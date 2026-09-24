@@ -6,7 +6,7 @@
 - 已clone官方DSH46a7f68，创建cryptoSUN2049/xDAN-System3-DSH并验证private=true。
 - 四线研究与设计完成；尚待用户审批M0+M1，未实现功能。
 - 原始上游Ruff失败；远端为空，未push，未部署/训练。
-- 先读docs/feat-system3-foundation/index.html或design.md。
+- 先读docs/feat-system3-foundation/system3-special-plan.html；再读design.md。
 
 ## 2. 本轮交付物
 
@@ -18,6 +18,15 @@
 | tasks/todo.md | 18 | 执行计划 |
 
 本handoff自身行数以wc -l为准；未修改继承的产品代码。
+
+### 专项方案 v2 新增
+
+- `docs/feat-system3-foundation/system3-special-plan.html`：完整产品与架构方案，15个章节；含本地9B、Jev、DSH、Claude Code/Codex、多智能体、隐私、训练、优先级和验收。
+- `docs/feat-system3-foundation/system3-special-plan.md`：HTML入口摘要。
+- `docs/feat-system3-foundation/system3-special-evidence.json`：源码锚点及身份快照。
+- Jev融合专章逐项覆盖8个位置：输入澄清、路由、上下文证据、子代理拆分、语义无进展、完成验收、生成/工具选择、异常升级；每项包含触发、输入、输出、DSH执行、回退、记录与验收。
+- 浏览验证：1280px无横向溢出；390px无横向溢出；预设路由案例可切换；local-only策略会阻断code外发；DOM id唯一；15个章节、14个表格、1个交互按钮。
+
 
 ## 3. 设计约束
 

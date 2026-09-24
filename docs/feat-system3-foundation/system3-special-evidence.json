@@ -1,0 +1,79 @@
+{
+  "date": "2026-09-24",
+  "artifact": "system3-special-plan.html",
+  "status": "proposal_only",
+  "upstream_sha": "46a7f68b0922371ce7144b668b90e377d8e799f4",
+  "methods": [
+    "read-only source review",
+    "prior primary-source research and local reports",
+    "design synthesis; no new model experiments"
+  ],
+  "sources": [
+    {
+      "path": "packages/subagent/subagent-codex/src/index.ts",
+      "exists": true,
+      "sha256": "3adc9ab888a503e7063fdda990596901ac05abe3759f95b1f52f72307824f957"
+    },
+    {
+      "path": "packages/subagent/subagent-codex/src/run.ts",
+      "exists": true,
+      "sha256": "fd5c8bf5b1ca5db72199417c418c5002eca28ecef9911fa459e5f974a6036e4a"
+    },
+    {
+      "path": "packages/subagent/subagent-codex/src/wire.ts",
+      "exists": true,
+      "sha256": "317637b5ea9b42a9785240d28da9218d1fd40dfcce449c7dccb78e5c7f9be8d3"
+    },
+    {
+      "path": "packages/subagent/subagent-claude-code/src/index.ts",
+      "exists": true,
+      "sha256": "153bf9029cca9f6c84430e9b9dbb805fa3293befb0d6fe68936a609cd7c075b0"
+    },
+    {
+      "path": "packages/subagent/subagent-claude-code/src/run.ts",
+      "exists": true,
+      "sha256": "905e4ecbb31f802814d9bf00f8151d6223797c6a83414d28443821ab13487a5c"
+    },
+    {
+      "path": "packages/experimental/agent-team/README.md",
+      "exists": true,
+      "sha256": "d54ab03a26bfbc9988020c2908f8adf8ee66fa6c68814bb0b7d9d2d525e2fd37"
+    },
+    {
+      "path": "packages/experimental/agent-team/src/index.ts",
+      "exists": true,
+      "sha256": "c05c3dc645125979aab236b1a159ef76c0e9d6b2206fc699ad3b45e0153c903b"
+    },
+    {
+      "path": "packages/experimental/agent-team/src/lifecycle.ts",
+      "exists": true,
+      "sha256": "2c89e3ce82015ff9353917a40989e44b70acdd8998aeef495fc9874bc016980c"
+    },
+    {
+      "path": "packages/experimental/agent-team/src/task-graph.ts",
+      "exists": true,
+      "sha256": "a726081289a2f7a848f69109a750db3ead0d95b88ab0adfdae0477f749b8f490"
+    },
+    {
+      "path": "packages/subagent/subagent/src/types.ts",
+      "exists": true,
+      "sha256": "08b6a2f78cc95e117ca745a079cb7d77a15fb3a66292f900a0e3fe280cd09411"
+    },
+    {
+      "path": "docs/feat-system3-foundation/design.md",
+      "exists": true,
+      "sha256": "3f334d10447053c5d2817f4250303cd894e9a9d96ce3d512ae28d712f86369c0"
+    },
+    {
+      "path": "docs/feat-system3-foundation/evidence.json",
+      "exists": true,
+      "sha256": "62bdd36f322c95dfb4a148056baf1718dead977d9783be7f56295e92339ace8d"
+    }
+  ],
+  "validation": {
+    "status": "pending browser verification",
+    "product_tests": "not run: no product changes",
+    "model_calls": "none",
+    "remote_writes": "none"
+  }
+}
