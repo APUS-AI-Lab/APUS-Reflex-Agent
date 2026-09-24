@@ -32,7 +32,9 @@ EXPECTED_TEXT = "runtime smoke ok"
 LIVE_API_SENTINEL = "PYTHON_SDK_LIVE_OK"
 CODE_PROMPT = "Use run_code to compute the packaged worker smoke value."
 CODE_WORKER_TEXT = "code worker smoke ok"
-WORKFLOW_PROMPT = "Use workflow to compute the packaged worker smoke value without agents."
+WORKFLOW_PROMPT = (
+    "Use workflow to compute the packaged worker smoke value without agents."
+)
 WORKFLOW_WORKER_TEXT = "workflow worker smoke ok"
 MINIMAL_PROMPT = "Exercise the packaged minimal agent's persistent shell."
 MINIMAL_TEXT = "minimal agent smoke ok"
@@ -54,11 +56,13 @@ MINIMAL_SHELL_COMMAND = (
     if IS_WINDOWS
     else (
         "counter=$(( ${counter:-0} + 1 )); export counter; "
-        "printf 'COUNT=%s CWD=%s\\n' \"$counter\" \"$PWD\"; "
-        "if [ \"$counter\" -eq 1 ]; then cd /tmp; fi"
+        'printf \'COUNT=%s CWD=%s\\n\' "$counter" "$PWD"; '
+        'if [ "$counter" -eq 1 ]; then cd /tmp; fi'
     )
 )
-MINIMAL_SHELL_SECOND_CWD = str(Path(tempfile.gettempdir()).resolve()) if IS_WINDOWS else "/tmp"
+MINIMAL_SHELL_SECOND_CWD = (
+    str(Path(tempfile.gettempdir()).resolve()) if IS_WINDOWS else "/tmp"
+)
 SPAWN_NODE_PROMPT = "Run node --version through the packaged shell tool."
 SPAWN_NODE_TEXT = "spawn node smoke ok"
 SPAWN_NODE_CALL_ID = "spawn-node-shell"
@@ -95,7 +99,9 @@ LEGACY_CUSTOM_DISABLED_ROWS = (
 SNAPSHOT_PROMPT = "Run the advanced packaged-runtime snapshot scenario."
 SNAPSHOT_SESSION_ID = "advanced-executable"
 SNAPSHOT_DIRECT_CHILD_PROMPT = "Reply with exactly DIRECT_CHILD_OK and nothing else."
-SNAPSHOT_WORKFLOW_CHILD_PROMPT = "Reply with exactly WORKFLOW_CHILD_OK and nothing else."
+SNAPSHOT_WORKFLOW_CHILD_PROMPT = (
+    "Reply with exactly WORKFLOW_CHILD_OK and nothing else."
+)
 SNAPSHOT_FINAL_TEXT = "ADVANCED_EXECUTABLE_OK"
 RESTART_FIRST_PROMPT = "Complete the first isolated Python SDK process turn."
 RESTART_FIRST_TEXT = "PROCESS_ONE_OK"
@@ -112,7 +118,10 @@ ADVANCED_SNAPSHOT_DIRECTORY = (
     Path(__file__).resolve().parent / "snapshots" / "python-sdk-single-exe" / "advanced"
 )
 ADVANCED_SNAPSHOT_FILENAMES = (
-    "result.json", "session.v3.jsonl", "session.1.v3.jsonl", "session.2.v3.jsonl",
+    "result.json",
+    "session.v3.jsonl",
+    "session.1.v3.jsonl",
+    "session.2.v3.jsonl",
 )
 MINIMAL_SNAPSHOT_DIRECTORY = (
     Path(__file__).resolve().parent / "snapshots" / "python-sdk-single-exe" / "minimal"
@@ -121,14 +130,20 @@ if IS_WINDOWS:
     MINIMAL_SNAPSHOT_DIRECTORY /= "win-x64"
 MINIMAL_SNAPSHOT_FILENAMES = ("model-visible.json",)
 IN_HISTORY_SNAPSHOT_DIRECTORY = (
-    Path(__file__).resolve().parent / "snapshots" / "python-sdk-single-exe" / "minimal-in-history"
+    Path(__file__).resolve().parent
+    / "snapshots"
+    / "python-sdk-single-exe"
+    / "minimal-in-history"
 )
 IN_HISTORY_SNAPSHOT_FILENAMES = ("prompt-history.json",)
 RESTART_SNAPSHOT_DIRECTORY = (
     Path(__file__).resolve().parent / "snapshots" / "python-sdk-single-exe" / "restart"
 )
 RESTART_SNAPSHOT_FILENAMES = (
-    "result.json", "requests.json", "session.1.v3.jsonl", "session.2.v3.jsonl",
+    "result.json",
+    "requests.json",
+    "session.1.v3.jsonl",
+    "session.2.v3.jsonl",
 )
 MCP_SERVER_SCRIPT = """\
 import json
@@ -216,64 +231,93 @@ def write_profile_patch(
 ) -> Path:
     """Write one JSON-form dsh profile patch with deterministic persistence."""
     path = root / name
-    path.write_text(json.dumps([
-        {
-            "id": "session-persistence-jsonl",
-            "config": {"root": str(sessions), "compression": "none"},
-        },
-        {"id": "session-telemetry-otel", "disabled": True},
-        *patches,
-    ], indent=2))
+    path.write_text(
+        json.dumps(
+            [
+                {
+                    "id": "session-persistence-jsonl",
+                    "config": {"root": str(sessions), "compression": "none"},
+                },
+                {"id": "session-telemetry-otel", "disabled": True},
+                *patches,
+            ],
+            indent=2,
+        )
+    )
     return path
 
 
 def write_advanced_profile_patch(root: Path, name: str, sessions: Path) -> Path:
     """Write the shared custom, snapshot, and restart profile patch."""
-    return write_profile_patch(root, name, sessions, [
-        {"id": "tools", "config": {"mode": "both"}},
-        {
-            "id": "system-prompt",
-            "config": {
-                "persona": "You are a coding agent powered by the {{model}} model. Your working directory is {{cwd}}.",
+    return write_profile_patch(
+        root,
+        name,
+        sessions,
+        [
+            {"id": "tools", "config": {"mode": "both"}},
+            {
+                "id": "system-prompt",
+                "config": {
+                    "persona": "You are a coding agent powered by the {{model}} model. Your working directory is {{cwd}}.",
+                },
             },
-        },
-        {"id": "session-log-deepseek", "config": {"enabled": True}},
-        *({"id": row_id, "disabled": True} for row_id in LEGACY_CUSTOM_DISABLED_ROWS),
-        {"id": "tool-bash", "disabled": True},
-        {"id": "tool-pwsh", "disabled": True},
-        {
-            "id": "tool-subagent",
-            "config": {
-                "provider": "spawn",
-                "toolName": "subagent",
-                "backgroundMode": "one-shot",
+            {"id": "session-log-deepseek", "config": {"enabled": True}},
+            *(
+                {"id": row_id, "disabled": True}
+                for row_id in LEGACY_CUSTOM_DISABLED_ROWS
+            ),
+            {"id": "tool-bash", "disabled": True},
+            {"id": "tool-pwsh", "disabled": True},
+            {
+                "id": "tool-subagent",
+                "config": {
+                    "provider": "spawn",
+                    "toolName": "subagent",
+                    "backgroundMode": "one-shot",
+                },
             },
-        },
-        {"insert": [
-            {"id": "ptc-runtime", "name": "@deepseek-ai/dsh-ptc-runtime-node"},
-            {"id": "cordis-host-runner", "name": "@deepseek-ai/dsh-cordis-host-runner"},
-            {"id": "cordis-tool", "name": "@deepseek-ai/dsh-tool-cordis"},
-        ]},
-    ])
+            {
+                "insert": [
+                    {"id": "ptc-runtime", "name": "@deepseek-ai/dsh-ptc-runtime-node"},
+                    {
+                        "id": "cordis-host-runner",
+                        "name": "@deepseek-ai/dsh-cordis-host-runner",
+                    },
+                    {"id": "cordis-tool", "name": "@deepseek-ai/dsh-tool-cordis"},
+                ]
+            },
+        ],
+    )
 
 
 def write_mcp_patch(root: Path, sessions: Path, server_script: Path) -> Path:
     """Write a profile patch that mounts the packaged MCP client."""
-    return write_profile_patch(root, "mcp.patch.yml", sessions, [{
-        "insert": [{
-            "id": "mcp-fixture",
-            "name": "@deepseek-ai/dsh-mcp-client",
-            "config": {
-                "serverName": "fixture",
-                "transport": "stdio",
-                "command": sys.executable,
-                "args": [str(server_script)],
-                "env": {"MCP_SMOKE_LOG": str(server_script.with_suffix(".log"))},
-                "failOnStartupError": True,
-                "reconnect": {"enabled": False},
-            },
-        }],
-    }])
+    return write_profile_patch(
+        root,
+        "mcp.patch.yml",
+        sessions,
+        [
+            {
+                "insert": [
+                    {
+                        "id": "mcp-fixture",
+                        "name": "@deepseek-ai/dsh-mcp-client",
+                        "config": {
+                            "serverName": "fixture",
+                            "transport": "stdio",
+                            "command": sys.executable,
+                            "args": [str(server_script)],
+                            "env": {
+                                "MCP_SMOKE_LOG": str(server_script.with_suffix(".log"))
+                            },
+                            "failOnStartupError": True,
+                            "reconnect": {"enabled": False},
+                        },
+                    }
+                ],
+            }
+        ],
+    )
 
 
 class MockModelHandler(BaseHTTPRequestHandler):
@@ -293,7 +337,9 @@ class MockModelHandler(BaseHTTPRequestHandler):
         self.end_headers()
         chunks = completion_chunks(body)
         for chunk in chunks:
-            self.wfile.write(f"event: {chunk['type']}\ndata: {json.dumps(chunk)}\n\n".encode())
+            self.wfile.write(
+                f"event: {chunk['type']}\ndata: {json.dumps(chunk)}\n\n".encode()
+            )
         self.wfile.flush()
 
     def log_message(self, _format: str, *_args: object) -> None:
@@ -306,12 +352,15 @@ def completion_chunks(body: dict[str, object]) -> list[dict[str, object]]:
     if not isinstance(messages, list) or not messages:
         raise AssertionError(f"model request has no messages: {body}")
     # A system prompt update may follow the tool result without replacing it.
-    latest = next(message for message in reversed(messages) if message.get("role") != "system")
+    latest = next(
+        message for message in reversed(messages) if message.get("role") != "system"
+    )
     if not isinstance(latest, dict):
         raise AssertionError(f"model request has an invalid latest message: {body}")
 
     tool_results = [
-        block for block in latest.get("content", [])
+        block
+        for block in latest.get("content", [])
         if isinstance(block, dict) and block.get("type") == "tool_result"
     ]
     if tool_results:
@@ -338,7 +387,9 @@ def completion_chunks(body: dict[str, object]) -> list[dict[str, object]]:
         if advanced is not None:
             return advanced
         if "42" not in tool_text:
-            raise AssertionError(f"{tool_name} worker returned no expected value: {latest}")
+            raise AssertionError(
+                f"{tool_name} worker returned no expected value: {latest}"
+            )
         if tool_name == "run_code":
             return text_chunks(CODE_WORKER_TEXT)
         if tool_name == "workflow":
@@ -352,7 +403,9 @@ def completion_chunks(body: dict[str, object]) -> list[dict[str, object]]:
         for block in message.get("content", [])
         if isinstance(block, dict) and block.get("type") == "text"
     ]
-    minimal_prompt = next((prompt for prompt in user_prompts if prompt == MINIMAL_PROMPT), None)
+    minimal_prompt = next(
+        (prompt for prompt in user_prompts if prompt == MINIMAL_PROMPT), None
+    )
     # The minimal composition's assembled system prompt, advertised tool schemas, and
     # model-visible messages are pinned by its snapshot, not asserted here.
     if minimal_prompt is not None:
@@ -390,9 +443,12 @@ def completion_chunks(body: dict[str, object]) -> list[dict[str, object]]:
         assert_advertised_tool(body, "snapshot_double")
         assert_advertised_tool(body, "run_code")
         return tool_call_chunks(
-            "advanced-code", "run_code",
-            {"code": "return await tools.snapshot_double({ value: 21 })",
-             "description": "Call the configured Plugin tool"},
+            "advanced-code",
+            "run_code",
+            {
+                "code": "return await tools.snapshot_double({ value: 21 })",
+                "description": "Call the configured Plugin tool",
+            },
         )
     if prompt == RESTART_FIRST_PROMPT:
         return text_chunks(RESTART_FIRST_TEXT)
@@ -402,7 +458,9 @@ def completion_chunks(body: dict[str, object]) -> list[dict[str, object]]:
             and RESTART_FIRST_TEXT in message_text(message.get("content"))
             for message in messages
         ):
-            raise AssertionError("second isolated process inherited the first process history")
+            raise AssertionError(
+                "second isolated process inherited the first process history"
+            )
         return text_chunks(RESTART_SECOND_TEXT)
     if prompt == CODE_PROMPT:
         assert_advertised_tool(body, "run_code")
@@ -437,7 +495,10 @@ def completion_chunks(body: dict[str, object]) -> list[dict[str, object]]:
         return tool_call_chunks(
             SPAWN_NODE_CALL_ID,
             MINIMAL_SHELL_TOOL,
-            {"command": SPAWN_NODE_COMMAND, "description": "Report the reachable Node version"},
+            {
+                "command": SPAWN_NODE_COMMAND,
+                "description": "Report the reachable Node version",
+            },
         )
     if prompt == MCP_PROMPT:
         assert_advertised_tool(body, "mcp__fixture__add")
@@ -447,13 +508,19 @@ def completion_chunks(body: dict[str, object]) -> list[dict[str, object]]:
             {"a": 19, "b": 23},
         )
     if prompt == PROFILE_PLUGIN_PROMPT:
-        system_text = message_text(body.get("system")) + "\n" + "\n".join(
-            message_text(message.get("content"))
-            for message in messages
-            if isinstance(message, dict) and message.get("role") == "system"
+        system_text = (
+            message_text(body.get("system"))
+            + "\n"
+            + "\n".join(
+                message_text(message.get("content"))
+                for message in messages
+                if isinstance(message, dict) and message.get("role") == "system"
+            )
         )
         if PROFILE_PLUGIN_MARKER not in system_text:
-            raise AssertionError("external profile plugin contributed no model-visible marker")
+            raise AssertionError(
+                "external profile plugin contributed no model-visible marker"
+            )
         return text_chunks(PROFILE_PLUGIN_TEXT)
     return text_chunks(EXPECTED_TEXT)
 
@@ -467,7 +534,9 @@ def mcp_tool_followup(
     if call_id != "mcp-add":
         return None
     if tool_name != "mcp__fixture__add" or "42" not in tool_text:
-        raise AssertionError(f"packaged MCP call returned an unexpected result: {tool_name}: {tool_text}")
+        raise AssertionError(
+            f"packaged MCP call returned an unexpected result: {tool_name}: {tool_text}"
+        )
     return text_chunks(MCP_TEXT)
 
 
@@ -491,16 +560,23 @@ def fs_search_tool_followup(
         if "needle.txt" not in tool_text:
             raise AssertionError(f"packaged glob returned no fixture path: {tool_text}")
         return text_chunks(FS_SEARCH_TEXT)
-    raise AssertionError(f"unexpected filesystem-search follow-up: {call_id} {tool_name}: {tool_text}")
+    raise AssertionError(
+        f"unexpected filesystem-search follow-up: {call_id} {tool_name}: {tool_text}"
+    )
 
 
 def host_node_version() -> str:
     """The machine's own `node --version` line, the required shell resolution target."""
     node = shutil.which("node")
     if node is None:
-        raise AssertionError("the spawn-node scenario requires Node on PATH for comparison")
+        raise AssertionError(
+            "the spawn-node scenario requires Node on PATH for comparison"
+        )
     return subprocess.run(
-        [node, "--version"], capture_output=True, text=True, check=True,
+        [node, "--version"],
+        capture_output=True,
+        text=True,
+        check=True,
     ).stdout.strip()
 
 
@@ -513,14 +589,18 @@ def spawn_node_tool_followup(
     if call_id != SPAWN_NODE_CALL_ID:
         return None
     if tool_name != MINIMAL_SHELL_TOOL:
-        raise AssertionError(f"spawn-node follow-up used an unexpected tool: {tool_name}")
+        raise AssertionError(
+            f"spawn-node follow-up used an unexpected tool: {tool_name}"
+        )
     expected = host_node_version()
     if expected not in tool_text:
         raise AssertionError(
             f"packaged shell did not reach the machine's node {expected}: {tool_text}"
         )
     if "PKG_EXECPATH=ABSENT" not in tool_text:
-        raise AssertionError(f"PKG_EXECPATH reached the shell child environment: {tool_text}")
+        raise AssertionError(
+            f"PKG_EXECPATH reached the shell child environment: {tool_text}"
+        )
     return text_chunks(SPAWN_NODE_TEXT)
 
 
@@ -534,7 +614,9 @@ def minimal_tool_followup(
         return None
     if call_id == "minimal-bash-1" and tool_name == MINIMAL_SHELL_TOOL:
         if "COUNT=1" not in tool_text:
-            raise AssertionError(f"first persistent shell call lost its output: {tool_text}")
+            raise AssertionError(
+                f"first persistent shell call lost its output: {tool_text}"
+            )
         return tool_call_chunks(
             "minimal-bash-2",
             MINIMAL_SHELL_TOOL,
@@ -545,7 +627,9 @@ def minimal_tool_followup(
         if expected.lower() not in tool_text.lower():
             raise AssertionError(f"persistent shell did not retain state: {tool_text}")
         return text_chunks(MINIMAL_TEXT)
-    raise AssertionError(f"unexpected minimal-agent follow-up: {call_id} {tool_name}: {tool_text}")
+    raise AssertionError(
+        f"unexpected minimal-agent follow-up: {call_id} {tool_name}: {tool_text}"
+    )
 
 
 def advanced_tool_followup(
@@ -559,22 +643,44 @@ def advanced_tool_followup(
         return None
     if call_id == "advanced-code" and tool_name == "run_code":
         if "42" not in tool_text:
-            raise AssertionError(f"run_code returned no configured-tool value: {tool_text}")
-        return tool_call_chunks("advanced-denied-native", "snapshot_double", {"value": -1})
+            raise AssertionError(
+                f"run_code returned no configured-tool value: {tool_text}"
+            )
+        return tool_call_chunks(
+            "advanced-denied-native", "snapshot_double", {"value": -1}
+        )
     if call_id == "advanced-denied-native" and tool_name == "snapshot_double":
-        if 'Auto review rejected tool "snapshot_double"; its body was not executed' not in tool_text:
-            raise AssertionError(f"native denial did not preserve the model result: {tool_text}")
+        if (
+            'Auto review rejected tool "snapshot_double"; its body was not executed'
+            not in tool_text
+        ):
+            raise AssertionError(
+                f"native denial did not preserve the model result: {tool_text}"
+            )
         if "transport raw" in tool_text:
-            raise AssertionError("native denial leaked its user-facing reason to the model")
-        return tool_call_chunks("advanced-denied-ptc", "run_code", {
-            "code": "try { await tools.snapshot_double({ value: -1 }) } catch (error) { return error.message }",
-            "description": "Catch a structured inner tool denial",
-        })
+            raise AssertionError(
+                "native denial leaked its user-facing reason to the model"
+            )
+        return tool_call_chunks(
+            "advanced-denied-ptc",
+            "run_code",
+            {
+                "code": "try { await tools.snapshot_double({ value: -1 }) } catch (error) { return error.message }",
+                "description": "Catch a structured inner tool denial",
+            },
+        )
     if call_id == "advanced-denied-ptc" and tool_name == "run_code":
-        if 'Auto review rejected tool "snapshot_double"; its body was not executed' not in tool_text:
-            raise AssertionError(f"PTC denial did not preserve the model result: {tool_text}")
+        if (
+            'Auto review rejected tool "snapshot_double"; its body was not executed'
+            not in tool_text
+        ):
+            raise AssertionError(
+                f"PTC denial did not preserve the model result: {tool_text}"
+            )
         if "transport raw" in tool_text:
-            raise AssertionError("PTC denial leaked its user-facing reason to the model")
+            raise AssertionError(
+                "PTC denial leaked its user-facing reason to the model"
+            )
         assert_advertised_tool(body, "subagent")
         return tool_call_chunks(
             "advanced-direct-child",
@@ -586,7 +692,9 @@ def advanced_tool_followup(
         )
     if call_id == "advanced-direct-child" and tool_name == "subagent":
         if "DIRECT_CHILD_OK" not in tool_text:
-            raise AssertionError(f"subagent returned no expected child value: {tool_text}")
+            raise AssertionError(
+                f"subagent returned no expected child value: {tool_text}"
+            )
         assert_advertised_tool(body, "workflow")
         return tool_call_chunks(
             "advanced-workflow",
@@ -601,37 +709,69 @@ def advanced_tool_followup(
         )
     if call_id == "advanced-workflow" and tool_name == "workflow":
         if "WORKFLOW_CHILD_OK" not in tool_text:
-            raise AssertionError(f"workflow returned no expected child value: {tool_text}")
+            raise AssertionError(
+                f"workflow returned no expected child value: {tool_text}"
+            )
         return text_chunks(SNAPSHOT_FINAL_TEXT)
-    raise AssertionError(f"unexpected advanced tool follow-up: {call_id} {tool_name}: {tool_text}")
+    raise AssertionError(
+        f"unexpected advanced tool follow-up: {call_id} {tool_name}: {tool_text}"
+    )
 
 
 def text_chunks(text: str) -> list[dict[str, object]]:
     """Build a complete Messages text response."""
     return [
         message_start(),
-        {"type": "content_block_start", "index": 0, "content_block": {"type": "text", "text": ""}},
-        {"type": "content_block_delta", "index": 0, "delta": {"type": "text_delta", "text": text}},
+        {
+            "type": "content_block_start",
+            "index": 0,
+            "content_block": {"type": "text", "text": ""},
+        },
+        {
+            "type": "content_block_delta",
+            "index": 0,
+            "delta": {"type": "text_delta", "text": text},
+        },
         {"type": "content_block_stop", "index": 0},
-        {"type": "message_delta", "delta": {"stop_reason": "end_turn"}, "usage": {"output_tokens": 3}},
+        {
+            "type": "message_delta",
+            "delta": {"stop_reason": "end_turn"},
+            "usage": {"output_tokens": 3},
+        },
         {"type": "message_stop"},
     ]
 
 
-def tool_call_chunks(call_id: str, name: str, arguments: dict[str, object]) -> list[dict[str, object]]:
+def tool_call_chunks(
+    call_id: str, name: str, arguments: dict[str, object]
+) -> list[dict[str, object]]:
     """Build a complete Messages tool-use response."""
     return [
         message_start(),
         {
-            "type": "content_block_start", "index": 0,
-            "content_block": {"type": "tool_use", "id": call_id, "name": name, "input": {}},
+            "type": "content_block_start",
+            "index": 0,
+            "content_block": {
+                "type": "tool_use",
+                "id": call_id,
+                "name": name,
+                "input": {},
+            },
         },
         {
-            "type": "content_block_delta", "index": 0,
-            "delta": {"type": "input_json_delta", "partial_json": json.dumps(arguments)},
+            "type": "content_block_delta",
+            "index": 0,
+            "delta": {
+                "type": "input_json_delta",
+                "partial_json": json.dumps(arguments),
+            },
         },
         {"type": "content_block_stop", "index": 0},
-        {"type": "message_delta", "delta": {"stop_reason": "tool_use"}, "usage": {"output_tokens": 3}},
+        {
+            "type": "message_delta",
+            "delta": {"stop_reason": "tool_use"},
+            "usage": {"output_tokens": 3},
+        },
         {"type": "message_stop"},
     ]
 
@@ -640,7 +780,11 @@ def message_start() -> dict[str, object]:
     """Start a Messages response with deterministic token usage."""
     return {
         "type": "message_start",
-        "message": {"id": "msg_smoke", "model": "smoke-model", "usage": {"input_tokens": 3, "output_tokens": 0}},
+        "message": {
+            "id": "msg_smoke",
+            "model": "smoke-model",
+            "usage": {"input_tokens": 3, "output_tokens": 0},
+        },
     }
 
 
@@ -663,7 +807,9 @@ def latest_tool_call(messages: list[object], result_id: object) -> tuple[str, st
                 and isinstance(call.get("name"), str)
             ):
                 return call_id, call["name"]
-    raise AssertionError(f"tool result has no preceding assistant tool call: {messages}")
+    raise AssertionError(
+        f"tool result has no preceding assistant tool call: {messages}"
+    )
 
 
 def message_text(content: object) -> str:
@@ -720,7 +866,24 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--scenario",
-        choices=("all", "sdk-default", "sdk-custom", "sdk-minimal", "sdk-minimal-in-history", "sdk-fs-search", "sdk-spawn-node", "sdk-mcp", "sdk-snapshot", "sdk-restart", "sdk-profile-plugin", "sdk-office", "sdk-authoring", "sdk-live", "runner", "direct"),
+        choices=(
+            "all",
+            "sdk-default",
+            "sdk-custom",
+            "sdk-minimal",
+            "sdk-minimal-in-history",
+            "sdk-fs-search",
+            "sdk-spawn-node",
+            "sdk-mcp",
+            "sdk-snapshot",
+            "sdk-restart",
+            "sdk-profile-plugin",
+            "sdk-office",
+            "sdk-authoring",
+            "sdk-live",
+            "runner",
+            "direct",
+        ),
         default="all",
     )
     parser.add_argument("--exe", type=Path)
@@ -732,17 +895,47 @@ def main() -> None:
     parser.add_argument("--update-snapshots", action="store_true")
     args = parser.parse_args()
     if args.installed_wheel and args.exe is not None:
-        parser.error("--installed-wheel resolves the wheel's own runtime and cannot be combined with --exe")
+        parser.error(
+            "--installed-wheel resolves the wheel's own runtime and cannot be combined with --exe"
+        )
     if args.scenario == "sdk-live" and not args.installed_wheel:
         parser.error("--scenario sdk-live requires --installed-wheel")
     if args.scenario == "sdk-profile-plugin" and not args.installed_wheel:
         parser.error("--scenario sdk-profile-plugin requires --installed-wheel")
     if args.installed_wheel:
         args.exe = assert_installed_wheel_environment()
-    if args.scenario in {"all", "sdk-custom", "sdk-minimal", "sdk-minimal-in-history", "sdk-fs-search", "sdk-spawn-node", "sdk-snapshot", "sdk-restart", "sdk-office", "sdk-authoring", "runner", "direct"} and args.exe is None:
-        parser.error("--exe is required for custom, minimal, fs-search, spawn-node, snapshot, restart, office, runner, and direct scenarios")
-    if args.update_snapshots and args.scenario not in {"all", "sdk-minimal", "sdk-minimal-in-history", "sdk-snapshot", "sdk-restart", "sdk-authoring"}:
-        parser.error("--update-snapshots requires --scenario sdk-minimal, sdk-minimal-in-history, sdk-snapshot, sdk-restart, sdk-authoring, or all")
+    if (
+        args.scenario
+        in {
+            "all",
+            "sdk-custom",
+            "sdk-minimal",
+            "sdk-minimal-in-history",
+            "sdk-fs-search",
+            "sdk-spawn-node",
+            "sdk-snapshot",
+            "sdk-restart",
+            "sdk-office",
+            "sdk-authoring",
+            "runner",
+            "direct",
+        }
+        and args.exe is None
+    ):
+        parser.error(
+            "--exe is required for custom, minimal, fs-search, spawn-node, snapshot, restart, office, runner, and direct scenarios"
+        )
+    if args.update_snapshots and args.scenario not in {
+        "all",
+        "sdk-minimal",
+        "sdk-minimal-in-history",
+        "sdk-snapshot",
+        "sdk-restart",
+        "sdk-authoring",
+    }:
+        parser.error(
+            "--update-snapshots requires --scenario sdk-minimal, sdk-minimal-in-history, sdk-snapshot, sdk-restart, sdk-authoring, or all"
+        )
     if args.exe is not None and not args.exe.is_file():
         parser.error(f"runtime executable does not exist: {args.exe}")
 
@@ -779,7 +972,9 @@ def main() -> None:
             smoke_sdk_minimal(model.url, args.exe.resolve(), args.update_snapshots)
         if args.scenario in {"all", "sdk-minimal-in-history"}:
             assert args.exe is not None
-            smoke_sdk_minimal(model.url, args.exe.resolve(), args.update_snapshots, in_history=True)
+            smoke_sdk_minimal(
+                model.url, args.exe.resolve(), args.update_snapshots, in_history=True
+            )
         if args.scenario in {"all", "sdk-fs-search"}:
             assert args.exe is not None
             smoke_sdk_fs_search(model.url, args.exe.resolve())
@@ -793,7 +988,9 @@ def main() -> None:
             smoke_sdk_snapshot(model.url, args.exe.resolve(), args.update_snapshots)
         if args.scenario in {"all", "sdk-restart"}:
             assert args.exe is not None
-            smoke_sdk_restart_snapshot(model.url, args.exe.resolve(), args.update_snapshots)
+            smoke_sdk_restart_snapshot(
+                model.url, args.exe.resolve(), args.update_snapshots
+            )
         if args.installed_wheel and args.scenario in {"all", "sdk-profile-plugin"}:
             smoke_sdk_profile_plugin(model.url)
         if args.scenario in {"all", "direct"}:
@@ -804,11 +1001,17 @@ def main() -> None:
     print(f"smoke-python-runtime: {args.scenario} passed")
 
 
-def smoke_sdk_authoring(base_url: str, executable: Path, update_snapshots: bool) -> None:
+def smoke_sdk_authoring(
+    base_url: str, executable: Path, update_snapshots: bool
+) -> None:
     """Query the bundled Python and switch skills without replacing that environment."""
     from deepseek_harness import DeepSeekHarness
 
-    resources = executable.with_name(executable.name.removeprefix("deepseek-harness-sdk-runtime-").removesuffix(".exe"))
+    resources = executable.with_name(
+        executable.name.removeprefix("deepseek-harness-sdk-runtime-").removesuffix(
+            ".exe"
+        )
+    )
     manifest = json.loads((resources / "primary-runtime/runtime.json").read_text())
     for mode in ("default", "replacement", "disabled"):
         with tempfile.TemporaryDirectory(prefix="dsh-sdk-authoring-") as temporary:
@@ -817,15 +1020,31 @@ def smoke_sdk_authoring(base_url: str, executable: Path, update_snapshots: bool)
             if mode == "replacement":
                 skill = home / "skills/office-docx/SKILL.md"
                 skill.parent.mkdir(parents=True)
-                skill.write_text("---\nname: office-docx\ndescription: CUSTOM_OFFICE_DOCX\n---\nUse the bundled Python for custom document work.\n")
+                skill.write_text(
+                    "---\nname: office-docx\ndescription: CUSTOM_OFFICE_DOCX\n---\nUse the bundled Python for custom document work.\n"
+                )
             patch = root / "skills.patch.yml"
-            patch.write_text(json.dumps([{"id": "skill-office", "disabled": True}] if mode == "disabled" else []))
+            patch.write_text(
+                json.dumps(
+                    [{"id": "skill-office", "disabled": True}]
+                    if mode == "disabled"
+                    else []
+                )
+            )
             first = len(MockModelHandler.requests)
             with DeepSeekHarness(
-                provider="deepseek-official", model="smoke-model", cwd=str(root),
-                dsh_bin=str(executable), dsh_home=str(home), patches=(str(patch),),
-                api_key="sk-keyless-smoke", base_url=base_url,
-                env={"DSH_PERMISSION_MODE": "danger-full-access", "DSH_TELEMETRY_DISABLED": "1"},
+                provider="deepseek-official",
+                model="smoke-model",
+                cwd=str(root),
+                dsh_bin=str(executable),
+                dsh_home=str(home),
+                patches=(str(patch),),
+                api_key="sk-keyless-smoke",
+                base_url=base_url,
+                env={
+                    "DSH_PERMISSION_MODE": "danger-full-access",
+                    "DSH_TELEMETRY_DISABLED": "1",
+                },
                 request_timeout_seconds=60,
             ) as harness:
                 result = harness.run(AUTHORING_PROMPT, session_id="authoring")
@@ -836,33 +1055,72 @@ def smoke_sdk_authoring(base_url: str, executable: Path, update_snapshots: bool)
             for name in ("office-docx", "office-pptx", "office-xlsx"):
                 assert (name in prompt) == (mode != "disabled"), (mode, name)
             assert ("CUSTOM_OFFICE_DOCX" in prompt) == (mode == "replacement"), mode
-            tool_result = next(block for message in requests[1]["messages"]
-                               for block in message.get("content", [])
-                               if isinstance(block, dict) and block.get("tool_use_id") == "authoring-runtime")
+            tool_result = next(
+                block
+                for message in requests[1]["messages"]
+                for block in message.get("content", [])
+                if isinstance(block, dict)
+                and block.get("tool_use_id") == "authoring-runtime"
+            )
             dependencies = json.loads(message_text(tool_result["content"]))
             python = Path(dependencies["python"])
             assert python.is_relative_to(resources), dependencies
             assert Path(dependencies["node"]).is_relative_to(resources), dependencies
             assert Path(dependencies["pnpm"]).is_relative_to(resources), dependencies
-            assert dependencies["pythonDistributions"] == manifest["pythonPackages"], dependencies
+            assert dependencies["pythonDistributions"] == manifest["pythonPackages"], (
+                dependencies
+            )
             assert not (home / "dsh-runtimes").exists()
             if mode == "default":
-                subprocess.run([
-                    str(python), "-I", "-B", str(Path(__file__).parent / "primary-runtime/smoke.py"),
-                    json.dumps(manifest["pythonPackages"]), manifest["python"],
-                    str(resources / "office-skills/scripts/check_office.py"),
-                ], check=True, timeout=120,
-                    env={name: value for name, value in os.environ.items()
-                         if not re.search(r"KEY|SECRET|TOKEN|PASSWORD", name, re.I)})
-                schema = next(tool for tool in requests[0]["tools"] if tool.get("name") == "load_workspace_dependencies")
-                visible = {"tool": schema, "result": {**dependencies, "python": "{{python}}", "pythonPackages": "{{site-packages}}",
-                           **{name: "{{" + name + "}}" for name in ("node", "nodePackages", "pnpm")}}}
+                subprocess.run(
+                    [
+                        str(python),
+                        "-I",
+                        "-B",
+                        str(Path(__file__).parent / "primary-runtime/smoke.py"),
+                        json.dumps(manifest["pythonPackages"]),
+                        manifest["python"],
+                        str(resources / "office-skills/scripts/check_office.py"),
+                    ],
+                    check=True,
+                    timeout=120,
+                    env={
+                        name: value
+                        for name, value in os.environ.items()
+                        if not re.search(r"KEY|SECRET|TOKEN|PASSWORD", name, re.I)
+                    },
+                )
+                schema = next(
+                    tool
+                    for tool in requests[0]["tools"]
+                    if tool.get("name") == "load_workspace_dependencies"
+                )
+                visible = {
+                    "tool": schema,
+                    "result": {
+                        **dependencies,
+                        "python": "{{python}}",
+                        "pythonPackages": "{{site-packages}}",
+                        **{
+                            name: "{{" + name + "}}"
+                            for name in ("node", "nodePackages", "pnpm")
+                        },
+                    },
+                }
                 compare_snapshot_files(
-                    {"model-visible.json": json.dumps(visible, indent=2, ensure_ascii=False) + "\n"},
-                    update_snapshots, Path(__file__).parent / "snapshots/python-sdk-single-exe/authoring",
+                    {
+                        "model-visible.json": json.dumps(
+                            visible, indent=2, ensure_ascii=False
+                        )
+                        + "\n"
+                    },
+                    update_snapshots,
+                    Path(__file__).parent / "snapshots/python-sdk-single-exe/authoring",
                     ("model-visible.json",),
                 )
-    print("smoke-python-runtime: bundled Python, default skills, replacement and disabled skills passed")
+    print(
+        "smoke-python-runtime: bundled Python, default skills, replacement and disabled skills passed"
+    )
 
 
 def smoke_sdk_office(executable: Path) -> None:
@@ -873,7 +1131,9 @@ def smoke_sdk_office(executable: Path) -> None:
         root = Path(temporary).resolve()
         relocated = root / executable.name
         stem = executable.name.removesuffix(".exe")
-        resources = executable.with_name(stem.removeprefix("deepseek-harness-sdk-runtime-"))
+        resources = executable.with_name(
+            stem.removeprefix("deepseek-harness-sdk-runtime-")
+        )
         for source in [*executable.parent.glob(f"{stem}*"), resources]:
             destination = root / source.name
             if source.is_dir():
@@ -882,34 +1142,73 @@ def smoke_sdk_office(executable: Path) -> None:
                 shutil.copy2(source, destination)
         office = root / f"{stem}-office"
         adapter = office / "node_modules/@deepseek-ai/libreoffice-kit/package.json"
-        native = stem.removeprefix("deepseek-harness-sdk-runtime-").replace("win-", "win32-").replace("macos-", "darwin-")
-        declared = json.loads(adapter.read_text(encoding="utf-8")).get("optionalDependencies", {})
-        selected = native if f"@deepseek-ai/libreoffice-kit-{native}" in declared else "wasm"
+        native = (
+            stem.removeprefix("deepseek-harness-sdk-runtime-")
+            .replace("win-", "win32-")
+            .replace("macos-", "darwin-")
+        )
+        declared = json.loads(adapter.read_text(encoding="utf-8")).get(
+            "optionalDependencies", {}
+        )
+        selected = (
+            native if f"@deepseek-ai/libreoffice-kit-{native}" in declared else "wasm"
+        )
         expected_backend = "wasm" if selected == "wasm" else "native"
         engines = [
             json.loads(manifest.read_text())["engine"]["kind"]
-            for manifest in (office / "node_modules/@deepseek-ai").glob("libreoffice-kit-*/prebuilds.json")
+            for manifest in (office / "node_modules/@deepseek-ai").glob(
+                "libreoffice-kit-*/prebuilds.json"
+            )
         ]
         if engines != [expected_backend]:
-            raise AssertionError(f"Office sidecar must contain only {expected_backend}: {engines}")
+            raise AssertionError(
+                f"Office sidecar must contain only {expected_backend}: {engines}"
+            )
         plugin = root / "office.mjs"
-        shutil.copy2(Path(__file__).resolve().parent / "fixtures/python-sdk-office.mjs", plugin)
+        shutil.copy2(
+            Path(__file__).resolve().parent / "fixtures/python-sdk-office.mjs", plugin
+        )
         document = root / "document.docx"
-        with zipfile.ZipFile(document, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-            archive.writestr("[Content_Types].xml", '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>')
-            archive.writestr("_rels/.rels", '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>')
-            archive.writestr("word/document.xml", '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>Python Office wheel</w:t></w:r></w:p><w:sectPr><w:pgSz w:w="12240" w:h="15840"/></w:sectPr></w:body></w:document>')
+        with zipfile.ZipFile(
+            document, "w", compression=zipfile.ZIP_DEFLATED
+        ) as archive:
+            archive.writestr(
+                "[Content_Types].xml",
+                '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>',
+            )
+            archive.writestr(
+                "_rels/.rels",
+                '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>',
+            )
+            archive.writestr(
+                "word/document.xml",
+                '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>Python Office wheel</w:t></w:r></w:p><w:sectPr><w:pgSz w:w="12240" w:h="15840"/></w:sectPr></w:body></w:document>',
+            )
 
         mode = expected_backend
         output = root / f"{mode}.pdf"
         result_path = root / f"{mode}.json"
         patch = root / f"{mode}.patch.yml"
-        patch.write_text(json.dumps([{"insert": [{
-            "id": "python-sdk-office-smoke",
-            "inject": ["skills"],
-            "name": plugin.as_uri(),
-            "config": {"input": str(document), "output": str(output), "result": str(result_path)},
-        }]}]))
+        patch.write_text(
+            json.dumps(
+                [
+                    {
+                        "insert": [
+                            {
+                                "id": "python-sdk-office-smoke",
+                                "inject": ["skills"],
+                                "name": plugin.as_uri(),
+                                "config": {
+                                    "input": str(document),
+                                    "output": str(output),
+                                    "result": str(result_path),
+                                },
+                            }
+                        ]
+                    }
+                ]
+            )
+        )
         with DeepSeekHarness(
             provider="deepseek-official",
             model="smoke-model",
@@ -919,7 +1218,10 @@ def smoke_sdk_office(executable: Path) -> None:
             patches=(str(patch),),
             api_key="sk-keyless-smoke",
             base_url="http://127.0.0.1:9",
-            env={"DSH_PERMISSION_MODE": "danger-full-access", "DSH_TELEMETRY_DISABLED": "1"},
+            env={
+                "DSH_PERMISSION_MODE": "danger-full-access",
+                "DSH_TELEMETRY_DISABLED": "1",
+            },
             # The startup plugin awaits a converter with a 120-second deadline before JSON-RPC is ready.
             initialize_timeout_seconds=180,
             request_timeout_seconds=180,
@@ -927,28 +1229,42 @@ def smoke_sdk_office(executable: Path) -> None:
             pass
         result = json.loads(result_path.read_text())
         if result["backend"] != expected_backend:
-            raise AssertionError(f"Office conversion did not use {expected_backend}: {result}")
+            raise AssertionError(
+                f"Office conversion did not use {expected_backend}: {result}"
+            )
         if not result["moduleUrl"].startswith(office.as_uri() + "/"):
-            raise AssertionError(f"Office module was not loaded from the relocated wheel: {result}")
+            raise AssertionError(
+                f"Office module was not loaded from the relocated wheel: {result}"
+            )
         pdf = output.read_bytes()
         if len(pdf) < 100 or not pdf.startswith(b"%PDF-"):
-            raise AssertionError(f"Office conversion produced an invalid PDF at {output}")
-        print(f"smoke-python-runtime: relocated Office {result['backend']} DOCX produced {len(pdf)} PDF bytes")
+            raise AssertionError(
+                f"Office conversion produced an invalid PDF at {output}"
+            )
+        print(
+            f"smoke-python-runtime: relocated Office {result['backend']} DOCX produced {len(pdf)} PDF bytes"
+        )
 
 
 def assert_installed_wheel_environment() -> Path:
     """Prove that this process imports matching non-editable wheel installations."""
     if sys.prefix == sys.base_prefix:
-        raise AssertionError("installed-wheel smoke must run inside a virtual environment")
+        raise AssertionError(
+            "installed-wheel smoke must run inside a virtual environment"
+        )
     if os.environ.get("PYTHONPATH"):
         raise AssertionError("installed-wheel smoke requires PYTHONPATH to be unset")
     if os.environ.get("DSH_RUNTIME_MODE"):
-        raise AssertionError("installed-wheel smoke requires DSH_RUNTIME_MODE to be unset")
+        raise AssertionError(
+            "installed-wheel smoke requires DSH_RUNTIME_MODE to be unset"
+        )
 
     repo_root = Path(__file__).resolve().parent.parent
     cwd = Path.cwd().resolve()
     if cwd.is_relative_to(repo_root):
-        raise AssertionError(f"installed-wheel smoke must run outside the repository, got {cwd}")
+        raise AssertionError(
+            f"installed-wheel smoke must run outside the repository, got {cwd}"
+        )
 
     sdk_version = importlib.metadata.version("deepseek-harness-sdk")
     runtime_version = importlib.metadata.version("deepseek-harness-runtime-bin")
@@ -972,19 +1288,27 @@ def assert_installed_wheel_environment() -> Path:
             raise AssertionError(f"installed module {name} has no filesystem location")
         path = Path(module_file).resolve()
         if not path.is_relative_to(prefix):
-            raise AssertionError(f"installed module {name} came from outside the virtual environment: {path}")
+            raise AssertionError(
+                f"installed module {name} came from outside the virtual environment: {path}"
+            )
         if path.is_relative_to(repo_root):
-            raise AssertionError(f"installed module {name} came from the repository checkout: {path}")
+            raise AssertionError(
+                f"installed module {name} came from the repository checkout: {path}"
+            )
         imported[name] = path
 
     runtime_module = sys.modules["deepseek_harness_runtime"]
     executable = runtime_module.bundled_runtime_path().resolve()
     runtime_package = imported["deepseek_harness_runtime"].parent
     if not executable.is_relative_to(runtime_package):
-        raise AssertionError(f"bundled runtime came from outside the installed runtime wheel: {executable}")
+        raise AssertionError(
+            f"bundled runtime came from outside the installed runtime wheel: {executable}"
+        )
     runtime_files = importlib.metadata.files("deepseek-harness-runtime-bin") or []
     if not any(Path(file).name == executable.name for file in runtime_files):
-        raise AssertionError(f"runtime executable is absent from installed distribution records: {executable}")
+        raise AssertionError(
+            f"runtime executable is absent from installed distribution records: {executable}"
+        )
     return executable
 
 
@@ -1034,7 +1358,9 @@ def smoke_sdk_live() -> None:
             # The challenge is absent from the prior turn and the verification prompt.
             challenge = secrets.token_hex(32).encode("ascii")
             marker.write_bytes(challenge)
-            with tempfile.TemporaryDirectory(prefix="receipt-", dir=root) as receipt_directory:
+            with tempfile.TemporaryDirectory(
+                prefix="receipt-", dir=root
+            ) as receipt_directory:
                 receipt = Path(receipt_directory) / "receipt.txt"
                 verify_prompt = (
                     "The file created in the previous turn has changed externally. "
@@ -1048,9 +1374,13 @@ def smoke_sdk_live() -> None:
                 verified = harness.run(verify_prompt, session_id=session_id)
                 assert_live_turn("verify", verified)
                 if not receipt.is_file():
-                    raise AssertionError(f"verify turn did not create receipt {receipt}")
+                    raise AssertionError(
+                        f"verify turn did not create receipt {receipt}"
+                    )
                 if receipt.read_bytes() != challenge:
-                    raise AssertionError(f"verify turn wrote unexpected bytes to receipt {receipt}")
+                    raise AssertionError(
+                        f"verify turn wrote unexpected bytes to receipt {receipt}"
+                    )
                 if not marker.is_file() or marker.read_bytes() != challenge:
                     raise AssertionError(f"verify turn changed source file {marker}")
         assert_zstd_session_log(sessions)
@@ -1061,7 +1391,11 @@ def assert_live_turn(label: str, result: RunResult) -> None:
     if result.finish_reason != "completed":
         event_types = [event.get("type") for event in result.events]
         turn_end_data = next(
-            (event.get("data") for event in reversed(result.events) if event.get("type") == "turn/end"),
+            (
+                event.get("data")
+                for event in reversed(result.events)
+                if event.get("type") == "turn/end"
+            ),
             None,
         )
         turn_end = safe_turn_end(turn_end_data)
@@ -1077,6 +1411,7 @@ def assert_live_turn(label: str, result: RunResult) -> None:
     answer_lines = result.final_response.strip().splitlines()
     if not answer_lines or answer_lines[-1].strip() != LIVE_API_SENTINEL:
         raise AssertionError(f"{label} turn returned {result.final_response!r}")
+
 
 def safe_turn_end(value: object) -> object:
     """Project a live-provider failure without retaining credential-bearing text."""
@@ -1122,7 +1457,9 @@ def smoke_sdk_default(base_url: str) -> None:
             base_url=base_url,
             request_timeout_seconds=60,
         ) as harness:
-            result = harness.run("reply with the smoke text", session_id="default-smoke")
+            result = harness.run(
+                "reply with the smoke text", session_id="default-smoke"
+            )
         assert result.final_response == EXPECTED_TEXT, (
             f"final={result.final_response!r} finish={result.finish_reason!r} "
             f"events={[event.get('type') for event in result.events]!r} "
@@ -1154,17 +1491,29 @@ def smoke_sdk_custom(base_url: str, executable: Path) -> None:
             base_url=base_url,
             request_timeout_seconds=60,
         ) as harness:
-            text_result = harness.run("reply with the smoke text", session_id="custom-smoke")
+            text_result = harness.run(
+                "reply with the smoke text", session_id="custom-smoke"
+            )
             code_result = harness.run(CODE_PROMPT, session_id="custom-smoke")
             workflow_result = harness.run(WORKFLOW_PROMPT, session_id="custom-smoke")
         assert text_result.final_response == EXPECTED_TEXT, text_result.final_response
-        assert code_result.final_response == CODE_WORKER_TEXT, code_result.final_response
-        assert workflow_result.final_response == WORKFLOW_WORKER_TEXT, workflow_result.final_response
-        assert_session_log(sessions, root, EXPECTED_TEXT, CODE_WORKER_TEXT, WORKFLOW_WORKER_TEXT)
+        assert code_result.final_response == CODE_WORKER_TEXT, (
+            code_result.final_response
+        )
+        assert workflow_result.final_response == WORKFLOW_WORKER_TEXT, (
+            workflow_result.final_response
+        )
+        assert_session_log(
+            sessions, root, EXPECTED_TEXT, CODE_WORKER_TEXT, WORKFLOW_WORKER_TEXT
+        )
 
 
 def smoke_sdk_minimal(
-    base_url: str, executable: Path, update_snapshots: bool, *, in_history: bool = False,
+    base_url: str,
+    executable: Path,
+    update_snapshots: bool,
+    *,
+    in_history: bool = False,
 ) -> None:
     """Exercise the shipped standalone minimal profile through the packaged executable."""
     from deepseek_harness import DeepSeekHarness
@@ -1178,15 +1527,34 @@ def smoke_sdk_minimal(
         patches = ()
         if in_history:
             patch = root / "in-history.patch.yml"
-            patch.write_text(json.dumps([
-                {"id": "llm-deepseek", "config": {"models": [
-                    {"id": "smoke-model", "systemPromptUpdate": "in-history"},
-                ]}},
-                {"insert": [{
-                    "id": "in-history-prompt",
-                    "name": (Path(__file__).resolve().parent / "fixtures/python-sdk-in-history-prompt.mjs").as_uri(),
-                }]},
-            ]))
+            patch.write_text(
+                json.dumps(
+                    [
+                        {
+                            "id": "llm-deepseek",
+                            "config": {
+                                "models": [
+                                    {
+                                        "id": "smoke-model",
+                                        "systemPromptUpdate": "in-history",
+                                    },
+                                ]
+                            },
+                        },
+                        {
+                            "insert": [
+                                {
+                                    "id": "in-history-prompt",
+                                    "name": (
+                                        Path(__file__).resolve().parent
+                                        / "fixtures/python-sdk-in-history-prompt.mjs"
+                                    ).as_uri(),
+                                }
+                            ]
+                        },
+                    ]
+                )
+            )
             patches = (str(patch),)
         with DeepSeekHarness(
             provider="deepseek-official",
@@ -1204,20 +1572,30 @@ def smoke_sdk_minimal(
 
         event_text = json.dumps(result.events)
         if MINIMAL_TEXT not in event_text:
-            raise AssertionError(f"minimal agent run emitted no final response: {result.events}")
+            raise AssertionError(
+                f"minimal agent run emitted no final response: {result.events}"
+            )
         assert_session_log(sessions, root, MINIMAL_TEXT, "COUNT=1", "COUNT=2")
 
         requests = MockModelHandler.requests[first_request:]
         if in_history:
             logs = read_session_logs(sessions)
-            files = build_in_history_snapshot_files(result, requests, logs[result.session_id])
+            files = build_in_history_snapshot_files(
+                result, requests, logs[result.session_id]
+            )
             compare_snapshot_files(
-                files, update_snapshots, IN_HISTORY_SNAPSHOT_DIRECTORY, IN_HISTORY_SNAPSHOT_FILENAMES,
+                files,
+                update_snapshots,
+                IN_HISTORY_SNAPSHOT_DIRECTORY,
+                IN_HISTORY_SNAPSHOT_FILENAMES,
             )
         else:
             files = build_minimal_snapshot_files(requests, root)
             compare_snapshot_files(
-                files, update_snapshots, MINIMAL_SNAPSHOT_DIRECTORY, MINIMAL_SNAPSHOT_FILENAMES,
+                files,
+                update_snapshots,
+                MINIMAL_SNAPSHOT_DIRECTORY,
+                MINIMAL_SNAPSHOT_FILENAMES,
             )
 
 
@@ -1230,10 +1608,15 @@ def smoke_sdk_fs_search(base_url: str, executable: Path) -> None:
         (root / "needle.txt").write_text(f"{FS_SEARCH_MARKER}\n")
         dsh_home = root / "home"
         sessions = dsh_home / "sessions"
-        patch = write_profile_patch(root, "fs-search.patch.yml", sessions, [
-            {"id": "skill-filesystem", "disabled": True},
-            {"id": "tool-fs-search", "config": {"sampleOverCapGlobResults": False}},
-        ])
+        patch = write_profile_patch(
+            root,
+            "fs-search.patch.yml",
+            sessions,
+            [
+                {"id": "skill-filesystem", "disabled": True},
+                {"id": "tool-fs-search", "config": {"sampleOverCapGlobResults": False}},
+            ],
+        )
         with DeepSeekHarness(
             provider="deepseek-official",
             model="smoke-model",
@@ -1252,7 +1635,9 @@ def smoke_sdk_fs_search(base_url: str, executable: Path) -> None:
             result = harness.run(FS_SEARCH_PROMPT, session_id="fs-search-smoke")
 
         assert result.final_response == FS_SEARCH_TEXT, result.final_response
-        assert_session_log(sessions, root, FS_SEARCH_TEXT, FS_SEARCH_MARKER, "needle.txt")
+        assert_session_log(
+            sessions, root, FS_SEARCH_TEXT, FS_SEARCH_MARKER, "needle.txt"
+        )
 
 
 def smoke_sdk_spawn_node(base_url: str, executable: Path) -> None:
@@ -1334,15 +1719,20 @@ def smoke_sdk_profile_plugin(base_url: str) -> None:
         dsh_home = root / "home"
         plugin = root / "plugin"
         plugin.mkdir()
-        (plugin / "package.json").write_text(json.dumps({
-            "name": "dsh-python-blackbox-plugin",
-            "version": "1.0.0",
-            "private": True,
-            "type": "module",
-            "exports": "./index.js",
-            "peerDependencies": {"@deepseek-ai/cordis": "*"},
-            "dsh": {"bundle": {"patch": "./cordis.patch.yml"}},
-        }, indent=2))
+        (plugin / "package.json").write_text(
+            json.dumps(
+                {
+                    "name": "dsh-python-blackbox-plugin",
+                    "version": "1.0.0",
+                    "private": True,
+                    "type": "module",
+                    "exports": "./index.js",
+                    "peerDependencies": {"@deepseek-ai/cordis": "*"},
+                    "dsh": {"bundle": {"patch": "./cordis.patch.yml"}},
+                },
+                indent=2,
+            )
+        )
         (plugin / "index.js").write_text(
             "import { Context } from '@deepseek-ai/cordis'\n"
             "export const name = 'python-sdk-blackbox-plugin'\n"
@@ -1356,9 +1746,21 @@ def smoke_sdk_profile_plugin(base_url: str) -> None:
             "  }))\n"
             "}\n"
         )
-        (plugin / "cordis.patch.yml").write_text(json.dumps([{
-            "insert": [{"id": "python-sdk-blackbox-plugin", "name": "dsh-python-blackbox-plugin"}],
-        }], indent=2))
+        (plugin / "cordis.patch.yml").write_text(
+            json.dumps(
+                [
+                    {
+                        "insert": [
+                            {
+                                "id": "python-sdk-blackbox-plugin",
+                                "name": "dsh-python-blackbox-plugin",
+                            }
+                        ],
+                    }
+                ],
+                indent=2,
+            )
+        )
 
         dsh = Path(sysconfig.get_path("scripts")) / ("dsh.exe" if IS_WINDOWS else "dsh")
         environment = {**os.environ, "DSH_HOME": str(dsh_home)}
@@ -1373,14 +1775,20 @@ def smoke_sdk_profile_plugin(base_url: str) -> None:
         if installed.returncode != 0:
             raise AssertionError(
                 f"Python-installed dsh could not add the external profile plugin: "
-                f"returncode={installed.returncode} (0x{installed.returncode & 0xffffffff:08x}) "
+                f"returncode={installed.returncode} (0x{installed.returncode & 0xFFFFFFFF:08x}) "
                 f"stdout={installed.stdout!r} stderr={installed.stderr!r}"
             )
-        manifest = json.loads((dsh_home / "profiles" / "sdk" / "package.json").read_text())
+        manifest = json.loads(
+            (dsh_home / "profiles" / "sdk" / "package.json").read_text()
+        )
         if "dsh-python-blackbox-plugin" not in manifest.get("dependencies", {}):
-            raise AssertionError(f"dsh plugin did not record the external dependency: {manifest}")
+            raise AssertionError(
+                f"dsh plugin did not record the external dependency: {manifest}"
+            )
         if "dsh-python-blackbox-plugin" not in manifest["dsh"]["profile"]["bundles"]:
-            raise AssertionError(f"dsh plugin did not activate the external bundle: {manifest}")
+            raise AssertionError(
+                f"dsh plugin did not activate the external bundle: {manifest}"
+            )
 
         harness = DeepSeekHarness(
             provider="deepseek-official",
@@ -1397,7 +1805,9 @@ def smoke_sdk_profile_plugin(base_url: str) -> None:
         )
         try:
             with harness:
-                result = harness.run(PROFILE_PLUGIN_PROMPT, session_id="profile-plugin-smoke")
+                result = harness.run(
+                    PROFILE_PLUGIN_PROMPT, session_id="profile-plugin-smoke"
+                )
         except Exception as error:
             raise AssertionError(
                 f"external profile plugin runtime failed: {harness.client._runtime_diagnostics()}"
@@ -1416,30 +1826,73 @@ def smoke_sdk_snapshot(base_url: str, executable: Path, update_snapshots: bool) 
         dsh_home = root / "home"
         sessions = dsh_home / "sessions"
         patch = write_advanced_profile_patch(root, "snapshot.patch.yml", sessions)
-        feedback_patch = write_profile_patch(root, "feedback.patch.yml", sessions, [{"insert": [
-            {"id": "snapshot-tool", "name": (
-                Path(__file__).resolve().parent / "fixtures/python-snapshot-tool.mjs"
-            ).as_uri()},
-            {"id": "snapshot-image-offload", "name": (
-                Path(__file__).resolve().parent / "fixtures/python-snapshot-image-offload.mjs"
-            ).as_uri(), "config": {"parentSessionId": SNAPSHOT_SESSION_ID}},
-            {"id": "snapshot-workflow-order", "name": (
-                Path(__file__).resolve().parent / "fixtures/python-snapshot-workflow-order.mjs"
-            ).as_uri(), "config": {
-                "parentSessionId": SNAPSHOT_SESSION_ID, "prompt": SNAPSHOT_WORKFLOW_CHILD_PROMPT,
-            }},
-            {"id": "snapshot-message-feedback", "name": "@deepseek-ai/dsh-message-feedback",
-             "config": {"maxNoteBytes": 1024}},
-            {"id": "snapshot-feedback-producer", "name": (
-                Path(__file__).resolve().parent.parent / "snapshots/sdk/text-turn/feedback-producer.mjs"
-            ).as_uri()},
-        ]}])
-        creation_patch = write_profile_patch(root, "creation.patch.yml", sessions, [
-            {"insert": [{
-                "id": "serial-created-fixture",
-                "name": str(Path(__file__).resolve().parents[1] / "packages/core/agent-loop/tests/fixtures/serial-created.mjs"),
-            }]},
-        ])
+        feedback_patch = write_profile_patch(
+            root,
+            "feedback.patch.yml",
+            sessions,
+            [
+                {
+                    "insert": [
+                        {
+                            "id": "snapshot-tool",
+                            "name": (
+                                Path(__file__).resolve().parent
+                                / "fixtures/python-snapshot-tool.mjs"
+                            ).as_uri(),
+                        },
+                        {
+                            "id": "snapshot-image-offload",
+                            "name": (
+                                Path(__file__).resolve().parent
+                                / "fixtures/python-snapshot-image-offload.mjs"
+                            ).as_uri(),
+                            "config": {"parentSessionId": SNAPSHOT_SESSION_ID},
+                        },
+                        {
+                            "id": "snapshot-workflow-order",
+                            "name": (
+                                Path(__file__).resolve().parent
+                                / "fixtures/python-snapshot-workflow-order.mjs"
+                            ).as_uri(),
+                            "config": {
+                                "parentSessionId": SNAPSHOT_SESSION_ID,
+                                "prompt": SNAPSHOT_WORKFLOW_CHILD_PROMPT,
+                            },
+                        },
+                        {
+                            "id": "snapshot-message-feedback",
+                            "name": "@deepseek-ai/dsh-message-feedback",
+                            "config": {"maxNoteBytes": 1024},
+                        },
+                        {
+                            "id": "snapshot-feedback-producer",
+                            "name": (
+                                Path(__file__).resolve().parent.parent
+                                / "snapshots/sdk/text-turn/feedback-producer.mjs"
+                            ).as_uri(),
+                        },
+                    ]
+                }
+            ],
+        )
+        creation_patch = write_profile_patch(
+            root,
+            "creation.patch.yml",
+            sessions,
+            [
+                {
+                    "insert": [
+                        {
+                            "id": "serial-created-fixture",
+                            "name": str(
+                                Path(__file__).resolve().parents[1]
+                                / "packages/core/agent-loop/tests/fixtures/serial-created.mjs"
+                            ),
+                        }
+                    ]
+                },
+            ],
+        )
         with DeepSeekHarness(
             provider="deepseek-official",
             model="smoke-model",
@@ -1458,55 +1911,114 @@ def smoke_sdk_snapshot(base_url: str, executable: Path, update_snapshots: bool) 
             result = harness.run(SNAPSHOT_PROMPT, session_id=SNAPSHOT_SESSION_ID)
 
         assert result.final_response == SNAPSHOT_FINAL_TEXT, result.final_response
-        offloads = [event for event in result.events if event.get("type") == "image/offload"]
+        offloads = [
+            event for event in result.events if event.get("type") == "image/offload"
+        ]
         if len(offloads) != 1 or "surfaceOp" in offloads[0]:
-            raise AssertionError(f"advanced snapshot expected one standalone image offload: {offloads}")
+            raise AssertionError(
+                f"advanced snapshot expected one standalone image offload: {offloads}"
+            )
         targets = offloads[0]["data"]["targets"]
         if len(targets) != 1 or targets[0]["imageIndexes"] != [0]:
-            raise AssertionError(f"advanced snapshot selected unexpected image occurrences: {targets}")
-        feedback_types = [event.get("type") for event in result.events
-                          if str(event.get("type")).startswith("feedback/")]
-        if feedback_types != ["feedback/record", "feedback/record", "feedback/message-put", "feedback/message-put", "feedback/message-delete"]:
-            raise AssertionError(f"advanced snapshot did not exercise all feedback mutations: {feedback_types}")
+            raise AssertionError(
+                f"advanced snapshot selected unexpected image occurrences: {targets}"
+            )
+        feedback_types = [
+            event.get("type")
+            for event in result.events
+            if str(event.get("type")).startswith("feedback/")
+        ]
+        if feedback_types != [
+            "feedback/record",
+            "feedback/record",
+            "feedback/message-put",
+            "feedback/message-put",
+            "feedback/message-delete",
+        ]:
+            raise AssertionError(
+                f"advanced snapshot did not exercise all feedback mutations: {feedback_types}"
+            )
         methods = [notification.method for notification in result.notifications]
-        if methods.count("subagent.started") != 2 or methods.count("subagent.finished") != 2:
-            raise AssertionError(f"advanced snapshot emitted unexpected subagent lifecycle: {methods}")
-        ptc_events = [event for event in result.events
-                      if event.get("type") in ("tool/ptc-dispatch-start", "tool/ptc-dispatch")]
-        if [event["type"] for event in ptc_events] != ["tool/ptc-dispatch-start", "tool/ptc-dispatch"] * 2:
-            raise AssertionError(f"advanced snapshot emitted unexpected PTC dispatch events: {ptc_events}")
+        if (
+            methods.count("subagent.started") != 2
+            or methods.count("subagent.finished") != 2
+        ):
+            raise AssertionError(
+                f"advanced snapshot emitted unexpected subagent lifecycle: {methods}"
+            )
+        ptc_events = [
+            event
+            for event in result.events
+            if event.get("type") in ("tool/ptc-dispatch-start", "tool/ptc-dispatch")
+        ]
+        if [event["type"] for event in ptc_events] != [
+            "tool/ptc-dispatch-start",
+            "tool/ptc-dispatch",
+        ] * 2:
+            raise AssertionError(
+                f"advanced snapshot emitted unexpected PTC dispatch events: {ptc_events}"
+            )
         for index, event in enumerate(ptc_events):
             data = event["data"]
-            identity = (data.get("rootCallId"), data.get("parentCallId"), data.get("subCallId"))
+            identity = (
+                data.get("rootCallId"),
+                data.get("parentCallId"),
+                data.get("subCallId"),
+            )
             root_call = "advanced-code" if index < 2 else "advanced-denied-ptc"
             if identity != (root_call, root_call, root_call + ":ptc:1"):
-                raise AssertionError(f"advanced snapshot emitted unexpected PTC dispatch identity: {identity}")
+                raise AssertionError(
+                    f"advanced snapshot emitted unexpected PTC dispatch identity: {identity}"
+                )
             if {"description", "parameters", "schema"}.intersection(data):
                 raise AssertionError("PTC binding schema entered the packaged SDK wire")
-        errors = [event["data"]["error"] for event in result.events
-                  if event.get("type") in ("tool/result", "tool/ptc-dispatch") and "error" in event["data"]]
-        assert errors == [{
-            "name": "AutoReviewDeniedError", "code": "AUTO_REVIEW_DENIED", "reason": "  transport raw\r\nreason  ",
-        }] * 2, errors
+        errors = [
+            event["data"]["error"]
+            for event in result.events
+            if event.get("type") in ("tool/result", "tool/ptc-dispatch")
+            and "error" in event["data"]
+        ]
+        assert (
+            errors
+            == [
+                {
+                    "name": "AutoReviewDeniedError",
+                    "code": "AUTO_REVIEW_DENIED",
+                    "reason": "  transport raw\r\nreason  ",
+                }
+            ]
+            * 2
+        ), errors
 
         logs = read_session_logs(sessions)
         child_ids = snapshot_child_ids(result)
         expected_ids = {SNAPSHOT_SESSION_ID, *child_ids}
         if set(logs) != expected_ids:
-            raise AssertionError(f"advanced snapshot expected parent plus two child logs: {sorted(logs)}")
+            raise AssertionError(
+                f"advanced snapshot expected parent plus two child logs: {sorted(logs)}"
+            )
         if "DIRECT_CHILD_OK" not in render_jsonl(logs[child_ids[0]]):
-            raise AssertionError("first advanced child log has no direct-subagent result")
+            raise AssertionError(
+                "first advanced child log has no direct-subagent result"
+            )
         if "WORKFLOW_CHILD_OK" not in render_jsonl(logs[child_ids[1]]):
-            raise AssertionError("second advanced child log has no workflow-subagent result")
+            raise AssertionError(
+                "second advanced child log has no workflow-subagent result"
+            )
 
         files = build_snapshot_files(result, logs, child_ids, root)
         compare_snapshot_files(
-            files, update_snapshots, ADVANCED_SNAPSHOT_DIRECTORY, ADVANCED_SNAPSHOT_FILENAMES,
+            files,
+            update_snapshots,
+            ADVANCED_SNAPSHOT_DIRECTORY,
+            ADVANCED_SNAPSHOT_FILENAMES,
             native_writer_output=True,
         )
 
 
-def smoke_sdk_restart_snapshot(base_url: str, executable: Path, update_snapshots: bool) -> None:
+def smoke_sdk_restart_snapshot(
+    base_url: str, executable: Path, update_snapshots: bool
+) -> None:
     """Snapshot two isolated sessions across complete SDK runtime restarts."""
     from deepseek_harness import DeepSeekHarness
 
@@ -1539,8 +2051,13 @@ def smoke_sdk_restart_snapshot(base_url: str, executable: Path, update_snapshots
         second = run(RESTART_SECOND_PROMPT, RESTART_SECOND_SESSION_ID)
         requests = MockModelHandler.requests[first_request:]
         if len(requests) != 2:
-            raise AssertionError(f"restart snapshot expected two model requests: {requests}")
-        if first.final_response != RESTART_FIRST_TEXT or second.final_response != RESTART_SECOND_TEXT:
+            raise AssertionError(
+                f"restart snapshot expected two model requests: {requests}"
+            )
+        if (
+            first.final_response != RESTART_FIRST_TEXT
+            or second.final_response != RESTART_SECOND_TEXT
+        ):
             raise AssertionError(
                 f"restart snapshot responses differ: {first.final_response!r}, {second.final_response!r}"
             )
@@ -1548,14 +2065,18 @@ def smoke_sdk_restart_snapshot(base_url: str, executable: Path, update_snapshots
         logs = read_session_logs(sessions)
         expected_ids = {RESTART_FIRST_SESSION_ID, RESTART_SECOND_SESSION_ID}
         if set(logs) != expected_ids:
-            raise AssertionError(f"restart snapshot expected two durable sessions: {sorted(logs)}")
+            raise AssertionError(
+                f"restart snapshot expected two durable sessions: {sorted(logs)}"
+            )
         for session_id, expected in (
             (RESTART_FIRST_SESSION_ID, RESTART_FIRST_TEXT),
             (RESTART_SECOND_SESSION_ID, RESTART_SECOND_TEXT),
         ):
             records = logs[session_id]
             if sum(record.get("type") == "turn/end" for record in records) != 1:
-                raise AssertionError(f"restart snapshot {session_id} has an unexpected turn count")
+                raise AssertionError(
+                    f"restart snapshot {session_id} has an unexpected turn count"
+                )
             if expected not in render_jsonl(records):
                 raise AssertionError(f"restart snapshot durable log has no {expected}")
 
@@ -1568,7 +2089,10 @@ def smoke_sdk_restart_snapshot(base_url: str, executable: Path, update_snapshots
             sessions,
         )
         compare_snapshot_files(
-            files, update_snapshots, RESTART_SNAPSHOT_DIRECTORY, RESTART_SNAPSHOT_FILENAMES,
+            files,
+            update_snapshots,
+            RESTART_SNAPSHOT_DIRECTORY,
+            RESTART_SNAPSHOT_FILENAMES,
             native_writer_output=True,
         )
 
@@ -1593,20 +2117,40 @@ def smoke_direct(base_url: str, executable: Path) -> None:
             environment,
         )
         try:
-            peer.send({"jsonrpc": "2.0", "id": "initialize", "method": "initialize", "params": {"cwd": str(root), "provider": "deepseek-official", "model": "smoke-model"}})
+            peer.send(
+                {
+                    "jsonrpc": "2.0",
+                    "id": "initialize",
+                    "method": "initialize",
+                    "params": {
+                        "cwd": str(root),
+                        "provider": "deepseek-official",
+                        "model": "smoke-model",
+                    },
+                }
+            )
             peer.read_until(lambda message: message.get("id") == "initialize")
-            peer.send({
-                "jsonrpc": "2.0",
-                "id": "prompt",
-                "method": "session/prompt",
-                "params": {"sessionId": "direct-smoke", "contentBlocks": [{"type": "text", "text": "reply with the smoke text"}]},
-            })
+            peer.send(
+                {
+                    "jsonrpc": "2.0",
+                    "id": "prompt",
+                    "method": "session/prompt",
+                    "params": {
+                        "sessionId": "direct-smoke",
+                        "contentBlocks": [
+                            {"type": "text", "text": "reply with the smoke text"}
+                        ],
+                    },
+                }
+            )
             messages = peer.read_until(lambda message: message.get("id") == "prompt")
             if not any(is_idle_notification(message) for message in messages):
                 messages.extend(peer.read_until(is_idle_notification))
             event_text = json.dumps(messages)
             if EXPECTED_TEXT not in event_text:
-                raise AssertionError(f"direct runtime emitted no final response: {messages}")
+                raise AssertionError(
+                    f"direct runtime emitted no final response: {messages}"
+                )
             peer.send({"jsonrpc": "2.0", "id": "shutdown", "method": "shutdown"})
             peer.read_until(lambda message: message.get("id") == "shutdown")
         finally:
@@ -1645,7 +2189,11 @@ def smoke_packaged_runner(executable: Path) -> None:
                 timeout=30,
                 check=False,
             )
-            if result.returncode != 7 or request_path.exists() or (root / "startup-error.json").exists():
+            if (
+                result.returncode != 7
+                or request_path.exists()
+                or (root / "startup-error.json").exists()
+            ):
                 raise AssertionError(
                     "packaged POSIX runner failed: "
                     f"exit={result.returncode}; stdout={result.stdout!r}; stderr={result.stderr!r}"
@@ -1691,7 +2239,14 @@ process.stdout.write(JSON.stringify({ ...result, messages, stdout, stderr }))
             encoding="utf-8",
         )
         helper_result = subprocess.run(
-            [node, str(helper), str(executable), sys.executable, str(root), target_script],
+            [
+                node,
+                str(helper),
+                str(executable),
+                sys.executable,
+                str(root),
+                target_script,
+            ],
             cwd=root,
             capture_output=True,
             text=True,
@@ -1699,7 +2254,9 @@ process.stdout.write(JSON.stringify({ ...result, messages, stdout, stderr }))
             check=False,
         )
         if helper_result.returncode != 0:
-            raise AssertionError(f"packaged Windows runner helper failed: {helper_result.stderr}")
+            raise AssertionError(
+                f"packaged Windows runner helper failed: {helper_result.stderr}"
+            )
         observed = json.loads(helper_result.stdout)
         expected = {
             "exitCode": 0,
@@ -1709,7 +2266,9 @@ process.stdout.write(JSON.stringify({ ...result, messages, stdout, stderr }))
             "stderr": "",
         }
         if observed != expected:
-            raise AssertionError(f"packaged Windows runner returned unexpected facts: {observed}")
+            raise AssertionError(
+                f"packaged Windows runner returned unexpected facts: {observed}"
+            )
 
 
 def is_idle_notification(message: dict[str, object]) -> bool:
@@ -1746,7 +2305,9 @@ class RuntimePeer:
         self.process.stdin.write(json.dumps(message) + "\n")
         self.process.stdin.flush()
 
-    def read_until(self, predicate: Callable[[dict[str, object]], bool]) -> list[dict[str, object]]:
+    def read_until(
+        self, predicate: Callable[[dict[str, object]], bool]
+    ) -> list[dict[str, object]]:
         deadline = time.monotonic() + 60
         messages: list[dict[str, object]] = []
         while time.monotonic() < deadline:
@@ -1755,7 +2316,9 @@ class RuntimePeer:
             except queue.Empty:
                 continue
             if line is None:
-                raise RuntimeError(f"runtime exited before expected message; stderr: {''.join(self.stderr)}")
+                raise RuntimeError(
+                    f"runtime exited before expected message; stderr: {''.join(self.stderr)}"
+                )
             try:
                 message = json.loads(line)
             except json.JSONDecodeError:
@@ -1763,7 +2326,9 @@ class RuntimePeer:
             messages.append(message)
             if predicate(message):
                 return messages
-        raise TimeoutError(f"runtime timed out; messages={messages}; stderr={''.join(self.stderr)}")
+        raise TimeoutError(
+            f"runtime timed out; messages={messages}; stderr={''.join(self.stderr)}"
+        )
 
     def close(self) -> None:
         if self.process.stdin is not None and not self.process.stdin.closed:
@@ -1774,7 +2339,9 @@ class RuntimePeer:
             self.process.kill()
             self.process.wait()
         if self.process.returncode not in {0, -15}:
-            raise RuntimeError(f"runtime exited {self.process.returncode}; stderr: {''.join(self.stderr)}")
+            raise RuntimeError(
+                f"runtime exited {self.process.returncode}; stderr: {''.join(self.stderr)}"
+            )
 
     def _read_stdout(self) -> None:
         assert self.process.stdout is not None
@@ -1793,7 +2360,9 @@ SNAPSHOT_SESSION_FILENAME = re.compile(
 )
 
 
-def persisted_session_filename_version(path: Path, compressed: bool = False) -> int | None:
+def persisted_session_filename_version(
+    path: Path, compressed: bool = False
+) -> int | None:
     """Return one canonical persistence basename's generation for the selected encoding."""
     match = PERSISTED_SESSION_FILENAME.fullmatch(path.name)
     if match is None or (match.group(2) is not None) != compressed:
@@ -1801,7 +2370,9 @@ def persisted_session_filename_version(path: Path, compressed: bool = False) -> 
     return int(match.group(1) or 0)
 
 
-def latest_persisted_session_paths(sessions: Path, compressed: bool = False) -> list[Path]:
+def latest_persisted_session_paths(
+    sessions: Path, compressed: bool = False
+) -> list[Path]:
     """Select the numeric-highest immutable generation in each physical Session directory."""
     pattern = "*.jsonl.zstd" if compressed else "*.jsonl"
     selected: dict[Path, tuple[int, Path]] = {}
@@ -1821,9 +2392,15 @@ def session_header_version(content: str, label: str) -> int:
     if first is None:
         raise AssertionError(f"{label}: Session log is empty")
     header = json.loads(first)
-    version = header.get("version") if isinstance(header, dict) and header.get("type") == "session" else None
+    version = (
+        header.get("version")
+        if isinstance(header, dict) and header.get("type") == "session"
+        else None
+    )
     if not isinstance(version, int) or isinstance(version, bool) or version < 0:
-        raise AssertionError(f"{label}: Session header has no non-negative integer version")
+        raise AssertionError(
+            f"{label}: Session header has no non-negative integer version"
+        )
     return version
 
 
@@ -1836,7 +2413,9 @@ def assert_current_session_version(version: int, label: str) -> None:
         re.MULTILINE,
     )
     if len(declarations) != 1:
-        raise AssertionError(f"{source}: expected one literal SESSION_FORMAT_VERSION declaration")
+        raise AssertionError(
+            f"{source}: expected one literal SESSION_FORMAT_VERSION declaration"
+        )
     current_version = int(declarations[0])
     if version != current_version:
         raise AssertionError(
@@ -1903,7 +2482,9 @@ def selected_snapshot_session_files(directory: Path) -> dict[int, Path]:
 def assert_session_log(sessions: Path, cwd: Path, *expected_texts: str) -> None:
     logs = latest_persisted_session_paths(sessions)
     if len(logs) != 1:
-        raise AssertionError(f"expected one JSONL session log under {sessions}, found {logs}")
+        raise AssertionError(
+            f"expected one JSONL session log under {sessions}, found {logs}"
+        )
     content = logs[0].read_text()
     assert_persisted_session_version(logs[0], content)
     lines = content.splitlines()
@@ -1919,7 +2500,9 @@ def assert_session_log(sessions: Path, cwd: Path, *expected_texts: str) -> None:
 def assert_zstd_session_log(sessions: Path) -> None:
     logs = latest_persisted_session_paths(sessions, compressed=True)
     if len(logs) != 1:
-        raise AssertionError(f"expected one Zstandard JSONL session log under {sessions}, found {logs}")
+        raise AssertionError(
+            f"expected one Zstandard JSONL session log under {sessions}, found {logs}"
+        )
     if not logs[0].read_bytes().startswith(bytes.fromhex("28b52ffd")):
         raise AssertionError(f"session log has no Zstandard magic: {logs[0]}")
 
@@ -1930,11 +2513,7 @@ def read_session_logs(sessions: Path) -> dict[str, list[dict[str, object]]]:
     for path in latest_persisted_session_paths(sessions):
         content = path.read_text(encoding="utf-8")
         assert_persisted_session_version(path, content)
-        records = [
-            json.loads(line)
-            for line in content.splitlines()
-            if line
-        ]
+        records = [json.loads(line) for line in content.splitlines() if line]
         if not records or records[0].get("type") != "session":
             raise AssertionError(f"session log has no header: {path}")
         session_id = records[0].get("id")
@@ -1959,7 +2538,9 @@ def snapshot_child_ids(result: "RunResult") -> list[str]:
         if isinstance(child_id, str) and child_id not in child_ids:
             child_ids.append(child_id)
     if len(child_ids) != 2:
-        raise AssertionError(f"advanced snapshot expected two child session ids: {child_ids}")
+        raise AssertionError(
+            f"advanced snapshot expected two child session ids: {child_ids}"
+        )
     return child_ids
 
 
@@ -1969,9 +2550,13 @@ def build_in_history_snapshot_files(
     log: list[dict[str, object]],
 ) -> dict[str, str]:
     """Assert live requests, SDK subscriptions, and persistence retain both prompts."""
-    systems = [event for event in result.events if event.get("type") == "system/message"]
+    systems = [
+        event for event in result.events if event.get("type") == "system/message"
+    ]
     assert len(systems) == 2, systems
-    assert [event.get("surfaceOp") for event in systems] == ["append", "append"], systems
+    assert [event.get("surfaceOp") for event in systems] == ["append", "append"], (
+        systems
+    )
     prompts = [message_text(event["data"]["message"]["content"]) for event in systems]
     assert "Python SDK prompt version 1." in prompts[0], prompts
     assert "Python SDK prompt version 2." not in prompts[0], prompts
@@ -1986,22 +2571,42 @@ def build_in_history_snapshot_files(
         and notification.payload.get("event", {}).get("type") == "system/message"
     ]
     assert subscribed == systems, subscribed
-    contexts = [event["data"] for event in result.events if event.get("type") == "request/context"]
-    assert contexts and all(context.get("systemPromptUpdate") == "in-history" for context in contexts), contexts
-    assert len([event for event in result.events if event.get("type") == "request/header"]) == 1
+    contexts = [
+        event["data"]
+        for event in result.events
+        if event.get("type") == "request/context"
+    ]
+    assert contexts and all(
+        context.get("systemPromptUpdate") == "in-history" for context in contexts
+    ), contexts
+    assert (
+        len([event for event in result.events if event.get("type") == "request/header"])
+        == 1
+    )
     assert all(event.get("surfaceOp") in (None, "append") for event in result.events)
-    first_tool = next(index for index, event in enumerate(result.events) if event.get("type") == "tool/result")
+    first_tool = next(
+        index
+        for index, event in enumerate(result.events)
+        if event.get("type") == "tool/result"
+    )
     assert result.events.index(systems[1]) > first_tool
     assert len(requests) == 3, requests
     request_prompts = []
     for index, request in enumerate(requests):
         messages = request["messages"]
         assert message_text(request.get("system")) == prompts[0]
-        assert request["tools"] == requests[0]["tools"], "prompt update changed tool schemas"
-        positions = [position for position, message in enumerate(messages) if message["role"] == "system"]
-        texts = [message_text(request["system"]), *[
-            message_text(messages[position]["content"]) for position in positions
-        ]]
+        assert request["tools"] == requests[0]["tools"], (
+            "prompt update changed tool schemas"
+        )
+        positions = [
+            position
+            for position, message in enumerate(messages)
+            if message["role"] == "system"
+        ]
+        texts = [
+            message_text(request["system"]),
+            *[message_text(messages[position]["content"]) for position in positions],
+        ]
         assert texts == (prompts[:1] if index == 0 else prompts), texts
         if index > 0:
             previous = messages[positions[0] - 1]
@@ -2015,7 +2620,9 @@ def build_in_history_snapshot_files(
         "subscribedSystemPrompts": prompts,
         "requestContexts": contexts,
     }
-    return {"prompt-history.json": json.dumps(evidence, indent=2, ensure_ascii=False) + "\n"}
+    return {
+        "prompt-history.json": json.dumps(evidence, indent=2, ensure_ascii=False) + "\n"
+    }
 
 
 def build_minimal_snapshot_files(
@@ -2036,15 +2643,18 @@ def build_minimal_snapshot_files(
         messages = body.get("messages")
         if not isinstance(messages, list):
             raise AssertionError(f"minimal model request has no messages: {body}")
-        snapshot.append({
-            "system": minimal_snapshot_text(body.get("system"), cwd),
-            "tools": minimal_snapshot_text(body.get("tools"), cwd),
-            "messages": [
-                minimal_snapshot_message(message, cwd)
-                for message in messages
-            ],
-        })
-    return {"model-visible.json": json.dumps(snapshot, indent=2, ensure_ascii=False) + "\n"}
+        snapshot.append(
+            {
+                "system": minimal_snapshot_text(body.get("system"), cwd),
+                "tools": minimal_snapshot_text(body.get("tools"), cwd),
+                "messages": [
+                    minimal_snapshot_message(message, cwd) for message in messages
+                ],
+            }
+        )
+    return {
+        "model-visible.json": json.dumps(snapshot, indent=2, ensure_ascii=False) + "\n"
+    }
 
 
 def minimal_snapshot_message(message: object, cwd: Path) -> dict[str, object]:
@@ -2053,21 +2663,34 @@ def minimal_snapshot_message(message: object, cwd: Path) -> dict[str, object]:
         raise AssertionError(f"minimal model request has an invalid message: {message}")
     role = message.get("role")
     if role == "system":
-        return {"role": role, "text": minimal_snapshot_text(message_text(message.get("content")), cwd)}
+        return {
+            "role": role,
+            "text": minimal_snapshot_text(message_text(message.get("content")), cwd),
+        }
     if role == "user":
         content = []
         for block in message.get("content", []):
             if block.get("type") == "tool_result":
-                content.append({"type": "tool_result", "tool_use_id": block.get("tool_use_id"), "content": "{{tool-result}}"})
+                content.append(
+                    {
+                        "type": "tool_result",
+                        "tool_use_id": block.get("tool_use_id"),
+                        "content": "{{tool-result}}",
+                    }
+                )
             elif block.get("type") == "text":
                 content.append(minimal_snapshot_text(block, cwd))
             else:
-                raise AssertionError(f"minimal user message has unexpected content: {block}")
+                raise AssertionError(
+                    f"minimal user message has unexpected content: {block}"
+                )
         return {"role": role, "content": content}
     if role == "assistant":
         calls = message.get("content")
         if not isinstance(calls, list):
-            raise AssertionError(f"minimal assistant message has no tool calls: {message}")
+            raise AssertionError(
+                f"minimal assistant message has no tool calls: {message}"
+            )
         return {
             "role": role,
             "toolCalls": [
@@ -2076,7 +2699,9 @@ def minimal_snapshot_message(message: object, cwd: Path) -> dict[str, object]:
                 if isinstance(call, dict) and call.get("type") == "tool_use"
             ],
         }
-    raise AssertionError(f"minimal model request has an unexpected message role: {message}")
+    raise AssertionError(
+        f"minimal model request has an unexpected message role: {message}"
+    )
 
 
 def minimal_snapshot_text(value: object, cwd: Path) -> object:
@@ -2110,7 +2735,9 @@ def build_snapshot_files(
             command_index += 1
             replacements.append((data["commandId"], f"{{{{command:{command_index}}}}}"))
         if record.get("type") == "command/done" and isinstance(data, dict):
-            anonymous = re.search(r"Anonymous user: ([0-9a-f-]{36})", str(data.get("text")))
+            anonymous = re.search(
+                r"Anonymous user: ([0-9a-f-]{36})", str(data.get("text"))
+            )
             if anonymous is not None:
                 replacements.append((anonymous.group(1), "{{anonymous-user}}"))
     feedback_targets = dict.fromkeys(
@@ -2139,23 +2766,34 @@ def build_snapshot_files(
         ],
     }
     normalized_result = normalize_snapshot_value(result_value, replacements)
-    parent_records = project_session_snapshot([
-        normalize_snapshot_value(record, replacements) for record in logs[SNAPSHOT_SESSION_ID]
-    ])
+    parent_records = project_session_snapshot(
+        [
+            normalize_snapshot_value(record, replacements)
+            for record in logs[SNAPSHOT_SESSION_ID]
+        ]
+    )
     files = {
-        "result.json": json.dumps(normalized_result, indent=2, ensure_ascii=False) + "\n",
+        "result.json": json.dumps(normalized_result, indent=2, ensure_ascii=False)
+        + "\n",
         snapshot_session_filename(
-            0, session_header_version(render_jsonl(parent_records), "advanced parent"),
+            0,
+            session_header_version(render_jsonl(parent_records), "advanced parent"),
         ): render_jsonl(parent_records),
     }
     for index, child_id in enumerate(child_ids, start=1):
-        child_records = project_session_snapshot([
-            normalize_snapshot_value(record, replacements) for record in logs[child_id]
-        ])
+        child_records = project_session_snapshot(
+            [
+                normalize_snapshot_value(record, replacements)
+                for record in logs[child_id]
+            ]
+        )
         child_content = render_jsonl(child_records)
-        files[snapshot_session_filename(
-            index, session_header_version(child_content, f"advanced child {index}"),
-        )] = child_content
+        files[
+            snapshot_session_filename(
+                index,
+                session_header_version(child_content, f"advanced child {index}"),
+            )
+        ] = child_content
     return files
 
 
@@ -2179,13 +2817,9 @@ def build_restart_snapshot_files(
             "session_id": result.session_id,
             "final_response": result.final_response,
             "finish_reason": result.finish_reason,
-            "eventTypes": [
-                event.get("type")
-                for event in result.events
-            ],
+            "eventTypes": [event.get("type") for event in result.events],
             "notificationMethods": [
-                notification.method
-                for notification in result.notifications
+                notification.method for notification in result.notifications
             ],
         }
         for result in (first, second)
@@ -2199,26 +2833,40 @@ def build_restart_snapshot_files(
         }
         for request in requests
     ]
-    first_records = project_session_snapshot([
-        normalize_snapshot_value(record, replacements) for record in logs[RESTART_FIRST_SESSION_ID]
-    ])
-    second_records = project_session_snapshot([
-        normalize_snapshot_value(record, replacements) for record in logs[RESTART_SECOND_SESSION_ID]
-    ])
+    first_records = project_session_snapshot(
+        [
+            normalize_snapshot_value(record, replacements)
+            for record in logs[RESTART_FIRST_SESSION_ID]
+        ]
+    )
+    second_records = project_session_snapshot(
+        [
+            normalize_snapshot_value(record, replacements)
+            for record in logs[RESTART_SECOND_SESSION_ID]
+        ]
+    )
     first_content = render_jsonl(first_records)
     second_content = render_jsonl(second_records)
     return {
         "result.json": json.dumps(
-            normalize_snapshot_value(result_value, replacements), indent=2, ensure_ascii=False,
-        ) + "\n",
+            normalize_snapshot_value(result_value, replacements),
+            indent=2,
+            ensure_ascii=False,
+        )
+        + "\n",
         "requests.json": json.dumps(
-            normalize_snapshot_value(request_value, replacements), indent=2, ensure_ascii=False,
-        ) + "\n",
+            normalize_snapshot_value(request_value, replacements),
+            indent=2,
+            ensure_ascii=False,
+        )
+        + "\n",
         snapshot_session_filename(
-            1, session_header_version(first_content, "restart Session 1"),
+            1,
+            session_header_version(first_content, "restart Session 1"),
         ): first_content,
         snapshot_session_filename(
-            2, session_header_version(second_content, "restart Session 2"),
+            2,
+            session_header_version(second_content, "restart Session 2"),
         ): second_content,
     }
 
@@ -2242,12 +2890,16 @@ def snapshot_workflow_run_id(result: "RunResult") -> str:
     for event in result.events:
         event_type = event.get("type")
         data = event.get("data")
-        if not isinstance(event_type, str) or not event_type.startswith("tool-workflow/"):
+        if not isinstance(event_type, str) or not event_type.startswith(
+            "tool-workflow/"
+        ):
             continue
         if isinstance(data, dict) and isinstance(data.get("runId"), str):
             run_ids.add(data["runId"])
     if len(run_ids) != 1:
-        raise AssertionError(f"advanced snapshot expected one workflow run id: {sorted(run_ids)}")
+        raise AssertionError(
+            f"advanced snapshot expected one workflow run id: {sorted(run_ids)}"
+        )
     return next(iter(run_ids))
 
 
@@ -2260,11 +2912,15 @@ def snapshot_agent_id(result: "RunResult", child_id: str) -> str:
         if payload.get("childSessionId") != child_id:
             continue
         if payload.get("provider") != "spawn" or payload.get("status") != "ok":
-            raise AssertionError(f"advanced child did not finish successfully: {payload}")
+            raise AssertionError(
+                f"advanced child did not finish successfully: {payload}"
+            )
         agent_id = payload.get("agentId")
         if isinstance(agent_id, str):
             return agent_id
-    raise AssertionError(f"advanced snapshot has no finished agent for child {child_id}")
+    raise AssertionError(
+        f"advanced snapshot has no finished agent for child {child_id}"
+    )
 
 
 def normalize_snapshot_value(
@@ -2283,8 +2939,7 @@ def normalize_snapshot_value(
         return value
 
     normalized = {
-        key: normalize_snapshot_value(item, replacements)
-        for key, item in value.items()
+        key: normalize_snapshot_value(item, replacements) for key, item in value.items()
     }
     if normalized.get("type") == "session" and "createdAt" in normalized:
         normalized["createdAt"] = 0
@@ -2308,13 +2963,23 @@ def normalize_snapshot_value(
                 dt = member.get("dt")
                 if isinstance(dt, list):
                     member["dt"] = [0] * len(dt)
-    if isinstance(normalized.get("id"), str) and normalized.get("role") in ("assistant", "system", "user", "tool", "developer"):
+    if isinstance(normalized.get("id"), str) and normalized.get("role") in (
+        "assistant",
+        "system",
+        "user",
+        "tool",
+        "developer",
+    ):
         if not normalized["id"].startswith("{{message:"):
             normalized["id"] = "{{messageId}}"
     if normalized.get("type") in ("feedback/message-put", "feedback/message-delete"):
         data = normalized.get("data")
         if isinstance(data, dict):
-            item = data.get("item") if normalized["type"] == "feedback/message-put" else data
+            item = (
+                data.get("item")
+                if normalized["type"] == "feedback/message-put"
+                else data
+            )
             if isinstance(item, dict):
                 if normalized["type"] == "feedback/message-put":
                     item["createdAt"] = 0
@@ -2363,7 +3028,9 @@ def render_jsonl(records: list[object]) -> str:
     )
 
 
-def project_session_snapshot(records: list[dict[str, object]]) -> list[dict[str, object]]:
+def project_session_snapshot(
+    records: list[dict[str, object]],
+) -> list[dict[str, object]]:
     """Omit storage sequence/time envelopes from snapshot body records."""
     projected = [dict(record) for record in records]
     for record in projected[1:]:
@@ -2379,12 +3046,16 @@ NATIVE_DELIVERY_FORMAT_TOKEN = "{{sourceSessionFormatVersion}}"
 def expand_snapshot_stream_member(member: object) -> list[dict[str, object]]:
     """Expand one compact Assistant stream member into logical provider chunks."""
     if not isinstance(member, dict):
-        raise AssertionError(f"snapshot Assistant stream member is not an object: {member!r}")
+        raise AssertionError(
+            f"snapshot Assistant stream member is not an object: {member!r}"
+        )
     member_type = member.get("type")
     if member_type == "chunk":
         chunk = member.get("chunk")
         if not isinstance(chunk, dict):
-            raise AssertionError(f"snapshot Assistant chunk member has no chunk: {member!r}")
+            raise AssertionError(
+                f"snapshot Assistant chunk member has no chunk: {member!r}"
+            )
         return [chunk]
     packed_kinds = {
         "text-chunks": ("texts", "text-delta", "text"),
@@ -2393,20 +3064,17 @@ def expand_snapshot_stream_member(member: object) -> list[dict[str, object]]:
     }
     packed = packed_kinds.get(member_type)
     if packed is None:
-        raise AssertionError(f"snapshot Assistant stream has unknown member type: {member_type!r}")
+        raise AssertionError(
+            f"snapshot Assistant stream has unknown member type: {member_type!r}"
+        )
     values_key, chunk_type, value_key = packed
     values = member.get(values_key)
     if not isinstance(values, list):
-        raise AssertionError(f"snapshot Assistant stream member has no {values_key}: {member!r}")
-    shared = {
-        key: member[key]
-        for key in ("index", "id", "name")
-        if key in member
-    }
-    return [
-        {"type": chunk_type, **shared, value_key: value}
-        for value in values
-    ]
+        raise AssertionError(
+            f"snapshot Assistant stream member has no {values_key}: {member!r}"
+        )
+    shared = {key: member[key] for key in ("index", "id", "name") if key in member}
+    return [{"type": chunk_type, **shared, value_key: value} for value in values]
 
 
 def expand_snapshot_assistant_event(value: object) -> list[object]:
@@ -2437,24 +3105,28 @@ def expand_snapshot_assistant_event(value: object) -> list[object]:
             return expanded
         return {**value, wrapper_key: {**wrapper, "event": expanded}}
 
-    common = {
-        key: data[key]
-        for key in ("turn", "step")
-        if key in data
-    }
+    common = {key: data[key] for key in ("turn", "step") if key in data}
     expanded = [
-        wrap({
-            "type": "assistant/chunk",
-            "data": {**common, "chunk": chunk},
-        })
+        wrap(
+            {
+                "type": "assistant/chunk",
+                "data": {**common, "chunk": chunk},
+            }
+        )
         for member in stream
         for chunk in expand_snapshot_stream_member(member)
     ]
     if event.get("type") == "assistant/message":
-        expanded.append(wrap({
-            **event,
-            "data": {key: item for key, item in data.items() if key != "stream"},
-        }))
+        expanded.append(
+            wrap(
+                {
+                    **event,
+                    "data": {
+                        key: item for key, item in data.items() if key != "stream"
+                    },
+                }
+            )
+        )
     return expanded
 
 
@@ -2481,12 +3153,24 @@ def normalize_session_format_comparison(
         normalized.setdefault("isSeeded", False)
         ordered_header = {
             key: normalized[key]
-            for key in ("type", "version", "id", "createdAt", "cwd", "isSeeded", "delegationDepth")
+            for key in (
+                "type",
+                "version",
+                "id",
+                "createdAt",
+                "cwd",
+                "isSeeded",
+                "delegationDepth",
+            )
             if key in normalized
         }
         normalized = {
             **ordered_header,
-            **{key: item for key, item in normalized.items() if key not in ordered_header},
+            **{
+                key: item
+                for key, item in normalized.items()
+                if key not in ordered_header
+            },
         }
     if isinstance(normalized.get("type"), str) and "data" in normalized:
         normalized.pop("seq", None)
@@ -2504,16 +3188,26 @@ def normalize_native_delivery_record(value: object, source_version: int) -> obje
         for key in ("payload", "params"):
             wrapper = value.get(key)
             if isinstance(wrapper, dict) and "event" in wrapper:
-                return {**value, key: {
-                    **wrapper,
-                    "event": normalize_native_delivery_record(wrapper["event"], source_version),
-                }}
+                return {
+                    **value,
+                    key: {
+                        **wrapper,
+                        "event": normalize_native_delivery_record(
+                            wrapper["event"], source_version
+                        ),
+                    },
+                }
     data = value.get("data")
-    if value.get("type") != "session-log-deepseek/delivery-accepted" or not isinstance(data, dict):
+    if value.get("type") != "session-log-deepseek/delivery-accepted" or not isinstance(
+        data, dict
+    ):
         return value
     if data.get("sessionFormatVersion") != source_version:
         return value
-    return {**value, "data": {**data, "sessionFormatVersion": NATIVE_DELIVERY_FORMAT_TOKEN}}
+    return {
+        **value,
+        "data": {**data, "sessionFormatVersion": NATIVE_DELIVERY_FORMAT_TOKEN},
+    }
 
 
 def normalize_snapshot_comparison_text(
@@ -2527,9 +3221,14 @@ def normalize_snapshot_comparison_text(
         header = parsed[0] if parsed else None
         source_version = header.get("version") if isinstance(header, dict) else None
         if not isinstance(source_version, int):
-            raise AssertionError(f"{name}: snapshot Session header has no integer format version")
+            raise AssertionError(
+                f"{name}: snapshot Session header has no integer format version"
+            )
         if native_writer_version is not None:
-            parsed = [normalize_native_delivery_record(record, native_writer_version) for record in parsed]
+            parsed = [
+                normalize_native_delivery_record(record, native_writer_version)
+                for record in parsed
+            ]
         records = [
             normalize_session_format_comparison(expanded, source_version)
             for record in parsed
@@ -2538,20 +3237,30 @@ def normalize_snapshot_comparison_text(
         return render_jsonl(records)
     if name.endswith(".json"):
         value = json.loads(content)
-        if name == "result.json" and native_writer_version is not None and isinstance(value, dict):
+        if (
+            name == "result.json"
+            and native_writer_version is not None
+            and isinstance(value, dict)
+        ):
             value = {
                 **value,
                 **{
-                    key: [normalize_native_delivery_record(record, native_writer_version) for record in value[key]]
+                    key: [
+                        normalize_native_delivery_record(record, native_writer_version)
+                        for record in value[key]
+                    ]
                     for key in ("events", "notifications")
                     if isinstance(value.get(key), list)
                 },
             }
-        return json.dumps(
-            normalize_session_format_comparison(value),
-            indent=2,
-            ensure_ascii=False,
-        ) + "\n"
+        return (
+            json.dumps(
+                normalize_session_format_comparison(value),
+                indent=2,
+                ensure_ascii=False,
+            )
+            + "\n"
+        )
     return content
 
 
@@ -2571,7 +3280,9 @@ def compare_snapshot_files(
         return name if parsed is None else snapshot_session_filename(parsed[0], 0)
 
     if tuple(map(role_name, files)) != tuple(map(role_name, filenames)):
-        raise AssertionError(f"{scenario} snapshot builder produced {tuple(files)}, expected {filenames}")
+        raise AssertionError(
+            f"{scenario} snapshot builder produced {tuple(files)}, expected {filenames}"
+        )
     for name, content in files.items():
         if parse_snapshot_session_filename(name) is not None:
             assert_current_session_version(session_header_version(content, name), name)
@@ -2581,12 +3292,18 @@ def compare_snapshot_files(
             (directory / name).write_text(content, encoding="utf-8", newline="\n")
         print(f"smoke-python-runtime: updated snapshots in {directory}")
 
-    existing = [path for path in directory.iterdir() if path.is_file()] if directory.is_dir() else []
+    existing = (
+        [path for path in directory.iterdir() if path.is_file()]
+        if directory.is_dir()
+        else []
+    )
     expected_non_session = {
         name for name in filenames if parse_snapshot_session_filename(name) is None
     }
     existing_non_session = {
-        path.name for path in existing if parse_snapshot_session_filename(path.name) is None
+        path.name
+        for path in existing
+        if parse_snapshot_session_filename(path.name) is None
     }
     if existing_non_session != expected_non_session:
         raise AssertionError(
@@ -2608,7 +3325,9 @@ def compare_snapshot_files(
                 f"header declares v{header_version}",
             )
         if index in actual_sessions:
-            raise AssertionError(f"{scenario} snapshot builder produced duplicate Session role {index}")
+            raise AssertionError(
+                f"{scenario} snapshot builder produced duplicate Session role {index}"
+            )
         actual_sessions[index] = (name, content)
     if set(selected_expected) != set(actual_sessions):
         raise AssertionError(
@@ -2617,30 +3336,46 @@ def compare_snapshot_files(
         )
     actual_native_version = expected_native_version = None
     if native_writer_output:
+
         def common_generation(contents: list[tuple[str, str]]) -> int:
-            versions = {session_header_version(content, name) for name, content in contents}
+            versions = {
+                session_header_version(content, name) for name, content in contents
+            }
             if len(versions) != 1:
-                raise AssertionError(f"{scenario}: native writer comparison requires one Session generation across all roles")
+                raise AssertionError(
+                    f"{scenario}: native writer comparison requires one Session generation across all roles"
+                )
             return versions.pop()
 
         actual_native_version = common_generation(list(actual_sessions.values()))
-        expected_native_version = common_generation([
-            (path.name, path.read_text(encoding="utf-8")) for path in selected_expected.values()
-        ])
+        expected_native_version = common_generation(
+            [
+                (path.name, path.read_text(encoding="utf-8"))
+                for path in selected_expected.values()
+            ]
+        )
     for name, actual in files.items():
         parsed = parse_snapshot_session_filename(name)
-        expected_path = directory / name if parsed is None else selected_expected[parsed[0]]
+        expected_path = (
+            directory / name if parsed is None else selected_expected[parsed[0]]
+        )
         expected_text = expected_path.read_text(encoding="utf-8")
-        compared_actual = normalize_snapshot_comparison_text(name, actual, actual_native_version)
-        compared_expected = normalize_snapshot_comparison_text(expected_path.name, expected_text, expected_native_version)
+        compared_actual = normalize_snapshot_comparison_text(
+            name, actual, actual_native_version
+        )
+        compared_expected = normalize_snapshot_comparison_text(
+            expected_path.name, expected_text, expected_native_version
+        )
         if compared_actual == compared_expected:
             continue
-        diff = "".join(difflib.unified_diff(
-            compared_expected.splitlines(keepends=True),
-            compared_actual.splitlines(keepends=True),
-            fromfile=f"expected/{expected_path.name}",
-            tofile=f"actual/{name}",
-        ))
+        diff = "".join(
+            difflib.unified_diff(
+                compared_expected.splitlines(keepends=True),
+                compared_actual.splitlines(keepends=True),
+                fromfile=f"expected/{expected_path.name}",
+                tofile=f"actual/{name}",
+            )
+        )
         raise AssertionError(
             f"{scenario} executable snapshot mismatch in {name}; "
             "rerun with --update-snapshots after reviewing the behavior\n"

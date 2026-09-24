@@ -27,12 +27,17 @@ def main():
     versions = json.loads(sys.argv[1])
     # Only pip belongs to the interpreter baseline; all other distributions must be declared.
     # Each target's native release-host smoke must confirm this baseline.
-    expected_names = {re.sub(r"[-_.]+", "-", name).lower() for name in versions} | {"pip"}
+    expected_names = {re.sub(r"[-_.]+", "-", name).lower() for name in versions} | {
+        "pip"
+    }
     installed_names = {
         re.sub(r"[-_.]+", "-", distribution.metadata["Name"]).lower()
         for distribution in importlib.metadata.distributions()
     }
-    assert installed_names == expected_names, {"unexpected": sorted(installed_names - expected_names), "missing": sorted(expected_names - installed_names)}
+    assert installed_names == expected_names, {
+        "unexpected": sorted(installed_names - expected_names),
+        "missing": sorted(expected_names - installed_names),
+    }
     for name, expected in versions.items():
         actual = importlib.metadata.version(name)
         assert actual == expected, (name, actual, expected)
@@ -58,16 +63,29 @@ def main():
 
         presentation = Presentation()
         slide = presentation.slides.add_slide(presentation.slide_layouts[6])
-        slide.shapes.add_textbox(Inches(1), Inches(1), Inches(4), Inches(1)).text = "Office 演示"
+        slide.shapes.add_textbox(
+            Inches(1), Inches(1), Inches(4), Inches(1)
+        ).text = "Office 演示"
         slide.shapes.add_picture(str(image), Inches(1), Inches(2))
         chart_data = CategoryChartData()
         chart_data.categories = ["A", "B"]
         chart_data.add_series("Values", [2, 4])
-        slide.shapes.add_chart(XL_CHART_TYPE.COLUMN_CLUSTERED, Inches(3), Inches(2), Inches(4), Inches(3), chart_data)
+        slide.shapes.add_chart(
+            XL_CHART_TYPE.COLUMN_CLUSTERED,
+            Inches(3),
+            Inches(2),
+            Inches(4),
+            Inches(3),
+            chart_data,
+        )
         presentation.save(root / "presentation.pptx")
         reopened_presentation = Presentation(root / "presentation.pptx")
         assert len(reopened_presentation.slides) == 1
-        chart = next(shape.chart for shape in reopened_presentation.slides[0].shapes if shape.has_chart)
+        chart = next(
+            shape.chart
+            for shape in reopened_presentation.slides[0].shapes
+            if shape.has_chart
+        )
         assert list(chart.series[0].values) == [2.0, 4.0]
 
         workbook = Workbook()
@@ -89,9 +107,17 @@ def main():
             ("presentation.pptx", ["--contains", "Office 演示", "--count", "1"]),
             ("workbook.xlsx", ["--contains", "Value", "--count", "1"]),
         ]:
-            checked = subprocess.run([sys.executable, "-I", "-B", sys.argv[3], str(root / file), *arguments],
-                                     check=False, capture_output=True, text=True, timeout=30)
-            assert checked.returncode == 0 and json.loads(checked.stdout)["verdict"] == "pass", checked.stdout + checked.stderr
+            checked = subprocess.run(
+                [sys.executable, "-I", "-B", sys.argv[3], str(root / file), *arguments],
+                check=False,
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+            assert (
+                checked.returncode == 0
+                and json.loads(checked.stdout)["verdict"] == "pass"
+            ), checked.stdout + checked.stderr
     print("Office runtime versions and document round trips passed.")
 
 

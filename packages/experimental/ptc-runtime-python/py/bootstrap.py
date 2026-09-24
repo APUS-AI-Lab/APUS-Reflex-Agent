@@ -26,6 +26,8 @@ import sys
 import threading
 import traceback
 from decimal import Context, Decimal
+from pathlib import Path
+from typing import Any
 
 # The float encoder must NOT depend on the process-global decimal context: a
 # legitimate program may set `getcontext().prec = 2` (silently rounding the
@@ -34,8 +36,6 @@ from decimal import Context, Decimal
 # prec=28 (more than the 17 significant digits a double needs) makes the
 # normalize() spelling decision context-independent.
 _FLOAT_CONTEXT = Context(prec=28)
-from pathlib import Path
-from typing import Any
 
 # ``python3 -I`` (isolated) drops the script directory from ``sys.path`` so
 # the sibling ``protocol.py`` is invisible by default. Restore it explicitly
@@ -68,7 +68,9 @@ _memoryview = memoryview
 # exception rather than a worker-exit, which is the honest verdict for a settled
 # run whose reporting was sabotaged. The bytes are JSON-valid and
 # newline-terminated.
-_FALLBACK_DONE_FRAME = b'{"type":"done","error":{"kind":"exception","message":"<unrenderable>"}}\n'
+_FALLBACK_DONE_FRAME = (
+    b'{"type":"done","error":{"kind":"exception","message":"<unrenderable>"}}\n'
+)
 
 # Code-unit ceiling on the exception class name interpolated into the LAST-resort
 # failure diagnostic. A metaclass `__name__` property can return any length, and
@@ -320,7 +322,9 @@ class _LogStream(io.TextIOBase):
                     # join was (measured: MemoryError inside `sys.stdout.write`
                     # under a 400 MiB addressSpaceMb), and `remaining + 4`
                     # characters are all the helper can use.
-                    self._push_bounded_prefix(text[: min(newline, self._logs.remaining + 4)])
+                    self._push_bounded_prefix(
+                        text[: min(newline, self._logs.remaining + 4)]
+                    )
                 else:
                     self._pending.append(text[:newline])
                     line = "".join(self._pending_parts())
@@ -348,7 +352,7 @@ class _LogStream(io.TextIOBase):
                 # and the oversized line is never materialized.
                 overhead = 3 if not self._logs._open_started else 0
                 if newline - pos + overhead > self._logs.remaining:
-                    self._logs.push(text[pos:pos + self._logs.remaining + 4])
+                    self._logs.push(text[pos : pos + self._logs.remaining + 4])
                     break
                 self._logs.push(text[pos:newline])
                 pos = newline + 1
@@ -364,7 +368,7 @@ class _LogStream(io.TextIOBase):
                     # is a lower bound on the serialized cost), so a
                     # `remaining + 4`-character prefix is all that can ever survive;
                     # the flush trigger below rejects it and emits the marker.
-                    tail = text[pos:pos + self._logs.remaining + 4]
+                    tail = text[pos : pos + self._logs.remaining + 4]
                     self._pending.append(tail)
                     self._pending_chars = len(tail)
                 else:
@@ -382,7 +386,7 @@ class _LogStream(io.TextIOBase):
                     # copy would be the RLIMIT_AS death this bound exists to
                     # avoid, while push only needs enough characters to fail its
                     # own cheap length check.
-                    self._logs.push(text[pos:pos + self._logs.remaining + 4])
+                    self._logs.push(text[pos : pos + self._logs.remaining + 4])
         else:
             self._pending.append(text)
             self._pending_chars += len(text)
@@ -500,9 +504,7 @@ class _LogStream(io.TextIOBase):
 # ~558 MiB for 4 MiB, so a legitimate multi-megabyte binding reply raised
 # MemoryError out of ``_pump_replies``, leaving its future unsettled until the
 # wall clock reported a timeout.
-_SCALAR_RE = re.compile(
-    r'-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|true|false|null'
-)
+_SCALAR_RE = re.compile(r"-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|true|false|null")
 
 # A run of ordinary string body characters. The star applies to a CHARACTER
 # CLASS, which the engine matches in one linear pass with no backtracking state,
@@ -809,7 +811,7 @@ class ProtocolChannel:
         with self._write_lock:
             view = memoryview(payload)
             while view:
-                view = view[os.write(self._fd, view):]
+                view = view[os.write(self._fd, view) :]
 
 
 # ---------------------------------------------------------------------------
@@ -927,8 +929,12 @@ def _clamped(which: int, soft: int, hard: int) -> tuple[int, int]:
     imposes no ceiling and the requested value stands.
     """
     inherited_soft, inherited_hard = resource.getrlimit(which)
-    clamped_soft = soft if inherited_soft == resource.RLIM_INFINITY else min(soft, inherited_soft)
-    clamped_hard = hard if inherited_hard == resource.RLIM_INFINITY else min(hard, inherited_hard)
+    clamped_soft = (
+        soft if inherited_soft == resource.RLIM_INFINITY else min(soft, inherited_soft)
+    )
+    clamped_hard = (
+        hard if inherited_hard == resource.RLIM_INFINITY else min(hard, inherited_hard)
+    )
     # setrlimit requires soft <= hard. Clamping the two sides independently can
     # invert them (a finite inherited soft below the clamped hard is fine, but a
     # requested hard below the inherited soft would leave soft > hard), so pin
@@ -949,11 +955,7 @@ def _clamped(which: int, soft: int, hard: int) -> tuple[int, int]:
     # preserve. The ``hard >= 2`` guard leaves the ``hard == 1`` blind spot
     # (a 1-second dual limit cannot lower soft to 0) — a definite CPU overrun
     # there is still reported as `worker-exit`; see the settlement note.
-    if (
-        which == resource.RLIMIT_CPU
-        and result_soft == result_hard
-        and result_hard >= 2
-    ):
+    if which == resource.RLIMIT_CPU and result_soft == result_hard and result_hard >= 2:
         result_soft = result_hard - 1
     return (result_soft, result_hard)
 
@@ -1067,7 +1069,10 @@ async def _run(channel: ProtocolChannel) -> None:
             effective_soft = effective_as[0]
             budgetable = effective_soft - _INTERPRETER_BASELINE_BYTES
             for _budget_key in ("maxLogBytes", "maxValueBytes"):
-                if int(boot[_budget_key]) * _OUTPUT_BUDGET_WORST_CASE_MULTIPLE >= budgetable:
+                if (
+                    int(boot[_budget_key]) * _OUTPUT_BUDGET_WORST_CASE_MULTIPLE
+                    >= budgetable
+                ):
                     raise ValueError(
                         "config.%s is too large for the inherited RLIMIT_AS of %d bytes "
                         "(a near-budget output would breach it during encode); "
@@ -1084,9 +1089,7 @@ async def _run(channel: ProtocolChannel) -> None:
                     # absolute installed bootstrap.py path in model-visible
                     # durable output, leaking host paths into transcripts.
                     "message": "bootstrap: applying resource limits failed\n"
-                    + "".join(
-                        traceback.format_exception_only(type(exc), exc)
-                    ),
+                    + "".join(traceback.format_exception_only(type(exc), exc)),
                 },
             }
         )
@@ -1354,7 +1357,7 @@ async def _run(channel: ProtocolChannel) -> None:
             with channel._write_lock:
                 view = _memoryview_local(_fallback_frame_local)
                 while view:
-                    view = view[_os_write_local(channel._fd, view):]
+                    view = view[_os_write_local(channel._fd, view) :]
 
     max_value_bytes = int(boot["maxValueBytes"])
     done: dict[str, Any] | str
@@ -1368,8 +1371,13 @@ async def _run(channel: ProtocolChannel) -> None:
         wrapper = ast.AsyncFunctionDef(
             name="__dsh_main__",
             args=ast.arguments(
-                posonlyargs=[], args=[], vararg=None,
-                kwonlyargs=[], kw_defaults=[], kwarg=None, defaults=[],
+                posonlyargs=[],
+                args=[],
+                vararg=None,
+                kwonlyargs=[],
+                kw_defaults=[],
+                kwarg=None,
+                defaults=[],
             ),
             body=module.body or [ast.Pass()],
             decorator_list=[],
@@ -1509,7 +1517,9 @@ async def _pump_replies(
         message = frame.get("message")
         try:
             loop.call_soon_threadsafe(complete, fut, ok, value, message)
-        except _RuntimeError:  # `_RuntimeError` is a pre-program local, not a rebindable module global
+        except (
+            _RuntimeError
+        ):  # `_RuntimeError` is a pre-program local, not a rebindable module global
             # The Future's loop has already closed — the thread that ran
             # `asyncio.run(tools.x(...))` finished (its coroutine was cancelled
             # or it exited) before this reply arrived, so nothing awaits the
@@ -1867,7 +1877,10 @@ def _check_done_value(value: Any, max_bytes: int):
     js_safe = 2**53 - 1
 
     def invalid(reason: str):
-        return ("invalid-output", f"program completion must be lossless JSON ({reason})")
+        return (
+            "invalid-output",
+            f"program completion must be lossless JSON ({reason})",
+        )
 
     over_budget = ("output-limit", f"completion value exceeded {max_bytes} bytes")
 
@@ -1958,7 +1971,9 @@ def _check_done_value(value: Any, max_bytes: int):
                 except OverflowError:
                     exact = False
                 if not exact:
-                    return invalid("integer not exactly representable as a JavaScript number")
+                    return invalid(
+                        "integer not exactly representable as a JavaScript number"
+                    )
             total += len(_dump_scalar(current).encode("utf-8"))
         elif type(current) is float:
             if current != current or current in (float("inf"), float("-inf")):
@@ -2456,7 +2471,11 @@ def _make_failure_reporter() -> Any:
             # the run misreports as an exit or a timeout. The slice is a
             # code-unit prefix, which bounds the bytes at 4x, and the following
             # `cap_message` still applies the exact byte cap.
-            name = raw_name[:_MAX_FALLBACK_NAME_CHARS] if type(raw_name) is str else "<unknown>"
+            name = (
+                raw_name[:_MAX_FALLBACK_NAME_CHARS]
+                if type(raw_name) is str
+                else "<unknown>"
+            )
         except _BaseException:  # noqa: BLE001 -- a raising __name__ must not cost the done frame
             name = "<unknown>"
         # Wrapped for the same reason: `cap_message` encodes, and its allocation
@@ -2551,7 +2570,10 @@ def _done_with_value(
         # could otherwise make the done frame exceed the host's frame parse cap
         # and be silently dropped — an invalid-output run misreported as a
         # worker-exit.
-        return {"type": "done", "error": {"kind": kind, "message": _cap_message(message, max_value_bytes)}}
+        return {
+            "type": "done",
+            "error": {"kind": kind, "message": _cap_message(message, max_value_bytes)},
+        }
     # Pre-encode the value at the validation point (not in `_run`'s later send,
     # which is outside the try): see the TOCTOU note in the docstring. The value
     # is JSON-plain by construction, so `_encode_json_plain` is the encoder.

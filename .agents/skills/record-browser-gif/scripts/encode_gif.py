@@ -108,16 +108,29 @@ def probe_stream(ffprobe: str, path: Path) -> dict[str, object]:
         ]
     )
     streams = result.get("streams")
-    if not isinstance(streams, list) or len(streams) != 1 or not isinstance(streams[0], dict):
+    if (
+        not isinstance(streams, list)
+        or len(streams) != 1
+        or not isinstance(streams[0], dict)
+    ):
         fail(f"expected one video stream in {path}")
     return streams[0]
 
 
 def video_duration(ffprobe: str, path: Path) -> float:
     """Read container duration because Playwright WebM omits stream duration."""
-    result = run_json([
-        ffprobe, "-v", "error", "-show_entries", "format=duration", "-of", "json", str(path),
-    ])
+    result = run_json(
+        [
+            ffprobe,
+            "-v",
+            "error",
+            "-show_entries",
+            "format=duration",
+            "-of",
+            "json",
+            str(path),
+        ]
+    )
     metadata = result.get("format")
     if not isinstance(metadata, dict):
         fail(f"missing format metadata for {path}")
@@ -143,7 +156,9 @@ def ffconcat_quote(path: Path) -> str:
     return "'" + value.replace("'", "'\\''") + "'"
 
 
-def write_concat_manifest(path: Path, frames: list[Path], durations: list[float]) -> None:
+def write_concat_manifest(
+    path: Path, frames: list[Path], durations: list[float]
+) -> None:
     """Write an ffconcat manifest that materializes the final frame's hold."""
     lines = ["ffconcat version 1.0"]
     for frame, duration in zip(frames, durations):
@@ -156,18 +171,36 @@ def write_concat_manifest(path: Path, frames: list[Path], durations: list[float]
 def build_parser() -> argparse.ArgumentParser:
     """Build the command-line contract."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("input", type=Path, help="video file or directory of ordered screenshots")
+    parser.add_argument(
+        "input", type=Path, help="video file or directory of ordered screenshots"
+    )
     parser.add_argument("output", type=Path, help="output .gif path")
-    parser.add_argument("--pattern", help="screenshot glob (default: *.png; directory input only)")
+    parser.add_argument(
+        "--pattern", help="screenshot glob (default: *.png; directory input only)"
+    )
     parser.add_argument(
         "--durations",
         help="screenshot holds (default: 2 seconds each; directory input only)",
     )
-    parser.add_argument("--start", type=nonnegative_float, help="video trim start in seconds (default: 0)")
-    parser.add_argument("--end", type=positive_float, help="video trim end in seconds (default: EOF)")
-    parser.add_argument("--speed", type=positive_float, help="video playback multiplier (default: 1)")
-    parser.add_argument("--final-hold", type=nonnegative_float, help="extra final video frame hold (default: 2 seconds)")
-    parser.add_argument("--fps", type=positive_int, default=10, help="encoded frames per second")
+    parser.add_argument(
+        "--start",
+        type=nonnegative_float,
+        help="video trim start in seconds (default: 0)",
+    )
+    parser.add_argument(
+        "--end", type=positive_float, help="video trim end in seconds (default: EOF)"
+    )
+    parser.add_argument(
+        "--speed", type=positive_float, help="video playback multiplier (default: 1)"
+    )
+    parser.add_argument(
+        "--final-hold",
+        type=nonnegative_float,
+        help="extra final video frame hold (default: 2 seconds)",
+    )
+    parser.add_argument(
+        "--fps", type=positive_int, default=10, help="encoded frames per second"
+    )
     parser.add_argument(
         "--max-width",
         type=positive_int,
@@ -186,7 +219,9 @@ def build_parser() -> argparse.ArgumentParser:
         default=DEFAULT_MAX_BYTES,
         help="maximum output size",
     )
-    parser.add_argument("--force", action="store_true", help="replace an existing output file")
+    parser.add_argument(
+        "--force", action="store_true", help="replace an existing output file"
+    )
     return parser
 
 
@@ -227,25 +262,37 @@ def main() -> None:
         if not start < end <= source_duration:
             fail(f"video trim must satisfy 0 <= start < end <= {source_duration:.3f}")
         if (end - start) / speed < 2 / args.fps:
-            fail("video selection must span at least two output frames before the final hold")
+            fail(
+                "video selection must span at least two output frames before the final hold"
+            )
         expected_duration = (end - start) / speed + final_hold
         details = {
-            "sourceVideo": str(source), "sourceDurationSeconds": source_duration,
-            "startSeconds": start, "endSeconds": end, "speed": speed,
+            "sourceVideo": str(source),
+            "sourceDurationSeconds": source_duration,
+            "startSeconds": start,
+            "endSeconds": end,
+            "speed": speed,
             "finalHoldSeconds": final_hold,
         }
     else:
-        if any(value is not None for value in (args.start, args.end, args.speed, args.final_hold)):
+        if any(
+            value is not None
+            for value in (args.start, args.end, args.speed, args.final_hold)
+        ):
             fail("--start, --end, --speed and --final-hold require a video file")
         pattern = args.pattern if args.pattern is not None else "*.png"
         if not pattern:
             fail("--pattern must not be empty")
-        frames = sorted(path.resolve() for path in source.glob(pattern) if path.is_file())
+        frames = sorted(
+            path.resolve() for path in source.glob(pattern) if path.is_file()
+        )
         if len(frames) < 2:
             fail(f"expected at least two frames in {source}")
         if output in frames:
             fail("output path must not match an input frame")
-        durations = parse_durations(args.durations if args.durations is not None else "2", len(frames))
+        durations = parse_durations(
+            args.durations if args.durations is not None else "2", len(frames)
+        )
         expected_duration = sum(durations)
         dimensions = {
             (stream_int(stream, "width", frame), stream_int(stream, "height", frame))
