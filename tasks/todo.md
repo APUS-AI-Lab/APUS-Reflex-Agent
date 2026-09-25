@@ -6,16 +6,19 @@
 - [x] 创建feat-system3-foundation隔离worktree。
 - [x] 深读DSH核心、Jev材料、微信与上游skill、Uni-Agent最新训练证据。
 - [x] 编写四条工作线设计、API草案、文件清单与验收实验。
-- [ ] 用户审批设计（M0+M1）。
-- [ ] 修复上游4项Ruff lint与28文件格式问题，并完成相关验证。
-- [ ] 推送私有基线，确认远端HEAD与CI。
+- [x] 用户审批设计（通过用户多次“继续”与当前goal激活确认）。
+- [x] 修复上游4项Ruff lint与28文件格式问题，并完成相关验证。
+- [x] 推送私有基线，确认远端HEAD与CI。
 - [ ] M1：日志证据筛选、影子监督、统一费用账本。
+- [x] M1-a：实现本地优先隐私路由准入纯策略包并通过单测、类型与文档门禁。
 - [ ] M2：一个外部宿主真实接入与配对任务评测。
 - [ ] A线：冻结基线→可信数据→独立controller训练与晋级。
 
 ## Review
 
-本轮只有设计文档，未改产品代码、未安装依赖、未训练/部署/推送。原始上游不满足用户强制Ruff门禁，失败信息如实记录；设计与证据文件生成后做文件存在、hash、HTML与差异检查。性能与训练结果来自标注来源，未在本轮复测。
+M0完成了上游门禁修复、依赖安装、构建与Python SDK回归测试，并已推送私有仓库。M1-a新增确定性本地优先路由策略；完整日志筛选、影子监督与费用账本仍未完成。设计与专项HTML做过文件、hash、浏览器布局及交互检查；性能与训练结果来自标注来源，未在本轮复测。
+
+M1-a验证：`vitest` 5/5 通过；`tsc -b tsconfig.host.json` 通过；包级 Oxlint、package meta、export JSDoc、package paths、README model-experience/limitations、全仓双语 pairing、`ruff check .` 与 `ruff format --check .` 均通过。
 
 ## 专项方案 v2 · 本地9B + Jev + 多智能体
 

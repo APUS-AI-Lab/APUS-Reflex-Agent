@@ -1,5 +1,7 @@
 # xDAN-System3-DSH：四条工作线与首发设计
 
+English | [中文](design.zh.md)
+
 状态：设计待审批，尚未实施。调研日期：2026-09-24。读者：产品负责人、模型训练与 Harness 工程团队。
 
 ## 1. 产品目标与 System3 定义

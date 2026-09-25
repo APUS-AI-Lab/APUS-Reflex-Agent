@@ -1,5 +1,7 @@
 # System3 本地9B与多智能体协作专项方案
 
+English | [中文](system3-special-plan.zh.md)
+
 完整内容以 [专项HTML](system3-special-plan.html) 为准。设计状态：待实施；本轮仅文档。
 
 ## 核心优先级

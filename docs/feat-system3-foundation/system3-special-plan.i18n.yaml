@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-system3-foundation/system3-special-plan.md
+system3-special-plan.md: 1f6f8399c9e959da0113c80b8137ee14ef366fbc
+system3-special-plan.zh.md: a4bf1602c0c8bd1023386c273bba543f2f478afb
