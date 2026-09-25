@@ -400,6 +400,7 @@
     { "path": "./packages/test-support/llm-mock-server" },
     { "path": "./packages/experimental/webworker-packer" },
     { "path": "./packages/experimental/system3-policy" },
+    { "path": "./packages/experimental/system3-evidence" },
     { "path": "./packages/experimental/inspector/tsconfig.host.json" },
     { "path": "./packages/subagent/subagent" },
     { "path": "./packages/subagent/tool-subagent" },

@@ -45,6 +45,7 @@ kind: "package-group"
 | [`webworker-packer`](webworker-packer/README.zh.md) | 构建浏览器 worker 预览所消费的 gzip 压缩虚拟文件系统（VFS）镜像 | 库与 CLI（命令行界面），不使用 ctx key |
 | [`webworker-runtime`](webworker-runtime/README.zh.md) | 在专用浏览器 worker 中运行 harness 插件树 | 库与 worker 入口，不使用 ctx key |
 | [`system3-policy`](system3-policy/README.zh.md) | 在模型路由选择前执行确定性的本地优先隐私准入 | 库，不使用 ctx key |
+| [`system3-evidence`](system3-evidence/README.zh.md) | 为长工具输出提供可恢复的有界证据片段 | 库，不使用 ctx key |
 
 -----
 

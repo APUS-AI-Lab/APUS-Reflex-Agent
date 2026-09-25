@@ -54,7 +54,8 @@
 
 - [x] 获得设计批准；M0门禁修复与私有基线push已完成。
 - [x] M1-a本地优先策略包：类型、测试、包文档与双语门禁已完成。
-- [ ] M1-b日志证据筛选、影子监督与统一费用账本。
+- [x] M1-b日志证据片段选择：类型、测试、包文档与双语门禁已完成。
+- [ ] M1-c影子监督与统一费用账本。
 - [ ] 固定模型/DSH/SDK/runtime/profile/patch/verifier版本并真实process smoke。
 - [ ] 规则vsJev日志筛选、影子监督、费用账本；正式holdout独立封存。
 - [ ] 单宿主接入能力验证；不先承诺全流量截获。
@@ -65,7 +66,7 @@
 - 根仓库 /Users/gumpm5/Documents/Code/xDAN-System3-DSH：main，46a7f68b0922371ce7144b668b90e377d8e799f4。
 - 本worktree .Codex/worktrees/feat-system3-foundation；分支feat-system3-foundation。
 - origin为自有私有仓库，upstream为deepseek-ai/deepseek-harness。
-- GitHub仓库已创建且私有；M0与M1-a提交已push到私有origin；CI未运行；无产品部署和GPU创建。
+- GitHub仓库已创建且私有；M0与M1-a/b提交已push到私有origin；CI未运行；无产品部署和GPU创建。
 - 原xDAN-DSH-uni-agent工作区及未提交修改全部保留。
 
 ## 7. 冷启动 checklist
@@ -73,6 +74,6 @@
 1. 读本文件→design.md→evidence.json→tasks/todo.md。
 2. 读本repo AGENTS与docs/AGENTS，核git status/diff/stash/branch/HEAD/worktree。
 3. 核远端private与refs，确认私有仓库与feature分支commit一致。
-4. 先回读system3-policy契约与测试，再进入M1-b日志/监督实现。
+4. 先回读system3-policy与system3-evidence契约/测试，再进入M1-c监督与费用实现。
 5. 训练细节回读performance-9b最新报告与实际版本，不按旧root文档推断。
 6. 按改动面验证、两项Ruff通过再push，保留本worktree。

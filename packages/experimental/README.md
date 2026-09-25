@@ -45,6 +45,7 @@ The experimental group contains prototype capabilities whose contracts can chang
 | [`webworker-packer`](webworker-packer/README.md) | Builds the gzip-compressed VFS image consumed by the browser worker preview | library and CLI — no ctx key |
 | [`webworker-runtime`](webworker-runtime/README.md) | Runs the harness plugin tree inside a dedicated browser worker | library and worker entry — no ctx key |
 | [`system3-policy`](system3-policy/README.md) | Deterministic local-first privacy admission before model route selection | library — no ctx key |
+| [`system3-evidence`](system3-evidence/README.md) | Lossless bounded evidence spans for long tool output | library — no ctx key |
 
 -----
 
