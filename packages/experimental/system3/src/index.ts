@@ -22,6 +22,8 @@ export interface Config {
   readonly approvedRemoteIds?: readonly string[]
   readonly approvedRemoteDataClasses?: readonly ('public' | 'workspace' | 'sensitive' | 'secret')[]
   readonly cloudApproval?: boolean
+  /** Observe AgentLoop boundaries without changing prompts, routes, or results. */
+  readonly observeAgentLoop?: boolean
 }
 
 /** Small operational counters, intentionally free of user data. */
@@ -31,6 +33,12 @@ export interface System3ServiceSnapshot {
   readonly supervision: number
   readonly shadow: number
   readonly costs: number
+  readonly agent: {
+    readonly preSteps: number
+    readonly requests: number
+    readonly requestErrors: number
+    readonly turnStops: number
+  }
 }
 
 /** Unified runtime seam for the System3 pure policies. */
@@ -59,10 +67,12 @@ export default class System3 extends Service implements System3Service {
     approvedRemoteIds: z.array(z.string()).default([]),
     approvedRemoteDataClasses: z.array(z.union([z.const('public'), z.const('workspace'), z.const('sensitive'), z.const('secret')])).default([]),
     cloudApproval: z.boolean().default(false),
+    observeAgentLoop: z.boolean().default(false),
   })
 
   readonly privacyPolicy: System3PrivacyPolicy
   private readonly counters = { routes: 0, evidence: 0, supervision: 0, shadow: 0, costs: 0 }
+  private readonly agentCounters = { preSteps: 0, requests: 0, requestErrors: 0, turnStops: 0 }
 
   constructor(ctx: Context, config: Config = {}) {
     super(ctx, 'system3')
@@ -72,6 +82,28 @@ export default class System3 extends Service implements System3Service {
       ...(config.approvedRemoteDataClasses === undefined ? {} : { approvedRemoteDataClasses: [...config.approvedRemoteDataClasses] }),
       ...(config.cloudApproval === undefined ? {} : { cloudApproval: config.cloudApproval }),
     }
+    if (config.observeAgentLoop === true) this.observeAgentLoop()
+  }
+
+  /** Install non-mutating AgentLoop observers for runtime smoke tests and telemetry. */
+  private observeAgentLoop(): void {
+    type Next = () => Promise<unknown>
+    const on = this.ctx.on.bind(this.ctx) as unknown as (name: string, listener: (payload: unknown, next: Next) => unknown) => unknown
+    on('agent/pre-step', async (_payload, next) => {
+      this.agentCounters.preSteps += 1
+      return await next()
+    })
+    on('agent/request', async (_payload, next) => {
+      this.agentCounters.requests += 1
+      return await next()
+    })
+    on('agent/request-error', async (_payload, next) => {
+      this.agentCounters.requestErrors += 1
+      return await next()
+    })
+    on('agent/turn-stopping', () => {
+      this.agentCounters.turnStops += 1
+    })
   }
 
   route(candidates: readonly System3RouteCandidate[], preferredId?: string): System3RouteSelection {
@@ -104,5 +136,7 @@ export default class System3 extends Service implements System3Service {
     return sumSystem3CostRecords(records)
   }
 
-  snapshot(): System3ServiceSnapshot { return { ...this.counters } }
+  snapshot(): System3ServiceSnapshot {
+    return { ...this.counters, agent: { ...this.agentCounters } }
+  }
 }

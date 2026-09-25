@@ -10,8 +10,8 @@ kind: "package-reference"
 ## 摘要
 
 挂载这个显式启用的服务，可以通过一个 `ctx.system3` seam 使用本地优先路由准
-入、可恢复证据选择、完成监督、shadow 对照和 usage accounting。它组合纯函数库，
-在调用方接入事件前不会拦截 AgentLoop 流量。
+入、可恢复证据选择、完成监督、shadow 对照、usage accounting，以及可选的
+AgentLoop 观测 seam。它组合纯函数库；观测只记录边界，不修改 prompt、路由或模型结果。
 
 ## 目录
 
@@ -32,7 +32,7 @@ kind: "package-reference"
 ```ts
 import System3 from '@deepseek-ai/dsh-experimental-system3'
 
-await ctx.plugin(System3, { privacyMode: 'local-only' })
+await ctx.plugin(System3, { privacyMode: 'local-only', observeAgentLoop: true })
 const decision = ctx.system3.route(candidates, 'local-9b')
 ```
 
@@ -42,9 +42,11 @@ const decision = ctx.system3.route(candidates, 'local-9b')
 <a id="understand-the-implementation"></a>
 ## 实现说明
 
-服务不拥有第二套 agent loop，也不拥有网络客户端。每个方法只增加无敏感数据的
-计数，然后委派给一个纯策略包。隐私策略在挂载时捕获；Jev 偏好只是候选排序提示，
-不能覆盖策略。
+服务不拥有第二套 agent loop，也不拥有网络客户端。每个策略方法只增加无敏感数据的
+计数，然后委派给一个纯策略包。启用 `observeAgentLoop` 后，会为
+`agent/pre-step`、`agent/request`、`agent/request-error` 和 `agent/turn-stopping`
+安装不修改行为的监听器，边界计数会进入 `snapshot()`。隐私策略在挂载时捕获；Jev
+偏好只是候选排序提示，不能覆盖策略。
 
 <a id="model-experience"></a>
 ## 模型体验
@@ -67,8 +69,9 @@ const decision = ctx.system3.route(candidates, 'local-9b')
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- 目前不会安装 AgentLoop、`session/event`、provider 或 subagent hook，避免显式
-  之外的 profile 被悄悄改变。
+- 观测不等于决策集成：目前不会选择 provider、修改 messages、调用 Jev、持久化证据或
+  调度 subagent。只有在具体 Host profile 的重放、取消和隐私测试覆盖后，才应增加决策
+  hook。
 - 服务不执行操作系统级隐私隔离。workspace、环境变量、子进程出网和导出授权仍
   由 Host 负责。
 - 后续集成在声称端到端 System3 之前，必须固定事件 schema、重放行为、取消语义

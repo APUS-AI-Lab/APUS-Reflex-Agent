@@ -11,8 +11,9 @@ English | [中文](README.zh.md)
 
 Mount this opt-in service to expose one `ctx.system3` seam for local-first
 route admission, recoverable evidence selection, completion supervision, shadow
-comparison, and usage accounting. It composes pure libraries and deliberately
-does not intercept AgentLoop traffic until a caller wires those events.
+comparison, usage accounting, and an opt-in AgentLoop observation seam. It
+composes pure libraries; observation records boundaries but does not mutate
+prompts, routes, or model results.
 
 ## Table of Contents
 
@@ -34,7 +35,7 @@ candidate metadata.
 ```ts
 import System3 from '@deepseek-ai/dsh-experimental-system3'
 
-await ctx.plugin(System3, { privacyMode: 'local-only' })
+await ctx.plugin(System3, { privacyMode: 'local-only', observeAgentLoop: true })
 const decision = ctx.system3.route(candidates, 'local-9b')
 ```
 
@@ -45,10 +46,13 @@ comparisons, and cost records in their own durable Session/audit layer.
 <a id="understand-the-implementation"></a>
 ## Understand the implementation
 
-The service owns no second agent loop and no network client. Each method
-increments a non-sensitive counter and delegates to one pure package. The
-privacy policy is captured at activation; a Jev preference remains a candidate
-ordering hint and cannot override it.
+The service owns no second agent loop and no network client. Each policy method
+increments a non-sensitive counter and delegates to one pure package. When
+`observeAgentLoop` is enabled, it adds non-mutating listeners for `agent/pre-step`,
+`agent/request`, `agent/request-error`, and `agent/turn-stopping`; the resulting
+boundary counters are included in `snapshot()`. The privacy policy is captured
+at activation; a Jev preference remains a candidate ordering hint and cannot
+override it.
 
 <a id="model-experience"></a>
 ## Model Experience
@@ -71,8 +75,10 @@ None by itself; mounting the service does not rewrite prompts or change tool sch
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- No AgentLoop, `session/event`, provider, or subagent hook is installed yet;
-  this prevents an opt-in service from silently changing existing profiles.
+- Observation is intentionally not decision integration: it does not select a
+  provider, edit messages, call Jev, persist evidence, or dispatch a subagent.
+  Decision hooks must be added only after replay, cancellation, and privacy
+  tests cover the concrete host profile.
 - The service does not enforce OS privacy isolation. Workspaces, environment
   variables, subprocess egress, and export consent remain host responsibilities.
 - A follow-up integration must pin event schemas, replay behavior, cancellation,

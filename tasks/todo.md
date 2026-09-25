@@ -9,10 +9,12 @@
 - [x] 用户审批设计（通过用户多次“继续”与当前goal激活确认）。
 - [x] 修复上游4项Ruff lint与28文件格式问题，并完成相关验证。
 - [x] 推送私有基线，确认远端HEAD与CI。
-- [ ] M1：日志证据筛选、影子监督、统一费用账本。
+- [ ] M1：日志证据筛选、影子监督、统一费用账本与运行时接线。
 - [x] M1-a：实现本地优先隐私路由准入纯策略包并通过单测、类型与文档门禁。
 - [x] M1-b：实现可恢复、可审计的长工具输出证据片段选择纯策略包。
 - [x] M1-c：实现独立完成监督、Jev shadow 对照与 provider/estimated usage ledger。
+- [x] M1-d（观察层）：接入 AgentLoop 四个边界事件，保持行为不变并暴露无敏感运行计数。
+- [ ] M1-e（决策层）：接入 Session 证据、真实本地9B provider 与可回放的 Jev 决策。
 - [ ] M2：一个外部宿主真实接入与配对任务评测。
 - [ ] A线：冻结基线→可信数据→独立controller训练与晋级。
 
@@ -20,7 +22,7 @@
 
 M0完成了上游门禁修复、依赖安装、构建与Python SDK回归测试，并已推送私有仓库。M1-a新增确定性本地优先路由策略；完整日志筛选、影子监督与费用账本仍未完成。设计与专项HTML做过文件、hash、浏览器布局及交互检查；性能与训练结果来自标注来源，未在本轮复测。
 
-M1-a/b/c验证：策略包 `vitest` 分别 5/5、5/5、6/6 通过；`tsc -b tsconfig.host.json` 通过；包级 Oxlint、package meta、export JSDoc、package paths、README model-experience/limitations、全仓双语 pairing、`ruff check .` 与 `ruff format --check .` 均通过。
+M1-a/b/c与观察层验证：四个 System3 包 `vitest` 共 19/19 通过；`tsc -b tsconfig.host.json` 通过；包级 Oxlint、package meta、export JSDoc、package paths、README model-experience/limitations、全仓双语 pairing、`ruff check .` 与 `ruff format --check .` 均通过。
 
 ## 专项方案 v2 · 本地9B + Jev + 多智能体
 

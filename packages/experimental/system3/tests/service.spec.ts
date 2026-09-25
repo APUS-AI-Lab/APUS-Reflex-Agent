@@ -1,4 +1,5 @@
 import { Context } from '@deepseek-ai/cordis'
+import { agentEvents } from '@deepseek-ai/dsh-agent'
 import { describe, expect, it } from 'vitest'
 import System3 from '../src/index.ts'
 
@@ -22,7 +23,14 @@ describe('System3 Cordis service', () => {
         availableEvidenceRefs: ['test:1'], budgetRemaining: 1,
       })
       expect(service.shadow('candidate_done', baseline).agrees).toBe(true)
-      expect(service.snapshot()).toEqual({ routes: 1, evidence: 1, supervision: 1, shadow: 1, costs: 0 })
+      expect(service.snapshot()).toEqual({
+        routes: 1,
+        evidence: 1,
+        supervision: 1,
+        shadow: 1,
+        costs: 0,
+        agent: { preSteps: 0, requests: 0, requestErrors: 0, turnStops: 0 },
+      })
     } finally {
       await plugin.dispose()
     }
@@ -35,6 +43,25 @@ describe('System3 Cordis service', () => {
       const result = ctx.get('system3')!.route([{ id: 'claude', executionDomain: 'network', dataClasses: ['workspace'] }], 'claude')
       expect(result.selected).toBeUndefined()
       expect(result.blocked[0]?.reason).toBe('route-not-approved')
+    } finally {
+      await plugin.dispose()
+    }
+  })
+
+  it('observes AgentLoop boundaries without changing their decisions', async () => {
+    const ctx = new Context()
+    const plugin = await ctx.plugin(System3, { observeAgentLoop: true })
+    try {
+      const agent = { id: 'test-agent', ctx } as never
+      const dispatch = agentEvents(ctx, agent)
+      const signal = new AbortController().signal
+      const messages: never[] = []
+
+      await dispatch.waterfall('agent/pre-step', { turn: 1, step: 0, signal, messages }, () => Promise.resolve({ kind: 'enter', messages }))
+      await dispatch.waterfall('agent/request', { turn: 1, step: 0, signal }, () => Promise.resolve({} as never))
+      await dispatch.serial('agent/turn-stopping', { turn: 1, signal })
+
+      expect(ctx.system3.snapshot().agent).toEqual({ preSteps: 1, requests: 1, requestErrors: 0, turnStops: 1 })
     } finally {
       await plugin.dispose()
     }
