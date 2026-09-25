@@ -7585,6 +7585,8 @@ importers:
 
   packages/experimental/system3-policy: {}
 
+  packages/experimental/system3-supervisor: {}
+
   packages/experimental/tool-agent-team:
     dependencies:
       '@deepseek-ai/schemastery':
