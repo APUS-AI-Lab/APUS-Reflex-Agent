@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/feat-system3-foundation/design.md
-design.md: 63b031027ec7b70857ebf7e1e07db79520aa15b6
-design.zh.md: 93b1b82c98cb0aabe219b933d69b50e24f5f8f67
+design.md: d86886f4830092da3cff68f9076e53d4b79dae1c
+design.zh.md: cbf685ef89b0d99a12ad16ce774f96f4886e4fce

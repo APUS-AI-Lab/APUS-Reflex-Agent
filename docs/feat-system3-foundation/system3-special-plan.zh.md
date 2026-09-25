@@ -2,7 +2,7 @@
 
 [English](system3-special-plan.md) | 中文
 
-完整内容以 [专项HTML](system3-special-plan.html) 为准。设计状态：待实施；本轮仅文档。
+完整内容以 [专项HTML](system3-special-plan.html) 为准。设计状态：基础实现已交付；真实9B、Jev决策和专家接线仍待实施。
 
 ## 核心优先级
 

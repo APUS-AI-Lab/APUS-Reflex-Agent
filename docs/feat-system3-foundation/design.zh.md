@@ -2,7 +2,7 @@
 
 [English](design.md) | 中文
 
-状态：设计待审批，尚未实施。调研日期：2026-09-24。读者：产品负责人、模型训练与 Harness 工程团队。
+状态：设计已批准；基础实现已交付，完整运行时接线仍在实施。调研日期：2026-09-24。读者：产品负责人、模型训练与 Harness 工程团队。
 
 ## 1. 产品目标与 System3 定义
 
@@ -18,7 +18,7 @@ System1 是 APUS/OpenJev 的高频候选判断与经专项验证的轻量工作�
 
 已完整 clone 到 /Users/gumpm5/Documents/Code/xDAN-System3-DSH，保留 Git 历史；本地根分支改为 main，上游 remote 为 upstream，自有 origin 为 https://github.com/cryptoSUN2049/xDAN-System3-DSH.git。远端已创建并回读 private=true。工作树为 .Codex/worktrees/feat-system3-foundation，分支同名。
 
-尚未推送：原始上游在 Ruff 0.13.3 下有 4 个 lint 问题、28 个待格式化文件。用户要求每次 push 前两项 Ruff 全通过，因此远端当前为空。未经设计审批未修复源码、改包名、安装依赖、构建产品或启动训练。
+已完成原始上游的 Ruff 修复与格式化；main 保留官方基线，feat-system3-foundation 已推送到自有私有仓库。基础 System3 包、统一 Cordis 服务和真实 AgentLoop smoke 已交付；真实模型、训练与部署仍未启动。
 
 品牌改名分两层：仓库与产品名使用 xDAN-System3-DSH；首阶段保留 @deepseek-ai/* 包名、dsh 命令与 MIT 声明，避免全仓字符串替换造成依赖和上游同步破坏。发布自有 npm 包及外部插件前再审独立 namespace 与发布清单。私有仓库不改变继承代码的许可义务。
 
@@ -189,7 +189,7 @@ M0：审批设计、修复上游推送门禁、发布私有基线。M1：DSH原�
 
 ## 12. 审批范围与未完成事项
 
-本轮只完成仓库创建、克隆、只读调研和设计。尚未构建System3产品、运行新模型评测、部署模型或验收省钱效果。需要批准的下一步为M0+M1：先修原始代码门禁并推送私有基线，再做DSH原生最小闭环；外部宿主、训练GPU、模型发布与自动执行升级分别按其具体设计推进。
+本阶段完成仓库创建、克隆、源码调研、专项设计、System3策略包、统一Cordis服务和真实AgentLoop smoke。尚未接入真实APUS 9B、Jev模型决策、Claude/Codex专家委派、训练GPU或成本收益评测；下一步是Session证据接线、真实provider和可回放决策闭环。
 
 依据用户提供的AGENTS.md Development Preflight第2条：设计需呈现并获得明确“开始/approved/confirmed”后实施。此次等待不是工具审批拒绝，而是用户要求的设计审批步骤。
 

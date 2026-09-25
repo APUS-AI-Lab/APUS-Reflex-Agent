@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/feat-system3-foundation/system3-special-plan.md
-system3-special-plan.md: 1f6f8399c9e959da0113c80b8137ee14ef366fbc
-system3-special-plan.zh.md: a4bf1602c0c8bd1023386c273bba543f2f478afb
+system3-special-plan.md: c36b1f360ee1acf114aed23d9eccb81e608a02da
+system3-special-plan.zh.md: 4869ec00d6010e86e3cc086d9d007b61d6ad3642
