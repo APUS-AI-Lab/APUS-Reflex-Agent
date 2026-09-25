@@ -1,0 +1,108 @@
+/** Cordis service composing the System3 policy, evidence, and supervision seams. */
+import { Context, Service } from '@deepseek-ai/cordis'
+import z from '@deepseek-ai/schemastery'
+import { selectSystem3Evidence, type System3EvidenceRequest, type System3EvidenceSelection } from '@deepseek-ai/dsh-experimental-system3-evidence'
+import { selectSystem3Route, type System3PrivacyMode, type System3RouteCandidate, type System3RouteSelection, type System3PrivacyPolicy } from '@deepseek-ai/dsh-experimental-system3-policy'
+import { compareSystem3Advice, superviseSystem3Advice, sumSystem3CostRecords, validateSystem3CostRecord, type System3AdviceAction, type System3CostRecord, type System3SupervisorRequest, type System3SupervisorResult, type System3ShadowComparison } from '@deepseek-ai/dsh-experimental-system3-supervisor'
+
+export type { System3EvidenceRequest, System3EvidenceSelection } from '@deepseek-ai/dsh-experimental-system3-evidence'
+export type { System3PrivacyMode, System3PrivacyPolicy, System3RouteCandidate, System3RouteSelection } from '@deepseek-ai/dsh-experimental-system3-policy'
+export type { System3AdviceAction, System3CostRecord, System3ShadowComparison, System3SupervisorRequest, System3SupervisorResult } from '@deepseek-ai/dsh-experimental-system3-supervisor'
+
+declare module '@deepseek-ai/cordis' {
+  interface Context {
+    /** Experimental System3 decision, evidence, and supervision service. */
+    system3: System3Service
+  }
+}
+
+/** Configures the default local-first privacy boundary. */
+export interface Config {
+  readonly privacyMode?: System3PrivacyMode
+  readonly approvedRemoteIds?: readonly string[]
+  readonly approvedRemoteDataClasses?: readonly ('public' | 'workspace' | 'sensitive' | 'secret')[]
+  readonly cloudApproval?: boolean
+}
+
+/** Small operational counters, intentionally free of user data. */
+export interface System3ServiceSnapshot {
+  readonly routes: number
+  readonly evidence: number
+  readonly supervision: number
+  readonly shadow: number
+  readonly costs: number
+}
+
+/** Unified runtime seam for the System3 pure policies. */
+export interface System3Service {
+  readonly privacyPolicy: System3PrivacyPolicy
+  route(candidates: readonly System3RouteCandidate[], preferredId?: string): System3RouteSelection
+  evidence(request: System3EvidenceRequest): System3EvidenceSelection
+  supervise(request: System3SupervisorRequest): System3SupervisorResult
+  shadow(modelAction: System3AdviceAction, baseline: System3SupervisorResult): System3ShadowComparison
+  validateCost(record: System3CostRecord): System3CostRecord
+  sumCosts(records: readonly System3CostRecord[]): System3CostRecord
+  snapshot(): System3ServiceSnapshot
+}
+
+/**
+ * Cordis service that composes policy modules without owning an AgentLoop.
+ *
+ * The service is deliberately a narrow seam: callers still supply provider
+ * candidates, complete artifacts, independent checks, and usage records. This
+ * keeps the next integration step explicit instead of silently intercepting
+ * every model call.
+ */
+export default class System3 extends Service implements System3Service {
+  static Config = z.object({
+    privacyMode: z.union([z.const('local-only'), z.const('controlled'), z.const('cloud-approved')]).default('local-only'),
+    approvedRemoteIds: z.array(z.string()).default([]),
+    approvedRemoteDataClasses: z.array(z.union([z.const('public'), z.const('workspace'), z.const('sensitive'), z.const('secret')])).default([]),
+    cloudApproval: z.boolean().default(false),
+  })
+
+  readonly privacyPolicy: System3PrivacyPolicy
+  private readonly counters = { routes: 0, evidence: 0, supervision: 0, shadow: 0, costs: 0 }
+
+  constructor(ctx: Context, config: Config = {}) {
+    super(ctx, 'system3')
+    this.privacyPolicy = {
+      mode: config.privacyMode ?? 'local-only',
+      ...(config.approvedRemoteIds === undefined ? {} : { approvedRemoteIds: [...config.approvedRemoteIds] }),
+      ...(config.approvedRemoteDataClasses === undefined ? {} : { approvedRemoteDataClasses: [...config.approvedRemoteDataClasses] }),
+      ...(config.cloudApproval === undefined ? {} : { cloudApproval: config.cloudApproval }),
+    }
+  }
+
+  route(candidates: readonly System3RouteCandidate[], preferredId?: string): System3RouteSelection {
+    this.counters.routes += 1
+    return selectSystem3Route(this.privacyPolicy, candidates, preferredId)
+  }
+
+  evidence(request: System3EvidenceRequest): System3EvidenceSelection {
+    this.counters.evidence += 1
+    return selectSystem3Evidence(request)
+  }
+
+  supervise(request: System3SupervisorRequest): System3SupervisorResult {
+    this.counters.supervision += 1
+    return superviseSystem3Advice(request)
+  }
+
+  shadow(modelAction: System3AdviceAction, baseline: System3SupervisorResult): System3ShadowComparison {
+    this.counters.shadow += 1
+    return compareSystem3Advice(modelAction, baseline)
+  }
+
+  validateCost(record: System3CostRecord): System3CostRecord {
+    this.counters.costs += 1
+    return validateSystem3CostRecord(record)
+  }
+
+  sumCosts(records: readonly System3CostRecord[]): System3CostRecord {
+    this.counters.costs += records.length
+    return sumSystem3CostRecords(records)
+  }
+
+  snapshot(): System3ServiceSnapshot { return { ...this.counters } }
+}

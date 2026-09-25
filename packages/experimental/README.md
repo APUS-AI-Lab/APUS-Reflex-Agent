@@ -47,6 +47,7 @@ The experimental group contains prototype capabilities whose contracts can chang
 | [`system3-policy`](system3-policy/README.md) | Deterministic local-first privacy admission before model route selection | library — no ctx key |
 | [`system3-evidence`](system3-evidence/README.md) | Lossless bounded evidence spans for long tool output | library — no ctx key |
 | [`system3-supervisor`](system3-supervisor/README.md) | Completion gate, shadow comparison, and usage ledger primitives | library — no ctx key |
+| [`system3`](system3/README.md) | Cordis service composing System3 policy, evidence, and supervision | `ctx.system3` |
 
 -----
 

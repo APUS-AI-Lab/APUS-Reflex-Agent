@@ -108,7 +108,12 @@ export function superviseSystem3Advice(request: System3SupervisorRequest): Syste
   return { action: 'escalate', accepted: false, reason: 'invalid-advice', missingChecks, missingEvidenceRefs }
 }
 
-/** Compare Jev/model advice with a deterministic supervised baseline. */
+/**
+ * Compare Jev/model advice with a deterministic supervised baseline.
+ * @param modelAction - Non-authoritative model or Jev action.
+ * @param baseline - Deterministic supervisor result.
+ * @returns An auditable agreement and divergence classification.
+ */
 export function compareSystem3Advice(
   modelAction: System3AdviceAction,
   baseline: System3SupervisorResult,
@@ -125,7 +130,11 @@ function assertCount(value: number, name: string): void {
   if (!Number.isInteger(value) || value < 0) throw new RangeError(`${name} must be a non-negative integer`)
 }
 
-/** Validate usage without fabricating provider-reported zeros. */
+/**
+ * Validate usage without fabricating provider-reported zeros.
+ * @param record - One provider or estimated usage record.
+ * @returns The validated record, preserving its usage source.
+ */
 export function validateSystem3CostRecord(record: System3CostRecord): System3CostRecord {
   if (record.requestId.trim().length === 0 || record.episodeId.trim().length === 0 || record.modelRevision.trim().length === 0) {
     throw new TypeError('requestId, episodeId, and modelRevision must not be empty')
@@ -137,7 +146,11 @@ export function validateSystem3CostRecord(record: System3CostRecord): System3Cos
   return { ...record }
 }
 
-/** Add two validated records from the same episode and model revision. */
+/**
+ * Add validated records from the same episode and model revision.
+ * @param records - Non-empty usage records to aggregate.
+ * @returns A summed record retaining the first record's identity metadata.
+ */
 export function sumSystem3CostRecords(records: readonly System3CostRecord[]): System3CostRecord {
   if (records.length === 0) throw new RangeError('records must not be empty')
   const firstRecord = records[0]
