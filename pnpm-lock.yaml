@@ -7581,6 +7581,25 @@ importers:
         specifier: ^4.22.4
         version: 4.22.4
 
+  packages/experimental/system3:
+    dependencies:
+      '@deepseek-ai/dsh-experimental-system3-evidence':
+        specifier: workspace:*
+        version: link:../system3-evidence
+      '@deepseek-ai/dsh-experimental-system3-policy':
+        specifier: workspace:*
+        version: link:../system3-policy
+      '@deepseek-ai/dsh-experimental-system3-supervisor':
+        specifier: workspace:*
+        version: link:../system3-supervisor
+      '@deepseek-ai/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:~
+        version: link:../../../vendor/cordis
+
   packages/experimental/system3-evidence: {}
 
   packages/experimental/system3-policy: {}
