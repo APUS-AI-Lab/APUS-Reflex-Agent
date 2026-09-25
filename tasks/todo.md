@@ -15,6 +15,7 @@
 - [x] M1-c：实现独立完成监督、Jev shadow 对照与 provider/estimated usage ledger。
 - [x] M1-d（观察层）：接入 AgentLoop 四个边界事件，保持行为不变并暴露无敏感运行计数。
 - [ ] M1-e（决策层）：接入 Session 证据、真实本地9B provider 与可回放的 Jev 决策。
+- [x] M1-e-观察验证：用真实 AgentLoop + MockAdapter 跑通一轮 durable turn，并验证四个边界计数。
 - [ ] M2：一个外部宿主真实接入与配对任务评测。
 - [ ] A线：冻结基线→可信数据→独立controller训练与晋级。
 
@@ -22,7 +23,7 @@
 
 M0完成了上游门禁修复、依赖安装、构建与Python SDK回归测试，并已推送私有仓库。M1-a新增确定性本地优先路由策略；完整日志筛选、影子监督与费用账本仍未完成。设计与专项HTML做过文件、hash、浏览器布局及交互检查；性能与训练结果来自标注来源，未在本轮复测。
 
-M1-a/b/c与观察层验证：四个 System3 包 `vitest` 共 19/19 通过；`tsc -b tsconfig.host.json` 通过；包级 Oxlint、package meta、export JSDoc、package paths、README model-experience/limitations、全仓双语 pairing、`ruff check .` 与 `ruff format --check .` 均通过。
+M1-a/b/c与运行时观察验证：System3 测试共 20/20 通过，其中包含真实 AgentLoop + MockAdapter 的 durable turn smoke；`tsc -b tsconfig.host.json` 通过；包级 Oxlint、package meta、export JSDoc、package paths、README model-experience/limitations、全仓双语 pairing、`ruff check .` 与 `ruff format --check .` 均通过。
 
 ## 专项方案 v2 · 本地9B + Jev + 多智能体
 

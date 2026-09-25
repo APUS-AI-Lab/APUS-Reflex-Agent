@@ -80,5 +80,6 @@ const decision = ctx.system3.route(candidates, 'local-9b')
 <a id="dev-note"></a>
 ### 开发说明
 
-服务测试会挂载 Cordis，验证本地优先回退、证据与监督组合、隐私拒绝和计数。运行
+服务测试会挂载 Cordis，验证本地优先回退、证据与监督组合、隐私拒绝、计数，并通过
+MockAdapter 驱动一轮真实 AgentLoop。运行
 `vitest run packages/experimental/system3/tests/service.spec.ts`。

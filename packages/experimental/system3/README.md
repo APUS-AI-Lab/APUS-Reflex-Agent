@@ -88,5 +88,6 @@ None by itself; mounting the service does not rewrite prompts or change tool sch
 ### Dev Note
 
 The service test mounts Cordis, verifies local-first fallback, composes evidence
-and supervision, and checks privacy rejection plus counters. Run
+and supervision, checks privacy rejection plus counters, and drives one real
+AgentLoop turn through a mock adapter. Run
 `vitest run packages/experimental/system3/tests/service.spec.ts`.
