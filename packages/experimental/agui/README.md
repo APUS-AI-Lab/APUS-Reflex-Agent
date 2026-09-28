@@ -1,0 +1,110 @@
+---
+description: "AG-UI over HTTP: stream DeepSeek Harness turns, threads, approvals and questions to an external client such as Muse."
+kind: "package-reference"
+---
+
+# @deepseek-ai/dsh-experimental-agui
+
+English | [中文](README.zh.md)
+
+## Summary
+
+`dsh-experimental-agui` lets a client that speaks [AG-UI](https://docs.ag-ui.com) — the OpenMuse server with `AGENT_BACKEND=agui`, or any `HttpAgent` — drive DeepSeek Harness agents over HTTP. One `POST <basePath>/run` streams a turn as server-sent AG-UI events; a small thread API lists, creates, renames and archives persisted Sessions and replays their history; approval and question requests raised while a run is streaming become `CUSTOM` events the client answers through matching routes. A thread id is the Session id, so the durable Session log stays the only source of truth.
+
+## Table of Contents
+
+- [Use this package](#use-this-package)
+- [Understand the implementation](#understand-the-implementation)
+- [Model Experience](#model-experience)
+- [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
+- [Dev Note](#dev-note)
+
+-----
+
+<a id="use-this-package"></a>
+## Use this package
+
+Mount the plugin on a profile that provides `webServer`, `agents` and `sessions`; the Web profile does. Export the bearer token in the environment variable the row names, then apply the shipped overlay:
+
+```sh
+export DSH_AGUI_TOKEN='a-long-random-secret'
+pnpm dsh --profile web --patch packages/experimental/agui/cordis.patch.yml
+```
+
+Point the Muse server at it:
+
+```dotenv
+AGENT_BACKEND=agui
+AGENT_URL=http://127.0.0.1:3080/agui/run
+AGENT_TOKEN=a-long-random-secret
+```
+
+Routes, all under `basePath` and all requiring `Authorization: Bearer <token>`:
+
+| Route | Purpose |
+|---|---|
+| `POST /run` | AG-UI `RunAgentInput`; the newest `user` message is submitted to the thread's Agent and the turn streams back as `text/event-stream` (`data: <json>` per event). |
+| `GET /threads` | Root Sessions with title, archived flag, cwd, createdAt and whether an Agent is live. Needs `sessionQuery`. |
+| `POST /threads` `{ id?, cwd? }` | Create a Session ahead of its first run. |
+| `PATCH /threads/:id` `{ title?, archived? }` | Rename (needs `sessionTitle`) or archive (needs `workspaceRegistry`). |
+| `GET /threads/:id/messages` | AG-UI `user`, `assistant` and `tool` messages projected from the durable log. Needs `sessionQuery`. |
+| `POST /approvals/:id` `{ decision: "allow" \| "reject" }` | Answer a `CUSTOM dsh.approval` event. |
+| `POST /questions/:id` `{ answers: [...] }` | Answer a `CUSTOM dsh.question` event. |
+
+Events emitted during a run: `RUN_STARTED`, `TEXT_MESSAGE_*`, `REASONING_MESSAGE_*`, `TOOL_CALL_START/ARGS/END/RESULT`, `SUBAGENT_STARTED/FINISHED/ERROR`, `CUSTOM` (`dsh.approval`, `dsh.question`) and `RUN_FINISHED` or `RUN_ERROR`. Closing the response cancels the turn.
+
+### Configuration
+
+| Key | Meaning |
+|---|---|
+| `tokenEnv` | Environment variable holding the bearer token. Required; an empty value fails activation. |
+| `basePath` | Absolute route prefix without a trailing slash. Default `/agui`. |
+| `provider`, `model` | Route for Agents this bridge creates or resumes. |
+| `defaultCwd` | Working directory for new Sessions when `forwardedProps.cwd` is absent. Defaults to the process cwd. |
+| `maxBodyBytes` | Largest accepted request body. Default 1 MiB. |
+
+-----
+
+<a id="understand-the-implementation"></a>
+## Understand the implementation
+
+<details>
+<summary>Implementation internals — click to expand</summary>
+
+`src/run.ts` drives one turn: it queues the user message with `agent.followup`, correlates the claimed turn through `agent/inbox/claimed`, projects `agent/assistant-stream` frames into text, reasoning and tool-call events as the model streams, reads `tool/result` and `turn/end` from `session/event`, and finishes with `RUN_FINISHED` or `RUN_ERROR`. Every listener is scoped to the exact Agent and removed when the run settles; the Session is flushed afterwards so the list and history routes read a durable log.
+
+`src/index.ts` owns admission, the per-thread `AgentHandle` cache (live in this process, resumed from persistence, or created), the pending approval and question maps, and route dispatch. `src/projection.ts` derives history messages from committed events: only `user/message` events with `source.kind === 'user'`, `assistant/message` and `tool/result` appear, so injected context never reaches the client.
+
+**Runtime invariant:** No runtime invariant companion is published. Every fact the bridge reports is read from the Agent runtime and the Session log; it keeps no independent durable state.
+
+</details>
+
+-----
+
+<a id="model-experience"></a>
+## Model Experience
+
+The model sees no difference from a Web session: the same system prompt, tools and approval policy apply. An approval or question the model triggers waits for the client's answer; if the client disconnects, the request resolves `cancelled` and the turn is cancelled.
+
+-----
+
+<a id="known-limitations-and-deferred-work"></a>
+## Known Limitations and Deferred Work
+
+- One run per thread at a time; a second `POST /run` answers 409.
+- Thread `updatedAt` is not reported; `createdAt` comes from the Session header.
+- `SUBAGENT_*` events are emitted for every subagent run in the process while a run streams, not only for the streaming thread's descendants.
+- Reasoning and text of a superseded model attempt are streamed and then replaced by the retry's output; the client sees both.
+- No TLS and no per-user identity: one bearer token admits one trusted front-end.
+
+-----
+
+<a id="dev-note"></a>
+## Dev Note
+
+<details>
+<summary>Maintainer working context — click to expand</summary>
+
+Tests mount a real AgentLoop, JSONL persistence, the test session-query engine and a listening `WebServer` on port 0, then call the routes over HTTP (`tests/harness.ts`).
+
+</details>

@@ -1,0 +1,25 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "lib/types"
+  },
+  "include": ["src"],
+  "references": [
+    { "path": "../../../vendor/cosmokit" },
+    { "path": "../../../vendor/cordis" },
+    { "path": "../../../vendor/loader" },
+    { "path": "../../../vendor/schemastery" },
+    { "path": "../../core/agent" },
+    { "path": "../../core/session" },
+    { "path": "../../host/webserver" },
+    { "path": "../../llm/llm" },
+    { "path": "../../session/session-persistence" },
+    { "path": "../../session-query/session-query" },
+    { "path": "../../session/session-title" },
+    { "path": "../../subagent/subagent" },
+    { "path": "../../interaction/user-approval" },
+    { "path": "../../interaction/user-questions" },
+    { "path": "../../workspace/workspace" }
+  ]
+}
