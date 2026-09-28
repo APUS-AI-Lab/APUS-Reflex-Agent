@@ -76,3 +76,10 @@
 - 本地：`~/Documents/Code/xDAN-System3-PersonalAgent-Harness`，旧路径 `~/Documents/Code/xDAN-System3-DSH` 为软链接；worktree 已 `git worktree repair`。
 - 分支名不变：`feat-system3-foundation`、`feat-dsh-agui`。
 - 待合并时处理：`docs/feat-system3-foundation/*` 与 System3 各包 `package.json` 中的旧仓库 URL（位于 Codex 在用的 foundation 分支，靠重定向工作）。
+
+## 4.8 M2 v1 · App 能力经 MCP（2026-09-28，已实测）
+- Overlay `docs/feat-dsh-agui/app-mcp.patch.yml`：挂 `@deepseek-ai/dsh-mcp-client`（serverName `app`，streamable-http，`APP_MCP_URL` 默认 `http://127.0.0.1:8787/mcp`，Bearer `MUSE_MCP_TOKEN`）。启动时与 agui、fidoo 两个 overlay 一起传。
+- 模型看到的工具名：`mcp__app__search_mail`、`read_mail_thread`、`browse_web`、`agent_status`、`create_goal`、`watch_page`、`remember_fact`。
+- persona 新增：优先用 `mcp__app__*` 工具处理邮件/目标/记忆/网页；私有结果不外发；工具前的进度说明也用用户语言。
+- 事实：mcp-client 丢弃结果 `_meta`；`structuredContent`（含 `_privacy`）只在进程内（`tools/result` 可读）——M3 的 System3 隐私门控从这里取。MCP 工具默认不走审批。
+- 实测：App 聊天问 permission slip 邮件 → `mcp__app__search_mail` → `mcp__app__read_mail_thread` → 中文作答；App 端显示邮件卡片。

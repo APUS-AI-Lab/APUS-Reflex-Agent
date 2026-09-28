@@ -115,6 +115,7 @@ describe('AG-UI bridge', () => {
     expect(systemOf(0)).toContain('Be brief and direct')
     expect(systemOf(0)).not.toContain('DeepSeek Harness')
     expect(systemOf(0)).toContain('Do not volunteer internal details')
+    expect(systemOf(0)).toContain('mcp__app__')
     // A later run with a new persona applies to the same Agent's next step.
     await harness.run('thread-persona', 'again', 'p2', { persona: { name: 'Iris', tone: 'warm' } })
     expect(systemOf(1)).toContain('You are Iris')
