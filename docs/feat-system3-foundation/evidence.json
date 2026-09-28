@@ -1,7 +1,6 @@
 {
   "date": "2026-09-24",
   "status": "design_pending_approval",
-  "upstream_sha": "46a7f68b0922371ce7144b668b90e377d8e799f4",
   "jev_skill_sha": "259a798ab8df70a3566f1cb7f8226e533782d847",
   "private_repo": "cryptoSUN2049/xDAN-System3-DSH",
   "remote_code_pushed": false,
@@ -143,5 +142,11 @@
       "exists": true,
       "sha256": "9e24adee62987e38e0577c4ba051b15b015f61cd5d5412dc56882094f5e52c2b"
     }
-  ]
+  ],
+  "upstream_snapshot": {
+    "repository": "https://github.com/deepseek-ai/deepseek-harness",
+    "branch": "master",
+    "audited_on": "2026-09-24",
+    "historical_line_numbers": true
+  }
 }

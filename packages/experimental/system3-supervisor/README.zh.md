@@ -7,11 +7,9 @@ kind: "package-library"
 
 [English](README.md) | 中文
 
-## 摘要
+## 概述
 
-这是无依赖的监督库，让 Jev 建议服从独立证据。只有目标 revision 最新、所有必
-需检查通过、证据引用存在且预算仍有余量时，`candidate_done` 才会变成 `done`。
-它还记录模型与基线的分歧，并区分 provider usage 与估算值。
+这是无依赖的监督库，让 Jev 建议服从独立证据。只有目标 revision 最新、所有必需检查通过、证据引用存在且预算仍有余量时，`candidate_done` 才会变成 `done`。 它还记录模型与基线的分歧，并区分 provider usage 与估算值。
 
 ## 目录
 
@@ -19,7 +17,7 @@ kind: "package-library"
 - [实现说明](#understand-the-implementation)
 - [模型体验](#model-experience)
 - [已知限制与后续工作](#known-limitations-and-deferred-work)
-- [开发说明](#dev-note)
+- [开发备注](#dev-note)
 
 -----
 
@@ -37,16 +35,23 @@ const result = superviseSystem3Advice({
 })
 ```
 
-只有 `result.action` 可以作为完成决策。把 `compareSystem3Advice()` 的输出作为
-shadow evidence 持久化；把 provider 报告的 usage 以 `source: 'provider'` 传给
-`validateSystem3CostRecord()`，估算值保持显式标记。
+只有 `result.action` 可以作为完成决策。把 `compareSystem3Advice()` 的输出作为 shadow evidence 持久化；把 provider 报告的 usage 以 `source: 'provider'` 传给 `validateSystem3CostRecord()`，估算值保持显式标记。
+
+-----
 
 <a id="understand-the-implementation"></a>
 ## 实现说明
 
-监督器在处理建议前拒绝过期目标 revision 和缺失证据。检查失败返回 `retry`，
-检查未知返回 `escalate`，未知建议安全失败。`sumSystem3CostRecords()` 只做算术，
-不会把估算值变成 provider 事实。
+<details>
+<summary>实现内部细节——点击展开</summary>
+
+监督器在处理建议前拒绝过期目标 revision 和缺失证据。检查失败返回 `retry`， 检查未知返回 `escalate`，未知建议安全失败。`sumSystem3CostRecords()` 只做算术， 不会把估算值变成 provider 事实。
+
+**Runtime invariant:** 不发布 runtime invariant companion。本库根据显式输入计算结果，不维护可相互偏离的独立可变观测。
+
+</details>
+
+-----
 
 <a id="model-experience"></a>
 ## 模型体验
@@ -59,8 +64,7 @@ shadow evidence 持久化；把 provider 报告的 usage 以 `source: 'provider'
 
 #### Token effect
 
-没有直接影响。ledger 记录真实 usage 或明确标注的估算值，以便评估 Jev 额外请求
-和它避免的工作。
+没有直接影响。ledger 记录真实 usage 或明确标注的估算值，以便评估 Jev 额外请求和它避免的工作。
 
 #### KV Cache effect
 
@@ -70,14 +74,11 @@ shadow evidence 持久化；把 provider 报告的 usage 以 `source: 'provider'
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- 监督器信任独立检查提供方和证据清单，不运行测试、不检查文件，也不执行进程
-  沙箱。
-- 成本记录包含 token 数和耗时，不包含 provider 价格表；价格版本关联属于 DSH
-  账务层。
+- 监督器信任独立检查提供方和证据清单，不运行测试、不检查文件，也不执行进程沙箱。
+- 成本记录包含 token 数和耗时，不包含 provider 价格表；价格版本关联属于 DSH 账务层。
 - Shadow 对照只是观测 seam，不会自动训练或晋级 Jev checkpoint。
 
 <a id="dev-note"></a>
-### 开发说明
+### 开发备注
 
-测试覆盖通过完成、失败/未知检查、过期目标、缺失证据、shadow 分歧、usage 求和
-和非法计数。运行 `vitest run packages/experimental/system3-supervisor/tests/supervisor.spec.ts`。
+无。

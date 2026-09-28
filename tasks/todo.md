@@ -19,6 +19,17 @@
 - [ ] M2：一个外部宿主真实接入与配对任务评测。
 - [ ] A线：冻结基线→可信数据→独立controller训练与晋级。
 
+## M1-f · APUS/OpenJev 9B 接入（2026-09-25）
+
+- [x] 只读核查 RunPod Pod、GPU、vLLM high32/low16、gateway 健康状态与真实 Choice 请求。
+- [x] 确认 `/v1/systemone` 是独立 decision 协议，不能伪装为 `llm-pi-ai` 生成路由。
+- [x] 写入接入设计：`docs/feat-system3-foundation/jev-9b-integration-design.md`。
+- [x] 用户审批设计后，确定 `apus-dsh-jev-plugin` 命名与通用 `ctx.jev` contract。
+- [ ] 实现 `apus-dsh-jev-plugin` Jev client capability seam 与 System One 协议校验。
+- [ ] 接入 System3 shadow mode、Session decision receipt 与 deterministic fallback。
+- [ ] 在现有 RunPod Pod 同机跑 built smoke；不重启 vLLM/gateway、不公开 30135。
+- [ ] 完成 timeout、invalid response、unknown、replay 和 local-only 回归。
+
 ## Review
 
 M0完成了上游门禁修复、依赖安装、构建与Python SDK回归测试，并已推送私有仓库。M1-a新增确定性本地优先路由策略；完整日志筛选、影子监督与费用账本仍未完成。设计与专项HTML做过文件、hash、浏览器布局及交互检查；性能与训练结果来自标注来源，未在本轮复测。

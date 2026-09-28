@@ -14,7 +14,7 @@ System1 是 APUS/OpenJev 的高频候选判断与经专项验证的轻量工作�
 
 ## 2. 当前已执行与仓库状态
 
-官方上游为 https://github.com/deepseek-ai/deepseek-harness ，2026-09-24 固定 HEAD 为 46a7f68b0922371ce7144b668b90e377d8e799f4；原默认分支 master，许可证 MIT。
+官方上游为 https://github.com/deepseek-ai/deepseek-harness ，源码审阅日期为 2026-09-24，审阅来源为当时的 upstream/master；原默认分支 master，许可证 MIT。
 
 已完整 clone 到 /Users/gumpm5/Documents/Code/xDAN-System3-DSH，保留 Git 历史；本地根分支改为 main，上游 remote 为 upstream，自有 origin 为 https://github.com/cryptoSUN2049/xDAN-System3-DSH.git。远端已创建并回读 private=true。工作树为 .Codex/worktrees/feat-system3-foundation，分支同名。
 
@@ -62,7 +62,7 @@ flowchart TD
 
 ## 4.1 最新源码中的八个结合点
 
-以下路径相对于仓库根目录；行号固定于46a7f68。所有收益都是待实验假设，源码审计不等于运行验证。
+以下路径相对于仓库根目录；行号对应2026-09-24的源码审阅快照。所有收益都是待实验假设，源码审计不等于运行验证。
 
 | 优先级 | 能力 | 已有机制与源码位置 | System1增量与边界 |
 | --- | --- | --- | --- |
@@ -131,7 +131,7 @@ DSH 的 hooks-codex/hooks-claude-code 是在 DSH 中执行相应hook配置；sub
 
 复用：uni_agent/agents/dsh/agent.py与runner.py的黑盒SDK/Gateway；tasks/harbor_dsh/protocol.py的身份/预算/版本协议；ledger.py取消ACK；trajectory_audit.py的trace/reward/receipt一致性；framework/framework.py的teacher/mask/VERL消费；tasks/dsh/rsi_candidates.py的登记、配对晋级与回滚原语。去污复用data-decontam-gate专项，新增办公与长任务数据适配。
 
-新46a7f68 Python SDK仍提供DeepSeekHarnessConfig、run(input, session_id)、events/final_response/finish_reason，外观相容；旧发布清单绑定Exp b236969、Session v2及0.1.3a2，运行语义尚未认证。需要重新构建SDK/runtime/image，固定完整profile及patch digest，真实验收tool/trace/receipt/stop/restart/cancel。sdk-minimal缺少压缩、文件工具、workspace指令、skills、jobs、subagents，不用它代表完整System3。
+2026-09-24审阅的 Python SDK仍提供DeepSeekHarnessConfig、run(input, session_id)、events/final_response/finish_reason，外观相容；旧发布清单绑定历史Exp发布版本、Session v2及0.1.3a2，运行语义尚未认证。需要重新构建SDK/runtime/image，固定完整profile及patch digest，真实验收tool/trace/receipt/stop/restart/cancel。sdk-minimal缺少压缩、文件工具、workspace指令、skills、jobs、subagents，不用它代表完整System3。
 
 逐请求max_tokens不等于多模型episode硬预算。跨模型成本、deadline、重试、子代理都要合并账本并执行硬停止；字段存在不作为预算已生效的证明。
 
@@ -195,7 +195,7 @@ M0：审批设计、修复上游推送门禁、发布私有基线。M1：DSH原�
 
 ## 13. 来源与复核入口
 
-- [DSH固定源码](https://github.com/deepseek-ai/deepseek-harness/tree/46a7f68b0922371ce7144b668b90e377d8e799f4)
+- [DSH维护源码](https://github.com/deepseek-ai/deepseek-harness/tree/master)
 - [APUS模型卡](https://huggingface.co/apus-ailab/APUS-OpenJev-v1)
 - [用户提供的微信文章](https://mp.weixin.qq.com/s/QJOjAdIuw9PjsY-QiKZfdw?scene=1)
 - [Jev Skills固定revision](https://github.com/wuyoscar/jev-skill/tree/259a798ab8df70a3566f1cb7f8226e533782d847)

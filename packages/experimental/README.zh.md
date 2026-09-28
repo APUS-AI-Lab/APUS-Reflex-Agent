@@ -48,6 +48,7 @@ kind: "package-group"
 | [`system3-evidence`](system3-evidence/README.zh.md) | 为长工具输出提供可恢复的有界证据片段 | 库，不使用 ctx key |
 | [`system3-supervisor`](system3-supervisor/README.zh.md) | 完成门禁、shadow 对照与 usage ledger 原语 | 库，不使用 ctx key |
 | [`system3`](system3/README.zh.md) | 组合 System3 策略、证据和监督能力的 Cordis 服务 | `ctx.system3` |
+| [`apus-dsh-jev-plugin`](apus-dsh-jev-plugin/README.zh.md) | 通过 System One HTTP provider 提供与部署无关的类型化 Jev 决策 | `ctx.jev` |
 
 -----
 

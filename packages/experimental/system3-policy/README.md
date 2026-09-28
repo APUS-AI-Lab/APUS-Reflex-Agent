@@ -9,11 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-This dependency-free library is the privacy boundary for the experimental
-System3 harness. Jev, DSH, or a provider registry may propose a route, but
-`admitSystem3Routes()` applies the user's local, controlled, or cloud-approved
-policy before any route is selected. A model score cannot bypass a blocked
-network route.
+This dependency-free library is the privacy boundary for the experimental System3 harness. Jev, DSH, or a provider registry may propose a route, but `admitSystem3Routes()` applies the user's local, controlled, or cloud-approved policy before any route is selected. A model score cannot bypass a blocked network route.
 
 ## Table of Contents
 
@@ -28,9 +24,7 @@ network route.
 <a id="use-this-package"></a>
 ## Use this package
 
-The package has no Cordis plugin and makes no network calls. Pass ordered route
-candidates to the pure functions and use the returned `selected` route only
-after admission.
+The package has no Cordis plugin and makes no network calls. Pass ordered route candidates to the pure functions and use the returned `selected` route only after admission.
 
 ```ts
 import { selectSystem3Route } from '@deepseek-ai/dsh-experimental-system3-policy'
@@ -46,19 +40,23 @@ const decision = selectSystem3Route(
 // decision.selected?.id === 'local-9b'
 ```
 
-Use `controlled` or `cloud-approved` only with explicit remote route ids and
-data-class allowlists. If no candidate is legal, `requiresClarification` is
-true and the caller must ask for approval or fail closed.
+Use `controlled` or `cloud-approved` only with explicit remote route ids and data-class allowlists. If no candidate is legal, `requiresClarification` is true and the caller must ask for approval or fail closed.
+
+-----
 
 <a id="understand-the-implementation"></a>
 ## Understand the implementation
 
-Local candidates are retained. Network candidates require an approved route id
-and an allowlist entry for every data class they may receive. `cloud-approved`
-also requires `cloudApproval: true`. Duplicate ids are reduced to their first
-occurrence, and the original candidate order is preserved. This makes the
-function suitable as a deterministic, auditable seam between classification
-and execution.
+<details>
+<summary>Implementation internals — click to expand</summary>
+
+Local candidates are retained. Network candidates require an approved route id and an allowlist entry for every data class they may receive. `cloud-approved` also requires `cloudApproval: true`. Duplicate ids are reduced to their first occurrence, and the original candidate order is preserved. This makes the function suitable as a deterministic, auditable seam between classification and execution.
+
+**Runtime invariant:** No runtime invariant companion is published. This library computes results from explicit inputs and owns no independent mutable observations.
+
+</details>
+
+-----
 
 <a id="model-experience"></a>
 ## Model Experience
@@ -81,17 +79,11 @@ None; the package does not assemble or send model requests.
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- The package checks declared route domains and data classes; it does not
-  inspect a provider's actual network behavior or enforce OS-level isolation.
-- Route metadata must be supplied by a trusted provider registry. A later M1
-  integration will bind this pure policy to DSH route registration and audit
-  events.
-- The package does not infer consent from model confidence. A user approval
-  surface and durable export ledger are separate System3 work.
+- The package checks declared route domains and data classes; it does not inspect a provider's actual network behavior or enforce OS-level isolation.
+- Route metadata must come from a trusted host. The System3 consumer applies this policy before a Jev shadow request; callers own other execution paths.
+- The package does not infer consent from model confidence. A user approval surface and durable export ledger are separate System3 work.
 
 <a id="dev-note"></a>
 ### Dev Note
 
-The tests cover local-only blocking, controlled data-class filtering, explicit
-cloud approval, Jev preference fallback, duplicate suppression, and fail-closed
-selection. Run `vitest run packages/experimental/system3-policy/tests/policy.spec.ts`.
+None.

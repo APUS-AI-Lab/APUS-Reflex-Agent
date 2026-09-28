@@ -9,11 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-This dependency-free library keeps Jev advice subordinate to independent
-evidence. `candidate_done` becomes `done` only when the goal revision is current,
-all required checks pass, evidence references exist, and budget remains. It also
-records model-vs-baseline divergence and distinguishes provider usage from
-estimates.
+This dependency-free library keeps Jev advice subordinate to independent evidence. `candidate_done` becomes `done` only when the goal revision is current, all required checks pass, evidence references exist, and budget remains. It also records model-vs-baseline divergence and distinguishes provider usage from estimates.
 
 ## Table of Contents
 
@@ -39,18 +35,23 @@ const result = superviseSystem3Advice({
 })
 ```
 
-Treat `result.action` as the only completion decision. Persist
-`compareSystem3Advice()` output as shadow evidence, and pass provider-reported
-usage to `validateSystem3CostRecord()` with `source: 'provider'`; estimates stay
-explicitly marked.
+Treat `result.action` as the only completion decision. Persist `compareSystem3Advice()` output as shadow evidence, and pass provider-reported usage to `validateSystem3CostRecord()` with `source: 'provider'`; estimates stay explicitly marked.
+
+-----
 
 <a id="understand-the-implementation"></a>
 ## Understand the implementation
 
-The supervisor rejects stale goal revisions and missing evidence before advice
-handling. Failed checks produce `retry`; unknown checks produce `escalate`;
-unknown advice fails closed. `sumSystem3CostRecords()` is arithmetic only and
-does not turn estimates into provider facts.
+<details>
+<summary>Implementation internals — click to expand</summary>
+
+The supervisor rejects stale goal revisions and missing evidence before advice handling. Failed checks produce `retry`; unknown checks produce `escalate`; unknown advice fails closed. `sumSystem3CostRecords()` is arithmetic only and does not turn estimates into provider facts.
+
+**Runtime invariant:** No runtime invariant companion is published. This library computes results from explicit inputs and owns no independent mutable observations.
+
+</details>
+
+-----
 
 <a id="model-experience"></a>
 ## Model Experience
@@ -73,16 +74,11 @@ None directly; the supervisor does not assemble requests, and a caller may keep 
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- The supervisor trusts the independent check provider and evidence inventory;
-  it does not run tests, inspect files, or enforce a process sandbox.
-- Cost records contain token counts and elapsed time, not provider price tables;
-  price-version joins belong to the DSH accounting layer.
-- Shadow comparison is an observation seam. It does not train or automatically
-  promote a Jev checkpoint.
+- The supervisor trusts the independent check provider and evidence inventory; it does not run tests, inspect files, or enforce a process sandbox.
+- Cost records contain token counts and elapsed time, not provider price tables; price-version joins belong to the DSH accounting layer.
+- Shadow comparison is an observation seam. It does not train or automatically promote a Jev checkpoint.
 
 <a id="dev-note"></a>
 ### Dev Note
 
-Tests cover accepted completion, failed/unknown checks, stale goals, missing
-evidence, shadow divergence, usage summation, and invalid counts. Run
-`vitest run packages/experimental/system3-supervisor/tests/supervisor.spec.ts`.
+None.

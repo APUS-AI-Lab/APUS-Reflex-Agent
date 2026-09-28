@@ -1,0 +1,9 @@
+# Source-checkout overlay for a harness running on the Jev RunPod host.
+# Apply after system3-fidoo-runpod-tunnel.patch.yml: the whole System3 config wins.
+- id: system3
+  config:
+    privacyMode: local-only
+    observeAgentLoop: true
+    jevRouteId: jev
+    jevExecutionDomain: local
+    jevEffort: low

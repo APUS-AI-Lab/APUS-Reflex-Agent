@@ -1,0 +1,4 @@
+# Explicit verification consumer; no secrets or automatic AgentLoop hook.
+- insert:
+    - id: system3-live-probe
+      name: ../../packages/experimental/system3/tests/fixtures/live-probe.ts

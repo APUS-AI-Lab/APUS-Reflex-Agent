@@ -2,7 +2,6 @@
   "date": "2026-09-24",
   "artifact": "system3-special-plan.html",
   "status": "proposal_with_foundation_implementation",
-  "upstream_sha": "46a7f68b0922371ce7144b668b90e377d8e799f4",
   "methods": [
     "read-only source review",
     "prior primary-source research and local reports",
@@ -76,5 +75,11 @@
     "product_tests": "System3 package tests and real AgentLoop mock smoke passed",
     "model_calls": "none",
     "remote_writes": "none"
+  },
+  "upstream_snapshot": {
+    "repository": "https://github.com/deepseek-ai/deepseek-harness",
+    "branch": "master",
+    "audited_on": "2026-09-24",
+    "historical_line_numbers": true
   }
 }
