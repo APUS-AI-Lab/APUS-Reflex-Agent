@@ -118,7 +118,7 @@ describe('AG-UI bridge', () => {
     // A later run with a new persona applies to the same Agent's next step.
     await harness.run('thread-persona', 'again', 'p2', { persona: { name: 'Iris', tone: 'warm' } })
     expect(systemOf(1)).toContain('You are Iris')
-    // A thread without a persona uses the Agent Space default, never the harness identity.
+    // A thread without a persona uses the Personal Agent default, never the harness identity.
     await harness.run('thread-default', 'hello', 'p3')
     expect(systemOf(2)).toContain('You are Muse')
     expect(personaFrom({ name: ' ', tone: 'warm' })).toBeUndefined()
