@@ -9,6 +9,7 @@ import { mountAgentLoopTestDependencies } from '@deepseek-ai/dsh-agent-loop-test
 import WebServer from '@deepseek-ai/dsh-host-webserver'
 import JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
 import ApprovalService from '@deepseek-ai/dsh-user-approval'
+import UserQuestionService from '@deepseek-ai/dsh-user-questions'
 import { MockAdapter } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import { TestSessionQueryEngine } from '../../../session-query/session-query/tests/test-service.ts'
 import * as AguiPlugin from '../src/index.ts'
@@ -42,6 +43,7 @@ export async function makeAguiHarness(script: ConstructorParameters<typeof MockA
   await ctx.plugin(JsonlSessionPersistence, { root, compression: 'none' })
   await ctx.plugin(TestSessionQueryEngine)
   await ctx.plugin(ApprovalService, {})
+  await ctx.plugin(UserQuestionService)
   await ctx.plugin(AgentLoop, { agents: [] })
   await ctx.plugin(WebServer, { host: '127.0.0.1', port: 0 })
   const adapter = new MockAdapter(script)

@@ -24,8 +24,22 @@ JEV_SSH_PORT = os.environ.get("SYSTEM3_JEV_SSH_PORT", "").strip() or "22"
 KEY_NAMES = ("SYSTEM3_LITELLM_API_KEY", "APUS_JEV_API_KEY")
 
 
+# user@host or host; never an ssh option (a leading "-" would be parsed as one).
+SSH_HOST_PATTERN = re.compile(r"^[A-Za-z0-9._@:\[\]]+(?:-[A-Za-z0-9._@:\[\]]+)*$")
+
+
 def require_hosts() -> None:
-    """Fail early with a clear message when the SSH hosts are not configured."""
+    """Fail early when the SSH hosts are missing or could be read as ssh options."""
+    for name, value in (
+        ("SYSTEM3_FIDOO_HOST", FIDOO_HOST),
+        ("SYSTEM3_JEV_HOST", JEV_HOST),
+    ):
+        if value and not SSH_HOST_PATTERN.match(value):
+            raise SystemExit(
+                f"{name} must look like user@host, got an unsupported value"
+            )
+    if not JEV_SSH_PORT.isdigit():
+        raise SystemExit("SYSTEM3_JEV_SSH_PORT must be a port number")
     missing = [
         name
         for name, value in (

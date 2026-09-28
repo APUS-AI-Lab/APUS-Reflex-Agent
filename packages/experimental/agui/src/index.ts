@@ -127,6 +127,10 @@ export function apply(ctx: Context, config: Config): void {
     return holder
   }
   const runs = new Map<string, ActiveRun>()
+  // Threads with a run starting or streaming. Claimed before the first await so two
+  // concurrent requests for one thread cannot both pass the busy check.
+  const busy = new Set<string>()
+  const resolving = new Map<string, Promise<AgentHandle>>()
   const approvals = new Map<string, Pending<ApprovalOutcome>>()
   const questions = new Map<string, Pending<AskUserQuestionAnswer>>()
 
@@ -167,10 +171,20 @@ export function apply(ctx: Context, config: Config): void {
     })
   })
 
-  /** The Agent for a thread: live in this process, resumed from the log, or created. */
-  const resolveAgent = async (threadId: string, cwd: string | undefined, create: boolean): Promise<AgentHandle> => {
+  /** The Agent for a thread; concurrent callers share one resolution. */
+  const resolveAgent = (threadId: string, cwd: string | undefined, create: boolean): Promise<AgentHandle> => {
     const cached = handles.get(threadId)
-    if (cached !== undefined) return cached
+    if (cached !== undefined) return Promise.resolve(cached)
+    let pending = resolving.get(threadId)
+    if (pending === undefined) {
+      pending = openAgent(threadId, cwd, create).finally(() => { resolving.delete(threadId) })
+      resolving.set(threadId, pending)
+    }
+    return pending
+  }
+
+  /** The Agent for a thread: live in this process, resumed from the log, or created. */
+  const openAgent = async (threadId: string, cwd: string | undefined, create: boolean): Promise<AgentHandle> => {
     // Loader siblings mount concurrently; a thread must see the complete application.
     await ctx.get('loader')?.await()
     const sessionId = sessionIdOf(threadId)
@@ -221,17 +235,27 @@ export function apply(ctx: Context, config: Config): void {
     const latest = [...body.messages].reverse().find(message => message.role === 'user')
     const text = latest === undefined ? '' : userText(latest)
     if (text.trim() === '') throw new HttpError(400, 'the run carries no user message')
-    if (runs.has(body.threadId)) throw new HttpError(409, 'thread already running')
+    if (busy.has(body.threadId)) throw new HttpError(409, 'thread already running')
+    busy.add(body.threadId)
+    try {
+      await streamRun(body, text, res)
+    } finally {
+      busy.delete(body.threadId)
+    }
+  }
+
+  const streamRun = async (body: RunAgentInput, text: string, res: ServerResponse): Promise<void> => {
     personaOf(body.threadId).persona = personaFrom(body.forwardedProps?.persona) ?? personaOf(body.threadId).persona
     const handle = await resolveAgent(body.threadId, body.forwardedProps?.cwd, true)
     const sse = new SseWriter(res)
     const run: ActiveRun = { runId: body.runId, threadId: body.threadId, agent: handle.agent, sse }
     runs.set(body.threadId, run)
-    // The client left mid-turn. The Agent may already be gone when the socket
-    // closes during teardown, so a failed cancel is logged, never thrown.
+    // The client left mid-turn. The socket can close during teardown, after the
+    // plugin's own dispose already cancelled the run and the context went
+    // inactive, so the whole check-and-cancel is logged on failure, never thrown.
     const onClose = (): void => {
-      if (runs.get(body.threadId) !== run || ctx.agents.get(sessionIdOf(body.threadId)) !== handle.agent) return
       try {
+        if (runs.get(body.threadId) !== run || ctx.agents.get(sessionIdOf(body.threadId)) !== handle.agent) return
         handle.agent.cancel({ kind: 'user' })
       } catch (error: unknown) {
         ctx.logger.warn(`agui: cancel after client close failed: ${String(error)}`)
@@ -301,9 +325,10 @@ export function apply(ctx: Context, config: Config): void {
     if (req.method !== 'POST' || id === undefined) throw new HttpError(404, 'not found')
     const entry = pending.get(id)
     if (entry === undefined) throw new HttpError(404, 'no such pending request')
-    const body = objectBody(await readJson(req, config.maxBodyBytes))
+    const value = answer(objectBody(await readJson(req, config.maxBodyBytes)))
+    if (pending.get(id) !== entry) throw new HttpError(404, 'no such pending request')
     pending.delete(id)
-    entry.resolve(answer(body))
+    entry.resolve(value)
     json(res, 204, null)
   }
 

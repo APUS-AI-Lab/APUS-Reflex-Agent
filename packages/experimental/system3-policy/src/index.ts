@@ -76,6 +76,8 @@ function includesDataClass(
 function isRemoteApproved(candidate: System3RouteCandidate, policy: System3PrivacyPolicy): System3BlockReason | undefined {
   if (policy.mode === 'local-only') return 'network-disallowed'
   if (!policy.approvedRemoteIds?.includes(candidate.id)) return 'route-not-approved'
+  // A network route that declares no data classes cannot be checked, so it is refused.
+  if (candidate.dataClasses.length === 0) return 'data-class-not-approved'
   if (candidate.dataClasses.some(dataClass => !includesDataClass(policy.approvedRemoteDataClasses, dataClass))) {
     return 'data-class-not-approved'
   }

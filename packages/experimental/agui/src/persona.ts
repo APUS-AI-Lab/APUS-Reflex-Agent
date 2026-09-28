@@ -24,9 +24,12 @@ const TONES: Record<PersonaTone, string> = {
 export function personaFrom(value: unknown): Persona | undefined {
   if (typeof value !== 'object' || value === null) return undefined
   const { name, tone } = value as { name?: unknown; tone?: unknown }
-  if (typeof name !== 'string' || name.trim() === '' || name.length > 60) return undefined
+  if (typeof name !== 'string') return undefined
+  // The name lands in the system prompt: one line, no control characters.
+  const clean = name.replace(/[\u0000-\u001f\u007f\u2028\u2029]/g, ' ').replace(/\s+/g, ' ').trim()
+  if (clean === '' || clean.length > 60) return undefined
   if (tone !== 'warm' && tone !== 'concise' && tone !== 'thoughtful') return undefined
-  return { name: name.trim(), tone }
+  return { name: clean, tone }
 }
 
 /** The persona section text: who the agent is to the person, and how it speaks. */

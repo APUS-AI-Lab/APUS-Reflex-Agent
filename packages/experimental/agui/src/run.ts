@@ -114,6 +114,17 @@ export async function driveRun(ctx: Context, run: ActiveRun, text: string): Prom
     if (subject === agent && claimed.id === message.id) turn = claimedTurn
   }))
 
+  // A cancel or archive can clear the inbox before a busy Agent claims this
+  // message; no turn will ever start for it, so the run ends as aborted.
+  disposers.push(ctx.on('agent/inbox/discarded', ({ agent: subject, message: dropped }) => {
+    if (subject === agent && dropped.id === message.id && turn === undefined) {
+      finished.resolve({ kind: 'aborted', reason: { kind: 'user' } })
+    }
+  }))
+  disposers.push(ctx.on('agent/disposed', ({ agent: subject }) => {
+    if (subject === agent) finished.resolve({ kind: 'aborted', reason: { kind: 'disposed' } })
+  }))
+
   disposers.push(ctx.on('session/event', (session, event) => {
     if (session !== agent.session) return
     if (event.type === 'tool/result') {
@@ -135,10 +146,15 @@ export async function driveRun(ctx: Context, run: ActiveRun, text: string): Prom
     finished.resolve({ kind: 'error', error: { message: error instanceof Error ? error.message : String(error), code: 'AGENT_ERROR' } })
   }))
 
+  // Subagent events are process-wide; follow only children of this thread's session.
+  const children = new Set<string>()
   disposers.push(ctx.on('subagent/start', (info) => {
+    if (ctx.sessions.get(info.id)?.header.parentSession !== agent.session.id) return
+    children.add(info.runId)
     sse.send({ type: 'SUBAGENT_STARTED', subagentRunId: info.runId, name: info.provider })
   }))
   disposers.push(ctx.on('subagent/end', (info) => {
+    if (!children.delete(info.runId)) return
     const event: AguiEvent = info.stopReason === 'error'
       ? { type: 'SUBAGENT_ERROR', subagentRunId: info.runId, message: 'subagent failed' }
       : { type: 'SUBAGENT_FINISHED', subagentRunId: info.runId, outcome: { type: info.stopReason === 'completed' ? 'success' : 'suspended' } }
