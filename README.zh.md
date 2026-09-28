@@ -2,6 +2,8 @@
 
 [English](README.md) | 中文
 
+> **xDAN System3 Agent Space · Harness。** 本 fork 是 [xDAN System3 Agent Space](https://github.com/cryptoSUN2049/xDAN-Duse) 的 agent 大脑；Agent Space 是一个手机和电脑都能用的私人 agent。它在上游之上增加了 System3 层（本地优先路由、证据、监督与成本账本，位于 `packages/experimental/system3*`），以及 Agent Space App 所对接的 `agui` 桥（`packages/experimental/agui`）。以下上游 DeepSeek Harness 文档保持不变。分支：`feat-system3-foundation`（System3）、`feat-dsh-agui`（桥）。
+
 DeepSeek Harness（`dsh`）是由 [DeepSeek AI](https://deepseek.com) 开发的开源 agent harness（智能体框架）。
 
 它构建于**一切皆插件**的架构之上，由 [Cordis](https://github.com/cordiverse/cordis) 驱动，其设计参见论文 [_A Programming Paradigm for Spatiotemporal Composability_](https://arxiv.org/abs/2608.25512)。
