@@ -274,6 +274,122 @@ publish(topic: string, payload: InspectorJsonValue, monotonicMs?: number): void
 
 Source: [`packages/experimental/inspector/src/index.ts`](../../packages/experimental/inspector/src/index.ts)
 
+<a id="ctxjev--jev"></a>
+
+### `ctx.jev` — `Jev`
+
+Cordis service that resolves one pinned Jev provider per request.
+
+```ts cordis-catalog
+/**
+ * Register a provider and return the disposer owned by the caller.
+ * @param provider - Provider whose identity is unique in the registry.
+ * @returns A disposer that removes only this registration.
+ */
+register(provider: JevProvider): () => void
+
+/**
+ * List provider metadata without exposing credentials or request data.
+ * @returns Detached registered provider metadata.
+ */
+listProviders(): readonly JevProviderInfo[]
+
+/**
+ * Resolve a request to a provider and effective model without performing I/O.
+ * @param request - Host request and optional provider selection.
+ * @returns Validated request with provider and model pinned.
+ */
+resolve(request: JevRequest): JevSpec
+
+/**
+ * Execute a typed decision, returning unknown when the provider is unavailable or invalid.
+ * @param request - Host state and typed questions.
+ * @param signal - Cancellation propagated to the caller.
+ * @returns Validated result or a safe failure description.
+ */
+async decide(request: JevRequest, signal?: AbortSignal): Promise<JevOutcome>
+```
+
+Source: [`packages/experimental/apus-dsh-jev-plugin/src/index.ts`](../../packages/experimental/apus-dsh-jev-plugin/src/index.ts)
+
+<a id="ctxsystem3--system3service"></a>
+
+### `ctx.system3` — `System3Service`
+
+Unified runtime seam for the System3 pure policies.
+
+```ts cordis-catalog
+/**
+ * Choose the route a request may take under the privacy policy.
+ * @param candidates - Routes the caller could use, in preference order.
+ * @param preferredId - Route to take when it is admitted.
+ * @returns The admitted route, or the reasons every candidate was refused.
+ */
+route(candidates: readonly System3RouteCandidate[], preferredId?: string): System3RouteSelection
+
+/**
+ * Select recoverable evidence that fits the request's budget.
+ * @param request - Candidate evidence items and the budget.
+ * @returns The chosen items and what was left out.
+ */
+evidence(request: System3EvidenceRequest): System3EvidenceSelection
+
+/**
+ * Decide whether a turn may complete from its classified facts.
+ * @param request - Supervisor facts and independent checks.
+ * @returns The deterministic completion decision.
+ */
+supervise(request: System3SupervisorRequest): System3SupervisorResult
+
+/**
+ * Compare model advice with the deterministic decision without changing it.
+ * @param modelAction - Action the model advised.
+ * @param baseline - Deterministic supervisor decision.
+ * @returns Agreement and disagreement facts for the ledger.
+ */
+shadow(modelAction: System3AdviceAction, baseline: System3SupervisorResult): System3ShadowComparison
+
+/**
+ * Validate one usage record before it enters the ledger.
+ * @param record - Usage and cost of one call.
+ * @returns The same record when valid.
+ */
+validateCost(record: System3CostRecord): System3CostRecord
+
+/**
+ * Add usage records into one total.
+ * @param records - Validated usage records.
+ * @returns Their sum.
+ */
+sumCosts(records: readonly System3CostRecord[]): System3CostRecord
+
+/**
+ * Read operational counters, free of user data.
+ * @returns Current counters.
+ */
+snapshot(): System3ServiceSnapshot
+
+/**
+ * Record Jev advice beside the unchanged deterministic baseline.
+ * @param session - Session owning the persisted decision.
+ * @param request - Classified supervisor facts and independent checks.
+ * @param signal - Caller cancellation.
+ * @returns Committed, non-model-visible receipt.
+ */
+shadowDecision(session: Session, request: System3DecisionRequest, signal?: AbortSignal): Promise<System3DecisionReceipt>
+
+/**
+ * Read the latest projected receipt without calling Jev during replay.
+ * @param session - Live or restored Session.
+ * @returns Latest committed receipt, or null before the first decision.
+ */
+lastDecision(session: Session): System3DecisionReceipt | null
+```
+
+Types: [Session](session.zh.md)
+
+Source: [`packages/experimental/system3/src/index.ts`](../../packages/experimental/system3/src/index.ts)
+
 <a id="cordis-events"></a>
 
 ### `cordis/*` events

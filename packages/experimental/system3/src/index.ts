@@ -57,12 +57,48 @@ export interface System3ServiceSnapshot {
 /** Unified runtime seam for the System3 pure policies. */
 export interface System3Service {
   readonly privacyPolicy: System3PrivacyPolicy
+  /**
+   * Choose the route a request may take under the privacy policy.
+   * @param candidates - Routes the caller could use, in preference order.
+   * @param preferredId - Route to take when it is admitted.
+   * @returns The admitted route, or the reasons every candidate was refused.
+   */
   route(candidates: readonly System3RouteCandidate[], preferredId?: string): System3RouteSelection
+  /**
+   * Select recoverable evidence that fits the request's budget.
+   * @param request - Candidate evidence items and the budget.
+   * @returns The chosen items and what was left out.
+   */
   evidence(request: System3EvidenceRequest): System3EvidenceSelection
+  /**
+   * Decide whether a turn may complete from its classified facts.
+   * @param request - Supervisor facts and independent checks.
+   * @returns The deterministic completion decision.
+   */
   supervise(request: System3SupervisorRequest): System3SupervisorResult
+  /**
+   * Compare model advice with the deterministic decision without changing it.
+   * @param modelAction - Action the model advised.
+   * @param baseline - Deterministic supervisor decision.
+   * @returns Agreement and disagreement facts for the ledger.
+   */
   shadow(modelAction: System3AdviceAction, baseline: System3SupervisorResult): System3ShadowComparison
+  /**
+   * Validate one usage record before it enters the ledger.
+   * @param record - Usage and cost of one call.
+   * @returns The same record when valid.
+   */
   validateCost(record: System3CostRecord): System3CostRecord
+  /**
+   * Add usage records into one total.
+   * @param records - Validated usage records.
+   * @returns Their sum.
+   */
   sumCosts(records: readonly System3CostRecord[]): System3CostRecord
+  /**
+   * Read operational counters, free of user data.
+   * @returns Current counters.
+   */
   snapshot(): System3ServiceSnapshot
   /**
    * Record Jev advice beside the unchanged deterministic baseline.
