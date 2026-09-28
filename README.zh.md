@@ -2,7 +2,7 @@
 
 [English](README.md) | 中文
 
-> **xDAN System3 Personal Agent · Harness。** 本 fork 是 [xDAN System3 Personal Agent](https://github.com/cryptoSUN2049/xDAN-Duse) 的 agent 大脑；xDAN Personal Agent 是一个手机和电脑都能用的私人 agent，slogan：「你的私人 Agent，替你把事做完。」它在上游之上增加了 System3 层（本地优先路由、证据、监督与成本账本，位于 `packages/experimental/system3*`），以及 Personal Agent App 所对接的 `agui` 桥（`packages/experimental/agui`）。以下上游 DeepSeek Harness 文档保持不变。分支：`feat-system3-foundation`（System3）、`feat-dsh-agui`（桥）。
+> **xDAN System3 Personal Agent · Harness。** 本 fork 是 [xDAN System3 Personal Agent](https://github.com/cryptoSUN2049/xDAN-System3-PersonalAgent-App) 的 agent 大脑；xDAN Personal Agent 是一个手机和电脑都能用的私人 agent，slogan：「你的私人 Agent，替你把事做完。」它在上游之上增加了 System3 层（本地优先路由、证据、监督与成本账本，位于 `packages/experimental/system3*`），以及 Personal Agent App 所对接的 `agui` 桥（`packages/experimental/agui`）。以下上游 DeepSeek Harness 文档保持不变。分支：`feat-system3-foundation`（System3）、`feat-dsh-agui`（桥）。
 
 DeepSeek Harness（`dsh`）是由 [DeepSeek AI](https://deepseek.com) 开发的开源 agent harness（智能体框架）。
 

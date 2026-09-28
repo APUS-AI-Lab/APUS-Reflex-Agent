@@ -1,12 +1,12 @@
 # feat-dsh-agui — M1 交接（AG-UI over HTTP 桥）
 
-总方案：xDAN-Duse 仓库 `docs/main/system3-dsh-muse/plan.html`。本分支只做 M1。
+总方案：xDAN-System3-PersonalAgent-App 仓库 `docs/main/system3-dsh-muse/plan.html`。本分支只做 M1。
 
 ## 1. TL;DR
 - 目标：让 OpenMuse（`AGENT_BACKEND=agui`）或任意 AG-UI `HttpAgent` 通过 HTTP 驱动 DSH agent；线程 id = Session id，DSH 日志是唯一事实源。
 - 状态：**M1 完成**。新包 `packages/experimental/agui`，5/5 测试，oxlint / `tsc -b tsconfig.host.json` / doc-standard / 翻译配对全过。
 - 分支基于 `feat-system3-foundation`（P0 已推送的 4 个提交之上）。
-- 下一步：M1.5 在 Muse 仓库写 `DshThreadStore`，把 `/api/threads` 与回放代理到本桥。
+- 下一步：M1.5 在 App 仓库写 `DshThreadStore`，把 `/api/threads` 与回放代理到本桥。
 
 ## 2. 本轮交付物
 | 文件 | 说明 |
@@ -50,7 +50,7 @@
 - 结果：`/agui/run` 流 `RUN_STARTED → TEXT_MESSAGE_* → RUN_FINISHED(success)`，回复 `READY`；`/threads/:id/messages` 回读正确；Muse 侧 `@ag-ui/client` `HttpAgent` 直连同一端点通过 schema 校验并拿到回复。`reasoningEffort: low` 下未观察到 reasoning 流。
 
 ## 5. 下一里程碑
-- [ ] M1.5（Muse 仓库）：`DshThreadStore` 代理本桥；`AGENT_URL=<dsh>/agui/run`；手机端渲染 `dsh.approval` / `dsh.question` 卡片。
+- [ ] M1.5（App 仓库）：`DshThreadStore` 代理本桥；`AGENT_URL=<dsh>/agui/run`；手机端渲染 `dsh.approval` / `dsh.question` 卡片。
 - [ ] 线程 `updatedAt`（需读日志尾部或 persistence revision）。
 - [ ] `SUBAGENT_*` 事件按线程后代过滤（需 subagent runtime 暴露父 agent）。
 - [ ] M3：`subagent-codex/src/wire.ts:571-620` 审批/提问改为经 `ctx.approval.request` 上抛（用户硬性要求：不允许自动拒绝）。
@@ -59,7 +59,7 @@
 - 分支 `feat-dsh-agui`，worktree `.Codex/worktrees/feat-dsh-agui`。未创建 PR。
 
 ## 7. 冷启动 checklist
-1. 读本文件与 Muse 仓库的 `docs/main/system3-dsh-muse/plan.html`。
+1. 读本文件与 App 仓库的 `docs/main/system3-dsh-muse/plan.html`。
 2. `pnpm install --offline && pnpm run build:native-system`。
 3. `npx vitest run packages/experimental/agui`。
 4. 手动联调：`export DSH_AGUI_TOKEN=...; pnpm dsh --patch packages/experimental/agui/cordis.patch.yml --profile web --no-open`，然后 `curl -N -H "Authorization: Bearer $DSH_AGUI_TOKEN" -d '{"threadId":"t1","runId":"r1","messages":[{"role":"user","content":"hi"}]}' http://127.0.0.1:3080/agui/run`。
@@ -70,3 +70,9 @@
 - **Web profile 加载的是 `packages/experimental/agui/lib/index.js`，改 src 后必须重建**（`pnpm exec tsc -b tsconfig.host.json && pnpm exec tsdown`）再重启 DSH；vitest 读 src，测不出这类问题。
 - 实测：Muse 设身份 Nova/concise → 新线程回答"我是 Nova，你在 xDAN System3 Personal Agent 里的私人智能体"，不再报 Web GUI 地址 / 沙箱 / 审批策略。
 - 待办：部署时把 agui `defaultCwd` 设为用户专属工作区（现在默认是 DSH checkout，模型会提到 worktree 名）。
+
+## 4.7 仓库与目录改名（2026-09-28）
+- GitHub：本仓库为 `cryptoSUN2049/xDAN-System3-PersonalAgent-Harness`（旧名 `xDAN-System3-DSH` 自动重定向）；App 为 `xDAN-System3-PersonalAgent-App`。
+- 本地：`~/Documents/Code/xDAN-System3-PersonalAgent-Harness`，旧路径 `~/Documents/Code/xDAN-System3-DSH` 为软链接；worktree 已 `git worktree repair`。
+- 分支名不变：`feat-system3-foundation`、`feat-dsh-agui`。
+- 待合并时处理：`docs/feat-system3-foundation/*` 与 System3 各包 `package.json` 中的旧仓库 URL（位于 Codex 在用的 foundation 分支，靠重定向工作）。
