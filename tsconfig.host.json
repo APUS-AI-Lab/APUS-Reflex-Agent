@@ -403,6 +403,7 @@
     { "path": "./packages/experimental/system3-evidence" },
     { "path": "./packages/experimental/system3-supervisor" },
     { "path": "./packages/experimental/system3" },
+    { "path": "./packages/experimental/apus-dsh-jev-plugin" },
     { "path": "./packages/experimental/inspector/tsconfig.host.json" },
     { "path": "./packages/subagent/subagent" },
     { "path": "./packages/subagent/tool-subagent" },

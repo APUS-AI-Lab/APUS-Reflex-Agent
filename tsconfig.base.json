@@ -315,6 +315,7 @@
       "@deepseek-ai/dsh-experimental-system3-evidence": ["./packages/experimental/system3-evidence/src"],
       "@deepseek-ai/dsh-experimental-system3-supervisor": ["./packages/experimental/system3-supervisor/src"],
       "@deepseek-ai/dsh-experimental-system3": ["./packages/experimental/system3/src"],
+      "@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin": ["./packages/experimental/apus-dsh-jev-plugin/src"],
       "@deepseek-ai/dsh-experimental-inspector": ["./packages/experimental/inspector/src"],
       "@deepseek-ai/dsh-experimental-inspector/client": ["./packages/experimental/inspector/src/client/index.ts"],
       "@deepseek-ai/dsh-experimental-ptc-runtime-python": ["./packages/experimental/ptc-runtime-python/src"],
