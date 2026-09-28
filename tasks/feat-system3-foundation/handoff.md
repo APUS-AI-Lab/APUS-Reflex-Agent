@@ -3,7 +3,7 @@
 ## 1. TL;DR
 
 - 产品：System3 = APUS System1 + 强模型System2 + 确定性执行与验收。
-- 已clone官方DSH46a7f68，创建cryptoSUN2049/xDAN-System3-DSH并验证private=true。
+- 已clone官方DSH46a7f68，创建cryptoSUN2049/xDAN-System3-DSH并验证private=true（2026-09-28 更名为 xDAN-System3-PersonalAgent-Harness，旧名自动重定向）。
 - 四线研究与设计完成；用户已通过“继续”确认进入实现，目标仍未完成。
 - M0门禁修复、构建、测试和私有基线已推送；M1-a/b/c、M1-d观察层和真实 AgentLoop smoke 已完成，决策层仍在进行。
 - 先读docs/feat-system3-foundation/system3-special-plan.html；再读design.md。
@@ -71,7 +71,7 @@
 
 ## 6. 分支/部署状态
 
-- 根仓库 /Users/gumpm5/Documents/Code/xDAN-System3-DSH：main，46a7f68b0922371ce7144b668b90e377d8e799f4。
+- 根仓库 /Users/gumpm5/Documents/Code/xDAN-System3-PersonalAgent-Harness（旧路径 xDAN-System3-DSH 为软链接）：main，46a7f68b0922371ce7144b668b90e377d8e799f4。
 - 本worktree .Codex/worktrees/feat-system3-foundation；分支feat-system3-foundation。
 - origin为自有私有仓库，upstream为deepseek-ai/deepseek-harness。
 - GitHub仓库已创建且私有；M0、M1-a/b/c与观察层提交已push到私有origin；真实 AgentLoop smoke 已在本地通过；CI未运行；无产品部署和GPU创建。
