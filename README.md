@@ -2,7 +2,7 @@
 
 English | [中文](README.zh.md)
 
-> **xDAN System3 Agent Space · Harness.** This fork is the agent brain of [xDAN System3 Agent Space](https://github.com/cryptoSUN2049/xDAN-Duse), a private agent for phone and computer. It adds the System3 layer (local-first routing, evidence, supervision, and a cost ledger, under `packages/experimental/system3*`) and the `agui` bridge that the Agent Space App talks to (`packages/experimental/agui`). The upstream DeepSeek Harness documentation below applies unchanged. Branches: `feat-system3-foundation` (System3), `feat-dsh-agui` (bridge).
+> **xDAN System3 Personal Agent · Harness.** This fork is the agent brain of [xDAN System3 Personal Agent](https://github.com/cryptoSUN2049/xDAN-Duse), a private agent for phone and computer. Slogan: "Your private agent. It gets things done." It adds the System3 layer (local-first routing, evidence, supervision, and a cost ledger, under `packages/experimental/system3*`) and the `agui` bridge that the Personal Agent App talks to (`packages/experimental/agui`). The upstream DeepSeek Harness documentation below applies unchanged. Branches: `feat-system3-foundation` (System3), `feat-dsh-agui` (bridge).
 
 DeepSeek Harness (`dsh`) is an open-source agent harness developed by [DeepSeek AI](https://deepseek.com).
 

@@ -111,7 +111,7 @@ describe('AG-UI bridge', () => {
       return first?.role === 'system' ? JSON.stringify(first) : ''
     }
     await harness.run('thread-persona', 'who are you', 'p1', { persona: { name: 'Nova', tone: 'concise' } })
-    expect(systemOf(0)).toContain('You are Nova, the person\'s private agent in xDAN System3 Agent Space.')
+    expect(systemOf(0)).toContain('You are Nova, the person\'s private agent in xDAN System3 Personal Agent.')
     expect(systemOf(0)).toContain('Be brief and direct')
     expect(systemOf(0)).not.toContain('DeepSeek Harness')
     expect(systemOf(0)).toContain('Do not volunteer internal details')

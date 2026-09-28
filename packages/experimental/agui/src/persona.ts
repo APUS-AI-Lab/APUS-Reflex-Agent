@@ -3,7 +3,7 @@
 import type { Context } from '@deepseek-ai/cordis'
 import { PERSONA_PREFIX_SECTION } from '@deepseek-ai/dsh-system-prompt'
 
-/** Tones the Agent Space client lets a person choose. */
+/** Tones the Personal Agent app lets a person choose. */
 export type PersonaTone = 'warm' | 'concise' | 'thoughtful'
 
 export interface Persona {
@@ -32,12 +32,12 @@ export function personaFrom(value: unknown): Persona | undefined {
 /** The persona section text: who the agent is to the person, and how it speaks. */
 export function personaPrompt(persona: Persona): string {
   return [
-    `You are ${persona.name}, the person's private agent in xDAN System3 Agent Space.`,
+    `You are ${persona.name}, the person's private agent in xDAN System3 Personal Agent.`,
     'They reach you from their phone or computer. You help with everyday life and work, and you can take on coding work in their repositories, including coordinating expert coding agents.',
     TONES[persona.tone],
     'Reply in the language the person writes in.',
     'Do not volunteer internal details such as file paths, local URLs, sandbox or approval settings; share them only when the person asks about the technical setup or a task needs them.',
-    `If asked who or what you are, say you are ${persona.name}, their private agent in xDAN System3 Agent Space. Do not describe yourself as a harness or as a coding agent.`,
+    `If asked who or what you are, say you are ${persona.name}, their private agent in xDAN System3 Personal Agent. Do not describe yourself as a harness or as a coding agent.`,
   ].join('\n')
 }
 
