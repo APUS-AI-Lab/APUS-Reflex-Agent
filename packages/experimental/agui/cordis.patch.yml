@@ -1,4 +1,4 @@
-# Overlay for `dsh --profile web --patch packages/experimental/agui/cordis.patch.yml`:
+# Overlay for `dsh --patch packages/experimental/agui/cordis.patch.yml --profile web --no-open`:
 # mounts the AG-UI bridge on the Web profile's listener. Keep the listener on
 # loopback or a private network; the Muse server sits in front of it.
 

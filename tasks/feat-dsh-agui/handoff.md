@@ -16,7 +16,7 @@
 | `src/projection.ts` | 持久化事件 → AG-UI `user/assistant/tool` 消息（只取 `source.kind==='user'` 的用户消息）。 |
 | `src/agui.ts` | 本地 AG-UI 类型子集 + `SseWriter`（`data: <json>` 帧）。不依赖 `@ag-ui/*`。 |
 | `src/http.ts` | Bearer 常量时间比较、有界 JSON body、`HttpError`。 |
-| `cordis.patch.yml` | `dsh --profile web --patch packages/experimental/agui/cordis.patch.yml` 即可挂载。 |
+| `cordis.patch.yml` | `dsh --patch packages/experimental/agui/cordis.patch.yml --profile web --no-open` 即可挂载。 |
 | `tests/harness.ts`, `tests/agui.spec.ts` | 真实 AgentLoop + JSONL 持久化 + 测试 sessionQuery + `WebServer(port 0)`，走 HTTP 调路由。 |
 | `README.md/.zh.md/.i18n.yaml` | package-reference 文档；`packages/experimental/README*` 加了一行。 |
 | `tsconfig.host.json` | 新增 reference。 |
@@ -38,6 +38,10 @@
 - 测试里对 SSE 用 `while (await next())` 轮询时，若流已结束会形成微任务饥饿、vitest 超时无法触发——`next()` 必须先消费已到达事件再等待，并对 `undefined` 退出。
 - Agent 被 dispose 后 `res.on('close')` 里再 `cancel` 会抛 "projection registration is not active"，需先校验 `runs` / `ctx.agents.get` 再 try/catch。
 - 翻译配对：新增/修改 README 后跑 `pnpm run verify-translation-pairing --write <README.md>`，再跑无参检查。
+- **`--patch` 是全局启动参数，必须放在 `--profile` 之前**，否则 profile 子命令报 `unknown option '--patch'`。
+- **Web profile 里的 plugin 只能从 `apps/cli/package.json` 的 `dependencies`/`peerDependencies` 解析**（`packages/boot/app-boot/src/profile.ts:profileDependencyNames`），根 `package.json` 或 apps/cli 的 `devDependencies` 都不算；否则 loader 只报一句 `failed to import`（真实错误只进 `ctx.logger.error`，终端看不到）。已把 `@deepseek-ai/dsh-experimental-agui` 加进 apps/cli `dependencies`（先例：agent-team-profile、voice-input-bundle），`verify-default-product-isolation` / `web-product-bundle-isolation` 99/99 通过。
+- Web profile 启动前需 `pnpm run build`（客户端 bundle），源码模式也不例外。
+- 已用真实 `dsh --patch … --profile web --no-open --port 3095` 验证：`GET /agui/threads` 200、无 token 401、`POST /agui/threads` 201、再次列表含新线程。
 
 ## 5. 下一里程碑
 - [ ] M1.5（Muse 仓库）：`DshThreadStore` 代理本桥；`AGENT_URL=<dsh>/agui/run`；手机端渲染 `dsh.approval` / `dsh.question` 卡片。
@@ -52,4 +56,4 @@
 1. 读本文件与 Muse 仓库的 `docs/main/system3-dsh-muse/plan.html`。
 2. `pnpm install --offline && pnpm run build:native-system`。
 3. `npx vitest run packages/experimental/agui`。
-4. 手动联调：`export DSH_AGUI_TOKEN=...; pnpm dsh --profile web --patch packages/experimental/agui/cordis.patch.yml`，然后 `curl -N -H "Authorization: Bearer $DSH_AGUI_TOKEN" -d '{"threadId":"t1","runId":"r1","messages":[{"role":"user","content":"hi"}]}' http://127.0.0.1:3080/agui/run`。
+4. 手动联调：`export DSH_AGUI_TOKEN=...; pnpm dsh --patch packages/experimental/agui/cordis.patch.yml --profile web --no-open`，然后 `curl -N -H "Authorization: Bearer $DSH_AGUI_TOKEN" -d '{"threadId":"t1","runId":"r1","messages":[{"role":"user","content":"hi"}]}' http://127.0.0.1:3080/agui/run`。

@@ -28,7 +28,7 @@ kind: "package-reference"
 
 ```sh
 export DSH_AGUI_TOKEN='a-long-random-secret'
-pnpm dsh --profile web --patch packages/experimental/agui/cordis.patch.yml
+pnpm dsh --patch packages/experimental/agui/cordis.patch.yml --profile web --no-open
 ```
 
 让 Muse 服务端指向它：

@@ -31,6 +31,9 @@ importers:
       '@deepseek-ai/dsh-computer-use':
         specifier: workspace:*
         version: link:packages/computer-use/computer-use
+      '@deepseek-ai/dsh-experimental-agui':
+        specifier: workspace:*
+        version: link:packages/experimental/agui
       '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin':
         specifier: workspace:*
         version: link:packages/experimental/apus-dsh-jev-plugin
@@ -250,6 +253,9 @@ importers:
       '@deepseek-ai/dsh-experimental-agent-team-profile':
         specifier: workspace:*
         version: link:../../packages/experimental/agent-team-profile
+      '@deepseek-ai/dsh-experimental-agui':
+        specifier: workspace:*
+        version: link:../../packages/experimental/agui
       '@deepseek-ai/dsh-experimental-voice-input-bundle':
         specifier: workspace:*
         version: link:../../packages/experimental/voice-input-bundle
