@@ -1,0 +1,26 @@
+# Give the harness the Personal Agent App's capabilities over MCP.
+# The App serves them at /mcp when MUSE_MCP_TOKEN is set; the same token goes here.
+# Apply with the bridge and model overlays:
+#   export MUSE_MCP_TOKEN=<at least 24 random characters, shared with the App>
+#   export APP_MCP_URL=http://127.0.0.1:8787/mcp   # optional, this is the default
+#   pnpm dsh --patch packages/experimental/agui/cordis.patch.yml \
+#            --patch docs/feat-dsh-agui/fidoo-agui.patch.yml \
+#            --patch docs/feat-dsh-agui/app-mcp.patch.yml --profile web --no-open
+# Tools appear to the model as mcp__app__<name>: search_mail, read_mail_thread,
+# browse_web, agent_status, create_goal, watch_page, remember_fact. Every result
+# carries structuredContent._privacy ("private" | "public").
+
+- insert:
+    - id: mcp-app
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: app
+        transport: streamable-http
+        url: !!js 'process.env.APP_MCP_URL ?? "http://127.0.0.1:8787/mcp"'
+        headers:
+          Authorization: !!js '`Bearer ${process.env.MUSE_MCP_TOKEN ?? ""}`'
+        toolCallTimeoutMs: 60000
+        failOnStartupError: false
+        reconnect:
+          enabled: true
+          maxAttempts: 10

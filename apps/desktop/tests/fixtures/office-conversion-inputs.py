@@ -1,4 +1,5 @@
 """Create one-page Office inputs with the packaged authoring runtime."""
+
 from pathlib import Path
 import sys
 from docx import Document
@@ -16,5 +17,7 @@ workbook.save(root / "input.xlsx")
 workbook.close()
 presentation = Presentation()
 slide = presentation.slides.add_slide(presentation.slide_layouts[6])
-slide.shapes.add_textbox(Inches(1), Inches(1), Inches(6), Inches(1)).text = "Desktop Office conversion 42"
+slide.shapes.add_textbox(
+    Inches(1), Inches(1), Inches(6), Inches(1)
+).text = "Desktop Office conversion 42"
 presentation.save(root / "input.pptx")

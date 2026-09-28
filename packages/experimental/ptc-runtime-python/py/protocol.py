@@ -32,7 +32,9 @@ class ErrorClass(TypedDict):
 
 # ``global`` is a Python keyword, so the required part is declared functionally
 # to hold the real wire key; ``errorClass`` is optional per the TS `errorClass?`.
-_NamespaceRequired = TypedDict("_NamespaceRequired", {"global": str, "names": "list[str]"})
+_NamespaceRequired = TypedDict(
+    "_NamespaceRequired", {"global": str, "names": "list[str]"}
+)
 
 
 class Namespace(_NamespaceRequired, total=False):
@@ -73,7 +75,9 @@ CallMessage = TypedDict(
 )
 
 
-_LogMessageRequired = TypedDict("_LogMessageRequired", {"type": Literal["log"], "text": str})
+_LogMessageRequired = TypedDict(
+    "_LogMessageRequired", {"type": Literal["log"], "text": str}
+)
 
 
 class LogMessage(_LogMessageRequired, total=False):

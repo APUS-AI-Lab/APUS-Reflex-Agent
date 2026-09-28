@@ -16,7 +16,9 @@ class SdkProtocolError(HarnessError):
 class JsonRpcError(HarnessError):
     """Raised when the runtime returns a JSON-RPC error response."""
 
-    def __init__(self, code: int | None, message: str, data: object | None = None) -> None:
+    def __init__(
+        self, code: int | None, message: str, data: object | None = None
+    ) -> None:
         super().__init__(message)
         self.code = code
         self.message = message

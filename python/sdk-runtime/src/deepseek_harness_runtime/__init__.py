@@ -69,7 +69,11 @@ def bundled_runtime_path() -> Path:
     """
     tag = _current_platform_tag()
     extension = ".exe" if tag.startswith("win-") else ""
-    path = bundled_package_dir() / "runtime" / f"deepseek-harness-sdk-runtime-{tag}{extension}"
+    path = (
+        bundled_package_dir()
+        / "runtime"
+        / f"deepseek-harness-sdk-runtime-{tag}{extension}"
+    )
     if not path.is_file():
         raise FileNotFoundError(
             f"deepseek-harness-runtime-bin is missing the runtime executable at {path}. "
@@ -100,9 +104,15 @@ def bundled_runtime_path() -> Path:
             + _EXE_ACQUISITION_HINT
         )
     native = tag.replace("win-", "win32-").replace("macos-", "darwin-")
-    declared = json.loads(adapter.read_text(encoding="utf-8")).get("optionalDependencies", {})
+    declared = json.loads(adapter.read_text(encoding="utf-8")).get(
+        "optionalDependencies", {}
+    )
     engine = native if f"@deepseek-ai/libreoffice-kit-{native}" in declared else "wasm"
-    if not (office / "node_modules" / f"@deepseek-ai/libreoffice-kit-{engine}/prebuilds.json").is_file():
+    if not (
+        office
+        / "node_modules"
+        / f"@deepseek-ai/libreoffice-kit-{engine}/prebuilds.json"
+    ).is_file():
         raise FileNotFoundError(
             f"deepseek-harness-runtime-bin is missing the Office sidecar engine {engine} at {office}. "
             + _EXE_ACQUISITION_HINT
@@ -137,29 +147,19 @@ def resolve_bundled_launch_args(mode: str | None = None) -> tuple[str, ...]:
 def _current_platform_tag() -> str:
     plat = _PLATFORM_TAGS.get(sys.platform)
     arch = _ARCH_TAGS.get(platform.machine().lower())
-    if (
-        plat is None
-        or arch is None
-        or (plat == "win" and arch != "x64")
-    ):
+    if plat is None or arch is None or (plat == "win" and arch != "x64"):
         raise FileNotFoundError(
             "no bundled DeepSeek Harness SDK runtime exists for this platform "
             f"(sys.platform={sys.platform!r}, machine={platform.machine()!r}); supported: "
-            "Linux x64/arm64, macOS x64/arm64, and Windows x64. " + _EXE_ACQUISITION_HINT
+            "Linux x64/arm64, macOS x64/arm64, and Windows x64. "
+            + _EXE_ACQUISITION_HINT
         )
     return f"{plat}-{arch}"
 
 
 def _node_launch_args() -> tuple[str, str]:
     node_root = bundled_package_dir() / "runtime" / "node"
-    bin_js = (
-        node_root
-        / "node_modules"
-        / "@deepseek-ai"
-        / "dsh"
-        / "lib"
-        / "bin.js"
-    )
+    bin_js = node_root / "node_modules" / "@deepseek-ai" / "dsh" / "lib" / "bin.js"
     if not bin_js.is_file():
         raise FileNotFoundError(
             f"the dev-only node runtime closure is missing at {node_root} "

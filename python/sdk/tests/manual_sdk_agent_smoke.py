@@ -24,24 +24,50 @@ class MockCompletionHandler(BaseHTTPRequestHandler):
     def do_POST(self) -> None:
         length = int(self.headers.get("content-length", "0"))
         body = self.rfile.read(length).decode("utf-8")
-        self.requests.append({
-            "path": self.path,
-            "api_key": self.headers.get("x-api-key"),
-            "body": json.loads(body),
-        })
+        self.requests.append(
+            {
+                "path": self.path,
+                "api_key": self.headers.get("x-api-key"),
+                "body": json.loads(body),
+            }
+        )
         self.send_response(200)
         self.send_header("content-type", "text/event-stream")
         self.end_headers()
         events = [
-            {"type": "message_start", "message": {"id": "sdk-smoke", "model": "sdk-smoke-model", "usage": {"input_tokens": 7, "output_tokens": 0}}},
-            {"type": "content_block_start", "index": 0, "content_block": {"type": "text", "text": ""}},
-            {"type": "content_block_delta", "index": 0, "delta": {"type": "text_delta", "text": "SDK runtime reached the configured HTTP model endpoint."}},
+            {
+                "type": "message_start",
+                "message": {
+                    "id": "sdk-smoke",
+                    "model": "sdk-smoke-model",
+                    "usage": {"input_tokens": 7, "output_tokens": 0},
+                },
+            },
+            {
+                "type": "content_block_start",
+                "index": 0,
+                "content_block": {"type": "text", "text": ""},
+            },
+            {
+                "type": "content_block_delta",
+                "index": 0,
+                "delta": {
+                    "type": "text_delta",
+                    "text": "SDK runtime reached the configured HTTP model endpoint.",
+                },
+            },
             {"type": "content_block_stop", "index": 0},
-            {"type": "message_delta", "delta": {"stop_reason": "end_turn"}, "usage": {"output_tokens": 9}},
+            {
+                "type": "message_delta",
+                "delta": {"stop_reason": "end_turn"},
+                "usage": {"output_tokens": 9},
+            },
             {"type": "message_stop"},
         ]
         for event in events:
-            self.wfile.write(f"event: {event['type']}\ndata: {json.dumps(event)}\n\n".encode())
+            self.wfile.write(
+                f"event: {event['type']}\ndata: {json.dumps(event)}\n\n".encode()
+            )
 
     def log_message(self, _format: str, *_args: object) -> None:
         return
@@ -52,7 +78,9 @@ def run_smoke(repo_root: Path, keep_sessions: bool) -> None:
     session_root = dsh_home / "sessions"
     runtime_entry = repo_root / "apps/cli/src/bin.ts"
     server = ThreadingHTTPServer(("127.0.0.1", 0), MockCompletionHandler)
-    thread = threading.Thread(target=server.serve_forever, name="mock-messages-server", daemon=True)
+    thread = threading.Thread(
+        target=server.serve_forever, name="mock-messages-server", daemon=True
+    )
     thread.start()
     base_url = f"http://127.0.0.1:{server.server_address[1]}"
 
@@ -97,7 +125,9 @@ def run_smoke(repo_root: Path, keep_sessions: bool) -> None:
         assert request["body"]["model"] == "sdk-smoke-model"
 
         jsonl_files = sorted(session_root.rglob("*.jsonl.zstd"))
-        assert jsonl_files, f"no Zstandard JSONL sessions were written under {session_root}"
+        assert jsonl_files, (
+            f"no Zstandard JSONL sessions were written under {session_root}"
+        )
         print("session_jsonl_zstd_files:")
         for path in jsonl_files:
             print(f"  {path} bytes={path.stat().st_size}")

@@ -44,6 +44,12 @@ The experimental group contains prototype capabilities whose contracts can chang
 | [`tool-agent-team`](tool-agent-team/README.md) | Nine tools that let the model create, message, and coordinate teammates | registers scoped tools on `ctx.tools` |
 | [`webworker-packer`](webworker-packer/README.md) | Builds the gzip-compressed VFS image consumed by the browser worker preview | library and CLI — no ctx key |
 | [`webworker-runtime`](webworker-runtime/README.md) | Runs the harness plugin tree inside a dedicated browser worker | library and worker entry — no ctx key |
+| [`system3-policy`](system3-policy/README.md) | Deterministic local-first privacy admission before model route selection | library — no ctx key |
+| [`system3-evidence`](system3-evidence/README.md) | Lossless bounded evidence spans for long tool output | library — no ctx key |
+| [`system3-supervisor`](system3-supervisor/README.md) | Completion gate, shadow comparison, and usage ledger primitives | library — no ctx key |
+| [`system3`](system3/README.md) | Cordis service composing System3 policy, evidence, and supervision | `ctx.system3` |
+| [`apus-dsh-jev-plugin`](apus-dsh-jev-plugin/README.md) | Provider-neutral typed Jev decisions through a System One HTTP provider | `ctx.jev` |
+| [`agui`](agui/README.md) | AG-UI over HTTP: turns, threads, approvals and questions for an external client such as Muse | — (routes on `ctx.webServer`) |
 
 -----
 

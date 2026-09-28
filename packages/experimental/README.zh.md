@@ -44,6 +44,12 @@ kind: "package-group"
 | [`tool-agent-team`](tool-agent-team/README.zh.md) | 让模型创建、发消息与协调 teammate 的九个工具 | 按作用域注册工具到 `ctx.tools` |
 | [`webworker-packer`](webworker-packer/README.zh.md) | 构建浏览器 worker 预览所消费的 gzip 压缩虚拟文件系统（VFS）镜像 | 库与 CLI（命令行界面），不使用 ctx key |
 | [`webworker-runtime`](webworker-runtime/README.zh.md) | 在专用浏览器 worker 中运行 harness 插件树 | 库与 worker 入口，不使用 ctx key |
+| [`system3-policy`](system3-policy/README.zh.md) | 在模型路由选择前执行确定性的本地优先隐私准入 | 库，不使用 ctx key |
+| [`system3-evidence`](system3-evidence/README.zh.md) | 为长工具输出提供可恢复的有界证据片段 | 库，不使用 ctx key |
+| [`system3-supervisor`](system3-supervisor/README.zh.md) | 完成门禁、shadow 对照与 usage ledger 原语 | 库，不使用 ctx key |
+| [`system3`](system3/README.zh.md) | 组合 System3 策略、证据和监督能力的 Cordis 服务 | `ctx.system3` |
+| [`apus-dsh-jev-plugin`](apus-dsh-jev-plugin/README.zh.md) | 通过 System One HTTP provider 提供与部署无关的类型化 Jev 决策 | `ctx.jev` |
+| [`agui`](agui/README.zh.md) | 基于 HTTP 的 AG-UI：为 Muse 等外部客户端提供轮次、线程、审批与提问 | 无（路由挂在 `ctx.webServer`） |
 
 -----
 

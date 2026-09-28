@@ -62,10 +62,16 @@ class DeepSeekHarness:
         **kwargs: object,
     ) -> None:
         if config is not None and kwargs:
-            raise TypeError("pass either DeepSeekHarnessConfig or keyword options, not both")
+            raise TypeError(
+                "pass either DeepSeekHarnessConfig or keyword options, not both"
+            )
         self.config = config or DeepSeekHarnessConfig(**kwargs)
         cwd = str(Path(self.config.cwd or Path.cwd()).resolve())
-        runtime_cwd = str(Path(self.config.runtime_cwd).resolve()) if self.config.runtime_cwd is not None else cwd
+        runtime_cwd = (
+            str(Path(self.config.runtime_cwd).resolve())
+            if self.config.runtime_cwd is not None
+            else cwd
+        )
         self._cwd = cwd
         env = dict(self.config.env)
         if self.config.base_url is not None:
@@ -128,7 +134,9 @@ class DeepSeekHarness:
         session_id: str | None = None,
         on_notification: Callable[[Notification], None] | None = None,
     ) -> RunResult:
-        return self.start_session(session_id).run(input, on_notification=on_notification)
+        return self.start_session(session_id).run(
+            input, on_notification=on_notification
+        )
 
 
 class Session:
@@ -158,7 +166,9 @@ class Session:
                 if isinstance(event, dict):
                     events.append(event)
 
-        with self.harness.client.subscribe_session_notifications(self.id) as subscription:
+        with self.harness.client.subscribe_session_notifications(
+            self.id
+        ) as subscription:
             message_id = self.harness.client.session_prompt(
                 self.id,
                 content_blocks,
@@ -189,8 +199,13 @@ class Session:
         )
 
 
-def _is_inbox_receipt(notification: Notification, session_id: str, message_id: str) -> bool:
-    if notification.method != "session.event" or notification.payload.get("sessionId") != session_id:
+def _is_inbox_receipt(
+    notification: Notification, session_id: str, message_id: str
+) -> bool:
+    if (
+        notification.method != "session.event"
+        or notification.payload.get("sessionId") != session_id
+    ):
         return False
     event = notification.payload.get("event")
     if not isinstance(event, dict) or event.get("type") != "agent/inbox/spliced":
@@ -198,7 +213,8 @@ def _is_inbox_receipt(notification: Notification, session_id: str, message_id: s
     data = event.get("data")
     inserted = data.get("inserted") if isinstance(data, dict) else None
     return isinstance(inserted, list) and any(
-        isinstance(message, dict) and message.get("id") == message_id for message in inserted
+        isinstance(message, dict) and message.get("id") == message_id
+        for message in inserted
     )
 
 

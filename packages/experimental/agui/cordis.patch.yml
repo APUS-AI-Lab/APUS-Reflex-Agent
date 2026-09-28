@@ -1,0 +1,12 @@
+# Overlay for `dsh --patch packages/experimental/agui/cordis.patch.yml --profile web --no-open`:
+# mounts the AG-UI bridge on the Web profile's listener. Keep the listener on
+# loopback or a private network; the Muse server sits in front of it.
+
+- insert:
+    - id: agui
+      name: '@deepseek-ai/dsh-experimental-agui'
+      config:
+        tokenEnv: DSH_AGUI_TOKEN
+        basePath: /agui
+        provider: deepseek-official
+        model: deepseek-v4-flash

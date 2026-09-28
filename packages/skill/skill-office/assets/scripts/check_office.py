@@ -79,27 +79,41 @@ def iter_namespaces(root: ET.Element, namespaces: tuple[str, ...], local_name: s
 def relationship_target(part: str, target: str) -> str:
     """Resolve a package relationship without fetching external resources."""
     path = unquote(urlsplit(target).path)
-    return posixpath.normpath(path.lstrip("/") if path.startswith("/") else posixpath.join(posixpath.dirname(part), path))
+    return posixpath.normpath(
+        path.lstrip("/")
+        if path.startswith("/")
+        else posixpath.join(posixpath.dirname(part), path)
+    )
 
 
-def relationships(part: str, xml: dict[str, ET.Element], types: set[str] | None = None) -> dict[str, str]:
-    path = posixpath.join(posixpath.dirname(part), "_rels", posixpath.basename(part) + ".rels")
+def relationships(
+    part: str, xml: dict[str, ET.Element], types: set[str] | None = None
+) -> dict[str, str]:
+    path = posixpath.join(
+        posixpath.dirname(part), "_rels", posixpath.basename(part) + ".rels"
+    )
     root = xml.get(path)
     if root is None:
         return {}
     return {
         rel.attrib["Id"]: relationship_target(part, rel.attrib["Target"])
-        for rel in root if rel.get("TargetMode") != "External" and (types is None or rel.get("Type") in types)
+        for rel in root
+        if rel.get("TargetMode") != "External"
+        and (types is None or rel.get("Type") in types)
     }
 
 
-def related_xml(part: str, reference: str, links: dict[str, str], xml: dict[str, ET.Element]) -> ET.Element:
+def related_xml(
+    part: str, reference: str, links: dict[str, str], xml: dict[str, ET.Element]
+) -> ET.Element:
     """Read a related XML part with diagnostics naming its source and reference."""
     if reference not in links:
         raise ValueError(f"{part} references missing relationship: {reference}")
     target = links[reference]
     if target not in xml:
-        raise ValueError(f"{part} relationship {reference} targets a non-XML member: {target}")
+        raise ValueError(
+            f"{part} relationship {reference} targets a non-XML member: {target}"
+        )
     return xml[target]
 
 
@@ -115,37 +129,71 @@ def inspect_docx(xml: dict[str, ET.Element]) -> tuple[dict, str]:
         grid = table.findall(f"{w}tblGrid/{w}gridCol")
         rows = table.findall(f"{w}tr")
         # Merged cells span logical grid columns; counting physical cells loses them.
-        columns = len(grid) if grid else max((sum(
-            int(cell.find(f"{w}tcPr/{w}gridSpan").get(f"{w}val", "1"))
-            if cell.find(f"{w}tcPr/{w}gridSpan") is not None else 1
-            for cell in row.findall(f"{w}tc")
-        ) for row in rows), default=0)
+        columns = (
+            len(grid)
+            if grid
+            else max(
+                (
+                    sum(
+                        int(cell.find(f"{w}tcPr/{w}gridSpan").get(f"{w}val", "1"))
+                        if cell.find(f"{w}tcPr/{w}gridSpan") is not None
+                        else 1
+                        for cell in row.findall(f"{w}tc")
+                    )
+                    for row in rows
+                ),
+                default=0,
+            )
+        )
         tables.append({"rows": len(rows), "columns": columns})
     sections = []
     for section in body.iter(f"{w}sectPr"):
         size = section.find(f"{w}pgSz")
         margins = section.find(f"{w}pgMar")
-        sections.append({
-            "page_twips": {} if size is None else {key.removeprefix(w): value for key, value in size.attrib.items()},
-            "margins_twips": {} if margins is None else {key.removeprefix(w): value for key, value in margins.attrib.items()},
-        })
+        sections.append(
+            {
+                "page_twips": {}
+                if size is None
+                else {key.removeprefix(w): value for key, value in size.attrib.items()},
+                "margins_twips": {}
+                if margins is None
+                else {
+                    key.removeprefix(w): value for key, value in margins.attrib.items()
+                },
+            }
+        )
     text_parts = [body]
     for kind in ("header", "footer"):
         links = relationships(part, xml, relationship_types(kind))
         for section in body.iter(f"{w}sectPr"):
             for reference in section.findall(f"{w}{kind}Reference"):
-                text_parts.append(related_xml(part, relationship_id(reference, part), links, xml))
+                text_parts.append(
+                    related_xml(part, relationship_id(reference, part), links, xml)
+                )
     for kind in ("footnote", "endnote"):
-        references = {node.attrib[f"{w}id"] for node in body.iter(f"{w}{kind}Reference")}
+        references = {
+            node.attrib[f"{w}id"] for node in body.iter(f"{w}{kind}Reference")
+        }
         if not references:
             continue
         links = relationships(part, xml, relationship_types(f"{kind}s"))
         for reference in links:
             tree = related_xml(part, reference, links, xml)
-            text_parts.extend(note for note in tree.findall(f"{w}{kind}") if note.get(f"{w}id") in references)
-    text = "\n".join("".join(node.text or "" for node in paragraph.iter(f"{w}t")) for tree in text_parts
-                     for paragraph in tree.iter(f"{w}p"))
-    return {"paragraphs": len(list(body.iter(f"{w}p"))), "tables": tables, "sections": sections}, text
+            text_parts.extend(
+                note
+                for note in tree.findall(f"{w}{kind}")
+                if note.get(f"{w}id") in references
+            )
+    text = "\n".join(
+        "".join(node.text or "" for node in paragraph.iter(f"{w}t"))
+        for tree in text_parts
+        for paragraph in tree.iter(f"{w}p")
+    )
+    return {
+        "paragraphs": len(list(body.iter(f"{w}p"))),
+        "tables": tables,
+        "sections": sections,
+    }, text
 
 
 def inspect_pptx(xml: dict[str, ET.Element]) -> tuple[dict, str]:
@@ -158,8 +206,15 @@ def inspect_pptx(xml: dict[str, ET.Element]) -> tuple[dict, str]:
     for slide in slides:
         reference = relationship_id(slide, part)
         tree = related_xml(part, reference, links, xml)
-        texts.append("\n".join("".join(node.text or "" for node in iter_namespaces(paragraph, A_NAMESPACES, "t"))
-                               for paragraph in iter_namespaces(tree, A_NAMESPACES, "p")))
+        texts.append(
+            "\n".join(
+                "".join(
+                    node.text or ""
+                    for node in iter_namespaces(paragraph, A_NAMESPACES, "t")
+                )
+                for paragraph in iter_namespaces(tree, A_NAMESPACES, "p")
+            )
+        )
     return {"slides": len(slides)}, "\n".join(texts)
 
 
@@ -171,17 +226,26 @@ def inspect_xlsx(xml: dict[str, ET.Element]) -> tuple[dict, str]:
     sheets = []
     texts = []
     shared = xml.get("xl/sharedStrings.xml")
-    shared_s = s if shared is None else namespace(shared, S_NAMESPACES, "xl/sharedStrings.xml")
-    shared_strings = [] if shared is None else [
-        "".join(node.text or "" for node in item.iter(f"{shared_s}t")) for item in shared.iter(f"{shared_s}si")
-    ]
+    shared_s = (
+        s if shared is None else namespace(shared, S_NAMESPACES, "xl/sharedStrings.xml")
+    )
+    shared_strings = (
+        []
+        if shared is None
+        else [
+            "".join(node.text or "" for node in item.iter(f"{shared_s}t"))
+            for item in shared.iter(f"{shared_s}si")
+        ]
+    )
     for sheet in root.findall(f"{s}sheets/{s}sheet"):
         reference = relationship_id(sheet, part)
         tree = related_xml(part, reference, links, xml)
         sheet_s = namespace(tree, S_NAMESPACES, links[reference])
         cells = list(tree.iter(f"{sheet_s}c"))
         formulas = sum(cell.find(f"{sheet_s}f") is not None for cell in cells)
-        sheets.append({"name": sheet.attrib["name"], "cells": len(cells), "formulas": formulas})
+        sheets.append(
+            {"name": sheet.attrib["name"], "cells": len(cells), "formulas": formulas}
+        )
         for cell in cells:
             if cell.get("t") == "s":
                 value = cell.findtext(f"{sheet_s}v", "")
@@ -189,12 +253,21 @@ def inspect_xlsx(xml: dict[str, ET.Element]) -> tuple[dict, str]:
                 try:
                     index = int(value)
                 except ValueError as error:
-                    raise ValueError(f"{location}: invalid shared string index {value!r}") from error
+                    raise ValueError(
+                        f"{location}: invalid shared string index {value!r}"
+                    ) from error
                 if not 0 <= index < len(shared_strings):
-                    raise ValueError(f"{location}: shared string index out of range: {index}")
+                    raise ValueError(
+                        f"{location}: shared string index out of range: {index}"
+                    )
                 texts.append(shared_strings[index])
-        texts.extend("".join(node.text or "" for node in cell.iter(f"{sheet_s}t")) for cell in cells)
-        texts.extend(cell.findtext(f"{sheet_s}v", "") for cell in cells if cell.get("t") == "str")
+        texts.extend(
+            "".join(node.text or "" for node in cell.iter(f"{sheet_s}t"))
+            for cell in cells
+        )
+        texts.extend(
+            cell.findtext(f"{sheet_s}v", "") for cell in cells if cell.get("t") == "str"
+        )
         texts.append(sheet.attrib["name"])
     return {"sheets": sheets, "formulas_evaluated": False}, "\n".join(texts)
 
@@ -209,18 +282,33 @@ def inspect(path: Path) -> tuple[dict, str]:
         corrupt = archive.testzip()
         if corrupt is not None:
             raise ValueError(f"ZIP member failed its CRC check: {corrupt}")
-        xml = {name: ET.fromstring(archive.read(name)) for name in members
-               if name.endswith((".xml", ".rels"))}
+        xml = {
+            name: ET.fromstring(archive.read(name))
+            for name in members
+            if name.endswith((".xml", ".rels"))
+        }
     if main not in xml:
         raise ValueError(f"missing main part: {main}")
     types = xml.get("[Content_Types].xml")
-    if types is None or not any(node.get("PartName") == "/" + main
-                                and node.get("ContentType", "").endswith(content_type) for node in types):
-        raise ValueError(f"[Content_Types].xml does not declare {main} as {path.suffix.lower()}")
+    if types is None or not any(
+        node.get("PartName") == "/" + main
+        and node.get("ContentType", "").endswith(content_type)
+        for node in types
+    ):
+        raise ValueError(
+            f"[Content_Types].xml does not declare {main} as {path.suffix.lower()}"
+        )
     for name, tree in xml.items():
         if not name.endswith(".rels"):
             continue
-        source = "" if name == "_rels/.rels" else posixpath.join(posixpath.dirname(posixpath.dirname(name)), posixpath.basename(name)[:-5])
+        source = (
+            ""
+            if name == "_rels/.rels"
+            else posixpath.join(
+                posixpath.dirname(posixpath.dirname(name)),
+                posixpath.basename(name)[:-5],
+            )
+        )
         for rel in tree:
             if rel.get("TargetMode") == "External":
                 continue
@@ -242,9 +330,15 @@ def main() -> int:
     parser.add_argument("--count", type=int, help="expected slide or sheet count")
     args = parser.parse_args()
     if args.input.suffix.lower() not in MAIN_PARTS:
-        parser.error("input must be .docx, .pptx, or .xlsx; converting the filename does not convert its contents")
-    if args.count is not None and (args.count < 0 or args.input.suffix.lower() == ".docx"):
-        parser.error("--count must be non-negative and applies only to slides or sheets")
+        parser.error(
+            "input must be .docx, .pptx, or .xlsx; converting the filename does not convert its contents"
+        )
+    if args.count is not None and (
+        args.count < 0 or args.input.suffix.lower() == ".docx"
+    ):
+        parser.error(
+            "--count must be non-negative and applies only to slides or sheets"
+        )
     if args.out is not None and args.out.resolve() == args.input.resolve():
         parser.error("--out must differ from the input document")
     checks = []
@@ -253,14 +347,40 @@ def main() -> int:
         summary, text = inspect(args.input)
         checks.append({"id": "package", "status": "pass"})
         for required in args.contains:
-            checks.append({"id": "contains", "status": "pass" if required in text else "fail", "text": required})
+            checks.append(
+                {
+                    "id": "contains",
+                    "status": "pass" if required in text else "fail",
+                    "text": required,
+                }
+            )
         if args.count is not None:
             actual = summary.get("slides", len(summary.get("sheets", [])))
-            checks.append({"id": "count", "status": "pass" if actual == args.count else "fail", "expected": args.count, "actual": actual})
-    except (OSError, ValueError, KeyError, RuntimeError, ET.ParseError, zipfile.BadZipFile, zlib.error) as error:
+            checks.append(
+                {
+                    "id": "count",
+                    "status": "pass" if actual == args.count else "fail",
+                    "expected": args.count,
+                    "actual": actual,
+                }
+            )
+    except (
+        OSError,
+        ValueError,
+        KeyError,
+        RuntimeError,
+        ET.ParseError,
+        zipfile.BadZipFile,
+        zlib.error,
+    ) as error:
         checks.append({"id": "package", "status": "fail", "detail": str(error)})
     failed = any(check["status"] == "fail" for check in checks)
-    report = {"format": args.input.suffix.lower()[1:], "verdict": "fail" if failed else "pass", "checks": checks, "summary": summary}
+    report = {
+        "format": args.input.suffix.lower()[1:],
+        "verdict": "fail" if failed else "pass",
+        "checks": checks,
+        "summary": summary,
+    }
     output = json.dumps(report, ensure_ascii=True, indent=2) + "\n"
     if args.out is not None:
         try:

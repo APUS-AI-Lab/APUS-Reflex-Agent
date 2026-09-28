@@ -125,6 +125,7 @@ interface SdkAssertions {
 }
 
 const SDK_ASSERTIONS: Readonly<Record<string, SdkAssertions>> = {
+  'system3-shadow': { expectedFinalResponse: 'SDK snapshot OK' },
   'tool-error-details': {
     patches: [fileURLToPath(new URL('./tool-error-details/runtime.cordis.yml', import.meta.url))],
     expectedFinalResponse: 'ERROR_DETAILS_OK',
@@ -842,6 +843,18 @@ describe('TypeScript SDK snapshots over the jsonrpc runtime', () => {
       )
       reconcileCatalogCreationTimes(ordered.map(log => log.content), 'validate')
       const actualContext = contextOf(ordered, cwd)
+      if (scenario.name === 'system3-shadow') {
+        const decisions = results.flatMap(result => result.events).filter(event => event.type === 'system3/decision')
+        expect(decisions, JSON.stringify(results.at(-1)?.events.filter(event => event.type === 'turn/end'))).toHaveLength(1)
+        expect(decisions[0]).toMatchObject({ data: {
+          mode: 'shadow', outcome: { kind: 'ok' }, advice: 'candidate_done',
+          baseline: { action: 'retry' }, comparison: { divergence: 'model-premature-done' },
+        } })
+        expect(decisions[0]).not.toHaveProperty('surfaceOp')
+        const persisted = records(ordered[0]!.content).filter(event => event.type === 'system3/decision')
+        expect(persisted).toHaveLength(1)
+        expect(persisted[0]?.data).toEqual(decisions[0]?.data)
+      }
       if (scenario.name === 'subagent-activation-limit') {
         expect(ordered).toHaveLength(2)
         const denied = records(ordered[0]!.content).find(record => record.type === 'tool/result'

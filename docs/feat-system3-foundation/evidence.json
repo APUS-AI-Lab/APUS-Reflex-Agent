@@ -1,0 +1,152 @@
+{
+  "date": "2026-09-24",
+  "status": "design_pending_approval",
+  "jev_skill_sha": "259a798ab8df70a3566f1cb7f8226e533782d847",
+  "private_repo": "cryptoSUN2049/xDAN-System3-DSH",
+  "remote_code_pushed": false,
+  "validation": {
+    "ruff_version": "0.13.3",
+    "ruff_check": "failed: 4 upstream issues",
+    "ruff_format_check": "failed: 28 upstream files",
+    "product_build": "not_run",
+    "new_model_evaluation": "not_run"
+  },
+  "sources": [
+    {
+      "path": "/Users/gumpm5/Documents/Code/xDAN-ms-swift-jev/.Codex/worktrees/feat-jev-combined/docs/feat-jev-combined/apus-jet-evaluation-report-20260921.html",
+      "exists": true,
+      "sha256": "ca4587609e53072d00b97621a2d0e62cdd1242303dd32cbd7322cad2ab296048"
+    },
+    {
+      "path": "/Users/gumpm5/Documents/Code/xDAN-ms-swift-jev/.Codex/worktrees/feat-jev-rlcd/docs/feat-jev-rlcd/index.html",
+      "exists": true,
+      "sha256": "1aec29ec4a5d06fcf373cbfe8849f371b957905107f465cf9ec46b4a57ae5e20"
+    },
+    {
+      "path": "/Users/gumpm5/Documents/Code/xDAN-ms-swift-jev/docs/design/Jev核心信息全景.html",
+      "exists": true,
+      "sha256": "6691ba537baf2f1f8c338c8978a54bb8ee8162a16e17337f3a8e567361081599"
+    },
+    {
+      "path": "/Users/gumpm5/Documents/Code/xDAN-ms-swift-jev/.Codex/worktrees/feat-jev-combined/docs/feat-jev-combined/final-checkpoint-5949-evaluation-20260920.md",
+      "exists": true,
+      "sha256": "2eb73299c53eee510cd8ea43e808e5c43d8fcca22abaf4fdf4adc605a82598b7"
+    },
+    {
+      "path": "/Users/gumpm5/Documents/Code/xDAN-Project-Hope-2026/5-Develop/api-structures/API-REFERENCE.md",
+      "exists": true,
+      "sha256": "4ee36562ffe06ec8344103db9f6986eb731191322cc9de89f9e629f507691fd2"
+    },
+    {
+      "path": "/Users/gumpm5/Documents/Code/xDAN-DSH-uni-agent/.Codex/worktrees/verl-uni-agent-harbor-opd-rl/docs/performance-9b/overnight/final-analysis.json",
+      "exists": true,
+      "sha256": "66b3c42f8d37095f9c8e7409056dec7ac50529982364809f31baf6e51be0f3af"
+    },
+    {
+      "path": "/Users/gumpm5/Documents/Code/xDAN-DSH-uni-agent/.Codex/worktrees/verl-uni-agent-harbor-opd-rl/docs/performance-9b/tokenizer-opd-compatibility/full-verdict.md",
+      "exists": true,
+      "sha256": "959b318a10ad5b6f9b828115be9e7021d9125c862744b178350a87ad97204537"
+    },
+    {
+      "path": "/Users/gumpm5/Documents/Code/xDAN-DSH-uni-agent/.Codex/worktrees/verl-uni-agent-harbor-opd-rl/docs/performance-9b/checkpoint-full-eval/evidence-20260921/opd12-supplemented-pair.json",
+      "exists": true,
+      "sha256": "0aa50949fe44737cd778ab831eb2c24f6660dc225aa246312b36b1bd17473573"
+    },
+    {
+      "path": "/Users/gumpm5/Documents/Code/xDAN-DSH-uni-agent/.Codex/worktrees/verl-uni-agent-harbor-opd-rl/docs/performance-9b/checkpoint-full-eval/evidence-20260921/rl20-supplemented-pair.json",
+      "exists": true,
+      "sha256": "5cdfc15bcc2afaa9e877bb00bf3be7d388b0c5b89c98b9b03f45b3829f6cb2cb"
+    },
+    {
+      "path": "/Users/gumpm5/Documents/Code/xDAN-DSH-uni-agent/.Codex/worktrees/verl-uni-agent-harbor-opd-rl/deployment/versions/dsh-session-v2-candidate.json",
+      "exists": true,
+      "sha256": "19196002e3905d996ab4b43e661c702347340489fb3e5923403ec35c30ff87ac"
+    },
+    {
+      "path": "/Users/gumpm5/Documents/Code/xDAN-DSH-uni-agent/.Codex/worktrees/verl-uni-agent-harbor-opd-rl/uni_agent/agents/dsh/runner.py",
+      "exists": true,
+      "sha256": "a122de903b1775231f6ff6f70762b78500819d6c9ce8a3323b729dac64468732"
+    },
+    {
+      "path": "/Users/gumpm5/Documents/Code/xDAN-DSH-uni-agent/.Codex/worktrees/verl-uni-agent-harbor-opd-rl/uni_agent/tasks/harbor_dsh/protocol.py",
+      "exists": true,
+      "sha256": "ae1162b4567264ca0c14f1c6b5cea2300ec232c16829b62a02a7e3c597240ee5"
+    },
+    {
+      "path": "/Users/gumpm5/Documents/Code/xDAN-System3-DSH/.Codex/worktrees/feat-system3-foundation/docs/architecture.md",
+      "exists": true,
+      "sha256": "9badc6e4472a985361bc20a5fcd5b5420c63f14a91ae03a204de424947bcc909"
+    },
+    {
+      "path": "/Users/gumpm5/Documents/Code/xDAN-System3-DSH/.Codex/worktrees/feat-system3-foundation/packages/core/agent-loop/src/agent.ts",
+      "exists": true,
+      "sha256": "d77f9602338483bfaed22e3c897fab8933c7eac829d2ba944ae60b78deba7a12"
+    },
+    {
+      "path": "/Users/gumpm5/Documents/Code/xDAN-System3-DSH/.Codex/worktrees/feat-system3-foundation/packages/core/agent/src/runtime-types.ts",
+      "exists": true,
+      "sha256": "d0ac3509febb04308eff84bc6c949ff3c736dec9fd9f8d230c5d7fa3455ff204"
+    },
+    {
+      "path": "/Users/gumpm5/Documents/Code/xDAN-System3-DSH/.Codex/worktrees/feat-system3-foundation/packages/core/tools/src/index.ts",
+      "exists": true,
+      "sha256": "8db2ce69d9be374845063b72efd91917e174c961bc8ac37b3670cc17e8d494f0"
+    },
+    {
+      "path": "/Users/gumpm5/Documents/Code/xDAN-System3-DSH/.Codex/worktrees/feat-system3-foundation/packages/spill/spill-policy/src/index.ts",
+      "exists": true,
+      "sha256": "c7faaaf9085c3329c754681ea6d0f0d1b7ac3bacd41044ca720ab13795a20cd3"
+    },
+    {
+      "path": "/Users/gumpm5/Documents/Code/xDAN-System3-DSH/.Codex/worktrees/feat-system3-foundation/packages/guard/repeat-tool-reminder/src/index.ts",
+      "exists": true,
+      "sha256": "1e917986fe9c5187d8f0fa11154ab2bf3b7c1d30db991540f4d1e62a2c59236d"
+    },
+    {
+      "path": "/Users/gumpm5/Documents/Code/xDAN-System3-DSH/.Codex/worktrees/feat-system3-foundation/packages/compaction/compaction-basic/src/summarizer.ts",
+      "exists": true,
+      "sha256": "c5b51c93d6b104157abe9fea8d6c4b678f232e8312019b2f6ec7e01ba74d6abb"
+    },
+    {
+      "path": "/Users/gumpm5/Documents/Code/xDAN-System3-DSH/.Codex/worktrees/feat-system3-foundation/packages/compaction/compaction-basic/src/region.ts",
+      "exists": true,
+      "sha256": "295b53cc9e924f7cb2e843e0d0d296e89ead73da2aab9790282db30736e2e063"
+    },
+    {
+      "path": "/Users/gumpm5/Documents/Code/xDAN-System3-DSH/.Codex/worktrees/feat-system3-foundation/packages/subagent/tool-subagent/src/index.ts",
+      "exists": true,
+      "sha256": "c6916dde620dd7cee16adf9b08293d4b790199d35bc505c24acbcd86fb637f8e"
+    },
+    {
+      "path": "/Users/gumpm5/Documents/Code/xDAN-System3-DSH/.Codex/worktrees/feat-system3-foundation/packages/goal/goal-round-driver/src/index.ts",
+      "exists": true,
+      "sha256": "3aa362932c39ef300524051ce2d2998d049c765afeb548cb9a4941830fe61fac"
+    },
+    {
+      "path": "/Users/gumpm5/Documents/Code/xDAN-System3-DSH/.Codex/worktrees/feat-system3-foundation/packages/goal/goal/src/index.ts",
+      "exists": true,
+      "sha256": "333ebc31489619ee083235c5f5ceeb38ac3c6c844b2a0179458058401a6ebf9a"
+    },
+    {
+      "path": "/Users/gumpm5/Documents/Code/xDAN-System3-DSH/.Codex/worktrees/feat-system3-foundation/packages/llm/token-meter/src/index.ts",
+      "exists": true,
+      "sha256": "9d399314121785154296af650c6059bfd967a4ba6fc72299aadf8a2dce3f7ce1"
+    },
+    {
+      "path": "/Users/gumpm5/Documents/Code/xDAN-System3-DSH/.Codex/worktrees/feat-system3-foundation/packages/hooks/hooks-codex/README.md",
+      "exists": true,
+      "sha256": "1d73f86f92caaa299fadec9a2e2197e8ca7d0752b27a680a9fbc5af2f6ca1b0f"
+    },
+    {
+      "path": "/Users/gumpm5/Documents/Code/xDAN-System3-DSH/.Codex/worktrees/feat-system3-foundation/python/sdk/src/deepseek_harness/api.py",
+      "exists": true,
+      "sha256": "9e24adee62987e38e0577c4ba051b15b015f61cd5d5412dc56882094f5e52c2b"
+    }
+  ],
+  "upstream_snapshot": {
+    "repository": "https://github.com/deepseek-ai/deepseek-harness",
+    "branch": "master",
+    "audited_on": "2026-09-24",
+    "historical_line_numbers": true
+  }
+}

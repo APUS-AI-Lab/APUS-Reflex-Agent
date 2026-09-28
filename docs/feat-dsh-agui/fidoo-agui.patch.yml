@@ -1,0 +1,46 @@
+# Route the Web profile and the AG-UI bridge through the Fidoo LiteLLM proxy.
+# Apply after the bridge overlay:
+#   export DSH_AGUI_TOKEN=<random secret shared with the Muse server>
+#   export SYSTEM3_LITELLM_API_KEY=<Fidoo virtual key>
+#   pnpm dsh --patch packages/experimental/agui/cordis.patch.yml \
+#            --patch docs/feat-dsh-agui/fidoo-agui.patch.yml --profile web --no-open
+# The proxy registers `deepseek-v4-flash` (upstream deepseek/deepseek-v4-flash,
+# 1M context). Change the two model ids below when a newer alias is registered.
+
+- id: llm-deepseek
+  disabled: true
+
+- id: llm-pi-ai
+  config:
+    providers:
+      fidoo:
+        displayName: Fidoo DeepSeek
+        apiKeyEnv: SYSTEM3_LITELLM_API_KEY
+        api: openai-completions
+        baseURL: https://proxy.fidoo.ai/v1
+        compat:
+          thinkingFormat: deepseek
+        models:
+          - id: deepseek-v4-flash
+            name: DeepSeek V4 Flash
+            contextWindow: 1048576
+            maxTokens: 8192
+            input: [text]
+            reasoningEfforts:
+              off:
+              low: low
+              medium: medium
+              high: high
+
+- id: agent-default-model
+  config:
+    provider: fidoo
+    model: deepseek-v4-flash
+    reasoningEffort: low
+
+- id: agui
+  config:
+    tokenEnv: DSH_AGUI_TOKEN
+    basePath: /agui
+    provider: fidoo
+    model: deepseek-v4-flash

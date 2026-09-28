@@ -1,0 +1,147 @@
+[
+  {
+    "version": 1,
+    "mode": "shadow",
+    "stateDigest": "fde2b173bf32e2ef9b666f72643a851151bb6ba2b37674f5c133410bde99a662",
+    "evidenceRefs": [],
+    "goalRevision": "g1",
+    "dataClasses": [
+      "public"
+    ],
+    "routeId": "jev",
+    "executionDomain": "local",
+    "providerId": "system-one",
+    "requestedModel": "APUS-OpenJev-fixture",
+    "effort": "low",
+    "turn": 1,
+    "step": 1,
+    "baseline": {
+      "action": "continue",
+      "accepted": true,
+      "reason": "accepted",
+      "missingChecks": [],
+      "missingEvidenceRefs": []
+    },
+    "advice": "candidate_done",
+    "comparison": {
+      "modelAction": "candidate_done",
+      "baselineAction": "continue",
+      "agrees": false,
+      "divergence": "model-premature-done"
+    },
+    "outcome": {
+      "kind": "ok",
+      "response": {
+        "model": "APUS-OpenJev-fixture",
+        "answers": {
+          "action": {
+            "type": "choice",
+            "choice": "candidate_done",
+            "probabilities": {
+              "continue": 0.025,
+              "retry": 0.025,
+              "escalate": 0.025,
+              "candidate_done": 0.9,
+              "unknown": 0.025
+            },
+            "confidence": 0.9
+          }
+        },
+        "usage": {
+          "prompt_tokens": 8,
+          "completion_tokens": 1
+        }
+      }
+    },
+    "request": {
+      "state": {
+        "currentGoalRevision": "g1",
+        "advice": {
+          "action": "continue",
+          "goalRevision": "g1",
+          "evidenceRefs": []
+        },
+        "requiredChecks": [],
+        "availableEvidenceRefs": [],
+        "budgetRemaining": 1
+      },
+      "effort": "low",
+      "questions": {
+        "action": {
+          "type": "choice",
+          "criteria": {
+            "continue": "Continue working on the current goal.",
+            "retry": "Retry after resolving a failed check.",
+            "escalate": "Request additional capability or human input.",
+            "candidate_done": "Suggest completion for independent verification.",
+            "unknown": "Insufficient evidence to choose an action."
+          }
+        }
+      },
+      "model": "APUS-OpenJev-fixture"
+    }
+  },
+  {
+    "version": 1,
+    "mode": "shadow",
+    "stateDigest": "fde2b173bf32e2ef9b666f72643a851151bb6ba2b37674f5c133410bde99a662",
+    "evidenceRefs": [],
+    "goalRevision": "g1",
+    "dataClasses": [
+      "public"
+    ],
+    "routeId": "jev",
+    "executionDomain": "local",
+    "providerId": "system-one",
+    "requestedModel": "APUS-OpenJev-fixture",
+    "effort": "low",
+    "turn": 1,
+    "step": 1,
+    "baseline": {
+      "action": "continue",
+      "accepted": true,
+      "reason": "accepted",
+      "missingChecks": [],
+      "missingEvidenceRefs": []
+    },
+    "advice": "unknown",
+    "comparison": {
+      "modelAction": "unknown",
+      "baselineAction": "continue",
+      "agrees": false,
+      "divergence": "model-unsafe"
+    },
+    "outcome": {
+      "kind": "unknown",
+      "code": "http",
+      "status": 503
+    },
+    "request": {
+      "state": {
+        "currentGoalRevision": "g1",
+        "advice": {
+          "action": "continue",
+          "goalRevision": "g1",
+          "evidenceRefs": []
+        },
+        "requiredChecks": [],
+        "availableEvidenceRefs": [],
+        "budgetRemaining": 1
+      },
+      "effort": "low",
+      "questions": {
+        "action": {
+          "type": "choice",
+          "criteria": {
+            "continue": "Continue working on the current goal.",
+            "retry": "Retry after resolving a failed check.",
+            "escalate": "Request additional capability or human input.",
+            "candidate_done": "Suggest completion for independent verification.",
+            "unknown": "Insufficient evidence to choose an action."
+          }
+        }
+      },
+      "model": "APUS-OpenJev-fixture"
+    }
+  }
+]

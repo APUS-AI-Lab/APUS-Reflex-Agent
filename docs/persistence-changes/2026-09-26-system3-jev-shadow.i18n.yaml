@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/persistence-changes/2026-09-26-system3-jev-shadow.md
+2026-09-26-system3-jev-shadow.md: de27273c1212520d6994663a833285b72f27b783
+2026-09-26-system3-jev-shadow.zh.md: 313f9488aecbd79199efa2cadd8aad81940daad8

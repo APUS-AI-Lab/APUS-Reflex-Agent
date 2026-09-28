@@ -46,12 +46,18 @@ def parse_otool_deployment_target(output: str) -> tuple[int, ...]:
             command = "build"
         elif stripped == "cmd LC_VERSION_MIN_MACOSX":
             command = "minimum"
-        elif command == "build" and (match := re.fullmatch(r"minos\s+(\d+(?:\.\d+)*)", stripped)):
+        elif command == "build" and (
+            match := re.fullmatch(r"minos\s+(\d+(?:\.\d+)*)", stripped)
+        ):
             versions.append(parse_version(match.group(1)))
-        elif command == "minimum" and (match := re.fullmatch(r"version\s+(\d+(?:\.\d+)*)", stripped)):
+        elif command == "minimum" and (
+            match := re.fullmatch(r"version\s+(\d+(?:\.\d+)*)", stripped)
+        ):
             versions.append(parse_version(match.group(1)))
     if not versions:
-        raise ValueError("otool output contains no macOS deployment target load command")
+        raise ValueError(
+            "otool output contains no macOS deployment target load command"
+        )
     return max(versions)
 
 
@@ -90,7 +96,9 @@ def validate_deployment_targets(
     executables: list[Path], platform_tag: str
 ) -> list[tuple[Path, tuple[int, ...]]]:
     """Validate every executable and return its measured deployment target."""
-    measured = [(executable, deployment_target(executable)) for executable in executables]
+    measured = [
+        (executable, deployment_target(executable)) for executable in executables
+    ]
     for executable, actual in measured:
         ensure_compatible(executable, actual, platform_tag)
     return measured
@@ -102,7 +110,9 @@ def main() -> None:
     parser.add_argument("executables", type=Path, nargs="+")
     args = parser.parse_args()
     platform_tag = MACOS_PLATFORMS[args.platform]
-    for executable, version in validate_deployment_targets(args.executables, platform_tag):
+    for executable, version in validate_deployment_targets(
+        args.executables, platform_tag
+    ):
         rendered = ".".join(str(part) for part in version)
         print(f"{executable}: macOS {rendered} <= {platform_tag}")
 

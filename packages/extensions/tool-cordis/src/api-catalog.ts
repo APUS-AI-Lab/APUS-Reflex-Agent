@@ -1248,6 +1248,37 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
+    key: 'jev',
+    summary: 'Cordis service that resolves one pinned Jev provider per request.',
+    description: 'Cordis service that resolves one pinned Jev provider per request.',
+    methods: [
+      {
+        signature: 'register(provider: JevProvider): () => void',
+        description: 'Register a provider and return the disposer owned by the caller.',
+        parameters: [{ name: 'provider', description: 'Provider whose identity is unique in the registry.' }],
+        returns: 'A disposer that removes only this registration.',
+      },
+      {
+        signature: 'listProviders(): readonly JevProviderInfo[]',
+        description: 'List provider metadata without exposing credentials or request data.',
+        parameters: [],
+        returns: 'Detached registered provider metadata.',
+      },
+      {
+        signature: 'resolve(request: JevRequest): JevSpec',
+        description: 'Resolve a request to a provider and effective model without performing I/O.',
+        parameters: [{ name: 'request', description: 'Host request and optional provider selection.' }],
+        returns: 'Validated request with provider and model pinned.',
+      },
+      {
+        signature: 'async decide(request: JevRequest, signal?: AbortSignal): Promise<JevOutcome>',
+        description: 'Execute a typed decision, returning unknown when the provider is unavailable or invalid.',
+        parameters: [{ name: 'request', description: 'Host state and typed questions.' }, { name: 'signal', description: 'Cancellation propagated to the caller.' }],
+        returns: 'Validated result or a safe failure description.',
+      },
+    ],
+  },
+  {
     key: 'jobController',
     summary: 'Host service backing the generated `ctx.remote.job` namespace.',
     description: 'Host service backing the generated `ctx.remote.job` namespace.',
@@ -2871,6 +2902,67 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         description: 'Allocate a real terminal and start one owned process session. This is the only non-pipe process primitive: implementations own terminal byte I/O, foreground groups, signals, and whole-session quiescence.',
         parameters: [{ name: 'spec', description: 'fully specified argv, cwd, environment, dimensions, grace, and allocation cancellation.' }],
         returns: 'the live terminal handle after allocation succeeds.',
+      },
+    ],
+  },
+  {
+    key: 'system3',
+    summary: 'Unified runtime seam for the System3 pure policies.',
+    description: 'Unified runtime seam for the System3 pure policies.',
+    methods: [
+      {
+        signature: 'route(candidates: readonly System3RouteCandidate[], preferredId?: string): System3RouteSelection',
+        description: 'Choose the route a request may take under the privacy policy.',
+        parameters: [{ name: 'candidates', description: 'Routes the caller could use, in preference order.' }, { name: 'preferredId', description: 'Route to take when it is admitted.' }],
+        returns: 'The admitted route, or the reasons every candidate was refused.',
+      },
+      {
+        signature: 'evidence(request: System3EvidenceRequest): System3EvidenceSelection',
+        description: 'Select recoverable evidence that fits the request\'s budget.',
+        parameters: [{ name: 'request', description: 'Candidate evidence items and the budget.' }],
+        returns: 'The chosen items and what was left out.',
+      },
+      {
+        signature: 'supervise(request: System3SupervisorRequest): System3SupervisorResult',
+        description: 'Decide whether a turn may complete from its classified facts.',
+        parameters: [{ name: 'request', description: 'Supervisor facts and independent checks.' }],
+        returns: 'The deterministic completion decision.',
+      },
+      {
+        signature: 'shadow(modelAction: System3AdviceAction, baseline: System3SupervisorResult): System3ShadowComparison',
+        description: 'Compare model advice with the deterministic decision without changing it.',
+        parameters: [{ name: 'modelAction', description: 'Action the model advised.' }, { name: 'baseline', description: 'Deterministic supervisor decision.' }],
+        returns: 'Agreement and disagreement facts for the ledger.',
+      },
+      {
+        signature: 'validateCost(record: System3CostRecord): System3CostRecord',
+        description: 'Validate one usage record before it enters the ledger.',
+        parameters: [{ name: 'record', description: 'Usage and cost of one call.' }],
+        returns: 'The same record when valid.',
+      },
+      {
+        signature: 'sumCosts(records: readonly System3CostRecord[]): System3CostRecord',
+        description: 'Add usage records into one total.',
+        parameters: [{ name: 'records', description: 'Validated usage records.' }],
+        returns: 'Their sum.',
+      },
+      {
+        signature: 'snapshot(): System3ServiceSnapshot',
+        description: 'Read operational counters, free of user data.',
+        parameters: [],
+        returns: 'Current counters.',
+      },
+      {
+        signature: 'shadowDecision(session: Session, request: System3DecisionRequest, signal?: AbortSignal): Promise<System3DecisionReceipt>',
+        description: 'Record Jev advice beside the unchanged deterministic baseline.',
+        parameters: [{ name: 'session', description: 'Session owning the persisted decision.' }, { name: 'request', description: 'Classified supervisor facts and independent checks.' }, { name: 'signal', description: 'Caller cancellation.' }],
+        returns: 'Committed, non-model-visible receipt.',
+      },
+      {
+        signature: 'lastDecision(session: Session): System3DecisionReceipt | null',
+        description: 'Read the latest projected receipt without calling Jev during replay.',
+        parameters: [{ name: 'session', description: 'Live or restored Session.' }],
+        returns: 'Latest committed receipt, or null before the first decision.',
       },
     ],
   },
@@ -5174,6 +5266,74 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface InvokeRemoteRequest {\n    readonly namespace: string;\n    readonly method: string;\n    readonly args: Readonly<Record<string, unknown>>;\n    readonly uplink?: AsyncIterable<unknown>;\n    readonly peer?: PeerScope;\n    readonly signal?: AbortSignal;\n}',
   },
   {
+    name: 'JevAnswer',
+    declaration: 'export type JevAnswer = JevChoiceAnswer | JevScoreAnswer | JevNoulAnswer;',
+  },
+  {
+    name: 'JevChoiceAnswer',
+    declaration: 'export interface JevChoiceAnswer {\n    readonly type: \'choice\';\n    readonly choice: string;\n    readonly probabilities: Readonly<Record<string, number>>;\n    readonly confidence: number;\n}',
+  },
+  {
+    name: 'JevChoiceQuestion',
+    declaration: 'export interface JevChoiceQuestion {\n    readonly type: \'choice\';\n    readonly instructions?: string;\n    readonly criteria: Readonly<Record<string, string>>;\n}',
+  },
+  {
+    name: 'JevErrorCode',
+    declaration: 'export type JevErrorCode = \'missing-credential\' | \'timeout\' | \'rate-limited\' | \'http\' | \'invalid-response\' | \'transport\';',
+  },
+  {
+    name: 'JevFailure',
+    declaration: 'export interface JevFailure {\n    readonly code: JevErrorCode;\n    readonly message: string;\n    readonly status?: number;\n}',
+  },
+  {
+    name: 'JevNoulAnswer',
+    declaration: 'export interface JevNoulAnswer {\n    readonly type: \'noul\';\n    readonly noul: number;\n}',
+  },
+  {
+    name: 'JevNoulQuestion',
+    declaration: 'export interface JevNoulQuestion {\n    readonly type: \'noul\';\n    readonly criteria?: Readonly<{\n        true: string;\n        false: string;\n    }>;\n    readonly instructions?: string;\n}',
+  },
+  {
+    name: 'JevOutcome',
+    declaration: 'export type JevOutcome = {\n    readonly kind: \'ok\';\n    readonly spec: JevSpec;\n    readonly response: JevResponse;\n} | {\n    readonly kind: \'unknown\';\n    readonly spec: JevSpec;\n    readonly failure: JevFailure;\n};',
+  },
+  {
+    name: 'JevProvider',
+    declaration: 'export interface JevProvider {\n    readonly info: JevProviderInfo;\n    decide(request: JevRequest, signal?: AbortSignal): Promise<JevResponse>;\n}',
+  },
+  {
+    name: 'JevProviderInfo',
+    declaration: 'export interface JevProviderInfo {\n    readonly id: string;\n    readonly model: string;\n    readonly endpoint: string;\n}',
+  },
+  {
+    name: 'JevQuestion',
+    declaration: 'export type JevQuestion = JevChoiceQuestion | JevScoreQuestion | JevNoulQuestion;',
+  },
+  {
+    name: 'JevRequest',
+    declaration: 'export interface JevRequest {\n    readonly providerId?: string;\n    readonly state: JsonValue;\n    readonly questions: Readonly<Record<string, JevQuestion>>;\n    readonly model?: string;\n    readonly effort?: \'low\' | \'high\';\n}',
+  },
+  {
+    name: 'JevResponse',
+    declaration: 'export interface JevResponse {\n    readonly model: string;\n    readonly answers: Readonly<Record<string, JevAnswer>>;\n    readonly usage?: JevUsage;\n}',
+  },
+  {
+    name: 'JevScoreAnswer',
+    declaration: 'export interface JevScoreAnswer {\n    readonly type: \'score\';\n    readonly score: number;\n    readonly legend: Readonly<Record<string, string>>;\n    readonly probabilities: Readonly<Record<string, number>>;\n    readonly confidence: number;\n}',
+  },
+  {
+    name: 'JevScoreQuestion',
+    declaration: 'export interface JevScoreQuestion {\n    readonly type: \'score\';\n    readonly instructions?: string;\n    readonly criteria: readonly string[];\n}',
+  },
+  {
+    name: 'JevSpec',
+    declaration: 'export interface JevSpec extends JevRequest {\n    readonly providerId: string;\n    readonly model: string;\n}',
+  },
+  {
+    name: 'JevUsage',
+    declaration: 'export type JevUsage = Readonly<Record<string, number>>;',
+  },
+  {
     name: 'JobAppendOptions',
     declaration: 'export interface JobAppendOptions {\n    channel?: JobChannel;\n    gapBefore?: true;\n}',
   },
@@ -7016,6 +7176,114 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'SurfaceOp',
     declaration: 'export type SurfaceOp = \'append\' | {\n    op: \'replace\';\n    startSeq: SessionSeq;\n    endSeq: SessionSeq;\n};',
+  },
+  {
+    name: 'System3AdviceAction',
+    declaration: 'export type System3AdviceAction = \'continue\' | \'retry\' | \'escalate\' | \'candidate_done\' | \'unknown\';',
+  },
+  {
+    name: 'System3BlockedRoute',
+    declaration: 'export interface System3BlockedRoute {\n    readonly candidate: System3RouteCandidate;\n    readonly reason: System3BlockReason;\n}',
+  },
+  {
+    name: 'System3BlockReason',
+    declaration: 'export type System3BlockReason = \'network-disallowed\' | \'route-not-approved\' | \'data-class-not-approved\' | \'cloud-approval-required\';',
+  },
+  {
+    name: 'System3CheckStatus',
+    declaration: 'export type System3CheckStatus = \'pass\' | \'fail\' | \'unknown\';',
+  },
+  {
+    name: 'System3CostRecord',
+    declaration: 'export interface System3CostRecord {\n    readonly requestId: string;\n    readonly episodeId: string;\n    readonly modelRevision: string;\n    readonly inputTokens: number;\n    readonly outputTokens: number;\n    readonly cacheReadTokens: number;\n    readonly cacheWriteTokens: number;\n    readonly reasoningTokens: number;\n    readonly source: System3UsageSource;\n    readonly elapsedMs: number;\n}',
+  },
+  {
+    name: 'System3DataClass',
+    declaration: 'export type System3DataClass = \'public\' | \'workspace\' | \'sensitive\' | \'secret\';',
+  },
+  {
+    name: 'System3DecisionId',
+    declaration: 'export type System3DecisionId = Branded<\'System3DecisionId\'>;',
+  },
+  {
+    name: 'System3DecisionOutcome',
+    declaration: 'export type System3DecisionOutcome = {\n    readonly kind: \'ok\';\n    readonly response: JevResponse;\n} | {\n    readonly kind: \'unknown\';\n    readonly code: JevFailure[\'code\'] | \'privacy-denied\' | \'provider-unavailable\' | \'cancelled\';\n    readonly status?: number;\n};',
+  },
+  {
+    name: 'System3DecisionReceipt',
+    declaration: 'export interface System3DecisionReceipt {\n    readonly version: 1;\n    readonly id: System3DecisionId;\n    readonly mode: \'shadow\';\n    readonly request: JevRequest;\n    readonly stateDigest: string;\n    readonly evidenceRefs: readonly string[];\n    readonly goalRevision: string;\n    readonly dataClasses: readonly System3DataClass[];\n    readonly routeId: string;\n    readonly executionDomain: System3ExecutionDomain;\n    readonly providerId?: string;\n    readonly requestedModel?: string;\n    readonly effort: \'low\' | \'high\';\n    readonly turn?: number;\n    readonly step?: number;\n    readonly elapsedMs: number;\n    readonly baseline: System3SupervisorResult;\n    readonly advice: System3AdviceAction;\n    readonly comparison: System3ShadowComparison;\n    readonly outcome: System3DecisionOutcome;\n}',
+  },
+  {
+    name: 'System3DecisionRequest',
+    declaration: 'export interface System3DecisionRequest {\n    readonly dataClasses: readonly System3DataClass[];\n    readonly supervisor: System3SupervisorRequest;\n    readonly turn?: number;\n    readonly step?: number;\n}',
+  },
+  {
+    name: 'System3EvidenceReason',
+    declaration: 'export type System3EvidenceReason = \'full\' | \'head\' | \'tail\' | \'match\';',
+  },
+  {
+    name: 'System3EvidenceRequest',
+    declaration: 'export interface System3EvidenceRequest {\n    readonly artifactRef: string;\n    readonly text: string;\n    readonly maxChars: number;\n    readonly requiredTerms?: readonly string[];\n    readonly contextChars?: number;\n    readonly headChars?: number;\n    readonly tailChars?: number;\n}',
+  },
+  {
+    name: 'System3EvidenceSelection',
+    declaration: 'export interface System3EvidenceSelection {\n    readonly artifactRef: string;\n    readonly retainedSpans: readonly System3EvidenceSpan[];\n    readonly omittedRanges: readonly System3OmittedRange[];\n    readonly retainedChars: number;\n    readonly omittedChars: number;\n    readonly truncated: boolean;\n}',
+  },
+  {
+    name: 'System3EvidenceSpan',
+    declaration: 'export interface System3EvidenceSpan {\n    readonly start: number;\n    readonly end: number;\n    readonly reason: System3EvidenceReason;\n    readonly matchedTerms?: readonly string[];\n}',
+  },
+  {
+    name: 'System3ExecutionDomain',
+    declaration: 'export type System3ExecutionDomain = \'local\' | \'network\';',
+  },
+  {
+    name: 'System3GoalCheck',
+    declaration: 'export interface System3GoalCheck {\n    readonly id: string;\n    readonly status: System3CheckStatus;\n    readonly evidenceRefs: readonly string[];\n}',
+  },
+  {
+    name: 'System3OmittedRange',
+    declaration: 'export interface System3OmittedRange {\n    readonly start: number;\n    readonly end: number;\n}',
+  },
+  {
+    name: 'System3RouteAdmission',
+    declaration: 'export interface System3RouteAdmission {\n    readonly allowed: readonly System3RouteCandidate[];\n    readonly blocked: readonly System3BlockedRoute[];\n    readonly requiresClarification: boolean;\n}',
+  },
+  {
+    name: 'System3RouteCandidate',
+    declaration: 'export interface System3RouteCandidate {\n    readonly id: string;\n    readonly executionDomain: System3ExecutionDomain;\n    readonly dataClasses: readonly System3DataClass[];\n}',
+  },
+  {
+    name: 'System3RouteSelection',
+    declaration: 'export interface System3RouteSelection extends System3RouteAdmission {\n    readonly selected?: System3RouteCandidate;\n}',
+  },
+  {
+    name: 'System3ServiceSnapshot',
+    declaration: 'export interface System3ServiceSnapshot {\n    readonly routes: number;\n    readonly evidence: number;\n    readonly supervision: number;\n    readonly shadow: number;\n    readonly costs: number;\n    readonly agent: {\n        readonly preSteps: number;\n        readonly requests: number;\n        readonly requestErrors: number;\n        readonly turnStops: number;\n    };\n}',
+  },
+  {
+    name: 'System3ShadowComparison',
+    declaration: 'export interface System3ShadowComparison {\n    readonly modelAction: System3AdviceAction;\n    readonly baselineAction: System3SupervisedAction;\n    readonly agrees: boolean;\n    readonly divergence: \'none\' | \'model-premature-done\' | \'model-understops\' | \'model-unsafe\';\n}',
+  },
+  {
+    name: 'System3SupervisedAction',
+    declaration: 'export type System3SupervisedAction = \'continue\' | \'retry\' | \'escalate\' | \'done\';',
+  },
+  {
+    name: 'System3SupervisorAdvice',
+    declaration: 'export interface System3SupervisorAdvice {\n    readonly action: System3AdviceAction;\n    readonly goalRevision: string;\n    readonly evidenceRefs: readonly string[];\n}',
+  },
+  {
+    name: 'System3SupervisorRequest',
+    declaration: 'export interface System3SupervisorRequest {\n    readonly currentGoalRevision: string;\n    readonly advice: System3SupervisorAdvice;\n    readonly requiredChecks: readonly System3GoalCheck[];\n    readonly availableEvidenceRefs: readonly string[];\n    readonly budgetRemaining: number;\n}',
+  },
+  {
+    name: 'System3SupervisorResult',
+    declaration: 'export interface System3SupervisorResult {\n    readonly action: System3SupervisedAction;\n    readonly accepted: boolean;\n    readonly reason: \'accepted\' | \'stale-goal\' | \'missing-evidence\' | \'failed-checks\' | \'unknown-checks\' | \'budget-exhausted\' | \'invalid-advice\';\n    readonly missingChecks: readonly string[];\n    readonly missingEvidenceRefs: readonly string[];\n}',
+  },
+  {
+    name: 'System3UsageSource',
+    declaration: 'export type System3UsageSource = \'provider\' | \'estimated\';',
   },
   {
     name: 'SystemMessage',

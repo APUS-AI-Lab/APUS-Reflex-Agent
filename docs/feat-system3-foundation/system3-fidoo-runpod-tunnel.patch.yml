@@ -1,0 +1,52 @@
+# Source-checkout overlay for a headless profile. Keep the SSH tunnel controlled.
+- id: llm-deepseek
+  disabled: true
+
+- id: llm-pi-ai
+  config:
+    providers:
+      fidoo:
+        displayName: Fidoo DeepSeek
+        apiKeyEnv: SYSTEM3_LITELLM_API_KEY
+        api: openai-completions
+        baseURL: https://proxy.fidoo.ai/v1
+        compat:
+          thinkingFormat: deepseek
+        models:
+          - id: deepseek-v4-flash
+            name: DeepSeek V4 Flash
+            contextWindow: 1048576
+            maxTokens: 8192
+            input: [text]
+            reasoningEfforts:
+              off:
+              low: low
+              medium: medium
+              high: high
+
+- id: agent-default-model
+  config:
+    provider: fidoo
+    model: deepseek-v4-flash
+    reasoningEffort: low
+
+- insert:
+    - id: jev
+      name: ../../packages/experimental/apus-dsh-jev-plugin/src/index.ts
+      config:
+        endpoint: http://127.0.0.1:30135
+        model: APUS-OpenJev-v1-9B-5949
+        effort: low
+        timeoutMs: 30000
+        apiKeyEnv: APUS_JEV_API_KEY
+
+    - id: system3
+      name: ../../packages/experimental/system3/src/index.ts
+      config:
+        privacyMode: controlled
+        approvedRemoteIds: [jev]
+        approvedRemoteDataClasses: [public]
+        observeAgentLoop: true
+        jevRouteId: jev
+        jevExecutionDomain: network
+        jevEffort: low
