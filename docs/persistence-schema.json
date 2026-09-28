@@ -15809,6 +15809,810 @@
       }
     },
     {
+      "key": "event:system3/decision",
+      "kind": "event",
+      "event": "system3/decision",
+      "surface": false,
+      "digest": "b923b60d7839c5e3d3e03be20abbe587b9029440c839b8459cd1672149f971fe",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "data",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "ignorable",
+                "type": 79,
+                "optional": true
+              },
+              {
+                "name": "seq",
+                "type": 37,
+                "optional": false
+              },
+              {
+                "name": "time",
+                "type": 37,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 80,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "advice",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "baseline",
+                "type": 8,
+                "optional": false
+              },
+              {
+                "name": "comparison",
+                "type": 22,
+                "optional": false
+              },
+              {
+                "name": "dataClasses",
+                "type": 28,
+                "optional": false
+              },
+              {
+                "name": "effort",
+                "type": 34,
+                "optional": false
+              },
+              {
+                "name": "elapsedMs",
+                "type": 37,
+                "optional": false
+              },
+              {
+                "name": "evidenceRefs",
+                "type": 12,
+                "optional": false
+              },
+              {
+                "name": "executionDomain",
+                "type": 38,
+                "optional": false
+              },
+              {
+                "name": "goalRevision",
+                "type": 13,
+                "optional": false
+              },
+              {
+                "name": "id",
+                "type": 13,
+                "optional": false
+              },
+              {
+                "name": "mode",
+                "type": 41,
+                "optional": false
+              },
+              {
+                "name": "outcome",
+                "type": 42,
+                "optional": false
+              },
+              {
+                "name": "providerId",
+                "type": 13,
+                "optional": true
+              },
+              {
+                "name": "request",
+                "type": 67,
+                "optional": false
+              },
+              {
+                "name": "requestedModel",
+                "type": 13,
+                "optional": true
+              },
+              {
+                "name": "routeId",
+                "type": 13,
+                "optional": false
+              },
+              {
+                "name": "stateDigest",
+                "type": 13,
+                "optional": false
+              },
+              {
+                "name": "step",
+                "type": 37,
+                "optional": true
+              },
+              {
+                "name": "turn",
+                "type": 37,
+                "optional": true
+              },
+              {
+                "name": "version",
+                "type": 78,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "union",
+            "types": [
+              3,
+              4,
+              5,
+              6,
+              7
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "retry"
+          },
+          {
+            "kind": "literal",
+            "value": "unknown"
+          },
+          {
+            "kind": "literal",
+            "value": "candidate_done"
+          },
+          {
+            "kind": "literal",
+            "value": "continue"
+          },
+          {
+            "kind": "literal",
+            "value": "escalate"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "accepted",
+                "type": 9,
+                "optional": false
+              },
+              {
+                "name": "action",
+                "type": 10,
+                "optional": false
+              },
+              {
+                "name": "missingChecks",
+                "type": 12,
+                "optional": false
+              },
+              {
+                "name": "missingEvidenceRefs",
+                "type": 12,
+                "optional": false
+              },
+              {
+                "name": "reason",
+                "type": 14,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "boolean"
+          },
+          {
+            "kind": "union",
+            "types": [
+              3,
+              6,
+              7,
+              11
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "done"
+          },
+          {
+            "kind": "array",
+            "element": 13
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "union",
+            "types": [
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "accepted"
+          },
+          {
+            "kind": "literal",
+            "value": "stale-goal"
+          },
+          {
+            "kind": "literal",
+            "value": "unknown-checks"
+          },
+          {
+            "kind": "literal",
+            "value": "missing-evidence"
+          },
+          {
+            "kind": "literal",
+            "value": "invalid-advice"
+          },
+          {
+            "kind": "literal",
+            "value": "budget-exhausted"
+          },
+          {
+            "kind": "literal",
+            "value": "failed-checks"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "agrees",
+                "type": 9,
+                "optional": false
+              },
+              {
+                "name": "baselineAction",
+                "type": 10,
+                "optional": false
+              },
+              {
+                "name": "divergence",
+                "type": 23,
+                "optional": false
+              },
+              {
+                "name": "modelAction",
+                "type": 2,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "union",
+            "types": [
+              24,
+              25,
+              26,
+              27
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "model-premature-done"
+          },
+          {
+            "kind": "literal",
+            "value": "model-understops"
+          },
+          {
+            "kind": "literal",
+            "value": "model-unsafe"
+          },
+          {
+            "kind": "literal",
+            "value": "none"
+          },
+          {
+            "kind": "array",
+            "element": 29
+          },
+          {
+            "kind": "union",
+            "types": [
+              30,
+              31,
+              32,
+              33
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "public"
+          },
+          {
+            "kind": "literal",
+            "value": "secret"
+          },
+          {
+            "kind": "literal",
+            "value": "sensitive"
+          },
+          {
+            "kind": "literal",
+            "value": "workspace"
+          },
+          {
+            "kind": "union",
+            "types": [
+              35,
+              36
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "high"
+          },
+          {
+            "kind": "literal",
+            "value": "low"
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "union",
+            "types": [
+              39,
+              40
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "local"
+          },
+          {
+            "kind": "literal",
+            "value": "network"
+          },
+          {
+            "kind": "literal",
+            "value": "shadow"
+          },
+          {
+            "kind": "union",
+            "types": [
+              43,
+              54
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "code",
+                "type": 44,
+                "optional": false
+              },
+              {
+                "name": "kind",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "status",
+                "type": 37,
+                "optional": true
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "union",
+            "types": [
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "privacy-denied"
+          },
+          {
+            "kind": "literal",
+            "value": "provider-unavailable"
+          },
+          {
+            "kind": "literal",
+            "value": "rate-limited"
+          },
+          {
+            "kind": "literal",
+            "value": "cancelled"
+          },
+          {
+            "kind": "literal",
+            "value": "timeout"
+          },
+          {
+            "kind": "literal",
+            "value": "transport"
+          },
+          {
+            "kind": "literal",
+            "value": "http"
+          },
+          {
+            "kind": "literal",
+            "value": "invalid-response"
+          },
+          {
+            "kind": "literal",
+            "value": "missing-credential"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "kind",
+                "type": 55,
+                "optional": false
+              },
+              {
+                "name": "response",
+                "type": 56,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "ok"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "answers",
+                "type": 57,
+                "optional": false
+              },
+              {
+                "name": "model",
+                "type": 13,
+                "optional": false
+              },
+              {
+                "name": "usage",
+                "type": 60,
+                "optional": true
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 13,
+                "value": 58
+              }
+            ]
+          },
+          {
+            "kind": "union",
+            "types": [
+              59,
+              62,
+              65
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "choice",
+                "type": 13,
+                "optional": false
+              },
+              {
+                "name": "confidence",
+                "type": 37,
+                "optional": false
+              },
+              {
+                "name": "probabilities",
+                "type": 60,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 61,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 13,
+                "value": 37
+              }
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "choice"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "confidence",
+                "type": 37,
+                "optional": false
+              },
+              {
+                "name": "legend",
+                "type": 63,
+                "optional": false
+              },
+              {
+                "name": "probabilities",
+                "type": 60,
+                "optional": false
+              },
+              {
+                "name": "score",
+                "type": 37,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 64,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 13,
+                "value": 13
+              }
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "score"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "noul",
+                "type": 37,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 66,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "noul"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "effort",
+                "type": 34,
+                "optional": true
+              },
+              {
+                "name": "model",
+                "type": 13,
+                "optional": true
+              },
+              {
+                "name": "providerId",
+                "type": 13,
+                "optional": true
+              },
+              {
+                "name": "questions",
+                "type": 68,
+                "optional": false
+              },
+              {
+                "name": "state",
+                "type": 74,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 13,
+                "value": 69
+              }
+            ]
+          },
+          {
+            "kind": "union",
+            "types": [
+              70,
+              71,
+              72
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "criteria",
+                "type": 12,
+                "optional": false
+              },
+              {
+                "name": "instructions",
+                "type": 13,
+                "optional": true
+              },
+              {
+                "name": "type",
+                "type": 64,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "criteria",
+                "type": 63,
+                "optional": false
+              },
+              {
+                "name": "instructions",
+                "type": 13,
+                "optional": true
+              },
+              {
+                "name": "type",
+                "type": 61,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "criteria",
+                "type": 73,
+                "optional": true
+              },
+              {
+                "name": "instructions",
+                "type": 13,
+                "optional": true
+              },
+              {
+                "name": "type",
+                "type": 66,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "false",
+                "type": 13,
+                "optional": false
+              },
+              {
+                "name": "true",
+                "type": 13,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "union",
+            "types": [
+              9,
+              13,
+              37,
+              75,
+              76,
+              77
+            ]
+          },
+          {
+            "kind": "array",
+            "element": 74
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 13,
+                "value": 74
+              }
+            ]
+          },
+          {
+            "kind": "primitive",
+            "type": "null"
+          },
+          {
+            "kind": "literal",
+            "value": 1
+          },
+          {
+            "kind": "literal",
+            "value": true
+          },
+          {
+            "kind": "literal",
+            "value": "system3/decision"
+          }
+        ]
+      }
+    },
+    {
       "key": "event:team/member",
       "kind": "event",
       "event": "team/member",
@@ -21669,6 +22473,20 @@
       "sources": []
     },
     {
+      "digest": "018d5abfdbe707119517350ec78d2703b72ab04da294162c3b22d28e3c948de9",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "public"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "0203243b72fc867afc81aff5f4cf2167e564ed342534eb612fc92f295cf07789",
       "schema": {
         "root": 0,
@@ -21782,6 +22600,20 @@
       ]
     },
     {
+      "digest": "03129cf158e22e615c82ecc5fa207c558c6015a81f935b2f92a79c917201e7fd",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "stale-goal"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "0341d4c3dfcd53253cdc1e789d9130d3cd848b6f8b0706bf92f313a68b39ff23",
       "schema": {
         "root": 0,
@@ -21789,6 +22621,20 @@
           {
             "kind": "literal",
             "value": "product-interaction"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "04b108d9357035bb2354c9831b317ac235496d01c1914a1a033603694a04996a",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "budget-exhausted"
           }
         ]
       },
@@ -21839,6 +22685,20 @@
       ]
     },
     {
+      "digest": "0652ec1eb6d381974214f7960eda1fb1229b11549ce3faf6f9588dbc04ae2fe7",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "ok"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "0657d3ca5ac4e7bf79b00bcf860b1c7159d01a9da137497221ec2f1776e365f7",
       "schema": {
         "root": 0,
@@ -21854,6 +22714,59 @@
       ],
       "sources": [
         "packages/core/session/src/types.ts:32"
+      ]
+    },
+    {
+      "digest": "066ec5d537a17b6ad642a2e560c7ab8cdca90b41a56719ad831191aeb86e7548",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "model-unsafe"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "07e0f8b8be750a4d003f7df86b627695c6783390252c0bac1fdfb180de4d50d4",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "union",
+            "types": [
+              1,
+              2,
+              3,
+              4
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "public"
+          },
+          {
+            "kind": "literal",
+            "value": "secret"
+          },
+          {
+            "kind": "literal",
+            "value": "sensitive"
+          },
+          {
+            "kind": "literal",
+            "value": "workspace"
+          }
+        ]
+      },
+      "names": [
+        "packages/experimental/system3-policy/src/index.ts#System3DataClass"
+      ],
+      "sources": [
+        "packages/experimental/system3-policy/src/index.ts:10"
       ]
     },
     {
@@ -22600,6 +23513,20 @@
           {
             "kind": "literal",
             "value": false
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "0d40bff99bbd96991bc0a4a60f482e15c4bb46a820cca9c38430ae18979e89ef",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "invalid-advice"
           }
         ]
       },
@@ -29395,6 +30322,20 @@
       ]
     },
     {
+      "digest": "182d62055a704acef3685fce76e2beb21f977bf930985ee33f0e2aff36022861",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "model-understops"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "18dc21f12bbac8ade8377e6fbb54179e20c3d955d73fba3244c57fb6bf001df0",
       "schema": {
         "root": 0,
@@ -29739,6 +30680,20 @@
           {
             "kind": "literal",
             "value": "success"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "1abe3f7b0521eedcb491feff9dffa8f04fb0cd782dfd879ccb9e43f54fcaeea6",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "network"
           }
         ]
       },
@@ -30956,6 +31911,118 @@
       ],
       "sources": [
         "packages/compaction/compaction-image-offload/src/projection.ts:9"
+      ]
+    },
+    {
+      "digest": "1d2809cee52a4308806a6b05848e53b5666fc166d82f41ddd96cc289aeba3b64",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "agrees",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "baselineAction",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "divergence",
+                "type": 7,
+                "optional": false
+              },
+              {
+                "name": "modelAction",
+                "type": 12,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "boolean"
+          },
+          {
+            "kind": "union",
+            "types": [
+              3,
+              4,
+              5,
+              6
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "continue"
+          },
+          {
+            "kind": "literal",
+            "value": "retry"
+          },
+          {
+            "kind": "literal",
+            "value": "done"
+          },
+          {
+            "kind": "literal",
+            "value": "escalate"
+          },
+          {
+            "kind": "union",
+            "types": [
+              8,
+              9,
+              10,
+              11
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "model-understops"
+          },
+          {
+            "kind": "literal",
+            "value": "model-unsafe"
+          },
+          {
+            "kind": "literal",
+            "value": "none"
+          },
+          {
+            "kind": "literal",
+            "value": "model-premature-done"
+          },
+          {
+            "kind": "union",
+            "types": [
+              3,
+              4,
+              6,
+              13,
+              14
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "candidate_done"
+          },
+          {
+            "kind": "literal",
+            "value": "unknown"
+          }
+        ]
+      },
+      "names": [
+        "packages/experimental/system3-supervisor/src/index.ts#System3ShadowComparison"
+      ],
+      "sources": [
+        "packages/experimental/system3-supervisor/src/index.ts:48"
       ]
     },
     {
@@ -32246,6 +33313,20 @@
       "sources": []
     },
     {
+      "digest": "23ca509ab31daa4b9b111ec9da0903f7b9476d2692df4caec8fd5c641b2f553e",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "secret"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "24b10f7cdae64928f89c49afc2eca0af9eb4a2f135e16f3416e6b8461fef1748",
       "schema": {
         "root": 0,
@@ -33375,6 +34456,20 @@
       ]
     },
     {
+      "digest": "2d431b50b572702b7c17e6dfb5c235f9cb1677a264eaccb154be8e80e383018f",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "timeout"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "2da725e554cd89301d829ed9dc45a572c3cd1b93b5e91d0d71f007976d8a0863",
       "schema": {
         "root": 0,
@@ -33796,6 +34891,68 @@
       "sources": []
     },
     {
+      "digest": "2fbe3c93cde33928f6a8c38e7f4ed5f92cbeae1b876a6304bcc28617b12ebb2f",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "choice",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "confidence",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "probabilities",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 4,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 1,
+                "value": 2
+              }
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "choice"
+          }
+        ]
+      },
+      "names": [
+        "packages/experimental/apus-dsh-jev-plugin/src/types.ts#JevChoiceAnswer"
+      ],
+      "sources": [
+        "packages/experimental/apus-dsh-jev-plugin/src/types.ts:39"
+      ]
+    },
+    {
       "digest": "2fe5026daf14bd4ff2b7bfb7cf9791c302d9cbba06802178b6dfec00b892698f",
       "schema": {
         "root": 0,
@@ -33946,6 +35103,204 @@
       ]
     },
     {
+      "digest": "3116b62472ff1f4d3a251dbb7ae215d7f64fe6656ff6d3585c674db7a76eaf60",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "provider-unavailable"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "311bcb135220924e0da8a03ac548e6baf8d733c94c4aa07b3ddfdad56147b4fb",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "kind",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "response",
+                "type": 2,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "ok"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "answers",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "model",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "usage",
+                "type": 8,
+                "optional": true
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 4,
+                "value": 5
+              }
+            ]
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "union",
+            "types": [
+              6,
+              10,
+              13
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "choice",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "confidence",
+                "type": 7,
+                "optional": false
+              },
+              {
+                "name": "probabilities",
+                "type": 8,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 9,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 4,
+                "value": 7
+              }
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "choice"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "confidence",
+                "type": 7,
+                "optional": false
+              },
+              {
+                "name": "legend",
+                "type": 11,
+                "optional": false
+              },
+              {
+                "name": "probabilities",
+                "type": 8,
+                "optional": false
+              },
+              {
+                "name": "score",
+                "type": 7,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 12,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 4,
+                "value": 4
+              }
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "score"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "noul",
+                "type": 7,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 14,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "noul"
+          }
+        ]
+      },
+      "names": [],
+      "sources": [
+        "packages/experimental/system3/src/decisions.ts:23"
+      ]
+    },
+    {
       "digest": "312aee2f0c42aabbae6cc60d92d596d8453c0aeb061c5868d1755a69ef49e69a",
       "schema": {
         "root": 0,
@@ -34029,6 +35384,97 @@
       ],
       "sources": [
         "packages/compaction/compaction/src/checkpoint.ts:22"
+      ]
+    },
+    {
+      "digest": "3246a7a4b705b83c748eddec40ec1b1c82c8374b14cb32249045e9690e8dec96",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "code",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "kind",
+                "type": 11,
+                "optional": false
+              },
+              {
+                "name": "status",
+                "type": 12,
+                "optional": true
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "union",
+            "types": [
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "cancelled"
+          },
+          {
+            "kind": "literal",
+            "value": "http"
+          },
+          {
+            "kind": "literal",
+            "value": "invalid-response"
+          },
+          {
+            "kind": "literal",
+            "value": "missing-credential"
+          },
+          {
+            "kind": "literal",
+            "value": "privacy-denied"
+          },
+          {
+            "kind": "literal",
+            "value": "provider-unavailable"
+          },
+          {
+            "kind": "literal",
+            "value": "rate-limited"
+          },
+          {
+            "kind": "literal",
+            "value": "timeout"
+          },
+          {
+            "kind": "literal",
+            "value": "transport"
+          },
+          {
+            "kind": "literal",
+            "value": "unknown"
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          }
+        ]
+      },
+      "names": [],
+      "sources": [
+        "packages/experimental/system3/src/decisions.ts:24"
       ]
     },
     {
@@ -35041,6 +36487,56 @@
       "sources": []
     },
     {
+      "digest": "34e707d2606754b4c1fb67848d10beba9465e0a3384514116671da689240e397",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "union",
+            "types": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "accepted"
+          },
+          {
+            "kind": "literal",
+            "value": "budget-exhausted"
+          },
+          {
+            "kind": "literal",
+            "value": "failed-checks"
+          },
+          {
+            "kind": "literal",
+            "value": "invalid-advice"
+          },
+          {
+            "kind": "literal",
+            "value": "missing-evidence"
+          },
+          {
+            "kind": "literal",
+            "value": "stale-goal"
+          },
+          {
+            "kind": "literal",
+            "value": "unknown-checks"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "35203ba7ad5ef6f97d556b85df20ae98f04f09c65748cecdf8eefdb8b6405ffc",
       "schema": {
         "root": 0,
@@ -35342,6 +36838,20 @@
       ]
     },
     {
+      "digest": "37754fa5ccea9aa18bcd31a960af027770bdaadbdded927360422f702215a798",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "local"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "378f90f9f6022a0991928a1eaf7991094ea1920fe89a9248358a1da106e1a970",
       "schema": {
         "root": 0,
@@ -35557,6 +37067,20 @@
       "sources": [
         "packages/feedback/message-feedback/src/types.ts:17"
       ]
+    },
+    {
+      "digest": "3a7f838475da01b85cc6da0bda902bc68d77e7f973b137e7207a7da047c55345",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "invalid-response"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
     },
     {
       "digest": "3abae7324356f155cb42450c00b806d134ec93bd6439d2063b8d724162d58604",
@@ -35794,6 +37318,20 @@
           {
             "kind": "literal",
             "value": "subagent/catalog"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "3ae8729505e2cc9f9b6315bf47123b1890390a537897abd33ffa2e6b2bb4fe6e",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "http"
           }
         ]
       },
@@ -42076,6 +43614,20 @@
       "sources": []
     },
     {
+      "digest": "437a1c86fb6f66449be77a2b71773ab83865d2d8ee7b82a8db1c08936000a004",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "high"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "43e311235aa537df1bacdd92d144df8a952337a76e9ac892cdf670f1a797bad8",
       "schema": {
         "root": 0,
@@ -43911,6 +45463,20 @@
       "sources": []
     },
     {
+      "digest": "491d9bc333e615c38449e442581a90bcc5d1d1ff8c3fe506ab417f18f274f8e7",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "unknown-checks"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "4991dfc415c9efebc36fa6969e1798c7d2e42396cc1e6e0ac7d7c89c5c5c4aea",
       "schema": {
         "root": 0,
@@ -44590,6 +46156,7 @@
         "packages/experimental/agent-team/src/types.ts#TeamId",
         "packages/experimental/agent-team/src/types.ts#TeamMessageId",
         "packages/experimental/agent-team/src/types.ts#TeamTaskId",
+        "packages/experimental/system3/src/decisions.ts#System3DecisionId",
         "packages/feedback/message-feedback/src/types.ts#MessageFeedbackVersion",
         "packages/goal/goal/src/types.ts#GoalId",
         "packages/interaction/commands/src/brand.ts#CommandId",
@@ -44615,6 +46182,7 @@
         "packages/experimental/agent-team/src/types.ts:20",
         "packages/experimental/agent-team/src/types.ts:32",
         "packages/experimental/agent-team/src/types.ts:8",
+        "packages/experimental/system3/src/decisions.ts:11",
         "packages/feedback/message-feedback/src/types.ts:14",
         "packages/goal/goal/src/types.ts:17",
         "packages/interaction/commands/src/brand.ts:31",
@@ -45072,6 +46640,38 @@
       },
       "names": [],
       "sources": []
+    },
+    {
+      "digest": "51418d209d3ad7c6f8a841c0927ca89d93d3780afbcc83500045bcdaf5d25b7e",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 1,
+                "value": 2
+              }
+            ]
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          }
+        ]
+      },
+      "names": [
+        "packages/experimental/apus-dsh-jev-plugin/src/types.ts#JevUsage"
+      ],
+      "sources": [
+        "packages/experimental/apus-dsh-jev-plugin/src/types.ts:65"
+      ]
     },
     {
       "digest": "516da4cdd6d2f1e5ce488e648578ca51f40e458f707b803e5b24de870e799415",
@@ -49728,6 +51328,36 @@
       "sources": []
     },
     {
+      "digest": "55b4069f72df33ac53843b148ec4a960b5a4ebf93de38bc9a97edaa122f6614e",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "false",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "true",
+                "type": 1,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "5654685d7557ec747e74887237065e626a5bdfa426ca43f7fbb0b6fee9b0916c",
       "schema": {
         "root": 0,
@@ -49825,6 +51455,66 @@
           {
             "kind": "literal",
             "value": "tool/result"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "5735a078c45c17326d364f5c682da35cf32bd9b6ce031d996216e581e6364c21",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "union",
+            "types": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "cancelled"
+          },
+          {
+            "kind": "literal",
+            "value": "http"
+          },
+          {
+            "kind": "literal",
+            "value": "invalid-response"
+          },
+          {
+            "kind": "literal",
+            "value": "missing-credential"
+          },
+          {
+            "kind": "literal",
+            "value": "privacy-denied"
+          },
+          {
+            "kind": "literal",
+            "value": "provider-unavailable"
+          },
+          {
+            "kind": "literal",
+            "value": "rate-limited"
+          },
+          {
+            "kind": "literal",
+            "value": "timeout"
+          },
+          {
+            "kind": "literal",
+            "value": "transport"
           }
         ]
       },
@@ -50792,6 +52482,35 @@
       "sources": []
     },
     {
+      "digest": "5bc0567a620ccf8b2810928108239344c0ffd73b70d036cab16490a8949269cc",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "union",
+            "types": [
+              1,
+              2
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "local"
+          },
+          {
+            "kind": "literal",
+            "value": "network"
+          }
+        ]
+      },
+      "names": [
+        "packages/experimental/system3-policy/src/index.ts#System3ExecutionDomain"
+      ],
+      "sources": [
+        "packages/experimental/system3-policy/src/index.ts:16"
+      ]
+    },
+    {
       "digest": "5bc66269cfaf614c0ecda8ecb469f23101a7609793fc2b693ac23c4aecdb575e",
       "schema": {
         "root": 0,
@@ -50833,6 +52552,20 @@
           {
             "kind": "literal",
             "value": "resource-cost"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "5c321445138cc2072f7e9f99f08376966053bc862efa205c3e825eac53b20945",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "failed-checks"
           }
         ]
       },
@@ -51346,6 +53079,20 @@
       "sources": []
     },
     {
+      "digest": "5f7058fbdbc2b1000f4f60cd8de991b3121b5759c01753438f76b72464b2b273",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "sensitive"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "5f758f3de5f00c18968a7c6d347083aac5c9ae13f6a79c78f6611b23c4973564",
       "schema": {
         "root": 0,
@@ -51537,6 +53284,20 @@
           {
             "kind": "literal",
             "value": "next-turn"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "63ba8895cc09e4693cf0819fdcd18c084bef195febda5b6a23af279b3852be36",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "retry"
           }
         ]
       },
@@ -54500,6 +56261,20 @@
       "sources": [
         "packages/llm/llm/src/message.ts:35"
       ]
+    },
+    {
+      "digest": "65f6a6e8bdce83766d022927b3a9ba4d05876b4aaa7e0c5f13648801e9286634",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "low"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
     },
     {
       "digest": "66ba70f6f068da443f969a0b947a013c3addd776b9b60a0a393759c19825e9a2",
@@ -58064,6 +59839,172 @@
       ]
     },
     {
+      "digest": "693f3aa30e2f5006d86aef1dbf1459d83bf5a0820f8c82a11c64d99a24556eb8",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "answers",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "model",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "usage",
+                "type": 8,
+                "optional": true
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 2,
+                "value": 3
+              }
+            ]
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "union",
+            "types": [
+              4,
+              7,
+              10
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "noul",
+                "type": 5,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 6,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "literal",
+            "value": "noul"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "choice",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "confidence",
+                "type": 5,
+                "optional": false
+              },
+              {
+                "name": "probabilities",
+                "type": 8,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 9,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 2,
+                "value": 5
+              }
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "choice"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "confidence",
+                "type": 5,
+                "optional": false
+              },
+              {
+                "name": "legend",
+                "type": 11,
+                "optional": false
+              },
+              {
+                "name": "probabilities",
+                "type": 8,
+                "optional": false
+              },
+              {
+                "name": "score",
+                "type": 5,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 12,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 2,
+                "value": 2
+              }
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "score"
+          }
+        ]
+      },
+      "names": [
+        "packages/experimental/apus-dsh-jev-plugin/src/types.ts#JevResponse"
+      ],
+      "sources": [
+        "packages/experimental/apus-dsh-jev-plugin/src/types.ts:68"
+      ]
+    },
+    {
       "digest": "693f4952fb5565da96c06bace8924b098ac2fbc915fde0ff8019701183abc057",
       "schema": {
         "root": 0,
@@ -58193,6 +60134,44 @@
       "sources": [
         "packages/api/session-controller/src/types.ts:401"
       ]
+    },
+    {
+      "digest": "6a7ab1c5ad8ec672f7c972a469e23cca6c88771870786042677e03cdf25f55ac",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 1,
+                "value": 1
+              }
+            ]
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "6a98d5b2e16c569cb4da65c185565e1f40f00d7253ccde3ec5477fb85fa97614",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "candidate_done"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
     },
     {
       "digest": "6ab45ac76839722df912f3ba50f1c6b41f2d614bde11f1aabfae04117ccdc80d",
@@ -58736,6 +60715,20 @@
       "sources": []
     },
     {
+      "digest": "6c457a2be247ee4aa61be968084a2b406d074c2de3580e6d4a470bb9b57a5b98",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "missing-evidence"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "6c5a37d42ebdb12db4410699259335f1e149e3a0260425684c00b153afc8990d",
       "schema": {
         "root": 0,
@@ -58827,6 +60820,44 @@
       },
       "names": [],
       "sources": []
+    },
+    {
+      "digest": "6df0bf13ffaac4f4bf9c06a1202886ad37a058ac00d1809c6af29119d2c48efb",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "noul",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 2,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "literal",
+            "value": "noul"
+          }
+        ]
+      },
+      "names": [
+        "packages/experimental/apus-dsh-jev-plugin/src/types.ts#JevNoulAnswer"
+      ],
+      "sources": [
+        "packages/experimental/apus-dsh-jev-plugin/src/types.ts:56"
+      ]
     },
     {
       "digest": "6e52dd55a1d48954ed5464ec46fe34d9eb65f709baabc9561e7a279910b0c406",
@@ -59279,6 +61310,83 @@
       "names": [],
       "sources": [
         "packages/llm/llm/src/assistant-stream.ts:28"
+      ]
+    },
+    {
+      "digest": "729a9b5230e950061541b978a451f0bc641b891cd507bb51c89646adc7eeeac1",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "confidence",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "legend",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "probabilities",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "score",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 5,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 3,
+                "value": 3
+              }
+            ]
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 3,
+                "value": 1
+              }
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "score"
+          }
+        ]
+      },
+      "names": [
+        "packages/experimental/apus-dsh-jev-plugin/src/types.ts#JevScoreAnswer"
+      ],
+      "sources": [
+        "packages/experimental/apus-dsh-jev-plugin/src/types.ts:47"
       ]
     },
     {
@@ -59868,6 +61976,45 @@
       ]
     },
     {
+      "digest": "7a07d713ef0579a8fcde543599e60247a372bd88e1d134ac198f4a39275a195b",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "array",
+            "element": 1
+          },
+          {
+            "kind": "union",
+            "types": [
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "public"
+          },
+          {
+            "kind": "literal",
+            "value": "secret"
+          },
+          {
+            "kind": "literal",
+            "value": "sensitive"
+          },
+          {
+            "kind": "literal",
+            "value": "workspace"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "7a651f3b672c52fb615f22c0ce9cb3cc5b22aad92e6bbeefb0808fd7b9233a50",
       "schema": {
         "root": 0,
@@ -59969,6 +62116,230 @@
       },
       "names": [],
       "sources": []
+    },
+    {
+      "digest": "7c31abfc906200f1d334b4a59dd2d2578772bfbdfddc05d9e3b7449491898079",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "effort",
+                "type": 1,
+                "optional": true
+              },
+              {
+                "name": "model",
+                "type": 4,
+                "optional": true
+              },
+              {
+                "name": "providerId",
+                "type": 4,
+                "optional": true
+              },
+              {
+                "name": "questions",
+                "type": 5,
+                "optional": false
+              },
+              {
+                "name": "state",
+                "type": 16,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "union",
+            "types": [
+              2,
+              3
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "high"
+          },
+          {
+            "kind": "literal",
+            "value": "low"
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 4,
+                "value": 6
+              }
+            ]
+          },
+          {
+            "kind": "union",
+            "types": [
+              7,
+              10,
+              13
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "criteria",
+                "type": 8,
+                "optional": false
+              },
+              {
+                "name": "instructions",
+                "type": 4,
+                "optional": true
+              },
+              {
+                "name": "type",
+                "type": 9,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "array",
+            "element": 4
+          },
+          {
+            "kind": "literal",
+            "value": "score"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "criteria",
+                "type": 11,
+                "optional": false
+              },
+              {
+                "name": "instructions",
+                "type": 4,
+                "optional": true
+              },
+              {
+                "name": "type",
+                "type": 12,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 4,
+                "value": 4
+              }
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "choice"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "criteria",
+                "type": 14,
+                "optional": true
+              },
+              {
+                "name": "instructions",
+                "type": 4,
+                "optional": true
+              },
+              {
+                "name": "type",
+                "type": 15,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "false",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "true",
+                "type": 4,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "noul"
+          },
+          {
+            "kind": "union",
+            "types": [
+              4,
+              17,
+              18,
+              19,
+              20,
+              21
+            ]
+          },
+          {
+            "kind": "array",
+            "element": 16
+          },
+          {
+            "kind": "primitive",
+            "type": "boolean"
+          },
+          {
+            "kind": "primitive",
+            "type": "null"
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 4,
+                "value": 16
+              }
+            ]
+          }
+        ]
+      },
+      "names": [
+        "packages/experimental/apus-dsh-jev-plugin/src/types.ts#JevRequest"
+      ],
+      "sources": [
+        "packages/experimental/apus-dsh-jev-plugin/src/types.ts:29"
+      ]
     },
     {
       "digest": "7c6129b6961cf4b2a030f36c78d2b0a5be38617651a9b81322e054ee512bee06",
@@ -60847,6 +63218,274 @@
       ]
     },
     {
+      "digest": "7d58975098638ae4586e006b75edbcac6346a06952658a54b6589078cb3be68d",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "union",
+            "types": [
+              1,
+              14
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "code",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "kind",
+                "type": 12,
+                "optional": false
+              },
+              {
+                "name": "status",
+                "type": 13,
+                "optional": true
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "union",
+            "types": [
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "cancelled"
+          },
+          {
+            "kind": "literal",
+            "value": "http"
+          },
+          {
+            "kind": "literal",
+            "value": "invalid-response"
+          },
+          {
+            "kind": "literal",
+            "value": "missing-credential"
+          },
+          {
+            "kind": "literal",
+            "value": "privacy-denied"
+          },
+          {
+            "kind": "literal",
+            "value": "provider-unavailable"
+          },
+          {
+            "kind": "literal",
+            "value": "rate-limited"
+          },
+          {
+            "kind": "literal",
+            "value": "timeout"
+          },
+          {
+            "kind": "literal",
+            "value": "transport"
+          },
+          {
+            "kind": "literal",
+            "value": "unknown"
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "kind",
+                "type": 15,
+                "optional": false
+              },
+              {
+                "name": "response",
+                "type": 16,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "ok"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "answers",
+                "type": 17,
+                "optional": false
+              },
+              {
+                "name": "model",
+                "type": 18,
+                "optional": false
+              },
+              {
+                "name": "usage",
+                "type": 21,
+                "optional": true
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 18,
+                "value": 19
+              }
+            ]
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "union",
+            "types": [
+              20,
+              23,
+              26
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "choice",
+                "type": 18,
+                "optional": false
+              },
+              {
+                "name": "confidence",
+                "type": 13,
+                "optional": false
+              },
+              {
+                "name": "probabilities",
+                "type": 21,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 22,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 18,
+                "value": 13
+              }
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "choice"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "confidence",
+                "type": 13,
+                "optional": false
+              },
+              {
+                "name": "legend",
+                "type": 24,
+                "optional": false
+              },
+              {
+                "name": "probabilities",
+                "type": 21,
+                "optional": false
+              },
+              {
+                "name": "score",
+                "type": 13,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 25,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 18,
+                "value": 18
+              }
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "score"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "noul",
+                "type": 13,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 27,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "noul"
+          }
+        ]
+      },
+      "names": [
+        "packages/experimental/system3/src/decisions.ts#System3DecisionOutcome"
+      ],
+      "sources": [
+        "packages/experimental/system3/src/decisions.ts:22"
+      ]
+    },
+    {
       "digest": "7d65acf0a3a43a8f445ce5d3320b42eca492739fc931b2a7516bfb8368dc2c68",
       "schema": {
         "root": 0,
@@ -61181,6 +63820,20 @@
       "sources": [
         "packages/goal/goal/src/domain.ts:47"
       ]
+    },
+    {
+      "digest": "7fbce53969f0cd65cc65ccf70a55b93742346e35a935bb9bca2958c89a6e2fb7",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "done"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
     },
     {
       "digest": "8064c03c87c357fd1575cb9395ce86e6dcbe2d275bf7717864a02cddf01827d5",
@@ -63897,6 +66550,147 @@
       "sources": []
     },
     {
+      "digest": "92d5ae20571c103b7b5c95d429aa1c223500f8b89525727cb9e16e936cfa8669",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 1,
+                "value": 2
+              }
+            ]
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "union",
+            "types": [
+              3,
+              7,
+              10
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "choice",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "confidence",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "probabilities",
+                "type": 5,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 6,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 1,
+                "value": 4
+              }
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "choice"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "confidence",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "legend",
+                "type": 8,
+                "optional": false
+              },
+              {
+                "name": "probabilities",
+                "type": 5,
+                "optional": false
+              },
+              {
+                "name": "score",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 9,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 1,
+                "value": 1
+              }
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "score"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "noul",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 11,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "noul"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "930a6567a10bb62ddd157bd8abdf4b182810c8c3b49d91309b3b009a5fed9731",
       "schema": {
         "root": 0,
@@ -64102,6 +66896,20 @@
           {
             "kind": "primitive",
             "type": "null"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "93a3bf7dbca6fa6905cf6c7fb7da411444561bd9135489d9b6ea6af129007c3a",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "workspace"
           }
         ]
       },
@@ -65006,6 +67814,20 @@
           {
             "kind": "primitive",
             "type": "string"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "99accc4c5b6b8951697d38d79f6012b5b5b325a4b82faa077ae57785ddb55a76",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "transport"
           }
         ]
       },
@@ -68274,6 +71096,20 @@
       ]
     },
     {
+      "digest": "9d40b3dd27c89280499a7bf5b3e26022fde3a2931829b0864ebb1527bd1e4384",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "choice"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "9d80129e13edfb6feb03ed327e6085c6ef60b97ad074244b2f5fd4667424a6a4",
       "schema": {
         "root": 0,
@@ -70378,6 +73214,53 @@
       "sources": []
     },
     {
+      "digest": "abecd8659805388af94f09a01da72f1bcdbbc8d885ea7546ee26020a10177a0e",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "criteria",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "instructions",
+                "type": 2,
+                "optional": true
+              },
+              {
+                "name": "type",
+                "type": 3,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "array",
+            "element": 2
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "literal",
+            "value": "score"
+          }
+        ]
+      },
+      "names": [
+        "packages/experimental/apus-dsh-jev-plugin/src/types.ts#JevScoreQuestion"
+      ],
+      "sources": [
+        "packages/experimental/apus-dsh-jev-plugin/src/types.ts:12"
+      ]
+    },
+    {
       "digest": "ad0c38a0adb82a94c925456df41586d9b5f9202fca18593eae2213d4445b4585",
       "schema": {
         "root": 0,
@@ -71356,6 +74239,45 @@
       ]
     },
     {
+      "digest": "b311bb8040a29889a189533318a6ccbe305b2cc5ed55b926ece0f7e8b5462e99",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "union",
+            "types": [
+              1,
+              2,
+              3,
+              4
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "continue"
+          },
+          {
+            "kind": "literal",
+            "value": "done"
+          },
+          {
+            "kind": "literal",
+            "value": "escalate"
+          },
+          {
+            "kind": "literal",
+            "value": "retry"
+          }
+        ]
+      },
+      "names": [
+        "packages/experimental/system3-supervisor/src/index.ts#System3SupervisedAction"
+      ],
+      "sources": [
+        "packages/experimental/system3-supervisor/src/index.ts:36"
+      ]
+    },
+    {
       "digest": "b3681c026a0b98e98b103f057dfd217fbe904129c090efd668253ec9aea7fece",
       "schema": {
         "root": 0,
@@ -72179,6 +75101,20 @@
       "sources": []
     },
     {
+      "digest": "b5b21712bbaf2325b5e0fd683bcea7e8b11d633b79f0d1a057c3323e796de81b",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "missing-credential"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "b6896938660a1dfe4ddd100fb3164d9f8fa57feeabfe37441a80106c9942697a",
       "schema": {
         "root": 0,
@@ -72329,6 +75265,65 @@
       },
       "names": [],
       "sources": []
+    },
+    {
+      "digest": "b74b085487c560281a7ade4d2be7f84afc7d49b466c2c6964fb3910cb07d9289",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "criteria",
+                "type": 1,
+                "optional": true
+              },
+              {
+                "name": "instructions",
+                "type": 2,
+                "optional": true
+              },
+              {
+                "name": "type",
+                "type": 3,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "false",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "true",
+                "type": 2,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "literal",
+            "value": "noul"
+          }
+        ]
+      },
+      "names": [
+        "packages/experimental/apus-dsh-jev-plugin/src/types.ts#JevNoulQuestion"
+      ],
+      "sources": [
+        "packages/experimental/apus-dsh-jev-plugin/src/types.ts:19"
+      ]
     },
     {
       "digest": "b765ee31033cea463863faf3fc6a0a1b85c47c6a2f13fe1ce833abe56105114b",
@@ -72681,6 +75676,808 @@
       "sources": [
         "packages/deliverables/tool-present/src/types.ts:5"
       ]
+    },
+    {
+      "digest": "b923b60d7839c5e3d3e03be20abbe587b9029440c839b8459cd1672149f971fe",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "data",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "ignorable",
+                "type": 79,
+                "optional": true
+              },
+              {
+                "name": "seq",
+                "type": 37,
+                "optional": false
+              },
+              {
+                "name": "time",
+                "type": 37,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 80,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "advice",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "baseline",
+                "type": 8,
+                "optional": false
+              },
+              {
+                "name": "comparison",
+                "type": 22,
+                "optional": false
+              },
+              {
+                "name": "dataClasses",
+                "type": 28,
+                "optional": false
+              },
+              {
+                "name": "effort",
+                "type": 34,
+                "optional": false
+              },
+              {
+                "name": "elapsedMs",
+                "type": 37,
+                "optional": false
+              },
+              {
+                "name": "evidenceRefs",
+                "type": 12,
+                "optional": false
+              },
+              {
+                "name": "executionDomain",
+                "type": 38,
+                "optional": false
+              },
+              {
+                "name": "goalRevision",
+                "type": 13,
+                "optional": false
+              },
+              {
+                "name": "id",
+                "type": 13,
+                "optional": false
+              },
+              {
+                "name": "mode",
+                "type": 41,
+                "optional": false
+              },
+              {
+                "name": "outcome",
+                "type": 42,
+                "optional": false
+              },
+              {
+                "name": "providerId",
+                "type": 13,
+                "optional": true
+              },
+              {
+                "name": "request",
+                "type": 67,
+                "optional": false
+              },
+              {
+                "name": "requestedModel",
+                "type": 13,
+                "optional": true
+              },
+              {
+                "name": "routeId",
+                "type": 13,
+                "optional": false
+              },
+              {
+                "name": "stateDigest",
+                "type": 13,
+                "optional": false
+              },
+              {
+                "name": "step",
+                "type": 37,
+                "optional": true
+              },
+              {
+                "name": "turn",
+                "type": 37,
+                "optional": true
+              },
+              {
+                "name": "version",
+                "type": 78,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "union",
+            "types": [
+              3,
+              4,
+              5,
+              6,
+              7
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "retry"
+          },
+          {
+            "kind": "literal",
+            "value": "unknown"
+          },
+          {
+            "kind": "literal",
+            "value": "candidate_done"
+          },
+          {
+            "kind": "literal",
+            "value": "continue"
+          },
+          {
+            "kind": "literal",
+            "value": "escalate"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "accepted",
+                "type": 9,
+                "optional": false
+              },
+              {
+                "name": "action",
+                "type": 10,
+                "optional": false
+              },
+              {
+                "name": "missingChecks",
+                "type": 12,
+                "optional": false
+              },
+              {
+                "name": "missingEvidenceRefs",
+                "type": 12,
+                "optional": false
+              },
+              {
+                "name": "reason",
+                "type": 14,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "boolean"
+          },
+          {
+            "kind": "union",
+            "types": [
+              3,
+              6,
+              7,
+              11
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "done"
+          },
+          {
+            "kind": "array",
+            "element": 13
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "union",
+            "types": [
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "accepted"
+          },
+          {
+            "kind": "literal",
+            "value": "stale-goal"
+          },
+          {
+            "kind": "literal",
+            "value": "unknown-checks"
+          },
+          {
+            "kind": "literal",
+            "value": "missing-evidence"
+          },
+          {
+            "kind": "literal",
+            "value": "invalid-advice"
+          },
+          {
+            "kind": "literal",
+            "value": "budget-exhausted"
+          },
+          {
+            "kind": "literal",
+            "value": "failed-checks"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "agrees",
+                "type": 9,
+                "optional": false
+              },
+              {
+                "name": "baselineAction",
+                "type": 10,
+                "optional": false
+              },
+              {
+                "name": "divergence",
+                "type": 23,
+                "optional": false
+              },
+              {
+                "name": "modelAction",
+                "type": 2,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "union",
+            "types": [
+              24,
+              25,
+              26,
+              27
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "model-premature-done"
+          },
+          {
+            "kind": "literal",
+            "value": "model-understops"
+          },
+          {
+            "kind": "literal",
+            "value": "model-unsafe"
+          },
+          {
+            "kind": "literal",
+            "value": "none"
+          },
+          {
+            "kind": "array",
+            "element": 29
+          },
+          {
+            "kind": "union",
+            "types": [
+              30,
+              31,
+              32,
+              33
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "public"
+          },
+          {
+            "kind": "literal",
+            "value": "secret"
+          },
+          {
+            "kind": "literal",
+            "value": "sensitive"
+          },
+          {
+            "kind": "literal",
+            "value": "workspace"
+          },
+          {
+            "kind": "union",
+            "types": [
+              35,
+              36
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "high"
+          },
+          {
+            "kind": "literal",
+            "value": "low"
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "union",
+            "types": [
+              39,
+              40
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "local"
+          },
+          {
+            "kind": "literal",
+            "value": "network"
+          },
+          {
+            "kind": "literal",
+            "value": "shadow"
+          },
+          {
+            "kind": "union",
+            "types": [
+              43,
+              54
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "code",
+                "type": 44,
+                "optional": false
+              },
+              {
+                "name": "kind",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "status",
+                "type": 37,
+                "optional": true
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "union",
+            "types": [
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "privacy-denied"
+          },
+          {
+            "kind": "literal",
+            "value": "provider-unavailable"
+          },
+          {
+            "kind": "literal",
+            "value": "rate-limited"
+          },
+          {
+            "kind": "literal",
+            "value": "cancelled"
+          },
+          {
+            "kind": "literal",
+            "value": "timeout"
+          },
+          {
+            "kind": "literal",
+            "value": "transport"
+          },
+          {
+            "kind": "literal",
+            "value": "http"
+          },
+          {
+            "kind": "literal",
+            "value": "invalid-response"
+          },
+          {
+            "kind": "literal",
+            "value": "missing-credential"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "kind",
+                "type": 55,
+                "optional": false
+              },
+              {
+                "name": "response",
+                "type": 56,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "ok"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "answers",
+                "type": 57,
+                "optional": false
+              },
+              {
+                "name": "model",
+                "type": 13,
+                "optional": false
+              },
+              {
+                "name": "usage",
+                "type": 60,
+                "optional": true
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 13,
+                "value": 58
+              }
+            ]
+          },
+          {
+            "kind": "union",
+            "types": [
+              59,
+              62,
+              65
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "choice",
+                "type": 13,
+                "optional": false
+              },
+              {
+                "name": "confidence",
+                "type": 37,
+                "optional": false
+              },
+              {
+                "name": "probabilities",
+                "type": 60,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 61,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 13,
+                "value": 37
+              }
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "choice"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "confidence",
+                "type": 37,
+                "optional": false
+              },
+              {
+                "name": "legend",
+                "type": 63,
+                "optional": false
+              },
+              {
+                "name": "probabilities",
+                "type": 60,
+                "optional": false
+              },
+              {
+                "name": "score",
+                "type": 37,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 64,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 13,
+                "value": 13
+              }
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "score"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "noul",
+                "type": 37,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 66,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "noul"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "effort",
+                "type": 34,
+                "optional": true
+              },
+              {
+                "name": "model",
+                "type": 13,
+                "optional": true
+              },
+              {
+                "name": "providerId",
+                "type": 13,
+                "optional": true
+              },
+              {
+                "name": "questions",
+                "type": 68,
+                "optional": false
+              },
+              {
+                "name": "state",
+                "type": 74,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 13,
+                "value": 69
+              }
+            ]
+          },
+          {
+            "kind": "union",
+            "types": [
+              70,
+              71,
+              72
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "criteria",
+                "type": 12,
+                "optional": false
+              },
+              {
+                "name": "instructions",
+                "type": 13,
+                "optional": true
+              },
+              {
+                "name": "type",
+                "type": 64,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "criteria",
+                "type": 63,
+                "optional": false
+              },
+              {
+                "name": "instructions",
+                "type": 13,
+                "optional": true
+              },
+              {
+                "name": "type",
+                "type": 61,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "criteria",
+                "type": 73,
+                "optional": true
+              },
+              {
+                "name": "instructions",
+                "type": 13,
+                "optional": true
+              },
+              {
+                "name": "type",
+                "type": 66,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "false",
+                "type": 13,
+                "optional": false
+              },
+              {
+                "name": "true",
+                "type": 13,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "union",
+            "types": [
+              9,
+              13,
+              37,
+              75,
+              76,
+              77
+            ]
+          },
+          {
+            "kind": "array",
+            "element": 74
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 13,
+                "value": 74
+              }
+            ]
+          },
+          {
+            "kind": "primitive",
+            "type": "null"
+          },
+          {
+            "kind": "literal",
+            "value": 1
+          },
+          {
+            "kind": "literal",
+            "value": true
+          },
+          {
+            "kind": "literal",
+            "value": "system3/decision"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
     },
     {
       "digest": "b9305f0ea75ccd6a6061c27fde19f2ab85534f9f3c1a717b573b077ebae0f611",
@@ -73243,6 +77040,41 @@
       "sources": []
     },
     {
+      "digest": "bbf7e7304fd28435c8f7a822fe061edfb32cb3683f9eae0b68a7809d050fb62e",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "union",
+            "types": [
+              1,
+              2,
+              3,
+              4
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "model-premature-done"
+          },
+          {
+            "kind": "literal",
+            "value": "model-understops"
+          },
+          {
+            "kind": "literal",
+            "value": "model-unsafe"
+          },
+          {
+            "kind": "literal",
+            "value": "none"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "bcf0caf62d964b2fcf5404bd5c909cfa9a21c3f3c96e6b7e36d9e33565223825",
       "schema": {
         "root": 0,
@@ -73298,6 +77130,34 @@
       "sources": []
     },
     {
+      "digest": "bec89bc17f237198963ffdb68013d3f164f7842fa2c11c4015adef4e43a320a9",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "continue"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "bed2344f42e7c3641ddaed04774b7fccc6dbc2ad8bc9b0acab66e39d3a9449a3",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "privacy-denied"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "bf16d2e98a7f13894ded2cffe5ce857bf473954a0e3c0ed9bc7739e2e1c7b78a",
       "schema": {
         "root": 0,
@@ -73310,6 +77170,155 @@
       },
       "names": [],
       "sources": []
+    },
+    {
+      "digest": "bf2efb5c26610b62656970292977fe8e05a23605fad1cf65da88b5b0e3f4b9cd",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "model-premature-done"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "c09c3acbe68fa72f092d9154e8596571ee5cf7e69920ae845c89e31ab40dde54",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "union",
+            "types": [
+              1,
+              6,
+              9
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "choice",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "confidence",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "probabilities",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 5,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 2,
+                "value": 3
+              }
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "choice"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "confidence",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "legend",
+                "type": 7,
+                "optional": false
+              },
+              {
+                "name": "probabilities",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "score",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 8,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 2,
+                "value": 2
+              }
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "score"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "noul",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 10,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "noul"
+          }
+        ]
+      },
+      "names": [
+        "packages/experimental/apus-dsh-jev-plugin/src/types.ts#JevAnswer"
+      ],
+      "sources": [
+        "packages/experimental/apus-dsh-jev-plugin/src/types.ts:62"
+      ]
     },
     {
       "digest": "c0ea97bc89dfc46fa94eab956f5c3ee6af2f964aa7db6327cb18b451f207bef7",
@@ -73553,6 +77562,20 @@
       "sources": [
         "packages/llm/llm-retry/src/types.ts:16"
       ]
+    },
+    {
+      "digest": "c1c3b4dd47bf8ef78de34d80f32a7843806e55868b1cf291e503d45a755c9c58",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "escalate"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
     },
     {
       "digest": "c1f0f17b6493b85db6453bb30e01b208d703731b25bc1e68e5d4fc72eea9cdea",
@@ -73911,6 +77934,20 @@
           {
             "kind": "primitive",
             "type": "string"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "c7aa60b157aa12243d8f7a7d9979b90a7850c6b236d0eb0a036d2e8dcb7c8145",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "rate-limited"
           }
         ]
       },
@@ -77399,6 +81436,20 @@
       "sources": []
     },
     {
+      "digest": "d2299283b7882bd034056e56808bcd6a4ca68168df39de8fc5056f65b83dc9df",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "noul"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "d28765f87d6b6ab408e0b2f3e7e297791b004b806d8e302c49903ebae815feb2",
       "schema": {
         "root": 0,
@@ -78004,6 +82055,20 @@
       "sources": []
     },
     {
+      "digest": "d74872f6b1aa352f81a5680d445f517d81ead9e575664893712978ceb90b5064",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "system3/decision"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "d85590a5675c6e2fd8164e5792a6cceac714605b8ac228adae5ee668facb1490",
       "schema": {
         "root": 0,
@@ -78227,6 +82292,20 @@
           {
             "kind": "literal",
             "value": "schedule"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "da2d19e1ee4eb30c3f92cef1f96cb9e6cb4a227ad80ad0e8ee7795c4ada3de92",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "none"
           }
         ]
       },
@@ -82401,6 +86480,50 @@
       "sources": []
     },
     {
+      "digest": "e302e71f3796f6e28f8697f7020aef5dccc38157de8b786d8e5725f71b5116f8",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "union",
+            "types": [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "candidate_done"
+          },
+          {
+            "kind": "literal",
+            "value": "continue"
+          },
+          {
+            "kind": "literal",
+            "value": "escalate"
+          },
+          {
+            "kind": "literal",
+            "value": "retry"
+          },
+          {
+            "kind": "literal",
+            "value": "unknown"
+          }
+        ]
+      },
+      "names": [
+        "packages/experimental/system3-supervisor/src/index.ts#System3AdviceAction"
+      ],
+      "sources": [
+        "packages/experimental/system3-supervisor/src/index.ts:7"
+      ]
+    },
+    {
       "digest": "e308ccf867a5398e316e0af8cb6ce238a8d33a63b9b384c8250a686786285f72",
       "schema": {
         "root": 0,
@@ -82477,6 +86600,128 @@
       },
       "names": [],
       "sources": []
+    },
+    {
+      "digest": "e32643ce60f31a6aa26e4a7ee32759135d8ad2871acec6bdcff0d83e94133f9f",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "accepted",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "action",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "missingChecks",
+                "type": 7,
+                "optional": false
+              },
+              {
+                "name": "missingEvidenceRefs",
+                "type": 7,
+                "optional": false
+              },
+              {
+                "name": "reason",
+                "type": 9,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "boolean"
+          },
+          {
+            "kind": "union",
+            "types": [
+              3,
+              4,
+              5,
+              6
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "continue"
+          },
+          {
+            "kind": "literal",
+            "value": "done"
+          },
+          {
+            "kind": "literal",
+            "value": "escalate"
+          },
+          {
+            "kind": "literal",
+            "value": "retry"
+          },
+          {
+            "kind": "array",
+            "element": 8
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "union",
+            "types": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "accepted"
+          },
+          {
+            "kind": "literal",
+            "value": "failed-checks"
+          },
+          {
+            "kind": "literal",
+            "value": "invalid-advice"
+          },
+          {
+            "kind": "literal",
+            "value": "missing-evidence"
+          },
+          {
+            "kind": "literal",
+            "value": "stale-goal"
+          },
+          {
+            "kind": "literal",
+            "value": "unknown-checks"
+          },
+          {
+            "kind": "literal",
+            "value": "budget-exhausted"
+          }
+        ]
+      },
+      "names": [
+        "packages/experimental/system3-supervisor/src/index.ts#System3SupervisorResult"
+      ],
+      "sources": [
+        "packages/experimental/system3-supervisor/src/index.ts:39"
+      ]
     },
     {
       "digest": "e3e77b26f0148755a505f5b8ea843a3be117827d4703bb5754d9dc8ddbef521f",
@@ -82562,6 +86807,20 @@
           {
             "kind": "literal",
             "value": "append"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "e479de5bf00c4f95dbe18327f509d054e41906f3f208c460d7687d2472c52e11",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "accepted"
           }
         ]
       },
@@ -83234,6 +87493,143 @@
       "sources": []
     },
     {
+      "digest": "e9e25fba31b76486e64e9e2c8dfcda8d70c56cacac2235176ae293d660ac0fcd",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 1,
+                "value": 2
+              }
+            ]
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "union",
+            "types": [
+              3,
+              6,
+              9
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "criteria",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "instructions",
+                "type": 1,
+                "optional": true
+              },
+              {
+                "name": "type",
+                "type": 5,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "array",
+            "element": 1
+          },
+          {
+            "kind": "literal",
+            "value": "score"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "criteria",
+                "type": 7,
+                "optional": false
+              },
+              {
+                "name": "instructions",
+                "type": 1,
+                "optional": true
+              },
+              {
+                "name": "type",
+                "type": 8,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 1,
+                "value": 1
+              }
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "choice"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "criteria",
+                "type": 10,
+                "optional": true
+              },
+              {
+                "name": "instructions",
+                "type": 1,
+                "optional": true
+              },
+              {
+                "name": "type",
+                "type": 11,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "false",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "true",
+                "type": 1,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "noul"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "ea08ec1df0c33108fd03345b9af199cf04dea450aa045d3c683f216311403403",
       "schema": {
         "root": 0,
@@ -83624,6 +88020,137 @@
       ]
     },
     {
+      "digest": "ead7f917055c548c3af3a01862938c59fb8fd62a81ac2d5597cf2e702c20ee55",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "union",
+            "types": [
+              1,
+              5,
+              8
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "criteria",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "instructions",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "type",
+                "type": 4,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "array",
+            "element": 3
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "literal",
+            "value": "score"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "criteria",
+                "type": 6,
+                "optional": false
+              },
+              {
+                "name": "instructions",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "type",
+                "type": 7,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 3,
+                "value": 3
+              }
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "choice"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "criteria",
+                "type": 9,
+                "optional": true
+              },
+              {
+                "name": "instructions",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "type",
+                "type": 10,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "false",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "true",
+                "type": 3,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "noul"
+          }
+        ]
+      },
+      "names": [
+        "packages/experimental/apus-dsh-jev-plugin/src/types.ts#JevQuestion"
+      ],
+      "sources": [
+        "packages/experimental/apus-dsh-jev-plugin/src/types.ts:26"
+      ]
+    },
+    {
       "digest": "ebb768d85ec87fb68e42fc14fd7d8535b5ac11791b14d04c6770180f0a719bf8",
       "schema": {
         "root": 0,
@@ -83631,6 +88158,31 @@
           {
             "kind": "literal",
             "value": "image/webp"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "ec1f32d7e46ea234b0f71bd63f32f5d15ca35311fb159248118fcecc449ab00c",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "union",
+            "types": [
+              1,
+              2
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "high"
+          },
+          {
+            "kind": "literal",
+            "value": "low"
           }
         ]
       },
@@ -83728,6 +88280,773 @@
       },
       "names": [],
       "sources": []
+    },
+    {
+      "digest": "ec42fc5b82fe479e4b3a5c61a755250c783a1fb46940b06def7bd4b71fe1d00c",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "advice",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "baseline",
+                "type": 7,
+                "optional": false
+              },
+              {
+                "name": "comparison",
+                "type": 21,
+                "optional": false
+              },
+              {
+                "name": "dataClasses",
+                "type": 27,
+                "optional": false
+              },
+              {
+                "name": "effort",
+                "type": 33,
+                "optional": false
+              },
+              {
+                "name": "elapsedMs",
+                "type": 36,
+                "optional": false
+              },
+              {
+                "name": "evidenceRefs",
+                "type": 11,
+                "optional": false
+              },
+              {
+                "name": "executionDomain",
+                "type": 37,
+                "optional": false
+              },
+              {
+                "name": "goalRevision",
+                "type": 12,
+                "optional": false
+              },
+              {
+                "name": "id",
+                "type": 12,
+                "optional": false
+              },
+              {
+                "name": "mode",
+                "type": 40,
+                "optional": false
+              },
+              {
+                "name": "outcome",
+                "type": 41,
+                "optional": false
+              },
+              {
+                "name": "providerId",
+                "type": 12,
+                "optional": true
+              },
+              {
+                "name": "request",
+                "type": 66,
+                "optional": false
+              },
+              {
+                "name": "requestedModel",
+                "type": 12,
+                "optional": true
+              },
+              {
+                "name": "routeId",
+                "type": 12,
+                "optional": false
+              },
+              {
+                "name": "stateDigest",
+                "type": 12,
+                "optional": false
+              },
+              {
+                "name": "step",
+                "type": 36,
+                "optional": true
+              },
+              {
+                "name": "turn",
+                "type": 36,
+                "optional": true
+              },
+              {
+                "name": "version",
+                "type": 77,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "union",
+            "types": [
+              2,
+              3,
+              4,
+              5,
+              6
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "retry"
+          },
+          {
+            "kind": "literal",
+            "value": "unknown"
+          },
+          {
+            "kind": "literal",
+            "value": "candidate_done"
+          },
+          {
+            "kind": "literal",
+            "value": "continue"
+          },
+          {
+            "kind": "literal",
+            "value": "escalate"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "accepted",
+                "type": 8,
+                "optional": false
+              },
+              {
+                "name": "action",
+                "type": 9,
+                "optional": false
+              },
+              {
+                "name": "missingChecks",
+                "type": 11,
+                "optional": false
+              },
+              {
+                "name": "missingEvidenceRefs",
+                "type": 11,
+                "optional": false
+              },
+              {
+                "name": "reason",
+                "type": 13,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "boolean"
+          },
+          {
+            "kind": "union",
+            "types": [
+              2,
+              5,
+              6,
+              10
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "done"
+          },
+          {
+            "kind": "array",
+            "element": 12
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "union",
+            "types": [
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "accepted"
+          },
+          {
+            "kind": "literal",
+            "value": "stale-goal"
+          },
+          {
+            "kind": "literal",
+            "value": "unknown-checks"
+          },
+          {
+            "kind": "literal",
+            "value": "missing-evidence"
+          },
+          {
+            "kind": "literal",
+            "value": "invalid-advice"
+          },
+          {
+            "kind": "literal",
+            "value": "budget-exhausted"
+          },
+          {
+            "kind": "literal",
+            "value": "failed-checks"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "agrees",
+                "type": 8,
+                "optional": false
+              },
+              {
+                "name": "baselineAction",
+                "type": 9,
+                "optional": false
+              },
+              {
+                "name": "divergence",
+                "type": 22,
+                "optional": false
+              },
+              {
+                "name": "modelAction",
+                "type": 1,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "union",
+            "types": [
+              23,
+              24,
+              25,
+              26
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "model-premature-done"
+          },
+          {
+            "kind": "literal",
+            "value": "model-understops"
+          },
+          {
+            "kind": "literal",
+            "value": "model-unsafe"
+          },
+          {
+            "kind": "literal",
+            "value": "none"
+          },
+          {
+            "kind": "array",
+            "element": 28
+          },
+          {
+            "kind": "union",
+            "types": [
+              29,
+              30,
+              31,
+              32
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "public"
+          },
+          {
+            "kind": "literal",
+            "value": "secret"
+          },
+          {
+            "kind": "literal",
+            "value": "sensitive"
+          },
+          {
+            "kind": "literal",
+            "value": "workspace"
+          },
+          {
+            "kind": "union",
+            "types": [
+              34,
+              35
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "high"
+          },
+          {
+            "kind": "literal",
+            "value": "low"
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "union",
+            "types": [
+              38,
+              39
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "local"
+          },
+          {
+            "kind": "literal",
+            "value": "network"
+          },
+          {
+            "kind": "literal",
+            "value": "shadow"
+          },
+          {
+            "kind": "union",
+            "types": [
+              42,
+              53
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "code",
+                "type": 43,
+                "optional": false
+              },
+              {
+                "name": "kind",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "status",
+                "type": 36,
+                "optional": true
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "union",
+            "types": [
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "privacy-denied"
+          },
+          {
+            "kind": "literal",
+            "value": "provider-unavailable"
+          },
+          {
+            "kind": "literal",
+            "value": "rate-limited"
+          },
+          {
+            "kind": "literal",
+            "value": "cancelled"
+          },
+          {
+            "kind": "literal",
+            "value": "timeout"
+          },
+          {
+            "kind": "literal",
+            "value": "transport"
+          },
+          {
+            "kind": "literal",
+            "value": "http"
+          },
+          {
+            "kind": "literal",
+            "value": "invalid-response"
+          },
+          {
+            "kind": "literal",
+            "value": "missing-credential"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "kind",
+                "type": 54,
+                "optional": false
+              },
+              {
+                "name": "response",
+                "type": 55,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "ok"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "answers",
+                "type": 56,
+                "optional": false
+              },
+              {
+                "name": "model",
+                "type": 12,
+                "optional": false
+              },
+              {
+                "name": "usage",
+                "type": 59,
+                "optional": true
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 12,
+                "value": 57
+              }
+            ]
+          },
+          {
+            "kind": "union",
+            "types": [
+              58,
+              61,
+              64
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "choice",
+                "type": 12,
+                "optional": false
+              },
+              {
+                "name": "confidence",
+                "type": 36,
+                "optional": false
+              },
+              {
+                "name": "probabilities",
+                "type": 59,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 60,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 12,
+                "value": 36
+              }
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "choice"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "confidence",
+                "type": 36,
+                "optional": false
+              },
+              {
+                "name": "legend",
+                "type": 62,
+                "optional": false
+              },
+              {
+                "name": "probabilities",
+                "type": 59,
+                "optional": false
+              },
+              {
+                "name": "score",
+                "type": 36,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 63,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 12,
+                "value": 12
+              }
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "score"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "noul",
+                "type": 36,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 65,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "noul"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "effort",
+                "type": 33,
+                "optional": true
+              },
+              {
+                "name": "model",
+                "type": 12,
+                "optional": true
+              },
+              {
+                "name": "providerId",
+                "type": 12,
+                "optional": true
+              },
+              {
+                "name": "questions",
+                "type": 67,
+                "optional": false
+              },
+              {
+                "name": "state",
+                "type": 73,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 12,
+                "value": 68
+              }
+            ]
+          },
+          {
+            "kind": "union",
+            "types": [
+              69,
+              70,
+              71
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "criteria",
+                "type": 11,
+                "optional": false
+              },
+              {
+                "name": "instructions",
+                "type": 12,
+                "optional": true
+              },
+              {
+                "name": "type",
+                "type": 63,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "criteria",
+                "type": 62,
+                "optional": false
+              },
+              {
+                "name": "instructions",
+                "type": 12,
+                "optional": true
+              },
+              {
+                "name": "type",
+                "type": 60,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "criteria",
+                "type": 72,
+                "optional": true
+              },
+              {
+                "name": "instructions",
+                "type": 12,
+                "optional": true
+              },
+              {
+                "name": "type",
+                "type": 65,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "false",
+                "type": 12,
+                "optional": false
+              },
+              {
+                "name": "true",
+                "type": 12,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "union",
+            "types": [
+              8,
+              12,
+              36,
+              74,
+              75,
+              76
+            ]
+          },
+          {
+            "kind": "array",
+            "element": 73
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 12,
+                "value": 73
+              }
+            ]
+          },
+          {
+            "kind": "primitive",
+            "type": "null"
+          },
+          {
+            "kind": "literal",
+            "value": 1
+          }
+        ]
+      },
+      "names": [
+        "packages/experimental/system3/src/decisions.ts#System3DecisionReceipt"
+      ],
+      "sources": [
+        "packages/experimental/system3/src/decisions.ts:27"
+      ]
     },
     {
       "digest": "ec8b5ff7c77ca6893ac7ba5a0c5b2aefeb52f12c64450b7359660c2a7e8a53d7",
@@ -86701,6 +92020,20 @@
       "sources": []
     },
     {
+      "digest": "f005ccd3a05c1885c6d4c728a0d89b46e394a36f80608eecd76b45033de8604c",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "score"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "f05fb85e715af4ab4de0b6ba111166dd0435bd8bb74a0fa0f32b9d174113fc7c",
       "schema": {
         "root": 0,
@@ -87155,6 +92488,59 @@
       "names": [],
       "sources": [
         "packages/llm/llm/src/types.ts:446"
+      ]
+    },
+    {
+      "digest": "f2085c3feff2adc56f68574f40458f76027976f8986af0c0b7fa07a502edc031",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "criteria",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "instructions",
+                "type": 2,
+                "optional": true
+              },
+              {
+                "name": "type",
+                "type": 3,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 2,
+                "value": 2
+              }
+            ]
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "literal",
+            "value": "choice"
+          }
+        ]
+      },
+      "names": [
+        "packages/experimental/apus-dsh-jev-plugin/src/types.ts#JevChoiceQuestion"
+      ],
+      "sources": [
+        "packages/experimental/apus-dsh-jev-plugin/src/types.ts:5"
       ]
     },
     {
@@ -93800,6 +99186,20 @@
           {
             "kind": "literal",
             "value": "rejected"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "fb45597620408f604984270e3bd23449997fc91a1c45bd4466f3bda1e0de069a",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "shadow"
           }
         ]
       },
