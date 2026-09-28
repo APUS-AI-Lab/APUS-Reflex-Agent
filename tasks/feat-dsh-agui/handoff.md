@@ -43,6 +43,12 @@
 - Web profile 启动前需 `pnpm run build`（客户端 bundle），源码模式也不例外。
 - 已用真实 `dsh --patch … --profile web --no-open --port 3095` 验证：`GET /agui/threads` 200、无 token 401、`POST /agui/threads` 201、再次列表含新线程。
 
+## 4.5 真实模型链路（2026-09-28 已验证）
+- Overlay：`docs/feat-dsh-agui/fidoo-agui.patch.yml` → `llm-pi-ai` 的 `fidoo` provider（`https://proxy.fidoo.ai/v1`，key 取 `SYSTEM3_LITELLM_API_KEY`），默认模型与 agui 均为 `deepseek-v4-flash`。
+- Fidoo registry 当前只有 `deepseek-v4-flash`（上游 `deepseek/deepseek-v4-flash`，1M in / 393k out），**没有 4.1 别名**；有了之后改 overlay 里两处 model id。
+- 启动：`export DSH_AGUI_TOKEN=…; export SYSTEM3_LITELLM_API_KEY=…; pnpm dsh --patch packages/experimental/agui/cordis.patch.yml --patch docs/feat-dsh-agui/fidoo-agui.patch.yml --profile web --no-open`
+- 结果：`/agui/run` 流 `RUN_STARTED → TEXT_MESSAGE_* → RUN_FINISHED(success)`，回复 `READY`；`/threads/:id/messages` 回读正确；Muse 侧 `@ag-ui/client` `HttpAgent` 直连同一端点通过 schema 校验并拿到回复。`reasoningEffort: low` 下未观察到 reasoning 流。
+
 ## 5. 下一里程碑
 - [ ] M1.5（Muse 仓库）：`DshThreadStore` 代理本桥；`AGENT_URL=<dsh>/agui/run`；手机端渲染 `dsh.approval` / `dsh.question` 卡片。
 - [ ] 线程 `updatedAt`（需读日志尾部或 persistence revision）。
