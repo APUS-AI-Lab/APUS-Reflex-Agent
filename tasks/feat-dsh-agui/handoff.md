@@ -63,3 +63,10 @@
 2. `pnpm install --offline && pnpm run build:native-system`。
 3. `npx vitest run packages/experimental/agui`。
 4. 手动联调：`export DSH_AGUI_TOKEN=...; pnpm dsh --patch packages/experimental/agui/cordis.patch.yml --profile web --no-open`，然后 `curl -N -H "Authorization: Bearer $DSH_AGUI_TOKEN" -d '{"threadId":"t1","runId":"r1","messages":[{"role":"user","content":"hi"}]}' http://127.0.0.1:3080/agui/run`。
+
+## 4.6 Persona（2026-09-28）
+- 客户端每次 run 在 `forwardedProps.persona = { name, tone }` 传人格；桥在 agent scope 内用同名空 section 遮蔽 `harness:identity`、`harness:source`、`app:web-surface`，并以 `deployment:persona-prefix` 注入 "You are <name>, the person's private agent in xDAN System3 Agent Space…"。只影响桥驱动的会话，DSH Web/CLI 不变。
+- 未传 persona 时默认 `{ name: 'Muse', tone: 'warm' }`。
+- **Web profile 加载的是 `packages/experimental/agui/lib/index.js`，改 src 后必须重建**（`pnpm exec tsc -b tsconfig.host.json && pnpm exec tsdown`）再重启 DSH；vitest 读 src，测不出这类问题。
+- 实测：Muse 设身份 Nova/concise → 新线程回答"我是 Nova，你在 xDAN System3 Agent Space 里的私人智能体"，不再报 Web GUI 地址 / 沙箱 / 审批策略。
+- 待办：部署时把 agui `defaultCwd` 设为用户专属工作区（现在默认是 DSH checkout，模型会提到 worktree 名）。

@@ -3,7 +3,7 @@ import { ToolCallId } from '@deepseek-ai/dsh-llm'
 import { SessionId } from '@deepseek-ai/dsh-session'
 import { afterEach, describe, expect, it } from 'vitest'
 import { textResponse, toolCallResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
-import { CUSTOM_APPROVAL } from '../src/index.ts'
+import { CUSTOM_APPROVAL, personaFrom } from '../src/index.ts'
 import { type AguiHarness, makeAguiHarness } from './harness.ts'
 
 let harness: AguiHarness | undefined
@@ -102,5 +102,26 @@ describe('AG-UI bridge', () => {
     await stream.done
     await agent.whenIdle()
     expect(agent.status).toBe('idle')
+  })
+
+  it('speaks as the persona the client sends instead of the harness', async () => {
+    harness = await makeAguiHarness([textResponse('hi'), textResponse('hi again'), textResponse('plain')])
+    const systemOf = (index: number): string => {
+      const first = harness!.adapter.requests[index]?.messages[0]
+      return first?.role === 'system' ? JSON.stringify(first) : ''
+    }
+    await harness.run('thread-persona', 'who are you', 'p1', { persona: { name: 'Nova', tone: 'concise' } })
+    expect(systemOf(0)).toContain('You are Nova, the person\'s private agent in xDAN System3 Agent Space.')
+    expect(systemOf(0)).toContain('Be brief and direct')
+    expect(systemOf(0)).not.toContain('DeepSeek Harness')
+    expect(systemOf(0)).toContain('Do not volunteer internal details')
+    // A later run with a new persona applies to the same Agent's next step.
+    await harness.run('thread-persona', 'again', 'p2', { persona: { name: 'Iris', tone: 'warm' } })
+    expect(systemOf(1)).toContain('You are Iris')
+    // A thread without a persona uses the Agent Space default, never the harness identity.
+    await harness.run('thread-default', 'hello', 'p3')
+    expect(systemOf(2)).toContain('You are Muse')
+    expect(personaFrom({ name: ' ', tone: 'warm' })).toBeUndefined()
+    expect(personaFrom({ name: 'X', tone: 'loud' })).toBeUndefined()
   })
 })

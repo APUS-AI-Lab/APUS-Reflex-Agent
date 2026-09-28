@@ -46,7 +46,7 @@ export interface RunAgentInput {
     readonly role: string
     readonly content?: string | readonly { readonly type: string; readonly text?: string }[]
   }[]
-  readonly forwardedProps?: { readonly cwd?: string } | undefined
+  readonly forwardedProps?: { readonly cwd?: string; readonly persona?: unknown } | undefined
 }
 
 /** Custom event names carried in `CUSTOM.name`; the payload sits in `value`. */

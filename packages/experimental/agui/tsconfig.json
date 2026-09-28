@@ -12,6 +12,7 @@
     { "path": "../../../vendor/schemastery" },
     { "path": "../../core/agent" },
     { "path": "../../core/session" },
+    { "path": "../../core/system-prompt" },
     { "path": "../../host/webserver" },
     { "path": "../../llm/llm" },
     { "path": "../../session/session-persistence" },

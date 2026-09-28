@@ -23,9 +23,9 @@ export interface AguiHarness {
   /** Call the bridge with the test bearer token. */
   request(path: string, init?: RequestInit & { token?: string }): Promise<Response>
   /** Start a run and collect its events until the stream ends. */
-  run(threadId: string, text: string, runId?: string): Promise<AguiEvent[]>
+  run(threadId: string, text: string, runId?: string, forwardedProps?: object): Promise<AguiEvent[]>
   /** Start a run and hand back the live event stream plus an abort handle. */
-  openRun(threadId: string, text: string, runId?: string): Promise<{
+  openRun(threadId: string, text: string, runId?: string, forwardedProps?: object): Promise<{
     events: AguiEvent[]
     next(): Promise<AguiEvent | undefined>
     abort(): void
@@ -64,12 +64,12 @@ export async function makeAguiHarness(script: ConstructorParameters<typeof MockA
     })
   }
 
-  const openRun: AguiHarness['openRun'] = async (threadId, text, runId = `run-${String(Date.now())}`) => {
+  const openRun: AguiHarness['openRun'] = async (threadId, text, runId = `run-${String(Date.now())}`, forwardedProps = {}) => {
     const controller = new AbortController()
     const response = await request('/run', {
       method: 'POST',
       signal: controller.signal,
-      body: JSON.stringify({ threadId, runId, messages: [{ id: 'm1', role: 'user', content: text }], tools: [], context: [], state: {}, forwardedProps: {} }),
+      body: JSON.stringify({ threadId, runId, messages: [{ id: 'm1', role: 'user', content: text }], tools: [], context: [], state: {}, forwardedProps }),
     })
     if (response.status !== 200 || response.body === null) throw new Error(`run failed: ${String(response.status)} ${await response.text()}`)
     const events: AguiEvent[] = []
@@ -127,8 +127,8 @@ export async function makeAguiHarness(script: ConstructorParameters<typeof MockA
     baseUrl,
     request,
     openRun,
-    run: async (threadId, text, runId) => {
-      const stream = await openRun(threadId, text, runId)
+    run: async (threadId, text, runId, forwardedProps) => {
+      const stream = await openRun(threadId, text, runId, forwardedProps)
       await stream.done
       return stream.events
     },

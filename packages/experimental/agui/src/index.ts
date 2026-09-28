@@ -26,11 +26,13 @@ import type {} from '@deepseek-ai/dsh-workspace'
 import z from '@deepseek-ai/schemastery'
 import { CUSTOM_APPROVAL, CUSTOM_QUESTION, type RunAgentInput, SseWriter, userText } from './agui.ts'
 import { HttpError, admitted, json, objectBody, readJson } from './http.ts'
+import { DEFAULT_PERSONA, installPersona, type Persona, personaFrom } from './persona.ts'
 import { historyMessages } from './projection.ts'
 import { type ActiveRun, driveRun, sessionIdOf } from './run.ts'
 
 export type { AguiEvent, AguiMessage, RunAgentInput } from './agui.ts'
 export { CUSTOM_APPROVAL, CUSTOM_QUESTION } from './agui.ts'
+export { DEFAULT_PERSONA, personaFrom, personaPrompt, type Persona } from './persona.ts'
 export { historyMessages } from './projection.ts'
 
 export const name = 'agui'
@@ -84,10 +86,18 @@ function runInput(body: Record<string, unknown>): RunAgentInput {
     throw new HttpError(400, 'threadId and runId are required')
   }
   if (!Array.isArray(messages) || !messages.every(isMessage)) throw new HttpError(400, 'messages must be an array of messages')
-  const cwd = typeof forwardedProps === 'object' && forwardedProps !== null
-    ? (forwardedProps as { cwd?: unknown }).cwd
-    : undefined
-  return { threadId, runId, messages, ...typeof cwd === 'string' ? { forwardedProps: { cwd } } : {} }
+  const props = typeof forwardedProps === 'object' && forwardedProps !== null
+    ? forwardedProps as { cwd?: unknown; persona?: unknown }
+    : {}
+  return {
+    threadId,
+    runId,
+    messages,
+    forwardedProps: {
+      ...typeof props.cwd === 'string' ? { cwd: props.cwd } : {},
+      ...props.persona === undefined ? {} : { persona: props.persona },
+    },
+  }
 }
 
 function isMessage(value: unknown): value is RunAgentInput['messages'][number] {
@@ -107,6 +117,15 @@ export function apply(ctx: Context, config: Config): void {
   if (token === undefined || token.trim() === '') throw new Error(`agui: ${config.tokenEnv} must hold the bearer token`)
 
   const handles = new Map<string, AgentHandle>()
+  const personas = new Map<string, { persona: Persona }>()
+  const personaOf = (threadId: string): { persona: Persona } => {
+    let holder = personas.get(threadId)
+    if (holder === undefined) {
+      holder = { persona: DEFAULT_PERSONA }
+      personas.set(threadId, holder)
+    }
+    return holder
+  }
   const runs = new Map<string, ActiveRun>()
   const approvals = new Map<string, Pending<ApprovalOutcome>>()
   const questions = new Map<string, Pending<AskUserQuestionAnswer>>()
@@ -159,6 +178,7 @@ export function apply(ctx: Context, config: Config): void {
     const agentOptions = { provider: config.provider, model: config.model }
     const setup = (agentCtx: Context): void => {
       installModelSelection(agentCtx, { current: agentOptions, assembled: undefined })
+      installPersona(agentCtx, personaOf(threadId))
     }
     const persisted = await ctx.get('sessionPersistence')?.stat(sessionId)
     let handle: AgentHandle
@@ -202,6 +222,7 @@ export function apply(ctx: Context, config: Config): void {
     const text = latest === undefined ? '' : userText(latest)
     if (text.trim() === '') throw new HttpError(400, 'the run carries no user message')
     if (runs.has(body.threadId)) throw new HttpError(409, 'thread already running')
+    personaOf(body.threadId).persona = personaFrom(body.forwardedProps?.persona) ?? personaOf(body.threadId).persona
     const handle = await resolveAgent(body.threadId, body.forwardedProps?.cwd, true)
     const sse = new SseWriter(res)
     const run: ActiveRun = { runId: body.runId, threadId: body.threadId, agent: handle.agent, sse }
@@ -334,6 +355,7 @@ export function apply(ctx: Context, config: Config): void {
     questions.clear()
     const owned = [...handles.values()]
     handles.clear()
+    personas.clear()
     return Promise.all(owned.map(handle => handle.dispose())).then(() => undefined)
   }, 'agui: dispose agents')
 }
