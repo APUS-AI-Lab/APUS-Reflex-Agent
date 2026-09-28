@@ -876,6 +876,7 @@ def main() -> None:
             "sdk-spawn-node",
             "sdk-mcp",
             "sdk-snapshot",
+            "sdk-system3-shadow",
             "sdk-restart",
             "sdk-profile-plugin",
             "sdk-office",
@@ -914,6 +915,7 @@ def main() -> None:
             "sdk-fs-search",
             "sdk-spawn-node",
             "sdk-snapshot",
+            "sdk-system3-shadow",
             "sdk-restart",
             "sdk-office",
             "sdk-authoring",
@@ -930,11 +932,12 @@ def main() -> None:
         "sdk-minimal",
         "sdk-minimal-in-history",
         "sdk-snapshot",
+        "sdk-system3-shadow",
         "sdk-restart",
         "sdk-authoring",
     }:
         parser.error(
-            "--update-snapshots requires --scenario sdk-minimal, sdk-minimal-in-history, sdk-snapshot, sdk-restart, sdk-authoring, or all"
+            "--update-snapshots requires --scenario sdk-minimal, sdk-minimal-in-history, sdk-snapshot, sdk-system3-shadow, sdk-restart, sdk-authoring, or all"
         )
     if args.exe is not None and not args.exe.is_file():
         parser.error(f"runtime executable does not exist: {args.exe}")
@@ -986,6 +989,11 @@ def main() -> None:
         if args.scenario in {"all", "sdk-snapshot"}:
             assert args.exe is not None
             smoke_sdk_snapshot(model.url, args.exe.resolve(), args.update_snapshots)
+        if args.scenario == "sdk-system3-shadow":
+            assert args.exe is not None
+            smoke_sdk_system3_shadow(
+                model.url, args.exe.resolve(), args.update_snapshots
+            )
         if args.scenario in {"all", "sdk-restart"}:
             assert args.exe is not None
             smoke_sdk_restart_snapshot(
@@ -1815,6 +1823,120 @@ def smoke_sdk_profile_plugin(base_url: str) -> None:
 
         assert result.final_response == PROFILE_PLUGIN_TEXT, result.final_response
         assert_zstd_session_log(dsh_home / "sessions")
+
+
+def smoke_sdk_system3_shadow(
+    base_url: str, executable: Path, update_snapshots: bool
+) -> None:
+    """Project a real opt-in System3 receipt through the SDK and durable log."""
+    from deepseek_harness import DeepSeekHarness
+
+    session_id = "system3-shadow-smoke"
+    producer = (
+        Path(__file__).resolve().parent.parent
+        / "snapshots/sdk/system3-shadow/decision-producer.mjs"
+    )
+    with tempfile.TemporaryDirectory(prefix="dsh-sdk-system3-shadow-") as temporary:
+        root = Path(temporary).resolve()
+        sessions = root / "home/sessions"
+        patch = write_profile_patch(
+            root,
+            "system3-shadow.patch.yml",
+            sessions,
+            [
+                {"id": "skill-filesystem", "config": {"includeDefaultRoots": False}},
+                {
+                    "insert": [
+                        {
+                            "id": "snapshot-system3-shadow-producer",
+                            "name": producer.as_uri(),
+                        }
+                    ]
+                },
+            ],
+        )
+        request_start = len(MockModelHandler.requests)
+        with DeepSeekHarness(
+            provider="deepseek-official",
+            model="smoke-model",
+            cwd=str(root),
+            dsh_bin=str(executable),
+            dsh_home=str(root / "home"),
+            patches=(str(patch),),
+            env={
+                "DSH_PERMISSION_MODE": "danger-full-access",
+                "DSH_TELEMETRY_DISABLED": "1",
+            },
+            api_key="sk-keyless-smoke",
+            base_url=base_url,
+            request_timeout_seconds=60,
+        ) as harness:
+            result = harness.run("reply with the smoke text", session_id=session_id)
+        assert result.final_response == EXPECTED_TEXT, result.final_response
+        decisions = [
+            event for event in result.events if event.get("type") == "system3/decision"
+        ]
+        if len(decisions) != 1 or "surfaceOp" in decisions[0]:
+            raise AssertionError(
+                f"SDK requires one non-surface System3 receipt: {decisions}"
+            )
+        receipt = decisions[0]["data"]
+        if (
+            receipt["outcome"]["kind"] != "ok"
+            or receipt["baseline"]["action"] != "retry"
+            or receipt["comparison"]["divergence"] != "model-premature-done"
+        ):
+            raise AssertionError(f"SDK changed System3 advice or baseline: {receipt}")
+        logs = read_session_logs(sessions)
+        persisted = [
+            event
+            for event in logs[session_id]
+            if event.get("type") == "system3/decision"
+        ]
+        if len(persisted) != 1 or persisted[0]["data"] != receipt:
+            raise AssertionError("SDK receipt differs from persisted System3 receipt")
+        replacements = [(str(root), "{{cwd}}"), (session_id, "{{parent}}")]
+        result_value = {
+            "session_id": result.session_id,
+            "final_response": result.final_response,
+            "events": result.events,
+            "notifications": [
+                {"method": item.method, "payload": item.payload}
+                for item in result.notifications
+            ],
+        }
+        normalized_log = normalize_snapshot_value(logs[session_id], replacements)
+        assert isinstance(normalized_log, list)
+        log_content = render_jsonl(project_session_snapshot(normalized_log))
+        requests = MockModelHandler.requests[request_start:]
+        if len(requests) != 1 or "system3/decision" in json.dumps(requests):
+            raise AssertionError("System3 added model-visible receipt data")
+        files = {
+            "result.json": json.dumps(
+                normalize_snapshot_value(result_value, replacements),
+                indent=2,
+                ensure_ascii=False,
+            )
+            + "\n",
+            **build_minimal_snapshot_files(requests, root),
+            snapshot_session_filename(
+                0, session_header_version(log_content, "System3 Session")
+            ): log_content,
+        }
+        compare_snapshot_files(
+            files,
+            update_snapshots,
+            Path(__file__).resolve().parent
+            / "snapshots/python-sdk-single-exe/system3-shadow",
+            (
+                "result.json",
+                "model-visible.json",
+                snapshot_session_filename(
+                    0, session_header_version(log_content, "System3 Session")
+                ),
+            ),
+            native_writer_output=True,
+        )
 
 
 def smoke_sdk_snapshot(base_url: str, executable: Path, update_snapshots: bool) -> None:

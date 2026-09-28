@@ -1,0 +1,10 @@
+version: 1
+scenario: system3-shadow
+profile: sdk
+composition: sdk-system3-shadow
+recording: authored
+header:
+  class: sdk-system3-shadow
+  pin: true
+  systemPromptSource: text-turn
+  toolSchemasSource: text-turn
