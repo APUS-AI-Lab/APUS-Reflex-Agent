@@ -5,7 +5,7 @@
   "publishConfig": { "access": "public" },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/cryptoSUN2049/xDAN-System3-DSH.git",
+    "url": "git+https://github.com/cryptoSUN2049/xDAN-System3-PersonalAgent-Harness.git",
     "directory": "packages/experimental/system3-evidence"
   },
   "type": "module",

@@ -1,4 +1,4 @@
-# xDAN-System3-DSH：四条工作线与首发设计
+# xDAN System3 Personal Agent · Harness：四条工作线与首发设计
 
 [English](design.md) | 中文
 
@@ -16,11 +16,11 @@ System1 是 APUS/OpenJev 的高频候选判断与经专项验证的轻量工作�
 
 官方上游为 https://github.com/deepseek-ai/deepseek-harness ，源码审阅日期为 2026-09-24，审阅来源为当时的 upstream/master；原默认分支 master，许可证 MIT。
 
-已完整 clone 到 /Users/gumpm5/Documents/Code/xDAN-System3-DSH，保留 Git 历史；本地根分支改为 main，上游 remote 为 upstream，自有 origin 为 https://github.com/cryptoSUN2049/xDAN-System3-DSH.git。远端已创建并回读 private=true。工作树为 .Codex/worktrees/feat-system3-foundation，分支同名。
+已完整 clone 到 /Users/gumpm5/Documents/Code/xDAN-System3-PersonalAgent-Harness，保留 Git 历史；本地根分支改为 main，上游 remote 为 upstream，自有 origin 为 https://github.com/cryptoSUN2049/xDAN-System3-PersonalAgent-Harness.git。远端已创建并回读 private=true。工作树为 .Codex/worktrees/feat-system3-foundation，分支同名。
 
 已完成原始上游的 Ruff 修复与格式化；main 保留官方基线，feat-system3-foundation 已推送到自有私有仓库。基础 System3 包、统一 Cordis 服务和真实 AgentLoop smoke 已交付；真实模型、训练与部署仍未启动。
 
-品牌改名分两层：仓库与产品名使用 xDAN-System3-DSH；首阶段保留 @deepseek-ai/* 包名、dsh 命令与 MIT 声明，避免全仓字符串替换造成依赖和上游同步破坏。发布自有 npm 包及外部插件前再审独立 namespace 与发布清单。私有仓库不改变继承代码的许可义务。
+品牌改名分两层：仓库名使用 xDAN-System3-PersonalAgent-Harness、产品名为 xDAN System3 Personal Agent（2026-09-28 起仓库更名为 xDAN-System3-PersonalAgent-Harness，产品品牌为 xDAN System3 Personal Agent；旧仓库名自动重定向，旧本地路径为软链接。）；首阶段保留 @deepseek-ai/* 包名、dsh 命令与 MIT 声明，避免全仓字符串替换造成依赖和上游同步破坏。发布自有 npm 包及外部插件前再审独立 namespace 与发布清单。私有仓库不改变继承代码的许可义务。
 
 ## 3. 四条工作线
 
