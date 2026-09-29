@@ -37,7 +37,7 @@ pnpm dsh --patch docs/feat-independent-harness/system3-jev.patch.yml --profile h
 <a id="integration-roadmap"></a>
 ## 集成路线
 
-[设计方案](design.html)定义后续切片。下列自动行为均为规划，不能当作已实现功能。
+[Jev Native + DSH Native 专项方案](jev-native-dsh-native-plan.html)定义后续切片。下列自动行为均为规划，不能当作已实现功能。
 
 | 阶段 | 交付物 | 验收证据 |
 |---|---|---|

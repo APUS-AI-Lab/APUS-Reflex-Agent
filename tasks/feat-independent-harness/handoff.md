@@ -4,8 +4,8 @@
 
 - 新私有仓库：cryptoSUN2049/xDAN-System3-Harness；独立 Git 历史副本，无共享 object alternates。
 - 产品目标：将 Jev 理念与模型能力嵌入 DSH，构建通用决策、执行与验证闭环。
-- 独立底座与本地验收完成；首次提交 a71506a 已推送并回读确认，正式目录迁移完成。
-- 先读 docs/feat-independent-harness/README.zh.md，再读 design.html。
+- 独立底座与本地验收完成；初始化提交已推送并回读确认，正式目录迁移完成。
+- 最新设计入口：docs/feat-independent-harness/jev-native-dsh-native-plan.html；旧 design.html 为初始化方案。
 
 ## 2. 本轮交付物
 
@@ -154,7 +154,7 @@
 - 隔离 worktree：.Codex/worktrees/feat-independent-harness，交付时保留。
 - origin 只指向新私有仓库；upstream 为官方 DSH，push URL 为 DISABLED；已移除 donor remote。
 - 新项目未部署。独立 CI 使用 hosted runner；继承 workflow 的 50 个 job 仅在 DSH_UPSTREAM_AUTOMATION=true 时执行。
-- 首次 push 已完成，远端 main 回读为 a71506a；首次 HTTP/2 上传失败后用 HTTP/1.1 成功重试。Actions 已启用，但回读时尚无 workflow run，远端 CI 未验证；没有把跳过的继承任务视为验证通过。
+- 首次 push 已完成，远端 main 已回读确认；首次 HTTP/2 上传失败后用 HTTP/1.1 成功重试。Actions 已启用，但回读时尚无 workflow run，远端 CI 未验证；没有把跳过的继承任务视为验证通过。
 
 ## 7. 冷启动 checklist
 
@@ -163,3 +163,13 @@
 3. 初始化依赖与 native；根据修改范围选择测试。无密钥回放与真实模型验证分别报告。
 4. 查看最新远端 CI；不要为恢复旧自动化而直接启用 DSH_UPSTREAM_AUTOMATION。
 5. 先完成证据与预算所有权，再让 Jev 改变执行流程。
+
+## 8. Jev Native + DSH Native 专项方案
+
+- 交付：中英文根 README 的架构入口；docs/feat-independent-harness/architecture.svg、architecture@2x.png、jev-native-dsh-native-plan.html；集成指南链接与双语配对记录；tasks 的计划及纠偏经验。
+- HTML 为离线单文件，图形与样式内嵌；原子能力、场景、记忆、路由与长期 Goal 均作为候选领域审查。没有修改运行时代码，也未引入 Pilot 代码。
+- DSH / Pilot 源码审计与两轮反方 review 后，撤回“首期必需新增 pre-assembly 契约”；首个恢复试验固定 route、不裁工具，现有生命周期优先。联合路由需另验容量、compaction、重试与单一 selection 所有者。
+- Goal 已有原生状态及续轮，但恢复后 disarm；Schedule 不唤醒冷会话；workflow 无跨重启恢复；storage/FTS 不等于语义长期记忆。不能在方案中把这些条件抹掉。
+- 最终只读复核无新增实质阻断项；不是运行时或收益验收。首个任务族、候选、实际 Jev 部署及预算仍需实施前确认。
+- 交付物：专项 HTML 251 行、SVG 86 行、PNG 2400×2520；根 README 与集成指南双语同步。
+- 图形人工检查、浏览器离线加载（零外部资源）、22 个 HTML 链接及 Markdown 链接检查通过；doc-sync 42/42、pnpm run lint 通过。首次检查发现旧交接中的提交 hash 违反仓库引用规则，已修正并通过复验。

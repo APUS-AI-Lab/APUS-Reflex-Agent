@@ -2,7 +2,17 @@
 
 [English](README.md) | 中文
 
-> **独立的 Jev + DeepSeek Harness。** 本仓库通过 DSH 插件架构集成 Jev 类型化模型决策、证据筛选、确定性监督与可回放决策记录，面向通用 Agent 执行与验证。Jev 提供建议，确定性代码负责隐私准入、权限、预算与完成检查。从[独立集成指南](docs/feat-independent-harness/README.zh.md)开始。
+> **Jev Native + DSH Native。** System3 将 System1（Jev-like 有界语义决策）与 System2（高性能推理与生成）结合，由 DSH 原生状态和执行机制统一协调。当前仓库提供类型化 Jev provider 与可回放的显式影子决策；自动混合调度是设计目标。从[集成指南](docs/feat-independent-harness/README.zh.md)开始。
+
+## 架构
+
+System1 占据规则无法解决语义歧义、完整 System2 生成又太贵的中间决策位置。DSH 拥有共享 Session、生命周期、权限与执行。图中虚线决策运行时是规划，挂载现有 Jev provider 不会启用它。
+
+![Jev Native + DSH Native：规划中的原生协调机制基于共享 Session 证据，协调规则、System1 决策和 System2 执行。](docs/feat-independent-harness/architecture@2x.png)
+
+[SVG 源文件](docs/feat-independent-harness/architecture.svg) · [Jev Native + DSH Native 专项方案](docs/feat-independent-harness/jev-native-dsh-native-plan.html)
+
+评估涵盖原子能力、场景策略、记忆、路由与长程目标；这些是候选领域，不是必做功能清单。优先使用现有 DSH 生命周期机制，核心改造需有具体必要性。Agent JEV Pilot 仅作为实验参考，不作为代码依赖。
 
 DeepSeek Harness（`dsh`）是由 [DeepSeek AI](https://deepseek.com) 开发的开源 agent harness（智能体框架）。
 

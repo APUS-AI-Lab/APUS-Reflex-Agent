@@ -9,7 +9,7 @@
 - [x] 编写独立 Jev 配置入口、集成路线和验收边界。
 - [x] 完整构建、相关单测、Session snapshot 与文档检查（42 项 doc-sync 全通过）。
 - [x] 隔离环境下验证 profile 配置、Web 启动及认证 HTTP 200。
-- [x] Ruff 双检查、提交与推送，回读新 main（a71506a）。
+- [x] Ruff 双检查、提交与推送，回读新 main。
 - [x] 写入 tasks/feat-independent-harness/handoff.md。
 - [x] 迁移并核对正式本地目录 /Users/gumpm5/Documents/Code/xDAN-System3-Harness，修复并保留隔离 worktree。
 
@@ -23,3 +23,16 @@
 - [ ] 持久化有界语义输入，明确隐私分类及外发准入。
 - [ ] 在 AgentLoop extension point 安装自动 shadow consumer。
 - [ ] 封存任务对照评测后才晋级有界控制、路由与专家委派。
+
+## README 架构图
+
+- [x] 按 Jev Native + DSH Native 修订架构图，区分现有基础与候选设计，输出 SVG 与 PNG。
+- [x] 在中英文 README 嵌入图片并更新配对记录。
+- [ ] 检查图片、文档与推送门禁，发布到 GitHub main。
+
+## System1 / System2 融合评估
+
+- [x] 审计 DSH 生命周期、插件扩展点及中间决策机会。
+- [x] 对照 agent-jev-pilot 架构与实验教训；遵照用户纠偏，不导入其代码或能力。
+- [x] 修订架构图与中英文 README，形成原生混合架构专项 HTML；完成独立反方 review 与最终复核。
+- [ ] 发布已验证的文档；产品代码实施另行确认。

@@ -2,7 +2,17 @@
 
 English | [中文](README.zh.md)
 
-> **Independent Jev + DeepSeek Harness.** This repository embeds typed Jev model decisions, evidence selection, deterministic supervision, and replayable decision records into the DSH plugin architecture. It is a standalone, general-purpose agent runtime. Jev provides advice; deterministic code owns privacy admission, permissions, budgets, and completion checks. Start with the [independent integration guide](docs/feat-independent-harness/README.md).
+> **Jev Native + DSH Native.** System3 combines System1 (Jev-like bounded semantic decisions) with System2 (high-performance reasoning and generation), coordinated by DSH’s native state and execution mechanisms. This repository currently provides a typed Jev provider and replayable explicit shadow decisions; automatic hybrid scheduling is a design target. Start with the [integration guide](docs/feat-independent-harness/README.md).
+
+## Architecture
+
+System1 occupies the middle ground where rules cannot resolve semantic ambiguity and a full System2 generation is too costly. DSH owns the shared Session, lifecycle, permissions and execution. The dashed decision runtime is proposed; mounting the current Jev provider does not enable it.
+
+![Jev Native + DSH Native: proposed native coordination connects rules, System1 decisions and System2 execution against shared Session evidence.](docs/feat-independent-harness/architecture@2x.png)
+
+[SVG source](docs/feat-independent-harness/architecture.svg) · [Jev Native + DSH Native plan (Chinese)](docs/feat-independent-harness/jev-native-dsh-native-plan.html)
+
+The assessment considers capabilities, scenario strategies, memory, routing and long-horizon goals as candidates, not a required feature list. Existing DSH lifecycle mechanisms come first; core changes require a demonstrated need. Agent JEV Pilot is an experimental reference, not a code dependency.
 
 DeepSeek Harness (`dsh`) is an open-source agent harness developed by [DeepSeek AI](https://deepseek.com).
 

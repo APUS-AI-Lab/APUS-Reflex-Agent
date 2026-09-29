@@ -15,3 +15,15 @@
 ## 2026-09-29：独立产品不再围绕旧 App 组织目标
 
 用户再次明确 xDAN-System3-Harness 不需要考虑 Duse。新产品文档、优先级和验收以 Jev 的任务决策、DSH 执行、独立证据及成本质量对照为中心；来源项目仅作为历史信息，不再作为产品兼容性或设计约束。
+
+## 2026-09-29：System3 是双模型协作，不能缩减为结束检查
+
+用户明确 System3 = System1（Jev-like 决策模型）+ System2（高性能大模型）。架构设计先识别 DSH 全流程中规则覆盖不了、完整生成又太贵的中间决策，再选择首个实施切片；完成前检查只是候选节点。评估 agent-jev-pilot 时区分可复用决策协议与 Codex/Claude Code 专属 hook 适配，不能仅凭现有 provider 推断已经实现内置自动编排。
+
+## 2026-09-29：原生混合架构优先于外部插件迁移
+
+用户明确不能直接引入 agent-jev-pilot 的能力和代码。Pilot 仅用作经验与实验对照；System3 必须从 DSH 的原生 Session、AgentLoop、provider、工具与上下文语义设计。Cordis 插件只是 DSH 内部组织机制，不代表外围外挂；不预先将外部插件的七类功能映射成产品模块。
+
+## 产品定位：Jev Native + DSH Native
+
+System3 以 Jev Native + DSH Native 为核心：保留 Jev 的原生有界决策接口和 DSH 的原生生命周期、状态与执行机制，使规则、System1 和 System2 在同一宿主中协作；禁止将原生集成偷换为旁路调用或外部插件迁入。

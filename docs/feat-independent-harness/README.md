@@ -37,7 +37,7 @@ This command inspects composition; it does not make a Jev decision. A consumer c
 <a id="integration-roadmap"></a>
 ## Integration roadmap
 
-The [design](design.html) defines the next slices. None of the proposed automatic behavior below is claimed as implemented.
+The [native System3 plan](jev-native-dsh-native-plan.html) defines the next slices. None of the proposed automatic behavior below is claimed as implemented.
 
 | Stage | Deliverable | Acceptance evidence |
 |---|---|---|
