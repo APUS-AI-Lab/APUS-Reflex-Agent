@@ -3,7 +3,7 @@
 ## 1. TL;DR
 
 - 新私有仓库：cryptoSUN2049/xDAN-System3-Harness；独立 Git 历史副本，无共享 object alternates。
-- 产品目标：将 Jev 理念与模型能力嵌入 DSH，构建通用决策、执行与验证闭环。
+- 产品顺序：第一目标是 Jev 入口策略与调度，第二目标是执行环节更智能、更顺畅；总体为 Jev Native + DSH Native。
 - 独立底座与本地验收完成；初始化提交已推送并回读确认，正式目录迁移完成。
 - 最新设计入口：docs/feat-independent-harness/jev-native-dsh-native-plan.html；旧 design.html 为初始化方案。
 
@@ -141,11 +141,10 @@
 
 ## 5. 下一里程碑任务清单
 
-- [ ] 定义独立 verifier、目标版本与完成证据要求，修复空 checks 和 evidenceRefs 完整性。
-- [ ] 构建有界任务/轨迹/证据语义投影，分类准入后保存完整 Jev 输入。
-- [ ] 用 agent/turn-stopping 等 extension point 安装自动 shadow consumer，明确次数、取消及卸载行为。
-- [ ] 绑定真实预算所有权和并发预留；目标变化后拒绝应用旧决策。
-- [ ] 配对任务验证成功率、每成功任务总成本、P95 和错误完成，再晋级有界控制、路由与专家委派。
+- [ ] M1a：共享入口决策服务与 Web/API 空闲文本适配，两个兼容模型，实际路由采用、请求准入、取消、过期和每回合有效期。
+- [ ] M1b：专业委派与规划／澄清，附件／排队批次关联，headless／SDK／ACP 分别适配与验收。
+- [ ] M2：同一原生机制上的记忆、能力、恢复、升级、目标与沟通；完成证据相关缺口在自动完成判断前补齐。
+- [ ] M3：通过实测的本地 9B/27B Lead 与跨会话任务恢复、主动跟进。
 
 ## 6. 分支与部署状态
 
@@ -180,7 +179,7 @@
 
 - 用户再次明确：产品主线和特点是 Jev Native 深入 DSH 架构、能力与各环节决策；记忆、路由、长程目标和主动沟通沿此展开，9B/27B Lead 是未来部署演进。不能改成泛本地 Lead 平台。
 - 主图采用中文，中心为原生事实、合法候选、Jev 判断、原生服务采纳及结果反馈；正文十节，明确六类作用点的输入、结构化判断、DSH 消费者与限制。中文和英文根 README 同步此定位。
-- 首期建议固定执行模型、工具和路由，验证失败诊断后下一项证据选择。规则、Jev、System2 使用同一候选与证据比较，包含候选形成及所有失败代价；不以完整 Lead 平台或新增核心接口为前提。
+- 本次修订当时建议固定执行模型、工具和路由，验证失败诊断后下一项证据选择；该试验现按第 10 节移至第二目标。规则、Jev、System2 使用同一候选与证据比较，包含候选形成及所有失败代价；不以完整 Lead 平台或新增核心接口为前提。
 - 反方最终复核无实质阻断；可行性表已将 Jev 行置首。模型能力、自动融合与净收益均未声称已实现；没有运行模型实验或发送外部消息。
 - 图形与离线浏览器检查通过：中文路径字形、22 个本地链接及锚点、唯一 ID、内嵌 SVG、零外部资源，桌面和 390px 手机宽度均无整页横向溢出。PNG 为 2400×3100。
 - 本轮检查：doc-sync 42/42、pnpm run lint、ruff check .、ruff format --check . 均通过。按正常流程提交推送至 main，由 pre-push 执行增量类型检查；发布以远端回读为准，保留 worktree。
@@ -198,3 +197,33 @@
 | `tasks/todo.md` | 45 | 任务与验收记录 |
 | `docs/feat-independent-harness/architecture@2x.png` | 2400×3100 | GitHub 图像 |
 | `tasks/feat-independent-harness/handoff.md` | 200 | 冷启动入口与本次结果 |
+
+
+## 10. 入口第一目标与过程第二目标
+
+- 当前方案明确入口 Jev 策略与原生调度为第一目标，执行环节智能与顺畅协作为第二目标；首图、正文、根 README、集成指南与里程碑已统一。9B/27B Lead 保留未来演进，未改运行时代码。
+- 入口先选处理方式，再由相应原生服务采用模型、专业委派或澄清；入口和过程共享输入／任务身份、版本、证据与采用记录，单一动作拥有者提交决定。不能将分类或建议当作真实调度。
+- 源码确认 selectModel 会保存用户默认，自动请求策略不能直接使用它；内部 selectForNextRequest 可复用会话内行为，但并非跨入口公共 API。Web/API、headless、SDK、ACP 路径不同，逐项适配验收。
+- idle 检查不等于原子准入；等待 Jev 时可进入新工作。活跃 followup／steer 与排队消息不能共用一个可被覆盖的 selection.current。首片限定空闲且无待处理输入的文本任务，并补准入保护、身份版本复核与取消。
+- 原生插件组合（claimed 输入身份 + awaited assemble）值得验证，但须测试监听顺序、无新输入续步、主动组装、恢复与清理；不预设必须改核心循环。
+- 自动选型首片按匹配输入触发的一个回合有效，回合内工具续步可沿用，结束或取消后重新准入；用户固定约束单独记录。未提交首个匹配请求就失败或取消时，记录失效并恢复未消费选择，不回写历史。
+- 独立方案评审未发现实质阻断，提出的策略有效期已具体化。工程回放与真实模型质量评测分别验收；入口首片不宣称完整全入口或专家调度已完成。
+- 本轮验证：doc-sync 42/42、pnpm run lint、Ruff 双检查通过；中文 SVG/PNG 人工检查及浏览器离线加载通过，29 个本地链接／锚点有效，桌面与 390px 手机宽度无整页横向溢出，零外部资源。
+- 本轮文档按正常流程发布 main，pre-push 继续执行类型检查；远端发布状态以 ref 回读为准。没有运行真实模型实验或修改运行时代码。
+
+本次交付清单（文件总行数）：
+
+| 路径 | 行数／尺寸 | 说明 |
+|---|---:|---|
+| `README.md` | 90 | 入口第一、过程第二 |
+| `README.zh.md` | 111 | 中文优先级和架构入口 |
+| `README.i18n.yaml` | 6 | 根双语配对 |
+| `docs/feat-independent-harness/README.md` | 62 | 入口优先实施路线 |
+| `docs/feat-independent-harness/README.zh.md` | 62 | 中文实施路线 |
+| `docs/feat-independent-harness/README.i18n.yaml` | 6 | 集成指南双语配对 |
+| `docs/feat-independent-harness/jev-native-dsh-native-plan.html` | 304 | 目标、机制、接口、范围及验收 |
+| `docs/feat-independent-harness/architecture.svg` | 110 | 入口与过程协同架构图 |
+| `tasks/todo.md` | 51 | 当前计划与门禁结果 |
+| `tasks/lessons.md` | 41 | 用户明确的目标顺序 |
+| `docs/feat-independent-harness/architecture@2x.png` | 2400×3540 | GitHub 架构图 |
+| `tasks/feat-independent-harness/handoff.md` | 229 | 冷启动与本次交付 |

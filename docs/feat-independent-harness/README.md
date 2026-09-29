@@ -8,7 +8,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-This project develops Jev as a decision model inside DeepSeek Harness: the generator proposes work, Jev evaluates bounded questions, and deterministic code checks whether an action is permitted. The repository is an independent, general-purpose agent runtime. The existing implementation provides explicit typed decisions and replayable shadow receipts; it does not automatically route every request or verify arbitrary task completion.
+This project develops Jev as a native decision model inside DeepSeek Harness. Intake strategy and dispatch are the first objective; smarter, smoother execution is the second. Jev evaluates bounded choices, DSH owns admission and execution, and System2 handles open reasoning and generation. The repository is an independent, general-purpose agent runtime. The existing implementation provides explicit typed decisions and replayable shadow receipts; it does not automatically route every request or verify arbitrary task completion.
 
 ## Table of Contents
 
@@ -42,10 +42,10 @@ The [native System3 plan](jev-native-dsh-native-plan.html) defines the next slic
 | Stage | Deliverable | Acceptance evidence |
 |---|---|---|
 | Independent foundation | Product-neutral Harness, typed Jev provider, shadow receipt and replay | Keyless HTTP integration, session replay, independent runtime composition |
-| Evidence-backed decisions | Bounded goal, trace and verifier inputs with explicit privacy classification | Exact persisted input, evidence references, no unauthorized egress |
-| Automatic shadow supervision | Call Jev at a documented lifecycle event without changing execution | Real AgentLoop fixture, cancellation, replay and baseline comparison |
-| Bounded control | Apply admitted continue/retry/escalate advice with a deterministic intervention budget | Failed-check, stale-goal, budget and concurrency regressions |
-| Routing and delegation | Choose among admitted model/expert candidates | Paired task success, total cost and latency measurements |
+| M1a: intake model dispatch | Shared decision service and a Web/API adapter for idle text requests using compatible model candidates | Input-bound route adoption, explicit user selection, cancellation, expiry and actual task outcomes |
+| M1b: intake strategy and entry coverage | Specialist handoff, planning/clarification paths, queued inputs and additional DSH entry adapters | Ownership, result return, modality/capacity checks and per-entry replay |
+| M2: intelligent execution | Memory, capabilities, recovery, escalation, goals and communication using the same decision mechanism | Less rework, repeated handoff and route oscillation without quality regression |
+| M3: local models and sustained work | Evaluate local 9B/27B Lead Agents; add durable task recovery and separately authorized notifications | Measured capabilities, resources, recovery, cancellation and delivery |
 
 Choice probabilities are not calibrated success rates. A model's `candidate_done` is not proof that the task is complete. Empty required checks and missing evidence for passing checks must be addressed before promoting the current supervisor to automatic completion authority. The current shadow input contains structured check facts, not a semantic projection of the user's task. Decision quality and cost savings remain unproven.
 
