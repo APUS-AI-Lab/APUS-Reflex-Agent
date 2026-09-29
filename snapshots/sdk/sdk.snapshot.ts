@@ -126,6 +126,7 @@ interface SdkAssertions {
 
 const SDK_ASSERTIONS: Readonly<Record<string, SdkAssertions>> = {
   'system3-shadow': { expectedFinalResponse: 'SDK snapshot OK' },
+  'system3-entry-route': { expectedFinalResponse: 'SDK snapshot OK' },
   'agui-persona': { expectedFinalResponse: 'SDK snapshot OK' },
   'tool-error-details': {
     patches: [fileURLToPath(new URL('./tool-error-details/runtime.cordis.yml', import.meta.url))],
@@ -844,7 +845,7 @@ describe('TypeScript SDK snapshots over the jsonrpc runtime', () => {
       )
       reconcileCatalogCreationTimes(ordered.map(log => log.content), 'validate')
       const actualContext = contextOf(ordered, cwd)
-      if (scenario.name === 'system3-shadow') {
+      if (scenario.name === 'system3-shadow' || scenario.name === 'system3-entry-route') {
         const decisions = results.flatMap(result => result.events).filter(event => event.type === 'system3/decision')
         expect(decisions, JSON.stringify(results.at(-1)?.events.filter(event => event.type === 'turn/end'))).toHaveLength(1)
         expect(decisions[0]).toMatchObject({ data: {
@@ -855,6 +856,21 @@ describe('TypeScript SDK snapshots over the jsonrpc runtime', () => {
         const persisted = records(ordered[0]!.content).filter(event => event.type === 'system3/decision')
         expect(persisted).toHaveLength(1)
         expect(persisted[0]?.data).toEqual(decisions[0]?.data)
+      }
+      if (scenario.name === 'system3-entry-route') {
+        const events = results.flatMap(result => result.events)
+        const recommendations = events.filter(event => event.type === 'system3/entry-decision')
+        const adopted = events.filter(event => event.type === 'model/automatic-selection')
+        expect(recommendations).toHaveLength(1)
+        expect(adopted).toHaveLength(1)
+        expect(recommendations[0]).toMatchObject({ data: { outcome: 'selected', requestId: 'snapshot-entry-request' } })
+        expect(adopted[0]).toMatchObject({ data: { requestId: 'snapshot-entry-request' } })
+        for (const event of [...recommendations, ...adopted]) {
+          expect(event).not.toHaveProperty('surfaceOp')
+          const persisted = records(ordered[0]!.content).filter(record => record.type === event.type)
+          expect(persisted).toHaveLength(1)
+          expect(persisted[0]?.data).toEqual(event.data)
+        }
       }
       if (scenario.name === 'subagent-activation-limit') {
         expect(ordered).toHaveLength(2)

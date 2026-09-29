@@ -1,0 +1,10 @@
+version: 1
+scenario: system3-entry-route
+profile: sdk
+composition: sdk-system3-entry-route
+recording: authored
+header:
+  class: sdk-system3-entry-route
+  pin: true
+  systemPromptSource: text-turn
+  toolSchemasSource: text-turn

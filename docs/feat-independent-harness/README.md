@@ -8,12 +8,13 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-This project develops Jev as a native decision model inside DeepSeek Harness. Intake strategy and dispatch are the first objective; smarter, smoother execution is the second. Jev evaluates bounded choices, DSH owns admission and execution, and System2 handles open reasoning and generation. The repository is an independent, general-purpose agent runtime. The existing implementation provides explicit typed decisions and replayable shadow receipts; it does not automatically route every request or verify arbitrary task completion.
+This project develops Jev as a native decision model inside DeepSeek Harness. Intake strategy and dispatch are the first objective; smarter, smoother execution is the second. Jev evaluates bounded choices, DSH owns admission and execution, and System2 handles open reasoning and generation. The repository is an independent, general-purpose agent runtime. The implementation provides explicit typed decisions, replayable receipts, and opt-in model routing for idle Web/API text prompts. It does not route every DSH entry point or verify arbitrary task completion.
 
 ## Table of Contents
 
 - [Run independently](#run-independently)
 - [Mount Jev](#mount-jev)
+- [Fidoo and entry routing](#fidoo-entry)
 - [Integration roadmap](#integration-roadmap)
 - [Verify independence](#verify-independence)
 - [Dev Note](#dev-note)
@@ -34,10 +35,31 @@ pnpm dsh --patch docs/feat-independent-harness/system3-jev.patch.yml --profile h
 
 This command inspects composition; it does not make a Jev decision. A consumer calls `ctx.system3.shadowDecision` with classified facts and independent checks, then reads `lastDecision` from the live or restored Session. See the [System3 package](../../packages/experimental/system3/README.md) and [Jev provider](../../packages/experimental/apus-dsh-jev-plugin/README.md). The current receipt preserves the input, model answer, deterministic baseline, usage when reported, and privacy refusal or provider failure. Mounting the service alone does not install automatic supervision.
 
+<a id="fidoo-entry"></a>
+## Fidoo and entry routing
+
+The [Fidoo overlay](system3-fidoo.patch.yml) uses the existing `llm-pi-ai` adapter and OpenAI-compatible `https://proxy.fidoo.ai/v1` endpoint. It reads `SYSTEM3_LITELLM_API_KEY` from the environment and declares `deepseek-v4-flash` and `deepseek-v4-pro`. Both use a conservative 131,072-token context setting and an 8,192-token output limit; these are deployment settings, not claims about the gateway's maximum capacity. This generation overlay also works without Jev.
+
+```sh
+pnpm dsh --patch docs/feat-independent-harness/system3-fidoo.patch.yml --profile headless "Reply with exactly READY. Do not use tools."
+```
+
+To enable entry decisions, configure `JEV_ENDPOINT`, `JEV_MODEL`, `JEV_API_KEY`, and `SYSTEM3_LITELLM_API_KEY`, then explicitly classify all session data in `SYSTEM3_SESSION_DATA_CLASSES` as a JSON array. Use `["public"]` only for a public-data session. The classification includes history that the selected generation model may receive; it is a deployment declaration, not an automatic sensitivity detector. The [entry overlay](system3-entry.patch.yml) admits both Jev and the named generation candidates for those declared classes. A remote GPU reached through a loopback tunnel remains network execution.
+
+```sh
+pnpm dsh --patch docs/feat-independent-harness/system3-jev.patch.yml --patch docs/feat-independent-harness/system3-fidoo.patch.yml --patch docs/feat-independent-harness/system3-entry.patch.yml --profile web --no-open
+```
+
+On a new session, an idle text prompt with no pending inbox and no recorded manual model selection enters Jev's bounded choice. The selected model applies to that prompt's turn, including tool continuations. Provider failure, oversized input, abstention, or insufficient confidence retains the baseline. Invalid candidate configuration rejects admission. Cancellation prevents late admission. An explicit model selection disables automatic entry selection for that session; create a new session to resume automatic selection in this first slice.
+
+`system3/entry-decision` records the exact decision request and advice; `model/automatic-selection` records accepted turn selection, and `request/header` identifies the model actually called. This receipt contains user input, so it follows the session log's storage and access policy. Automatic choices do not overwrite the user's saved model preference. Attachments, busy inputs, headless, SDK, ACP, and the optional AG-UI bridge retain their existing admission paths.
+
+The deployed `APUS-OpenJev-v1-9B-5949` is a Jev-like model using the native decision protocol. Its scores are not calibrated success probabilities. The sample threshold of 0.8 and 16 KiB decision-input cap are configurable starting values. Only the current input and allowed candidates reach the entry decision; history-dependent references should cause abstention. See the [implementation scope](entry-routing-implementation.html) and [verification report](entry-routing-verification.html).
+
 <a id="integration-roadmap"></a>
 ## Integration roadmap
 
-The [native System3 plan](jev-native-dsh-native-plan.html) defines the next slices. None of the proposed automatic behavior below is claimed as implemented.
+The [native System3 plan](jev-native-dsh-native-plan.html) defines the architecture. M1a supplies the first entry model-selection slice; the broader scheduling and execution stages remain planned.
 
 | Stage | Deliverable | Acceptance evidence |
 |---|---|---|
@@ -52,7 +74,7 @@ Choice probabilities are not calibrated success rates. A model's `candidate_done
 <a id="verify-independence"></a>
 ## Verify independence
 
-Focused unit and HTTP integration tests live under `packages/experimental/{agui,apus-dsh-jev-plugin,system3,system3-policy,system3-evidence,system3-supervisor}`. The keyless `system3-shadow` SDK scenario replays durable decision receipts. The [handoff](../../tasks/feat-independent-harness/handoff.md) records commands actually run and their results; source inspection alone does not prove deployment readiness.
+Focused unit and HTTP integration tests live under `packages/experimental/{agui,apus-dsh-jev-plugin,system3,system3-policy,system3-evidence,system3-supervisor}`. The keyless `system3-shadow` and `system3-entry-route` SDK scenarios replay durable decisions; SDK event replay does not mean SDK prompts use the Web/API router. The [handoff](../../tasks/feat-independent-harness/handoff.md) records commands actually run and their results; source inspection alone does not prove deployment readiness.
 
 <a id="dev-note"></a>
 ## Dev Note

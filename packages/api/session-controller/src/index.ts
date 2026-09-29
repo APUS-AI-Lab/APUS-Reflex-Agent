@@ -18,6 +18,9 @@ import {
   inspectApiSession,
   type ApiSessionAgentResult,
 } from './agent.ts'
+import { SessionPromptRouting } from './prompt-router.ts'
+import type { SessionPromptRouter } from './prompt-router.ts'
+export type { SessionPromptRouter, SessionPromptRouteRequest } from './prompt-router.ts'
 import { SessionCommandController } from './commands.ts'
 import { SessionControlController } from './control.ts'
 import { SessionHistoryController } from './history.ts'
@@ -116,6 +119,7 @@ export class SessionController extends TypertRemoteService {
   })
 
   private readonly agents: ApiSessionAgentController
+  private readonly promptRouting: SessionPromptRouting
   private readonly commands: SessionCommandController
   private readonly controlState: SessionControlController
   private readonly history: SessionHistoryController
@@ -128,6 +132,16 @@ export class SessionController extends TypertRemoteService {
   private readonly promotions = new Set<Promise<void>>()
 
   /**
+   * Register the sole optional router for idle text prompts before inbox admission.
+   * Providers install the returned disposer with their own plugin effect.
+   * @param router - Host provider selecting a registered generation route.
+   * @returns Disposer cancelling pending decisions, without changing admitted turns.
+   */
+  registerPromptRouter(router: SessionPromptRouter): () => void {
+    return this.promptRouting.register(router)
+  }
+
+  /**
    * @param ctx - Host context containing the Session capability assembly.
    * @param config - native-opener deployment policy.
    * @param internals - host integrations replaceable by direct unit tests.
@@ -136,7 +150,8 @@ export class SessionController extends TypertRemoteService {
     super(ctx, 'sessionController', { namespace: 'session' })
     installModelSelectionProjection(ctx)
     this.agents = new ApiSessionAgentController(ctx)
-    this.commands = new SessionCommandController(ctx, this.agents, process.cwd())
+    this.promptRouting = new SessionPromptRouting(ctx, this.agents)
+    this.commands = new SessionCommandController(ctx, this.agents, process.cwd(), this.promptRouting)
     ctx.effect(() => ctx.fileUploads.registerAgentResolver(async (sessionId) => {
       const result = await this.agents.resolveAgent(sessionId)
       if ('error' in result) throw result.error

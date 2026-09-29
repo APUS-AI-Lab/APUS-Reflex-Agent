@@ -809,6 +809,8 @@ export const FOUNDATION_TYPE_NAMES: ReadonlySet<string> = new Set([
 
 /** Project types deliberately documented outside the subsystems catalog. */
 export const TYPE_LINK_EXEMPTIONS: Readonly<Record<string, string>> = {
+  SessionPromptRouter: 'Optional input routing is owned by packages/api/session-controller/README.md',
+  SessionPromptRouteRequest: 'Optional input routing is owned by packages/api/session-controller/README.md',
   JevOutcome: 'System One decision contract is owned by packages/experimental/apus-dsh-jev-plugin/README.md',
   JevProvider: 'System One decision contract is owned by packages/experimental/apus-dsh-jev-plugin/README.md',
   JevProviderInfo: 'System One decision contract is owned by packages/experimental/apus-dsh-jev-plugin/README.md',

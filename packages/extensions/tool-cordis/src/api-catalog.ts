@@ -1827,6 +1827,12 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     description: 'Host service backing the generated `ctx.remote.session` namespace.',
     methods: [
       {
+        signature: 'registerPromptRouter(router: SessionPromptRouter): () => void',
+        description: 'Register the sole optional router for idle text prompts before inbox admission. Providers install the returned disposer with their own plugin effect.',
+        parameters: [{ name: 'router', description: 'Host provider selecting a registered generation route.' }],
+        returns: 'Disposer cancelling pending decisions, without changing admitted turns.',
+      },
+      {
         signature: 'resolveAgent(sessionId: SessionId): Promise<ApiSessionAgentResult>',
         description: 'Resolve or resume one ordinary Session for another Host API domain.',
         parameters: [{ name: 'sessionId', description: 'Session identity whose Agent owns the operation.' }],
@@ -6568,6 +6574,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'SessionPromptRequest',
     declaration: 'export interface SessionPromptRequest {\n    readonly requestId: SessionRequestId;\n    readonly sessionId: SessionId;\n    readonly mode: \'queue\' | \'steer\';\n    readonly content: readonly PromptContentPart[];\n    readonly clientTimeZone?: string;\n}',
+  },
+  {
+    name: 'SessionPromptRouter',
+    declaration: 'export interface SessionPromptRouter {\n    route(request: SessionPromptRouteRequest, signal: AbortSignal): Promise<ModelSelection | undefined>;\n}',
+  },
+  {
+    name: 'SessionPromptRouteRequest',
+    declaration: 'export interface SessionPromptRouteRequest {\n    readonly agent: Agent;\n    readonly requestId: SessionRequestId;\n    readonly message: UserMessage;\n    readonly baseline: ModelSelection;\n}',
   },
   {
     name: 'SessionPromptValue',

@@ -2,17 +2,17 @@
 
 [English](README.md) | 中文
 
-> **Jev Native + DSH Native。** System3 将 System1（Jev-like 有界语义决策）与 System2（高性能推理与生成）结合，由 DSH 原生状态和执行机制统一协调。当前仓库提供类型化 Jev provider 与可回放的显式影子决策；自动混合调度是设计目标。从[集成指南](docs/feat-independent-harness/README.zh.md)开始。
+> **Jev Native + DSH Native。** System3 将 System1（Jev-like 有界语义决策）与 System2（高性能推理与生成）结合，由 DSH 原生状态和执行机制统一协调。当前仓库提供类型化 Jev 决策、可回放记录，以及通过原生 Web/API controller 显式启用的入口选模。从[集成指南](docs/feat-independent-harness/README.zh.md)开始。
 
 ## 架构
 
-第一目标是 **Jev 入口策略决策与调度**：用户输入后选择允许的处理路径，由 DSH 交给适合的模型或专业 Agent。第二目标是**执行环节更智能、更顺畅**，逐步增强证据、记忆、恢复、升级与目标判断。两者共享原生任务状态、决策记录和动作归属；规则处理确定情况，System2 承担开放推理与生成。自动融合仍为规划，挂载现有 provider 不会启用它。
+第一目标是 **Jev 入口策略决策与调度**：用户输入后选择允许的处理路径，由 DSH 交给适合的模型或专业 Agent。第二目标是**执行环节更智能、更顺畅**，逐步增强证据、记忆、恢复、升级与目标判断。两者共享原生任务状态、决策记录和动作归属；规则处理确定情况，System2 承担开放推理与生成。入口选模需要显式配置候选与隐私策略；仅挂载决策 provider 不会启用它。
 
 ![Jev Native + DSH Native：第一目标为入口策略与调度，第二目标为过程智能，共享原生决策与结果反馈。](docs/feat-independent-harness/architecture@2x.png)
 
 [SVG 源文件](docs/feat-independent-harness/architecture.svg) · [Jev Native + DSH Native 专项方案](docs/feat-independent-harness/jev-native-dsh-native-plan.html)
 
-首片建议通过 Web/API 适配处理空闲文本请求；专业交接、排队输入及其他 DSH 入口需要分别接入和验收。记忆、路由、长程目标和主动沟通沿同一架构展开，未来本地 9B／27B Lead Agent 保留为部署演进。Pilot 仅作为实验参考，不作为代码依赖。
+首期实现通过 Web/API 适配处理空闲文本请求，生成模型可经 Fidoo LiteLLM 调用；专业交接、排队输入及其他 DSH 入口需要分别接入和验收。记忆、路由、长程目标和主动沟通沿同一架构展开，未来本地 9B／27B Lead Agent 保留为部署演进。Pilot 仅作为实验参考，不作为代码依赖。
 
 DeepSeek Harness（`dsh`）是由 [DeepSeek AI](https://deepseek.com) 开发的开源 agent harness（智能体框架）。
 

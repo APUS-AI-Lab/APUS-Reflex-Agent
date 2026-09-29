@@ -13,6 +13,7 @@
     "src/assistant-stream.ts",
     "src/catalog.ts",
     "src/commands.ts",
+    "src/prompt-router.ts",
     "src/control.ts",
     "src/file-references.ts",
     "src/history.ts",

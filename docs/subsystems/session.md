@@ -776,6 +776,14 @@ Host service backing the generated `ctx.remote.session` namespace.
 
 ```ts cordis-catalog
 /**
+ * Register the sole optional router for idle text prompts before inbox admission.
+ * Providers install the returned disposer with their own plugin effect.
+ * @param router - Host provider selecting a registered generation route.
+ * @returns Disposer cancelling pending decisions, without changing admitted turns.
+ */
+registerPromptRouter(router: SessionPromptRouter): () => void
+
+/**
  * Resolve or resume one ordinary Session for another Host API domain.
  * @param sessionId - Session identity whose Agent owns the operation.
  * @returns the live Agent or the stable Session-domain failure.

@@ -230,7 +230,7 @@ export interface Config {
 }
 ```
 
-来源： [`packages/api/session-controller/src/index.ts:79`](../packages/api/session-controller/src/index.ts)
+来源： [`packages/api/session-controller/src/index.ts:82`](../packages/api/session-controller/src/index.ts)
 
 <a id="deepseek-aidsh-api-settings-controller"></a>
 
@@ -1154,12 +1154,44 @@ export interface Config {
   readonly jevExecutionDomain?: 'local' | 'network'
   /** Execution effort sent to the Jev provider. */
   readonly jevEffort?: 'low' | 'high'
+  /** Opt-in model recommendations for idle text prompts admitted through the Session API. */
+  readonly entryRouting?: false | System3EntryRoutingConfig
+}
+
+/** Explicit controls for entry recommendations; omission leaves entry routing disabled. */
+export interface System3EntryRoutingConfig {
+  /** Named model choices; abstain is reserved for keeping the baseline. */
+  readonly candidates: readonly System3EntryCandidate[]
+  /** Conservative classification of all session data the generation model may receive. */
+  readonly sessionDataClasses: readonly System3DataClass[]
+  /** Minimum provider confidence for a recommendation; not a calibrated success probability. */
+  readonly minConfidence: number
+  /** UTF-8 byte limit on the complete Jev request; larger inputs retain the baseline without truncation. */
+  readonly maxInputBytes: number
+}
+
+/** Deployment-owned model route and its allowed session data classes. */
+export interface System3EntryCandidate {
+  /** Unique lower-kebab-case choice name, excluding abstain and unknown. */
+  readonly id: string
+  /** Task criteria presented to Jev for this candidate. */
+  readonly description: string
+  /** Registered generation provider route. */
+  readonly provider: string
+  /** Exact generation model identifier. */
+  readonly model: string
+  /** Adapter-supported reasoning level for this model. */
+  readonly reasoningEffort?: string
+  /** Actual generation location, including a tunnel's remote destination. */
+  readonly executionDomain: System3ExecutionDomain
+  /** Session data classes this candidate may receive. */
+  readonly dataClasses: readonly System3DataClass[]
 }
 ```
 
-Depends on: [`System3PrivacyMode`](../packages/experimental/system3-policy/src/index.ts)
+Depends on: [`System3DataClass`](../packages/experimental/system3-policy/src/index.ts) · [`System3ExecutionDomain`](../packages/experimental/system3-policy/src/index.ts) · [`System3PrivacyMode`](../packages/experimental/system3-policy/src/index.ts)
 
-来源： [`packages/experimental/system3/src/index.ts:27`](../packages/experimental/system3/src/index.ts)
+来源： [`packages/experimental/system3/src/index.ts:32`](../packages/experimental/system3/src/index.ts)
 
 <a id="deepseek-aidsh-experimental-tool-agent-team"></a>
 

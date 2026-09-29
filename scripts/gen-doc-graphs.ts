@@ -106,14 +106,14 @@ const SERVICE_ROLES: ServiceRole[] = [
     mode: 'seam',
     implementations: ['experimental-apus-dsh-jev-plugin'],
     consumers: ['experimental-system3'],
-    note: 'Resolves registered decision providers and validates typed answers; System3 owns privacy admission and durable shadow receipts.',
+    note: 'Resolves registered decision providers and validates typed answers; System3 owns privacy admission and durable recommendation receipts.',
   },
   {
     key: 'system3',
     pkg: 'experimental-system3',
     title: 'Decision evidence and supervision',
     mode: 'service',
-    note: 'Composes routing, evidence and supervision policies for explicit host calls; shadow decisions preserve the deterministic baseline without changing AgentLoop behavior.',
+    note: 'Composes routing, evidence and supervision policies; opt-in API input routing records Jev recommendations separately from adopted model selections.',
   },
   {
     key: 'hmr',

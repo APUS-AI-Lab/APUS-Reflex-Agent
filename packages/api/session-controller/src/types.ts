@@ -38,6 +38,12 @@ declare module '@deepseek-ai/dsh-session/types' {
      * assembly. Log-only: it never enters derived model history.
      */
     'model/selection': ModelSelection
+    /** Automatic route for one input; baseline remains authoritative after its turn. */
+    'model/automatic-selection': {
+      readonly requestId: SessionRequestId
+      readonly baseline: ModelSelection
+      readonly selection: ModelSelection
+    }
   }
 }
 
@@ -109,6 +115,14 @@ export interface ModelSelectionProjectionState {
   readonly lastUsed: ModelSelection | null
   /** Later user selection not yet consumed by a matching model request. */
   readonly pending: ModelSelection | null
+  /** Last explicitly selected route; retained after request consumption. */
+  readonly explicit: ModelSelection | null
+  /** Baseline restored after an automatically routed turn or process restart. */
+  readonly automaticBaseline: ModelSelection | null
+  /** Automatic route reserved for the current input turn, cleared at turn end. */
+  readonly automatic: ModelSelection | null
+  /** Whether a request header adopted the reserved automatic route in the current turn. */
+  readonly automaticInUse: boolean
 }
 
 /** Client view of the durable model-selection fold. */

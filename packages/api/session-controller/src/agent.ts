@@ -14,7 +14,7 @@ import type { SessionInspection } from '@deepseek-ai/dsh-session-persistence'
 import { SessionQueryError, type SessionObservation } from '@deepseek-ai/dsh-session-query'
 import { RemoteError } from '@deepseek-ai/dsh-typert-protocol'
 import type {} from '@deepseek-ai/dsh-typert-registry'
-import type { ModelSelection } from './types.ts'
+import type { ModelSelection, SessionRequestId } from './types.ts'
 
 /** Cold Session identity absent from persistence. */
 export class ApiSessionNotFound extends Error {}
@@ -67,6 +67,7 @@ export type ApiSessionAgentResult =
 
 type InstalledSelection = ModelSelectionRef & {
   current: AgentModelSelection
+  automatic: AgentModelSelection | undefined
   consume(provider: string, model: string, reasoningEffort: string | undefined): boolean
 }
 
@@ -290,10 +291,14 @@ export class ApiSessionAgentController {
     let picked = projectionState.pending === null
       ? undefined
       : agentModelSelection(projectionState.pending)
+    let automatic: AgentModelSelection | undefined
     const defaultModel = this.ctx.agentDefaultModel
     const selection: InstalledSelection = {
       get current(): AgentModelSelection {
+        if (automatic !== undefined) return automatic
         if (picked !== undefined) return picked
+        const state = agent.ctx.sessionProjections.stateOf(agent.session, 'modelSelection')
+        if (state?.explicit === null && state.automaticBaseline !== null) return agentModelSelection(state.automaticBaseline)
         const loggedHeader = agent.session.requestHeader()
         if (loggedHeader === undefined) return defaultModel.currentSelection()
         const logged = loggedHeader.config
@@ -318,6 +323,8 @@ export class ApiSessionAgentController {
         picked = undefined
         return true
       },
+      get automatic() { return automatic },
+      set automatic(next: AgentModelSelection | undefined) { automatic = next },
       assembled: undefined,
     }
     installModelSelection(agent.ctx, selection)
@@ -331,8 +338,39 @@ export class ApiSessionAgentController {
    * @param selection - validated selection to record and apply.
    */
   selectForNextRequest(agent: Agent, selection: AgentModelSelection): void {
+    this.selectionFor(agent).automatic = undefined
     agent.session.append('model/selection', selection)
     this.selectionFor(agent).current = selection
+  }
+
+  /**
+   * Whether durable history contains a human Session model selection.
+   * @param agent - Session owner.
+   * @returns Whether automatic routing must yield to explicit selection.
+   */
+  hasExplicitSelection(agent: Agent): boolean {
+    const state = this.ctx.sessionProjections.stateOf(agent.session, 'modelSelection')
+    if (state === undefined) throw new Error('required modelSelection projection is not registered')
+    return state.explicit !== null
+  }
+
+  /**
+   * Record a route bound to one admitted input and install its live turn override.
+   * @param agent - Exact live Session owner.
+   * @param selection - Validated automatic generation route.
+   * @param baseline - Route restored after this turn or a process restart.
+   * @param requestId - Input identity linking the decision to admission.
+   * @returns Idempotent restoration that never overwrites a later selection.
+   */
+  installAutomaticSelection(
+    agent: Agent, selection: AgentModelSelection, baseline: AgentModelSelection, requestId: SessionRequestId,
+  ): () => void {
+    const installed = this.selectionFor(agent)
+    agent.session.append('model/automatic-selection', { requestId, selection, baseline })
+    installed.automatic = selection
+    return () => {
+      if (installed.automatic === selection) installed.automatic = undefined
+    }
   }
 
   /**

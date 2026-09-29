@@ -15,6 +15,7 @@ kind: "package-reference"
 - [使用本包](#use-this-package)
 - [Client 引用](#client-references)
 - [会话媒体引用](#session-media-references)
+- [自动提示词路由](#automatic-prompt-routing)
 - [配置](#configuration)
 - [模型体验](#model-experience)
 - [已知限制与延期工作](#known-limitations-and-deferred-work)
@@ -82,6 +83,15 @@ Client 的首次 `follow`、重连首屏与 `loadOlder()` 至少请求 50 条以
 
 -----
 
+<a id="automatic-prompt-routing"></a>
+## 自动提示词路由
+
+Host 插件通过 `ctx.sessionController.registerPromptRouter(router)` 注册一个 `SessionPromptRouter`，并用 `ctx.effect()` 持有 disposer。重复 provider 会报错。`SessionPromptRouteRequest` 携带存活的 Agent、请求标识、确切文本消息及当前 Session 模型 baseline；`route(request, signal)` 返回经校验的生成模型选择，或返回 `undefined` 使用 baseline。Provider 负责推理期限与降级策略；抛错会拒绝准入。
+
+路由仅覆盖空闲、没有排队工作时的文本提示词。图片、文件、活跃轮次，以及历史中有人工 `model/selection` 的 Session 仍采用普通准入。本实现把该历史事件视为固定模型策略；改变它需要未来显式的自动模式操作。此入口不覆盖 Headless、SDK 或 ACP 输入。
+
+提示词准入与人工选模按 Agent 串行。若其他 owner 已持有 maintenance，输入仍按普通队列准入，不调用路由。Maintenance 在等待路由时阻止模型执行；取消或 provider 移除会拒绝尚未准入的输入，即使 provider 忽略取消信号。竞争输入会阻止建议生效。`model/automatic-selection` 在同步 inbox 接受后、执行前记录请求标识、所选路由和恢复 baseline；它不证明发生过生成，实际使用由 `request/header` 记录并激活投影中的自动路由。在该 header 之前，投影的下一路由仍为 baseline；原生中断轮次恢复会清除已采用的自动路由。自动路由维持整个已准入轮次，包括工具续步。移除 provider 不改变已准入工作的路由；轮次结束恢复 baseline，恢复的 Session 也使用 baseline，而非中断前的自动路由。后来人工选型仍拥有优先权。
+
 <a id="configuration"></a>
 ## 配置
 
@@ -96,11 +106,11 @@ Client 的首次 `follow`、重连首屏与 `loadOlder()` 至少请求 50 条以
 <a id="model-experience"></a>
 ## 模型体验
 
-无；任何模型可见效果都由被调用的 Agent 命令负责。
+无，因为此 controller 负责用户消息准入与路由选择，模型可见消息由 Agent 与注册的 router 拥有。
 
 #### KV Cache 影响
 
-无直接影响；模型请求仍由 Agent 和 LLM（大语言模型）包拥有。
+路由保留此前的 Session 消息。Provider 或模型改变可能无法复用上一条路由的缓存；provider 特定缓存行为由 LLM adapter 负责。
 
 ## 已知限制与延期工作
 

@@ -56,6 +56,7 @@ jobs:
           packages/experimental/system3-policy/tests
           packages/experimental/system3-supervisor/tests
           packages/experimental/agui/tests
+          packages/api/session-controller/tests
           --maxWorkers=2
       - name: Replay System3 and AG-UI persona sessions
-        run: pnpm run test:snapshot snapshots/sdk/sdk.snapshot.ts -t 'system3-shadow|agui-persona'
+        run: pnpm run test:snapshot snapshots/sdk/sdk.snapshot.ts -t 'system3-shadow|system3-entry-route|agui-persona'

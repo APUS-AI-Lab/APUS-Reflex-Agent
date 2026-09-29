@@ -877,6 +877,7 @@ def main() -> None:
             "sdk-mcp",
             "sdk-snapshot",
             "sdk-system3-shadow",
+            "sdk-system3-entry-route",
             "sdk-restart",
             "sdk-profile-plugin",
             "sdk-office",
@@ -916,6 +917,7 @@ def main() -> None:
             "sdk-spawn-node",
             "sdk-snapshot",
             "sdk-system3-shadow",
+            "sdk-system3-entry-route",
             "sdk-restart",
             "sdk-office",
             "sdk-authoring",
@@ -933,11 +935,12 @@ def main() -> None:
         "sdk-minimal-in-history",
         "sdk-snapshot",
         "sdk-system3-shadow",
+        "sdk-system3-entry-route",
         "sdk-restart",
         "sdk-authoring",
     }:
         parser.error(
-            "--update-snapshots requires --scenario sdk-minimal, sdk-minimal-in-history, sdk-snapshot, sdk-system3-shadow, sdk-restart, sdk-authoring, or all"
+            "--update-snapshots requires --scenario sdk-minimal, sdk-minimal-in-history, sdk-snapshot, sdk-system3-shadow, sdk-system3-entry-route, sdk-restart, sdk-authoring, or all"
         )
     if args.exe is not None and not args.exe.is_file():
         parser.error(f"runtime executable does not exist: {args.exe}")
@@ -993,6 +996,14 @@ def main() -> None:
             assert args.exe is not None
             smoke_sdk_system3_shadow(
                 model.url, args.exe.resolve(), args.update_snapshots
+            )
+        if args.scenario in {"all", "sdk-system3-entry-route"}:
+            assert args.exe is not None
+            smoke_sdk_system3_shadow(
+                model.url,
+                args.exe.resolve(),
+                args.update_snapshots,
+                entry_route=True,
             )
         if args.scenario in {"all", "sdk-restart"}:
             assert args.exe is not None
@@ -1826,29 +1837,34 @@ def smoke_sdk_profile_plugin(base_url: str) -> None:
 
 
 def smoke_sdk_system3_shadow(
-    base_url: str, executable: Path, update_snapshots: bool
+    base_url: str,
+    executable: Path,
+    update_snapshots: bool,
+    *,
+    entry_route: bool = False,
 ) -> None:
-    """Project a real opt-in System3 receipt through the SDK and durable log."""
+    """Project opt-in System3 receipts through the SDK and durable log."""
     from deepseek_harness import DeepSeekHarness
 
-    session_id = "system3-shadow-smoke"
+    scenario = "system3-entry-route" if entry_route else "system3-shadow"
+    session_id = f"{scenario}-smoke"
     producer = (
         Path(__file__).resolve().parent.parent
-        / "snapshots/sdk/system3-shadow/decision-producer.mjs"
+        / f"snapshots/sdk/{scenario}/decision-producer.mjs"
     )
-    with tempfile.TemporaryDirectory(prefix="dsh-sdk-system3-shadow-") as temporary:
+    with tempfile.TemporaryDirectory(prefix=f"dsh-sdk-{scenario}-") as temporary:
         root = Path(temporary).resolve()
         sessions = root / "home/sessions"
         patch = write_profile_patch(
             root,
-            "system3-shadow.patch.yml",
+            f"{scenario}.patch.yml",
             sessions,
             [
                 {"id": "skill-filesystem", "config": {"includeDefaultRoots": False}},
                 {
                     "insert": [
                         {
-                            "id": "snapshot-system3-shadow-producer",
+                            "id": f"snapshot-{scenario}-producer",
                             "name": producer.as_uri(),
                         }
                     ]
@@ -1895,6 +1911,36 @@ def smoke_sdk_system3_shadow(
         ]
         if len(persisted) != 1 or persisted[0]["data"] != receipt:
             raise AssertionError("SDK receipt differs from persisted System3 receipt")
+        if entry_route:
+            for event_type in ("system3/entry-decision", "model/automatic-selection"):
+                projected = [
+                    event for event in result.events if event.get("type") == event_type
+                ]
+                stored = [
+                    event
+                    for event in logs[session_id]
+                    if event.get("type") == event_type
+                ]
+                if len(projected) != 1 or len(stored) != 1:
+                    raise AssertionError(f"Expected one {event_type} in SDK and log")
+                if (
+                    "surfaceOp" in projected[0]
+                    or projected[0]["data"] != stored[0]["data"]
+                ):
+                    raise AssertionError(
+                        f"SDK changed the non-surface {event_type} payload"
+                    )
+                if projected[0]["data"]["requestId"] != "snapshot-entry-request":
+                    raise AssertionError(
+                        "Entry recommendation and adoption lost their request ID"
+                    )
+                if (
+                    event_type == "system3/entry-decision"
+                    and projected[0]["data"]["outcome"] != "selected"
+                ):
+                    raise AssertionError(
+                        "Jev fixture did not select the generation model"
+                    )
         replacements = [(str(root), "{{cwd}}"), (session_id, "{{parent}}")]
         result_value = {
             "session_id": result.session_id,
@@ -1909,7 +1955,14 @@ def smoke_sdk_system3_shadow(
         assert isinstance(normalized_log, list)
         log_content = render_jsonl(project_session_snapshot(normalized_log))
         requests = MockModelHandler.requests[request_start:]
-        if len(requests) != 1 or "system3/decision" in json.dumps(requests):
+        if len(requests) != 1 or any(
+            event_type in json.dumps(requests)
+            for event_type in (
+                "system3/decision",
+                "system3/entry-decision",
+                "model/automatic-selection",
+            )
+        ):
             raise AssertionError("System3 added model-visible receipt data")
         files = {
             "result.json": json.dumps(
@@ -1927,7 +1980,7 @@ def smoke_sdk_system3_shadow(
             files,
             update_snapshots,
             Path(__file__).resolve().parent
-            / "snapshots/python-sdk-single-exe/system3-shadow",
+            / f"snapshots/python-sdk-single-exe/{scenario}",
             (
                 "result.json",
                 "model-visible.json",

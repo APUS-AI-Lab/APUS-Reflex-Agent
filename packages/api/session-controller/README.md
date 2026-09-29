@@ -15,6 +15,7 @@ English | [中文](README.zh.md)
 - [Use this package](#use-this-package)
 - [Client references](#client-references)
 - [Session media references](#session-media-references)
+- [Automatic prompt routing](#automatic-prompt-routing)
 - [Configuration](#configuration)
 - [Model Experience](#model-experience)
 - [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
@@ -82,6 +83,15 @@ References keep local Session data, scoped Contexts, and history streams alive, 
 
 -----
 
+<a id="automatic-prompt-routing"></a>
+## Automatic prompt routing
+
+Host plugins register one `SessionPromptRouter` through `ctx.sessionController.registerPromptRouter(router)` and retain its disposer with `ctx.effect()`. Duplicate providers fail. `SessionPromptRouteRequest` carries the live Agent, request identity, exact text message, and current Session model baseline; `route(request, signal)` returns a validated generation model selection or `undefined` to use that baseline. The provider owns inference deadlines and fallback policy; errors reject admission.
+
+Routing covers idle text prompts without queued work. Images, files, active turns, and Sessions with any historical human `model/selection` retain ordinary admission. That historical event is a fixed-selection policy for this implementation; changing it requires an explicit future automatic-mode operation. This endpoint does not cover Headless, SDK, or ACP input.
+
+Prompt admission and manual model selection serialize per Agent. If another owner already holds maintenance, input keeps ordinary queue admission without routing. Maintenance prevents model execution while routing awaits; cancellation or provider removal rejects pending admission even if the provider ignores cancellation. Competing input prevents applying the recommendation. `model/automatic-selection` records the request identity, selected route, and restoration baseline after synchronous inbox acceptance, before execution. It is not proof of generation; `request/header` records actual use and activates the projected automatic route. Before that header, the projected next route remains the baseline; native interrupted-turn recovery clears an adopted automatic route. Automatic routes remain through the admitted turn, including tool continuations. Provider removal does not reroute admitted work; turn completion restores the baseline, and restored Sessions use that baseline rather than an interrupted automatic route. Later manual selection remains authoritative.
+
 <a id="configuration"></a>
 ## Configuration
 
@@ -96,11 +106,11 @@ The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-a
 <a id="model-experience"></a>
 ## Model Experience
 
-None, as invoked Agent commands own any model-visible effect.
+None, as this controller admits user messages and selects routes while the Agent and registered router own model-visible messages.
 
 #### KV Cache effect
 
-No direct effect; model requests remain owned by the Agent and LLM packages.
+Routing leaves prior Session messages intact. A provider or model change can prevent reuse of the previous route's cache; the LLM adapter owns provider-specific caching behavior.
 
 ## Known Limitations and Deferred Work
 

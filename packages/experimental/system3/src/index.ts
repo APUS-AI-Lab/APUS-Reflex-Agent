@@ -3,11 +3,16 @@ import { Context, Service } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import type {} from '@deepseek-ai/dsh-agent'
 import type {} from '@deepseek-ai/dsh-session-projection'
+import type {} from '@deepseek-ai/dsh-api-session-controller'
+import { createSystem3EntryRouter, type System3EntryRoutingConfig } from './entry-routing.ts'
 import { system3DecisionProjection } from './decision-projection.ts'
 import type { Session } from '@deepseek-ai/dsh-session'
 import { recordSystem3Decision, type System3DecisionRequest, type System3DecisionReceipt, type System3JevOptions } from './decisions.ts'
 
 export type { System3DecisionId, System3DecisionRequest, System3DecisionReceipt, System3DecisionOutcome } from './decisions.ts'
+export type { System3JevOptions } from './decisions.ts'
+export { createSystem3EntryRouter } from './entry-routing.ts'
+export type { System3EntryCandidate, System3EntryRoutingConfig, System3EntryDecisionReceipt, System3EntryOutcome } from './entry-routing.ts'
 import { selectSystem3Evidence, type System3EvidenceRequest, type System3EvidenceSelection } from '@deepseek-ai/dsh-experimental-system3-evidence'
 import { selectSystem3Route, type System3PrivacyMode, type System3RouteCandidate, type System3RouteSelection, type System3PrivacyPolicy } from '@deepseek-ai/dsh-experimental-system3-policy'
 import { compareSystem3Advice, superviseSystem3Advice, sumSystem3CostRecords, validateSystem3CostRecord, type System3AdviceAction, type System3CostRecord, type System3SupervisorRequest, type System3SupervisorResult, type System3ShadowComparison } from '@deepseek-ai/dsh-experimental-system3-supervisor'
@@ -41,6 +46,8 @@ export interface Config {
   readonly jevExecutionDomain?: 'local' | 'network'
   /** Execution effort sent to the Jev provider. */
   readonly jevEffort?: 'low' | 'high'
+  /** Opt-in model recommendations for idle text prompts admitted through the Session API. */
+  readonly entryRouting?: false | System3EntryRoutingConfig
 }
 
 /** Small operational counters, intentionally free of user data. */
@@ -138,6 +145,16 @@ export default class System3 extends Service implements System3Service {
     jevRouteId: z.string().default('jev'),
     jevExecutionDomain: z.union([z.const('local'), z.const('network')]).default('network'),
     jevEffort: z.union([z.const('low'), z.const('high')]).default('low'),
+    entryRouting: z.union([z.const(false), z.object({
+      candidates: z.array(z.object({
+        id: z.string().required(), description: z.string().required(), provider: z.string().required(), model: z.string().required(),
+        reasoningEffort: z.string(), executionDomain: z.union([z.const('local'), z.const('network')]).required(),
+        dataClasses: z.array(z.union([z.const('public'), z.const('workspace'), z.const('sensitive'), z.const('secret')])).required(),
+      })).required(),
+      sessionDataClasses: z.array(z.union([z.const('public'), z.const('workspace'), z.const('sensitive'), z.const('secret')])).required(),
+      minConfidence: z.number().min(0).max(1).required(),
+      maxInputBytes: z.number().step(1).min(1).required(),
+    })]).default(false),
   })
 
   readonly privacyPolicy: System3PrivacyPolicy
@@ -155,6 +172,12 @@ export default class System3 extends Service implements System3Service {
       ...(config.cloudApproval === undefined ? {} : { cloudApproval: config.cloudApproval }),
     }
     ctx.inject(['sessionProjections'], ctx => ctx.sessionProjections.register(system3DecisionProjection))
+    if (config.entryRouting !== undefined && config.entryRouting !== false) {
+      const router = createSystem3EntryRouter(ctx, config.entryRouting, this.privacyPolicy, this.jevOptions)
+      ctx.inject(['sessionController', 'llm'], (ctx) => {
+        ctx.effect(() => ctx.sessionController.registerPromptRouter(router))
+      })
+    }
     if (config.observeAgentLoop === true) this.observeAgentLoop()
   }
 

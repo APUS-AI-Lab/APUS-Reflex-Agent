@@ -8,12 +8,13 @@ description: "运行独立 Harness，区分已实现与规划中的 Jev 集成�
 
 ## 概要
 
-本项目将 Jev 作为 DeepSeek Harness 的原生决策模型发展：入口策略与调度是第一目标，执行过程更智能、更顺畅是第二目标。Jev 评估有界选择，DSH 拥有准入与执行，System2 承担开放推理与生成。仓库提供独立、通用的 Agent 运行时。当前实现提供显式的类型化决策与可回放影子记录；尚未自动路由每个请求，也不能验证任意任务是否完成。
+本项目将 Jev 作为 DeepSeek Harness 的原生决策模型发展：入口策略与调度是第一目标，执行过程更智能、更顺畅是第二目标。Jev 评估有界选择，DSH 拥有准入与执行，System2 承担开放推理与生成。仓库提供独立、通用的 Agent 运行时。当前实现提供显式类型化决策、可回放记录，以及可选的 Web/API 空闲文本入口选模。它尚未覆盖所有 DSH 入口，也不能验证任意任务是否完成。
 
 ## 目录
 
 - [独立运行](#run-independently)
 - [挂载 Jev](#mount-jev)
+- [Fidoo 与入口选模](#fidoo-entry)
 - [集成路线](#integration-roadmap)
 - [验证独立性](#verify-independence)
 - [开发备注](#dev-note)
@@ -34,10 +35,31 @@ pnpm dsh --patch docs/feat-independent-harness/system3-jev.patch.yml --profile h
 
 该命令检查组合配置，不发起 Jev 决策。消费者以分类后的事实及独立检查调用 `ctx.system3.shadowDecision`，再从当前或恢复后的 Session 读取 `lastDecision`。参见 [System3 包](../../packages/experimental/system3/README.zh.md)与 [Jev provider](../../packages/experimental/apus-dsh-jev-plugin/README.zh.md)。当前记录保存输入、模型答案、确定性基线、provider 报告的用量，以及隐私拒绝或 provider 失败。仅挂载服务不会安装自动监督逻辑。
 
+<a id="fidoo-entry"></a>
+## Fidoo 与入口选模
+
+[Fidoo overlay](system3-fidoo.patch.yml)使用现有 `llm-pi-ai` adapter，通过 OpenAI 兼容的 `https://proxy.fidoo.ai/v1` 调用模型。凭据读取环境变量 `SYSTEM3_LITELLM_API_KEY`，声明 `deepseek-v4-flash` 与 `deepseek-v4-pro`。两者采用保守的 131,072-token 上下文配置与 8,192-token 输出上限；这是部署配置，不代表网关最大能力。此生成配置也可单独使用。
+
+```sh
+pnpm dsh --patch docs/feat-independent-harness/system3-fidoo.patch.yml --profile headless "Reply with exactly READY. Do not use tools."
+```
+
+启用入口决策前，配置 `JEV_ENDPOINT`、`JEV_MODEL`、`JEV_API_KEY` 和 `SYSTEM3_LITELLM_API_KEY`，并用 JSON 数组形式的 `SYSTEM3_SESSION_DATA_CLASSES` 显式声明整个会话的数据分类。仅公开数据会话才能使用 `["public"]`。分类涵盖执行模型可能收到的历史；这是部署声明，不是自动敏感信息检测。[入口 overlay](system3-entry.patch.yml)据此批准 Jev 与指定生成候选处理这些分类。通过 loopback 隧道访问的远端 GPU 仍是网络执行。
+
+```sh
+pnpm dsh --patch docs/feat-independent-harness/system3-jev.patch.yml --patch docs/feat-independent-harness/system3-fidoo.patch.yml --patch docs/feat-independent-harness/system3-entry.patch.yml --profile web --no-open
+```
+
+新会话中，空闲、无待处理输入且没有人工选模记录的文本请求进入 Jev 有界判断。选中的模型用于该请求触发的整个回合，包含工具续步。Provider 故障、输入超限、弃权或置信不足时沿用 baseline；候选配置错误拒绝准入。取消阻止迟到的请求入队。人工选择模型后，此会话停用自动入口选模；首期可新建会话重新使用自动选择。
+
+`system3/entry-decision` 保存完整决策请求与建议，`model/automatic-selection` 保存已准入的回合选型，`request/header` 标识实际调用模型。记录包含用户输入，适用 Session 日志的存储与访问策略。自动选择不覆盖用户保存的默认模型。附件、忙碌输入、headless、SDK、ACP 与可选 AG-UI 桥继续使用原准入路径。
+
+实测部署的 `APUS-OpenJev-v1-9B-5949` 是使用原生决策协议的 Jev-like 模型，其分数不是校准后的成功率。示例中的 0.8 阈值和 16 KiB 决策输入限制均可配置，只是起始值。入口判断仅收到当前输入与允许候选；依赖历史的指代应弃权。详见[实施范围](entry-routing-implementation.html)与[验收记录](entry-routing-verification.html)。
+
 <a id="integration-roadmap"></a>
 ## 集成路线
 
-[Jev Native + DSH Native 专项方案](jev-native-dsh-native-plan.html)定义后续切片。下列自动行为均为规划，不能当作已实现功能。
+[Jev Native + DSH Native 专项方案](jev-native-dsh-native-plan.html)定义整体架构。M1a 提供首个入口选模切片，更广泛的调度与过程能力仍为规划。
 
 | 阶段 | 交付物 | 验收证据 |
 |---|---|---|
@@ -52,7 +74,7 @@ Choice 概率不等于校准后的成功率；模型提出 `candidate_done` 不�
 <a id="verify-independence"></a>
 ## 验证独立性
 
-聚焦单测与 HTTP 集成测试位于 `packages/experimental/{agui,apus-dsh-jev-plugin,system3,system3-policy,system3-evidence,system3-supervisor}`。无密钥 `system3-shadow` SDK 场景回放持久化决策记录。[交接文档](../../tasks/feat-independent-harness/handoff.md)记录实际执行的命令与结果；仅检查源码不能证明部署就绪。
+聚焦单测与 HTTP 集成测试位于 `packages/experimental/{agui,apus-dsh-jev-plugin,system3,system3-policy,system3-evidence,system3-supervisor}`。无密钥 `system3-shadow` 与 `system3-entry-route` SDK 场景回放持久决策记录；SDK 事件回放不代表 SDK prompt 已接入 Web/API router。[交接文档](../../tasks/feat-independent-harness/handoff.md)记录实际执行的命令与结果；仅检查源码不能证明部署就绪。
 
 <a id="dev-note"></a>
 ## 开发备注
