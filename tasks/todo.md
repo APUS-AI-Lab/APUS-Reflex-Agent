@@ -9,9 +9,9 @@
 - [x] 编写独立 Jev 配置入口、集成路线和验收边界。
 - [x] 完整构建、相关单测、Session snapshot 与文档检查（42 项 doc-sync 全通过）。
 - [x] 隔离环境下验证 profile 配置、Web 启动及认证 HTTP 200。
-- [ ] Ruff 双检查、提交与推送，回读新 main。
+- [x] Ruff 双检查、提交与推送，回读新 main（a71506a）。
 - [x] 写入 tasks/feat-independent-harness/handoff.md。
-- [ ] 迁移并核对正式本地目录。
+- [x] 迁移并核对正式本地目录 /Users/gumpm5/Documents/Code/xDAN-System3-Harness，修复并保留隔离 worktree。
 
 ## Review
 

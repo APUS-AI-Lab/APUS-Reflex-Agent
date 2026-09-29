@@ -4,7 +4,7 @@
 
 - 新私有仓库：cryptoSUN2049/xDAN-System3-Harness；独立 Git 历史副本，无共享 object alternates。
 - 产品目标：将 Jev 理念与模型能力嵌入 DSH，构建通用决策、执行与验证闭环。
-- 独立底座与本地验收完成；首次推送和正式目录迁移待回读确认。
+- 独立底座与本地验收完成；首次提交 a71506a 已推送并回读确认，正式目录迁移完成。
 - 先读 docs/feat-independent-harness/README.zh.md，再读 design.html。
 
 ## 2. 本轮交付物
@@ -150,11 +150,11 @@
 ## 6. 分支与部署状态
 
 - 工作分支：feat-independent-harness；目标默认分支：main。
-- 目标本地目录：/Users/gumpm5/Documents/Code/xDAN-System3-Harness。
+- 正式本地目录：/Users/gumpm5/Documents/Code/xDAN-System3-Harness。
 - 隔离 worktree：.Codex/worktrees/feat-independent-harness，交付时保留。
 - origin 只指向新私有仓库；upstream 为官方 DSH，push URL 为 DISABLED；已移除 donor remote。
 - 新项目未部署。独立 CI 使用 hosted runner；继承 workflow 的 50 个 job 仅在 DSH_UPSTREAM_AUTOMATION=true 时执行。
-- 首次 push 与 CI 结果待后续回读记录；没有把跳过的继承任务视为验证通过。
+- 首次 push 已完成，远端 main 回读为 a71506a；首次 HTTP/2 上传失败后用 HTTP/1.1 成功重试。Actions 已启用，但回读时尚无 workflow run，远端 CI 未验证；没有把跳过的继承任务视为验证通过。
 
 ## 7. 冷启动 checklist
 
