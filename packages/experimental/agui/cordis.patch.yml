@@ -4,7 +4,7 @@
 
 - insert:
     - id: agui
-      name: '@deepseek-ai/dsh-experimental-agui'
+      name: './lib/index.js'
       config:
         tokenEnv: DSH_AGUI_TOKEN
         basePath: /agui

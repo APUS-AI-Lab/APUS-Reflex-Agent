@@ -24,6 +24,8 @@ English | [中文](README.zh.md)
 <a id="use-this-package"></a>
 ## Use this package
 
+Use this overlay from a built source checkout with development dependencies installed; the plugin path resolves beside the overlay. Default `dsh` installations do not include AG-UI; this package does not supply an installable profile bundle.
+
 Mount the plugin on a profile that provides `webServer`, `agents` and `sessions`; the Web profile does. Export the bearer token in the environment variable the row names, then apply the shipped overlay:
 
 ```sh
