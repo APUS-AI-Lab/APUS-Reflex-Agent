@@ -16,7 +16,7 @@ describe('persona capabilities', () => {
     expect(text).not.toContain('查找和阅读邮件')
     expect(text).toContain('Not connected yet')
     expect(text).toContain('邮件 / mail: 还没连接')
-    expect(text).toContain('日历 / calendar: 还没连接')
+    expect(text).toContain('日历 / calendar: 对话里暂时还不能')
     expect(text).toContain('终端 / terminal: 尚未开启')
   })
 
