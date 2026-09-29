@@ -6,7 +6,7 @@
 - 产品顺序：第一目标是 Jev 入口策略与调度，第二目标是执行环节更智能、更顺畅；总体为 Jev Native + DSH Native。
 - 独立底座与本地验收完成；初始化提交已推送并回读确认，正式目录迁移完成。
 - M1a 首片已实现：显式启用的 Web/API 空闲文本选模，真实 Jev 9B → Fidoo Flash / Pro 已验证；其他入口及过程智能仍待后续。
-- 最新入口：docs/feat-independent-harness/README.zh.md 与 entry-routing-verification.html；总体方案仍为 jev-native-dsh-native-plan.html。
+- 最新入口：docs/feat-independent-harness/README.zh.md；第 12 节记录 Web UI 选型及默认产品隔离修复，总体方案仍为 jev-native-dsh-native-plan.html。
 
 ## 2. 本轮交付物
 
@@ -142,7 +142,7 @@
 
 ## 5. 下一里程碑任务清单
 
-- [ ] M1a：共享入口决策服务与 Web/API 空闲文本适配，两个兼容模型，实际路由采用、请求准入、取消、过期和每回合有效期。
+- [x] M1a 首片：共享入口决策服务与 Web/API 空闲文本适配，两个兼容模型，实际路由采用、请求准入、取消、过期和每回合有效期；详见第 11 节。
 - [ ] M1b：专业委派与规划／澄清，附件／排队批次关联，headless／SDK／ACP 分别适配与验收。
 - [ ] M2：同一原生机制上的记忆、能力、恢复、升级、目标与沟通；完成证据相关缺口在自动完成判断前补齐。
 - [ ] M3：通过实测的本地 9B/27B Lead 与跨会话任务恢复、主动跟进。
@@ -343,3 +343,43 @@
 - [ ] 设计明确的自动／人工选型切换体验；首期人工选型后新建会话才能恢复自动。
 - [ ] 后续分别接附件／排队批次、SDK／ACP／headless、专业委派；再推进记忆、恢复、目标与沟通。
 - 冷启动先读本节与 entry-routing-verification.html，进入本 worktree 核对 git 状态，再按独立集成指南启动；不要运行来源项目的 App overlay。
+
+## 12. Web UI 选型与默认产品隔离修复
+
+- 用户补充希望配套好用的 DSH Web UI。调研候选为 zhu1090093659/dsh-web 与 MichengAI/dsh-codex-ui，报告与原生接入设计在 web-ui-selection.html，独立 README 双语已链接。未安装第三方插件，未新增 UI 运行时代码。
+- 建议保留原生 Web，会话只读决策卡为下一切片，自动／固定模式需要后续 Host 状态 API。第三方看板的 selectModel 会触发人工固定，Team 与 Goal 续轮不在 M1a 输入入口覆盖内。看板 succeeded 不等于独立验收。
+- 版本证据：本仓库 CLI 0.1.7-rc.1；dsh-web v0.4.4 要求 ≥0.2.0-rc.1，dev 要求 ≥0.2.0-rc.2；Codex UI 当前 manifest 显式列出 0.1.7-rc.1，但尚未本地联调。
+- 独立 review 修正了两处展示设计：header 在模型流开始前写入；输入关联经 user/message.source.rpcId 与 turn/step。缺档显示未知／等待确认，不自动判为未采用。
+- CLI 的 experimental-agui 移至 devDependencies，overlay 改为相对构建入口，默认生产隔离检查恢复通过。profile resolver 不暴露 devDependencies，单纯移动 manifest 会使裸包名 overlay 失效；相对入口沿用现有 inspector 机制，不放宽 resolver 或检查规则。README 明确已构建源码检出的支持范围。
+
+### 本轮文件（总行数）
+
+| 路径 | 行数 | 说明 |
+|---|---:|---|
+| `apps/cli/package.json` | 159 | 移除默认AGUI生产依赖 |
+| `pnpm-lock.yaml` | 29255 | 同步开发依赖 |
+| `packages/experimental/agui/cordis.patch.yml` | 12 | 按overlay相对位置加载构建入口 |
+| `packages/experimental/agui/README.md` | 123 | 源码组合支持范围 |
+| `packages/experimental/agui/README.zh.md` | 123 | 中文支持范围 |
+| `packages/experimental/agui/README.i18n.yaml` | 6 | 配对记录 |
+| `docs/feat-independent-harness/web-ui-selection.html` | 68 | 中文UI选型及接入设计 |
+| `docs/feat-independent-harness/README.md` | 84 | 报告入口 |
+| `docs/feat-independent-harness/README.zh.md` | 84 | 中文报告入口 |
+| `docs/feat-independent-harness/README.i18n.yaml` | 6 | 配对记录 |
+| `tasks/feat-independent-harness/notes.md` | 13 | 隔离修复与smoke记录 |
+| `tasks/lessons.md` | 46 | 展示语义经验 |
+| `tasks/todo.md` | 81 | 计划与验收 |
+| `tasks/feat-independent-harness/handoff.md` | 385 | 冷启动与剩余任务 |
+
+### 验证、分支与下一步
+
+- 完整 build、102 项相关测试、默认产品隔离、205 个 Cordis 配置、built AG-UI persona SDK 回放通过；派生图重新生成无差异。
+- 真实 built Web + AG-UI overlay：匿名 /agui/threads 返回 401，测试 Bearer 返回 200 和空 threads；没有调用模型，临时目录与自有进程已清理。故障与修复过程见本目录 notes.md。
+- 中文报告离线浏览器检查：1280px 与 390px 均无横向溢出，零外部资源；16 个链接，图文已人工检查。报告为设计，不是 UI 功能验收。
+- 最终文档快检 20/20、doc-sync 42/42、lint、依赖策略、包元数据、Ruff 双检查均通过；本轮以 feat-independent-harness 工作分支交付，main 不动，没有常驻部署。推送使用正常类型检查 hook，发布结果以远端 ref 回读为准。
+- 远端 CI 新核实：main 的 Independent harness run 36562864544 因 GitHub Actions budget 未开始执行；feature 无 run。不能声称远端 CI 通过，也不应为此修改测试逻辑。
+- [ ] 原生 System3 只读决策卡与回放展示。
+- [ ] 明确的自动／固定模式 Host 状态与 UI 操作。
+- [ ] 固定模型基线对照的路由质量、延迟、费用与返工评测。
+- [ ] 选定社区插件后在隔离 profile 实测版本、工具审批、恢复与 Jev 路由；不为界面直接升级整个 Harness。
+- 冷启动先读本节、web-ui-selection.html、entry-routing-verification.html，再检查工作分支状态；远端 CI 需要账户 Actions budget 恢复后才能补证。

@@ -43,3 +43,4 @@ System3 以 Jev Native + DSH Native 为核心：保留 Jev 的原生有界决策
 - Jev 入口弃权的 baseline 必须来自当前 Session 的实际选择，不能读取可被其他会话修改的全局默认。
 - DSH 的 Agent.status 为 idle 不代表没有 maintenance；自动路由取得维护所有权失败时，保留原生输入排队行为。
 - 自动选择的持久记录不等于实际模型调用；恢复与客户端展示必须同时考虑 request/header 和原生中断回合收尾。
+- request/header 在模型流开始前写入，只能证明请求配置；执行结果须结合输出、错误与取消。UI 关联经 user/message.source.rpcId 和 turn/step，不能假定 header 自带 API requestId，不能把分页缺档判成未采用。

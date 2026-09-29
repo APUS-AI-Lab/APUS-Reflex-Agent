@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>System3 Web UI · 选型与原生接入评估</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1220;--card:#142033;--line:#30435d;--text:#e7eef8;--muted:#aebdd2;--accent:#7dd3fc;--green:#86efac;--amber:#fde68a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.8 system-ui,-apple-system,"PingFang SC",sans-serif}main{max-width:1120px;margin:auto;padding:48px 24px 72px}a{color:var(--accent);text-underline-offset:4px}a:focus-visible,summary:focus-visible{outline:3px solid var(--amber);outline-offset:4px}h1{font-size:clamp(28px,5vw,44px);line-height:1.3;margin:12px 0 20px}h2{font-size:24px;margin:0 0 14px}p{margin:10px 0}section{margin-top:30px}.eyebrow,.muted{color:var(--muted)}.eyebrow{font-size:13px;letter-spacing:.08em}.lead{font-size:20px}.card{padding:24px;border:1px solid var(--line);border-radius:16px;background:var(--card)}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.tag{color:var(--green);font-size:13px}.notice{border-left:4px solid var(--amber);padding:12px 18px;background:#2c2930}.flow{display:flex;align-items:stretch;gap:12px;margin:20px 0}.flow>div{flex:1;min-width:0;padding:16px;border:1px solid var(--line);border-radius:12px}.flow>span{align-self:center;color:var(--accent)}.flow strong{display:block;color:var(--accent)}.flow small{color:var(--muted)}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;text-align:left}th,td{padding:14px 12px;vertical-align:top;border-bottom:1px solid var(--line)}th{color:var(--accent)}code{color:#c4b5fd;font-size:.92em;overflow-wrap:anywhere}li{margin:8px 0}summary{cursor:pointer;color:var(--accent);font-weight:650}details>div{padding-top:12px}.source,footer{font-size:14px;color:var(--muted)}footer{margin-top:36px}p,li,td,a{overflow-wrap:anywhere}@media(max-width:760px){main{padding:28px 16px 48px}.grid{grid-template-columns:1fr}.card{padding:18px}.flow{flex-direction:column}.flow>span{transform:rotate(90deg)}th,td{padding:10px 8px;font-size:14px}}
+</style>
+</head>
+<body><main>
+<header>
+<div class="eyebrow">JEV NATIVE + DSH NATIVE · 2026-09-30 调研记录</div>
+<h1>把智能决策呈现在原生工作台</h1>
+<p class="lead">建议沿用 DSH Web，以小型原生 UI 插件展示 System3 决策，再按需引入社区界面。最像用户描述的候选是 <a href="https://github.com/zhu1090093659/dsh-web">dsh-web</a>；目前尚未确认就是用户记得的项目。</p>
+<p class="muted">本页是选型与接入设计，第三方插件尚未安装或联调。候选能力来自项目说明与源码；声明兼容不等于已通过本项目验收。</p>
+</header>
+<section class="grid" aria-label="候选比较">
+<article class="card"><div class="tag">首选底座</div><h2>DSH 原生 Web</h2><p>本仓库已经提供聊天、工具审批、执行轨迹、工作区、终端、子代理和 Goal 界面。原生会话与入口路由能够直接复用。</p><p>主要缺口是 Jev 决策展示与自动模式操作，无需重建聊天与会话系统。</p><p class="source"><a href="../../packages/bundle/web-app/README.zh.md">本仓库 Web 说明</a> · <a href="https://www.deepseek.com/harness/en/">官方产品介绍</a></p></article>
+<article class="card"><div class="tag">综合功能候选</div><h2>dsh-web</h2><p>提供任务看板、Git 图谱、远程访问、SSH 和用量扩展，支持按需组合。</p><p>核查的 v0.4.4 发布版要求 DSH ≥0.2.0-rc.1，dev 分支要求 ≥0.2.0-rc.2；本仓库 CLI 为 0.1.7-rc.1，当前不能直接承诺兼容。</p><p class="source"><a href="https://github.com/zhu1090093659/dsh-web">项目与截图</a> · <a href="https://github.com/zhu1090093659/dsh-web/blob/v0.4.4/packages/dsh-web-all/package.json">发布版要求</a></p></article>
+<article class="card"><div class="tag">轻量界面候选</div><h2>DSH Codex UI</h2><p>侧重工作区会话树、搜索、会话管理与轮次导航，提供 Codex 风格布局。</p><p>当前 package manifest 明确列出 0.1.7-rc.1 支持，适合作为隔离试装候选；我们的路由扩展仍需独立回归。</p><p class="source"><a href="https://github.com/MichengAI/dsh-codex-ui">项目与截图</a> · <a href="https://github.com/MichengAI/dsh-codex-ui/blob/main/package.json">兼容声明</a></p></article>
+</section>
+<section class="card">
+<h2>界面负责呈现，DSH 负责执行</h2>
+<div class="flow" aria-label="原生接入流程">
+<div><strong>工作台输入</strong><small>用户问题、自动或固定意图</small></div><span aria-hidden="true">→</span>
+<div><strong>DSH 原生准入</strong><small>会话、取消、队列与权限</small></div><span aria-hidden="true">→</span>
+<div><strong>Jev 有界判断</strong><small>合法候选、选择或弃权</small></div><span aria-hidden="true">→</span>
+<div><strong>原生模型执行</strong><small>System2 经 Fidoo 生成</small></div>
+</div>
+<p>会话日志向工作台返回三类事实：<code>system3/entry-decision</code> 是建议，<code>model/automatic-selection</code> 是采用记录，<code>request/header</code> 是准备调用的模型配置。header 在模型流开始前记录，执行结果还需结合模型输出、错误或取消状态，不能把“Jev 选了 Pro”直接显示成“Pro 已执行”。</p>
+<p>关联需从决策 requestId，经 <code>user/message.source.rpcId</code> 定位输入，再按 turn/step 找到对应 header；header 本身没有 API requestId。缺失的记录需要等待补档或显示未知。</p>
+<p>目前自动入口仅覆盖空闲、无待处理输入、无人工固定选型的 Web/API 文本请求。路由期间的取消与失败由宿主处理。UI 读取持久事实，刷新、重连和回放不得再次调用 Jev。</p>
+<p class="source"><a href="entry-routing-verification.html">当前入口验收</a> · <a href="../../packages/api/session-controller/src/prompt-router.ts">原生准入实现</a></p>
+</section>
+<section class="card">
+<h2>任务看板不等于 System3 调度</h2>
+<div class="table-wrap"><table><thead><tr><th>核查路径</th><th>对 Jev 的影响</th><th>接入要求</th></tr></thead><tbody>
+<tr><td>普通看板任务调用 <code>session/prompt</code></td><td>源码路径可到达现有入口；仍需满足空闲、文本、无固定选择等条件。</td><td>实测建议、采用、请求配置及模型响应一致。</td></tr>
+<tr><td>任务指定模型，先调用 <code>session/selectModel</code></td><td>被视为人工固定选择，自动入口跳过 Jev。</td><td>保留用户固定意图，另设明确的自动策略。</td></tr>
+<tr><td>Team 成员、Goal 自动续轮</td><td>不经过同一文本准入路径，首片没有覆盖。</td><td>分别设计适配与回放，不能宣称安装即覆盖。</td></tr>
+<tr><td>看板标记 succeeded</td><td>包含回合结果与 Goal 状态判断，但不是独立任务验收。</td><td>区分回合完成、目标暂停、结果未知和验收通过。</td></tr>
+</tbody></table></div>
+<p class="notice">核查的 dev 实现会在 Goal 暂停、缺失或投影读取失败时回退到回合结果；因此卡片完成状态不能直接成为我们的长程 Goal 完成证据。</p>
+<p class="source">源码依据：<a href="https://github.com/zhu1090093659/dsh-web/blob/dev/packages/dsh-task-board/src/host-runner.ts">任务准入与结果判定</a>、<a href="https://github.com/zhu1090093659/dsh-web/blob/dev/packages/dsh-task-board/src/host-service.ts">Team 调用</a>。此处为源码审计，非跨版本运行验证。</p>
+</section>
+<section class="card">
+<h2>建议的交付顺序</h2>
+<ol>
+<li><strong>先做可读的决策卡。</strong>在原生会话显示建议模型、是否采用、请求模型、执行状态、弃权或失败状态及耗时。展开查看候选与分数；分数不得标成成功率。</li>
+<li><strong>补自动／固定模式操作。</strong>当前人工选模后需要新建会话才能恢复自动。应先补宿主状态操作、持久记录与恢复语义，再提供 UI 开关。</li>
+<li><strong>隔离试装社区布局。</strong>先验证 DSH Codex UI；需要 dsh-web 的具体模块时再选择匹配版本。每项验证通过后纳入可选组合。</li>
+<li><strong>再接任务与长程目标。</strong>看板、记忆和主动沟通复用同一任务身份、执行事实与授权，不产生另一套竞争路由。</li>
+</ol>
+<p>Open WebUI 支持 OpenAI 兼容 API 与本地模型，适合独立多模型聊天。但直接连接 Fidoo 只连接生成模型；要呈现 DSH 的会话、审批、工具和 Jev 采用记录，还需适配层。本项目现阶段优先复用已有原生工作台。<a href="https://github.com/open-webui/open-webui">Open WebUI 项目说明</a>。</p>
+</section>
+<section class="card">
+<details open><summary>首个 UI 切片：文件、接口与验收设计</summary><div>
+<p><strong>目标：</strong>用户能在原生会话中确认本次请求由谁判断、谁执行，以及是否发生降级。此切片只读展示，不改变现有选模策略。</p>
+<p><strong>建议文件：</strong><code>packages/experimental/system3-ui/</code> 放可选的客户端事件解释器、卡片、双语文案及行为测试；<code>docs/feat-independent-harness/</code> 放组合配置与使用说明。具体包结构以实现前的 Host/Client 类型审查为准，实验包不进入默认 CLI 生产依赖。</p>
+<p><strong>接口：</strong>消费现有 Session 事件与投影，通过原生 Conversation definition 和 <code>conversation.chat.node</code> slot 呈现。记录缺失显示未知或等待确认；只有完整已结算区间的证据才能判断未采用。不得推断不存在的解释、费用或执行成功。自动模式 API 属于下一切片。</p>
+<p><strong>验证：</strong>关联不同请求、建议未采用、provider 失败、弃权、采用后取消、实际请求、重连与冷回放；打开页面不能发送新决策请求。补无密钥会话快照和浏览器交互，检查 390px 布局、键盘操作、双语、审批与工具卡不回归。社区插件另测版本匹配及卸载后恢复。</p>
+<p class="source"><a href="../../packages/client/ui-workflow-run/src/client/index.ts">本仓库原生卡片注册实例</a> · <a href="https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/subsystems/conversation.zh.md">官方 Conversation 文档</a></p>
+</div></details>
+</section>
+<footer><a href="README.zh.md">独立项目指南</a> · <a href="jev-native-dsh-native-plan.html">总体架构方案</a><p>已完成：第三方项目搜索、版本核对、本仓库与看板源码审查。未完成：第三方运行联调、System3 专用 UI 实现、路由质量与成本收益评测。</p></footer>
+</main></body></html>

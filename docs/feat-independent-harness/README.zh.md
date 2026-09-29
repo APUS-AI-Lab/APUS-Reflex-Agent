@@ -59,7 +59,7 @@ pnpm dsh --patch docs/feat-independent-harness/system3-jev.patch.yml --patch doc
 <a id="integration-roadmap"></a>
 ## 集成路线
 
-[Jev Native + DSH Native 专项方案](jev-native-dsh-native-plan.html)定义整体架构。M1a 提供首个入口选模切片，更广泛的调度与过程能力仍为规划。
+[Jev Native + DSH Native 专项方案](jev-native-dsh-native-plan.html)定义整体架构。M1a 提供首个入口选模切片，更广泛的调度与过程能力仍为规划。[Web UI 选型与接入评估](web-ui-selection.html)比较原生界面及社区扩展，定义决策展示的首个候选切片；第三方界面尚未联调。
 
 | 阶段 | 交付物 | 验收证据 |
 |---|---|---|

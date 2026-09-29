@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/feat-independent-harness/README.md
-README.md: 8b1041d40c3dd25e1bc5926de756d625c9232dd4
-README.zh.md: d75028ae20e128ddc99e605e23228d6e32e3a79f
+README.md: 0393ffd0da89c0031c5a59a8ce454626afc8a221
+README.zh.md: 8dd06b6cc5b87d33c42760b9f20edd28c55a8f4e

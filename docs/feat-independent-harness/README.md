@@ -59,7 +59,7 @@ The deployed `APUS-OpenJev-v1-9B-5949` is a Jev-like model using the native deci
 <a id="integration-roadmap"></a>
 ## Integration roadmap
 
-The [native System3 plan](jev-native-dsh-native-plan.html) defines the architecture. M1a supplies the first entry model-selection slice; the broader scheduling and execution stages remain planned.
+The [native System3 plan](jev-native-dsh-native-plan.html) defines the architecture. M1a supplies the first entry model-selection slice; the broader scheduling and execution stages remain planned. The [Web UI assessment](web-ui-selection.html) compares the native interface with community extensions and proposes the first decision-display slice; third-party interfaces have not been integration-tested.
 
 | Stage | Deliverable | Acceptance evidence |
 |---|---|---|
