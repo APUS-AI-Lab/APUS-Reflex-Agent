@@ -1,13 +1,13 @@
 {
   "name": "@deepseek-ai/dsh-experimental-agui",
-  "description": "AG-UI over HTTP: stream DeepSeek Harness turns, threads, approvals and questions to an external client such as Muse",
+  "description": "AG-UI over HTTP: stream Harness turns, threads, approvals and questions to compatible clients",
   "version": "0.1.7-rc.1",
   "publishConfig": {
     "access": "public"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/cryptoSUN2049/xDAN-System3-PersonalAgent-Harness.git",
+    "url": "git+https://github.com/cryptoSUN2049/xDAN-System3-Harness.git",
     "directory": "packages/experimental/agui"
   },
   "type": "module",

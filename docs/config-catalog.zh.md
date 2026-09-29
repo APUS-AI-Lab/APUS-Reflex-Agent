@@ -750,6 +750,39 @@ export interface Config {
 
 来源： [`packages/experimental/agent-team/src/types.ts:152`](../packages/experimental/agent-team/src/types.ts)
 
+<a id="deepseek-aidsh-experimental-agui"></a>
+
+## `@deepseek-ai/dsh-experimental-agui`
+
+需要： `agents` · `sessions` · `tools` · `webServer`
+
+```ts config-catalog
+/** Authentication, model routing and request limits for the HTTP bridge. */
+export interface Config {
+  /** Environment variable holding the bearer token every request must present. */
+  readonly tokenEnv: string
+  /** Route prefix; absolute, no trailing slash. @default '/agui' */
+  readonly basePath: string
+  /** Provider and model for Agents this bridge creates or resumes. */
+  readonly provider: string
+  /** Model identifier exposed by the selected provider. */
+  readonly model: string
+  /** Working directory for new Sessions when the client names none. */
+  readonly defaultCwd?: string
+  /** Largest accepted request body. @default 1 MiB */
+  readonly maxBodyBytes: number
+  /**
+   * MCP servers (by `serverName`) whose tool lists are re-listed before each
+   * run, for servers that cannot announce tool changes. @default []
+   */
+  readonly refreshMcpServers: string[]
+  /** Longest a run waits for that re-list before it starts with the cached tools. @default 3000 */
+  readonly mcpRefreshTimeoutMs: number
+}
+```
+
+来源： [`packages/experimental/agui/src/index.ts:46`](../packages/experimental/agui/src/index.ts)
+
 <a id="deepseek-aidsh-experimental-api-speech-to-text"></a>
 
 ## `@deepseek-ai/dsh-experimental-api-speech-to-text`
@@ -767,6 +800,30 @@ export interface Config {
 ```
 
 来源： [`packages/experimental/api-speech-to-text/src/index.ts:20`](../packages/experimental/api-speech-to-text/src/index.ts)
+
+<a id="deepseek-aidsh-experimental-apus-dsh-jev-plugin"></a>
+
+## `@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin`
+
+```ts config-catalog
+/** Plugin configuration for the built-in System One provider. */
+export interface Config {
+  /** System One gateway URL; credentials must use apiKeyEnv rather than URL user information. */
+  readonly endpoint: string
+  /** Model identifier used when a decision request omits its model. */
+  readonly model: string
+  /** Decision effort used when a request omits it. @default 'low' */
+  readonly effort?: 'low' | 'high'
+  /** Maximum duration in milliseconds for the gateway HTTP request. @default 30000 */
+  readonly timeoutMs?: number
+  /** Credential reference for bearer authentication; omission permits an unauthenticated gateway. */
+  readonly apiKeyEnv?: string
+  /** Registry identity of the built-in provider, selected when a request omits providerId. @default 'system-one' */
+  readonly providerId?: string
+}
+```
+
+来源： [`packages/experimental/apus-dsh-jev-plugin/src/index.ts:24`](../packages/experimental/apus-dsh-jev-plugin/src/index.ts)
 
 <a id="deepseek-aidsh-experimental-browser-use-chrome-devtools-mcp"></a>
 
@@ -1073,6 +1130,36 @@ export interface Config {
 ```
 
 来源： [`packages/experimental/speech-to-text-sensevoice/src/config.ts:6`](../packages/experimental/speech-to-text-sensevoice/src/config.ts)
+
+<a id="deepseek-aidsh-experimental-system3"></a>
+
+## `@deepseek-ai/dsh-experimental-system3`
+
+```ts config-catalog
+/** Configures the default local-first privacy boundary. */
+export interface Config {
+  /** Privacy policy applied before route selection or explicit Jev calls. @default 'local-only' */
+  readonly privacyMode?: System3PrivacyMode
+  /** Remote route identities permitted when the privacy mode allows network execution. */
+  readonly approvedRemoteIds?: readonly string[]
+  /** Data classes permitted on approved remote routes; undeclared classes are refused. */
+  readonly approvedRemoteDataClasses?: readonly ('public' | 'workspace' | 'sensitive' | 'secret')[]
+  /** Additional explicit approval required by cloud-approved mode. @default false */
+  readonly cloudApproval?: boolean
+  /** Observe AgentLoop boundaries without changing prompts, routes, or results. */
+  readonly observeAgentLoop?: boolean
+  /** Privacy-policy route identity for explicit Jev calls. */
+  readonly jevRouteId?: string
+  /** Actual execution location, including the remote destination of any tunnel. */
+  readonly jevExecutionDomain?: 'local' | 'network'
+  /** Execution effort sent to the Jev provider. */
+  readonly jevEffort?: 'low' | 'high'
+}
+```
+
+Depends on: [`System3PrivacyMode`](../packages/experimental/system3-policy/src/index.ts)
+
+来源： [`packages/experimental/system3/src/index.ts:27`](../packages/experimental/system3/src/index.ts)
 
 <a id="deepseek-aidsh-experimental-tool-agent-team"></a>
 
@@ -2011,7 +2098,7 @@ export interface ReconnectConfig {
 }
 ```
 
-来源： [`packages/mcp/mcp-client/src/index.ts:104`](../packages/mcp/mcp-client/src/index.ts)
+来源： [`packages/mcp/mcp-client/src/index.ts:117`](../packages/mcp/mcp-client/src/index.ts)
 
 <a id="deepseek-aidsh-message-feedback"></a>
 
@@ -4253,6 +4340,9 @@ export interface Config {
 - `@deepseek-ai/dsh-deque`（[`packages/util/deque/src/index.ts`](../packages/util/deque/src/index.ts)）
 - `@deepseek-ai/dsh-experimental-agent-team-profile`（[`packages/experimental/agent-team-profile/src/index.ts`](../packages/experimental/agent-team-profile/src/index.ts)）
 - `@deepseek-ai/dsh-experimental-browser-use-runtime`（[`packages/experimental/browser-use-runtime/src/index.ts`](../packages/experimental/browser-use-runtime/src/index.ts)）
+- `@deepseek-ai/dsh-experimental-system3-evidence` ([`packages/experimental/system3-evidence/src/index.ts`](../packages/experimental/system3-evidence/src/index.ts))
+- `@deepseek-ai/dsh-experimental-system3-policy` ([`packages/experimental/system3-policy/src/index.ts`](../packages/experimental/system3-policy/src/index.ts))
+- `@deepseek-ai/dsh-experimental-system3-supervisor` ([`packages/experimental/system3-supervisor/src/index.ts`](../packages/experimental/system3-supervisor/src/index.ts))
 - `@deepseek-ai/dsh-experimental-voice-input-bundle`（[`packages/experimental/voice-input-bundle/src/index.ts`](../packages/experimental/voice-input-bundle/src/index.ts)）
 - `@deepseek-ai/dsh-experimental-webworker-packer`（[`packages/experimental/webworker-packer/src/index.ts`](../packages/experimental/webworker-packer/src/index.ts)）
 - `@deepseek-ai/dsh-experimental-webworker-runtime`（[`packages/experimental/webworker-runtime/src/index.ts`](../packages/experimental/webworker-runtime/src/index.ts)）

@@ -17,6 +17,7 @@ env:
 
 jobs:
   pack:
+    if: vars.DSH_UPSTREAM_AUTOMATION == 'true'
     name: Pack npm tarballs
     runs-on: ubuntu-24.04
     steps:
@@ -76,6 +77,7 @@ jobs:
           retention-days: 7
 
   publish:
+    if: vars.DSH_UPSTREAM_AUTOMATION == 'true'
     name: Publish to npm
     needs: pack
     runs-on: ubuntu-24.04

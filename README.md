@@ -1,8 +1,8 @@
-# DeepSeek Harness
+# xDAN System3 Harness
 
 English | [中文](README.zh.md)
 
-> **xDAN System3 Personal Agent · Harness.** This fork is the agent brain of [xDAN System3 Personal Agent](https://github.com/cryptoSUN2049/xDAN-System3-PersonalAgent-App), a private agent for phone and computer. Slogan: "Your private agent. It gets things done." It adds the System3 layer (local-first routing, evidence, supervision, and a cost ledger, under `packages/experimental/system3*`) and the `agui` bridge that the Personal Agent App talks to (`packages/experimental/agui`). The upstream DeepSeek Harness documentation below applies unchanged. Branches: `feat-system3-foundation` (System3), `feat-dsh-agui` (bridge).
+> **Independent Jev + DeepSeek Harness.** This repository embeds typed Jev model decisions, evidence selection, deterministic supervision, and replayable decision records into the DSH plugin architecture. It is a standalone, general-purpose agent runtime. Jev provides advice; deterministic code owns privacy admission, permissions, budgets, and completion checks. Start with the [independent integration guide](docs/feat-independent-harness/README.md).
 
 DeepSeek Harness (`dsh`) is an open-source agent harness developed by [DeepSeek AI](https://deepseek.com).
 
@@ -18,9 +18,9 @@ Review the [safety notice](SAFETY.md) before running the project.
 
 ## Run
 
-### Run from `npm`
+### Run the upstream distribution from `npm`
 
-Install `Node.js`, then run:
+The npm package below is the upstream distribution; it does not install this fork’s Jev additions. Install `Node.js`, then run:
 
 ```sh
 npx @deepseek-ai/dsh web
@@ -28,13 +28,14 @@ npx @deepseek-ai/dsh web
 
 The command starts the Web UI at `http://127.0.0.1:3080` by default and opens it in the default browser for a local launch. An SSH launch only prints the host URL because the SSH client or editor owns the local forwarded address. Pass `--no-open` to run the server without opening a browser. See [Web UI guide](docs/user/guide/index.md).
 
+<a id="run-from-source"></a>
 ### Run from source
 
 To run from a repository checkout:
 
 ```sh
-git clone https://github.com/deepseek-ai/deepseek-harness.git
-cd deepseek-harness
+git clone https://github.com/cryptoSUN2049/xDAN-System3-Harness.git
+cd xDAN-System3-Harness
 pnpm install
 pnpm run build
 pnpm dsh web

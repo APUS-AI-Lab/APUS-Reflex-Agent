@@ -27,8 +27,13 @@ Mount this opt-in service to expose one `ctx.system3` seam for local-first route
 Mount it in an experimental profile. The default policy is `local-only`; remote routes require explicit configuration and remain subject to the per-call candidate metadata.
 
 ```ts
-import System3 from '@deepseek-ai/dsh-experimental-system3'
+import { Context } from '@deepseek-ai/cordis'
+import System3, { type System3RouteCandidate } from '@deepseek-ai/dsh-experimental-system3'
 
+const ctx = new Context()
+const candidates: System3RouteCandidate[] = [
+  { id: 'local-9b', executionDomain: 'local', dataClasses: ['public'] },
+]
 await ctx.plugin(System3, { privacyMode: 'local-only', observeAgentLoop: true })
 const decision = ctx.system3.route(candidates, 'local-9b')
 ```

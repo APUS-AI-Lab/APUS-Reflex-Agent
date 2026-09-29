@@ -136,4 +136,27 @@ register(server: string, provider: McpResourceProvider): () => void
 ```
 
 Source: [`packages/mcp/mcp-resources/src/index.ts`](../../packages/mcp/mcp-resources/src/index.ts)
+
+<a id="mcp-client-events"></a>
+
+### `mcp-client/*` events
+
+<a id="mcp-clientrefresh-tools--parallel"></a>
+
+#### `mcp-client/refresh-tools` — parallel
+
+Re-list the named server's tools now. Dispatch with `ctx.parallel` to wait for the re-list; it settles without rejecting, and a server that is not connected or not loaded ignores the request.
+
+```ts cordis-catalog
+/**
+ * Re-list the named server's tools now. Dispatch with `ctx.parallel` to
+ * wait for the re-list; it settles without rejecting, and a server that
+ * is not connected or not loaded ignores the request.
+ * @mode parallel
+ * @param serverName - the configured `serverName` to refresh.
+ */
+'mcp-client/refresh-tools'(serverName: string): Promise<void> | undefined
+```
+
+Source: [`packages/mcp/mcp-client/src/index.ts`](../../packages/mcp/mcp-client/src/index.ts)
 <!-- END GENERATED cordis-surface -->

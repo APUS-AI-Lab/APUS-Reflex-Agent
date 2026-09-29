@@ -32,6 +32,7 @@ env:
 
 jobs:
   preview:
+    if: vars.DSH_UPSTREAM_AUTOMATION == 'true'
     runs-on: ubuntu-24.04
     name: cloudflare pages preview
     steps:

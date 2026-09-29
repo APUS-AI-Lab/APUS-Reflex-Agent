@@ -24,6 +24,7 @@ concurrency:
 
 jobs:
   build:
+    if: vars.DSH_UPSTREAM_AUTOMATION == 'true'
     name: Build six wheels
     uses: ./.github/workflows/build-exe-for-python-sdk.yml
     with:
@@ -31,6 +32,7 @@ jobs:
       release: true
 
   python-compat:
+    if: vars.DSH_UPSTREAM_AUTOMATION == 'true'
     name: Python ${{ matrix.python }} / installed SDK
     needs: build
     runs-on: ubuntu-latest
@@ -76,6 +78,7 @@ jobs:
           python scripts/smoke-python-runtime.py --scenario sdk-mcp
 
   validate:
+    if: vars.DSH_UPSTREAM_AUTOMATION == 'true'
     name: Validate release candidate
     needs: [build, python-compat]
     runs-on: ubuntu-latest
@@ -184,7 +187,7 @@ jobs:
 
   publish-runtime:
     name: Publish runtime wheels to public PyPI
-    if: github.event_name == 'workflow_dispatch' && inputs.publish
+    if: ${{ vars.DSH_UPSTREAM_AUTOMATION == 'true' && (github.event_name == 'workflow_dispatch' && inputs.publish) }}
     needs: validate
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -219,7 +222,7 @@ jobs:
   # to overwrite the runtime release.
   publish-sdk:
     name: Publish SDK wheel to public PyPI
-    if: github.event_name == 'workflow_dispatch' && inputs.publish
+    if: ${{ vars.DSH_UPSTREAM_AUTOMATION == 'true' && (github.event_name == 'workflow_dispatch' && inputs.publish) }}
     needs: [validate, publish-runtime]
     runs-on: ubuntu-latest
     timeout-minutes: 10

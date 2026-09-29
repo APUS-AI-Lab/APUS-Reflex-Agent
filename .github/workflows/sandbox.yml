@@ -40,6 +40,7 @@ jobs:
   # e2e.yml's key preflight guards against. Each leg therefore asserts BOTH
   # its platform files actually ran: `Test Files  2 passed (2)`, no skips.
   sandbox-e2e:
+    if: vars.DSH_UPSTREAM_AUTOMATION == 'true'
     strategy:
       fail-fast: false
       matrix:

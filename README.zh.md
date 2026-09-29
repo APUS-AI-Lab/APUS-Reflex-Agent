@@ -1,8 +1,8 @@
-# DeepSeek Harness
+# xDAN System3 Harness
 
 [English](README.md) | 中文
 
-> **xDAN System3 Personal Agent · Harness。** 本 fork 是 [xDAN System3 Personal Agent](https://github.com/cryptoSUN2049/xDAN-System3-PersonalAgent-App) 的 agent 大脑；xDAN Personal Agent 是一个手机和电脑都能用的私人 agent，slogan：「你的私人 Agent，替你把事做完。」它在上游之上增加了 System3 层（本地优先路由、证据、监督与成本账本，位于 `packages/experimental/system3*`），以及 Personal Agent App 所对接的 `agui` 桥（`packages/experimental/agui`）。以下上游 DeepSeek Harness 文档保持不变。分支：`feat-system3-foundation`（System3）、`feat-dsh-agui`（桥）。
+> **独立的 Jev + DeepSeek Harness。** 本仓库通过 DSH 插件架构集成 Jev 类型化模型决策、证据筛选、确定性监督与可回放决策记录，面向通用 Agent 执行与验证。Jev 提供建议，确定性代码负责隐私准入、权限、预算与完成检查。从[独立集成指南](docs/feat-independent-harness/README.zh.md)开始。
 
 DeepSeek Harness（`dsh`）是由 [DeepSeek AI](https://deepseek.com) 开发的开源 agent harness（智能体框架）。
 
@@ -20,9 +20,9 @@ DeepSeek Harness 处于 _开发者预览_ 阶段，正在快速迭代。**未来
 
 ## 运行
 
-### 通过 `npm` 运行
+### 通过 `npm` 运行上游发行版
 
-安装 `Node.js`，然后运行：
+下面的 npm 包是上游发行版，不包含本 fork 的 Jev 扩展。安装 `Node.js`，然后运行：
 
 ```sh
 npx @deepseek-ai/dsh web
@@ -32,13 +32,14 @@ npx @deepseek-ai/dsh web
 
 <a id="run-from-source"></a>
 
+<a id="run-from-source"></a>
 ### 从源码运行
 
 如需从仓库源码运行：
 
 ```sh
-git clone https://github.com/deepseek-ai/deepseek-harness.git
-cd deepseek-harness
+git clone https://github.com/cryptoSUN2049/xDAN-System3-Harness.git
+cd xDAN-System3-Harness
 pnpm install
 pnpm run build
 pnpm dsh web

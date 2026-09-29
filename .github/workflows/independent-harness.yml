@@ -1,0 +1,61 @@
+name: Independent harness
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: independent-harness-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DSH_TELEMETRY_DISABLED: '1'
+  DSH_EXAMPLE_MODE: lib
+  DSH_SNAPSHOT: replay
+
+jobs:
+  system3:
+    name: Jev and System3
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: pnpm
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Install Ruff
+        run: python -m pip install ruff==0.13.3
+      - name: Python lint and format
+        run: |
+          ruff check .
+          ruff format --check .
+      - name: Build host runtime
+        run: |
+          pnpm run build:native-system
+          pnpm run build:lib:host
+      - name: Jev, System3, and AG-UI behavior
+        run: >-
+          pnpm exec vitest run
+          packages/experimental/apus-dsh-jev-plugin/tests
+          packages/experimental/system3/tests
+          packages/experimental/system3-evidence/tests
+          packages/experimental/system3-policy/tests
+          packages/experimental/system3-supervisor/tests
+          packages/experimental/agui/tests
+          --maxWorkers=2
+      - name: Replay System3 and AG-UI persona sessions
+        run: pnpm run test:snapshot snapshots/sdk/sdk.snapshot.ts -t 'system3-shadow|agui-persona'

@@ -62,7 +62,7 @@ jobs:
   # construct the matrix before the dependent jobs.
   plan:
     name: plan targets
-    if: inputs.ci || inputs.release || github.event_name == 'workflow_dispatch'
+    if: ${{ vars.DSH_UPSTREAM_AUTOMATION == 'true' && (inputs.ci || inputs.release || github.event_name == 'workflow_dispatch') }}
     runs-on: >-
       ${{ inputs.ci && !inputs.release && vars.DSH_CI_FAILOVER_LINUX == 'blacksmith'
           && 'blacksmith-4vcpu-ubuntu-2404' || 'ubuntu-latest' }}
@@ -123,6 +123,7 @@ jobs:
           echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
 
   sdk-wheel:
+    if: vars.DSH_UPSTREAM_AUTOMATION == 'true'
     needs: plan
     name: deepseek_harness_sdk-${{ needs.plan.outputs.version }}-py3-none-any.whl
     runs-on: >-
@@ -154,6 +155,7 @@ jobs:
 
   # Blacksmith x64 CI builds use 2 vCPU for compilation, bundling, and wheel smokes.
   build:
+    if: vars.DSH_UPSTREAM_AUTOMATION == 'true'
     needs: [plan, sdk-wheel]
     name: ${{ matrix.target }}
     runs-on: >-

@@ -17,6 +17,7 @@ env:
 
 jobs:
   expected-filenames:
+    if: vars.DSH_UPSTREAM_AUTOMATION == 'true'
     name: no golden filenames
     runs-on: >-
       ${{ vars.DSH_CI_FAILOVER_LINUX == 'blacksmith' && 'blacksmith-4vcpu-ubuntu-2404'

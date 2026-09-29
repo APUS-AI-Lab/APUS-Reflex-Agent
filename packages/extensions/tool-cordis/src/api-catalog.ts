@@ -4058,6 +4058,14 @@ export const EVENT_API: readonly EventApiEntry[] = [
     parameters: [{ name: 'options', description: 'the full request. A LOOP-built request carries the process-local {@link markAgentLoopRequest} identity and arrives deep-frozen (mutation throws): its content is a pure function of the session log (the reconstructability Agent Note), so listeners read it, never rewrite it. Hand-built calls do not carry that marker; callers own their request inputs and must keep them unchanged until the stream settles.' }],
   },
   {
+    name: 'mcp-client/refresh-tools',
+    mode: 'parallel',
+    signature: '\'mcp-client/refresh-tools\'(serverName: string): Promise<void> | undefined',
+    summary: 'Re-list the named server\'s tools now.',
+    description: 'Re-list the named server\'s tools now. Dispatch with `ctx.parallel` to wait for the re-list; it settles without rejecting, and a server that is not connected or not loaded ignores the request.',
+    parameters: [{ name: 'serverName', description: 'the configured `serverName` to refresh.' }],
+  },
+  {
     name: 'permission-presets/catalog-changed',
     mode: 'emit',
     signature: '\'permission-presets/catalog-changed\'(): void',

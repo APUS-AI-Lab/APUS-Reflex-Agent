@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/experimental/agui/README.md
-README.md: 3a969c0e650a68042e4a7dca91d77ed1ba325cc3
-README.zh.md: 0df0815cb291123ed4b14b289c37938e290555c5
+README.md: fc157d2ce8bb744353393545c38a985b4504d4ae
+README.zh.md: b1b66f73ef88fa3bc08f9b99843abb20bfbd0d92

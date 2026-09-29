@@ -100,6 +100,22 @@ const GROUP_ORDER = [
 
 const SERVICE_ROLES: ServiceRole[] = [
   {
+    key: 'jev',
+    pkg: 'experimental-apus-dsh-jev-plugin',
+    title: 'Typed model decisions',
+    mode: 'seam',
+    implementations: ['experimental-apus-dsh-jev-plugin'],
+    consumers: ['experimental-system3'],
+    note: 'Resolves registered decision providers and validates typed answers; System3 owns privacy admission and durable shadow receipts.',
+  },
+  {
+    key: 'system3',
+    pkg: 'experimental-system3',
+    title: 'Decision evidence and supervision',
+    mode: 'service',
+    note: 'Composes routing, evidence and supervision policies for explicit host calls; shadow decisions preserve the deterministic baseline without changing AgentLoop behavior.',
+  },
+  {
     key: 'hmr',
     pkg: 'hmr',
     title: 'Serialized module and configuration reloads',

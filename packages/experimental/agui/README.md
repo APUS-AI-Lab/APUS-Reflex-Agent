@@ -1,5 +1,5 @@
 ---
-description: "AG-UI over HTTP: stream DeepSeek Harness turns, threads, approvals and questions to an external client such as Muse."
+description: "AG-UI over HTTP: stream DeepSeek Harness turns, threads, approvals and questions to an external client."
 kind: "package-reference"
 ---
 
@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-`dsh-experimental-agui` lets a client that speaks [AG-UI](https://docs.ag-ui.com) — the OpenMuse server with `AGENT_BACKEND=agui`, or any `HttpAgent` — drive DeepSeek Harness agents over HTTP. One `POST <basePath>/run` streams a turn as server-sent AG-UI events; a small thread API lists, creates, renames and archives persisted Sessions and replays their history; approval and question requests raised while a run is streaming become `CUSTOM` events the client answers through matching routes. A thread id is the Session id, so the durable Session log stays the only source of truth.
+`dsh-experimental-agui` lets a client that speaks [AG-UI](https://docs.ag-ui.com) — such as `HttpAgent` — drive DeepSeek Harness agents over HTTP. One `POST <basePath>/run` streams a turn as server-sent AG-UI events; a small thread API lists, creates, renames and archives persisted Sessions and replays their history; approval and question requests raised while a run is streaming become `CUSTOM` events the client answers through matching routes. A thread id is the Session id, so the durable Session log stays the only source of truth.
 
 ## Table of Contents
 
@@ -31,13 +31,7 @@ export DSH_AGUI_TOKEN='a-long-random-secret'
 pnpm dsh --patch packages/experimental/agui/cordis.patch.yml --profile web --no-open
 ```
 
-Point the Muse server at it:
-
-```dotenv
-AGENT_BACKEND=agui
-AGENT_URL=http://127.0.0.1:3080/agui/run
-AGENT_TOKEN=a-long-random-secret
-```
+Send AG-UI requests to `http://127.0.0.1:3080/agui/run` with `Authorization: Bearer <DSH_AGUI_TOKEN>`.
 
 Routes, all under `basePath` and all requiring `Authorization: Bearer <token>`:
 
@@ -62,10 +56,12 @@ Events emitted during a run: `RUN_STARTED`, `TEXT_MESSAGE_*`, `REASONING_MESSAGE
 | `provider`, `model` | Route for Agents this bridge creates or resumes. |
 | `defaultCwd` | Working directory for new Sessions when `forwardedProps.cwd` is absent. Defaults to the process cwd. |
 | `maxBodyBytes` | Largest accepted request body. Default 1 MiB. |
-| `refreshMcpServers` | MCP `serverName`s whose tools are re-listed before each run, for servers that cannot announce tool changes. Default `["app"]`. |
+| `refreshMcpServers` | MCP `serverName`s whose tools are re-listed before each run, for servers that cannot announce tool changes. Default `[]`. |
 | `mcpRefreshTimeoutMs` | Longest a run waits for that re-list; after it, or on a failure, the run starts with the cached tools. Default 3000. |
 
-A run may carry `forwardedProps.persona` `{ name, tone, hidden? }`; the default is Duse with the `warm` tone. The persona replaces the harness identity and the Web-only prompt sections, and a `persona:capabilities` section lists, at every step, only the capability groups (`web`, `watch`, `search`, `memory`, `goals`, `mail`, `calendar`, `files`, `terminal`, `experts`) that have a mounted tool and are not in `hidden`. Mail, calendar and terminal are named as not connected when absent. A tool that no group lists is callable but not advertised.
+A run may carry `forwardedProps.persona` `{ name, tone, hidden? }`; the default is System3 with the `concise` tone. The persona replaces the harness identity and Web-only prompt sections. At every step, `persona:capabilities` lists only mounted general-purpose tool groups (`web`, `search`, `files`, `terminal`, `experts`) not in `hidden`. Unclassified tools remain callable and are described by their tool schemas; the bridge neither infers business capabilities from MCP server names nor requires product-specific settings or pages.
+
+Custom profile plugins can reuse `installPersona(agent.ctx, { persona })` to install the same agent-scoped prompt sections.
 
 -----
 
@@ -88,12 +84,23 @@ A run may carry `forwardedProps.persona` `{ name, tone, hidden? }`; the default 
 <a id="model-experience"></a>
 ## Model Experience
 
-The model sees no difference from a Web session: the same system prompt, tools and approval policy apply. An approval or question the model triggers waits for the client's answer; if the client disconnects, the request resolves `cancelled` and the turn is cancelled.
+### Bridge persona and mounted capabilities
 
------
+#### What the model sees
+
+The `persona:capabilities` section accompanies the selected persona. Bridge Agents receive the selected name and tone, honesty instructions and a summary of recognised mounted tool groups. Client persona changes and mounted tools update these sections on the next model request. The exact default assembled text is pinned in the [SDK-profile snapshot](../../../snapshots/sdk/agui-persona/system-prompt.expected.md). Tool execution and approval policy remain deployment-owned; approval and question results follow the client response or cancellation.
+
+#### Token effect
+
+Persona and capability sections replace the deployment identity and Web-only sections. Their size depends on the bounded persona name and mounted capability groups; this plugin sends no independent model request.
+
+#### KV Cache effect
+
+An unchanged persona and tool set preserve the repeated prompt prefix. Changing the persona, hidden groups or mounted tools replaces the corresponding prompt sections and may invalidate prefix reuse from the first changed token.
+
+## Known Limitations and Deferred Work
 
 <a id="known-limitations-and-deferred-work"></a>
-## Known Limitations and Deferred Work
 
 - One run per thread at a time; a second `POST /run` answers 409.
 - Thread `updatedAt` is not reported; `createdAt` comes from the Session header.
@@ -104,7 +111,7 @@ The model sees no difference from a Web session: the same system prompt, tools a
 -----
 
 <a id="dev-note"></a>
-## Dev Note
+### Dev Note
 
 <details>
 <summary>Maintainer working context — click to expand</summary>

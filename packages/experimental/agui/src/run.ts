@@ -185,7 +185,11 @@ export async function driveRun(ctx: Context, run: ActiveRun, text: string): Prom
   }
 }
 
-/** The session identity an AG-UI thread maps to: the thread id itself. */
+/**
+ * The session identity an AG-UI thread maps to: the thread id itself.
+ * @param threadId - admitted thread identifier.
+ * @returns The corresponding Session identifier.
+ */
 export function sessionIdOf(threadId: string): SessionId {
   return threadId as SessionId
 }

@@ -11,7 +11,12 @@ export class HttpError extends Error {
   }
 }
 
-/** Whether the request carries the configured bearer token. */
+/**
+ * Whether the request carries the configured bearer token.
+ * @param req - incoming HTTP request.
+ * @param token - deployment bearer token.
+ * @returns Whether the bearer token matches exactly.
+ */
 export function admitted(req: IncomingMessage, token: string): boolean {
   const header = req.headers.authorization
   if (typeof header !== 'string' || !header.startsWith('Bearer ')) return false
@@ -20,7 +25,12 @@ export function admitted(req: IncomingMessage, token: string): boolean {
   return presented.length === expected.length && timingSafeEqual(presented, expected)
 }
 
-/** Read a JSON body no larger than `maxBytes`. */
+/**
+ * Read a JSON body no larger than `maxBytes`.
+ * @param req - incoming HTTP body stream.
+ * @param maxBytes - maximum accepted body size.
+ * @returns Parsed JSON, or an empty object for an empty body; rejects oversized or invalid JSON.
+ */
 export async function readJson(req: IncomingMessage, maxBytes: number): Promise<unknown> {
   const chunks: Buffer[] = []
   let size = 0
@@ -38,13 +48,22 @@ export async function readJson(req: IncomingMessage, maxBytes: number): Promise<
   }
 }
 
-/** Answer with a JSON document. */
+/**
+ * Answer with a JSON document.
+ * @param res - response to finish.
+ * @param status - HTTP response status.
+ * @param body - JSON-serializable response value.
+ */
 export function json(res: ServerResponse, status: number, body: unknown): void {
   res.writeHead(status, { 'content-type': 'application/json' })
   res.end(JSON.stringify(body))
 }
 
-/** Narrow an unknown body to a plain object. */
+/**
+ * Narrow an unknown body to a plain object.
+ * @param body - parsed request value.
+ * @returns The object; throws HTTP 400 for null, arrays or primitives.
+ */
 export function objectBody(body: unknown): Record<string, unknown> {
   if (typeof body !== 'object' || body === null || Array.isArray(body)) throw new HttpError(400, 'expected a JSON object')
   return body as Record<string, unknown>

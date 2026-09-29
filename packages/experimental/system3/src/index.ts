@@ -25,9 +25,13 @@ declare module '@deepseek-ai/cordis' {
 
 /** Configures the default local-first privacy boundary. */
 export interface Config {
+  /** Privacy policy applied before route selection or explicit Jev calls. @default 'local-only' */
   readonly privacyMode?: System3PrivacyMode
+  /** Remote route identities permitted when the privacy mode allows network execution. */
   readonly approvedRemoteIds?: readonly string[]
+  /** Data classes permitted on approved remote routes; undeclared classes are refused. */
   readonly approvedRemoteDataClasses?: readonly ('public' | 'workspace' | 'sensitive' | 'secret')[]
+  /** Additional explicit approval required by cloud-approved mode. @default false */
   readonly cloudApproval?: boolean
   /** Observe AgentLoop boundaries without changing prompts, routes, or results. */
   readonly observeAgentLoop?: boolean

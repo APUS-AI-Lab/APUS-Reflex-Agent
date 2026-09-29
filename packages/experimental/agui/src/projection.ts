@@ -4,12 +4,20 @@ import type { ContentBlock } from '@deepseek-ai/dsh-llm'
 import type { SessionEvent } from '@deepseek-ai/dsh-session'
 import type { AguiMessage } from './agui.ts'
 
-/** Concatenate the text blocks of a message, ignoring images and tool metadata. */
+/**
+ * Concatenate the text blocks of a message, ignoring images and tool metadata.
+ * @param content - message content blocks in order.
+ * @returns Concatenated text blocks.
+ */
 export function textOf(content: readonly ContentBlock[]): string {
   return content.filter(block => block.type === 'text').map(block => block.text).join('')
 }
 
-/** Concatenate reasoning blocks. */
+/**
+ * Concatenate reasoning blocks.
+ * @param content - message content blocks in order.
+ * @returns Concatenated reasoning text.
+ */
 export function reasoningOf(content: readonly ContentBlock[]): string {
   return content.filter(block => block.type === 'reasoning').map(block => block.text).join('')
 }

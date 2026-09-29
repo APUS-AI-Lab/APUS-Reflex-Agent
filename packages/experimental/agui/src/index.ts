@@ -33,7 +33,7 @@ import { type ActiveRun, driveRun, sessionIdOf } from './run.ts'
 
 export type { AguiEvent, AguiMessage, RunAgentInput } from './agui.ts'
 export { CUSTOM_APPROVAL, CUSTOM_QUESTION } from './agui.ts'
-export { CAPABILITIES_SECTION, CAPABILITY_GROUPS, DEFAULT_PERSONA, personaFrom, personaPrompt, renderCapabilities, type CapabilityGroup, type Persona } from './persona.ts'
+export { CAPABILITIES_SECTION, CAPABILITY_GROUPS, DEFAULT_PERSONA, installPersona, personaFrom, personaPrompt, renderCapabilities, type CapabilityGroup, type Persona } from './persona.ts'
 export { historyMessages } from './projection.ts'
 
 export const name = 'agui'
@@ -42,6 +42,7 @@ export const name = 'agui'
 // 501 when the composition omits it, so a minimal profile still streams turns.
 export const inject = ['agents', 'sessions', 'tools', 'webServer']
 
+/** Authentication, model routing and request limits for the HTTP bridge. */
 export interface Config {
   /** Environment variable holding the bearer token every request must present. */
   readonly tokenEnv: string
@@ -49,6 +50,7 @@ export interface Config {
   readonly basePath: string
   /** Provider and model for Agents this bridge creates or resumes. */
   readonly provider: string
+  /** Model identifier exposed by the selected provider. */
   readonly model: string
   /** Working directory for new Sessions when the client names none. */
   readonly defaultCwd?: string
@@ -56,7 +58,7 @@ export interface Config {
   readonly maxBodyBytes: number
   /**
    * MCP servers (by `serverName`) whose tool lists are re-listed before each
-   * run, for servers that cannot announce tool changes. @default ['app']
+   * run, for servers that cannot announce tool changes. @default []
    */
   readonly refreshMcpServers: string[]
   /** Longest a run waits for that re-list before it starts with the cached tools. @default 3000 */
@@ -70,7 +72,7 @@ export const Config: z<Config> = z.object({
   model: z.string().required(),
   defaultCwd: z.string(),
   maxBodyBytes: z.natural().min(1).default(1024 * 1024),
-  refreshMcpServers: z.array(z.string()).default(['app']),
+  refreshMcpServers: z.array(z.string()).default([]),
   mcpRefreshTimeoutMs: z.natural().default(3000),
 })
 

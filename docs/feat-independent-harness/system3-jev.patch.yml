@@ -1,0 +1,19 @@
+# Explicit source-checkout composition; no App server or generation-route change.
+- insert:
+    - id: jev
+      name: ../../packages/experimental/apus-dsh-jev-plugin/src/index.ts
+      config:
+        endpoint: !!js 'process.env.JEV_ENDPOINT'
+        model: !!js 'process.env.JEV_MODEL'
+        apiKeyEnv: JEV_API_KEY
+        effort: low
+        timeoutMs: 30000
+
+    - id: system3
+      name: ../../packages/experimental/system3/src/index.ts
+      config:
+        privacyMode: local-only
+        observeAgentLoop: true
+        jevRouteId: jev
+        jevExecutionDomain: !!js 'process.env.JEV_EXECUTION_DOMAIN ?? "network"'
+        jevEffort: low

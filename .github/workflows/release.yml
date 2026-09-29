@@ -27,6 +27,7 @@ env:
 
 jobs:
   dependencies:
+    if: vars.DSH_UPSTREAM_AUTOMATION == 'true'
     name: Dependency layout
     # Persistent runners accept only trusted, credential-free rehearsals.
     runs-on: >-
@@ -87,6 +88,7 @@ jobs:
         run: pnpm run verify-npm-install-layout
 
   pack:
+    if: vars.DSH_UPSTREAM_AUTOMATION == 'true'
     name: Pack npm tarballs
     # Persistent runners accept only trusted, credential-free rehearsals.
     runs-on: >-

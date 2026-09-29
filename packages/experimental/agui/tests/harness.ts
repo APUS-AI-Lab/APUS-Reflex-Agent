@@ -58,7 +58,7 @@ export async function makeAguiHarness(
     model: 'mock',
     defaultCwd: root,
     maxBodyBytes: 1024 * 1024,
-    refreshMcpServers: ['app'],
+    refreshMcpServers: [],
     mcpRefreshTimeoutMs: 3000,
     ...overrides,
   })

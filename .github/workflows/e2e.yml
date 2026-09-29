@@ -59,9 +59,7 @@ jobs:
     name: e2e
     # Run on every trusted event. Skip untrusted PRs (forks + Dependabot) where
     # the secret is withheld — they would otherwise hard-fail the preflight.
-    if: >-
-      github.event_name != 'pull_request'
-      || !(github.event.pull_request.head.repo.fork || github.event.pull_request.user.login == 'dependabot[bot]')
+    if: ${{ vars.DSH_UPSTREAM_AUTOMATION == 'true' && (github.event_name != 'pull_request' || !(github.event.pull_request.head.repo.fork || github.event.pull_request.user.login == 'dependabot[bot]')) }}
     # Profile e2e files can each own several complete dsh subprocess trees, so
     # four file workers preserve process/PTY headroom. Tests retain 120s/test
     # and retry 2; 45m still bounds retry storms against a slow API.

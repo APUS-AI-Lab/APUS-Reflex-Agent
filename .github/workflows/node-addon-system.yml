@@ -43,6 +43,7 @@ defaults:
 
 jobs:
   matrix:
+    if: vars.DSH_UPSTREAM_AUTOMATION == 'true'
     name: Matrix
     runs-on: ubuntu-24.04
     outputs:
@@ -54,6 +55,7 @@ jobs:
         run: echo "ci=$(node ./scripts/github-matrix.mjs ci)" >> "$GITHUB_OUTPUT"
 
   native:
+    if: vars.DSH_UPSTREAM_AUTOMATION == 'true'
     name: ${{ matrix.platform }}
     needs: matrix
     runs-on: ${{ matrix.runner }}

@@ -27,8 +27,13 @@ kind: "package-reference"
 在实验 profile 中挂载。默认策略为 `local-only`；远程路由必须显式配置，并且 仍要通过每次调用提供的候选元数据。
 
 ```ts
-import System3 from '@deepseek-ai/dsh-experimental-system3'
+import { Context } from '@deepseek-ai/cordis'
+import System3, { type System3RouteCandidate } from '@deepseek-ai/dsh-experimental-system3'
 
+const ctx = new Context()
+const candidates: System3RouteCandidate[] = [
+  { id: 'local-9b', executionDomain: 'local', dataClasses: ['public'] },
+]
 await ctx.plugin(System3, { privacyMode: 'local-only', observeAgentLoop: true })
 const decision = ctx.system3.route(candidates, 'local-9b')
 ```

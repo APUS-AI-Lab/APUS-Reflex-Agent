@@ -1,5 +1,5 @@
 ---
-description: "基于 HTTP 的 AG-UI 桥：把 DeepSeek Harness 的轮次、线程、审批与提问流式送给 Muse 等外部客户端。"
+description: "基于 HTTP 的 AG-UI 桥：把 DeepSeek Harness 的轮次、线程、审批与提问流式送给 外部客户端。"
 kind: "package-reference"
 ---
 
@@ -9,7 +9,7 @@ kind: "package-reference"
 
 ## 概述
 
-`dsh-experimental-agui` 让任何会说 [AG-UI](https://docs.ag-ui.com) 的客户端——配置了 `AGENT_BACKEND=agui` 的 OpenMuse 服务端，或任意 `HttpAgent`——通过 HTTP 驱动 DeepSeek Harness 的 agent。一次 `POST <basePath>/run` 以 server-sent AG-UI 事件流式返回一个轮次；一组小巧的线程 API 负责列出、创建、重命名、归档持久化的 Session 并回放其历史；运行期间 agent 发起的审批与提问会变成 `CUSTOM` 事件，由客户端通过对应路由作答。线程 id 就是 Session id，因此持久化 Session 日志始终是唯一的事实来源。
+`dsh-experimental-agui` 让任何会说 [AG-UI](https://docs.ag-ui.com) 的客户端（例如 `HttpAgent`）通过 HTTP 驱动 DeepSeek Harness 的 agent。一次 `POST <basePath>/run` 以 server-sent AG-UI 事件流式返回一个轮次；一组小巧的线程 API 负责列出、创建、重命名、归档持久化的 Session 并回放其历史；运行期间 agent 发起的审批与提问会变成 `CUSTOM` 事件，由客户端通过对应路由作答。线程 id 就是 Session id，因此持久化 Session 日志始终是唯一的事实来源。
 
 ## 目录
 
@@ -31,13 +31,7 @@ export DSH_AGUI_TOKEN='a-long-random-secret'
 pnpm dsh --patch packages/experimental/agui/cordis.patch.yml --profile web --no-open
 ```
 
-让 Muse 服务端指向它：
-
-```dotenv
-AGENT_BACKEND=agui
-AGENT_URL=http://127.0.0.1:3080/agui/run
-AGENT_TOKEN=a-long-random-secret
-```
+客户端向 `http://127.0.0.1:3080/agui/run` 发送 AG-UI 请求，并携带 `Authorization: Bearer <DSH_AGUI_TOKEN>`。
 
 所有路由都在 `basePath` 下，且都要求 `Authorization: Bearer <token>`：
 
@@ -62,10 +56,12 @@ AGENT_TOKEN=a-long-random-secret
 | `provider`、`model` | 本桥创建或恢复的 Agent 所用路由。 |
 | `defaultCwd` | 客户端未给出 `forwardedProps.cwd` 时新 Session 的工作目录。默认进程 cwd。 |
 | `maxBodyBytes` | 可接受的最大请求体。默认 1 MiB。 |
-| `refreshMcpServers` | 每次 run 前重新列出工具的 MCP `serverName`，用于无法通知工具变更的服务器。默认 `["app"]`。 |
+| `refreshMcpServers` | 每次 run 前重新列出工具的 MCP `serverName`，用于无法通知工具变更的服务器。默认 `[]`。 |
 | `mcpRefreshTimeoutMs` | run 等待该重新列出的最长时间；超时或失败时 run 使用缓存的工具开始。默认 3000。 |
 
-run 可携带 `forwardedProps.persona` `{ name, tone, hidden? }`；默认是 Duse、`warm` 语气。persona 替换 harness 身份与仅用于 Web 的 prompt 段落，`persona:capabilities` 段在每一步只列出已挂载工具且不在 `hidden` 中的能力组（`web`、`watch`、`search`、`memory`、`goals`、`mail`、`calendar`、`files`、`terminal`、`experts`）。邮件、日历、终端缺失时标明尚未连接。任何组都未列入的工具可以调用，但不会被宣传。
+run 可携带 `forwardedProps.persona` `{ name, tone, hidden? }`；默认是 System3、`concise` 语气。persona 替换 harness 身份与仅用于 Web 的 prompt 段落。`persona:capabilities` 在每一步只列出已挂载工具且不在 `hidden` 中的通用能力组（`web`、`search`、`files`、`terminal`、`experts`）。未分类工具仍可调用，模型通过其工具描述了解用途；桥不会根据 MCP 服务器名推断业务能力，也不会要求使用某个产品的设置或页面。
+
+自定义 profile 插件可调用 `installPersona(agent.ctx, { persona })`，复用相同的 Agent 局部 prompt 段落。
 
 -----
 
@@ -88,12 +84,23 @@ run 可携带 `forwardedProps.persona` `{ name, tone, hidden? }`；默认是 Dus
 <a id="model-experience"></a>
 ## 模型体验
 
-模型看不出与 Web 会话的差别：同样的系统提示、工具与审批策略生效。模型触发的审批或提问会等待客户端作答；客户端断开时请求解析为 `cancelled`，轮次被取消。
+### 桥的人格与已挂载能力
 
------
+#### 模型看到的内容
+
+`persona:capabilities` 段落与所选人格一起提供。桥创建的 Agent 接收所选名称、语气、诚实要求以及已识别挂载工具组的摘要。客户端人格与挂载工具发生变化后，这些段落在下一次模型请求更新。默认组装文本由 [SDK profile 快照](../../../snapshots/sdk/agui-persona/system-prompt.expected.md) 固定。工具执行与审批策略仍由部署配置决定；审批和提问结果取决于客户端回答或取消。
+
+#### Token 影响
+
+人格与能力段落替换部署身份及仅用于 Web 的段落。长度取决于有长度限制的人格名称和已挂载能力组；本插件不发起独立模型请求。
+
+#### KV Cache 影响
+
+人格和工具集合不变时，重复提示前缀保持稳定。人格、隐藏组或挂载工具发生变化后，对应提示段落被替换，可能从首个变化 token 起失去前缀复用。
+
+## 已知限制与延期工作
 
 <a id="known-limitations-and-deferred-work"></a>
-## 已知限制与延期工作
 
 - 每个线程同一时刻只允许一个运行；第二个 `POST /run` 返回 409。
 - 不报告线程 `updatedAt`；`createdAt` 取自 Session header。
@@ -104,7 +111,7 @@ run 可携带 `forwardedProps.persona` `{ name, tone, hidden? }`；默认是 Dus
 -----
 
 <a id="dev-note"></a>
-## 开发备注
+### 开发备注
 
 <details>
 <summary>维护者的工作上下文——点击展开</summary>

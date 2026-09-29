@@ -71,7 +71,7 @@
 
 ## 6. 分支/部署状态
 
-- 根仓库 /Users/gumpm5/Documents/Code/xDAN-System3-PersonalAgent-Harness（旧路径 xDAN-System3-DSH 为软链接）：main，46a7f68b0922371ce7144b668b90e377d8e799f4。
+- 根仓库 /Users/gumpm5/Documents/Code/xDAN-System3-PersonalAgent-Harness（旧路径 xDAN-System3-DSH 为软链接）：main，基线提交保留在该来源分支的 Git 历史中。
 - 本worktree .Codex/worktrees/feat-system3-foundation；分支feat-system3-foundation。
 - origin为自有私有仓库，upstream为deepseek-ai/deepseek-harness。
 - GitHub仓库已创建且私有；M0、M1-a/b/c与观察层提交已push到私有origin；真实 AgentLoop smoke 已在本地通过；CI未运行；无产品部署和GPU创建。

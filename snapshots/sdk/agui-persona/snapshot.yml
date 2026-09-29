@@ -1,0 +1,9 @@
+version: 1
+scenario: agui-persona
+profile: sdk
+composition: sdk-agui-persona
+recording: authored
+header:
+  class: sdk-agui-persona
+  pin: true
+  toolSchemasSource: text-turn

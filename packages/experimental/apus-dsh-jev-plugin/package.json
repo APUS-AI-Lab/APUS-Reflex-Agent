@@ -7,7 +7,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/cryptoSUN2049/xDAN-System3-PersonalAgent-Harness.git",
+    "url": "git+https://github.com/cryptoSUN2049/xDAN-System3-Harness.git",
     "directory": "packages/experimental/apus-dsh-jev-plugin"
   },
   "type": "module",

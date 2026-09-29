@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jev × DeepSeek Harness 独立项目设计</title>
+<style>body{max-width:1024px;margin:40px auto;padding:0 20px;font:16px/1.7 system-ui;color:#18232f}table{border-collapse:collapse;width:100%}td,th{border:1px solid #ccd5de;padding:10px;text-align:left}pre{background:#f1f4f7;padding:20px;white-space:pre-wrap}h2{margin-top:32px}</style>
+<h1>Jev × DeepSeek Harness</h1>
+<p>独立仓库：xDAN-System3-Harness。用户已于 2026-09-29 批准创建，核心方向是将 Jev 理念与模型能力嵌入 DSH。产品定位是独立、通用的 Agent 决策与执行框架。</p>
+<h2>目标与边界</h2>
+<p>让 Jev 在有证据、有预算、可回放的决策点提供模型判断，由 DSH 执行任务，由确定性代码守住权限、隐私、取消和验收。Jev 不替代生成模型，概率不等于校准置信度，candidate_done 不等于完成。本次先完成独立底座与已有能力迁移；后续自动控制按独立切片实施。</p>
+<h2>架构与数据流</h2>
+<pre>用户 / Web / CLI / SDK / 可选 AG-UI 客户端
+                       │
+                       ▼
+             DSH AgentLoop + Session
+               │                 │
+       System2 生成与工具执行     结构化执行事实
+               │                 │
+               └──────┬──────────┘
+                      ▼
+          System3 隐私准入与证据选择
+                      │
+                      ▼
+          Jev Choice / Score / Noul
+                      │
+                      ▼
+     持久化请求、模型答案、baseline、usage
+                      │
+                      ▼
+      确定性检查 / 预算 / 取消 / 目标版本
+                      │
+          当前：只保存 shadow 记录
+          后续：证据支持时晋级有界控制</pre>
+<h2>Jev 原则如何落到代码</h2>
+<table><tr><th>原则</th><th>现有基础</th><th>后续缺口</th></tr>
+<tr><td>决策与生成分开</td><td>ctx.jev 类型化 System One provider；主 LLM 继续生成</td><td>任务层 decision/generate 独立能力基准</td></tr>
+<tr><td>有界候选与确定性约束</td><td>Choice/Score/Noul 校验，隐私 route 准入，失败 unknown</td><td>把模型建议连接到可执行动作的确定性准入</td></tr>
+<tr><td>证据先于完成判断</td><td>requiredChecks、evidenceRefs、supervisor 纯函数</td><td>空 checks、passing check 引用、当前目标 revision 和真正独立 verifier</td></tr>
+<tr><td>可回放而非只存结论</td><td>system3/decision 保存完整结构化请求、答案与 baseline，恢复不请求模型</td><td>有界任务与轨迹语义投影，隐私分类后记录完整输入</td></tr>
+<tr><td>按事件触发判断</td><td>DSH extension points、AgentLoop 观测计数</td><td>agent/turn-stopping 自动 shadow consumer，明确触发频率与取消</td></tr>
+<tr><td>收益需要对照证明</td><td>usage 字段和成本账本原语</td><td>权威预算、并发预留、质量相当时每成功任务总成本及 P95</td></tr></table>
+<h2>独立仓库文件范围</h2>
+<ul><li>根 README 双语：独立定位、源码启动和 Jev 集成入口。</li><li>packages/experimental/agui：通用人格、工具能力说明和 MCP 刷新默认配置。</li><li>六个 System3/Jev/AG-UI package.json：新仓库归属；保留包名与依赖接口。</li><li>docs/feat-independent-harness：当前入口、Jev overlay 和本设计。</li><li>.github/workflows：独立无密钥 CI；继承上游自动化显式启用。</li><li>tasks/feat-independent-harness：实际验证结果、交接与后续任务。</li><li>snapshots/sdk：复用 System3 shadow 回放，补充通用 persona 的真实 profile 快照。</li></ul>
+<h2>接口约定</h2>
+<p>AG-UI HTTP 接口保持通用，客户端可传人格，不需要 App URL/token。ctx.jev 继续接受 typed question 并返回已验证答案或 unknown；ctx.system3.shadowDecision 继续持久化记录且不自动改路由。默认启动不连接旧 App 或运行 SSH 凭据脚本。JEV_ENDPOINT、JEV_MODEL 来自显式部署配置；模型所在宿主不能由 localhost URL 推断。</p>
+<h2>验收计划</h2>
+<ol><li>保留 MIT、历史与原仓库；新 Git 仓库无共享 object alternates、无旧远端 push 目标。</li><li>聚焦 Jev/System3/AG-UI 测试通过，涵盖 provider 拒绝、隐私、取消、HTTP 集成与记录回放。</li><li>构建源码及自带客户端，使用隔离 home 检查独立 overlay、真实启动及 SDK snapshot。</li><li>主模型看到的通用人格与 Session 记录一致；无特定消费 App 的业务承诺。</li><li>类型、lint、文档与必要生成目录检查；每次 push 前 Ruff 两门通过。</li><li>推送后回读 origin/main 与私有状态，记录 CI；不把排队或未运行写成通过。</li></ol>
+<h2>后续实施顺序</h2>
+<p>先完善 supervisor 的证据完整性和空检查规则，再做有界语义输入及自动 shadow；有足够任务对照证据后，才启用有界继续、重试、升级、模型路由和专家委派。实际预算与目标完成权必须接到 DSH 的权威状态，不能仅依赖调用者传入的数字或模型自评。</p>
+<h2>不在本次初始化中承诺的能力</h2>
+<p>自动语义完成判断、全流量 Jev 路由、专家调度、本地 9B 通用任务质量、训练收益和部署成本改善均未在本轮实现或证明。保留这些方向，不用仓库创建成功替代功能验收。</p>
+</html>

@@ -26,6 +26,7 @@ env:
 
 jobs:
   e2e:
+    if: vars.DSH_UPSTREAM_AUTOMATION == 'true'
     runs-on: ubuntu-latest
     name: Azure OpenAI Responses + Anthropic Messages
     timeout-minutes: 20

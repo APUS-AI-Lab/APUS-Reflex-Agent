@@ -1,7 +1,7 @@
 /**
  * The AG-UI wire subset this bridge emits, declared locally so the harness
  * does not depend on the `@ag-ui/*` packages. Field names follow AG-UI 0.0.59;
- * the Muse client validates them against the published schemas.
+ * AG-UI clients validate them against the published schemas.
  */
 
 import type { ServerResponse } from 'node:http'
@@ -51,9 +51,14 @@ export interface RunAgentInput {
 
 /** Custom event names carried in `CUSTOM.name`; the payload sits in `value`. */
 export const CUSTOM_APPROVAL = 'dsh.approval'
+/** Question event name carried in `CUSTOM.name`; the payload sits in `value`. */
 export const CUSTOM_QUESTION = 'dsh.question'
 
-/** Text of a user message in either AG-UI content encoding. */
+/**
+ * Text of a user message in either AG-UI content encoding.
+ * @param message - incoming AG-UI message.
+ * @returns Concatenated text, or an empty string when absent.
+ */
 export function userText(message: RunAgentInput['messages'][number]): string {
   if (typeof message.content === 'string') return message.content
   return (message.content ?? [])
@@ -82,7 +87,10 @@ export class SseWriter {
     return !this.closed
   }
 
-  /** Write one event as `data: <json>`; a detached client drops it silently. */
+  /**
+ * Write one event as `data: <json>`; a detached client drops it silently.
+ * @param event - protocol event to serialize.
+ */
   send(event: AguiEvent): void {
     if (this.closed) return
     this.res.write(`data: ${JSON.stringify({ timestamp: Date.now(), ...event })}\n\n`)

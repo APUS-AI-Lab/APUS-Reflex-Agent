@@ -33,6 +33,7 @@ declare module '@deepseek-ai/cordis' {
      * Re-list the named server's tools now. Dispatch with `ctx.parallel` to
      * wait for the re-list; it settles without rejecting, and a server that
      * is not connected or not loaded ignores the request.
+     * @mode parallel
      * @param serverName - the configured `serverName` to refresh.
      */
     'mcp-client/refresh-tools'(serverName: string): Promise<void> | undefined

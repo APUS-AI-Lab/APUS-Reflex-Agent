@@ -126,6 +126,7 @@ interface SdkAssertions {
 
 const SDK_ASSERTIONS: Readonly<Record<string, SdkAssertions>> = {
   'system3-shadow': { expectedFinalResponse: 'SDK snapshot OK' },
+  'agui-persona': { expectedFinalResponse: 'SDK snapshot OK' },
   'tool-error-details': {
     patches: [fileURLToPath(new URL('./tool-error-details/runtime.cordis.yml', import.meta.url))],
     expectedFinalResponse: 'ERROR_DETAILS_OK',

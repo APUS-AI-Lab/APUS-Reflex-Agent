@@ -27,6 +27,7 @@ defaults:
 
 jobs:
   matrix:
+    if: vars.DSH_UPSTREAM_AUTOMATION == 'true'
     name: Matrix
     runs-on: ubuntu-24.04
     outputs:
@@ -38,6 +39,7 @@ jobs:
         run: echo "prebuilds=$(node ./scripts/github-matrix.mjs release-prebuild)" >> "$GITHUB_OUTPUT"
 
   build-prebuilds:
+    if: vars.DSH_UPSTREAM_AUTOMATION == 'true'
     name: ${{ matrix.package }}
     needs: matrix
     runs-on: ${{ matrix.runner }}
@@ -88,6 +90,7 @@ jobs:
           retention-days: 7
 
   pack:
+    if: vars.DSH_UPSTREAM_AUTOMATION == 'true'
     name: Pack npm tarballs
     needs: build-prebuilds
     runs-on: ubuntu-24.04
@@ -147,7 +150,7 @@ jobs:
 
   publish:
     name: Publish to npm
-    if: inputs.publish
+    if: ${{ vars.DSH_UPSTREAM_AUTOMATION == 'true' && (inputs.publish) }}
     needs: pack
     runs-on: ubuntu-24.04
     environment: npm-publish

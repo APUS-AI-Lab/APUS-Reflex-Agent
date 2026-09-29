@@ -22,11 +22,17 @@ declare module '@deepseek-ai/cordis' {
 
 /** Plugin configuration for the built-in System One provider. */
 export interface Config {
+  /** System One gateway URL; credentials must use apiKeyEnv rather than URL user information. */
   readonly endpoint: string
+  /** Model identifier used when a decision request omits its model. */
   readonly model: string
+  /** Decision effort used when a request omits it. @default 'low' */
   readonly effort?: 'low' | 'high'
+  /** Maximum duration in milliseconds for the gateway HTTP request. @default 30000 */
   readonly timeoutMs?: number
+  /** Credential reference for bearer authentication; omission permits an unauthenticated gateway. */
   readonly apiKeyEnv?: string
+  /** Registry identity of the built-in provider, selected when a request omits providerId. @default 'system-one' */
   readonly providerId?: string
 }
 

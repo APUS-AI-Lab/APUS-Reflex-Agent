@@ -35,6 +35,7 @@ env:
 
 jobs:
   build:
+    if: vars.DSH_UPSTREAM_AUTOMATION == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -79,6 +80,7 @@ jobs:
           path: website/.dist
 
   deploy:
+    if: vars.DSH_UPSTREAM_AUTOMATION == 'true'
     needs: build
     runs-on: ubuntu-latest
     permissions:
