@@ -39,7 +39,7 @@ kind: "package-library"
 
 <a id="configuration"></a>
 
-除成对的路由覆盖项外，每个字段都必填；库不提供默认值。
+除成对的路由覆盖项和 `subject` 外，每个字段都必填；只有 `subject` 带库默认值。
 
 | 键 | 默认值 | 含义 |
 |---|---|---|
@@ -49,6 +49,7 @@ kind: "package-library"
 | `maxOutputTokens` | 必填 | 辅助生成的 token 上限 |
 | `timeoutMs` | 必填 | 运行时定时器限制内的端到端时限 |
 | `provider`, `model` | 可选 | 显式路由；二者同时提供或同时省略 |
+| `subject` | `an AI coding-assistant session` | 被命名的对象，嵌入系统指令 "Create a concise title for <subject> …"；须为不超过 120 个字符、非空白且不含控制字符的单行文本 |
 
 -----
 

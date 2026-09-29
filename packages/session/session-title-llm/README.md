@@ -39,7 +39,7 @@ A provider plugin calls `registerSessionTitleLlmProvider(ctx, config, id, automa
 
 <a id="configuration"></a>
 
-Every field is required except the paired route override; there are no library defaults.
+Every field is required except the paired route override and `subject`; `subject` is the only library default.
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -49,6 +49,7 @@ Every field is required except the paired route override; there are no library d
 | `maxOutputTokens` | required | Auxiliary generation token cap |
 | `timeoutMs` | required | End-to-end deadline within the runtime timer limit |
 | `provider`, `model` | optional | Explicit route; both or neither |
+| `subject` | `an AI coding-assistant session` | What is being titled, inserted into the system instruction "Create a concise title for <subject> …"; one non-blank line of at most 120 characters with no control characters |
 
 -----
 

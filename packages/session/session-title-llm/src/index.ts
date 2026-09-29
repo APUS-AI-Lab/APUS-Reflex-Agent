@@ -72,10 +72,26 @@ export interface SessionTitleLlmConfig {
   readonly provider?: string
   /** Optional explicit model id; must be paired with `provider`. */
   readonly model?: string
+  /**
+   * Optional noun phrase naming what is being titled, as in "a concise title for <subject>".
+   * Defaults to {@link DEFAULT_SESSION_TITLE_SUBJECT}.
+   */
+  readonly subject?: string
 }
 
-/** Validated immutable model-provider policy. */
-export interface ResolvedSessionTitleLlmConfig extends SessionTitleLlmConfig {}
+/** Validated immutable model-provider policy with the title subject resolved. */
+export interface ResolvedSessionTitleLlmConfig extends SessionTitleLlmConfig {
+  readonly subject: string
+}
+
+/** Title subject used when a deployment does not configure one. */
+export const DEFAULT_SESSION_TITLE_SUBJECT = 'an AI coding-assistant session'
+
+/** Longest accepted `subject`, in UTF-16 code units. */
+export const MAX_SESSION_TITLE_SUBJECT_LENGTH = 120
+
+/** A non-blank single line with no C0/C1 control characters. */
+const SUBJECT_PATTERN = /^(?=.*\S)[^\u0000-\u001f\u007f-\u009f\u2028\u2029]+$/u
 
 /** Shared Loader field schemas with no library defaults. */
 export const SessionTitleLlmConfigFields = {
@@ -86,6 +102,7 @@ export const SessionTitleLlmConfigFields = {
   timeoutMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).required(),
   provider: z.string(),
   model: z.string(),
+  subject: z.string().max(MAX_SESSION_TITLE_SUBJECT_LENGTH).pattern(SUBJECT_PATTERN),
 }
 
 /** Shared Loader schema with no library defaults. */
@@ -100,6 +117,7 @@ const CONFIG_KEYS: ReadonlySet<string> = new Set([
   'timeoutMs',
   'provider',
   'model',
+  'subject',
 ])
 
 /** Validate one positive integer limit. */
@@ -143,7 +161,11 @@ export function resolveSessionTitleLlmConfig(
       || typeof value.model !== 'string' || value.model.length === 0)) {
     throw new Error('session-title-llm: provider and model overrides must be non-empty strings')
   }
-  return deepFreeze({ ...value })
+  const subject = value.subject ?? DEFAULT_SESSION_TITLE_SUBJECT
+  if (typeof subject !== 'string' || subject.length > MAX_SESSION_TITLE_SUBJECT_LENGTH || !SUBJECT_PATTERN.test(subject)) {
+    throw new Error(`session-title-llm: subject must be a non-blank single line of at most ${MAX_SESSION_TITLE_SUBJECT_LENGTH} characters with no control characters`)
+  }
+  return deepFreeze({ ...value, subject })
 }
 
 /** Select the provider-owned message subset from one fixed service revision. */
@@ -194,7 +216,7 @@ function resolveRoute(
 /** Stable language-aware system instruction shared by both provider plugins. */
 function systemPrompt(config: ResolvedSessionTitleLlmConfig): string {
   return [
-    'Create a concise title for an AI coding-assistant session from the supplied human messages.',
+    `Create a concise title for ${config.subject} from the supplied human messages.`,
     'Return only the title on one line, **in plain text of natural language**, with no quotes, prefix, explanation, Markdown, XML, or terminal control codes. No code is allowed.',
     'Use the language of the messages.',
     `Aim for about ${config.targetWords} words in non-CJK languages or ${config.targetCjkCharacters} CJK characters.`,
