@@ -35,7 +35,10 @@ export interface AguiHarness {
   dispose(): Promise<void>
 }
 
-export async function makeAguiHarness(script: ConstructorParameters<typeof MockAdapter>[0]): Promise<AguiHarness> {
+export async function makeAguiHarness(
+  script: ConstructorParameters<typeof MockAdapter>[0],
+  overrides: Partial<AguiPlugin.Config> = {},
+): Promise<AguiHarness> {
   process.env.AGUI_TEST_TOKEN = TOKEN
   const root = await mkdtemp(join(tmpdir(), 'dsh-agui-test-'))
   const ctx = new Context()
@@ -55,6 +58,9 @@ export async function makeAguiHarness(script: ConstructorParameters<typeof MockA
     model: 'mock',
     defaultCwd: root,
     maxBodyBytes: 1024 * 1024,
+    refreshMcpServers: ['app'],
+    mcpRefreshTimeoutMs: 3000,
+    ...overrides,
   })
   const baseUrl = `http://127.0.0.1:${String(ctx.webServer.port)}/agui`
 

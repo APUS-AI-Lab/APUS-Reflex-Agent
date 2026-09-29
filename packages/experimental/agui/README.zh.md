@@ -62,6 +62,10 @@ AGENT_TOKEN=a-long-random-secret
 | `provider`、`model` | 本桥创建或恢复的 Agent 所用路由。 |
 | `defaultCwd` | 客户端未给出 `forwardedProps.cwd` 时新 Session 的工作目录。默认进程 cwd。 |
 | `maxBodyBytes` | 可接受的最大请求体。默认 1 MiB。 |
+| `refreshMcpServers` | 每次 run 前重新列出工具的 MCP `serverName`，用于无法通知工具变更的服务器。默认 `["app"]`。 |
+| `mcpRefreshTimeoutMs` | run 等待该重新列出的最长时间；超时或失败时 run 使用缓存的工具开始。默认 3000。 |
+
+run 可携带 `forwardedProps.persona` `{ name, tone, hidden? }`；默认是 Duse、`warm` 语气。persona 替换 harness 身份与仅用于 Web 的 prompt 段落，`persona:capabilities` 段在每一步只列出已挂载工具且不在 `hidden` 中的能力组（`web`、`watch`、`search`、`memory`、`goals`、`mail`、`calendar`、`files`、`terminal`、`experts`）。邮件、日历、终端缺失时标明尚未连接。任何组都未列入的工具可以调用，但不会被宣传。
 
 -----
 

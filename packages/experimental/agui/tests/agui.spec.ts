@@ -1,6 +1,7 @@
 import { agentEvents } from '@deepseek-ai/dsh-agent'
 import { ToolCallId, createUserMessage } from '@deepseek-ai/dsh-llm'
 import { SessionId } from '@deepseek-ai/dsh-session'
+import { defineContentToolFixture } from '@deepseek-ai/dsh-tools'
 import { afterEach, describe, expect, it } from 'vitest'
 import { textResponse, toolCallResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import { type AguiEvent, CUSTOM_APPROVAL, personaFrom } from '../src/index.ts'
@@ -110,20 +111,69 @@ describe('AG-UI bridge', () => {
       const first = harness!.adapter.requests[index]?.messages[0]
       return first?.role === 'system' ? JSON.stringify(first) : ''
     }
-    await harness.run('thread-persona', 'who are you', 'p1', { persona: { name: 'Nova', tone: 'concise' } })
-    expect(systemOf(0)).toContain('You are Nova, the person\'s private agent in xDAN System3 Personal Agent.')
+    // A global Web deliverables section that bridge Agents must not see.
+    harness.ctx.systemPrompt.section({ name: 'ui:deliverable-file-references', order: 9000, text: 'Use present when a separate file card helps.' })
+    harness.ctx.tools.register(defineContentToolFixture({
+      name: 'mcp__app__browse_web', description: 'Read a public web page.', parameters: {},
+      execute: async () => [{ type: 'text', text: 'page' }],
+    }))
+    await harness.run('thread-persona', 'who are you', 'p1', { persona: { name: 'Nova', tone: 'concise', hidden: ['watch'] } })
+    expect(systemOf(0)).toContain('You are Nova, the person\'s private agent.')
+    expect(systemOf(0)).toContain('我是 Nova，你的私人 agent')
     expect(systemOf(0)).toContain('Be brief and direct')
-    expect(systemOf(0)).not.toContain('DeepSeek Harness')
+    expect(systemOf(0)).not.toContain('powered by DeepSeek Harness')
+    expect(systemOf(0)).not.toContain('Use present')
     expect(systemOf(0)).toContain('Do not volunteer internal details')
-    expect(systemOf(0)).toContain('mcp__app__')
+    expect(systemOf(0)).toContain('- 阅读并总结网页')
+    expect(systemOf(0)).toContain('邮件 / mail: 还没连接')
+    expect(systemOf(0)).not.toContain('查找和阅读邮件')
+    // A tool mounted mid-thread is advertised at the next step.
+    harness.ctx.tools.register(defineContentToolFixture({
+      name: 'mcp__app__search_mail', description: 'Search mail.', parameters: {},
+      execute: async () => [{ type: 'text', text: 'mail' }],
+    }))
     // A later run with a new persona applies to the same Agent's next step.
     await harness.run('thread-persona', 'again', 'p2', { persona: { name: 'Iris', tone: 'warm' } })
     expect(systemOf(1)).toContain('You are Iris')
+    expect(systemOf(1)).toContain('- 查找和阅读邮件')
     // A thread without a persona uses the Personal Agent default, never the harness identity.
     await harness.run('thread-default', 'hello', 'p3')
-    expect(systemOf(2)).toContain('You are Muse')
+    expect(systemOf(2)).toContain('You are Duse')
     expect(personaFrom({ name: ' ', tone: 'warm' })).toBeUndefined()
     expect(personaFrom({ name: 'X', tone: 'loud' })).toBeUndefined()
+  })
+
+  it('re-lists MCP tools before each run and still runs when the re-list fails or stalls', async () => {
+    harness = await makeAguiHarness([textResponse('one'), textResponse('two'), textResponse('three')], { mcpRefreshTimeoutMs: 50 })
+    const systemOf = (index: number): string => JSON.stringify(harness!.adapter.requests[index]?.messages[0])
+    const asked: string[] = []
+    let mode: 'add' | 'fail' | 'stall' = 'add'
+    harness.ctx.on('mcp-client/refresh-tools', (server) => {
+      asked.push(server)
+      if (mode === 'fail') return Promise.reject(new Error('refresh failed'))
+      if (mode === 'stall') return new Promise<void>(() => {})
+      harness!.ctx.tools.register(defineContentToolFixture({
+        name: 'mcp__app__search_mail', description: 'Search mail.', parameters: {},
+        execute: async () => [{ type: 'text', text: 'mail' }],
+      }))
+      return Promise.resolve()
+    })
+    await harness.run('thread-refresh', 'any mail?', 'r1')
+    expect(asked).toEqual(['app'])
+    expect(systemOf(0)).toContain('- 查找和阅读邮件')
+    mode = 'fail'
+    expect((await harness.run('thread-refresh', 'again', 'r2')).at(-1)?.type).toBe('RUN_FINISHED')
+    mode = 'stall'
+    expect((await harness.run('thread-refresh', 'once more', 'r3')).at(-1)?.type).toBe('RUN_FINISHED')
+    expect(asked).toEqual(['app', 'app', 'app'])
+  })
+
+  it('skips the MCP re-list when no server is configured', async () => {
+    harness = await makeAguiHarness([textResponse('ok')], { refreshMcpServers: [] })
+    const asked: string[] = []
+    harness.ctx.on('mcp-client/refresh-tools', (server) => { asked.push(server); return undefined })
+    await harness.run('thread-no-refresh', 'hi', 'r1')
+    expect(asked).toEqual([])
   })
 
   it('lets only one of two concurrent runs on a cold thread through', async () => {
