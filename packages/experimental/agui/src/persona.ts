@@ -56,7 +56,8 @@ const GROUPS: Record<CapabilityGroup, GroupSpec> = {
   },
   calendar: {
     line: '查看和安排日程 / check and plan the calendar',
-    missing: '日历 / calendar: 还没连接，需要先在设置里连接 Google / not connected; Google must be connected in Settings first',
+    // Google may already be connected for the app; only chat lacks calendar tools, so never send the person to connect it again.
+    missing: '日历 / calendar: 对话里暂时还不能查看或安排日程，可以在 App 的日历页查看 / not available in chat yet; the person can use the Calendar page in the app',
     pattern: /^mcp__app__\w*(?:calendar|_events?)\w*$/,
   },
   files: {
