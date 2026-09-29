@@ -23,6 +23,7 @@ export const Config: z<Config> = z.object({
   timeoutMs: SessionTitleLlmConfigFields.timeoutMs,
   provider: SessionTitleLlmConfigFields.provider,
   model: SessionTitleLlmConfigFields.model,
+  subject: SessionTitleLlmConfigFields.subject,
 })
 /* jscpd:ignore-end */
 
