@@ -158,7 +158,7 @@
 
 ## 7. 冷启动 checklist
 
-1. 读本交接、独立 README 与 design.html，保持 Jev 决策/执行/验证目标。
+1. 读本交接、独立 README 与 jev-native-dsh-native-plan.html；design.html 仅为初始化方案。
 2. 在正式仓库根核对 git status、HEAD、worktree 和 origin，再进入隔离 worktree 开发。
 3. 初始化依赖与 native；根据修改范围选择测试。无密钥回放与真实模型验证分别报告。
 4. 查看最新远端 CI；不要为恢复旧自动化而直接启用 DSH_UPSTREAM_AUTOMATION。
@@ -167,10 +167,34 @@
 ## 8. Jev Native + DSH Native 专项方案
 
 - 交付：中英文根 README 的架构入口；docs/feat-independent-harness/architecture.svg、architecture@2x.png、jev-native-dsh-native-plan.html；集成指南链接与双语配对记录；tasks 的计划及纠偏经验。
-- HTML 为离线单文件，图形与样式内嵌；原子能力、场景、记忆、路由与长期 Goal 均作为候选领域审查。没有修改运行时代码，也未引入 Pilot 代码。
+- HTML 为离线单文件，图形与样式内嵌；能力、场景、记忆、路由与长期 Goal 的接入位置均经过审查。没有修改运行时代码，也未引入 Pilot 代码。
 - DSH / Pilot 源码审计与两轮反方 review 后，撤回“首期必需新增 pre-assembly 契约”；首个恢复试验固定 route、不裁工具，现有生命周期优先。联合路由需另验容量、compaction、重试与单一 selection 所有者。
 - Goal 已有原生状态及续轮，但恢复后 disarm；Schedule 不唤醒冷会话；workflow 无跨重启恢复；storage/FTS 不等于语义长期记忆。不能在方案中把这些条件抹掉。
 - 最终只读复核无新增实质阻断项；不是运行时或收益验收。首个任务族、候选、实际 Jev 部署及预算仍需实施前确认。
 - 交付物：专项 HTML 251 行、SVG 86 行、PNG 2400×2520；根 README 与集成指南双语同步。
 - 图形人工检查、浏览器离线加载（零外部资源）、22 个 HTML 链接及 Markdown 链接检查通过；doc-sync 42/42、pnpm run lint 通过。首次检查发现旧交接中的提交 hash 违反仓库引用规则，已修正并通过复验。
 - 专项方案、SVG/PNG 与中英文 README 已推送新仓库 main；推送前 Ruff 双检查与类型检查通过。正式目录 main 与保留 worktree 同步交付。
+
+
+## 9. 中文原生决策方案修订
+
+- 用户再次明确：产品主线和特点是 Jev Native 深入 DSH 架构、能力与各环节决策；记忆、路由、长程目标和主动沟通沿此展开，9B/27B Lead 是未来部署演进。不能改成泛本地 Lead 平台。
+- 主图采用中文，中心为原生事实、合法候选、Jev 判断、原生服务采纳及结果反馈；正文十节，明确六类作用点的输入、结构化判断、DSH 消费者与限制。中文和英文根 README 同步此定位。
+- 首期建议固定执行模型、工具和路由，验证失败诊断后下一项证据选择。规则、Jev、System2 使用同一候选与证据比较，包含候选形成及所有失败代价；不以完整 Lead 平台或新增核心接口为前提。
+- 反方最终复核无实质阻断；可行性表已将 Jev 行置首。模型能力、自动融合与净收益均未声称已实现；没有运行模型实验或发送外部消息。
+- 图形与离线浏览器检查通过：中文路径字形、22 个本地链接及锚点、唯一 ID、内嵌 SVG、零外部资源，桌面和 390px 手机宽度均无整页横向溢出。PNG 为 2400×3100。
+- 本轮检查：doc-sync 42/42、pnpm run lint、ruff check .、ruff format --check . 均通过。按正常流程提交推送至 main，由 pre-push 执行增量类型检查；发布以远端回读为准，保留 worktree。
+
+本次文档改动清单（文件总行数）：
+
+| 路径 | 行数／尺寸 | 用途 |
+|---|---:|---|
+| `README.md` | 90 | 英文架构入口 |
+| `README.zh.md` | 111 | 中文架构入口 |
+| `README.i18n.yaml` | 6 | 双语配对记录 |
+| `docs/feat-independent-harness/jev-native-dsh-native-plan.html` | 248 | 中文专项方案 |
+| `docs/feat-independent-harness/architecture.svg` | 92 | 中文原生决策图 |
+| `tasks/lessons.md` | 37 | 用户纠偏规则 |
+| `tasks/todo.md` | 45 | 任务与验收记录 |
+| `docs/feat-independent-harness/architecture@2x.png` | 2400×3100 | GitHub 图像 |
+| `tasks/feat-independent-harness/handoff.md` | 200 | 冷启动入口与本次结果 |

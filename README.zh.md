@@ -6,13 +6,13 @@
 
 ## 架构
 
-System1 占据规则无法解决语义歧义、完整 System2 生成又太贵的中间决策位置。DSH 拥有共享 Session、生命周期、权限与执行。图中虚线决策运行时是规划，挂载现有 Jev provider 不会启用它。
+核心特点是原生中间决策：DSH 提供执行事实与合法候选，Jev 判断有界语义问题，所属原生服务校验并采纳，实际结果供后续决策与评估使用。规则处理确定情况，System2 承担开放推理与生成。图中虚线自动融合部分为规划，挂载现有 provider 不会启用它。
 
-![Jev Native + DSH Native：规划中的原生协调机制基于共享 Session 证据，协调规则、System1 决策和 System2 执行。](docs/feat-independent-harness/architecture@2x.png)
+![Jev Native + DSH Native：原生执行事实、有界 Jev 判断、原生动作采纳与结果反馈贯穿 DSH 生命周期。](docs/feat-independent-harness/architecture@2x.png)
 
 [SVG 源文件](docs/feat-independent-harness/architecture.svg) · [Jev Native + DSH Native 专项方案](docs/feat-independent-harness/jev-native-dsh-native-plan.html)
 
-评估涵盖原子能力、场景策略、记忆、路由与长程目标；这些是候选领域，不是必做功能清单。优先使用现有 DSH 生命周期机制，核心改造需有具体必要性。Agent JEV Pilot 仅作为实验参考，不作为代码依赖。
+记忆、模型与专业路由、执行恢复、长程目标和主动沟通沿原生决策主线展开，每类 Jev 应用分别验证价值。未来本地 9B／27B 可作为 Lead Agent 处理本地事务、持续编排与跟踪，复杂执行、规划或验收交由专业能力承接。优先使用现有 DSH 机制；Pilot 仅作为实验参考，不作为代码依赖。
 
 DeepSeek Harness（`dsh`）是由 [DeepSeek AI](https://deepseek.com) 开发的开源 agent harness（智能体框架）。
 

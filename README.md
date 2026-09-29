@@ -6,13 +6,13 @@ English | [中文](README.zh.md)
 
 ## Architecture
 
-System1 occupies the middle ground where rules cannot resolve semantic ambiguity and a full System2 generation is too costly. DSH owns the shared Session, lifecycle, permissions and execution. The dashed decision runtime is proposed; mounting the current Jev provider does not enable it.
+The defining design is native intermediate decision-making: DSH supplies execution facts and permitted candidates, Jev resolves bounded semantic uncertainty, and the owning DSH service validates and applies the choice. Results feed subsequent decisions and evaluation. Rules handle deterministic cases; System2 handles open reasoning and generation. The dashed automatic integration is proposed, not enabled by mounting the current provider.
 
-![Jev Native + DSH Native: proposed native coordination connects rules, System1 decisions and System2 execution against shared Session evidence.](docs/feat-independent-harness/architecture@2x.png)
+![Jev Native + DSH Native: execution facts, bounded Jev decisions, native action adoption and outcome feedback across the DSH lifecycle. Chinese architecture diagram.](docs/feat-independent-harness/architecture@2x.png)
 
 [SVG source](docs/feat-independent-harness/architecture.svg) · [Jev Native + DSH Native plan (Chinese)](docs/feat-independent-harness/jev-native-dsh-native-plan.html)
 
-The assessment considers capabilities, scenario strategies, memory, routing and long-horizon goals as candidates, not a required feature list. Existing DSH lifecycle mechanisms come first; core changes require a demonstrated need. Agent JEV Pilot is an experimental reference, not a code dependency.
+Memory, model and expert routing, recovery, long-horizon goals and proactive communication extend this native decision architecture. Each Jev use requires its own evidence of value. Future local 9B/27B models may act as Lead Agents for local work and sustained coordination, with harder execution, planning or verification delegated to specialists. Existing DSH mechanisms come first; Pilot is an experimental reference, not a code dependency.
 
 DeepSeek Harness (`dsh`) is an open-source agent harness developed by [DeepSeek AI](https://deepseek.com).
 
