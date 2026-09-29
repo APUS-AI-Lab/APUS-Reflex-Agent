@@ -62,6 +62,10 @@ Events emitted during a run: `RUN_STARTED`, `TEXT_MESSAGE_*`, `REASONING_MESSAGE
 | `provider`, `model` | Route for Agents this bridge creates or resumes. |
 | `defaultCwd` | Working directory for new Sessions when `forwardedProps.cwd` is absent. Defaults to the process cwd. |
 | `maxBodyBytes` | Largest accepted request body. Default 1 MiB. |
+| `refreshMcpServers` | MCP `serverName`s whose tools are re-listed before each run, for servers that cannot announce tool changes. Default `["app"]`. |
+| `mcpRefreshTimeoutMs` | Longest a run waits for that re-list; after it, or on a failure, the run starts with the cached tools. Default 3000. |
+
+A run may carry `forwardedProps.persona` `{ name, tone, hidden? }`; the default is Duse with the `warm` tone. The persona replaces the harness identity and the Web-only prompt sections, and a `persona:capabilities` section lists, at every step, only the capability groups (`web`, `watch`, `search`, `memory`, `goals`, `mail`, `calendar`, `files`, `terminal`, `experts`) that have a mounted tool and are not in `hidden`. Mail, calendar and terminal are named as not connected when absent. A tool that no group lists is callable but not advertised.
 
 -----
 

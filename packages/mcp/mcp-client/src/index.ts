@@ -27,6 +27,18 @@ export { createMcpToolDefinition } from './tools.ts'
 export type { McpResult, McpToolDefinitionOptions } from './tools.ts'
 export type { ReconnectConfig, ResolvedReconnectPolicy } from './connection.ts'
 
+declare module '@deepseek-ai/cordis' {
+  interface Events {
+    /**
+     * Re-list the named server's tools now. Dispatch with `ctx.parallel` to
+     * wait for the re-list; it settles without rejecting, and a server that
+     * is not connected or not loaded ignores the request.
+     * @param serverName - the configured `serverName` to refresh.
+     */
+    'mcp-client/refresh-tools'(serverName: string): Promise<void> | undefined
+  }
+}
+
 /** Cordis plugin name used by loader diagnostics. */
 export const name = 'mcp-client'
 
@@ -180,6 +192,7 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
   // quiesces in-flight work, and unregisters the current generation.
   const connection = startConnection(ctx, config, reconnect)
   registerServerContext(ctx, config.serverName, connection)
+  ctx.on('mcp-client/refresh-tools', serverName => serverName === config.serverName ? connection.refreshTools() : undefined)
   let stopping: Promise<void> | undefined
   const dispose = (): Promise<void> => stopping ??= connection.dispose()
   // Cordis announces unload before awaiting an unfinished apply(). Closing

@@ -15,6 +15,7 @@ import type { Context } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/cordis-plugin-loader'
 import { installModelSelection, type Agent, type AgentHandle } from '@deepseek-ai/dsh-agent'
 import type {} from '@deepseek-ai/dsh-host-webserver'
+import type {} from '@deepseek-ai/dsh-mcp-client'
 import type { WebRoute } from '@deepseek-ai/dsh-host-webserver'
 import type { SessionId } from '@deepseek-ai/dsh-session'
 import type {} from '@deepseek-ai/dsh-session-persistence'
@@ -32,14 +33,14 @@ import { type ActiveRun, driveRun, sessionIdOf } from './run.ts'
 
 export type { AguiEvent, AguiMessage, RunAgentInput } from './agui.ts'
 export { CUSTOM_APPROVAL, CUSTOM_QUESTION } from './agui.ts'
-export { DEFAULT_PERSONA, personaFrom, personaPrompt, type Persona } from './persona.ts'
+export { CAPABILITIES_SECTION, CAPABILITY_GROUPS, DEFAULT_PERSONA, personaFrom, personaPrompt, renderCapabilities, type CapabilityGroup, type Persona } from './persona.ts'
 export { historyMessages } from './projection.ts'
 
 export const name = 'agui'
 // sessionPersistence, sessionQuery, sessionTitle, workspaceRegistry and loader
 // are read through ctx.get at request time: each route that needs one answers
 // 501 when the composition omits it, so a minimal profile still streams turns.
-export const inject = ['agents', 'sessions', 'webServer']
+export const inject = ['agents', 'sessions', 'tools', 'webServer']
 
 export interface Config {
   /** Environment variable holding the bearer token every request must present. */
@@ -53,6 +54,13 @@ export interface Config {
   readonly defaultCwd?: string
   /** Largest accepted request body. @default 1 MiB */
   readonly maxBodyBytes: number
+  /**
+   * MCP servers (by `serverName`) whose tool lists are re-listed before each
+   * run, for servers that cannot announce tool changes. @default ['app']
+   */
+  readonly refreshMcpServers: string[]
+  /** Longest a run waits for that re-list before it starts with the cached tools. @default 3000 */
+  readonly mcpRefreshTimeoutMs: number
 }
 
 export const Config: z<Config> = z.object({
@@ -62,6 +70,8 @@ export const Config: z<Config> = z.object({
   model: z.string().required(),
   defaultCwd: z.string(),
   maxBodyBytes: z.natural().min(1).default(1024 * 1024),
+  refreshMcpServers: z.array(z.string()).default(['app']),
+  mcpRefreshTimeoutMs: z.natural().default(3000),
 })
 
 /** One thread's summary for the list endpoint. */
@@ -117,6 +127,27 @@ export function apply(ctx: Context, config: Config): void {
   if (token === undefined || token.trim() === '') throw new Error(`agui: ${config.tokenEnv} must hold the bearer token`)
 
   const handles = new Map<string, AgentHandle>()
+  /**
+   * Re-list the configured MCP servers' tools, so a tool the server added or
+   * dropped since the last run is advertised correctly. Bounded by
+   * `mcpRefreshTimeoutMs`; a failure is logged and the run uses the cached tools.
+   */
+  const refreshMcpTools = async (): Promise<void> => {
+    if (config.refreshMcpServers.length === 0) return
+    let timer: NodeJS.Timeout | undefined
+    const timeout = new Promise<void>((resolve) => { timer = setTimeout(resolve, config.mcpRefreshTimeoutMs) })
+    try {
+      await Promise.race([
+        Promise.all(config.refreshMcpServers.map(server => ctx.parallel('mcp-client/refresh-tools', server))),
+        timeout,
+      ])
+    } catch (error: unknown) {
+      ctx.logger.warn(`agui: MCP tool refresh failed: ${String(error)}`)
+    } finally {
+      clearTimeout(timer)
+    }
+  }
+
   const personas = new Map<string, { persona: Persona }>()
   const personaOf = (threadId: string): { persona: Persona } => {
     let holder = personas.get(threadId)
@@ -247,6 +278,7 @@ export function apply(ctx: Context, config: Config): void {
   const streamRun = async (body: RunAgentInput, text: string, res: ServerResponse): Promise<void> => {
     personaOf(body.threadId).persona = personaFrom(body.forwardedProps?.persona) ?? personaOf(body.threadId).persona
     const handle = await resolveAgent(body.threadId, body.forwardedProps?.cwd, true)
+    await refreshMcpTools()
     const sse = new SseWriter(res)
     const run: ActiveRun = { runId: body.runId, threadId: body.threadId, agent: handle.agent, sse }
     runs.set(body.threadId, run)

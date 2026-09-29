@@ -113,6 +113,13 @@ export interface ConnectionHandle extends ServerContext {
    * unregister every tool this server still owns.
    */
   dispose(): Promise<void>
+  /**
+   * Re-list the tools of the connected generation now, for servers that
+   * cannot send `notifications/tools/list_changed` (such as a stateless HTTP
+   * endpoint). A no-op while the server is connecting or down. Never
+   * rejects: a failed re-list is logged and keeps the previous tools.
+   */
+  refreshTools(): Promise<void>
 }
 
 /**
@@ -363,6 +370,15 @@ export function startConnection(ctx: Context, config: Config, policy: ResolvedRe
   return {
     ready,
     instructions: () => serverInstructions,
+    async refreshTools(): Promise<void> {
+      const generation = client
+      if (generation === undefined || connectedAt === undefined) return
+      try {
+        await enqueueSync(generation)
+      } catch (error) {
+        if (!disposed) ctx.logger.warn(`${label}: on-demand tool re-sync failed: ${String(error)}`)
+      }
+    },
     resources: {
       async request(request, exec): Promise<JsonValue> {
         const generation = client

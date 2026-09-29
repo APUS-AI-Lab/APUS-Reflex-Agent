@@ -390,6 +390,49 @@ describe('apply (plugin lifecycle)', () => {
     expect(ctx.tools.get('mcp__srv__remote')).toBeDefined()
   })
 
+  it('re-lists tools on demand for its own server only', async () => {
+    await apply(ctx, stdioConfig)
+    mockListTools.mockClear()
+    await ctx.parallel('mcp-client/refresh-tools', 'other')
+    expect(mockListTools).not.toHaveBeenCalled()
+
+    mockListTools.mockResolvedValue({ tools: [{ name: 'updated', inputSchema: { type: 'object' } }], nextCursor: undefined })
+    await ctx.parallel('mcp-client/refresh-tools', 'srv')
+    expect(ctx.tools.get('mcp__srv__updated')).toBeDefined()
+    expect(ctx.tools.get('mcp__srv__remote')).toBeUndefined()
+  })
+
+  it('keeps the previous tools and resolves when an on-demand re-list fails', async () => {
+    await apply(ctx, stdioConfig)
+    const warned = vi.spyOn(ctx.logger, 'warn')
+    mockListTools.mockRejectedValue(new Error('flaky server'))
+    await ctx.parallel('mcp-client/refresh-tools', 'srv')
+    expect(warned).toHaveBeenCalledWith(expect.stringContaining('on-demand tool re-sync failed: Error: flaky server'))
+    expect(ctx.tools.get('mcp__srv__remote')).toBeDefined()
+  })
+
+  it('ignores an on-demand re-list while disconnected', async () => {
+    mockConnect.mockRejectedValue(new Error('connection refused'))
+    await apply(ctx, stdioConfig)
+    await ctx.parallel('mcp-client/refresh-tools', 'srv')
+    expect(mockListTools).not.toHaveBeenCalled()
+    await ctx.fiber.dispose()
+  })
+
+  it('stays quiet when an on-demand re-list fails after disposal', async () => {
+    const fiber = ctx.plugin({ name: 'mcp-client-refresh', inject, apply }, stdioConfig)
+    await fiber
+    const listing: PromiseWithResolvers<unknown> = Promise.withResolvers()
+    mockListTools.mockReturnValue(listing.promise)
+    const warned = vi.spyOn(ctx.logger, 'warn')
+    const refreshed = ctx.parallel('mcp-client/refresh-tools', 'srv')
+    await vi.waitFor(() => { expect(mockListTools).toHaveBeenCalledTimes(2) })
+    const disposed = fiber.dispose()
+    listing.reject(new Error('late failure'))
+    await Promise.all([refreshed, disposed])
+    expect(warned).not.toHaveBeenCalledWith(expect.stringContaining('on-demand'))
+  })
+
   it('effect disposer unregisters the CURRENT generation and closes client', async () => {
     // Load through ctx.plugin so ONLY the plugin's fiber is disposed — the
     // registry must survive to observe the unregistration.
