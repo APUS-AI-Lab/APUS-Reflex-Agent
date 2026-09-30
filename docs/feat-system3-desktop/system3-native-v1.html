@@ -3,10 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="System3：Jev Native + DSH Native 完整设计 v1.1。入口决策、有限过程判断、能力与记忆、长期目标，以及 dataelement 桌面和原生 Web 的联动。">
-<title>System3 原生混合架构 · v1.1 定稿候选</title>
+<meta name="description" content="System3：Jev Native + DSH Native 完整设计 v1.2。入口决策、有限过程判断、能力与记忆、长期目标，以及 dataelement 桌面和原生 Web 的联动。">
+<title>System3 原生混合架构 · v1.2 定稿候选</title>
 <style>
 :root{color-scheme:dark;--bg:#10151d;--panel:#19222d;--line:#334354;--text:#e8edf2;--muted:#b3c0ce;--jev:#6ce4b0;--dsh:#7bb9ff;--warn:#ffd38c}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.8 system-ui,-apple-system,"PingFang SC",sans-serif}main{max-width:1200px;margin:auto;padding:40px 28px 80px}a{color:var(--dsh);text-underline-offset:4px}h1{font-size:clamp(30px,5vw,48px);line-height:1.25;max-width:980px}h2{font-size:26px;line-height:1.4;margin:0 0 20px}h3{font-size:19px;margin:8px 0 12px}p{margin:10px 0 18px}.lead{font-size:21px;max-width:980px}.muted,small{color:var(--muted)}.eyebrow{color:var(--jev);letter-spacing:.1em;font-size:13px}.pill{display:inline-block;border:1px solid var(--line);border-radius:20px;padding:3px 12px;font-size:13px;margin:0 8px 8px 0}.status{color:var(--warn)}nav{display:flex;flex-wrap:wrap;gap:12px 20px;border-block:1px solid var(--line);padding:18px 0;margin:28px 0}section{padding:32px 0;border-bottom:1px solid var(--line);scroll-margin-top:20px}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.card,.callout{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px}.callout{border-left:4px solid var(--jev);margin:20px 0}.dsh{border-left-color:var(--dsh)}.caution{border-left-color:var(--warn)}.card p:last-child{margin-bottom:0}.table-scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:14px}th,td{text-align:left;vertical-align:top;border:1px solid var(--line);padding:13px 16px}th{background:var(--panel);font-weight:600}td:first-child{min-width:130px}code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--jev);font-size:.88em;overflow-wrap:anywhere}pre{padding:20px;background:#0b1016;border:1px solid var(--line);border-radius:10px;white-space:pre-wrap;overflow-wrap:anywhere;font:13px/1.7 ui-monospace,monospace}li{margin-bottom:8px}details{margin:18px 0}summary{cursor:pointer;color:var(--dsh)}.flow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin:20px 0}.flow .node{border:1px solid var(--line);border-radius:10px;padding:18px;background:var(--panel);position:relative}.flow .node:not(:last-child):after{content:'→';position:absolute;right:-15px;top:30px;color:var(--muted)}.node strong{display:block}.node small{display:block;font-size:13px;margin-top:8px}.node.jev{border-color:var(--jev)}.node.owner{border-color:var(--dsh)}.spine{border:1px dashed var(--dsh);padding:16px;border-radius:10px;text-align:center;color:var(--dsh)}.branches{display:flex;gap:12px;flex-wrap:wrap;margin:16px 0}.branches span{border:1px solid var(--line);padding:8px 14px;border-radius:8px}.demo{background:#0d141d;border:1px solid var(--line);border-radius:14px;padding:24px}.toolbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap}label{color:var(--muted);font-size:14px}select,button{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:10px 14px;font:inherit}button{cursor:pointer}button:hover{border-color:var(--jev)}button:focus-visible,select:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid var(--jev);outline-offset:4px}.chat{border-top:1px solid var(--line);margin-top:20px;padding-top:20px}.timeline{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:16px 0}.stage{padding:15px;border:1px solid var(--line);border-radius:8px}.stage strong{display:block;color:var(--jev)}.stage span{font-size:14px}.foot{font-size:13px;color:var(--muted)}.split{display:grid;grid-template-columns:1.5fr 1fr;gap:18px}.criteria{font-size:14px}.note{color:var(--warn)}@media(max-width:800px){main{padding:24px 18px 50px}.grid,.split{grid-template-columns:1fr}.flow{grid-template-columns:1fr}.flow .node:not(:last-child):after{content:'↓';top:auto;bottom:-20px;left:50%;right:auto}.timeline{grid-template-columns:1fr 1fr}table{min-width:680px}}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}@media print{body{background:white;color:#182334}main{max-width:none;padding:0}.muted,small,.foot{color:#415166}.card,.callout,.demo,th,.flow .node{background:#f5f7fa;color:#182334}nav,button{display:none}section{break-inside:avoid}a{color:#155ea0}.timeline,.flow{break-inside:avoid}}
+
+.architecture-figure{margin:20px 0}.architecture-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px}.architecture-scroll svg{display:block;width:100%;height:auto;min-width:1000px}.architecture-scroll:focus-visible{outline:3px solid var(--jev);outline-offset:4px}figcaption{font-size:13px;color:var(--muted);margin-top:12px}.experience-frame{width:100%;height:1080px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}@media print{.architecture-scroll svg{min-width:0}.experience-frame{display:none}}
 </style>
 </head>
 <body><main>
@@ -14,7 +16,7 @@
 <div class="eyebrow">xDAN SYSTEM3 HARNESS · JEV NATIVE + DSH NATIVE</div>
 <h1>把快速判断融入原生执行，<br>让每一次采用都有真实反馈</h1>
 <p class="lead">System3 = System1（Jev-like 有界决策模型）+ System2（高性能推理与生成模型）。第一目标是入口选对模型与处理路径；第二目标是执行过程中，能力、记忆和跟进选择更合适。</p>
-<span class="pill">设计版本 v1.1</span><span class="pill">2026-09-30</span><span class="pill">桌面优先：dataelement</span><span class="pill">目标底座：DSH 0.1.7-rc.2</span><span class="pill status">定稿候选 · 等待具体设计确认</span>
+<span class="pill">设计版本 v1.2</span><span class="pill">2026-09-30</span><span class="pill">桌面优先：dataelement</span><span class="pill">目标底座：DSH 0.1.7-rc.2</span><span class="pill status">定稿候选 · 等待具体设计确认</span>
 <p class="muted">决策模型供给：自有 Jev 9B 与官方 Jev 原生 API，统一通过官方 TypeSafe SDK 接入，共用同一原生决策/采用机制；部署地点、协议参数和质量基线分别验证。</p>
 <p class="muted">本页是本轮统一设计入口。产品代码当前仍为 rc.1 定制版，仅首期 Web/API 入口选模已交付。rc.2 升级、第二名桌面集成及下列扩展尚未实施。交互演示使用静态样例，不连接模型。</p>
 </header>
@@ -32,13 +34,148 @@
 </section>
 <section id="architecture">
 <h2>2. 同一个 DSH 宿主，明确的决策与执行所有权</h2>
-<div class="flow" aria-label="System3 主架构：输入，规则，Jev，DSH采纳，结果">
-<div class="node"><strong>用户输入 / 新结果</strong><small>会话身份、目标版本、人工意图、工具结果、可读证据</small></div>
-<div class="node owner"><strong>DSH 形成合法候选</strong><small>权限、数据范围、服务可用性、容量和模态、预算规则</small></div>
-<div class="node jev"><strong>Jev 快速判断</strong><small>小候选集；choice / score；选择或弃权；有界输入</small></div>
-<div class="node owner"><strong>所属服务采用</strong><small>SessionController / Skill / 上下文 / Subagent / Goal；检查版本与取消</small></div>
-<div class="node"><strong>执行与结果反馈</strong><small>实际调用、上下文加载、输出或失败；持久事实；规则对照评测</small></div>
+<figure class="architecture-figure">
+<div class="architecture-scroll" tabindex="0" role="region" aria-label="Jev 融合 Harness 流程架构图，窄屏可横向滚动">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 1280" role="img" aria-labelledby="diagram-title diagram-desc">
+  <title id="diagram-title">Jev 融入 Harness：即时判断、原生执行与持续反馈</title>
+  <desc id="diagram-desc">完整设计示意，不表示全部已实现。用户输入经过 DSH 规则形成合法候选，Jev System1 做有界判断或弃权，所属原生服务校验与采用。唯一 DSH 执行核心支持云 System2、原生工具，以及待验证的本机 9B 或 27B 通用 Lead。未来 Lead 处理本机常用任务和数据，通过原生 subagent 接口委派已安装的专业 Agent，结果返回 Harness 并由 Lead 整合。真实结果写入统一 Session、有来源的记忆与 Goal，再重新形成合法候选供下一次判断。决策服务、Lead、云模型和专家的数据执行域分别管理，数据外发必须经过规则准入。</desc>
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#26313e" stroke-width="0.5"/></pattern>
+    <marker id="arrow-green" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><path d="M0 0L9 3.5L0 7Z" fill="#6ce4b0"/></marker>
+    <marker id="arrow-blue" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><path d="M0 0L9 3.5L0 7Z" fill="#7bb9ff"/></marker>
+    <marker id="arrow-amber" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><path d="M0 0L9 3.5L0 7Z" fill="#ffd38c"/></marker>
+  </defs>
+  <style>
+    text { font-family: "PingFang SC", "Noto Sans CJK SC", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif; fill: #e8edf2; }
+    .title { font-size: 32px; font-weight: 500; }
+    .subtitle { font-size: 19px; fill: #b3c0ce; }
+    .heading { font-size: 24px; font-weight: 500; }
+    .body { font-size: 20px; fill: #b3c0ce; }
+    .small { font-size: 18px; fill: #b3c0ce; }
+    .annotation { font-size: 18px; }
+    .green { fill: #6ce4b0; }
+    .blue { fill: #7bb9ff; }
+    .amber { fill: #ffd38c; }
+    .panel { fill: #19222d; stroke: #334354; stroke-width: 1.5; }
+    .decision { fill: #173127; stroke: #6ce4b0; stroke-width: 2; }
+    .owned { fill: #182b40; stroke: #7bb9ff; stroke-width: 2; }
+    .future { fill: #302a22; stroke: #ffd38c; stroke-width: 2; stroke-dasharray: 10 6; }
+    .suggestion { fill: none; stroke: #6ce4b0; stroke-width: 2.5; marker-end: url(#arrow-green); }
+    .execution { fill: none; stroke: #7bb9ff; stroke-width: 2.5; marker-end: url(#arrow-blue); }
+    .future-link { fill: none; stroke: #ffd38c; stroke-width: 2.5; stroke-dasharray: 10 6; marker-end: url(#arrow-amber); }
+    .feedback { fill: none; stroke: #7bb9ff; stroke-width: 2.5; stroke-dasharray: 2 7; stroke-linecap: round; marker-end: url(#arrow-blue); }
+  </style>
+  <rect width="1440" height="1280" fill="#10151d"/>
+  <rect width="1440" height="1280" fill="url(#grid)"/>
+
+  <!-- Regions precede connectors and opaque component panels. -->
+  <rect x="65" y="390" width="1310" height="465" rx="18" fill="#121b26" stroke="#7bb9ff" stroke-width="1.5"/>
+  <text x="90" y="425" class="heading blue">DSH 原生执行与编排 · 一个执行核心</text>
+  <text x="90" y="453" class="small">权限、工具、取消、预算与父子任务生命周期均由 Harness 维护</text>
+
+  <!-- Input flow: legal candidates, bounded suggestion, owned adoption. -->
+  <path d="M305 250H355" class="execution"/>
+  <path d="M655 250H705" class="suggestion"/>
+  <path d="M1005 250H1055" class="suggestion"/>
+  <text x="1030" y="229" class="annotation green" text-anchor="middle">建议</text>
+
+  <!-- Adopted execution enters the original Harness. -->
+  <path d="M1215 320V360H1355V675H1135V700" class="execution"/>
+  <path d="M1215 320V380H695V490" class="execution"/>
+  <text x="1280" y="349" class="annotation blue" text-anchor="middle">采用后执行</text>
+  <path d="M1215 360H50V550H100" class="future-link"/>
+  <rect x="590" y="339" width="350" height="31" fill="#10151d"/>
+  <text x="765" y="361" class="annotation amber" text-anchor="middle">未来可采用本机 Lead · 待验证</text>
+
+  <!-- The future Lead uses native subagent ownership and return paths. -->
+  <path d="M460 565H525" class="future-link"/>
+  <path d="M865 565H930" class="execution"/>
+  <path d="M1135 640V665H695V640" class="feedback"/>
+  <text x="970" y="686" class="annotation blue" text-anchor="middle">专家结果回 Harness</text>
+  <path d="M610 640V675H480V610H460" class="future-link"/>
+  <text x="545" y="664" class="small amber" text-anchor="middle">Lead 整合</text>
+  <path d="M280 640V700" class="future-link"/>
+  <path d="M695 640V700" class="execution"/>
+
+  <!-- Results settle before state update or subsequent decisions. -->
+  <path d="M280 800V830H695V885" class="future-link"/>
+  <path d="M695 800V885" class="execution"/>
+  <path d="M1135 800V830H695" class="execution"/>
+  <path d="M695 975V1020" class="execution"/>
+
+  <!-- Feedback returns to candidate formation, preserving rule ownership. -->
+  <path d="M100 1065H30V140H505V175" class="feedback"/>
+  <rect x="60" y="116" width="750" height="28" fill="#10151d"/>
+  <text x="65" y="136" class="annotation blue">新输入 / 新结果 / Goal 变化 → 重建合法候选 → 后续 Jev 判断</text>
+
+  <!-- Primary components. -->
+  <rect x="65" y="175" width="240" height="145" rx="12" class="panel"/>
+  <text x="185" y="215" class="heading" text-anchor="middle">用户 / 桌面</text>
+  <text x="185" y="252" class="body" text-anchor="middle">任务与人工意图</text>
+  <text x="185" y="282" class="small" text-anchor="middle">自动 / 固定 · 停止 / 恢复</text>
+  <rect x="355" y="175" width="300" height="145" rx="12" class="owned"/>
+  <text x="505" y="215" class="heading blue" text-anchor="middle">规则形成合法候选</text>
+  <text x="505" y="252" class="body" text-anchor="middle">权限 · 隐私 · 预算 · 可用性</text>
+  <text x="505" y="282" class="small" text-anchor="middle">只提交少量明确的候选</text>
+  <rect x="705" y="175" width="300" height="145" rx="12" class="decision"/>
+  <text x="855" y="213" class="heading green" text-anchor="middle">Jev · System1</text>
+  <text x="855" y="248" class="body" text-anchor="middle">choice / score / noul / 弃权</text>
+  <text x="855" y="277" class="small" text-anchor="middle">自有 9B / 官方 API</text>
+  <text x="855" y="304" class="small" text-anchor="middle">弃权沿基线 · 执行域按供给</text>
+  <rect x="1055" y="175" width="320" height="145" rx="12" class="owned"/>
+  <text x="1215" y="215" class="heading blue" text-anchor="middle">所属原生服务采用</text>
+  <text x="1215" y="252" class="body" text-anchor="middle">模型 · 能力 · 记忆 · Goal</text>
+  <text x="1215" y="282" class="small" text-anchor="middle">校验版本、取消与生效时点</text>
+
+  <!-- Execution components. -->
+  <rect x="100" y="490" width="360" height="150" rx="12" class="future"/>
+  <text x="280" y="528" class="heading amber" text-anchor="middle">未来：本机 9B / 27B Lead</text>
+  <text x="280" y="563" class="body" text-anchor="middle">通用 System2 · 待验证</text>
+  <text x="280" y="593" class="small" text-anchor="middle">常用任务 / 数据处理 / 目标跟踪</text>
+  <text x="280" y="622" class="small" text-anchor="middle">生成、编排并整合专家结果</text>
+  <rect x="525" y="490" width="340" height="150" rx="12" class="owned"/>
+  <text x="695" y="529" class="heading blue" text-anchor="middle">原生 subagent 交接</text>
+  <text x="695" y="567" class="body" text-anchor="middle">合法专家 · 上下文范围</text>
+  <text x="695" y="599" class="small" text-anchor="middle">任务归属 / 取消 / 结果回传</text>
+  <rect x="930" y="490" width="410" height="150" rx="12" class="owned"/>
+  <text x="1135" y="529" class="heading blue" text-anchor="middle">专业 Agent · 已安装才可选</text>
+  <text x="1135" y="567" class="body" text-anchor="middle">Codex / Claude / 领域 Agent</text>
+  <text x="1135" y="599" class="small" text-anchor="middle">分别明确实际执行域与数据规则</text>
+  <rect x="100" y="700" width="360" height="100" rx="12" class="future"/>
+  <text x="280" y="741" class="heading amber" text-anchor="middle">本机常用能力与数据处理</text>
+  <text x="280" y="775" class="small" text-anchor="middle">在本机执行 · 仍遵守原生权限</text>
+  <rect x="525" y="700" width="340" height="100" rx="12" class="owned"/>
+  <text x="695" y="741" class="heading blue" text-anchor="middle">原生工具与调用生命周期</text>
+  <text x="695" y="775" class="small" text-anchor="middle">文件 / 终端 / 模型调用 / 取消</text>
+  <rect x="930" y="700" width="410" height="100" rx="12" class="owned"/>
+  <text x="1135" y="741" class="heading blue" text-anchor="middle">云 System2 · 高难推理与生成</text>
+  <text x="1135" y="775" class="small" text-anchor="middle">远程执行 · 仅发送规则获准数据</text>
+
+  <!-- One result stream and one durable state projection. -->
+  <rect x="100" y="885" width="1240" height="90" rx="12" class="owned"/>
+  <text x="720" y="923" class="heading blue" text-anchor="middle">真实结果回到 Harness</text>
+  <text x="720" y="955" class="body" text-anchor="middle">实际模型输出 / 工具结果 / 专家返回 / 错误与取消 · 输出不等于任务验收通过</text>
+  <rect x="100" y="1020" width="1240" height="95" rx="12" class="owned"/>
+  <text x="720" y="1059" class="heading blue" text-anchor="middle">统一 Session · 有来源的记忆 · 原生 Goal · 桌面 / Web 反馈</text>
+  <text x="720" y="1093" class="body" text-anchor="middle">关键上下文保留与查回 · 真实进展与验收证据 · 同一日志回放 · 不另建执行核心</text>
+
+  <!-- Legend and notes remain outside the execution region. -->
+  <path d="M85 1158H140" class="suggestion"/>
+  <text x="155" y="1165" class="annotation">Jev 建议</text>
+  <path d="M320 1158H375" class="execution"/>
+  <text x="390" y="1165" class="annotation">原生采用 / 执行</text>
+  <path d="M620 1158H675" class="feedback"/>
+  <text x="690" y="1165" class="annotation">结果反馈</text>
+  <path d="M885 1158H940" class="future-link"/>
+  <text x="955" y="1165" class="annotation amber">未来本机 Lead 路径 · 待验证</text>
+  <text x="85" y="1201" class="small">角色边界：Jev 不生成完整规划、不执行工具；Lead 与专家执行均由 DSH 原生机制管理</text>
+  <text x="85" y="1230" class="small">数据边界：决策服务、Lead、云模型与专家各自准入；本机 Lead 不代表整个任务不外发</text>
+  <text x="65" y="56" class="title">Jev 融入 Harness：即时判断 → 原生执行 → 持续反馈</text>
+  <text x="65" y="91" class="subtitle">完整设计示意 · 实线不表示全部已实现 · 未来本机 Lead 使用虚线标注</text>
+</svg>
 </div>
+<figcaption>完整设计示意；实线不表示全部已实现。绿色是 Jev 有界建议，蓝色是 Harness 采用与执行，点线是结果反馈，黄色虚线是未来本机 Lead。<br><a href="diagram/jev-harness-flow.svg" target="_blank" rel="noopener">打开 SVG 大图</a> · <a href="diagram/jev-harness-flow@2x.png" target="_blank" rel="noopener">打开高清 PNG</a></figcaption>
+</figure>
 <div class="spine">统一 Session 日志与原生投影 → 桌面 / Web / SDK 回放；前端不调用 Jev、不重新计算路由、不自判任务完成</div>
 <div class="branches"><span>入口：模型 / 处理路径</span><span>过程：Skill / 相关记忆</span><span>失败后：下一份证据</span><span>目标：继续 / 等待 / 沟通建议</span></div>
 <div class="split"><div class="card"><h3>System1：Jev</h3><p>判断少量已描述的候选。它不生成完整工作计划，不执行工具，不分配权限，不读取全量日志，也不独立认定 Goal 已完成。规则无法区分候选、且大模型判断的成本明显高时才调用。</p></div><div class="card"><h3>System2 与 DSH</h3><p>System2 完成复杂推理、生成、工具调用和专业工作；DSH 维护任务状态、执行准入、持久化、取消、权限和预算。未来本地 Lead 是生成与编排角色，不能与 Jev 有界判断混为一谈。</p></div></div>
@@ -138,7 +275,12 @@ System2：Fidoo / 其他生成 Provider → 原生 ctx.llm → 推理、生成�
 <p>可信安全 profile 独立保留 System3 持久事件解码、回放与投影消费者；禁用 Jev provider 不得导致既有 Session 无法读取。provider 不可用时，新输入使用获准 baseline 并显示降级，正常模式的自动意图不被覆写。验收覆盖「已有 System3 日志 → 安全模式打开 → 正确回放 → 降级输入」，不能通过忽略旧事件或换回 stock DSH 恢复。</p>
 </section>
 <section id="experience">
-<h2>5. 前后端联动：让用户看懂真实决策</h2>
+<h2>5. 前后端联动：让用户感到任务被接住、持续推进</h2>
+<div class="callout"><strong>体验方向：有先手的任务工作台</strong><p>一句话交付目标，系统迅速选路，实际能力随任务用上，约束记得住，失败后有下一步。用户默认看当前动作、阶段成果和待验收项；重要选择就地可见，来源和完整决策链一层展开。</p><p><a href="system3-experience-v2.html" target="_blank" rel="noopener">打开可点击体验稿</a> · <a href="system3-experience-review.zh.md">查看交互提案与可实现性评审</a></p></div>
+<div class="grid"><article class="card"><h3>有先手，决策成为行动</h3><p>任务回执就地更新；实际采用后开始对应工作。普通选择保持简洁，技能加入、诊断转向和专家接力留下具体记录。</p></article><article class="card"><h3>记得住，资料可检查</h3><p>实际使用的约束在任务旁边；可以打开原话、排除后续使用。上下文整理后可检查保留的事实，信息不足时查回原文。</p></article><article class="card"><h3>有掌控，成果逐步到位</h3><p>方案、修改与验收证据逐步出现；暂停、停止、恢复和下一回合模式可达。Goal 显示真实缺项，重要变化合并报告。</p></article></div>
+<p>未来本机通用 9B/27B Lead 在同一个 Harness 中处理本地常用任务和数据、组织工作并经原生 subagent 调度专业 Agent；Jev 继续做有限候选判断。界面分别显示本机、决策服务与专家的实际执行位置，获准材料才能外发。模型工具能力、资源和可靠性须先验证。</p>
+<details><summary>在本页体验七个任务场景（离线样例）</summary><p class="foot">全部状态、成果和来源均为编写样例；推进步数不代表实际耗时，切换示例会重置回放。完整体验请打开独立页面；它不调用任何后端。</p><iframe class="experience-frame" src="system3-experience-v2.html" title="System3 七个任务旅程的离线交互体验稿" loading="lazy"></iframe></details>
+<h3>展开层：建议、采用、请求与结果的区别</h3>
 <p>输入框优先扩展已有模型选择器，提供自动决策与固定模型；自动模式显示 baseline 和允许候选。恢复自动走 Host API，而不是假装重新选择 baseline。已开始的请求保持其生效配置，新的模式在明确的下一准入边界生效。</p>
 <div class="demo" aria-label="静态交互原型">
 <div class="eyebrow">方案演示 · 静态样例 · 不代表后端执行</div>
@@ -190,7 +332,7 @@ Host 采用：重查目录、作用域与 modelInvocable → 加载实际指令 
 <section id="delivery">
 <h2>7. 完整后端 Goal 的里程碑与完成标准</h2>
 <div class="table-scroll"><table><thead><tr><th>阶段</th><th>交付</th><th>必须成立的验收</th></tr></thead><tbody>
-<tr><td>G0：设计收敛<br>本次交付</td><td>统一 v1.1 HTML、源码审计、独立评审、工作区计划与交接。</td><td>当前状态、实现范围、接口草案、测试和模型限制明确；用户确认具体设计后开始产品实现。</td></tr>
+<tr><td>G0：设计收敛<br>本次交付</td><td>统一 v1.2 HTML、源码审计、独立评审、工作区计划与交接。</td><td>当前状态、实现范围、接口草案、测试和模型限制明确；用户确认具体设计后开始产品实现。</td></tr>
 <tr><td>G1：底座与桌面</td><td>正式 rc.2 源码对齐；dataelement 桌面加载自有 System3 运行时；补丁映射及可信安全 profile。</td><td>开发与安装包均运行正确产物；入口、取消、恢复、Session 迁移与双 SDK 行为回归；不能加载回 stock DSH。</td></tr>
 <tr><td>G2：入口完整闭环</td><td>自动/固定切换、Jev 入口选模、真实决策卡和 Host/Client 投影。</td><td>人工覆盖、取消、并发、卸载和重启一致；建议→采用→请求→输出对应。附件/排队/steering 支持或保留基线须明确，不能宣称全入口已覆盖。</td></tr>
 <tr><td>Jev 供给验收<br>贯穿 G1—G6</td><td>自有 9B 与官方均走同一 TypeSafe SDK；单一 typed 决策服务；实际来源与质量配置。</td><td>两种 SDK 配置分别验证 choice/score/noul、baseURL 路径、独立凭据、输入/响应校验、总截止/取消、限流、重试和回放。官方合成 smoke 已通过，自有 SDK smoke 也已通过，但两者完整采用链尚未通过；逐项验证后才能宣称对应供给验收。切换不覆盖当前回合，不越过数据准入。</td></tr>

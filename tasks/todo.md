@@ -92,3 +92,17 @@
 ### Review
 
 当前交付为设计，不代表 rc.2、桌面、记忆或长期目标后端已经打通。统一方案在 [system3-native-v1.html](../docs/feat-system3-desktop/system3-native-v1.html)，冷启动先读 [handoff](feat-system3-desktop/handoff.md)。
+
+## 即时决策与能力感知交互评审
+
+- [x] 读取交接、经验、原设计与相关前端/交互 skills，确认既有 worktree 干净。
+- [x] 浏览器检查原型的默认视图、状态切换、展开层与窄屏。
+- [x] 并行审查任务旅程及能力反馈所需的原生事实。
+- [x] 形成交互改造评审与独立离线示意，覆盖入口、过程、记忆、委派、Goal、异常及用户控制。
+- [x] 验证示意交互、键盘、窄屏与文档检查，更新交接和评审结果。
+
+本轮是设计评审；产品代码实施仍以具体设计确认作为前置条件。
+
+### 本轮交互 Review
+
+主 HTML 升至 v1.2，嵌入完整 Jev/Harness 架构图，未来本机 9B/27B Lead 与专家编排有独立位置；增加七场景离线体验入口和页内回放。中英文评审与一致性记录完整。66 项交互断言、明暗主题/窄屏/键盘/减少动态效果、doc-sync 42/42 和 Host lint 通过。复核修正固定模型、历史恢复与后续排除的组合状态；不宣称新增后端或性能收益。证据见 [experience-verification.json](../docs/feat-system3-desktop/experience-verification.json)。

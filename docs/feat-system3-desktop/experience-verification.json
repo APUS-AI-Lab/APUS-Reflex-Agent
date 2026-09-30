@@ -1,0 +1,118 @@
+{
+  "checkedAtUtc": "2026-09-30T04:24:40.275468+00:00",
+  "scope": "Design-only architecture and interaction review; offline fixtures; no new product backend",
+  "artifacts": {
+    "system3-native-v1.html": {
+      "sha256": "7891ee0445cc99102d239b332c65f75f0e0bda6aff0cf85d813d9919820ce4e1",
+      "bytes": 65397
+    },
+    "system3-experience-v2.html": {
+      "sha256": "ac3ad5c24f82518beb06df12c62c157ed3d366680d09713ee3267d405c281e9a",
+      "bytes": 31667
+    },
+    "system3-experience-review.md": {
+      "sha256": "6c7fe2be39f6379dc3ec1dcc117d183dc360d9c424d1ffee01d28b98766e89b0",
+      "bytes": 16160
+    },
+    "system3-experience-review.zh.md": {
+      "sha256": "230bfda78660d6241f2a056cc433d4d67c7ea8714b2bbabef6e4a2f1e3211ea5",
+      "bytes": 13445
+    },
+    "system3-experience-review.i18n.yaml": {
+      "sha256": "ab061cecfeaaf83e583c99babea21ea45683d625bdb05bb9285a6537c65e20af",
+      "bytes": 492
+    },
+    "diagram/jev-harness-flow.svg": {
+      "sha256": "c21f3c05adc94880f76f94a4e19aaf657d03fe88a8f83e234f79c9e307776258",
+      "bytes": 10928
+    },
+    "diagram/jev-harness-flow@2x.png": {
+      "sha256": "dbe2e518f9073ca180bd44f3924cf5abcc2f1518b9e5593a4e71668ea04d4a8a",
+      "bytes": 716531
+    }
+  },
+  "browser": {
+    "tool": "gstack browse",
+    "offline": true,
+    "scenarios": [
+      "migration-memory-compaction-retrieval",
+      "quick-task",
+      "diagnostic-recovery",
+      "expert-handoff",
+      "restart-resumption",
+      "decision-timeout-baseline",
+      "history-gap"
+    ],
+    "modes": [
+      "auto",
+      "fixed"
+    ],
+    "interactionAssertions": 66,
+    "result": "passed",
+    "additionalChecks": [
+      "320/390/768/1024/1440px: no document overflow",
+      "light and dark: visual review",
+      "keyboard Enter: sidebar navigation",
+      "reduced motion: button transition 0s",
+      "main HTML diagram scroll: keyboard ArrowRight",
+      "main HTML iframe: task accepted",
+      "console: no errors"
+    ],
+    "correctedFindings": [
+      "fixed-mode output facts",
+      "history restoration is not current request admission",
+      "excluded sources respected after resumption and retrieval",
+      "current effective step drives all presentation"
+    ]
+  },
+  "diagram": {
+    "viewBox": "0 0 1440 1280",
+    "pngPixels": [
+      2880,
+      2560
+    ],
+    "textNodes": 49,
+    "result": "valid accessible SVG; no text overflow; offline rendering",
+    "rendering": "Final PNG rendered with gstack browse after sharp omitted text"
+  },
+  "staticChecks": {
+    "mainHtmlIds": 21,
+    "mainHtmlReferences": 37,
+    "prototypeIds": 24,
+    "prototypeReferences": 2,
+    "localReferences": "passed",
+    "inlineJavaScriptParsing": "passed",
+    "svgXml": "passed"
+  },
+  "repositoryChecks": [
+    {
+      "command": "pnpm run test:docs",
+      "result": "initial: 18 passed, 2 failed; new bilingual pair and existing repository references corrected"
+    },
+    {
+      "command": "pnpm run verify-translation-pairing --write docs/feat-system3-desktop/system3-experience-review",
+      "result": "recorded complete English/Chinese pair"
+    },
+    {
+      "command": "pnpm run doc-sync",
+      "result": "42 passed, 0 failed, 0 skipped; includes documentation build and all documentation quick checks"
+    },
+    {
+      "command": "pnpm run lint:contracts-ready",
+      "result": "exit 0 on host; initial sandbox EPERM blocked tsx local IPC"
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed"
+    }
+  ],
+  "notVerified": [
+    "real Jev/Harness backend integration",
+    "actual routing or task latency benefit",
+    "actual local 9B/27B Lead capabilities",
+    "installed desktop Windows/macOS window chrome",
+    "real-device touch or screen-reader testing",
+    "actual costs or semantic losslessness"
+  ],
+  "implementationApproval": "product-code implementation remains pending explicit design approval"
+}

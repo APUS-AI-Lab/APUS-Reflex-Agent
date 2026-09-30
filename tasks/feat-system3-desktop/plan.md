@@ -13,6 +13,7 @@
 - [x] 独立评审补齐 Goal 全入口验收、Skill 加载与实际请求区分、安全模式解码及至少一个实际过程节点的完成条件。
 - [x] 独立复核 HTML，浏览器验证交互与窄屏，检查文档链接。
 - [x] 写入同名 handoff，交付具体设计。
+- [x] 补充 v1.2 Jev/Harness 完整架构图、本机 9B/27B Lead 位置与七场景体验稿；66 项交互断言、doc-sync 42/42、Host lint 通过。
 - [ ] 用户确认该具体设计后开始产品代码实施（根指令 Development Preflight / Human Gate）。
 
 ## 完整后端交付

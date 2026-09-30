@@ -6,9 +6,9 @@
   "implementationApproval": "pending",
   "goalStatus": "not complete; implementation awaits explicit design approval; current status owned by Goal tool",
   "sourcePins": {
-    "system3CodeBase": "eec9dcd4b25b888adb8fd03a2af1e2a1330882cf",
-    "officialRc1": "46a7f68b0922371ce7144b668b90e377d8e799f4",
-    "officialRc2": "477b4f420553e8a52c2fbccc464d7561b239c443",
+    "system3CodeBase": "feat-independent-harness; source history and docs/feat-independent-harness/entry-routing-verification.html",
+    "officialRc1": "dsh-v0.1.7-rc.1",
+    "officialRc2": "dsh-v0.1.7-rc.2",
     "dataelementDesktop": "9f943036258b7850ee02459705c9aba62320d990",
     "typesafeSdk": "v0.6.0 / 66880ccded6cb642dc1809620c2b108c33730214"
   },
@@ -80,5 +80,6 @@
     "authenticatedLiveCall": "official and self-hosted single synthetic SDK call passed; full native integration and quality not verified",
     "sdkSource": "https://docs.typesafe.ai/sdk/javascript"
   },
-  "sdkAddendumCheckedAtUtc": "2026-09-30T01:39:42.363590+00:00"
+  "sdkAddendumCheckedAtUtc": "2026-09-30T01:39:42.363590+00:00",
+  "sourceReferenceNote": "Maintained references use release tags or repository documents. Original source pins remain in the historical version of this verification record."
 }

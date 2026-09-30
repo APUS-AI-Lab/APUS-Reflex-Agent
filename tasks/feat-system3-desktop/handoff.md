@@ -5,20 +5,26 @@
 - 产品为独立 Jev Native + DSH Native，入口第一目标、合理过程快决策第二目标。
 - 用户选定 dataelement/dsh-desktop，并同意对齐 DSH 0.1.7-rc.2。
 - 用户明确要求完整后端 Goal：入口、过程、能力/记忆与长期目标维护；必须尊重 Jev 9B 的有限能力。
-- 本轮为统一设计阶段；中文 v1.1 定稿候选 HTML 已生成，产品代码尚未实施。
+- 本轮为统一设计阶段；中文 v1.2 架构与七场景体验方向稿已生成，产品代码尚未实施。
 - 工作区 feat-system3-desktop 从上一工作分支创建；主目录与旧工作区保持干净。
 
 ## 2. 本轮交付物
 
 | 路径 | 行数 | 说明 |
 |---|---:|---|
-| `docs/feat-system3-desktop/system3-native-v1.html` | 240 | 统一设计、性能与可恢复压缩、离线架构/交互、G0—G6验收 |
+| `docs/feat-system3-desktop/system3-native-v1.html` | 382 | v1.2：内嵌完整架构、本机 Lead 演进位置、体验入口与页内回放 |
+| `docs/feat-system3-desktop/system3-experience-v2.html` | 83 | 七场景离线体验：记忆、诊断、专家、恢复、降级、缺档与控制 |
+| `docs/feat-system3-desktop/system3-experience-review.md` / `.zh.md` | 各 114 | 体验方向、信息层级、原稿改造、原生事实与验证计划 |
+| `docs/feat-system3-desktop/system3-experience-review.i18n.yaml` | 6 | 中英文一致性记录 |
+| `docs/feat-system3-desktop/diagram/jev-harness-flow.svg` | 137 | 可访问、离线的中文流程架构图 |
+| `docs/feat-system3-desktop/diagram/jev-harness-flow@2x.png` | 2880×2560 | 高清架构图导出 |
+| `docs/feat-system3-desktop/experience-verification.json` | 118 | 本轮交互、图、文档与 lint 证据；后端未验收 |
 | `docs/feat-system3-desktop/jev-sdk-preflight.json` | 117 | SDK固定来源、两种供给合成smoke；不含凭据 |
-| `docs/feat-system3-desktop/verification.json` | 84 | 固定来源、设计复核与检查记录；明确未实施项 |
-| `tasks/feat-system3-desktop/plan.md` | 34 | 当前 Goal 的可勾选计划 |
-| `tasks/todo.md` | 94 | 承接历史目标与新阶段入口 |
-| `tasks/lessons.md` | 66 | 完整后端、真实版本、速度与记忆边界经验 |
-| `tasks/feat-system3-desktop/handoff.md` | 79 | 冷启动入口 |
+| `docs/feat-system3-desktop/verification.json` | 85 | 固定来源、设计复核与检查记录；明确未实施项 |
+| `tasks/feat-system3-desktop/plan.md` | 35 | 当前 Goal 的可勾选计划 |
+| `tasks/todo.md` | 108 | 承接历史目标与新阶段入口 |
+| `tasks/lessons.md` | 70 | 完整后端、真实版本、速度与记忆边界经验 |
+| `tasks/feat-system3-desktop/handoff.md` | 92 | 冷启动入口 |
 
 ## 3. 设计约束
 
@@ -49,6 +55,9 @@
 
 - 浏览器重复 load-html 使用 setContent 时可能保留旧脚本绑定；刷新到 about:blank 后重新加载，最新版本1360/390px九项检查均通过。
 
+- 本轮体验评审覆盖完整任务，不缩减为决策日志。恢复历史资料与本次注入分别显示，用户排除控制后续查回/注入；固定模式回执不能残留自动选模结果。
+- 图的 sharp 导出器在本机丢失全部文字；最终 PNG 由 gstack browse 以 2× 截图，中文和框内排版已核对。
+
 设计交付、SDK补充交付和本轮复核三个连续Goal回合均未收到具体设计实施确认；只读审计、独立复核与两种SDK真实预检已完成，剩余实现依赖用户Human Gate。
 
 ## 5. 下一里程碑任务清单
@@ -77,3 +86,7 @@
 ## 8. 本轮验证
 
 独立架构/UI复核通过；新增性能与压缩复核要求所有fallback也经过同一事实检查，已纳入。HTML32链接和15锚点、1360/390px九项状态检查通过，无控制台错误；文档快检20/20、doc-sync42/42、Host构建与lint、Ruff双检查通过。rc.2只做merge-tree冲突预览，未实施合并；后端Goal未完成。完整记录见 `docs/feat-system3-desktop/verification.json`。
+
+## 9. v1.2 体验与架构补充
+
+使用 frontend-ui-engineering、dsh-client-ui-ux、ui-animation、gstack browse 与 baoyu-diagram；两项独立产品/原生事实审查。主 HTML 直接嵌入 SVG，来源图及 PNG 可单独打开；体验稿有七场景、自动/固定、暂停/恢复、停止收尾、来源查看与后续排除。66 项浏览器交互断言通过；320—1440px 无整页溢出，明暗主题、键盘、减少动态效果和页内回放已核对。doc-sync 42/42、Host lint、静态链接/脚本/SVG 与 diff 检查通过。新评审已完整配对；旧验证记录的仓库 commit 引用改为实际 release tag/文档，原固定信息在历史版本保留。产品后端与本机 Lead 仍待批准后实现，不能把样例结果当实测收益。
