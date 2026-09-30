@@ -106,3 +106,16 @@
 ### 本轮交互 Review
 
 主 HTML 升至 v1.2，嵌入完整 Jev/Harness 架构图，未来本机 9B/27B Lead 与专家编排有独立位置；增加七场景离线体验入口和页内回放。中英文评审与一致性记录完整。66 项交互断言、明暗主题/窄屏/键盘/减少动态效果、doc-sync 42/42 和 Host lint 通过。复核修正固定模型、历史恢复与后续排除的组合状态；不宣称新增后端或性能收益。证据见 [experience-verification.json](../docs/feat-system3-desktop/experience-verification.json)。
+
+## Jev / Harness 调用关系架构图
+
+- [x] 复核 worktree 与调用所有权，采用 baoyu-diagram 架构布局。
+- [x] 绘制调用和返回关系，标明本机 Lead 经原生工具委派专家。
+- [x] 嵌入主 HTML，给 v2 增加页内查看和独立 SVG / PNG 入口。
+- [x] 检查图中文字、链接、窄屏与原有交互，更新交接并打开 HTML。
+
+范围为设计交付：调用图补充现有流程图，沿用原生接口，不引入新 API 或产品代码；SDK 替换和本机 Lead 明确标为拟实施。
+
+### 调用图 Review
+
+新增独立调用关系 SVG / 2× PNG，主 HTML 内嵌，v2 提供导航与可折叠查看。独立源码审查确认原生调用所有权，图中区分自动入口的条件调用、固定或不适用的旁路、SDK 替换和未来本机 Lead。静态资源与脚本、1360/390px、键盘展开及 66 项原有交互断言通过，Markdown 链接和换行检查通过。证据见 [invocation-verification.json](../docs/feat-system3-desktop/invocation-verification.json)。

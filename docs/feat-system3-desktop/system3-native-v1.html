@@ -20,7 +20,7 @@
 <p class="muted">决策模型供给：自有 Jev 9B 与官方 Jev 原生 API，统一通过官方 TypeSafe SDK 接入，共用同一原生决策/采用机制；部署地点、协议参数和质量基线分别验证。</p>
 <p class="muted">本页是本轮统一设计入口。产品代码当前仍为 rc.1 定制版，仅首期 Web/API 入口选模已交付。rc.2 升级、第二名桌面集成及下列扩展尚未实施。交互演示使用静态样例，不连接模型。</p>
 </header>
-<nav aria-label="方案目录"><a href="#goal">完整 Goal</a><a href="#architecture">原生架构</a><a href="#boundaries">决策范围</a><a href="#performance">速度与可恢复记忆</a><a href="#desktop">rc.2 与桌面</a><a href="#experience">体验联动</a><a href="#api">接口草案</a><a href="#delivery">交付与验收</a><a href="#review">审慎评审</a><a href="#sources">依据</a></nav>
+<nav aria-label="方案目录"><a href="#goal">完整 Goal</a><a href="#architecture">原生架构</a><a href="#invocation-architecture">调用关系</a><a href="#boundaries">决策范围</a><a href="#performance">速度与可恢复记忆</a><a href="#desktop">rc.2 与桌面</a><a href="#experience">体验联动</a><a href="#api">接口草案</a><a href="#delivery">交付与验收</a><a href="#review">审慎评审</a><a href="#sources">依据</a></nav>
 <section id="goal">
 <h2>1. 完整目标与本轮交付范围</h2>
 <div class="callout"><strong>完整后端 Goal</strong><p>用户输入经过有界入口选择，DSH 执行；过程中按需要选择技能与记忆、判断下一份诊断证据、维护目标进展。建议由所属原生服务校验并采用，桌面与 Web 从同一日志读取结果；取消、人工覆盖、重连与恢复保持一致。</p></div>
@@ -176,6 +176,193 @@
 </div>
 <figcaption>完整设计示意；实线不表示全部已实现。绿色是 Jev 有界建议，蓝色是 Harness 采用与执行，点线是结果反馈，黄色虚线是未来本机 Lead。<br><a href="diagram/jev-harness-flow.svg" target="_blank" rel="noopener">打开 SVG 大图</a> · <a href="diagram/jev-harness-flow@2x.png" target="_blank" rel="noopener">打开高清 PNG</a></figcaption>
 </figure>
+<div id="invocation-architecture" style="scroll-margin-top:24px">
+<h3>调用关系：谁发起、谁执行、结果返回给谁</h3>
+<p>入口消费者调用 Jev 获得有界建议，原生服务校验并采用。AgentLoop 经模型服务调用云端 System2 或未来本机 9B/27B Lead；模型返回内容及工具、委派指令，由 Harness 调用工具或已安装的专家 provider，结果回父任务并进入下一步。专家运行时可管理自己的内部执行，Harness 管理委派的启动、交接与结果归属。</p>
+<figure class="architecture-figure">
+<div class="architecture-scroll" tabindex="0" role="region" aria-label="Jev 与 Harness 调用及返回关系架构图，窄屏可横向滚动">
+<svg xmlns="http://www.w3.org/2000/svg" id="ji-invocation" class="ji-root" viewBox="0 0 1600 1540" role="img" aria-labelledby="ji-title ji-desc">
+  <title id="ji-title">System3 调用架构：谁调用、谁执行、结果返回谁</title>
+  <desc id="ji-desc">完整目标调用设计，不表示全部已打通。UI 通过原生 RPC 调用 Host SessionController，并接收状态和结果。Host 通过原生输入队列驱动 AgentLoop；固定或不适用的入口跳过 Jev，符合条件时才调用 System3 原生消费者；消费者调用 ctx.jev 的共享 Host provider，目标实现使用官方 TypeSafe SDK 调用自有 Jev 9B 或官方 API，有界答案返回消费者，所属原生 owner 校验并采用。AgentLoop 经 ctx.llm 调用云 System2 或待验证的本机通用 9B、27B Lead；生成内容、工具请求和委派请求均沿 ctx.llm 返回 Harness。父 AgentLoop 执行原生工具和 ctx.subagents 调用，专业 Agent 在自身运行时中执行，子任务结果返回父任务，并进入下一次模型请求供 Lead 整合。原生事件与 Session 通过 API 投影回 UI。权限、数据外发、预算、取消和完成验收由规则控制。Jev 不生成完整规划或执行工具；本机 Lead 的自主编排仍使用原生委派，不绕过 Harness。</desc>
+  <defs>
+    <pattern id="ji-grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#26313e" stroke-width="0.5"/></pattern>
+    <marker id="ji-arrow-blue" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><path d="M0 0L9 3.5L0 7Z" fill="#7bb9ff"/></marker>
+    <marker id="ji-arrow-green" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><path d="M0 0L9 3.5L0 7Z" fill="#6ce4b0"/></marker>
+    <marker id="ji-arrow-amber" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><path d="M0 0L9 3.5L0 7Z" fill="#ffd38c"/></marker>
+  </defs>
+  <style>
+    .ji-root text { font-family: "PingFang SC", "Noto Sans CJK SC", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif; fill: #e8edf2; }
+    .ji-root .ji-title-text { font-size: 32px; font-weight: 500; }
+    .ji-root .ji-subtitle { font-size: 20px; fill: #b3c0ce; }
+    .ji-root .ji-heading { font-size: 24px; font-weight: 500; }
+    .ji-root .ji-body { font-size: 21px; fill: #b3c0ce; }
+    .ji-root .ji-small { font-size: 18px; fill: #b3c0ce; }
+    .ji-root .ji-label { font-size: 18px; }
+    .ji-root .ji-blue { fill: #7bb9ff; }
+    .ji-root .ji-green { fill: #6ce4b0; }
+    .ji-root .ji-amber { fill: #ffd38c; }
+    .ji-root .ji-panel { fill: #19222d; stroke: #334354; stroke-width: 1.5; }
+    .ji-root .ji-owned { fill: #182b40; stroke: #7bb9ff; stroke-width: 2; }
+    .ji-root .ji-decision { fill: #173127; stroke: #6ce4b0; stroke-width: 2; }
+    .ji-root .ji-future { fill: #302a22; stroke: #ffd38c; stroke-width: 2; stroke-dasharray: 10 6; }
+    .ji-root .ji-call { fill: none; stroke: #7bb9ff; stroke-width: 2.5; marker-end: url(#ji-arrow-blue); }
+    .ji-root .ji-decision-call { fill: none; stroke: #6ce4b0; stroke-width: 2.5; marker-end: url(#ji-arrow-green); }
+    .ji-root .ji-return { fill: none; stroke: #7bb9ff; stroke-width: 2.5; stroke-dasharray: 2 7; stroke-linecap: round; marker-end: url(#ji-arrow-blue); }
+    .ji-root .ji-decision-return { fill: none; stroke: #6ce4b0; stroke-width: 2.5; stroke-dasharray: 2 7; stroke-linecap: round; marker-end: url(#ji-arrow-green); }
+    .ji-root .ji-future-call { fill: none; stroke: #ffd38c; stroke-width: 2.5; stroke-dasharray: 10 6; marker-end: url(#ji-arrow-amber); }
+    .ji-root .ji-future-return { fill: none; stroke: #ffd38c; stroke-width: 2.5; stroke-dasharray: 2 7; stroke-linecap: round; marker-end: url(#ji-arrow-amber); }
+  </style>
+  <rect width="1600" height="1540" fill="#10151d"/>
+  <rect width="1600" height="1540" fill="url(#ji-grid)"/>
+
+  <!-- Swimlanes describe invocation roles, not shared physical deployment. -->
+  <rect x="55" y="305" width="1490" height="360" rx="16" fill="#121f1c" stroke="#395d50" stroke-width="1.5"/>
+  <text x="85" y="341" class="ji-heading ji-green">A · 条件决策调用：有界建议返回，原生 owner 采用</text>
+  <rect x="55" y="710" width="1490" height="525" rx="16" fill="#121b26" stroke="#334e6b" stroke-width="1.5"/>
+  <text x="85" y="747" class="ji-heading ji-blue">B · 原生执行调用</text>
+  <text x="700" y="747" class="ji-body ji-blue">模型返回请求，Harness 调度工具与委派</text>
+
+  <!-- UI RPC and its direct Host response. -->
+  <path d="M340 185H405" class="ji-call"/>
+  <path d="M405 225H340" class="ji-return"/>
+  <text x="372" y="172" class="ji-label ji-blue" text-anchor="middle">RPC</text>
+  <text x="372" y="213" class="ji-label ji-blue" text-anchor="middle">返回</text>
+
+  <!-- The decision consumer is invoked only for eligible input. -->
+  <path d="M580 250V280H40V420H85" class="ji-call"/>
+  <text x="580" y="276" class="ji-label ji-blue">条件调用 · 自动入口</text>
+  <path d="M735 250V270H1570V690H435V795H245V825" class="ji-call"/>
+  <text x="900" y="293" class="ji-label ji-blue">原生输入队列：固定 / 不适用时跳过入口 Jev</text>
+
+  <!-- Shared Jev provider round trip. -->
+  <path d="M405 410H465" class="ji-decision-call"/>
+  <path d="M870 410H930" class="ji-decision-call"/>
+  <path d="M930 460H870" class="ji-decision-return"/>
+  <path d="M465 460H405" class="ji-decision-return"/>
+  <text x="435" y="398" class="ji-label ji-green" text-anchor="middle">调用</text>
+  <text x="900" y="398" class="ji-label ji-green" text-anchor="middle">调用</text>
+  <text x="435" y="448" class="ji-label ji-green" text-anchor="middle">答案</text>
+  <text x="900" y="448" class="ji-label ji-green" text-anchor="middle">答案</text>
+  <path d="M245 500V560" class="ji-decision-call"/>
+  <text x="268" y="536" class="ji-label ji-green">提交有界建议</text>
+
+  <!-- Adoption continues the original AgentLoop rather than a second loop. -->
+  <path d="M85 602H50V875H85" class="ji-call"/>
+  <text x="85" y="696" class="ji-small ji-blue">采纳后沿原生输入 / 上下文状态继续</text>
+
+  <!-- Generation round trip through ctx.llm. -->
+  <path d="M405 865H465" class="ji-call"/>
+  <path d="M465 920H405" class="ji-return"/>
+  <path d="M745 850H805" class="ji-call"/>
+  <path d="M805 820H785V905H745" class="ji-return"/>
+  <path d="M745 935H805" class="ji-future-call"/>
+  <path d="M805 990H785V950H745" class="ji-future-return"/>
+  <text x="435" y="851" class="ji-label ji-blue" text-anchor="middle">调用</text>
+  <text x="435" y="908" class="ji-label ji-blue" text-anchor="middle">返回</text>
+  <text x="805" y="900" class="ji-small ji-blue">生成 / tool / 委派请求沿 ctx.llm 返回</text>
+
+  <!-- Tool and delegation requests are executed by the parent Harness. -->
+  <path d="M245 965V1070H1210V875H1240" class="ji-call"/>
+  <path d="M1240 930H1185V1090H310V965" class="ji-return"/>
+  <text x="630" y="1056" class="ji-label ji-blue">父任务执行返回的 tool / 委派请求</text>
+  <text x="640" y="1118" class="ji-label ji-blue">tool / 子任务结果回父任务</text>
+  <path d="M1340 965V1105" class="ji-call"/>
+  <path d="M1410 1105V965" class="ji-return"/>
+  <text x="1315" y="1042" class="ji-label ji-blue" text-anchor="end">调用</text>
+  <text x="1435" y="1042" class="ji-label ji-blue">子结果</text>
+
+  <!-- Durable facts and API projections return to the client. -->
+  <path d="M85 940H40V1250H300V1280" class="ji-call"/>
+  <text x="330" y="1274" class="ji-small ji-blue">持久事件 / 输出 / 采用回执</text>
+  <path d="M85 1325H25V205H55" class="ji-return"/>
+
+  <!-- Interface and Host entry. -->
+  <rect x="55" y="140" width="285" height="110" rx="12" class="ji-panel"/>
+  <text x="197" y="179" class="ji-heading" text-anchor="middle">桌面 / Web UI</text>
+  <text x="197" y="213" class="ji-body" text-anchor="middle">提交 / 模式 / 取消 / 恢复</text>
+  <text x="197" y="239" class="ji-small" text-anchor="middle">客户端不直调 Jev 或专家</text>
+  <rect x="405" y="140" width="350" height="110" rx="12" class="ji-owned"/>
+  <text x="580" y="179" class="ji-heading ji-blue" text-anchor="middle">Host · SessionController</text>
+  <text x="580" y="213" class="ji-body" text-anchor="middle">原生 RPC / 输入准入 / 生命周期</text>
+  <text x="580" y="239" class="ji-small" text-anchor="middle">原生输入队列 / 会话控制</text>
+  <rect x="825" y="140" width="720" height="110" rx="12" class="ji-owned"/>
+  <text x="1185" y="179" class="ji-heading ji-blue" text-anchor="middle">确定规则贯穿所有调用与采用</text>
+  <text x="1185" y="213" class="ji-body" text-anchor="middle">权限 / 数据外发 / 预算 / 取消 / 完成验收</text>
+  <text x="1185" y="239" class="ji-small" text-anchor="middle">先准入、后调用；完成需实际证据</text>
+
+  <!-- Bounded decision path and provider supply. -->
+  <rect x="85" y="375" width="320" height="125" rx="12" class="ji-decision"/>
+  <text x="245" y="405" class="ji-heading ji-green" text-anchor="middle">System3 原生消费者</text>
+  <text x="245" y="436" class="ji-small" text-anchor="middle">入口 / Skill / 记忆 / Goal 节点</text>
+  <text x="245" y="461" class="ji-small ji-amber" text-anchor="middle">入口已交付 · 过程节点待实施</text>
+  <text x="245" y="486" class="ji-small" text-anchor="middle">choice / score / noul / 弃权</text>
+  <rect x="465" y="375" width="405" height="125" rx="12" class="ji-decision"/>
+  <text x="667" y="415" class="ji-heading ji-green" text-anchor="middle">ctx.jev → TypeSafe SDK</text>
+  <text x="667" y="450" class="ji-body" text-anchor="middle">Host 共享 provider · 同一 SDK</text>
+  <text x="667" y="483" class="ji-small ji-amber" text-anchor="middle">目标：替换现有 Fetch；尚待实施</text>
+  <rect x="930" y="375" width="585" height="125" rx="12" class="ji-decision"/>
+  <text x="1222" y="407" class="ji-heading ji-green" text-anchor="middle">决策服务 · 两种供给</text>
+  <text x="1222" y="437" class="ji-body" text-anchor="middle">自有 Jev 9B（设备 / 内网 / 远程）</text>
+  <text x="1222" y="465" class="ji-body" text-anchor="middle">官方 Jev API（官方云）</text>
+  <text x="1222" y="489" class="ji-small" text-anchor="middle">执行域分别准入 · 只返回有界答案</text>
+  <rect x="85" y="560" width="320" height="85" rx="12" class="ji-owned"/>
+  <text x="245" y="595" class="ji-heading ji-blue" text-anchor="middle">原生 owner 校验与采纳</text>
+  <text x="245" y="629" class="ji-small" text-anchor="middle">合法候选 / revision / 生效时点</text>
+  <text x="465" y="593" class="ji-body ji-green">建议与采用分开；弃权或无效结果保留获准基线</text>
+  <text x="465" y="631" class="ji-body">Jev 不生成完整规划、不执行工具、不独立判定完成</text>
+
+  <!-- A single original loop calls the selected generation provider. -->
+  <rect x="85" y="825" width="320" height="140" rx="12" class="ji-owned"/>
+  <text x="245" y="866" class="ji-heading ji-blue" text-anchor="middle">Harness · AgentLoop</text>
+  <text x="245" y="902" class="ji-body" text-anchor="middle">父任务 / 上下文 / 原生执行循环</text>
+  <text x="245" y="935" class="ji-small" text-anchor="middle">消费模型返回，调度工具与子任务</text>
+  <rect x="465" y="825" width="280" height="140" rx="12" class="ji-owned"/>
+  <text x="605" y="866" class="ji-heading ji-blue" text-anchor="middle">ctx.llm</text>
+  <text x="605" y="902" class="ji-body" text-anchor="middle">原生模型 provider 调用</text>
+  <text x="605" y="935" class="ji-small" text-anchor="middle">上下文 / 工具 schema / 取消</text>
+  <rect x="805" y="765" width="355" height="100" rx="12" class="ji-owned"/>
+  <text x="982" y="803" class="ji-heading ji-blue" text-anchor="middle">云 System2</text>
+  <text x="982" y="837" class="ji-body" text-anchor="middle">高难推理与生成 · 获准数据</text>
+  <rect x="805" y="915" width="355" height="110" rx="12" class="ji-future"/>
+  <text x="982" y="952" class="ji-heading ji-amber" text-anchor="middle">未来本机 9B / 27B Lead</text>
+  <text x="982" y="984" class="ji-body" text-anchor="middle">本机能力 / 数据 / 自主编排</text>
+  <text x="982" y="1012" class="ji-small" text-anchor="middle">待验证 · 仍经原生委派与执行</text>
+  <rect x="1240" y="825" width="275" height="140" rx="12" class="ji-owned"/>
+  <text x="1377" y="859" class="ji-heading ji-blue" text-anchor="middle">原生工具 / 专业委派</text>
+  <text x="1377" y="888" class="ji-body" text-anchor="middle">ctx.subagents</text>
+  <text x="1377" y="917" class="ji-small" text-anchor="middle">执行工具 / 启动与管理专家任务</text>
+  <text x="1377" y="946" class="ji-small" text-anchor="middle">权限 / 父子归属 / 取消 / 回传</text>
+  <rect x="1240" y="1105" width="275" height="105" rx="12" class="ji-owned"/>
+  <text x="1377" y="1134" class="ji-heading ji-blue" text-anchor="middle">已安装的专业 Agent</text>
+  <text x="1377" y="1160" class="ji-small" text-anchor="middle">Codex / Claude Code / 专家</text>
+  <text x="1377" y="1183" class="ji-small" text-anchor="middle">subprocess 启动专家运行时</text>
+  <text x="1377" y="1205" class="ji-small" text-anchor="middle">独立运行时 · 结果回父任务</text>
+  <text x="85" y="1167" class="ji-body ji-blue">结果进入下一次模型请求，Lead 可归并专家结果并生成答复</text>
+  <text x="85" y="1204" class="ji-small">Lead 提出任务与顺序；Harness 启动与管理委派，专家内部按其自身运行时执行</text>
+
+  <!-- Source-of-truth state and its Client-safe projection. -->
+  <rect x="85" y="1280" width="1430" height="110" rx="12" class="ji-owned"/>
+  <text x="800" y="1322" class="ji-heading ji-blue" text-anchor="middle">原生事件 / Session → API 投影 → UI 状态与结果</text>
+  <text x="800" y="1357" class="ji-body" text-anchor="middle">决策 / 采用 / 请求 / 输出 / 工具 / 子任务 / Goal 验收 · 刷新与重连仅回放事实</text>
+
+  <!-- Legend and scope notes stay outside the swimlanes. -->
+  <path d="M85 1428H140" class="ji-call"/>
+  <text x="157" y="1435" class="ji-label">原生调用 / 执行</text>
+  <path d="M390 1428H445" class="ji-return"/>
+  <text x="462" y="1435" class="ji-label">答案 / 结果 / 事件返回</text>
+  <path d="M780 1428H835" class="ji-decision-call"/>
+  <text x="852" y="1435" class="ji-label ji-green">Jev 判断与建议</text>
+  <path d="M1110 1428H1165" class="ji-future-call"/>
+  <text x="1182" y="1435" class="ji-label ji-amber">未来本机 Lead · 待验证</text>
+  <text x="85" y="1475" class="ji-small">状态边界：既有原生调用路径与目标扩展共图展示；SDK 替换、过程节点及完整采用链须逐项实施与验收</text>
+  <text x="85" y="1508" class="ji-small">数据边界：本机 Lead 不等于整项任务本地；决策供给、云模型与专业 Agent 各自通过数据外发准入</text>
+  <text x="55" y="56" class="ji-title-text">System3 调用架构：谁调用、谁执行、结果返回谁</text>
+  <text x="55" y="94" class="ji-subtitle">完整目标设计 · 不表示全部已打通 · 建议、生成与实际执行分开 · 使用同一个 Harness</text>
+</svg>
+</div>
+<figcaption>调用关系目标设计；实线为调用，点线为返回或事件，具体阶段以图内说明为准。当前 Fetch provider 的 SDK 替换、过程决策消费者与本机 Lead 均需后续实施验证。<br><a href="diagram/jev-harness-invocation.svg" target="_blank" rel="noopener">打开调用关系 SVG</a> · <a href="diagram/jev-harness-invocation@2x.png" target="_blank" rel="noopener">打开高清 PNG</a> · <a href="system3-experience-v2.html#invocation-architecture">在 v2 体验稿中查看</a></figcaption>
+</figure>
+</div>
 <div class="spine">统一 Session 日志与原生投影 → 桌面 / Web / SDK 回放；前端不调用 Jev、不重新计算路由、不自判任务完成</div>
 <div class="branches"><span>入口：模型 / 处理路径</span><span>过程：Skill / 相关记忆</span><span>失败后：下一份证据</span><span>目标：继续 / 等待 / 沟通建议</span></div>
 <div class="split"><div class="card"><h3>System1：Jev</h3><p>判断少量已描述的候选。它不生成完整工作计划，不执行工具，不分配权限，不读取全量日志，也不独立认定 Goal 已完成。规则无法区分候选、且大模型判断的成本明显高时才调用。</p></div><div class="card"><h3>System2 与 DSH</h3><p>System2 完成复杂推理、生成、工具调用和专业工作；DSH 维护任务状态、执行准入、持久化、取消、权限和预算。未来本地 Lead 是生成与编排角色，不能与 Jev 有界判断混为一谈。</p></div></div>

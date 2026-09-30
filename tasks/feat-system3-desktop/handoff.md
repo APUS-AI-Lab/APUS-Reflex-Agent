@@ -12,19 +12,22 @@
 
 | 路径 | 行数 | 说明 |
 |---|---:|---|
-| `docs/feat-system3-desktop/system3-native-v1.html` | 382 | v1.2：内嵌完整架构、本机 Lead 演进位置、体验入口与页内回放 |
-| `docs/feat-system3-desktop/system3-experience-v2.html` | 83 | 七场景离线体验：记忆、诊断、专家、恢复、降级、缺档与控制 |
+| `docs/feat-system3-desktop/system3-native-v1.html` | 569 | v1.2：内嵌完整架构、本机 Lead 演进位置、体验入口与页内回放 |
+| `docs/feat-system3-desktop/system3-experience-v2.html` | 91 | 七场景离线体验：记忆、诊断、专家、恢复、降级、缺档与控制 |
 | `docs/feat-system3-desktop/system3-experience-review.md` / `.zh.md` | 各 114 | 体验方向、信息层级、原稿改造、原生事实与验证计划 |
 | `docs/feat-system3-desktop/system3-experience-review.i18n.yaml` | 6 | 中英文一致性记录 |
 | `docs/feat-system3-desktop/diagram/jev-harness-flow.svg` | 137 | 可访问、离线的中文流程架构图 |
 | `docs/feat-system3-desktop/diagram/jev-harness-flow@2x.png` | 2880×2560 | 高清架构图导出 |
+| `docs/feat-system3-desktop/diagram/jev-harness-invocation.svg` | 178 | 调用与返回架构图 |
+| `docs/feat-system3-desktop/invocation-verification.json` | 84 | 本次设计与浏览器验证记录 |
+| `docs/feat-system3-desktop/diagram/jev-harness-invocation@2x.png` | 3200×3080 | 高清调用架构图 |
 | `docs/feat-system3-desktop/experience-verification.json` | 118 | 本轮交互、图、文档与 lint 证据；后端未验收 |
 | `docs/feat-system3-desktop/jev-sdk-preflight.json` | 117 | SDK固定来源、两种供给合成smoke；不含凭据 |
 | `docs/feat-system3-desktop/verification.json` | 85 | 固定来源、设计复核与检查记录；明确未实施项 |
-| `tasks/feat-system3-desktop/plan.md` | 35 | 当前 Goal 的可勾选计划 |
-| `tasks/todo.md` | 108 | 承接历史目标与新阶段入口 |
+| `tasks/feat-system3-desktop/plan.md` | 36 | 当前 Goal 的可勾选计划 |
+| `tasks/todo.md` | 121 | 承接历史目标与新阶段入口 |
 | `tasks/lessons.md` | 70 | 完整后端、真实版本、速度与记忆边界经验 |
-| `tasks/feat-system3-desktop/handoff.md` | 92 | 冷启动入口 |
+| `tasks/feat-system3-desktop/handoff.md` | 101 | 冷启动入口 |
 
 ## 3. 设计约束
 
@@ -90,3 +93,9 @@
 ## 9. v1.2 体验与架构补充
 
 使用 frontend-ui-engineering、dsh-client-ui-ux、ui-animation、gstack browse 与 baoyu-diagram；两项独立产品/原生事实审查。主 HTML 直接嵌入 SVG，来源图及 PNG 可单独打开；体验稿有七场景、自动/固定、暂停/恢复、停止收尾、来源查看与后续排除。66 项浏览器交互断言通过；320—1440px 无整页溢出，明暗主题、键盘、减少动态效果和页内回放已核对。doc-sync 42/42、Host lint、静态链接/脚本/SVG 与 diff 检查通过。新评审已完整配对；旧验证记录的仓库 commit 引用改为实际 release tag/文档，原固定信息在历史版本保留。产品后端与本机 Lead 仍待批准后实现，不能把样例结果当实测收益。
+
+## 10. 调用关系图补充
+
+主 HTML 的 `#invocation-architecture` 内嵌调用图；v2 顶部“调用关系图”跳到页内可折叠图，并提供 SVG / PNG 及完整说明入口。新增图明确 UI→Host、System3→Jev、AgentLoop→模型、工具→专家及结果回父任务→UI 的方向；固定或不适用入口跳过 Jev。当前 Fetch provider、目标 SDK 替换、待实施过程节点和未来本机通用 9B/27B Lead 分别标明。专家内部执行由专家运行时管理，Harness 负责委派生命周期与结果归属。
+
+本次为静态设计补充，没有改变产品代码。新增 SVG 的 IDs 与样式使用 `ji-` 前缀隔离；主 HTML 内嵌与独立 SVG 一致。浏览器检查两页 1360/390px、键盘展开、图中文字及 66 项既有场景断言通过，静态链接/脚本/XML、Markdown 链接/换行与 diff 检查通过；未重复运行上一轮完整 doc-sync 或产品构建。当前文件校验记录在 `docs/feat-system3-desktop/invocation-verification.json`，上一轮体验记录保留其当时文件摘要。
