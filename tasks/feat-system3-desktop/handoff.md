@@ -18,7 +18,7 @@
 | `tasks/feat-system3-desktop/plan.md` | 34 | 当前 Goal 的可勾选计划 |
 | `tasks/todo.md` | 94 | 承接历史目标与新阶段入口 |
 | `tasks/lessons.md` | 66 | 完整后端、真实版本、速度与记忆边界经验 |
-| `tasks/feat-system3-desktop/handoff.md` | 77 | 冷启动入口 |
+| `tasks/feat-system3-desktop/handoff.md` | 79 | 冷启动入口 |
 
 ## 3. 设计约束
 
@@ -49,6 +49,8 @@
 
 - 浏览器重复 load-html 使用 setContent 时可能保留旧脚本绑定；刷新到 about:blank 后重新加载，最新版本1360/390px九项检查均通过。
 
+设计交付、SDK补充交付和本轮复核三个连续Goal回合均未收到具体设计实施确认；只读审计、独立复核与两种SDK真实预检已完成，剩余实现依赖用户Human Gate。
+
 ## 5. 下一里程碑任务清单
 
 - [ ] 具体设计确认。
@@ -61,7 +63,7 @@
 
 - 分支：feat-system3-desktop，基于 feat-independent-harness；本轮尚无产品代码修改。
 - main 保持原有状态；没有 PR、merge 或新的常驻部署。
-- 当前 Goal active，未因设计文档交付标记完整完成。
+- Goal 未完成；当前实施前置条件是具体设计确认，状态以 Goal 工具为准。
 - 上轮远端 Actions 受 budget 阻止，不能视为 CI 通过。
 
 ## 7. 冷启动 checklist
@@ -74,4 +76,4 @@
 
 ## 8. 本轮验证
 
-独立架构/UI复核通过；新增性能与压缩复核要求所有fallback也经过同一事实检查，已纳入。HTML32链接和15锚点、1360/390px九项状态检查通过，无控制台错误；文档快检20/20、doc-sync42/42、Host构建与lint、Ruff双检查通过。rc.2只做merge-tree冲突预览，未实施合并；后端Goal仍active。完整记录见 `docs/feat-system3-desktop/verification.json`。
+独立架构/UI复核通过；新增性能与压缩复核要求所有fallback也经过同一事实检查，已纳入。HTML32链接和15锚点、1360/390px九项状态检查通过，无控制台错误；文档快检20/20、doc-sync42/42、Host构建与lint、Ruff双检查通过。rc.2只做merge-tree冲突预览，未实施合并；后端Goal未完成。完整记录见 `docs/feat-system3-desktop/verification.json`。

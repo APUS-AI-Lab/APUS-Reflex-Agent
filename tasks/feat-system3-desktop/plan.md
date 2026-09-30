@@ -31,4 +31,4 @@
 
 当前只完成设计和源码审计。没有升级 rc.2、引入桌面源码或实现新决策/UI。不能以 HTML、mock 或连通性替代后端 Goal 完成。未来本地 9B/27B Lead、冷 Session 后台唤醒、跨 Session Goal 和外部通知保留为单独能力验证。
 
-验证记录见 `docs/feat-system3-desktop/verification.json`。文档快检20/20、doc-sync42/42、lint及Ruff通过；HTML桌面/窄屏与真实状态区分已检查。Goal保持active，等待具体设计确认后进入G1。
+验证记录见 `docs/feat-system3-desktop/verification.json`。文档快检20/20、doc-sync42/42、lint及Ruff通过；HTML桌面/窄屏与真实状态区分已检查。Goal尚未完成；设计和两种供给的SDK预检已交付，等待具体设计确认后进入G1。

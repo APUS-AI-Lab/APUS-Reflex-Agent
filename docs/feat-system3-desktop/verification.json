@@ -4,7 +4,7 @@
   "design": "docs/feat-system3-desktop/system3-native-v1.html",
   "designSha256": "2b5750c3764683fe3441a02d7af431f8e94a99cccec8fd46c7e1e87edb579668",
   "implementationApproval": "pending",
-  "goalStatus": "active; backend requirements not yet complete",
+  "goalStatus": "not complete; implementation awaits explicit design approval; current status owned by Goal tool",
   "sourcePins": {
     "system3CodeBase": "eec9dcd4b25b888adb8fd03a2af1e2a1330882cf",
     "officialRc1": "46a7f68b0922371ce7144b668b90e377d8e799f4",
