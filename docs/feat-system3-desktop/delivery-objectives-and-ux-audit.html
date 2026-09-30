@@ -14,7 +14,7 @@
 <h1>三层智能的目标已记录，<br>产品 UI/UX 与前端接入尚未完成</h1>
 <p class="lead">交付同一任务的完整体验：接得住目标，执行中实际调整，成果可检查，用户可干预，中断后可继续。</p>
 <p class="muted">本页为当前设计工作区与前端初始化分支的只读审查结论及待办参考。运行时、生产 UI 与部署未在本轮修改。既有入口实网验证和新公网 Jev 服务各有独立证据，不等同于桌面三层体验交付。</p>
-<nav aria-label="审查目录"><a href="#objective">任务目标</a><a href="#status">完成度</a><a href="#ux">交互缺口</a><a href="#integration">前端对接</a><a href="#delivery">实施顺序</a><a href="#acceptance">验收</a><a href="#evidence">证据范围</a></nav>
+<nav aria-label="审查目录"><a href="#objective">任务目标</a><a href="#status">完成度</a><a href="#ux">交互缺口</a><a href="#integration">前端对接</a><a href="#delivery">实施顺序</a><a href="#acceptance">验收</a><a href="#evidence">证据范围</a><a href="#speed">入口与体感速度</a></nav>
 <p><a href="system3-intelligence-design.html">三层机制与 API 草案</a> · <a href="system3-experience-v3.html">v3 离线工作台</a> · <a href="system3-native-v1.html">总架构</a> · <a href="../../tasks/feat-system3-desktop/plan.md">可勾选任务计划</a></p>
 </header>
 <section id="objective">
@@ -101,6 +101,36 @@
 <li>相邻 Frontend 的 <code>chore-bootstrap</code> 相对 <code>upstream/main</code> 只有两份 Python 格式改动及两份初始化文档。生产应用源码未被 System3 改造。</li>
 <li>独立 <code>ops-jev9b-api</code> 工作区的 <code>tasks/ops-jev9b-api/handoff.md</code> 与 <code>docs/ops-jev9b-api/public-verification.json</code> 记录公网服务进展。本轮只读核对，未合并该分支、未探活、未读取密钥。</li>
 </ul>
+</section>
+<section id="speed">
+<h2>8. 入口智能与体感速度：先缩短关键等待，再改善表达</h2>
+<p>本轮为代码审查与优化候选设计，未测出生产前后差值。优化同时约束首次可见反馈、首个有用输出、首个有效成果、完整任务质量/耗时/成本；“已收到”或填充句不能算有用成果。界面更新不能比真实事件提前宣称采用或执行。</p>
+<h3>确认的现状</h3>
+<ul>
+<li>原生 Conversation 已有本地 pending submission，<code>sendSession</code> 在请求前执行 <code>beginSubmission → nextPaint → 序列化材料 → prompt</code>。应保留并接通真实状态，不能重复造一套乐观回显。</li>
+<li>可路由纯文本入口依次等待 <code>Jev route → resolveCallConfig → 准入 → AgentLoop 生成</code>；人工固定及不适用入口已有旁路。Jev 调用是该自动路径上的前置等待，但实际各段耗时仍需测量。</li>
+<li>当前 Jev Fetch provider 默认 HTTP 超时为30秒，在凭据解析后才开始；入口前后的模型准备也不属于该计时，尚无覆盖整个入口操作的独立截止。当前 Fetch 没有通用自动重试循环；迁入 SDK 时必须重新审查重试和总截止。</li>
+<li>原生文本流发布采用连续三个 requestAnimationFrame 合并更新，首块没有单独的即时发布分支；这是现有吞吐策略，首块→绘制收益需实测。桌面已存在预热与零稳定等待窗口，不能把它们当作尚未实现的优化。</li>
+<li>入口已使用一个有界 Choice 请求。Fidoo 对应的 Pi AI <code>resolveModel</code> 当前读取本地 snapshot；串行解析候选不等于逐模型请求网络，不应先假定它是主要瓶颈。</li>
+<li>旧入口 low 档约0.76/1.08秒与公网 high 三问题约3.74–5.22秒来自不同条件，仅是历史样本。不能用两组数推导提速比例或把 high 改为 low 直接宣布优化。</li>
+</ul>
+<div class="table-scroll" tabindex="0" role="region" aria-label="入口与体感速度优化优先级"><table><thead><tr><th>环节 / 优先级</th><th>拟议优化</th><th>条件与验证</th></tr></thead><tbody>
+<tr><td>提交与接收 · P0</td><td>复用现有立即回显，保留草稿失败恢复；补 Host 收到/准入反馈。取消请求即时在本地反馈，最终收尾由 Host 确认。</td><td>建议本地回显 p95≤100ms 为待校准体验目标，不是当前实测或发布 SLA。真实输入测到实际绘制；含中文输入法、附件编码和长会话。收到前不声称已准入。</td></tr>
+<tr><td>入口是否需要判断 · P0</td><td>保留固定模式旁路；对经过权限/能力检查后没有实质选项的请求设计确定性路径。只有选择能影响结果时才增加 Jev 判断，避免再加一个 LLM 先决定是否调用 Jev。</td><td>不能按字数简单判断任务难度，也不能绕过数据准入。记录规则路径与实际模型；比较“固定基线 / 规则 / 规则+Jev”的质量、返工和总时延。</td></tr>
+<tr><td>决策时间预算 · P0</td><td>增加覆盖入口准备、凭据、Jev 和采用前解析的总截止；保留生成启动所需预算。超时后取消在途判断，重查候选/用户意图后使用合法基线；迟到结果失效。</td><td>预算由真实入口单问题负载与收益曲线校准，配置化；不把公网 high 一律截到任意500ms而导致永久降级。无合法基线则明确阻塞，用户取消不得当作可继续生成的超时。</td></tr>
+<tr><td>第一份有用输出 · P0</td><td>直接沿原生流输出有效内容；任务允许时先生成可使用的小成果，再补充分析与验证。报告、差异和证据各自到达即呈现，草稿明确未验收。当前 produced-files 稳定入口在回合收尾，过程工具另有呈现；可验证从已结算产物事件提前开放入口，不从流文本猜文件已存在。</td><td>不另调一个模型生成安抚句，不用空标题或“正在思考”计入提速；真正的检验和权限前置不省略，最终完成仍由必需检查决定。</td></tr>
+<tr><td>流式渲染与阅读 · P0</td><td>试验将首个有效内容从现有三帧合并路径中单独即时发布，后续保留原生合并；比较 chunk→paint 与渲染开销后再决定。稳定消息身份，仅更新变化区域；昂贵解析与不可见详情按需处理；不在模型流上再叠加打字机延迟。</td><td>先查现有实现与真实浏览器性能，避免增加第二层节流；结算、错误、取消及时刷新，全文一致。保持滚动锚点、正在选择的文字、输入焦点与减少动态偏好。</td></tr>
+<tr><td>桌面启动与准备 · P1</td><td>保留已有预热，分测 runtime ready→缓存/认证清理→loadURL→首个可操作界面；不绕过安全清理。启动失败允许诊断/重试；必要时预加载模块及合法候选静态配置。</td><td>区分冷/暖启动和内存/CPU成本，不让设置、插件市场或历史全量加载阻塞首次任务。未发送输入不得预先传给模型；后台准备不能改变权限或自动运行任务。</td></tr>
+<tr><td>连接与提交准备 · P1</td><td>分测公网新连接/复用连接的 DNS/TLS、网关排队与推理；附件编码等昂贵准备期间观察取消信号，避免取消后继续无用准备。</td><td>当前图片 FileReader 编码没有接收 signal；沿原回显退休和草稿恢复流程验证，不改成主线程手工字节循环。公网 health/鉴权样本也有秒级耗时，但不能据此推断模型推理占比。</td></tr>
+<tr><td>模型与过程策略 · P1</td><td>针对具体任务评估模型及 reasoning effort、稳定前缀、工具往返和上下文规模；过程 Jev 只在新证据或目标变化且有选择价值时触发。无依赖且获准的只读准备可并行。</td><td>默认 high/low 不在本轮变更，按同一任务集分别测质量与成本；保留关键事实和必要校验。Jev 尚未决策时不抢跑生成/写操作，不为提速重复计费或外发。</td></tr>
+<tr><td>持续体感 · P1</td><td>短暂中间状态可合并；长等待显示当前动作与可执行控制。回来后先看新增成果、阻塞和需参与事项，技术记录展开。动效短、可打断，保持控件空间位置。</td><td>不强制把已经完成的阶段排队播完，不伪造百分比或时间；以真实等待和目标用户操作判断是否减少误解与重复提交。</td></tr>
+</tbody></table></div>
+<h3>第一轮测量与实施卡</h3>
+<p><strong>用户操作：</strong>桌面首次提交/暖会话提交、看到有用结果、打开首个成果，以及执行中取消。<strong>工作负载：</strong>公开固定短改写、复杂接口分析、已授权文件处理、长会话；另外独立测冷启动、并发排队、超时/失败和取消，不把附件旁路与文本自动路由混为一组。</p>
+<p><strong>计时：</strong>客户端同一单调时钟记录提交→回显绘制、首块绘制、有用成果可操作；Host/供给各自记录解析、路由、凭据、网络/排队/推理、采用、生成与工具阶段。按原生 request/turn/step 关联，不能直接相减不同机器的时钟。对外报告端到端样本分布，并把未完成、降级与返工计入，不只保留成功快样本。</p>
+<p><strong>比较：</strong>先测未修改的真实构建；固定模型、规则、规则+Jev 在相同权限、材料与任务上比较。冷/暖、供给、模型/effort、并发和网络分别记录。保留原始样本，报告 p50/p95 与样本规模；少量样本不作稳定尾延迟结论。性能任务串行测量，避免与自有构建互相干扰。</p>
+<p><strong>资源与停止规则：</strong>同时记录 renderer 主线程长任务/渲染次数及内存、Host 资源和所有模型调用成本。一次只改变一个原因；只有真实终点改善且质量、取消、顺序、恢复和权限不退化才保留。优化前后运行所属行为与回放检查；构造受控延迟或回退原行为，确认测量能识别目标回归。</p>
+<p>源码依据：<a href="../../packages/client/ui-conversation/src/client/service.ts">提交回显</a>、<a href="../../packages/api/session-controller/src/prompt-router.ts">入口串行采用</a>、<a href="../../packages/experimental/system3/src/entry-routing.ts">Jev 有界选路</a>、<a href="../../packages/experimental/apus-dsh-jev-plugin/src/client.ts">HTTP 计时范围</a>、<a href="../../packages/llm/llm-pi-ai/src/adapter.ts">Fidoo 适配器元数据</a>、<a href="../../packages/client/ui-conversation/src/client/conversation/assembly.ts">流式三帧发布</a>、<a href="../../packages/client/ui-chat/src/client/conversation-nodes/assistant.ts">首块发布策略</a>、<a href="../../packages/client/ui-deliverables/src/client/turn-deliverables.ts">成果入口</a>。这些证明调用结构，不证明某段已经测得性能瓶颈。</p>
 </section>
 <footer>本页是目标记录与设计复核，不是产品完成声明。源代码与各阶段真实验证决定实现状态；本轮未执行产品代码变更或部署。</footer>
 </main></body>
