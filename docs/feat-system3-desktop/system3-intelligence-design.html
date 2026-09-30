@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="System3 入口智能、过程智能与体感智能的穿透设计：用户承诺、原生所有权、共享状态、控制恢复与验收。桌面优先，Web/API/双 SDK 共享语义。">
+<title>System3 · 入口智能｜过程智能｜体感智能 · 穿透设计</title>
+<style>
+:root{color-scheme:dark;--bg:#10151d;--surface:#141d27;--panel:#19222d;--line:#334354;--text:#e8edf2;--muted:#b3c0ce;--green:#6ce4b0;--blue:#7bb9ff;--amber:#ffd38c}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.8 system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}main{max-width:1260px;margin:auto;padding:40px 28px 72px}h1,h2,h3{font-weight:550}h1{font-size:clamp(30px,4.8vw,46px);line-height:1.3;margin:14px 0 20px}h2{font-size:25px;line-height:1.45;margin:0 0 18px}h3{font-size:19px;margin:24px 0 10px}p{margin:10px 0 16px}a{color:var(--blue);text-underline-offset:4px;overflow-wrap:anywhere}code{font:0.88em/1.6 ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--green);overflow-wrap:anywhere}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:14px/1.75 ui-monospace,SFMono-Regular,Consolas,monospace;padding:18px;background:#0b1016;border:1px solid var(--line);border-radius:6px}.eyebrow{font-size:13px;letter-spacing:.09em;color:var(--green)}.lead{font-size:21px;max-width:980px}.muted,.caption,small{color:var(--muted)}.caption{font-size:14px}.status{display:inline-block;color:var(--amber);border:1px solid var(--line);padding:4px 12px;margin:2px 8px 8px 0;border-radius:4px;font-size:13px}.links{display:flex;gap:12px 24px;flex-wrap:wrap;margin:20px 0}nav{display:flex;gap:10px 22px;flex-wrap:wrap;padding:18px 0;border-block:1px solid var(--line);margin:28px 0}section{padding:32px 0;border-bottom:1px solid var(--line);scroll-margin-top:18px}.note{border-left:3px solid var(--green);padding:4px 0 4px 18px;margin:22px 0;max-width:1050px}.note.blue{border-color:var(--blue)}.note.amber{border-color:var(--amber)}.promise{margin:18px 0}.promise dt{font-weight:550;color:var(--green);margin:16px 0 4px}.promise dd{margin:0;max-width:1050px}.table-scroll{overflow-x:auto;margin:18px 0;border:1px solid var(--line);border-radius:6px}.table-scroll:focus-visible,.diagram-scroll:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid var(--blue);outline-offset:3px}table{width:100%;border-collapse:collapse;font-size:14px;line-height:1.7}th,td{padding:13px 15px;vertical-align:top;text-align:left;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}th{background:var(--panel);font-weight:550;color:var(--text)}td:last-child,th:last-child{border-right:0}tr:last-child td{border-bottom:0}caption{caption-side:top;text-align:left;padding:12px 15px;background:var(--surface);color:var(--muted)}.matrix{min-width:1000px}.matrix th:first-child{width:18%}.matrix th:nth-child(2){width:26%}.matrix th:nth-child(3){width:18%}.matrix th:nth-child(4){width:24%}.matrix th:last-child{width:14%}.compact{min-width:750px}.state-table{min-width:900px}.tag{font-size:12px;color:var(--amber);display:block;margin-top:5px}.diagram-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:6px;background:var(--surface)}.diagram-scroll img{display:block;width:100%;min-width:960px;height:auto}figure{margin:22px 0}figcaption{color:var(--muted);font-size:14px;margin-top:10px}.sequence{padding:18px 20px;background:var(--surface);border:1px solid var(--line);border-radius:6px;font-size:15px}.sequence span{display:inline-block;margin:4px 8px 4px 0}.sequence .arrow{color:var(--muted)}ul,ol{padding-left:24px}li{margin:8px 0}details{margin:20px 0}summary{cursor:pointer;color:var(--blue);padding:6px 0}footer{padding-top:24px;font-size:14px;color:var(--muted)}@media(max-width:800px){main{padding:24px 18px 48px}.lead{font-size:19px}h2{font-size:23px}section{padding:26px 0}nav{gap:9px 16px}.table-scroll{margin:16px 0}.diagram-scroll img{min-width:900px}}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}@media print{body{background:white;color:#182334}main{max-width:none;padding:0}nav{display:none}.muted,.caption,small,figcaption,footer{color:#45566a}th,caption,.sequence,pre{background:#f3f5f7;color:#182334}table{font-size:11px}.matrix,.compact,.state-table{min-width:0}.table-scroll{overflow:visible}a{color:#175b94}code,.promise dt{color:#176a48}.diagram-scroll img{min-width:0}h2,h3{break-after:avoid}tr{break-inside:avoid}}
+</style>
+</head>
+<body>
+<main>
+<header>
+<div class="eyebrow">SYSTEM3 · 面向外部用户的穿透设计</div>
+<h1>入口智能｜过程智能｜体感智能</h1>
+<p class="lead">把任务交给它，系统选合适的处理方式；工作中记住约束、遇到问题调整；你能尽早看见成果，知道还差什么，并随时控制后续工作。</p>
+<span class="status">设计参考 · 2026-09-30</span><span class="status">默认桌面优先</span><span class="status">产品实现尚未启动</span>
+<p class="muted">三层共同约束同一套 Harness 与 Agent 行为。本文定义用户承诺、所属服务、可见事实、异常恢复和验收，不表示模型已经达到相应可靠性。当前产品仍为原底座定制版；rc.2 对齐、前端整合及新增机制须在具体实现设计获准后落码。</p>
+<div class="links"><a href="system3-experience-v3.html">打开三层智能交互稿 v3</a><a href="system3-native-v1.html">完整原生设计与交付范围</a><a href="system3-experience-review.zh.md">v2 体验评审与原生依据</a></div>
+</header>
+<nav aria-label="设计目录"><a href="#audience">用户与承诺</a><a href="#entry">入口智能</a><a href="#process">过程智能</a><a href="#experience">体感智能</a><a href="#architecture">共同架构</a><a href="#identity">任务身份与状态</a><a href="#admission">权限与预算</a><a href="#control">控制与恢复</a><a href="#api">跨终端接口</a><a href="#repositories">两仓职责</a><a href="#delivery">实施与验收</a><a href="#decisions">关键取舍</a></nav>
+
+<section id="audience">
+<h2>1. 为谁解决什么问题</h2>
+<p>首批面向桌面中的开发者、资料处理者和持续任务使用者。他们能用自然语言说出目标和限制，希望减少挑模型、反复解释、追问进度和手动协调专家的工作。第一批覆盖日常整理、代码与文件任务、明确授权的持续目标；并不预设小模型能够胜任所有任务族。</p>
+<p>桌面提供工作区、文件和专家任务的完整操作体验；Web 复用同一任务语义与工作台组件。API 与 TypeScript/Python SDK 提供同样的任务事实和控制结果，允许其他界面按自身需求呈现。终端特有的目录选择、窗口和通知能力单独标明，不能影响任务是否采用了某次建议的判断。</p>
+<dl class="promise"><dt>入口智能：不用先理解内部模型，任务也能被合理接住。</dt><dd>立即回显、Host 收到请求、获准候选判断、输入准入分开呈现。自动选择尊重固定意图、能力条件、数据去向与预算；信息不足时使用合法基线或请求必要补充。</dd><dt>过程智能：约束持续可用，变化有依据，工作有归属。</dt><dd>技能与相关历史进入实际请求；压缩可检查、原文可查回；失败后先取证；专业 Agent 经原生委派；持续 Goal 按真实检查推进。</dd><dt>体感智能：当前动作、成果、缺项与控制始终可理解。</dt><dd>及时反馈不冒充模型提速。普通选择保持简洁，关键变化就地出现；停止有明确范围和收尾；返回后的变化摘要与完整费用都有事实来源。</dd></dl>
+<div class="note amber"><p>本文是授权范围内的设计交付。v3 使用编写的离线样例；真实行为、性能、费用和模型能力均需后端、桌面安装包与跨终端验收。未来本机通用 9B/27B Lead 保持为待验证演进能力。</p></div>
+</section>
+
+<section id="entry">
+<h2>2. 入口智能：接收、准入与选择贯通</h2>
+<p>入口先尊重用户说了什么、允许做什么、当前会话是否忙碌，再决定是否需要 Jev。明确任务的整理与复杂计划由 System2 承担；权限和预算由规则处理；Jev 只判断少量合法候选。固定模式和规则已能确定的路径不增加入口 Jev 调用。</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="入口智能机制表，窄屏可横向滚动"><table class="matrix"><caption>完整机制：用户动作 → Host 事实 → 可感知体验 → 异常控制 → 验收</caption><thead><tr><th>用户动作与承诺</th><th>Host 所有者与事实</th><th>用户感知</th><th>干预、失败与恢复</th><th>验收指标</th></tr></thead><tbody>
+<tr><td>提交目标与约束；任务被接住。</td><td>SessionController 请求所有者报告收到待处理请求；路由后由 inbox 准入。现有 requestId/rpcId 贯通输入；收到状态投影拟补。</td><td>“已提交”立即回显；Host 确认后“已收到，正在选择”；准入后显示排队或工作状态。</td><td>准入失败保留输入。重试复用输入身份，不能重复执行。若目标不清，必要补充由所属 Agent 提出，不编造已理解的计划。</td><td>反馈耗时；重复提交率；重复准入次数；任务关联正确率。</td></tr>
+<tr><td>选择自动，或明确固定模型；省去不必要的选模。</td><td>规则形成可用候选；System3 入口消费者调用 ctx.jev；原生选模 owner 记录采用。持久 routing mode/revision/effectiveFrom 拟新增。</td><td>默认一行“本次由 Pro 处理”；展开看候选能力说明、真实采用和降级原因。</td><td>固定优先。超时、弃权、无效或过期结果不能迟到采用；沿获准 baseline。执行中改模式只影响声明的下一准入。</td><td>对照固定/规则基线的成功率、返工和完成耗时；Jev 额外延迟与弃权率。</td></tr>
+<tr><td>限制外发与费用；选择只在获准路径中发生。</td><td>Host 分别检查 Jev、System2、专家的实际执行域、数据类别、批准范围与能力。已存在 privacy policy；逐请求批准和预算视图拟补。</td><td>提交前检查哪些材料会到哪里；实际执行位置持续可查。被拒路径明确显示原因。</td><td>无合法路线则阻塞该动作，提供补充范围、修改限制或选择其他合法路径的操作。不会静默改送云端；价格未知不能伪装成零费用。</td><td>非法路线采用为零；批准范围一致性；用户能正确判断外发对象。</td></tr>
+<tr><td>任务运行时补充、排队或移除输入；不会改变错任务。</td><td>SessionController 串行处理模式与准入；原生 inbox 区分 steer/queue。输入身份、目标 revision 与候选版本限制采用。</td><td>“补充当前任务”与“下一任务排队”分开；列明修改何时生效。</td><td>并发输入不丢队列优先级；人工意图覆盖旧建议。附加材料、子任务输入或不支持的路由入口保留明确基线，不宣称全入口智能覆盖。</td><td>并发、附件、排队与 steering 关联；旧决策采用次数；用户对生效范围的理解。</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="process">
+<h2>3. 过程智能：每次调整改变真实工作</h2>
+<p>只在新输入、新结果或 Goal revision 变化且确有选择价值时判断。消费者向所属原生服务提交有限建议；加载、注入、压缩替换、专家交接和 Goal 更新都由各自 owner 完成。一次 Jev 建议不能证明后续服务已经动作。</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="过程智能机制表，窄屏可横向滚动"><table class="matrix"><caption>首期过程节点必须实际采用、改变行为、可回放；全部 shadow 不算完成。</caption><thead><tr><th>用户动作与承诺</th><th>Host 所有者与事实</th><th>用户感知</th><th>干预、失败与恢复</th><th>验收指标</th></tr></thead><tbody>
+<tr><td>交付专业任务，或指定 Skill；合适的方法实际用上。</td><td>Skill 服务校验真实目录、Scope、调用策略和内容版本；原生 pre-step 注入带来源正文，关联实际请求。自动消费者拟补。</td><td>“迁移核对清单已用上”；可检查正文和来源。取得正文与已入请求分别显示。</td><td>显式 Skill 优先；不把自动来源伪装成用户手势。目录失效、不完整、reject/cancel 保留原生行为，统一版本去重。</td><td>正确注入率；重复注入；未准入内容；相对规则基线的质量与返工。</td></tr>
+<tr><td>沿用约束，继续长任务；关键事实可检查、来源可恢复。</td><td>范围检索与上下文消费者维护来源/排除；Compaction owner 提交实际 replacement，并校验必需事实、版本、工具配对与可读原文。</td><td>约束在任务旁；历史使用、恢复资料和本次使用分开；压缩后可检查保留项和查回记录。</td><td>排除只控制声明的未来范围；重新允许不倒填旧请求。原文缺失说明；保护检查失败不提交替换，包括 fallback。容量不足时升级或请求补充。</td><td>必需事实保持；原文恢复；续做质量；重复解释；判断/摘要/查回总开销。</td></tr>
+<tr><td>工具失败后继续工作；下一步依据错误证据。</td><td>已结算 tool/result 形成候选；Jev 可建议下一份证据；下一请求由 System2 用原生工具实际取证、诊断与修复。</td><td>原错误保留；显示“建议先看日志”，实际读取后才显示“已取得日志”，随后出现修改与验证材料。</td><td>不重放未知幂等性的写操作，不抢已有溢出压缩或 adapter retry。重复失败/无进展按规则限制新动作，必要时等待用户。</td><td>无效重试次数；修复成功率；每成功任务耗时、费用与恢复能力。</td></tr>
+<tr><td>需要专家时委派具体工作；成果仍属于原任务。</td><td>原生委派工具 → ctx.subagents → 已安装 provider；parent/child/run 关联、交接范围、取消和结果由生命周期维护。</td><td>专家负责的事、实际状态、阶段成果和父任务整合可查；模型别名不冒充专业委派。</td><td>未安装 provider 不进候选。失败或取消保留部分成果并标明局限；停止范围明确到某个 run 或整个任务，不能让父子重复执行同一输入。</td><td>归属与结果回传；重复执行；取消收尾；专家结果的实际整合与任务质量。</td></tr>
+<tr><td>明确建立持续 Goal；进展按验收证据推进。</td><td>Goal owner 维护 id/revision、phase、activation、续轮与预算；统一完成入口核验非空必需检查及可解析证据，拟补完成控制。</td><td>“还差 1 项：真实回归通过”；证据与下一动作可打开。重启显示“等待你恢复”，而非持续运行。</td><td>暂停/恢复走 CAS；预算或无进展时限制新续轮。完成由独立检查或可识别人类授权决定；Jev 只建议继续、等待或报告。</td><td>未验收却完成次数；空转轮数；预算控制；冷恢复与真实续轮成功率。</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="experience">
+<h2>4. 体感智能：把事实变成可理解的体验</h2>
+<p>默认界面只回答“现在做什么、有什么成果、还差什么、我能做什么”。重要变化就地呈现，来源和完整决策记录展开查看。桌面与 Web 复用唯一原生 Conversation；新增任务工作台包装原有交流、节点和 sidebar slot，不制造第二个对话执行器。</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="体感智能机制表，窄屏可横向滚动"><table class="matrix"><caption>可见反馈必须来自实际状态；快速判断不强制排队播放完整阶段。</caption><thead><tr><th>用户动作与承诺</th><th>Host 所有者与事实</th><th>用户感知</th><th>干预、失败与恢复</th><th>验收指标</th></tr></thead><tbody>
+<tr><td>发送后等待；及时知道任务到哪一步，并尽早看到成果。</td><td>请求所有者发瞬态状态；assistant stream 反馈当前输出；Session 结算、原生呈现和工作区改动记录承载可检查产物。</td><td>当前动作保持一行；草稿、文件修改、报告实际到达即出现。无需盯完整协议链。</td><td>失败保留部分输出；中断内容标为未完成。没有内容时不填报告；记录待补时局部未知，不重新决策。</td><td>首次有效成果时间；成果发现率；状态理解；重复提交与无效等待。</td></tr>
+<tr><td>改模式、暂停、停止、返回续做；控制结果明确。</td><td>Host 控制返回范围、生效点、revision；收尾投影由原生 owner 状态证明，恢复读取同一日志。</td><td>“请求已接纳”与“已生效/已收尾”分开；原动作和成果保留；当前、历史、下一准入清楚。</td><td>普通 cancel 不等价于停止所有未来工作。复合停止可部分失败，逐项显示；断线恢复事实，重启 Goal 不自动 armed。</td><td>控制可发现性；范围理解；取消后新增动作；断线/重启一致性。</td></tr>
+<tr><td>离开后回来，或同时处理多任务；安静了解变化与资源。</td><td>Host 聚合真实变化和阻塞；完整调用账目区分 provider/estimated/unknown；Session 与原生任务引用关联成果、专家和通知。</td><td>“方案已更新，仍缺回归”；需参与时给具体操作。费用显示范围与未知项，普通判断不反复弹窗。</td><td>去重、频率限制和已读是不同事实。只承诺当前 live 会话能力；cold 唤醒与外部通知另验收。聚合不覆盖原始证据。</td><td>无效打扰；遗漏需参与事项；多任务归属；费用覆盖；变化摘要理解度。</td></tr>
+</tbody></table></div>
+<p>动效只帮助确认接收、定位变化和保持状态连续；不让每个 token 排队动画，不用循环光效证明模型正在变聪明。模型耗时和界面响应分别测量。键盘、屏幕阅读器、减少动态效果、明暗主题与窄窗都属于产品验收，不能以“示例能点”替代真实操作可用性。</p>
+<div class="note blue"><p>v3 应覆盖完整输入、权限拒绝、预算阻塞、排队/补充、专家失败、控制收尾、历史补档与恢复。样例结束只表示回放结束；Goal 仍 active 时，真实产品仍保留可执行下一步及暂停/停止入口。</p></div>
+</section>
+
+<section id="architecture">
+<h2>5. UI、Host、模型、工具与持久投影共用一套执行</h2>
+<figure><div class="diagram-scroll" tabindex="0" role="region" aria-label="Jev 与 Harness 调用架构，窄屏可横向滚动"><img src="diagram/jev-harness-invocation.svg" alt="UI 经 Host API 进入 SessionController；System3 消费者经 ctx.jev 调用 provider 与 Jev 供给并返回有界建议；AgentLoop 经 ctx.llm 调用 System2，按模型返回的指令执行原生工具或委派专家；实际结果通过 Session、Host 投影和 API 回到 UI。SDK 替换及未来本机 Lead 单独标注。"></div><figcaption>调用图区分既有机制、拟实施 SDK 替换和未来本机 Lead。<a href="diagram/jev-harness-invocation.svg">打开原图</a>；详细底座与 provider 约束见<a href="system3-native-v1.html#invocation-architecture">原生调用说明</a>。</figcaption></figure>
+<div class="sequence" aria-label="同一任务的调用关系"><span>UI / API / SDK 提交与控制</span><span class="arrow">→</span><span>Host 准入与原生 AgentLoop</span><span class="arrow">→</span><span>模型生成 / 工具执行 / 专家委派</span><span class="arrow">→</span><span>实际结果与 Session 结算</span><span class="arrow">→</span><span>Host 投影与可见成果</span></div>
+<p>System3 消费者从当前有限事实形成问题，调用单一 ctx.jev registry。Jev 返回 choice/score/noul 结果或弃权，所属服务重查版本、准入和取消后决定采用。当前入口消费者已有；Skill、记忆、压缩选择、诊断和自动专家消费者按阶段补齐。现有 provider 仍使用直接 Fetch；两种供给统一到官方 TypeSafe SDK 是拟实施替换，单次 SDK smoke 不表示运行时已经替换。</p>
+<p>System2 生成内容及工具/委派指令。AgentLoop 经 ctx.llm 调用 generation provider，经原生工具运行时执行指令；委派工具经 ctx.subagents 启动已安装专家。专家自己的内部运行时由对应 provider 管理，父任务的交接、启动、取消和结果归属由 Harness 控制；不能宣称所有专家内部工具都经过父 AgentLoop。</p>
+<p>未来本机通用 9B/27B 作为 System2 的 Lead 角色，在同一 AgentLoop 中处理经验证的本地常用任务、数据、工作安排和专家结果整合。它返回委派指令，由 Harness 工具路径执行，不直接绕过 Harness 调专家。自有 Jev 9B 与本机通用 Lead 是不同角色；进程内 Agent、自有服务、本机模型和远程模型分别说明实际执行域。</p>
+</section>
+
+<section id="identity">
+<h2>6. 任务身份与状态：多个输入也不会关联错</h2>
+<p>任务视图从原生 Session、已识别输入、回合、步骤和子任务推导。拟新增的 TaskView 是 Host 投影，不是第二任务数据库；一次普通请求不会被强行创建为长期 Goal。只有用户明确建立持续目标时，任务视图附加 GoalRef，继续沿原生 Goal 管理授权与生命周期。</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="任务身份映射表"><table class="compact"><thead><tr><th>概念</th><th>拟议映射</th><th>不可混淆</th></tr></thead><tbody>
+<tr><td>任务视图引用</td><td>TaskRef 由 sessionId + rootInputRequestId 组成；后者引用已有 SessionRequestId。多个追加输入列入 inputRequestIds。</td><td>引用名是草案，输入 id 复用原生身份。一回合可承载多个输入，不能只用 turn 作为任务主键。</td></tr>
+<tr><td>实际执行位置</td><td>相关输入的 rpcId / 消息引用 → turn/step → 当时有效 request/header → assistant/message、attempt 或 tool/result。</td><td>有效 header 可以沿原日志继承；不存在每步新 header 的保证。分页缺档不能推断未采用。</td></tr>
+<tr><td>专家归属</td><td>parentSessionId、childSessionId（存在时）、runId 及 provider；关联原始委派工具调用。</td><td>运行中的专家不必有进程内 localAgent。缺少子会话时不能编造可读子日志；结果仍走原生 run/工具结算。</td></tr>
+<tr><td>长期目标</td><td>可选 GoalRef：id + revision；phase 来自持久日志，activation 来自当前进程。</td><td>active 不等于 armed；回合完成不等于 Goal 完成；一次性任务不需要自动续轮。</td></tr>
+</tbody></table></div>
+<h3>接收与准入严格分开</h3>
+<p>当前 Session API 在可路由输入中先等待入口判断，再把输入放入原生 inbox，随后返回 accepted。新的即时回执定义“Host 已收到待处理请求”，由同一请求所有者发布，不能将它解释为输入已入队或已进入模型。收到状态若尚无持久准入记录，重启后显示待确认，不自动重发。</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="任务事实与可见状态表"><table class="state-table"><thead><tr><th>事实阶段</th><th>依据与所有者</th><th>可显示</th><th>仍不能推断</th></tr></thead><tbody>
+<tr><td>本地提交</td><td>客户端输入回显与 requestId；尚无 Host 回执。</td><td>已提交，等待服务器接收。</td><td>不能声称 Host 已接收、已保存或已执行。</td></tr>
+<tr><td>Host 收到 / 入口处理中<span class="tag">瞬态投影拟新增</span></td><td>Host 请求所有者持有该请求；开始准入/路由，关联当前连接与运行时实例。</td><td>已收到待处理请求；正在选择处理方式。</td><td>不能声称输入已准入 inbox、模型已经处理。</td></tr>
+<tr><td>输入准入</td><td>原生 inbox 接受 identified message；后续 user/message 保留 source.rpcId。</td><td>已入队或已开始对应回合。</td><td>准入与持久化屏障分开；不能把同步接受等同已落盘。</td></tr>
+<tr><td>建议 / 采用</td><td>决策回执；所属 owner 的采用事实。入口采用复用 model/automatic-selection。</td><td>建议选择；或本次已选用。</td><td>建议不等于采用；采用不保证请求发出或任务成功。</td></tr>
+<tr><td>实际请求 / 上下文使用</td><td>有效 header 证明配置已准备；模型可见日志及请求关联证明材料进入请求；真实流反馈证明本地调用已开始。</td><td>配置已准备；本次使用了哪些材料；开始等待实际输出。</td><td>不能从 header 推断远程服务已成功接收；正文取得不等于实际使用。</td></tr>
+<tr><td>实际输出 / 产物</td><td>流内容、assistant/message/attempt、工具结果、呈现与改动记录及可读产物引用。</td><td>已有草稿、部分结果或待验收产物。</td><td>中断也可能有内容；存在产物不等于检查通过。</td></tr>
+<tr><td>回合结算 / 任务验收</td><td>turn/end 结算回合；任务对应非空必需检查、有效证据与授权完成结果分别记录。</td><td>回合结束；或明确验收通过。</td><td>回合、专家完成与任务验收是不同事实。Goal 的完成必须经过统一 owner。</td></tr>
+</tbody></table></div>
+<p>TaskView 保留这些独立事实与关联，不把它们强行压成单一线性“完成百分比”。重连先采用 Host 的 asOfSeq 与控制基线，再补日志；瞬态状态不能覆盖更晚的持久结果。缺档、不支持、待确认、失败、中断与正常完成各有明确表示。</p>
+</section>
+
+<section id="admission">
+<h2>7. 权限、外发拒绝、模型能力与预算</h2>
+<p>权限、隐私、候选可用性、取消、预算和验收由规则负责；Jev 分数不能授予权限，也不能显示为成功概率。模型能力来自实际 registry/provider 声明与任务族验证，不能由模型名称推断。自有和官方 Jev 分别绑定供给、实际模型、执行域、协议能力与质量基线；不静默换供给。</p>
+<ol><li>用户选择工作区、提交材料或限制外发。Host 检查可读范围与数据类别；当前数据类别来自显式配置，不冒充已验证的自动敏感识别。</li><li>规则分别过滤决策服务、生成模型、工具和专家的候选。远程准入说明具体对象、材料类别、用途与作用范围；批准由可识别人类身份的控制请求产生。</li><li>有合法路线才判断或执行。没有获准供给时，沿已获准且具备任务能力的基线；没有这样的基线则拒绝新增动作并等待补充、改限制或批准。</li><li>Jev 只接收有限必要状态；超限或指代不明时弃权，不能偷偷截断必需约束。复杂规划、摘要生成、修复和最终回答仍由 System2 或经验证的 Lead 完成。</li></ol>
+<h3>预算也是状态，不只是设置页中的一个数字</h3>
+<p>拟补 Task/Goal 预算包含可配置的决策次数、总截止、续轮、Token 或金额限制，并声明覆盖哪些调用。账目包含 Jev、生成、摘要、失败重试、查回及专家；provider usage、估算与未知分别保存。现有 Goal 只有轮数限制，现有普通 tokenUsage 投影不代表全部任务费用。</p>
+<p>预算达到准入限制时停止新增受限动作；在途请求仍按取消及结算事实处理，其真实费用不能清零。金额硬预算需要可计算价格与明确计费范围；信息不足时不能声称能够执行这个硬限制。价格或用量缺失显示未知，缓存是否命中以实际回执为准，不由压缩或稳定前缀推断。</p>
+<div class="note amber"><p>“更快、更省、记得住”都是评测目标。首批对照需要相同任务、候选、权限、证据和预算；判断、网络、摘要和查回的开销全部计入。没有实测数据时不显示固定节省比例、预计成功率或绝对无损徽章。</p></div>
+</section>
+
+<section id="control">
+<h2>8. 控制范围与结算：停止不会自动撤销</h2>
+<p>用户看到的操作必须定义作用对象、影响范围与生效点。Host 返回控制已接纳后，界面保持“等待收尾”；只有相关 owner 的实际结算证明完成，才显示停止。外部动作已经发生时保留记录；撤销需要该动作的独立可用恢复机制，不能由 cancel 或停止按钮推断。</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="控制范围表"><table class="compact"><thead><tr><th>操作与实现状态</th><th>影响范围</th><th>接纳与结算</th><th>失败 / 恢复</th></tr></thead><tbody>
+<tr><td>取消当前回合<span class="tag">复用原生 cancel</span></td><td>停止当前普通 Agent 的活动回合；现有 API 保留 pending inbox。</td><td>accepted 只表示请求了取消；turn 与工具随后结算。</td><td>界面保留排队输入并说明可继续；不能称整个任务及其所有未来工作已停止。</td></tr>
+<tr><td>暂停 / 恢复 Goal<span class="tag">复用原生 Goal；补任务视图</span></td><td>约束该 Goal 的自动续轮；Host 暂停对正在运行回合的影响沿原生 driver。</td><td>CAS 校验 exact GoalRef；phase 与 activation 分开报告。</td><td>旧 revision 冲突刷新；重启保持 disarmed，明确人类恢复后继续。不能重新生成已有产物冒充续做。</td></tr>
+<tr><td>停止这个任务<span class="tag">拟新增复合控制</span></td><td>限制本任务未来准入/续轮，处理本任务所属排队输入、活动工具、jobs 和子 run；明确保留或移除哪些工作。</td><td>先记录控制意图并限制新动作，再调用各 owner，逐项聚合 settled/pending/failed/unknown。</td><td>普通 cancel(keepInbox) 不能独自实现。未收尾的专家保持可见；重启核实外部进程与日志，不能把未知当已停止。不删除不属于此任务的提醒或输入。</td></tr>
+<tr><td>停止某个专家<span class="tag">复用原生 owner；视能力提供</span></td><td>某个 parent/child/run；父任务仍可整合已有结果。</td><td>中断信号接纳与子 run 结算分别显示。</td><td>provider 不支持的控制显式说明；结果可能部分返回。不能靠隐藏专家卡称停止成功。</td></tr>
+<tr><td>改变自动 / 固定模式<span class="tag">持久模式 API 拟新增</span></td><td>Session 级模式意图及明确的下一准入；不覆写已经开始的配置。</td><td>返回 revision 与 effectiveFrom；当前执行和下一策略分别展示。</td><td>CAS 冲突刷新 Host 实际值；恢复自动不修改全局默认或历史采用。</td></tr>
+<tr><td>排除 / 恢复来源<span class="tag">Host 范围持久控制拟新增</span></td><td>声明的任务、Session 或 Workspace 后续检索/查回/注入。</td><td>Host 确认范围和 revision 后更新；当前请求使用事实保留。</td><td>已发送的历史或当前内容不撤回。排除后恢复执行仍检查来源；重新允许只影响未来，不倒填本次请求。</td></tr>
+</tbody></table></div>
+<p>共享视图区分控制 requested、accepted、effective 与 settled。部分失败显示具体尚未停止的对象和下一可用动作；用户无需理解内部工具名，但能知道还有哪项工作在继续。停止也不能伪造回合、子任务或压缩事务的结束事件。</p>
+</section>
+
+<section id="api">
+<h2>9. 桌面、Web、API 与双 SDK 共享语义</h2>
+<p>下表为字段和接口草案，名称尚未形成公开 API。实现先检查现有定义可否复用；可推导事实放投影，只有不能从原生日志重建的新模型可见输入或实际采用事实才补所属事件。共享行为不要求所有终端都有同样的视觉组件。</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="跨终端接口字段草案"><table class="compact"><thead><tr><th>接口 / 事件来源</th><th>拟议字段</th><th>复用与拟新增</th><th>语义与过滤</th></tr></thead><tbody>
+<tr><td>任务引用与输入</td><td>taskRef、requestId、inputRequestIds、delivery(queue/steer)、turn/stepRefs、可选 goalRef。</td><td>复用 SessionRequestId、rpcId、Session/Goal 与运行引用；任务关联视图拟新增。</td><td>多输入/步骤关联可追溯；不能把转发、重试或补历史变成新的任务执行。</td></tr>
+<tr><td>TaskView / 状态投影</td><td>asOfSeq、viewVersion、hostReceived/admission/execution、currentAction、lastResult、nextAction、goalPhase/activation、coverage。</td><td>复用原生 projection 基线；TaskView 与 Host 请求瞬态状态拟新增。</td><td>明确 durable / transient 来源、完整性与 unknown。状态由 Host 聚合；Client 不重算路由。请求状态带运行时/连接身份，重启不能复用旧瞬态状态。</td></tr>
+<tr><td>决策与采用</td><td>decisionId/requestId、nodeKind、candidateVersion、goalRevision、outcome、selectedId、owner、effectiveBoundary、usage/elapsed、provider/model/domain。</td><td>入口复用 entry-decision、model/automatic-selection；共享 Client-safe 回执与其他消费者采用字段拟新增。</td><td>不发送完整私密请求体。候选说明与结构化结果可解释；不补编自然语言理由，不把建议改写成执行。</td></tr>
+<tr><td>实际使用与成果</td><td>sourceRefs/contentVersion、message/requestRefs、compactionRef/replacement、artifactRefs、child/runRefs、status、可解析 evidenceRefs/checkResults。</td><td>复用模型可见日志、工具结果、Compaction、呈现与工作区改动；缺少关联或受保护事实清单时补所属记录。</td><td>区分取得/注入、summary/replacement、草稿/验收。来源只暴露用户有权读取的范围；证据缺失不发布假通过。</td></tr>
+<tr><td>控制请求与结果</td><td>controlRequestId、action、target/taskRef、scope、expectedRevision、effectiveFrom；受影响对象及 requested/accepted/effective/settled。</td><td>复用 select/cancel/queue/Goal/subagent 控制；routing mode、stopTask、排除范围与聚合结算拟新增。</td><td>幂等、CAS 和实际 owner 结果优先；拒绝/冲突/部分失败明确。human authorization 与模型申请不能只靠同一布尔字段区分。</td></tr>
+<tr><td>资源与能力可用性</td><td>limits、spent/reserved/unknown、usageSource、pricingRef、executionDomain、featureAvailability、degradationReason。</td><td>复用 provider/usage/Goal 轮数事实；完整账目与预算/能力投影拟新增。</td><td>未安装、未验证、不支持、禁用和暂不可用分别说明；unknown 不归零。选择供给不继承另一供给的阈值结论。</td></tr>
+</tbody></table></div>
+<h3>事件流与兼容</h3>
+<p>现有 Session follow 流提供日志窗口、持久事件和可选 assistant-stream，Host 控制流提供投影基线与更新。TaskView 沿原生序号发布，重连先恢复基线并补档；任何展示端都不因重连再次调用 Jev。API/SDK 用相同字段确认控制和读取证据，不能另定一套 accepted 或 completed 含义。</p>
+<p>新增持久类型按仓库的版本与声明规则处理：Session 历史世代不移动、覆盖或删除；解码、投影、持久变更声明、TypeScript/Python SDK expected outputs 与 keyless snapshots 同步更新。投影 schema/viewVersion 及能力发现明确，不靠忽略未知持久事件恢复。固定运行时版本与正式 rc.2 对齐，外部 SDK 使用自己的版本体系。</p>
+<p>桌面目录选择与文件打开、Web 可用的下载操作、SDK 的流消费可以不同；它们必须共享实际采用、实际材料、数据外发、预算、控制范围、Goal 激活和验收事实。某终端没有 UI 操作时仍应能读到限制，而不是隐去后端状态。</p>
+</section>
+
+<section id="repositories">
+<h2>10. 两个仓库，各自承担明确工作</h2>
+<p><code>xDAN-System3-Harness</code> 维护执行、原生服务、日志与语义；<code>xDAN-System3-Frontend</code> 以 dataelement/dsh-desktop 的源代码基线承担桌面载体与产品界面。保留上游来源和许可证。复制仓库不表示已经集成自有后端；不把前端的演示状态合并成生产任务状态。</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="两仓职责与建议改动范围"><table class="compact"><thead><tr><th>仓库 / 建议范围</th><th>职责</th><th>组合方式与约束</th></tr></thead><tbody>
+<tr><td>Harness：<code>packages/api/session-controller/</code> 与原生投影</td><td>收到/准入、任务关联、模式 CAS、生效点、队列与控制聚合；API 与 Client-safe 类型。</td><td>新行为不藏进 Electron IPC。持久与瞬态来源分明，维护取消、并发和恢复。</td></tr>
+<tr><td>Harness：<code>packages/experimental/system3*/</code>、Jev provider</td><td>有界消费者、准入、来源、采用、预算与统一完成控制；官方 SDK 供给替换。</td><td>单一 ctx.jev；规则负责安全与准入；节点收益独立验证后启用。</td></tr>
+<tr><td>Harness：Skill / Compaction / Goal / Subagent / deliverables 与双 SDK</td><td>所属服务实际动作及必要关联、原文保护、父子生命周期、产物与验收、回放。</td><td>按缺口做最小扩展；更新全部消费者和 SDK 投影，不另造执行循环。</td></tr>
+<tr><td>Frontend：公共任务工作台、Conversation 扩展、locale/theme 与控件</td><td>默认当前动作、成果、上下文、Goal 与记录；输入、异常、干预及多任务体验。</td><td>建议维护一份可供桌面/Web 复用的 Client Module，以明确包入口接入 Host profile；具体上游目录和封装在落码前映射。消费 Harness 类型与投影，不自行路由或判完成。</td></tr>
+<tr><td>Frontend：现有 Electron 主进程 / preload / runtime 管理与打包</td><td>目录选择、窗口、更新、runtime 启动与恢复、安装包一致性。</td><td>沿原生 dsh Web profile 启动自有运行时；保留唯一 Conversation。Host 注册 UI 模块的薄装配不增加第二 SessionController。</td></tr>
+<tr><td>两仓：build manifest、契约测试、设计及交接</td><td>固定运行时来源、DSH Host/Client/System3 版本、Client Module 版本、schema 与能力清单。</td><td>混装 fail loud，给明确恢复方式；后端导出语义/类型，前端发布 UI 模块，避免双向源码依赖与重复状态库。</td></tr>
+</tbody></table></div>
+<h3>当前桌面复用与安全恢复</h3>
+<p>dataelement 桌面通过独立 Electron Node 进程调用 DSH CLI 的 Web profile，复用原生 Conversation；它不是第二个 AgentLoop。rc.2 源码、桌面补丁和自有产物需逐项映射，不能只改 package version。开发联调与安装包分别核验实际加载的 Host、Client Modules 和运行时来源。</p>
+<p>安全 profile 禁用不可信扩展时仍保留 System3 事件解码、回放与状态读取。Jev provider 不可用时新输入显示真实降级，正常自动意图不被覆写；没有合法 baseline 不执行。已有任务资料、原文和成果可读；重启 Goal 仍 disarmed，控制与在途外部动作先核实再报告。不能换回 stock runtime 或忽略历史事件冒充恢复。</p>
+</section>
+
+<section id="delivery">
+<h2>11. 分阶段落地，完成标准贯通三层</h2>
+<p>设计阶段先完成体验和原生语义；产品实现仍经过具体设计确认。本表沿已有 G1—G6 扩展前端交付与跨终端验收，不用一个漂亮工作台或 provider 连通样例替代完整后端。每批完成相应 build、lint、行为检查；CI 负责完整平台矩阵，报告只包含实际运行的检查。</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="分阶段实施与验收表"><table class="compact"><thead><tr><th>阶段</th><th>可交付行为与体验</th><th>必须验收</th></tr></thead><tbody>
+<tr><td>G0：本轮设计</td><td>三层机制、v3 样例、状态/控制草案、两仓职责与验收任务。</td><td>样例交互、关联与状态一致；所有拟新增能力明确；不声称后端或性能通过。具体实现方案获准后进入落码。</td></tr>
+<tr><td>G1：运行时与桌面</td><td>正式 rc.2 源码对齐；补丁映射；自有 runtime 与 UI 模块组合；两种 Jev SDK 配置。</td><td>开发与安装包实际来源、取消/恢复、历史世代和安全 profile；provider 协议、凭据、校验、总截止与回放。</td></tr>
+<tr><td>G2：入口贯通</td><td>Host 收到/Agent 准入、自动/固定、任务关联、权限拒绝、队列与真实入口反馈。</td><td>同输入一次准入；固定跳过 Jev；弃权、超时、旧版本、取消和并发；桌面/Web/API 对 adopted/request/output 含义一致。</td></tr>
+<tr><td>G3：首个过程节点</td><td>Skill 小候选选择及实际注入；真实方法与来源体验。</td><td>先 shadow 对照再采用；Scope/目录/显式优先/去重/reject/cancel；模型可见日志与 keyless snapshot 证明真实变化。</td></tr>
+<tr><td>G4：记忆、压缩与诊断</td><td>有来源检索、排除、事实保护、原文查回、失败后的取证与成果。</td><td>读范围/版本/排除有效；原文可恢复，检查失败不提交 replacement；不重放未知写操作；任务质量与总开销对照。</td></tr>
+<tr><td>G5：专家与持续 Goal</td><td>一个真实专家任务族，父任务整合；目标续轮、预算、独立验收、复合停止与会话内沟通。</td><td>父子归属与取消收尾、部分成果；Goal CAS、无进展和预算限制；所有完成入口受约束，重启 disarmed 与 live Schedule 限制准确。</td></tr>
+<tr><td>G6：整体交付与收益</td><td>完整任务、多任务控制、两仓安装组合、跨终端回放、可复现使用说明。</td><td>必需链路真实通过；至少一个过程节点实际采用且对照不降低质量；失败恢复、双 SDK 与快照；没有数据就不宣称收益。</td></tr>
+</tbody></table></div>
+<h3>行为、真实链路与快照各证明什么</h3>
+<ul><li>行为测试验证准入、幂等、固定意图、scope、预算、CAS、目录失效、旧决策、并发、取消与控制结算；断言后端动作和实际日志，不只断言文字出现。</li><li>keyless recorded-session snapshots 验证模型可见输入、建议/采用/实际使用、失败/中断和用户输出；新增过程消费者同步补快照支持。持久类型和 loop/lifecycle 变化同步 TypeScript/Python SDK expected outputs。</li><li>真实 e2e 验证自有与官方 Jev、System2、专家及桌面安装包的完整采用与输出关联；使用获准的公开合成材料。鉴权 smoke、单次样例、静态原型和浏览器断言分别标注，不代替真实链路。</li><li>跨终端一致性用同一事件记录和同一控制动作校验桌面、Web、API、双 SDK；重连、历史分页、缺档、安全恢复与能力不支持都必须保留相同语义。</li><li>用户验收观察参与者是否能指出当前动作、已有成果、验收缺项、数据去向和接管操作；再验证真实任务是否完成。窄窗、键盘、屏幕阅读器及减少动态效果同时检查。</li></ul>
+<h3>效果评测</h3>
+<p>固定模型、确定规则、规则 + Jev 使用同一任务族、候选、证据、权限和预算。先用分层样例做试点，再扩大数据才作一般结论；记录任务成功率、返工、用户重复解释、首次有效成果、端到端完成耗时与每成功任务总成本。每个节点同时报告 extra latency、弃权、超时及质量变化；供给的 p50/p95 和阈值不跨模型复用。</p>
+<p>界面反馈更及时单独记录用户理解与等待体验；它不等于 Agent 执行更快。压缩 Token 缩减需扣除判断、摘要和查回开销；缺少完整账目或价格时只报告可核实部分，并列未知项。当前没有三层机制的实测收益，本文不设置虚构数值。</p>
+</section>
+
+<section id="decisions">
+<h2>12. 三个关键设计决策</h2>
+<ol><li><strong>任务语义归 Host，界面表达归共同 UI。</strong> TaskView 投影复用原生身份与日志；桌面优先不改变 API/SDK 行为。普通任务不强加 Goal，长期自主续做必须有明确授权。</li><li><strong>每次智能动作都要形成实际采用与结果。</strong> 规则负责准入，Jev 负责有界判断，System2/未来 Lead 生成和组织，Harness 执行与结算；界面从真实事实展示变化。</li><li><strong>按完整任务和恢复能力验收。</strong> 入口、过程和体感共同接受成功率、成本、延迟与用户理解检验；无收益节点可禁用或删除，但不能用全 shadow 或静态界面宣称 System3 整体完成。</li></ol>
+<p>具体落码前还需确认首批任务族、预算配置、Frontend Client Module 的实际目录和安装组合。其余机制先沿本设计推进，避免把“穿透设计”扩成第二任务系统、额外总控模型或更高调用频率。</p>
+<details><summary>原生事实与进一步依据</summary><ul><li><a href="../../packages/api/session-controller/src/commands.ts">Session 输入准入、队列和普通取消</a>；<a href="../../packages/api/session-controller/src/prompt-router.ts">入口路由所有权与并发</a>；<a href="../../packages/api/session-controller/src/types.ts">选模与投影类型</a>。</li><li><a href="../../packages/experimental/system3/src/entry-routing.ts">Jev 入口决策回执</a>；<a href="../../packages/experimental/system3/src/decision-projection.ts">当前 Host-only shadow 投影</a>；<a href="../../packages/experimental/apus-dsh-jev-plugin/src/client.ts">当前 Fetch provider</a>。</li><li><a href="../../packages/core/agent-loop/src/agent.ts">原生请求准备、流与结算</a>；<a href="../../packages/core/agent-loop/src/tool-calls.ts">工具执行和结果</a>；<a href="../../packages/subagent/subagent/src/index.ts">子任务所有者</a>。</li><li><a href="../../packages/skill/tool-skill/src/index.ts">Skill 调用与注入</a>；<a href="../../packages/compaction/compaction/src/types.ts">压缩 summary 与 replacement 语义</a>；<a href="../../packages/goal/goal/src/types.ts">Goal phase 与 activation</a>；<a href="../../packages/schedule/schedule/README.zh.md">live 会话跟进限制</a>。</li><li><a href="../../packages/llm/token-meter/src/usage-projection.ts">当前输出用量投影</a>；<a href="../../packages/deliverables/README.zh.md">原生产物与工作区改动</a>；<a href="../testing.md">测试政策</a>；<a href="../session-format-status.md">Session 数据版本规则</a>。</li></ul></details>
+</section>
+<footer><p>文档类型：面向产品与实施评审的设计参考。页面不连接任何服务；CSS 内嵌，架构图和关联页面保留同目录即可离线阅读。本文是方案与接口草案，不是已发布 API，不是产品代码完成声明。</p></footer>
+</main>
+</body>
+</html>

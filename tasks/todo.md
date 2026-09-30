@@ -119,3 +119,18 @@
 ### 调用图 Review
 
 新增独立调用关系 SVG / 2× PNG，主 HTML 内嵌，v2 提供导航与可折叠查看。独立源码审查确认原生调用所有权，图中区分自动入口的条件调用、固定或不适用的旁路、SDK 替换和未来本机 Lead。静态资源与脚本、1360/390px、键盘展开及 66 项原有交互断言通过，Markdown 链接和换行检查通过。证据见 [invocation-verification.json](../docs/feat-system3-desktop/invocation-verification.json)。
+
+## 对外三层智能体验设计与前端仓库
+
+- [x] 确认 dataelement 桌面选型及创建独立私有前端仓库的授权。
+- [x] 完成本地克隆、私有仓库首推与一致性核验，保留 upstream 和许可证。
+- [x] 复核入口、过程、体感三层机制及当前原型缺口。
+- [x] 形成跨 UI / Host / Agent / 模型 / 工具 / 事件 / SDK 的完整设计与验收。
+- [x] 制作基于桌面工作台结构的 v3 连续任务体验，覆盖业务文件、专业专家和中断续做。
+- [x] 验证交互、无障碍关键路径、窄屏、事实语义，更新主 HTML 与交接后打开。
+
+设计复用 dataelement 桌面壳与原生 Conversation；本轮不启动后端或产品代码实施。仓库复制保持上游源代码基线。
+
+### 三层智能 Review
+
+主设计升至 v1.3，v3 连续工作台与跨层实施设计已关联。私有前端仓库 main 首推并核验，保留 481 条上游历史；应用未接入自有 runtime。v3 浏览器状态 37 断言、独立 Node VM 62 断言、v2 回归 66 断言与 23 组布局检查通过；修正提交快照、停止后待答复/取证恢复、来源排除验收和普通任务/Goal 区分。验证记录见 [intelligence-verification.json](../docs/feat-system3-desktop/intelligence-verification.json)。

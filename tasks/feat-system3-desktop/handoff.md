@@ -5,7 +5,7 @@
 - 产品为独立 Jev Native + DSH Native，入口第一目标、合理过程快决策第二目标。
 - 用户选定 dataelement/dsh-desktop，并同意对齐 DSH 0.1.7-rc.2。
 - 用户明确要求完整后端 Goal：入口、过程、能力/记忆与长期目标维护；必须尊重 Jev 9B 的有限能力。
-- 本轮为统一设计阶段；中文 v1.2 架构与七场景体验方向稿已生成，产品代码尚未实施。
+- 本轮为统一设计阶段；中文 v1.3 架构、v3 连续任务体验和三层跨端设计已生成，产品代码尚未实施。
 - 工作区 feat-system3-desktop 从上一工作分支创建；主目录与旧工作区保持干净。
 
 ## 2. 本轮交付物
@@ -99,3 +99,27 @@
 主 HTML 的 `#invocation-architecture` 内嵌调用图；v2 顶部“调用关系图”跳到页内可折叠图，并提供 SVG / PNG 及完整说明入口。新增图明确 UI→Host、System3→Jev、AgentLoop→模型、工具→专家及结果回父任务→UI 的方向；固定或不适用入口跳过 Jev。当前 Fetch provider、目标 SDK 替换、待实施过程节点和未来本机通用 9B/27B Lead 分别标明。专家内部执行由专家运行时管理，Harness 负责委派生命周期与结果归属。
 
 本次为静态设计补充，没有改变产品代码。新增 SVG 的 IDs 与样式使用 `ji-` 前缀隔离；主 HTML 内嵌与独立 SVG 一致。浏览器检查两页 1360/390px、键盘展开、图中文字及 66 项既有场景断言通过，静态链接/脚本/XML、Markdown 链接/换行与 diff 检查通过；未重复运行上一轮完整 doc-sync 或产品构建。当前文件校验记录在 `docs/feat-system3-desktop/invocation-verification.json`，上一轮体验记录保留其当时文件摘要。
+
+## 11. 三层智能与私有前端仓库
+
+最新体验入口为 `docs/feat-system3-desktop/system3-experience-v3.html`，详细实施设计为 `system3-intelligence-design.html`；主 HTML v1.3 内提供链接与嵌入。v3 使用离线编写样例，支持月报、专家接力、历史续做，形成同一任务的入口、过程与体感体验。真实后端 G1—G6 仍未实施。
+
+| 本轮文件 | 行数 | 内容 |
+|---|---:|---|
+| `docs/feat-system3-desktop/system3-native-v1.html` | 573 | 统一 v1.3 入口与图 |
+| `docs/feat-system3-desktop/system3-experience-v2.html` | 91 | 保留参考，纠正收到与准入 |
+| `docs/feat-system3-desktop/system3-experience-v3.html` | 74 | 工作台结构与控件 |
+| `docs/feat-system3-desktop/system3-experience-v3.css` | 9 | 响应式、明暗与动态偏好 |
+| `docs/feat-system3-desktop/system3-experience-v3.js` | 716 | 离线状态与用户控制 |
+| `docs/feat-system3-desktop/system3-intelligence-design.html` | 184 | 三层机制、两仓职责、API 草案、G0—G6 |
+| `docs/feat-system3-desktop/system3-browser-qa.json` | 428 | 浏览器布局、键盘、v2 回归证据 |
+
+`intelligence-verification.json` 保存本轮文件摘要与验证范围。v3 37 项浏览器状态断言、独立 Node VM 14组/62断言、v2 66项回归与23组布局检查通过；Markdown wrap/link、JS/HTML/SVG 静态检查、Ruff 双检查和 diff 检查通过。没有重复运行产品构建或完整后端测试。
+
+原型已修复提交快照与下一草稿混用、停止后遗失待答复/取证、排除来源仍通过验收、普通任务误称 Goal 的问题。恢复依据独立待办事实，重新允许来源不倒填旧请求。推进按钮禁用后仅在该用户动作原本持焦点时交接到新控件。
+
+前端本地根目录为 `/Users/gumpm5/Documents/Code/xDAN-System3-Frontend`，隔离工作区 `.Codex/worktrees/chore-bootstrap`；GitHub `cryptoSUN2049/xDAN-System3-Frontend` 已核验 private=true、fork=false、default=main，远端与本地初始化提交一致。保留 481 条上游历史和 MIT；origin 为私有仓库、upstream 为 dataelement。HTTPS 首推连接重置后，HTTP/1.1 加缓冲完成传输。应用品牌与 runtime 未修改、未安装依赖或启动。后续从该仓库 `tasks/chore-bootstrap/handoff.md` 冷启动。
+
+- [x] 完成三层穿透设计、桌面 v3 与前端私有源码仓库。
+- [ ] 确认具体设计，执行 G1 版本与桌面接入；保持唯一 Harness 执行核心。
+- [ ] G2/G3 优先完成真实入口回执与一个实际采用的过程节点，再推进 G4—G6。

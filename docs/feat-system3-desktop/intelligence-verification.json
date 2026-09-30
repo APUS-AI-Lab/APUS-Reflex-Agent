@@ -1,0 +1,64 @@
+{
+  "checkedAtUTC": "2026-09-30T08:09:53.615466+00:00",
+  "scope": "offline design and repository bootstrap; no product integration or performance claim",
+  "frontend": {
+    "repository": "https://github.com/cryptoSUN2049/xDAN-System3-Frontend",
+    "private": true,
+    "fork": false,
+    "defaultBranch": "main",
+    "verifiedHead": "eed8d40d2d10eecd6a9993cd27a7541524154c2b",
+    "upstreamCommitsRetained": 481,
+    "license": "MIT; DataElement copyright retained",
+    "applicationIntegration": false
+  },
+  "checks": {
+    "v3BrowserStateAssertions": 37,
+    "v3IndependentNodeVmAssertionsReported": 62,
+    "v2BrowserAssertions": 66,
+    "responsiveSamples": 23,
+    "localHtmlReferencesAndIds": "passed",
+    "externalJavascriptSyntax": "passed",
+    "canonicalInvocationSvgMatchesMain": "passed",
+    "markdownWrap": "2240 files passed",
+    "markdownLinks": "2218 files passed",
+    "ruffCheck": "passed",
+    "ruffFormatCheck": "31 files passed",
+    "diffCheck": "passed"
+  },
+  "files": {
+    "system3-native-v1.html": {
+      "lines": 573,
+      "sha256": "07ef6707f4ff74d7b18ff2526ff4fdf7f985277e57aadb4a0b1c840f41df3704"
+    },
+    "system3-experience-v2.html": {
+      "lines": 91,
+      "sha256": "12641b5a8e88ba69327ff46153dd700970a95ef4770bb2159044e3c02edadbe6"
+    },
+    "system3-experience-v3.html": {
+      "lines": 74,
+      "sha256": "c947e38987031e174f9c7de5d6ecc8667122cab024b700f94e149bd9e1ec5ca1"
+    },
+    "system3-experience-v3.css": {
+      "lines": 9,
+      "sha256": "6a804767c224d1d0c903ea1fd1a7f897ca03309b81add05662ff7cf1c194f06b"
+    },
+    "system3-experience-v3.js": {
+      "lines": 716,
+      "sha256": "55db0912cef1e33d23efb46b9903c2b98a49beec11e31e9ddd870887865f808d"
+    },
+    "system3-intelligence-design.html": {
+      "lines": 184,
+      "sha256": "6265c4a78a3861a64b7aa2ced2e88ed184be6165c64220614e277ae481def289"
+    },
+    "system3-browser-qa.json": {
+      "lines": 428,
+      "sha256": "f21e15e4aa8b4b7de259885efa0e39cfcb2b9a5c342885d957475ecae10c35bb"
+    }
+  },
+  "limitations": [
+    "offline authored samples, not a real model or Harness run",
+    "desktop package not installed, launched or integration-tested",
+    "detailed design page has dark theme only",
+    "local general 9B/27B Lead unverified"
+  ]
+}
