@@ -4,7 +4,7 @@
 
 - 用户已授权完整实现、真实测试与 litellm 服务器部署；统一正式 rc.2。
 - 产品源码、Frontend、index、构建与部署由本会话独占。Jev 运维只在独立预检工作树审查。
-- 入口/Skill、双 SDK、R1/R2/R3 固定复核及真实 Desktop/Linux 任务与恢复验收通过；收口文档与双仓 PR。
+- 入口/Skill、双 SDK、R1/R2/R3 固定复核及真实 Desktop/Linux 任务与恢复验收通过；双仓 PR 已创建。
 - 主目录 main 未修改；此工作树保留。
 
 ## 本轮交付物
@@ -37,7 +37,7 @@ Jev 8086 是结构化决策协议，8002 不能替代；实际 profile 显式 hi
 - 当前 Mac 本地包未签名/公证；开发验收不能表述为已完成签名分发。
 - 合成 finish/error/aborted 不能证明模型响应；运行态不能由历史入口采用记录推断。
 - 发布健康通过才更新 previous；回滚按目标自身 service.unit 配对，成功后消费 previous。
-- 回滚前驱必须能读取新增 Session 事件；最终部署使用同一修复源码的稳定/验证版本完成数据恢复验收。
+- 本次回滚只验收同一修复源码的两个 release 之间切换、单元配对和会话恢复，不证明旧源码能读取新增 Session 事件。
 
 ## 下一里程碑任务清单
 
@@ -45,13 +45,14 @@ Jev 8086 是结构化决策协议，8002 不能替代；实际 profile 显式 hi
 - [x] 部署已审查实现，真实完成 CSV 任务并以独立 oracle 核验产物。
 - [x] 验证取消、恢复自动、刷新、服务重启与真实回滚后的会话/产物持久性。
 - [x] Desktop 正常/安全模式启动、干净提交装配、实际自动 Skill/CSV 任务、安装后重启恢复通过。
-- [ ] 双仓 ship、远端 SHA 核验、记录 CI 和回滚状态。
+- [x] 双仓 ship、远端 SHA 核验、记录 CI 和回滚状态。
+- [ ] GitHub Actions 账户预算恢复后重跑远端 CI；通过前保持 PR 未合并。
 
 后续产品范围：本地 9B/27B Lead、Jev 记忆压缩和完整专家/长期 Goal 编排未在本轮验收；候选 Skill 目录超限时保留原生路径。
 
 ## 分支/部署状态
 
-Harness 分支 `feat-system3-g1`；已接受基础标签 `system3-g1-foundation`。Frontend 分支 `feat-system3-integration`。服务器现运行已审查标签对应的稳定发布，真实重启和回滚通过；精确 release ID、源码提交、任务和恢复证据见 docs/feat-system3-g1/deployment-final.json。应用仅监听服务器 127.0.0.1:18731，通过 SSH tunnel 与原生 cookie 访问。本机已安装 ~/Applications/xDAN System3.app，使用 ~/.local/bin/xdan-system3 或 ~/Applications/启动 xDAN System3.command 启动；凭据只在包外的受限文件内。Desktop pin 与任务证据见 desktop-acceptance.json。CI 与 PR 状态待最终 ship 更新。
+Harness 分支 `feat-system3-g1`；已接受基础标签 `system3-g1-foundation`。Frontend 分支 `feat-system3-integration`。服务器现运行已审查标签对应的稳定发布，真实重启和回滚通过；精确 release ID、源码提交、任务和恢复证据见 docs/feat-system3-g1/deployment-final.json。应用仅监听服务器 127.0.0.1:18731，通过 SSH tunnel 与原生 cookie 访问。本机已安装 ~/Applications/xDAN System3.app，使用 ~/.local/bin/xdan-system3 或 ~/Applications/启动 xDAN System3.command 启动；凭据只在包外的受限文件内。Desktop pin 与任务证据见 desktop-acceptance.json。私有 Harness PR #13、Frontend PR #1 已创建，均可无冲突合并但尚未合并。GitHub Actions 在任何步骤开始前因账户预算被阻止；本地与真实运行证据通过不替代远端 CI。验收证据固定标签 system3-g1-acceptance-rc2，实际运行实现固定标签 system3-g1-reviewed-rc2。
 
 ## 冷启动 checklist
 
@@ -60,3 +61,7 @@ Harness 分支 `feat-system3-g1`；已接受基础标签 `system3-g1-foundation`
 3. 检查服务器 current 与本地安装包 manifest，不能把预检当最终发布。
 4. 只使用产品独立 BROWSE_STATE_FILE；不要干扰运维浏览器或 A100。
 5. 按剩余验收清单继续，真实通过后更新本交接。
+
+## PR 与 CI
+
+[Harness PR #13](https://github.com/cryptoSUN2049/xDAN-System3-Harness/pull/13) 与 [Frontend PR #1](https://github.com/cryptoSUN2049/xDAN-System3-Frontend/pull/1) 均已创建。远端 Actions 未开始任何步骤即因账户预算受限失败；不改写为代码测试失败，也不冒充 CI 通过。冻结验收资料不依赖后续交接提交；独立审查已只读核对已安装 app 摘要、源码 pin 与稳定服务指针/单元配对。
