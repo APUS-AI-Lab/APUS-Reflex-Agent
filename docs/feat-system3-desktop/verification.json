@@ -2,7 +2,7 @@
   "checkedAtUtc": "2026-09-30T00:58:45.950593+00:00",
   "scope": "Design review and unchanged rc.1 code baseline; no rc.2/desktop/new backend implementation",
   "design": "docs/feat-system3-desktop/system3-native-v1.html",
-  "designSha256": "161a21db945ed62fb1c98464b00453b561b2e994aa0447c678016bc8857c4b19",
+  "designSha256": "4c25df8920eec6d3fb2b02aaec1c6ffddd0b98d3bc96f3aa7b4ee8a32b2aab8f",
   "implementationApproval": "pending",
   "goalStatus": "active; backend requirements not yet complete",
   "sourcePins": {
@@ -14,7 +14,8 @@
   "reviews": {
     "nativeArchitecture": "accepted after Goal all-path verification, Skill actual admission, and real intermediate-node requirements",
     "hostClientExperience": "accepted after safe profile event-decoding independence",
-    "performanceAndCompaction": "bounded block decisions accepted; fallback must pass the same fact/source/version checks"
+    "performanceAndCompaction": "bounded block decisions accepted; fallback must pass the same fact/source/version checks",
+    "jevSupplies": "accepted; one ctx.jev registry, self-hosted 9B and official protocol adapters; separate model/domain/quality verification"
   },
   "checks": [
     {
@@ -47,11 +48,11 @@
     },
     {
       "command": "HTML local/anchor link validation",
-      "result": "28 links; 15 ids; no external script; one trailing newline"
+      "result": "29 links; 15 ids; no external script; one trailing newline; latest provider addendum checked"
     },
     {
       "command": "gstack browse static prototype verification",
-      "result": "9 assertions at 1360px and 390px; no document overflow; no console errors"
+      "result": "latest provider addendum: 9 assertions at 1360px and 390px; no document overflow; no console errors; fresh page used"
     },
     {
       "command": "git merge-tree --write-tree --name-only HEAD <officialRc2>",
@@ -63,6 +64,13 @@
     "dataelement installed desktop",
     "new backend behavior",
     "routing quality/cost benefit",
-    "semantic losslessness"
-  ]
+    "semantic losslessness",
+    "official Jev authenticated live chain and quality"
+  ],
+  "providerAddendumCheckedAtUtc": "2026-09-30T01:08:10.661568+00:00",
+  "providerDocumentation": {
+    "source": "https://docs.typesafe.ai/api",
+    "verified": "native REST, Bearer, required instructions, Score 2–10, typed probability fields, model/usage receipt",
+    "authenticatedLiveCall": "not performed"
+  }
 }

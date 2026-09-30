@@ -15,6 +15,7 @@
 <h1>把快速判断融入原生执行，<br>让每一次采用都有真实反馈</h1>
 <p class="lead">System3 = System1（Jev-like 有界决策模型）+ System2（高性能推理与生成模型）。第一目标是入口选对模型与处理路径；第二目标是执行过程中，能力、记忆和跟进选择更合适。</p>
 <span class="pill">设计版本 v1.0</span><span class="pill">2026-09-30</span><span class="pill">桌面优先：dataelement</span><span class="pill">目标底座：DSH 0.1.7-rc.2</span><span class="pill status">定稿候选 · 等待具体设计确认</span>
+<p class="muted">决策模型供给：自有 Jev 9B 与官方 Jev 原生 API，共用同一原生决策/采用机制；部署地点、协议参数和质量基线分别验证。</p>
 <p class="muted">本页是本轮统一设计入口。产品代码当前仍为 rc.1 定制版，仅首期 Web/API 入口选模已交付。rc.2 升级、第二名桌面集成及下列扩展尚未实施。交互演示使用静态样例，不连接模型。</p>
 </header>
 <nav aria-label="方案目录"><a href="#goal">完整 Goal</a><a href="#architecture">原生架构</a><a href="#boundaries">决策范围</a><a href="#performance">速度与可恢复记忆</a><a href="#desktop">rc.2 与桌面</a><a href="#experience">体验联动</a><a href="#api">接口草案</a><a href="#delivery">交付与验收</a><a href="#review">审慎评审</a><a href="#sources">依据</a></nav>
@@ -41,6 +42,16 @@
 <div class="spine">统一 Session 日志与原生投影 → 桌面 / Web / SDK 回放；前端不调用 Jev、不重新计算路由、不自判任务完成</div>
 <div class="branches"><span>入口：模型 / 处理路径</span><span>过程：Skill / 相关记忆</span><span>失败后：下一份证据</span><span>目标：继续 / 等待 / 沟通建议</span></div>
 <div class="split"><div class="card"><h3>System1：Jev</h3><p>判断少量已描述的候选。它不生成完整工作计划，不执行工具，不分配权限，不读取全量日志，也不独立认定 Goal 已完成。规则无法区分候选、且大模型判断的成本明显高时才调用。</p></div><div class="card"><h3>System2 与 DSH</h3><p>System2 完成复杂推理、生成、工具调用和专业工作；DSH 维护任务状态、执行准入、持久化、取消、权限和预算。未来本地 Lead 是生成与编排角色，不能与 Jev 有界判断混为一谈。</p></div></div>
+<h3>一套决策服务，两种 Jev 供给</h3>
+<div class="split"><article class="card"><h3>自有 Jev 9B</h3><p>现有自有模型通过 System One 兼容服务接入；可部署在设备、内网或自有远程 GPU。providerId、模型/checkpoint、实际执行域与接口能力由配置明确；9B 的真实分类与选择质量单独评测。</p></article><article class="card"><h3>官方 Jev 原生 API</h3><p>通过 TypeSafe 的原生 <code>POST https://api.typesafe.ai/v1/systemone</code> 与 Bearer 凭据接入。官方模型供给、响应事实与 usage 单独记录，复用同一 DSH 候选、取消、采用与回放机制。官方链路尚未实测。</p></article></div>
+<pre>自有 Jev 9B 服务 ─┐
+                 ├→ 一个 ctx.jev Provider Registry → 有界决策节点 → DSH 所属服务采用
+官方原生 Jev API ─┘
+System2：Fidoo / 其他生成 Provider → 原生 ctx.llm → 推理、生成与工具执行</pre>
+<p>已有 <code>ctx.jev.register / resolve / decide</code> 支持 provider 注册与请求绑定；新增官方供给使用薄协议适配，不重复注册第二个 Jev 总服务。每次请求先固定 provider 与请求模型引用，再按该供给的数据执行域做准入；响应回执记录实际返回模型。不得把自有模型配置标签当作实际供给，或静默向官方云回退。</p>
+<p>官方文档已核对：原生请求要求 state/model/questions；问题须有 instructions；Score 接受 2—10 级。自有服务的 effort 等扩展参数不能未经验证发送给官方。适配器按各供给能力校验和序列化，输出仍规范化为 typed answer，不伪造缺失分数、分布或 usage。参见<a href="https://docs.typesafe.ai/api">官方 API 参考</a>。</p>
+<p>配置与回执包含 providerId、requestedModel、实际返回 model、协议/候选版本、执行域、耗时与真实 usage。<code>jev-latest</code> 是别名，不能视为永久冻结模型。自有 9B 与官方的分数阈值、校准及延迟各自评测；切换供给不自动复用另一供给的质量结论。</p>
+<p class="foot">前端可在设置中选择决策供给、查看健康与降级状态，决策卡默认简洁并在展开时显示实际来源。凭据保存在 Host 管理的 credential store，不发送给客户端。额外远程供给只有在相应数据类别获准时才能进入候选；无获准供给时保留原生 baseline。</p>
 <details><summary>可复制的 Mermaid 架构源码</summary><pre>flowchart LR
   Input[输入或新的执行结果] --> Candidates[DSH规则生成合法候选]
   Candidates --> Jev[Jev有界选择或弃权]
@@ -155,6 +166,7 @@
 <div class="table-scroll"><table><thead><tr><th>建议接口 / 状态</th><th>输入与返回</th><th>行为约束</th></tr></thead><tbody>
 <tr><td>session/setRoutingMode</td><td>sessionId、expectedRevision、mode(auto/fixed)、fixedSelection；返回 revision、effectiveFrom。</td><td>Session 级 CAS，和 prompt admission 序列化。当前执行不被悄悄重路由；变更明确影响下一准入。恢复自动不改全局默认。</td></tr>
 <tr><td>system3 路由投影</td><td>mode、baseline、candidateVersion、currentDecision、nextPolicy、featureAvailability。</td><td>Client-safe、带 schema 与状态版本；不把完整私密请求体发送到通用展示投影。</td></tr>
+<tr><td>Jev 供给配置 / 投影</td><td>providerId、模型引用、协议能力、实际执行域、健康与降级状态；凭据只用 Host 引用。</td><td>复用单一 ctx.jev registry。provider 变更在下一决策生效，已开始请求与已采用动作保持绑定；旧响应不能跨供给版本采用。</td></tr>
 <tr><td>统一决策回执</td><td>decisionId、sessionId、input/turn/stepRefs、nodeKind、goalRevision、candidateVersion、outcome、selectedId、elapsed/usage。</td><td>输出只能引用合法候选或弃权；原始请求由受控日志保存用于重建。过期、取消、无候选和无效返回分别记录。</td></tr>
 <tr><td>原生采用回执</td><td>decisionId、owner、appliedAction/sourceRefs、outcome、reason、effectiveBoundary。</td><td>建议与采用分开。模型选择复用已有 model/automatic-selection，其他服务在完成实际加载、注入或交接后写回执。</td></tr>
 <tr><td>Memory 排除</td><td>session/workspace、sourceId、expectedRevision、作用范围。</td><td>持久化明确范围；新检索与准入都检查排除，UI 通过 Host 返回状态更新。</td></tr>
@@ -177,6 +189,7 @@ Host 采用：重查目录、作用域与 modelInvocable → 加载实际指令 
 <tr><td>G0：设计收敛<br>本次交付</td><td>统一 v1.0 HTML、源码审计、独立评审、工作区计划与交接。</td><td>当前状态、实现范围、接口草案、测试和模型限制明确；用户确认具体设计后开始产品实现。</td></tr>
 <tr><td>G1：底座与桌面</td><td>正式 rc.2 源码对齐；dataelement 桌面加载自有 System3 运行时；补丁映射及可信安全 profile。</td><td>开发与安装包均运行正确产物；入口、取消、恢复、Session 迁移与双 SDK 行为回归；不能加载回 stock DSH。</td></tr>
 <tr><td>G2：入口完整闭环</td><td>自动/固定切换、Jev 入口选模、真实决策卡和 Host/Client 投影。</td><td>人工覆盖、取消、并发、卸载和重启一致；建议→采用→请求→输出对应。附件/排队/steering 支持或保留基线须明确，不能宣称全入口已覆盖。</td></tr>
+<tr><td>Jev 供给验收<br>贯穿 G1—G6</td><td>自有 9B 与官方原生 API 两种部署；单一 typed 决策服务；实际来源与质量配置。</td><td>两种 provider 分别验证 choice/score/noul、请求限制、取消、认证/限流/无效返回与回放。真实 API 鉴权调用需实际凭据；未实测不能称对应供给验收通过。切换不覆盖当前回合，不越过数据准入。</td></tr>
 <tr><td>G3：第一个过程节点</td><td>Skill 候选选择与实际加载，先 shadow，验证后采用。</td><td>真实变化进入模型可见日志；显式 Skill 优先；有目录失效、Scope、取消和弃权测试；规则对照不降低任务质量。</td></tr>
 <tr><td>G4：基础记忆、压缩与诊断</td><td>带来源的记忆选择；原生 compaction 的有限内容分类、明确事实保护与原文查回；失败后下一份证据分类。</td><td>可读范围、来源版本、排除、去重和输入限制有效；压缩前后必需事实与原文恢复通过；不编造永久事实、不重放写工具；真实采用可回放。</td></tr>
 <tr><td>G5：委派与长程 Goal</td><td>一个可用专家任务族的完整交接；同 Session Goal 进展、暂停/恢复、实际续轮与会话内沟通。</td><td>父子归属和取消正确；不重复执行；Goal CAS、预算和独立验收；无进展不空转；重启 disarmed 与 live Schedule 限制准确呈现。</td></tr>

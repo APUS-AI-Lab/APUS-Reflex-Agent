@@ -12,12 +12,12 @@
 
 | 路径 | 行数 | 说明 |
 |---|---:|---|
-| `docs/feat-system3-desktop/system3-native-v1.html` | 222 | 统一设计、性能与可恢复压缩、离线架构/交互、G0—G6验收 |
-| `docs/feat-system3-desktop/verification.json` | 68 | 固定来源、设计复核与检查记录；明确未实施项 |
-| `tasks/feat-system3-desktop/plan.md` | 31 | 当前 Goal 的可勾选计划 |
+| `docs/feat-system3-desktop/system3-native-v1.html` | 235 | 统一设计、性能与可恢复压缩、离线架构/交互、G0—G6验收 |
+| `docs/feat-system3-desktop/verification.json` | 76 | 固定来源、设计复核与检查记录；明确未实施项 |
+| `tasks/feat-system3-desktop/plan.md` | 32 | 当前 Goal 的可勾选计划 |
 | `tasks/todo.md` | 93 | 承接历史目标与新阶段入口 |
-| `tasks/lessons.md` | 58 | 完整后端、真实版本、速度与记忆边界经验 |
-| `tasks/feat-system3-desktop/handoff.md` | 72 | 冷启动入口 |
+| `tasks/lessons.md` | 62 | 完整后端、真实版本、速度与记忆边界经验 |
+| `tasks/feat-system3-desktop/handoff.md` | 75 | 冷启动入口 |
 
 ## 3. 设计约束
 
@@ -43,6 +43,9 @@
 - Skill 正文加载不证明已进入请求，需 waterfall 排序、reject/cancel 与统一防重复；安全 profile 的事件解码和投影必须独立于 Jev provider。
 - 整体完成至少有一个经规则对照、实际采用并可回放的过程节点，全部 shadow/禁用不能算完成。
 - 最新用户补充：体验更快、记忆压缩不丢关键上下文、原生特点覆盖重要环节。HTML 已补 choice/score/noul、端到端延迟及 compaction 的块选择、事实保护与查回；不承诺摘要语义绝对无损。
+- 自有 Jev 9B 与官方 API 都纳入：已有单一 ctx.jev provider registry；官方 TypeSafe API 文档已核实，instructions与Score等级限制需要适配，自有 effort 扩展不盲传。官方鉴权链路未实测，不声称验收完成。
+
+- 浏览器重复 load-html 使用 setContent 时可能保留旧脚本绑定；刷新到 about:blank 后重新加载，最新版本1360/390px九项检查均通过。
 
 ## 5. 下一里程碑任务清单
 
@@ -69,4 +72,4 @@
 
 ## 8. 本轮验证
 
-独立架构/UI复核通过；新增性能与压缩复核要求所有fallback也经过同一事实检查，已纳入。HTML28链接和15锚点、1360/390px九项状态检查通过，无控制台错误；文档快检20/20、doc-sync42/42、Host构建与lint、Ruff双检查通过。rc.2只做merge-tree冲突预览，未实施合并；后端Goal仍active。完整记录见 `docs/feat-system3-desktop/verification.json`。
+独立架构/UI复核通过；新增性能与压缩复核要求所有fallback也经过同一事实检查，已纳入。HTML29链接和15锚点、1360/390px九项状态检查通过，无控制台错误；文档快检20/20、doc-sync42/42、Host构建与lint、Ruff双检查通过。rc.2只做merge-tree冲突预览，未实施合并；后端Goal仍active。完整记录见 `docs/feat-system3-desktop/verification.json`。
