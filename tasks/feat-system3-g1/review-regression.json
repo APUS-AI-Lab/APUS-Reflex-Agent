@@ -45,5 +45,15 @@
     "correction": "replace SHA with fixed tag",
     "rerun": "pnpm run verify-repository-references",
     "rerunPassed": true
+  },
+  "independentReview": {
+    "productSource": "3127b62274bf324a3eac0cba28d03a37c3b91a30",
+    "reviewCommit": "22acaefd3b",
+    "findingsClosed": [
+      "R1",
+      "R2",
+      "R3"
+    ],
+    "scope": "fixed-source static review and local projection probe; does not replace final deployment acceptance"
   }
 }

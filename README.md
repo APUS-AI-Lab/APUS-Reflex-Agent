@@ -2,7 +2,7 @@
 
 English | [中文](README.zh.md)
 
-> **Jev Native + DSH Native.** System3 combines System1 (Jev-like bounded semantic decisions) with System2 (high-performance reasoning and generation), coordinated by DSH’s native state and execution mechanisms. This repository provides typed Jev decisions, replayable receipts, and opt-in entry model routing through the native Web/API controller. Start with the [integration guide](docs/feat-independent-harness/README.md).
+> **Jev Native + DSH Native.** System3 combines System1 (Jev-like bounded semantic decisions) with System2 (high-performance reasoning and generation), coordinated by DSH’s native state and execution mechanisms. This repository provides typed Jev decisions, replayable receipts, opt-in entry model routing through the native Web/API controller, and bounded native Skill selection. Start with the [integration guide](docs/feat-independent-harness/README.md).
 
 ## Architecture
 
@@ -12,7 +12,7 @@ The first objective is **Jev-guided intake strategy and dispatch**: after user i
 
 [SVG source](docs/feat-independent-harness/architecture.svg) · [Jev Native + DSH Native plan (Chinese)](docs/feat-independent-harness/jev-native-dsh-native-plan.html)
 
-The first implementation handles idle text requests through a Web/API adapter with Fidoo LiteLLM generation routes; specialist handoff, queued inputs and other DSH entry points require their own integration and verification. Memory, routing, long-horizon goals and proactive communication extend the same architecture. Future local 9B/27B Lead Agents remain a deployment option. Pilot is an experimental reference, not a code dependency.
+The implementation handles idle Web/API text requests with Fidoo LiteLLM generation routes, bounded Skill selection before native model steps, and a Conversation view that distinguishes advice, adoption, model response and Skill injection. See the [implementation and acceptance scope](docs/feat-system3-g1/implementation.md), [deployment guide](docs/feat-system3-g1/deployment.md), and [System3 configuration and limits](packages/experimental/system3/README.md). Specialist handoff, queued-entry routing, Jev-driven memory and sustained Goal decisions, and local 9B/27B Lead Agents require further integration and verification. Pilot remains an experimental reference.
 
 DeepSeek Harness (`dsh`) is an open-source agent harness developed by [DeepSeek AI](https://deepseek.com).
 

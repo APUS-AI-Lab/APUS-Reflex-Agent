@@ -1,17 +1,23 @@
-# Deployment work in progress
+# Deployment handoff notes
 
-- Target: `ssh root@litellm`; independent `xdan-system3.service`, localhost port 18731, user `xdan-system3`. Existing LiteLLM/Caddy/Owlume services were not reconfigured.
-- Current process is a preflight build of the merged rc.2 source before final Jev SDK, process and UI work; do not call it product acceptance. Host Node 24.21.0 and CLI 0.1.7-rc.2 were executed successfully.
-- Current symlink: `/opt/xdan-system3/current` → `/opt/xdan-system3/releases/preflight`. Runtime home `/var/lib/xdan-system3/home`, public task workspace `/var/lib/xdan-system3/workspace`. The latter contains only the public orders fixture and reconciliation Skill; no oracle.
-- Build source `/opt/xdan-system3/source-g1`, baseline image `xdan-system3:build-preflight`, build log `/opt/xdan-system3/build-preflight.log`. Baseline complete Linux build passed in 182 seconds (image export/extraction took additional minutes). Free disk after preflight extraction was about 30 GiB.
-- Protected credentials: `/etc/xdan-system3/runtime.env` mode 0600. Fidoo uses existing `GATEWAY_KEY_SYSTEM3_DSH` from `/home/xdan-litellm-server/.env.relays`, not GENERAL or MASTER. Jev uses the existing gateway key. Do not print values.
-- Private native launch URL on the development machine: `~/.config/xdan-system3/launch-url`, mode 0600. Refresh from the restricted service journal after every restart. Never print tokens, full environment, unsanitized service logs or cookies. The main agent owns an SSH tunnel on local 18731.
-- Preflight evidence: `docs/feat-system3-g1/deployment-preflight.json`. Anonymous API 401, untrusted Host and cross-Origin 403, native login exchange 200 with clean redirect and cookie. Socket binds only 127.0.0.1; service runtime memory was about 186 MiB.
-- Kernel 6.6 does not activate Landlock. Default Docker seccomp prevented bubblewrap; temporarily relaxing it for a disposable probe still failed mounting proc. Keep Docker for Linux build only. Native systemd with the selected hardening passed actual bubblewrap workspace writes and rejected even the service user's home writes. Do not enable danger-full-access to conceal sandbox failure.
-- `dsh` launcher flags must precede app flags: `web --patch <file> --no-open`. Reversing those flags fails with unknown --patch. The committed unit uses the correct order.
-- Final next steps: freeze and commit the complete implementation, archive tracked source plus final deployment files without node_modules/secrets, upload, invoke `release.sh <unique-release-id> <40-character-source-commit>`, then run the main agent's browser task and external oracle. The release script builds and extracts a full matching Node runtime, enables the unit, restarts it and waits for anonymous API 401. Final config includes entry deadline/baseline and Skill selection. Verify final built provider behavior, shell credential scrub, artifact, cancellation and restart persistence.
-- Do not infer Docker health or an HTTP 200 as task completion. The actual final task is still pending.
+## Current deployment
 
-## Release pointer and unit pairing
+Reviewed tag `system3-g1-reviewed-rc2` is deployed on `root@litellm` as the independent, enabled `xdan-system3.service`. The stable release remains active after a tested same-revision rollback. Exact source revision, release IDs, process IDs, artifact hashes and task receipts are in `docs/feat-system3-g1/deployment-final.json`. Existing LiteLLM, Caddy and Owlume services were not reconfigured.
 
-Review caught premature previous-pointer replacement and repeated rollback mixing a target artifact with another release’s unit. Publication now updates previous only after health succeeds. Every release stores service.unit; rollback uses that target pair, consumes the target on success, and restores the original pair on failure. Eight disposable-container fixtures passed, including three consecutive publications and a second rollback attempt. The system3-g1-product-rc2 release controller remains stopped before activation while its successful Linux build supplies cache for the corrected revision.
+The application uses Node 24.21.0 and CLI 0.1.7-rc.2, listens only on 127.0.0.1:18731, and runs as xdan-system3. Anonymous API access returns 401; untrusted Origin and Host return 403. Public task data lives in /var/lib/xdan-system3/workspace; the external oracle is not in that workspace. Service home is /var/lib/xdan-system3/home. Docker builds Linux artifacts; systemd runs them with native bubblewrap and credential scrub.
+
+## Acceptance
+
+The real browser task selected and injected csv-reconciliation, received an actual Fidoo response, executed native tools, and passed two strict external artifact checks after a native follow-up removed an extra field. Jev's low-confidence entry outcome correctly retained the configured baseline. A tool subprocess reported both credential names absent. User cancellation, fixed-model reset to automatic, same-session browser replay after restart and after rollback, and unchanged artifact hashes all passed. Desktop installation and live task evidence are in desktop-acceptance.json.
+
+Every release saves its own service.unit. Publication updates the previous pointer only after health succeeds. Rollback selects the target artifact/unit pair, consumes its target on success, and restores the original pair on failure. Eight isolated Docker fixtures passed; the actual second rollback was rejected without changing PID or unit. No rollback target is currently pending. Do not point an older implementation at newer required Session events.
+
+## Access and credentials
+
+Root-only /etc/xdan-system3/runtime.env reuses the dedicated system3-dsh virtual key and Jev gateway key. Never print their values. The local private native launch URL is ~/.config/xdan-system3/launch-url (0600); refresh from restricted journal output after restart without printing tokens. The parent owns the SSH tunnel on local18731. Public classification is limited to explicit test material.
+
+## Operational constraints
+
+The kernel does not activate Landlock. A disposable Docker probe could not run bubblewrap with its private proc mount; the final deployment retains native systemd confinement instead of disabling the product sandbox. Bubblewrap workspace writes passed and writes outside the workspace were rejected. DSH launcher options must precede app options: web --patch <file> --no-open.
+
+The obsolete pre-review controller was terminated before activation, and only its unreferenced image was deleted to free space. The reviewed dual release finished with about 7.7G free disk. Do not prune shared Docker services or caches. Build and fixture log paths, exact release IDs and current health are recorded in deployment-final.json.

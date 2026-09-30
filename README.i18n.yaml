@@ -3,11 +3,11 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write README.md
 /xdan-system3-harness:
-  en: fcc2a52dc7af3521
-  zh: c870ed6146e08fbd
+  en: 69d969a0186e0f39
+  zh: ec5ae351d91a8b01
 /xdan-system3-harness/architecture:
-  en: 12b673b10228a2d5
-  zh: c07a7b6b715c4293
+  en: c7664881d93ba877
+  zh: 05f6b60dc7965444
 /xdan-system3-harness/developer-preview:
   en: 4ef4d8a71ac143f0
   zh: 1bfc3149ba8e5543

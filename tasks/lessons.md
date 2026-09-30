@@ -88,3 +88,5 @@ README 可能滞后；先查 package 与固定来源，再核对 git 共同祖�
 ## System3 响应事实审查
 
 传输事件非空不代表模型已响应：适配器会合成 error/aborted 结束事件。展示响应前必须验证实际响应内容，并覆盖纯错误、纯取消、部分输出后失败三种记录。当前执行状态只能来自当前 Session 生命周期，不能拿历史采用记录推断新任务的等待阶段。
+
+- Desktop/server startup logs contain native one-time launch tokens. Inspect only allowlisted readiness/version lines or parse into booleans; never print raw log tails. Renew native authentication after accidental diagnostic exposure.

@@ -1,0 +1,169 @@
+{
+  "sourceRevision": "3127b62274bf324a3eac0cba28d03a37c3b91a30",
+  "runtimeVersion": "0.1.7-rc.2",
+  "nodeVersion": "v24.21.0",
+  "build": "git archive fixed commit; Linux frozen lockfile/native/Host/Client build passed; 345 client artifacts",
+  "current": "/opt/xdan-system3/releases/g1-stable-3127b62",
+  "previous": null,
+  "sameRevisionPredecessor": true,
+  "service": {
+    "user": "xdan-system3",
+    "group": "xdan-system3",
+    "active": true,
+    "enabled": true,
+    "bind": "127.0.0.1:18731",
+    "unitMatchesCurrentSavedUnit": true,
+    "previousUnitMatchesCurrentAtVerification": true
+  },
+  "access": {
+    "anonymousApi": 401,
+    "foreignOrigin": 403,
+    "foreignHost": 403,
+    "privateLaunchUrlPath": "~/.config/xdan-system3/launch-url",
+    "privateLaunchUrlMode": "0600"
+  },
+  "releaseFixtures": {
+    "passed": 8,
+    "log": "/private/tmp/system3-release-fixtures-final.log"
+  },
+  "releaseLog": "/opt/xdan-system3/release-3127b62.log",
+  "diskAvailableAfterDualRelease": "7.7G",
+  "obsolete571Activated": false,
+  "obsolete571ControllerTerminated": true,
+  "obsolete571ImageRemoved": true,
+  "modelTaskAcceptance": "passed; initial strict-schema failure corrected through native continuation before final external oracle acceptance",
+  "restartAndRollback": "passed: actual restart and compatible rollback, same-session browser replay, unchanged artifact, paired units and repeated rollback rejection",
+  "restart": {
+    "before": {
+      "pid": "4122896",
+      "artifactSha256": "cbe3d84eaa680f317bc8e4041197996bfde17cfd018829dd64ab31345efe1b8b",
+      "release": "/opt/xdan-system3/releases/g1-verify-3127b62"
+    },
+    "after": {
+      "pid": "4144625",
+      "artifactSha256": "cbe3d84eaa680f317bc8e4041197996bfde17cfd018829dd64ab31345efe1b8b",
+      "release": "/opt/xdan-system3/releases/g1-verify-3127b62",
+      "anonymousApi": 401
+    },
+    "artifactUnchanged": true,
+    "processRestarted": true,
+    "browserReplayPassed": true
+  },
+  "rollback": {
+    "before": {
+      "release": "/opt/xdan-system3/releases/g1-verify-3127b62",
+      "previous": "/opt/xdan-system3/releases/g1-stable-3127b62",
+      "pid": "4144625",
+      "artifactSha256": "cbe3d84eaa680f317bc8e4041197996bfde17cfd018829dd64ab31345efe1b8b"
+    },
+    "after": {
+      "release": "/opt/xdan-system3/releases/g1-stable-3127b62",
+      "previousConsumed": true,
+      "pid": "4148582",
+      "artifactSha256": "cbe3d84eaa680f317bc8e4041197996bfde17cfd018829dd64ab31345efe1b8b",
+      "unitMatchesTarget": true,
+      "anonymousApi": "401",
+      "runtimeVersion": "0.1.7-rc.2"
+    },
+    "sameRevision": "3127b62274bf324a3eac0cba28d03a37c3b91a30",
+    "artifactUnchanged": true,
+    "repeatRejected": true,
+    "repeatExitCode": 1,
+    "repeatDidNotRestart": true,
+    "repeatUnitUnchanged": true,
+    "browserReplayPassed": true
+  },
+  "previousConsumed": true,
+  "task": {
+    "sessionId": "session-489bf890-c6c6-484b-bc79-8694190e0978",
+    "sessionPath": "/var/lib/xdan-system3/home/.dsh/sessions/--var-lib-xdan-system3-workspace--/session-489bf890-c6c6-484b-bc79-8694190e0978/session.v4.jsonl.zstd",
+    "entry": {
+      "requestId": "f341c406-83c7-4314-a045-e708a2250f6e",
+      "effort": "high",
+      "outcome": "low-confidence",
+      "elapsedMs": 933,
+      "selected": null,
+      "adopted": {
+        "provider": "fidoo",
+        "model": "deepseek-v4-flash",
+        "reasoningEffort": "low"
+      },
+      "baseline": {
+        "provider": "fidoo",
+        "model": "deepseek-v4-flash",
+        "reasoningEffort": "low"
+      },
+      "fallbackUsed": true
+    },
+    "skill": {
+      "turn": 3,
+      "selected": "csv-reconciliation",
+      "effort": "high",
+      "elapsedMs": 285,
+      "injectionMessageId": "6670f15c-f8a9-458a-8bbb-2a0c81fd4c93",
+      "nativeMessageId": "6670f15c-f8a9-458a-8bbb-2a0c81fd4c93",
+      "source": {
+        "kind": "skill-invocation",
+        "name": "csv-reconciliation",
+        "form": "instructions"
+      }
+    },
+    "actualResponse": {
+      "kind": "model",
+      "provider": "fidoo",
+      "model": "deepseek-v4-flash"
+    },
+    "cancel": {
+      "turn": 2,
+      "reason": {
+        "kind": "aborted",
+        "reason": {
+          "kind": "user"
+        }
+      }
+    },
+    "artifact": {
+      "path": "artifacts/region-totals.json",
+      "oracleCommand": "python3 apps/cli/tests/profiles/system3/fixtures/verify-artifact.py /private/tmp/system3-server-final-oracle",
+      "initialPassed": false,
+      "initialFailure": "unexpected top-level source field; numeric totals correct",
+      "recovery": "native follow-up in turn 4 removed extra field and revalidated exact key set",
+      "finalPassed": true,
+      "checks": 2,
+      "value": {
+        "currency": "USD",
+        "paidOrders": 5,
+        "excludedOrders": 1,
+        "byRegion": {
+          "AMER": "225.25",
+          "APAC": "170.00",
+          "EMEA": "80.00"
+        },
+        "total": "475.25"
+      },
+      "sha256": "cbe3d84eaa680f317bc8e4041197996bfde17cfd018829dd64ab31345efe1b8b",
+      "inputSha256": "b6bd231a96b9d9b9024587f0873a4a33bb18c405dbb02a087c3e47866fc316e1"
+    },
+    "credentialScrub": {
+      "toolProcess": "Node.js executed by native shell",
+      "JEV_API_KEY_present": false,
+      "SYSTEM3_LITELLM_API_KEY_present": false
+    },
+    "ui": {
+      "fixedModelThenResetAutomatic": true,
+      "restartReadSameSession": true,
+      "restartStoppedHistoryVisible": true,
+      "restartAutomaticVisible": true,
+      "restartCorrectedArtifactVisible": true,
+      "screenshot": "/private/tmp/system3-3127-server-task.png",
+      "rollBackUI": true,
+      "rollbackReadSameSession": true,
+      "rollbackAutomaticVisible": true,
+      "rollbackStoppedHistoryVisible": true,
+      "rollbackCorrectedArtifactVisible": true
+    }
+  },
+  "status": "passed",
+  "finalPassed": true,
+  "rollBackUI": true
+}

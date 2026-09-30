@@ -4,7 +4,7 @@
 
 - 用户已授权完整实现、真实测试与 litellm 服务器部署；统一正式 rc.2。
 - 产品源码、Frontend、index、构建与部署由本会话独占。Jev 运维只在独立预检工作树审查。
-- 入口/Skill 与双 SDK 回放通过；第二批 R1/R2/R3 修复已落盘，最终源码门禁与真实部署验收进行中。
+- 入口/Skill、双 SDK、R1/R2/R3 固定复核及真实 Desktop/Linux 任务与恢复验收通过；收口文档与双仓 PR。
 - 主目录 main 未修改；此工作树保留。
 
 ## 本轮交付物
@@ -41,15 +41,17 @@ Jev 8086 是结构化决策协议，8002 不能替代；实际 profile 显式 hi
 
 ## 下一里程碑任务清单
 
-- [ ] 完成最终源码门禁并提交固定审查点。
-- [ ] 部署该提交，真实完成 CSV 任务并以独立 oracle 核验产物。
-- [ ] 验证取消、恢复自动、刷新和服务重启持久性。
-- [ ] Desktop 正常/安全模式启动、干净提交装配与目录包验收。
+- [x] 完成最终源码门禁并提交固定审查点 system3-g1-reviewed-rc2；R1/R2/R3 独立固定复核关闭。
+- [x] 部署已审查实现，真实完成 CSV 任务并以独立 oracle 核验产物。
+- [x] 验证取消、恢复自动、刷新、服务重启与真实回滚后的会话/产物持久性。
+- [x] Desktop 正常/安全模式启动、干净提交装配、实际自动 Skill/CSV 任务、安装后重启恢复通过。
 - [ ] 双仓 ship、远端 SHA 核验、记录 CI 和回滚状态。
+
+后续产品范围：本地 9B/27B Lead、Jev 记忆压缩和完整专家/长期 Goal 编排未在本轮验收；候选 Skill 目录超限时保留原生路径。
 
 ## 分支/部署状态
 
-Harness 分支 `feat-system3-g1`；已接受基础标签 `system3-g1-foundation`。Frontend 分支 `feat-system3-integration`。服务器是预检版本，非最终产品；应用仅监听服务器 127.0.0.1:18731，通过 SSH tunnel 与原生 cookie 访问。私密启动 URL、凭据不进入文档。CI 尚未提交最终版本。
+Harness 分支 `feat-system3-g1`；已接受基础标签 `system3-g1-foundation`。Frontend 分支 `feat-system3-integration`。服务器现运行已审查标签对应的稳定发布，真实重启和回滚通过；精确 release ID、源码提交、任务和恢复证据见 docs/feat-system3-g1/deployment-final.json。应用仅监听服务器 127.0.0.1:18731，通过 SSH tunnel 与原生 cookie 访问。本机已安装 ~/Applications/xDAN System3.app，使用 ~/.local/bin/xdan-system3 或 ~/Applications/启动 xDAN System3.command 启动；凭据只在包外的受限文件内。Desktop pin 与任务证据见 desktop-acceptance.json。CI 与 PR 状态待最终 ship 更新。
 
 ## 冷启动 checklist
 

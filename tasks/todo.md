@@ -181,12 +181,12 @@
 - [x] 修复 rc.2 provider 配置，TypeScript 与 Python 的 System3 entry-route/shadow 回放通过。
 - [x] 完成入口总截止、合法回退、固定/自动模式和可重放的前端事实投影。
 - [x] 完成真实 Skill 选择与原生模型消息注入，补回归和快照。
-- [ ] Frontend 接入自有 rc.2 runtime，开发与 Mac arm64 目录应用真实启动。
-- [ ] 完成入口、过程和体感 UI，与实际模型、工具、交付物及原生用户控制联动。
+- [x] Frontend 接入自有 rc.2 runtime，开发与 Mac arm64 目录应用真实启动。
+- [x] 完成入口、过程和体感 UI，与实际模型、工具、交付物及原生用户控制联动。
 - [x] Linux 原生构建及非 root systemd 预检通过；原生工作区 sandbox 保留。
-- [ ] 冻结最终源码，重新构建并发布到 litellm 独立 System3 服务。
-- [ ] 真实浏览器执行公共 CSV 任务，验证 Jev、Fidoo、Skill、文件交付、取消及重启恢复。
-- [ ] 独立审查并修复；运行相关构建、测试、lint、文档及 Ruff 门禁。
+- [x] 冻结最终源码，重新构建并发布到 litellm 独立 System3 服务。
+- [x] 真实浏览器执行公共 CSV 任务，验证 Jev、Fidoo、Skill、文件交付、取消及重启恢复。
+- [x] 独立审查并修复；运行相关构建、测试、lint、文档及 Ruff 门禁。
 - [ ] 记录当前成果、未完成的后续里程碑、部署/回滚证据和冷启动 handoff；完成 ship。
 
 ### 当前 Review
