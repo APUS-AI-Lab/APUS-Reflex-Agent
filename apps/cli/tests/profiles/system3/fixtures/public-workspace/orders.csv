@@ -1,0 +1,7 @@
+order_id,region,amount,status
+S3-001,APAC,120.50,paid
+S3-002,EMEA,80.00,paid
+S3-003,APAC,49.50,paid
+S3-004,AMER,210.00,paid
+S3-005,EMEA,20.00,refunded
+S3-006,AMER,15.25,paid

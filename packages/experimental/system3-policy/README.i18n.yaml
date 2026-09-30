@@ -1,6 +1,43 @@
-# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
-# side as of the last confirmed-consistent state. Both languages carry equal authority;
-# after editing either side, bring the other along and re-record with:
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/experimental/system3-policy/README.md
-README.md: 5043efcdc6c1e5c6d83c15bd886812d2adb325c0
-README.zh.md: 2ee3a1e4ce59d9c75ae7ad496afd57153a81fe3e
+/:
+  en: 13c6ae10a6ca7fad
+  zh: c31072cb3997d105
+/deepseek-ai-dsh-experimental-system3-policy:
+  en: 67ddd0d7059d5f05
+  zh: 4753ca796a0097b6
+/deepseek-ai-dsh-experimental-system3-policy/summary:
+  en: 1c5044e14c99c5fe
+  zh: aa09ff5cd9bb646f
+/deepseek-ai-dsh-experimental-system3-policy/table-of-contents:
+  en: 76368b6b1da79c80
+  zh: 577bc812458ce0c0
+/deepseek-ai-dsh-experimental-system3-policy/use-this-package:
+  en: c39b81b206df2b7c
+  zh: 55ab8af76d03e1f9
+/deepseek-ai-dsh-experimental-system3-policy/understand-the-implementation:
+  en: 8a6ce49127d887f2
+  zh: 6f2754eb7aee257f
+/deepseek-ai-dsh-experimental-system3-policy/model-experience:
+  en: 215e7ba838619b7b
+  zh: a311da3843709f90
+/deepseek-ai-dsh-experimental-system3-policy/model-experience/route-admission:
+  en: 72927feb6af196af
+  zh: 360c56bdcf120bd8
+/deepseek-ai-dsh-experimental-system3-policy/model-experience/route-admission/what-the-model-sees:
+  en: be49beb4ac2eb86a
+  zh: 8e85b1d5cf72ec48
+/deepseek-ai-dsh-experimental-system3-policy/model-experience/route-admission/token-effect:
+  en: 04605de3f09c74bc
+  zh: 74df8791be0663bc
+/deepseek-ai-dsh-experimental-system3-policy/model-experience/route-admission/kv-cache-effect:
+  en: 0ddfe1ff03381987
+  zh: 61740a8fb25fb450
+/deepseek-ai-dsh-experimental-system3-policy/known-limitations-and-deferred-work:
+  en: 94a0ecaa60c180ab
+  zh: 5648677067f56d58
+/deepseek-ai-dsh-experimental-system3-policy/known-limitations-and-deferred-work/dev-note:
+  en: 0a1253c6f7b5e8b9
+  zh: 9f56528562c7c914

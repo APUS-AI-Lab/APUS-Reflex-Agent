@@ -42,7 +42,8 @@ export async function readJson(req: IncomingMessage, maxBytes: number): Promise<
   }
   if (size === 0) return {}
   try {
-    return JSON.parse(Buffer.concat(chunks).toString('utf8')) as unknown
+    const body: unknown = JSON.parse(Buffer.concat(chunks).toString('utf8'))
+    return body
   } catch {
     throw new HttpError(400, 'invalid JSON body')
   }

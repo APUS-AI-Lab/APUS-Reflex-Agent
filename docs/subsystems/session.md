@@ -835,6 +835,13 @@ inspect( sessionId: SessionId, signal?: AbortSignal, ): Promise<SessionInspectio
 @Remote('selectModel') selectModel(request: SessionSelectModelRequest): Promise<SessionSelectModelValue>
 
 /**
+ * Release a human model override so later eligible inputs may use automatic routing.
+ * @param request - Session identity.
+ * @returns Current model retained as the automatic baseline.
+ */
+@Remote('resetModelSelection') resetModelSelection(request: SessionResetModelSelectionRequest): Promise<SessionSelectModelValue>
+
+/**
  * Select the first available account model after login when no provider API key is configured.
  * @returns after saving the first available model or retaining the existing default.
  */

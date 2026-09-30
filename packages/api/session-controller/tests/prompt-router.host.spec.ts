@@ -19,6 +19,9 @@ const selected = { provider: 'fixture', model: 'specialist' }
 class Adapter extends LlmAdapter {
   requests: GenerateOptions[] = []
   firstTool = false
+  override async listModels(provider: string) {
+    return Promise.all(['default', 'specialist', 'manual'].map(model => this.resolveModel(provider, model)))
+  }
   override async resolveModel(provider: string, model: string) {
     return { provider, id: model, name: model, reasoning: { efforts: [{ id: ReasoningEffortId('high'), name: 'High' }] } }
   }
@@ -150,7 +153,7 @@ it('reports the baseline as the next route after an automatic turn ends', async 
   h.routing.register({ route: async () => selected })
   await h.routing.admit(h.request, h.admit)
   await h.agent.whenIdle()
-  expect(h.ctx.sessionProjections.snapshot(h.agent.session).values.modelSelection).toEqual({ lastUsed: selected, next: baseline })
+  expect(h.ctx.sessionProjections.snapshot(h.agent.session).values.modelSelection).toEqual({ mode: 'auto', lastUsed: selected, next: baseline })
 })
 
 it('routes through the actual prompt command and serializes later manual selection', async () => {
@@ -342,4 +345,78 @@ it('native lifecycle disposal aborts pending routing before Agent unregistration
   await h.ctx.fiber.dispose()
   await rejected
   expect(h.adapter.requests).toHaveLength(0)
+})
+
+it('releases a fixed model through the command and restores automatic mode from durable history', async () => {
+  const h = await harness()
+  h.agents.selectForNextRequest(h.agent, selected)
+  const command = new SessionCommandController(h.ctx, h.agents, '/workspace', h.routing)
+  expect(h.ctx.sessionProjections.snapshot(h.agent.session).values.modelSelection?.mode).toBe('fixed')
+  await expect(command.resetModelSelection({ sessionId: h.agent.id })).resolves.toEqual({ selected })
+  expect(h.agents.hasExplicitSelection(h.agent)).toBe(false)
+  const recovered = Session.create(SessionId('reset-route'), h.agent.session.snapshotEvents())
+  expect(h.ctx.sessionProjections.snapshot(recovered).values.modelSelection).toEqual({
+    mode: 'auto', lastUsed: null, next: selected,
+  })
+  const route = vi.fn(async () => baseline)
+  h.routing.register({ route })
+  await h.routing.admit(h.request, h.admit)
+  await h.agent.whenIdle()
+  expect(route).toHaveBeenCalledOnce()
+  expect(h.adapter.requests[0]?.model).toBe('default')
+  expect(h.agents.selectionFor(h.agent).current).toEqual(selected)
+})
+
+it('keeps automatic-mode reset idempotent during an automatically routed turn', async () => {
+  const h = await harness()
+  const release = h.agents.installAutomaticSelection(h.agent, selected, baseline, h.request.requestId)
+  const command = new SessionCommandController(h.ctx, h.agents, '/workspace', h.routing)
+  const seq = h.agent.session.seq
+  await expect(command.resetModelSelection({ sessionId: h.agent.id })).resolves.toEqual({ selected: baseline })
+  expect(h.agent.session.seq).toBe(seq)
+  expect(h.agents.selectionFor(h.agent).current).toEqual(selected)
+  release()
+  expect(h.agents.selectionFor(h.agent).current).toEqual(baseline)
+  const recovered = Session.create(SessionId('idempotent-auto'), h.agent.session.snapshotEvents())
+  expect(h.ctx.sessionProjections.snapshot(recovered).values.modelSelection?.next).toEqual(baseline)
+})
+
+
+it('uses only a prepared baseline when the total entry deadline expires', async () => {
+  const h = await harness()
+  const late = Promise.withResolvers<typeof selected>()
+  h.routing.register({ deadlineMs: 10, validateBaseline: () => {}, route: () => late.promise })
+  await h.routing.admit(h.request, h.admit)
+  await h.agent.whenIdle()
+  expect(h.adapter.requests[0]?.model).toBe('default')
+  late.resolve(selected)
+  await Promise.resolve()
+  expect(h.agents.selectionFor(h.agent).current).toEqual(baseline)
+  expect(h.agent.session.snapshotEvents().filter(event => event.type === 'model/automatic-selection')
+    .map(event => event.data.selection.model)).toEqual(['default'])
+})
+
+it('rejects before admission if baseline preparation cannot finish within the entry deadline', async () => {
+  const h = await harness()
+  const route = vi.fn(async () => selected)
+  vi.spyOn(h.ctx.llm, 'resolveCallConfig').mockImplementation(() => new Promise(() => {}))
+  h.routing.register({ deadlineMs: 10, route })
+  await expect(h.routing.admit(h.request, h.admit)).rejects.toThrow('deadline')
+  expect(route).not.toHaveBeenCalled()
+  expect(h.agent.inbox.nextTurn).toHaveLength(0)
+  expect(h.adapter.requests).toHaveLength(0)
+})
+
+it('refuses a denied baseline before route I/O or inbox admission', async () => {
+  const h = await harness()
+  const route = vi.fn(async () => selected)
+  h.routing.register({ deadlineMs: 100, validateBaseline: () => { throw new Error('baseline denied') }, route })
+  await expect(h.routing.admit(h.request, h.admit)).rejects.toThrow('baseline denied')
+  expect(route).not.toHaveBeenCalled()
+  expect(h.agent.inbox.nextTurn).toHaveLength(0)
+})
+
+it('rejects entry timer values that Node would reduce to one millisecond', async () => {
+  const h = await harness()
+  expect(() => h.routing.register({ deadlineMs: 2 ** 31, route: async () => undefined })).toThrow('deadlineMs')
 })

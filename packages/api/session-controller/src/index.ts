@@ -59,6 +59,7 @@ import type {
   SessionSearchValue,
   SessionSelectModelRequest,
   SessionSelectModelValue,
+  SessionResetModelSelectionRequest,
   SessionProjectionsRequest,
   SessionProjectionsValue,
   SessionProjectionValues,
@@ -297,6 +298,16 @@ export class SessionController extends TypertRemoteService {
   @Remote('selectModel')
   selectModel(request: SessionSelectModelRequest): Promise<SessionSelectModelValue> {
     return this.commands.selectModel(request)
+  }
+
+  /**
+   * Release a human model override so later eligible inputs may use automatic routing.
+   * @param request - Session identity.
+   * @returns Current model retained as the automatic baseline.
+   */
+  @Remote('resetModelSelection')
+  resetModelSelection(request: SessionResetModelSelectionRequest): Promise<SessionSelectModelValue> {
+    return this.commands.resetModelSelection(request)
   }
 
   /**

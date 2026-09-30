@@ -61,6 +61,8 @@ kind: "package-reference"
 | `{ modelInvocable: false, userInvocable: true }` | 排除 | 包含 |
 | `{ modelInvocable: false, userInvocable: false }` | 排除 | 排除 |
 
+加载后的指令消息使用 `SkillInvocationSource`（`kind: skill-invocation`、名称与 instructions 形式）。显式用户加载器检查 `userInvocable`，自动选择器检查 `modelInvocable`。选择消费者在自身回执中记录调用意图；此来源仅标识已加载指令，不单独声称用户执行了显式手势。
+
 ### 可观察的成功与失败
 
 任意提供方报告的 skill 都会出现在合并目录中，按其精确 kebab-case 名称加载即可返回正文；无效名称返回无结果而非抛错。发现失败的提供方会被记录并跳过，观测被标记为不完整，因此消费方保留其最后一份可用目录；显式的不完整观测仍会贡献其候选项。格式错误的候选项会快速失败——注册表在缓存或返回任何内容之前，会先验证名称、描述、调用布尔值与提供方归属。

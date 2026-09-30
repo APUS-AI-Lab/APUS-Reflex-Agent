@@ -26,6 +26,7 @@ const modelSelectionProjectionStateSchema = z.object({
 }) as z.ZodType<ModelSelectionProjectionState>
 
 const modelSelectionProjectionSchema = z.object({
+  mode: z.enum(['auto', 'fixed']),
   lastUsed: modelSelectionSchema.nullable(),
   next: modelSelectionSchema.nullable(),
 }) as z.ZodType<ModelSelectionProjection>
@@ -40,6 +41,10 @@ function applyModelSelectionProjection(
   state: ModelSelectionProjectionState,
   event: SessionEvent,
 ): ModelSelectionProjectionState {
+  if (event.type === 'model/selection-reset') {
+    return { ...state, pending: event.data.baseline, explicit: null, automaticBaseline: event.data.baseline,
+      automatic: null, automaticInUse: false }
+  }
   if (event.type === 'model/selection') {
     return sameSelection(state.pending, event.data) && sameSelection(state.explicit, event.data)
       ? state
@@ -72,11 +77,12 @@ const modelSelectionProjection = {
   wire: {
     viewSchema: modelSelectionProjectionSchema,
     view: state => ({
+      mode: state.explicit === null ? 'auto' : 'fixed',
       lastUsed: state.lastUsed,
       next: state.pending ?? state.explicit ?? (state.automaticInUse ? state.automatic : null) ?? state.automaticBaseline ?? state.lastUsed,
     }),
   },
-  stateVersion: 4,
+  stateVersion: 5,
 } satisfies ProjectionDefinition<'modelSelection', ModelSelectionProjectionState>
 
 function sameSelection(left: ModelSelection | null, right: ModelSelection | null): boolean {

@@ -1931,6 +1931,12 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'the normalized selection installed for the Session, without waiting for default persistence.',
       },
       {
+        signature: '@Remote(\'resetModelSelection\') resetModelSelection(request: SessionResetModelSelectionRequest): Promise<SessionSelectModelValue>',
+        description: 'Release a human model override so later eligible inputs may use automatic routing.',
+        parameters: [{ name: 'request', description: 'Session identity.' }],
+        returns: 'Current model retained as the automatic baseline.',
+      },
+      {
         signature: '@Remote async initializeDefaultModel(): Promise<void>',
         description: 'Select the first available account model after login when no provider API key is configured.',
         parameters: [],
@@ -6874,6 +6880,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'SessionRequestId',
     declaration: 'export type SessionRequestId = Branded<\'session-request-id\'>;',
+  },
+  {
+    name: 'SessionResetModelSelectionRequest',
+    declaration: 'export interface SessionResetModelSelectionRequest {\n    readonly sessionId: SessionId;\n}',
   },
   {
     name: 'SessionResultFilter',

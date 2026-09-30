@@ -110,7 +110,7 @@ export class SystemOneProvider implements JevProvider {
     const combined = signal === undefined ? controller.signal : AbortSignal.any([signal, controller.signal])
     let abortWait: (() => void) | undefined
     const cancelled = new Promise<never>((_resolve, reject) => {
-      abortWait = () => { reject(combined.reason) }
+      abortWait = () => { reject(combined.reason instanceof Error ? combined.reason : new Error('Jev request aborted', { cause: combined.reason })) }
       combined.addEventListener('abort', abortWait, { once: true })
     })
     try {

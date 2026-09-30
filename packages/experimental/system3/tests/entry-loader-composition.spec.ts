@@ -16,6 +16,7 @@ import JsonlPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import ToolRuntime from '@deepseek-ai/dsh-tools'
+import Skills from '@deepseek-ai/dsh-skill'
 import { afterEach, expect, it, vi } from 'vitest'
 import Jev from '../../apus-dsh-jev-plugin/src/index.ts'
 import System3 from '../src/index.ts'
@@ -46,6 +47,7 @@ it('routes an API prompt through Loader-mounted Jev and records the actual HTTP 
   vi.stubEnv('SYSTEM3_COMPOSITION_LLM_KEY', 'external-http-fixture')
   const requests: { path: string; body: Record<string, unknown> }[] = []
   let jevRequests = 0
+  let skillRequests = 0
   server = createServer((request, response) => {
     let body = ''
     request.on('data', (chunk: Buffer) => { body += chunk.toString('utf8') })
@@ -53,6 +55,13 @@ it('routes an API prompt through Loader-mounted Jev and records the actual HTTP 
       const path = request.url ?? ''
       requests.push({ path, body: JSON.parse(body) as Record<string, unknown> })
       if (path === '/v1/systemone') {
+        const query = JSON.parse(body) as { questions: { skill?: object } }
+        if (query.questions.skill !== undefined) {
+          skillRequests += 1
+          response.writeHead(200, { 'content-type': 'application/json' })
+          response.end(JSON.stringify({ model: 'APUS-OpenJev-fixture', answers: { skill: { type: 'choice', choice: 'skill-0', confidence: 1, probabilities: { 'skill-0': 1, abstain: 0 } } } }))
+          return
+        }
         jevRequests += 1
         if (jevRequests === 2) {
           response.writeHead(503, { 'content-type': 'application/json' })
@@ -91,6 +100,11 @@ it('routes an API prompt through Loader-mounted Jev and records the actual HTTP 
     ['@deepseek-ai/dsh-session-projection', SessionProjectionRegistry],
     ['@deepseek-ai/dsh-system-prompt', SystemPrompt],
     ['@deepseek-ai/dsh-tools', ToolRuntime],
+    ['@deepseek-ai/dsh-skill', Skills],
+    ['fixture-skills', { inject: ['skills'], apply(host: Context) {
+      host.effect(() => host.skills.register({ name: 'public-api-review', source: 'runtime', description: 'Review a public API reasoning problem.',
+        content: 'Compare all public API inputs against outputs and record concrete compatibility findings.' }))
+    } }],
     ['@deepseek-ai/dsh-agent', AgentRegistry],
     ['@deepseek-ai/dsh-agent-loop', AgentLoop],
     ['@deepseek-ai/dsh-llm-pi-ai', LlmPiAi],
@@ -123,7 +137,8 @@ it('routes an API prompt through Loader-mounted Jev and records the actual HTTP 
     ] : [],
     ...name === '@deepseek-ai/dsh-experimental-system3' ? [
       '  config:', '    privacyMode: local-only', '    jevExecutionDomain: local', '    observeAgentLoop: true',
-      '    entryRouting:', '      minConfidence: 0.5', '      maxInputBytes: 16000', '      sessionDataClasses: [public]',
+      '    skillSelection:', '      sessionDataClasses: [public]', '      minConfidence: 0.5', '      maxInputBytes: 16000', '      maxContentBytes: 24000', '      maxCandidates: 12', '      deadlineMs: 2000',
+      '    entryRouting:', '      baseline:', '        executionDomain: local', '        dataClasses: [public]', '      minConfidence: 0.5', '      maxInputBytes: 16000', '      sessionDataClasses: [public]',
       '      candidates:', '        - id: expert', '          description: Specialized reasoning',
       '          provider: fidoo-fixture', '          model: expert-fixture', '          executionDomain: local', '          dataClasses: [public]',
     ] : [],
@@ -164,9 +179,15 @@ it('routes an API prompt through Loader-mounted Jev and records the actual HTTP 
   const generation = requests.filter(request => request.path === '/v1/chat/completions')
   expect(generation.map(request => request.body.model)).toEqual(['expert-fixture', 'deepseek-v4-flash'])
   expect(jevRequests).toBe(2)
+  expect(skillRequests).toBe(2)
+  expect(generation.every(request => JSON.stringify(request.body.messages).includes('Compare all public API inputs against outputs'))).toBe(true)
   const events = agent.session.snapshotEvents()
   const recommendations = events.flatMap(event => event.type === 'system3/entry-decision' ? [event.data] : [])
   expect(recommendations).toHaveLength(2)
+  expect(events.filter(event => event.type === 'system3/skill-decision').map(event => event.data.outcome)).toEqual(['selected', 'selected'])
+  expect(events.filter(event => event.type === 'user/message' && event.data.source.kind === 'skill-invocation')).toHaveLength(2)
+  expect(ctx.sessionProjections.stateOf(agent.session, 'system3Runtime')?.skill).toMatchObject({ selected: 'public-api-review', injected: true })
+  expect(ctx.sessionProjections.stateOf(agent.session, 'system3Runtime')?.entry).toMatchObject({ requestId: 'entry-second', adopted: { model: 'deepseek-v4-flash' }, used: { model: 'deepseek-v4-flash' } })
   expect(events.filter(event => event.type === 'model/automatic-selection').map(event => event.data)).toMatchObject([
     { requestId: 'entry-first', selection: { model: 'expert-fixture' }, baseline: { model: 'deepseek-v4-flash' } },
     { requestId: 'entry-second', selection: { model: 'deepseek-v4-flash' }, baseline: { model: 'deepseek-v4-flash' } },
@@ -182,5 +203,6 @@ it('routes an API prompt through Loader-mounted Jev and records the actual HTTP 
   expect(restored.deriveMessages()).toEqual(agent.session.deriveMessages())
   expect(persisted.events.filter(event => event.type === 'system3/entry-decision').map(event => event.data)).toEqual(recommendations)
   expect(ctx.sessionProjections.stateOf(restored, 'modelSelection')?.automaticBaseline?.model).toBe('deepseek-v4-flash')
+  expect(ctx.sessionProjections.stateOf(restored, 'system3Runtime')).toEqual(ctx.sessionProjections.stateOf(agent.session, 'system3Runtime'))
   expect(requests).toHaveLength(count)
 })

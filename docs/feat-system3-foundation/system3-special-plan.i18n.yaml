@@ -1,6 +1,16 @@
-# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
-# side as of the last confirmed-consistent state. Both languages carry equal authority;
-# after editing either side, bring the other along and re-record with:
+# Bilingual-pair consistency record for system3-special-plan.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/feat-system3-foundation/system3-special-plan.md
-system3-special-plan.md: c36b1f360ee1acf114aed23d9eccb81e608a02da
-system3-special-plan.zh.md: 4869ec00d6010e86e3cc086d9d007b61d6ad3642
+/system3-9b:
+  en: f323acfa8246df10
+  zh: 81835395724a475b
+/system3-9b/section:
+  en: ebdfbe9d114bec53
+  zh: ebdfbe9d114bec53
+/system3-9b/section~2:
+  en: f44de7c1f3d5ebe8
+  zh: f44de7c1f3d5ebe8
+/system3-9b/section~3:
+  en: 2b9a91620dd9f2b2
+  zh: 2b9a91620dd9f2b2

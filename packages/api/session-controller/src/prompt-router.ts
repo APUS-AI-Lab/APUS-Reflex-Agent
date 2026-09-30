@@ -1,4 +1,5 @@
 /** Optional host-owned model routing before an idle text prompt enters its Agent. */
+import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
 import type { Context } from '@deepseek-ai/cordis'
 import type { Agent, ModelSelection } from '@deepseek-ai/dsh-agent'
 import type { UserMessage } from '@deepseek-ai/dsh-session'
@@ -19,6 +20,13 @@ export interface SessionPromptRouteRequest {
 
 /** Host provider that advises a route without admitting or mutating the input. */
 export interface SessionPromptRouter {
+  /** Total routing and model-preparation budget; omission leaves existing providers unbounded. */
+  readonly deadlineMs?: number
+  /**
+   * Refuse a fallback route whose execution location or data permissions are unknown or denied.
+   * @param request - Exact pending input and current baseline.
+   */
+  validateBaseline?(request: SessionPromptRouteRequest): void
   /**
    * Select a registered generation route; undefined preserves the baseline.
    * @param request - Exact input and baseline captured before admission.
@@ -63,6 +71,10 @@ export class SessionPromptRouting {
    */
   register(router: SessionPromptRouter): () => void {
     if (this.registration !== undefined) throw new Error('Session prompt router already registered')
+    if (router.deadlineMs !== undefined
+      && (!Number.isSafeInteger(router.deadlineMs) || router.deadlineMs <= 0 || router.deadlineMs > MAX_TIMER_DELAY_MS)) {
+      throw new Error('Session prompt router deadlineMs must be a positive safe integer')
+    }
     const registration: Registration = { router, abort: new AbortController() }
     this.registration = registration
     const dispose = this.ctx.effect(() => () => {
@@ -89,42 +101,68 @@ export class SessionPromptRouting {
     try {
       // Only synchronous ownership refusal permits queueing.
       admission = agent.runMaintenance(async (maintenanceSignal) => {
-        const signal = AbortSignal.any([maintenanceSignal, registration.abort.signal])
-        signal.throwIfAborted()
-        const baseline = this.agents.selectionFor(agent).current
-        const routed = await abortable(registration.router.route({ ...request, baseline }, signal), signal)
-        signal.throwIfAborted()
-        // Competing input keeps its original route and queue priority.
-        if (agent.inbox.nextStep.length > 0 || agent.inbox.nextTurn.length > 0
-          || this.agents.hasExplicitSelection(agent)) return admit(signal)
-        const selected = routed ?? baseline
-        const resolved = await abortable(this.ctx.llm.resolveCallConfig(selected), signal)
-        signal.throwIfAborted()
-        if (agent.inbox.nextStep.length > 0 || agent.inbox.nextTurn.length > 0
-          || this.agents.hasExplicitSelection(agent)) return admit(signal)
-        let restore: (() => void) | undefined
-        const select = (): void => {
-          signal.throwIfAborted()
-          const pending = [...agent.inbox.nextStep, ...agent.inbox.nextTurn]
-          if (pending.some(message => message.id !== request.message.id)
-            || this.agents.hasExplicitSelection(agent)) return
-          const restoreSelection = this.agents.installAutomaticSelection(agent, {
-            provider: resolved.provider,
-            model: resolved.model,
-            ...selected.reasoningEffort === undefined ? {} : { reasoningEffort: selected.reasoningEffort },
-          }, baseline, request.requestId)
-          restore = (): void => { stop(); restoreSelection() }
-          const stop = agent.ctx.on('session/event', (session, event) => {
-            if (session === agent.session && event.type === 'turn/end') restore?.()
-          })
-        }
+        const ownerSignal = AbortSignal.any([maintenanceSignal, registration.abort.signal])
+        const deadline = new AbortController()
+        const timer = registration.router.deadlineMs === undefined ? undefined : setTimeout(() => {
+          deadline.abort(new DOMException('Session entry deadline exceeded', 'TimeoutError'))
+        }, registration.router.deadlineMs)
+        const signal = AbortSignal.any([ownerSignal, deadline.signal])
         try {
           signal.throwIfAborted()
-          return await admit(signal, select)
-        } catch (error: unknown) {
-          restore?.()
-          agent.inbox.remove(request.message.id)
-          throw error
+          const baseline = this.agents.selectionFor(agent).current
+          const input = { ...request, baseline }
+          registration.router.validateBaseline?.(input)
+          // Prepare a permitted fallback before making an optional recommendation.
+          const baselineConfig = await abortable(this.ctx.llm.resolveCallConfig(baseline, signal), signal)
+          let routed: ModelSelection | undefined
+          let resolved = baselineConfig
+          let admissionSignal = signal
+          try {
+            routed = await abortable(registration.router.route(input, signal), signal)
+            signal.throwIfAborted()
+            if (routed !== undefined) resolved = await abortable(this.ctx.llm.resolveCallConfig(routed, signal), signal)
+            signal.throwIfAborted()
+          } catch (error) {
+            ownerSignal.throwIfAborted()
+            if (!deadline.signal.aborted) throw error
+            // A deadline may use only the already prepared, permitted baseline.
+            routed = undefined
+            resolved = baselineConfig
+            admissionSignal = ownerSignal
+          }
+          // Competing input keeps its original route and queue priority.
+          if (agent.inbox.nextStep.length > 0 || agent.inbox.nextTurn.length > 0
+          || this.agents.hasExplicitSelection(agent)) return await admit(admissionSignal)
+          const selected = routed ?? baseline
+          admissionSignal.throwIfAborted()
+          if (agent.inbox.nextStep.length > 0 || agent.inbox.nextTurn.length > 0
+          || this.agents.hasExplicitSelection(agent)) return await admit(admissionSignal)
+          let restore: (() => void) | undefined
+          const select = (): void => {
+            admissionSignal.throwIfAborted()
+            const pending = [...agent.inbox.nextStep, ...agent.inbox.nextTurn]
+            if (pending.some(message => message.id !== request.message.id)
+            || this.agents.hasExplicitSelection(agent)) return
+            const restoreSelection = this.agents.installAutomaticSelection(agent, {
+              provider: resolved.provider,
+              model: resolved.model,
+              ...selected.reasoningEffort === undefined ? {} : { reasoningEffort: selected.reasoningEffort },
+            }, baseline, request.requestId)
+            restore = (): void => { stop(); restoreSelection() }
+            const stop = agent.ctx.on('session/event', (session, event) => {
+              if (session === agent.session && event.type === 'turn/end') restore?.()
+            })
+          }
+          try {
+            admissionSignal.throwIfAborted()
+            return await admit(admissionSignal, select)
+          } catch (error: unknown) {
+            restore?.()
+            agent.inbox.remove(request.message.id)
+            throw error
+          }
+        } finally {
+          if (timer !== undefined) clearTimeout(timer)
         }
       })
     } catch (error: unknown) {

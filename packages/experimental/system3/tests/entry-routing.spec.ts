@@ -165,7 +165,7 @@ it('registers only when opted in and removes the exact registration on plugin di
   expect(controller).not.toHaveProperty('router', expect.anything())
   await disabled.dispose()
   const enabled = await ctx.plugin(System3, { entryRouting: {
-    ...config, sessionDataClasses: [...config.sessionDataClasses],
+    minConfidence: config.minConfidence, maxInputBytes: config.maxInputBytes, sessionDataClasses: [...config.sessionDataClasses],
     candidates: config.candidates.map(candidate => ({ ...candidate, dataClasses: [...candidate.dataClasses] })),
   } })
   await enabled.await()
@@ -247,4 +247,30 @@ it('does not recommend a provider answer outside the admitted candidates', async
   } }))
   expect(await router.route(request, signal)).toBeUndefined()
   expect(request.agent.session.snapshotEvents().at(-1)?.data).toMatchObject({ outcome: 'invalid-response' })
+})
+
+
+it('requires explicit legal baseline metadata when the current route is outside the candidate catalog', async () => {
+  const h = await setup()
+  expect(() => h.router.validateBaseline?.(h.request)).toThrow('baseline route')
+  const allowed = createSystem3EntryRouter(h.ctx, { ...config, baseline: { executionDomain: 'local', dataClasses: ['workspace'] } },
+    { mode: 'local-only' }, { routeId: 'jev', executionDomain: 'local', effort: 'low' })
+  expect(() => allowed.validateBaseline?.(h.request)).not.toThrow()
+  const denied = createSystem3EntryRouter(h.ctx, { ...config, baseline: { executionDomain: 'network', dataClasses: ['workspace'] } },
+    { mode: 'local-only' }, { routeId: 'jev', executionDomain: 'local', effort: 'low' })
+  expect(() => denied.validateBaseline?.(h.request)).toThrow('baseline route')
+})
+
+it('rejects entry deadline overflow before registration', async () => {
+  const h = await setup()
+  expect(() => createSystem3EntryRouter(h.ctx, { ...config, deadlineMs: 2 ** 31 }, { mode: 'local-only' },
+    { routeId: 'jev', executionDomain: 'local', effort: 'low' })).toThrow('timer range')
+})
+
+
+it('records a total-deadline timeout distinctly from user cancellation', async () => {
+  const h = await setup(); const abort = new AbortController()
+  abort.abort(new DOMException('deadline', 'TimeoutError'))
+  await expect(h.router.route(h.request, abort.signal)).rejects.toThrow('deadline')
+  expect(h.request.agent.session.snapshotEvents().at(-1)?.data).toMatchObject({ outcome: 'timeout' })
 })

@@ -1,0 +1,14 @@
+.git
+.Codex
+node_modules
+**/node_modules
+**/lib
+**/dist
+**/*.tsbuildinfo
+.env
+.env.*
+**/.env
+**/.env.*
+**/*.key
+**/*.pem
+.DS_Store

@@ -1,0 +1,156 @@
+{
+  "status": "preflight-passed-final-product-acceptance-pending",
+  "recordedAt": "2026-09-30T18:38:47.685661+00:00",
+  "target": "root@litellm",
+  "service": "xdan-system3.service",
+  "accessUrl": "http://127.0.0.1:18731/",
+  "runtime": {
+    "node": "24.21.0",
+    "dsh": "0.1.7-rc.2",
+    "user": "xdan-system3",
+    "bind": "127.0.0.1:18731",
+    "supervisor": "systemd"
+  },
+  "baselineSourceArchiveSha256": "70d1e4d1d39c4252dee0665f0494b03cbd920a06310b6f939c3e01b63426d774",
+  "linuxBuild": {
+    "passed": true,
+    "buildSeconds": 182.1,
+    "clientArtifactCount": 343,
+    "finalImplementationIncluded": false
+  },
+  "checks": {
+    "anonymousApi": 401,
+    "untrustedOrigin": 403,
+    "untrustedHost": 403,
+    "nativeTokenExchange": 200,
+    "tokenRemovedByRedirect": true,
+    "cookieCount": 1,
+    "hostBubblewrapWorkspaceWrite": true,
+    "hostBubblewrapOutsideWriteRejected": true,
+    "systemdBubblewrapWorkspaceWrite": true,
+    "systemdBubblewrapOutsideWriteRejected": true,
+    "nativeCredentialScrubAndChildProcess": true,
+    "releaseFailureBranchesInIsolatedMockContainer": 5
+  },
+  "credentials": {
+    "generation": "existing system3-dsh virtual key",
+    "decision": "existing OpenJev gateway key",
+    "location": "/etc/xdan-system3/runtime.env",
+    "mode": "0600",
+    "valuesRecorded": false
+  },
+  "fixture": {
+    "workspace": "/var/lib/xdan-system3/workspace",
+    "files": [
+      "orders.csv",
+      ".agents/skills/csv-reconciliation/SKILL.md"
+    ],
+    "oracleInWorkspace": false
+  },
+  "constraints": [
+    "Kernel active LSM list does not include Landlock.",
+    "Default Docker runtime did not support native bubblewrap; isolated systemd user deployment passed the same native sandbox checks.",
+    "The running preflight release predates final provider, process and frontend changes; it is not product acceptance."
+  ],
+  "pending": [
+    "Final source commit and reproducible Linux image",
+    "Actual Jev SDK routing and skill adoption",
+    "Fidoo streamed generation and native shell task",
+    "External artifact oracle",
+    "Cancel/recovery and restart persistence"
+  ],
+  "firstPublicTask": {
+    "sessionId": "session-10972d25-e809-4d30-b645-c71c44af9c63",
+    "logFile": "/var/lib/xdan-system3/home/.dsh/sessions/--var-lib-xdan-system3-workspace--/session-10972d25-e809-4d30-b645-c71c44af9c63/session.v4.jsonl.zstd",
+    "logEventCountThroughFirstTurn": 28,
+    "entry": {
+      "seq": 3,
+      "requestId": "9d45cb53-5680-49e0-971f-1cdbd5b0444c",
+      "outcome": "selected",
+      "elapsedMs": 978,
+      "decisionModel": "APUS-OpenJev-v1-9B-5949",
+      "selected": {
+        "provider": "fidoo",
+        "model": "deepseek-v4-flash",
+        "reasoningEffort": "low"
+      },
+      "baseline": {
+        "provider": "fidoo",
+        "model": "deepseek-v4-flash",
+        "reasoningEffort": "low"
+      },
+      "requestEffort": "high"
+    },
+    "adoption": {
+      "seq": 5,
+      "requestId": "9d45cb53-5680-49e0-971f-1cdbd5b0444c",
+      "selection": {
+        "provider": "fidoo",
+        "model": "deepseek-v4-flash",
+        "reasoningEffort": "low"
+      }
+    },
+    "generationHeader": {
+      "seq": 13,
+      "config": {
+        "provider": "fidoo",
+        "model": "deepseek-v4-flash",
+        "reasoningEffort": "low"
+      }
+    },
+    "tools": [
+      {
+        "seq": 19,
+        "name": "bash",
+        "callId": "call_00_cp30KibRNJnbN79Ny1MI2445",
+        "resultSeq": 20,
+        "isError": false
+      },
+      {
+        "seq": 21,
+        "name": "read",
+        "callId": "call_01_MetBjVQFuAyClrbNn9Yb3276",
+        "resultSeq": 22,
+        "isError": false
+      }
+    ],
+    "turnEnd": {
+      "seq": 27,
+      "reason": {
+        "kind": "completed"
+      }
+    },
+    "fixture": {
+      "sha256": "b6bd231a96b9d9b9024587f0873a4a33bb18c405dbb02a087c3e47866fc316e1",
+      "rowCount": 6,
+      "columns": [
+        "order_id",
+        "region",
+        "amount",
+        "status"
+      ],
+      "matchesLocalFixture": true
+    },
+    "limitations": [
+      "Preflight release: official TypeSafe SDK replacement and automatic Skill injection not included.",
+      "One public task is functional evidence, not a latency benchmark."
+    ]
+  },
+  "secondPublicTaskCredentialScrub": {
+    "entrySeq": 28,
+    "entryElapsedMs": 948,
+    "requestId": "5cd1096a-a56b-4b79-aac9-450b2d4de706",
+    "tool": "bash",
+    "callSeq": 36,
+    "resultSeq": 37,
+    "isError": false,
+    "credentialAbsent": {
+      "JEV_API_KEY": true,
+      "SYSTEM3_LITELLM_API_KEY": true
+    },
+    "turnEndSeq": 42,
+    "turnEndReason": {
+      "kind": "completed"
+    }
+  }
+}

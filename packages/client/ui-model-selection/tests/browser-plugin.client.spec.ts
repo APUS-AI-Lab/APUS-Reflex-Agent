@@ -100,7 +100,7 @@ async function bench(locale: 'zh' | 'en' = 'zh') {
           ? {}
           : { reasoningEffort: payload.reasoningEffort },
       }
-      projections.get(payload.sessionId)?.set({ lastUsed: null, next: selected })
+      projections.get(payload.sessionId)?.set({ mode: 'auto', lastUsed: null, next: selected })
       return Promise.resolve({ ok: true as const, value: { selected } })
     },
   }
@@ -157,6 +157,7 @@ async function bench(locale: 'zh' | 'en' = 'zh') {
     const handle = createScope(ctx, id)
     scopes.set(id, handle.ctx)
     const projection = createSnapshotStore<ModelSelectionProjection | undefined>({
+      mode: 'auto',
       lastUsed: null,
       next: null,
     })
@@ -378,6 +379,7 @@ describe('ui-model-selection dual entry', () => {
 
     b.remote.emit('settings/document-updated', ['llm-deepseek', 1])
     b.setProjected(sid('s1'), {
+      mode: 'auto',
       lastUsed: { provider: 'deepseek-official', model: 'deepseek-v4-flash' },
       next: { provider: 'deepseek-official', model: 'deepseek-v4-pro' },
     })
@@ -437,7 +439,7 @@ describe('ui-model-selection dual entry', () => {
       b.mint('existing')
       const existing = b.ctx.modelDirectories.directoryFor(sid('existing'))
       await existing.load()
-      b.setProjected(sid('existing'), { lastUsed: null,
+      b.setProjected(sid('existing'), { mode: 'auto', lastUsed: null,
         next: { provider: 'deepseek-official', model: 'deepseek-v4-flash', reasoningEffort: 'high' } })
       b.setRoutable(false)
       b.remote.emit('settings/document-updated', ['llm-deepseek', 1])
@@ -486,7 +488,7 @@ describe('ui-model-selection dual entry', () => {
     b.mint('s1')
     const face = b.seat().inject!(sid('s1'))
     const intended = { provider: 'deepseek-official', model: 'unlisted' }
-    b.setProjected(sid('s1'), { lastUsed: intended, next: intended })
+    b.setProjected(sid('s1'), { mode: 'auto', lastUsed: intended, next: intended })
     await vi.waitFor(() => { expect(face.directory.getSnapshot().status).toBe('ready') })
     expect(face.directory.getSnapshot().current).toEqual(intended)
     expect(b.blockOf('s1')).toBeUndefined()

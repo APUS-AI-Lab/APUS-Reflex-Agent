@@ -57,6 +57,12 @@ Candidate and Jev network admission both use the privacy policy before sending t
 
 `minConfidence` is an acceptance threshold, not a calibrated success probability. Abstention, low confidence, denied privacy, no compatible candidates, unavailable Jev, and provider failures return no override. Cancellation rejects without authorizing prompt admission. A `system3/entry-decision` event preserves the exact Jev request (including text), validated response, and recommendation; `request` is null when no decision was dispatched. The host-only `providerId` in that request is omitted by the Jev HTTP serializer. The Session API's separate `model/automatic-selection` event identifies actual adoption with the same request id. Replaying either event performs no model call. Router registration is disposed with the plugin.
 
+`entryRouting.deadlineMs` bounds baseline preparation, Jev advice, and selected-route preparation together (default 30000 ms; maximum `MAX_TIMER_DELAY_MS`). A timeout can admit only an already prepared legal baseline; incomplete baseline preparation rejects without inbox insertion. The baseline must match an admitted configured candidate or declare `baseline.executionDomain` and `baseline.dataClasses`; an independent remote baseline uses privacy route id `baseline`. Cancel and provider removal abort pending admission, and late advice never authorizes another admission. Native `resetModelSelection` restores automatic routing for later eligible inputs; a manual selection remains fixed until reset.
+
+`skillSelection` enables one scoped, model-invocable Skill selection for surviving user input at the native `agent/pre-step` seam. Configure `sessionDataClasses`, `minConfidence`, `maxInputBytes`, `maxContentBytes`, `maxCandidates` (1–254), and `deadlineMs`. Jev receives current text and complete bounded catalog descriptions; it receives no Skill bodies or conversation history. Stable candidate ids reserve an independent abstention choice. Privacy refusal, incomplete discovery, catalog overflow, low confidence, timeout, stale metadata, or an oversized body leaves the original native model/tool path intact. A catalog exceeding `maxCandidates` is never claimed to have been automatically searched, and explicit `/name` invocations retain their own invocation policy.
+
+A `system3/skill-decision` records the exact request, validated response and reported usage, selection, and proposed native `injectionMessageId`. The loaded body uses `skill-invocation` instructions and becomes model-visible only when the loop commits that exact `user/message`; it grants no tool permission. The `system3Runtime` wire projection exposes `entry.suggested`, `entry.adopted`, and `entry.used` independently, and `skill.selected` separately from `skill.injected`. Actual use requires model output or a nonempty streamed attempt in the exact input's turn, so admission alone never claims dispatch. Replay rebuilds these facts without Jev calls and exposes neither provider inputs nor complete probabilities to clients.
+
 <a id="understand-the-implementation"></a>
 ## Understand the implementation
 
@@ -77,7 +83,7 @@ Entry routing adds a Jev call for each eligible admitted prompt when privacy and
 
 #### KV Cache effect
 
-Observation and shadow receipts do not change the generation prefix. An adopted generation-model switch may lose provider cache reuse; tool schemas are unchanged.
+Observation and shadow receipts do not change the generation prefix. Automatic Skill injection appends bounded native instruction content before generation. An adopted generation-model switch may lose provider cache reuse; tool schemas are unchanged.
 
 ## Known Limitations and Deferred Work
 

@@ -61,6 +61,8 @@ An invocation policy on every skill decides which surfaces may advertise and loa
 | `{ modelInvocable: false, userInvocable: true }` | excluded | included |
 | `{ modelInvocable: false, userInvocable: false }` | excluded | excluded |
 
+Loaded instruction messages use `SkillInvocationSource` (`kind: skill-invocation`, name, and instructions form). Explicit user loaders enforce `userInvocable`; automatic selectors enforce `modelInvocable`. The selecting consumer records invocation intent in its own receipt; this source alone identifies the loaded instructions and does not claim a user gesture.
+
 ### Observable success and failures
 
 A skill that any provider reports appears in the merged catalog, and loading it by its exact kebab-case name returns the body; an invalid name returns no skill rather than throwing. A provider that fails discovery is logged and skipped, and the observation is reported incomplete so consumers keep their last-good catalog; an explicit incomplete observation still contributes its candidates. A malformed candidate fails fast — the registry validates names, descriptions, invocation booleans, and provider ownership before caching or returning anything.

@@ -50,6 +50,7 @@ import type {
   SessionRenameValue,
   SessionSelectModelRequest,
   SessionSelectModelValue,
+  SessionResetModelSelectionRequest,
   SessionUpdateQueueRequest,
   SessionUpdateQueueValue,
   SessionRequestId,
@@ -186,6 +187,18 @@ export class SessionCommandController {
         )
       }
     })
+  }
+
+  /**
+   * Release a Session's human model override without changing an in-flight request.
+   * @param request - Session whose later eligible inputs may use automatic routing.
+   * @returns Current model retained as the automatic baseline.
+   */
+  async resetModelSelection(request: SessionResetModelSelectionRequest): Promise<SessionSelectModelValue> {
+    const agent = await this.resolveAgent(request.sessionId)
+    return this.agents.serializeImageAdmission(agent, () => Promise.resolve({
+      selected: { ...this.agents.resetModelSelection(agent) },
+    }))
   }
 
   /**

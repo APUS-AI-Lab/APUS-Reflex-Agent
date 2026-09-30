@@ -1,0 +1,9 @@
+{
+  "extends": "../../../tsconfig.base.client.json",
+  "compilerOptions": { "rootDir": "src", "outDir": "lib/types", "tsBuildInfoFile": "lib/tsconfig.client.tsbuildinfo" },
+  "include": ["src/types.ts"],
+  "references": [
+    { "path": "../../api/session-controller/tsconfig.client.json" },
+    { "path": "../../session/session-projection" }
+  ]
+}

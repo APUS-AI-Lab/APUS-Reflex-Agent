@@ -2058,6 +2058,32 @@ def smoke_sdk_system3_shadow(
                         "Jev fixture did not select the generation model"
                     )
         replacements = [(str(root), "{{cwd}}"), (session_id, "{{parent}}")]
+        if entry_route:
+            skills = [
+                event
+                for event in result.events
+                if event.get("type") == "system3/skill-decision"
+            ]
+            if len(skills) != 1 or skills[0]["data"].get("outcome") != "selected":
+                raise AssertionError("Expected one selected native Skill receipt")
+            injection_id = skills[0]["data"].get("injectionMessageId")
+            injected = [
+                event
+                for event in logs[session_id]
+                if event.get("type") == "user/message"
+                and event["data"].get("id") == injection_id
+            ]
+            if (
+                not isinstance(injection_id, str)
+                or len(injected) != 1
+                or injected[0]["data"].get("source", {}).get("kind")
+                != "skill-invocation"
+            ):
+                raise AssertionError(
+                    "Skill receipt must identify its exact native instruction message"
+                )
+            replacements.append((injection_id, "{{message:system3-skill}}"))
+
         result_value = {
             "session_id": result.session_id,
             "final_response": result.final_response,

@@ -1,9 +1,11 @@
 /** Opt-in Jev recommendations for the Session API's idle text admission. */
+import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
 import type { Context } from '@deepseek-ai/cordis'
 import type { ModelSelection } from '@deepseek-ai/dsh-agent'
 import type { SessionPromptRouter } from '@deepseek-ai/dsh-api-session-controller'
 import type { SessionRequestId } from '@deepseek-ai/dsh-api-session-controller/types'
 import { ReasoningEffortId } from '@deepseek-ai/dsh-llm'
+import { RemoteError } from '@deepseek-ai/dsh-typert-protocol'
 import { MAX_JEV_CHOICES, type JevErrorCode, type JevRequest, type JevResponse } from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
 import { admitSystem3Routes, type System3DataClass, type System3ExecutionDomain, type System3PrivacyPolicy } from '@deepseek-ai/dsh-experimental-system3-policy'
 import type { System3JevOptions } from './decisions.ts'
@@ -28,6 +30,15 @@ export interface System3EntryCandidate {
 
 /** Explicit controls for entry recommendations; omission leaves entry routing disabled. */
 export interface System3EntryRoutingConfig {
+  /** Total entry budget, including baseline and selected-model preparation. @default 30000 */
+  readonly deadlineMs?: number
+  /** Explicit execution location and data capacity of the current baseline route. */
+  readonly baseline?: {
+    /** Actual generation location of the fallback, including tunnel destinations. */
+    readonly executionDomain: System3ExecutionDomain
+    /** Data classes this fallback route is permitted to receive. */
+    readonly dataClasses: readonly System3DataClass[]
+  }
   /** Named model choices; abstain is reserved for keeping the baseline. */
   readonly candidates: readonly System3EntryCandidate[]
   /** Conservative classification of all session data the generation model may receive. */
@@ -61,6 +72,8 @@ export interface System3EntryDecisionReceipt {
 
 declare module '@deepseek-ai/dsh-session/types' {
   interface SessionEventMap {
+    /** Jev entry work has started for an input not yet admitted to the inbox. */
+    'system3/entry-start': { readonly requestId: SessionRequestId }
     /** Jev entry recommendation; only model/automatic-selection records actual adoption. */
     'system3/entry-decision': System3EntryDecisionReceipt
   }
@@ -73,6 +86,7 @@ function selectionOf(candidate: System3EntryCandidate): ModelSelection {
 
 function validateConfig(config: System3EntryRoutingConfig): void {
   if (config.candidates.length === 0 || config.candidates.length >= MAX_JEV_CHOICES) throw new Error('entryRouting requires 1-254 candidates')
+  if (config.deadlineMs !== undefined && (!Number.isSafeInteger(config.deadlineMs) || config.deadlineMs <= 0 || config.deadlineMs > MAX_TIMER_DELAY_MS)) throw new Error('entryRouting deadlineMs must fit the timer range')
   const ids = new Set<string>()
   const routes = new Set<string>()
   for (const candidate of config.candidates) {
@@ -107,6 +121,18 @@ export function createSystem3EntryRouter(
   validateConfig(config)
   const settings = structuredClone(config)
   return {
+    deadlineMs: settings.deadlineMs ?? 30000,
+    validateBaseline(input) {
+      const candidate = settings.candidates.find(value =>
+        value.provider === input.baseline.provider && value.model === input.baseline.model)
+      const baseline = settings.baseline ?? candidate
+      const allowed = baseline !== undefined && settings.sessionDataClasses.every(value => baseline.dataClasses.includes(value))
+        && admitSystem3Routes(policy, [{ id: candidate?.id ?? 'baseline', executionDomain: baseline.executionDomain,
+          dataClasses: settings.sessionDataClasses }]).allowed.length > 0
+      if (!allowed) {
+        throw new RemoteError('session/route-denied', 'The baseline route cannot receive the classified session data.', {})
+      }
+    },
     async route(input, signal) {
       const started = Date.now()
       let request: JevRequest | null = null
@@ -114,6 +140,7 @@ export function createSystem3EntryRouter(
       let selected: ModelSelection | undefined
       let outcome: System3EntryOutcome = 'provider-unavailable'
       let candidateIds: string[] = []
+      input.agent.session.append('system3/entry-start', { requestId: input.requestId })
       try {
         signal.throwIfAborted()
         const textBlocks = input.message.content.filter(block => block.type === 'text')
@@ -180,7 +207,7 @@ export function createSystem3EntryRouter(
         outcome = 'selected'
         return selected
       } catch (error) {
-        if (signal.aborted) outcome = 'cancelled'
+        if (signal.aborted) outcome = signal.reason instanceof DOMException && signal.reason.name === 'TimeoutError' ? 'timeout' : 'cancelled'
         throw error
       } finally {
         input.agent.session.append('system3/entry-decision', {

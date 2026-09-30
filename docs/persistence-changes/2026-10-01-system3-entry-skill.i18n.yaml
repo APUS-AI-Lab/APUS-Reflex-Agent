@@ -1,0 +1,28 @@
+# Bilingual-pair consistency record for 2026-10-01-system3-entry-skill.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/persistence-changes/2026-10-01-system3-entry-skill.md
+/:
+  en: 3d5a424ae7d7e46b
+  zh: c22a8e4a62d8cc1a
+/2026-10-01-system3-entry-skill:
+  en: 32d17a4b6569f60a
+  zh: 689f288dfff5b862
+/2026-10-01-system3-entry-skill/summary:
+  en: a7bd72ed3352992b
+  zh: 613345a276df7dac
+/2026-10-01-system3-entry-skill/table-of-contents:
+  en: 6cf314a069ceb451
+  zh: 9adff678e9ecab3b
+/2026-10-01-system3-entry-skill/declaration:
+  en: 6907136f28e48c90
+  zh: 02f8298485f3d8e7
+/2026-10-01-system3-entry-skill/compatibility:
+  en: 88bec9cc32c42960
+  zh: 5574bf4272feafdb
+/2026-10-01-system3-entry-skill/verification:
+  en: f152eb374dab3c50
+  zh: b13db775427d06bf
+/2026-10-01-system3-entry-skill/dev-note:
+  en: b75c8458928b72b9
+  zh: 003ba4e17b4b5269

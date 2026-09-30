@@ -1,6 +1,34 @@
-# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
-# side as of the last confirmed-consistent state. Both languages carry equal authority;
-# after editing either side, bring the other along and re-record with:
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/feat-independent-harness/README.md
-README.md: 0393ffd0da89c0031c5a59a8ce454626afc8a221
-README.zh.md: 8dd06b6cc5b87d33c42760b9f20edd28c55a8f4e
+/:
+  en: cc177f8201ff0b81
+  zh: 973675f28565dc1e
+/independent-jev-integration:
+  en: ac27f559b834258a
+  zh: 50ce9933e83f3d46
+/independent-jev-integration/summary:
+  en: 7b72d9334caf5f79
+  zh: fb86fc65ee345eb0
+/independent-jev-integration/table-of-contents:
+  en: 3e147d57719fa864
+  zh: 11aac188c333b63e
+/independent-jev-integration/run-independently:
+  en: ef529f789a2ca4c8
+  zh: 78cddd230948125d
+/independent-jev-integration/mount-jev:
+  en: b075e760cbab6509
+  zh: d707fc4148919fc0
+/independent-jev-integration/fidoo-and-entry-routing:
+  en: 0a47d667c65ad375
+  zh: 16c5fa4ffbf9100c
+/independent-jev-integration/integration-roadmap:
+  en: 2a1f3a9ba0fc7084
+  zh: 2242063c5e64de01
+/independent-jev-integration/verify-independence:
+  en: 6be3cbb68b58fdf5
+  zh: f1b3a67f00f49275
+/independent-jev-integration/dev-note:
+  en: 8e3f79839cad7433
+  zh: 740ffbc3a6d82fd8

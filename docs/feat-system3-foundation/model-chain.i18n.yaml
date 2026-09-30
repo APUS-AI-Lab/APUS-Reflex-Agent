@@ -1,6 +1,34 @@
-# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
-# side as of the last confirmed-consistent state. Both languages carry equal authority;
-# after editing either side, bring the other along and re-record with:
+# Bilingual-pair consistency record for model-chain.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/feat-system3-foundation/model-chain.md
-model-chain.md: 675fb4b63de995c076c8499d47f08803d6b9bcc0
-model-chain.zh.md: e02dcb7deb6d69ea52310c30d0c632173ec23d1c
+/:
+  en: 19aa9186d758aef3
+  zh: 7178ea7464b3d03b
+/system3-model-chain:
+  en: 9544d7efdcfbb55e
+  zh: f3664b9a96dc632d
+/system3-model-chain/summary:
+  en: 7dbb53fc5214c841
+  zh: 594195aea65029c8
+/system3-model-chain/table-of-contents:
+  en: db10a783ca13c81d
+  zh: fc5f3ef2029262f9
+/system3-model-chain/prepare-credentials-and-connectivity:
+  en: e0057f696bec7ff1
+  zh: 714bb52f05a1b814
+/system3-model-chain/create-and-inspect-the-profile:
+  en: 42b26582ef50da32
+  zh: 4cc28e3abfba22de
+/system3-model-chain/run-the-profile:
+  en: 79f21111f52f894e
+  zh: 9ff29639052f0683
+/system3-model-chain/verify-the-decision-path:
+  en: 4d14fd12e04bf858
+  zh: 76f9cd0f270fd542
+/system3-model-chain/limitations:
+  en: b954b122fae18b5a
+  zh: 0a50ab9e691f2f3b
+/system3-model-chain/limitations/dev-note:
+  en: 1101d7f81fb1cfdd
+  zh: fa05f10de659dfd3

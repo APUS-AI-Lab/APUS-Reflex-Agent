@@ -1,0 +1,90 @@
+# SSH forwards this host-loopback socket; native browser authentication remains enabled.
+- id: webserver
+  config:
+    host: 127.0.0.1
+    port: 18731
+    compression: gzip
+    compressionLevel: 1
+    compressionThresholdBytes: 1024
+- id: session-log-deepseek
+  config:
+    enabled: false
+- id: llm-deepseek
+  disabled: true
+- id: llm-pi-ai
+  config:
+    providers:
+      fidoo:
+        displayName: Fidoo LiteLLM
+        api: openai-completions
+        baseURL: https://proxy.fidoo.ai/v1
+        apiKeyEnv: SYSTEM3_LITELLM_API_KEY
+        compat:
+          thinkingFormat: deepseek
+        models:
+          - id: deepseek-v4-flash
+            contextWindow: 131072
+            maxTokens: 8192
+            input: [text]
+            reasoningEfforts: {off: null, low: low, medium: medium, high: high}
+          - id: deepseek-v4-pro
+            contextWindow: 131072
+            maxTokens: 8192
+            input: [text]
+            reasoningEfforts: {off: null, low: low, medium: medium, high: high}
+- id: agent-default-model
+  config:
+    provider: fidoo
+    model: deepseek-v4-flash
+    reasoningEffort: low
+- insert:
+    - id: ui-system3
+      name: ../../packages/experimental/client-ui-system3/lib/index.js
+    - id: jev
+      name: ../../packages/experimental/apus-dsh-jev-plugin/lib/index.js
+      config:
+        endpoint: https://owb1q1vidflfhp-8086.proxy.runpod.net
+        model: APUS-OpenJev-v1-9B-5949
+        apiKeyEnv: JEV_API_KEY
+        effort: high
+        timeoutMs: 15000
+    - id: system3
+      name: ../../packages/experimental/system3/lib/index.js
+      config:
+        privacyMode: controlled
+        observeAgentLoop: true
+        approvedRemoteIds: [jev, fast, reasoning]
+        approvedRemoteDataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'
+        jevRouteId: jev
+        jevExecutionDomain: network
+        jevEffort: high
+        skillSelection:
+          sessionDataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'
+          minConfidence: 0.5
+          maxInputBytes: 16000
+          maxContentBytes: 24000
+          deadlineMs: 8000
+          maxCandidates: 32
+        entryRouting:
+          deadlineMs: 15000
+          baseline:
+            executionDomain: network
+            dataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'
+          sessionDataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'
+          minConfidence: 0.8
+          maxInputBytes: 16384
+          candidates:
+            - id: fast
+              description: 简短问答、改写、归纳以及范围明确的常规任务。
+              provider: fidoo
+              model: deepseek-v4-flash
+              reasoningEffort: low
+              executionDomain: network
+              dataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'
+            - id: reasoning
+              description: 复杂系统设计、困难代码分析、多步骤推理，以及需要权衡依赖与风险的任务。
+              provider: fidoo
+              model: deepseek-v4-pro
+              reasoningEffort: low
+              executionDomain: network
+              dataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'

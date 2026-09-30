@@ -224,7 +224,7 @@ export interface Config {
 ## `@deepseek-ai/dsh-api-session-controller`
 
 - `inject`: `agentDefaultModel` · `agents` · `attachments` · `fileUploads` · `fs` · `llm` · `sessions` · `sessionProjections` · `sessionQuery` · `typert` · `workspaceRegistry`
-- `source`: [`packages/api/session-controller/src/index.ts:82`](../packages/api/session-controller/src/index.ts)
+- `source`: [`packages/api/session-controller/src/index.ts:83`](../packages/api/session-controller/src/index.ts)
 
 ```ts config-catalog
 /** Session Controller deployment policy. */
@@ -893,6 +893,8 @@ export interface Config {
 export interface Config {
   /** System One gateway URL; credentials must use apiKeyEnv rather than URL user information. */
   readonly endpoint: string
+  /** Wire protocol; the official API does not receive the OpenJev effort extension. @default 'openjev' */
+  readonly protocol?: 'openjev' | 'typesafe'
   /** Model identifier used when a decision request omits its model. */
   readonly model: string
   /** Decision effort used when a request omits it. @default 'low' */
@@ -1224,7 +1226,7 @@ export interface Config {
 ## `@deepseek-ai/dsh-experimental-system3`
 
 - `refs`: [`System3DataClass`](../packages/experimental/system3-policy/src/index.ts) · [`System3ExecutionDomain`](../packages/experimental/system3-policy/src/index.ts) · [`System3PrivacyMode`](../packages/experimental/system3-policy/src/index.ts)
-- `source`: [`packages/experimental/system3/src/index.ts:32`](../packages/experimental/system3/src/index.ts)
+- `source`: [`packages/experimental/system3/src/index.ts:37`](../packages/experimental/system3/src/index.ts)
 
 ```ts config-catalog
 /** Configures the default local-first privacy boundary. */
@@ -1247,10 +1249,21 @@ export interface Config {
   readonly jevEffort?: 'low' | 'high'
   /** Opt-in model recommendations for idle text prompts admitted through the Session API. */
   readonly entryRouting?: false | System3EntryRoutingConfig
+  /** Opt-in scoped Skill advice and native pre-step instruction injection. */
+  readonly skillSelection?: false | System3SkillSelectionConfig
 }
 
 /** Explicit controls for entry recommendations; omission leaves entry routing disabled. */
 export interface System3EntryRoutingConfig {
+  /** Total entry budget, including baseline and selected-model preparation. @default 30000 */
+  readonly deadlineMs?: number
+  /** Explicit execution location and data capacity of the current baseline route. */
+  readonly baseline?: {
+    /** Actual generation location of the fallback, including tunnel destinations. */
+    readonly executionDomain: System3ExecutionDomain
+    /** Data classes this fallback route is permitted to receive. */
+    readonly dataClasses: readonly System3DataClass[]
+  }
   /** Named model choices; abstain is reserved for keeping the baseline. */
   readonly candidates: readonly System3EntryCandidate[]
   /** Conservative classification of all session data the generation model may receive. */
@@ -1259,6 +1272,22 @@ export interface System3EntryRoutingConfig {
   readonly minConfidence: number
   /** UTF-8 byte limit on the complete Jev request; larger inputs retain the baseline without truncation. */
   readonly maxInputBytes: number
+}
+
+/** Explicit limits for automatically loading one model-invocable Skill per new user input. */
+export interface System3SkillSelectionConfig {
+  /** Conservative classification of input and catalog descriptions sent to Jev. */
+  readonly sessionDataClasses: readonly System3DataClass[]
+  /** Minimum accepted Jev confidence; not a calibrated success probability. */
+  readonly minConfidence: number
+  /** UTF-8 limit for the entire resolved Jev request; overflow does not truncate input. */
+  readonly maxInputBytes: number
+  /** UTF-8 limit for the complete rendered Skill instructions; overflow skips injection. */
+  readonly maxContentBytes: number
+  /** Maximum complete catalog size considered automatically; overflow uses native Skill discovery. */
+  readonly maxCandidates: number
+  /** Total catalog, Jev and body-loading deadline, within the Node timer range. */
+  readonly deadlineMs: number
 }
 
 /** Deployment-owned model route and its allowed session data classes. */
@@ -2938,7 +2967,7 @@ export interface Config {
 
 ## `@deepseek-ai/dsh-skill`
 
-- `source`: [`packages/skill/skill/src/index.ts:278`](../packages/skill/skill/src/index.ts)
+- `source`: [`packages/skill/skill/src/index.ts:277`](../packages/skill/skill/src/index.ts)
 
 ```ts config-catalog
 /** Skill registry configuration. */
@@ -4468,6 +4497,7 @@ export interface Config {
 | `@deepseek-ai/dsh-deepseek-llm-api-extensions` | — | [`packages/llm/deepseek-llm-api-extensions/src/index.ts`](../packages/llm/deepseek-llm-api-extensions/src/index.ts) |
 | `@deepseek-ai/dsh-experimental-auto-review` | `approval` · `llm` · `permissionPresets` · `sessions` · `tools` | [`packages/experimental/auto-review/src/index.ts`](../packages/experimental/auto-review/src/index.ts) |
 | `@deepseek-ai/dsh-experimental-client-ui-agent-team` | — | [`packages/experimental/client-ui-agent-team/src/index.ts`](../packages/experimental/client-ui-agent-team/src/index.ts) |
+| `@deepseek-ai/dsh-experimental-client-ui-system3` | — | [`packages/experimental/client-ui-system3/src/index.ts`](../packages/experimental/client-ui-system3/src/index.ts) |
 | `@deepseek-ai/dsh-experimental-client-ui-voice-input` | — | [`packages/experimental/client-ui-voice-input/src/index.ts`](../packages/experimental/client-ui-voice-input/src/index.ts) |
 | `@deepseek-ai/dsh-experimental-computer-use-cua-driver-native` | `computerUse` · `tools` · `systemPrompt` | [`packages/experimental/computer-use-cua-driver-native/src/index.ts`](../packages/experimental/computer-use-cua-driver-native/src/index.ts) |
 | `@deepseek-ai/dsh-fs-observation-policy` | — | [`packages/fs/fs-observation-policy/src/index.ts`](../packages/fs/fs-observation-policy/src/index.ts) |

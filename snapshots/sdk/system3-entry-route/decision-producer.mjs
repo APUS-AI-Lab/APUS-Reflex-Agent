@@ -4,16 +4,31 @@ import Jev from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
 import System3, { createSystem3EntryRouter } from '@deepseek-ai/dsh-experimental-system3'
 
 export const name = 'snapshot-system3-entry-route-producer'
-export const inject = ['sessionProjections']
+export const inject = ['sessionProjections', 'skills']
 
 /** @param {import('@deepseek-ai/cordis').Context} ctx - Runtime services. */
 export async function apply(ctx) {
   let requests = 0
   let entryRequests = 0
+  let skillRequests = 0
   const server = createServer(async (request, response) => {
     let body = ''
     for await (const chunk of request) body += chunk
     const query = JSON.parse(body)
+    if (request.url === '/v1/systemone' && query.model === 'jev-snapshot' && query.questions.skill?.type === 'choice') {
+      const choice = Object.entries(query.questions.skill.criteria).find(([, value]) => value.startsWith('snapshot-response:'))?.[0]
+      if (!['Reply with exactly: SDK snapshot OK', 'reply with the smoke text'].includes(query.state.input) || choice === undefined) {
+        response.writeHead(400).end('unexpected Skill request')
+        return
+      }
+      skillRequests += 1
+      response.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({
+        model: 'jev-snapshot', answers: { skill: {
+          type: 'choice', choice, probabilities: Object.fromEntries(Object.keys(query.questions.skill.criteria).map(id => [id, id === choice ? 1 : 0])), confidence: 1,
+        } }, usage: { input_tokens: 9, output_tokens: 1 },
+      }))
+      return
+    }
     if (request.url === '/v1/systemone' && query.model === 'jev-snapshot' && query.questions.route?.type === 'choice') {
       if (query.state.input !== 'Choose a model for this fixture input.' || !query.questions.route.criteria.current) {
         response.writeHead(400).end('unexpected entry request')
@@ -49,11 +64,33 @@ export async function apply(ctx) {
   const address = server.address()
   if (address === null || typeof address === 'string') throw new Error('Jev fixture has no TCP port')
   await ctx.plugin(Jev, { endpoint: `http://127.0.0.1:${address.port}`, model: 'jev-snapshot' })
-  await ctx.plugin(System3, { jevExecutionDomain: 'local', jevRouteId: 'snapshot-jev' })
+  ctx.effect(() => ctx.skills.register({
+    name: 'snapshot-response', source: 'runtime', description: 'Follow an exact public SDK snapshot response request.',
+    content: 'Preserve the exact response text requested by the user. Do not add a prefix, explanation, or suffix.',
+  }))
+  ctx.on('agent/pre-step', async ({ agent }, next) => {
+    const append = agent.session.append
+    // Keep only fixture elapsed accounting stable; the native loop still creates and commits the instruction message.
+    agent.session.append = function (type, data, ...options) {
+      return append.call(this, type, type === 'system3/skill-decision' ? { ...data, elapsedMs: 0 } : data, ...options)
+    }
+    try { return await next() } finally { agent.session.append = append }
+  })
+  await ctx.plugin(System3, { jevExecutionDomain: 'local', jevRouteId: 'snapshot-jev',
+    skillSelection: { sessionDataClasses: ['public'], minConfidence: 0.8, maxInputBytes: 16000,
+      maxContentBytes: 4096, maxCandidates: 254, deadlineMs: 2000 },
+  })
   const system3 = ctx.get('system3')
   if (system3 === undefined) throw new Error('System3 fixture service did not mount')
   ctx.on('agent/turn-stopping', async ({ agent, signal }) => {
     if (agent.session.header.parentSession !== undefined) return
+    const skill = ctx.sessionProjections.stateOf(agent.session, 'system3Runtime')?.skill
+    const skillReceipt = agent.session.snapshotEvents().find(event => event.type === 'system3/skill-decision')
+    const injection = agent.session.snapshotEvents().find(event => event.type === 'user/message' && event.data.id === skillReceipt?.data.injectionMessageId)
+    if (skillRequests !== 1 || skill?.selected !== 'snapshot-response' || skill.injected !== true
+      || injection?.data.source.kind !== 'skill-invocation' || !JSON.stringify(injection.data.content).includes('Preserve the exact response text')) {
+      throw new Error('System3 Skill advice did not enter the actual generation request')
+    }
     const messages = JSON.stringify(agent.session.deriveMessages())
     const append = agent.session.append
     // Fix only fixture persistence inputs; keep production crypto and clocks intact.

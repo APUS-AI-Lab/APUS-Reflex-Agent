@@ -1,6 +1,49 @@
-# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
-# side as of the last confirmed-consistent state. Both languages carry equal authority;
-# after editing either side, bring the other along and re-record with:
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/experimental/system3/README.md
-README.md: 666dc6b550d089e329a58073e4f7b3ae3e5ff22d
-README.zh.md: 9a09d2c92c2acc369fc19e76bd93efe90934fd02
+/:
+  en: ba6526ce7984bc9c
+  zh: 099156a89f4c5d5d
+/deepseek-ai-dsh-experimental-system3:
+  en: 713f0995c117bffe
+  zh: 0a1a499368073764
+/deepseek-ai-dsh-experimental-system3/summary:
+  en: 83b48e8ebb5774ad
+  zh: 189659cc5bc64bac
+/deepseek-ai-dsh-experimental-system3/table-of-contents:
+  en: 76368b6b1da79c80
+  zh: 577bc812458ce0c0
+/deepseek-ai-dsh-experimental-system3/use-this-package:
+  en: 4084e49e2c048eae
+  zh: b632cfbe3311c52a
+/deepseek-ai-dsh-experimental-system3/use-this-package/explicit-jev-shadow-decisions:
+  en: 3dc70484ca0ec162
+  zh: ffe2a312c704e222
+/deepseek-ai-dsh-experimental-system3/use-this-package/session-api-entry-routing:
+  en: 24e6651226b4d82c
+  zh: fbffe5d9f73fd56e
+/deepseek-ai-dsh-experimental-system3/understand-the-implementation:
+  en: 0cdf95236b2b2e5c
+  zh: 6a5f6dd3a124555b
+/deepseek-ai-dsh-experimental-system3/model-experience:
+  en: 215e7ba838619b7b
+  zh: a311da3843709f90
+/deepseek-ai-dsh-experimental-system3/model-experience/unified-system3-seam:
+  en: b022849fca97dc48
+  zh: 9221dc8d7ceaee1e
+/deepseek-ai-dsh-experimental-system3/model-experience/unified-system3-seam/what-the-model-sees:
+  en: a482afc972c86735
+  zh: 1248dafd388eb35e
+/deepseek-ai-dsh-experimental-system3/model-experience/unified-system3-seam/token-effect:
+  en: 5498ba28375bfce6
+  zh: 21134f7438701ad7
+/deepseek-ai-dsh-experimental-system3/model-experience/unified-system3-seam/kv-cache-effect:
+  en: 2b64defb67a1de9d
+  zh: 416430dee1beec0d
+/deepseek-ai-dsh-experimental-system3/known-limitations-and-deferred-work:
+  en: 766a5bcb320b22ee
+  zh: a9c2bac933aaacac
+/deepseek-ai-dsh-experimental-system3/known-limitations-and-deferred-work/dev-note:
+  en: d3b44bc6feb5c012
+  zh: 0ded2f6de7be4d58

@@ -191,15 +191,19 @@ const EXACT_EDITS: readonly ExactEdit[] = [
     find: `    const peer = manifest.peerDependencies?.cordis
     const dev = manifest.devDependencies?.cordis
 
-    if (!peer) errors.push(\`\${label}: cordis must be a peerDependency\`)
-    if (!dev) errors.push(\`\${label}: cordis must also be a devDependency\`)
+    if (!isForkMember || forkMember.needsCordis) {
+      if (!peer) errors.push(\`\${label}: cordis must be a peerDependency\`)
+      if (!dev) errors.push(\`\${label}: cordis must also be a devDependency\`)
+    }
     if (peer && dev && peer !== dev) {
       errors.push(\`\${label}: cordis peer (\${peer}) and dev (\${dev}) ranges must match\`)`,
     replace: `    const peer = manifest.peerDependencies?.['@deepseek-ai/cordis']
     const dev = manifest.devDependencies?.['@deepseek-ai/cordis']
 
-    if (!peer) errors.push(\`\${label}: @deepseek-ai/cordis must be a peerDependency\`)
-    if (!dev) errors.push(\`\${label}: @deepseek-ai/cordis must also be a devDependency\`)
+    if (!isForkMember || forkMember.needsCordis) {
+      if (!peer) errors.push(\`\${label}: @deepseek-ai/cordis must be a peerDependency\`)
+      if (!dev) errors.push(\`\${label}: @deepseek-ai/cordis must also be a devDependency\`)
+    }
     if (peer && dev && peer !== dev) {
       errors.push(\`\${label}: @deepseek-ai/cordis peer (\${peer}) and dev (\${dev}) ranges must match\`)`,
     expect: 1,

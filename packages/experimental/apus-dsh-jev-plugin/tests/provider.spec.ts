@@ -82,8 +82,8 @@ describe('System One provider', () => {
       resolveApiKey: async () => 'fixture-key',
       fetcher: async (input, init) => {
         calls += 1
-        expect(String(input)).toBe('https://api.typesafe.ai/v1/systemone')
-        expect(JSON.parse(String(init?.body))).not.toHaveProperty('effort')
+        expect(typeof input === 'string' ? input : input instanceof URL ? input.href : input.url).toBe('https://api.typesafe.ai/v1/systemone')
+        expect(JSON.parse(typeof init?.body === 'string' ? init.body : '{}')).not.toHaveProperty('effort')
         expect(new Headers(init?.headers).get('x-typesafe-sdk')).toBe('typesafe-sdk/0.6.0')
         return response({ error: 'private detail' }, 503)
       },
@@ -115,6 +115,24 @@ describe('System One provider', () => {
       },
     })
     await expect(provider.decide(request)).rejects.toMatchObject({ failure: { code: 'invalid-response' } })
+  })
+
+  it('preserves caller cancellation while a credential lookup is still pending', async () => {
+    const credential = Promise.withResolvers<string>()
+    let calls = 0
+    const provider = new SystemOneProvider({
+      id: 'test', endpoint: 'http://localhost', model: 'jev-test', effort: 'high', timeoutMs: 1000,
+      resolveApiKey: () => credential.promise,
+      fetcher: async () => { calls += 1; return response({}) },
+    })
+    const abort = new AbortController()
+    const reason = new Error('user stopped before credential resolution')
+    const pending = provider.decide(request, abort.signal)
+    abort.abort(reason)
+    await expect(pending).rejects.toBe(reason)
+    credential.resolve('late-key')
+    await Promise.resolve()
+    expect(calls).toBe(0)
   })
 
 })

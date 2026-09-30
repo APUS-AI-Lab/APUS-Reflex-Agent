@@ -13,6 +13,8 @@ packages:
   # Deploy root of the single-exe build: a pure dependency manifest whose
   # closure is what the exe bundles and what the Python runtime distributes.
   - python/sdk-runtime
+  # Private opt-in System3 Desktop deployment closure; not a default DSH app.
+  - deploy/system3/runtime
 
 overrides:
   'extract-zip>yauzl': '3.4.0'

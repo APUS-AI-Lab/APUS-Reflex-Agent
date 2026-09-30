@@ -344,6 +344,25 @@ export class ApiSessionAgentController {
   }
 
   /**
+   * Release the human override and retain the current model as the automatic baseline.
+   * @param agent - Live Session owner, serialized with prompt admission and model selection.
+   * @returns Baseline retained for future automatic routing.
+   */
+  resetModelSelection(agent: Agent): AgentModelSelection {
+    const installed = this.selectionFor(agent)
+    const state = this.ctx.sessionProjections.stateOf(agent.session, 'modelSelection')
+    if (state === undefined) throw new Error('required modelSelection projection is not registered')
+    if (state.explicit === null) {
+      return state.automaticBaseline === null ? installed.current : agentModelSelection(state.automaticBaseline)
+    }
+    const baseline = installed.current
+    agent.session.append('model/selection-reset', { baseline })
+    installed.automatic = undefined
+    installed.current = baseline
+    return baseline
+  }
+
+  /**
    * Whether durable history contains a human Session model selection.
    * @param agent - Session owner.
    * @returns Whether automatic routing must yield to explicit selection.

@@ -51,6 +51,18 @@ const publicationSourceAllowlist: Readonly<Record<string, readonly string[]>> = 
 }
 /** Public source home recorded in maintained package manifests. */
 const publishedRepositoryUrl = 'git+https://github.com/deepseek-ai/deepseek-harness.git'
+/** Fork-owned release members; both directory and package name must match. */
+const forkRepositoryUrl = 'git+https://github.com/cryptoSUN2049/xDAN-System3-Harness.git'
+const forkReleaseMembers: Readonly<Record<string, { name: string; needsCordis: boolean }>> = {
+  'packages/experimental/agui': { name: '@deepseek-ai/dsh-experimental-agui', needsCordis: true },
+  'packages/experimental/apus-dsh-jev-plugin': { name: '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin', needsCordis: true },
+  'packages/experimental/client-ui-system3': { name: '@deepseek-ai/dsh-experimental-client-ui-system3', needsCordis: true },
+  'packages/experimental/system3': { name: '@deepseek-ai/dsh-experimental-system3', needsCordis: true },
+  // These libraries export deterministic functions without Cordis registrations.
+  'packages/experimental/system3-evidence': { name: '@deepseek-ai/dsh-experimental-system3-evidence', needsCordis: false },
+  'packages/experimental/system3-policy': { name: '@deepseek-ai/dsh-experimental-system3-policy', needsCordis: false },
+  'packages/experimental/system3-supervisor': { name: '@deepseek-ai/dsh-experimental-system3-supervisor', needsCordis: false },
+}
 /** Packages that participate in the experimental policy. */
 const experimentalPackageDirectory = /^packages\/experimental\/[^/]+$/
 /** npm namespace reserved for experimental packages. */
@@ -385,6 +397,9 @@ export function checkDshFamilyVersion(manifest: PackageManifest, expected: strin
 export function checkWorkspaceManifest({ dir, manifest }: WorkspaceManifest): string[] {
   const errors = checkExperimentalManifest({ dir, manifest })
   const label = manifest.name ?? dir
+  const forkMember = forkReleaseMembers[dir]
+  const isForkMember = forkMember !== undefined && forkMember.name === manifest.name
+  const expectedRepositoryUrl = isForkMember ? forkRepositoryUrl : publishedRepositoryUrl
   const familyVersionError = checkDshFamilyVersion(manifest, repositoryVersion)
   if (familyVersionError !== undefined) errors.push(familyVersionError)
   const isNativePackageDir = dir.startsWith('native/system/packages/')
@@ -422,9 +437,9 @@ export function checkWorkspaceManifest({ dir, manifest }: WorkspaceManifest): st
       errors.push(`${label}: release member must set publishConfig.access to "public"`)
     }
     if (manifest.repository?.type !== 'git'
-      || manifest.repository.url !== publishedRepositoryUrl
+      || manifest.repository.url !== expectedRepositoryUrl
       || manifest.repository.directory !== dir) {
-      errors.push(`${label}: release member repository must use ${publishedRepositoryUrl} with directory ${dir}`)
+      errors.push(`${label}: release member repository must use ${expectedRepositoryUrl} with directory ${dir}`)
     }
   } else if (!experimentalPackageDirectory.test(dir) && manifest.private !== true) {
     errors.push(`${label}: package.json must set "private": true`)
@@ -465,8 +480,10 @@ export function checkWorkspaceManifest({ dir, manifest }: WorkspaceManifest): st
     const peer = manifest.peerDependencies?.['@deepseek-ai/cordis']
     const dev = manifest.devDependencies?.['@deepseek-ai/cordis']
 
-    if (!peer) errors.push(`${label}: @deepseek-ai/cordis must be a peerDependency`)
-    if (!dev) errors.push(`${label}: @deepseek-ai/cordis must also be a devDependency`)
+    if (!isForkMember || forkMember.needsCordis) {
+      if (!peer) errors.push(`${label}: @deepseek-ai/cordis must be a peerDependency`)
+      if (!dev) errors.push(`${label}: @deepseek-ai/cordis must also be a devDependency`)
+    }
     if (peer && dev && peer !== dev) {
       errors.push(`${label}: @deepseek-ai/cordis peer (${peer}) and dev (${dev}) ranges must match`)
     }

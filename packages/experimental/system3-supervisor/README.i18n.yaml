@@ -1,6 +1,43 @@
-# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
-# side as of the last confirmed-consistent state. Both languages carry equal authority;
-# after editing either side, bring the other along and re-record with:
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/experimental/system3-supervisor/README.md
-README.md: fb2171e51a57dae004ce9dc4e16c976b7e665a16
-README.zh.md: d74e40d2d0542d42c76238a7773a2f910712d268
+/:
+  en: 331fdc729822ddbb
+  zh: fe8273e5ed5ad798
+/deepseek-ai-dsh-experimental-system3-supervisor:
+  en: 716075a98184f2e5
+  zh: 8a2f4f201cee7036
+/deepseek-ai-dsh-experimental-system3-supervisor/summary:
+  en: ed9e50a83092947d
+  zh: a634bf8678fedb3b
+/deepseek-ai-dsh-experimental-system3-supervisor/table-of-contents:
+  en: 76368b6b1da79c80
+  zh: 577bc812458ce0c0
+/deepseek-ai-dsh-experimental-system3-supervisor/use-this-package:
+  en: 86c11cb4cfb6db58
+  zh: 4bf9faa02afd1edb
+/deepseek-ai-dsh-experimental-system3-supervisor/understand-the-implementation:
+  en: b461155852b8d8dc
+  zh: 37fb9bcb45a84cb0
+/deepseek-ai-dsh-experimental-system3-supervisor/model-experience:
+  en: 215e7ba838619b7b
+  zh: a311da3843709f90
+/deepseek-ai-dsh-experimental-system3-supervisor/model-experience/completion-supervision:
+  en: b6c9fdedcdeaba8e
+  zh: 7226c595ce37ceb2
+/deepseek-ai-dsh-experimental-system3-supervisor/model-experience/completion-supervision/what-the-model-sees:
+  en: 46d836a2142dfeaa
+  zh: aa42ffdcbf280c9d
+/deepseek-ai-dsh-experimental-system3-supervisor/model-experience/completion-supervision/token-effect:
+  en: fe379160ff699ee4
+  zh: 7a20a043b939789b
+/deepseek-ai-dsh-experimental-system3-supervisor/model-experience/completion-supervision/kv-cache-effect:
+  en: ce0ff4d6a159a8d9
+  zh: 7a7047af58726664
+/deepseek-ai-dsh-experimental-system3-supervisor/known-limitations-and-deferred-work:
+  en: e203f71a31e74599
+  zh: fe3d6e78afc9bdc9
+/deepseek-ai-dsh-experimental-system3-supervisor/known-limitations-and-deferred-work/dev-note:
+  en: 0a1253c6f7b5e8b9
+  zh: 9f56528562c7c914

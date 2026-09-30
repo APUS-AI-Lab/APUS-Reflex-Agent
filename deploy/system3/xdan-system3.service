@@ -1,0 +1,42 @@
+[Unit]
+Description=xDAN System3 authenticated Harness web service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=xdan-system3
+Group=xdan-system3
+WorkingDirectory=/var/lib/xdan-system3/workspace
+Environment=HOME=/var/lib/xdan-system3/home
+Environment=DSH_HOME=/var/lib/xdan-system3/home/.dsh
+Environment=DSH_PERMISSION_MODE=workspace-write
+Environment=DSH_TELEMETRY_MODE=DISABLED
+Environment=DSH_TELEMETRY_DISABLED=1
+Environment=PATH=/opt/xdan-system3/current/bin:/usr/local/bin:/usr/bin:/bin
+EnvironmentFile=/etc/xdan-system3/runtime.env
+ExecStart=/opt/xdan-system3/current/bin/node /opt/xdan-system3/current/app/apps/cli/lib/bin.js web --patch /opt/xdan-system3/current/app/deploy/system3/runtime.patch.yml --no-open
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=20
+KillMode=control-group
+UMask=0077
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectProc=invisible
+RestrictSUIDSGID=yes
+ReadWritePaths=/var/lib/xdan-system3
+InaccessiblePaths=/etc/xdan-system3 -/opt/owlume-supply-test -/opt/owlume-test2 -/opt/xdan-datagen -/opt/actions-runner-owlume-test2
+MemoryMax=2G
+CPUQuota=200%
+TasksMax=256
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=xdan-system3
+
+[Install]
+WantedBy=multi-user.target

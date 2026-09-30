@@ -38,6 +38,8 @@ declare module '@deepseek-ai/dsh-session/types' {
      * assembly. Log-only: it never enters derived model history.
      */
     'model/selection': ModelSelection
+    /** Release a human model override; preserve its current route as the automatic baseline. */
+    'model/selection-reset': { readonly baseline: ModelSelection }
     /** Automatic route for one input; baseline remains authoritative after its turn. */
     'model/automatic-selection': {
       readonly requestId: SessionRequestId
@@ -127,6 +129,8 @@ export interface ModelSelectionProjectionState {
 
 /** Client view of the durable model-selection fold. */
 export interface ModelSelectionProjection {
+  /** Automatic recommendations are eligible only without a human model override. */
+  readonly mode: 'auto' | 'fixed'
   /** Selection consumed by the latest recorded model request. */
   readonly lastUsed: ModelSelection | null
   /** Selection the next request should use, falling back to {@link lastUsed}. */
@@ -218,6 +222,7 @@ declare module '@deepseek-ai/dsh-typert-protocol' {
     'session/provider-credentials-unavailable': Record<string, never>
     'session/provider-models-unavailable': { readonly provider: string }
     'session/model-unavailable': { readonly provider: string; readonly model: string }
+    'session/route-denied': Record<string, never>
     'session/conflict': {
       readonly sessionId: SessionId
       readonly requestedCwd: string
@@ -311,6 +316,11 @@ export interface SessionCreateValue {
 
 /** Session model-selection request. */
 export interface SessionSelectModelRequest extends ModelSelection {
+  readonly sessionId: SessionId
+}
+
+/** Release this Session's fixed model choice while preserving its current baseline. */
+export interface SessionResetModelSelectionRequest {
   readonly sessionId: SessionId
 }
 

@@ -1,6 +1,43 @@
-# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
-# side as of the last confirmed-consistent state. Both languages carry equal authority;
-# after editing either side, bring the other along and re-record with:
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/experimental/system3-evidence/README.md
-README.md: 6ebfcb23a7de2de644573e2bb6c5144111377d52
-README.zh.md: 7b9f7cf860a90956506acaac658c567e2df57ec4
+/:
+  en: 854c3239772ab354
+  zh: b2dd3ce5d7e40b34
+/deepseek-ai-dsh-experimental-system3-evidence:
+  en: f579ae43a57fa323
+  zh: 766e599d828139fb
+/deepseek-ai-dsh-experimental-system3-evidence/summary:
+  en: 7372715c4d69c715
+  zh: 74d4f1985a6e3165
+/deepseek-ai-dsh-experimental-system3-evidence/table-of-contents:
+  en: 76368b6b1da79c80
+  zh: 577bc812458ce0c0
+/deepseek-ai-dsh-experimental-system3-evidence/use-this-package:
+  en: b46cd99b1de9866e
+  zh: 7a520f09ffb2e4ec
+/deepseek-ai-dsh-experimental-system3-evidence/understand-the-implementation:
+  en: 9c5cc080fad857bd
+  zh: d3b67e15fd937378
+/deepseek-ai-dsh-experimental-system3-evidence/model-experience:
+  en: 215e7ba838619b7b
+  zh: a311da3843709f90
+/deepseek-ai-dsh-experimental-system3-evidence/model-experience/evidence-projection:
+  en: 48353daeecde08f5
+  zh: 17233975d7d2d459
+/deepseek-ai-dsh-experimental-system3-evidence/model-experience/evidence-projection/what-the-model-sees:
+  en: fa000f9bdabc62f0
+  zh: 5636dac38cfd5c57
+/deepseek-ai-dsh-experimental-system3-evidence/model-experience/evidence-projection/token-effect:
+  en: 22aafa4118fa7c9a
+  zh: d00aca8e6a522f4a
+/deepseek-ai-dsh-experimental-system3-evidence/model-experience/evidence-projection/kv-cache-effect:
+  en: 6483b20d8ab002b2
+  zh: 2daa79b1205524cc
+/deepseek-ai-dsh-experimental-system3-evidence/known-limitations-and-deferred-work:
+  en: 1dfa4c6a70794698
+  zh: 4416ebbde45e2295
+/deepseek-ai-dsh-experimental-system3-evidence/known-limitations-and-deferred-work/dev-note:
+  en: 0a1253c6f7b5e8b9
+  zh: 9f56528562c7c914

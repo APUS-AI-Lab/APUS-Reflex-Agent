@@ -157,3 +157,38 @@
 ### 速度审查 Review
 
 确认原生即时回显已存在，自动入口先等 Jev 再准入；默认 HTTP 超时30秒不等于入口总截止。文本流现有三帧合并可作为首块策略对照；Fidoo modelInfo 读取本地 snapshot，桌面已预热且稳定窗口为0，不重复提出已存在的优化。记录9项候选及测量卡，未宣称实测提速、未调用模型或改变high/low配置。现有评审页390/1360px无溢出，HTML链接、Markdown wrap/link与diff检查通过。
+
+# System3 G1 产品实施预检历史（运维会话，实施授权前）
+
+- [x] 读取三层产品设计、两仓交接和当前状态。
+- [x] 固定源码来源，完成 rc.2 只读合并预检与桌面补丁清单。
+- [x] 写出 G1 的文件范围、接口兼容义务和产品验证计划。
+- [ ] 用户确认产品 G1 或优先完成 Pod 自动恢复。
+- [ ] G1a：合并 rc.2 并验证 Session/System3 与双 SDK。
+- [ ] G1b：逐项适配桌面补丁。
+- [ ] G1c：固定自有 runtime，开发与目录安装包真实启动。
+- [ ] G1d：实网 high 装配、失败和恢复验证。
+
+## Review
+
+本轮仅完成源码预检和具体实施方案；模型服务保持已验收状态，产品实现待用户明确实施方向。既有 feat-system3-desktop 在读取过程中新增了 feat-system3-desktop 文档提交，本轮从该固定点另建 feat-system3-g1，避免干扰并行工作。未修改源码、未进行合并、未声称产品测试通过。
+
+## 当前产品实施与真实部署（2026-10-01，用户已授权）
+
+- [x] 接受完整打通、真实部署和统一 rc.2 的授权；固定双会话写入归属。
+- [x] 合并正式 dsh-v0.1.7-rc.2，六个自有包统一版本；提交 system3-g1-foundation。
+- [x] Jev 切换 TypeSafe SDK 0.6.0，验证整体超时、取消、协议解析和密钥不泄漏。
+- [x] 修复 rc.2 provider 配置，TypeScript 与 Python 的 System3 entry-route/shadow 回放通过。
+- [x] 完成入口总截止、合法回退、固定/自动模式和可重放的前端事实投影。
+- [x] 完成真实 Skill 选择与原生模型消息注入，补回归和快照。
+- [ ] Frontend 接入自有 rc.2 runtime，开发与 Mac arm64 目录应用真实启动。
+- [ ] 完成入口、过程和体感 UI，与实际模型、工具、交付物及原生用户控制联动。
+- [x] Linux 原生构建及非 root systemd 预检通过；原生工作区 sandbox 保留。
+- [ ] 冻结最终源码，重新构建并发布到 litellm 独立 System3 服务。
+- [ ] 真实浏览器执行公共 CSV 任务，验证 Jev、Fidoo、Skill、文件交付、取消及重启恢复。
+- [ ] 独立审查并修复；运行相关构建、测试、lint、文档及 Ruff 门禁。
+- [ ] 记录当前成果、未完成的后续里程碑、部署/回滚证据和冷启动 handoff；完成 ship。
+
+### 当前 Review
+
+首个固定审查提交和检查证据见 [implementation-ready.md](feat-system3-g1/implementation-ready.md)，双会话归属见 [coordination-ack.md](feat-system3-g1/coordination-ack.md)。预检构建和接口健康不代表最终产品验收；最终发布必须对应完整固定提交。
