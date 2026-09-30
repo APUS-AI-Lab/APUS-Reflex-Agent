@@ -34,7 +34,7 @@
 <tr><td>产品方向与架构</td><td>三层机制、所有者、调用图、状态草案与 G1—G6。</td><td>设计覆盖已建立；客户端模块位置、安装组合、首批任务族和部分交互仍需收敛。</td></tr>
 <tr><td>交互原型</td><td>v3 三任务回放、37 项浏览器状态断言、23 组布局样本；v2 66 项回归。</td><td>样例交互已验证；不等于生产交互定稿、真实文件处理或目标用户验收。</td></tr>
 <tr><td>现有模型后端</td><td>M1a 的 Jev 9B → Fidoo Flash/Pro 真实入口采用与输出；官方与自有 Jev 独立 SDK smoke。</td><td>部分链路真实成立；完整过程智能、SDK runtime 替换和所有入口覆盖未交付。</td></tr>
-<tr><td>Jev 公网服务</td><td>独立 ops 工作区 2026-09-30 公网 HTTPS 26 项验证，日常调用无需 SSH。</td><td>服务部署条件已有进展；本轮未重新探活，未证明桌面已采用新端点。无人值守重启恢复未配置。</td></tr>
+<tr><td>Jev 公网服务</td><td>最新 ops-jev9b-a100 工作区：2026-10-01 A100，默认 high/32层，27项决策 + 15项原生回归及5个指南示例通过。</td><td>服务部署条件已有进展；本轮未重新探活，未证明桌面已采用新端点。无人值守重启恢复未配置。</td></tr>
 <tr><td>Frontend 产品接入</td><td>相对上游仅两份 Python 格式修改和两份初始化文档；未修改应用源码。</td><td>未完成自有 runtime、System3 UI、事件流和控制 API 装配。已有上游功能不能算新增产品交付。</td></tr>
 <tr><td>产品验收</td><td>尚无自有 System3 桌面安装包的完整任务证据或目标用户操作结果。</td><td>未完成。不用文件数、截图、接口健康或主观百分比替代验收。</td></tr>
 </tbody></table></div>
@@ -99,13 +99,14 @@
 <li><a href="jev-sdk-preflight.json">SDK 独立预检</a>证明两种供给的合成协议/鉴权响应，不证明运行时代码已替换。</li>
 <li><a href="intelligence-verification.json">v3 交付记录</a>和<a href="system3-browser-qa.json">浏览器检查</a>保留原型验证范围；本轮不重复声明产品测试通过。</li>
 <li>相邻 Frontend 的 <code>chore-bootstrap</code> 相对 <code>upstream/main</code> 只有两份 Python 格式改动及两份初始化文档。生产应用源码未被 System3 改造。</li>
-<li>独立 <code>ops-jev9b-api</code> 工作区的 <code>tasks/ops-jev9b-api/handoff.md</code> 与 <code>docs/ops-jev9b-api/public-verification.json</code> 记录公网服务进展。本轮只读核对，未合并该分支、未探活、未读取密钥。</li>
+<li>最新独立 <code>ops-jev9b-a100</code> 工作区的交接、中文接入指南、<code>decision-verification.json</code> 与 <code>native-verification.json</code> 记录A100服务进展；旧 <code>ops-jev9b-api</code> 的Pod URL与耗时保留为历史证据，不作为当前基线。本轮只读核对，未合并该分支、未探活、未读取密钥。</li>
 </ul>
 </section>
 <section id="speed">
 <h2>8. 入口智能与体感速度：先缩短关键等待，再改善表达</h2>
 <p>本轮为代码审查与优化候选设计，未测出生产前后差值。优化同时约束首次可见反馈、首个有用输出、首个有效成果、完整任务质量/耗时/成本；“已收到”或填充句不能算有用成果。界面更新不能比真实事件提前宣称采用或执行。</p>
 <h3>确认的现状</h3>
+<p>A100 最新指南记录：15个成功决策请求（含并发）中位数3.52秒、范围2.91–9.58秒；包含公网/TLS，属于小样本功能验收，不是入口单问题SLA或提速证明。8086提供结构化决策且不接受stream；8002提供标准vLLM及SSE，两者共用high引擎，会竞争容量。前端接入继续经Harness；标准生成协议成功不等于该决策模型已具备通用Lead能力。</p>
 <ul>
 <li>原生 Conversation 已有本地 pending submission，<code>sendSession</code> 在请求前执行 <code>beginSubmission → nextPaint → 序列化材料 → prompt</code>。应保留并接通真实状态，不能重复造一套乐观回显。</li>
 <li>可路由纯文本入口依次等待 <code>Jev route → resolveCallConfig → 准入 → AgentLoop 生成</code>；人工固定及不适用入口已有旁路。Jev 调用是该自动路径上的前置等待，但实际各段耗时仍需测量。</li>

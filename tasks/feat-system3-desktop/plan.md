@@ -23,7 +23,7 @@
 - Frontend `packages/dsh-desktop-client-ui/`：现有模块已依赖 Conversation/API 并使用原生 slots。优先评估在此扩展与共享模块拆分的必要性，复用 locale/theme，不先建第二套前端。
 - 接入顺序：自有 runtime → 显式 Jev/System3 配置 → Client-safe 实际采用投影 → Conversation/侧栏 → 真实控制接口 → 安全恢复与安装包验收。
 
-独立 `ops-jev9b-api` 工作区记录 2026-09-30 已完成 Jev 9B 公网 HTTPS 26 项验证，日常无需 SSH；本轮未重新探活，也未修改 endpoint、凭据或默认 effort。接入时复核新端点/密钥引用、SDK 请求和 high/low 实际配置；公网三问题样本与入口延迟分别评测，不能混用。
+最新供给基线改为 `ops-jev9b-a100`：2026-10-01 A100，默认 high/32层，27项决策、15项原生回归和5个指南示例通过。决策根地址 `https://owb1q1vidflfhp-8086.proxy.runpod.net`，路径 `/v1/systemone`；标准 vLLM Base URL 为 `https://owb1q1vidflfhp-8002.proxy.runpod.net/v1`。两者模型名及协议不同；结构化决策不支持 stream，原生 SSE 不代表决策可提前采用。旧 Pod URL 不再作为当前接入目标；Fidoo 继续承担既定生成职责。本轮只读指南，未探活或修改运行配置。新A100样本需独立评测，不能沿用旧环境延迟；公网服务验收不替代前端端到端接入。
 
 ## 完成定义与首条纵向交付
 
