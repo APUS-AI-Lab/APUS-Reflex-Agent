@@ -25,7 +25,7 @@ Load this Host discovery entry alongside System3 and the native Conversation Cli
 
 ## Behavior
 
-The dock observes native Session and projection subscriptions. Local submission appears before routing completes. Execution state follows the live Session; detailed decisions remain available after history replay. Ending a turn does not claim artifact verification. The fixed-model action calls the native reset API and waits for the persisted mode to change; failed mutations preserve the displayed mode. Addressed subagents cannot mutate root model selection.
+The dock observes native Session and projection subscriptions. Local submission appears before routing completes. Execution state follows the live Session, independently of historical entry advice; detailed decisions remain available after history replay. Ending a turn does not claim artifact verification. The fixed-model action calls the native reset API and waits for the persisted mode to change; failed mutations preserve the displayed mode. Addressed subagents cannot mutate root model selection.
 
 ## Model Experience
 

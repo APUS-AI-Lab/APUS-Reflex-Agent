@@ -2,7 +2,7 @@
 import { z, type ZodType } from 'zod'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import type { SessionRequestId, ModelSelection } from '@deepseek-ai/dsh-api-session-controller/types'
-import type { MessageId } from '@deepseek-ai/dsh-llm'
+import { assistantStreamFirstTokenTime, isVisibleChunk, type AssistantStreamRecord, type MessageId } from '@deepseek-ai/dsh-llm'
 import type { ProjectionDefinition } from '@deepseek-ai/dsh-session-projection'
 import type { System3RuntimeView } from './types.ts'
 import type {} from './entry-routing.ts'
@@ -40,9 +40,16 @@ const stateSchema: ZodType<System3RuntimeState> = z.object({ entry: viewSchema.s
   entryTurn: z.number().nullable(), startRequestId: requestId.nullable(),
   skillMessageId: z.string().transform(value => brandString<MessageId>(value)).nullable() })
 
+/** Content deltas and completed content blocks prove response; protocol-only records do not. */
+function hasResponseContent(stream: readonly AssistantStreamRecord[]): boolean {
+  return assistantStreamFirstTokenTime(stream) !== undefined
+    || stream.some(record => record.type === 'chunk' && record.chunk.type === 'block-end'
+      && (record.chunk.block.type === 'tool-call' || isVisibleChunk(record.chunk)))
+}
+
 /** Fold advice and adoption; confirm request use from output or a streamed attempt in the exact input turn. */
 export const system3RuntimeProjection = {
-  key: 'system3Runtime', stateVersion: 2, stateSchema,
+  key: 'system3Runtime', stateVersion: 3, stateSchema,
   init: () => ({ entry: null, skill: null, header: null, currentTurn: null, currentStep: null,
     entryTurn: null, startRequestId: null, skillMessageId: null }),
   wire: { viewSchema, view: state => ({ entry: state.entry, skill: state.skill }) },
@@ -73,7 +80,7 @@ export const system3RuntimeProjection = {
     }
     if (state.entry !== null && state.entry.adopted !== null && state.entryTurn !== null
       && ((event.type === 'assistant/message' && event.data.turn === state.entryTurn)
-        || (event.type === 'assistant/attempt' && event.data.turn === state.entryTurn && event.data.stream.length > 0))) {
+        || (event.type === 'assistant/attempt' && event.data.turn === state.entryTurn && hasResponseContent(event.data.stream)))) {
       const source = event.type === 'assistant/message' ? event.data.message.source : undefined
       const actual = event.type === 'assistant/message'
         ? source?.kind === 'model' ? { provider: source.provider, model: source.model,

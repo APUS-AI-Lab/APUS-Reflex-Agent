@@ -1,7 +1,7 @@
 import { Context } from '@deepseek-ai/cordis'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import type { SessionRequestId } from '@deepseek-ai/dsh-api-session-controller/types'
-import { createAssistantMessage, createUserMessage, ReasoningEffortId } from '@deepseek-ai/dsh-llm'
+import { createAssistantMessage, createUserMessage, ReasoningEffortId, ToolCallId, type AssistantStreamRecord } from '@deepseek-ai/dsh-llm'
 import { Session, SessionId, SessionLogOffset, type SessionEvent } from '@deepseek-ai/dsh-session'
 import Projections from '@deepseek-ai/dsh-session-projection'
 import { afterEach, expect, it } from 'vitest'
@@ -177,4 +177,74 @@ it('rejects late legacy receipts once a modern entry-start identifies the pendin
   h.session.append('model/automatic-selection', { requestId: old, baseline: selected, selection: selected })
   expect(h.view()?.entry).toMatchObject({ requestId: current, phase: 'decided', adopted: null, used: null })
   expect(h.view()?.startRequestId).toBe(current)
+})
+
+
+const protocolOnlyAttempts: { label: string; stream: AssistantStreamRecord[] }[] = [
+  { label: 'local adapter error', stream: [{ type: 'chunk', time: 1,
+    chunk: { type: 'finish', reason: { kind: 'error', failure: { code: 'ERROR', message: 'local failure' } } } }] },
+  { label: 'local adapter abort', stream: [{ type: 'chunk', time: 1,
+    chunk: { type: 'finish', reason: { kind: 'aborted', failure: { code: 'ABORTED', message: 'local cancellation' } } } }] },
+  { label: 'usage only', stream: [{ type: 'chunk', time: 1,
+    chunk: { type: 'usage', usage: { inputTokens: 4, outputTokens: 3 } } }] },
+  { label: 'text block placeholder', stream: [{ type: 'chunk', time: 1,
+    chunk: { type: 'block-start', index: 0, blockType: 'text' } }] },
+  { label: 'image block placeholder', stream: [{ type: 'chunk', time: 1,
+    chunk: { type: 'block-start', index: 0, blockType: 'image' } }] },
+  { label: 'empty compact text', stream: [{ type: 'text-chunks', time0: 1, index: 0, dt: [], texts: [''] }] },
+  { label: 'empty compact reasoning', stream: [{ type: 'reasoning-chunks', time0: 1, index: 0, dt: [], texts: [''] }] },
+  { label: 'empty compact tool arguments', stream: [{ type: 'tool-call-chunks', time0: 1, index: 0,
+    dt: [], id: ToolCallId('empty-tool'), args: [''] }] },
+  { label: 'empty raw text', stream: [{ type: 'chunk', time: 1, chunk: { type: 'text-delta', index: 0, text: '' } }] },
+  { label: 'empty completed text', stream: [{ type: 'chunk', time: 1,
+    chunk: { type: 'block-end', index: 0, block: { type: 'text', text: '' } } }] },
+]
+it.each(protocolOnlyAttempts)('does not confirm actual response from $label', async ({ stream }) => {
+  const h = await setup(); const id = h.begin('protocol-only')
+  h.session.append('request/header', { header: { config: selected }, reason: 'initial' }); h.input(id, 1)
+  h.session.append('assistant/attempt', { turn: 1, step: 0, stream })
+  expect(h.view()?.entry).toMatchObject({ adopted: selected, used: null })
+  const restored = Session.fromRestore(h.session.id, h.session.snapshotEvents(), h.session.header, SessionLogOffset(0), 'shared-frozen')
+  expect(h.ctx.sessionProjections.stateOf(restored, 'system3Runtime')?.entry?.used).toBeNull()
+})
+
+const responseAttempts: { label: string; stream: AssistantStreamRecord[] }[] = [
+  { label: 'partial text before a later error', stream: [
+    { type: 'text-chunks', time0: 1, index: 0, dt: [], texts: ['partial response'] },
+    { type: 'chunk', time: 2, chunk: { type: 'finish', reason: { kind: 'error',
+      failure: { code: 'ERROR', message: 'connection lost after content' } } } },
+  ] },
+  { label: 'reasoning content', stream: [{ type: 'reasoning-chunks', time0: 1, index: 0, dt: [], texts: ['reasoning fragment'] }] },
+  { label: 'tool-call name', stream: [{ type: 'tool-call-chunks', time0: 1, index: 0, dt: [],
+    id: ToolCallId('tool-response'), name: 'read', args: [''] }] },
+  { label: 'complete text without deltas', stream: [{ type: 'chunk', time: 1,
+    chunk: { type: 'block-end', index: 0, block: { type: 'text', text: 'complete response' } } }] },
+  { label: 'complete tool call without deltas', stream: [{ type: 'chunk', time: 1,
+    chunk: { type: 'block-end', index: 0, block: { type: 'tool-call', id: ToolCallId('completed-tool'),
+      name: 'read', arguments: '{}' } } }] },
+]
+it.each(responseAttempts)('confirms actual response from $label without claiming task completion', async ({ stream }) => {
+  const h = await setup(); const id = h.begin('content-response')
+  h.session.append('request/header', { header: { config: selected }, reason: 'initial' }); h.input(id, 1)
+  h.session.append('assistant/attempt', { turn: 1, step: 0, stream })
+  expect(h.view()?.entry?.used).toEqual(selected)
+})
+
+
+it('clears preceding Skill injection facts when the next decision proposes no instructions', async () => {
+  const h = await setup()
+  const injection = createUserMessage({ content: [{ type: 'text', text: 'Instructions.' }],
+    source: { kind: 'skill-invocation', name: 'csv', form: 'instructions' } })
+  h.session.append('system3/skill-decision', { version: 1, requestId: null, turn: 1, step: 0, request: null,
+    candidateNames: ['csv'], selected: 'csv', injectionMessageId: injection.id, outcome: 'selected', elapsedMs: 1 })
+  h.session.append('step/start', { turn: 1, step: 0 })
+  h.session.append('user/message', injection, { surfaceOp: 'append' })
+  expect(h.view()?.skill?.injected).toBe(true)
+  h.session.append('system3/skill-decision', { version: 1, requestId: null, turn: 2, step: 0, request: null,
+    candidateNames: [], outcome: 'timeout', elapsedMs: 8 })
+  expect(h.view()?.skill).toMatchObject({ turn: 2, outcome: 'timeout', selected: null, injected: false })
+  expect(h.view()?.skillMessageId).toBeNull()
+  h.session.append('step/start', { turn: 2, step: 0 })
+  h.session.append('user/message', injection, { surfaceOp: 'append' })
+  expect(h.view()?.skill?.injected).toBe(false)
 })

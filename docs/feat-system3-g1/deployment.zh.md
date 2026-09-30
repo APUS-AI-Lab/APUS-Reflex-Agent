@@ -16,9 +16,9 @@ systemd 单元采用空 capability 集、NoNewPrivileges、ProtectSystem=strict�
 
 ## 发布和恢复
 
-在服务器的已审查源码归档目录运行 `deploy/system3/release.sh <immutable-release-id> <source-commit>`。脚本依据 lockfile 安装依赖，在固定 Node 镜像中构建 Linux 产物，提取应用及匹配的 Node/bubblewrap 二进制，建立归 root 所有的发布目录，原子切换后仅重启 System3 单元。源码 commit 写入客户端元数据和镜像标签。健康检查要求进程 active，且匿名 API 请求返回 HTTP 401。
+在服务器的已审查源码归档目录运行 `deploy/system3/release.sh <immutable-release-id> <source-commit>`。脚本依据 lockfile 安装依赖，在固定 Node 镜像中构建 Linux 产物，提取应用及匹配的 Node/bubblewrap 二进制，建立归 root 所有的发布目录，原子切换后仅重启 System3 单元。源码 commit 写入客户端元数据和镜像标签。健康检查要求进程 active，且匿名 API 请求返回 HTTP 401。 只有健康发布才更新前一发布指针；发布失败保留已有回滚目标。每个发布保存自己的 `service.unit`；旧的活动发布在首次被替代前补存当时的单元一次。
 
-`deploy/system3/rollback.sh` 选择兼容的前一版本并保留会话。应用回滚不会撤销会话格式或数据库迁移；涉及持久格式变更的发布须先停服务备份。`Restart=on-failure` 和启用的 systemd 单元支持进程故障或主机重启后恢复。可用性检查不等同任务验收：还需单独验证浏览器鉴权、真实 Jev 选择、Fidoo 输出、Skill 采用、原生 shell 执行、产物正确性、取消和重启后的持久化。
+`deploy/system3/rollback.sh` 选择兼容的前一版本及其保存的单元，并保留会话。回滚成功后消费目标指针；重复执行直接失败，不重启或修改单元。回滚失败则恢复原版本及其单元，并保留目标。应用回滚不会撤销会话格式或数据库迁移；涉及持久格式变更的发布须先停服务备份。`Restart=on-failure` 和启用的 systemd 单元支持进程故障或主机重启后恢复。可用性检查不等同任务验收：还需单独验证浏览器鉴权、真实 Jev 选择、Fidoo 输出、Skill 采用、原生 shell 执行、产物正确性、取消和重启后的持久化。
 
 ## 源码文件
 
@@ -36,4 +36,4 @@ systemd 单元采用空 capability 集、NoNewPrivileges、ProtectSystem=strict�
 
 目标运行 TencentOS x86_64、内核 6.6.117、glibc 2.38、systemd 255 和 Docker 29.8.1。固定 Node 镜像运行 24.21.0。System3 专属 key 成功列出两个配置的 Fidoo 模型；A100 Jev 健康端点报告 ready/high32。基线 rc.2 Linux 构建通过 native 编译、Host 和 Client TypeScript/bundling、desktop bundle 与 Web 构建（343 个客户端产物）。
 
-内核没有启用 Landlock LSM。采用默认 Docker seccomp 的非 root 容器无法创建 bubblewrap namespace；临时诊断容器取消该过滤后仍无法挂载私有 proc 文件系统。因此部署使用原生 systemd，未放宽容器权限。宿主以及选定 systemd 加固下的 bubblewrap 均可写工作区，并以只读文件系统错误拒绝写入同一用户的 home。原生环境清理也通过子进程检查，两项部署凭据仅存在于父进程。五种隔离发布脚本场景通过：发布/手动回滚、激活失败、HTTP/鉴权健康失败、提取失败和非法发布标识。初次浏览器任务证据见 `deployment-preflight.json`；最终实现部署和完整任务验收仍待完成。
+内核没有启用 Landlock LSM。采用默认 Docker seccomp 的非 root 容器无法创建 bubblewrap namespace；临时诊断容器取消该过滤后仍无法挂载私有 proc 文件系统。因此部署使用原生 systemd，未放宽容器权限。宿主以及选定 systemd 加固下的 bubblewrap 均可写工作区，并以只读文件系统错误拒绝写入同一用户的 home。原生环境清理也通过子进程检查，两项部署凭据仅存在于父进程。八种隔离发布脚本场景通过：发布/手动回滚、激活失败、HTTP/鉴权健康失败、提取失败、非法发布标识、第三次发布失败保留更早回滚目标、重复回滚不修改服务，以及回滚失败恢复原版本和单元配对。初次浏览器任务证据见 `deployment-preflight.json`；最终实现部署和完整任务验收仍待完成。

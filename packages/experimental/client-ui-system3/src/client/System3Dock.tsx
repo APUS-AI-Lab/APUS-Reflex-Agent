@@ -28,7 +28,7 @@ function labelOf(props: System3FeedbackProps): System3Key {
   if (props.opening) return 'loading'
   if (props.failed) return 'interrupted'
   if (props.pending) return props.facts?.entry?.phase === 'deciding' ? 'deciding' : 'received'
-  if (props.running) return props.facts?.entry?.used ? 'running' : props.facts?.entry?.adopted ? 'adopted' : 'running'
+  if (props.running) return 'running'
   return props.facts?.entry?.used ? 'settled' : 'ready'
 }
 function model(value: ModelSelection | null | undefined, t: TranslateNS<'system3'>): string {

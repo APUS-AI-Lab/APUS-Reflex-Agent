@@ -8,7 +8,7 @@ Product implementation owns Harness `feat-system3-g1` and Frontend `feat-system3
 
 ## Product source checkpoint
 
-The next product checkpoint includes total entry deadlines, permitted baseline fallback, fixed/automatic model control, native Skill instruction injection, replayable facts and the localized Conversation dock. It also includes the Linux release and rollback scripts and Desktop runtime dependency carrier. A source checkpoint is not a deployment acceptance certificate.
+The product checkpoint includes total entry deadlines, permitted baseline fallback, fixed/automatic model control, native Skill instruction injection, replayable facts and the localized Conversation dock. It also includes the Linux release and rollback scripts and Desktop runtime dependency carrier. A source checkpoint is not a deployment acceptance certificate.
 
 ## Verified source behavior
 
@@ -20,6 +20,10 @@ The next product checkpoint includes total entry deadlines, permitted baseline f
 
 ## Review and deployment status
 
-The independent Jev operations review found no definite blocker in the fixed foundation. It did not cover later Skill, UI or deployment changes. The baseline Linux preflight completed real Jev high and Fidoo read-only CSV execution, plus a tool-process check confirming both model credential variables were absent. This evidence lives in `docs/feat-system3-g1/deployment-preflight.json` and does not substitute for final release acceptance.
+The second independent review identified three release blockers: synthetic failure records could confirm model response, failed activation could replace the earlier rollback target, and repeated rollback could mismatch application and unit. The correction requires content evidence, updates the previous pointer only after health succeeds, and restores each release with its saved unit while consuming a successful rollback target. The baseline Linux preflight completed real Jev high and Fidoo read-only CSV execution, plus a tool-process check confirming both model credential variables were absent. This evidence lives in `docs/feat-system3-g1/deployment-preflight.json` and does not substitute for final release acceptance.
 
 Final Desktop startup, public CSV artifact verification, cancellation, reload, server restart and rollback remain release gates. Product browser state is isolated from the operations session. Model calls and deployment have one owner.
+
+## Review correction verification
+
+Release scripts passed eight isolated container cases, including failed third activation preserving the earlier target, repeated rollback refusing without service mutation, and failed rollback restoring the current application and unit. Projection regression passed 28 tests with all coverage metrics at 100%; Conversation feedback passed 11 tests with all metrics at 100%. Host and Client builds and persistence checks passed. Exact focused commands and logs are in `review-regression.json`; all 42 documentation checks passed, including the focused repository-reference rerun after replacing a commit literal with its fixed tag. Production activation remains paused on the earlier preflight.

@@ -1,0 +1,49 @@
+{
+  "baseline": "system3-g1-product-rc2",
+  "status": "source-verified; final deployment pending",
+  "r1": {
+    "test": "pnpm exec vitest run packages/experimental/system3/tests/runtime-projection.spec.ts --coverage --coverage.include=packages/experimental/system3/src/runtime-projection.ts --coverage.reporter=text --coverage.reportsDirectory=/private/tmp/system3-g1-projection-coverage",
+    "passed": 28,
+    "coveragePercent": {
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "lines": 100
+    },
+    "cacheStateVersion": 3,
+    "log": "/tmp/system3-g1-projection-fix-tests.log"
+  },
+  "ui": {
+    "passed": 11,
+    "coveragePercent": 100,
+    "log": "/tmp/system3-g1-response-ui-tests.log"
+  },
+  "r2_r3": {
+    "command": "ssh root@litellm 'docker run --rm --entrypoint bash -v /tmp/system3-release-fixture-review:/work:ro node:24-bookworm@sha256:64af3819f9275802414d7cdc38c27e9d82bd564dec4d4da87d008255d36c63b4 /work/deploy/system3/tests/release.spec.sh'",
+    "passed": 8,
+    "log": "/private/tmp/system3-release-fixtures-final.log",
+    "cases": [
+      "publish and manual rollback",
+      "activation failure",
+      "health failure",
+      "extraction failure",
+      "invalid release id",
+      "third release failure preserves earlier previous",
+      "repeat rollback refuses without mutation",
+      "rollback failure restores current and unit"
+    ]
+  },
+  "build": [
+    "pnpm run build:lib:host",
+    "pnpm run build:lib:client"
+  ],
+  "persistence": "pnpm run verify-persistence-changes: 68 roots match 10 history records",
+  "documentation": {
+    "command": "pnpm run doc-sync",
+    "passedInitially": 41,
+    "failedInitially": "repository references: literal SHA in deployment notes",
+    "correction": "replace SHA with fixed tag",
+    "rerun": "pnpm run verify-repository-references",
+    "rerunPassed": true
+  }
+}

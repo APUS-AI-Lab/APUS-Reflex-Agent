@@ -18,7 +18,8 @@ docker build --build-arg "DSH_CLIENT_COMMIT_HASH=$source_commit" -f "$root/deplo
 install -d -m 755 "$release/bin"
 container=$(docker create "$image")
 switch=/opt/xdan-system3/current.next.$$
-trap 'docker rm "$container" >/dev/null 2>&1 || true; rm -f "$switch"' EXIT
+previous_switch=/opt/xdan-system3/previous.next.$$
+trap 'docker rm "$container" >/dev/null 2>&1 || true; rm -f "$switch" "$previous_switch"' EXIT
 docker cp "$container:/app" "$release/app"
 docker cp "$container:/usr/local/." "$release"
 docker cp "$container:/usr/bin/bwrap" "$release/bin/bwrap"
@@ -32,11 +33,13 @@ previous=
 if [[ -L /opt/xdan-system3/current ]]; then
   previous=$(readlink -f /opt/xdan-system3/current)
 fi
-if [[ -n $previous ]]; then
-  ln -sfn "$previous" /opt/xdan-system3/previous
-fi
+install -m 644 "$root/deploy/system3/xdan-system3.service" "$release/service.unit"
 if [[ -f /etc/systemd/system/xdan-system3.service ]]; then
   cp /etc/systemd/system/xdan-system3.service "$release/previous.service"
+  # Adopt a legacy active release before its first paired rollback.
+  if [[ -n $previous && ! -f $previous/service.unit ]]; then
+    install -m 644 /etc/systemd/system/xdan-system3.service "$previous/service.unit"
+  fi
 fi
 restore_previous() {
   if [[ -f $release/previous.service ]]; then
@@ -52,7 +55,7 @@ restore_previous() {
   fi
 }
 activate() {
-  install -m 644 "$root/deploy/system3/xdan-system3.service" /etc/systemd/system/xdan-system3.service &&
+  install -m 644 "$release/service.unit" /etc/systemd/system/xdan-system3.service &&
     systemctl daemon-reload &&
     systemctl enable xdan-system3.service >/dev/null &&
     systemctl restart xdan-system3.service
@@ -67,6 +70,10 @@ fi
 for attempt in $(seq 1 60); do
   status=$(curl -s --max-time 2 -o /dev/null -w '%{http_code}' http://127.0.0.1:18731/api/remote.mux || true)
   if [[ $status == 401 ]] && systemctl is-active --quiet xdan-system3.service; then
+    if [[ -n $previous ]]; then
+      ln -s "$previous" "$previous_switch"
+      mv -Tf "$previous_switch" /opt/xdan-system3/previous
+    fi
     printf 'Deployed %s: authenticated loopback service is ready\n' "$release_id"
     exit 0
   fi

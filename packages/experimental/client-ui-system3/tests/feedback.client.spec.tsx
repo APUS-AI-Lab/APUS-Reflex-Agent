@@ -26,7 +26,7 @@ it('keeps suggested and adopted routes distinct from actual model use', () => {
     suggested: model, adopted: model, used: null, elapsedMs: 29,
   } } })
   const { rerender } = render(<System3Feedback {...props} />)
-  expect(screen.getByRole('status').textContent).toBe('已选择，等待模型响应')
+  expect(screen.getByRole('status').textContent).toBe('正在执行')
   expect(screen.getByText('实际响应模型').nextSibling?.textContent).toBe('尚无记录')
   rerender(<System3Feedback {...props} facts={{ ...props.facts!, entry: { ...props.facts!.entry!, used: model } }} />)
   expect(screen.getByRole('status').textContent).toBe('正在执行')
@@ -82,4 +82,15 @@ it('announces active decision and retains ended-turn evidence without claiming v
   } }} />)
   expect(screen.getByRole('status').textContent).toBe('本轮已结束')
   expect(screen.getByText('实际响应模型').nextSibling?.textContent).toBe('fidoo / generation')
+})
+
+it('uses live execution state when a fixed-model turn follows an unanswered automatic turn', () => {
+  render(<System3Feedback {...inputs({ running: true,
+    selection: { mode: 'fixed', lastUsed: model, next: model },
+    facts: { skill: null, entry: { requestId: brandString<SessionRequestId>('previous'), phase: 'decided',
+      outcome: 'selected', suggested: model, adopted: model, used: null, elapsedMs: 10 } },
+  })} />)
+  expect(screen.getByRole('status').textContent).toBe('正在执行')
+  expect(screen.getByText('实际响应模型').nextSibling?.textContent).toBe('尚无记录')
+  expect(screen.queryByText('已选择，等待模型响应')).toBeNull()
 })

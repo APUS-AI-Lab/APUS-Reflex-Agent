@@ -11,3 +11,7 @@
 - `dsh` launcher flags must precede app flags: `web --patch <file> --no-open`. Reversing those flags fails with unknown --patch. The committed unit uses the correct order.
 - Final next steps: freeze and commit the complete implementation, archive tracked source plus final deployment files without node_modules/secrets, upload, invoke `release.sh <unique-release-id> <40-character-source-commit>`, then run the main agent's browser task and external oracle. The release script builds and extracts a full matching Node runtime, enables the unit, restarts it and waits for anonymous API 401. Final config includes entry deadline/baseline and Skill selection. Verify final built provider behavior, shell credential scrub, artifact, cancellation and restart persistence.
 - Do not infer Docker health or an HTTP 200 as task completion. The actual final task is still pending.
+
+## Release pointer and unit pairing
+
+Review caught premature previous-pointer replacement and repeated rollback mixing a target artifact with another release’s unit. Publication now updates previous only after health succeeds. Every release stores service.unit; rollback uses that target pair, consumes the target on success, and restores the original pair on failure. Eight disposable-container fixtures passed, including three consecutive publications and a second rollback attempt. The system3-g1-product-rc2 release controller remains stopped before activation while its successful Linux build supplies cache for the corrected revision.

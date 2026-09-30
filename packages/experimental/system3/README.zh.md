@@ -61,7 +61,7 @@ const decision = ctx.system3.route(candidates, 'local-9b')
 
 `skillSelection` 在原生 `agent/pre-step` 扩展点为下游保留的用户输入选择至多一个当前作用域允许模型调用的 Skill。配置包含 `sessionDataClasses`、`minConfidence`、`maxInputBytes`、`maxContentBytes`、`maxCandidates`（1–254）和 `deadlineMs`。Jev 读取当前文本及完整且有界的目录描述，不读取 Skill 正文或会话历史。稳定候选 id 为独立弃权选项保留位置。隐私拒绝、发现不完整、目录超限、低置信度、超时、元数据过期或正文超限时，保留原生模型与工具流程。目录超过 `maxCandidates` 时不声称自动搜索过全部 Skill；显式 `/name` 调用继续使用自身调用策略。
 
-`system3/skill-decision` 记录准确请求、验证后的响应与提供方报告的用量、选择结果，以及拟注入的原生 `injectionMessageId`。加载的正文采用 `skill-invocation` 指令，只有 loop 提交准确的 `user/message` 后才成为模型可见内容，不授予工具权限。`system3Runtime` wire 投影分别呈现 `entry.suggested`、`entry.adopted` 和 `entry.used`，并区分 `skill.selected` 与 `skill.injected`。实际使用须由准确输入所属 turn 的模型输出或非空流式 attempt 确认；仅准入不代表已发送模型请求。回放会重建这些事实而不调用 Jev，客户端无法从投影取得提供方原始输入或完整概率。
+`system3/skill-decision` 记录准确请求、验证后的响应与提供方报告的用量、选择结果，以及拟注入的原生 `injectionMessageId`。加载的正文采用 `skill-invocation` 指令，只有 loop 提交准确的 `user/message` 后才成为模型可见内容，不授予工具权限。`system3Runtime` wire 投影分别呈现 `entry.suggested`、`entry.adopted` 和 `entry.used`，并区分 `skill.selected` 与 `skill.injected`。实际使用须由准确输入所属 turn 的模型输出，或含内容增量、完整内容块的流式 attempt 确认。用量、块占位及仅含结束错误或取消的记录不证明已收到响应；真实内容之后发生错误仍保留响应事实。仅准入不代表已发送模型请求。回放会重建这些事实而不调用 Jev，客户端无法从投影取得提供方原始输入或完整概率。
 
 <a id="understand-the-implementation"></a>
 ## 实现说明
