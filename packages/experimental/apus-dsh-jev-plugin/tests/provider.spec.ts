@@ -25,7 +25,8 @@ describe('System One provider', () => {
     const result = await provider.decide(request)
     expect(result.answers.decision).toMatchObject({ type: 'choice', choice: 'keep' })
     expect(captured?.url).toBe('http://127.0.0.1:30135/v1/systemone')
-    expect(captured?.init?.headers).toEqual({ 'content-type': 'application/json', authorization: 'Bearer test-key' })
+    expect(new Headers(captured?.init?.headers).get('authorization')).toBe('Bearer test-key')
+    expect(new Headers(captured?.init?.headers).get('content-type')).toBe('application/json')
     expect(JSON.parse(typeof captured?.init?.body === 'string' ? captured.init.body : '{}')).toMatchObject({ model: 'jev-test', effort: 'low' })
   })
 
@@ -71,6 +72,49 @@ describe('System One provider', () => {
     abort.abort(new Error('cancelled'))
     await expect(provider.decide(request, abort.signal)).rejects.toThrow('cancelled')
     expect(calls).toBe(0)
+  })
+
+  it('uses the official SDK without OpenJev effort or automatic retries', async () => {
+    let calls = 0
+    const provider = new SystemOneProvider({
+      id: 'official', endpoint: 'https://api.typesafe.ai/v1', protocol: 'typesafe',
+      model: 'jev-latest', effort: 'high', timeoutMs: 1000,
+      resolveApiKey: async () => 'fixture-key',
+      fetcher: async (input, init) => {
+        calls += 1
+        expect(String(input)).toBe('https://api.typesafe.ai/v1/systemone')
+        expect(JSON.parse(String(init?.body))).not.toHaveProperty('effort')
+        expect(new Headers(init?.headers).get('x-typesafe-sdk')).toBe('typesafe-sdk/0.6.0')
+        return response({ error: 'private detail' }, 503)
+      },
+    })
+    await expect(provider.decide(request)).rejects.toMatchObject({ failure: { code: 'http', status: 503 } })
+    expect(calls).toBe(1)
+  })
+
+  it('includes credential resolution in the timeout and prevents late network dispatch', async () => {
+    let resolveKey: ((key: string) => void) | undefined
+    let calls = 0
+    const provider = new SystemOneProvider({
+      id: 'test', endpoint: 'http://localhost', model: 'jev-test', effort: 'high', timeoutMs: 5,
+      resolveApiKey: () => new Promise((resolve) => { resolveKey = resolve }),
+      fetcher: async () => { calls += 1; return response({}) },
+    })
+    await expect(provider.decide(request)).rejects.toMatchObject({ failure: { code: 'timeout' } })
+    resolveKey?.('late-key')
+    await Promise.resolve()
+    expect(calls).toBe(0)
+  })
+
+  it('never sends a placeholder credential and validates malformed SDK responses', async () => {
+    const provider = new SystemOneProvider({
+      id: 'test', endpoint: 'http://localhost', model: 'jev-test', effort: 'high', timeoutMs: 1000,
+      fetcher: async (_input, init) => {
+        expect(new Headers(init?.headers).has('authorization')).toBe(false)
+        return new Response('private upstream HTML', { status: 200 })
+      },
+    })
+    await expect(provider.decide(request)).rejects.toMatchObject({ failure: { code: 'invalid-response' } })
   })
 
 })

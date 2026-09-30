@@ -43,6 +43,7 @@ External packages installed for runtime use or distributed inside the prebuilt b
 | [`@fortune-sheet/react`](https://github.com/ruilisi/fortune-sheet) | MIT |
 | [`@joplin/turndown-plugin-gfm`](https://github.com/laurent22/joplin-turndown-plugin-gfm) | MIT |
 | [`@jridgewell/gen-mapping`](https://github.com/jridgewell/sourcemaps) | MIT |
+| [`@js-temporal/polyfill`](https://github.com/js-temporal/temporal-polyfill) | ISC |
 | [`@lexical/history`](https://github.com/facebook/lexical) | MIT |
 | [`@lexical/plain-text`](https://github.com/facebook/lexical) | MIT |
 | [`@lexical/text`](https://github.com/facebook/lexical) | MIT |
@@ -66,6 +67,7 @@ External packages installed for runtime use or distributed inside the prebuilt b
 | [`@standard-schema/spec`](https://github.com/standard-schema/standard-schema) | MIT |
 | [`@tanstack/react-virtual`](https://github.com/TanStack/virtual) | MIT |
 | [`@trycua/cua-driver`](https://github.com/trycua/cua) | MIT |
+| [`@typesafe-ai/sdk`](https://github.com/typesafe-ai/typesafe-sdk-js) | MIT |
 | [`@vscode/ripgrep`](https://github.com/microsoft/vscode-ripgrep) | MIT |
 | [`@xterm/addon-fit`](https://github.com/xtermjs/xterm.js/tree/master/addons/addon-fit) | MIT |
 | [`@xterm/addon-serialize`](https://github.com/xtermjs/xterm.js/tree/master/addons/addon-serialize) | MIT |

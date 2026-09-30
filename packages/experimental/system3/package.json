@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-experimental-system3",
   "description": "Cordis service composing the experimental System3 policy, evidence, and supervision seams",
-  "version": "0.1.7-rc.1",
+  "version": "0.1.7-rc.2",
   "publishConfig": {
     "access": "public"
   },

@@ -1,6 +1,55 @@
-# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
-# side as of the last confirmed-consistent state. Both languages carry equal authority;
-# after editing either side, bring the other along and re-record with:
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/experimental/apus-dsh-jev-plugin/README.md
-README.md: 6d1b140d8a7e113b0d5d4724b100ba72220c75c5
-README.zh.md: 6e731d26825c3713d07b711161915583fee1bbe4
+/:
+  en: 9c8f52383b801321
+  zh: 1480a1297d0beee0
+/deepseek-ai-dsh-experimental-apus-dsh-jev-plugin:
+  en: cbf9faccecd3cdef
+  zh: 13ebf4216e0e1ac0
+/deepseek-ai-dsh-experimental-apus-dsh-jev-plugin/summary:
+  en: 07e821c273b44cf2
+  zh: 5053715be91fc530
+/deepseek-ai-dsh-experimental-apus-dsh-jev-plugin/table-of-contents:
+  en: d152484eb41ac6b4
+  zh: 9fddfa200be6a5a2
+/deepseek-ai-dsh-experimental-apus-dsh-jev-plugin/use-this-package:
+  en: f6a25fdcc72d5e68
+  zh: 6a111ab7b3b25920
+/deepseek-ai-dsh-experimental-apus-dsh-jev-plugin/use-this-package/configure-the-gateway:
+  en: 4c61d3b571d6f9fc
+  zh: 1297d62b2d743c7a
+/deepseek-ai-dsh-experimental-apus-dsh-jev-plugin/use-this-package/ask-a-typed-question:
+  en: f5516c0eb45144e8
+  zh: de91370339c49a8d
+/deepseek-ai-dsh-experimental-apus-dsh-jev-plugin/understand-the-implementation:
+  en: e10efaf1a727652f
+  zh: 7cbd267340a44068
+/deepseek-ai-dsh-experimental-apus-dsh-jev-plugin/understand-the-implementation/source-map:
+  en: 05680c35f2e4239f
+  zh: fbbacee5d1f343af
+/deepseek-ai-dsh-experimental-apus-dsh-jev-plugin/further-exploration:
+  en: 7e47fa09daa0e726
+  zh: 11490250365bfd40
+/deepseek-ai-dsh-experimental-apus-dsh-jev-plugin/model-experience:
+  en: 215e7ba838619b7b
+  zh: a311da3843709f90
+/deepseek-ai-dsh-experimental-apus-dsh-jev-plugin/model-experience/typed-decision-sidecar:
+  en: 7a1d4d14b45cd02f
+  zh: fdae81fe7397063e
+/deepseek-ai-dsh-experimental-apus-dsh-jev-plugin/model-experience/typed-decision-sidecar/what-the-model-sees:
+  en: 5bbbece7e9707ac4
+  zh: 74768651ed716bee
+/deepseek-ai-dsh-experimental-apus-dsh-jev-plugin/model-experience/typed-decision-sidecar/token-effect:
+  en: 1036b1d68827ad57
+  zh: d204e8a0ed84a097
+/deepseek-ai-dsh-experimental-apus-dsh-jev-plugin/model-experience/typed-decision-sidecar/kv-cache-effect:
+  en: d524707248c9893c
+  zh: ac1eee6a9c3633eb
+/deepseek-ai-dsh-experimental-apus-dsh-jev-plugin/known-limitations-and-deferred-work:
+  en: 2ac8acb56ab3714a
+  zh: 78e1b5be6722fc1c
+/deepseek-ai-dsh-experimental-apus-dsh-jev-plugin/known-limitations-and-deferred-work/dev-note:
+  en: e67f633dc6fe7773
+  zh: e88aeb617ffb74ea

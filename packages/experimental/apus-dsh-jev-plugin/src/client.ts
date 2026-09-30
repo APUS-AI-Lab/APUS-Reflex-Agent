@@ -1,4 +1,5 @@
 /** HTTP System One provider for a local or remote vLLM-compatible Jev gateway. */
+import { TypeSafeClient, APIError, APITimeoutError, type Questions } from '@typesafe-ai/sdk'
 import { launchEnvironmentOf } from '@deepseek-ai/dsh-launch-environment'
 import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
 import { credentialRef } from '@deepseek-ai/dsh-credentials'
@@ -24,16 +25,14 @@ export interface SystemOneProviderOptions {
   readonly endpoint: string
   readonly model: string
   readonly effort: 'low' | 'high'
+  /** OpenJev supports effort; the official TypeSafe API omits that extension. */
+  readonly protocol?: 'openjev' | 'typesafe'
   readonly timeoutMs: number
   readonly apiKeyEnv?: string
   readonly fetcher?: JevFetch
   readonly resolveApiKey?: () => Promise<string | undefined>
 }
 
-function endpointUrl(endpoint: string): string {
-  const base = endpoint.replace(/\/+$/, '')
-  return base.endsWith('/v1') ? `${base}/systemone` : `${base}/v1/systemone`
-}
 
 function publicEndpoint(endpoint: string): string {
   try {
@@ -93,42 +92,70 @@ export class SystemOneProvider implements JevProvider {
   async decide(request: JevRequest, signal?: AbortSignal): Promise<JevResponse> {
     signal?.throwIfAborted()
     const normalized = validateJevRequest(request)
-    const key = this.options.resolveApiKey === undefined ? undefined : await this.options.resolveApiKey()
-    signal?.throwIfAborted()
+    if (typeof normalized.state === 'number' || typeof normalized.state === 'boolean') {
+      throw new JevProtocolError('SDK state must be text, an object, an array, or null')
+    }
+    const questions: Questions = {}
+    for (const [name, question] of Object.entries(normalized.questions)) {
+      if (question.type !== 'score') {
+        questions[name] = question
+      } else {
+        const [first, second, ...rest] = question.criteria
+        if (first === undefined || second === undefined) throw new JevProtocolError('score requires at least two levels')
+        questions[name] = { ...question, criteria: [first, second, ...rest] }
+      }
+    }
     const controller = new AbortController()
     const timer = setTimeout(() => { controller.abort() }, this.options.timeoutMs)
     const combined = signal === undefined ? controller.signal : AbortSignal.any([signal, controller.signal])
-    const { providerId: _providerId, ...wireRequest } = normalized
-    const body = { ...wireRequest, model: normalized.model ?? this.options.model, effort: normalized.effort ?? this.options.effort }
+    let abortWait: (() => void) | undefined
+    const cancelled = new Promise<never>((_resolve, reject) => {
+      abortWait = () => { reject(combined.reason) }
+      combined.addEventListener('abort', abortWait, { once: true })
+    })
     try {
-      const response = await this.fetcher(endpointUrl(this.options.endpoint), {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', ...key === undefined ? {} : { authorization: `Bearer ${key}` } },
-        body: JSON.stringify(body),
-        signal: combined,
+      const key = await Promise.race([this.options.resolveApiKey?.(), cancelled])
+      combined.throwIfAborted()
+      const client = new TypeSafeClient({
+        // The SDK requires a nonempty key even for explicitly unauthenticated local gateways.
+        // The transport below removes this placeholder instead of transmitting it.
+        apiKey: key ?? 'unauthenticated-local-gateway',
+        baseURL: this.options.endpoint.replace(/\/v1$/, ''),
+        defaultModel: this.options.model,
+        timeout: this.options.timeoutMs,
+        retry: { maxRetries: 0 },
+        logLevel: 'off',
+        fetch: (input, init) => {
+          const headers = new Headers(init?.headers)
+          if (key === undefined) headers.delete('authorization')
+          return this.fetcher(input, { ...init, headers })
+        },
       })
-      if (!response.ok) {
-        throw failure(response.status === 429 || response.status === 529 ? 'rate-limited' : 'http', `jev provider returned HTTP ${response.status}`, response.status)
+      const body = {
+        state: normalized.state,
+        questions,
+        model: normalized.model ?? this.options.model,
+        ...this.options.protocol === 'typesafe' ? {} : { effort: normalized.effort ?? this.options.effort },
       }
-      let raw: unknown
+      const raw = await Promise.race([client.systemOne(body, { signal: combined }), cancelled])
+      combined.throwIfAborted()
       try {
-        raw = await response.json()
+        return parseJevResponse(raw, normalized)
       } catch (error) {
-        throw failure('invalid-response', `jev provider returned non-JSON response (${response.status})`, response.status, error)
-      }
-      try {
-        return parseJevResponse(raw, body)
-      } catch (error) {
-        if (error instanceof JevProtocolError) throw failure('invalid-response', 'jev provider response failed validation', response.status, error)
+        if (error instanceof JevProtocolError) throw failure('invalid-response', 'jev provider response failed validation', undefined, error)
         throw error
       }
     } catch (error) {
       signal?.throwIfAborted()
-      if (controller.signal.aborted) throw failure('timeout', `jev provider timed out after ${this.options.timeoutMs}ms`)
+      if (controller.signal.aborted || error instanceof APITimeoutError) throw failure('timeout', `jev provider timed out after ${this.options.timeoutMs}ms`)
       if (error instanceof JevProviderError) throw error
+      if (error instanceof APIError) {
+        throw failure(error.status === 429 || error.status === 529 ? 'rate-limited' : 'http', `jev provider returned HTTP ${error.status}`, error.status)
+      }
       throw failure('transport', 'jev provider request failed', undefined, error)
     } finally {
       clearTimeout(timer)
+      if (abortWait !== undefined) combined.removeEventListener('abort', abortWait)
     }
   }
 }

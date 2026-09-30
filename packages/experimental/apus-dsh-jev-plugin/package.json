@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin",
   "description": "Experimental provider-neutral Jev decision service with a System One HTTP provider",
-  "version": "0.1.7-rc.1",
+  "version": "0.1.7-rc.2",
   "publishConfig": {
     "access": "public"
   },
@@ -39,7 +39,8 @@
     "@deepseek-ai/dsh-launch-environment": "workspace:*",
     "@deepseek-ai/dsh-timeout": "workspace:*",
     "@deepseek-ai/dsh-util-values": "workspace:*",
-    "@deepseek-ai/schemastery": "workspace:~"
+    "@deepseek-ai/schemastery": "workspace:~",
+    "@typesafe-ai/sdk": "0.6.0"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "workspace:~",
