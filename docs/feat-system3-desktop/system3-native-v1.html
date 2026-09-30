@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="System3：Jev Native + DSH Native 完整设计 v1.0。入口决策、有限过程判断、能力与记忆、长期目标，以及 dataelement 桌面和原生 Web 的联动。">
+<title>System3 原生混合架构 · v1.0 定稿候选</title>
+<style>
+:root{color-scheme:dark;--bg:#10151d;--panel:#19222d;--line:#334354;--text:#e8edf2;--muted:#b3c0ce;--jev:#6ce4b0;--dsh:#7bb9ff;--warn:#ffd38c}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.8 system-ui,-apple-system,"PingFang SC",sans-serif}main{max-width:1200px;margin:auto;padding:40px 28px 80px}a{color:var(--dsh);text-underline-offset:4px}h1{font-size:clamp(30px,5vw,48px);line-height:1.25;max-width:980px}h2{font-size:26px;line-height:1.4;margin:0 0 20px}h3{font-size:19px;margin:8px 0 12px}p{margin:10px 0 18px}.lead{font-size:21px;max-width:980px}.muted,small{color:var(--muted)}.eyebrow{color:var(--jev);letter-spacing:.1em;font-size:13px}.pill{display:inline-block;border:1px solid var(--line);border-radius:20px;padding:3px 12px;font-size:13px;margin:0 8px 8px 0}.status{color:var(--warn)}nav{display:flex;flex-wrap:wrap;gap:12px 20px;border-block:1px solid var(--line);padding:18px 0;margin:28px 0}section{padding:32px 0;border-bottom:1px solid var(--line);scroll-margin-top:20px}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.card,.callout{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px}.callout{border-left:4px solid var(--jev);margin:20px 0}.dsh{border-left-color:var(--dsh)}.caution{border-left-color:var(--warn)}.card p:last-child{margin-bottom:0}.table-scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:14px}th,td{text-align:left;vertical-align:top;border:1px solid var(--line);padding:13px 16px}th{background:var(--panel);font-weight:600}td:first-child{min-width:130px}code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--jev);font-size:.88em;overflow-wrap:anywhere}pre{padding:20px;background:#0b1016;border:1px solid var(--line);border-radius:10px;white-space:pre-wrap;overflow-wrap:anywhere;font:13px/1.7 ui-monospace,monospace}li{margin-bottom:8px}details{margin:18px 0}summary{cursor:pointer;color:var(--dsh)}.flow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin:20px 0}.flow .node{border:1px solid var(--line);border-radius:10px;padding:18px;background:var(--panel);position:relative}.flow .node:not(:last-child):after{content:'→';position:absolute;right:-15px;top:30px;color:var(--muted)}.node strong{display:block}.node small{display:block;font-size:13px;margin-top:8px}.node.jev{border-color:var(--jev)}.node.owner{border-color:var(--dsh)}.spine{border:1px dashed var(--dsh);padding:16px;border-radius:10px;text-align:center;color:var(--dsh)}.branches{display:flex;gap:12px;flex-wrap:wrap;margin:16px 0}.branches span{border:1px solid var(--line);padding:8px 14px;border-radius:8px}.demo{background:#0d141d;border:1px solid var(--line);border-radius:14px;padding:24px}.toolbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap}label{color:var(--muted);font-size:14px}select,button{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:10px 14px;font:inherit}button{cursor:pointer}button:hover{border-color:var(--jev)}button:focus-visible,select:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid var(--jev);outline-offset:4px}.chat{border-top:1px solid var(--line);margin-top:20px;padding-top:20px}.timeline{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:16px 0}.stage{padding:15px;border:1px solid var(--line);border-radius:8px}.stage strong{display:block;color:var(--jev)}.stage span{font-size:14px}.foot{font-size:13px;color:var(--muted)}.split{display:grid;grid-template-columns:1.5fr 1fr;gap:18px}.criteria{font-size:14px}.note{color:var(--warn)}@media(max-width:800px){main{padding:24px 18px 50px}.grid,.split{grid-template-columns:1fr}.flow{grid-template-columns:1fr}.flow .node:not(:last-child):after{content:'↓';top:auto;bottom:-20px;left:50%;right:auto}.timeline{grid-template-columns:1fr 1fr}table{min-width:680px}}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}@media print{body{background:white;color:#182334}main{max-width:none;padding:0}.muted,small,.foot{color:#415166}.card,.callout,.demo,th,.flow .node{background:#f5f7fa;color:#182334}nav,button{display:none}section{break-inside:avoid}a{color:#155ea0}.timeline,.flow{break-inside:avoid}}
+</style>
+</head>
+<body><main>
+<header>
+<div class="eyebrow">xDAN SYSTEM3 HARNESS · JEV NATIVE + DSH NATIVE</div>
+<h1>把快速判断融入原生执行，<br>让每一次采用都有真实反馈</h1>
+<p class="lead">System3 = System1（Jev-like 有界决策模型）+ System2（高性能推理与生成模型）。第一目标是入口选对模型与处理路径；第二目标是执行过程中，能力、记忆和跟进选择更合适。</p>
+<span class="pill">设计版本 v1.0</span><span class="pill">2026-09-30</span><span class="pill">桌面优先：dataelement</span><span class="pill">目标底座：DSH 0.1.7-rc.2</span><span class="pill status">定稿候选 · 等待具体设计确认</span>
+<p class="muted">本页是本轮统一设计入口。产品代码当前仍为 rc.1 定制版，仅首期 Web/API 入口选模已交付。rc.2 升级、第二名桌面集成及下列扩展尚未实施。交互演示使用静态样例，不连接模型。</p>
+</header>
+<nav aria-label="方案目录"><a href="#goal">完整 Goal</a><a href="#architecture">原生架构</a><a href="#boundaries">决策范围</a><a href="#performance">速度与可恢复记忆</a><a href="#desktop">rc.2 与桌面</a><a href="#experience">体验联动</a><a href="#api">接口草案</a><a href="#delivery">交付与验收</a><a href="#review">审慎评审</a><a href="#sources">依据</a></nav>
+<section id="goal">
+<h2>1. 完整目标与本轮交付范围</h2>
+<div class="callout"><strong>完整后端 Goal</strong><p>用户输入经过有界入口选择，DSH 执行；过程中按需要选择技能与记忆、判断下一份诊断证据、维护目标进展。建议由所属原生服务校验并采用，桌面与 Web 从同一日志读取结果；取消、人工覆盖、重连与恢复保持一致。</p></div>
+<p><strong>用户体验目标：</strong>快速得到有效响应，较少的无效操作与返工，压缩后仍能继续任务而不反复解释关键事实。评审覆盖 DSH 的每个重要阶段；是否采用 Jev 取决于该阶段真实的语义判断价值与端到端收益，不按调用数量判定融合深度。</p>
+<div class="grid">
+<article class="card"><h3>已经实现</h3><p>Jev typed provider；隐私和模型候选准入；Web/API 空闲纯文本入口选模；单回合自动选择与恢复；持久决策和采用事件；真实 Jev 9B → Fidoo Flash/Pro 公开样例验证。</p><p class="foot">连通和行为已验证，质量、成本与延迟收益尚未证实。</p></article>
+<article class="card"><h3>本 Goal 的分阶段交付</h3><p>rc.2 对齐与 dataelement 桌面；自动/固定切换；真实决策卡；第一个过程节点；有来源的记忆选择；可用原生专家委派；会话内长期 Goal 维护与主动跟进。</p><p class="foot">逐个节点独立验收，整体以最终交付清单判定完成。</p></article>
+<article class="card"><h3>后续能力演进</h3><p>9B/27B 通用 Lead Agent 的本地事务执行、专业 Agent 编排；跨会话持久任务管理；关闭桌面后的后台唤醒及外部主动沟通。</p><p class="foot">属于完整产品方向，需模型工具能力、常驻运行时及通知渠道验证，不能由本轮会话内能力推断已经具备。</p></article>
+</div>
+<p>不引入 Duse 产品依赖，不迁入 agent-jev-pilot 代码。Pilot 仅提供经验参照。这里的 Cordis 插件是 DSH 内部能力组织方式，Jev 位于原生服务与事件流程中。</p>
+</section>
+<section id="architecture">
+<h2>2. 同一个 DSH 宿主，明确的决策与执行所有权</h2>
+<div class="flow" aria-label="System3 主架构：输入，规则，Jev，DSH采纳，结果">
+<div class="node"><strong>用户输入 / 新结果</strong><small>会话身份、目标版本、人工意图、工具结果、可读证据</small></div>
+<div class="node owner"><strong>DSH 形成合法候选</strong><small>权限、数据范围、服务可用性、容量和模态、预算规则</small></div>
+<div class="node jev"><strong>Jev 快速判断</strong><small>小候选集；choice / score；选择或弃权；有界输入</small></div>
+<div class="node owner"><strong>所属服务采用</strong><small>SessionController / Skill / 上下文 / Subagent / Goal；检查版本与取消</small></div>
+<div class="node"><strong>执行与结果反馈</strong><small>实际调用、上下文加载、输出或失败；持久事实；规则对照评测</small></div>
+</div>
+<div class="spine">统一 Session 日志与原生投影 → 桌面 / Web / SDK 回放；前端不调用 Jev、不重新计算路由、不自判任务完成</div>
+<div class="branches"><span>入口：模型 / 处理路径</span><span>过程：Skill / 相关记忆</span><span>失败后：下一份证据</span><span>目标：继续 / 等待 / 沟通建议</span></div>
+<div class="split"><div class="card"><h3>System1：Jev</h3><p>判断少量已描述的候选。它不生成完整工作计划，不执行工具，不分配权限，不读取全量日志，也不独立认定 Goal 已完成。规则无法区分候选、且大模型判断的成本明显高时才调用。</p></div><div class="card"><h3>System2 与 DSH</h3><p>System2 完成复杂推理、生成、工具调用和专业工作；DSH 维护任务状态、执行准入、持久化、取消、权限和预算。未来本地 Lead 是生成与编排角色，不能与 Jev 有界判断混为一谈。</p></div></div>
+<details><summary>可复制的 Mermaid 架构源码</summary><pre>flowchart LR
+  Input[输入或新的执行结果] --> Candidates[DSH规则生成合法候选]
+  Candidates --> Jev[Jev有界选择或弃权]
+  Jev --> Owner[所属原生服务校验与采用]
+  Owner --> Execute[模型 工具 Skill 上下文 Goal]
+  Execute --> Facts[持久日志与结果证据]
+  Facts --> Candidates
+  Facts --> UI[原生Conversation与投影]
+  UI --> Desktop[dataelement桌面]
+  UI --> Web[原生Web]
+  User[人工固定 暂停 排除] --> Owner</pre></details>
+<h3>接入时序必须尊重实际源码</h3>
+<pre>SessionController 输入准入 / 入口 Jev
+→ 安装本回合自动模型选择
+→ inbox claim
+→ systemPrompt.assemble（捕获模型配置，组装工具 schema）
+→ agent/pre-step（适合带来源的 Skill / 记忆上下文）
+→ agent/request → prepareCall
+→ user/message + request/header → 模型流
+→ 工具流水线 / tool/result → 下一步
+→ agent/turn-stopping → turn/end</pre>
+<p class="note">pre-step 时模型与工具配置已经组装。首期过程节点只选择有来源的上下文；不能在这个位置随意裁剪工具或切换模型。模型变更必须由原选模所有者在正确边界提交；现有已知错误恢复继续走 DSH 规则。</p>
+<p>Skill 消费者必须在原生 waterfall 中调用 <code>next()</code>，保留 reject/cancel 与 startsRequestSeries；与已有目录、显式 Skill 消费者明确排序。自动加载使用独立来源，统一识别已加载的内容版本以防重复注入。记录分别表达「已取得正文」与「已进入实际请求」；后续拒绝、取消或准备失败时，前者不能冒充后者。</p>
+</section>
+<section id="boundaries">
+<h2>3. Jev 在哪些环节值得接入</h2>
+<p>节点准入标准：输入足够小，候选足够明确，错误容易回退，选择能改变真实行为，并能与规则基线比较。初期建议候选上限 4、每个输入批次每类最多一次判断；它们作为可配置试验参数，不视作模型已验证的能力上限。</p>
+<div class="table-scroll"><table>
+<thead><tr><th>环节</th><th>Jev 的有限职责</th><th>原生所有者 / 实际动作</th><th>弃权与限制</th></tr></thead><tbody>
+<tr><td>入口模型路由<br>首要交付</td><td>在实际可用 Flash / Pro / baseline 中选一个；分类只用于解释处理类型。</td><td>SessionController 保证输入一次准入；原生 ModelSelection 安装本回合选择。</td><td>指代不明、输入超限或候选不合法则保留已准入 baseline；人工固定优先。不能把分类标签当任务成功。</td></tr>
+<tr><td>Skill / 场景选择<br>首个过程节点</td><td>从少量真实 skill 摘要中选一个或 none；用户显式 skill 直接优先。</td><td>ctx.skills.snapshot/get；复用加载语义，在 pre-step 形成带来源、可回放的上下文。</td><td>遵守 modelInvocable、Scope 和版本；自动来源不得伪造成用户手势。目录不完整不宣称穷尽最优；不因此启用不存在的工具。</td></tr>
+<tr><td>记忆相关性<br>后续核心切片</td><td>在规则检索出的少量记忆摘要中选择相关项；不要求它生成永久事实。</td><td>已有 SessionQuery / SessionReferenceResolver 取得来源；System3 上下文消费者限定范围并注入。</td><td>限定 Workspace / Session 可读范围；用户排除和过期记录由 Host 管理。全文检索不等同于语义长期记忆。</td></tr>
+<tr><td>上下文压缩<br>重要能力节点</td><td>对有来源的小块内容分类为保留原文 / 可摘要 / 按需查回，评估局部相关性与遗漏风险。</td><td>ctx.compaction 的 provider/consumer 处理压缩事务与原生替换；System2 或已验证的摘要器生成正文，规则保护明确事实与工具配对。</td><td>Jev 不生成全量摘要，不独立证明语义无损。必需事实、来源或版本检查失败就不提交替换；原生 fallback 也必须通过同一检查。保留现有 surface，必要时升级或请求补充，受取消和预算控制。</td></tr>
+<tr><td>失败后诊断<br>后续过程切片</td><td>在「读错误详情 / 检查相关文件 / 查看已有测试结果 / 无建议」中选择下一份证据。</td><td>读取已结算 tool/result；下一 pre-step 注入建议，System2 通过已有工具取得证据。</td><td>不自动重放未知幂等性的写操作；不抢 overflow compaction、image offload 和 adapter retry。先 shadow 再采用。</td></tr>
+<tr><td>专业 Agent 路由<br>基础委派切片</td><td>在声明能力满足条件的少量实际 provider 中选择；一开始只验证一个任务族。</td><td>ctx.subagents；父子 runId、上下文交接、取消、结果回传和最终答复仍由原生生命周期维护。</td><td>未安装的 Codex/Claude provider 不进入候选。模型别名不能代替专业委派；不能让同一输入在父子两处重复执行。</td></tr>
+<tr><td>Goal 跟进<br>完整目标维护</td><td>依据 Goal revision 与有限真实证据，建议继续、等待用户补充或报告当前进展。</td><td>ctx.goals + goal-round-driver；CAS 更新、暂停、恢复、实际续轮与预算由 Host 控制。</td><td>Jev 不认定完成、不自写目标。已完成由独立验收证据或用户确认决定；turn/end 仅表示回合收尾。</td></tr>
+<tr><td>主动沟通<br>会话内先行</td><td>在已有重要变化、重复失败或等待输入时，分类为需要报告 / 可合并 / 暂不报告。</td><td>现有 live Session follow-up 与 Schedule；Host 负责去重、频率限制和取消。</td><td>排队不等于用户已读。cold 会话后台唤醒、外部通知与跨会话 Goal 单独设计；不宣称已有。</td></tr>
+</tbody></table></div>
+<div class="callout caution"><strong>明确由规则或 System2 负责的部分</strong><p>权限、隐私准入、候选服务是否存在、取消、幂等性、价格计算、预算限制和独立验收使用确定规则；复杂规划、代码修复、深层推理、最终答案生成由 System2 或经验证的本地 Lead 负责。Jev 分数尚未校准，不能显示成成功率。</p></div>
+<h3>控制复杂度的方法</h3>
+<ol><li>先保留固定基线；没有多个可比较候选时不调用 Jev。</li><li>入口只读必要输入；指代任务可以增加有限、带来源的上下文，超限时弃权，不能悄悄截断关键内容。</li><li>只在新输入、新结果或 Goal revision 变化时触发；不对每个 token 或每个事件调用。</li><li>同一批次去重，超时、取消、无效返回和旧版本建议不能迟到采用；成本、输入大小和调用次数由显式配置限制。</li><li>每个节点独立证明收益后再默认启用；无收益节点可以保留 opt-in 或直接删除。</li></ol>
+</section>
+<section id="performance">
+<h2>速度与记忆：用户可感知的原生融合</h2>
+<p>当前 Jev provider 真实支持 <code>choice</code>（合法候选选择）、<code>score</code>（有序语义等级）与 <code>noul</code>（二值命题分数），以及有界问题、分布与 usage。它不是现成的长文生成压缩器。三种接口按节点需要使用，不为覆盖所有协议而增加请求；相关判断可在同一有界 state 中合并，批量是否节省延迟需实测。</p>
+<h3>让 Agent 使用起来更快</h3>
+<div class="grid"><article class="card"><h3>入口与能力</h3><p>选适合的模型，明确 Skill 与专家候选，减少错误路径和返工。已有有效选择不在每一步重复评估；模式固定时入口不增加 Jev 请求。</p></article><article class="card"><h3>上下文与记忆</h3><p>小候选相关性判断，减少无关历史装载；关键事实保留原文，按需恢复来源。沿用 DSH 的稳定前缀与压缩机制，避免无谓改变请求前缀；不凭架构推断已命中缓存。</p></article><article class="card"><h3>反馈与跟进</h3><p>及时显示实际阶段与可撤销状态，避免用户重复提交；有限诊断减少盲目重试，Goal 基于真实变化跟进，停止无进展空转。</p></article></div>
+<p>以首次有效响应、端到端完成耗时、返工次数和成功率为主要指标；同时记录 Jev 额外耗时、超时、弃权、上下文 tokens 与费用。视觉反馈更及时不等于任务执行更快；压缩省下的 tokens 要扣除判断、摘要与查回的总开销。Jev 仍走串行关键路径的部分必须计入延迟。</p>
+<h3>「无损」的分层实现与验收</h3>
+<div class="table-scroll"><table><thead><tr><th>层次</th><th>可承诺的行为</th><th>验证方式</th></tr></thead><tbody>
+<tr><td>原始记录保存</td><td>压缩不删除已经持久化的原文与必要附件；保持来源、范围和内容校验信息。</td><td>压缩前后逐项读取、核对内容与可访问性；原来未记录或已经过期的外部内容不冒充可恢复原文。</td></tr>
+<tr><td>明确的关键事实</td><td>用户约束、Goal revision、验收条件、精确标识、路径和关键数值作为受保护内容或带来源的原文引用保留。</td><td>由明确声明与原文提取形成必需项；确定性对照确认存在与来源正确，缺少任一必需项不得采用该次摘要。不能仅靠 Jev 分数放行。</td></tr>
+<tr><td>摘要与按需恢复</td><td>摘要保留原始范围和 sourceRef；信息不足时取得原文或补充上下文。</td><td>测试恢复与回放、来源拒绝/缺失、长程事实问答和任务续做；上下文容量不足时应显式升级或请求补充，不能偷偷丢弃必需事实。</td></tr>
+<tr><td>语义任务质量</td><td>以压缩后任务质量不退化为目标，持续评测遗漏、矛盾和用户重复解释。</td><td>与完整上下文基线比较。摘要加可恢复来源不等于模型始终看见全部事实，不承诺任意语义的数学零损失。</td></tr>
+</tbody></table></div>
+<pre>已持久原文与来源
+→ 规则保护明确事实、权限、工具配对与容量
+→ Jev 对少量块做保留/摘要/查回选择，或弃权
+→ 原生 compaction 摘要器生成候选
+→ 检查必需事实、来源与版本；不通过则不采用
+→ DSH 持久压缩事务和上下文替换
+→ 续做任务与按需原文恢复；结果回到同一证据链</pre>
+<p>DSH 现有压缩保留被遮蔽的 Session 原文，已有基础。此次目标是沿原生 compaction 能力改善内容选择、必需事实保护与恢复体验。触发压力、错误恢复和事务所有权继续由原生机制维护；调用 Jev 的块大小、次数、超时和压缩收益阈值均可配置。是否能比现有压缩更快、更稳需要真实对照。</p>
+<p class="foot">源码依据：<a href="../../packages/experimental/apus-dsh-jev-plugin/src/types.ts">Jev 当前 typed 协议</a>、<a href="../../packages/compaction/compaction/README.zh.md">原生 Compaction</a>与<a href="../../packages/compaction/compaction-basic/src/summarizer.ts">摘要调用与前缀复用实现</a>。</p>
+</section>
+<section id="desktop">
+<h2>4. 第二名桌面载体与 rc.2 对齐</h2>
+<p>选定 <a href="https://github.com/dataelement/dsh-desktop">dataelement/dsh-desktop</a> 的交互与桌面载体。它通过 Electron 子进程调用 DSH CLI 的 Web profile，复用原生 Conversation；并未实现另一套 AgentLoop。System3 决策保留在后端，Electron IPC 继续只处理目录选择、窗口、重启、更新等桌面操作。</p>
+<div class="flow" aria-label="桌面打包链路">
+<div class="node"><strong>dataelement 桌面壳</strong><small>锁定来源版本，保留许可证；采用所需界面与安全启动能力</small></div>
+<div class="node owner"><strong>System3 自有运行时</strong><small>同源 rc.2 DSH 包、Jev 服务和 System3 bundle；生产依赖闭包</small></div>
+<div class="node owner"><strong>dsh Web profile</strong><small>通过原生 CLI 启动；正常与安全模式的可信 composition</small></div>
+<div class="node"><strong>原生 API 与 Web</strong><small>会话控制、鉴权、日志、投影与 Client Modules</small></div>
+<div class="node"><strong>桌面 / 浏览器</strong><small>同一 Host、同一决策事实、同一呈现机制</small></div>
+</div>
+<div class="callout dsh"><strong>对齐源码与产物，不能只改版本字符串</strong><p>实际共同祖先核对确认我们基于 rc.1 追加了定制提交；rc.1→rc.2 有 346 个提交、3433 个文件变化，其中包含大量双语和生成文件。我们的定制变化与升级交叠 46 个文件，需要重点复核 SessionController、CLI、目录生成器、SDK 回放和 Python smoke。</p></div>
+<p>桌面当前还带 25 个 rc.2 DSH 补丁，加上 Cordis loader 与 undici 补丁共 27 个。SessionController 的 handle 保留、删除、preset fallback 会影响恢复和销毁；Conversation 外框与模型搜索也有补丁。不能简单替换 package.json 后假定兼容。</p>
+<ol><li><strong>先对齐核心。</strong>在独立工作分支合并正式 rc.2 源码，逐项保留 Jev router、取消、人工固定优先、单回合选择及持久事件；重跑相关行为与双 SDK 回放。</li><li><strong>建立桌面补丁映射。</strong>逐个标记：上游已覆盖、需要合入 System3 源码、仅桌面层需要、暂不采用。对自有源码已经合入的改动不再次 patch-package。</li><li><strong>由桌面加载自有产物。</strong>先以显式 runtime 路径做开发联调；安装包使用固定的私有本地包集合或已有生产运行时打包机制，确保加载路径、Client Modules 和 Host 均来自同一构建。具体复用打包脚本在 rc.2 核心合并后验证。</li><li><strong>安全模式保留可信基础。</strong>禁用第三方插件；保留原生会话与模型、System3 状态读取和自动模式控制。Jev provider 不可用时使用获准 baseline 并显示降级，不能把安全模式悄悄当完整 System3。</li><li><strong>更新原子匹配。</strong>桌面、Host、Client、Session schema 和 System3 特性版本共同记录在 build manifest。检测到错误运行时或混装依赖时启动失败并给恢复方式；开发联调与安装包分别验收。</li></ol>
+<p class="foot">只在隔离数据目录验证。历史 Session 世代保留，持久格式升级遵循原生相邻迁移；共享 CLI/桌面数据前核实实际 profile 和凭据兼容。PPT、市场和远程访问是桌面配套功能，按需组合，不替代 Jev 核心验收。</p>
+<p>可信安全 profile 独立保留 System3 持久事件解码、回放与投影消费者；禁用 Jev provider 不得导致既有 Session 无法读取。provider 不可用时，新输入使用获准 baseline 并显示降级，正常模式的自动意图不被覆写。验收覆盖「已有 System3 日志 → 安全模式打开 → 正确回放 → 降级输入」，不能通过忽略旧事件或换回 stock DSH 恢复。</p>
+</section>
+<section id="experience">
+<h2>5. 前后端联动：让用户看懂真实决策</h2>
+<p>输入框优先扩展已有模型选择器，提供自动决策与固定模型；自动模式显示 baseline 和允许候选。恢复自动走 Host API，而不是假装重新选择 baseline。已开始的请求保持其生效配置，新的模式在明确的下一准入边界生效。</p>
+<div class="demo" aria-label="静态交互原型">
+<div class="eyebrow">方案演示 · 静态样例 · 不代表后端执行</div>
+<div class="toolbar"><label for="mode">处理模式</label><select id="mode"><option value="auto">自动决策 · baseline Flash</option><option value="fixed">固定模型 · Pro</option></select><label for="sample">演示状态</label><select id="sample"><option value="applied">复杂任务：选 Pro 并有输出</option><option value="prepared">请求已准备：尚无输出</option><option value="fallback">Jev 弃权：沿用 Flash</option><option value="gap">历史缺档：采用状态待确认</option><option value="cancel">用户取消：停止准入</option></select></div>
+<div class="chat"><strong>用户任务</strong><p id="demo-input">请评估现有实现的升级风险，并给出可验证的迁移方案。</p><p id="demo-policy" class="muted">当前模式：自动。Host 生成合法候选，Jev 只选模型。</p>
+<div id="demo-timeline" class="timeline" role="status" aria-live="polite"></div>
+<details><summary>查看过程与 Goal 反馈样例</summary><p><strong>能力上下文：</strong>选用迁移检查 Skill；Host 已加载，来源和内容版本有记录。它不代表新增工具权限。</p><p><strong>记忆上下文：</strong>引用该 Workspace 的已有接口约束；可展开来源或排除，排除应由 Host 持久化。</p><p><strong>Goal：</strong>迁移方案已输出，真实回归尚未通过；目标继续保持 active。Jev 可以建议下一份证据，不能据这次输出标记完成。</p><p class="foot">以上全部是待实现界面的静态示意数据。</p></details></div>
+</div>
+<h3>呈现与数据约束</h3>
+<div class="table-scroll"><table><thead><tr><th>用户看到</th><th>后端事实来源</th><th>禁止误导</th></tr></thead><tbody>
+<tr><td>自动 / 固定；何时生效</td><td>Host 持久模式与 revision；API 返回 effectiveFrom；原生选模投影。</td><td>不能根据当前模型名推测用户意图；不能把 UI 本地状态当全局事实。</td></tr>
+<tr><td>建议、采用、请求与输出</td><td>决策回执、原生采用事件、有效 request/header、assistant/message 或 attempt。</td><td>header 只证明配置已准备；输出完成不等于任务验收通过。</td></tr>
+<tr><td>Skill / 记忆实际使用</td><td>Host 的加载或注入回执、来源、版本、请求关联；模型可见内容可从 Session 重建。</td><td>仅推荐不能写「已加载」；只是前端隐藏不能写「已排除」。</td></tr>
+<tr><td>Goal 进展与暂停 / 恢复</td><td>ctx.goals 的 revision/phase、独立检查、实际续轮记录。</td><td>恢复后的 disarmed 不显示成持续运行；turn/end、follow-up 排队不等于完成。</td></tr>
+<tr><td>延迟、分数与费用</td><td>实测耗时、provider usage；有价目来源才计算费用。</td><td>分数不能称成功率；估算与实际区分，缺失费用显示未知。</td></tr>
+</tbody></table></div>
+<p>Client 使用原生 ConversationNodeDefinition 与 <code>conversation.chat.node</code>，侧栏复用现有 slot；dataelement 的 workbench frame 包装唯一 Conversation。持久记录用于刷新和回放，瞬态决策中状态由同一 Host 请求所有者发布。UI 不因重连重新调用 Jev。</p>
+<pre>system3/entry-decision.requestId
+→ model/automatic-selection.requestId
+→ user/message.source.rpcId
+→ 对应 turn/step 与当时有效的 request/header
+→ assistant/message / assistant/attempt / tool/result
+→ 明确验收证据（存在时）</pre>
+<p>分页缺失的记录先补档或显示未知。只有完整已结算区间才能判断没有采用。当前 Jev 响应没有自然语言理由，界面只呈现真实候选描述、规则过滤原因和结构化结果。</p>
+</section>
+<section id="api">
+<h2>6. 原生接口草案与状态模型</h2>
+<p class="note">本节是新增接口设计草案，名称与字段须在 rc.2 源码合并后定型；不是已经存在的公开 API。现有 session/prompt、SessionPromptRouter 与原生事件继续复用。</p>
+<div class="table-scroll"><table><thead><tr><th>建议接口 / 状态</th><th>输入与返回</th><th>行为约束</th></tr></thead><tbody>
+<tr><td>session/setRoutingMode</td><td>sessionId、expectedRevision、mode(auto/fixed)、fixedSelection；返回 revision、effectiveFrom。</td><td>Session 级 CAS，和 prompt admission 序列化。当前执行不被悄悄重路由；变更明确影响下一准入。恢复自动不改全局默认。</td></tr>
+<tr><td>system3 路由投影</td><td>mode、baseline、candidateVersion、currentDecision、nextPolicy、featureAvailability。</td><td>Client-safe、带 schema 与状态版本；不把完整私密请求体发送到通用展示投影。</td></tr>
+<tr><td>统一决策回执</td><td>decisionId、sessionId、input/turn/stepRefs、nodeKind、goalRevision、candidateVersion、outcome、selectedId、elapsed/usage。</td><td>输出只能引用合法候选或弃权；原始请求由受控日志保存用于重建。过期、取消、无候选和无效返回分别记录。</td></tr>
+<tr><td>原生采用回执</td><td>decisionId、owner、appliedAction/sourceRefs、outcome、reason、effectiveBoundary。</td><td>建议与采用分开。模型选择复用已有 model/automatic-selection，其他服务在完成实际加载、注入或交接后写回执。</td></tr>
+<tr><td>Memory 排除</td><td>session/workspace、sourceId、expectedRevision、作用范围。</td><td>持久化明确范围；新检索与准入都检查排除，UI 通过 Host 返回状态更新。</td></tr>
+<tr><td>Goal 维护</td><td>使用现有 Goal id/revision 与 phase API；补预算和检查引用。</td><td>原生续轮所有权不变；重启与 fork 的 disarmed 保留，用户明确恢复后继续。Jev 建议不得直接变成 done。</td></tr>
+</tbody></table></div>
+<h3>一个有界过程判断示例</h3>
+<pre>输入：本批次明确任务 + 当前可见的最多 4 个 Skill 摘要 + 目录版本
+合法候选：migration-review / api-check / test-analysis / none
+Jev 输出：一个候选 ID，或 none；结构化分数仅用于诊断
+Host 采用：重查目录、作用域与 modelInvocable → 加载实际指令 → 带来源进入原生请求
+实际结果：日志证明加载与注入，真实任务评测判断是否有用
+弃权：保留原生 Skill 目录和 System2 自选行为</pre>
+<p>保持一个共享的回执与取消机制，按节点增加薄消费者；不先构建大型决策 DAG、第二任务数据库或独立总控循环。原生事件和 Session 持久类型变更同步 TypeScript/Python SDK 投影、回放与声明。</p>
+<h3>Goal 完成必须有同一后端验收入口</h3>
+<p>Host 保存与 Goal id/revision 绑定的非空必需检查集合、实际检查结果和可解析证据。模型工具只能申请完成；Remote API 与服务调用同样经过原生 Goal 完成控制，不能仅在外围 supervisor 检查。未声明检查集合、证据为空或不存在、结果未通过、revision 过期时均不自动完成。用户确认走能识别人类身份的明确授权路径，不能允许模型通过布尔字段伪造人工确认。</p>
+</section>
+<section id="delivery">
+<h2>7. 完整后端 Goal 的里程碑与完成标准</h2>
+<div class="table-scroll"><table><thead><tr><th>阶段</th><th>交付</th><th>必须成立的验收</th></tr></thead><tbody>
+<tr><td>G0：设计收敛<br>本次交付</td><td>统一 v1.0 HTML、源码审计、独立评审、工作区计划与交接。</td><td>当前状态、实现范围、接口草案、测试和模型限制明确；用户确认具体设计后开始产品实现。</td></tr>
+<tr><td>G1：底座与桌面</td><td>正式 rc.2 源码对齐；dataelement 桌面加载自有 System3 运行时；补丁映射及可信安全 profile。</td><td>开发与安装包均运行正确产物；入口、取消、恢复、Session 迁移与双 SDK 行为回归；不能加载回 stock DSH。</td></tr>
+<tr><td>G2：入口完整闭环</td><td>自动/固定切换、Jev 入口选模、真实决策卡和 Host/Client 投影。</td><td>人工覆盖、取消、并发、卸载和重启一致；建议→采用→请求→输出对应。附件/排队/steering 支持或保留基线须明确，不能宣称全入口已覆盖。</td></tr>
+<tr><td>G3：第一个过程节点</td><td>Skill 候选选择与实际加载，先 shadow，验证后采用。</td><td>真实变化进入模型可见日志；显式 Skill 优先；有目录失效、Scope、取消和弃权测试；规则对照不降低任务质量。</td></tr>
+<tr><td>G4：基础记忆、压缩与诊断</td><td>带来源的记忆选择；原生 compaction 的有限内容分类、明确事实保护与原文查回；失败后下一份证据分类。</td><td>可读范围、来源版本、排除、去重和输入限制有效；压缩前后必需事实与原文恢复通过；不编造永久事实、不重放写工具；真实采用可回放。</td></tr>
+<tr><td>G5：委派与长程 Goal</td><td>一个可用专家任务族的完整交接；同 Session Goal 进展、暂停/恢复、实际续轮与会话内沟通。</td><td>父子归属和取消正确；不重复执行；Goal CAS、预算和独立验收；无进展不空转；重启 disarmed 与 live Schedule 限制准确呈现。</td></tr>
+<tr><td>G6：整体完成</td><td>跨节点真实任务、桌面/Web 回放一致、基线评测、完整构建与交接。</td><td>所有必需行为、真实链路及回归通过；有可复现使用说明与失败恢复。没有数据就不宣称收益。弱节点禁用或删去，并在 Goal 验收明确原因。</td></tr>
+</tbody></table></div>
+<p>本 Goal 的完成包括 G1—G6 的后端行为，不能以 HTML、决策展示或一个连通样例替代。headless/SDK/ACP 输入适配单独验证；现阶段它们的回放能力不证明已启用入口自动路由。未来本地 Lead、跨 Session Goal 与外部通知另立验证里程碑。</p>
+<p>可以移除无收益的候选节点，但 G6 仍要求至少一个经规则对照验证、实际采用、改变后端行为且可回放的中间节点；全部停留在 shadow 或全部禁用时，完整 Goal 不算完成。</p>
+<h3>拟修改文件与责任范围</h3>
+<div class="table-scroll"><table><thead><tr><th>路径范围</th><th>责任</th></tr></thead><tbody>
+<tr><td><code>package.json</code>、workspace/lockfile、上游正式 rc.2 变更</td><td>源码、依赖、schema 和生成目录对齐；不是只改 version。</td></tr>
+<tr><td><code>apps/system3-desktop/</code>（拟新增）及生产运行时打包脚本</td><td>固定 dataelement 来源、许可证、桌面适配与 runtime manifest。优先复用已验证 DSH 包装机制，避免第二执行核心。</td></tr>
+<tr><td><code>packages/api/session-controller/</code></td><td>自动/固定模式、CAS、生效边界、取消与原生选模；整合必要桌面补丁。</td></tr>
+<tr><td><code>packages/experimental/system3*/</code>与既有 Jev provider</td><td>有限决策消费者、预算、回执、上下文与独立验收；修复 supervisor 空检查及证据引用缺口。</td></tr>
+<tr><td><code>packages/experimental/system3-ui/</code>（拟新增）</td><td>Host/Client 明确分面，原生 Conversation 节点、路由控制、来源和 Goal 呈现；全部产品文案使用 typed locale。</td></tr>
+<tr><td>原生 Skill、Compaction、Goal、Subagent 消费者与相关投影</td><td>优先组合已有接口；压缩选择与必需事实检查落在所属 provider；确有缺口时做最小服务扩展并更新全部消费者。</td></tr>
+<tr><td>相关 tests、snapshots、TypeScript/Python SDK、持久类型声明</td><td>真实准入与执行、日志回放、重启及升级兼容证据。</td></tr>
+<tr><td><code>docs/feat-system3-desktop/</code>、<code>tasks/feat-system3-desktop/</code></td><td>本轮设计交付物与里程碑交接集中保存；实现后更新受影响 README/JSDoc 与双语记录。</td></tr>
+</tbody></table></div>
+<h3>验证计划</h3>
+<ul><li><strong>行为测试：</strong>自动/固定切换、Jev 超时/弃权/无效输出、取消、并发、旧 revision、插件卸载、冷恢复；无 router 时保持原生行为。</li><li><strong>过程测试：</strong>Skill 调用策略、Scope、目录不完整和过期；记忆可读范围与来源、排除；工具失败的非幂等性；Goal CAS、暂停、无进展、预算和验收。</li><li><strong>回放与 UI：</strong>keyless Session snapshots、双 SDK expected outputs；header 未成功、分页缺档、断线重连、未知状态、macOS/Windows 窗口布局和手机窄屏。</li><li><strong>真实链路：</strong>实际 Jev 9B 与指定 Fidoo proxy；桌面开发和安装包；正确 provider/模型/上下文采用及实际输出。私密数据只使用明确准入的路径。</li><li><strong>收益评测：</strong>固定模型、确定规则、规则+Jev，同一候选/证据/预算；每个首期节点先用约 30 个分层样例做试点，扩大样本后才作一般收益结论；比较成功率、返工、弃权、p50/p95 和每成功任务总成本。</li><li><strong>工程门禁：</strong>每批运行相关 build/lint/行为检查；按影响补 doc-sync 与持久化声明；每次 push 前 Ruff 双检查和正常 pre-push。远端 CI 未执行不能称为通过。</li></ul>
+<p class="foot">通过几次路由样例只能证明功能链路。初期没有预设“9B 一定快”或“必然省钱”的结论；输入摘要、网络与额外判断都计入端到端开销。</p>
+</section>
+<section id="review">
+<h2>8. 多层评审与实现可行性</h2>
+<div class="grid"><article class="card"><h3>架构可行性</h3><p>入口 router 已在本仓库真实工作；Skill/来源上下文、Goal 与 Subagent 有原生机制。接入路径可实现，但每种行为需要自己的消费者与验收。不能由现有 shadow 库推断已具备全流程监督。</p></article><article class="card"><h3>模型能力限制</h3><p>少候选分类与选择是合理试验方向，尚未证明这个 Jev 9B 在每类任务上的可靠性。难例弃权，由 System2 接管；不依赖未校准分数授予控制权。</p></article><article class="card"><h3>产品与工程成本</h3><p>rc.2 和桌面补丁是当前主要风险；先统一产物再加节点。用户只需理解当前模式、实际采用、待办与恢复，默认不展示大量内部协议。</p></article></div>
+<h3>需要纠正的现有缺口</h3>
+<ul><li>现有人工选择没有恢复自动操作；当前 wire modelSelection 只有 lastUsed/next。需要后端模式状态，不能仅补按钮。</li><li>现有 entry-decision 与 shadow 投影不是完整 Client-safe 决策链；必须补真实采用、结果与缺档处理。</li><li>现有 supervisor 信任外部 checks，不能代替 verifier。空必需检查、过期或不存在的证据不能放行完成。</li><li>DSH Goal 默认没有费用/Token/时间预算；Schedule 只处理 live 根 Agent。长程可靠性要明确补预算与运行条件。</li><li>连接远程 GPU 的 Jev 9B 仍是远程执行；未来设备上本地 Lead 必须另行实测资源与工具能力。</li></ul>
+<p>以“规则没必要覆盖、System2 完整判断成本高、Jev 可以在小范围内可靠选择”为取舍标准。若某个节点规则已经足够、输入太长或错误成本高，就省掉该次 Jev 调用。设计深度来自真实的原生采用与结果闭环。</p>
+</section>
+<section id="sources">
+<h2>9. 源码依据与版本关系</h2>
+<p>本轮源码审计由三项独立任务完成：rc.2/桌面对齐、Jev 原生节点、前后端体验。以下链接用于核实事实；官方 Context7 文档来自当前 master，仅作交叉参考，最终实现依据固定 rc.2 源码。</p>
+<ul><li><a href="../feat-independent-harness/jev-native-dsh-native-plan.html">上一版完整专项方案</a>：保留产品历史目标；本页收敛桌面与完整后端交付。</li><li><a href="../feat-independent-harness/entry-routing-verification.html">已有入口行为验收</a>与<a href="../feat-independent-harness/web-ui-selection.html">此前 Web UI 选型</a>。</li><li><a href="../../packages/api/session-controller/src/prompt-router.ts">当前原生 prompt router</a>与<a href="../../packages/experimental/system3/src/entry-routing.ts">当前 Jev 入口消费者</a>。</li><li><a href="../../docs/architecture.md">DSH 本仓库架构</a>、<a href="../../packages/skill/skill/README.zh.md">Skill</a>、<a href="../../packages/goal/goal-round-driver/README.zh.md">Goal 续轮</a>、<a href="../../packages/schedule/schedule/README.zh.md">Schedule 限制</a>。</li><li><a href="https://github.com/dataelement/dsh-desktop/blob/main/package.json">桌面实际依赖</a>、<a href="https://github.com/dataelement/dsh-desktop/blob/main/docs/architecture.md">桌面架构</a>和<a href="https://github.com/dataelement/dsh-desktop/tree/main/patches">桌面补丁</a>。README 的 rc.1 描述不作为版本真源。</li><li><a href="https://github.com/deepseek-ai/deepseek-harness/tags">官方发布 tag</a>和<a href="https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/subsystems/conversation.zh.md">原生 Conversation 文档</a>。</li></ul>
+<p class="foot">设计交付后不自动宣称产品完成；具体实现须经过仓库 Development Preflight 的 Human Gate。设计确认后按 G1→G6 持续实施，里程碑写入同名 worktree 的 handoff，完成依据来自实际运行与独立验收。</p>
+</section>
+<footer><p>System3 的特点：Jev 在入口和少数有价值的中间节点做有界判断，DSH 用原生状态、权限和生命周期把判断变成真实工作。</p><p class="foot">本页 CSS、示意与交互内嵌，可离线阅读。链接需保留仓库目录或联网。交互样例不调用任何后端。</p></footer>
+</main>
+<script>
+const mode=document.querySelector('#mode');const sample=document.querySelector('#sample');const output=document.querySelector('#demo-timeline');const policy=document.querySelector('#demo-policy');
+const cases={applied:[['建议','Jev 选择 Pro'],['采用','Host 已采用 Pro'],['请求','Pro 请求配置已准备'],['结果','已有模型输出；尚待任务验收']],prepared:[['建议','Jev 选择 Pro'],['采用','Host 已采用 Pro'],['请求','Pro 请求配置已准备'],['结果','尚无输出，不能认定执行成功']],fallback:[['建议','Jev 弃权'],['采用','保留已准入 baseline'],['请求','Flash 请求配置已准备'],['结果','示例有输出；尚待验收']],gap:[['建议','决策记录存在'],['采用','未知，等待补历史'],['请求','缺档，无法确认'],['结果','未知，不能推断未采用']],cancel:[['建议','判断已取消'],['采用','未准入本次输入'],['请求','未开始请求'],['结果','用户取消；Goal 不算完成']]};
+function render(){const fixed=mode.value==='fixed';policy.textContent=fixed?'当前模式：固定 Pro。人工意图优先，入口跳过 Jev；恢复自动须调用 Host 模式 API。':'当前模式：自动。Host 生成合法候选，Jev 只选模型。';const stages=fixed?[['建议','人工固定：入口不调用 Jev'],['采用','Host 保留固定 Pro'],['请求','按实际请求记录呈现'],['结果','以输出和验收证据为准']]:cases[sample.value];output.replaceChildren(...stages.map(([title,text])=>{const item=document.createElement('div');item.className='stage';const h=document.createElement('strong');h.textContent=title;const p=document.createElement('span');p.textContent=text;item.append(h,p);return item;}));}mode.addEventListener('change',render);sample.addEventListener('change',render);render();
+</script>
+</body></html>

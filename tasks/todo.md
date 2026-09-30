@@ -79,3 +79,15 @@
 ### Web UI 与隔离修复 review
 
 完整构建、102 项相关测试、默认产品隔离、205 个 Cordis 配置、AG-UI built SDK 回放和真实 Web 鉴权 smoke 通过。文档快检 20/20、doc-sync 42/42、lint、依赖策略与包元数据通过，Ruff 双检查通过。UI 仅完成中文设计与原生／第三方源码审查，未安装候选插件或实现新 UI。独立评审纠正了 header 与执行成功的区别，以及缺档时不能推断未采用。交付保留工作分支，main 与常驻部署未变。
+
+## 第二名桌面与完整后端 Goal
+
+- [x] 用户选定 dataelement 桌面并允许对齐 rc.2；综合历史产品目标。
+- [x] 创建 feat-system3-desktop 隔离工作区并完成三项独立源码审计。
+- [x] 形成统一 v1.0 中文 HTML、交互示意、接口草案和 G1—G6 后端验收。
+- [x] 完成文档独立复核与浏览器验证，交付设计。
+- [ ] 具体设计确认后，按 [当前工作区计划](feat-system3-desktop/plan.md) 持续实施完整后端 Goal。
+
+### Review
+
+当前交付为设计，不代表 rc.2、桌面、记忆或长期目标后端已经打通。统一方案在 [system3-native-v1.html](../docs/feat-system3-desktop/system3-native-v1.html)，冷启动先读 [handoff](feat-system3-desktop/handoff.md)。

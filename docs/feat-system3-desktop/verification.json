@@ -1,0 +1,68 @@
+{
+  "checkedAtUtc": "2026-09-30T00:58:45.950593+00:00",
+  "scope": "Design review and unchanged rc.1 code baseline; no rc.2/desktop/new backend implementation",
+  "design": "docs/feat-system3-desktop/system3-native-v1.html",
+  "designSha256": "161a21db945ed62fb1c98464b00453b561b2e994aa0447c678016bc8857c4b19",
+  "implementationApproval": "pending",
+  "goalStatus": "active; backend requirements not yet complete",
+  "sourcePins": {
+    "system3CodeBase": "eec9dcd4b25b888adb8fd03a2af1e2a1330882cf",
+    "officialRc1": "46a7f68b0922371ce7144b668b90e377d8e799f4",
+    "officialRc2": "477b4f420553e8a52c2fbccc464d7561b239c443",
+    "dataelementDesktop": "9f943036258b7850ee02459705c9aba62320d990"
+  },
+  "reviews": {
+    "nativeArchitecture": "accepted after Goal all-path verification, Skill actual admission, and real intermediate-node requirements",
+    "hostClientExperience": "accepted after safe profile event-decoding independence",
+    "performanceAndCompaction": "bounded block decisions accepted; fallback must pass the same fact/source/version checks"
+  },
+  "checks": [
+    {
+      "command": "pnpm run test:docs",
+      "result": "20/20 passed"
+    },
+    {
+      "command": "pnpm run doc-sync",
+      "result": "42/42 passed"
+    },
+    {
+      "command": "pnpm run lint",
+      "result": "exit 0; includes Host build"
+    },
+    {
+      "command": "pnpm run lint:contracts-ready",
+      "result": "exit 0"
+    },
+    {
+      "command": "ruff check .",
+      "result": "passed"
+    },
+    {
+      "command": "ruff format --check .",
+      "result": "31 files already formatted"
+    },
+    {
+      "command": "pnpm exec tsx scripts/verify-md-wrap.ts",
+      "result": "2238 files checked"
+    },
+    {
+      "command": "HTML local/anchor link validation",
+      "result": "28 links; 15 ids; no external script; one trailing newline"
+    },
+    {
+      "command": "gstack browse static prototype verification",
+      "result": "9 assertions at 1360px and 390px; no document overflow; no console errors"
+    },
+    {
+      "command": "git merge-tree --write-tree --name-only HEAD <officialRc2>",
+      "result": "expected exit 1; conflicts previewed; no working-tree source merge"
+    }
+  ],
+  "notVerifiedThisTurn": [
+    "rc.2 runtime",
+    "dataelement installed desktop",
+    "new backend behavior",
+    "routing quality/cost benefit",
+    "semantic losslessness"
+  ]
+}
