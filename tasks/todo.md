@@ -84,8 +84,9 @@
 
 - [x] 用户选定 dataelement 桌面并允许对齐 rc.2；综合历史产品目标。
 - [x] 创建 feat-system3-desktop 隔离工作区并完成三项独立源码审计。
-- [x] 形成统一 v1.0 中文 HTML、交互示意、接口草案和 G1—G6 后端验收。
+- [x] 形成统一 v1.1 中文 HTML、交互示意、接口草案和 G1—G6 后端验收。
 - [x] 完成文档独立复核与浏览器验证，交付设计。
+- [x] 按用户补充统一正式 rc.2 与 TypeSafe SDK；官方、自有9B真实合成 smoke 和 DSH 响应解析通过。
 - [ ] 具体设计确认后，按 [当前工作区计划](feat-system3-desktop/plan.md) 持续实施完整后端 Goal。
 
 ### Review

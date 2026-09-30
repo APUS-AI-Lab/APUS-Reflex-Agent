@@ -2,20 +2,21 @@
   "checkedAtUtc": "2026-09-30T00:58:45.950593+00:00",
   "scope": "Design review and unchanged rc.1 code baseline; no rc.2/desktop/new backend implementation",
   "design": "docs/feat-system3-desktop/system3-native-v1.html",
-  "designSha256": "4c25df8920eec6d3fb2b02aaec1c6ffddd0b98d3bc96f3aa7b4ee8a32b2aab8f",
+  "designSha256": "2b5750c3764683fe3441a02d7af431f8e94a99cccec8fd46c7e1e87edb579668",
   "implementationApproval": "pending",
   "goalStatus": "active; backend requirements not yet complete",
   "sourcePins": {
     "system3CodeBase": "eec9dcd4b25b888adb8fd03a2af1e2a1330882cf",
     "officialRc1": "46a7f68b0922371ce7144b668b90e377d8e799f4",
     "officialRc2": "477b4f420553e8a52c2fbccc464d7561b239c443",
-    "dataelementDesktop": "9f943036258b7850ee02459705c9aba62320d990"
+    "dataelementDesktop": "9f943036258b7850ee02459705c9aba62320d990",
+    "typesafeSdk": "v0.6.0 / 66880ccded6cb642dc1809620c2b108c33730214"
   },
   "reviews": {
     "nativeArchitecture": "accepted after Goal all-path verification, Skill actual admission, and real intermediate-node requirements",
     "hostClientExperience": "accepted after safe profile event-decoding independence",
     "performanceAndCompaction": "bounded block decisions accepted; fallback must pass the same fact/source/version checks",
-    "jevSupplies": "accepted; one ctx.jev registry, self-hosted 9B and official protocol adapters; separate model/domain/quality verification"
+    "jevSupplies": "accepted; both supplies use official TypeSafe SDK; explicit root URL/model/credentials/logging/retry; preserve DSH runtime validation and total cancellation budget"
   },
   "checks": [
     {
@@ -48,15 +49,20 @@
     },
     {
       "command": "HTML local/anchor link validation",
-      "result": "29 links; 15 ids; no external script; one trailing newline; latest provider addendum checked"
+      "result": "32 links; 15 ids; no external script; one trailing newline; latest SDK addendum checked"
     },
     {
       "command": "gstack browse static prototype verification",
-      "result": "latest provider addendum: 9 assertions at 1360px and 390px; no document overflow; no console errors; fresh page used"
+      "result": "SDK addendum: 9 assertions at 1360px and 390px; no document overflow; fresh page used"
     },
     {
       "command": "git merge-tree --write-tree --name-only HEAD <officialRc2>",
       "result": "expected exit 1; conflicts previewed; no working-tree source merge"
+    },
+    {
+      "command": "Official TypeSafe SDK 0.6.0 synthetic live smoke and DSH parser",
+      "result": "official and self-hosted 9B: choice/score/noul, usage, actual model and probability checks passed; one sample each; temporary tunnel closed",
+      "record": "docs/feat-system3-desktop/jev-sdk-preflight.json"
     }
   ],
   "notVerifiedThisTurn": [
@@ -65,12 +71,14 @@
     "new backend behavior",
     "routing quality/cost benefit",
     "semantic losslessness",
-    "official Jev authenticated live chain and quality"
+    "both Jev supplies full native adoption/cancellation/replay integration and routing quality"
   ],
   "providerAddendumCheckedAtUtc": "2026-09-30T01:08:10.661568+00:00",
   "providerDocumentation": {
     "source": "https://docs.typesafe.ai/api",
     "verified": "native REST, Bearer, required instructions, Score 2–10, typed probability fields, model/usage receipt",
-    "authenticatedLiveCall": "not performed"
-  }
+    "authenticatedLiveCall": "official and self-hosted single synthetic SDK call passed; full native integration and quality not verified",
+    "sdkSource": "https://docs.typesafe.ai/sdk/javascript"
+  },
+  "sdkAddendumCheckedAtUtc": "2026-09-30T01:39:42.363590+00:00"
 }

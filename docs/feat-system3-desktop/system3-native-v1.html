@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="System3：Jev Native + DSH Native 完整设计 v1.0。入口决策、有限过程判断、能力与记忆、长期目标，以及 dataelement 桌面和原生 Web 的联动。">
-<title>System3 原生混合架构 · v1.0 定稿候选</title>
+<meta name="description" content="System3：Jev Native + DSH Native 完整设计 v1.1。入口决策、有限过程判断、能力与记忆、长期目标，以及 dataelement 桌面和原生 Web 的联动。">
+<title>System3 原生混合架构 · v1.1 定稿候选</title>
 <style>
 :root{color-scheme:dark;--bg:#10151d;--panel:#19222d;--line:#334354;--text:#e8edf2;--muted:#b3c0ce;--jev:#6ce4b0;--dsh:#7bb9ff;--warn:#ffd38c}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.8 system-ui,-apple-system,"PingFang SC",sans-serif}main{max-width:1200px;margin:auto;padding:40px 28px 80px}a{color:var(--dsh);text-underline-offset:4px}h1{font-size:clamp(30px,5vw,48px);line-height:1.25;max-width:980px}h2{font-size:26px;line-height:1.4;margin:0 0 20px}h3{font-size:19px;margin:8px 0 12px}p{margin:10px 0 18px}.lead{font-size:21px;max-width:980px}.muted,small{color:var(--muted)}.eyebrow{color:var(--jev);letter-spacing:.1em;font-size:13px}.pill{display:inline-block;border:1px solid var(--line);border-radius:20px;padding:3px 12px;font-size:13px;margin:0 8px 8px 0}.status{color:var(--warn)}nav{display:flex;flex-wrap:wrap;gap:12px 20px;border-block:1px solid var(--line);padding:18px 0;margin:28px 0}section{padding:32px 0;border-bottom:1px solid var(--line);scroll-margin-top:20px}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.card,.callout{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px}.callout{border-left:4px solid var(--jev);margin:20px 0}.dsh{border-left-color:var(--dsh)}.caution{border-left-color:var(--warn)}.card p:last-child{margin-bottom:0}.table-scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:14px}th,td{text-align:left;vertical-align:top;border:1px solid var(--line);padding:13px 16px}th{background:var(--panel);font-weight:600}td:first-child{min-width:130px}code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--jev);font-size:.88em;overflow-wrap:anywhere}pre{padding:20px;background:#0b1016;border:1px solid var(--line);border-radius:10px;white-space:pre-wrap;overflow-wrap:anywhere;font:13px/1.7 ui-monospace,monospace}li{margin-bottom:8px}details{margin:18px 0}summary{cursor:pointer;color:var(--dsh)}.flow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin:20px 0}.flow .node{border:1px solid var(--line);border-radius:10px;padding:18px;background:var(--panel);position:relative}.flow .node:not(:last-child):after{content:'→';position:absolute;right:-15px;top:30px;color:var(--muted)}.node strong{display:block}.node small{display:block;font-size:13px;margin-top:8px}.node.jev{border-color:var(--jev)}.node.owner{border-color:var(--dsh)}.spine{border:1px dashed var(--dsh);padding:16px;border-radius:10px;text-align:center;color:var(--dsh)}.branches{display:flex;gap:12px;flex-wrap:wrap;margin:16px 0}.branches span{border:1px solid var(--line);padding:8px 14px;border-radius:8px}.demo{background:#0d141d;border:1px solid var(--line);border-radius:14px;padding:24px}.toolbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap}label{color:var(--muted);font-size:14px}select,button{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:10px 14px;font:inherit}button{cursor:pointer}button:hover{border-color:var(--jev)}button:focus-visible,select:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid var(--jev);outline-offset:4px}.chat{border-top:1px solid var(--line);margin-top:20px;padding-top:20px}.timeline{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:16px 0}.stage{padding:15px;border:1px solid var(--line);border-radius:8px}.stage strong{display:block;color:var(--jev)}.stage span{font-size:14px}.foot{font-size:13px;color:var(--muted)}.split{display:grid;grid-template-columns:1.5fr 1fr;gap:18px}.criteria{font-size:14px}.note{color:var(--warn)}@media(max-width:800px){main{padding:24px 18px 50px}.grid,.split{grid-template-columns:1fr}.flow{grid-template-columns:1fr}.flow .node:not(:last-child):after{content:'↓';top:auto;bottom:-20px;left:50%;right:auto}.timeline{grid-template-columns:1fr 1fr}table{min-width:680px}}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}@media print{body{background:white;color:#182334}main{max-width:none;padding:0}.muted,small,.foot{color:#415166}.card,.callout,.demo,th,.flow .node{background:#f5f7fa;color:#182334}nav,button{display:none}section{break-inside:avoid}a{color:#155ea0}.timeline,.flow{break-inside:avoid}}
 </style>
@@ -14,8 +14,8 @@
 <div class="eyebrow">xDAN SYSTEM3 HARNESS · JEV NATIVE + DSH NATIVE</div>
 <h1>把快速判断融入原生执行，<br>让每一次采用都有真实反馈</h1>
 <p class="lead">System3 = System1（Jev-like 有界决策模型）+ System2（高性能推理与生成模型）。第一目标是入口选对模型与处理路径；第二目标是执行过程中，能力、记忆和跟进选择更合适。</p>
-<span class="pill">设计版本 v1.0</span><span class="pill">2026-09-30</span><span class="pill">桌面优先：dataelement</span><span class="pill">目标底座：DSH 0.1.7-rc.2</span><span class="pill status">定稿候选 · 等待具体设计确认</span>
-<p class="muted">决策模型供给：自有 Jev 9B 与官方 Jev 原生 API，共用同一原生决策/采用机制；部署地点、协议参数和质量基线分别验证。</p>
+<span class="pill">设计版本 v1.1</span><span class="pill">2026-09-30</span><span class="pill">桌面优先：dataelement</span><span class="pill">目标底座：DSH 0.1.7-rc.2</span><span class="pill status">定稿候选 · 等待具体设计确认</span>
+<p class="muted">决策模型供给：自有 Jev 9B 与官方 Jev 原生 API，统一通过官方 TypeSafe SDK 接入，共用同一原生决策/采用机制；部署地点、协议参数和质量基线分别验证。</p>
 <p class="muted">本页是本轮统一设计入口。产品代码当前仍为 rc.1 定制版，仅首期 Web/API 入口选模已交付。rc.2 升级、第二名桌面集成及下列扩展尚未实施。交互演示使用静态样例，不连接模型。</p>
 </header>
 <nav aria-label="方案目录"><a href="#goal">完整 Goal</a><a href="#architecture">原生架构</a><a href="#boundaries">决策范围</a><a href="#performance">速度与可恢复记忆</a><a href="#desktop">rc.2 与桌面</a><a href="#experience">体验联动</a><a href="#api">接口草案</a><a href="#delivery">交付与验收</a><a href="#review">审慎评审</a><a href="#sources">依据</a></nav>
@@ -42,14 +42,18 @@
 <div class="spine">统一 Session 日志与原生投影 → 桌面 / Web / SDK 回放；前端不调用 Jev、不重新计算路由、不自判任务完成</div>
 <div class="branches"><span>入口：模型 / 处理路径</span><span>过程：Skill / 相关记忆</span><span>失败后：下一份证据</span><span>目标：继续 / 等待 / 沟通建议</span></div>
 <div class="split"><div class="card"><h3>System1：Jev</h3><p>判断少量已描述的候选。它不生成完整工作计划，不执行工具，不分配权限，不读取全量日志，也不独立认定 Goal 已完成。规则无法区分候选、且大模型判断的成本明显高时才调用。</p></div><div class="card"><h3>System2 与 DSH</h3><p>System2 完成复杂推理、生成、工具调用和专业工作；DSH 维护任务状态、执行准入、持久化、取消、权限和预算。未来本地 Lead 是生成与编排角色，不能与 Jev 有界判断混为一谈。</p></div></div>
-<h3>一套决策服务，两种 Jev 供给</h3>
-<div class="split"><article class="card"><h3>自有 Jev 9B</h3><p>现有自有模型通过 System One 兼容服务接入；可部署在设备、内网或自有远程 GPU。providerId、模型/checkpoint、实际执行域与接口能力由配置明确；9B 的真实分类与选择质量单独评测。</p></article><article class="card"><h3>官方 Jev 原生 API</h3><p>通过 TypeSafe 的原生 <code>POST https://api.typesafe.ai/v1/systemone</code> 与 Bearer 凭据接入。官方模型供给、响应事实与 usage 单独记录，复用同一 DSH 候选、取消、采用与回放机制。官方链路尚未实测。</p></article></div>
+<h3>一套决策服务、一个官方 SDK，两种 Jev 供给</h3>
+<div class="split"><article class="card"><h3>自有 Jev 9B</h3><p>自有模型经官方 TypeSafe SDK 的自定义 baseURL 连接 System One 兼容服务；可部署在设备、内网或自有远程 GPU。providerId、模型/checkpoint、实际执行域与接口能力由配置明确；9B 的真实分类与选择质量单独评测。</p></article><article class="card"><h3>官方 Jev 原生 API</h3><p>通过同一个官方 <code>@typesafe-ai/sdk</code> 的 <code>TypeSafeClient.systemOne()</code> 接入官方服务。官方模型供给、响应事实与 usage 单独记录，复用同一 DSH 候选、取消、采用与回放机制。官方 SDK 的单次真实鉴权与三类问题 smoke 已通过；不是路由质量或整体验收。</p></article></div>
 <pre>自有 Jev 9B 服务 ─┐
-                 ├→ 一个 ctx.jev Provider Registry → 有界决策节点 → DSH 所属服务采用
+                 ├→ 官方 TypeSafe SDK → 一个 ctx.jev Registry → 有界决策节点 → DSH 所属服务采用
 官方原生 Jev API ─┘
 System2：Fidoo / 其他生成 Provider → 原生 ctx.llm → 推理、生成与工具执行</pre>
-<p>已有 <code>ctx.jev.register / resolve / decide</code> 支持 provider 注册与请求绑定；新增官方供给使用薄协议适配，不重复注册第二个 Jev 总服务。每次请求先固定 provider 与请求模型引用，再按该供给的数据执行域做准入；响应回执记录实际返回模型。不得把自有模型配置标签当作实际供给，或静默向官方云回退。</p>
+<p>已有 <code>ctx.jev.register / resolve / decide</code> 支持 provider 注册与请求绑定；两种供给共用 Host 侧 SDK provider，以显式 baseURL/model/凭据配置区分，不分别维护自定义 HTTP 客户端；不重复注册第二个 Jev 总服务。现有 provider 仍是直接 Fetch，实现阶段须替换并更新消费者和测试。每次请求先固定 provider 与请求模型引用，再按该供给的数据执行域做准入；响应回执记录实际返回模型。不得把自有模型配置标签当作实际供给，或静默向官方云回退。</p>
 <p>官方文档已核对：原生请求要求 state/model/questions；问题须有 instructions；Score 接受 2—10 级。自有服务的 effort 等扩展参数不能未经验证发送给官方。适配器按各供给能力校验和序列化，输出仍规范化为 typed answer，不伪造缺失分数、分布或 usage。参见<a href="https://docs.typesafe.ai/api">官方 API 参考</a>。</p>
+<h3>TypeSafe SDK 接入约束</h3>
+<p>核对官方 <a href="https://docs.typesafe.ai/sdk/javascript">JavaScript/TypeScript SDK</a> 与 <a href="https://github.com/typesafe-ai/typesafe-sdk-js/tree/v0.6.0">v0.6.0 源码</a>。首期固定 SDK 0.6.0 并记录 lockfile；DSH Core、Host、Client、System3 和桌面 runtime 统一正式 <strong>0.1.7-rc.2</strong>，不能混装 rc.1，外部 SDK 使用自己的版本体系。</p>
+<ul><li><strong>显式配置。</strong>baseURL 是 API 根地址，SDK 会追加 /v1/systemone；不可重复写 /v1。两种供给各自传入 baseURL、model、apiKey、日志和重试配置，不依赖全局 TYPESAFE_* 回退串用供给。SDK 强制 Bearer；无鉴权自有 gateway 也必须验证其对显式非秘密占位 key 的兼容，官方密钥只发往官方供给。</li><li><strong>输入与响应校验。</strong>显式构建 SDK 请求，只发送 state/model/questions 及获准扩展，不能展开整个 JevSpec。SDK 会透传额外字段，自有 effort 仅在确认支持后发送。state 顶层限字符串、对象、数组或 null；如需规范化必须记录实际模型可见输入。保留 DSH 候选、概率、Score/legend、模型与 usage 校验；SDK JSON 解析后的静态类型不替代运行时检查。</li><li><strong>取消和总预算。</strong>SDK 单次 timeout 不含总重试预算；DSH 传入覆盖整个调用的 AbortSignal 与总截止。入口首期明确 maxRetries=0，其他节点只能配置一个重试所有者并受同一预算限制；过期响应不能采用。</li><li><strong>Host 所属。</strong>SDK 只进入 Host provider，不启用浏览器调用。显式控制 SDK logger/logLevel，禁用通用请求/响应正文日志；受控 Session 日志承担重建。客户端仅接收经过过滤的来源、健康与采用投影。</li></ul>
+<p class="note">真实预检：官方 SDK 0.6.0 用公开合成状态调用一次，jev-latest 返回 jev-1.13.0；Choice/Score/Noul、概率分布及 usage 检查通过，耗时1369ms（单样本，不代表 p50/p95）。自有 gateway 经独立凭据和临时 SSH 通道，使用同一 SDK 返回 APUS-OpenJev-v1-9B-5949；三类问题和 usage 检查通过，耗时563ms。两种响应均通过现有 DSH 运行时解析器；临时通道已关闭。两次单样本不能用于供给优劣或总体速度结论。结果见<a href="jev-sdk-preflight.json">不含凭据的预检记录</a>。</p>
 <p>配置与回执包含 providerId、requestedModel、实际返回 model、协议/候选版本、执行域、耗时与真实 usage。<code>jev-latest</code> 是别名，不能视为永久冻结模型。自有 9B 与官方的分数阈值、校准及延迟各自评测；切换供给不自动复用另一供给的质量结论。</p>
 <p class="foot">前端可在设置中选择决策供给、查看健康与降级状态，决策卡默认简洁并在展开时显示实际来源。凭据保存在 Host 管理的 credential store，不发送给客户端。额外远程供给只有在相应数据类别获准时才能进入候选；无获准供给时保留原生 baseline。</p>
 <details><summary>可复制的 Mermaid 架构源码</summary><pre>flowchart LR
@@ -186,10 +190,10 @@ Host 采用：重查目录、作用域与 modelInvocable → 加载实际指令 
 <section id="delivery">
 <h2>7. 完整后端 Goal 的里程碑与完成标准</h2>
 <div class="table-scroll"><table><thead><tr><th>阶段</th><th>交付</th><th>必须成立的验收</th></tr></thead><tbody>
-<tr><td>G0：设计收敛<br>本次交付</td><td>统一 v1.0 HTML、源码审计、独立评审、工作区计划与交接。</td><td>当前状态、实现范围、接口草案、测试和模型限制明确；用户确认具体设计后开始产品实现。</td></tr>
+<tr><td>G0：设计收敛<br>本次交付</td><td>统一 v1.1 HTML、源码审计、独立评审、工作区计划与交接。</td><td>当前状态、实现范围、接口草案、测试和模型限制明确；用户确认具体设计后开始产品实现。</td></tr>
 <tr><td>G1：底座与桌面</td><td>正式 rc.2 源码对齐；dataelement 桌面加载自有 System3 运行时；补丁映射及可信安全 profile。</td><td>开发与安装包均运行正确产物；入口、取消、恢复、Session 迁移与双 SDK 行为回归；不能加载回 stock DSH。</td></tr>
 <tr><td>G2：入口完整闭环</td><td>自动/固定切换、Jev 入口选模、真实决策卡和 Host/Client 投影。</td><td>人工覆盖、取消、并发、卸载和重启一致；建议→采用→请求→输出对应。附件/排队/steering 支持或保留基线须明确，不能宣称全入口已覆盖。</td></tr>
-<tr><td>Jev 供给验收<br>贯穿 G1—G6</td><td>自有 9B 与官方原生 API 两种部署；单一 typed 决策服务；实际来源与质量配置。</td><td>两种 provider 分别验证 choice/score/noul、请求限制、取消、认证/限流/无效返回与回放。真实 API 鉴权调用需实际凭据；未实测不能称对应供给验收通过。切换不覆盖当前回合，不越过数据准入。</td></tr>
+<tr><td>Jev 供给验收<br>贯穿 G1—G6</td><td>自有 9B 与官方均走同一 TypeSafe SDK；单一 typed 决策服务；实际来源与质量配置。</td><td>两种 SDK 配置分别验证 choice/score/noul、baseURL 路径、独立凭据、输入/响应校验、总截止/取消、限流、重试和回放。官方合成 smoke 已通过，自有 SDK smoke 也已通过，但两者完整采用链尚未通过；逐项验证后才能宣称对应供给验收。切换不覆盖当前回合，不越过数据准入。</td></tr>
 <tr><td>G3：第一个过程节点</td><td>Skill 候选选择与实际加载，先 shadow，验证后采用。</td><td>真实变化进入模型可见日志；显式 Skill 优先；有目录失效、Scope、取消和弃权测试；规则对照不降低任务质量。</td></tr>
 <tr><td>G4：基础记忆、压缩与诊断</td><td>带来源的记忆选择；原生 compaction 的有限内容分类、明确事实保护与原文查回；失败后下一份证据分类。</td><td>可读范围、来源版本、排除、去重和输入限制有效；压缩前后必需事实与原文恢复通过；不编造永久事实、不重放写工具；真实采用可回放。</td></tr>
 <tr><td>G5：委派与长程 Goal</td><td>一个可用专家任务族的完整交接；同 Session Goal 进展、暂停/恢复、实际续轮与会话内沟通。</td><td>父子归属和取消正确；不重复执行；Goal CAS、预算和独立验收；无进展不空转；重启 disarmed 与 live Schedule 限制准确呈现。</td></tr>
@@ -202,6 +206,7 @@ Host 采用：重查目录、作用域与 modelInvocable → 加载实际指令 
 <tr><td><code>package.json</code>、workspace/lockfile、上游正式 rc.2 变更</td><td>源码、依赖、schema 和生成目录对齐；不是只改 version。</td></tr>
 <tr><td><code>apps/system3-desktop/</code>（拟新增）及生产运行时打包脚本</td><td>固定 dataelement 来源、许可证、桌面适配与 runtime manifest。优先复用已验证 DSH 包装机制，避免第二执行核心。</td></tr>
 <tr><td><code>packages/api/session-controller/</code></td><td>自动/固定模式、CAS、生效边界、取消与原生选模；整合必要桌面补丁。</td></tr>
+<tr><td><code>packages/experimental/apus-dsh-jev-plugin/src/client.ts</code>、manifest/lockfile 与 provider tests</td><td>使用官方 TypeSafe SDK 替换直接 Fetch，两种供给统一客户端；保留 DSH 校验、取消和来源记录，更新受影响公开类型/消费者。</td></tr>
 <tr><td><code>packages/experimental/system3*/</code>与既有 Jev provider</td><td>有限决策消费者、预算、回执、上下文与独立验收；修复 supervisor 空检查及证据引用缺口。</td></tr>
 <tr><td><code>packages/experimental/system3-ui/</code>（拟新增）</td><td>Host/Client 明确分面，原生 Conversation 节点、路由控制、来源和 Goal 呈现；全部产品文案使用 typed locale。</td></tr>
 <tr><td>原生 Skill、Compaction、Goal、Subagent 消费者与相关投影</td><td>优先组合已有接口；压缩选择与必需事实检查落在所属 provider；确有缺口时做最小服务扩展并更新全部消费者。</td></tr>
@@ -209,7 +214,7 @@ Host 采用：重查目录、作用域与 modelInvocable → 加载实际指令 
 <tr><td><code>docs/feat-system3-desktop/</code>、<code>tasks/feat-system3-desktop/</code></td><td>本轮设计交付物与里程碑交接集中保存；实现后更新受影响 README/JSDoc 与双语记录。</td></tr>
 </tbody></table></div>
 <h3>验证计划</h3>
-<ul><li><strong>行为测试：</strong>自动/固定切换、Jev 超时/弃权/无效输出、取消、并发、旧 revision、插件卸载、冷恢复；无 router 时保持原生行为。</li><li><strong>过程测试：</strong>Skill 调用策略、Scope、目录不完整和过期；记忆可读范围与来源、排除；工具失败的非幂等性；Goal CAS、暂停、无进展、预算和验收。</li><li><strong>回放与 UI：</strong>keyless Session snapshots、双 SDK expected outputs；header 未成功、分页缺档、断线重连、未知状态、macOS/Windows 窗口布局和手机窄屏。</li><li><strong>真实链路：</strong>实际 Jev 9B 与指定 Fidoo proxy；桌面开发和安装包；正确 provider/模型/上下文采用及实际输出。私密数据只使用明确准入的路径。</li><li><strong>收益评测：</strong>固定模型、确定规则、规则+Jev，同一候选/证据/预算；每个首期节点先用约 30 个分层样例做试点，扩大样本后才作一般收益结论；比较成功率、返工、弃权、p50/p95 和每成功任务总成本。</li><li><strong>工程门禁：</strong>每批运行相关 build/lint/行为检查；按影响补 doc-sync 与持久化声明；每次 push 前 Ruff 双检查和正常 pre-push。远端 CI 未执行不能称为通过。</li></ul>
+<ul><li><strong>行为测试：</strong>自动/固定切换、Jev 超时/弃权/无效输出、取消、并发、旧 revision、插件卸载、冷恢复；无 router 时保持原生行为。</li><li><strong>过程测试：</strong>Skill 调用策略、Scope、目录不完整和过期；记忆可读范围与来源、排除；工具失败的非幂等性；Goal CAS、暂停、无进展、预算和验收。</li><li><strong>回放与 UI：</strong>keyless Session snapshots、双 SDK expected outputs；header 未成功、分页缺档、断线重连、未知状态、macOS/Windows 窗口布局和手机窄屏。</li><li><strong>真实链路：</strong>自有 Jev 9B 与官方 Jev 都通过 TypeSafe SDK；System2 使用指定 Fidoo proxy；桌面开发和安装包；正确 provider/模型/上下文采用及实际输出。私密数据只使用明确准入的路径。</li><li><strong>收益评测：</strong>固定模型、确定规则、规则+Jev，同一候选/证据/预算；每个首期节点先用约 30 个分层样例做试点，扩大样本后才作一般收益结论；比较成功率、返工、弃权、p50/p95 和每成功任务总成本。</li><li><strong>工程门禁：</strong>每批运行相关 build/lint/行为检查；按影响补 doc-sync 与持久化声明；每次 push 前 Ruff 双检查和正常 pre-push。远端 CI 未执行不能称为通过。</li></ul>
 <p class="foot">通过几次路由样例只能证明功能链路。初期没有预设“9B 一定快”或“必然省钱”的结论；输入摘要、网络与额外判断都计入端到端开销。</p>
 </section>
 <section id="review">
