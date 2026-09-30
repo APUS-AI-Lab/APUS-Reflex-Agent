@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>System3 · 任务目标与 UI/UX 接入完成度复核</title>
+<style>
+:root{color-scheme:dark;--bg:#10151d;--panel:#19222d;--line:#334354;--text:#e8edf2;--muted:#b3c0ce;--green:#6ce4b0;--blue:#7bb9ff;--amber:#ffd38c}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.8 system-ui,-apple-system,"PingFang SC",sans-serif}main{max-width:1160px;margin:auto;padding:36px 24px 64px}h1,h2,h3,strong,th{font-weight:500}h1{font-size:clamp(28px,4vw,40px);line-height:1.35}h2{font-size:24px;line-height:1.5}h3{font-size:19px}a{color:var(--blue);text-underline-offset:4px;overflow-wrap:anywhere}code{color:var(--green);font-size:.9em;overflow-wrap:anywhere}p{margin:12px 0}nav{display:flex;flex-wrap:wrap;gap:10px 24px;padding:16px 0;border-block:1px solid var(--line)}section{padding:24px 0;border-bottom:1px solid var(--line)}.lead{font-size:21px}.muted,footer{color:var(--muted)}.eyebrow{color:var(--green);font-size:13px}.note{padding:12px 18px;border-left:3px solid var(--amber);background:var(--panel);margin:20px 0}.table-scroll{overflow-x:auto;border:1px solid var(--line);margin:20px 0}table{border-collapse:collapse;width:100%;min-width:820px;font-size:14px;line-height:1.7}th,td{text-align:left;vertical-align:top;padding:12px 15px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}th{background:var(--panel)}td:last-child,th:last-child{border-right:0}tr:last-child td{border-bottom:0}li{margin:10px 0}a:focus-visible,.table-scroll:focus-visible{outline:3px solid var(--blue);outline-offset:3px}footer{padding-top:20px;font-size:13px}@media(max-width:600px){main{padding:24px 16px 40px}.lead{font-size:18px}h2{font-size:22px}}@media print{body{background:white;color:#182334}main{max-width:none;padding:0}.table-scroll{overflow:visible}table{min-width:0;font-size:11px}th,.note{background:#f3f5f7}a{color:#175b94}.muted,footer{color:#45566a}tr{break-inside:avoid}}
+</style>
+</head>
+<body><main>
+<header>
+<p class="eyebrow">SYSTEM3 · 产品交付复核 · 2026-10-01</p>
+<h1>三层智能的目标已记录，<br>产品 UI/UX 与前端接入尚未完成</h1>
+<p class="lead">交付同一任务的完整体验：接得住目标，执行中实际调整，成果可检查，用户可干预，中断后可继续。</p>
+<p class="muted">本页为当前设计工作区与前端初始化分支的只读审查结论及待办参考。运行时、生产 UI 与部署未在本轮修改。既有入口实网验证和新公网 Jev 服务各有独立证据，不等同于桌面三层体验交付。</p>
+<nav aria-label="审查目录"><a href="#objective">任务目标</a><a href="#status">完成度</a><a href="#ux">交互缺口</a><a href="#integration">前端对接</a><a href="#delivery">实施顺序</a><a href="#acceptance">验收</a><a href="#evidence">证据范围</a></nav>
+<p><a href="system3-intelligence-design.html">三层机制与 API 草案</a> · <a href="system3-experience-v3.html">v3 离线工作台</a> · <a href="system3-native-v1.html">总架构</a> · <a href="../../tasks/feat-system3-desktop/plan.md">可勾选任务计划</a></p>
+</header>
+<section id="objective">
+<h2>1. 本次记录的任务目标</h2>
+<p>面向外部使用者交付 System3 Harness + Agent 工作台。入口智能、过程智能、体感智能共同贯穿提交、准入、执行、补充要求、阶段成果、控制和验收；三者不拆成独立功能页面。桌面优先，Web/API/双 SDK 共享任务事实与控制含义。</p>
+<ul>
+<li><strong>入口：</strong>在权限、材料范围和预算约束下，Jev 做有限候选判断；Fidoo 路由承担生成。用户能区分已提交、已收到、已准入、实际执行，固定选择和合法基线始终有效。</li>
+<li><strong>过程：</strong>Skill、来源明确的记忆、压缩保护和查回、失败取证、专业 Agent 与持续 Goal 实际改变工作；至少一个 Jev 过程节点必须真实采用，随后完成 G1—G6 全部约定范围。</li>
+<li><strong>体感：</strong>用户默认看到当前动作、成果、缺项与下一操作，能够调整、停止和恢复；界面根据真实事件变化，性能与费用按完整任务评估。</li>
+<li><strong>前端：</strong>复用 dataelement 桌面载体与唯一原生 Conversation，接入自有 Harness runtime 和共享 Client Module。部署位置、数据去向、凭据配置、版本与能力不匹配都能准确说明。</li>
+<li><strong>未来本机 Lead：</strong>通用 9B/27B 处理常用任务和本地数据，并提出专家编排指令；Harness 执行。其能力验证单列，不把 Jev 9B 决策 API 等同于通用生成模型。</li>
+</ul>
+</section>
+<section id="status">
+<h2>2. 哪些完成了，哪些没有</h2>
+<div class="table-scroll" tabindex="0" role="region" aria-label="完成度表，窄屏可横向滚动"><table><thead><tr><th>层面</th><th>已具备的证据</th><th>本轮结论</th></tr></thead><tbody>
+<tr><td>产品方向与架构</td><td>三层机制、所有者、调用图、状态草案与 G1—G6。</td><td>设计覆盖已建立；客户端模块位置、安装组合、首批任务族和部分交互仍需收敛。</td></tr>
+<tr><td>交互原型</td><td>v3 三任务回放、37 项浏览器状态断言、23 组布局样本；v2 66 项回归。</td><td>样例交互已验证；不等于生产交互定稿、真实文件处理或目标用户验收。</td></tr>
+<tr><td>现有模型后端</td><td>M1a 的 Jev 9B → Fidoo Flash/Pro 真实入口采用与输出；官方与自有 Jev 独立 SDK smoke。</td><td>部分链路真实成立；完整过程智能、SDK runtime 替换和所有入口覆盖未交付。</td></tr>
+<tr><td>Jev 公网服务</td><td>独立 ops 工作区 2026-09-30 公网 HTTPS 26 项验证，日常调用无需 SSH。</td><td>服务部署条件已有进展；本轮未重新探活，未证明桌面已采用新端点。无人值守重启恢复未配置。</td></tr>
+<tr><td>Frontend 产品接入</td><td>相对上游仅两份 Python 格式修改和两份初始化文档；未修改应用源码。</td><td>未完成自有 runtime、System3 UI、事件流和控制 API 装配。已有上游功能不能算新增产品交付。</td></tr>
+<tr><td>产品验收</td><td>尚无自有 System3 桌面安装包的完整任务证据或目标用户操作结果。</td><td>未完成。不用文件数、截图、接口健康或主观百分比替代验收。</td></tr>
+</tbody></table></div>
+<div class="note"><p>服务上线、模型调用成功、Harness 采用、UI 显示真实事实、用户完成任务分别验收。只读发现另一工作区进展时保留其来源，不自动合并运维代码或改变运行配置。</p></div>
+</section>
+<section id="ux">
+<h2>3. UI/UX 还需要做哪些关键收敛</h2>
+<p>当前 v3 主要用于验证状态语义，中心时间线包含 Host、准入、采用等工程事件。产品默认视图应优先服务任务和成果，把必要的权限选择放在动作前，把详细技术记录放入展开层。此前“完成三层设计”应理解为形成可评审方案，不能理解为全部交互已定稿。</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="交互缺口与验收表"><table><thead><tr><th>缺口 / 类型</th><th>生产交互取舍</th><th>完成证据</th></tr></thead><tbody>
+<tr><td>首次使用与真实材料<br>设计待补齐，接入待实现</td><td>首次启动说明 runtime/模型可用性和凭据状态；选择工作区、文件后区分路径、已读取版本、未读/失效。v3 仅读文件名，不能证明真实读取或隐私控制。</td><td>新用户在空配置、无合法模型、读取被拒、文件移动/变更、授权撤销时有可完成下一步；未批准内容不进入请求。</td></tr>
+<tr><td>对话、任务与持续 Goal<br>语义已设计，交互待收敛</td><td>运行中输入明确区分“补充当前任务”和“排入下一任务”；草稿修改何时生效就地说明。普通任务不强加 Goal；创建持续目标需要明确范围和授权。</td><td>忙碌输入、撤回排队、修订约束、多任务切换后归属正确；新任务保留旧任务成果，用户能指出下一段输入影响哪项工作。</td></tr>
+<tr><td>成果与信息密度<br>设计待收敛</td><td>默认一行当前动作、就近成果和缺项；普通选模记录折叠。按窗口高度安排固定可达的输入/控制区和局部滚动，长报告/差异保持阅读位置。</td><td>常用桌面窗口、缩放、长对话和多产物下不用翻找即可找到成果与停止；验收证据能打开并绑定被检查的成果版本；不能只检查横向无溢出。</td></tr>
+<tr><td>控制与异常<br>主要语义已设计，真实执行待接入</td><td>暂停/停止区分请求、生效与收尾；部分失败逐项说明仍在运行的对象。重连和重启保留待确认状态及原成果，禁止通过重新提交来假装恢复。</td><td>取消竞争、流中断、日志缺档、子任务未停止、过期 revision、重复点击和重启真实复现；不重复写入、不假报已停止。</td></tr>
+<tr><td>权限、预算与专家细节<br>设计覆盖存在，部分演示缺失</td><td>不同供给的数据去向分别说明；审批保留具体动作与材料范围。默认选项不等于已获批准，“允许脱敏片段”不能暗示系统已实现自动脱敏。预算未知可见；达到上限有可执行选择。专家未安装、失败、部分结果与交接范围分别呈现。</td><td>原型尚未完整演示的预算阻塞、排队和专家失败需补齐；产品测试验证被拒动作不执行，专家结果归属及父任务采用正确。</td></tr>
+<tr><td>等待节奏与返回提醒<br>策略需实测</td><td>立即本地回显，按真实回执更新状态；快速阶段可以合并，慢调用给持续可用的控制。离开后返回显示变化、成果和需参与事项，避免逐节点打扰。</td><td>以实际入口 payload、effort 和网络测量首次反馈/有效成果及总耗时；长等待、失败和后台返回均可理解。公网 high 三问题样本不可直接当入口延迟。</td></tr>
+<tr><td>原生交互与可访问性<br>原型部分通过，产品待验收</td><td>复用 locale、主题、Toast、侧栏 slot 和原生组件；区分中文输入法确认与发送。键盘、读屏、缩放、窗口安全区及减少动态效果有完整路径。</td><td>真实桌面逐项验证；现有 Token 对比度抽样和窄屏截图不等于完整无障碍或 macOS/Windows 验收。</td></tr>
+<tr><td>真实使用价值<br>未验证</td><td>用目标任务检验是否少解释、早见成果、出错能继续；用户不需要知道 Jev 或 Host 才能完成工作。</td><td>目标用户独立操作并说明当前状态、材料范围、成果、缺项与控制效果；记录误解和失败，修正后复测。</td></tr>
+</tbody></table></div>
+</section>
+<section id="integration">
+<h2>4. 前端对接不是给 HTML 加几个请求</h2>
+<p><strong>明确接入仓库：</strong><code>/Users/gumpm5/Documents/Code/xDAN-System3-Frontend</code>。用户已再次确认该前端目标，三层智能的产品交互必须落到这个仓库及其复用的原生 Client Modules 中。</p>
+<p>现有接入点已定位：<code>src/main/index.ts</code> 解析 <code>dshEntryPath</code>；<code>src/main/runtime/harness-runtime.ts</code> 启动原生 Web profile；<code>build/dsh-desktop.patch.yml</code> 装配模块；<code>packages/dsh-desktop-client-ui/</code> 已通过模块加载器扩展 Conversation/API 和原生 slots。当前加载的是官方 npm runtime，尚未装配自有 System3 产物。优先扩展这些已有位置，是否拆共享模块以代码复用和发布依赖为依据。</p>
+
+<p>v3 在浏览器内保存样例 sessions、phase 和成果，由“下一事件”推进；文件选择仅取文件名。这些代码用于设计回放。生产组件从 Harness 的原生身份、事件、投影与控制回执读取事实；本地只保留草稿、展开、焦点和阅读位置等 UI 状态。</p>
+<ol>
+<li><strong>运行时装配：</strong>固定桌面和自有 Harness 版本、补丁与产物来源，验证启动实际加载的 Host/Client/Core/System3。开发环境可运行不替代安装包可运行。</li>
+<li><strong>事件与投影：</strong>复用 SessionController 与现有流，贯通 request/turn/step、采用、使用、成果和子任务；按需要补收到状态、模式与生效点、控制结算。TaskView 仍是设计草案，先判断哪些字段可推导。</li>
+<li><strong>客户端模块：</strong>在现有 Conversation 与 sidebar slots 中实现共享 UI；后端导出类型，前端消费它们。模块注册、静态资源、locale 与能力发现都进入固定组合，不建立第二 AgentLoop。</li>
+<li><strong>真实操作：</strong>提交/补充/排队、模式切换、材料批准、取消/复合停止、恢复、来源排除逐项映射 API；对不支持的动作明确说明。后端确认前不能把控制画成成功。</li>
+<li><strong>持久与安全：</strong>覆盖断线补档、冷启动、能力缺失、凭据错误和历史日志读取；前端不直接持有 Jev/Fidoo 凭据，也不直接调用模型来绕过 Harness。</li>
+</ol>
+<p>字段草案、服务所有者和两仓职责以<a href="system3-intelligence-design.html#api">跨终端接口</a>及<a href="system3-intelligence-design.html#repositories">两仓职责</a>为准。本页不再定义一套 API。</p>
+</section>
+<section id="delivery">
+<h2>5. 接下来按完整任务分批交付</h2>
+<p>产品落码前优先收敛三项生产交互：运行中补充/另起任务、逐对象材料批准、部分停止失败后的恢复；它们决定任务归属、数据授权和用户控制。按目标用户操作观察检验，之后再固定对应组件与接口。</p>
+<p>G1—G6 范围保持完整。建议首批使用隔离工作区的接口升级核对任务；这是实施建议，尚未获得用户对任务族的单独确认。</p>
+<ol>
+<li><strong>G1：</strong>桌面加载自有运行时，完成模型和服务配置/健康/不可用反馈；核对公网 Jev 新端点与凭据引用，统一 SDK，分别验收开发与安装包。</li>
+<li><strong>G2 + G3 首条链：</strong>真实输入 → Jev 选模 → Fidoo → Skill 实际注入 → 阶段成果 → 必需检查；同步交付真实状态展示、固定切换、停止和中断恢复。</li>
+<li><strong>G4 + G5：</strong>每扩展记忆、诊断、专家和持续 Goal，同时扩展来源、权限、控制、异常和验收 UI。不能把 UI 接入全部留到后端做完。</li>
+<li><strong>G6：</strong>跨终端回放一致、真实安装包、多任务/长任务与目标用户验收；按规则/固定模型基线测量质量、总成本和返工。</li>
+</ol>
+<p>每批必须同时提交后端事实、界面表达、用户控制与失败恢复的证据。第一条链可用于提前验证价值，但不据此宣称整体目标完成。</p>
+</section>
+<section id="acceptance">
+<h2>6. UI/UX 与前端接入完成的判定</h2>
+<ul>
+<li>从真实桌面提交目标，所用材料、Jev 建议、Harness 采用、Fidoo 实际输出、过程使用和产物能追到同一任务。</li>
+<li>用户可以解释“现在做什么、谁在处理、什么材料已用、有哪些成果、还差什么、我能怎么干预”；界面不得依据缺失事件推断成功。</li>
+<li>模式、材料和批准的生效范围正确；超时、冲突、取消、部分失败、重连和重启都不丢失事实或重复执行。</li>
+<li>长内容与多任务不妨碍阅读、输入和控制；键盘、读屏、输入法、缩放和平台窗口适配通过真实产品检查。</li>
+<li>交互方案由目标用户任务验证；至少一个 Jev 过程节点真实采用，对照任务质量没有下降；效率收益只报告实际测量结果。</li>
+</ul>
+<p>上述行为清单在<a href="../../tasks/feat-system3-desktop/plan.md">工作区计划</a>持续勾选；所有项必须有明确证据，不能用原型截图或单独 API 成功替代。</p>
+</section>
+<section id="evidence">
+<h2>7. 本轮证据与限制</h2>
+<ul>
+<li><a href="../feat-independent-harness/entry-routing-verification.html">M1a 真实入口验收</a>记录 Jev 9B 与 Fidoo Flash/Pro 的实际采用；本轮未重新调用模型。</li>
+<li><a href="jev-sdk-preflight.json">SDK 独立预检</a>证明两种供给的合成协议/鉴权响应，不证明运行时代码已替换。</li>
+<li><a href="intelligence-verification.json">v3 交付记录</a>和<a href="system3-browser-qa.json">浏览器检查</a>保留原型验证范围；本轮不重复声明产品测试通过。</li>
+<li>相邻 Frontend 的 <code>chore-bootstrap</code> 相对 <code>upstream/main</code> 只有两份 Python 格式改动及两份初始化文档。生产应用源码未被 System3 改造。</li>
+<li>独立 <code>ops-jev9b-api</code> 工作区的 <code>tasks/ops-jev9b-api/handoff.md</code> 与 <code>docs/ops-jev9b-api/public-verification.json</code> 记录公网服务进展。本轮只读核对，未合并该分支、未探活、未读取密钥。</li>
+</ul>
+</section>
+<footer>本页是目标记录与设计复核，不是产品完成声明。源代码与各阶段真实验证决定实现状态；本轮未执行产品代码变更或部署。</footer>
+</main></body>
+</html>
