@@ -188,7 +188,10 @@
 - [x] 真实浏览器执行公共 CSV 任务，验证 Jev、Fidoo、Skill、文件交付、取消及重启恢复。
 - [x] 独立审查并修复；运行相关构建、测试、lint、文档及 Ruff 门禁。
 - [x] 记录当前成果、未完成的后续里程碑、部署/回滚证据和冷启动 handoff；完成 ship（两仓 PR 已创建，远端 CI 预算受限，未合并）。
+- [x] 按追加的手动部署授权核对运行差异，恢复 SSH 隧道、验证认证页面、打开现有 Desktop 与默认浏览器并更新访问交接。
 
 ### 当前 Review
 
 首个固定审查提交和检查证据见 [implementation-ready.md](feat-system3-g1/implementation-ready.md)，双会话归属见 [coordination-ack.md](feat-system3-g1/coordination-ack.md)。预检构建和接口健康不代表最终产品验收；最终发布必须对应完整固定提交。
+
+手动访问核验已交付，见 [deployment-notes.md](feat-system3-g1/deployment-notes.md#manual-access-verification--2026-10-01)。本轮仅更新访问文档和交接，test:docs 20/20、doc-sync 42/42、lint、Ruff check/format 与 diff 检查通过；未重新部署产物、重启服务或调用模型。远端 CI 仍因 Actions 预算未执行，保持未合并。

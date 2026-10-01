@@ -5,6 +5,7 @@
 - 用户已授权完整实现、真实测试与 litellm 服务器部署；统一正式 rc.2。
 - 产品源码、Frontend、index、构建与部署由本会话独占。Jev 运维只在独立预检工作树审查。
 - 入口/Skill、双 SDK、R1/R2/R3 固定复核及真实 Desktop/Linux 任务与恢复验收通过；双仓 PR 已创建。
+- 用户追加手动部署授权；保留已验收产物，恢复本机 SSH 隧道并验证登录，Desktop 与默认浏览器已打开。
 - 主目录 main 未修改；此工作树保留。
 
 ## 本轮交付物
@@ -46,6 +47,7 @@ Jev 8086 是结构化决策协议，8002 不能替代；实际 profile 显式 hi
 - [x] 验证取消、恢复自动、刷新、服务重启与真实回滚后的会话/产物持久性。
 - [x] Desktop 正常/安全模式启动、干净提交装配、实际自动 Skill/CSV 任务、安装后重启恢复通过。
 - [x] 双仓 ship、远端 SHA 核验、记录 CI 和回滚状态。
+- [x] 手动部署访问核对：确认最新 PR 无新增运行改动，恢复隧道、验证认证页面并打开实际入口。
 - [ ] GitHub Actions 账户预算恢复后重跑远端 CI；通过前保持 PR 未合并。
 
 后续产品范围：本地 9B/27B Lead、Jev 记忆压缩和完整专家/长期 Goal 编排未在本轮验收；候选 Skill 目录超限时保留原生路径。
@@ -65,3 +67,7 @@ Harness 分支 `feat-system3-g1`；已接受基础标签 `system3-g1-foundation`
 ## PR 与 CI
 
 [Harness PR #13](https://github.com/cryptoSUN2049/xDAN-System3-Harness/pull/13) 与 [Frontend PR #1](https://github.com/cryptoSUN2049/xDAN-System3-Frontend/pull/1) 均已创建。远端 Actions 未开始任何步骤即因账户预算受限失败；不改写为代码测试失败，也不冒充 CI 通过。冻结验收资料不依赖后续交接提交；独立审查已只读核对已安装 app 摘要、源码 pin 与稳定服务指针/单元配对。
+
+## 本次手动访问交付
+
+本机 SSH 隧道由独立运维会话恢复，产品会话继续维护访问；双方未重复发布或重启服务。默认浏览器已通过私有启动 URL 打开 Web，现有 Desktop 已置于前台。实际页面与资源归属见 [deployment-notes.md](deployment-notes.md#manual-access-verification--2026-10-01)，启动和断线恢复见 [部署参考](../../docs/feat-system3-g1/deployment.zh.md#访问和隔离)。本次没有新增模型或任务验收，不扩展原有冻结证据的范围。

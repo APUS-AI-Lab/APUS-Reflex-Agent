@@ -10,6 +10,14 @@ The independent `xdan-system3.service` runs on `root@litellm`. Docker builds the
 
 The application binds `127.0.0.1:18731`. Connect with `ssh -N -L 18731:127.0.0.1:18731 root@litellm`, then privately retrieve the native launch URL from the restricted service journal. The browser exchanges its launch token for the native signed, authority-bound cookie; anonymous API calls remain rejected. SSH authenticates transport access and the Harness cookie authenticates API access. No public Caddy route or DNS change is required.
 
+The local installation is `~/Applications/xDAN System3.app`; double-click `~/Applications/启动 xDAN System3.command` or run `~/.local/bin/xdan-system3` to start Desktop. The first Web authentication URL is stored in the mode-0600 `~/.config/xdan-system3/launch-url` and opened in the local browser; never print this file in chat or shared logs. An authenticated browser can access `http://127.0.0.1:18731`; unauthenticated access returns 401.
+
+The SSH tunnel is separate from the systemd service and may exit after a network interruption. Restore it with the command below only when local port 18731 has no listener; retain existing tunnel and service processes.
+
+```sh
+ssh -fN -o BatchMode=yes -o ConnectTimeout=10 -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -L 127.0.0.1:18731:127.0.0.1:18731 root@litellm
+```
+
 The systemd unit uses an empty capability set, NoNewPrivileges, ProtectSystem=strict, ProtectHome, PrivateTmp, PrivateDevices, ProtectProc=invisible and RestrictSUIDSGID. Only `/var/lib/xdan-system3` is writable; private home and task workspace remain separate. Existing application directories and the environment-file directory are inaccessible inside the service. The service has a 2 GiB memory limit, 2 CPU quota and 256-task limit. Native workspace-write permissions remain enabled; subprocesses use the native credential scrub and bubblewrap.
 
 The root-only `/etc/xdan-system3/runtime.env` reuses the existing `system3-dsh` virtual key and supplies `SYSTEM3_LITELLM_API_KEY`, `JEV_API_KEY` and the explicit JSON `SYSTEM3_SESSION_DATA_CLASSES`. The acceptance environment declares only public material; operators must not put personal or confidential files into this workspace. Classification is a deployment declaration, not automatic sanitization. Credentials never enter build artifacts or frontend bundles. Native browser credentials persist in the private Harness home. DeepSeek session-log contribution and telemetry delivery are disabled.

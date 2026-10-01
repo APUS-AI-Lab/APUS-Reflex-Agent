@@ -10,6 +10,14 @@
 
 应用仅监听 `127.0.0.1:18731`。通过 `ssh -N -L 18731:127.0.0.1:18731 root@litellm` 连接，并从受限服务日志中私下获取原生启动 URL。浏览器用启动 token 换取原生签名、绑定访问来源的 cookie；匿名 API 请求仍被拒绝。SSH 验证传输访问，Harness cookie 验证 API 访问。无需新增公网 Caddy 路由或修改 DNS。
 
+本机已安装 `~/Applications/xDAN System3.app`；双击 `~/Applications/启动 xDAN System3.command` 或运行 `~/.local/bin/xdan-system3` 启动 Desktop。Web 首次认证入口保存在权限为 0600 的 `~/.config/xdan-system3/launch-url`，由本机浏览器打开；不要在聊天或共享日志中打印该文件。已认证浏览器可访问 `http://127.0.0.1:18731`；未认证访问返回 401。
+
+SSH 隧道不属于 systemd 服务。当前隧道在网络断开后可能退出；仅在本机 18731 没有监听时，使用以下命令恢复，保留已有隧道和服务进程。
+
+```sh
+ssh -fN -o BatchMode=yes -o ConnectTimeout=10 -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -L 127.0.0.1:18731:127.0.0.1:18731 root@litellm
+```
+
 systemd 单元采用空 capability 集、NoNewPrivileges、ProtectSystem=strict、ProtectHome、PrivateTmp、PrivateDevices、ProtectProc=invisible 和 RestrictSUIDSGID。仅 `/var/lib/xdan-system3` 可写；私有 home 和任务工作区分离。服务内部不能访问现有应用目录和环境变量文件目录。服务限制为 2 GiB 内存、2 CPU 配额和 256 个任务。保留原生 workspace-write 权限；子进程使用原生凭据清理和 bubblewrap。
 
 仅 root 可读的 `/etc/xdan-system3/runtime.env` 复用既有 `system3-dsh` virtual key，提供 `SYSTEM3_LITELLM_API_KEY`、`JEV_API_KEY` 和显式 JSON `SYSTEM3_SESSION_DATA_CLASSES`。验收环境仅声明公开材料；操作人员不得将个人或机密文件放入该工作区。分类是部署声明，不是自动脱敏。凭据不进入构建产物或前端 bundle。原生浏览器凭据持久保存在私有 Harness home。禁用 DeepSeek 会话日志贡献和遥测投递。
