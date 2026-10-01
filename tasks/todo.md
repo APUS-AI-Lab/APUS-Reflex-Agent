@@ -228,3 +228,13 @@
 - [x] 导出实际 PNG、完成本地文档检查及固定提交；不改运行源码 / 部署 / 论文。
 
 本次 Review：最终产品主图与流程细节 PNG 已独立确认对应 SVG，三个 HTML 引用完整。test:docs 20/20、doc-sync 42/42、lint、Ruff 与 diff 检查通过；浏览器与打印证据更新至 architecture-verification.json，运行基线保持冻结。固定提交用于更新既有 PR；此前 CI 成功不代表新提交远端 CI 通过。
+
+## 下一阶段：CI 收口与首个过程恢复消费者
+
+- [x] 核对 Harness 固定产品图提交的 Independent harness 工作流实际成功。
+- [x] 核对 Frontend PR 的未启动原因及完整工作流条件；允许原有 Windows PR 检查实际执行。
+- [x] 只读分析原生重试、重复提醒、工具事实与 pre-step 接入；落盘 [过程恢复设计](../docs/feat-system3-g1/process-recovery-plan.html)。
+- [ ] 确认新增运行能力的具体设计，再实施恢复消费者与前端事实投影。
+- [ ] 完成失效状态 / 取消 / 去重、真实原生组合、两 SDK 与 Session 回放。
+- [ ] 用原生大脑、确定性规则、Jev 策略三组对照核验真实任务收益。
+- [ ] Frontend 实际 CI 通过并完成双仓 PR 收口；新运行能力单独验收后发布。

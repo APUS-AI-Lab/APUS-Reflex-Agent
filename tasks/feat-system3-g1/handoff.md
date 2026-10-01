@@ -115,3 +115,11 @@ DNHM 文档补充验证：新增实验表键盘操作、390 / 1440px 展开布�
 | `tasks/todo.md` | 230 | 任务完成状态 |
 | `tasks/lessons.md` | 112 | 用户纠正与防重犯规则 |
 | `tasks/feat-system3-g1/handoff.md` | 117 | 冷启动与交接 |
+
+## 后续 CI 与过程恢复设计
+
+产品主图固定版本的 [Independent harness CI](https://github.com/cryptoSUN2049/xDAN-System3-Harness/actions/runs/36857821137) 实际执行并成功，图示任务已完成。Frontend 原预算阻塞解除后，Windows CI 实测暴露 README 下载断言与跨平台路径夹具两项问题；产品会话已统一修复并补齐固定自有 Harness 的 Windows 装配链，新固定 head 的 CI 待核对。详见 Frontend `docs/feat-system3-integration/ci-recovery-plan.md`。服务器与已安装 Mac App 仍使用 reviewed / acceptance 标签对应版本，本轮无模型调用或重新部署。
+
+新增 [process-recovery-plan.html](../../docs/feat-system3-g1/process-recovery-plan.html) 为待确认设计：仅原生只读文件不存在错误，Jev 在定位输入 / 请求明确输入 / 弃权间选择，由原生 pre-step 验证状态并提交精确指令注入；不直接重放工具，不扩大权限。前端分别展示观察、决策与采用事实，不把采用等同任务恢复成功。原生大脑、确定性规则和 Jev 三组对照同时评测任务质量、总耗时与成本。新增运行实现须先取得用户对该具体设计的确认；未修改运行代码。
+
+设计 HTML 已做 SVG self_check、8 个本地引用、ARIA/ID、1440/390px 浏览器与图像检查；doc-sync 42/42 通过。文件、任务和本交接随同文档提交，当前过程消费者状态始终为“尚未实现”。下一步先核对用户设计反馈及 Frontend 固定 head CI，再决定进入实现或继续 CI 故障修复。
