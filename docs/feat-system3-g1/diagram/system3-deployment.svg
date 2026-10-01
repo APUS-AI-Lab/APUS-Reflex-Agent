@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 880" role="img" aria-labelledby="system3-deployment-title system3-deployment-desc">
+<title id="system3-deployment-title">部署与数据归属：两套实例互不冒充</title><desc id="system3-deployment-desc">同一修复实现与 Client 协议；会话、工作区、凭据和运行状态各属于实际连接的 Host。</desc>
+<style>text{font-family:"PingFang SC","Microsoft YaHei",Arial,sans-serif}.title{font-size:26px;font-weight:700;fill:#f1f5f9}.label{font-size:17px;font-weight:650;fill:#f1f5f9}.copy{font-size:14px;fill:#cbd5e1}.small{font-size:13px;fill:#94a3b8}.group-label{font-size:14px;font-weight:650;fill:#94a3b8}.edge-label{font-size:13px;fill:#cbd5e1}</style>
+<defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#1e293b" stroke-width=".6"/></pattern>
+<marker id="ui-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#22d3ee"/></marker>
+<marker id="owner-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#34d399"/></marker>
+<marker id="store-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#a78bfa"/></marker>
+<marker id="model-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#fbbf24"/></marker>
+<marker id="policy-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#fb7185"/></marker>
+<marker id="future-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#60a5fa"/></marker>
+<marker id="wire-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#94a3b8"/></marker>
+</defs>
+<rect width="1280" height="880" fill="#0f172a"/>
+<rect width="1280" height="880" fill="url(#grid)"/>
+<rect x="30" y="110" width="580" height="545" rx="12" fill="#111d32" stroke="#475569" stroke-dasharray="7 5"/>
+<text class="group-label" x="48" y="136">本机 macOS · Frontend 安装包</text>
+<rect x="660" y="110" width="585" height="545" rx="12" fill="#111d32" stroke="#475569" stroke-dasharray="7 5"/>
+<text class="group-label" x="678" y="136">远端 Web 访问链路 · 跨本机与服务器</text>
+<path d="M320 254V310" fill="none" stroke="#22d3ee" stroke-width="2" marker-end="url(#ui-arrow)"/>
+<rect x="329" y="271" width="325" height="22" rx="3" fill="#0f172a"/>
+<text class="edge-label" x="334" y="287">本机 authenticated Host RPC</text>
+<path d="M950 254V310" fill="none" stroke="#22d3ee" stroke-width="2" marker-end="url(#ui-arrow)"/>
+<rect x="959" y="271" width="195" height="22" rx="3" fill="#0f172a"/>
+<text class="edge-label" x="964" y="287">SSH + 原生 cookie</text>
+<path d="M210 406V462" fill="none" stroke="#a78bfa" stroke-width="2" marker-end="url(#store-arrow)"/>
+<path d="M462 406V462" fill="none" stroke="#fb7185" stroke-width="2" marker-end="url(#policy-arrow)"/>
+<path d="M810 406V462" fill="none" stroke="#a78bfa" stroke-width="2" marker-end="url(#store-arrow)"/>
+<path d="M1090 406V462" fill="none" stroke="#fb7185" stroke-width="2" marker-end="url(#policy-arrow)"/>
+<rect x="60" y="158" width="520" height="96" rx="8" fill="#0f172a"/>
+<rect x="60" y="158" width="520" height="96" rx="8" fill="#22d3ee" fill-opacity=".08" stroke="#22d3ee" stroke-width="1.5"/>
+<text class="label" x="78" y="188">xDAN System3.app</text>
+<text class="copy" x="78" y="214">Electron 主进程 / preload / 原生 Conversation</text>
+<text class="copy" x="78" y="237">固定自有 runtime manifest；禁止 stock fallback</text>
+<rect x="60" y="310" width="520" height="96" rx="8" fill="#0f172a"/>
+<rect x="60" y="310" width="520" height="96" rx="8" fill="#34d399" fill-opacity=".08" stroke="#34d399" stroke-width="1.5"/>
+<text class="label" x="78" y="340">本机 Harness · 首选 127.0.0.1:43129</text>
+<text class="copy" x="78" y="366">经受支持 dsh profile 启动；占用时可选择临时端口</text>
+<text class="copy" x="78" y="389">本机所选工作区执行；正常 / safe 启动已验收</text>
+<rect x="60" y="462" width="245" height="123" rx="8" fill="#0f172a"/>
+<rect x="60" y="462" width="245" height="123" rx="8" fill="#a78bfa" fill-opacity=".08" stroke="#a78bfa" stroke-width="1.5"/>
+<text class="label" x="78" y="492">本机数据</text>
+<text class="copy" x="78" y="518">userData/harness</text>
+<text class="copy" x="78" y="541">用户所选工作区与产物</text>
+<text class="copy" x="78" y="564">独立本机 Session</text>
+<rect x="345" y="462" width="235" height="123" rx="8" fill="#0f172a"/>
+<rect x="345" y="462" width="235" height="123" rx="8" fill="#fb7185" fill-opacity=".08" stroke="#fb7185" stroke-width="1.5"/>
+<text class="label" x="363" y="492">本机 Host 凭据</text>
+<text class="copy" x="363" y="518">包外 runtime.env / 0600</text>
+<text class="copy" x="363" y="541">不进入前端与安装资源</text>
+<text class="copy" x="363" y="564">本地运行仍可请求网络模型</text>
+<rect x="690" y="158" width="520" height="96" rx="8" fill="#0f172a"/>
+<rect x="690" y="158" width="520" height="96" rx="8" fill="#22d3ee" fill-opacity=".08" stroke="#22d3ee" stroke-width="1.5"/>
+<text class="label" x="708" y="188">本机浏览器 / SSH 客户端 → 原生鉴权</text>
+<text class="copy" x="708" y="214">本机回环 18731 转发服务器回环 18731</text>
+<text class="copy" x="708" y="237">私有 launch URL 换 cookie；匿名 API 请求 401</text>
+<rect x="690" y="310" width="520" height="96" rx="8" fill="#0f172a"/>
+<rect x="690" y="310" width="520" height="96" rx="8" fill="#34d399" fill-opacity=".08" stroke="#34d399" stroke-width="1.5"/>
+<text class="label" x="708" y="340">litellm · xdan-system3.service · 非 root</text>
+<text class="copy" x="708" y="366">原生 systemd + bubblewrap；回环监听</text>
+<text class="copy" x="708" y="389">Docker 构建产物，不是最终应用运行容器</text>
+<rect x="690" y="462" width="245" height="123" rx="8" fill="#0f172a"/>
+<rect x="690" y="462" width="245" height="123" rx="8" fill="#a78bfa" fill-opacity=".08" stroke="#a78bfa" stroke-width="1.5"/>
+<text class="label" x="708" y="492">服务器数据</text>
+<text class="copy" x="708" y="518">/var/lib/xdan-system3</text>
+<text class="copy" x="708" y="541">专属 DSH_HOME 与 workspace</text>
+<text class="copy" x="708" y="564">Session / Schedule / 产物</text>
+<rect x="975" y="462" width="235" height="123" rx="8" fill="#0f172a"/>
+<rect x="975" y="462" width="235" height="123" rx="8" fill="#fb7185" fill-opacity=".08" stroke="#fb7185" stroke-width="1.5"/>
+<text class="label" x="993" y="492">服务器 Host 凭据</text>
+<text class="copy" x="993" y="518">/etc/xdan-system3</text>
+<text class="copy" x="993" y="541">runtime.env / 0600</text>
+<text class="copy" x="993" y="564">工具子进程已验证不携带 Key</text>
+<rect x="60" y="704" width="1150" height="99" rx="8" fill="#0f172a"/>
+<rect x="60" y="704" width="1150" height="99" rx="8" fill="#34d399" fill-opacity=".08" stroke="#34d399" stroke-width="1.5"/>
+<text class="label" x="78" y="734">发布、恢复与前端装配各有验收范围</text>
+<text class="copy" x="78" y="760">current 与 service.unit 配对；健康通过后更新 previous；成功回滚消费目标，重复回滚拒绝。</text>
+<text class="copy" x="78" y="783">已验证同一源码双 release、会话与产物恢复。签名 / 公证、跨端同步与任意旧源码降级均未验收。</text>
+<text class="small" x="40" y="845">隧道断线退出不等于服务器停止；Desktop 关闭后不能据此承诺本机后台继续执行。</text>
+<text class="title" x="40" y="45">部署与数据归属：两套实例互不冒充</text>
+<text class="small" x="40" y="74">同一修复实现与 Client 协议；会话、工作区、凭据和运行状态各属于实际连接的 Host。</text>
+</svg>

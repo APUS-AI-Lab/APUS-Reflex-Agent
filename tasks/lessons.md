@@ -90,3 +90,11 @@ README 可能滞后；先查 package 与固定来源，再核对 git 共同祖�
 传输事件非空不代表模型已响应：适配器会合成 error/aborted 结束事件。展示响应前必须验证实际响应内容，并覆盖纯错误、纯取消、部分输出后失败三种记录。当前执行状态只能来自当前 Session 生命周期，不能拿历史采用记录推断新任务的等待阶段。
 
 - Desktop/server startup logs contain native one-time launch tokens. Inspect only allowlisted readiness/version lines or parse into booleans; never print raw log tails. Renew native authentication after accidental diagnostic exposure.
+
+## 2026-10-01：架构主轴是大小脑在同一 Harness 内融合
+
+用户强调核心是 Jev 即时决策与推理思考模型融合。架构先表达有界判断、原生采用、生成、工具结算与结果反馈，再说明部署及三层体验；不能把接入两个模型或展示决策状态当作全过程融合。MAAH 区分运行时控制、设计时优化和执行后学习，按真实任务验证效果。
+
+## 2026-10-01：单 Agent 与多 Agent 共用执行抽象
+
+用户要求简化入口和过程的两路图。用 AgentLoop × N 表达相同执行单元，保留入口和过程的不同触发点；N 是包含主实例的原生执行实例总数，每个实例拥有自己的 Session 与生命周期。N=10 设计示意不等于当前并发验收，外部专家内部循环不冒充 Harness 原生 AgentLoop。

@@ -195,3 +195,19 @@
 首个固定审查提交和检查证据见 [implementation-ready.md](feat-system3-g1/implementation-ready.md)，双会话归属见 [coordination-ack.md](feat-system3-g1/coordination-ack.md)。预检构建和接口健康不代表最终产品验收；最终发布必须对应完整固定提交。
 
 手动访问核验已交付，见 [deployment-notes.md](feat-system3-g1/deployment-notes.md#manual-access-verification--2026-10-01)。本轮仅更新访问文档和交接，test:docs 20/20、doc-sync 42/42、lint、Ruff check/format 与 diff 检查通过；未重新部署产物、重启服务或调用模型。远端 CI 仍因 Actions 预算未执行，保持未合并。
+
+## System3 统一架构总览（参考 Duse，用户要求融合既有文档）
+
+- [x] 读取参考 HTML 并盘点本项目既有架构设计与体验稿；保留历史来源。
+- [x] 按十二节结构整合已发布能力、三层体验、调用关系、数据和目标架构。
+- [x] 绘制当前 / 目标与双实例部署图，将未来本机 9B/27B 和专家编排放入正确位置。
+- [x] 完成浏览器、响应式和链接复核；四图、两种架构、六场景、七种屏宽均验证。
+- [x] 按追加要求将两路图抽象为 AgentLoop × N，同步指定旧方案的工作树副本。
+- [x] 修复新 Actions 实际执行后发现的 persona expected 提示词错配；三个相关 keyless SDK 回放通过。
+- [x] 完成仓库文档检查；更新 handoff、提交并打开新 HTML。
+
+详细范围与验证计划见 [architecture-plan.md](feat-system3-g1/architecture-plan.md)。
+
+### 统一架构 Review
+
+[统一架构](../docs/feat-system3-g1/architecture.html) 已完成；核心为大小脑融合与 AgentLoop × N。12 份既有 HTML 整合成十二节页面，四图及六场景验证；七种屏宽无整页横向溢出，两个指定旧方案同步新图。test:docs 20/20、doc-sync 42/42、lint、Ruff 与 diff 检查通过。相关 keyless SDK 回放 3/3，通过不代表未来过程节点、N=10 或模型收益验收。

@@ -1,0 +1,318 @@
+{
+  "document": "architecture.html",
+  "date": "2026-10-01",
+  "purpose": "Offline architecture and design document validation; no new product acceptance.",
+  "runtimeBaseline": {
+    "implementationTag": "system3-g1-reviewed-rc2",
+    "acceptanceTag": "system3-g1-acceptance-rc2",
+    "runtimeChanged": false,
+    "realModelCalls": 0,
+    "serverRestarts": 0,
+    "desktopPackageChanges": 0
+  },
+  "browser": {
+    "tool": "gstack browse",
+    "isolatedState": true,
+    "responsive": [
+      {
+        "viewport": 320,
+        "documentWidth": 320,
+        "sections": 12,
+        "mainWidth": 320
+      },
+      {
+        "viewport": 390,
+        "documentWidth": 390,
+        "sections": 12,
+        "mainWidth": 390
+      },
+      {
+        "viewport": 768,
+        "documentWidth": 768,
+        "sections": 12,
+        "mainWidth": 768
+      },
+      {
+        "viewport": 850,
+        "documentWidth": 850,
+        "sections": 12,
+        "mainWidth": 850
+      },
+      {
+        "viewport": 1024,
+        "documentWidth": 1024,
+        "sections": 12,
+        "mainWidth": 809
+      },
+      {
+        "viewport": 1440,
+        "documentWidth": 1440,
+        "sections": 12,
+        "mainWidth": 1192
+      },
+      {
+        "viewport": 1920,
+        "documentWidth": 1920,
+        "sections": 12,
+        "mainWidth": 1300
+      }
+    ],
+    "architectures": [
+      {
+        "selected": "current",
+        "visible": [
+          "arch-current"
+        ],
+        "diagramTexts": 46
+      },
+      {
+        "selected": "target",
+        "visible": [
+          "arch-target"
+        ],
+        "diagramTexts": 61
+      }
+    ],
+    "journeys": [
+      {
+        "selected": "csv",
+        "state": "已发布实测",
+        "steps": 5,
+        "facts": 5,
+        "scope": "此卡解释体验与事实关系，非实时产品状态。"
+      },
+      {
+        "selected": "fallback",
+        "state": "已发布实测",
+        "steps": 5,
+        "facts": 5,
+        "scope": "此卡解释体验与事实关系，非实时产品状态。"
+      },
+      {
+        "selected": "cancel",
+        "state": "已发布实测",
+        "steps": 5,
+        "facts": 5,
+        "scope": "此卡解释体验与事实关系，非实时产品状态。"
+      },
+      {
+        "selected": "diagnosis",
+        "state": "目标接入",
+        "steps": 5,
+        "facts": 5,
+        "scope": "此卡解释体验与事实关系，非实时产品状态。"
+      },
+      {
+        "selected": "memory",
+        "state": "目标接入",
+        "steps": 5,
+        "facts": 5,
+        "scope": "此卡解释体验与事实关系，非实时产品状态。"
+      },
+      {
+        "selected": "lead",
+        "state": "后续演进",
+        "steps": 5,
+        "facts": 5,
+        "scope": "此卡解释体验与事实关系，非实时产品状态。"
+      }
+    ],
+    "themes": [
+      {
+        "theme": "dark",
+        "pressed": "true",
+        "background": "rgb(17, 29, 33)",
+        "text": "rgb(226, 239, 235)"
+      },
+      {
+        "theme": "light",
+        "pressed": "false",
+        "background": "rgb(245, 245, 240)",
+        "text": "rgb(26, 48, 53)"
+      }
+    ],
+    "keyboard": {
+      "focused": "target",
+      "selected": "target",
+      "outline": "solid",
+      "tabMoved": true
+    },
+    "printDetails": {
+      "count": 2,
+      "opened": true,
+      "restored": true
+    },
+    "reducedMotion": "CSS rule inspection; not OS preference emulation",
+    "navigation": {
+      "hash": "#journeys",
+      "current": "#product"
+    },
+    "consoleErrors": 0,
+    "httpResources": [],
+    "legacyDiagramPages": [
+      {
+        "file": "docs/feat-independent-harness/jev-native-dsh-native-plan.html",
+        "viewport": 390,
+        "documentWidth": 390,
+        "diagram": "AgentLoop × N"
+      },
+      {
+        "file": "docs/feat-system3-desktop/system3-native-v1.html",
+        "viewport": 390,
+        "documentWidth": 390,
+        "diagram": "AgentLoop × N"
+      }
+    ]
+  },
+  "static": {
+    "html": [
+      {
+        "file": "docs/feat-system3-g1/architecture.html",
+        "localLinks": 74,
+        "uniqueIds": 59,
+        "unresolvedLinks": [],
+        "unresolvedAriaReferences": [],
+        "scriptSyntax": "passed"
+      },
+      {
+        "file": "docs/feat-independent-harness/jev-native-dsh-native-plan.html",
+        "localLinks": 33,
+        "uniqueIds": 20,
+        "unresolvedLinks": [],
+        "unresolvedAriaReferences": [],
+        "scriptSyntax": "passed"
+      },
+      {
+        "file": "docs/feat-system3-desktop/system3-native-v1.html",
+        "localLinks": 39,
+        "uniqueIds": 33,
+        "unresolvedLinks": [],
+        "unresolvedAriaReferences": [],
+        "scriptSyntax": "passed"
+      }
+    ],
+    "svg": [
+      {
+        "file": "docs/feat-system3-g1/diagram/system3-current.svg",
+        "xml": "passed"
+      },
+      {
+        "file": "docs/feat-system3-g1/diagram/system3-deployment.svg",
+        "xml": "passed"
+      },
+      {
+        "file": "docs/feat-system3-g1/diagram/system3-fusion.svg",
+        "xml": "passed"
+      },
+      {
+        "file": "docs/feat-system3-g1/diagram/system3-target.svg",
+        "xml": "passed"
+      }
+    ]
+  },
+  "diagrams": [
+    {
+      "title": "当前发布：两个实例，同一套原生执行语义",
+      "width": 1280,
+      "height": 1050,
+      "overflow": []
+    },
+    {
+      "title": "目标设计：即时判断穿透同一任务",
+      "width": 1280,
+      "height": 1260,
+      "overflow": []
+    },
+    {
+      "title": "部署与数据归属：两套实例互不冒充",
+      "width": 1280,
+      "height": 880,
+      "overflow": []
+    },
+    {
+      "title": "Jev × 推理模型 × Harness：AgentLoop × N",
+      "width": 1280,
+      "height": 1190,
+      "overflow": []
+    }
+  ],
+  "print": {
+    "format": "A4",
+    "pages": 18,
+    "output": "Local temporary PDF; HTML includes print controls.",
+    "visualReview": "Target diagram and text fit inspected; expandable sources opened and restored."
+  },
+  "visualReview": {
+    "screenshots": [
+      "qa/desktop.png",
+      "qa/mobile.png",
+      "qa/target.png",
+      "qa/memory.png"
+    ],
+    "diagrams": [
+      "diagram/system3-fusion@2x.png",
+      "diagram/system3-current@2x.png",
+      "diagram/system3-target@2x.png",
+      "diagram/system3-deployment@2x.png"
+    ],
+    "reviewed": [
+      "desktop",
+      "mobile",
+      "target",
+      "memory",
+      "dark theme",
+      "AgentLoop × N fusion",
+      "A4 target diagram",
+      "current architecture",
+      "deployment diagram"
+    ]
+  },
+  "fixtureCorrection": {
+    "path": "snapshots/sdk/agui-persona/system-prompt.expected.md",
+    "change": "Seven stale tool guidance paragraphs aligned with existing rc.2 source; no Session fixture rewrite.",
+    "command": "DSH_TELEMETRY_DISABLED=1 DSH_EXAMPLE_MODE=lib DSH_SNAPSHOT=replay pnpm run test:snapshot snapshots/sdk/sdk.snapshot.ts -t 'system3-shadow|system3-entry-route|agui-persona'",
+    "result": {
+      "filesPassed": 1,
+      "testsPassed": 3,
+      "filteredOut": 24,
+      "realModelCalls": 0
+    }
+  },
+  "repositoryChecks": {
+    "state": "passed",
+    "commands": [
+      {
+        "command": "pnpm run test:docs",
+        "passed": 20,
+        "failed": 0
+      },
+      {
+        "command": "pnpm run doc-sync",
+        "passed": 42,
+        "failed": 0
+      },
+      {
+        "command": "pnpm run lint",
+        "result": "passed (includes Host build)"
+      },
+      {
+        "command": "ruff check .",
+        "result": "passed"
+      },
+      {
+        "command": "ruff format --check .",
+        "result": "33 files already formatted"
+      },
+      {
+        "command": "git diff --check",
+        "result": "passed"
+      }
+    ]
+  },
+  "limits": [
+    "N=10 is a design illustration, not tested deployment concurrency.",
+    "MAAH is a research direction; no terminology priority or novelty claim.",
+    "Future process consumers and full task controls are not accepted runtime capabilities.",
+    "This document validation does not extend frozen Desktop or server acceptance."
+  ]
+}

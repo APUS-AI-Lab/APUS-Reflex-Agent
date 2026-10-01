@@ -6,7 +6,7 @@
 - 产品源码、Frontend、index、构建与部署由本会话独占。Jev 运维只在独立预检工作树审查。
 - 入口/Skill、双 SDK、R1/R2/R3 固定复核及真实 Desktop/Linux 任务与恢复验收通过；双仓 PR 已创建。
 - 用户追加手动部署授权；保留已验收产物，恢复本机 SSH 隧道并验证登录，Desktop 与默认浏览器已打开。
-- 主目录 main 未修改；此工作树保留。
+- 新增十二节统一架构与四图，核心为大小脑在 Harness 内融合及 AgentLoop × N；主目录 main 未修改，此工作树保留。
 
 ## 本轮交付物
 
@@ -22,7 +22,10 @@
 | `docs/persistence-changes/2026-10-01-system3-entry-skill.*` | 三个新增事件的持久化类型确认 |
 | `deploy/system3/` | 独立 systemd 发布、回滚、Desktop 依赖装配 |
 | `apps/cli/tests/profiles/system3/` | 公开 CSV 任务与独立产物校验器 |
-| `docs/feat-system3-g1/` | 实施与部署文档、预检证据 |
+| `docs/feat-system3-g1/` | 实施与部署文档、最终证据；统一架构 HTML 512 行、英中来源清单及配对记录、浏览器证据和四组 SVG / 高清 PNG |
+| `docs/feat-independent-harness/jev-native-dsh-native-plan.html` | 293 行；首图改为 AgentLoop × N，保留历史正文并指向统一页 |
+| `docs/feat-system3-desktop/system3-native-v1.html` | 535 行；首图采用同一执行抽象，保留历史调用图 |
+| `snapshots/sdk/agui-persona/system-prompt.expected.md` | 七段提示词对齐 rc.2；保留严格断言及 Session fixtures |
 
 ## 设计约束
 
@@ -48,17 +51,18 @@ Jev 8086 是结构化决策协议，8002 不能替代；实际 profile 显式 hi
 - [x] Desktop 正常/安全模式启动、干净提交装配、实际自动 Skill/CSV 任务、安装后重启恢复通过。
 - [x] 双仓 ship、远端 SHA 核验、记录 CI 和回滚状态。
 - [x] 手动部署访问核对：确认最新 PR 无新增运行改动，恢复隧道、验证认证页面并打开实际入口。
-- [ ] GitHub Actions 账户预算恢复后重跑远端 CI；通过前保持 PR 未合并。
+- [ ] 最新独立 Harness Actions 已实际执行；修复 persona expected 后等待新固定 HEAD 的远端回放，CI 通过前保持 PR 未合并。
+- [ ] 按统一架构逐项接入约束 / 恢复、失败取证等过程消费者，真实采用与成果分别验收。
 
 后续产品范围：本地 9B/27B Lead、Jev 记忆压缩和完整专家/长期 Goal 编排未在本轮验收；候选 Skill 目录超限时保留原生路径。
 
 ## 分支/部署状态
 
-Harness 分支 `feat-system3-g1`；已接受基础标签 `system3-g1-foundation`。Frontend 分支 `feat-system3-integration`。服务器现运行已审查标签对应的稳定发布，真实重启和回滚通过；精确 release ID、源码提交、任务和恢复证据见 docs/feat-system3-g1/deployment-final.json。应用仅监听服务器 127.0.0.1:18731，通过 SSH tunnel 与原生 cookie 访问。本机已安装 ~/Applications/xDAN System3.app，使用 ~/.local/bin/xdan-system3 或 ~/Applications/启动 xDAN System3.command 启动；凭据只在包外的受限文件内。Desktop pin 与任务证据见 desktop-acceptance.json。私有 Harness PR #13、Frontend PR #1 已创建，均可无冲突合并但尚未合并。GitHub Actions 在任何步骤开始前因账户预算被阻止；本地与真实运行证据通过不替代远端 CI。验收证据固定标签 system3-g1-acceptance-rc2，实际运行实现固定标签 system3-g1-reviewed-rc2。
+Harness 分支 `feat-system3-g1`；已接受基础标签 `system3-g1-foundation`。Frontend 分支 `feat-system3-integration`。服务器现运行已审查标签对应的稳定发布，真实重启和回滚通过；精确 release ID、源码提交、任务和恢复证据见 docs/feat-system3-g1/deployment-final.json。应用仅监听服务器 127.0.0.1:18731，通过 SSH tunnel 与原生 cookie 访问。本机已安装 ~/Applications/xDAN System3.app，使用 ~/.local/bin/xdan-system3 或 ~/Applications/启动 xDAN System3.command 启动；凭据只在包外的受限文件内。Desktop pin 与任务证据见 desktop-acceptance.json。私有 Harness PR #13、Frontend PR #1 已创建，均可无冲突合并但尚未合并。较早 Actions 因预算未执行；最新独立 Harness 工作流已执行，Host build 和行为测试通过，persona system prompt expected 错配导致回放失败。已最小修复 expected，三个本地 keyless 场景通过；修复提交的远端 CI 待核对。本地与真实运行证据不替代远端 CI。验收证据固定标签 system3-g1-acceptance-rc2，实际运行实现固定标签 system3-g1-reviewed-rc2。
 
 ## 冷启动 checklist
 
-1. 先读本文件、coordination-ack.md、implementation-ready.md 与 tasks/todo.md 当前实施段。
+1. 先读本文件、[统一架构](../../docs/feat-system3-g1/architecture.html)、coordination-ack.md 与 tasks/todo.md；按当前事实和目标状态继续。
 2. 检查双工作树状态、固定标签和 deployment-notes.md，保留所有未提交工作。
 3. 检查服务器 current 与本地安装包 manifest，不能把预检当最终发布。
 4. 只使用产品独立 BROWSE_STATE_FILE；不要干扰运维浏览器或 A100。
@@ -66,8 +70,16 @@ Harness 分支 `feat-system3-g1`；已接受基础标签 `system3-g1-foundation`
 
 ## PR 与 CI
 
-[Harness PR #13](https://github.com/cryptoSUN2049/xDAN-System3-Harness/pull/13) 与 [Frontend PR #1](https://github.com/cryptoSUN2049/xDAN-System3-Frontend/pull/1) 均已创建。远端 Actions 未开始任何步骤即因账户预算受限失败；不改写为代码测试失败，也不冒充 CI 通过。冻结验收资料不依赖后续交接提交；独立审查已只读核对已安装 app 摘要、源码 pin 与稳定服务指针/单元配对。
+[Harness PR #13](https://github.com/cryptoSUN2049/xDAN-System3-Harness/pull/13) 与 [Frontend PR #1](https://github.com/cryptoSUN2049/xDAN-System3-Frontend/pull/1) 均已创建。较早远端 Actions 因预算未执行；后续 [独立 Harness 工作流](https://github.com/cryptoSUN2049/xDAN-System3-Harness/actions/runs/36803796698) 实际执行，build / 行为测试通过，persona expected 错配已按源码修复并本地回放通过。新固定 HEAD 的远端结果尚待核对，不把旧预算诊断继续作为当前失败原因，也不宣称 CI 已通过。冻结验收资料不依赖后续交接提交；独立审查已只读核对已安装 app 摘要、源码 pin 与稳定服务指针/单元配对。
 
 ## 本次手动访问交付
 
 本机 SSH 隧道由独立运维会话恢复，产品会话继续维护访问；双方未重复发布或重启服务。默认浏览器已通过私有启动 URL 打开 Web，现有 Desktop 已置于前台。实际页面与资源归属见 [deployment-notes.md](deployment-notes.md#manual-access-verification--2026-10-01)，启动和断线恢复见 [部署参考](../../docs/feat-system3-g1/deployment.zh.md#访问和隔离)。本次没有新增模型或任务验收，不扩展原有冻结证据的范围。
+
+## 统一架构交付
+
+主入口 [architecture.html](../../docs/feat-system3-g1/architecture.html)，融合 12 份既有 HTML、9 个 Markdown 资料族及 3 份旧 SVG。AgentLoop × N、当前、目标、部署四图与六场景均内嵌，无 CDN，可离线阅读；源码链接和下载资源需保留目录。来源见 [architecture-sources.md](../../docs/feat-system3-g1/architecture-sources.zh.md)，验证见 [architecture-verification.json](../../docs/feat-system3-g1/architecture-verification.json)。本轮不调用真实模型、不重新部署、不修改已安装 App；运行 pin 仍以冻结验收为准。
+
+MAAH 是后续控制策略研究命题，N=10 是协作设计示意。记忆、取证、完整专家 / Goal、本机 Lead 和总收益对照仍需各自实现与验收。构建 / 文档检查仅验证此次文档与快照修复，不扩展原发布验收范围。
+
+本次文档验证：test:docs 20/20、doc-sync 42/42、lint（包含 Host build）、Ruff check / format、diff 检查均通过，keyless SDK 三场景通过。浏览器为独占 architecture state，不操作产品登录或审查会话。
