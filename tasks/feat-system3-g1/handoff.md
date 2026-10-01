@@ -6,7 +6,7 @@
 - 产品源码、Frontend、index、构建与部署由本会话独占。Jev 运维只在独立预检工作树审查。
 - 入口/Skill、双 SDK、R1/R2/R3 固定复核及真实 Desktop/Linux 任务与恢复验收通过；双仓 PR 已创建。
 - 用户追加手动部署授权；保留已验收产物，恢复本机 SSH 隧道并验证登录，Desktop 与默认浏览器已打开。
-- 新增十二节统一架构与四图，核心为大小脑在 Harness 内融合及 AgentLoop × N；主目录 main 未修改，此工作树保留。
+- 新增十二节统一架构与五图，核心为 Jev Native AgentLoop Harness 产品编排与参数化 Agent 执行对象；主目录 main 未修改，此工作树保留。
 
 ## 本轮交付物
 
@@ -22,9 +22,9 @@
 | `docs/persistence-changes/2026-10-01-system3-entry-skill.*` | 三个新增事件的持久化类型确认 |
 | `deploy/system3/` | 独立 systemd 发布、回滚、Desktop 依赖装配 |
 | `apps/cli/tests/profiles/system3/` | 公开 CSV 任务与独立产物校验器 |
-| `docs/feat-system3-g1/` | 实施与部署文档、最终证据；统一架构 HTML 514 行、英中来源清单及配对记录、浏览器证据和四组 SVG / 高清 PNG |
-| `docs/feat-independent-harness/jev-native-dsh-native-plan.html` | 293 行；首图改为 AgentLoop × N，保留历史正文并指向统一页 |
-| `docs/feat-system3-desktop/system3-native-v1.html` | 535 行；首图采用同一执行抽象，保留历史调用图 |
+| `docs/feat-system3-g1/` | 实施与部署文档、最终证据；统一架构 HTML 589 行、英中来源清单及配对记录、浏览器证据和五组 SVG / 高清 PNG |
+| `docs/feat-independent-harness/jev-native-dsh-native-plan.html` | 250 行；首图改为同一产品架构，保留历史正文并指向统一页 |
+| `docs/feat-system3-desktop/system3-native-v1.html` | 492 行；首图采用同一产品架构，保留历史调用图 |
 | `snapshots/sdk/agui-persona/system-prompt.expected.md` | 七段提示词对齐 rc.2；保留严格断言及 Session fixtures |
 
 ## 设计约束
@@ -52,7 +52,7 @@ Jev 8086 是结构化决策协议，8002 不能替代；实际 profile 显式 hi
 - [x] 双仓 ship、远端 SHA 核验、记录 CI 和回滚状态。
 - [x] 手动部署访问核对：确认最新 PR 无新增运行改动，恢复隧道、验证认证页面并打开实际入口。
 - [x] persona expected 修复后的统一架构版本，独立 Harness Actions 已实际执行并通过；PR 尚未合并。
-- [ ] DNHM 研究定位补充提交推送后，核对其独立 Harness CI；不复跑冻结运行验收。
+- [x] DNHM 定位文档的固定独立 Harness CI 已通过；不复跑冻结运行验收。
 - [ ] 按统一架构逐项接入约束 / 恢复、失败取证等过程消费者，真实采用与成果分别验收。
 
 后续产品范围：本地 9B/27B Lead、Jev 记忆压缩和完整专家/长期 Goal 编排未在本轮验收；候选 Skill 目录超限时保留原生路径。
@@ -71,7 +71,7 @@ Harness 分支 `feat-system3-g1`；已接受基础标签 `system3-g1-foundation`
 
 ## PR 与 CI
 
-[Harness PR #13](https://github.com/cryptoSUN2049/xDAN-System3-Harness/pull/13) 与 [Frontend PR #1](https://github.com/cryptoSUN2049/xDAN-System3-Frontend/pull/1) 均已创建。persona expected 修复后的 [独立 Harness 工作流](https://github.com/cryptoSUN2049/xDAN-System3-Harness/actions/runs/36831007221) 已由 REST 核对为 completed / success。该结果限于这一工作流及其固定提交，不代表 Frontend CI 或后续提交已通过；后续论文定位文档提交另行核对。冻结验收资料不依赖后续交接提交；独立审查已只读核对已安装 app 摘要、源码 pin 与稳定服务指针/单元配对。
+[Harness PR #13](https://github.com/cryptoSUN2049/xDAN-System3-Harness/pull/13) 与 [Frontend PR #1](https://github.com/cryptoSUN2049/xDAN-System3-Frontend/pull/1) 均已创建。DNHM 文档版本的 [独立 Harness 工作流](https://github.com/cryptoSUN2049/xDAN-System3-Harness/actions/runs/36833089898) 已由 REST 核对为 completed / success。该结果限于这一工作流及其固定提交，不代表 Frontend CI 或后续提交已通过；后续产品架构图文档提交另行核对。冻结验收资料不依赖后续交接提交；独立审查已只读核对已安装 app 摘要、源码 pin 与稳定服务指针/单元配对。
 
 ## 本次手动访问交付
 
@@ -79,12 +79,39 @@ Harness 分支 `feat-system3-g1`；已接受基础标签 `system3-g1-foundation`
 
 ## 统一架构交付
 
-主入口 [architecture.html](../../docs/feat-system3-g1/architecture.html)，融合 12 份既有 HTML、9 个 Markdown 资料族及 3 份旧 SVG。AgentLoop × N、当前、目标、部署四图与六场景均内嵌，无 CDN，可离线阅读；源码链接和下载资源需保留目录。来源见 [architecture-sources.md](../../docs/feat-system3-g1/architecture-sources.zh.md)，验证见 [architecture-verification.json](../../docs/feat-system3-g1/architecture-verification.json)。本轮不调用真实模型、不重新部署、不修改已安装 App；运行 pin 仍以冻结验收为准。
+主入口 [architecture.html](../../docs/feat-system3-g1/architecture.html)，融合 12 份既有 HTML、9 个 Markdown 资料族及 3 份旧 SVG。产品编排架构、当前、目标、部署及可展开执行流程五图与六场景均内嵌，无 CDN，可离线阅读；源码链接和下载资源需保留目录。来源见 [architecture-sources.md](../../docs/feat-system3-g1/architecture-sources.zh.md)，验证见 [architecture-verification.json](../../docs/feat-system3-g1/architecture-verification.json)。本轮不调用真实模型、不重新部署、不修改已安装 App；运行 pin 仍以冻结验收为准。
 
-MAAH 是后续控制策略研究命题，N=10 是协作设计示意。记忆、取证、完整专家 / Goal、本机 Lead 和总收益对照仍需各自实现与验收。构建 / 文档检查仅验证此次文档与快照修复，不扩展原发布验收范围。
+MAAH 是后续控制策略研究命题；N 是同一执行对象的数量参数，不指定拓扑或已验收并发数。记忆、取证、完整专家 / Goal、本机 Lead 和总收益对照仍需各自实现与验收。构建 / 文档检查仅验证此次文档与快照修复，不扩展原发布验收范围。
 
 第 7 节补充 [DNHM 工作定义](../../docs/feat-system3-g1/architecture.html#dnhm)、Runtime Harness Generalization 及三组最小实验。独立运维负责近邻全文方法与代码比对；本会话只整合已交付的方法提议，不声明术语首创、已证新颖性、训练完成或实验收益。当前运行实现与 Frontend pin 保持冻结。
 
 本次文档验证：test:docs 20/20、doc-sync 42/42、lint（包含 Host build）、Ruff check / format、diff 检查均通过，keyless SDK 三场景通过。浏览器为独占 architecture state，不操作产品登录或审查会话。
 
 DNHM 文档补充验证：新增实验表键盘操作、390 / 1440px 展开布局与打印还原通过；七种屏宽和原交互回归通过，A4 共 19 页。test:docs 20/20、doc-sync 42/42、lint 通过；此处的 SDK / 四图原验收记录保留，未重复模型或部署测试。
+
+## 产品架构主图修订
+
+主图为 1280×900 的 Jev Native AgentLoop Harness 产品目标架构，9 业务组件展示用户任务、入口智能、编排总管与任务依赖、Agent 执行对象及能力、过程智能和记忆 / 成果反馈。原生步骤图保留在 system3-agent-loop.svg 与可展开 details；两图内嵌 ID 前缀独立，三页 CSS 显式保持深色图文字颜色。主图不增加全过程编排实现或论文结果；当前发布仍仅 entry / Skill 实测。用户要求本轮限图 / 文档和本地验证、固定提交，运行源码与部署保持。
+
+本次主图修订验证：test:docs 20/20、doc-sync 42/42、lint、Ruff check / format、diff 检查通过；两 SVG 技能 self_check、172 个本地引用、三页内嵌颜色 / ARIA / ID、七种屏宽与五个折叠区通过。两 PNG 为 2560×1800 / 2560×3520，独立审查确认图像一致。A4 21 页，第 4–5 页完整呈现新两图。本轮固定提交并更新既有 PR；新提交远端 CI 待按固定 HEAD 核验，前述成功结果限于此前提交。未重复运行或部署验收。
+
+### 本轮图示修订文件
+
+| 路径 | 行数 / 格式 | 内容 |
+| --- | --- | --- |
+| `docs/feat-system3-g1/architecture.html` | 589 | 产品主图、流程 details、演进与范围 |
+| `docs/feat-independent-harness/jev-native-dsh-native-plan.html` | 250 | 首图与内嵌颜色同步 |
+| `docs/feat-system3-desktop/system3-native-v1.html` | 492 | 首图与内嵌颜色同步 |
+| `docs/feat-system3-g1/diagram/system3-fusion.svg` | 51 | 9 组件产品目标架构 |
+| `docs/feat-system3-g1/diagram/system3-fusion@2x.png` | PNG | 2560×1800 新主图 |
+| `docs/feat-system3-g1/diagram/system3-agent-loop.svg` | 119 | 20 节点原生执行流程 |
+| `docs/feat-system3-g1/diagram/system3-agent-loop@2x.png` | PNG | 2560×3520 流程 |
+| `docs/feat-system3-g1/qa/product-architecture.png` | PNG | 实际内嵌主图截图 |
+| `docs/feat-system3-g1/architecture-sources.md` | 70 | 英文来源与图示范围 |
+| `docs/feat-system3-g1/architecture-sources.zh.md` | 70 | 中文配对来源 |
+| `docs/feat-system3-g1/architecture-sources.i18n.yaml` | 25 | 配对确认 |
+| `docs/feat-system3-g1/architecture-verification.json` | 483 | 本轮验证与保留证据范围 |
+| `tasks/feat-system3-g1/architecture-plan.md` | 61 | 设计计划与 Review |
+| `tasks/todo.md` | 230 | 任务完成状态 |
+| `tasks/lessons.md` | 112 | 用户纠正与防重犯规则 |
+| `tasks/feat-system3-g1/handoff.md` | 117 | 冷启动与交接 |

@@ -25,7 +25,7 @@
 
 另有 9 个直接相关 Markdown 资料族：[原生架构](../architecture.zh.md)、[独立接入](../feat-independent-harness/README.zh.md)、Foundation 的 [基础设计](../feat-system3-foundation/design.zh.md)、[9B 接入](../feat-system3-foundation/jev-9b-integration-design.zh.md)、[模型链](../feat-system3-foundation/model-chain.zh.md)、[专项方案](../feat-system3-foundation/system3-special-plan.zh.md)、[体验评审](../feat-system3-desktop/system3-experience-review.zh.md)、当前 [实施](implementation.zh.md) 与 [部署](deployment.zh.md)。译本作为同一资料处理。
 
-3 份旧 SVG 为 [初期架构](../feat-independent-harness/architecture.svg)、[流程图](../feat-system3-desktop/diagram/jev-harness-flow.svg)、[调用图](../feat-system3-desktop/diagram/jev-harness-invocation.svg)。新页首先提供 [AgentLoop × N 融合机制](diagram/system3-fusion.svg)，再提供 [当前架构](diagram/system3-current.svg)、[目标架构](diagram/system3-target.svg) 和 [双实例部署](diagram/system3-deployment.svg)，且将图内嵌以便离线阅读。
+3 份旧 SVG 为 [初期架构](../feat-independent-harness/architecture.svg)、[流程图](../feat-system3-desktop/diagram/jev-harness-flow.svg)、[调用图](../feat-system3-desktop/diagram/jev-harness-invocation.svg)。新页首先提供 [Jev Native AgentLoop Harness 产品架构](diagram/system3-fusion.svg)，再提供 [当前架构](diagram/system3-current.svg)、[目标架构](diagram/system3-target.svg) 和 [双实例部署](diagram/system3-deployment.svg)。[原生执行流程](diagram/system3-agent-loop.svg) 保留在可展开细节，五图使用独立 ID 前缀内嵌以便离线阅读。
 
 ## 当前事实基线
 
@@ -47,14 +47,24 @@ Frontend 的实际入口是自己的 Electron 壳与自有 Harness：首选回�
 
 ## 页面组织和验证范围
 
-结构沿用户指定的 Duse 架构页：十二节目录、产品结论、系统图、穿透场景、接口、数据、模型、安全、部署、进展、后续与资料。参考页属于另一项目；其 App BFF、邮件、日历和业务数据库不迁入 System3。旧正文保留为历史设计；用户追加要求重画的 Native v1 与 Jev Native + DSH Native 已在本工作树替换首张总图，指向同一个 AgentLoop × N 示意和统一当前资料。原主目录与其他工作树不修改。
+结构沿用户指定的 Duse 架构页：十二节目录、产品结论、系统图、穿透场景、接口、数据、模型、安全、部署、进展、后续与资料。参考页属于另一项目；其 App BFF、邮件、日历和业务数据库不迁入 System3。旧正文保留为历史设计；用户追加要求重画的 Native v1 与 Jev Native + DSH Native 已在本工作树替换首张总图，指向同一个产品架构和统一当前资料。原主目录与其他工作树不修改。
 
 HTML 的主题、架构切换、六场景、锚点和打印均为离线页面交互，不发送模型、工具或业务请求。浏览器与文档验证见 [architecture-verification.json](architecture-verification.json)；页面设计通过不增加当前产品的功能验收范围。
 
 ## 最新设计定位
 
-核心是 Jev 即时决策模型与推理思考模型在同一 Harness 内协作：判断实际改变下一步方法，推理与工具结果回到后续上下文及判断，原生服务拥有采用和执行。AgentLoop × N 表达单 Agent 和多 Agent 共用执行单元；N=10 为一个主实例加九个子实例的目标示意，各自拥有 Session，不是当前并发成绩。
+核心是 Jev 即时决策模型与推理思考模型在同一 Harness 内协作：判断实际改变下一步方法，推理与工具结果回到后续上下文及判断，原生服务拥有采用和执行。Agent 执行单元 × N 是单一参数化模板，每实例拥有独立 Session 和生命周期，使用相同闭环。父子委派与协作属于可选组合关系；N 不指定固定拓扑或已验收并发数。
 
 MAAH 作为本项目拟研究方向，不声明术语首创或已证新颖性，并区分设计时优化、运行时候选控制和执行后轨迹学习。本页整合独立运维论证的角色及评测原则，不复制其对外故事或把研究先例当作本产品收益。
 
 DNHM（Decision-Native Harness Models）是工作定义：可观测执行状态与带类型及语言描述的合法动作，经过直接候选打分、选择或弃权、原生核验与采用，再获得执行反馈。Runtime Harness Generalization 是拟研究的问题：冻结 controller，跨封存的未见任务族、控制节点和执行模型迁移。三组实验分别检验泛化、直接打分净收益及状态变化下的有效采用；固定候选构造、执行条件和防泄漏协议，端到端评测保留失败，计入准备、网络、验证及恢复成本。完整方法与代码比对、正式训练和 benchmark 尚未完成；已发布的入口与 Skill 消费者不证明上述研究主张。
+
+## 产品架构与执行流程
+
+主图为产品目标架构：用户任务经入口智能进入 Jev Native AgentLoop Harness 编排总管，由其组织任务委派、任务依赖与 Agent 分工。任务对象、Agent 执行对象与模型、Skill、工具、专家能力分别表达；共享 Jev 决策与 System2 规划供给支撑编排，过程智能与任务记忆将进度、证据、调整和恢复反馈给总管及用户。演进条为单模型执行、多模型 / 多能力协作、多智能体编排。完整智能编排仍是目标；已验收入口与 Skill 不代表原生 workflow、subagent、Goal 或 jobs 已由 Jev 全部控制。
+
+可展开执行图另行区分原生动作、判断、终态、Session 存储和外部模型服务。入口选模与自动 Skill 各有条件 Jev 请求 / 响应；固定入口模型跳过 Jev，Skill 需要符合条件的 surviving 用户输入。未来控制点用虚线轮廓。每次 pre-step 都包含上下文组装，下一步回边不重复入口选模。
+
+[AgentLoop driver](../../packages/core/agent-loop/src/agent.ts) 合并 step 结果、nextStep 与 agent/turn-stopping 判断是否继续；[工具调度](../../packages/core/agent-loop/src/tool-calls.ts) 可以结束 step 或提供后续上下文。request-error retry 留在模型请求；pre-step 拒绝、Token 截断、合作取消及未恢复错误保留各自 turn/end 原因。回合完成不证明独立任务验收，也不撤销外部动作。展开说明补充主路径省略的分支；图中不存在内置万能回合预算门。
+
+Session 记录箭头表达存储关系；assistant 响应在工具调度前提交，工具结果由其原生 owner 记录。[入口 router](../../packages/experimental/system3/src/entry-routing.ts) 与 [Skill selector](../../packages/experimental/system3/src/skill-selection.ts) 定义真实决策准入及记录事实。本次图稿只修改文档，不增加运行或研究验收。

@@ -1,7 +1,7 @@
 {
   "document": "architecture.html",
   "date": "2026-10-01",
-  "purpose": "Offline architecture and design document validation; no new product acceptance.",
+  "purpose": "Offline product architecture and native execution flow validation; no new runtime or research acceptance.",
   "runtimeBaseline": {
     "implementationTag": "system3-g1-reviewed-rc2",
     "acceptanceTag": "system3-g1-acceptance-rc2",
@@ -138,7 +138,7 @@
       "tabMoved": true
     },
     "printDetails": {
-      "count": 3,
+      "count": 5,
       "opened": true,
       "restored": true
     },
@@ -151,25 +151,105 @@
     "httpResources": [],
     "legacyDiagramPages": [
       {
-        "file": "docs/feat-independent-harness/jev-native-dsh-native-plan.html",
         "viewport": 390,
         "documentWidth": 390,
-        "diagram": "AgentLoop × N"
+        "title": "Jev Native AgentLoop Harness 产品目标架构",
+        "nodes": 9,
+        "mainViewBox": "0 0 1280 900",
+        "nodeFills": [
+          "rgb(241, 245, 249)"
+        ],
+        "subFills": [
+          "rgb(203, 213, 225)"
+        ],
+        "duplicateIds": false,
+        "ariaValid": true,
+        "file": "docs/feat-independent-harness/jev-native-dsh-native-plan.html"
       },
       {
-        "file": "docs/feat-system3-desktop/system3-native-v1.html",
         "viewport": 390,
         "documentWidth": 390,
-        "diagram": "AgentLoop × N"
+        "title": "Jev Native AgentLoop Harness 产品目标架构",
+        "nodes": 9,
+        "mainViewBox": "0 0 1280 900",
+        "nodeFills": [
+          "rgb(241, 245, 249)"
+        ],
+        "subFills": [
+          "rgb(203, 213, 225)"
+        ],
+        "duplicateIds": false,
+        "ariaValid": true,
+        "file": "docs/feat-system3-desktop/system3-native-v1.html"
       }
-    ]
+    ],
+    "productArchitecturePages": [
+      {
+        "viewport": 390,
+        "documentWidth": 390,
+        "title": "Jev Native AgentLoop Harness 产品目标架构",
+        "nodes": 9,
+        "mainViewBox": "0 0 1280 900",
+        "nodeFills": [
+          "rgb(241, 245, 249)"
+        ],
+        "subFills": [
+          "rgb(203, 213, 225)"
+        ],
+        "duplicateIds": false,
+        "ariaValid": true,
+        "file": "docs/feat-system3-g1/architecture.html"
+      },
+      {
+        "viewport": 390,
+        "documentWidth": 390,
+        "title": "Jev Native AgentLoop Harness 产品目标架构",
+        "nodes": 9,
+        "mainViewBox": "0 0 1280 900",
+        "nodeFills": [
+          "rgb(241, 245, 249)"
+        ],
+        "subFills": [
+          "rgb(203, 213, 225)"
+        ],
+        "duplicateIds": false,
+        "ariaValid": true,
+        "file": "docs/feat-independent-harness/jev-native-dsh-native-plan.html"
+      },
+      {
+        "viewport": 390,
+        "documentWidth": 390,
+        "title": "Jev Native AgentLoop Harness 产品目标架构",
+        "nodes": 9,
+        "mainViewBox": "0 0 1280 900",
+        "nodeFills": [
+          "rgb(241, 245, 249)"
+        ],
+        "subFills": [
+          "rgb(203, 213, 225)"
+        ],
+        "duplicateIds": false,
+        "ariaValid": true,
+        "file": "docs/feat-system3-desktop/system3-native-v1.html"
+      }
+    ],
+    "flowDetails": {
+      "initial": false,
+      "ids": "embedded-system3-agent-loop-system3-fusion-title embedded-system3-agent-loop-system3-fusion-desc",
+      "nodes": 20,
+      "keyboardRestored": true
+    },
+    "narrowDiagramKeyboard": {
+      "focusable": true,
+      "scrolled": true
+    }
   },
   "static": {
     "html": [
       {
         "file": "docs/feat-system3-g1/architecture.html",
-        "localLinks": 74,
-        "uniqueIds": 61,
+        "localLinks": 80,
+        "uniqueIds": 68,
         "unresolvedLinks": [],
         "unresolvedAriaReferences": [],
         "scriptSyntax": "passed"
@@ -177,7 +257,7 @@
       {
         "file": "docs/feat-independent-harness/jev-native-dsh-native-plan.html",
         "localLinks": 33,
-        "uniqueIds": 20,
+        "uniqueIds": 18,
         "unresolvedLinks": [],
         "unresolvedAriaReferences": [],
         "scriptSyntax": "passed"
@@ -185,13 +265,17 @@
       {
         "file": "docs/feat-system3-desktop/system3-native-v1.html",
         "localLinks": 39,
-        "uniqueIds": 33,
+        "uniqueIds": 31,
         "unresolvedLinks": [],
         "unresolvedAriaReferences": [],
         "scriptSyntax": "passed"
       }
     ],
     "svg": [
+      {
+        "file": "docs/feat-system3-g1/diagram/system3-agent-loop.svg",
+        "xml": "passed"
+      },
       {
         "file": "docs/feat-system3-g1/diagram/system3-current.svg",
         "xml": "passed"
@@ -230,44 +314,56 @@
       "overflow": []
     },
     {
-      "title": "Jev × 推理模型 × Harness：AgentLoop × N",
+      "file": "docs/feat-system3-g1/diagram/system3-fusion.svg",
+      "title": "Jev Native AgentLoop Harness 产品目标架构",
       "width": 1280,
-      "height": 1190,
-      "overflow": []
+      "height": 900,
+      "nodes": 9,
+      "overflow": [],
+      "png": "docs/feat-system3-g1/diagram/system3-fusion@2x.png",
+      "pngWidth": 2560,
+      "pngHeight": 1800
+    },
+    {
+      "title": "Agent 执行单元 × N：Jev 与原生 Harness 闭环",
+      "width": 1280,
+      "height": 1760,
+      "nodes": 20,
+      "overflow": [],
+      "file": "docs/feat-system3-g1/diagram/system3-agent-loop.svg",
+      "png": "docs/feat-system3-g1/diagram/system3-agent-loop@2x.png",
+      "pngWidth": 2560,
+      "pngHeight": 3520
     }
   ],
   "print": {
     "format": "A4",
-    "pages": 19,
+    "pages": 21,
     "output": "Local temporary PDF; HTML includes print controls.",
-    "visualReview": "DNHM definition and all three experimental rows inspected on pages 12–13; expanded content printed and original fold states restored."
+    "visualReview": "Complete product architecture and caption on page 4; complete native execution flow and caption on page 5.",
+    "foldStatesRestored": true
   },
   "visualReview": {
     "screenshots": [
+      "qa/product-architecture.png"
+    ],
+    "diagrams": [
+      "diagram/system3-fusion@2x.png",
+      "diagram/system3-agent-loop@2x.png"
+    ],
+    "reviewed": [
+      "new product architecture export",
+      "new native execution flow export",
+      "three HTML embedded node and secondary-label colors",
+      "A4 product architecture",
+      "A4 native execution flow"
+    ],
+    "retainedUnchangedScreenshots": [
       "qa/desktop.png",
       "qa/mobile.png",
       "qa/target.png",
       "qa/memory.png",
       "qa/dnhm.png"
-    ],
-    "diagrams": [
-      "diagram/system3-fusion@2x.png",
-      "diagram/system3-current@2x.png",
-      "diagram/system3-target@2x.png",
-      "diagram/system3-deployment@2x.png"
-    ],
-    "reviewed": [
-      "desktop",
-      "mobile",
-      "target",
-      "memory",
-      "dark theme",
-      "AgentLoop × N fusion",
-      "A4 target diagram",
-      "current architecture",
-      "deployment diagram",
-      "DNHM definition and three experiments",
-      "A4 DNHM continuation"
     ]
   },
   "fixtureCorrection": {
@@ -279,7 +375,8 @@
       "testsPassed": 3,
       "filteredOut": 24,
       "realModelCalls": 0
-    }
+    },
+    "scope": "Retained preceding keyless SDK correction evidence; not repeated for this diagram-only revision."
   },
   "repositoryChecks": {
     "state": "passed",
@@ -309,11 +406,19 @@
       {
         "command": "git diff --check",
         "result": "passed"
+      },
+      {
+        "command": "pnpm run verify-md-wrap",
+        "result": "passed after final task-document edits"
+      },
+      {
+        "command": "pnpm run verify-repository-references",
+        "result": "passed after verification-record edits"
       }
     ]
   },
   "limits": [
-    "N=10 is a design illustration, not tested deployment concurrency.",
+    "N is a parameter for identical Agent execution objects with independent Sessions and lifecycles; it specifies neither topology nor accepted concurrency.",
     "MAAH is a research direction; no terminology priority or novelty claim.",
     "Future process consumers and full task controls are not accepted runtime capabilities.",
     "This document validation does not extend frozen Desktop or server acceptance.",
@@ -347,14 +452,32 @@
     "scope": "Working definition and proposed experiments only; no training, novelty, or measured benefit claims."
   },
   "remoteWorkflowVerification": {
-    "url": "https://github.com/cryptoSUN2049/xDAN-System3-Harness/actions/runs/36831007221",
+    "url": "https://github.com/cryptoSUN2049/xDAN-System3-Harness/actions/runs/36833089898",
     "status": "completed",
     "conclusion": "success",
     "verification": "GitHub REST",
-    "scope": "Preceding unified architecture revision; subsequent DNHM documentation commit requires its own CI check."
+    "scope": "Preceding fixed DNHM documentation revision; this product diagram amendment requires CI verification at its own remote HEAD."
   },
   "validationScope": {
-    "currentAmendment": "Offline page interactions, DNHM expanded responsive and keyboard behavior, print continuation, links, script syntax, documentation gates, and lint.",
-    "retainedUnchangedEvidence": "Diagram layout and exports, legacy-page browser checks, and the prior keyless SDK fixture correction are retained from the preceding validation; no model or runtime acceptance repeated."
+    "currentAmendment": "Product architecture and execution flow exports, three embedded copies, main-page interactions, responsive and keyboard reading, print expansion/restoration and complete diagrams, local links and script syntax, both SVG skill self-checks, documentation gates, Ruff, and diff checks.",
+    "retainedUnchangedEvidence": "Current/target/deployment diagram exports, prior keyless SDK fixture correction, and unchanged DNHM experiments; no model, runtime, or deployment acceptance repeated."
+  },
+  "productArchitecture": {
+    "name": "Jev Native AgentLoop Harness",
+    "components": 9,
+    "executionObject": "Agent execution objects × N",
+    "responsibilities": [
+      "task delegation",
+      "task orchestration",
+      "Agent orchestration"
+    ],
+    "evolution": [
+      "single-model execution",
+      "multiple models and capabilities",
+      "multi-agent orchestration manager"
+    ],
+    "status": "Target product design; current accepted Jev consumers are entry routing and automatic Skill selection.",
+    "runtimeChanged": false,
+    "independentReview": "Separate Jev reviewer confirmed semantics, responsive presentation, folding, IDs, ARIA, colors, and PNG/SVG consistency; no repeated runtime tests."
   }
 }

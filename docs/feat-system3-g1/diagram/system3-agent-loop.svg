@@ -1,0 +1,119 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 1760" role="img" aria-labelledby="system3-fusion-title system3-fusion-desc">
+<title id="system3-fusion-title">Agent 执行单元 × N：Jev 与原生 Harness 闭环</title>
+<desc id="system3-fusion-desc">单一参数化 Agent 闭环展示条件入口选模与 Skill 决策、原生准入、模型请求响应、工具执行、Session 记录、下一步回边、请求重试和回合终态。</desc>
+<style>text{font-family:"PingFang SC","Microsoft YaHei",Arial,sans-serif}.title{font-size:26px;font-weight:700;fill:#f1f5f9}.node-label{font-size:18px;font-weight:650;fill:#f1f5f9}.sub{font-size:13px;fill:#cbd5e1}.edge-label{font-size:12px;fill:#cbd5e1}.small{font-size:13px;fill:#94a3b8}</style>
+<defs>
+<marker id="owner-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#34d399"/></marker>
+<marker id="model-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#fbbf24"/></marker>
+<marker id="store-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#a78bfa"/></marker>
+<marker id="input-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#22d3ee"/></marker>
+<marker id="end-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#94a3b8"/></marker>
+<marker id="alert-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#fb7185"/></marker>
+<marker id="future-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#60a5fa"/></marker>
+</defs>
+<rect width="1280" height="1760" fill="#0f172a"/>
+<rect x="376" y="540" width="488" height="908" rx="12" fill="#111d32" stroke="#475569" stroke-dasharray="7 5"/>
+<text class="small" x="392" y="564">AgentLoop</text>
+<path data-edge="input-context" d="M640 184V236" fill="none" stroke="#34d399" stroke-width="2" marker-end="url(#owner-arrow)"/>
+<path data-edge="context-entry" d="M640 300V340" fill="none" stroke="#34d399" stroke-width="2" marker-end="url(#owner-arrow)"/>
+<path data-edge="entry-admit" d="M640 412V452" fill="none" stroke="#34d399" stroke-width="2" marker-end="url(#owner-arrow)"/>
+<path data-edge="admit-step" d="M640 516V580" fill="none" stroke="#34d399" stroke-width="2" marker-end="url(#owner-arrow)"/>
+<path data-edge="skill-prepare" d="M640 656V704" fill="none" stroke="#34d399" stroke-width="2" marker-end="url(#owner-arrow)"/>
+<path data-edge="prepare-stream" d="M640 768V828" fill="none" stroke="#34d399" stroke-width="2" marker-end="url(#owner-arrow)"/>
+<path data-edge="stream-tools" d="M640 940V984" fill="none" stroke="#34d399" stroke-width="2" marker-end="url(#owner-arrow)"/>
+<path data-edge="tools-execute" d="M640 1072V1116" fill="none" stroke="#34d399" stroke-width="2" marker-end="url(#owner-arrow)"/>
+<path data-edge="execute-record" d="M640 1180V1232" fill="none" stroke="#34d399" stroke-width="2" marker-end="url(#owner-arrow)"/>
+<path data-edge="record-continue" d="M640 1296V1324" fill="none" stroke="#34d399" stroke-width="2" marker-end="url(#owner-arrow)"/>
+<path data-edge="continue-end" d="M640 1436V1480" fill="none" stroke="#34d399" stroke-width="2" marker-end="url(#owner-arrow)"/>
+<path data-edge="next-step" d="M520 1380H448Q440 1380 440 1372V650Q440 642 448 642H480" fill="none" stroke="#34d399" stroke-width="2" marker-end="url(#owner-arrow)"/>
+<path data-edge="no-tools" d="M724 1028H840Q848 1028 848 1036V1372Q848 1380 840 1380H760" fill="none" stroke="#34d399" stroke-width="2" marker-end="url(#owner-arrow)"/>
+<path data-edge="request-retry" d="M480 908H468Q460 908 460 900V860Q460 852 468 852H480" fill="none" stroke="#94a3b8" stroke-width="2" marker-end="url(#end-arrow)"/>
+<path data-edge="session-read" d="M320 274H480" fill="none" stroke="#a78bfa" stroke-width="2" marker-end="url(#store-arrow)"/>
+<path data-edge="assistant-session" d="M480 920H448a8 8 0 0 0 -16 0H376Q368 920 368 912V352Q368 344 360 344H320" fill="none" stroke="#a78bfa" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#store-arrow)"/>
+<path data-edge="tool-session" d="M480 1264H448a8 8 0 0 0 -16 0H360Q352 1264 352 1256V368Q352 360 344 360H320" fill="none" stroke="#a78bfa" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#store-arrow)"/>
+<path data-edge="future-control" d="M480 296H360Q352 296 352 288V282a8 8 0 0 0 0 -16V172Q352 164 344 164H320" fill="none" stroke="#60a5fa" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#future-arrow)"/>
+<path data-edge="entry-jev-request" d="M800 364H888Q896 364 896 372V410Q896 418 904 418H976" fill="none" stroke="#fbbf24" stroke-width="2" marker-end="url(#model-arrow)"/>
+<path data-edge="entry-jev-response" d="M976 450H888Q880 450 880 442V404Q880 396 872 396H800" fill="none" stroke="#fbbf24" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#model-arrow)"/>
+<path data-edge="skill-jev-request" d="M800 608H872Q880 608 880 600V506Q880 498 888 498H976" fill="none" stroke="#fbbf24" stroke-width="2" marker-end="url(#model-arrow)"/>
+<path data-edge="skill-jev-response" d="M976 530H888Q896 530 896 538V632Q896 640 888 640H800" fill="none" stroke="#fbbf24" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#model-arrow)"/>
+<path data-edge="llm-request" d="M800 860H976" fill="none" stroke="#fbbf24" stroke-width="2" marker-end="url(#model-arrow)"/>
+<path data-edge="llm-response" d="M976 908H800" fill="none" stroke="#fbbf24" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#model-arrow)"/>
+<path data-edge="aborted-error" d="M864 1200H920Q928 1200 928 1208V1504Q928 1512 920 1512H800" fill="none" stroke="#fb7185" stroke-width="2" marker-end="url(#alert-arrow)"/>
+<path data-edge="completed" d="M520 1544V1560Q520 1568 512 1568H264Q256 1568 256 1576V1612" fill="none" stroke="#34d399" stroke-width="2" marker-end="url(#owner-arrow)"/>
+<path data-edge="blocked-max-tokens" d="M600 1544V1584Q600 1592 592 1592H520Q512 1592 512 1600V1612" fill="none" stroke="#94a3b8" stroke-width="2" marker-end="url(#end-arrow)"/>
+<path data-edge="aborted" d="M680 1544V1592Q680 1600 688 1600H760Q768 1600 768 1608V1612" fill="none" stroke="#fb7185" stroke-width="2" marker-end="url(#alert-arrow)"/>
+<path data-edge="error" d="M760 1544V1548Q760 1556 768 1556H1016Q1024 1556 1024 1564V1612" fill="none" stroke="#fb7185" stroke-width="2" marker-end="url(#alert-arrow)"/>
+<g data-edge-label="input"><rect x="650" y="202" width="48" height="20" rx="3" fill="#0f172a"/><text class="edge-label" x="674.0" y="216" text-anchor="middle">input</text></g>
+<g data-edge-label="route"><rect x="650" y="420" width="48" height="20" rx="3" fill="#0f172a"/><text class="edge-label" x="674.0" y="434" text-anchor="middle">route</text></g>
+<g data-edge-label="inbox"><rect x="650" y="538" width="48" height="20" rx="3" fill="#0f172a"/><text class="edge-label" x="674.0" y="552" text-anchor="middle">inbox</text></g>
+<g data-edge-label="是"><rect x="652" y="1078" width="32" height="20" rx="3" fill="#0f172a"/><text class="edge-label" x="668.0" y="1092" text-anchor="middle">是</text></g>
+<g data-edge-label="否"><rect x="744" y="1000" width="32" height="20" rx="3" fill="#0f172a"/><text class="edge-label" x="760.0" y="1014" text-anchor="middle">否</text></g>
+<g data-edge-label="有后续"><rect x="448" y="1344" width="64" height="20" rx="3" fill="#0f172a"/><text class="edge-label" x="480.0" y="1358" text-anchor="middle">有后续</text></g>
+<g data-edge-label="无后续"><rect x="652" y="1436" width="64" height="20" rx="3" fill="#0f172a"/><text class="edge-label" x="684.0" y="1450" text-anchor="middle">无后续</text></g>
+<g data-edge-label="tool/result"><rect x="652" y="1200" width="90" height="20" rx="3" fill="#0f172a"/><text class="edge-label" x="697.0" y="1214" text-anchor="middle">tool/result</text></g>
+<g data-edge-label="result"><rect x="652" y="1304" width="48" height="20" rx="3" fill="#0f172a"/><text class="edge-label" x="676.0" y="1318" text-anchor="middle">result</text></g>
+<g data-edge-label="retry"><rect x="388" y="860" width="44" height="20" rx="3" fill="#0f172a"/><text class="edge-label" x="410" y="874" text-anchor="middle">retry</text></g>
+<g data-edge-label="state"><rect x="340" y="246" width="44" height="20" rx="3" fill="#0f172a"/><text class="edge-label" x="362" y="260" text-anchor="middle">state</text></g>
+<g data-edge-label="响应"><rect x="396" y="892" width="36" height="20" rx="3" fill="#0f172a"/><text class="edge-label" x="414.0" y="906" text-anchor="middle">响应</text></g>
+<g data-edge-label="结果"><rect x="396" y="1236" width="36" height="20" rx="3" fill="#0f172a"/><text class="edge-label" x="414.0" y="1250" text-anchor="middle">结果</text></g>
+<g data-edge-label="目标"><rect x="364" y="208" width="40" height="20" rx="3" fill="#0f172a"/><text class="edge-label" x="384.0" y="222" text-anchor="middle">目标</text></g>
+<g data-edge-label="自动 / 候选"><rect x="804" y="336" width="88" height="20" rx="3" fill="#0f172a"/><text class="edge-label" x="848.0" y="350" text-anchor="middle">自动 / 候选</text></g>
+<g data-edge-label="选择 / 弃权"><rect x="800" y="408" width="76" height="20" rx="3" fill="#0f172a"/><text class="edge-label" x="838.0" y="422" text-anchor="middle">选择 / 弃权</text></g>
+<g data-edge-label="eligible / skills"><rect x="804" y="576" width="112" height="20" rx="3" fill="#0f172a"/><text class="edge-label" x="860.0" y="590" text-anchor="middle">eligible / skills</text></g>
+<g data-edge-label="选择 / 弃权"><rect x="800" y="660" width="76" height="20" rx="3" fill="#0f172a"/><text class="edge-label" x="838.0" y="674" text-anchor="middle">选择 / 弃权</text></g>
+<g data-edge-label="messages / tools"><rect x="820" y="832" width="136" height="20" rx="3" fill="#0f172a"/><text class="edge-label" x="888.0" y="846" text-anchor="middle">messages / tools</text></g>
+<g data-edge-label="text / tool-call"><rect x="820" y="928" width="136" height="20" rx="3" fill="#0f172a"/><text class="edge-label" x="888.0" y="942" text-anchor="middle">text / tool-call</text></g>
+<g data-edge-label="abort / fatal error"><rect x="940" y="1168" width="140" height="20" rx="3" fill="#0f172a"/><text class="edge-label" x="1010.0" y="1182" text-anchor="middle">abort / fatal error</text></g>
+<g data-node="input"><rect x="480" y="128" width="320" height="56" rx="24" fill="#0f172a"/><rect x="480" y="128" width="320" height="56" rx="24" fill="#22d3ee" fill-opacity=".08" stroke="#22d3ee" stroke-width="1.5"/><text class="node-label" x="640.0" y="162.0" text-anchor="middle">用户输入</text>
+</g>
+<g data-node="context"><rect x="480" y="236" width="320" height="64" rx="8" fill="#0f172a"/><rect x="480" y="236" width="320" height="64" rx="8" fill="#34d399" fill-opacity=".08" stroke="#34d399" stroke-width="1.5"/><text class="node-label" x="640.0" y="274.0" text-anchor="middle">状态 / 上下文</text>
+</g>
+<g data-node="entry-route"><rect x="480" y="340" width="320" height="72" rx="8" fill="#0f172a"/><rect x="480" y="340" width="320" height="72" rx="8" fill="#34d399" fill-opacity=".08" stroke="#34d399" stroke-width="1.5"/><text class="node-label" x="640.0" y="368.0" text-anchor="middle">入口选模</text>
+<text class="sub" x="640.0" y="396.0" text-anchor="middle">SessionController router</text>
+</g>
+<g data-node="native-admission"><rect x="480" y="452" width="320" height="64" rx="8" fill="#0f172a"/><rect x="480" y="452" width="320" height="64" rx="8" fill="#34d399" fill-opacity=".08" stroke="#34d399" stroke-width="1.5"/><text class="node-label" x="640.0" y="490.0" text-anchor="middle">原生准入 / 入队</text>
+</g>
+<g data-node="pre-step"><rect x="480" y="580" width="320" height="76" rx="8" fill="#0f172a"/><rect x="480" y="580" width="320" height="76" rx="8" fill="#34d399" fill-opacity=".08" stroke="#34d399" stroke-width="1.5"/><text class="node-label" x="640.0" y="610.0" text-anchor="middle">上下文组装 / pre-step</text>
+<text class="sub" x="640.0" y="638.0" text-anchor="middle">条件 Skill / 原生指令</text>
+</g>
+<g data-node="request-prepare"><rect x="480" y="704" width="320" height="64" rx="8" fill="#0f172a"/><rect x="480" y="704" width="320" height="64" rx="8" fill="#34d399" fill-opacity=".08" stroke="#34d399" stroke-width="1.5"/><text class="node-label" x="640.0" y="742.0" text-anchor="middle">请求准备 / 指令采用</text>
+</g>
+<g data-node="model-stream"><rect x="480" y="828" width="320" height="112" rx="8" fill="#0f172a"/><rect x="480" y="828" width="320" height="112" rx="8" fill="#34d399" fill-opacity=".08" stroke="#34d399" stroke-width="1.5"/><text class="node-label" x="640.0" y="876.0" text-anchor="middle">模型请求 / 响应</text>
+<text class="sub" x="640.0" y="904.0" text-anchor="middle">ctx.llm.stream → 响应结算</text>
+</g>
+<g data-node="has-tools"><polygon points="640,984.0 724.0,1028 640,1072.0 556.0,1028" fill="#0f172a"/><polygon points="640,984.0 724.0,1028 640,1072.0 556.0,1028" fill="#fbbf24" fill-opacity=".08" stroke="#fbbf24" stroke-width="1.5"/>
+<text class="node-label" x="640" y="1034.0" text-anchor="middle">有工具请求?</text>
+</g>
+<g data-node="tool-execution"><rect x="480" y="1116" width="320" height="64" rx="8" fill="#0f172a"/><rect x="480" y="1116" width="320" height="64" rx="8" fill="#34d399" fill-opacity=".08" stroke="#34d399" stroke-width="1.5"/><text class="node-label" x="640.0" y="1154.0" text-anchor="middle">原生工具执行</text>
+</g>
+<g data-node="result-record"><rect x="480" y="1232" width="320" height="64" rx="8" fill="#0f172a"/><rect x="480" y="1232" width="320" height="64" rx="8" fill="#a78bfa" fill-opacity=".08" stroke="#a78bfa" stroke-width="1.5"/><text class="node-label" x="640.0" y="1270.0" text-anchor="middle">结果入 Session</text>
+</g>
+<g data-node="has-next"><polygon points="640,1324.0 760.0,1380 640,1436.0 520.0,1380" fill="#0f172a"/><polygon points="640,1324.0 760.0,1380 640,1436.0 520.0,1380" fill="#fbbf24" fill-opacity=".08" stroke="#fbbf24" stroke-width="1.5"/>
+<text class="node-label" x="640" y="1374.0" text-anchor="middle">待续输入 /</text>
+<text class="node-label" x="640" y="1398.0" text-anchor="middle">工具后续?</text>
+</g>
+<g data-node="turn-end"><rect x="480" y="1480" width="320" height="64" rx="8" fill="#0f172a"/><rect x="480" y="1480" width="320" height="64" rx="8" fill="#34d399" fill-opacity=".08" stroke="#34d399" stroke-width="1.5"/><text class="node-label" x="640.0" y="1504.0" text-anchor="middle">turn/end</text>
+<text class="sub" x="640.0" y="1532.0" text-anchor="middle">原生回合结算</text>
+</g>
+<g data-node="jev-service"><rect x="976" y="382" width="240" height="184" rx="8" fill="#0f172a"/><rect x="976" y="382" width="240" height="184" rx="8" fill="#fbbf24" fill-opacity=".08" stroke="#fbbf24" stroke-width="1.5"/><text class="node-label" x="1096.0" y="466.0" text-anchor="middle">Jev / System1</text>
+<text class="sub" x="1096.0" y="494.0" text-anchor="middle">9B · /v1/systemone</text>
+</g>
+<g data-node="llm-service"><rect x="976" y="828" width="240" height="112" rx="8" fill="#0f172a"/><rect x="976" y="828" width="240" height="112" rx="8" fill="#fbbf24" fill-opacity=".08" stroke="#fbbf24" stroke-width="1.5"/><text class="node-label" x="1096.0" y="876.0" text-anchor="middle">LLM / System2</text>
+<text class="sub" x="1096.0" y="904.0" text-anchor="middle">Fidoo · Flash / Pro</text>
+</g>
+<g data-node="future-control"><rect x="80" y="132" width="240" height="64" rx="8" fill="#0f172a"/><rect x="80" y="132" width="240" height="64" rx="8" fill="#60a5fa" fill-opacity=".08" stroke="#60a5fa" stroke-width="1.5" stroke-dasharray="6 5"/><text class="node-label" x="200.0" y="170.0" text-anchor="middle">未来过程控制点</text>
+</g>
+<g data-node="session"><path d="M80 252V368a120 16 0 0 0 240 0V252Z" fill="#0f172a" stroke="#a78bfa" stroke-width="1.5"/><ellipse cx="200" cy="252" rx="120" ry="16" fill="#1d203c" stroke="#a78bfa" stroke-width="1.5"/><path d="M80 368a120 16 0 0 0 240 0" fill="none" stroke="#a78bfa" stroke-width="1.5"/><text class="node-label" x="200" y="304" text-anchor="middle">Session</text><text class="sub" x="200" y="332" text-anchor="middle">surface / durable log</text></g>
+<g data-node="completed"><rect x="144" y="1612" width="224" height="56" rx="24" fill="#0f172a"/><rect x="144" y="1612" width="224" height="56" rx="24" fill="#34d399" fill-opacity=".08" stroke="#34d399" stroke-width="1.5"/><text class="node-label" x="256.0" y="1646.0" text-anchor="middle">回合完成</text>
+</g>
+<g data-node="blocked-max"><rect x="400" y="1612" width="224" height="56" rx="24" fill="#0f172a"/><rect x="400" y="1612" width="224" height="56" rx="24" fill="#94a3b8" fill-opacity=".08" stroke="#94a3b8" stroke-width="1.5"/><text class="node-label" x="512.0" y="1646.0" text-anchor="middle">阻塞 / 截断</text>
+</g>
+<g data-node="cancelled"><rect x="656" y="1612" width="224" height="56" rx="24" fill="#0f172a"/><rect x="656" y="1612" width="224" height="56" rx="24" fill="#fb7185" fill-opacity=".08" stroke="#fb7185" stroke-width="1.5"/><text class="node-label" x="768.0" y="1646.0" text-anchor="middle">取消</text>
+</g>
+<g data-node="failed"><rect x="912" y="1612" width="224" height="56" rx="24" fill="#0f172a"/><rect x="912" y="1612" width="224" height="56" rx="24" fill="#fb7185" fill-opacity=".08" stroke="#fb7185" stroke-width="1.5"/><text class="node-label" x="1024.0" y="1646.0" text-anchor="middle">失败</text>
+</g>
+<path d="M40 1700H1240" stroke="#475569"/>
+<text class="small" x="40" y="1732">动作 □　判断 ◇　终态 ⬭　Session 存储　实线：当前执行 / 请求　虚线：响应 / 记录 / 目标控制点</text>
+<text class="title" x="40" y="44">Agent 执行单元 × N</text>
+<text class="small" x="40" y="76">Jev × 推理模型 × Harness · 单实例技术闭环</text>
+</svg>

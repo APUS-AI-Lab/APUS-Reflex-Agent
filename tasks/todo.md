@@ -217,4 +217,14 @@
 - [x] REST 确认统一架构版本的 [独立 Harness CI](https://github.com/cryptoSUN2049/xDAN-System3-Harness/actions/runs/36831007221) 成功。
 - [x] 第 7 节补充 DNHM 工作定义、Runtime Harness Generalization 与三组可证伪实验。
 - [x] 复核新折叠内容、窄屏及打印，运行文档门禁，准备新的固定架构提交。
-- [ ] 推送后核对新提交 CI，与独立运维交接；继续保留源码 / 运行验收与研究提议的区别。
+- [x] DNHM 固定版本的独立 Harness CI 已核对成功并交接；后续文档提交另行核对，不扩展运行验收。
+
+## 产品架构主图表达修订
+
+- [x] 将固定数量对照合为参数化 Agent 执行对象 × N，每实例独立 Session / 生命周期。
+- [x] 主图改为业务标签优先的 Jev Native AgentLoop Harness 编排总管及 9 组件产品目标架构。
+- [x] 步骤 / 条件 / 重试 / 终态另存原生流程 SVG，置于 details；主图与流程 ID 前缀独立。
+- [x] 三页内嵌同步，独立只读验证语义、宽窄屏、颜色、ARIA、ID 与折叠。
+- [x] 导出实际 PNG、完成本地文档检查及固定提交；不改运行源码 / 部署 / 论文。
+
+本次 Review：最终产品主图与流程细节 PNG 已独立确认对应 SVG，三个 HTML 引用完整。test:docs 20/20、doc-sync 42/42、lint、Ruff 与 diff 检查通过；浏览器与打印证据更新至 architecture-verification.json，运行基线保持冻结。固定提交用于更新既有 PR；此前 CI 成功不代表新提交远端 CI 通过。
