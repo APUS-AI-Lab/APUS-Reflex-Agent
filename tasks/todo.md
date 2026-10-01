@@ -211,3 +211,10 @@
 ### 统一架构 Review
 
 [统一架构](../docs/feat-system3-g1/architecture.html) 已完成；核心为大小脑融合与 AgentLoop × N。12 份既有 HTML 整合成十二节页面，四图及六场景验证；七种屏宽无整页横向溢出，两个指定旧方案同步新图。test:docs 20/20、doc-sync 42/42、lint、Ruff 与 diff 检查通过。相关 keyless SDK 回放 3/3，通过不代表未来过程节点、N=10 或模型收益验收。
+
+### 研究定位补充与 CI 收口
+
+- [x] REST 确认统一架构版本的 [独立 Harness CI](https://github.com/cryptoSUN2049/xDAN-System3-Harness/actions/runs/36831007221) 成功。
+- [x] 第 7 节补充 DNHM 工作定义、Runtime Harness Generalization 与三组可证伪实验。
+- [x] 复核新折叠内容、窄屏及打印，运行文档门禁，准备新的固定架构提交。
+- [ ] 推送后核对新提交 CI，与独立运维交接；继续保留源码 / 运行验收与研究提议的区别。

@@ -33,3 +33,14 @@ Desktop 是本机自有 Harness，Web 是远端独立 Harness；二者共享实�
 独立只读复核已纠正 Desktop workspace 分类、浏览器物理位置、匿名 API 401、资料计数、事实投影方向及历史 entry 关联。七种屏宽、两种架构、六场景、主题、键盘和打印展开还原通过；四图文字不越界。额外发现 CI persona expected 未跟随 rc.2 提示词更新，仅修改七段 expected，三个 keyless SDK 回放通过，未改历史 Session、运行实现或部署产物。完整结果见 docs/feat-system3-g1/architecture-verification.json。
 
 仓库检查完成：test:docs 20/20、doc-sync 42/42、lint（包含 Host build）、Ruff check / format、diff 检查通过。来源清单补齐英中配对与确认记录。页面作为离线设计交付，不扩展任何运行能力。
+
+## DNHM 定位整合
+
+将独立会话固定论文定位的工作定义、Runtime Harness Generalization 问题及三组最小实验整合到统一 HTML 第七节，保持十二节导航与四图。来源清单英中同步并确认配对，更新交接和页面验证。只陈述提议，不导入未独立核读的七篇文献机制结论；独立论文先例与全文比对仍由审查会话负责。不改模型、包源码、配置或部署。
+
+- [x] 读取固定定位 HTML / JSON，确认定义、证据范围和实验缺口。
+- [x] 核对融合版 v1 的独立 CI 成功结果，原运行 pin 保持。
+- [x] 更新统一页、英中来源及交接。
+- [x] 验证折叠、打印、窄屏及文档检查，准备固定提交交接。
+
+定位补充验证：七种屏宽、原六场景及两种架构回归通过；新增实验表键盘展开 / 收起、390 / 1440px 展开布局及打印还原通过。A4 共 19 页，研究定义与三组实验在第 12–13 页完整呈现。test:docs 20/20、doc-sync 42/42 与 lint 通过；没有调用真实模型或改变运行产物。

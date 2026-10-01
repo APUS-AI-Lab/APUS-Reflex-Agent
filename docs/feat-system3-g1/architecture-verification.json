@@ -138,14 +138,14 @@
       "tabMoved": true
     },
     "printDetails": {
-      "count": 2,
+      "count": 3,
       "opened": true,
       "restored": true
     },
     "reducedMotion": "CSS rule inspection; not OS preference emulation",
     "navigation": {
       "hash": "#journeys",
-      "current": "#product"
+      "current": "#overview"
     },
     "consoleErrors": 0,
     "httpResources": [],
@@ -169,7 +169,7 @@
       {
         "file": "docs/feat-system3-g1/architecture.html",
         "localLinks": 74,
-        "uniqueIds": 59,
+        "uniqueIds": 61,
         "unresolvedLinks": [],
         "unresolvedAriaReferences": [],
         "scriptSyntax": "passed"
@@ -238,16 +238,17 @@
   ],
   "print": {
     "format": "A4",
-    "pages": 18,
+    "pages": 19,
     "output": "Local temporary PDF; HTML includes print controls.",
-    "visualReview": "Target diagram and text fit inspected; expandable sources opened and restored."
+    "visualReview": "DNHM definition and all three experimental rows inspected on pages 12–13; expanded content printed and original fold states restored."
   },
   "visualReview": {
     "screenshots": [
       "qa/desktop.png",
       "qa/mobile.png",
       "qa/target.png",
-      "qa/memory.png"
+      "qa/memory.png",
+      "qa/dnhm.png"
     ],
     "diagrams": [
       "diagram/system3-fusion@2x.png",
@@ -264,7 +265,9 @@
       "AgentLoop × N fusion",
       "A4 target diagram",
       "current architecture",
-      "deployment diagram"
+      "deployment diagram",
+      "DNHM definition and three experiments",
+      "A4 DNHM continuation"
     ]
   },
   "fixtureCorrection": {
@@ -313,6 +316,45 @@
     "N=10 is a design illustration, not tested deployment concurrency.",
     "MAAH is a research direction; no terminology priority or novelty claim.",
     "Future process consumers and full task controls are not accepted runtime capabilities.",
-    "This document validation does not extend frozen Desktop or server acceptance."
-  ]
+    "This document validation does not extend frozen Desktop or server acceptance.",
+    "DNHM and Runtime Harness Generalization remain research proposals; full nearest-method comparisons and formal training benchmarks are unfinished."
+  ],
+  "paperPositioning": {
+    "workingDefinition": "DNHM",
+    "researchQuestion": "Runtime Harness Generalization",
+    "keyboard": {
+      "open": true,
+      "rows": 3,
+      "focused": "SUMMARY"
+    },
+    "expandedResponsive": [
+      {
+        "viewport": 390,
+        "documentWidth": 390,
+        "experimentVisible": true,
+        "tableWidth": 312
+      },
+      {
+        "viewport": 1440,
+        "documentWidth": 1440,
+        "experimentVisible": true,
+        "tableWidth": 1054
+      }
+    ],
+    "closedByKeyboard": true,
+    "printRestored": true,
+    "productRuntimeChanged": false,
+    "scope": "Working definition and proposed experiments only; no training, novelty, or measured benefit claims."
+  },
+  "remoteWorkflowVerification": {
+    "url": "https://github.com/cryptoSUN2049/xDAN-System3-Harness/actions/runs/36831007221",
+    "status": "completed",
+    "conclusion": "success",
+    "verification": "GitHub REST",
+    "scope": "Preceding unified architecture revision; subsequent DNHM documentation commit requires its own CI check."
+  },
+  "validationScope": {
+    "currentAmendment": "Offline page interactions, DNHM expanded responsive and keyboard behavior, print continuation, links, script syntax, documentation gates, and lint.",
+    "retainedUnchangedEvidence": "Diagram layout and exports, legacy-page browser checks, and the prior keyless SDK fixture correction are retained from the preceding validation; no model or runtime acceptance repeated."
+  }
 }

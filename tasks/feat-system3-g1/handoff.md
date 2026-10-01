@@ -22,7 +22,7 @@
 | `docs/persistence-changes/2026-10-01-system3-entry-skill.*` | 三个新增事件的持久化类型确认 |
 | `deploy/system3/` | 独立 systemd 发布、回滚、Desktop 依赖装配 |
 | `apps/cli/tests/profiles/system3/` | 公开 CSV 任务与独立产物校验器 |
-| `docs/feat-system3-g1/` | 实施与部署文档、最终证据；统一架构 HTML 512 行、英中来源清单及配对记录、浏览器证据和四组 SVG / 高清 PNG |
+| `docs/feat-system3-g1/` | 实施与部署文档、最终证据；统一架构 HTML 514 行、英中来源清单及配对记录、浏览器证据和四组 SVG / 高清 PNG |
 | `docs/feat-independent-harness/jev-native-dsh-native-plan.html` | 293 行；首图改为 AgentLoop × N，保留历史正文并指向统一页 |
 | `docs/feat-system3-desktop/system3-native-v1.html` | 535 行；首图采用同一执行抽象，保留历史调用图 |
 | `snapshots/sdk/agui-persona/system-prompt.expected.md` | 七段提示词对齐 rc.2；保留严格断言及 Session fixtures |
@@ -51,14 +51,15 @@ Jev 8086 是结构化决策协议，8002 不能替代；实际 profile 显式 hi
 - [x] Desktop 正常/安全模式启动、干净提交装配、实际自动 Skill/CSV 任务、安装后重启恢复通过。
 - [x] 双仓 ship、远端 SHA 核验、记录 CI 和回滚状态。
 - [x] 手动部署访问核对：确认最新 PR 无新增运行改动，恢复隧道、验证认证页面并打开实际入口。
-- [ ] 最新独立 Harness Actions 已实际执行；修复 persona expected 后等待新固定 HEAD 的远端回放，CI 通过前保持 PR 未合并。
+- [x] persona expected 修复后的统一架构版本，独立 Harness Actions 已实际执行并通过；PR 尚未合并。
+- [ ] DNHM 研究定位补充提交推送后，核对其独立 Harness CI；不复跑冻结运行验收。
 - [ ] 按统一架构逐项接入约束 / 恢复、失败取证等过程消费者，真实采用与成果分别验收。
 
 后续产品范围：本地 9B/27B Lead、Jev 记忆压缩和完整专家/长期 Goal 编排未在本轮验收；候选 Skill 目录超限时保留原生路径。
 
 ## 分支/部署状态
 
-Harness 分支 `feat-system3-g1`；已接受基础标签 `system3-g1-foundation`。Frontend 分支 `feat-system3-integration`。服务器现运行已审查标签对应的稳定发布，真实重启和回滚通过；精确 release ID、源码提交、任务和恢复证据见 docs/feat-system3-g1/deployment-final.json。应用仅监听服务器 127.0.0.1:18731，通过 SSH tunnel 与原生 cookie 访问。本机已安装 ~/Applications/xDAN System3.app，使用 ~/.local/bin/xdan-system3 或 ~/Applications/启动 xDAN System3.command 启动；凭据只在包外的受限文件内。Desktop pin 与任务证据见 desktop-acceptance.json。私有 Harness PR #13、Frontend PR #1 已创建，均可无冲突合并但尚未合并。较早 Actions 因预算未执行；最新独立 Harness 工作流已执行，Host build 和行为测试通过，persona system prompt expected 错配导致回放失败。已最小修复 expected，三个本地 keyless 场景通过；修复提交的远端 CI 待核对。本地与真实运行证据不替代远端 CI。验收证据固定标签 system3-g1-acceptance-rc2，实际运行实现固定标签 system3-g1-reviewed-rc2。
+Harness 分支 `feat-system3-g1`；已接受基础标签 `system3-g1-foundation`。Frontend 分支 `feat-system3-integration`。服务器现运行已审查标签对应的稳定发布，真实重启和回滚通过；精确 release ID、源码提交、任务和恢复证据见 docs/feat-system3-g1/deployment-final.json。应用仅监听服务器 127.0.0.1:18731，通过 SSH tunnel 与原生 cookie 访问。本机已安装 ~/Applications/xDAN System3.app，使用 ~/.local/bin/xdan-system3 或 ~/Applications/启动 xDAN System3.command 启动；凭据只在包外的受限文件内。Desktop pin 与任务证据见 desktop-acceptance.json。私有 Harness PR #13、Frontend PR #1 已创建，尚未合并。较早 Actions 因预算未执行；后续实际执行暴露 persona expected 错配，最小修复后三个本地 keyless 场景及远端独立 Harness CI 通过。Frontend CI 本轮未重新核对；后续提交应按各自固定 HEAD 核验。本地与真实运行证据不替代远端 CI。验收证据固定标签 system3-g1-acceptance-rc2，实际运行实现固定标签 system3-g1-reviewed-rc2。
 
 ## 冷启动 checklist
 
@@ -70,7 +71,7 @@ Harness 分支 `feat-system3-g1`；已接受基础标签 `system3-g1-foundation`
 
 ## PR 与 CI
 
-[Harness PR #13](https://github.com/cryptoSUN2049/xDAN-System3-Harness/pull/13) 与 [Frontend PR #1](https://github.com/cryptoSUN2049/xDAN-System3-Frontend/pull/1) 均已创建。较早远端 Actions 因预算未执行；后续 [独立 Harness 工作流](https://github.com/cryptoSUN2049/xDAN-System3-Harness/actions/runs/36803796698) 实际执行，build / 行为测试通过，persona expected 错配已按源码修复并本地回放通过。新固定 HEAD 的远端结果尚待核对，不把旧预算诊断继续作为当前失败原因，也不宣称 CI 已通过。冻结验收资料不依赖后续交接提交；独立审查已只读核对已安装 app 摘要、源码 pin 与稳定服务指针/单元配对。
+[Harness PR #13](https://github.com/cryptoSUN2049/xDAN-System3-Harness/pull/13) 与 [Frontend PR #1](https://github.com/cryptoSUN2049/xDAN-System3-Frontend/pull/1) 均已创建。persona expected 修复后的 [独立 Harness 工作流](https://github.com/cryptoSUN2049/xDAN-System3-Harness/actions/runs/36831007221) 已由 REST 核对为 completed / success。该结果限于这一工作流及其固定提交，不代表 Frontend CI 或后续提交已通过；后续论文定位文档提交另行核对。冻结验收资料不依赖后续交接提交；独立审查已只读核对已安装 app 摘要、源码 pin 与稳定服务指针/单元配对。
 
 ## 本次手动访问交付
 
@@ -82,4 +83,8 @@ Harness 分支 `feat-system3-g1`；已接受基础标签 `system3-g1-foundation`
 
 MAAH 是后续控制策略研究命题，N=10 是协作设计示意。记忆、取证、完整专家 / Goal、本机 Lead 和总收益对照仍需各自实现与验收。构建 / 文档检查仅验证此次文档与快照修复，不扩展原发布验收范围。
 
+第 7 节补充 [DNHM 工作定义](../../docs/feat-system3-g1/architecture.html#dnhm)、Runtime Harness Generalization 及三组最小实验。独立运维负责近邻全文方法与代码比对；本会话只整合已交付的方法提议，不声明术语首创、已证新颖性、训练完成或实验收益。当前运行实现与 Frontend pin 保持冻结。
+
 本次文档验证：test:docs 20/20、doc-sync 42/42、lint（包含 Host build）、Ruff check / format、diff 检查均通过，keyless SDK 三场景通过。浏览器为独占 architecture state，不操作产品登录或审查会话。
+
+DNHM 文档补充验证：新增实验表键盘操作、390 / 1440px 展开布局与打印还原通过；七种屏宽和原交互回归通过，A4 共 19 页。test:docs 20/20、doc-sync 42/42、lint 通过；此处的 SDK / 四图原验收记录保留，未重复模型或部署测试。
