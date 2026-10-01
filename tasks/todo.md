@@ -237,4 +237,7 @@
 - [ ] 确认新增运行能力的具体设计，再实施恢复消费者与前端事实投影。
 - [ ] 完成失效状态 / 取消 / 去重、真实原生组合、两 SDK 与 Session 回放。
 - [ ] 用原生大脑、确定性规则、Jev 策略三组对照核验真实任务收益。
-- [ ] Frontend 实际 CI 通过并完成双仓 PR 收口；新运行能力单独验收后发布。
+- [x] Frontend Windows 实际 CI 通过，固定证据与双仓 PR 交接完成；两 PR 保持 OPEN。
+- [ ] 新过程恢复能力经设计确认、独立验收后再发布。
+
+本轮 CI Review：Windows 原生测试 1563 通过 / 4 跳过，固定自有 Harness 构建、27 补丁装配、Electron HTTP 200、开发安装包与隔离应用启动通过。固定提交、工作流步骤、产物 API 摘要及范围见 [review-regression.json](feat-system3-g1/review-regression.json) 的 windowsFrontendCiAcceptance。服务器和已安装 Mac App 未更新；过程恢复设计尚未实施。

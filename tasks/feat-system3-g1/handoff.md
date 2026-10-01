@@ -59,7 +59,7 @@ Jev 8086 是结构化决策协议，8002 不能替代；实际 profile 显式 hi
 
 ## 分支/部署状态
 
-Harness 分支 `feat-system3-g1`；已接受基础标签 `system3-g1-foundation`。Frontend 分支 `feat-system3-integration`。服务器现运行已审查标签对应的稳定发布，真实重启和回滚通过；精确 release ID、源码提交、任务和恢复证据见 docs/feat-system3-g1/deployment-final.json。应用仅监听服务器 127.0.0.1:18731，通过 SSH tunnel 与原生 cookie 访问。本机已安装 ~/Applications/xDAN System3.app，使用 ~/.local/bin/xdan-system3 或 ~/Applications/启动 xDAN System3.command 启动；凭据只在包外的受限文件内。Desktop pin 与任务证据见 desktop-acceptance.json。私有 Harness PR #13、Frontend PR #1 已创建，尚未合并。较早 Actions 因预算未执行；后续实际执行暴露 persona expected 错配，最小修复后三个本地 keyless 场景及远端独立 Harness CI 通过。Frontend CI 本轮未重新核对；后续提交应按各自固定 HEAD 核验。本地与真实运行证据不替代远端 CI。验收证据固定标签 system3-g1-acceptance-rc2，实际运行实现固定标签 system3-g1-reviewed-rc2。
+Harness 分支 `feat-system3-g1`；已接受基础标签 `system3-g1-foundation`。Frontend 分支 `feat-system3-integration`。服务器现运行已审查标签对应的稳定发布，真实重启和回滚通过；精确 release ID、源码提交、任务和恢复证据见 docs/feat-system3-g1/deployment-final.json。应用仅监听服务器 127.0.0.1:18731，通过 SSH tunnel 与原生 cookie 访问。本机已安装 ~/Applications/xDAN System3.app，使用 ~/.local/bin/xdan-system3 或 ~/Applications/启动 xDAN System3.command 启动；凭据只在包外的受限文件内。Desktop pin 与任务证据见 desktop-acceptance.json。私有 Harness PR #13、Frontend PR #1 已创建，尚未合并。较早 Actions 因预算未执行；后续实际执行暴露 persona expected 错配，最小修复后三个本地 keyless 场景及远端独立 Harness CI 通过。Frontend Windows CI 已实际通过，固定证据见下文；后续提交应按各自固定 HEAD 核验。本地与真实运行证据不替代远端 CI。验收证据固定标签 system3-g1-acceptance-rc2，实际运行实现固定标签 system3-g1-reviewed-rc2。
 
 ## 冷启动 checklist
 
@@ -118,8 +118,14 @@ DNHM 文档补充验证：新增实验表键盘操作、390 / 1440px 展开布�
 
 ## 后续 CI 与过程恢复设计
 
-产品主图固定版本的 [Independent harness CI](https://github.com/cryptoSUN2049/xDAN-System3-Harness/actions/runs/36857821137) 实际执行并成功，图示任务已完成。Frontend 原预算阻塞解除后，Windows CI 实测暴露 README 下载断言与跨平台路径夹具两项问题；产品会话已统一修复并补齐固定自有 Harness 的 Windows 装配链，新固定 head 的 CI 待核对。详见 Frontend `docs/feat-system3-integration/ci-recovery-plan.md`。服务器与已安装 Mac App 仍使用 reviewed / acceptance 标签对应版本，本轮无模型调用或重新部署。
+产品主图固定版本的 [Independent harness CI](https://github.com/cryptoSUN2049/xDAN-System3-Harness/actions/runs/36857821137) 实际执行并成功，图示任务已完成。Frontend 原预算阻塞解除后，Windows CI 实测暴露 README 下载断言与跨平台路径夹具两项问题；产品会话已统一修复并补齐固定自有 Harness 的 Windows 装配链，最新固定 head 的 Windows CI 已完成并成功，证据见下文。详见 Frontend `docs/feat-system3-integration/ci-recovery-plan.md`。服务器与已安装 Mac App 仍使用 reviewed / acceptance 标签对应版本，本轮无模型调用或重新部署。
 
 新增 [process-recovery-plan.html](../../docs/feat-system3-g1/process-recovery-plan.html) 为待确认设计：仅原生只读文件不存在错误，Jev 在定位输入 / 请求明确输入 / 弃权间选择，由原生 pre-step 验证状态并提交精确指令注入；不直接重放工具，不扩大权限。前端分别展示观察、决策与采用事实，不把采用等同任务恢复成功。原生大脑、确定性规则和 Jev 三组对照同时评测任务质量、总耗时与成本。新增运行实现须先取得用户对该具体设计的确认；未修改运行代码。
 
-设计 HTML 已做 SVG self_check、8 个本地引用、ARIA/ID、1440/390px 浏览器与图像检查；doc-sync 42/42 通过。文件、任务和本交接随同文档提交，当前过程消费者状态始终为“尚未实现”。下一步先核对用户设计反馈及 Frontend 固定 head CI，再决定进入实现或继续 CI 故障修复。
+设计 HTML 已做 SVG self_check、8 个本地引用、ARIA/ID、1440/390px 浏览器与图像检查；doc-sync 42/42 通过。文件、任务和本交接随同文档提交，当前过程消费者状态始终为“尚未实现”。下一步等待用户对具体恢复设计的确认，再进入实现；Frontend CI 故障已关闭。
+
+## Windows CI 最终交接
+
+[Windows PR CI](https://github.com/cryptoSUN2049/xDAN-System3-Frontend/actions/runs/36872088417) 已实际成功：原生测试 173 文件通过 / 2 跳过，1563 项通过 / 4 跳过；固定私有 Harness 源码构建、7 个自有包 / 27 补丁装配、Electron HTTP 200、三种缩放 UI、开发安装包和隔离应用工作区 / 会话创建通过。固定源码与步骤、产物 ID / 到期时间 / GitHub API 摘要集中于 [review-regression.json](review-regression.json) 的 windowsFrontendCiAcceptance。摘要不是本地下载复算或安装器文件哈希。
+
+该记录只覆盖未签名 Windows 开发包及解包后的应用启动，不包含安装向导执行、签名发布或新增模型任务。服务器与已安装 Mac App 保持原冻结验收版本。两仓 PR 均 OPEN，未合并。过程恢复 HTML 是待确认设计；本轮没有新增恢复消费者。Frontend 后续源码修改须重新核对对应 head，不能沿用本次成功。
