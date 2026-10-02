@@ -1521,6 +1521,9 @@ importers:
       '@deepseek-ai/dsh-subagent-acp':
         specifier: workspace:*
         version: link:../../../packages/subagent/subagent-acp
+      '@deepseek-ai/dsh-subagent-codex':
+        specifier: workspace:*
+        version: link:../../../packages/subagent/subagent-codex
       '@deepseek-ai/dsh-subagent-fork-in-process':
         specifier: workspace:*
         version: link:../../../packages/subagent/subagent-fork-in-process

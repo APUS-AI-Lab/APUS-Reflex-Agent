@@ -22,6 +22,8 @@ The systemd unit uses an empty capability set, NoNewPrivileges, ProtectSystem=st
 
 The root-only `/etc/xdan-system3/runtime.env` reuses the existing `system3-dsh` virtual key and supplies `SYSTEM3_LITELLM_API_KEY`, `JEV_API_KEY` and the explicit JSON `SYSTEM3_SESSION_DATA_CLASSES`. The acceptance environment declares only public material; operators must not put personal or confidential files into this workspace. Classification is a deployment declaration, not automatic sanitization. Credentials never enter build artifacts or frontend bundles. Native browser credentials persist in the private Harness home. DeepSeek session-log contribution and telemetry delivery are disabled.
 
+Delegated Codex runs use the bundled Codex CLI with the service-owned `CODEX_HOME` `/var/lib/xdan-system3/codex-home` (mode 0700). Each release installs `deploy/system3/codex/config.toml` there with mode 0600: it sends Codex to the Fidoo Responses API with `gpt-5.6-sol-relay`, reads the key from `SYSTEM3_LITELLM_API_KEY`, sets `approval_policy = "never"` and `sandbox_mode = "workspace-write"`, and disables update checks and analytics. No personal ChatGPT login, plugin, or MCP server enters this home. The unit sets `SYSTEM3_CODEX_HOME`; `runtime.patch.yml` passes it and the key only to the Codex child. Codex sandboxes its own commands on Linux, and that sandbox has not been verified on this kernel without Landlock; verify a delegated task that runs a command before relying on delegation.
+
 ## Release and recovery
 
 Run `deploy/system3/release.sh <immutable-release-id> <source-commit>` on the server from a reviewed source archive. The script installs dependencies from the lockfile and builds Linux artifacts in the pinned Node image, extracts the application and matching Node/bubblewrap binaries, creates a root-owned release directory, selects it atomically, then restarts only the System3 unit. The source commit is embedded in client metadata and the image label. Release health requires an active process and HTTP 401 for an anonymous API request. Only a healthy publication updates the previous-release pointer; failed publications retain the existing rollback target. Each release saves its own `service.unit`; an active legacy release receives its current unit once before replacement.
@@ -36,6 +38,7 @@ Run `deploy/system3/release.sh <immutable-release-id> <source-commit>` on the se
 | `deploy/system3/Dockerfile.dockerignore` | Excludes local dependencies, build outputs and common secret files |
 | `deploy/system3/runtime.patch.yml` | Loopback transport, model routes and explicit System3 policy |
 | `deploy/system3/xdan-system3.service` | Dedicated user, filesystem isolation and resource limits |
+| `deploy/system3/codex/config.toml` | Private Codex home configuration for delegated runs |
 | `deploy/system3/release.sh` | Build, extract, switch and health validation |
 | `deploy/system3/rollback.sh` | Compatible previous-release recovery |
 | `deploy/system3/tests/release.spec.sh` | Isolated fault injection for release and rollback |

@@ -22,6 +22,8 @@ systemd 单元采用空 capability 集、NoNewPrivileges、ProtectSystem=strict�
 
 仅 root 可读的 `/etc/xdan-system3/runtime.env` 复用既有 `system3-dsh` virtual key，提供 `SYSTEM3_LITELLM_API_KEY`、`JEV_API_KEY` 和显式 JSON `SYSTEM3_SESSION_DATA_CLASSES`。验收环境仅声明公开材料；操作人员不得将个人或机密文件放入该工作区。分类是部署声明，不是自动脱敏。凭据不进入构建产物或前端 bundle。原生浏览器凭据持久保存在私有 Harness home。禁用 DeepSeek 会话日志贡献和遥测投递。
 
+委派的 Codex 使用随应用打包的 Codex CLI，`CODEX_HOME` 为服务专属的 `/var/lib/xdan-system3/codex-home`（权限 0700）。每次发布都把 `deploy/system3/codex/config.toml` 以 0600 权限装入该目录：它让 Codex 通过 Fidoo 的 Responses API 调用 `gpt-5.6-sol-relay`，从 `SYSTEM3_LITELLM_API_KEY` 读取 key，设置 `approval_policy = "never"` 和 `sandbox_mode = "workspace-write"`，并关闭更新检查和分析上报。个人 ChatGPT 登录、插件和 MCP server 都不进入该目录。systemd 单元设置 `SYSTEM3_CODEX_HOME`；`runtime.patch.yml` 只把它和 key 传给 Codex 子进程。Codex 在 Linux 上自行沙箱化它执行的命令，该沙箱尚未在这台没有 Landlock 的内核上验证；依赖委派之前，先验证一次会执行命令的委派任务。
+
 ## 发布和恢复
 
 在服务器的已审查源码归档目录运行 `deploy/system3/release.sh <immutable-release-id> <source-commit>`。脚本依据 lockfile 安装依赖，在固定 Node 镜像中构建 Linux 产物，提取应用及匹配的 Node/bubblewrap 二进制，建立归 root 所有的发布目录，原子切换后仅重启 System3 单元。源码 commit 写入客户端元数据和镜像标签。健康检查要求进程 active，且匿名 API 请求返回 HTTP 401。 只有健康发布才更新前一发布指针；发布失败保留已有回滚目标。每个发布保存自己的 `service.unit`；旧的活动发布在首次被替代前补存当时的单元一次。
@@ -36,6 +38,7 @@ systemd 单元采用空 capability 集、NoNewPrivileges、ProtectSystem=strict�
 | `deploy/system3/Dockerfile.dockerignore` | 排除本地依赖、构建输出和常见凭据文件 |
 | `deploy/system3/runtime.patch.yml` | Loopback 传输、模型路由和显式 System3 策略 |
 | `deploy/system3/xdan-system3.service` | 专用用户、文件系统隔离和资源限制 |
+| `deploy/system3/codex/config.toml` | 委派运行使用的私有 Codex home 配置 |
 | `deploy/system3/release.sh` | 构建、提取、切换和健康验证 |
 | `deploy/system3/rollback.sh` | 恢复兼容的前一发布 |
 | `deploy/system3/tests/release.spec.sh` | 发布和回滚的隔离故障注入 |

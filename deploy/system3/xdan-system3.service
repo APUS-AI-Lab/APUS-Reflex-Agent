@@ -10,6 +10,7 @@ Group=xdan-system3
 WorkingDirectory=/var/lib/xdan-system3/workspace
 Environment=HOME=/var/lib/xdan-system3/home
 Environment=DSH_HOME=/var/lib/xdan-system3/home/.dsh
+Environment=SYSTEM3_CODEX_HOME=/var/lib/xdan-system3/codex-home
 Environment=DSH_PERMISSION_MODE=workspace-write
 Environment=DSH_TELEMETRY_MODE=DISABLED
 Environment=DSH_TELEMETRY_DISABLED=1

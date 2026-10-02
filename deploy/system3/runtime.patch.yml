@@ -71,7 +71,7 @@
       config:
         privacyMode: controlled
         observeAgentLoop: true
-        approvedRemoteIds: [jev, fast, reasoning, expert, frontier]
+        approvedRemoteIds: [jev, fast, reasoning, expert, frontier, codex]
         approvedRemoteDataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'
         jevRouteId: jev
         jevExecutionDomain: network
@@ -134,3 +134,26 @@
               reasoningEffort: high
               executionDomain: network
               dataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'
+            - id: codex
+              description: 需要在工作区里动手完成、跨多个文件的工程任务：实现功能、修复缺陷并补测试、运行命令验证。单行修改、解释代码或回答问题不属于此类。
+              label: 工程任务 · 委派 Codex
+              delegate:
+                provider: codex
+                tool: subagent_codex
+              executionDomain: network
+              dataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'
+    # Delegation target: Codex with the private home release.sh installs, calling the Fidoo relay.
+    - id: subagent-codex
+      name: ../../packages/subagent/subagent-codex/lib/index.js
+      config:
+        permissionMode: never
+        env:
+          CODEX_HOME: !!js process.env.SYSTEM3_CODEX_HOME
+          SYSTEM3_LITELLM_API_KEY: !!js process.env.SYSTEM3_LITELLM_API_KEY
+    - id: tool-subagent-codex-system3
+      name: ../../packages/subagent/tool-subagent/lib/index.js
+      config:
+        provider: codex
+        toolName: subagent_codex
+        backgroundMode: one-shot
+        maxDepth: provider-managed

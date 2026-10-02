@@ -3,6 +3,7 @@ set -euo pipefail
 [[ -f /.dockerenv && ! -e /opt/xdan-system3 ]] || { echo 'This test requires a clean disposable container' >&2; exit 1; }
 mkdir -p /test/bin /test/source/deploy/system3 /etc/xdan-system3 /etc/systemd/system
 cp /work/deploy/system3/{release.sh,rollback.sh,xdan-system3.service} /test/source/deploy/system3/
+mkdir -p /test/source/deploy/system3/codex && cp /work/deploy/system3/codex/config.toml /test/source/deploy/system3/codex/
 printf 'FIXTURE=public\n' > /etc/xdan-system3/runtime.env
 id xdan-system3 >/dev/null 2>&1 || useradd --system xdan-system3
 cat > /test/bin/docker <<'SH'
