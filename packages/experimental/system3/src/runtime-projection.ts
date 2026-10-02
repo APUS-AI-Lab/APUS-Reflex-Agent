@@ -16,6 +16,8 @@ interface System3RuntimeState extends System3RuntimeView {
   readonly entryTurn: number | null
   readonly startRequestId: SessionRequestId | null
   readonly skillMessageId: MessageId | null
+  /** Whether any committed user message or tool result in this Session carries an image block. */
+  readonly imageInSession: boolean
   /** Route chosen or retained by the latest entry decision; null when that decision left the baseline. */
   readonly route: { readonly requestId: SessionRequestId; readonly selection: ModelSelection } | null
 }
@@ -41,7 +43,7 @@ const stateSchema: ZodType<System3RuntimeState> = z.object({ entry: viewSchema.s
   header: selection.nullable(), currentTurn: z.number().nullable(), currentStep: z.number().nullable(),
   entryTurn: z.number().nullable(), startRequestId: requestId.nullable(),
   skillMessageId: z.string().transform(value => brandString<MessageId>(value)).nullable(),
-  route: z.object({ requestId, selection }).nullable() })
+  imageInSession: z.boolean(), route: z.object({ requestId, selection }).nullable() })
 
 /** Content deltas and completed content blocks prove response; protocol-only records do not. */
 function hasResponseContent(stream: readonly AssistantStreamRecord[]): boolean {
@@ -54,9 +56,13 @@ function hasResponseContent(stream: readonly AssistantStreamRecord[]): boolean {
 export const system3RuntimeProjection = {
   key: 'system3Runtime', stateVersion: 4, stateSchema,
   init: () => ({ entry: null, skill: null, header: null, currentTurn: null, currentStep: null,
-    entryTurn: null, startRequestId: null, skillMessageId: null, route: null }),
+    entryTurn: null, startRequestId: null, skillMessageId: null, imageInSession: false, route: null }),
   wire: { viewSchema, view: state => ({ entry: state.entry, skill: state.skill }) },
   apply(state, event) {
+    if (!state.imageInSession && (event.type === 'user/message' || event.type === 'tool/result')) {
+      const content = event.type === 'user/message' ? event.data.content : event.data.message.content
+      if (content.some(block => block.type === 'image')) state = { ...state, imageInSession: true }
+    }
     if (event.type === 'step/start') return { ...state, currentTurn: event.data.turn, currentStep: event.data.step }
     if (event.type === 'step/end' || event.type === 'turn/end') return { ...state, currentTurn: null, currentStep: null }
     if (event.type === 'request/header') {

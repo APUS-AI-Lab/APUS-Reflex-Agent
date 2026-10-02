@@ -25,7 +25,7 @@
           - id: deepseek-v4-flash
             contextWindow: 131072
             maxTokens: 8192
-            input: [text]
+            input: [text, image]
             reasoningEfforts: {off: null, low: low, medium: medium, high: high}
           - id: deepseek-v4-pro
             contextWindow: 131072
@@ -41,12 +41,12 @@
           - id: gpt-5.6-sol-relay
             contextWindow: 131072
             maxTokens: 8192
-            input: [text]
+            input: [text, image]
             reasoningEfforts: {low: low, medium: medium, high: high}
           - id: gpt-6-sol-relay
             contextWindow: 131072
             maxTokens: 8192
-            input: [text]
+            input: [text, image]
             reasoningEfforts: {low: low, medium: medium, high: high}
 - id: agent-default-model
   config:

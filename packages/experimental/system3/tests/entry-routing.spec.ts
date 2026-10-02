@@ -1,6 +1,7 @@
 import { Context, Service } from '@deepseek-ai/cordis'
 import type { SessionPromptRouter } from '@deepseek-ai/dsh-api-session-controller'
 import { brandString } from '@deepseek-ai/dsh-brand'
+import type { AttachmentId } from '@deepseek-ai/dsh-attachment'
 import type { SessionRequestId } from '@deepseek-ai/dsh-api-session-controller/types'
 import AgentLoop from '@deepseek-ai/dsh-agent-loop'
 import { mountAgentLoopTestDependencies } from '@deepseek-ai/dsh-agent-loop-testkit'
@@ -142,6 +143,21 @@ describe('retainOnAbstain', () => {
     vi.spyOn(ctx, 'get').mockImplementation(((name: string) => name === 'sessionProjections' ? undefined : ctx[name as 'jev']) as Context['get'])
     await expect(router.route(request, signal)).rejects.toThrow('requires sessionProjections')
   })
+})
+
+it('requires image input from candidates only once the Session contains an image', async () => {
+  const { adapter, ctx, decide, request, router, signal } = await setup()
+  ctx.sessionProjections.register(system3RuntimeProjection)
+  vi.spyOn(adapter, 'resolveModel').mockImplementation(async (provider, model) => ({ provider, id: model, name: model,
+    context: { contextWindow: 10000 }, inputModalities: model === 'baseline' ? ['text', 'image'] : ['text'] }))
+  expect(await router.route(request, signal)).toEqual({ provider: 'mock', model: 'fast' })
+  request.agent.session.append('user/message', createUserMessage({
+    content: [{ type: 'text', text: 'see' }, { type: 'image', attachment: { attachmentId: brandString<AttachmentId>('image-1'), mediaType: 'image/png', bytes: 4, width: 1, height: 1 } }], source: { kind: 'user' },
+  }), { surfaceOp: 'append' })
+  decide.mockClear()
+  expect(await router.route({ ...request, requestId: brandString<SessionRequestId>('after-image') }, signal)).toBeUndefined()
+  expect(decide).not.toHaveBeenCalled()
+  expect(request.agent.session.snapshotEvents().at(-1)?.data).toMatchObject({ outcome: 'no-candidates' })
 })
 
 it('blocks the remote Jev before I/O even when its URL is loopback', async () => {

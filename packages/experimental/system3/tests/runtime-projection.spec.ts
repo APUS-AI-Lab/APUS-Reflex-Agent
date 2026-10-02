@@ -1,7 +1,8 @@
 import { Context } from '@deepseek-ai/cordis'
 import { brandString } from '@deepseek-ai/dsh-brand'
+import type { AttachmentId } from '@deepseek-ai/dsh-attachment'
 import type { SessionRequestId } from '@deepseek-ai/dsh-api-session-controller/types'
-import { createAssistantMessage, createUserMessage, ReasoningEffortId, ToolCallId, type AssistantStreamRecord } from '@deepseek-ai/dsh-llm'
+import { createAssistantMessage, createToolResultMessage, createUserMessage, ReasoningEffortId, ToolCallId, type AssistantStreamRecord } from '@deepseek-ai/dsh-llm'
 import { Session, SessionId, SessionLogOffset, type SessionEvent } from '@deepseek-ai/dsh-session'
 import Projections from '@deepseek-ai/dsh-session-projection'
 import { afterEach, expect, it } from 'vitest'
@@ -247,4 +248,17 @@ it('clears preceding Skill injection facts when the next decision proposes no in
   h.session.append('step/start', { turn: 2, step: 0 })
   h.session.append('user/message', injection, { surfaceOp: 'append' })
   expect(h.view()?.skill?.injected).toBe(false)
+})
+
+it('marks the Session as containing images from a user message or a tool result', async () => {
+  const attachment = { attachmentId: brandString<AttachmentId>('image-1'), mediaType: 'image/png' as const, bytes: 4, width: 1, height: 1 }
+  const image = { type: 'image' as const, attachment }
+  const fromTool = await setup()
+  fromTool.session.append('tool/result', { turn: 1, step: 0, message: createToolResultMessage({ callId: ToolCallId('call-1'), content: [{ type: 'text', text: 'plain' }], isError: false }) }, { surfaceOp: 'append' })
+  expect(fromTool.view()?.imageInSession).toBe(false)
+  fromTool.session.append('tool/result', { turn: 1, step: 0, message: createToolResultMessage({ callId: ToolCallId('call-2'), content: [image], isError: false }) }, { surfaceOp: 'append' })
+  expect(fromTool.view()?.imageInSession).toBe(true)
+  const fromUser = await setup()
+  fromUser.session.append('user/message', createUserMessage({ content: [image], source: { kind: 'user' } }), { surfaceOp: 'append' })
+  expect(fromUser.view()?.imageInSession).toBe(true)
 })

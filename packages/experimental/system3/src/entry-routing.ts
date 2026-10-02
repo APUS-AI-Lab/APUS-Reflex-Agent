@@ -4,7 +4,7 @@ import type { Context } from '@deepseek-ai/cordis'
 import type { ModelSelection } from '@deepseek-ai/dsh-agent'
 import type { SessionPromptRouter } from '@deepseek-ai/dsh-api-session-controller'
 import type { SessionRequestId } from '@deepseek-ai/dsh-api-session-controller/types'
-import { ReasoningEffortId } from '@deepseek-ai/dsh-llm'
+import { ReasoningEffortId, type ModelModality } from '@deepseek-ai/dsh-llm'
 import { RemoteError } from '@deepseek-ai/dsh-typert-protocol'
 import { MAX_JEV_CHOICES, type JevErrorCode, type JevRequest, type JevResponse } from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
 import { admitSystem3Routes, type System3DataClass, type System3ExecutionDomain, type System3PrivacyPolicy } from '@deepseek-ai/dsh-experimental-system3-policy'
@@ -205,6 +205,11 @@ export function createSystem3EntryRouter(
         if (llm === undefined) throw new Error('entryRouting requires the llm service')
         const baseline = await llm.resolveModelInfo(input.baseline.provider, input.baseline.model, signal)
         signal.throwIfAborted()
+        // The candidate will read the whole Session: require image input only once an image is in it.
+        // Without the System3 projection, fall back to every modality the baseline accepts.
+        const history = ctx.get('sessionProjections')?.stateOf(input.agent.session, 'system3Runtime')
+        const required: readonly ModelModality[] | undefined = history === undefined ? undefined
+          : history.imageInSession ? ['text', 'image'] : ['text']
         const compatible: System3EntryCandidate[] = []
         for (const candidate of allowed) {
           const model = await llm.resolveModelInfo(candidate.provider, candidate.model, signal)
@@ -216,7 +221,7 @@ export function createSystem3EntryRouter(
           if (baseline.context === undefined || model.context === undefined
             || model.context.contextWindow < baseline.context.contextWindow) continue
           if (baseline.inputModalities === undefined || model.inputModalities === undefined
-            || !baseline.inputModalities.every(modality => model.inputModalities?.includes(modality))) continue
+            || !(required ?? baseline.inputModalities).every(modality => model.inputModalities?.includes(modality))) continue
           compatible.push(candidate)
         }
         allowed = compatible
