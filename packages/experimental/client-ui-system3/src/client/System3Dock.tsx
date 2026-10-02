@@ -34,6 +34,12 @@ function labelOf(props: System3FeedbackProps): System3Key {
 function model(value: ModelSelection | null | undefined, t: TranslateNS<'system3'>): string {
   return value ? `${value.provider} / ${value.model}${value.reasoningEffort ? ` · ${value.reasoningEffort}` : ''}` : t('none')
 }
+/** The configured route shown as soon as the entry decision is recorded, before the model answers. */
+function routeNotice(entry: System3RuntimeView['entry'] | undefined, t: TranslateNS<'system3'>): string | null {
+  if (entry?.phase !== 'decided' || entry.route === null) return null
+  const route = entry.route.label ?? model(entry.suggested ?? entry.adopted, t)
+  return t(entry.route.retained ? 'routeRetained' : 'routeChosen', { route })
+}
 /** Render observed progress and allow a fixed Session to return to automatic mode.
  * @param props - Persisted facts and live Session status.
  * @returns Compact, expandable execution feedback.
@@ -51,10 +57,12 @@ export function System3Feedback(props: System3FeedbackProps) {
     finally { pending.current = false; setSwitching(false) }
   }
   const fixed = selection?.mode === 'fixed'
+  const notice = routeNotice(facts?.entry, t)
   return <section className={css.dock} aria-label={t('title')}>
     <div className={css.bar}>
       <span className={css.dot} data-active={props.running || props.pending} aria-hidden="true" />
       <span role="status" aria-live="polite">{t(labelOf(props))}</span>
+      {notice !== null && <span className={css.route} aria-live="polite">{notice}</span>}
       <span className={css.mode}>{t(fixed ? 'fixed' : 'auto')}</span>
       {fixed && props.available && <button className={css.button} disabled={switching || props.opening} onClick={() => { void change() }}>
         {t(switching ? 'resetting' : 'reset')}
@@ -65,7 +73,7 @@ export function System3Feedback(props: System3FeedbackProps) {
       <p className={css.muted}>{t('cloud')}</p>
       <p>{t('historical')}</p>
       <dl className={css.facts}>
-        <dt>{t('suggestion')}</dt><dd>{model(facts?.entry?.suggested, t)}</dd>
+        <dt>{t('suggestion')}</dt><dd>{facts?.entry?.route?.retained === true ? t('continued') : model(facts?.entry?.suggested, t)}</dd>
         <dt>{t('adoption')}</dt><dd>{model(facts?.entry?.adopted, t)}</dd>
         <dt>{t('actual')}</dt><dd>{model(facts?.entry?.used, t)}</dd>
         {facts?.entry?.elapsedMs !== null && facts?.entry?.elapsedMs !== undefined && <><dt>{t('decisionTime')}</dt><dd>{facts.entry.elapsedMs} {t('milliseconds')}</dd></>}

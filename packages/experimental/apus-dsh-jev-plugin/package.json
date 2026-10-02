@@ -36,11 +36,13 @@
   ],
   "license": "MIT",
   "dependencies": {
+    "@deepseek-ai/dsh-http-proxy": "workspace:*",
     "@deepseek-ai/dsh-launch-environment": "workspace:*",
     "@deepseek-ai/dsh-timeout": "workspace:*",
     "@deepseek-ai/dsh-util-values": "workspace:*",
     "@deepseek-ai/schemastery": "workspace:~",
-    "@typesafe-ai/sdk": "0.6.0"
+    "@typesafe-ai/sdk": "0.6.0",
+    "undici": "^8.10.0"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "workspace:~",

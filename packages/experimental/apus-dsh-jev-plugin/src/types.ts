@@ -88,6 +88,12 @@ export interface JevProvider {
    * @returns Validated provider response.
    */
   decide(request: JevRequest, signal?: AbortSignal): Promise<JevResponse>
+  /**
+   * Open or keep alive the transport to the provider without requesting a decision.
+   * Providers without a reusable transport omit it.
+   * @param signal - Caller cancellation.
+   */
+  warm?(signal?: AbortSignal): Promise<void>
 }
 
 /** A request with the provider selected and its effective model pinned. */

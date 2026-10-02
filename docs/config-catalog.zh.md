@@ -886,7 +886,7 @@ export interface Config {
 
 ## `@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin`
 
-- `source`: [`packages/experimental/apus-dsh-jev-plugin/src/index.ts:24`](../packages/experimental/apus-dsh-jev-plugin/src/index.ts)
+- `source`: [`packages/experimental/apus-dsh-jev-plugin/src/index.ts:25`](../packages/experimental/apus-dsh-jev-plugin/src/index.ts)
 
 ```ts config-catalog
 /** Plugin configuration for the built-in System One provider. */
@@ -905,6 +905,13 @@ export interface Config {
   readonly apiKeyEnv?: string
   /** Registry identity of the built-in provider, selected when a request omits providerId. @default 'system-one' */
   readonly providerId?: string
+  /**
+   * Idle time in milliseconds a direct connection to the gateway stays open for reuse. Omission keeps
+   * the process-wide transport. A request routed through a configured HTTP proxy always uses that proxy's transport.
+   */
+  readonly keepAliveMs?: number
+  /** Negotiate HTTP/2 on the dedicated direct connection; requires `keepAliveMs`. @default false */
+  readonly http2?: boolean
 }
 ```
 <!-- END GENERATED config-catalog:@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin -->
@@ -1226,7 +1233,7 @@ export interface Config {
 ## `@deepseek-ai/dsh-experimental-system3`
 
 - `refs`: [`System3DataClass`](../packages/experimental/system3-policy/src/index.ts) · [`System3ExecutionDomain`](../packages/experimental/system3-policy/src/index.ts) · [`System3PrivacyMode`](../packages/experimental/system3-policy/src/index.ts)
-- `source`: [`packages/experimental/system3/src/index.ts:37`](../packages/experimental/system3/src/index.ts)
+- `source`: [`packages/experimental/system3/src/index.ts:39`](../packages/experimental/system3/src/index.ts)
 
 ```ts config-catalog
 /** Configures the default local-first privacy boundary. */
@@ -1278,6 +1285,8 @@ export interface System3EntryRoutingConfig {
    * model already chosen for that work. Provider failures still use the baseline. @default false
    */
   readonly retainOnAbstain?: boolean
+  /** Keep the Jev connection open after plugin start and after each turn ends; omission sends no warm-up requests. */
+  readonly keepWarm?: System3KeepWarmConfig
 }
 
 /** Explicit limits for automatically loading one model-invocable Skill per new user input. */
@@ -1302,6 +1311,8 @@ export interface System3EntryCandidate {
   readonly id: string
   /** Task criteria presented to Jev for this candidate. */
   readonly description: string
+  /** Short route name the Client shows as soon as this candidate is chosen, such as a task class and model name. */
+  readonly label?: string
   /** Registered generation provider route. */
   readonly provider: string
   /** Exact generation model identifier. */
@@ -1312,6 +1323,14 @@ export interface System3EntryCandidate {
   readonly executionDomain: System3ExecutionDomain
   /** Session data classes this candidate may receive. */
   readonly dataClasses: readonly System3DataClass[]
+}
+
+/** How long after activity, and how often, the Jev connection is kept open. */
+export interface System3KeepWarmConfig {
+  /** Time after plugin start or the latest turn end during which the connection is kept open. */
+  readonly windowMs: number
+  /** Interval between warm-up requests; shorter than the gateway's idle connection timeout. */
+  readonly intervalMs: number
 }
 ```
 <!-- END GENERATED config-catalog:@deepseek-ai/dsh-experimental-system3 -->

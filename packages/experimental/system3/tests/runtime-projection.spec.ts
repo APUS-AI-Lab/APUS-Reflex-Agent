@@ -262,3 +262,19 @@ it('marks the Session as containing images from a user message or a tool result'
   fromUser.session.append('user/message', createUserMessage({ content: [image], source: { kind: 'user' } }), { surfaceOp: 'append' })
   expect(fromUser.view()?.imageInSession).toBe(true)
 })
+
+it('exposes the chosen route with its label and whether it continued the previous route', async () => {
+  const h = await setup()
+  const first = brandString<SessionRequestId>('chosen')
+  h.session.append('system3/entry-start', { requestId: first })
+  h.session.append('system3/entry-decision', { version: 1, requestId: first, request: null, baseline: selected, candidateIds: ['deep'],
+    dataClasses: ['public'], routeId: 'jev', executionDomain: 'local', outcome: 'selected', selected, candidate: { id: 'deep', label: 'Deep' }, elapsedMs: 1 })
+  expect(h.view()?.entry?.route).toEqual({ id: 'deep', label: 'Deep', retained: false })
+  const second = brandString<SessionRequestId>('continued')
+  h.session.append('system3/entry-start', { requestId: second })
+  h.session.append('system3/entry-decision', { version: 1, requestId: second, request: null, baseline: selected, candidateIds: ['deep'],
+    dataClasses: ['public'], routeId: 'jev', executionDomain: 'local', outcome: 'abstain', retained: { requestId: first, selection: selected },
+    candidate: { id: 'deep' }, elapsedMs: 1 })
+  expect(h.view()?.entry?.route).toEqual({ id: 'deep', label: null, retained: true })
+  expect(system3RuntimeProjection.wire.viewSchema.parse(system3RuntimeProjection.wire.view(h.view()!)).entry?.route).toEqual({ id: 'deep', label: null, retained: true })
+})

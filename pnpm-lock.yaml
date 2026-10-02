@@ -8009,6 +8009,9 @@ importers:
 
   packages/experimental/apus-dsh-jev-plugin:
     dependencies:
+      '@deepseek-ai/dsh-http-proxy':
+        specifier: workspace:*
+        version: link:../../util/http-proxy
       '@deepseek-ai/dsh-launch-environment':
         specifier: workspace:*
         version: link:../../util/launch-environment
@@ -8024,6 +8027,9 @@ importers:
       '@typesafe-ai/sdk':
         specifier: 0.6.0
         version: 0.6.0
+      undici:
+        specifier: ^8.10.0
+        version: 8.10.0
     devDependencies:
       '@deepseek-ai/cordis':
         specifier: workspace:~

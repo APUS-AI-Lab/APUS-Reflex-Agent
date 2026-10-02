@@ -31,4 +31,35 @@ describe('apus-dsh-jev-plugin service', () => {
     } finally { dispose(); await ctx.fiber.dispose() }
   })
 
+
+  it('warms the default provider and reports providers without a transport or with a failure', async () => {
+    const ctx = new Context()
+    await ctx.plugin(Jev, { endpoint: 'http://localhost', model: 'default' })
+    const service = ctx.get('jev')!
+    const warmed: string[] = []
+    const disposeWarm = service.register({ info: { id: 'warmable', model: 'm', endpoint: 'http://localhost' },
+      decide: async () => { throw new Error('unused') }, warm: async () => { warmed.push('warmable') } })
+    const disposeFailing = service.register({ info: { id: 'failing', model: 'm', endpoint: 'http://localhost' },
+      decide: async () => { throw new Error('unused') }, warm: async () => { throw new Error('down') } })
+    const disposeCold = service.register({ info: { id: 'cold', model: 'm', endpoint: 'http://localhost' }, decide: async () => { throw new Error('unused') } })
+    try {
+      expect(await service.warm('warmable')).toBe(true)
+      expect(warmed).toEqual(['warmable'])
+      expect(await service.warm('failing')).toBe(false)
+      expect(await service.warm('cold')).toBe(false)
+      expect(await service.warm('missing')).toBe(false)
+      const aborted = new AbortController()
+      aborted.abort(new Error('stop'))
+      await expect(service.warm('failing', aborted.signal)).rejects.toThrow('down')
+    } finally {
+      disposeWarm(); disposeFailing(); disposeCold()
+      await ctx.fiber.dispose()
+    }
+  })
+
+  it('requires keepAliveMs for HTTP/2', async () => {
+    const ctx = new Context()
+    await expect(ctx.plugin(Jev, { endpoint: 'http://localhost', model: 'default', http2: true })).rejects.toThrow('http2 requires keepAliveMs')
+    await ctx.fiber.dispose()
+  })
 })

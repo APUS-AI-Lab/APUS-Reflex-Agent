@@ -64,6 +64,8 @@
         apiKeyEnv: JEV_API_KEY
         effort: high
         timeoutMs: 15000
+        keepAliveMs: 120000
+        http2: true
     - id: system3
       name: ../../packages/experimental/system3/lib/index.js
       config:
@@ -90,9 +92,13 @@
           minConfidence: 0.8
           maxInputBytes: 16384
           retainOnAbstain: true
+          keepWarm:
+            windowMs: 300000
+            intervalMs: 2000
           candidates:
             - id: fast
               description: 简短问答、翻译、改写、归纳，以及范围明确、一步就能完成的常规任务。
+              label: 简单问答 · DeepSeek Flash
               provider: fidoo
               model: deepseek-v4-flash
               reasoningEffort: low
@@ -100,6 +106,7 @@
               dataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'
             - id: reasoning
               description: 需要几步推理的分析：解释原理、比较方案、阅读和排查一段代码、中等规模的计算或推导。
+              label: 推理分析 · DeepSeek Pro
               provider: fidoo
               model: deepseek-v4-pro
               reasoningEffort: low
@@ -107,6 +114,7 @@
               dataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'
             - id: expert
               description: 约束多、跨度大的专业任务：完整系统设计、跨模块代码改造、长篇材料综合，以及需要权衡依赖与风险的方案。
+              label: 复杂专业任务 · GPT-5.6 Sol
               provider: fidoo-relay
               model: gpt-5.6-sol-relay
               reasoningEffort: medium
@@ -114,6 +122,7 @@
               dataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'
             - id: frontier
               description: 最难的一类问题：开放式研究、严格证明、前沿难题，以及前几档模型很可能无法可靠完成的任务。
+              label: 前沿难题 · GPT-6 Sol
               provider: fidoo-relay
               model: gpt-6-sol-relay
               reasoningEffort: high

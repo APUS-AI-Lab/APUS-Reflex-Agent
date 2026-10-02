@@ -1289,6 +1289,12 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'Validated request with provider and model pinned.',
       },
       {
+        signature: 'async warm(providerId?: string, signal?: AbortSignal): Promise<boolean>',
+        description: 'Open or keep alive a provider\'s transport; failures are reported, never thrown.',
+        parameters: [{ name: 'providerId', description: 'Provider to warm; the default provider when omitted.' }, { name: 'signal', description: 'Caller cancellation.' }],
+        returns: 'Whether the provider answered; false when it has no transport to warm or the request failed.',
+      },
+      {
         signature: 'async decide(request: JevRequest, signal?: AbortSignal): Promise<JevOutcome>',
         description: 'Execute a typed decision, returning unknown when the provider is unavailable or invalid.',
         parameters: [{ name: 'request', description: 'Host state and typed questions.' }, { name: 'signal', description: 'Cancellation propagated to the caller.' }],
@@ -5503,7 +5509,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'JevProvider',
-    declaration: 'export interface JevProvider {\n    readonly info: JevProviderInfo;\n    decide(request: JevRequest, signal?: AbortSignal): Promise<JevResponse>;\n}',
+    declaration: 'export interface JevProvider {\n    readonly info: JevProviderInfo;\n    decide(request: JevRequest, signal?: AbortSignal): Promise<JevResponse>;\n    warm?(signal?: AbortSignal): Promise<void>;\n}',
   },
   {
     name: 'JevProviderInfo',

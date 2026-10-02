@@ -49,7 +49,8 @@ it('records the exact Jev request and returns a suggestion without changing the 
   const { decide, request, router, signal } = await setup()
   expect(await router.route(request, signal)).toEqual({ provider: 'mock', model: 'fast' })
   const receipt = request.agent.session.snapshotEvents().find(event => event.type === 'system3/entry-decision')
-  expect(receipt?.data).toMatchObject({ requestId: request.requestId, outcome: 'selected', request: decide.mock.calls[0]?.[0] })
+  expect(receipt?.data).toMatchObject({ requestId: request.requestId, outcome: 'selected', request: decide.mock.calls[0]?.[0], candidate: { id: 'fast' } })
+  expect(receipt?.data).not.toHaveProperty('candidate.label')
   expect(request.agent.session.deriveMessages()).toEqual([])
 })
 
@@ -83,7 +84,7 @@ it.each(['abstain', 'low-confidence', 'timeout'] as const)('keeps the baseline o
 describe('retainOnAbstain', () => {
   const twoRoutes: Partial<System3EntryRoutingConfig> = { retainOnAbstain: true, candidates: [
     ...config.candidates,
-    { id: 'deep', description: '复杂任务', provider: 'mock', model: 'deep', executionDomain: 'local', dataClasses: ['workspace'] },
+    { id: 'deep', description: '复杂任务', label: '复杂任务 · Deep', provider: 'mock', model: 'deep', executionDomain: 'local', dataClasses: ['workspace'] },
   ] }
   const answer = (ctx: Context, choice: string, confidence: number) => async (query: Parameters<Context['jev']['decide']>[0]) => ({
     kind: 'ok' as const, spec: ctx.jev.resolve(query), response: { model: 'jev-test', answers: { route: {
@@ -106,7 +107,7 @@ describe('retainOnAbstain', () => {
     expect(await router.route(next('second-follow-up'), signal)).toEqual({ provider: 'mock', model: 'deep' })
     const receipt = request.agent.session.snapshotEvents().at(-1)?.data
     expect(receipt).toMatchObject({ outcome: choice === 'abstain' ? 'abstain' : 'low-confidence',
-      retained: { requestId: 'first', selection: { provider: 'mock', model: 'deep' } } })
+      retained: { requestId: 'first', selection: { provider: 'mock', model: 'deep' } }, candidate: { id: 'deep', label: '复杂任务 · Deep' } })
     expect(receipt).not.toHaveProperty('selected')
   })
 

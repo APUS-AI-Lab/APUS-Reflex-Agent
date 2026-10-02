@@ -9,6 +9,7 @@ import { RemoteError } from '@deepseek-ai/dsh-typert-protocol'
 import { MAX_JEV_CHOICES, type JevErrorCode, type JevRequest, type JevResponse } from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
 import { admitSystem3Routes, type System3DataClass, type System3ExecutionDomain, type System3PrivacyPolicy } from '@deepseek-ai/dsh-experimental-system3-policy'
 import type { System3JevOptions } from './decisions.ts'
+import type { System3KeepWarmConfig } from './keep-warm.ts'
 import type {} from './runtime-projection.ts'
 
 /** Deployment-owned model route and its allowed session data classes. */
@@ -17,6 +18,8 @@ export interface System3EntryCandidate {
   readonly id: string
   /** Task criteria presented to Jev for this candidate. */
   readonly description: string
+  /** Short route name the Client shows as soon as this candidate is chosen, such as a task class and model name. */
+  readonly label?: string
   /** Registered generation provider route. */
   readonly provider: string
   /** Exact generation model identifier. */
@@ -54,6 +57,8 @@ export interface System3EntryRoutingConfig {
    * model already chosen for that work. Provider failures still use the baseline. @default false
    */
   readonly retainOnAbstain?: boolean
+  /** Keep the Jev connection open after plugin start and after each turn ends; omission sends no warm-up requests. */
+  readonly keepWarm?: System3KeepWarmConfig
 }
 
 /** Decision result, distinct from the Session API's later adoption outcome. */
@@ -74,6 +79,8 @@ export interface System3EntryDecisionReceipt {
   readonly outcome: System3EntryOutcome
   readonly response?: JevResponse
   readonly selected?: ModelSelection
+  /** Configured candidate whose model this decision selected or retained, with its display label. */
+  readonly candidate?: { readonly id: string; readonly label?: string }
   /** Route kept from an earlier decision of this Session; Jev suggested none for this input. */
   readonly retained?: {
     /** The earlier request whose route continues. */
@@ -152,6 +159,7 @@ export function createSystem3EntryRouter(
       let response: JevResponse | undefined
       let selected: ModelSelection | undefined
       let retained: System3EntryDecisionReceipt['retained']
+      let chosen: System3EntryCandidate | undefined
       let outcome: System3EntryOutcome = 'provider-unavailable'
       let candidateIds: string[] = []
       let previous: {
@@ -176,6 +184,7 @@ export function createSystem3EntryRouter(
         if (candidate === undefined) return undefined
         const selection = selectionOf(candidate)
         retained = { requestId: prior.requestId, selection }
+        chosen = candidate
         return selection
       }
       input.agent.session.append('system3/entry-start', { requestId: input.requestId })
@@ -247,6 +256,7 @@ export function createSystem3EntryRouter(
         const candidate = allowed.find(value => value.id === answer.choice)
         if (candidate === undefined) { outcome = 'invalid-response'; return undefined }
         selected = selectionOf(candidate)
+        chosen = candidate
         outcome = 'selected'
         return selected
       } catch (error) {
@@ -258,6 +268,7 @@ export function createSystem3EntryRouter(
           dataClasses: [...settings.sessionDataClasses], routeId: options.routeId, executionDomain: options.executionDomain,
           outcome, ...response === undefined ? {} : { response }, ...selected === undefined ? {} : { selected },
           ...retained === undefined ? {} : { retained },
+          ...chosen === undefined ? {} : { candidate: { id: chosen.id, ...chosen.label === undefined ? {} : { label: chosen.label } } },
           elapsedMs: Date.now() - started,
         })
       }

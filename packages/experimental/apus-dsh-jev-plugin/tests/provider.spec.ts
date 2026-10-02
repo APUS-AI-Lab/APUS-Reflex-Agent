@@ -136,3 +136,33 @@ describe('System One provider', () => {
   })
 
 })
+
+describe('System One provider warm-up', () => {
+  it('requests the authenticated model list and drains it', async () => {
+    const calls: { url: string; auth: string | null }[] = []
+    const provider = new SystemOneProvider({
+      id: 'test', endpoint: 'https://gateway.example/v1', model: 'jev-test', effort: 'low', timeoutMs: 1000,
+      resolveApiKey: async () => 'test-key',
+      fetcher: async (input, init) => {
+        calls.push({ url: input instanceof Request ? input.url : input instanceof URL ? input.href : input, auth: new Headers(init?.headers).get('authorization') })
+        return response({ data: [] })
+      },
+    })
+    await provider.warm()
+    await provider.warm(new AbortController().signal)
+    expect(calls).toEqual(Array(2).fill({ url: 'https://gateway.example/v1/models', auth: 'Bearer test-key' }))
+  })
+
+  it('sends no credential to an unauthenticated gateway and reports HTTP failures', async () => {
+    let auth: string | null = 'unset'
+    const provider = new SystemOneProvider({
+      id: 'test', endpoint: 'http://127.0.0.1:30135', model: 'jev-test', effort: 'low', timeoutMs: 1000,
+      fetcher: async (_input, init) => { auth = new Headers(init?.headers).get('authorization'); return response({}, 503) },
+    })
+    await expect(provider.warm()).rejects.toMatchObject({ failure: { code: 'http', status: 503 } })
+    expect(auth).toBeNull()
+    const aborted = new AbortController()
+    aborted.abort(new Error('stop'))
+    await expect(provider.warm(aborted.signal)).rejects.toThrow('stop')
+  })
+})

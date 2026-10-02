@@ -302,6 +302,14 @@ listProviders(): readonly JevProviderInfo[]
 resolve(request: JevRequest): JevSpec
 
 /**
+ * Open or keep alive a provider's transport; failures are reported, never thrown.
+ * @param providerId - Provider to warm; the default provider when omitted.
+ * @param signal - Caller cancellation.
+ * @returns Whether the provider answered; false when it has no transport to warm or the request failed.
+ */
+async warm(providerId?: string, signal?: AbortSignal): Promise<boolean>
+
+/**
  * Execute a typed decision, returning unknown when the provider is unavailable or invalid.
  * @param request - Host state and typed questions.
  * @param signal - Cancellation propagated to the caller.

@@ -35,7 +35,8 @@ const requestId = z.string().transform(value => brandString<SessionRequestId>(va
 const viewSchema = z.object({
   entry: z.object({ requestId, phase: z.enum(['deciding', 'decided']), outcome: z.string().nullable(),
     suggested: selection.nullable(), adopted: selection.nullable(), used: selection.nullable(),
-    elapsedMs: z.number().nullable() }).nullable(),
+    elapsedMs: z.number().nullable(),
+    route: z.object({ id: z.string(), label: z.string().nullable(), retained: z.boolean() }).nullable() }).nullable(),
   skill: z.object({ requestId: requestId.nullable(), turn: z.number(), step: z.number(), outcome: z.string(),
     selected: z.string().nullable(), injected: z.boolean(), elapsedMs: z.number() }).nullable(),
 })
@@ -71,7 +72,7 @@ export const system3RuntimeProjection = {
         ...config.reasoningEffort === undefined ? {} : { reasoningEffort: String(config.reasoningEffort) } } }
     }
     if (event.type === 'system3/entry-start') return { ...state, startRequestId: event.data.requestId, entryTurn: null, entry: { requestId: event.data.requestId,
-      phase: 'deciding', outcome: null, suggested: null, adopted: null, used: null, elapsedMs: null } }
+      phase: 'deciding', outcome: null, suggested: null, adopted: null, used: null, elapsedMs: null, route: null } }
     if (event.type === 'system3/entry-decision') {
       if (state.startRequestId !== null && state.startRequestId !== event.data.requestId) return state
       const previous = state.entry?.requestId === event.data.requestId ? state.entry : null
@@ -81,7 +82,9 @@ export const system3RuntimeProjection = {
       return { ...state, route, entryTurn: previous === null ? null : state.entryTurn,
         entry: { requestId: event.data.requestId, phase: 'decided', outcome: event.data.outcome,
           suggested: event.data.selected ?? null, adopted: previous?.adopted ?? null,
-          used: previous?.used ?? null, elapsedMs: event.data.elapsedMs } }
+          used: previous?.used ?? null, elapsedMs: event.data.elapsedMs,
+          route: event.data.candidate === undefined ? null : { id: event.data.candidate.id,
+            label: event.data.candidate.label ?? null, retained: event.data.retained !== undefined } } }
     }
     if (event.type === 'model/automatic-selection' && state.entry?.requestId === event.data.requestId) {
       return { ...state, entry: { ...state.entry, adopted: event.data.selection } }

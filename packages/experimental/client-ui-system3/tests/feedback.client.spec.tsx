@@ -23,7 +23,7 @@ it('acknowledges a local submission before a decision arrives', () => {
 it('keeps suggested and adopted routes distinct from actual model use', () => {
   const props = inputs({ running: true, facts: { skill: null, entry: {
     requestId: brandString<SessionRequestId>('request'), phase: 'decided', outcome: 'selected',
-    suggested: model, adopted: model, used: null, elapsedMs: 29,
+    suggested: model, adopted: model, used: null, elapsedMs: 29, route: null,
   } } })
   const { rerender } = render(<System3Feedback {...props} />)
   expect(screen.getByRole('status').textContent).toBe('正在执行')
@@ -71,7 +71,7 @@ it('does not expose root model mutation for an addressed subagent', () => {
 it('announces active decision and retains ended-turn evidence without claiming verification', () => {
   const props = inputs({ pending: true, facts: { skill: null, entry: {
     requestId: brandString<SessionRequestId>('active'), phase: 'deciding', outcome: null,
-    suggested: null, adopted: null, used: null, elapsedMs: null,
+    suggested: null, adopted: null, used: null, elapsedMs: null, route: null,
   } } })
   const { rerender } = render(<System3Feedback {...props} />)
   expect(screen.getByRole('status').textContent).toBe('正在选择处理方式')
@@ -88,9 +88,21 @@ it('uses live execution state when a fixed-model turn follows an unanswered auto
   render(<System3Feedback {...inputs({ running: true,
     selection: { mode: 'fixed', lastUsed: model, next: model },
     facts: { skill: null, entry: { requestId: brandString<SessionRequestId>('previous'), phase: 'decided',
-      outcome: 'selected', suggested: model, adopted: model, used: null, elapsedMs: 10 } },
+      outcome: 'selected', suggested: model, adopted: model, used: null, elapsedMs: 10, route: null } },
   })} />)
   expect(screen.getByRole('status').textContent).toBe('正在执行')
   expect(screen.getByText('实际响应模型').nextSibling?.textContent).toBe('尚无记录')
   expect(screen.queryByText('已选择，等待模型响应')).toBeNull()
+})
+it('announces the chosen route as soon as the decision is recorded, before the model answers', () => {
+  const entry = { requestId: brandString<SessionRequestId>('routed'), phase: 'decided' as const, outcome: 'selected',
+    suggested: model, adopted: model, used: null, elapsedMs: 480, route: { id: 'expert', label: '复杂专业任务 · GPT-5.6 Sol', retained: false } }
+  const { rerender } = render(<System3Feedback {...inputs({ pending: true, facts: { skill: null, entry } })} />)
+  expect(screen.getByText('已判断：复杂专业任务 · GPT-5.6 Sol')).toBeTruthy()
+  rerender(<System3Feedback {...inputs({ running: true, facts: { skill: null,
+    entry: { ...entry, outcome: 'abstain', suggested: null, route: { id: 'expert', label: null, retained: true } } } })} />)
+  expect(screen.getByText('延续上一轮：fidoo / generation · low')).toBeTruthy()
+  expect(screen.getByText('建议模型').nextSibling?.textContent).toBe('延续上一轮')
+  rerender(<System3Feedback {...inputs({ facts: { skill: null, entry: { ...entry, phase: 'deciding', route: null } } })} />)
+  expect(screen.queryByText(/已判断/)).toBeNull()
 })

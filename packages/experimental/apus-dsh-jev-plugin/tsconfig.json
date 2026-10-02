@@ -6,6 +6,7 @@
     { "path": "../../../vendor/cordis" },
     { "path": "../../../vendor/schemastery" },
     { "path": "../../credentials/credentials" },
+    { "path": "../../util/http-proxy" },
     { "path": "../../util/launch-environment" },
     { "path": "../../util/timeout" },
     { "path": "../../util/values" }

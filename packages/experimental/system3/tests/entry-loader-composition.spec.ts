@@ -48,11 +48,18 @@ it('routes an API prompt through Loader-mounted Jev and records the actual HTTP 
   const requests: { path: string; body: Record<string, unknown> }[] = []
   let jevRequests = 0
   let skillRequests = 0
+  let warmRequests = 0
   server = createServer((request, response) => {
     let body = ''
     request.on('data', (chunk: Buffer) => { body += chunk.toString('utf8') })
     request.on('end', () => {
       const path = request.url ?? ''
+      if (path === '/v1/models') {
+        warmRequests += 1
+        response.writeHead(200, { 'content-type': 'application/json' })
+        response.end('{"data":[]}')
+        return
+      }
       requests.push({ path, body: JSON.parse(body) as Record<string, unknown> })
       if (path === '/v1/systemone') {
         const query = JSON.parse(body) as { questions: { skill?: object } }
@@ -138,7 +145,7 @@ it('routes an API prompt through Loader-mounted Jev and records the actual HTTP 
     ...name === '@deepseek-ai/dsh-experimental-system3' ? [
       '  config:', '    privacyMode: local-only', '    jevExecutionDomain: local', '    observeAgentLoop: true',
       '    skillSelection:', '      sessionDataClasses: [public]', '      minConfidence: 0.5', '      maxInputBytes: 16000', '      maxContentBytes: 24000', '      maxCandidates: 12', '      deadlineMs: 2000',
-      '    entryRouting:', '      baseline:', '        executionDomain: local', '        dataClasses: [public]', '      minConfidence: 0.5', '      maxInputBytes: 16000', '      sessionDataClasses: [public]', '      retainOnAbstain: true',
+      '    entryRouting:', '      baseline:', '        executionDomain: local', '        dataClasses: [public]', '      minConfidence: 0.5', '      maxInputBytes: 16000', '      sessionDataClasses: [public]', '      retainOnAbstain: true', '      keepWarm:', '        windowMs: 60000', '        intervalMs: 60000',
       '      candidates:', '        - id: expert', '          description: Specialized reasoning',
       '          provider: fidoo-fixture', '          model: expert-fixture', '          executionDomain: local', '          dataClasses: [public]',
     ] : [],
@@ -180,6 +187,8 @@ it('routes an API prompt through Loader-mounted Jev and records the actual HTTP 
   expect(generation.map(request => request.body.model)).toEqual(['expert-fixture', 'deepseek-v4-flash'])
   expect(jevRequests).toBe(2)
   expect(skillRequests).toBe(2)
+  // keepWarm sends one warm-up request at plugin start; its 60 s interval does not elapse during the test.
+  expect(warmRequests).toBeGreaterThanOrEqual(1)
   expect(generation.every(request => JSON.stringify(request.body.messages).includes('Compare all public API inputs against outputs'))).toBe(true)
   const events = agent.session.snapshotEvents()
   const recommendations = events.flatMap(event => event.type === 'system3/entry-decision' ? [event.data] : [])
