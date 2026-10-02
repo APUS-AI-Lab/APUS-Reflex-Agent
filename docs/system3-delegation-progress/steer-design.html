@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>委派补充说明设计</title>
+<style>
+:root{--bg:#fbfaf8;--fg:#1f2328;--muted:#5d6670;--line:#e3e0da;--card:#fff;--accent:#2f6fde;--warn:#b35c00}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#16181c;--fg:#e6e6e6;--muted:#a0a7b0;--line:#30343a;--card:#1d2025;--accent:#7aa7ff;--warn:#ffb15c}}
+:root[data-theme="dark"]{--bg:#16181c;--fg:#e6e6e6;--muted:#a0a7b0;--line:#30343a;--card:#1d2025;--accent:#7aa7ff;--warn:#ffb15c}
+body{background:var(--bg);color:var(--fg);font:15px/1.65 -apple-system,"PingFang SC",system-ui,sans-serif;margin:0;padding:24px 16px}
+main{max-width:920px;margin:0 auto}
+h1{font-size:24px;font-weight:500;margin:0 0 4px}h2{font-size:18px;font-weight:500;margin:32px 0 8px;border-top:1px solid var(--line);padding-top:20px}
+.sub{color:var(--muted);margin:0 0 20px}
+table{border-collapse:collapse;width:100%;font-size:13px;display:block;overflow-x:auto}th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}th{font-weight:500;background:var(--card)}
+code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card);border:1px solid var(--line);border-radius:4px;padding:0 4px}
+pre{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px;overflow-x:auto;font:12.5px/1.5 ui-monospace,Menlo,monospace}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin:12px 0}
+.q{border-left:3px solid var(--warn)}
+.mock{font-size:13px}.mock .row{display:flex;gap:8px;align-items:center;margin-top:8px}.mock input{flex:1;min-width:0;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)}.mock button{padding:6px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)}
+.muted{color:var(--muted)}
+</style>
+</head>
+<body><main>
+<h1>委派补充说明（mid-run steer）</h1>
+<p class="sub">System3 过程掌控 · 2026-10-02 · 待审批，未开始实现</p>
+
+<h2>1. 目标</h2>
+<p>Codex 跑偏或超时时，用户现在只能“继续等待”或“停止”。停止会丢掉已完成的工作。本设计在进度卡上增加第三个动作“补充说明”：用户输入一句话，直接注入 Codex 当前正在执行的 turn，Codex 在下一步就能读到并纠偏，不中断、不重启。</p>
+<ul>
+<li>入口：进度卡的提醒条（超时、停滞）和卡片底部，只在委派运行中显示。</li>
+<li>反馈：提交后 1 秒内在卡片上显示“已补充：…”，失败时用 toast 说明原因并保留输入。</li>
+<li>边界：只支持声明了该能力的 provider（第一版只有 Codex）；不支持时不显示入口。</li>
+</ul>
+
+<h2>2. 用户流程</h2>
+<div class="card mock">
+<div><b>codex 运行中 · 6 分 12 秒</b> <span class="muted">命令 14 · 改文件 3</span></div>
+<div class="muted">最近：正在为 parser 补测试…</div>
+<div style="color:var(--warn);margin-top:6px">⚠ 已运行超过 6 分钟　[继续等待] [补充说明] [停止]</div>
+<div class="row"><input placeholder="告诉 Codex 要调整什么，例如：不用改 README，先让测试通过" disabled><button disabled>发送</button></div>
+<div class="muted" style="margin-top:6px">已补充（6 分 20 秒）：不用改 README，先让测试通过</div>
+</div>
+
+<h2>3. 架构</h2>
+<pre class="mermaid">
+sequenceDiagram
+  participant UI as System3 进度卡
+  participant SC as session-controller client
+  participant SS as SubagentService（host）
+  participant R as SubagentRun（Codex）
+  participant CX as codex app-server
+  participant LOG as 父 Session 日志
+  UI->>SC: session.steerSubagent(runId, text)
+  SC->>SS: remote subagents.steerByParent(runId, parentSessionId, text)
+  SS->>SS: 查 live run 登记表，校验 parentSessionId
+  SS->>R: run.steer([{type:text}], signal)
+  R->>CX: turn/steer {threadId, expectedTurnId, input}
+  CX-->>R: {turnId}
+  R-->>SS: resolved
+  SS->>LOG: append subagent/steer {runId, content}
+  SS-->>SC: {accepted: true}
+  LOG-->>UI: projection subagentRun.steers → “已补充：…”
+</pre>
+<p>要点：</p>
+<ul>
+<li><b>能力挂在 run 上，不挂在 provider 上</b>：<code>SubagentRun.steer?</code> 存在即表示支持，与现有 <code>prepareContinuable?</code> 的“方法存在即能力”惯例一致。</li>
+<li><b>SubagentService 新增 live run 登记表</b>：只在 <code>subagent/start</code> 与 <code>subagent/end</code> 之间登记 <code>runId → {parentSessionId, run}</code>，由已有的 <code>observeRun</code> 维护；不改变 run 由调用方持有的所有权约定。</li>
+<li><b>先提交、后记录</b>：provider 接受后才写 <code>subagent/steer</code> 事件（“Publish state only at its commit point”）。Codex 拒绝（turn 已结束、expectedTurnId 不匹配）时不写事件，返回错误。</li>
+<li><b>可见 ⟺ 已记录</b>：补充说明会进入 Codex 模型的输入，所以必须写进父 Session。事件对父模型不可见（见第 6 节问题 1）。</li>
+</ul>
+
+<h2>4. 文件改动</h2>
+<table>
+<tr><th>包 / 文件</th><th>改动</th></tr>
+<tr><td><code>subagent/subagent/src/types.ts</code></td><td><code>SubagentRun.steer?(content, signal)</code>；<code>SubagentSteerInfo</code>；<code>SubagentSteerReceipt</code></td></tr>
+<tr><td><code>subagent/subagent/src/index.ts</code> + <code>lifecycle.ts</code></td><td>live run 登记表；<code>steer(runId, authority, content, signal)</code>；<code>@Remote('steerByParent')</code>；Session 事件 <code>subagent/steer</code></td></tr>
+<tr><td><code>subagent/subagent-codex/src/wire.ts</code> + <code>run.ts</code></td><td><code>steer()</code> 发送 <code>turn/steer</code>，带 <code>expectedTurnId</code>；turn 未开始或已结束时拒绝</td></tr>
+<tr><td><code>api/session-controller</code>（client remotes + session）</td><td><code>subagents.steerByParent</code> remote 类型；<code>Session.steerSubagent(runId, text)</code></td></tr>
+<tr><td><code>experimental/system3/src/runtime-projection.ts</code></td><td><code>subagentRun.steerable</code>、<code>subagentRun.steers[]</code>（时间与文本，最多保留最近 3 条）；stateVersion 8</td></tr>
+<tr><td><code>experimental/client-ui-system3</code></td><td>DelegationRun 增加补充说明输入框与已补充列表；locales 中英文案</td></tr>
+<tr><td><code>docs/persistence-changes/</code></td><td><code>subagent/steer</code> 新事件记录；session-format 文档</td></tr>
+<tr><td>README / 架构文档</td><td>dsh-subagent、subagent-codex README；architecture.html 第 05 节委派契约</td></tr>
+</table>
+
+<h2>5. 接口约定</h2>
+<pre>
+// dsh-subagent types.ts
+interface SubagentRun {
+  /** 可选：把补充输入注入正在执行的 turn。存在即支持。
+   *  resolve = 子 agent 已接受；reject = 运行已不接受输入（已结束 / turn 切换）。 */
+  steer?(content: readonly ContentBlock[], signal: AbortSignal): Promise&lt;void&gt;
+}
+
+// SessionEventMap（父 Session，ignorable: false，不进入父模型上下文）
+'subagent/steer': { version: 1; runId: SessionId; provider: string; content: ContentBlock[] }
+
+// remote
+steerByParent(runId: SessionId, parentSessionId: SessionId, text: string): { accepted: true }
+// 错误：gateway/bad-request（空文本或超过 2000 字符）
+//      subagent/unauthorized（run 不属于该父会话）
+//      subagent/not-steerable（run 不存在、已结束、provider 不支持或拒绝）
+</pre>
+
+<h2>6. 需要你决定的问题</h2>
+<div class="card q"><b>问题 1：父模型要不要知道用户补充过什么？</b><br>
+建议第一版<b>不让父模型看到</b>：事件只用于审计和界面。父模型交付前会重跑测试核验，仍依据原任务。代价是父模型的总结可能漏掉“用户中途改了要求”。后续可以把补充说明附在工具结果末尾，从已记录的事件推导，不需要新的事实。</div>
+<div class="card q"><b>问题 2：Claude Code 是否同期支持？</b><br>
+建议<b>不同期</b>。Claude Agent SDK 需要改成流式输入（AsyncIterable prompt）才能中途注入，改动面更大，而且目前还没有 Claude Code 委派候选。接口按可选能力设计，以后补上即可。</div>
+
+<h2>7. 测试计划</h2>
+<ul>
+<li>单元：登记表的生命周期（start 登记、end 移除、HMR dispose 清空）；鉴权（父会话不匹配时拒绝）；provider 不支持或拒绝时不写事件；文本长度上下限。</li>
+<li>Codex wire：fixture app-server 收到的 <code>turn/steer</code> 参数正确；turn 结束后的 steer 被拒绝。</li>
+<li>投影与 UI：<code>steers</code> 推导、<code>steerable</code> 开关；client spec 覆盖输入、成功、失败 toast。</li>
+<li>Session 格式：persistence-change 记录、Python 与 TS SDK 期望输出、snapshot。</li>
+<li>真实验证：Web 中委派 Codex，运行中补充“改用 xxx 命名”，确认 Codex 后续步骤采纳，卡片显示“已补充”，刷新后仍在。</li>
+</ul>
+
+<h2>8. 不做的事</h2>
+<ul>
+<li>不让 Jev 自动生成补充说明（自动纠偏属于卡住判定规则，后续单独设计）。</li>
+<li>不支持补充图片或附件，第一版只支持文本。</li>
+<li>不改主 agent-loop。</li>
+</ul>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad:true,theme:matchMedia('(prefers-color-scheme: dark)').matches?'dark':'default'})</script>
+</body></html>

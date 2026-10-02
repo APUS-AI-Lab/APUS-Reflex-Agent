@@ -54,7 +54,11 @@ Base: branch `feat-system3-g1`. Order follows [architecture section 11](../../do
 - [ ] Expected-duration labels, end summary in `turnTail`, short follow-ups skipping Jev.
 - [ ] 8.2 composer model chip (not decided).
 - [ ] Browser or desktop notification when the page is not visible.
-- [ ] Delegated Codex reads the user's global `~/.codex` instructions through `CODEX_HOME`; product deployments need an isolated Codex home.
+- [x] Delegated Codex reads a service-owned `CODEX_HOME` (`deploy/system3/codex/config.toml`, Fidoo Responses API, gpt-5.6-sol-relay); committed 58b8229dcb. Real Web run: routed to Codex, wordcount task done, 8 / 8 tests pass, nothing written outside the private home.
+- [ ] That run's first step took 5 min 39 s: Codex's first 5 POSTs to Fidoo each failed at the connection layer after ~62 s (`logs_2.sqlite`, `error sending request`), then succeeded. Same config via `codex exec`: 11 s and 27 s. Local network path (Clash TUN, fake-IP 198.18.x), not configuration; re-measure on the server.
+- [ ] Server unverified: Codex's own Linux command sandbox on a kernel without Landlock; release.spec.sh not rerun (needs the server's Docker).
+- [ ] Locally, Codex shell commands still source the user's `~/.zshenv` (login shell); the server's private HOME has none.
+- [ ] Mid-run steer: design `docs/system3-delegation-progress/steer-design.html`, awaiting approval.
 
 ## Slice 2 · delegation supervision
 
