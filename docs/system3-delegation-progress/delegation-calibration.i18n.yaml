@@ -1,0 +1,19 @@
+# Bilingual-pair consistency record for delegation-calibration.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/system3-delegation-progress/delegation-calibration.md
+/system3-delegation-threshold-calibration-2026-10-03:
+  en: c5410e77a5cdc311
+  zh: 2fa9b132698539d1
+/system3-delegation-threshold-calibration-2026-10-03/setup:
+  en: fd6fca9895c60196
+  zh: 6110c1ff5224282d
+/system3-delegation-threshold-calibration-2026-10-03/result:
+  en: fb2187f3d3a0a7da
+  zh: 889e9e5e2a4ac404
+/system3-delegation-threshold-calibration-2026-10-03/adopted-change:
+  en: 1c566c98af9a93e3
+  zh: 067d42fd4e895fd7
+/system3-delegation-threshold-calibration-2026-10-03/limits:
+  en: 7d0da4857c7ef791
+  zh: 235f258fdd16a105

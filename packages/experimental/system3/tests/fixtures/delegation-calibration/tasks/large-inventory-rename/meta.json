@@ -1,0 +1,6 @@
+{
+  "id": "large-inventory-rename",
+  "size": "large",
+  "prompt": "inventory 包要做一次 API 重命名，行为（参数、返回值、异常、JSON 文件格式、report 输出）全部保持不变：\n1. inventory/store.py 里的类 Store 改名为 Warehouse，并挪到新模块 inventory/warehouse.py。\n2. 方法改名：get_item_by_sku -> find，add_qty -> restock，remove_qty -> withdraw，all_items -> items；add_item 名字不变。Warehouse 上不要保留旧方法名。\n3. inventory/io.py 里 load_store -> load_warehouse，dump_store -> dump_warehouse，load_warehouse 返回 Warehouse 实例；io 模块里只保留新函数名。\n4. inventory/report.py 里的函数名不变，但内部改成只用新 API：传入 Warehouse 时要能正常工作，而且整个过程不能产生任何 DeprecationWarning。\n5. 兼容层：inventory/store.py 保留，from inventory.store import Store 仍然可用；实例化 Store 时发出 DeprecationWarning（导入时不要发）；Store 的实例同时支持新旧两套方法名（旧名行为和新名一致），并且 isinstance(Store(), Warehouse) 为 True。\n6. inventory/__init__.py 导出 Warehouse 和 Item，同时继续导出 Store。\n7. 把 tests/test_inventory.py 改成使用新 API，并保证 tests/ 下全部通过。\n做完以后整个包内部（除了兼容层本身）不再使用旧名字。",
+  "note": "A cross-module rename touching five files plus a deprecation shim, where every caller must move to the new API without behavior change."
+}

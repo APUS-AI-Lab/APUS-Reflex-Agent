@@ -1,0 +1,6 @@
+{
+  "id": "medium-lru-cache",
+  "size": "medium",
+  "prompt": "把 cachekit/lru.py 里的 LRUCache 实现出来（现在方法都是 NotImplementedError 占位），只用标准库。API 要求：\n- LRUCache(capacity)：capacity 必须是 >= 1 的 int，否则抛 ValueError。\n- get(key, default=None)：命中时返回值，并把该条目标记为最近使用；没命中返回 default。每次 get 都计入命中（hits）或未命中（misses）统计。\n- put(key, value)：新增或更新条目，更新也算最近使用。如果插入后条目数超过 capacity，淘汰最久未使用的那个，并返回被淘汰的 (key, value) 元组；没有淘汰时返回 None。更新已有 key 不会触发淘汰。\n- peek(key, default=None)：返回值但不改变使用顺序，也不计入统计。\n- pop(key, default=<未提供>)：删除并返回值；key 不存在时，如果给了 default 就返回 default，否则抛 KeyError。不计入统计。\n- len(cache) 返回条目数；key in cache 判断是否存在，不改变使用顺序、不计入统计。\n- keys()：返回 list，按从最久未使用到最近使用排序。\n- resize(capacity)：修改容量（校验规则同构造函数）；如果新容量小于当前条目数，按最久未使用优先的顺序淘汰多余条目，返回被淘汰的 (key, value) 列表（按淘汰先后顺序）；没有淘汰返回 []。\n- stats()：返回 dict {'hits': int, 'misses': int, 'evictions': int}，evictions 统计 put 和 resize 导致的淘汰总数（pop 和 clear 不算）。\n- clear()：清空所有条目，但统计数据不清零。\n做完就是上面这些行为都成立。",
+  "note": "One class with a dozen interacting methods whose ordering, eviction and stats rules must all agree."
+}

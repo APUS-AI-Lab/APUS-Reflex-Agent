@@ -1,0 +1,6 @@
+{
+  "id": "small-slugify",
+  "size": "small",
+  "prompt": "帮我实现 textkit/slug.py 里的 slugify(text, max_length=50)，现在只是个 NotImplementedError 占位。规则按顺序执行：\n1. 先做 Unicode NFKD 分解，并去掉所有组合附加符号（unicodedata.combining 为真的字符），所以 'Café' 会变成 'Cafe'；\n2. 转成小写；\n3. 只保留 ASCII 小写字母 a-z 和数字 0-9，其余任何字符（空格、标点、下划线、连字符、中文等）组成的连续一段替换成一个 '-'；\n4. 去掉首尾的 '-'；\n5. 如果长度超过 max_length，截断到前 max_length 个字符，然后再去掉末尾的 '-'；\n6. 如果最终结果是空字符串，返回 'untitled'。\nmax_length 小于 1 时抛 ValueError。例子：slugify('Hello, World!') == 'hello-world'，slugify('Café Déjà Vu') == 'cafe-deja-vu'，slugify('abc def', max_length=4) == 'abc'。只用标准库，tests/test_case.py 要继续通过。",
+  "note": "One self-contained function implemented from a precise, ordered rule list."
+}

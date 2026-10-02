@@ -1,0 +1,6 @@
+{
+  "id": "medium-csv-parser",
+  "size": "medium",
+  "prompt": "在 csvlite/parser.py 里实现一个简化版 CSV 解析器（不要用标准库 csv 模块），ParseError（ValueError 的子类）已经定义好了，parse_line 和 parse 现在是占位。规则如下：\n\nparse_line(line, delimiter=',') -> list[str]：解析一条记录。\n- delimiter 必须是长度为 1 的字符串，且不能是双引号、'\\r' 或 '\\n'，否则抛 ValueError。\n- 字段按 delimiter 切分；不带引号的字段原样保留（不去空格），空字段是 ''。所以 'a,,b' -> ['a', '', 'b']，'a,' -> ['a', '']，'' -> ['']。\n- 以双引号开头的字段是引号字段：引号内的 delimiter 和换行都按字面保留，连续两个双引号 \"\" 表示一个双引号字符。例如 '\"x,y\",\"say \"\"hi\"\"\"' -> ['x,y', 'say \"hi\"']，'\"\"' -> ['']。\n- 引号字段的结束引号后面必须紧跟 delimiter 或行尾，否则抛 ParseError（例如 '\"a\"b,c'）。\n- 引号没有闭合抛 ParseError；不带引号的字段中间出现双引号也抛 ParseError（例如 'a\"b'）。\n- 引号外出现换行（'\\n' 或 '\\r\\n'）抛 ParseError，因为那是多条记录。\n\nparse(text, delimiter=',', header=True)：解析整段文本。\n- 引号外的 '\\n' 或 '\\r\\n' 结束一条记录；引号内的换行属于字段内容，原样保留。\n- 引号外的空行（什么都没有的行）跳过；文本末尾的换行不产生额外记录；空文本返回 []。\n- header=False：返回 list[list[str]]。\n- header=True：第一条记录作为列名，返回 list[dict[str, str]]（每条记录按列名映射）；之后任何记录的字段数和表头不同，或者表头里有重复列名，都抛 ParseError；只有表头时返回 []。\n- 字段级别的规则和 parse_line 完全一致，delimiter 校验也一样。\n\n做完后 csvlite 包里的这两个函数按上面规则工作即可。",
+  "note": "A small state-machine parser in one module with several explicit quoting, record and header rules."
+}

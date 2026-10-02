@@ -1,0 +1,6 @@
+{
+  "id": "probe-flaky-investigation",
+  "size": "repo",
+  "prompt": "我们的集成测试套件在 CI 上大约每五次失败一次，本地很难复现。请在仓库里定位导致不稳定的根因（可能涉及多个服务之间的时序和共享状态），修复它，并用循环运行测试至少 50 次证明已经稳定。",
+  "note": "Open-ended investigation needing long exploration and repeated runs."
+}

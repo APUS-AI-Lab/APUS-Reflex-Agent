@@ -135,7 +135,7 @@
               executionDomain: network
               dataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'
             - id: codex
-              description: 需要在工作区里动手完成、跨多个文件的工程任务：实现功能、修复缺陷并补测试、运行命令验证。单行修改、解释代码或回答问题不属于此类。
+              description: 超出一次对话能完成的大型工程任务：在大型代码库里长时间探索、跨十个以上文件改造、反复构建和测试直到通过，通常要十分钟以上。几分钟内能直接改完的修复、函数实现或单个功能都不属于此类，交给模型直接完成。
               label: 工程任务 · 委派 Codex
               delegate:
                 provider: codex

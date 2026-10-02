@@ -1,0 +1,1057 @@
+{
+  "generatedAt": "2026-10-03",
+  "method": "Each task run twice per arm through `dsh headless`; hidden tests accept; Jev arm composed from recorded deterministic decisions. Main model DeepSeek V4 Flash (low); Codex 0.153.4 with gpt-5.5 over a ChatGPT login; development Mac.",
+  "wordings": {
+    "deployedBefore": {
+      "generatedAt": "2026-10-02T16:39:15.501Z",
+      "model": "APUS-OpenJev-v1-9B-5949",
+      "minConfidence": 0.8,
+      "codexDescription": "需要在工作区里动手完成、跨多个文件的工程任务：实现功能、修复缺陷并补测试、运行命令验证。单行修改、解释代码或回答问题不属于此类。",
+      "rows": [
+        {
+          "id": "large-inventory-rename",
+          "size": "large",
+          "outcome": "selected",
+          "decision": "codex",
+          "choice": "codex",
+          "confidence": 0.9610277580830374,
+          "elapsedMs": 2125
+        },
+        {
+          "id": "large-invoice-debug",
+          "size": "large",
+          "outcome": "selected",
+          "decision": "codex",
+          "choice": "codex",
+          "confidence": 0.9488831811078646,
+          "elapsedMs": 475
+        },
+        {
+          "id": "large-todo-tags",
+          "size": "large",
+          "outcome": "selected",
+          "decision": "codex",
+          "choice": "codex",
+          "confidence": 0.9748757553404221,
+          "elapsedMs": 518
+        },
+        {
+          "id": "medium-csv-parser",
+          "size": "medium",
+          "outcome": "selected",
+          "decision": "codex",
+          "choice": "codex",
+          "confidence": 0.9498603260632951,
+          "elapsedMs": 588
+        },
+        {
+          "id": "medium-date-ranges",
+          "size": "medium",
+          "outcome": "selected",
+          "decision": "codex",
+          "choice": "codex",
+          "confidence": 0.9495296732804767,
+          "elapsedMs": 506
+        },
+        {
+          "id": "medium-lru-cache",
+          "size": "medium",
+          "outcome": "low-confidence",
+          "decision": "baseline",
+          "choice": "codex",
+          "confidence": 0.6194549037888224,
+          "elapsedMs": 493
+        },
+        {
+          "id": "small-slugify",
+          "size": "small",
+          "outcome": "selected",
+          "decision": "codex",
+          "choice": "codex",
+          "confidence": 0.9819380561881814,
+          "elapsedMs": 488
+        },
+        {
+          "id": "small-wrap-fix",
+          "size": "small",
+          "outcome": "selected",
+          "decision": "codex",
+          "choice": "codex",
+          "confidence": 0.9665250784886306,
+          "elapsedMs": 930
+        },
+        {
+          "id": "trivial-discount-sign",
+          "size": "trivial",
+          "outcome": "low-confidence",
+          "decision": "baseline",
+          "choice": "codex",
+          "confidence": 0.5375307486240684,
+          "elapsedMs": 1392
+        },
+        {
+          "id": "trivial-pagination-offset",
+          "size": "trivial",
+          "outcome": "selected",
+          "decision": "codex",
+          "choice": "codex",
+          "confidence": 0.9220783061300486,
+          "elapsedMs": 493
+        },
+        {
+          "id": "probe-api-v2",
+          "size": "repo",
+          "outcome": "selected",
+          "decision": "expert",
+          "choice": "expert",
+          "confidence": 0.9543421851305758,
+          "elapsedMs": 480
+        },
+        {
+          "id": "probe-flaky-investigation",
+          "size": "repo",
+          "outcome": "selected",
+          "decision": "codex",
+          "choice": "codex",
+          "confidence": 0.9473009955044949,
+          "elapsedMs": 489
+        },
+        {
+          "id": "probe-monorepo-migration",
+          "size": "repo",
+          "outcome": "selected",
+          "decision": "codex",
+          "choice": "codex",
+          "confidence": 0.8890775117858192,
+          "elapsedMs": 482
+        }
+      ]
+    },
+    "adopted": {
+      "generatedAt": "2026-10-02T16:39:26.517Z",
+      "model": "APUS-OpenJev-v1-9B-5949",
+      "minConfidence": 0.8,
+      "codexDescription": "超出一次对话能完成的大型工程任务：在大型代码库里长时间探索、跨十个以上文件改造、反复构建和测试直到通过，通常要十分钟以上。几分钟内能直接改完的修复、函数实现或单个功能都不属于此类，交给模型直接完成。",
+      "rows": [
+        {
+          "id": "large-inventory-rename",
+          "size": "large",
+          "outcome": "selected",
+          "decision": "expert",
+          "choice": "expert",
+          "confidence": 0.8520871797116094,
+          "elapsedMs": 2015
+        },
+        {
+          "id": "large-invoice-debug",
+          "size": "large",
+          "outcome": "low-confidence",
+          "decision": "baseline",
+          "choice": "expert",
+          "confidence": 0.6072441342623227,
+          "elapsedMs": 528
+        },
+        {
+          "id": "large-todo-tags",
+          "size": "large",
+          "outcome": "selected",
+          "decision": "expert",
+          "choice": "expert",
+          "confidence": 0.9241525737029156,
+          "elapsedMs": 607
+        },
+        {
+          "id": "medium-csv-parser",
+          "size": "medium",
+          "outcome": "low-confidence",
+          "decision": "baseline",
+          "choice": "expert",
+          "confidence": 0.5965210655958513,
+          "elapsedMs": 535
+        },
+        {
+          "id": "medium-date-ranges",
+          "size": "medium",
+          "outcome": "selected",
+          "decision": "reasoning",
+          "choice": "reasoning",
+          "confidence": 0.9445020352532666,
+          "elapsedMs": 534
+        },
+        {
+          "id": "medium-lru-cache",
+          "size": "medium",
+          "outcome": "low-confidence",
+          "decision": "baseline",
+          "choice": "expert",
+          "confidence": 0.5387185732788988,
+          "elapsedMs": 517
+        },
+        {
+          "id": "small-slugify",
+          "size": "small",
+          "outcome": "selected",
+          "decision": "reasoning",
+          "choice": "reasoning",
+          "confidence": 0.9421322699637372,
+          "elapsedMs": 502
+        },
+        {
+          "id": "small-wrap-fix",
+          "size": "small",
+          "outcome": "low-confidence",
+          "decision": "baseline",
+          "choice": "reasoning",
+          "confidence": 0.5624178691269737,
+          "elapsedMs": 502
+        },
+        {
+          "id": "trivial-discount-sign",
+          "size": "trivial",
+          "outcome": "selected",
+          "decision": "reasoning",
+          "choice": "reasoning",
+          "confidence": 0.9880364263145205,
+          "elapsedMs": 1776
+        },
+        {
+          "id": "trivial-pagination-offset",
+          "size": "trivial",
+          "outcome": "selected",
+          "decision": "reasoning",
+          "choice": "reasoning",
+          "confidence": 0.985307084805771,
+          "elapsedMs": 478
+        },
+        {
+          "id": "probe-api-v2",
+          "size": "repo",
+          "outcome": "low-confidence",
+          "decision": "baseline",
+          "choice": "expert",
+          "confidence": 0.6919840268710533,
+          "elapsedMs": 477
+        },
+        {
+          "id": "probe-flaky-investigation",
+          "size": "repo",
+          "outcome": "selected",
+          "decision": "codex",
+          "choice": "codex",
+          "confidence": 0.8678386805513425,
+          "elapsedMs": 509
+        },
+        {
+          "id": "probe-monorepo-migration",
+          "size": "repo",
+          "outcome": "selected",
+          "decision": "codex",
+          "choice": "codex",
+          "confidence": 0.9677085349581064,
+          "elapsedMs": 981
+        }
+      ]
+    }
+  },
+  "summaries": {
+    "deployedBefore": {
+      "completePairs": 10,
+      "incompleteTasks": [],
+      "infrastructureFailures": 10,
+      "overall": {
+        "self": {
+          "runs": 20,
+          "passRate": 1.0,
+          "medianS": 36.3,
+          "totalS": 865.3,
+          "medianMainTokens": 13087,
+          "delegatedRuns": 0
+        },
+        "delegate": {
+          "runs": 20,
+          "passRate": 1.0,
+          "medianS": 203.0,
+          "totalS": 4515.3,
+          "medianMainTokens": 14355,
+          "delegatedRuns": 20
+        },
+        "jev": {
+          "runs": 20,
+          "passRate": 1.0,
+          "medianS": 176.2,
+          "totalS": 3819.4,
+          "medianMainTokens": 13127,
+          "delegatedRuns": 16
+        }
+      },
+      "bySize": {
+        "trivial": {
+          "self": {
+            "runs": 4,
+            "passRate": 1.0,
+            "medianS": 7.8,
+            "totalS": 40.9,
+            "medianMainTokens": 6931,
+            "delegatedRuns": 0
+          },
+          "delegate": {
+            "runs": 4,
+            "passRate": 1.0,
+            "medianS": 101.7,
+            "totalS": 434.7,
+            "medianMainTokens": 9334,
+            "delegatedRuns": 4
+          }
+        },
+        "small": {
+          "self": {
+            "runs": 4,
+            "passRate": 1.0,
+            "medianS": 26.4,
+            "totalS": 116.6,
+            "medianMainTokens": 9921,
+            "delegatedRuns": 0
+          },
+          "delegate": {
+            "runs": 4,
+            "passRate": 1.0,
+            "medianS": 129.5,
+            "totalS": 547.8,
+            "medianMainTokens": 12938,
+            "delegatedRuns": 4
+          }
+        },
+        "medium": {
+          "self": {
+            "runs": 6,
+            "passRate": 1.0,
+            "medianS": 36.9,
+            "totalS": 275.9,
+            "medianMainTokens": 13087,
+            "delegatedRuns": 0
+          },
+          "delegate": {
+            "runs": 6,
+            "passRate": 1.0,
+            "medianS": 341.8,
+            "totalS": 1911.8,
+            "medianMainTokens": 20549,
+            "delegatedRuns": 6
+          }
+        },
+        "large": {
+          "self": {
+            "runs": 6,
+            "passRate": 1.0,
+            "medianS": 68.2,
+            "totalS": 431.9,
+            "medianMainTokens": 19614,
+            "delegatedRuns": 0
+          },
+          "delegate": {
+            "runs": 6,
+            "passRate": 1.0,
+            "medianS": 262.5,
+            "totalS": 1621.0,
+            "medianMainTokens": 22308,
+            "delegatedRuns": 6
+          }
+        }
+      },
+      "tasks": {
+        "large-inventory-rename": {
+          "size": "large",
+          "jevDecision": "codex",
+          "self": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 100.2,
+            "totalS": 200.3,
+            "medianMainTokens": 26624,
+            "delegatedRuns": 0
+          },
+          "delegate": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 332.5,
+            "totalS": 664.9,
+            "medianMainTokens": 18344,
+            "delegatedRuns": 2
+          },
+          "jevArm": "delegate",
+          "jev": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 332.5,
+            "totalS": 664.9,
+            "medianMainTokens": 18344,
+            "delegatedRuns": 2
+          }
+        },
+        "large-invoice-debug": {
+          "size": "large",
+          "jevDecision": "codex",
+          "self": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 47.5,
+            "totalS": 95.1,
+            "medianMainTokens": 15752,
+            "delegatedRuns": 0
+          },
+          "delegate": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 198.2,
+            "totalS": 396.3,
+            "medianMainTokens": 24628,
+            "delegatedRuns": 2
+          },
+          "jevArm": "delegate",
+          "jev": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 198.2,
+            "totalS": 396.3,
+            "medianMainTokens": 24628,
+            "delegatedRuns": 2
+          }
+        },
+        "large-todo-tags": {
+          "size": "large",
+          "jevDecision": "codex",
+          "self": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 68.2,
+            "totalS": 136.5,
+            "medianMainTokens": 19614,
+            "delegatedRuns": 0
+          },
+          "delegate": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 279.9,
+            "totalS": 559.8,
+            "medianMainTokens": 22790,
+            "delegatedRuns": 2
+          },
+          "jevArm": "delegate",
+          "jev": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 279.9,
+            "totalS": 559.8,
+            "medianMainTokens": 22790,
+            "delegatedRuns": 2
+          }
+        },
+        "medium-csv-parser": {
+          "size": "medium",
+          "jevDecision": "codex",
+          "self": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 70.0,
+            "totalS": 140.0,
+            "medianMainTokens": 21410,
+            "delegatedRuns": 0
+          },
+          "delegate": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 341.8,
+            "totalS": 683.6,
+            "medianMainTokens": 22960,
+            "delegatedRuns": 2
+          },
+          "jevArm": "delegate",
+          "jev": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 341.8,
+            "totalS": 683.6,
+            "medianMainTokens": 22960,
+            "delegatedRuns": 2
+          }
+        },
+        "medium-date-ranges": {
+          "size": "medium",
+          "jevDecision": "codex",
+          "self": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 31.1,
+            "totalS": 62.2,
+            "medianMainTokens": 11653,
+            "delegatedRuns": 0
+          },
+          "delegate": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 332.2,
+            "totalS": 664.5,
+            "medianMainTokens": 18053,
+            "delegatedRuns": 2
+          },
+          "jevArm": "delegate",
+          "jev": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 332.2,
+            "totalS": 664.5,
+            "medianMainTokens": 18053,
+            "delegatedRuns": 2
+          }
+        },
+        "medium-lru-cache": {
+          "size": "medium",
+          "jevDecision": "baseline",
+          "self": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 36.8,
+            "totalS": 73.7,
+            "medianMainTokens": 12357,
+            "delegatedRuns": 0
+          },
+          "delegate": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 281.9,
+            "totalS": 563.7,
+            "medianMainTokens": 19673,
+            "delegatedRuns": 2
+          },
+          "jevArm": "self",
+          "jev": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 36.8,
+            "totalS": 73.7,
+            "medianMainTokens": 12357,
+            "delegatedRuns": 0
+          }
+        },
+        "small-slugify": {
+          "size": "small",
+          "jevDecision": "codex",
+          "self": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 25.0,
+            "totalS": 50.1,
+            "medianMainTokens": 9400,
+            "delegatedRuns": 0
+          },
+          "delegate": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 128.0,
+            "totalS": 256.0,
+            "medianMainTokens": 13046,
+            "delegatedRuns": 2
+          },
+          "jevArm": "delegate",
+          "jev": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 128.0,
+            "totalS": 256.0,
+            "medianMainTokens": 13046,
+            "delegatedRuns": 2
+          }
+        },
+        "small-wrap-fix": {
+          "size": "small",
+          "jevDecision": "codex",
+          "self": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 33.2,
+            "totalS": 66.5,
+            "medianMainTokens": 13131,
+            "delegatedRuns": 0
+          },
+          "delegate": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 145.9,
+            "totalS": 291.8,
+            "medianMainTokens": 12860,
+            "delegatedRuns": 2
+          },
+          "jevArm": "delegate",
+          "jev": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 145.9,
+            "totalS": 291.8,
+            "medianMainTokens": 12860,
+            "delegatedRuns": 2
+          }
+        },
+        "trivial-discount-sign": {
+          "size": "trivial",
+          "jevDecision": "baseline",
+          "self": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 12.7,
+            "totalS": 25.4,
+            "medianMainTokens": 4385,
+            "delegatedRuns": 0
+          },
+          "delegate": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 115.6,
+            "totalS": 231.3,
+            "medianMainTokens": 7896,
+            "delegatedRuns": 2
+          },
+          "jevArm": "self",
+          "jev": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 12.7,
+            "totalS": 25.4,
+            "medianMainTokens": 4385,
+            "delegatedRuns": 0
+          }
+        },
+        "trivial-pagination-offset": {
+          "size": "trivial",
+          "jevDecision": "codex",
+          "self": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 7.8,
+            "totalS": 15.5,
+            "medianMainTokens": 7108,
+            "delegatedRuns": 0
+          },
+          "delegate": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 101.7,
+            "totalS": 203.4,
+            "medianMainTokens": 10417,
+            "delegatedRuns": 2
+          },
+          "jevArm": "delegate",
+          "jev": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 101.7,
+            "totalS": 203.4,
+            "medianMainTokens": 10417,
+            "delegatedRuns": 2
+          }
+        }
+      }
+    },
+    "adopted": {
+      "completePairs": 10,
+      "incompleteTasks": [],
+      "infrastructureFailures": 10,
+      "overall": {
+        "self": {
+          "runs": 20,
+          "passRate": 1.0,
+          "medianS": 36.3,
+          "totalS": 865.3,
+          "medianMainTokens": 13087,
+          "delegatedRuns": 0
+        },
+        "delegate": {
+          "runs": 20,
+          "passRate": 1.0,
+          "medianS": 203.0,
+          "totalS": 4515.3,
+          "medianMainTokens": 14355,
+          "delegatedRuns": 20
+        },
+        "jev": {
+          "runs": 20,
+          "passRate": 1.0,
+          "medianS": 41.1,
+          "totalS": 2430.0,
+          "medianMainTokens": 14091,
+          "delegatedRuns": 0
+        }
+      },
+      "bySize": {
+        "trivial": {
+          "self": {
+            "runs": 4,
+            "passRate": 1.0,
+            "medianS": 7.8,
+            "totalS": 40.9,
+            "medianMainTokens": 6931,
+            "delegatedRuns": 0
+          },
+          "delegate": {
+            "runs": 4,
+            "passRate": 1.0,
+            "medianS": 101.7,
+            "totalS": 434.7,
+            "medianMainTokens": 9334,
+            "delegatedRuns": 4
+          }
+        },
+        "small": {
+          "self": {
+            "runs": 4,
+            "passRate": 1.0,
+            "medianS": 26.4,
+            "totalS": 116.6,
+            "medianMainTokens": 9921,
+            "delegatedRuns": 0
+          },
+          "delegate": {
+            "runs": 4,
+            "passRate": 1.0,
+            "medianS": 129.5,
+            "totalS": 547.8,
+            "medianMainTokens": 12938,
+            "delegatedRuns": 4
+          }
+        },
+        "medium": {
+          "self": {
+            "runs": 6,
+            "passRate": 1.0,
+            "medianS": 36.9,
+            "totalS": 275.9,
+            "medianMainTokens": 13087,
+            "delegatedRuns": 0
+          },
+          "delegate": {
+            "runs": 6,
+            "passRate": 1.0,
+            "medianS": 341.8,
+            "totalS": 1911.8,
+            "medianMainTokens": 20549,
+            "delegatedRuns": 6
+          }
+        },
+        "large": {
+          "self": {
+            "runs": 6,
+            "passRate": 1.0,
+            "medianS": 68.2,
+            "totalS": 431.9,
+            "medianMainTokens": 19614,
+            "delegatedRuns": 0
+          },
+          "delegate": {
+            "runs": 6,
+            "passRate": 1.0,
+            "medianS": 262.5,
+            "totalS": 1621.0,
+            "medianMainTokens": 22308,
+            "delegatedRuns": 6
+          }
+        }
+      },
+      "tasks": {
+        "large-inventory-rename": {
+          "size": "large",
+          "jevDecision": "expert",
+          "self": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 100.2,
+            "totalS": 200.3,
+            "medianMainTokens": 26624,
+            "delegatedRuns": 0
+          },
+          "delegate": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 332.5,
+            "totalS": 664.9,
+            "medianMainTokens": 18344,
+            "delegatedRuns": 2
+          },
+          "jevArm": "self-expert",
+          "jev": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 450.8,
+            "totalS": 901.6,
+            "medianMainTokens": 122675,
+            "delegatedRuns": 0
+          }
+        },
+        "large-invoice-debug": {
+          "size": "large",
+          "jevDecision": "baseline",
+          "self": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 47.5,
+            "totalS": 95.1,
+            "medianMainTokens": 15752,
+            "delegatedRuns": 0
+          },
+          "delegate": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 198.2,
+            "totalS": 396.3,
+            "medianMainTokens": 24628,
+            "delegatedRuns": 2
+          },
+          "jevArm": "self",
+          "jev": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 47.5,
+            "totalS": 95.1,
+            "medianMainTokens": 15752,
+            "delegatedRuns": 0
+          }
+        },
+        "large-todo-tags": {
+          "size": "large",
+          "jevDecision": "expert",
+          "self": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 68.2,
+            "totalS": 136.5,
+            "medianMainTokens": 19614,
+            "delegatedRuns": 0
+          },
+          "delegate": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 279.9,
+            "totalS": 559.8,
+            "medianMainTokens": 22790,
+            "delegatedRuns": 2
+          },
+          "jevArm": "self-expert",
+          "jev": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 439.5,
+            "totalS": 879.0,
+            "medianMainTokens": 93619,
+            "delegatedRuns": 0
+          }
+        },
+        "medium-csv-parser": {
+          "size": "medium",
+          "jevDecision": "baseline",
+          "self": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 70.0,
+            "totalS": 140.0,
+            "medianMainTokens": 21410,
+            "delegatedRuns": 0
+          },
+          "delegate": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 341.8,
+            "totalS": 683.6,
+            "medianMainTokens": 22960,
+            "delegatedRuns": 2
+          },
+          "jevArm": "self",
+          "jev": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 70.0,
+            "totalS": 140.0,
+            "medianMainTokens": 21410,
+            "delegatedRuns": 0
+          }
+        },
+        "medium-date-ranges": {
+          "size": "medium",
+          "jevDecision": "reasoning",
+          "self": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 31.1,
+            "totalS": 62.2,
+            "medianMainTokens": 11653,
+            "delegatedRuns": 0
+          },
+          "delegate": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 332.2,
+            "totalS": 664.5,
+            "medianMainTokens": 18053,
+            "delegatedRuns": 2
+          },
+          "jevArm": "self-pro",
+          "jev": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 66.1,
+            "totalS": 132.2,
+            "medianMainTokens": 13147,
+            "delegatedRuns": 0
+          }
+        },
+        "medium-lru-cache": {
+          "size": "medium",
+          "jevDecision": "baseline",
+          "self": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 36.8,
+            "totalS": 73.7,
+            "medianMainTokens": 12357,
+            "delegatedRuns": 0
+          },
+          "delegate": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 281.9,
+            "totalS": 563.7,
+            "medianMainTokens": 19673,
+            "delegatedRuns": 2
+          },
+          "jevArm": "self",
+          "jev": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 36.8,
+            "totalS": 73.7,
+            "medianMainTokens": 12357,
+            "delegatedRuns": 0
+          }
+        },
+        "small-slugify": {
+          "size": "small",
+          "jevDecision": "reasoning",
+          "self": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 25.0,
+            "totalS": 50.1,
+            "medianMainTokens": 9400,
+            "delegatedRuns": 0
+          },
+          "delegate": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 128.0,
+            "totalS": 256.0,
+            "medianMainTokens": 13046,
+            "delegatedRuns": 2
+          },
+          "jevArm": "self-pro",
+          "jev": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 28.8,
+            "totalS": 57.6,
+            "medianMainTokens": 9181,
+            "delegatedRuns": 0
+          }
+        },
+        "small-wrap-fix": {
+          "size": "small",
+          "jevDecision": "baseline",
+          "self": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 33.2,
+            "totalS": 66.5,
+            "medianMainTokens": 13131,
+            "delegatedRuns": 0
+          },
+          "delegate": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 145.9,
+            "totalS": 291.8,
+            "medianMainTokens": 12860,
+            "delegatedRuns": 2
+          },
+          "jevArm": "self",
+          "jev": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 33.2,
+            "totalS": 66.5,
+            "medianMainTokens": 13131,
+            "delegatedRuns": 0
+          }
+        },
+        "trivial-discount-sign": {
+          "size": "trivial",
+          "jevDecision": "reasoning",
+          "self": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 12.7,
+            "totalS": 25.4,
+            "medianMainTokens": 4385,
+            "delegatedRuns": 0
+          },
+          "delegate": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 115.6,
+            "totalS": 231.3,
+            "medianMainTokens": 7896,
+            "delegatedRuns": 2
+          },
+          "jevArm": "self-pro",
+          "jev": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 17.1,
+            "totalS": 34.2,
+            "medianMainTokens": 6726,
+            "delegatedRuns": 0
+          }
+        },
+        "trivial-pagination-offset": {
+          "size": "trivial",
+          "jevDecision": "reasoning",
+          "self": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 7.8,
+            "totalS": 15.5,
+            "medianMainTokens": 7108,
+            "delegatedRuns": 0
+          },
+          "delegate": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 101.7,
+            "totalS": 203.4,
+            "medianMainTokens": 10417,
+            "delegatedRuns": 2
+          },
+          "jevArm": "self-pro",
+          "jev": {
+            "runs": 2,
+            "passRate": 1.0,
+            "medianS": 25.0,
+            "totalS": 50.1,
+            "medianMainTokens": 7698,
+            "delegatedRuns": 0
+          }
+        }
+      }
+    }
+  },
+  "expertWordingTrials": {
+    "v3FourTierDecisionMatch": 0.8666666666666667,
+    "v4FourTierDecisionMatch": 0.9333333333333333,
+    "originalFourTierDecisionMatch": 0.9666666666666667
+  }
+}

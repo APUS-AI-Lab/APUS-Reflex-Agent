@@ -1,0 +1,6 @@
+{
+  "id": "large-todo-tags",
+  "size": "large",
+  "prompt": "给 todo 这个小工具加标签功能，会涉及 todo/models.py、todo/storage.py、todo/core.py、todo/cli.py。CLI 入口是 todo.cli.main(argv)，用法是 python -m todo [--store PATH] <command>。需求：\n1. Task 增加 tags 字段：字符串列表，默认是空列表（Task(id=1, title='x') 这种老写法仍然可用）。\n2. add 子命令支持可重复的 --tag 参数，例如 todo add '写周报' --tag Work --tag urgent。标签统一去掉首尾空白并转成小写，去重时保留第一次出现的顺序。任何一个标签去空白后为空时视为错误：和现有的空标题错误一样，在 stderr 输出以 'error:' 开头的信息、返回退出码 1，并且不保存任何东西。\n3. JSON 存储里每个任务都要保存 'tags' 字段（列表）。已有的老数据文件里任务没有 'tags' 字段，读出来时 tags 视为空列表，不能报错。\n4. list 子命令支持 --tag NAME，只列出带有该标签的任务；NAME 按同样规则规范化后匹配（不区分大小写）；可以和 --pending 一起用。\n5. list 的输出格式：有标签的任务在原来那一行后面依次追加 ' #标签'（按存储顺序），例如 '[ ] 1 写周报 #work #urgent'；没有标签的任务输出和现在完全一样。\n6. 新增 tags 子命令：每行输出 '<标签> <使用该标签的任务数>'（已完成的任务也算），按标签字母序排列；没有任何标签时什么都不输出，退出码 0。\n7. core 层对应提供：add_task(store, title, tags=None) 返回带 tags 的 Task；list_tasks(store, include_done=True, tag=None)；tag_counts(store) 返回 dict[str, int]。\n完成标准：上面这些行为都可用，现有的 add/list/done 行为不变，tests/ 下已有测试继续通过。",
+  "note": "A feature that must be threaded consistently through the model, storage, core and CLI layers of a small package, including backward-compatible persistence."
+}

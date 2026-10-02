@@ -1,0 +1,6 @@
+{
+  "id": "probe-api-v2",
+  "size": "repo",
+  "prompt": "给现有的订单服务新增一整套 v2 REST API：设计并实现 12 个端点、数据库迁移、鉴权中间件、OpenAPI 文档和端到端测试，同时保证 v1 接口行为完全不变。",
+  "note": "Multi-day feature spanning many modules and test layers."
+}

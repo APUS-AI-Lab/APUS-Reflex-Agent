@@ -1,0 +1,6 @@
+{
+  "id": "medium-date-ranges",
+  "size": "medium",
+  "prompt": "daterange/core.py 里的几个函数还没实现（都是 NotImplementedError），帮我按下面的要求补全，只用标准库（datetime 等）：\n1. parse_range(text) -> tuple[date, date]：接受 'YYYY-MM-DD..YYYY-MM-DD'（两个日期用两个点连接），或者单个 'YYYY-MM-DD'（表示当天，返回 (d, d)）。首尾空白忽略。日期必须严格是 4 位年-2 位月-2 位日；格式不对、日期不存在（比如 2023-02-29）、或者开始日期晚于结束日期，都抛 ValueError。\n2. iter_days(start, end)：生成器，依次产出从 start 到 end（两端都包含）的每一天的 date；start 晚于 end 时什么都不产出。\n3. merge_ranges(ranges) -> list[tuple[date, date]]：输入是 (start, end) 元组的可迭代对象，顺序任意，每个元组都满足 start <= end。把重叠的或相邻的（前一个的 end 的下一天就是后一个的 start）区间合并，返回按 start 升序排列的列表；空输入返回 []。\n4. business_days(start, end, holidays=()) -> int：统计 [start, end]（两端都包含）内周一到周五的天数，再扣掉 holidays 里的日期；holidays 里落在周末或者区间外的日期不影响结果，重复的日期只算一次。start 晚于 end 返回 0。\n5. month_span(year, month) -> tuple[date, date]：返回该月第一天和最后一天，正确处理闰年；month 不在 1 到 12 之间抛 ValueError。\n6. overlap_days(a, b) -> int：a、b 都是 (start, end) 闭区间，返回两者重叠的天数，不重叠返回 0。\n完成标准：这些函数都按上述规则工作。",
+  "note": "A utility module of six related functions with explicit calendar edge cases (leap years, adjacency, inclusivity)."
+}
