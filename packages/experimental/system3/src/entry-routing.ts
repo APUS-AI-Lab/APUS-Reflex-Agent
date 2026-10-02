@@ -9,6 +9,7 @@ import { RemoteError } from '@deepseek-ai/dsh-typert-protocol'
 import { MAX_JEV_CHOICES, type JevErrorCode, type JevRequest, type JevResponse } from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
 import { admitSystem3Routes, type System3DataClass, type System3ExecutionDomain, type System3PrivacyPolicy } from '@deepseek-ai/dsh-experimental-system3-policy'
 import type { System3JevOptions } from './decisions.ts'
+import type {} from './runtime-projection.ts'
 
 /** Deployment-owned model route and its allowed session data classes. */
 export interface System3EntryCandidate {
@@ -47,6 +48,12 @@ export interface System3EntryRoutingConfig {
   readonly minConfidence: number
   /** UTF-8 byte limit on the complete Jev request; larger inputs retain the baseline without truncation. */
   readonly maxInputBytes: number
+  /**
+   * Keep the previous entry decision's route when Jev abstains or answers below
+   * `minConfidence`, so an input that refers to earlier turns continues on the
+   * model already chosen for that work. Provider failures still use the baseline. @default false
+   */
+  readonly retainOnAbstain?: boolean
 }
 
 /** Decision result, distinct from the Session API's later adoption outcome. */
@@ -67,6 +74,12 @@ export interface System3EntryDecisionReceipt {
   readonly outcome: System3EntryOutcome
   readonly response?: JevResponse
   readonly selected?: ModelSelection
+  /** Route kept from an earlier decision of this Session; Jev suggested none for this input. */
+  readonly retained?: {
+    /** The earlier request whose route continues. */
+    readonly requestId: SessionRequestId
+    readonly selection: ModelSelection
+  }
   readonly elapsedMs: number
 }
 
@@ -138,8 +151,33 @@ export function createSystem3EntryRouter(
       let request: JevRequest | null = null
       let response: JevResponse | undefined
       let selected: ModelSelection | undefined
+      let retained: System3EntryDecisionReceipt['retained']
       let outcome: System3EntryOutcome = 'provider-unavailable'
       let candidateIds: string[] = []
+      let previous: {
+        readonly requestId: SessionRequestId
+        readonly provider: string
+        readonly model: string
+        readonly reasoningEffort?: string
+      } | undefined
+      if (settings.retainOnAbstain === true) {
+        const projections = ctx.get('sessionProjections')
+        if (projections === undefined) throw new Error('entryRouting retainOnAbstain requires sessionProjections')
+        // Read before entry-start so the fold still describes the preceding decision.
+        const route = projections.stateOf(input.agent.session, 'system3Runtime')?.route
+        if (route) previous = { requestId: route.requestId, ...route.selection }
+      }
+      // Continue only on a route that is still an admitted, compatible candidate; adopt that candidate's own selection.
+      const retain = (allowed: readonly System3EntryCandidate[]): ModelSelection | undefined => {
+        const prior = previous
+        if (prior === undefined) return undefined
+        const candidate = allowed.find(value => value.provider === prior.provider
+          && value.model === prior.model && value.reasoningEffort === prior.reasoningEffort)
+        if (candidate === undefined) return undefined
+        const selection = selectionOf(candidate)
+        retained = { requestId: prior.requestId, selection }
+        return selection
+      }
       input.agent.session.append('system3/entry-start', { requestId: input.requestId })
       try {
         signal.throwIfAborted()
@@ -199,8 +237,8 @@ export function createSystem3EntryRouter(
         if (result.kind === 'unknown') { outcome = result.failure.code; return undefined }
         response = result.response
         const answer = response.answers.route
-        if (answer?.type !== 'choice' || answer.choice === 'abstain') { outcome = 'abstain'; return undefined }
-        if (answer.confidence < settings.minConfidence) { outcome = 'low-confidence'; return undefined }
+        if (answer?.type !== 'choice' || answer.choice === 'abstain') { outcome = 'abstain'; return retain(allowed) }
+        if (answer.confidence < settings.minConfidence) { outcome = 'low-confidence'; return retain(allowed) }
         const candidate = allowed.find(value => value.id === answer.choice)
         if (candidate === undefined) { outcome = 'invalid-response'; return undefined }
         selected = selectionOf(candidate)
@@ -214,6 +252,7 @@ export function createSystem3EntryRouter(
           version: 1, requestId: input.requestId, request, baseline: { ...input.baseline }, candidateIds,
           dataClasses: [...settings.sessionDataClasses], routeId: options.routeId, executionDomain: options.executionDomain,
           outcome, ...response === undefined ? {} : { response }, ...selected === undefined ? {} : { selected },
+          ...retained === undefined ? {} : { retained },
           elapsedMs: Date.now() - started,
         })
       }

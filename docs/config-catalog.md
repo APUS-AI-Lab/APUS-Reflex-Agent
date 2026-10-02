@@ -1270,6 +1270,12 @@ export interface System3EntryRoutingConfig {
   readonly minConfidence: number
   /** UTF-8 byte limit on the complete Jev request; larger inputs retain the baseline without truncation. */
   readonly maxInputBytes: number
+  /**
+   * Keep the previous entry decision's route when Jev abstains or answers below
+   * `minConfidence`, so an input that refers to earlier turns continues on the
+   * model already chosen for that work. Provider failures still use the baseline. @default false
+   */
+  readonly retainOnAbstain?: boolean
 }
 
 /** Explicit limits for automatically loading one model-invocable Skill per new user input. */

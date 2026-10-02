@@ -16824,7 +16824,7 @@
       "kind": "event",
       "event": "system3/entry-decision",
       "surface": false,
-      "digest": "b391a61506715ea660db7c77d9b23bd3bd69942e758dab5b3e8ee88354b47631",
+      "digest": "be2c1d523179fc16f51f6b7c160c4e14def9b0bff4ea34ac29b64a76e47bb9fd",
       "schema": {
         "root": 0,
         "nodes": [
@@ -16838,7 +16838,7 @@
               },
               {
                 "name": "ignorable",
-                "type": 59,
+                "type": 60,
                 "optional": true
               },
               {
@@ -16853,7 +16853,7 @@
               },
               {
                 "name": "type",
-                "type": 60,
+                "type": 61,
                 "optional": false
               }
             ],
@@ -16908,6 +16908,11 @@
                 "optional": true
               },
               {
+                "name": "retained",
+                "type": 58,
+                "optional": true
+              },
+              {
                 "name": "routeId",
                 "type": 3,
                 "optional": false
@@ -16919,7 +16924,7 @@
               },
               {
                 "name": "version",
-                "type": 58,
+                "type": 59,
                 "optional": false
               }
             ],
@@ -17068,11 +17073,11 @@
           },
           {
             "kind": "literal",
-            "value": "privacy-denied"
+            "value": "cancelled"
           },
           {
             "kind": "literal",
-            "value": "cancelled"
+            "value": "privacy-denied"
           },
           {
             "kind": "literal",
@@ -17404,6 +17409,22 @@
               {
                 "name": "type",
                 "type": 45,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "requestId",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "selection",
+                "type": 2,
                 "optional": false
               }
             ],
@@ -24040,6 +24061,59 @@
       ],
       "sources": [
         "packages/interaction/user-approval/src/index.ts:67"
+      ]
+    },
+    {
+      "digest": "063a3a7dda2642105aa09aeab28b90e03af134e506b27cd50a5202b776d9e756",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "requestId",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "selection",
+                "type": 2,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "model",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "provider",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "reasoningEffort",
+                "type": 1,
+                "optional": true
+              }
+            ],
+            "indices": []
+          }
+        ]
+      },
+      "names": [],
+      "sources": [
+        "packages/experimental/system3/src/entry-routing.ts:78"
       ]
     },
     {
@@ -38450,6 +38524,595 @@
       },
       "names": [],
       "sources": []
+    },
+    {
+      "digest": "37017f78a79898954da57a74240f73dc392f3cc901495648a8a09e1b573824dc",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "baseline",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "candidateIds",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "dataClasses",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "elapsedMs",
+                "type": 10,
+                "optional": false
+              },
+              {
+                "name": "executionDomain",
+                "type": 11,
+                "optional": false
+              },
+              {
+                "name": "outcome",
+                "type": 14,
+                "optional": false
+              },
+              {
+                "name": "request",
+                "type": 30,
+                "optional": false
+              },
+              {
+                "name": "requestId",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "response",
+                "type": 50,
+                "optional": true
+              },
+              {
+                "name": "retained",
+                "type": 57,
+                "optional": true
+              },
+              {
+                "name": "routeId",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "selected",
+                "type": 1,
+                "optional": true
+              },
+              {
+                "name": "version",
+                "type": 58,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "model",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "provider",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "reasoningEffort",
+                "type": 2,
+                "optional": true
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "array",
+            "element": 2
+          },
+          {
+            "kind": "array",
+            "element": 5
+          },
+          {
+            "kind": "union",
+            "types": [
+              6,
+              7,
+              8,
+              9
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "workspace"
+          },
+          {
+            "kind": "literal",
+            "value": "public"
+          },
+          {
+            "kind": "literal",
+            "value": "secret"
+          },
+          {
+            "kind": "literal",
+            "value": "sensitive"
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "union",
+            "types": [
+              12,
+              13
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "network"
+          },
+          {
+            "kind": "literal",
+            "value": "local"
+          },
+          {
+            "kind": "union",
+            "types": [
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "timeout"
+          },
+          {
+            "kind": "literal",
+            "value": "transport"
+          },
+          {
+            "kind": "literal",
+            "value": "unsupported-input"
+          },
+          {
+            "kind": "literal",
+            "value": "abstain"
+          },
+          {
+            "kind": "literal",
+            "value": "low-confidence"
+          },
+          {
+            "kind": "literal",
+            "value": "missing-credential"
+          },
+          {
+            "kind": "literal",
+            "value": "rate-limited"
+          },
+          {
+            "kind": "literal",
+            "value": "http"
+          },
+          {
+            "kind": "literal",
+            "value": "input-too-large"
+          },
+          {
+            "kind": "literal",
+            "value": "invalid-response"
+          },
+          {
+            "kind": "literal",
+            "value": "no-candidates"
+          },
+          {
+            "kind": "literal",
+            "value": "privacy-denied"
+          },
+          {
+            "kind": "literal",
+            "value": "provider-unavailable"
+          },
+          {
+            "kind": "literal",
+            "value": "cancelled"
+          },
+          {
+            "kind": "literal",
+            "value": "selected"
+          },
+          {
+            "kind": "union",
+            "types": [
+              31,
+              49
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "effort",
+                "type": 32,
+                "optional": true
+              },
+              {
+                "name": "model",
+                "type": 2,
+                "optional": true
+              },
+              {
+                "name": "providerId",
+                "type": 2,
+                "optional": true
+              },
+              {
+                "name": "questions",
+                "type": 35,
+                "optional": false
+              },
+              {
+                "name": "state",
+                "type": 45,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "union",
+            "types": [
+              33,
+              34
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "high"
+          },
+          {
+            "kind": "literal",
+            "value": "low"
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 2,
+                "value": 36
+              }
+            ]
+          },
+          {
+            "kind": "union",
+            "types": [
+              37,
+              39,
+              42
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "criteria",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "instructions",
+                "type": 2,
+                "optional": true
+              },
+              {
+                "name": "type",
+                "type": 38,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "score"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "criteria",
+                "type": 40,
+                "optional": false
+              },
+              {
+                "name": "instructions",
+                "type": 2,
+                "optional": true
+              },
+              {
+                "name": "type",
+                "type": 41,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 2,
+                "value": 2
+              }
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "choice"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "criteria",
+                "type": 43,
+                "optional": true
+              },
+              {
+                "name": "instructions",
+                "type": 2,
+                "optional": true
+              },
+              {
+                "name": "type",
+                "type": 44,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "false",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "true",
+                "type": 2,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "noul"
+          },
+          {
+            "kind": "union",
+            "types": [
+              2,
+              10,
+              46,
+              47,
+              48,
+              49
+            ]
+          },
+          {
+            "kind": "array",
+            "element": 45
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 2,
+                "value": 45
+              }
+            ]
+          },
+          {
+            "kind": "primitive",
+            "type": "boolean"
+          },
+          {
+            "kind": "primitive",
+            "type": "null"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "answers",
+                "type": 51,
+                "optional": false
+              },
+              {
+                "name": "model",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "usage",
+                "type": 54,
+                "optional": true
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 2,
+                "value": 52
+              }
+            ]
+          },
+          {
+            "kind": "union",
+            "types": [
+              53,
+              55,
+              56
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "choice",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "confidence",
+                "type": 10,
+                "optional": false
+              },
+              {
+                "name": "probabilities",
+                "type": 54,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 41,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 2,
+                "value": 10
+              }
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "confidence",
+                "type": 10,
+                "optional": false
+              },
+              {
+                "name": "legend",
+                "type": 40,
+                "optional": false
+              },
+              {
+                "name": "probabilities",
+                "type": 54,
+                "optional": false
+              },
+              {
+                "name": "score",
+                "type": 10,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 38,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "noul",
+                "type": 10,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 44,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "requestId",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "selection",
+                "type": 1,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": 1
+          }
+        ]
+      },
+      "names": [
+        "packages/experimental/system3/src/entry-routing.ts#System3EntryDecisionReceipt"
+      ],
+      "sources": [
+        "packages/experimental/system3/src/entry-routing.ts:64"
+      ]
     },
     {
       "digest": "37184378c6439257d105c4e2022d80fc9c3a3f7c7f6ac661b00bc9f18d871006",
@@ -69562,574 +70225,6 @@
       "sources": []
     },
     {
-      "digest": "960bd96b864903bee3d33a0f38600f3c88b36ac4a9c593b6a65083b09ad3e421",
-      "schema": {
-        "root": 0,
-        "nodes": [
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "baseline",
-                "type": 1,
-                "optional": false
-              },
-              {
-                "name": "candidateIds",
-                "type": 3,
-                "optional": false
-              },
-              {
-                "name": "dataClasses",
-                "type": 4,
-                "optional": false
-              },
-              {
-                "name": "elapsedMs",
-                "type": 10,
-                "optional": false
-              },
-              {
-                "name": "executionDomain",
-                "type": 11,
-                "optional": false
-              },
-              {
-                "name": "outcome",
-                "type": 14,
-                "optional": false
-              },
-              {
-                "name": "request",
-                "type": 30,
-                "optional": false
-              },
-              {
-                "name": "requestId",
-                "type": 2,
-                "optional": false
-              },
-              {
-                "name": "response",
-                "type": 50,
-                "optional": true
-              },
-              {
-                "name": "routeId",
-                "type": 2,
-                "optional": false
-              },
-              {
-                "name": "selected",
-                "type": 1,
-                "optional": true
-              },
-              {
-                "name": "version",
-                "type": 57,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "model",
-                "type": 2,
-                "optional": false
-              },
-              {
-                "name": "provider",
-                "type": 2,
-                "optional": false
-              },
-              {
-                "name": "reasoningEffort",
-                "type": 2,
-                "optional": true
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "primitive",
-            "type": "string"
-          },
-          {
-            "kind": "array",
-            "element": 2
-          },
-          {
-            "kind": "array",
-            "element": 5
-          },
-          {
-            "kind": "union",
-            "types": [
-              6,
-              7,
-              8,
-              9
-            ]
-          },
-          {
-            "kind": "literal",
-            "value": "workspace"
-          },
-          {
-            "kind": "literal",
-            "value": "public"
-          },
-          {
-            "kind": "literal",
-            "value": "secret"
-          },
-          {
-            "kind": "literal",
-            "value": "sensitive"
-          },
-          {
-            "kind": "primitive",
-            "type": "number"
-          },
-          {
-            "kind": "union",
-            "types": [
-              12,
-              13
-            ]
-          },
-          {
-            "kind": "literal",
-            "value": "network"
-          },
-          {
-            "kind": "literal",
-            "value": "local"
-          },
-          {
-            "kind": "union",
-            "types": [
-              15,
-              16,
-              17,
-              18,
-              19,
-              20,
-              21,
-              22,
-              23,
-              24,
-              25,
-              26,
-              27,
-              28,
-              29
-            ]
-          },
-          {
-            "kind": "literal",
-            "value": "timeout"
-          },
-          {
-            "kind": "literal",
-            "value": "transport"
-          },
-          {
-            "kind": "literal",
-            "value": "unsupported-input"
-          },
-          {
-            "kind": "literal",
-            "value": "abstain"
-          },
-          {
-            "kind": "literal",
-            "value": "low-confidence"
-          },
-          {
-            "kind": "literal",
-            "value": "missing-credential"
-          },
-          {
-            "kind": "literal",
-            "value": "rate-limited"
-          },
-          {
-            "kind": "literal",
-            "value": "http"
-          },
-          {
-            "kind": "literal",
-            "value": "input-too-large"
-          },
-          {
-            "kind": "literal",
-            "value": "invalid-response"
-          },
-          {
-            "kind": "literal",
-            "value": "no-candidates"
-          },
-          {
-            "kind": "literal",
-            "value": "privacy-denied"
-          },
-          {
-            "kind": "literal",
-            "value": "provider-unavailable"
-          },
-          {
-            "kind": "literal",
-            "value": "cancelled"
-          },
-          {
-            "kind": "literal",
-            "value": "selected"
-          },
-          {
-            "kind": "union",
-            "types": [
-              31,
-              49
-            ]
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "effort",
-                "type": 32,
-                "optional": true
-              },
-              {
-                "name": "model",
-                "type": 2,
-                "optional": true
-              },
-              {
-                "name": "providerId",
-                "type": 2,
-                "optional": true
-              },
-              {
-                "name": "questions",
-                "type": 35,
-                "optional": false
-              },
-              {
-                "name": "state",
-                "type": 45,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "union",
-            "types": [
-              33,
-              34
-            ]
-          },
-          {
-            "kind": "literal",
-            "value": "high"
-          },
-          {
-            "kind": "literal",
-            "value": "low"
-          },
-          {
-            "kind": "object",
-            "properties": [],
-            "indices": [
-              {
-                "key": 2,
-                "value": 36
-              }
-            ]
-          },
-          {
-            "kind": "union",
-            "types": [
-              37,
-              39,
-              42
-            ]
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "criteria",
-                "type": 3,
-                "optional": false
-              },
-              {
-                "name": "instructions",
-                "type": 2,
-                "optional": true
-              },
-              {
-                "name": "type",
-                "type": 38,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "literal",
-            "value": "score"
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "criteria",
-                "type": 40,
-                "optional": false
-              },
-              {
-                "name": "instructions",
-                "type": 2,
-                "optional": true
-              },
-              {
-                "name": "type",
-                "type": 41,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "object",
-            "properties": [],
-            "indices": [
-              {
-                "key": 2,
-                "value": 2
-              }
-            ]
-          },
-          {
-            "kind": "literal",
-            "value": "choice"
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "criteria",
-                "type": 43,
-                "optional": true
-              },
-              {
-                "name": "instructions",
-                "type": 2,
-                "optional": true
-              },
-              {
-                "name": "type",
-                "type": 44,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "false",
-                "type": 2,
-                "optional": false
-              },
-              {
-                "name": "true",
-                "type": 2,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "literal",
-            "value": "noul"
-          },
-          {
-            "kind": "union",
-            "types": [
-              2,
-              10,
-              46,
-              47,
-              48,
-              49
-            ]
-          },
-          {
-            "kind": "array",
-            "element": 45
-          },
-          {
-            "kind": "object",
-            "properties": [],
-            "indices": [
-              {
-                "key": 2,
-                "value": 45
-              }
-            ]
-          },
-          {
-            "kind": "primitive",
-            "type": "boolean"
-          },
-          {
-            "kind": "primitive",
-            "type": "null"
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "answers",
-                "type": 51,
-                "optional": false
-              },
-              {
-                "name": "model",
-                "type": 2,
-                "optional": false
-              },
-              {
-                "name": "usage",
-                "type": 54,
-                "optional": true
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "object",
-            "properties": [],
-            "indices": [
-              {
-                "key": 2,
-                "value": 52
-              }
-            ]
-          },
-          {
-            "kind": "union",
-            "types": [
-              53,
-              55,
-              56
-            ]
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "choice",
-                "type": 2,
-                "optional": false
-              },
-              {
-                "name": "confidence",
-                "type": 10,
-                "optional": false
-              },
-              {
-                "name": "probabilities",
-                "type": 54,
-                "optional": false
-              },
-              {
-                "name": "type",
-                "type": 41,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "object",
-            "properties": [],
-            "indices": [
-              {
-                "key": 2,
-                "value": 10
-              }
-            ]
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "confidence",
-                "type": 10,
-                "optional": false
-              },
-              {
-                "name": "legend",
-                "type": 40,
-                "optional": false
-              },
-              {
-                "name": "probabilities",
-                "type": 54,
-                "optional": false
-              },
-              {
-                "name": "score",
-                "type": 10,
-                "optional": false
-              },
-              {
-                "name": "type",
-                "type": 38,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "noul",
-                "type": 10,
-                "optional": false
-              },
-              {
-                "name": "type",
-                "type": 44,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "literal",
-            "value": 1
-          }
-        ]
-      },
-      "names": [
-        "packages/experimental/system3/src/entry-routing.ts#System3EntryDecisionReceipt"
-      ],
-      "sources": [
-        "packages/experimental/system3/src/entry-routing.ts:57"
-      ]
-    },
-    {
       "digest": "96bfb916a727cd4445a594df264c523fc039749a31bfed924b8cc7bb308a5bb0",
       "schema": {
         "root": 0,
@@ -75718,7 +75813,7 @@
         "packages/experimental/system3/src/entry-routing.ts#System3EntryOutcome"
       ],
       "sources": [
-        "packages/experimental/system3/src/entry-routing.ts:53"
+        "packages/experimental/system3/src/entry-routing.ts:60"
       ]
     },
     {
@@ -78268,609 +78363,6 @@
           {
             "kind": "literal",
             "value": "disposed"
-          }
-        ]
-      },
-      "names": [],
-      "sources": []
-    },
-    {
-      "digest": "b391a61506715ea660db7c77d9b23bd3bd69942e758dab5b3e8ee88354b47631",
-      "schema": {
-        "root": 0,
-        "nodes": [
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "data",
-                "type": 1,
-                "optional": false
-              },
-              {
-                "name": "ignorable",
-                "type": 59,
-                "optional": true
-              },
-              {
-                "name": "seq",
-                "type": 11,
-                "optional": false
-              },
-              {
-                "name": "time",
-                "type": 11,
-                "optional": false
-              },
-              {
-                "name": "type",
-                "type": 60,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "baseline",
-                "type": 2,
-                "optional": false
-              },
-              {
-                "name": "candidateIds",
-                "type": 4,
-                "optional": false
-              },
-              {
-                "name": "dataClasses",
-                "type": 5,
-                "optional": false
-              },
-              {
-                "name": "elapsedMs",
-                "type": 11,
-                "optional": false
-              },
-              {
-                "name": "executionDomain",
-                "type": 12,
-                "optional": false
-              },
-              {
-                "name": "outcome",
-                "type": 15,
-                "optional": false
-              },
-              {
-                "name": "request",
-                "type": 31,
-                "optional": false
-              },
-              {
-                "name": "requestId",
-                "type": 3,
-                "optional": false
-              },
-              {
-                "name": "response",
-                "type": 51,
-                "optional": true
-              },
-              {
-                "name": "routeId",
-                "type": 3,
-                "optional": false
-              },
-              {
-                "name": "selected",
-                "type": 2,
-                "optional": true
-              },
-              {
-                "name": "version",
-                "type": 58,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "model",
-                "type": 3,
-                "optional": false
-              },
-              {
-                "name": "provider",
-                "type": 3,
-                "optional": false
-              },
-              {
-                "name": "reasoningEffort",
-                "type": 3,
-                "optional": true
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "primitive",
-            "type": "string"
-          },
-          {
-            "kind": "array",
-            "element": 3
-          },
-          {
-            "kind": "array",
-            "element": 6
-          },
-          {
-            "kind": "union",
-            "types": [
-              7,
-              8,
-              9,
-              10
-            ]
-          },
-          {
-            "kind": "literal",
-            "value": "workspace"
-          },
-          {
-            "kind": "literal",
-            "value": "public"
-          },
-          {
-            "kind": "literal",
-            "value": "secret"
-          },
-          {
-            "kind": "literal",
-            "value": "sensitive"
-          },
-          {
-            "kind": "primitive",
-            "type": "number"
-          },
-          {
-            "kind": "union",
-            "types": [
-              13,
-              14
-            ]
-          },
-          {
-            "kind": "literal",
-            "value": "network"
-          },
-          {
-            "kind": "literal",
-            "value": "local"
-          },
-          {
-            "kind": "union",
-            "types": [
-              16,
-              17,
-              18,
-              19,
-              20,
-              21,
-              22,
-              23,
-              24,
-              25,
-              26,
-              27,
-              28,
-              29,
-              30
-            ]
-          },
-          {
-            "kind": "literal",
-            "value": "timeout"
-          },
-          {
-            "kind": "literal",
-            "value": "transport"
-          },
-          {
-            "kind": "literal",
-            "value": "abstain"
-          },
-          {
-            "kind": "literal",
-            "value": "unsupported-input"
-          },
-          {
-            "kind": "literal",
-            "value": "low-confidence"
-          },
-          {
-            "kind": "literal",
-            "value": "missing-credential"
-          },
-          {
-            "kind": "literal",
-            "value": "rate-limited"
-          },
-          {
-            "kind": "literal",
-            "value": "http"
-          },
-          {
-            "kind": "literal",
-            "value": "input-too-large"
-          },
-          {
-            "kind": "literal",
-            "value": "invalid-response"
-          },
-          {
-            "kind": "literal",
-            "value": "no-candidates"
-          },
-          {
-            "kind": "literal",
-            "value": "privacy-denied"
-          },
-          {
-            "kind": "literal",
-            "value": "cancelled"
-          },
-          {
-            "kind": "literal",
-            "value": "provider-unavailable"
-          },
-          {
-            "kind": "literal",
-            "value": "selected"
-          },
-          {
-            "kind": "union",
-            "types": [
-              32,
-              50
-            ]
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "effort",
-                "type": 33,
-                "optional": true
-              },
-              {
-                "name": "model",
-                "type": 3,
-                "optional": true
-              },
-              {
-                "name": "providerId",
-                "type": 3,
-                "optional": true
-              },
-              {
-                "name": "questions",
-                "type": 36,
-                "optional": false
-              },
-              {
-                "name": "state",
-                "type": 46,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "union",
-            "types": [
-              34,
-              35
-            ]
-          },
-          {
-            "kind": "literal",
-            "value": "high"
-          },
-          {
-            "kind": "literal",
-            "value": "low"
-          },
-          {
-            "kind": "object",
-            "properties": [],
-            "indices": [
-              {
-                "key": 3,
-                "value": 37
-              }
-            ]
-          },
-          {
-            "kind": "union",
-            "types": [
-              38,
-              40,
-              43
-            ]
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "criteria",
-                "type": 4,
-                "optional": false
-              },
-              {
-                "name": "instructions",
-                "type": 3,
-                "optional": true
-              },
-              {
-                "name": "type",
-                "type": 39,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "literal",
-            "value": "score"
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "criteria",
-                "type": 41,
-                "optional": false
-              },
-              {
-                "name": "instructions",
-                "type": 3,
-                "optional": true
-              },
-              {
-                "name": "type",
-                "type": 42,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "object",
-            "properties": [],
-            "indices": [
-              {
-                "key": 3,
-                "value": 3
-              }
-            ]
-          },
-          {
-            "kind": "literal",
-            "value": "choice"
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "criteria",
-                "type": 44,
-                "optional": true
-              },
-              {
-                "name": "instructions",
-                "type": 3,
-                "optional": true
-              },
-              {
-                "name": "type",
-                "type": 45,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "false",
-                "type": 3,
-                "optional": false
-              },
-              {
-                "name": "true",
-                "type": 3,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "literal",
-            "value": "noul"
-          },
-          {
-            "kind": "union",
-            "types": [
-              3,
-              11,
-              47,
-              48,
-              49,
-              50
-            ]
-          },
-          {
-            "kind": "array",
-            "element": 46
-          },
-          {
-            "kind": "object",
-            "properties": [],
-            "indices": [
-              {
-                "key": 3,
-                "value": 46
-              }
-            ]
-          },
-          {
-            "kind": "primitive",
-            "type": "boolean"
-          },
-          {
-            "kind": "primitive",
-            "type": "null"
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "answers",
-                "type": 52,
-                "optional": false
-              },
-              {
-                "name": "model",
-                "type": 3,
-                "optional": false
-              },
-              {
-                "name": "usage",
-                "type": 55,
-                "optional": true
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "object",
-            "properties": [],
-            "indices": [
-              {
-                "key": 3,
-                "value": 53
-              }
-            ]
-          },
-          {
-            "kind": "union",
-            "types": [
-              54,
-              56,
-              57
-            ]
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "choice",
-                "type": 3,
-                "optional": false
-              },
-              {
-                "name": "confidence",
-                "type": 11,
-                "optional": false
-              },
-              {
-                "name": "probabilities",
-                "type": 55,
-                "optional": false
-              },
-              {
-                "name": "type",
-                "type": 42,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "object",
-            "properties": [],
-            "indices": [
-              {
-                "key": 3,
-                "value": 11
-              }
-            ]
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "confidence",
-                "type": 11,
-                "optional": false
-              },
-              {
-                "name": "legend",
-                "type": 41,
-                "optional": false
-              },
-              {
-                "name": "probabilities",
-                "type": 55,
-                "optional": false
-              },
-              {
-                "name": "score",
-                "type": 11,
-                "optional": false
-              },
-              {
-                "name": "type",
-                "type": 39,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "noul",
-                "type": 11,
-                "optional": false
-              },
-              {
-                "name": "type",
-                "type": 45,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "literal",
-            "value": 1
-          },
-          {
-            "kind": "literal",
-            "value": true
-          },
-          {
-            "kind": "literal",
-            "value": "system3/entry-decision"
           }
         ]
       },
@@ -81719,6 +81211,630 @@
           {
             "kind": "literal",
             "value": "finish"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "be2c1d523179fc16f51f6b7c160c4e14def9b0bff4ea34ac29b64a76e47bb9fd",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "data",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "ignorable",
+                "type": 60,
+                "optional": true
+              },
+              {
+                "name": "seq",
+                "type": 11,
+                "optional": false
+              },
+              {
+                "name": "time",
+                "type": 11,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 61,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "baseline",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "candidateIds",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "dataClasses",
+                "type": 5,
+                "optional": false
+              },
+              {
+                "name": "elapsedMs",
+                "type": 11,
+                "optional": false
+              },
+              {
+                "name": "executionDomain",
+                "type": 12,
+                "optional": false
+              },
+              {
+                "name": "outcome",
+                "type": 15,
+                "optional": false
+              },
+              {
+                "name": "request",
+                "type": 31,
+                "optional": false
+              },
+              {
+                "name": "requestId",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "response",
+                "type": 51,
+                "optional": true
+              },
+              {
+                "name": "retained",
+                "type": 58,
+                "optional": true
+              },
+              {
+                "name": "routeId",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "selected",
+                "type": 2,
+                "optional": true
+              },
+              {
+                "name": "version",
+                "type": 59,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "model",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "provider",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "reasoningEffort",
+                "type": 3,
+                "optional": true
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "array",
+            "element": 3
+          },
+          {
+            "kind": "array",
+            "element": 6
+          },
+          {
+            "kind": "union",
+            "types": [
+              7,
+              8,
+              9,
+              10
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "workspace"
+          },
+          {
+            "kind": "literal",
+            "value": "public"
+          },
+          {
+            "kind": "literal",
+            "value": "secret"
+          },
+          {
+            "kind": "literal",
+            "value": "sensitive"
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "union",
+            "types": [
+              13,
+              14
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "network"
+          },
+          {
+            "kind": "literal",
+            "value": "local"
+          },
+          {
+            "kind": "union",
+            "types": [
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "timeout"
+          },
+          {
+            "kind": "literal",
+            "value": "transport"
+          },
+          {
+            "kind": "literal",
+            "value": "abstain"
+          },
+          {
+            "kind": "literal",
+            "value": "unsupported-input"
+          },
+          {
+            "kind": "literal",
+            "value": "low-confidence"
+          },
+          {
+            "kind": "literal",
+            "value": "missing-credential"
+          },
+          {
+            "kind": "literal",
+            "value": "rate-limited"
+          },
+          {
+            "kind": "literal",
+            "value": "http"
+          },
+          {
+            "kind": "literal",
+            "value": "input-too-large"
+          },
+          {
+            "kind": "literal",
+            "value": "invalid-response"
+          },
+          {
+            "kind": "literal",
+            "value": "no-candidates"
+          },
+          {
+            "kind": "literal",
+            "value": "cancelled"
+          },
+          {
+            "kind": "literal",
+            "value": "privacy-denied"
+          },
+          {
+            "kind": "literal",
+            "value": "provider-unavailable"
+          },
+          {
+            "kind": "literal",
+            "value": "selected"
+          },
+          {
+            "kind": "union",
+            "types": [
+              32,
+              50
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "effort",
+                "type": 33,
+                "optional": true
+              },
+              {
+                "name": "model",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "providerId",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "questions",
+                "type": 36,
+                "optional": false
+              },
+              {
+                "name": "state",
+                "type": 46,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "union",
+            "types": [
+              34,
+              35
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "high"
+          },
+          {
+            "kind": "literal",
+            "value": "low"
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 3,
+                "value": 37
+              }
+            ]
+          },
+          {
+            "kind": "union",
+            "types": [
+              38,
+              40,
+              43
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "criteria",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "instructions",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "type",
+                "type": 39,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "score"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "criteria",
+                "type": 41,
+                "optional": false
+              },
+              {
+                "name": "instructions",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "type",
+                "type": 42,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 3,
+                "value": 3
+              }
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "choice"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "criteria",
+                "type": 44,
+                "optional": true
+              },
+              {
+                "name": "instructions",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "type",
+                "type": 45,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "false",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "true",
+                "type": 3,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "noul"
+          },
+          {
+            "kind": "union",
+            "types": [
+              3,
+              11,
+              47,
+              48,
+              49,
+              50
+            ]
+          },
+          {
+            "kind": "array",
+            "element": 46
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 3,
+                "value": 46
+              }
+            ]
+          },
+          {
+            "kind": "primitive",
+            "type": "boolean"
+          },
+          {
+            "kind": "primitive",
+            "type": "null"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "answers",
+                "type": 52,
+                "optional": false
+              },
+              {
+                "name": "model",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "usage",
+                "type": 55,
+                "optional": true
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 3,
+                "value": 53
+              }
+            ]
+          },
+          {
+            "kind": "union",
+            "types": [
+              54,
+              56,
+              57
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "choice",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "confidence",
+                "type": 11,
+                "optional": false
+              },
+              {
+                "name": "probabilities",
+                "type": 55,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 42,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 3,
+                "value": 11
+              }
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "confidence",
+                "type": 11,
+                "optional": false
+              },
+              {
+                "name": "legend",
+                "type": 41,
+                "optional": false
+              },
+              {
+                "name": "probabilities",
+                "type": 55,
+                "optional": false
+              },
+              {
+                "name": "score",
+                "type": 11,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 39,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "noul",
+                "type": 11,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 45,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "requestId",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "selection",
+                "type": 2,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": 1
+          },
+          {
+            "kind": "literal",
+            "value": true
+          },
+          {
+            "kind": "literal",
+            "value": "system3/entry-decision"
           }
         ]
       },
@@ -91651,7 +91767,7 @@
       },
       "names": [],
       "sources": [
-        "packages/experimental/system3/src/entry-routing.ts:76"
+        "packages/experimental/system3/src/entry-routing.ts:89"
       ]
     },
     {

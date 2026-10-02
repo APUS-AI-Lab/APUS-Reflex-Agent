@@ -138,7 +138,7 @@ it('routes an API prompt through Loader-mounted Jev and records the actual HTTP 
     ...name === '@deepseek-ai/dsh-experimental-system3' ? [
       '  config:', '    privacyMode: local-only', '    jevExecutionDomain: local', '    observeAgentLoop: true',
       '    skillSelection:', '      sessionDataClasses: [public]', '      minConfidence: 0.5', '      maxInputBytes: 16000', '      maxContentBytes: 24000', '      maxCandidates: 12', '      deadlineMs: 2000',
-      '    entryRouting:', '      baseline:', '        executionDomain: local', '        dataClasses: [public]', '      minConfidence: 0.5', '      maxInputBytes: 16000', '      sessionDataClasses: [public]',
+      '    entryRouting:', '      baseline:', '        executionDomain: local', '        dataClasses: [public]', '      minConfidence: 0.5', '      maxInputBytes: 16000', '      sessionDataClasses: [public]', '      retainOnAbstain: true',
       '      candidates:', '        - id: expert', '          description: Specialized reasoning',
       '          provider: fidoo-fixture', '          model: expert-fixture', '          executionDomain: local', '          dataClasses: [public]',
     ] : [],

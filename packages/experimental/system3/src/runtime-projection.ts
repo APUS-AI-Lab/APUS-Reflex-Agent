@@ -16,6 +16,8 @@ interface System3RuntimeState extends System3RuntimeView {
   readonly entryTurn: number | null
   readonly startRequestId: SessionRequestId | null
   readonly skillMessageId: MessageId | null
+  /** Route chosen or retained by the latest entry decision; null when that decision left the baseline. */
+  readonly route: { readonly requestId: SessionRequestId; readonly selection: ModelSelection } | null
 }
 
 declare module '@deepseek-ai/dsh-session-projection/types' {
@@ -38,7 +40,8 @@ const viewSchema = z.object({
 const stateSchema: ZodType<System3RuntimeState> = z.object({ entry: viewSchema.shape.entry, skill: viewSchema.shape.skill,
   header: selection.nullable(), currentTurn: z.number().nullable(), currentStep: z.number().nullable(),
   entryTurn: z.number().nullable(), startRequestId: requestId.nullable(),
-  skillMessageId: z.string().transform(value => brandString<MessageId>(value)).nullable() })
+  skillMessageId: z.string().transform(value => brandString<MessageId>(value)).nullable(),
+  route: z.object({ requestId, selection }).nullable() })
 
 /** Content deltas and completed content blocks prove response; protocol-only records do not. */
 function hasResponseContent(stream: readonly AssistantStreamRecord[]): boolean {
@@ -49,9 +52,9 @@ function hasResponseContent(stream: readonly AssistantStreamRecord[]): boolean {
 
 /** Fold advice and adoption; confirm request use from output or a streamed attempt in the exact input turn. */
 export const system3RuntimeProjection = {
-  key: 'system3Runtime', stateVersion: 3, stateSchema,
+  key: 'system3Runtime', stateVersion: 4, stateSchema,
   init: () => ({ entry: null, skill: null, header: null, currentTurn: null, currentStep: null,
-    entryTurn: null, startRequestId: null, skillMessageId: null }),
+    entryTurn: null, startRequestId: null, skillMessageId: null, route: null }),
   wire: { viewSchema, view: state => ({ entry: state.entry, skill: state.skill }) },
   apply(state, event) {
     if (event.type === 'step/start') return { ...state, currentTurn: event.data.turn, currentStep: event.data.step }
@@ -66,7 +69,10 @@ export const system3RuntimeProjection = {
     if (event.type === 'system3/entry-decision') {
       if (state.startRequestId !== null && state.startRequestId !== event.data.requestId) return state
       const previous = state.entry?.requestId === event.data.requestId ? state.entry : null
-      return { ...state, entryTurn: previous === null ? null : state.entryTurn,
+      const route = event.data.selected !== undefined
+        ? { requestId: event.data.requestId, selection: event.data.selected }
+        : event.data.retained ?? null
+      return { ...state, route, entryTurn: previous === null ? null : state.entryTurn,
         entry: { requestId: event.data.requestId, phase: 'decided', outcome: event.data.outcome,
           suggested: event.data.selected ?? null, adopted: previous?.adopted ?? null,
           used: previous?.used ?? null, elapsedMs: event.data.elapsedMs } }

@@ -164,6 +164,7 @@ export default class System3 extends Service implements System3Service {
       sessionDataClasses: z.array(z.union([z.const('public'), z.const('workspace'), z.const('sensitive'), z.const('secret')])).required(),
       minConfidence: z.number().min(0).max(1).required(),
       maxInputBytes: z.number().step(1).min(1).required(),
+      retainOnAbstain: z.boolean().default(false),
     })]).default(false),
     skillSelection: z.union([z.const(false), z.object({
       sessionDataClasses: z.array(z.union([z.const('public'), z.const('workspace'), z.const('sensitive'), z.const('secret')])).required(),
@@ -193,7 +194,8 @@ export default class System3 extends Service implements System3Service {
     })
     if (config.entryRouting !== undefined && config.entryRouting !== false) {
       const router = createSystem3EntryRouter(ctx, config.entryRouting, this.privacyPolicy, this.jevOptions)
-      ctx.inject(['sessionController', 'llm'], (ctx) => {
+      const retains = config.entryRouting.retainOnAbstain === true
+      ctx.inject(retains ? ['sessionController', 'llm', 'sessionProjections'] : ['sessionController', 'llm'], (ctx) => {
         ctx.effect(() => ctx.sessionController.registerPromptRouter(router))
       })
     }

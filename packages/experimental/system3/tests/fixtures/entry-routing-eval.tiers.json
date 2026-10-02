@@ -1,0 +1,222 @@
+{
+  "version": 1,
+  "deployed": true,
+  "description": "Four-tier entry routing over the deployed System3 candidates. Tier labels are the set author's judgement; follow-ups refer to history the router does not receive and expect abstain.",
+  "baseline": {
+    "provider": "fidoo",
+    "model": "deepseek-v4-flash",
+    "reasoningEffort": "low"
+  },
+  "candidates": [
+    {
+      "id": "fast",
+      "description": "简短问答、翻译、改写、归纳，以及范围明确、一步就能完成的常规任务。",
+      "provider": "fidoo",
+      "model": "deepseek-v4-flash",
+      "reasoningEffort": "low"
+    },
+    {
+      "id": "reasoning",
+      "description": "需要几步推理的分析：解释原理、比较方案、阅读和排查一段代码、中等规模的计算或推导。",
+      "provider": "fidoo",
+      "model": "deepseek-v4-pro",
+      "reasoningEffort": "low"
+    },
+    {
+      "id": "expert",
+      "description": "约束多、跨度大的专业任务：完整系统设计、跨模块代码改造、长篇材料综合，以及需要权衡依赖与风险的方案。",
+      "provider": "fidoo-relay",
+      "model": "gpt-5.6-sol-relay",
+      "reasoningEffort": "medium"
+    },
+    {
+      "id": "frontier",
+      "description": "最难的一类问题：开放式研究、严格证明、前沿难题，以及前几档模型很可能无法可靠完成的任务。",
+      "provider": "fidoo-relay",
+      "model": "gpt-6-sol-relay",
+      "reasoningEffort": "high"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "fast-01",
+      "input": "把“请在周五前提交报告”翻译成英文。",
+      "expected": "fast",
+      "tag": "standalone"
+    },
+    {
+      "id": "fast-02",
+      "input": "Python 里怎么把字符串转成小写？",
+      "expected": "fast",
+      "tag": "standalone"
+    },
+    {
+      "id": "fast-03",
+      "input": "用一句话解释什么是 API。",
+      "expected": "fast",
+      "tag": "standalone"
+    },
+    {
+      "id": "fast-04",
+      "input": "把这句话改得更礼貌：你这个方案不行，重做。",
+      "expected": "fast",
+      "tag": "standalone"
+    },
+    {
+      "id": "fast-05",
+      "input": "列出 Linux 查看磁盘占用的常用命令。",
+      "expected": "fast",
+      "tag": "standalone"
+    },
+    {
+      "id": "fast-06",
+      "input": "2026-10-02 是星期几？",
+      "expected": "fast",
+      "tag": "standalone"
+    },
+    {
+      "id": "reasoning-01",
+      "input": "为什么 TCP 建立连接需要三次握手而不是两次？说明两次握手会出什么问题。",
+      "expected": "reasoning",
+      "tag": "standalone"
+    },
+    {
+      "id": "reasoning-02",
+      "input": "读多写少的商品详情接口，用旁路缓存还是读写穿透缓存？比较两者并给出建议。",
+      "expected": "reasoning",
+      "tag": "standalone"
+    },
+    {
+      "id": "reasoning-03",
+      "input": "这段代码为什么会漏掉最后一个元素：for i in range(len(a) - 1): total += a[i]",
+      "expected": "reasoning",
+      "tag": "standalone"
+    },
+    {
+      "id": "reasoning-04",
+      "input": "每月定投 2000 元，年化 6%，按月复利，5 年后本息合计大约多少？给出计算过程。",
+      "expected": "reasoning",
+      "tag": "standalone"
+    },
+    {
+      "id": "reasoning-05",
+      "input": "一个查询按 created_at 排序取前 20 条却很慢，表上只有 user_id 索引，分析原因并给出改法。",
+      "expected": "reasoning",
+      "tag": "standalone"
+    },
+    {
+      "id": "reasoning-06",
+      "input": "解释快速排序最坏情况为什么是 O(n²)，以及随机化如何缓解。",
+      "expected": "reasoning",
+      "tag": "standalone"
+    },
+    {
+      "id": "expert-01",
+      "input": "我们有一个日订单 500 万的单体订单系统，要拆成微服务。请设计拆分边界、数据一致性方案、灰度迁移步骤和每一步的回滚方式。",
+      "expected": "expert",
+      "tag": "standalone"
+    },
+    {
+      "id": "expert-02",
+      "input": "把一个 3 万行的 Node.js 项目从回调风格整体迁移到 async/await，保持幂等、重试和超时语义不变，给出分阶段计划、每阶段的测试策略和风险控制。",
+      "expected": "expert",
+      "tag": "standalone"
+    },
+    {
+      "id": "expert-03",
+      "input": "综合三份各 40 页的行业报告（市场规模、竞品分析、渠道调研），写一份给董事会的进入策略备忘录，要求结论有依据、风险有对冲。",
+      "expected": "expert",
+      "tag": "standalone"
+    },
+    {
+      "id": "expert-04",
+      "input": "为覆盖 30 个区域的公共 API 网关设计按租户和全局双层限流，考虑时钟偏差和区域故障，比较令牌桶、滑动窗口和集中配额服务。",
+      "expected": "expert",
+      "tag": "standalone"
+    },
+    {
+      "id": "expert-05",
+      "input": "把 2TB 的 PostgreSQL 主库从 12 升级到 16，停机不超过五分钟，制定包含逻辑复制、切换、校验和回退条件的完整方案。",
+      "expected": "expert",
+      "tag": "standalone"
+    },
+    {
+      "id": "expert-06",
+      "input": "为离线可用的多设备笔记应用设计同步与冲突解决方案，覆盖富文本、附件和权限，比较 OT 与 CRDT 并说明选型。",
+      "expected": "expert",
+      "tag": "standalone"
+    },
+    {
+      "id": "frontier-01",
+      "input": "提出一种在不访问训练数据的前提下判断大模型是否记忆了某段文本的新方法，给出理论依据、可证伪的实验设计和可能的反例。",
+      "expected": "frontier",
+      "tag": "standalone"
+    },
+    {
+      "id": "frontier-02",
+      "input": "设计一个在至多 1/3 拜占庭节点下消息复杂度低于 O(n²) 的共识协议，并给出安全性与活性的严格证明。",
+      "expected": "frontier",
+      "tag": "standalone"
+    },
+    {
+      "id": "frontier-03",
+      "input": "严格证明：对任意正实数 a、b、c 且 abc = 1，有 a/(b+c) + b/(c+a) + c/(a+b) ≥ 3/2，并讨论等号成立条件和推广。",
+      "expected": "frontier",
+      "tag": "standalone"
+    },
+    {
+      "id": "frontier-04",
+      "input": "针对长时程智能体规划中的误差累积问题，提出一个尚未被系统研究的方向，给出三个可检验的假设和对应实验方案。",
+      "expected": "frontier",
+      "tag": "standalone"
+    },
+    {
+      "id": "frontier-05",
+      "input": "从第一性原理推导一种线性复杂度的注意力近似，给出近似误差的上界证明，并说明它在什么条件下失效。",
+      "expected": "frontier",
+      "tag": "standalone"
+    },
+    {
+      "id": "frontier-06",
+      "input": "给出判定任意给定的三维多面体能否被剪拼成立方体的一个新思路，说明与 Dehn 不变量的关系以及证明的关键难点。",
+      "expected": "frontier",
+      "tag": "standalone"
+    },
+    {
+      "id": "follow-01",
+      "input": "继续",
+      "expected": "abstain",
+      "tag": "follow-up"
+    },
+    {
+      "id": "follow-02",
+      "input": "再展开说说第二点",
+      "expected": "abstain",
+      "tag": "follow-up"
+    },
+    {
+      "id": "follow-03",
+      "input": "换成表格",
+      "expected": "abstain",
+      "tag": "follow-up"
+    },
+    {
+      "id": "follow-04",
+      "input": "把它写成代码",
+      "expected": "abstain",
+      "tag": "follow-up"
+    },
+    {
+      "id": "follow-05",
+      "input": "还有别的办法吗",
+      "expected": "abstain",
+      "tag": "follow-up"
+    },
+    {
+      "id": "follow-06",
+      "input": "就按这个来",
+      "expected": "abstain",
+      "tag": "follow-up"
+    }
+  ]
+}
