@@ -4266,6 +4266,14 @@ export const EVENT_API: readonly EventApiEntry[] = [
     parameters: [],
   },
   {
+    name: 'subagent/activity',
+    mode: 'emit',
+    signature: '\'subagent/activity\'(this: Scoped<SubagentRuntime>, info: SubagentActivityInfo): void',
+    summary: 'A published one-shot child began or finished one step, reported only between that run\'s start and end.',
+    description: 'A published one-shot child began or finished one step, reported only between that run\'s start and end. Scope-filtered dispatch uses the same delegating parent carrier as `subagent/start`. Providers that observe no steps emit none.',
+    parameters: [{ name: 'info', description: 'the run identity, step category, and phase; never child content.' }],
+  },
+  {
     name: 'subagent/end',
     mode: 'emit',
     signature: '\'subagent/end\'(this: Scoped<SubagentRuntime>, info: SubagentRunEndInfo): void',
@@ -6331,7 +6339,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'ResolvedSubagentStartRequest',
-    declaration: 'export interface ResolvedSubagentStartRequest extends SubagentStartRequest {\n    readonly descriptor: SubagentDescriptorData;\n}',
+    declaration: 'export interface ResolvedSubagentStartRequest extends SubagentStartRequest {\n    readonly descriptor: SubagentDescriptorData;\n    readonly reportActivity: (activity: SubagentActivity) => void;\n}',
   },
   {
     name: 'RestoredSessionOptions',
@@ -7300,6 +7308,18 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'StreamChunk',
     declaration: 'export type StreamChunk = {\n    type: \'block-start\';\n    index: number;\n    blockType: ContentBlockType;\n} | {\n    type: \'text-delta\';\n    index: number;\n    text: string;\n} | {\n    type: \'reasoning-delta\';\n    index: number;\n    text: string;\n} | {\n    type: \'tool-call-delta\';\n    index: number;\n    id: ToolCallId;\n    name?: string;\n    argumentsDelta: string;\n} | {\n    type: \'block-end\';\n    index: number;\n    block: ContentBlock;\n} | {\n    type: \'usage\';\n    usage: TokenUsage;\n} | {\n    type: \'finish\';\n    reason: FinishReason;\n    replayState?: ReplayEnvelope;\n};',
+  },
+  {
+    name: 'SubagentActivity',
+    declaration: 'export interface SubagentActivity {\n    readonly kind: SubagentActivityKind;\n    readonly phase: \'started\' | \'completed\';\n}',
+  },
+  {
+    name: 'SubagentActivityInfo',
+    declaration: 'export interface SubagentActivityInfo extends SubagentActivity {\n    readonly runId: SubagentRunId;\n    readonly provider: string;\n    readonly id: SessionId;\n}',
+  },
+  {
+    name: 'SubagentActivityKind',
+    declaration: 'export type SubagentActivityKind = \'message\' | \'reasoning\' | \'command\' | \'file-change\' | \'tool\' | \'web-search\' | \'other\';',
   },
   {
     name: 'SubagentCapabilities',

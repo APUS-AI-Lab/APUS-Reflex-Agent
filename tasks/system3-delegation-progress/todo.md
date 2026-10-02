@@ -11,10 +11,12 @@ Base: branch `feat-system3-g1`. Order follows [architecture section 11](../../do
 
 ## Slice 1a · provider activity (live)
 
-- [ ] `onActivity` in the Codex and Claude Code providers at the points that discard notifications.
-- [ ] Live event `subagent/activity` with redacted summaries; parse failures never fail the run.
-- [ ] AG-UI forwarding filtered by parent session.
-- [ ] Unit tests at 100% per-file coverage for touched files; README updates.
+- [x] `reportActivity` on the provider start request; the seam publishes `subagent/activity` only between a run's start and end.
+- [x] Codex provider reports item categories from `item/started` and `item/completed`; Claude Code provider reports assistant blocks and tool calls.
+- [x] Redacted summaries only (category and phase); a malformed `item/started` is skipped and never fails the run.
+- [x] AG-UI forwards `CUSTOM dsh.subagent.activity` and now follows out-of-process runs by their delegating parent.
+- [x] Unit tests, README updates in both languages, regenerated catalogs, `doc-sync` 42 / 42, `typecheck`.
+- [ ] Real Codex and Claude Code runs observed end to end (needs the provider patches enabled in a profile).
 
 ## Slice 1b · parent-session milestones and progress card
 
@@ -25,3 +27,10 @@ Base: branch `feat-system3-g1`. Order follows [architecture section 11](../../do
 ## Slice 2 · delegation supervision
 
 - [ ] Design only after slice 0 and 1 results.
+
+## Review · 2026-10-02
+
+- Slice 0: 50-input evaluation run twice against the deployed Jev with identical decisions; results in `docs/system3-delegation-progress/entry-eval.md`.
+- Slice 1a: touched files in the three subagent packages stay at 100% coverage; 990 tests across subagent, AG-UI, scope and System3 pass.
+- `test:snapshot`: 177 pass; `browser-use-stagehand-native` fails in this worktree with a Node loader-hook error inside its fixture, in code this branch does not touch. Not yet compared against the base branch.
+- `packages/experimental/agui/src` is below the per-file coverage threshold before and after this change.

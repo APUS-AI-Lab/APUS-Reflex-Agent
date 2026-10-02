@@ -47,7 +47,7 @@ Routes, all under `basePath` and all requiring `Authorization: Bearer <token>`:
 | `POST /approvals/:id` `{ decision: "allow" \| "reject" }` | Answer a `CUSTOM dsh.approval` event. |
 | `POST /questions/:id` `{ answers: [...] }` | Answer a `CUSTOM dsh.question` event. |
 
-Events emitted during a run: `RUN_STARTED`, `TEXT_MESSAGE_*`, `REASONING_MESSAGE_*`, `TOOL_CALL_START/ARGS/END/RESULT`, `SUBAGENT_STARTED/FINISHED/ERROR`, `CUSTOM` (`dsh.approval`, `dsh.question`) and `RUN_FINISHED` or `RUN_ERROR`. Closing the response cancels the turn.
+Events emitted during a run: `RUN_STARTED`, `TEXT_MESSAGE_*`, `REASONING_MESSAGE_*`, `TOOL_CALL_START/ARGS/END/RESULT`, `SUBAGENT_STARTED/FINISHED/ERROR`, `CUSTOM` (`dsh.approval`, `dsh.question`, `dsh.subagent.activity`) and `RUN_FINISHED` or `RUN_ERROR`. Closing the response cancels the turn.
 
 ### Configuration
 
@@ -106,7 +106,7 @@ An unchanged persona and tool set preserve the repeated prompt prefix. Changing 
 
 - One run per thread at a time; a second `POST /run` answers 409.
 - Thread `updatedAt` is not reported; `createdAt` comes from the Session header.
-- `SUBAGENT_*` events are emitted for every subagent run in the process while a run streams, not only for the streaming thread's descendants.
+- `SUBAGENT_*` and `dsh.subagent.activity` events cover the runs the streaming thread's agent delegated; runs started by its descendants are not reported.
 - Reasoning and text of a superseded model attempt are streamed and then replaced by the retry's output; the client sees both.
 - No TLS and no per-user identity: one bearer token admits one trusted front-end.
 

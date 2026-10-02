@@ -7923,6 +7923,9 @@ importers:
 
   packages/experimental/agui:
     dependencies:
+      '@deepseek-ai/dsh-scope':
+        specifier: workspace:*
+        version: link:../../core/scope
       '@deepseek-ai/schemastery':
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery

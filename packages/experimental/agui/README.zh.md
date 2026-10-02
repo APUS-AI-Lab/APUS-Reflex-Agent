@@ -47,7 +47,7 @@ pnpm dsh --patch packages/experimental/agui/cordis.patch.yml --profile web --no-
 | `POST /approvals/:id` `{ decision: "allow" \| "reject" }` | 回答一条 `CUSTOM dsh.approval` 事件。 |
 | `POST /questions/:id` `{ answers: [...] }` | 回答一条 `CUSTOM dsh.question` 事件。 |
 
-运行期间发出的事件：`RUN_STARTED`、`TEXT_MESSAGE_*`、`REASONING_MESSAGE_*`、`TOOL_CALL_START/ARGS/END/RESULT`、`SUBAGENT_STARTED/FINISHED/ERROR`、`CUSTOM`（`dsh.approval`、`dsh.question`），以及 `RUN_FINISHED` 或 `RUN_ERROR`。关闭响应即取消该轮次。
+运行期间发出的事件：`RUN_STARTED`、`TEXT_MESSAGE_*`、`REASONING_MESSAGE_*`、`TOOL_CALL_START/ARGS/END/RESULT`、`SUBAGENT_STARTED/FINISHED/ERROR`、`CUSTOM`（`dsh.approval`、`dsh.question`、`dsh.subagent.activity`），以及 `RUN_FINISHED` 或 `RUN_ERROR`。关闭响应即取消该轮次。
 
 ### 配置
 
@@ -106,7 +106,7 @@ run 可携带 `forwardedProps.persona` `{ name, tone, hidden? }`；默认是 Sys
 
 - 每个线程同一时刻只允许一个运行；第二个 `POST /run` 返回 409。
 - 不报告线程 `updatedAt`；`createdAt` 取自 Session header。
-- 运行流式期间，进程内所有子 agent 运行都会发出 `SUBAGENT_*` 事件，而不仅限于该线程的后代。
+- `SUBAGENT_*` 与 `dsh.subagent.activity` 事件覆盖流式线程的 agent 直接委派的运行；其后代发起的运行不会上报。
 - 被替换的模型尝试的推理与文本会先流出，再被重试输出替代；客户端两者都会看到。
 - 无 TLS、无按用户身份：一个 bearer token 准入一个受信前端。
 

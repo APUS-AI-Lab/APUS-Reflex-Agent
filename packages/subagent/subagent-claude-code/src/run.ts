@@ -21,6 +21,9 @@ import type { SessionId } from '@deepseek-ai/dsh-session'
 import {
   settleRunResult,
   subprocessRunHandle,
+  type ResolvedSubagentStartRequest,
+  type SubagentActivity,
+  type SubagentActivityKind,
   type SubagentResult,
   type SubagentRun,
   type SubagentStartRequest,
@@ -225,23 +228,74 @@ export function successfulResult(message: SDKResultMessage): string {
   return message.result
 }
 
+/** Step category for each built-in Claude Code tool; unlisted tools report as `tool`. */
+const TOOL_ACTIVITY_KINDS: Readonly<Record<string, SubagentActivityKind>> = {
+  Bash: 'command',
+  Edit: 'file-change',
+  MultiEdit: 'file-change',
+  NotebookEdit: 'file-change',
+  Write: 'file-change',
+  WebFetch: 'web-search',
+  WebSearch: 'web-search',
+}
+
+/**
+ * Report the steps one SDK message carries as categories and phases. Message
+ * text, tool input, and tool results never leave this function.
+ * @param message - one assistant or user SDK message.
+ * @param pending - step category per unanswered tool-use id, updated in place.
+ * @param report - receives each step.
+ */
+function reportMessageActivity(
+  message: Extract<SDKMessage, { type: 'assistant' | 'user' }>,
+  pending: Map<string, SubagentActivityKind>,
+  report: (activity: SubagentActivity) => void,
+): void {
+  const content = message.message.content
+  if (typeof content === 'string') return
+  for (const block of content) {
+    if (message.type === 'user') {
+      // Only tool results are child work here; other user blocks echo the task.
+      const kind = block.type === 'tool_result' ? pending.get(block.tool_use_id) : undefined
+      if (block.type !== 'tool_result' || kind === undefined) continue
+      pending.delete(block.tool_use_id)
+      report({ kind, phase: 'completed' })
+    } else if (block.type === 'text') {
+      report({ kind: 'message', phase: 'completed' })
+    } else if (block.type === 'thinking') {
+      report({ kind: 'reasoning', phase: 'completed' })
+    } else if (block.type === 'tool_use') {
+      const kind = TOOL_ACTIVITY_KINDS[block.name] ?? 'tool'
+      pending.set(block.id, kind)
+      report({ kind, phase: 'started' })
+    }
+  }
+}
+
 /**
  * Consume the complete SDK stream and require one strict success plus normal
  * iterator completion.
  * @param query - published official SDK query.
  * @param onPermissionDenied - records a safe fact when the SDK reports native denial.
  * @param onResult - records that the SDK supplied a terminal result message.
+ * @param onActivity - receives each child step as a category and phase.
  * @returns the completed shared result.
  */
 export async function consumeClaudeQuery(
   query: AsyncIterable<SDKMessage>,
   onPermissionDenied?: () => void,
   onResult?: () => void,
+  onActivity?: (activity: SubagentActivity) => void,
 ): Promise<SubagentResult> {
   let answer: string | undefined
+  const pendingTools = new Map<string, SubagentActivityKind>()
   for await (const message of query) {
     if (message.type === 'system' && message.subtype === 'permission_denied') {
       onPermissionDenied?.()
+      continue
+    }
+    if (onActivity !== undefined && (message.type === 'assistant' || message.type === 'user')) {
+      reportMessageActivity(message, pendingTools, onActivity)
       continue
     }
     if (message.type !== 'result') continue
@@ -383,7 +437,7 @@ export function claudeQueryOptions(
  * @returns the published run after both Query and the real CLI handle exist.
  */
 export async function startClaudeCodeRun(
-  request: SubagentStartRequest,
+  request: SubagentStartRequest & Pick<ResolvedSubagentStartRequest, 'reportActivity'>,
   spec: ClaudeCodeRunSpec,
 ): Promise<SubagentRun> {
   const prompt = textTask(request.prompt)
@@ -532,7 +586,7 @@ export async function startClaudeCodeRun(
             ))
           }, () => {
             receivedResult = true
-          }),
+          }, request.reportActivity),
           publishedProcessFailure,
         ])
       } catch (error: unknown) {

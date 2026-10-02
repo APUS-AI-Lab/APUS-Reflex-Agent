@@ -9,11 +9,23 @@
 
 import type { Readable, Writable } from 'node:stream'
 import type { ContentBlock } from '@deepseek-ai/dsh-llm'
-import type { SubagentResult } from '@deepseek-ai/dsh-subagent'
+import type { SubagentActivity, SubagentActivityKind, SubagentResult } from '@deepseek-ai/dsh-subagent'
 import { JsonRpcLineTransport } from '@deepseek-ai/dsh-sdk-protocol'
 import type { CodexPermissionMode } from './run.ts'
 
 type JsonObject = Record<string, unknown>
+
+/** Step category for each app-server item type the child performs; unlisted types report as `other`. */
+const ITEM_ACTIVITY_KINDS: Readonly<Record<string, SubagentActivityKind>> = {
+  agentMessage: 'message',
+  reasoning: 'reasoning',
+  commandExecution: 'command',
+  fileChange: 'file-change',
+  mcpToolCall: 'tool',
+  dynamicToolCall: 'tool',
+  collabToolCall: 'tool',
+  webSearch: 'web-search',
+}
 
 /** Product facts owned by the Codex wire after publication. */
 export interface CodexWireFailureFacts {
@@ -225,6 +237,7 @@ export class CodexAppServerWire {
     output: Writable,
     private readonly permissionMode: CodexPermissionMode,
     private readonly model?: string,
+    private readonly onActivity?: (activity: SubagentActivity) => void,
   ) {
     this.transport = new JsonRpcLineTransport(input, output)
     // Fatal protocol state can arrive after the current guarded operation has
@@ -629,11 +642,29 @@ export class CodexAppServerWire {
     }
   }
 
+  /**
+   * Report an item's category and phase. The echoed task item is not child
+   * work; item text, commands, paths, and arguments never leave this method.
+   */
+  private reportItem(item: JsonObject, phase: SubagentActivity['phase']): void {
+    if (item.type === 'userMessage') return
+    this.onActivity?.({ kind: ITEM_ACTIVITY_KINDS[String(item.type)] ?? 'other', phase })
+  }
+
   private handleNotification(
     method: string,
     params: JsonObject,
     order?: number,
   ): void {
+    if (method === 'item/started') {
+      // Observe-only: a malformed start notification is skipped, never a run failure.
+      const item = params.item
+      if (
+        params.threadId === this.threadId && this.turnId !== undefined && params.turnId === this.turnId
+        && typeof item === 'object' && item !== null && !Array.isArray(item)
+      ) this.reportItem(item as JsonObject, 'started')
+      return
+    }
     if (method === 'turn/started') {
       const threadId = string(params.threadId, 'turn/started thread id')
       if (threadId !== this.threadId) return
@@ -660,6 +691,7 @@ export class CodexAppServerWire {
       }
       if (id !== this.turnId) return
       const item = object(params.item, 'item/completed item')
+      this.reportItem(item, 'completed')
       if (this.recordDeclinedItem(item, order)) return
       if (item.type !== 'agentMessage') return
       const text = typeof item.text === 'string'

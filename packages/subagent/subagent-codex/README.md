@@ -169,7 +169,7 @@ Append-only: foreground adds one result after the reusable parent prefix, while 
 
 These limits define when this provider is a poor fit or needs special operational care. They are current package constraints, not a general Codex comparison or a task backlog.
 
-- **One fresh process, thread, and turn per run** — there is no continuation, resume, pooling, progress stream, or product-session persistence.
+- **One fresh process, thread, and turn per run** — there is no continuation, resume, pooling, or product-session persistence. Progress is the category and phase of each child item, published as the live `subagent/activity` event; item text, commands, paths, and arguments are never forwarded.
 - **Static instance selection** — Profile rows fix provider names, optional models, and tool bindings; calls cannot choose or change either a provider or model dynamically, and every exposed tool needs a unique `toolName`.
 - **Authentication and account state remain native** — the Bundle supplies the CLI but does not create an account, log in, trust a project, or rewrite Codex settings; configuration and authentication failures surface with their lifecycle stage and the safe `unknown` fallback rather than a separate public taxonomy.
 - **The native platform payload is required at delegation time** — installs that omit optional dependencies, unsupported platforms, and missing or damaged payloads fail at the first run; there is no host-CLI fallback.

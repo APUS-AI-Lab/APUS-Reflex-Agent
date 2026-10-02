@@ -65,6 +65,7 @@ function spawnRequest(parent: Agent) {
       provider: 'spawn',
       label: 'child task',
     }),
+    reportActivity: () => {},
   }
 }
 

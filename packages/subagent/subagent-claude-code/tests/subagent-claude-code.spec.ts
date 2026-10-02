@@ -85,7 +85,7 @@ function request(
   prompt: ContentBlock[] = [{ type: 'text', text: 'do the task' }],
   signal = new AbortController().signal,
 ) {
-  return { prompt, parent: fakeParent, signal }
+  return { prompt, parent: fakeParent, signal, reportActivity: () => {} }
 }
 
 async function nextTask(): Promise<void> {
@@ -1034,6 +1034,35 @@ describe('query options and result mapping', () => {
       stopReason: 'completed',
     })
     expect(onPermissionDenied).toHaveBeenCalledOnce()
+  })
+
+  it('reports assistant and tool steps as categories without their content', async () => {
+    const assistant = (content: unknown): SDKMessage => ({ type: 'assistant', message: { content } }) as SDKMessage
+    const user = (content: unknown): SDKMessage => ({ type: 'user', message: { content } }) as SDKMessage
+    const activities: unknown[] = []
+    await expect(consumeClaudeQuery(queryFrom([
+      user('do the task'),
+      assistant([
+        { type: 'thinking', thinking: 'SECRET_TOKEN' },
+        { type: 'text', text: 'reading /private/secret.txt' },
+        { type: 'tool_use', id: 'tool-1', name: 'Bash', input: { command: 'cat /private/secret.txt' } },
+        { type: 'tool_use', id: 'tool-2', name: 'mcp__private__lookup', input: {} },
+        { type: 'redacted_thinking', data: 'opaque' },
+      ]),
+      user([
+        { type: 'tool_result', tool_use_id: 'tool-1', content: 'SECRET_TOKEN' },
+        { type: 'tool_result', tool_use_id: 'unknown-tool', content: '' },
+        { type: 'text', text: 'interleaved' },
+      ]),
+      success('done'),
+    ]), undefined, undefined, activity => void activities.push(activity))).resolves.toMatchObject({ stopReason: 'completed' })
+    expect(activities).toEqual([
+      { kind: 'reasoning', phase: 'completed' },
+      { kind: 'message', phase: 'completed' },
+      { kind: 'command', phase: 'started' },
+      { kind: 'tool', phase: 'started' },
+      { kind: 'command', phase: 'completed' },
+    ])
   })
 })
 

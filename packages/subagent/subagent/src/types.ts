@@ -117,6 +117,33 @@ export interface SubagentRunEndInfo {
 }
 
 /**
+ * Category of work a running child reports. It names what kind of step is in
+ * progress and never carries child content, paths, tool input, or credentials.
+ */
+export type SubagentActivityKind = 'message' | 'reasoning' | 'command' | 'file-change' | 'tool' | 'web-search' | 'other'
+
+/** One step a provider observed in its running child, before the seam attaches run identity. */
+export interface SubagentActivity {
+  /** What kind of step the child is performing. */
+  readonly kind: SubagentActivityKind
+  /** Whether the child began or finished the step. */
+  readonly phase: 'started' | 'completed'
+}
+
+/**
+ * Observe-only detail for one step of a published subagent run, carried by
+ * `subagent/activity` and paired with its {@link SubagentRunInfo} by `runId`.
+ */
+export interface SubagentActivityInfo extends SubagentActivity {
+  /** Unique identity shared with the paired start and terminal events. */
+  readonly runId: SubagentRunId
+  /** The same provider name carried by the paired start event. */
+  readonly provider: string
+  /** The child agent's id. */
+  readonly id: SessionId
+}
+
+/**
  * Which START-TIME features a provider supports. Checked by the service before delegating to
  * {@link SubagentProvider.start}: a request that needs a capability the chosen provider lacks
  * is rejected with a typed error rather than accepted-then-ignored (the "fail loud, no silent
@@ -207,6 +234,12 @@ export interface SubagentStartRequest {
 export interface ResolvedSubagentStartRequest extends SubagentStartRequest {
   /** Detached descriptor a session-backed provider persists in the child log. */
   readonly descriptor: SubagentDescriptorData
+  /**
+   * Report one step of the running child. The seam publishes it as
+   * `subagent/activity` only between this run's `subagent/start` and
+   * `subagent/end`; a call outside that interval is dropped. Never throws.
+   */
+  readonly reportActivity: (activity: SubagentActivity) => void
 }
 
 /**

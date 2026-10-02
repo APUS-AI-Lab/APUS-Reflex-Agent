@@ -933,6 +933,7 @@ export const TYPE_LINK_EXEMPTIONS: Readonly<Record<string, string>> = {
   RequestRunId: 'dynamic-package payload contract is owned by packages/extensions/cordis-host-runner/src/types.ts',
   RpcReceipt: 'carrier-layer receipt is owned by packages/client/connection/src/rpc.ts',
   SessionForkSource: 'service-local fork input is owned by packages/core/session/src/index.ts',
+  SubagentActivityInfo: 'event payload contract is owned by packages/subagent/subagent/src/types.ts',
   SubagentRunEndInfo: 'event payload contract is owned by packages/subagent/subagent/src/types.ts',
   SubagentRunInfo: 'event payload contract is owned by packages/subagent/subagent/src/types.ts',
   WorkflowAgentEndInfo: 'event-local snapshot is owned by packages/workflow/workflow/src/index.ts',
