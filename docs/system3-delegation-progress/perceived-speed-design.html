@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>System3 体感交互设计</title>
+<style>
+:root {
+  --bg: #f7f8fa; --panel: #ffffff; --ink: #1d2129; --ink-2: #4e5969; --ink-3: #86909c; --line: #e5e6eb;
+  --accent: #43a68c; --accent-soft: rgb(67 166 140 / 12%); --warn: #b7791f; --warn-soft: rgb(183 121 31 / 12%);
+  --chip: #f2f3f5; --code: #f2f3f5; --shadow: 0 1px 2px rgb(0 0 0 / 4%);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #17181a; --panel: #202124; --ink: #e8e9eb; --ink-2: #b6b9bf; --ink-3: #8a8f98; --line: #34363b;
+    --accent: #5cc3a6; --accent-soft: rgb(92 195 166 / 14%); --warn: #e0a84a; --warn-soft: rgb(224 168 74 / 14%);
+    --chip: #2a2c30; --code: #2a2c30; --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #17181a; --panel: #202124; --ink: #e8e9eb; --ink-2: #b6b9bf; --ink-3: #8a8f98; --line: #34363b;
+  --accent: #5cc3a6; --accent-soft: rgb(92 195 166 / 14%); --warn: #e0a84a; --warn-soft: rgb(224 168 74 / 14%);
+  --chip: #2a2c30; --code: #2a2c30; --shadow: none;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.65 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif; }
+main { max-width: 1040px; margin: 0 auto; padding: 32px 16px 80px; }
+h1 { font-size: 26px; font-weight: 500; margin: 0 0 6px; }
+h2 { font-size: 19px; font-weight: 500; margin: 44px 0 10px; padding-top: 8px; border-top: 1px solid var(--line); }
+h3 { font-size: 15px; font-weight: 500; margin: 22px 0 8px; }
+p { margin: 8px 0; }
+.lead { color: var(--ink-2); font-size: 15px; }
+.meta { color: var(--ink-3); font-size: 13px; }
+code { background: var(--code); padding: 1px 5px; border-radius: 4px; font-size: 12.5px; }
+.toc { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 16px 0 0; font-size: 13px; }
+.toc a { color: var(--ink-2); text-decoration: none; border-bottom: 1px dashed var(--line); }
+.table-wrap { overflow-x: auto; margin: 10px 0; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; background: var(--panel); }
+th, td { border: 1px solid var(--line); padding: 7px 9px; text-align: left; vertical-align: top; }
+th { font-weight: 500; color: var(--ink-2); background: var(--chip); }
+.tag { display: inline-block; font-size: 12px; padding: 0 6px; border-radius: 4px; background: var(--chip); color: var(--ink-2); white-space: nowrap; }
+.tag.done { background: var(--accent-soft); color: var(--accent); }
+.tag.new { background: var(--warn-soft); color: var(--warn); }
+.principles { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin: 12px 0; }
+.principle { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; box-shadow: var(--shadow); }
+.principle b { font-weight: 500; display: block; margin-bottom: 4px; }
+.principle span { color: var(--ink-2); font-size: 13px; }
+
+/* timeline */
+.timeline { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin: 12px 0; }
+.timeline h3 { margin-top: 0; }
+.track { position: relative; margin: 8px 0 4px; padding-left: 18px; border-left: 2px solid var(--line); }
+.tick { position: relative; padding: 4px 0 10px 8px; }
+.tick::before { content: ""; position: absolute; left: -25px; top: 10px; width: 10px; height: 10px; border-radius: 50%; background: var(--panel); border: 2px solid var(--ink-3); }
+.tick.fact::before { border-color: var(--accent); background: var(--accent-soft); }
+.tick.gap::before { border-color: var(--warn); background: var(--warn-soft); }
+.tick .t { font-variant-numeric: tabular-nums; color: var(--ink-3); font-size: 12px; display: inline-block; min-width: 64px; }
+.tick .what { font-size: 13px; }
+.tick .src { display: block; color: var(--ink-3); font-size: 12px; margin-left: 64px; }
+
+/* mock UI */
+.mock-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; margin: 12px 0; }
+.mock { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px; box-shadow: var(--shadow); }
+.mock-title { font-size: 12px; color: var(--ink-3); margin-bottom: 8px; }
+.bubble-user { margin-left: auto; max-width: 80%; background: var(--chip); border-radius: 12px; padding: 6px 10px; font-size: 13px; width: fit-content; }
+.turn-head { display: flex; align-items: center; gap: 8px; margin: 10px 0 6px; font-size: 13px; color: var(--ink-2); }
+.turn-head .dot, .dock .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); flex: none; }
+.turn-head .route { color: var(--ink); }
+.turn-head .hint { color: var(--ink-3); }
+.answer { font-size: 13px; color: var(--ink); background: transparent; border-left: 2px solid var(--line); padding: 2px 0 2px 10px; margin: 6px 0; }
+.answer.pending { color: var(--ink-3); }
+.dock { border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; font-size: 13px; margin-top: 10px; }
+.dock .bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.dock .route { color: var(--ink-2); }
+.dock .mode { margin-left: auto; color: var(--ink-3); }
+.dock .run { display: flex; flex-wrap: wrap; gap: 4px 12px; color: var(--ink-2); margin-top: 6px; }
+.dock .run .phase { color: var(--ink); }
+.composer { border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; margin-top: 8px; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-3); }
+.composer .model { margin-left: auto; color: var(--ink-2); background: var(--chip); border-radius: 999px; padding: 1px 9px; font-size: 12px; }
+.composer .model b { font-weight: 500; color: var(--ink); }
+.tail { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 13px; color: var(--ink-2); border-top: 1px dashed var(--line); padding-top: 6px; margin-top: 8px; }
+.tail .ok { color: var(--accent); }
+.notice { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; background: var(--warn-soft); color: var(--ink); border-radius: 8px; padding: 6px 10px; margin: 8px 0; }
+.notice .mark { color: var(--warn); }
+.notice button { margin-left: auto; white-space: nowrap; flex: none; font: inherit; font-size: 12px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 6px; padding: 1px 8px; }
+.callout { background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--warn); border-radius: 8px; padding: 10px 12px; margin: 12px 0; font-size: 13px; }
+.choice { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; margin: 10px 0; }
+.choice > div { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font-size: 13px; }
+.choice b { font-weight: 500; }
+footer { margin-top: 48px; color: var(--ink-3); font-size: 12px; }
+@media (prefers-reduced-motion: no-preference) {
+  .turn-head .dot.live, .dock .dot.live { animation: pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse { 50% { box-shadow: 0 0 0 7px var(--accent-soft); } }
+}
+@media (max-width: 480px) { main { padding: 20px 16px 60px; } h1 { font-size: 22px; } .tick .src { margin-left: 0; } }
+</style>
+</head>
+<body>
+<main>
+<header>
+  <div class="meta">System3 · 设计稿 · 待批准 · 2026-10-02 · worktree <code>system3-delegation-progress</code></div>
+  <h1>体感交互：让入口决策和过程掌控“看得见、等得明白”</h1>
+  <p class="lead">后端负责及时给出真实事实，前端负责在每个等待点立刻、清楚地呈现它们。本稿定义一轮对话里用户在每个时刻看到什么、数据从哪里来、放在界面哪个位置，以及怎样验收。实现前需要批准，并按仓库规则请设计或产品评审。</p>
+  <nav class="toc" aria-label="目录">
+    <a href="#principles">1 原则</a><a href="#timelines">2 三条时间线</a><a href="#mocks">3 界面草图</a>
+    <a href="#placement">4 落点与数据来源</a><a href="#copy">5 文案</a><a href="#backend">6 后端改动</a>
+    <a href="#acceptance">7 指标与验收</a><a href="#decisions">8 待决策</a><a href="#out">9 不做什么</a>
+  </nav>
+</header>
+
+<section id="principles">
+<h2>1 原则</h2>
+<div class="principles">
+  <div class="principle"><b>沉默不超过 3 秒</b><span>等待期间至少每 3 秒有一次可见变化：判断完成、开始执行、出现新步骤、计时前进。</span></div>
+  <div class="principle"><b>每个变化都有事实依据</b><span>只显示已记录的事实或由它直接算出的值；不显示没有依据的百分比或假进度条。</span></div>
+  <div class="principle"><b>第一秒说明去向</b><span>判断完成即在用户视线所在处说明“交给谁、属于哪类任务”，重任务同时给出预计耗时。</span></div>
+  <div class="principle"><b>结束给出可信总结</b><span>用了多久、改了什么、是否经过复核；没有核验证据就不说“已完成”。</span></div>
+  <div class="principle"><b>异常也要说清</b><span>超时、回退、弃权、系统介入都用一句话说明发生了什么、系统怎么处理、用户能做什么。</span></div>
+  <div class="principle"><b>可访问、两种主题都可读</b><span>状态变化用 aria-live polite 播报；尊重减少动效偏好；所有文字在浅色和深色主题下都可读。</span></div>
+</div>
+</section>
+
+<section id="timelines">
+<h2>2 三条时间线</h2>
+<p>时间来自 2026-10-02 本机真实测试。<span class="tag done">已有</span> 表示已实现，<span class="tag new">本稿新增</span> 表示待实现。橙色节点是当前违反“沉默不超过 3 秒”的空白期。</p>
+
+<div class="timeline">
+<h3>A · 轻问题：“把这句话翻译成英文”</h3>
+<div class="track">
+  <div class="tick fact"><span class="t">0 ms</span><span class="what">回显消息，显示“已收到” <span class="tag done">已有</span></span><span class="src">本地提交</span></div>
+  <div class="tick fact"><span class="t">≈0.5–1 s</span><span class="what">回合开头显示“交给 DeepSeek Flash · 简单问答” <span class="tag new">本稿新增：移到对话流</span></span><span class="src">system3/entry-decision 的 candidate.label</span></div>
+  <div class="tick fact"><span class="t">≈2–4 s</span><span class="what">回答开始流式输出 <span class="tag done">已有</span></span><span class="src">assistant 流</span></div>
+  <div class="tick fact"><span class="t">结束</span><span class="what">回合尾部：“2 秒 · DeepSeek Flash” <span class="tag new">本稿新增</span></span><span class="src">实际回答模型与耗时</span></div>
+</div>
+</div>
+
+<div class="timeline">
+<h3>B · 重任务：“设计实时特征平台”</h3>
+<div class="track">
+  <div class="tick fact"><span class="t">0 ms</span><span class="what">回显，“已收到” <span class="tag done">已有</span></span></div>
+  <div class="tick fact"><span class="t">≈0.5–1.2 s</span><span class="what">“交给 GPT-5.6 Sol · 复杂专业任务 · 通常约 20 秒” <span class="tag new">本稿新增：预计耗时</span></span><span class="src">candidate.label + 该档预计耗时</span></div>
+  <div class="tick gap"><span class="t">1–20 s</span><span class="what">现状：只有“正在执行”；新增：回合开头的计时“已 8 秒 / 通常约 20 秒” <span class="tag new">本稿新增</span></span><span class="src">决策时间 + 本地计时</span></div>
+  <div class="tick fact"><span class="t">≈20 s</span><span class="what">回答开始输出，计时收起 <span class="tag done">已有输出</span></span></div>
+  <div class="tick fact"><span class="t">结束</span><span class="what">“21 秒 · GPT-5.6 Sol” <span class="tag new">本稿新增</span></span></div>
+</div>
+</div>
+
+<div class="timeline">
+<h3>C · 委派：“实现 slugify 并补测试”</h3>
+<div class="track">
+  <div class="tick fact"><span class="t">≈0.7 s</span><span class="what">“交给 Codex · 工程任务 · 通常 2–3 分钟” <span class="tag new">本稿新增：移到对话流 + 预计耗时</span></span></div>
+  <div class="tick gap"><span class="t">1–27 s</span><span class="what">现状：主模型先读文件，只有“正在执行”；新增：“正在准备交给 Codex” <span class="tag new">本稿新增</span></span><span class="src">已注入委派指令、尚未调用工具</span></div>
+  <div class="tick gap"><span class="t">27–54 s</span><span class="what">现状：“codex running · N s”；新增：“Codex 正在启动 · N 秒” <span class="tag new">本稿新增</span></span><span class="src">运行中且尚无任何步骤</span></div>
+  <div class="tick fact"><span class="t">54–178 s</span><span class="what">“Codex 运行中 · 2 分 4 秒 · 命令 8 · 改文件 2 · 当前：执行命令” <span class="tag done">已有，改中文与分秒格式</span></span><span class="src">system3/delegation-progress</span></div>
+  <div class="tick fact"><span class="t">178–207 s</span><span class="what">“Codex 已完成，正在复核结果” <span class="tag new">本稿新增</span></span><span class="src">运行已结束、回合未结束</span></div>
+  <div class="tick fact"><span class="t">结束</span><span class="what">回合尾部：“3 分 27 秒 · Codex 改了 2 个文件 · 已复核：测试 8/8 通过” <span class="tag new">本稿新增</span></span><span class="src">进度快照 + 工作区改动 + 主模型复核的工具结果</span></div>
+</div>
+</div>
+</section>
+
+<section id="mocks">
+<h2>3 界面草图</h2>
+<p>草图只表达位置与信息层级，最终视觉沿用现有组件、颜色变量和 13px 行字号，字重不超过 500。</p>
+<div class="mock-grid">
+
+<div class="mock" aria-label="草图：判断完成">
+  <div class="mock-title">① 判断完成（≤1 秒）</div>
+  <div class="bubble-user">给这个仓库加登录接口并补测试</div>
+  <div class="turn-head"><span class="dot live" aria-hidden="true"></span><span class="route">交给 Codex · 工程任务</span><span class="hint">通常 2–3 分钟</span></div>
+  <div class="answer pending">正在准备交给 Codex</div>
+  <div class="composer">输入下一条消息…<span class="model">自动 · <b>Codex</b></span></div>
+</div>
+
+<div class="mock" aria-label="草图：委派运行中">
+  <div class="mock-title">② 委派运行中</div>
+  <div class="turn-head"><span class="dot live" aria-hidden="true"></span><span class="route">交给 Codex · 工程任务</span><span class="hint">已 1 分 12 秒</span></div>
+  <div class="dock">
+    <div class="bar"><span class="dot live" aria-hidden="true"></span><span>正在执行</span><span class="mode">自动调度</span></div>
+    <div class="run"><span class="phase">Codex 运行中</span><span>1 分 12 秒</span><span>命令 2 · 改文件 1 · 推理 2</span><span>当前：执行命令</span></div>
+  </div>
+  <div class="composer">输入下一条消息…<span class="model">自动 · <b>Codex</b></span></div>
+</div>
+
+<div class="mock" aria-label="草图：启动阶段">
+  <div class="mock-title">③ 启动阶段（尚无步骤）</div>
+  <div class="dock">
+    <div class="bar"><span class="dot live" aria-hidden="true"></span><span>正在执行</span><span class="mode">自动调度</span></div>
+    <div class="run"><span class="phase">Codex 正在启动</span><span>18 秒</span></div>
+  </div>
+</div>
+
+<div class="mock" aria-label="草图：重任务等待">
+  <div class="mock-title">④ 重任务等待第一个字</div>
+  <div class="bubble-user">设计一个实时特征平台</div>
+  <div class="turn-head"><span class="dot live" aria-hidden="true"></span><span class="route">交给 GPT-5.6 Sol · 复杂专业任务</span><span class="hint">已 8 秒 · 通常约 20 秒</span></div>
+  <div class="composer">输入下一条消息…<span class="model">自动 · <b>GPT-5.6 Sol</b></span></div>
+</div>
+
+<div class="mock" aria-label="草图：结束总结">
+  <div class="mock-title">⑤ 结束总结（回合尾部）</div>
+  <div class="answer">……slugify 已实现，8 个测试全部通过。</div>
+  <div class="tail"><span>3 分 27 秒</span><span>Codex 改了 2 个文件</span><span class="ok">已复核：测试 8/8 通过</span></div>
+</div>
+
+<div class="mock" aria-label="草图：回退与介入">
+  <div class="mock-title">⑥ 回退与系统介入</div>
+  <div class="notice"><span class="mark" aria-hidden="true">!</span><span>判断超时，先由 DeepSeek Flash 回答</span></div>
+  <div class="notice"><span class="mark" aria-hidden="true">!</span><span>同一个错误出现了 2 次，需要你确认下一步</span><button type="button">查看</button></div>
+</div>
+
+</div>
+</section>
+
+<section id="placement">
+<h2>4 落点与数据来源</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>元素</th><th>界面位置</th><th>数据来源</th><th>状态</th></tr></thead>
+<tbody>
+<tr><td>路由说明（交给谁、哪类任务）</td><td>对话流里本回合的开头；见待决策 8.1</td><td><code>system3Runtime.entry.route.label</code></td><td><span class="tag new">移位</span> 现在只在状态栏</td></tr>
+<tr><td>预计耗时与已用时</td><td>路由说明右侧，第一个字出现后收起</td><td>候选的预计耗时（第 6 节）+ 决策时间 + 本地计时</td><td><span class="tag new">新增</span></td></tr>
+<tr><td>委派准备中</td><td>本回合开头与状态栏</td><td><code>route.delegation.injected</code> 为真且 <code>called</code> 为假</td><td><span class="tag new">新增</span> 纯前端推导</td></tr>
+<tr><td>委派启动中 / 运行中 / 复核中</td><td>状态栏进度行 <code>conversation.input.dock</code></td><td><code>subagentRun</code>：运行中且无步骤 → 启动中；已结束且回合未结束 → 复核中</td><td><span class="tag done">已有运行中</span> 其余纯前端推导</td></tr>
+<tr><td>结束总结</td><td>回合尾部插槽 <code>conversation.chat.turnTail</code></td><td>回合耗时、实际模型、最后一次运行快照、主模型复核的工具结果</td><td><span class="tag new">新增</span> 复核结果需要后端标注，见第 6 节</td></tr>
+<tr><td>输入框模型标签</td><td><code>conversation.input.model</code></td><td><code>modelSelection</code> 与本回合采用的路由</td><td><span class="tag new">修改</span> 见待决策 8.2</td></tr>
+<tr><td>回退与介入提示</td><td>本回合开头的紧凑提示；不用 Toast（它与本回合绑定）</td><td><code>entry.outcome</code>（timeout、provider-unavailable 等）；卡住规则的介入事件</td><td><span class="tag new">新增</span></td></tr>
+</tbody></table></div>
+<p class="meta">按 dsh-client-ui-ux 规则：与本回合绑定的状态用就地提示，不用 Toast；不新增图标；只在一处显示加载状态；数字使用等宽数字避免跳动。</p>
+</section>
+
+<section id="copy">
+<h2>5 文案（中英）</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>键</th><th>中文</th><th>English</th></tr></thead>
+<tbody>
+<tr><td>routeChosen</td><td>交给 {route}</td><td>Handled by {route}</td></tr>
+<tr><td>routeRetained</td><td>延续上一轮：{route}</td><td>Continuing with {route}</td></tr>
+<tr><td>expected</td><td>通常约 {duration}</td><td>Usually about {duration}</td></tr>
+<tr><td>waited</td><td>已 {duration}</td><td>{duration} so far</td></tr>
+<tr><td>delegationPreparing</td><td>正在准备交给 {provider}</td><td>Preparing to hand off to {provider}</td></tr>
+<tr><td>runStarting</td><td>{provider} 正在启动</td><td>{provider} is starting</td></tr>
+<tr><td>runRunning</td><td>{provider} 运行中</td><td>{provider} is working</td></tr>
+<tr><td>runReviewing</td><td>{provider} 已完成，正在复核结果</td><td>{provider} finished; checking the result</td></tr>
+<tr><td>tailChanged</td><td>{provider} 改了 {count} 个文件</td><td>{provider} changed {count} files</td></tr>
+<tr><td>tailVerified</td><td>已复核：{check}</td><td>Checked: {check}</td></tr>
+<tr><td>fallbackTimeout</td><td>判断超时，先由 {model} 回答</td><td>Routing timed out; {model} is answering</td></tr>
+<tr><td>fallbackUnavailable</td><td>暂时无法判断，先由 {model} 回答</td><td>Routing is unavailable; {model} is answering</td></tr>
+</tbody></table></div>
+<p class="meta">时长格式：60 秒以内显示“N 秒”，以上显示“M 分 S 秒”。中文提示最多两句，不加句号。</p>
+</section>
+
+<section id="backend">
+<h2>6 后端改动</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>改动</th><th>内容</th><th>理由</th></tr></thead>
+<tbody>
+<tr><td>候选预计耗时</td><td>候选新增可选 <code>expectedSeconds</code>（或区间），随决策记录写入；第一版取自评测实测值</td><td>重任务第一秒给出预期；之后改为从历史回合统计，配置值作为冷启动</td></tr>
+<tr><td>复核结果标注</td><td>委派结束后，主模型执行的验证类工具结果（测试、构建）在回合尾部可识别</td><td>“已复核”必须有证据；无法识别时只显示用时和改动，不显示“已复核”</td></tr>
+<tr><td>后续消息跳过 Jev</td><td>上一轮已选路由且新输入很短时，直接沿用，不请求 Jev</td><td>实测“继续”类消息 Jev 花 0.9–1.9 秒只为弃权</td></tr>
+<tr><td>回退原因</td><td>已有：<code>entry.outcome</code></td><td>前端直接据此显示回退提示，无需新事件</td></tr>
+<tr><td>委派启动中、复核中</td><td>无需改动</td><td>由现有进度快照与回合状态推导</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="acceptance">
+<h2>7 指标与验收</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>指标</th><th>目标</th><th>测量方式</th></tr></thead>
+<tbody>
+<tr><td>发送到“已收到”</td><td>&lt; 100 ms</td><td>浏览器自动化：按下发送到状态文字出现</td></tr>
+<tr><td>发送到路由说明</td><td>≤ 1 s（热连接）</td><td>同上，到回合开头路由说明出现</td></tr>
+<tr><td>最长无变化间隔</td><td>≤ 3 s</td><td>每 0.5 秒采样可见文本，统计相邻变化的最大间隔</td></tr>
+<tr><td>轻问题出第一个字</td><td>不比关闭路由明显变慢</td><td>同一组输入开关路由各跑一遍对比</td></tr>
+<tr><td>结束总结的可信度</td><td>没有核验证据时不出现“已复核”</td><td>单元测试 + 一次委派失败的真实运行</td></tr>
+<tr><td>可访问性</td><td>状态变化被播报；减少动效时无脉冲动画；浅色与深色主题可读</td><td>组件测试 + 两种主题截图</td></tr>
+</tbody></table></div>
+<p>验收场景沿用本稿第 2 节三条时间线，各录一段浏览器过程截图；另加一次委派失败和一次判断超时。</p>
+</section>
+
+<section id="decisions">
+<h2>8 待决策</h2>
+<h3>8.1 路由说明放在哪里</h3>
+<div class="choice">
+  <div><b>A · 对话流回合开头（推荐）</b><br>用户视线就在这里，体感最好。现有插槽只有回合尾部 <code>conversation.chat.turnTail</code>，没有回合开头，需要在上游 ui-chat 新增一个对称的 <code>turnHead</code> 插槽。</div>
+  <div><b>B · 保留在状态栏，加强呈现</b><br>不改上游，只把状态栏里的路由说明放大、置于首位。改动小，但离回答较远，容易被忽略。</div>
+</div>
+<h3>8.2 输入框模型标签</h3>
+<div class="choice">
+  <div><b>A · 显示“自动 · 本回合模型”（推荐）</b><br>本回合由路由切换时显示实际模型，回合结束恢复显示默认。需要修改 <code>conversation.input.model</code> 的展示，可能涉及上游组件。</div>
+  <div><b>B · 不改</b><br>在路由说明里已有模型名，标签继续显示默认模型。有“标签和实际不一致”的困惑。</div>
+</div>
+<div class="callout">按仓库规则，这是明显可感知的界面与交互变化，实现前需要设计或产品评审。8.1 选 A 时还要先定义上游插槽的契约。</div>
+</section>
+
+<section id="out">
+<h2>9 不做什么</h2>
+<p>不显示百分比或预计剩余时间倒计时（子 agent 不提供可信的总量）；不展示子 agent 的具体内容、命令或路径；不用 Toast 承载与本回合绑定的状态；不为判断过程加入额外的模型调用；不新增图标。</p>
+</section>
+
+<footer>基于：统一架构 <code>docs/feat-system3-g1/architecture.html</code>、方法文档 <code>docs/system3-delegation-progress/decision-method.zh.md</code>、2026-10-02 本机真实测试记录。</footer>
+</main>
+</body>
+</html>
