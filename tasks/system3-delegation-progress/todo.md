@@ -16,7 +16,8 @@ Base: branch `feat-system3-g1`. Order follows [architecture section 11](../../do
 - [x] Redacted summaries only (category and phase); a malformed `item/started` is skipped and never fails the run.
 - [x] AG-UI forwards `CUSTOM dsh.subagent.activity` and now follows out-of-process runs by their delegating parent.
 - [x] Unit tests, README updates in both languages, regenerated catalogs, `doc-sync` 42 / 42, `typecheck`.
-- [ ] Real Codex and Claude Code runs observed end to end (needs the provider patches enabled in a profile).
+- [x] Real Codex run observed through the production provider: start, reasoning, command, message, end, in order.
+- [ ] Real Claude Code run observed end to end.
 
 ## Slice 1b · parent-session milestones and progress card
 
@@ -34,3 +35,4 @@ Base: branch `feat-system3-g1`. Order follows [architecture section 11](../../do
 - Slice 1a: touched files in the three subagent packages stay at 100% coverage; 990 tests across subagent, AG-UI, scope and System3 pass.
 - `test:snapshot`: 177 pass; `browser-use-stagehand-native` fails in this worktree with a Node loader-hook error inside its fixture, in code this branch does not touch. Not yet compared against the base branch.
 - `packages/experimental/agui/src` is below the per-file coverage threshold before and after this change.
+- Real Codex run (bundled CLI, local ChatGPT login, model `gpt-5.5`): the first step arrived about 22 s after start, so a progress view needs a visible started state before any step. The local default model `gpt-6.1-sol` is rejected by the bundled CLI for ChatGPT accounts; the provider needs an explicit `model`.
