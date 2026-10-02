@@ -62,6 +62,9 @@ export function System3Feedback(props: System3FeedbackProps) {
   }
   const fixed = selection?.mode === 'fixed'
   const notice = routeNotice(facts?.entry, props.pendingRequestId, t)
+  const route = facts?.entry?.route
+  const suggestion = route?.retained === true ? t('continued')
+    : route?.delegation ? route.label ?? route.delegation.tool : model(facts?.entry?.suggested, t)
   return <section className={css.dock} aria-label={t('title')}>
     <div className={css.bar}>
       <span className={css.dot} data-active={props.running || props.pending} aria-hidden="true" />
@@ -77,7 +80,7 @@ export function System3Feedback(props: System3FeedbackProps) {
       <p className={css.muted}>{t('cloud')}</p>
       <p>{t('historical')}</p>
       <dl className={css.facts}>
-        <dt>{t('suggestion')}</dt><dd>{facts?.entry?.route?.retained === true ? t('continued') : model(facts?.entry?.suggested, t)}</dd>
+        <dt>{t('suggestion')}</dt><dd>{suggestion}</dd>
         <dt>{t('adoption')}</dt><dd>{model(facts?.entry?.adopted, t)}</dd>
         <dt>{t('actual')}</dt><dd>{model(facts?.entry?.used, t)}</dd>
         {facts?.entry?.elapsedMs !== null && facts?.entry?.elapsedMs !== undefined && <><dt>{t('decisionTime')}</dt><dd>{facts.entry.elapsedMs} {t('milliseconds')}</dd></>}

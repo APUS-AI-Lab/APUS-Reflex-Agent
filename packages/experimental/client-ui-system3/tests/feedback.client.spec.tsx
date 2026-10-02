@@ -124,10 +124,17 @@ it('shows each delegation stage separately: suggested, instruction injected, too
   const { rerender } = render(<System3Feedback {...inputs({ running: true, facts: { skill: null, entry } })} />)
   expect(screen.getByText('已判断：工程任务 · 委派 Codex')).toBeTruthy()
   expect(screen.getByText('委派').nextSibling?.textContent).toBe('已建议，等待注入指令')
+  expect(screen.getByText('建议模型').nextSibling?.textContent).toBe('工程任务 · 委派 Codex')
   const stage = (injected: boolean, called: boolean) => inputs({ running: true,
     facts: { skill: null, entry: { ...entry, route: { ...entry.route, delegation: { ...delegation, injected, called } } } } })
   rerender(<System3Feedback {...stage(true, false)} />)
   expect(screen.getByText('委派').nextSibling?.textContent).toBe('已注入指令，等待调用 subagent_codex')
   rerender(<System3Feedback {...stage(true, true)} />)
   expect(screen.getByText('委派').nextSibling?.textContent).toBe('已调用 subagent_codex')
+})
+it('names the delegation tool when the delegation route has no label', () => {
+  render(<System3Feedback {...inputs({ facts: { skill: null, entry: { requestId: brandString<SessionRequestId>('d'), phase: 'decided', outcome: 'selected',
+    suggested: null, adopted: null, used: null, elapsedMs: 1,
+    route: { id: 'codex', label: null, retained: false, delegation: { candidateId: 'codex', tool: 'subagent_codex', injected: false, called: false } } } } })} />)
+  expect(screen.getByText('建议模型').nextSibling?.textContent).toBe('subagent_codex')
 })
