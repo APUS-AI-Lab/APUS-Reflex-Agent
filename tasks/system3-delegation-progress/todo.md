@@ -19,6 +19,15 @@ Base: branch `feat-system3-g1`. Order follows [architecture section 11](../../do
 - [x] Real Codex run observed through the production provider: start, reasoning, command, message, end, in order.
 - [ ] Real Claude Code run observed end to end.
 
+## Entry tiers and follow-up retention
+
+- [x] `retainOnAbstain`: abstain and low confidence continue the previous route when it is still an admitted candidate; receipts record `retained`; persistence change `2026-10-02-system3-entry-retained-route`.
+- [x] Deployed profile: four tiers (deepseek-v4-flash, deepseek-v4-pro, gpt-5.6-sol-relay, gpt-6-sol-relay) through Fidoo; GPT relay models use a separate `fidoo-relay` provider.
+- [x] Four-tier evaluation: 29 / 30 decisions match labels; p50 482 ms.
+- [x] Architecture page section 07: layered entry design, tier table, image-input handling.
+- [ ] Image input: modality filter before Jev; update deployed input modalities (Flash and both GPT relays read images, Pro does not).
+- [ ] Not yet deployed to the server or Desktop.
+
 ## Slice 1b · parent-session milestones and progress card
 
 - [ ] Persistent start / end / throttled milestone events, persistence-type acknowledgement, both SDK expected outputs, keyless snapshot.

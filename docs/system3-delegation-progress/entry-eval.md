@@ -2,7 +2,7 @@
 
 English | [中文](entry-eval.zh.md)
 
-Source: `packages/experimental/system3/tests/entry-routing-eval.e2e.ts` over `tests/fixtures/entry-routing-eval.tasks.json`. Raw output: [entry-eval-report.json](entry-eval-report.json).
+Source: `packages/experimental/system3/tests/entry-routing-eval.e2e.ts` over two task sets: `tests/fixtures/entry-routing-eval.tasks.json` (two tiers) and `tests/fixtures/entry-routing-eval.tiers.json` (the four deployed tiers). Raw output: [entry-eval-report.json](entry-eval-report.json).
 
 Run: `set -a; source ~/.config/xdan-system3/runtime.env; set +a; SYSTEM3_ENTRY_EVAL_REPORT=<path> pnpm exec vitest run --config vitest.e2e.config.ts packages/experimental/system3/tests/entry-routing-eval.e2e.ts`
 
@@ -25,10 +25,25 @@ Outcomes: 38 selected, 10 abstain, 2 low-confidence, 0 transport failures. Laten
 
 The two misses: `follow-07` ("换成英文") selected Flash, which is also the baseline; `short-hard-03` fell below 0.8 confidence and kept Flash.
 
+## Four tiers
+
+The deployed profile routes among four tiers through the same proxy: `fast` (deepseek-v4-flash, the baseline), `reasoning` (deepseek-v4-pro), `expert` (gpt-5.6-sol-relay), and `frontier` (gpt-6-sol-relay). The set has 6 inputs per tier and 6 follow-ups.
+
+| Measure | Jev | Always baseline |
+| --- | --- | --- |
+| Decision matches label | 29 / 30 | 6 / 30 |
+| Answering model matches label | 29 / 30 | 12 / 30 |
+| Follow-ups routed instead of abstaining | 0 / 6 | 0 / 6 |
+
+Outcomes: 23 selected, 5 abstain, 2 low-confidence. Latency p50 482 ms, p95 1323 ms. The miss is `frontier-03`, a strict inequality proof answered `frontier` at confidence 0.79, below the 0.8 threshold, so it kept Flash. 17 of 30 inputs leave the baseline.
+
+The evaluation routes with `retainOnAbstain` off to score Jev's own decisions. The deployed profile turns it on, so a follow-up continues the previous route.
+
 ## What this does and does not show
 
 - Jev separates simple from hard inputs on this set and abstains on context-dependent follow-ups, at about half a second per decision.
 - The rule was written with the first 40 inputs and the adversarial inputs were chosen to defeat it. Its 0 / 10 is by construction; the comparison shows that length and keywords are not enough, not how a tuned rule would do.
 - Labels were assigned by the set's author. There are no medium-difficulty inputs.
 - The evaluation scores the routing decision. It does not measure whether Pro answers the hard inputs better than Flash, nor cost per successful task.
-- Every follow-up stays on Flash, including ones that continue a hard task. Routing with session history is not implemented.
+- Tier labels are the set author's judgement, and the boundary between `expert` and `frontier` is the least certain.
+- With `retainOnAbstain` a follow-up continues the previous route; routing that reads session history is not implemented.
