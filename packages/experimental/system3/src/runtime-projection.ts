@@ -37,7 +37,7 @@ const requestId = z.string().transform(value => brandString<SessionRequestId>(va
 const viewSchema = z.object({
   entry: z.object({ requestId, phase: z.enum(['deciding', 'decided']), outcome: z.string().nullable(),
     suggested: selection.nullable(), adopted: selection.nullable(), used: selection.nullable(),
-    elapsedMs: z.number().nullable(),
+    elapsedMs: z.number().nullable(), turn: z.number().nullable(),
     route: z.object({ id: z.string(), label: z.string().nullable(), retained: z.boolean(),
       delegation: z.object({ candidateId: z.string(), tool: z.string(), injected: z.boolean(), called: z.boolean() })
         .nullable() }).nullable(),
@@ -63,7 +63,7 @@ function hasResponseContent(stream: readonly AssistantStreamRecord[]): boolean {
 
 /** Fold advice and adoption; confirm request use from output or a streamed attempt in the exact input turn. */
 export const system3RuntimeProjection = {
-  key: 'system3Runtime', stateVersion: 5, stateSchema,
+  key: 'system3Runtime', stateVersion: 6, stateSchema,
   init: () => ({ entry: null, skill: null, subagentRun: null, header: null, currentTurn: null, currentStep: null,
     entryTurn: null, startRequestId: null, skillMessageId: null, imageInSession: false, route: null }),
   wire: { viewSchema, view: state => ({ entry: state.entry, skill: state.skill, subagentRun: state.subagentRun }) },
@@ -80,7 +80,7 @@ export const system3RuntimeProjection = {
         ...config.reasoningEffort === undefined ? {} : { reasoningEffort: String(config.reasoningEffort) } } }
     }
     if (event.type === 'system3/entry-start') return { ...state, startRequestId: event.data.requestId, entryTurn: null, entry: { requestId: event.data.requestId,
-      phase: 'deciding', outcome: null, suggested: null, adopted: null, used: null, elapsedMs: null, route: null } }
+      phase: 'deciding', outcome: null, suggested: null, adopted: null, used: null, elapsedMs: null, turn: null, route: null } }
     if (event.type === 'system3/entry-decision') {
       if (state.startRequestId !== null && state.startRequestId !== event.data.requestId) return state
       const previous = state.entry?.requestId === event.data.requestId ? state.entry : null
@@ -90,7 +90,7 @@ export const system3RuntimeProjection = {
       return { ...state, route, entryTurn: previous === null ? null : state.entryTurn,
         entry: { requestId: event.data.requestId, phase: 'decided', outcome: event.data.outcome,
           suggested: event.data.selected ?? null, adopted: previous?.adopted ?? null,
-          used: previous?.used ?? null, elapsedMs: event.data.elapsedMs,
+          used: previous?.used ?? null, elapsedMs: event.data.elapsedMs, turn: previous?.turn ?? null,
           route: event.data.candidate === undefined ? null : { id: event.data.candidate.id,
             label: event.data.candidate.label ?? null, retained: event.data.retained !== undefined,
             delegation: event.data.candidate.delegate === undefined ? null
@@ -101,7 +101,7 @@ export const system3RuntimeProjection = {
     }
     if (event.type === 'user/message' && event.data.source.kind === 'user' && 'rpcId' in event.data.source
       && state.entry !== null && event.data.source.rpcId === state.entry.requestId && state.currentTurn !== null) {
-      return { ...state, entryTurn: state.currentTurn }
+      return { ...state, entryTurn: state.currentTurn, entry: { ...state.entry, turn: state.currentTurn } }
     }
     if (state.entry !== null && state.entry.adopted !== null && state.entryTurn !== null
       && ((event.type === 'assistant/message' && event.data.turn === state.entryTurn)

@@ -21,6 +21,9 @@
       "path": "../../client/store"
     },
     {
+      "path": "../../client/ui-chat/tsconfig.client.json"
+    },
+    {
       "path": "../../client/ui-conversation/tsconfig.client.json"
     },
     {

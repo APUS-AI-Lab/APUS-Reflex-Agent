@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-This optional Client plugin adds a compact native Conversation dock. It displays local submission feedback and persisted System3 advice, Host adoption, actual model responses and Skill injection as separate facts. Both Web and Desktop load this plugin through the product profile.
+This optional Client plugin adds a compact native Conversation dock. It displays local submission feedback and persisted System3 advice, Host adoption, actual model responses and Skill injection as separate facts. It also contributes a route line to the native Turn header (`conversation.chat.turnHead`) that names who handles the input, a continued route, or the fallback model, as soon as the entry decision for that Turn is recorded; the dock keeps the routing mode, delegation stages, and the delegated run's progress, including its starting and result-checking phases. Both Web and Desktop load this plugin through the product profile.
 
 ## Table of Contents
 

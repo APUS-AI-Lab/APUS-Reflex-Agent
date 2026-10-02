@@ -40,6 +40,20 @@
   transform: rotate(180deg);
 }
 
+.head {
+  display: flex;
+  flex: 0 1 auto;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  margin-left: 10px;
+  overflow: hidden;
+  color: var(--dsw-alias-label-secondary);
+  font-size: var(--dsh-content-font-size-secondary, 13px);
+  line-height: calc(24px + var(--dsh-content-font-delta, 0px));
+  white-space: nowrap;
+}
+
 .label {
   min-width: 0;
   overflow: hidden;

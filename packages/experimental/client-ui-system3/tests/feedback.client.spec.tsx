@@ -5,7 +5,8 @@ import { brandString } from '@deepseek-ai/dsh-brand'
 import type { SessionRequestId } from '@deepseek-ai/dsh-api-session-controller/types'
 import { makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
 import { zh as commonZh } from '@deepseek-ai/dsh-client-locale/src/locales/zh.ts'
-import { DelegationRun, System3Feedback, type System3FeedbackProps } from '../src/client/System3Dock.tsx'
+import { DelegationRun, routeNotice, System3Feedback, type System3FeedbackProps } from '../src/client/System3Dock.tsx'
+import { System3TurnHead } from '../src/client/TurnHead.tsx'
 import { zh } from '../src/client/locales.ts'
 
 afterEach(cleanup)
@@ -23,7 +24,7 @@ it('acknowledges a local submission before a decision arrives', () => {
 it('keeps suggested and adopted routes distinct from actual model use', () => {
   const props = inputs({ running: true, facts: { subagentRun: null, skill: null, entry: {
     requestId: brandString<SessionRequestId>('request'), phase: 'decided', outcome: 'selected',
-    suggested: model, adopted: model, used: null, elapsedMs: 29, route: null,
+    suggested: model, adopted: model, used: null, elapsedMs: 29, turn: null, route: null,
   } } })
   const { rerender } = render(<System3Feedback {...props} />)
   expect(screen.getByRole('status').textContent).toBe('正在执行')
@@ -71,7 +72,7 @@ it('does not expose root model mutation for an addressed subagent', () => {
 it('announces active decision and retains ended-turn evidence without claiming verification', () => {
   const props = inputs({ pending: true, facts: { subagentRun: null, skill: null, entry: {
     requestId: brandString<SessionRequestId>('active'), phase: 'deciding', outcome: null,
-    suggested: null, adopted: null, used: null, elapsedMs: null, route: null,
+    suggested: null, adopted: null, used: null, elapsedMs: null, turn: null, route: null,
   } } })
   const { rerender } = render(<System3Feedback {...props} />)
   expect(screen.getByRole('status').textContent).toBe('正在选择处理方式')
@@ -88,41 +89,49 @@ it('uses live execution state when a fixed-model turn follows an unanswered auto
   render(<System3Feedback {...inputs({ running: true,
     selection: { mode: 'fixed', lastUsed: model, next: model },
     facts: { subagentRun: null, skill: null, entry: { requestId: brandString<SessionRequestId>('previous'), phase: 'decided',
-      outcome: 'selected', suggested: model, adopted: model, used: null, elapsedMs: 10, route: null } },
+      outcome: 'selected', suggested: model, adopted: model, used: null, elapsedMs: 10, turn: null, route: null } },
   })} />)
   expect(screen.getByRole('status').textContent).toBe('正在执行')
   expect(screen.getByText('实际响应模型').nextSibling?.textContent).toBe('尚无记录')
   expect(screen.queryByText('已选择，等待模型响应')).toBeNull()
 })
-it('announces the chosen route as soon as the decision is recorded, before the model answers', () => {
+it('names the route, a continued route, or the fallback model, and nothing while deciding or for an earlier input', () => {
+  const t = makeTranslate(zh, commonZh)
   const entry = { requestId: brandString<SessionRequestId>('routed'), phase: 'decided' as const, outcome: 'selected',
-    suggested: model, adopted: model, used: null, elapsedMs: 480, route: { id: 'expert', label: '复杂专业任务 · GPT-5.6 Sol', retained: false, delegation: null } }
-  const { rerender } = render(<System3Feedback {...inputs({ pending: true, facts: { subagentRun: null, skill: null, entry } })} />)
-  expect(screen.getByText('已判断：复杂专业任务 · GPT-5.6 Sol')).toBeTruthy()
-  rerender(<System3Feedback {...inputs({ running: true, facts: { subagentRun: null, skill: null,
-    entry: { ...entry, outcome: 'abstain', suggested: null, route: { id: 'expert', label: null, retained: true, delegation: null } } } })} />)
-  expect(screen.getByText('延续上一轮：fidoo / generation · low')).toBeTruthy()
-  expect(screen.getByText('建议模型').nextSibling?.textContent).toBe('延续上一轮')
-  rerender(<System3Feedback {...inputs({ facts: { subagentRun: null, skill: null, entry: { ...entry, phase: 'deciding', route: null } } })} />)
-  expect(screen.queryByText(/已判断/)).toBeNull()
+    suggested: model, adopted: model, used: null, elapsedMs: 480, turn: 2,
+    route: { id: 'expert', label: '复杂专业任务 · GPT-5.6 Sol', retained: false, delegation: null } }
+  expect(routeNotice(entry, null, t)).toBe('已判断：复杂专业任务 · GPT-5.6 Sol')
+  expect(routeNotice({ ...entry, route: { ...entry.route, label: null, retained: true } }, null, t)).toBe('延续上一轮：fidoo / generation · low')
+  expect(routeNotice({ ...entry, phase: 'deciding' }, null, t)).toBeNull()
+  expect(routeNotice({ ...entry, suggested: null, route: { ...entry.route, label: null } }, null, t)).toBe('已判断：fidoo / generation · low')
+  expect(routeNotice(entry, brandString<SessionRequestId>('newer'), t)).toBeNull()
+  expect(routeNotice(entry, brandString<SessionRequestId>('routed'), t)).toBe('已判断：复杂专业任务 · GPT-5.6 Sol')
+  const unrouted = { ...entry, route: null }
+  expect(routeNotice({ ...unrouted, outcome: 'timeout' }, null, t)).toBe('判断超时，先由 fidoo / generation · low 回答')
+  expect(routeNotice({ ...unrouted, outcome: 'transport' }, null, t)).toBe('暂时无法判断，先由 fidoo / generation · low 回答')
+  expect(routeNotice({ ...unrouted, outcome: 'abstain' }, null, t)).toBeNull()
+  expect(routeNotice({ ...unrouted, outcome: 'timeout', adopted: null }, null, t)).toBeNull()
+  expect(routeNotice(null, null, t)).toBeNull()
 })
-it('does not show the previous input\'s route while a newer submission waits for its decision', () => {
-  const entry = { requestId: brandString<SessionRequestId>('earlier'), phase: 'decided' as const, outcome: 'selected',
-    suggested: model, adopted: model, used: model, elapsedMs: 480, route: { id: 'expert', label: 'Expert', retained: false, delegation: null } }
-  const { rerender } = render(<System3Feedback {...inputs({ pending: true, pendingRequestId: brandString<SessionRequestId>('newer'),
-    facts: { subagentRun: null, skill: null, entry } })} />)
-  expect(screen.queryByText('已判断：Expert')).toBeNull()
-  expect(screen.getByRole('status').textContent).toBe('已接收，正在准备')
-  rerender(<System3Feedback {...inputs({ pending: true, pendingRequestId: brandString<SessionRequestId>('newer'),
-    facts: { subagentRun: null, skill: null, entry: { ...entry, requestId: brandString<SessionRequestId>('newer') } } })} />)
-  expect(screen.getByText('已判断：Expert')).toBeTruthy()
+it('shows the route line only in the Turn header of the Turn that carried the input', () => {
+  const t = makeTranslate(zh, commonZh)
+  const entry = { requestId: brandString<SessionRequestId>('routed'), phase: 'decided' as const, outcome: 'selected',
+    suggested: model, adopted: model, used: null, elapsedMs: 480, turn: 2,
+    route: { id: 'expert', label: 'Expert', retained: false, delegation: null } }
+  const facts = { entry, skill: null, subagentRun: null }
+  const useProjection = (() => facts) as never
+  const { rerender, container } = render(<System3TurnHead turn={{ turn: 2 } as never} useProjection={useProjection} t={t} />)
+  expect(container.textContent).toBe('已判断：Expert')
+  rerender(<System3TurnHead turn={{ turn: 1 } as never} useProjection={useProjection} t={t} />)
+  expect(container.textContent).toBe('')
+  rerender(<System3TurnHead turn={{ turn: 2 } as never} useProjection={(() => ({ ...facts, entry: { ...entry, route: null, outcome: 'abstain' } }))} t={t} />)
+  expect(container.textContent).toBe('')
 })
 it('shows each delegation stage separately: suggested, instruction injected, tool called', () => {
   const delegation = { candidateId: 'codex', tool: 'subagent_codex', injected: false, called: false }
   const entry = { requestId: brandString<SessionRequestId>('delegate'), phase: 'decided' as const, outcome: 'selected',
-    suggested: null, adopted: null, used: null, elapsedMs: 480, route: { id: 'codex', label: '工程任务 · 委派 Codex', retained: false, delegation } }
+    suggested: null, adopted: null, used: null, elapsedMs: 480, turn: null, route: { id: 'codex', label: '工程任务 · 委派 Codex', retained: false, delegation } }
   const { rerender } = render(<System3Feedback {...inputs({ running: true, facts: { subagentRun: null, skill: null, entry } })} />)
-  expect(screen.getByText('已判断：工程任务 · 委派 Codex')).toBeTruthy()
   expect(screen.getByText('委派').nextSibling?.textContent).toBe('已建议，等待注入指令')
   expect(screen.getByText('建议模型').nextSibling?.textContent).toBe('工程任务 · 委派 Codex')
   const stage = (injected: boolean, called: boolean) => inputs({ running: true,
@@ -130,12 +139,13 @@ it('shows each delegation stage separately: suggested, instruction injected, too
       entry: { ...entry, route: { ...entry.route, delegation: { ...delegation, injected, called } } } } })
   rerender(<System3Feedback {...stage(true, false)} />)
   expect(screen.getByText('委派').nextSibling?.textContent).toBe('已注入指令，等待调用 subagent_codex')
+  expect(screen.getByText('正在准备委派')).toBeTruthy()
   rerender(<System3Feedback {...stage(true, true)} />)
   expect(screen.getByText('委派').nextSibling?.textContent).toBe('已调用 subagent_codex')
 })
 it('names the delegation tool when the delegation route has no label', () => {
   render(<System3Feedback {...inputs({ facts: { subagentRun: null, skill: null, entry: { requestId: brandString<SessionRequestId>('d'), phase: 'decided', outcome: 'selected',
-    suggested: null, adopted: null, used: null, elapsedMs: 1,
+    suggested: null, adopted: null, used: null, elapsedMs: 1, turn: null,
     route: { id: 'codex', label: null, retained: false, delegation: { candidateId: 'codex', tool: 'subagent_codex', injected: false, called: false } } } } })} />)
   expect(screen.getByText('建议模型').nextSibling?.textContent).toBe('subagent_codex')
 })
@@ -146,15 +156,19 @@ it('shows a running delegation with live elapsed time, step counts, and the step
     const run = { runId: 'run-1', provider: 'codex', state: 'running', startedAt: 4_000, elapsedMs: 3_000,
       completed: { command: 3, 'file-change': 2, custom: 1, reasoning: 0 }, current: 'command' }
     const t = makeTranslate(zh, commonZh)
-    const { rerender } = render(<DelegationRun run={run} t={t} />)
+    const { rerender } = render(<DelegationRun run={run} turnRunning t={t} />)
     expect(screen.getByRole('status').textContent).toBe('codex 运行中6 秒命令 3 · 改文件 2 · 其他 1当前：命令')
     act(() => { vi.advanceTimersByTime(2_000) })
     expect(screen.getByText('8 秒')).toBeTruthy()
-    rerender(<DelegationRun run={{ ...run, state: 'completed', elapsedMs: 98_400, current: null }} t={t} />)
-    expect(screen.getByRole('status').textContent).toBe('codex 已完成98 秒命令 3 · 改文件 2 · 其他 1')
-    rerender(<DelegationRun run={{ ...run, state: 'aborted', elapsedMs: 1_000, completed: {} }} t={t} />)
+    rerender(<DelegationRun run={{ ...run, state: 'completed', elapsedMs: 98_400, current: null }} turnRunning t={t} />)
+    expect(screen.getByRole('status').textContent).toBe('codex 已完成，正在复核结果1 分 38 秒命令 3 · 改文件 2 · 其他 1')
+    rerender(<DelegationRun run={{ ...run, state: 'completed', elapsedMs: 98_400, current: null }} turnRunning={false} t={t} />)
+    expect(screen.getByRole('status').textContent).toBe('codex 已完成1 分 38 秒命令 3 · 改文件 2 · 其他 1')
+    rerender(<DelegationRun run={{ ...run, completed: {}, current: null }} turnRunning t={t} />)
+    expect(screen.getByRole('status').textContent).toBe('codex 正在启动8 秒')
+    rerender(<DelegationRun run={{ ...run, state: 'aborted', elapsedMs: 1_000, completed: {} }} turnRunning={false} t={t} />)
     expect(screen.getByRole('status').textContent).toBe('codex 已中止1 秒')
-    rerender(<DelegationRun run={{ ...run, state: 'error', elapsedMs: 1_000, completed: { 'web-search': 1, tool: 1, message: 1, reasoning: 1 } }} t={t} />)
+    rerender(<DelegationRun run={{ ...run, state: 'error', elapsedMs: 1_000, completed: { 'web-search': 1, tool: 1, message: 1, reasoning: 1 } }} turnRunning={false} t={t} />)
     expect(screen.getByRole('status').textContent).toBe('codex 未完成1 秒搜索 1 · 工具 1 · 消息 1 · 推理 1')
   } finally {
     vi.useRealTimers()
@@ -165,4 +179,10 @@ it('renders the delegated run inside the dock when the projection carries one', 
   render(<System3Feedback {...inputs({ facts: { entry: null, skill: null, subagentRun: { runId: 'r', provider: 'codex', state: 'completed',
     startedAt: 0, elapsedMs: 5_000, completed: {}, current: null } } })} />)
   expect(screen.getByText('codex 已完成')).toBeTruthy()
+})
+it('reads a continued route as the suggestion in the details', () => {
+  render(<System3Feedback {...inputs({ facts: { subagentRun: null, skill: null, entry: { requestId: brandString<SessionRequestId>('c'), phase: 'decided',
+    outcome: 'abstain', suggested: null, adopted: model, used: null, elapsedMs: 1, turn: 3,
+    route: { id: 'expert', label: 'Expert', retained: true, delegation: null } } } })} />)
+  expect(screen.getByText('建议模型').nextSibling?.textContent).toBe('延续上一轮')
 })

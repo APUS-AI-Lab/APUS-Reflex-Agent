@@ -1,5 +1,6 @@
 import { memo, useEffect, useState } from 'react'
 import { IconChevronDownOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
+import type { PropsRenderSlots } from '@deepseek-ai/dsh-client-ui-slots'
 import type { ChatNodeViewProps } from '../contract/slots.ts'
 import { turnProcessAlwaysOpen } from '../contract/turn-process.ts'
 import { formatLiveRunDuration, formatRunDuration, LIVE_RUN_CLOCK_INTERVAL_MS } from './message-chrome.ts'
@@ -8,8 +9,8 @@ import css from './TurnProcessNodeView.module.css'
 
 /** Turn-level process disclosure controller. */
 export const TurnProcessNodeView = memo(function TurnProcessNodeView({
-  node, turnProcess, t,
-}: ChatNodeViewProps<'turn-process'>) {
+  node, turnProcess, renderSlot, t,
+}: ChatNodeViewProps<'turn-process'> & PropsRenderSlots<'conversation.chat.turnHead'>) {
   if (turnProcess === undefined) throw new Error('turn-process node requires Turn process owner state')
   const open = !turnProcess.foldable || turnProcess.open
   const turn = node.location.kind === 'turn' || node.location.kind === 'step'
@@ -24,6 +25,7 @@ export const TurnProcessNodeView = memo(function TurnProcessNodeView({
     return () => { clearInterval(timer) }
   }, [ticking])
   if (turn?.start === undefined && turn?.status !== 'closed') return null
+  const head = renderSlot('conversation.chat.turnHead', { turn })
   const canCollapse = turnProcess.foldable && turnProcess.hasContent && !turnProcessAlwaysOpen(node)
   const running = turn.status === 'open'
   const reason = turn.end?.data.reason.kind
@@ -62,6 +64,7 @@ export const TurnProcessNodeView = memo(function TurnProcessNodeView({
       >
         <span className={css.label}>{label}</span>
         {canCollapse && <IconChevronDownOutlineRegular className={css.chevron} />}
+        {head !== null && <span className={css.head}>{head}</span>}
       </button>
     </>
   )

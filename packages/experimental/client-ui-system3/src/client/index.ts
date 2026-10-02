@@ -8,6 +8,7 @@ import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
 import type {} from '@deepseek-ai/dsh-client-ui-session/client'
 import type {} from '@deepseek-ai/dsh-experimental-system3/types'
 import { System3Dock, type System3Actions } from './System3Dock.tsx'
+import { System3TurnHead } from './TurnHead.tsx'
 import { en, zh } from './locales.ts'
 
 /** Native services required by this optional Client plugin. */
@@ -27,4 +28,7 @@ export function apply(ctx: Context): void {
       },
     }),
   }, System3Dock))
+  ctx.slots.inject('conversation.chat.turnHead', () => ctx.slots.register({
+    name: 'conversation.chat.turnHead', id: 'system3-route', order: 5, locale: 'system3',
+  }, System3TurnHead))
 }
