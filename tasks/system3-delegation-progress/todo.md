@@ -58,7 +58,7 @@ Base: branch `feat-system3-g1`. Order follows [architecture section 11](../../do
 - [ ] That run's first step took 5 min 39 s: Codex's first 5 POSTs to Fidoo each failed at the connection layer after ~62 s (`logs_2.sqlite`, `error sending request`), then succeeded. Same config via `codex exec`: 11 s and 27 s. Local network path (Clash TUN, fake-IP 198.18.x), not configuration; re-measure on the server.
 - [ ] Server unverified: Codex's own Linux command sandbox on a kernel without Landlock; release.spec.sh not rerun (needs the server's Docker).
 - [ ] Locally, Codex shell commands still source the user's `~/.zshenv` (login shell); the server's private HOME has none.
-- [ ] Mid-run steer: design `docs/system3-delegation-progress/steer-design.html`, awaiting approval.
+- [x] Mid-run steer: design `docs/system3-delegation-progress/steer-design.html`, awaiting approval.
 
 ## Slice 2 · delegation supervision
 
@@ -74,9 +74,11 @@ Base: branch `feat-system3-g1`. Order follows [architecture section 11](../../do
 
 ## Mid-run steer (approved 2026-10-02; parent model does not see steers; Claude Code later)
 
-- [ ] dsh-subagent: `SubagentRun.steer?`, `SubagentRunInfo.steerable`, live steerable-run registry in `observeRun`, `@Remote('steerByParent')`, parent Session event `subagent/steer`, `subagent/not-steerable` error.
-- [ ] subagent-codex: `turn/steer` with `expectedTurnId`; reject before turn start / after completion / after close.
-- [ ] System3: progress snapshot `steerable`; projection `subagentRun.steerable` and `steers` (latest 3); stateVersion 8.
-- [ ] Client: DelegationRun steer input + sent list + failure notice; zh/en copy; inject `remote.subagents`.
-- [ ] Persistence records, READMEs, architecture section 05, SDK expected outputs / snapshots.
-- [ ] Gates + real Web run: steer a running Codex and observe adoption.
+- [x] dsh-subagent: `SubagentRun.steer?`, `SubagentRunInfo.steerable`, live steerable-run registry in `observeRun`, `@Remote('steerByParent')`, parent Session event `subagent/steer`, `subagent/not-steerable` error.
+- [x] subagent-codex: `turn/steer` with `expectedTurnId`; reject before turn start / after completion / after close.
+- [x] System3: progress snapshot `steerable`; projection `subagentRun.steerable` and `steers` (latest 3); stateVersion 8.
+- [x] Client: DelegationRun steer input + sent list + failure notice; zh/en copy; inject `remote.subagents`.
+- [x] Persistence records, READMEs, architecture section 05, SDK expected outputs / snapshots.
+- [x] Gates + real Web run: steer a running Codex and observe adoption.
+- Real Web run (personal Codex login, gpt-5.5): TaskQueue task delegated; at 21 s into the run a steer asked for an extra `snapshot()` method; the card showed "Added at 21 s" 0.4 s after send; Codex implemented `snapshot()` with tests, 35 / 35 pass; the steer line survived a page reload. A smaller task (textstats) finished before a steer could be sent, so simple delegations often last under a minute.
+- Gates: typecheck, lint, doc-sync 42/42, hygiene 18/18, 100 % coverage on changed files. `test:snapshot` and `packages/experimental` have failures only in browser-use-stagehand-native (Node load hook returns no source); the same test fails on main.
