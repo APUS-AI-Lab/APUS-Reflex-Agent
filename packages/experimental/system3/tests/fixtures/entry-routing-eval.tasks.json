@@ -1,0 +1,327 @@
+{
+  "version": 1,
+  "description": "Labelled public inputs for the System3 entry-routing evaluation. Follow-up inputs refer to conversation history the entry router does not receive; their expected decision is abstain. Adversarial inputs are short hard questions and long simple requests chosen to defeat length and keyword rules.",
+  "baseline": {
+    "provider": "fidoo",
+    "model": "deepseek-v4-flash",
+    "reasoningEffort": "low"
+  },
+  "candidates": [
+    {
+      "id": "fast",
+      "description": "简短问答、改写、归纳以及范围明确的常规任务。",
+      "provider": "fidoo",
+      "model": "deepseek-v4-flash",
+      "reasoningEffort": "low"
+    },
+    {
+      "id": "reasoning",
+      "description": "复杂系统设计、困难代码分析、多步骤推理，以及需要权衡依赖与风险的任务。",
+      "provider": "fidoo",
+      "model": "deepseek-v4-pro",
+      "reasoningEffort": "low"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "fast-01",
+      "input": "把这句话翻译成英文：今天下午三点开会。",
+      "expected": "fast",
+      "tag": "standalone"
+    },
+    {
+      "id": "fast-02",
+      "input": "TCP 和 UDP 的主要区别是什么？",
+      "expected": "fast",
+      "tag": "standalone"
+    },
+    {
+      "id": "fast-03",
+      "input": "帮我把下面这段话改得更正式一些：我们这周搞不定，下周再说吧。",
+      "expected": "fast",
+      "tag": "standalone"
+    },
+    {
+      "id": "fast-04",
+      "input": "用三句话总结什么是容器化。",
+      "expected": "fast",
+      "tag": "standalone"
+    },
+    {
+      "id": "fast-05",
+      "input": "Python 里怎么把列表倒序？",
+      "expected": "fast",
+      "tag": "standalone"
+    },
+    {
+      "id": "fast-06",
+      "input": "给这个函数起个更清楚的名字：def proc(d): return [x for x in d if x > 0]",
+      "expected": "fast",
+      "tag": "standalone"
+    },
+    {
+      "id": "fast-07",
+      "input": "HTTP 状态码 404 和 410 分别表示什么？",
+      "expected": "fast",
+      "tag": "standalone"
+    },
+    {
+      "id": "fast-08",
+      "input": "写一条 git 命令，查看最近五次提交。",
+      "expected": "fast",
+      "tag": "standalone"
+    },
+    {
+      "id": "fast-09",
+      "input": "把“用户登录失败次数过多”翻译成一条简短的英文错误提示。",
+      "expected": "fast",
+      "tag": "standalone"
+    },
+    {
+      "id": "fast-10",
+      "input": "JSON 和 YAML 哪个支持注释？",
+      "expected": "fast",
+      "tag": "standalone"
+    },
+    {
+      "id": "fast-11",
+      "input": "列出一周七天的英文缩写。",
+      "expected": "fast",
+      "tag": "standalone"
+    },
+    {
+      "id": "fast-12",
+      "input": "What does the acronym CRUD stand for?",
+      "expected": "fast",
+      "tag": "standalone"
+    },
+    {
+      "id": "fast-13",
+      "input": "把这三个要点合并成一句话：成本低、上线快、维护简单。",
+      "expected": "fast",
+      "tag": "standalone"
+    },
+    {
+      "id": "fast-14",
+      "input": "正则表达式里 \\d 匹配什么？",
+      "expected": "fast",
+      "tag": "standalone"
+    },
+    {
+      "id": "reasoning-01",
+      "input": "我们有一个单体订单系统，日订单量 500 万，要拆成微服务。请设计拆分边界、数据一致性方案和灰度迁移步骤，并说明每一步的回滚方式。",
+      "expected": "reasoning",
+      "tag": "standalone"
+    },
+    {
+      "id": "reasoning-02",
+      "input": "线上服务每隔几小时出现一次 p99 延迟尖刺，GC 日志正常，CPU 不高，连接池偶尔耗尽。请给出系统的排查路径，说明每一步要收集什么证据，以及各种可能根因如何区分。",
+      "expected": "reasoning",
+      "tag": "standalone"
+    },
+    {
+      "id": "reasoning-03",
+      "input": "比较在多租户 SaaS 中使用共享数据库加行级隔离、每租户一个 schema、每租户一个数据库三种方案，在成本、隔离性、迁移和运维上的权衡，并给出 200 家企业客户规模下的建议。",
+      "expected": "reasoning",
+      "tag": "standalone"
+    },
+    {
+      "id": "reasoning-04",
+      "input": "下面这段并发代码偶发死锁：两个 goroutine 分别先锁 A 再锁 B、先锁 B 再锁 A，并且中间有 channel 发送。请分析所有可能的死锁时序，并给出不改变外部行为的修复方案。",
+      "expected": "reasoning",
+      "tag": "standalone"
+    },
+    {
+      "id": "reasoning-05",
+      "input": "设计一个支持断点续传、去重和端到端校验的大文件同步协议，要考虑弱网、客户端崩溃和服务端多副本，写出状态机和失败恢复规则。",
+      "expected": "reasoning",
+      "tag": "standalone"
+    },
+    {
+      "id": "reasoning-06",
+      "input": "我们要把一个 2TB 的 PostgreSQL 主库从 12 升级到 16，要求停机不超过五分钟。请制定分步骤迁移方案，包含逻辑复制、切换、验证和回退条件。",
+      "expected": "reasoning",
+      "tag": "standalone"
+    },
+    {
+      "id": "reasoning-07",
+      "input": "证明：对任意有 n 个节点的树，删除一条边后得到的两个连通分量的节点数之和为 n，并据此推导出求树重心的线性时间算法及其正确性。",
+      "expected": "reasoning",
+      "tag": "standalone"
+    },
+    {
+      "id": "reasoning-08",
+      "input": "Design a rate limiter for a public API gateway that must enforce per-tenant and global limits across 30 regions with clock skew, and explain the trade-offs between token bucket, sliding window and a centralized quota service.",
+      "expected": "reasoning",
+      "tag": "standalone"
+    },
+    {
+      "id": "reasoning-09",
+      "input": "一个推荐系统的离线 AUC 上升了但线上点击率下降。请列出可能的原因，设计一组能逐一排除这些原因的实验，并说明每个实验的判定标准。",
+      "expected": "reasoning",
+      "tag": "standalone"
+    },
+    {
+      "id": "reasoning-10",
+      "input": "把一个基于回调的 Node.js 支付模块重构为 async/await，同时保持幂等、重试和超时语义不变。请先列出需要保持的不变量，再给出分阶段重构计划和每阶段的测试策略。",
+      "expected": "reasoning",
+      "tag": "standalone"
+    },
+    {
+      "id": "reasoning-11",
+      "input": "我们的事件溯源系统需要支持事件格式升级。比较原地迁移、读时升级和双写三种策略，分析对回放、快照和下游消费者的影响，并给出选择依据。",
+      "expected": "reasoning",
+      "tag": "standalone"
+    },
+    {
+      "id": "reasoning-12",
+      "input": "分析一个使用乐观锁的库存扣减接口在高并发下的失败重试风暴问题，推导重试次数与冲突率的关系，并提出至少两种降低冲突的架构改动及其代价。",
+      "expected": "reasoning",
+      "tag": "standalone"
+    },
+    {
+      "id": "reasoning-13",
+      "input": "为一个需要离线可用的移动端笔记应用设计同步冲突解决方案，比较最后写入胜出、操作转换和 CRDT，考虑富文本、附件和多设备，并说明选型理由。",
+      "expected": "reasoning",
+      "tag": "standalone"
+    },
+    {
+      "id": "reasoning-14",
+      "input": "A distributed job scheduler occasionally runs the same job twice after a leader failover. Walk through the failure scenarios that can cause this, and propose a design that guarantees at-most-once execution with fencing tokens.",
+      "expected": "reasoning",
+      "tag": "standalone"
+    },
+    {
+      "id": "follow-01",
+      "input": "继续",
+      "expected": "abstain",
+      "tag": "follow-up"
+    },
+    {
+      "id": "follow-02",
+      "input": "改一下第二段",
+      "expected": "abstain",
+      "tag": "follow-up"
+    },
+    {
+      "id": "follow-03",
+      "input": "再短一点",
+      "expected": "abstain",
+      "tag": "follow-up"
+    },
+    {
+      "id": "follow-04",
+      "input": "按刚才说的做",
+      "expected": "abstain",
+      "tag": "follow-up"
+    },
+    {
+      "id": "follow-05",
+      "input": "这个为什么不行？",
+      "expected": "abstain",
+      "tag": "follow-up"
+    },
+    {
+      "id": "follow-06",
+      "input": "好的",
+      "expected": "abstain",
+      "tag": "follow-up"
+    },
+    {
+      "id": "follow-07",
+      "input": "换成英文",
+      "expected": "abstain",
+      "tag": "follow-up"
+    },
+    {
+      "id": "follow-08",
+      "input": "第三点展开讲讲",
+      "expected": "abstain",
+      "tag": "follow-up"
+    },
+    {
+      "id": "follow-09",
+      "input": "还有吗",
+      "expected": "abstain",
+      "tag": "follow-up"
+    },
+    {
+      "id": "follow-10",
+      "input": "上面那个方案的风险呢",
+      "expected": "abstain",
+      "tag": "follow-up"
+    },
+    {
+      "id": "follow-11",
+      "input": "把它跑一下",
+      "expected": "abstain",
+      "tag": "follow-up"
+    },
+    {
+      "id": "follow-12",
+      "input": "不对，重来",
+      "expected": "abstain",
+      "tag": "follow-up"
+    },
+    {
+      "id": "short-hard-01",
+      "input": "为什么两阶段提交在协调者宕机时会阻塞，而三阶段提交仍不能在网络分区下保证一致？",
+      "expected": "reasoning",
+      "tag": "adversarial"
+    },
+    {
+      "id": "short-hard-02",
+      "input": "给出无锁队列中 ABA 问题的最小复现时序，并说明 hazard pointer 为何能避免它。",
+      "expected": "reasoning",
+      "tag": "adversarial"
+    },
+    {
+      "id": "short-hard-03",
+      "input": "一个 B+ 树索引在什么写入模式下会退化成频繁页分裂？定量说明填充因子的影响。",
+      "expected": "reasoning",
+      "tag": "adversarial"
+    },
+    {
+      "id": "short-hard-04",
+      "input": "Raft 的 leader 为什么不能直接提交之前任期的日志条目？请构造一个反例。",
+      "expected": "reasoning",
+      "tag": "adversarial"
+    },
+    {
+      "id": "short-hard-05",
+      "input": "在最终一致的购物车里，如何让“删除商品”不被并发的“增加数量”复活？",
+      "expected": "reasoning",
+      "tag": "adversarial"
+    },
+    {
+      "id": "long-easy-01",
+      "input": "把下面这段话翻译成英文，保持原意即可，不需要润色：我们公司成立于二零一五年，总部位于杭州，目前在北京、上海、深圳和成都设有分公司，员工总数约一千二百人，主要业务包括企业软件开发、云服务托管和技术咨询，客户覆盖金融、制造、零售和教育等多个行业，欢迎各界朋友前来参观交流。",
+      "expected": "fast",
+      "tag": "adversarial"
+    },
+    {
+      "id": "long-easy-02",
+      "input": "下面是一份会议通知，请只把其中的日期和地点提取出来，其他内容不用管：各位同事好，为了总结上半年的工作并讨论下半年的设计方向与架构调整计划，公司定于七月十八日上午九点在三号楼二层大会议室召开全体会议，请大家提前十分钟到场，自带笔记本电脑，会议预计持续两小时，如有冲突请提前向部门负责人请假。",
+      "expected": "fast",
+      "tag": "adversarial"
+    },
+    {
+      "id": "long-easy-03",
+      "input": "请把下面的购物清单按字母顺序排列，不用做任何其他处理：apples, zucchini, milk, bread, eggs, yogurt, carrots, onions, tomatoes, garlic, butter, cheese, rice, pasta, olive oil, salt, pepper, sugar, flour, coffee, tea, honey, lemons, bananas, oranges, grapes, spinach, potatoes.",
+      "expected": "fast",
+      "tag": "adversarial"
+    },
+    {
+      "id": "long-easy-04",
+      "input": "帮我把这封邮件里的错别字改掉，别的不要动：王经理您好，关于上周讨论的系统设记方案，我们团对已经完成了初步的分析和比较，相关文挡已经上传到共享盘，请您有空时查月，如有任何问题随时联西我，期待您的回复，祝工作顺力。",
+      "expected": "fast",
+      "tag": "adversarial"
+    },
+    {
+      "id": "long-easy-05",
+      "input": "Count how many times the word design appears in the following sentence and reply with only the number: good design is not just what it looks like, design is how it works, and great design makes complex systems feel simple even when the design process itself was long.",
+      "expected": "fast",
+      "tag": "adversarial"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+# Bilingual-pair consistency record for entry-eval.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/system3-delegation-progress/entry-eval.md
+/system3-entry-routing-evaluation-2026-10-02:
+  en: 4a662e8b799f1da3
+  zh: 48e8412607cd269b
+/system3-entry-routing-evaluation-2026-10-02/setup:
+  en: e9f5011fbfd5892d
+  zh: 7acbae621da7ca8c
+/system3-entry-routing-evaluation-2026-10-02/result:
+  en: a182b127d311d50d
+  zh: 1bd53fc2838b113e
+/system3-entry-routing-evaluation-2026-10-02/what-this-does-and-does-not-show:
+  en: 38c12bd3e102dfc5
+  zh: 4fc82b38d3aec5b4

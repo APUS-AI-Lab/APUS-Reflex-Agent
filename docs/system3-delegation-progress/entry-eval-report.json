@@ -1,0 +1,456 @@
+{
+  "generatedAt": "2026-10-02T02:24:47.808Z",
+  "endpoint": "owb1q1vidflfhp-8086.proxy.runpod.net",
+  "model": "APUS-OpenJev-v1-9B-5949",
+  "effort": "high",
+  "minConfidence": 0.8,
+  "tasks": 50,
+  "outcomes": {
+    "selected": 38,
+    "abstain": 10,
+    "low-confidence": 2
+  },
+  "thrown": [],
+  "latencyMs": {
+    "p50": 467,
+    "p95": 1211,
+    "max": 1932
+  },
+  "jev": {
+    "decisionMatch": 0.96,
+    "effectiveModelMatch": 0.98,
+    "leftBaseline": 0.36,
+    "followUpMisrouted": 0.08333333333333333
+  },
+  "alwaysBaseline": {
+    "decisionMatch": 0.24,
+    "effectiveModelMatch": 0.62,
+    "leftBaseline": 0,
+    "followUpMisrouted": 0
+  },
+  "rule": {
+    "decisionMatch": 0.8,
+    "effectiveModelMatch": 0.8,
+    "leftBaseline": 0.38,
+    "followUpMisrouted": 0
+  },
+  "adversarial": {
+    "jev": 0.9,
+    "rule": 0
+  },
+  "byExpected": {
+    "fast": {
+      "fast": 19
+    },
+    "reasoning": {
+      "reasoning": 18,
+      "abstain": 1
+    },
+    "abstain": {
+      "abstain": 11,
+      "fast": 1
+    }
+  },
+  "rows": [
+    {
+      "id": "fast-01",
+      "expected": "fast",
+      "decision": "fast",
+      "outcome": "selected",
+      "confidence": 0.9952178966343516,
+      "elapsedMs": 1932
+    },
+    {
+      "id": "fast-02",
+      "expected": "fast",
+      "decision": "fast",
+      "outcome": "selected",
+      "confidence": 0.9929784852323591,
+      "elapsedMs": 467
+    },
+    {
+      "id": "fast-03",
+      "expected": "fast",
+      "decision": "fast",
+      "outcome": "selected",
+      "confidence": 0.9941144196675591,
+      "elapsedMs": 463
+    },
+    {
+      "id": "fast-04",
+      "expected": "fast",
+      "decision": "fast",
+      "outcome": "selected",
+      "confidence": 0.9952680097256578,
+      "elapsedMs": 465
+    },
+    {
+      "id": "fast-05",
+      "expected": "fast",
+      "decision": "fast",
+      "outcome": "selected",
+      "confidence": 0.9927436494398042,
+      "elapsedMs": 459
+    },
+    {
+      "id": "fast-06",
+      "expected": "fast",
+      "decision": "fast",
+      "outcome": "selected",
+      "confidence": 0.9853549625994299,
+      "elapsedMs": 495
+    },
+    {
+      "id": "fast-07",
+      "expected": "fast",
+      "decision": "fast",
+      "outcome": "selected",
+      "confidence": 0.9948981712055952,
+      "elapsedMs": 501
+    },
+    {
+      "id": "fast-08",
+      "expected": "fast",
+      "decision": "fast",
+      "outcome": "selected",
+      "confidence": 0.9946392928863965,
+      "elapsedMs": 460
+    },
+    {
+      "id": "fast-09",
+      "expected": "fast",
+      "decision": "fast",
+      "outcome": "selected",
+      "confidence": 0.9931028763450835,
+      "elapsedMs": 474
+    },
+    {
+      "id": "fast-10",
+      "expected": "fast",
+      "decision": "fast",
+      "outcome": "selected",
+      "confidence": 0.9906835823336866,
+      "elapsedMs": 463
+    },
+    {
+      "id": "fast-11",
+      "expected": "fast",
+      "decision": "fast",
+      "outcome": "selected",
+      "confidence": 0.9958792519844448,
+      "elapsedMs": 1330
+    },
+    {
+      "id": "fast-12",
+      "expected": "fast",
+      "decision": "fast",
+      "outcome": "selected",
+      "confidence": 0.9954946885290316,
+      "elapsedMs": 455
+    },
+    {
+      "id": "fast-13",
+      "expected": "fast",
+      "decision": "fast",
+      "outcome": "selected",
+      "confidence": 0.995682567984896,
+      "elapsedMs": 493
+    },
+    {
+      "id": "fast-14",
+      "expected": "fast",
+      "decision": "fast",
+      "outcome": "selected",
+      "confidence": 0.9948981710182813,
+      "elapsedMs": 531
+    },
+    {
+      "id": "reasoning-01",
+      "expected": "reasoning",
+      "decision": "reasoning",
+      "outcome": "selected",
+      "confidence": 0.997118122055533,
+      "elapsedMs": 468
+    },
+    {
+      "id": "reasoning-02",
+      "expected": "reasoning",
+      "decision": "reasoning",
+      "outcome": "selected",
+      "confidence": 0.9810633649181686,
+      "elapsedMs": 455
+    },
+    {
+      "id": "reasoning-03",
+      "expected": "reasoning",
+      "decision": "reasoning",
+      "outcome": "selected",
+      "confidence": 0.9920479863685616,
+      "elapsedMs": 454
+    },
+    {
+      "id": "reasoning-04",
+      "expected": "reasoning",
+      "decision": "reasoning",
+      "outcome": "selected",
+      "confidence": 0.9896325024537632,
+      "elapsedMs": 466
+    },
+    {
+      "id": "reasoning-05",
+      "expected": "reasoning",
+      "decision": "reasoning",
+      "outcome": "selected",
+      "confidence": 0.9964872916460943,
+      "elapsedMs": 469
+    },
+    {
+      "id": "reasoning-06",
+      "expected": "reasoning",
+      "decision": "reasoning",
+      "outcome": "selected",
+      "confidence": 0.9950173400116213,
+      "elapsedMs": 1207
+    },
+    {
+      "id": "reasoning-07",
+      "expected": "reasoning",
+      "decision": "reasoning",
+      "outcome": "selected",
+      "confidence": 0.9304255634182811,
+      "elapsedMs": 479
+    },
+    {
+      "id": "reasoning-08",
+      "expected": "reasoning",
+      "decision": "reasoning",
+      "outcome": "selected",
+      "confidence": 0.996552215434311,
+      "elapsedMs": 464
+    },
+    {
+      "id": "reasoning-09",
+      "expected": "reasoning",
+      "decision": "reasoning",
+      "outcome": "selected",
+      "confidence": 0.9945578457401093,
+      "elapsedMs": 457
+    },
+    {
+      "id": "reasoning-10",
+      "expected": "reasoning",
+      "decision": "reasoning",
+      "outcome": "selected",
+      "confidence": 0.9911530168979251,
+      "elapsedMs": 467
+    },
+    {
+      "id": "reasoning-11",
+      "expected": "reasoning",
+      "decision": "reasoning",
+      "outcome": "selected",
+      "confidence": 0.99526928698778,
+      "elapsedMs": 466
+    },
+    {
+      "id": "reasoning-12",
+      "expected": "reasoning",
+      "decision": "reasoning",
+      "outcome": "selected",
+      "confidence": 0.996480583491903,
+      "elapsedMs": 469
+    },
+    {
+      "id": "reasoning-13",
+      "expected": "reasoning",
+      "decision": "reasoning",
+      "outcome": "selected",
+      "confidence": 0.9966136322543206,
+      "elapsedMs": 468
+    },
+    {
+      "id": "reasoning-14",
+      "expected": "reasoning",
+      "decision": "reasoning",
+      "outcome": "selected",
+      "confidence": 0.995444118735914,
+      "elapsedMs": 530
+    },
+    {
+      "id": "follow-01",
+      "expected": "abstain",
+      "decision": "abstain",
+      "outcome": "abstain",
+      "confidence": 0.9473662951944443,
+      "elapsedMs": 461
+    },
+    {
+      "id": "follow-02",
+      "expected": "abstain",
+      "decision": "abstain",
+      "outcome": "abstain",
+      "confidence": 0.5455171825642986,
+      "elapsedMs": 455
+    },
+    {
+      "id": "follow-03",
+      "expected": "abstain",
+      "decision": "abstain",
+      "outcome": "low-confidence",
+      "confidence": 0.5716130743813019,
+      "elapsedMs": 473
+    },
+    {
+      "id": "follow-04",
+      "expected": "abstain",
+      "decision": "abstain",
+      "outcome": "abstain",
+      "confidence": 0.9923483109313405,
+      "elapsedMs": 453
+    },
+    {
+      "id": "follow-05",
+      "expected": "abstain",
+      "decision": "abstain",
+      "outcome": "abstain",
+      "confidence": 0.9543313052148631,
+      "elapsedMs": 480
+    },
+    {
+      "id": "follow-06",
+      "expected": "abstain",
+      "decision": "abstain",
+      "outcome": "abstain",
+      "confidence": 0.39702739755483385,
+      "elapsedMs": 473
+    },
+    {
+      "id": "follow-07",
+      "expected": "abstain",
+      "decision": "fast",
+      "outcome": "selected",
+      "confidence": 0.9857827283180106,
+      "elapsedMs": 456
+    },
+    {
+      "id": "follow-08",
+      "expected": "abstain",
+      "decision": "abstain",
+      "outcome": "abstain",
+      "confidence": 0.9416719117091508,
+      "elapsedMs": 456
+    },
+    {
+      "id": "follow-09",
+      "expected": "abstain",
+      "decision": "abstain",
+      "outcome": "abstain",
+      "confidence": 0.9600896087006849,
+      "elapsedMs": 489
+    },
+    {
+      "id": "follow-10",
+      "expected": "abstain",
+      "decision": "abstain",
+      "outcome": "abstain",
+      "confidence": 0.8699775246054009,
+      "elapsedMs": 464
+    },
+    {
+      "id": "follow-11",
+      "expected": "abstain",
+      "decision": "abstain",
+      "outcome": "abstain",
+      "confidence": 0.5143582415644439,
+      "elapsedMs": 594
+    },
+    {
+      "id": "follow-12",
+      "expected": "abstain",
+      "decision": "abstain",
+      "outcome": "abstain",
+      "confidence": 0.5288286582475715,
+      "elapsedMs": 1205
+    },
+    {
+      "id": "short-hard-01",
+      "expected": "reasoning",
+      "decision": "reasoning",
+      "outcome": "selected",
+      "confidence": 0.9720838954064727,
+      "elapsedMs": 453
+    },
+    {
+      "id": "short-hard-02",
+      "expected": "reasoning",
+      "decision": "reasoning",
+      "outcome": "selected",
+      "confidence": 0.9436563017213502,
+      "elapsedMs": 458
+    },
+    {
+      "id": "short-hard-03",
+      "expected": "reasoning",
+      "decision": "abstain",
+      "outcome": "low-confidence",
+      "confidence": 0.6743514887742723,
+      "elapsedMs": 458
+    },
+    {
+      "id": "short-hard-04",
+      "expected": "reasoning",
+      "decision": "reasoning",
+      "outcome": "selected",
+      "confidence": 0.9752610937179838,
+      "elapsedMs": 459
+    },
+    {
+      "id": "short-hard-05",
+      "expected": "reasoning",
+      "decision": "reasoning",
+      "outcome": "selected",
+      "confidence": 0.9840250664870144,
+      "elapsedMs": 547
+    },
+    {
+      "id": "long-easy-01",
+      "expected": "fast",
+      "decision": "fast",
+      "outcome": "selected",
+      "confidence": 0.9921024266429234,
+      "elapsedMs": 464
+    },
+    {
+      "id": "long-easy-02",
+      "expected": "fast",
+      "decision": "fast",
+      "outcome": "selected",
+      "confidence": 0.9947897912572382,
+      "elapsedMs": 487
+    },
+    {
+      "id": "long-easy-03",
+      "expected": "fast",
+      "decision": "fast",
+      "outcome": "selected",
+      "confidence": 0.9900989677056887,
+      "elapsedMs": 468
+    },
+    {
+      "id": "long-easy-04",
+      "expected": "fast",
+      "decision": "fast",
+      "outcome": "selected",
+      "confidence": 0.991129818185,
+      "elapsedMs": 459
+    },
+    {
+      "id": "long-easy-05",
+      "expected": "fast",
+      "decision": "fast",
+      "outcome": "selected",
+      "confidence": 0.9939739667153845,
+      "elapsedMs": 1211
+    }
+  ]
+}
