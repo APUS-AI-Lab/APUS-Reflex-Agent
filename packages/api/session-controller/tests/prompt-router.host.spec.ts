@@ -153,7 +153,7 @@ it('reports the baseline as the next route after an automatic turn ends', async 
   h.routing.register({ route: async () => selected })
   await h.routing.admit(h.request, h.admit)
   await h.agent.whenIdle()
-  expect(h.ctx.sessionProjections.snapshot(h.agent.session).values.modelSelection).toEqual({ mode: 'auto', lastUsed: selected, next: baseline })
+  expect(h.ctx.sessionProjections.snapshot(h.agent.session).values.modelSelection).toEqual({ mode: 'auto', lastUsed: selected, next: baseline, automatic: false })
 })
 
 it('routes through the actual prompt command and serializes later manual selection', async () => {
@@ -356,7 +356,7 @@ it('releases a fixed model through the command and restores automatic mode from 
   expect(h.agents.hasExplicitSelection(h.agent)).toBe(false)
   const recovered = Session.create(SessionId('reset-route'), h.agent.session.snapshotEvents())
   expect(h.ctx.sessionProjections.snapshot(recovered).values.modelSelection).toEqual({
-    mode: 'auto', lastUsed: null, next: selected,
+    mode: 'auto', lastUsed: null, next: selected, automatic: false,
   })
   const route = vi.fn(async () => baseline)
   h.routing.register({ route })

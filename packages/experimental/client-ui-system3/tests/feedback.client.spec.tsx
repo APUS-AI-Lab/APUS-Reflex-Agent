@@ -14,7 +14,7 @@ const noStop = async (): Promise<void> => {}
 const noSteer = async (): Promise<void> => {}
 const model = { provider: 'fidoo', model: 'generation', reasoningEffort: 'low' }
 function inputs(overrides: Partial<System3FeedbackProps> = {}): System3FeedbackProps {
-  return { facts: { subagentRun: null, entry: null, skill: null }, selection: { mode: 'auto', lastUsed: null, next: null },
+  return { facts: { subagentRun: null, entry: null, skill: null }, selection: { mode: 'auto', lastUsed: null, next: null, automatic: false },
     pending: false, pendingRequestId: null, running: false, opening: false, failed: false, available: true,
     onAutomatic: vi.fn(async () => {}), onStop: vi.fn(async () => {}), onSteer: vi.fn(async () => {}),
     t: makeTranslate(zh, commonZh), ...overrides }
@@ -52,7 +52,7 @@ it('requires a durable injection fact before displaying a Skill as injected', ()
 it('deduplicates the actual automatic-mode action and waits for projected mode', async () => {
   const request = Promise.withResolvers<undefined>()
   const onAutomatic = vi.fn(() => request.promise)
-  render(<System3Feedback {...inputs({ selection: { mode: 'fixed', lastUsed: model, next: model }, onAutomatic })} />)
+  render(<System3Feedback {...inputs({ selection: { mode: 'fixed', lastUsed: model, next: model, automatic: false }, onAutomatic })} />)
   const button = screen.getByRole('button', { name: '恢复自动' })
   act(() => { fireEvent.click(button); fireEvent.click(button) })
   expect(onAutomatic).toHaveBeenCalledTimes(1)
@@ -61,14 +61,14 @@ it('deduplicates the actual automatic-mode action and waits for projected mode',
   expect(screen.getByText('固定模型')).toBeTruthy()
 })
 it('shows mutation failure without pretending automatic mode was restored', async () => {
-  render(<System3Feedback {...inputs({ selection: { mode: 'fixed', lastUsed: model, next: model },
+  render(<System3Feedback {...inputs({ selection: { mode: 'fixed', lastUsed: model, next: model, automatic: false },
     onAutomatic: () => Promise.reject(new Error('network')) })} />)
   await act(async () => { fireEvent.click(screen.getByRole('button', { name: '恢复自动' })) })
   expect(screen.getByRole('alert').textContent).toBe('切换失败，请重试')
   expect(screen.getByText('固定模型')).toBeTruthy()
 })
 it('does not expose root model mutation for an addressed subagent', () => {
-  render(<System3Feedback {...inputs({ selection: { mode: 'fixed', lastUsed: model, next: model }, available: false })} />)
+  render(<System3Feedback {...inputs({ selection: { mode: 'fixed', lastUsed: model, next: model, automatic: false }, available: false })} />)
   expect(screen.queryByRole('button', { name: '恢复自动' })).toBeNull()
 })
 
@@ -90,7 +90,7 @@ it('announces active decision and retains ended-turn evidence without claiming v
 
 it('uses live execution state when a fixed-model turn follows an unanswered automatic turn', () => {
   render(<System3Feedback {...inputs({ running: true,
-    selection: { mode: 'fixed', lastUsed: model, next: model },
+    selection: { mode: 'fixed', lastUsed: model, next: model, automatic: false },
     facts: { subagentRun: null, skill: null, entry: { requestId: brandString<SessionRequestId>('previous'), phase: 'decided',
       outcome: 'selected', suggested: model, adopted: model, used: null, elapsedMs: 10, turn: null, route: null } },
   })} />)

@@ -17,6 +17,8 @@ import type { ModelCatalogDirectory } from './catalog.ts'
 export interface ModelDirectoryState {
   /** Saved selection, retained even when its provider or model leaves the catalog. */
   current: ModelSelection | null
+  /** Whether {@link current} is the automatic route of the running input turn rather than a lasting choice. */
+  automatic: boolean
   /** Saved effort caption retained when the selected model is unavailable. */
   retainedEffort?: string
   /** Whether the current selection is present in the available catalog; null while unresolved. */
@@ -37,7 +39,7 @@ export interface ModelDirectoryState {
 export class ModelDirectory {
   /** The shared snapshot both entries render from (uSES-safe store). */
   readonly store: SnapshotStore<ModelDirectoryState> = createSnapshotStore<ModelDirectoryState>({
-    current: null, routable: null, groups: [], failures: [], status: 'idle', pending: null, error: null,
+    current: null, automatic: false, routable: null, groups: [], failures: [], status: 'idle', pending: null, error: null,
   })
 
   /** Latest selection operation wins; an older response never overwrites a newer one. */
@@ -150,6 +152,7 @@ export class ModelDirectory {
     if (catalog.status !== 'ready' || catalog.value === null || projected === undefined) {
       this.store.set({
         current: catalog.value === null ? null : this.store.getSnapshot().current,
+        automatic: catalog.value === null ? false : this.store.getSnapshot().automatic,
         ...retainedEffort === undefined ? {} : { retainedEffort },
         routable: null,
         groups: catalog.value?.groups ?? [],
@@ -165,6 +168,7 @@ export class ModelDirectory {
       && group.models.some(model => model.id === selection.model))
     this.store.set({
       current: selection,
+      automatic: projected.automatic,
       ...retainedEffort === undefined ? {} : { retainedEffort },
       routable,
       groups: catalog.value.groups,

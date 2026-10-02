@@ -90,7 +90,7 @@ GUI 模型选择要求确切提供方／模型对出现在可用目录中；不�
 
 Host 插件通过 `ctx.sessionController.registerPromptRouter(router)` 注册一个 `SessionPromptRouter`，并用 `ctx.effect()` 持有 disposer。重复 provider 会报错。`SessionPromptRouteRequest` 携带存活的 Agent、请求标识、确切文本消息及当前 Session 模型 baseline；`route(request, signal)` 返回经校验的生成模型选择，或返回 `undefined` 使用 baseline。Provider 负责推理期限与降级策略；抛错会拒绝准入。
 
-路由仅覆盖空闲、没有排队工作时的文本提示词。图片、文件、活跃轮次，以及仍有人工 `model/selection` 生效的 Session 采用普通准入。`resetModelSelection({ sessionId })` 记录 `model/selection-reset`，清除人工固定，并保留当前模型作为自动模式的 baseline。该操作与提示词准入及选模串行，不改变已经发出的 provider 请求。在自动模式重复重置时，当前轮次的临时路由和持久 baseline 都保持不变。`modelSelection` Client 投影从持久历史提供 `mode: auto | fixed`。此入口不覆盖 Headless、SDK 或 ACP 输入。
+路由仅覆盖空闲、没有排队工作时的文本提示词。图片、文件、活跃轮次，以及仍有人工 `model/selection` 生效的 Session 采用普通准入。`resetModelSelection({ sessionId })` 记录 `model/selection-reset`，清除人工固定，并保留当前模型作为自动模式的 baseline。该操作与提示词准入及选模串行，不改变已经发出的 provider 请求。在自动模式重复重置时，当前轮次的临时路由和持久 baseline 都保持不变。`modelSelection` Client 投影从持久历史提供 `mode: auto | fixed`；当前输入轮次的请求使用自动路由期间，它还提供 `automatic: true`，轮次结束后 `next` 回到 baseline，`automatic` 变为 false。此入口不覆盖 Headless、SDK 或 ACP 输入。
 
 提示词准入与人工选模按 Agent 串行。若其他 owner 已持有 maintenance，输入仍按普通队列准入，不调用路由。Maintenance 在等待路由时阻止模型执行；取消或 provider 移除会拒绝尚未准入的输入，即使 provider 忽略取消信号。竞争输入会阻止建议生效。`model/automatic-selection` 在同步 inbox 接受后、执行前记录请求标识、所选路由和恢复 baseline；它不证明发生过生成，实际使用由 `request/header` 记录并激活投影中的自动路由。在该 header 之前，投影的下一路由仍为 baseline；原生中断轮次恢复会清除已采用的自动路由。自动路由维持整个已准入轮次，包括工具续步。移除 provider 不改变已准入工作的路由；轮次结束恢复 baseline，恢复的 Session 也使用 baseline，而非中断前的自动路由。后来人工选型仍拥有优先权。
 

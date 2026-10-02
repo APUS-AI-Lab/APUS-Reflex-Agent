@@ -100,7 +100,7 @@ async function bench(locale: 'zh' | 'en' = 'zh') {
           ? {}
           : { reasoningEffort: payload.reasoningEffort },
       }
-      projections.get(payload.sessionId)?.set({ mode: 'auto', lastUsed: null, next: selected })
+      projections.get(payload.sessionId)?.set({ mode: 'auto', lastUsed: null, next: selected, automatic: false })
       return Promise.resolve({ ok: true as const, value: { selected } })
     },
   }
@@ -160,6 +160,7 @@ async function bench(locale: 'zh' | 'en' = 'zh') {
       mode: 'auto',
       lastUsed: null,
       next: null,
+      automatic: false,
     })
     projections.set(id, projection)
     const binding = {
@@ -382,6 +383,7 @@ describe('ui-model-selection dual entry', () => {
       mode: 'auto',
       lastUsed: { provider: 'deepseek-official', model: 'deepseek-v4-flash' },
       next: { provider: 'deepseek-official', model: 'deepseek-v4-pro' },
+      automatic: false,
     })
     expect(face.directory.getSnapshot()).toMatchObject({
       current: { provider: 'deepseek-official', model: 'deepseek-v4-flash' },
@@ -440,7 +442,7 @@ describe('ui-model-selection dual entry', () => {
       const existing = b.ctx.modelDirectories.directoryFor(sid('existing'))
       await existing.load()
       b.setProjected(sid('existing'), { mode: 'auto', lastUsed: null,
-        next: { provider: 'deepseek-official', model: 'deepseek-v4-flash', reasoningEffort: 'high' } })
+        next: { provider: 'deepseek-official', model: 'deepseek-v4-flash', reasoningEffort: 'high' }, automatic: false })
       b.setRoutable(false)
       b.remote.emit('settings/document-updated', ['llm-deepseek', 1])
       expect(existing.store.getSnapshot().retainedEffort).toBe('High')
@@ -488,11 +490,14 @@ describe('ui-model-selection dual entry', () => {
     b.mint('s1')
     const face = b.seat().inject!(sid('s1'))
     const intended = { provider: 'deepseek-official', model: 'unlisted' }
-    b.setProjected(sid('s1'), { mode: 'auto', lastUsed: intended, next: intended })
+    b.setProjected(sid('s1'), { mode: 'auto', lastUsed: intended, next: intended, automatic: false })
     await vi.waitFor(() => { expect(face.directory.getSnapshot().status).toBe('ready') })
     expect(face.directory.getSnapshot().current).toEqual(intended)
+    expect(face.directory.getSnapshot().automatic).toBe(false)
     expect(b.blockOf('s1')).toBeUndefined()
     expect(b.calls.select).toBe(0)
+    b.setProjected(sid('s1'), { mode: 'auto', lastUsed: intended, next: intended, automatic: true })
+    await vi.waitFor(() => { expect(face.directory.getSnapshot().automatic).toBe(true) })
   })
 
   it('an unknown session fails loud at the seat inject', async () => {
