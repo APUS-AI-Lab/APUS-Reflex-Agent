@@ -1,7 +1,7 @@
 /** Truthful execution feedback: advice, adoption and actual response stay separate. */
 import { useRef, useState } from 'react'
 import type { PropsLocale, PropsRuntime, TranslateNS } from '@deepseek-ai/dsh-client-ui-slots'
-import type { ModelSelection, ModelSelectionProjection } from '@deepseek-ai/dsh-api-session-controller/types'
+import type { ModelSelection, ModelSelectionProjection, SessionRequestId } from '@deepseek-ai/dsh-api-session-controller/types'
 import type { System3RuntimeView } from '@deepseek-ai/dsh-experimental-system3/types'
 import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
 import type {} from '@deepseek-ai/dsh-client-ui-session/client'
@@ -20,6 +20,8 @@ export interface System3FeedbackProps extends System3Actions {
   readonly selection: ModelSelectionProjection | null | undefined
   readonly running: boolean
   readonly pending: boolean
+  /** Latest local submission not yet admitted; an entry decision for an earlier input is not shown as its route. */
+  readonly pendingRequestId: SessionRequestId | null
   readonly opening: boolean
   readonly failed: boolean
   readonly t: TranslateNS<'system3'>
@@ -35,8 +37,10 @@ function model(value: ModelSelection | null | undefined, t: TranslateNS<'system3
   return value ? `${value.provider} / ${value.model}${value.reasoningEffort ? ` · ${value.reasoningEffort}` : ''}` : t('none')
 }
 /** The configured route shown as soon as the entry decision is recorded, before the model answers. */
-function routeNotice(entry: System3RuntimeView['entry'] | undefined, t: TranslateNS<'system3'>): string | null {
+function routeNotice(entry: System3RuntimeView['entry'] | undefined, pendingRequestId: SessionRequestId | null,
+  t: TranslateNS<'system3'>): string | null {
   if (entry?.phase !== 'decided' || entry.route === null) return null
+  if (pendingRequestId !== null && entry.requestId !== pendingRequestId) return null
   const route = entry.route.label ?? model(entry.suggested ?? entry.adopted, t)
   return t(entry.route.retained ? 'routeRetained' : 'routeChosen', { route })
 }
@@ -57,7 +61,7 @@ export function System3Feedback(props: System3FeedbackProps) {
     finally { pending.current = false; setSwitching(false) }
   }
   const fixed = selection?.mode === 'fixed'
-  const notice = routeNotice(facts?.entry, t)
+  const notice = routeNotice(facts?.entry, props.pendingRequestId, t)
   return <section className={css.dock} aria-label={t('title')}>
     <div className={css.bar}>
       <span className={css.dot} data-active={props.running || props.pending} aria-hidden="true" />
@@ -93,8 +97,10 @@ export function System3Dock(props: Pick<PropsRuntime<'conversation.input.dock'>,
   const selection = props.useProjection('modelSelection')
   const running = props.useSession(s => s.running)
   const pending = props.useSession(s => s.pendingSubmissions.length > 0 || s.awaitingFirstTurn)
+  const pendingRequestId = props.useSession(s => s.pendingSubmissions.at(-1)?.requestId ?? null)
   const opening = props.useSession(s => s.openState !== 'open')
   const failed = props.useSession(s => s.promptError !== null || s.lastAgentError !== null)
   return <System3Feedback key={props.sessionId} facts={facts} selection={selection} running={running} pending={pending}
+    pendingRequestId={pendingRequestId}
     opening={opening} failed={failed} available={props.available} onAutomatic={props.onAutomatic} t={props.t} />
 }

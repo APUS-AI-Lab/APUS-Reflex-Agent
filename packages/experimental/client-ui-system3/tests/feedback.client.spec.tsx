@@ -12,7 +12,7 @@ afterEach(cleanup)
 const model = { provider: 'fidoo', model: 'generation', reasoningEffort: 'low' }
 function inputs(overrides: Partial<System3FeedbackProps> = {}): System3FeedbackProps {
   return { facts: { entry: null, skill: null }, selection: { mode: 'auto', lastUsed: null, next: null },
-    pending: false, running: false, opening: false, failed: false, available: true,
+    pending: false, pendingRequestId: null, running: false, opening: false, failed: false, available: true,
     onAutomatic: vi.fn(async () => {}), t: makeTranslate(zh, commonZh), ...overrides }
 }
 it('acknowledges a local submission before a decision arrives', () => {
@@ -105,4 +105,15 @@ it('announces the chosen route as soon as the decision is recorded, before the m
   expect(screen.getByText('建议模型').nextSibling?.textContent).toBe('延续上一轮')
   rerender(<System3Feedback {...inputs({ facts: { skill: null, entry: { ...entry, phase: 'deciding', route: null } } })} />)
   expect(screen.queryByText(/已判断/)).toBeNull()
+})
+it('does not show the previous input\'s route while a newer submission waits for its decision', () => {
+  const entry = { requestId: brandString<SessionRequestId>('earlier'), phase: 'decided' as const, outcome: 'selected',
+    suggested: model, adopted: model, used: model, elapsedMs: 480, route: { id: 'expert', label: 'Expert', retained: false } }
+  const { rerender } = render(<System3Feedback {...inputs({ pending: true, pendingRequestId: brandString<SessionRequestId>('newer'),
+    facts: { skill: null, entry } })} />)
+  expect(screen.queryByText('已判断：Expert')).toBeNull()
+  expect(screen.getByRole('status').textContent).toBe('已接收，正在准备')
+  rerender(<System3Feedback {...inputs({ pending: true, pendingRequestId: brandString<SessionRequestId>('newer'),
+    facts: { skill: null, entry: { ...entry, requestId: brandString<SessionRequestId>('newer') } } })} />)
+  expect(screen.getByText('已判断：Expert')).toBeTruthy()
 })
