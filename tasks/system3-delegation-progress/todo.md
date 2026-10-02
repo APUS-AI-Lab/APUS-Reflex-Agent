@@ -28,6 +28,15 @@ Base: branch `feat-system3-g1`. Order follows [architecture section 11](../../do
 - [ ] Image input: modality filter before Jev; update deployed input modalities (Flash and both GPT relays read images, Pro does not).
 - [ ] Not yet deployed to the server or Desktop.
 
+## Speed and delegation (2026-10-02)
+
+- [x] Jev connection pool (`keepAliveMs`, `http2`) and System3 `keepWarm`; warm decisions 0.44–0.50 s, in-app 0.49–1.25 s on this Mac.
+- [x] Candidate `label`; route notice the moment the decision is recorded; stale notice hidden while a newer submission is pending.
+- [x] Delegation candidates (`delegate: { provider, tool }`), one `system3-delegation` instruction, suggested / injected / called stages.
+- [x] Real Web run: coding task routed to Codex in 0.69 s, instruction injected, `subagent_codex` called, fix and 4 tests added, 5 / 5 pass, 108 s total.
+- [ ] Delegation threshold: the model itself called the task a one-line fix; compare Flash / always-delegate / Jev on small and large coding tasks.
+- [ ] Python SDK snapshot verified only by hand-patching the committed log (the local runtime build bundles Office skills); CI must confirm.
+
 ## Slice 1b · parent-session milestones and progress card
 
 - [ ] Persistent start / end / throttled milestone events, persistence-type acknowledgement, both SDK expected outputs, keyless snapshot.
