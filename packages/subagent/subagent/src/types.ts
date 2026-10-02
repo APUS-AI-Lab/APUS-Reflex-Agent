@@ -91,6 +91,11 @@ export interface SubagentRunInfo {
   readonly id: SessionId
   /** Snapshot of whether `SubagentRun.localAgent` was present when start fulfilled. */
   readonly local: boolean
+  /**
+   * Whether the run's provider accepts mid-run input through `subagents.steerByParent`.
+   * Always false for continuable Activations, which take input through `subagents.prompt`.
+   */
+  readonly steerable: boolean
 }
 
 /**
@@ -365,6 +370,14 @@ export interface SubagentRun {
    * represent as a stop reason.
    */
   readonly result: Promise<SubagentResult>
+  /**
+   * OPTIONAL: deliver additional input to the child's active turn without restarting it.
+   * Presence is the capability. Fulfills once the child accepted the input; rejects when the
+   * run no longer accepts input, such as before its turn started or after it ended.
+   * @param content - text blocks the child receives as user input.
+   * @param signal - caller cancellation before acceptance.
+   */
+  steer?(content: readonly ContentBlock[], signal: AbortSignal): Promise<void>
   /**
    * Cancel remaining work, reach child quiescence, and release resources.
    * Idempotent.

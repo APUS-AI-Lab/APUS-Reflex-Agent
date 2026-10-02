@@ -57,9 +57,16 @@ export interface System3SubagentRunView {
   readonly note: string | null
   /** Latest unresolved attention alert: overtime lasts while running; stalled and starting clear on the next step. */
   readonly alert: { readonly kind: string; readonly elapsedMs: number } | null
+  /** Whether the run accepts a person's mid-run input now; false once it settles. */
+  readonly steerable: boolean
+  /** The latest three inputs the run accepted, oldest first, with milliseconds from start. */
+  readonly steers: readonly { readonly text: string; readonly atMs: number }[]
 }
 
-/** Latest entry, Skill, and delegated-run facts; no prompt bodies, child content, or provider probabilities leave the Host. */
+/**
+ * Latest entry, Skill, and delegated-run facts; no prompt bodies, child content, or provider probabilities leave the Host.
+ * Steer texts are the person's own input.
+ */
 export interface System3RuntimeView {
   readonly entry: System3EntryView | null
   readonly skill: System3SkillView | null

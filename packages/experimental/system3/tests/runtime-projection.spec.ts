@@ -6,6 +6,7 @@ import { createAssistantMessage, createToolResultMessage, createUserMessage, Rea
 import { Session, SessionId, SessionLogOffset, type SessionEvent } from '@deepseek-ai/dsh-session'
 import Projections from '@deepseek-ai/dsh-session-projection'
 import { afterEach, expect, it } from 'vitest'
+import { SubagentRunId } from '@deepseek-ai/dsh-subagent'
 import { system3RuntimeProjection } from '../src/runtime-projection.ts'
 
 const contexts: Context[] = []
@@ -285,8 +286,33 @@ it('keeps the latest delegated-run snapshot without its version field', async ()
   h.session.append('system3/delegation-progress', snapshot)
   h.session.append('system3/delegation-progress', { ...snapshot, state: 'completed', elapsedMs: 9, completed: { command: 2 } })
   expect(h.view()?.subagentRun).toEqual({ runId: 'run-1', provider: 'codex', state: 'completed', startedAt: 1, elapsedMs: 9, completed: { command: 2 }, current: null,
-    lastStepAt: null, note: null, alert: null })
+    lastStepAt: null, note: null, alert: null, steerable: false, steers: [] })
   expect(system3RuntimeProjection.wire.viewSchema.parse(system3RuntimeProjection.wire.view(h.view()!)).subagentRun?.state).toBe('completed')
+})
+
+it('keeps the latest three accepted steers of the current run and closes input when the run settles', async () => {
+  const h = await setup()
+  const startedAt = Date.now()
+  const running = { version: 1 as const, runId: 'run-1', provider: 'codex', state: 'running' as const, startedAt, elapsedMs: 0,
+    completed: {}, current: null, steerable: true }
+  const steer = (text: string, runId = 'run-1') => {
+    h.session.append('subagent/steer', { version: 1, runId: SubagentRunId(runId), provider: 'codex', text })
+  }
+  steer('before any run')
+  expect(h.view()?.subagentRun).toBeNull()
+  h.session.append('system3/delegation-progress', running)
+  expect(h.view()?.subagentRun).toMatchObject({ steerable: true, steers: [] })
+  steer('other run', 'run-2')
+  for (const text of ['one', 'two', 'three', 'four']) steer(text)
+  h.session.append('system3/delegation-progress', { ...running, elapsedMs: 5 })
+  const view = h.view()?.subagentRun
+  expect(view?.steers.map(entry => entry.text)).toEqual(['two', 'three', 'four'])
+  expect(view?.steers.every(entry => entry.atMs >= 0)).toBe(true)
+  h.session.append('system3/delegation-progress', { ...running, state: 'completed', elapsedMs: 9 })
+  expect(h.view()?.subagentRun).toMatchObject({ steerable: false, steers: [{ text: 'two' }, { text: 'three' }, { text: 'four' }] })
+  h.session.append('system3/delegation-progress', { ...running, runId: 'run-2' })
+  expect(h.view()?.subagentRun?.steers).toEqual([])
+  expect(system3RuntimeProjection.wire.viewSchema.parse(system3RuntimeProjection.wire.view(h.view()!)).subagentRun?.steerable).toBe(true)
 })
 
 it('keeps an overtime alert while running, clears a stall alert on the next step, and drops alerts at the end', async () => {

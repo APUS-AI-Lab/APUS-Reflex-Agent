@@ -54,7 +54,7 @@ Base: branch `feat-system3-g1`. Order follows [architecture section 11](../../do
 - [ ] Expected-duration labels, end summary in `turnTail`, short follow-ups skipping Jev.
 - [ ] 8.2 composer model chip (not decided).
 - [ ] Browser or desktop notification when the page is not visible.
-- [x] Delegated Codex reads a service-owned `CODEX_HOME` (`deploy/system3/codex/config.toml`, Fidoo Responses API, gpt-5.6-sol-relay); committed 58b8229dcb. Real Web run: routed to Codex, wordcount task done, 8 / 8 tests pass, nothing written outside the private home.
+- [x] Delegated Codex reads a service-owned `CODEX_HOME` (`deploy/system3/codex/config.toml`, Fidoo Responses API, gpt-5.6-sol-relay); committed. Real Web run: routed to Codex, wordcount task done, 8 / 8 tests pass, nothing written outside the private home.
 - [ ] That run's first step took 5 min 39 s: Codex's first 5 POSTs to Fidoo each failed at the connection layer after ~62 s (`logs_2.sqlite`, `error sending request`), then succeeded. Same config via `codex exec`: 11 s and 27 s. Local network path (Clash TUN, fake-IP 198.18.x), not configuration; re-measure on the server.
 - [ ] Server unverified: Codex's own Linux command sandbox on a kernel without Landlock; release.spec.sh not rerun (needs the server's Docker).
 - [ ] Locally, Codex shell commands still source the user's `~/.zshenv` (login shell); the server's private HOME has none.
@@ -71,3 +71,12 @@ Base: branch `feat-system3-g1`. Order follows [architecture section 11](../../do
 - `test:snapshot`: 177 pass; `browser-use-stagehand-native` fails in this worktree with a Node loader-hook error inside its fixture, in code this branch does not touch. Not yet compared against the base branch.
 - `packages/experimental/agui/src` is below the per-file coverage threshold before and after this change.
 - Real Codex run (bundled CLI, local ChatGPT login, model `gpt-5.5`): the first step arrived about 22 s after start, so a progress view needs a visible started state before any step. The local default model `gpt-6.1-sol` is rejected by the bundled CLI for ChatGPT accounts; the provider needs an explicit `model`.
+
+## Mid-run steer (approved 2026-10-02; parent model does not see steers; Claude Code later)
+
+- [ ] dsh-subagent: `SubagentRun.steer?`, `SubagentRunInfo.steerable`, live steerable-run registry in `observeRun`, `@Remote('steerByParent')`, parent Session event `subagent/steer`, `subagent/not-steerable` error.
+- [ ] subagent-codex: `turn/steer` with `expectedTurnId`; reject before turn start / after completion / after close.
+- [ ] System3: progress snapshot `steerable`; projection `subagentRun.steerable` and `steers` (latest 3); stateVersion 8.
+- [ ] Client: DelegationRun steer input + sent list + failure notice; zh/en copy; inject `remote.subagents`.
+- [ ] Persistence records, READMEs, architecture section 05, SDK expected outputs / snapshots.
+- [ ] Gates + real Web run: steer a running Codex and observe adoption.

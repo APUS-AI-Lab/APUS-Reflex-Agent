@@ -32,7 +32,8 @@
         "@deepseek-ai/dsh-api-session-controller",
         "@deepseek-ai/dsh-client-locale",
         "@deepseek-ai/dsh-client-ui-conversation",
-        "@deepseek-ai/dsh-api-remotes"
+        "@deepseek-ai/dsh-api-remotes",
+        "@deepseek-ai/dsh-client-ui-primitives"
       ],
       "platform": "web"
     }
@@ -53,7 +54,9 @@
     "@deepseek-ai/dsh-session": "workspace:*",
     "@deepseek-ai/cordis": "workspace:~",
     "@deepseek-ai/dsh-experimental-system3": "workspace:*",
-    "@deepseek-ai/dsh-api-remotes": "workspace:*"
+    "@deepseek-ai/dsh-api-remotes": "workspace:*",
+    "@deepseek-ai/dsh-client-ui-primitives": "workspace:*",
+    "@deepseek-ai/dsh-subagent": "workspace:*"
   },
   "devDependencies": {
     "@deepseek-ai/dsh-api-session-controller": "workspace:*",
@@ -73,7 +76,9 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "@deepseek-ai/dsh-experimental-system3": "workspace:*",
-    "@deepseek-ai/dsh-api-remotes": "workspace:*"
+    "@deepseek-ai/dsh-api-remotes": "workspace:*",
+    "@deepseek-ai/dsh-client-ui-primitives": "workspace:*",
+    "@deepseek-ai/dsh-subagent": "workspace:*"
   },
   "files": [
     "locale/*.json",

@@ -10,14 +10,22 @@ import type { SessionId } from '@deepseek-ai/dsh-session'
 import { RemoteError } from '@deepseek-ai/dsh-typert-protocol'
 import { z } from 'zod'
 import { SubagentError } from './error.ts'
+import type { SubagentSteerMaxChars } from './control-types.ts'
 
 const SESSION_ID_SCHEMA = z.string().min(1)
+/** Upper bound of one mid-run input text; a person's correction, not a new task. */
+export const SUBAGENT_STEER_MAX_CHARS: SubagentSteerMaxChars = 2000
 const CONTROL_ID_SCHEMAS = {
   'subagent.prompt': z.object({
     parentSessionId: SESSION_ID_SCHEMA,
     childSessionId: SESSION_ID_SCHEMA,
     mode: z.literal('continuable'),
     delivery: z.enum(['queue', 'steer']),
+  }),
+  'subagent.steer': z.object({
+    runId: z.string().min(1),
+    parentSessionId: SESSION_ID_SCHEMA,
+    text: z.string().max(SUBAGENT_STEER_MAX_CHARS).refine(text => text.trim().length > 0, 'text must not be blank'),
   }),
   'subagent.interrupt': z.object({
     parentSessionId: SESSION_ID_SCHEMA,

@@ -9,8 +9,8 @@
   en: e7c80d1de4d328b4
   zh: d9f368c27fd9f998
 /session-persistence-event-catalog/persistence-type-fingerprints:
-  en: 83d79e0f75e64c37
-  zh: 6cacc0fa6e894e8f
+  en: f7c1e7861139b2f9
+  zh: a3e7346631b87fd7
 /session-persistence-event-catalog/event-envelope:
   en: 7ebb1a2e0dd1f916
   zh: 8946f415dda5c1b8
@@ -210,8 +210,11 @@
   en: f5d53639dc5afdfc
   zh: 8c553e7397d08832
 /session-persistence-event-catalog/events/subagent/subagent-model-selection-policy-log-only:
-  en: cdf085d18fae747a
-  zh: 83cd5cf56fef4050
+  en: 87817e738bfde359
+  zh: 8e4a52506fa2751f
+/session-persistence-event-catalog/events/subagent/subagent-steer-log-only:
+  en: 0d88faeb44f08f37
+  zh: 2572572d3ee4ab7c
 /session-persistence-event-catalog/events/system:
   en: 8cac41d2fb575975
   zh: 8cac41d2fb575975
@@ -225,11 +228,11 @@
   en: 6bff840f7927c3dd
   zh: 9b3b7c364a94d9e1
 /session-persistence-event-catalog/events/system3/system3-delegation-alert-log-only:
-  en: b71d8afee759e227
-  zh: c8f8648c84b1f940
+  en: eb1213e19e70cbb4
+  zh: 12717ca2ec3e710f
 /session-persistence-event-catalog/events/system3/system3-delegation-progress-log-only:
-  en: c2175e95a7112f50
-  zh: e854d7191b04b723
+  en: 4dc633691d370405
+  zh: 22710842ad18e3b2
 /session-persistence-event-catalog/events/system3/system3-entry-decision-log-only:
   en: 3d22f52cf5205ca3
   zh: c75017cdaffc0d19
@@ -912,8 +915,11 @@
   en: e932f06c949f5f6c
   zh: e932f06c949f5f6c
 /session-persistence-event-catalog/resolved-persistence-types/subagent-model-selection-policy:
-  en: 25ccd80df944ac00
-  zh: 25ccd80df944ac00
+  en: 8fe1d0d5d5710ce0
+  zh: 8fe1d0d5d5710ce0
+/session-persistence-event-catalog/resolved-persistence-types/subagent-steer:
+  en: 17ef3cefdcc32268
+  zh: 17ef3cefdcc32268
 /session-persistence-event-catalog/resolved-persistence-types/success:
   en: 801923015f7dc7e4
   zh: 801923015f7dc7e4
@@ -1407,8 +1413,11 @@
   en: c56821e57987ae9e
   zh: 0364f59a472d51da
 /session-persistence-event-catalog/resolved-persistence-types/subagentsettledmessagesource:
-  en: a5e19707264c7449
-  zh: 4c619e931997d3f0
+  en: 72ab417ab1072cc8
+  zh: e49fc5783b564d64
+/session-persistence-event-catalog/resolved-persistence-types/subagentsteerevent:
+  en: dacc1a57093b3a95
+  zh: 8abac43c9e03490d
 /session-persistence-event-catalog/resolved-persistence-types/surfaceop:
   en: 253fc90d330ee0d8
   zh: 70c1dff448915534
@@ -1428,11 +1437,11 @@
   en: 4d22ad156edbf451
   zh: 03c0cfc9393b745d
 /session-persistence-event-catalog/resolved-persistence-types/system3delegationalert:
-  en: 0ec5a723ecc07519
-  zh: f5a700ebabac9017
+  en: 4b6762560281b629
+  zh: 183862a492737b2b
 /session-persistence-event-catalog/resolved-persistence-types/system3delegationprogress:
-  en: 255bd8ebe65e2528
-  zh: d70cabdaab16050f
+  en: 588bc7e15fd818f6
+  zh: 5266d51ab0e9bf74
 /session-persistence-event-catalog/resolved-persistence-types/system3delegationsource:
   en: 8bf91063f131f16a
   zh: ff6a3d07769e4bd7
@@ -1563,11 +1572,11 @@
   en: 5e7d82a493a1d4d8
   zh: d2d785891dd766fc
 /session-persistence-event-catalog/resolved-persistence-types/number~2:
-  en: a92f7956c4ac301d
-  zh: 3eb91e86a0b348c2
+  en: cef96dcc314496a6
+  zh: 318a112287a79702
 /session-persistence-event-catalog/resolved-persistence-types/string:
-  en: 3c87ecbabf165378
-  zh: 7a9f2cca247f5f8e
+  en: dfe9e705978973a2
+  zh: f2306b833825831b
 /session-persistence-event-catalog/resolved-persistence-types/string~2:
   en: 0089620bf4638263
   zh: 1922bef1713094bb
@@ -2322,8 +2331,11 @@
   en: 2adab4361a5b558d
   zh: 7f2a8da669f9e117
 /session-persistence-event-catalog/resolved-persistence-types/type-subagent-model-selection-policy:
-  en: 9dd6539f4a5d9d16
-  zh: d886630b70a4bce8
+  en: 64b97fe73cece459
+  zh: 77066edf4eb03a5f
+/session-persistence-event-catalog/resolved-persistence-types/type-subagent-steer:
+  en: 62e6e56cb9f7e41c
+  zh: e6666d268698c024
 /session-persistence-event-catalog/resolved-persistence-types/type-system-message:
   en: 533bcfb94f596c7c
   zh: 23d56d78135d1361
@@ -2331,11 +2343,11 @@
   en: b13f77d6bd82129e
   zh: 73e75f2b9dcfa8c0
 /session-persistence-event-catalog/resolved-persistence-types/type-system3-delegation-alert:
-  en: e5061a2069ccd944
-  zh: 37f4a1bee2d2abc5
+  en: 23c4971756210ebd
+  zh: 9049ca3bda6ae405
 /session-persistence-event-catalog/resolved-persistence-types/type-system3-delegation-progress:
-  en: 6bbac1a0899948da
-  zh: 6be329b65c68ad96
+  en: 26789870b75ca675
+  zh: 3d80936952721b50
 /session-persistence-event-catalog/resolved-persistence-types/type-system3-entry-decision:
   en: 6a63e1afe574ebe3
   zh: f606fa1fdd7383a5

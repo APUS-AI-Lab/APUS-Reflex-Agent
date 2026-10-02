@@ -62,6 +62,8 @@ kind: "package-reference"
 
 每个确切在线 Agent 都可以对直接可继续 child 使用 `sendMessage()`；驻留的可继续 child 还可以对自己的直接 parent 使用它。正在工作的目标通过 Steer 在最近 step 接收 Agent 消息；空闲目标启动轮次，且只有直接 child 可以冷恢复。parent 也可以随时中断正在运行的后代或列举自己的子级。浏览器发出的继续执行 prompt 会独立选择 Queue 或 Steer，并且可以携带图片部分：Host 先通过附件存储完成整批图片的准入与持久化，子级 inbox 才接受这条消息；当子级声明的模型不接受图片输入时拒绝投递。 直接子级发现读取 parent 自有的 `subagentCatalog` projection。`listChildren(parentSessionId, signal?)` 持有一次优先实时来源的 Session 观察，异步返回目录，不读取子级日志。它转发取消信号，并在物化后释放观察。物化以 O(D) 时间保留 D 条事实的父日志事件顺序。后代发现按父事件顺序递归读取子级目录，每个可达 Session 观察一次。无法读取目录的分支会被跳过，并返回诊断；两条路径都不加载或恢复子级 Agent。
 
+运行实现了可选 `SubagentRun.steer` 的一次性 child，可以在运行中通过 `steerByParent` Remote 接收用户输入，按生命周期 run id 和发起委派的父 Session id 寻址。`subagent/start` 以 `steerable` 报告这一能力。服务只在这类运行的 start 与 end 事件之间持有它们；子级接受文本之后，服务把 `subagent/steer` 追加到父 Session，父模型看不到该事件。未知、已结束或属于其他父会话的运行、子级拒绝，以及空白或超长（超过 `SUBAGENT_STEER_MAX_CHARS`）的文本都会被拒绝，且不留记录。
+
 ### 失败与恢复
 
 需要所选提供方不具备的能力的请求会在启动时明确报错，而不会被静默忽略。失败的子 agent 运行会返回停止原因，提供方后端还会附加安全诊断；被取消的请求以 `aborted` 结算。子 agent 相互隔离：崩溃或行为异常的子 agent 无法破坏父级会话。
@@ -195,6 +197,7 @@ You are a delegated subagent: your permission scope was fixed when you were star
 - **没有持久化 parent mailbox**——child 到 parent 的消息要求驻留的可继续 child 与在线直接 parent，提供的是接受标识，不保证恰好一次投递。
 - **生命周期事件只供观察**——影响运行的 `subagent/end` 延续或决策接口仍需等待具体消费方。
 - **步骤事件是实时且粗粒度的**——`subagent/activity` 为一次性运行携带步骤类别、阶段以及可选的子 agent 自身进度说明（长度上限为 `SUBAGENT_ACTIVITY_NOTE_MAX_CHARS`），不写入任何 Session，目前只有 Codex 和 Claude Code provider 上报。
+- **运行中输入仅限一次性运行和 Codex**——`steerByParent` 只能送达实现了 `SubagentRun.steer` 的运行，目前只有 Codex；Claude Code 需要先支持流式输入，可继续 child 则使用 `prompt` Remote。
 
 <a id="dev-note"></a>
 ### 开发备注

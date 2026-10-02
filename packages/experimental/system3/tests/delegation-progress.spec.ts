@@ -2,7 +2,7 @@ import { Context } from '@deepseek-ai/cordis'
 import AgentLoop from '@deepseek-ai/dsh-agent-loop'
 import { mountAgentLoopTestDependencies } from '@deepseek-ai/dsh-agent-loop-testkit'
 import { SessionId } from '@deepseek-ai/dsh-session'
-import SubagentRuntime, { type ResolvedSubagentStartRequest, type SubagentResult } from '@deepseek-ai/dsh-subagent'
+import SubagentRuntime, { type ResolvedSubagentStartRequest, type SubagentResult, type SubagentRun } from '@deepseek-ai/dsh-subagent'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import { installSystem3DelegationProgress } from '../src/delegation-progress.ts'
 import { system3RuntimeProjection } from '../src/runtime-projection.ts'
@@ -14,7 +14,7 @@ afterEach(async () => {
   for (const ctx of contexts.splice(0)) await ctx.fiber.dispose()
 })
 
-async function setup(intervalMs = 3000, monitor?: { overtimeMs: number; stallMs: number; startupMs: number }) {
+async function setup(intervalMs = 3000, monitor?: { overtimeMs: number; stallMs: number; startupMs: number }, steer?: SubagentRun['steer']) {
   const ctx = new Context()
   contexts.push(ctx)
   await mountAgentLoopTestDependencies(ctx)
@@ -30,7 +30,7 @@ async function setup(intervalMs = 3000, monitor?: { overtimeMs: number; stallMs:
     inheritsParentContext: false,
     async start(request) {
       report = request.reportActivity
-      return { id: SessionId('codex-child'), localAgent: undefined, result: settled.promise, async dispose() {} }
+      return { id: SessionId('codex-child'), localAgent: undefined, result: settled.promise, async dispose() {}, ...steer === undefined ? {} : { steer } }
     },
   })
   const parent = await ctx.agentLoop.create(SessionId('delegating-parent'), { provider: 'mock', model: 'mock' })
@@ -43,7 +43,7 @@ async function setup(intervalMs = 3000, monitor?: { overtimeMs: number; stallMs:
 it('writes the start at once, throttles running snapshots, and writes the end with the stop reason', async () => {
   const h = await setup()
   const run = await h.start()
-  expect(h.snapshots()).toEqual([expect.objectContaining({ version: 1, provider: 'codex', state: 'running', elapsedMs: 0, completed: {}, current: null })])
+  expect(h.snapshots()).toEqual([expect.objectContaining({ version: 1, provider: 'codex', state: 'running', elapsedMs: 0, completed: {}, current: null, steerable: false })])
   h.report({ kind: 'command', phase: 'started' })
   h.report({ kind: 'command', phase: 'completed' })
   h.report({ kind: 'file-change', phase: 'started' })
@@ -88,7 +88,7 @@ it('ignores activity for unknown runs and events without a delegating Agent, and
   expect(() => { installSystem3DelegationProgress(h.ctx, { intervalMs: 0 }) }).toThrow('intervalMs')
   h.ctx.emit('subagent/activity', { runId: 'unknown' as never, provider: 'codex', id: SessionId('x'), kind: 'tool', phase: 'completed' })
   h.ctx.emit('subagent/end', { runId: 'unknown' as never, provider: 'codex', id: SessionId('x'), local: false, stopReason: 'completed' })
-  h.ctx.emit('subagent/start', { runId: 'unscoped' as never, provider: 'codex', id: SessionId('x'), local: false })
+  h.ctx.emit('subagent/start', { runId: 'unscoped' as never, provider: 'codex', id: SessionId('x'), local: false, steerable: false })
   expect(h.snapshots()).toEqual([])
 })
 
@@ -124,4 +124,21 @@ it('writes no alerts without monitor thresholds and rejects invalid ones', async
   await vi.advanceTimersByTimeAsync(3_600_000)
   expect(h.alerts()).toEqual([])
   expect(() => { installSystem3DelegationProgress(h.ctx, { intervalMs: 1000, monitor: { overtimeMs: 1, stallMs: 0, startupMs: 1 } }) }).toThrow('stallMs')
+})
+
+it('records a person\'s accepted input in the delegating Session and shows it on the run', async () => {
+  const delivered: unknown[] = []
+  const h = await setup(3000, undefined, async (content) => { delivered.push(content) })
+  const run = await h.start()
+  const runId = h.snapshots()[0]!.runId
+  expect(h.snapshots()[0]).toMatchObject({ steerable: true })
+  await expect(h.ctx.subagents.steerByParent({ runId: runId as never, parentSessionId: h.parent.session.id, text: '先让测试通过' },
+    new AbortController().signal)).resolves.toEqual({ accepted: true })
+  expect(delivered).toEqual([[{ type: 'text', text: '先让测试通过' }]])
+  const view = h.ctx.sessionProjections.stateOf(h.parent.session, 'system3Runtime')
+  expect(view?.subagentRun).toMatchObject({ runId, steerable: true, steers: [{ text: '先让测试通过' }] })
+  h.settled.resolve({ output: [], stopReason: 'completed' })
+  await run.result
+  await vi.advanceTimersByTimeAsync(0)
+  expect(h.ctx.sessionProjections.stateOf(h.parent.session, 'system3Runtime')?.subagentRun).toMatchObject({ steerable: false, steers: [{ text: '先让测试通过' }] })
 })

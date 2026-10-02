@@ -387,6 +387,24 @@ export class CodexAppServerWire {
   }
 
   /**
+   * Add a person's input to the active turn through `turn/steer`, guarded by the
+   * committed turn id so input never lands on a different turn.
+   * @param texts - non-empty text blocks delivered as user input.
+   * @param signal - caller cancellation before Codex accepts the input.
+   * @throws when no turn is active, the connection closed, or Codex refused the input.
+   */
+  async steer(texts: readonly string[], signal: AbortSignal): Promise<void> {
+    if (this.threadId === undefined || this.turnId === undefined || this.terminalObserved || this.closed) {
+      throw new Error('subagent-codex: no active turn accepts input')
+    }
+    await this.guarded(this.transport.request('turn/steer', {
+      threadId: this.threadId,
+      expectedTurnId: this.turnId,
+      input: texts.map(text => ({ type: 'text', text, text_elements: [] })),
+    }, signal), signal)
+  }
+
+  /**
    * Best-effort remote cancellation. Local settlement and process teardown
    * remain authoritative when the child no longer accepts protocol requests.
    */

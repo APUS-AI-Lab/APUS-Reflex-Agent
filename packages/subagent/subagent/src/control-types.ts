@@ -106,6 +106,31 @@ export interface SubagentPromptReceipt {
   readonly messageId: MessageId
 }
 
+/**
+ * Identity of one accepted subagent run across its lifecycle events. The
+ * Host-side constructor lives in `./types.ts`; the brand is spelled here so
+ * this module stays free of Host imports.
+ */
+export type SubagentLiveRunId = Branded<'SubagentRunId'>
+
+/** Upper bound, in UTF-16 code units, of one mid-run input text. */
+export type SubagentSteerMaxChars = 2000
+
+/** One human input addressed to a running one-shot child. */
+export interface SubagentSteerRequest {
+  /** The lifecycle run id carried by `subagent/start`. */
+  readonly runId: SubagentLiveRunId
+  /** The delegating parent whose authority is claimed. */
+  readonly parentSessionId: SessionId
+  /** Non-blank text of at most {@link SubagentSteerMaxChars} code units. */
+  readonly text: string
+}
+
+/** Acknowledgement that the child accepted one mid-run input. */
+export interface SubagentSteerReceipt {
+  readonly accepted: true
+}
+
 /** Uniform acknowledgement that one interrupt request was admitted. */
 export interface SubagentInterruptReceipt {
   readonly accepted: true
@@ -136,5 +161,7 @@ declare module '@deepseek-ai/dsh-typert-protocol' {
     'subagent/attachment-invalid': { readonly reason: string }
     /** The child exists but its inbox cannot admit the message now. */
     'subagent/delivery-unavailable': { readonly childSessionId: SessionId }
+    /** The addressed run is not live, does not accept mid-run input, or refused it. */
+    'subagent/not-steerable': { readonly runId: SubagentLiveRunId }
   }
 }

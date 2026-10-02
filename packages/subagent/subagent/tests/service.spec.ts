@@ -6,6 +6,7 @@ import { HarnessError, ReasoningEffortId } from '@deepseek-ai/dsh-llm'
 import { carrierKeyOf } from '@deepseek-ai/dsh-scope'
 import SubagentRuntime, {
   SUBAGENT_ACTIVITY_NOTE_MAX_CHARS,
+  SUBAGENT_STEER_MAX_CHARS,
   foldSubagentDescriptor,
   snapshotSubagentDescriptor,
   SUBAGENT_DESCRIPTOR_VERSION,
@@ -17,6 +18,7 @@ import SubagentRuntime, {
   type SubagentResult,
   type SubagentRun,
   type SubagentRunEndInfo,
+  type SubagentRunInfo,
   type SubagentStartRequest,
 } from '@deepseek-ai/dsh-subagent'
 import { Session, SessionId, type SessionEvent } from '@deepseek-ai/dsh-session'
@@ -295,6 +297,100 @@ describe('SubagentRuntime', () => {
     expect(notes).toEqual(['Reading the parser first.', undefined,
       `${'x'.repeat(SUBAGENT_ACTIVITY_NOTE_MAX_CHARS - 1)}…`, 'y'.repeat(SUBAGENT_ACTIVITY_NOTE_MAX_CHARS)])
     result.resolve({ output: [], stopReason: 'completed' })
+  })
+
+  describe('steerByParent', () => {
+    function steeringParent(id: string): { agent: Agent; append: ReturnType<typeof vi.fn> } {
+      const append = vi.fn()
+      return { agent: Object.assign(fakeParent(id), { session: { id: SessionId(id), append } }), append }
+    }
+
+    async function steerableRun(steer: SubagentRun['steer']) {
+      const { ctx, subagents } = await service()
+      const result = Promise.withResolvers<SubagentResult>()
+      subagents.registerProvider({
+        name: 'steerable', capabilities: NO_CAPS, inheritsParentContext: false,
+        async start() {
+          return { id: SessionId('child'), localAgent: undefined, result: result.promise, async dispose() {}, ...steer === undefined ? {} : { steer } }
+        },
+      })
+      const starts: SubagentRunInfo[] = []
+      ctx.on('subagent/start', info => void starts.push(info))
+      const parent = steeringParent('delegator')
+      const run = await subagents.start('steerable', baseRequest({ parent: parent.agent }))
+      const runId = starts[0]!.runId
+      return { subagents, result, run, runId, starts, parent }
+    }
+
+    const signal = (): AbortSignal => new AbortController().signal
+
+    it('delivers text to the live run and records it in the parent Session after acceptance', async () => {
+      const steer = vi.fn(async () => {})
+      const { subagents, runId, starts, parent, result } = await steerableRun(steer)
+      expect(starts[0]!.steerable).toBe(true)
+      await expect(subagents.steerByParent({ runId, parentSessionId: SessionId('delegator'), text: 'use snake_case' }, signal()))
+        .resolves.toEqual({ accepted: true })
+      expect(steer).toHaveBeenCalledWith([{ type: 'text', text: 'use snake_case' }], expect.any(AbortSignal))
+      expect(parent.append).toHaveBeenCalledWith('subagent/steer', { version: 1, runId, provider: 'steerable', text: 'use snake_case' })
+      result.resolve({ output: [], stopReason: 'completed' })
+    })
+
+    it('refuses another parent, an unknown run, and a settled run without recording anything', async () => {
+      const steer = vi.fn(async () => {})
+      const { subagents, runId, parent, result, run } = await steerableRun(steer)
+      await expect(subagents.steerByParent({ runId, parentSessionId: SessionId('other'), text: 'x' }, signal()))
+        .rejects.toMatchObject({ code: 'subagent/not-steerable' })
+      await expect(subagents.steerByParent({ runId: 'missing' as typeof runId, parentSessionId: SessionId('delegator'), text: 'x' }, signal()))
+        .rejects.toMatchObject({ code: 'subagent/not-steerable' })
+      result.resolve({ output: [], stopReason: 'completed' })
+      await run.result
+      await expect(subagents.steerByParent({ runId, parentSessionId: SessionId('delegator'), text: 'x' }, signal()))
+        .rejects.toMatchObject({ code: 'subagent/not-steerable' })
+      expect(steer).not.toHaveBeenCalled()
+      expect(parent.append).not.toHaveBeenCalled()
+    })
+
+    it('forgets a run whose result rejects', async () => {
+      const { subagents, runId, result, run } = await steerableRun(async () => {})
+      result.reject(new Error('infrastructure'))
+      await run.result.catch(() => undefined)
+      await expect(subagents.steerByParent({ runId, parentSessionId: SessionId('delegator'), text: 'x' }, signal()))
+        .rejects.toMatchObject({ code: 'subagent/not-steerable' })
+    })
+
+    it('maps a refusal to not-steerable and caller cancellation to cancelled', async () => {
+      const controller = new AbortController()
+      const steer = vi.fn(async () => { throw new Error('turn ended') })
+      const { subagents, runId, parent, result } = await steerableRun(steer)
+      await expect(subagents.steerByParent({ runId, parentSessionId: SessionId('delegator'), text: 'x' }, signal()))
+        .rejects.toMatchObject({ code: 'subagent/not-steerable' })
+      controller.abort()
+      await expect(subagents.steerByParent({ runId, parentSessionId: SessionId('delegator'), text: 'x' }, controller.signal))
+        .rejects.toMatchObject({ code: 'gateway/cancelled' })
+      expect(parent.append).not.toHaveBeenCalled()
+      result.resolve({ output: [], stopReason: 'completed' })
+    })
+
+    it('rejects blank and oversized text before reaching the run', async () => {
+      const steer = vi.fn(async () => {})
+      const { subagents, runId, result } = await steerableRun(steer)
+      for (const text of ['   ', 'x'.repeat(SUBAGENT_STEER_MAX_CHARS + 1)]) {
+        await expect(subagents.steerByParent({ runId, parentSessionId: SessionId('delegator'), text }, signal()))
+          .rejects.toMatchObject({ code: 'gateway/bad-request' })
+      }
+      await expect(subagents.steerByParent({ runId, parentSessionId: SessionId('delegator'), text: 'y'.repeat(SUBAGENT_STEER_MAX_CHARS) }, signal()))
+        .resolves.toEqual({ accepted: true })
+      expect(steer).toHaveBeenCalledTimes(1)
+      result.resolve({ output: [], stopReason: 'completed' })
+    })
+
+    it('marks a run without input delivery as not steerable', async () => {
+      const { subagents, runId, starts, result } = await steerableRun(undefined)
+      expect(starts[0]!.steerable).toBe(false)
+      await expect(subagents.steerByParent({ runId, parentSessionId: SessionId('delegator'), text: 'x' }, signal()))
+        .rejects.toMatchObject({ code: 'subagent/not-steerable' })
+      result.resolve({ output: [], stopReason: 'completed' })
+    })
   })
 
   it('stops publishing steps once the run rejects', async () => {

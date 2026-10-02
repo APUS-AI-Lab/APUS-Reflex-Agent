@@ -33,6 +33,9 @@
       "path": "../../client/ui-session"
     },
     {
+      "path": "../../client/ui-primitives"
+    },
+    {
       "path": "../../client/ui-slots"
     },
     {
@@ -43,6 +46,9 @@
     },
     {
       "path": "../../api/remotes/tsconfig.client.json"
+    },
+    {
+      "path": "../../subagent/subagent"
     }
   ]
 }

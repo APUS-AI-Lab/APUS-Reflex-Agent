@@ -9,6 +9,7 @@ import type {} from './entry-routing.ts'
 import type {} from './skill-selection.ts'
 import type {} from './delegation.ts'
 import type {} from './delegation-progress.ts'
+import type {} from '@deepseek-ai/dsh-subagent'
 
 /** Host fold keeps request metadata private and exposes only the two public facts. */
 interface System3RuntimeState extends System3RuntimeView {
@@ -46,7 +47,8 @@ const viewSchema = z.object({
     selected: z.string().nullable(), injected: z.boolean(), elapsedMs: z.number() }).nullable(),
   subagentRun: z.object({ runId: z.string(), provider: z.string(), state: z.string(), startedAt: z.number(), elapsedMs: z.number(),
     completed: z.record(z.string(), z.number()), current: z.string().nullable(), lastStepAt: z.number().nullable(),
-    note: z.string().nullable(), alert: z.object({ kind: z.string(), elapsedMs: z.number() }).nullable() }).nullable(),
+    note: z.string().nullable(), alert: z.object({ kind: z.string(), elapsedMs: z.number() }).nullable(),
+    steerable: z.boolean(), steers: z.array(z.object({ text: z.string(), atMs: z.number() })) }).nullable(),
 })
 const stateSchema: ZodType<System3RuntimeState> = z.object({ entry: viewSchema.shape.entry, skill: viewSchema.shape.skill,
   subagentRun: viewSchema.shape.subagentRun,
@@ -54,6 +56,9 @@ const stateSchema: ZodType<System3RuntimeState> = z.object({ entry: viewSchema.s
   entryTurn: z.number().nullable(), startRequestId: requestId.nullable(),
   skillMessageId: z.string().transform(value => brandString<MessageId>(value)).nullable(),
   imageInSession: z.boolean(), route: z.object({ requestId, selection }).nullable() })
+
+/** Most recent accepted mid-run inputs kept per run for display. */
+const STEERS_KEPT = 3
 
 /** Content deltas and completed content blocks prove response; protocol-only records do not. */
 function hasResponseContent(stream: readonly AssistantStreamRecord[]): boolean {
@@ -64,7 +69,7 @@ function hasResponseContent(stream: readonly AssistantStreamRecord[]): boolean {
 
 /** Fold advice and adoption; confirm request use from output or a streamed attempt in the exact input turn. */
 export const system3RuntimeProjection = {
-  key: 'system3Runtime', stateVersion: 7, stateSchema,
+  key: 'system3Runtime', stateVersion: 8, stateSchema,
   init: () => ({ entry: null, skill: null, subagentRun: null, header: null, currentTurn: null, currentStep: null,
     entryTurn: null, startRequestId: null, skillMessageId: null, imageInSession: false, route: null }),
   wire: { viewSchema, view: state => ({ entry: state.entry, skill: state.skill, subagentRun: state.subagentRun }) },
@@ -129,12 +134,18 @@ export const system3RuntimeProjection = {
       }
     }
     if (event.type === 'system3/delegation-progress') {
-      const { version: _version, lastStepAt = null, note = null, ...run } = event.data
+      const { version: _version, lastStepAt = null, note = null, steerable = false, ...run } = event.data
       const previous = state.subagentRun?.runId === run.runId ? state.subagentRun : null
       // Overtime stays relevant while the run continues; a missing step is answered by the next step.
       const alert = run.state !== 'running' || previous?.alert == null ? null
         : previous.alert.kind === 'overtime' || lastStepAt === previous.lastStepAt ? previous.alert : null
-      return { ...state, subagentRun: { ...run, lastStepAt, note, alert } }
+      return { ...state, subagentRun: { ...run, lastStepAt, note, alert, steerable: steerable && run.state === 'running',
+        steers: previous?.steers ?? [] } }
+    }
+    if (event.type === 'subagent/steer' && state.subagentRun?.runId === event.data.runId) {
+      const steer = { text: event.data.text, atMs: Math.max(0, event.time - state.subagentRun.startedAt) }
+      return { ...state, subagentRun: { ...state.subagentRun,
+        steers: [...state.subagentRun.steers, steer].slice(-STEERS_KEPT) } }
     }
     if (event.type === 'system3/delegation-alert' && state.subagentRun?.runId === event.data.runId
       && state.subagentRun.state === 'running') {
