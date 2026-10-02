@@ -8,6 +8,7 @@ import type { System3RuntimeView } from './types.ts'
 import type {} from './entry-routing.ts'
 import type {} from './skill-selection.ts'
 import type {} from './delegation.ts'
+import type {} from './delegation-progress.ts'
 
 /** Host fold keeps request metadata private and exposes only the two public facts. */
 interface System3RuntimeState extends System3RuntimeView {
@@ -43,8 +44,11 @@ const viewSchema = z.object({
   }).nullable(),
   skill: z.object({ requestId: requestId.nullable(), turn: z.number(), step: z.number(), outcome: z.string(),
     selected: z.string().nullable(), injected: z.boolean(), elapsedMs: z.number() }).nullable(),
+  subagentRun: z.object({ runId: z.string(), provider: z.string(), state: z.string(), startedAt: z.number(), elapsedMs: z.number(),
+    completed: z.record(z.string(), z.number()), current: z.string().nullable() }).nullable(),
 })
 const stateSchema: ZodType<System3RuntimeState> = z.object({ entry: viewSchema.shape.entry, skill: viewSchema.shape.skill,
+  subagentRun: viewSchema.shape.subagentRun,
   header: selection.nullable(), currentTurn: z.number().nullable(), currentStep: z.number().nullable(),
   entryTurn: z.number().nullable(), startRequestId: requestId.nullable(),
   skillMessageId: z.string().transform(value => brandString<MessageId>(value)).nullable(),
@@ -59,10 +63,10 @@ function hasResponseContent(stream: readonly AssistantStreamRecord[]): boolean {
 
 /** Fold advice and adoption; confirm request use from output or a streamed attempt in the exact input turn. */
 export const system3RuntimeProjection = {
-  key: 'system3Runtime', stateVersion: 4, stateSchema,
-  init: () => ({ entry: null, skill: null, header: null, currentTurn: null, currentStep: null,
+  key: 'system3Runtime', stateVersion: 5, stateSchema,
+  init: () => ({ entry: null, skill: null, subagentRun: null, header: null, currentTurn: null, currentStep: null,
     entryTurn: null, startRequestId: null, skillMessageId: null, imageInSession: false, route: null }),
-  wire: { viewSchema, view: state => ({ entry: state.entry, skill: state.skill }) },
+  wire: { viewSchema, view: state => ({ entry: state.entry, skill: state.skill, subagentRun: state.subagentRun }) },
   apply(state, event) {
     if (!state.imageInSession && (event.type === 'user/message' || event.type === 'tool/result')) {
       const content = event.type === 'user/message' ? event.data.content : event.data.message.content
@@ -122,6 +126,10 @@ export const system3RuntimeProjection = {
       if (event.type === 'tool/call' && delegation.injected && !delegation.called && event.data.name === delegation.tool) {
         return { ...state, entry: { ...state.entry, route: { ...state.entry.route, delegation: { ...delegation, called: true } } } }
       }
+    }
+    if (event.type === 'system3/delegation-progress') {
+      const { version: _version, ...run } = event.data
+      return { ...state, subagentRun: run }
     }
     if (event.type === 'system3/skill-decision') return { ...state, skillMessageId: event.data.injectionMessageId ?? null, skill: { requestId: event.data.requestId,
       turn: event.data.turn, step: event.data.step, outcome: event.data.outcome,

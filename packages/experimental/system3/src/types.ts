@@ -36,10 +36,26 @@ export interface System3SkillView {
   readonly elapsedMs: number
 }
 
-/** Latest entry and Skill facts; no prompt bodies or provider probabilities leave the Host. */
+/** Latest progress snapshot of a subagent run delegated by this Session's Agent. */
+export interface System3SubagentRunView {
+  readonly runId: string
+  readonly provider: string
+  /** `running` until the run settles, then its stop reason. */
+  readonly state: string
+  /** Host wall-clock milliseconds when the run started; the Client derives live elapsed time from it. */
+  readonly startedAt: number
+  readonly elapsedMs: number
+  /** Completed steps per category. */
+  readonly completed: Readonly<Record<string, number>>
+  /** Category of the step in progress, or null. */
+  readonly current: string | null
+}
+
+/** Latest entry, Skill, and delegated-run facts; no prompt bodies, child content, or provider probabilities leave the Host. */
 export interface System3RuntimeView {
   readonly entry: System3EntryView | null
   readonly skill: System3SkillView | null
+  readonly subagentRun: System3SubagentRunView | null
 }
 
 declare module '@deepseek-ai/dsh-session-projection/types' {

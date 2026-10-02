@@ -16917,6 +16917,236 @@
       }
     },
     {
+      "key": "event:system3/delegation-progress",
+      "kind": "event",
+      "event": "system3/delegation-progress",
+      "surface": false,
+      "digest": "b7a5287089022cc0d2f384d42fef9d4b853a4192785d29543b9502569d12423b",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "data",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "ignorable",
+                "type": 22,
+                "optional": true
+              },
+              {
+                "name": "seq",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "time",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 23,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "completed",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "current",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "elapsedMs",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "provider",
+                "type": 13,
+                "optional": false
+              },
+              {
+                "name": "runId",
+                "type": 13,
+                "optional": false
+              },
+              {
+                "name": "startedAt",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "state",
+                "type": 14,
+                "optional": false
+              },
+              {
+                "name": "version",
+                "type": 21,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "command",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "file-change",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "message",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "other",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "reasoning",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "tool",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "web-search",
+                "type": 3,
+                "optional": true
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "union",
+            "types": [
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "command"
+          },
+          {
+            "kind": "primitive",
+            "type": "null"
+          },
+          {
+            "kind": "literal",
+            "value": "file-change"
+          },
+          {
+            "kind": "literal",
+            "value": "message"
+          },
+          {
+            "kind": "literal",
+            "value": "other"
+          },
+          {
+            "kind": "literal",
+            "value": "reasoning"
+          },
+          {
+            "kind": "literal",
+            "value": "tool"
+          },
+          {
+            "kind": "literal",
+            "value": "web-search"
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "union",
+            "types": [
+              15,
+              16,
+              17,
+              18,
+              19,
+              20
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "aborted"
+          },
+          {
+            "kind": "literal",
+            "value": "completed"
+          },
+          {
+            "kind": "literal",
+            "value": "error"
+          },
+          {
+            "kind": "literal",
+            "value": "max-tokens"
+          },
+          {
+            "kind": "literal",
+            "value": "running"
+          },
+          {
+            "kind": "literal",
+            "value": "refusal"
+          },
+          {
+            "kind": "literal",
+            "value": 1
+          },
+          {
+            "kind": "literal",
+            "value": true
+          },
+          {
+            "kind": "literal",
+            "value": "system3/delegation-progress"
+          }
+        ]
+      }
+    },
+    {
       "key": "event:system3/entry-decision",
       "kind": "event",
       "event": "system3/entry-decision",
@@ -31958,6 +32188,61 @@
       "sources": [
         "packages/attachment/attachment/src/types.ts:28"
       ]
+    },
+    {
+      "digest": "0f5fca3b535342217224ea654c18c7dc0edb697c81d1a196dff8c3814b69badb",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "command",
+                "type": 1,
+                "optional": true
+              },
+              {
+                "name": "file-change",
+                "type": 1,
+                "optional": true
+              },
+              {
+                "name": "message",
+                "type": 1,
+                "optional": true
+              },
+              {
+                "name": "other",
+                "type": 1,
+                "optional": true
+              },
+              {
+                "name": "reasoning",
+                "type": 1,
+                "optional": true
+              },
+              {
+                "name": "tool",
+                "type": 1,
+                "optional": true
+              },
+              {
+                "name": "web-search",
+                "type": 1,
+                "optional": true
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
     },
     {
       "digest": "0f8512903d94f57a4748fa1a2092e64342856796684e6b8343db685b192745ce",
@@ -56531,6 +56816,20 @@
       ]
     },
     {
+      "digest": "38a6e586c189de7265bbf6284218b30c46dd6e62d5d1b529d8e207acd787e06d",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "system3/delegation-progress"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "390eed1028aba02774f14408647acec10ec5516e97d4f15ecde2b9989d5a69f2",
       "schema": {
         "root": 0,
@@ -60079,6 +60378,20 @@
       "sources": []
     },
     {
+      "digest": "4a561c111a78d4520e850c93795369ea169ff86abd082aee86c8fd38121a65aa",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "refusal"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "4a9bef9f27a942520cc2279ca7dd3082556e4bff543f66b5c0333e1bbed1cd86",
       "schema": {
         "root": 0,
@@ -60133,6 +60446,20 @@
           {
             "kind": "literal",
             "value": "llm/retry-started"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "4ae7e51ab2db1203b06edae4998f5f79f8cbed303a5b0c8399a52d18349c88fc",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "message"
           }
         ]
       },
@@ -75507,6 +75834,51 @@
       "sources": []
     },
     {
+      "digest": "8593d5a9b4e715075627aed3d47c24e8a6c6fc81b02c870890cff89f77ef2d82",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "union",
+            "types": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "aborted"
+          },
+          {
+            "kind": "literal",
+            "value": "completed"
+          },
+          {
+            "kind": "literal",
+            "value": "error"
+          },
+          {
+            "kind": "literal",
+            "value": "max-tokens"
+          },
+          {
+            "kind": "literal",
+            "value": "refusal"
+          },
+          {
+            "kind": "literal",
+            "value": "running"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "85f9b505b7bdff1f61845c4cea8f36fd0fde1b62facbe87d8924d1d27e616f3a",
       "schema": {
         "root": 0,
@@ -81868,6 +82240,20 @@
       ]
     },
     {
+      "digest": "8ed95ba327629b7b82a310821fe669574a86c1ee2d3e1d58998942857f4e8b3f",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "web-search"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "8f324cea3916c0517261e88167def8efb3a9994c1135e23d40ed9fd48f8c7bd4",
       "schema": {
         "root": 0,
@@ -82001,6 +82387,199 @@
       },
       "names": [],
       "sources": []
+    },
+    {
+      "digest": "905648e0d17a4ce923c115f31fb3be2416e16a7f7c23792f35937edc89ea19f6",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "completed",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "current",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "elapsedMs",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "provider",
+                "type": 12,
+                "optional": false
+              },
+              {
+                "name": "runId",
+                "type": 12,
+                "optional": false
+              },
+              {
+                "name": "startedAt",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "state",
+                "type": 13,
+                "optional": false
+              },
+              {
+                "name": "version",
+                "type": 20,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "command",
+                "type": 2,
+                "optional": true
+              },
+              {
+                "name": "file-change",
+                "type": 2,
+                "optional": true
+              },
+              {
+                "name": "message",
+                "type": 2,
+                "optional": true
+              },
+              {
+                "name": "other",
+                "type": 2,
+                "optional": true
+              },
+              {
+                "name": "reasoning",
+                "type": 2,
+                "optional": true
+              },
+              {
+                "name": "tool",
+                "type": 2,
+                "optional": true
+              },
+              {
+                "name": "web-search",
+                "type": 2,
+                "optional": true
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "union",
+            "types": [
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "command"
+          },
+          {
+            "kind": "literal",
+            "value": "file-change"
+          },
+          {
+            "kind": "literal",
+            "value": "message"
+          },
+          {
+            "kind": "literal",
+            "value": "other"
+          },
+          {
+            "kind": "literal",
+            "value": "reasoning"
+          },
+          {
+            "kind": "literal",
+            "value": "tool"
+          },
+          {
+            "kind": "literal",
+            "value": "web-search"
+          },
+          {
+            "kind": "primitive",
+            "type": "null"
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "union",
+            "types": [
+              14,
+              15,
+              16,
+              17,
+              18,
+              19
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "aborted"
+          },
+          {
+            "kind": "literal",
+            "value": "completed"
+          },
+          {
+            "kind": "literal",
+            "value": "error"
+          },
+          {
+            "kind": "literal",
+            "value": "max-tokens"
+          },
+          {
+            "kind": "literal",
+            "value": "running"
+          },
+          {
+            "kind": "literal",
+            "value": "refusal"
+          },
+          {
+            "kind": "literal",
+            "value": 1
+          }
+        ]
+      },
+      "names": [
+        "packages/experimental/system3/src/delegation-progress.ts#System3DelegationProgress"
+      ],
+      "sources": [
+        "packages/experimental/system3/src/delegation-progress.ts:15"
+      ]
     },
     {
       "digest": "92d4a6cdd653e857958b4ab7cfe9b1b1ec36010d6f3d26997ab16b6886323a57",
@@ -84175,6 +84754,61 @@
           {
             "kind": "literal",
             "value": "ask"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "9e235ea7f2a3560bf61b17a203bd5da0355dc0a22e464011acf23571b63b9af3",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "union",
+            "types": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "command"
+          },
+          {
+            "kind": "literal",
+            "value": "file-change"
+          },
+          {
+            "kind": "literal",
+            "value": "message"
+          },
+          {
+            "kind": "literal",
+            "value": "other"
+          },
+          {
+            "kind": "literal",
+            "value": "reasoning"
+          },
+          {
+            "kind": "literal",
+            "value": "tool"
+          },
+          {
+            "kind": "literal",
+            "value": "web-search"
+          },
+          {
+            "kind": "primitive",
+            "type": "null"
           }
         ]
       },
@@ -89074,6 +89708,234 @@
           {
             "kind": "literal",
             "value": "subagent/descriptor"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "b7a5287089022cc0d2f384d42fef9d4b853a4192785d29543b9502569d12423b",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "data",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "ignorable",
+                "type": 22,
+                "optional": true
+              },
+              {
+                "name": "seq",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "time",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 23,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "completed",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "current",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "elapsedMs",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "provider",
+                "type": 13,
+                "optional": false
+              },
+              {
+                "name": "runId",
+                "type": 13,
+                "optional": false
+              },
+              {
+                "name": "startedAt",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "state",
+                "type": 14,
+                "optional": false
+              },
+              {
+                "name": "version",
+                "type": 21,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "command",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "file-change",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "message",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "other",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "reasoning",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "tool",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "web-search",
+                "type": 3,
+                "optional": true
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "union",
+            "types": [
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "command"
+          },
+          {
+            "kind": "primitive",
+            "type": "null"
+          },
+          {
+            "kind": "literal",
+            "value": "file-change"
+          },
+          {
+            "kind": "literal",
+            "value": "message"
+          },
+          {
+            "kind": "literal",
+            "value": "other"
+          },
+          {
+            "kind": "literal",
+            "value": "reasoning"
+          },
+          {
+            "kind": "literal",
+            "value": "tool"
+          },
+          {
+            "kind": "literal",
+            "value": "web-search"
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "union",
+            "types": [
+              15,
+              16,
+              17,
+              18,
+              19,
+              20
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "aborted"
+          },
+          {
+            "kind": "literal",
+            "value": "completed"
+          },
+          {
+            "kind": "literal",
+            "value": "error"
+          },
+          {
+            "kind": "literal",
+            "value": "max-tokens"
+          },
+          {
+            "kind": "literal",
+            "value": "running"
+          },
+          {
+            "kind": "literal",
+            "value": "refusal"
+          },
+          {
+            "kind": "literal",
+            "value": 1
+          },
+          {
+            "kind": "literal",
+            "value": true
+          },
+          {
+            "kind": "literal",
+            "value": "system3/delegation-progress"
           }
         ]
       },
@@ -94223,6 +95085,20 @@
       ]
     },
     {
+      "digest": "c2ebc21942a0cc9ab804555cf917e6b3b10a5ec9d88fc2ac6e44dd8ba21b9d2b",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "command"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "c43b119ce579b3e9983a0d3adc4ba402ebb9ba773d89738a2dab01ecf5813943",
       "schema": {
         "root": 0,
@@ -94434,6 +95310,20 @@
       "sources": [
         "packages/util/values/src/index.ts:4"
       ]
+    },
+    {
+      "digest": "c6e4fa548c431804f6adebfaed3e343205c813699d2a191f990a7b1133e8c5ba",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "running"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
     },
     {
       "digest": "c748fb42c80a120038a8c587af80ec39924803c401364db11c8974d5bf6d0262",
@@ -103487,6 +104377,20 @@
           {
             "kind": "literal",
             "value": "instruction-following"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "e51f28b6c668c696b89e99f9cbb4d9e42de5254401c424894e20896cf2b6aec8",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "file-change"
           }
         ]
       },

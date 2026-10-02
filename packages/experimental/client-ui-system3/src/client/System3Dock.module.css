@@ -3,6 +3,7 @@
 .dot { width: 7px; height: 7px; flex: none; border-radius: 50%; background: #85929e; }
 .dot[data-active="true"] { background: #43a68c; box-shadow: 0 0 0 4px rgb(67 166 140 / 12%); }
 .route { color: var(--dsw-alias-label-secondary); overflow-wrap: anywhere; }
+.run { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 6px 0 2px; color: var(--dsw-alias-label-secondary); }
 .mode { margin-inline-start: auto; color: var(--dsw-alias-label-secondary); }
 .button { padding: 5px 10px; color: inherit; background: transparent; border: 1px solid var(--dsw-alias-border-l1); border-radius: 8px; cursor: pointer; font: inherit; min-height: 32px; }
 .button:disabled { opacity: 0.5; cursor: default; }

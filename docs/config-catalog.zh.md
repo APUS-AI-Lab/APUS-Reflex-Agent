@@ -1233,7 +1233,7 @@ export interface Config {
 ## `@deepseek-ai/dsh-experimental-system3`
 
 - `refs`: [`System3DataClass`](../packages/experimental/system3-policy/src/index.ts) · [`System3ExecutionDomain`](../packages/experimental/system3-policy/src/index.ts) · [`System3PrivacyMode`](../packages/experimental/system3-policy/src/index.ts)
-- `source`: [`packages/experimental/system3/src/index.ts:41`](../packages/experimental/system3/src/index.ts)
+- `source`: [`packages/experimental/system3/src/index.ts:43`](../packages/experimental/system3/src/index.ts)
 
 ```ts config-catalog
 /** Configures the default local-first privacy boundary. */
@@ -1258,6 +1258,8 @@ export interface Config {
   readonly entryRouting?: false | System3EntryRoutingConfig
   /** Opt-in scoped Skill advice and native pre-step instruction injection. */
   readonly skillSelection?: false | System3SkillSelectionConfig
+  /** Opt-in persistent progress snapshots of subagent runs, written to the delegating Agent's Session. */
+  readonly delegationProgress?: false | System3DelegationProgressConfig
 }
 
 /** Explicit controls for entry recommendations; omission leaves entry routing disabled. */
@@ -1303,6 +1305,12 @@ export interface System3SkillSelectionConfig {
   readonly maxCandidates: number
   /** Total catalog, Jev and body-loading deadline, within the Node timer range. */
   readonly deadlineMs: number
+}
+
+/** How often a running subagent's progress may be written to the parent Session. */
+export interface System3DelegationProgressConfig {
+  /** Minimum time between two running snapshots of one run; start and end are written at once. */
+  readonly intervalMs: number
 }
 
 /** One entry route Jev may choose. */

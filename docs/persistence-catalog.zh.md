@@ -66,6 +66,7 @@
 | `event:subagent/model-selection-policy` | event | `a6567ccb2e530606b775371eb4fa31468d72084339968e8b0440a516a23b39dc` | [`{ type: "subagent/model-selection-policy" }`](#persistence-type-sha256-a6567ccb2e530606b775371eb4fa31468d72084339968e8b0440a516a23b39dc) |
 | `event:system/message` | event | `69081694be231d56fd9580ba14645fd5e35373202605d5c5c841a9435b5fa3b1` | [`{ type: "system/message" }`](#persistence-type-sha256-69081694be231d56fd9580ba14645fd5e35373202605d5c5c841a9435b5fa3b1) |
 | `event:system3/decision` | event | `b923b60d7839c5e3d3e03be20abbe587b9029440c839b8459cd1672149f971fe` | [`{ type: "system3/decision" }`](#persistence-type-sha256-b923b60d7839c5e3d3e03be20abbe587b9029440c839b8459cd1672149f971fe) |
+| `event:system3/delegation-progress` | event | `b7a5287089022cc0d2f384d42fef9d4b853a4192785d29543b9502569d12423b` | [`{ type: "system3/delegation-progress" }`](#persistence-type-sha256-b7a5287089022cc0d2f384d42fef9d4b853a4192785d29543b9502569d12423b) |
 | `event:system3/entry-decision` | event | `0cfb145b502a904af1045bbed75063afa0713b8155f27b54d2fcc0d0ff2e6f29` | [`{ type: "system3/entry-decision" }`](#persistence-type-sha256-0cfb145b502a904af1045bbed75063afa0713b8155f27b54d2fcc0d0ff2e6f29) |
 | `event:system3/entry-start` | event | `0f109d50397f1d347b2f62df20bd1e21a200c839428c8bca5449e8ed37ab633a` | [`{ type: "system3/entry-start" }`](#persistence-type-sha256-0f109d50397f1d347b2f62df20bd1e21a200c839428c8bca5449e8ed37ab633a) |
 | `event:system3/skill-decision` | event | `2da260ec5f7fe67028206d4c6254ff01a52dfe9a7f9aa67dedf72324ac4748ce` | [`{ type: "system3/skill-decision" }`](#persistence-type-sha256-2da260ec5f7fe67028206d4c6254ff01a52dfe9a7f9aa67dedf72324ac4748ce) |
@@ -1009,6 +1010,17 @@ export type SessionEvent<T extends SessionEventType = SessionEventType> = {
 
 来源：[`packages/experimental/system3/src/decisions.ts:54`](../packages/experimental/system3/src/decisions.ts)
 
+<a id="system3delegation-progress--log-only"></a>
+
+#### `system3/delegation-progress` — log-only
+
+```ts persistence-catalog
+/** Throttled progress of a subagent run delegated by this Session's Agent; carries step categories, never child content. */
+'system3/delegation-progress': System3DelegationProgress
+```
+
+来源：[`packages/experimental/system3/src/delegation-progress.ts:36`](../packages/experimental/system3/src/delegation-progress.ts)
+
 <a id="system3entry-decision--log-only"></a>
 
 #### `system3/entry-decision` — log-only
@@ -1645,6 +1657,14 @@ SHA-256: `15495614ccfa9cbdeefb0ec2abd76406435f4c6ff3dae42acae8e09ef42025c9`
 
 `"codex"`
 
+<a id="persistence-type-sha256-c2ebc21942a0cc9ab804555cf917e6b3b10a5ec9d88fc2ac6e44dd8ba21b9d2b"></a>
+
+### `"command"`
+
+SHA-256: `c2ebc21942a0cc9ab804555cf917e6b3b10a5ec9d88fc2ac6e44dd8ba21b9d2b`
+
+`"command"`
+
 <a id="persistence-type-sha256-8cdd3fdd295cee53035de16a1b23411716f75e9f994fe9510cac5d7fef605c76"></a>
 
 ### `"command/done"`
@@ -1924,6 +1944,14 @@ SHA-256: `c99e20441bf15341e9db54385e558e5c03d21dff2eb1ac08ccbf47c2d8747954`
 SHA-256: `277b61f9c6f8170425fa6ffe06cfa14376757a896a4749cb82a687d7364c4fc9`
 
 `"file"`
+
+<a id="persistence-type-sha256-e51f28b6c668c696b89e99f9cbb4d9e42de5254401c424894e20896cf2b6aec8"></a>
+
+### `"file-change"`
+
+SHA-256: `e51f28b6c668c696b89e99f9cbb4d9e42de5254401c424894e20896cf2b6aec8`
+
+`"file-change"`
 
 <a id="persistence-type-sha256-bd499eac047efe091a4df7382eadd06d25cf0cb31fee3981e8b24d85762841cd"></a>
 
@@ -2210,6 +2238,14 @@ SHA-256: `7323b652385626ddcc2507d8309bcf7db97854bae245ce5bc6837659dc56dfe2`
 SHA-256: `68141cbe3994a5ffcd064c07c75996538437fd9dbf77ce8a2927e89ec577fabe`
 
 `"max-tokens"`
+
+<a id="persistence-type-sha256-4ae7e51ab2db1203b06edae4998f5f79f8cbed303a5b0c8399a52d18349c88fc"></a>
+
+### `"message"`
+
+SHA-256: `4ae7e51ab2db1203b06edae4998f5f79f8cbed303a5b0c8399a52d18349c88fc`
+
+`"message"`
 
 <a id="persistence-type-sha256-b5b21712bbaf2325b5e0fd683bcea7e8b11d633b79f0d1a057c3323e796de81b"></a>
 
@@ -2563,6 +2599,14 @@ SHA-256: `383cf73ae4748e5beb281ae74857ba1ffb92ae01075b9fbf51af78b666007a8f`
 
 `"recall"`
 
+<a id="persistence-type-sha256-4a561c111a78d4520e850c93795369ea169ff86abd082aee86c8fd38121a65aa"></a>
+
+### `"refusal"`
+
+SHA-256: `4a561c111a78d4520e850c93795369ea169ff86abd082aee86c8fd38121a65aa`
+
+`"refusal"`
+
 <a id="persistence-type-sha256-fab35c4520883c0d69e42d079c9f543fc5ac7a2d15b537b5572fcd99059c7018"></a>
 
 ### `"rejected"`
@@ -2642,6 +2686,14 @@ SHA-256: `34d1ab5c5df378186d6054b1a1beea9a41e41965d6f336f0bc0025c441a82e66`
 SHA-256: `63ba8895cc09e4693cf0819fdcd18c084bef195febda5b6a23af279b3852be36`
 
 `"retry"`
+
+<a id="persistence-type-sha256-c6e4fa548c431804f6adebfaed3e343205c813699d2a191f990a7b1133e8c5ba"></a>
+
+### `"running"`
+
+SHA-256: `c6e4fa548c431804f6adebfaed3e343205c813699d2a191f990a7b1133e8c5ba`
+
+`"running"`
 
 <a id="persistence-type-sha256-24b10f7cdae64928f89c49afc2eca0af9eb4a2f135e16f3416e6b8461fef1748"></a>
 
@@ -2938,6 +2990,14 @@ SHA-256: `fc9ea50524729ee321154670cf9ef23a5b0cc0ce6d9f9f03534e4aeae29ab4f4`
 SHA-256: `d74872f6b1aa352f81a5680d445f517d81ead9e575664893712978ceb90b5064`
 
 `"system3/decision"`
+
+<a id="persistence-type-sha256-38a6e586c189de7265bbf6284218b30c46dd6e62d5d1b529d8e207acd787e06d"></a>
+
+### `"system3/delegation-progress"`
+
+SHA-256: `38a6e586c189de7265bbf6284218b30c46dd6e62d5d1b529d8e207acd787e06d`
+
+`"system3/delegation-progress"`
 
 <a id="persistence-type-sha256-f432bdf263098069d7487bf8fed6695d0ca84cb57d26f3dc750b2231043e6aca"></a>
 
@@ -3298,6 +3358,14 @@ SHA-256: `f68c335306535a001127dae6685ece493a0ee7f4e2a851197b6054d8a9ff7394`
 SHA-256: `de25352d2dc4196309bd84b5bac6319f6d5c898ea0e82bb5ae66c5738d0d426f`
 
 `"user/message"`
+
+<a id="persistence-type-sha256-8ed95ba327629b7b82a310821fe669574a86c1ee2d3e1d58998942857f4e8b3f"></a>
+
+### `"web-search"`
+
+SHA-256: `8ed95ba327629b7b82a310821fe669574a86c1ee2d3e1d58998942857f4e8b3f`
+
+`"web-search"`
 
 <a id="persistence-type-sha256-6f611bed14b2106542480c4a230b4a83baf76dc0d8ac0cd13319a7cb8dae7675"></a>
 
@@ -5413,6 +5481,29 @@ SHA-256: `ec42fc5b82fe479e4b3a5c61a755250c783a1fb46940b06def7bd4b71fe1d00c`
 | `turn` | 可选 | `number` |
 | `version` | 必需 | `1` |
 
+<a id="persistence-type-sha256-905648e0d17a4ce923c115f31fb3be2416e16a7f7c23792f35937edc89ea19f6"></a>
+
+<a id="persistence-type-packagesexperimentalsystem3srcdelegation-progresstssystem3delegationprogress"></a>
+
+<a id="persistence-type-system3delegationprogress"></a>
+
+### `System3DelegationProgress`
+
+SHA-256: `905648e0d17a4ce923c115f31fb3be2416e16a7f7c23792f35937edc89ea19f6`
+
+来源：[`packages/experimental/system3/src/delegation-progress.ts:15`](../packages/experimental/system3/src/delegation-progress.ts)
+
+| 属性 | 存在性 | 类型 |
+|---|---|---|
+| `completed` | 必需 | [`{ command?, file-change?, message?, other?, … }`](#persistence-type-sha256-0f5fca3b535342217224ea654c18c7dc0edb697c81d1a196dff8c3814b69badb) |
+| `current` | 必需 | [`union (8 variants)`](#persistence-type-sha256-9e235ea7f2a3560bf61b17a203bd5da0355dc0a22e464011acf23571b63b9af3) |
+| `elapsedMs` | 必需 | `number` |
+| `provider` | 必需 | `string` |
+| `runId` | 必需 | `string` |
+| `startedAt` | 必需 | `number` |
+| `state` | 必需 | [`union (6 variants)`](#persistence-type-sha256-8593d5a9b4e715075627aed3d47c24e8a6c6fc81b02c870890cff89f77ef2d82) |
+| `version` | 必需 | `1` |
+
 <a id="persistence-type-sha256-42a78477f622034f05ace9fda7264c5dcb524b815eb10078b9bf35b4c091be0e"></a>
 
 <a id="persistence-type-packagesexperimentalsystem3srcdelegationtssystem3delegationsource"></a>
@@ -6465,6 +6556,21 @@ SHA-256: `62e6a429ff3f390a46ac39fb468692032f42936ca0db19b53454184189401379`
 - `"pause"`
 - `"resume"`
 
+<a id="persistence-type-sha256-8593d5a9b4e715075627aed3d47c24e8a6c6fc81b02c870890cff89f77ef2d82"></a>
+
+### `union (6 variants)`
+
+SHA-256: `8593d5a9b4e715075627aed3d47c24e8a6c6fc81b02c870890cff89f77ef2d82`
+
+以下类型之一：
+
+- `"aborted"`
+- `"completed"`
+- `"error"`
+- `"max-tokens"`
+- `"refusal"`
+- `"running"`
+
 <a id="persistence-type-sha256-3305a4bb6b6c29b482ba91d59c60b47e8f98282d3dacc8c29e4a4c2712209bdd"></a>
 
 ### `union (7 variants)`
@@ -6496,6 +6602,23 @@ SHA-256: `34e707d2606754b4c1fb67848d10beba9465e0a3384514116671da689240e397`
 - `"missing-evidence"`
 - `"stale-goal"`
 - `"unknown-checks"`
+
+<a id="persistence-type-sha256-9e235ea7f2a3560bf61b17a203bd5da0355dc0a22e464011acf23571b63b9af3"></a>
+
+### `union (8 variants)`
+
+SHA-256: `9e235ea7f2a3560bf61b17a203bd5da0355dc0a22e464011acf23571b63b9af3`
+
+以下类型之一：
+
+- `"command"`
+- `"file-change"`
+- `"message"`
+- `"other"`
+- `"reasoning"`
+- `"tool"`
+- `"web-search"`
+- `null`
 
 <a id="persistence-type-sha256-5735a078c45c17326d364f5c682da35cf32bd9b6ce031d996216e581e6364c21"></a>
 
@@ -6766,6 +6889,22 @@ SHA-256: `a81059ca06999da1e712414520c2c65e491d052fcf9640fae20aa38f0a5dc735`
 | `code` | 必需 | `string` |
 | `name` | 必需 | `string` |
 | `reason` | 可选 | `string` |
+
+<a id="persistence-type-sha256-0f5fca3b535342217224ea654c18c7dc0edb697c81d1a196dff8c3814b69badb"></a>
+
+### `{ command?, file-change?, message?, other?, … }`
+
+SHA-256: `0f5fca3b535342217224ea654c18c7dc0edb697c81d1a196dff8c3814b69badb`
+
+| 属性 | 存在性 | 类型 |
+|---|---|---|
+| `command` | 可选 | `number` |
+| `file-change` | 可选 | `number` |
+| `message` | 可选 | `number` |
+| `other` | 可选 | `number` |
+| `reasoning` | 可选 | `number` |
+| `tool` | 可选 | `number` |
+| `web-search` | 可选 | `number` |
 
 <a id="persistence-type-sha256-5b6fb1f226ff56402db08a6aae82af76100b14056271875f69ec526a1ae05d51"></a>
 
@@ -9551,6 +9690,22 @@ SHA-256: `b923b60d7839c5e3d3e03be20abbe587b9029440c839b8459cd1672149f971fe`
 | `seq` | 必需 | `number` |
 | `time` | 必需 | `number` |
 | `type` | 必需 | `"system3/decision"` |
+
+<a id="persistence-type-sha256-b7a5287089022cc0d2f384d42fef9d4b853a4192785d29543b9502569d12423b"></a>
+
+<a id="persistence-type-eventsystem3delegation-progress"></a>
+
+### `{ type: "system3/delegation-progress" }`
+
+SHA-256: `b7a5287089022cc0d2f384d42fef9d4b853a4192785d29543b9502569d12423b`
+
+| 属性 | 存在性 | 类型 |
+|---|---|---|
+| `data` | 必需 | [`System3DelegationProgress`](#persistence-type-sha256-905648e0d17a4ce923c115f31fb3be2416e16a7f7c23792f35937edc89ea19f6) |
+| `ignorable` | 可选 | `true` |
+| `seq` | 必需 | `number` |
+| `time` | 必需 | `number` |
+| `type` | 必需 | `"system3/delegation-progress"` |
 
 <a id="persistence-type-sha256-0cfb145b502a904af1045bbed75063afa0713b8155f27b54d2fcc0d0ff2e6f29"></a>
 

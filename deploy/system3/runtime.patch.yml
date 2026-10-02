@@ -76,6 +76,8 @@
         jevRouteId: jev
         jevExecutionDomain: network
         jevEffort: high
+        delegationProgress:
+          intervalMs: 2000
         skillSelection:
           sessionDataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'
           minConfidence: 0.5

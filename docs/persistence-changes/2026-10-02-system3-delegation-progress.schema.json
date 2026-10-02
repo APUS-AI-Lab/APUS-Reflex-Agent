@@ -1,0 +1,236 @@
+{
+  "formatVersion": 2,
+  "roots": [
+    {
+      "key": "event:system3/delegation-progress",
+      "kind": "event",
+      "event": "system3/delegation-progress",
+      "surface": false,
+      "digest": "b7a5287089022cc0d2f384d42fef9d4b853a4192785d29543b9502569d12423b",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "data",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "ignorable",
+                "type": 22,
+                "optional": true
+              },
+              {
+                "name": "seq",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "time",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 23,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "completed",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "current",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "elapsedMs",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "provider",
+                "type": 13,
+                "optional": false
+              },
+              {
+                "name": "runId",
+                "type": 13,
+                "optional": false
+              },
+              {
+                "name": "startedAt",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "state",
+                "type": 14,
+                "optional": false
+              },
+              {
+                "name": "version",
+                "type": 21,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "command",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "file-change",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "message",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "other",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "reasoning",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "tool",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "web-search",
+                "type": 3,
+                "optional": true
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "union",
+            "types": [
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "command"
+          },
+          {
+            "kind": "primitive",
+            "type": "null"
+          },
+          {
+            "kind": "literal",
+            "value": "file-change"
+          },
+          {
+            "kind": "literal",
+            "value": "message"
+          },
+          {
+            "kind": "literal",
+            "value": "other"
+          },
+          {
+            "kind": "literal",
+            "value": "reasoning"
+          },
+          {
+            "kind": "literal",
+            "value": "tool"
+          },
+          {
+            "kind": "literal",
+            "value": "web-search"
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "union",
+            "types": [
+              15,
+              16,
+              17,
+              18,
+              19,
+              20
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "aborted"
+          },
+          {
+            "kind": "literal",
+            "value": "completed"
+          },
+          {
+            "kind": "literal",
+            "value": "error"
+          },
+          {
+            "kind": "literal",
+            "value": "max-tokens"
+          },
+          {
+            "kind": "literal",
+            "value": "running"
+          },
+          {
+            "kind": "literal",
+            "value": "refusal"
+          },
+          {
+            "kind": "literal",
+            "value": 1
+          },
+          {
+            "kind": "literal",
+            "value": true
+          },
+          {
+            "kind": "literal",
+            "value": "system3/delegation-progress"
+          }
+        ]
+      }
+    }
+  ],
+  "types": []
+}

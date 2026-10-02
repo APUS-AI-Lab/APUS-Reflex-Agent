@@ -85,8 +85,8 @@ it('restores the same wire facts without leaking effective headers or making mod
   h.session.append('request/header', { header: { config: selected }, reason: 'initial' }); h.input(id, 1); h.output(1)
   const restored = Session.fromRestore(h.session.id, h.session.snapshotEvents(), h.session.header, SessionLogOffset(0), 'shared-frozen')
   const state = h.ctx.sessionProjections.stateOf(restored, 'system3Runtime')!
-  expect(system3RuntimeProjection.wire.view(state)).toEqual({ entry: h.view()?.entry, skill: null })
-  expect(Object.keys(system3RuntimeProjection.wire.view(state))).toEqual(['entry', 'skill'])
+  expect(system3RuntimeProjection.wire.view(state)).toEqual({ entry: h.view()?.entry, skill: null, subagentRun: null })
+  expect(Object.keys(system3RuntimeProjection.wire.view(state))).toEqual(['entry', 'skill', 'subagentRun'])
 })
 
 
@@ -277,4 +277,13 @@ it('exposes the chosen route with its label and whether it continued the previou
     candidate: { id: 'deep' }, elapsedMs: 1 })
   expect(h.view()?.entry?.route).toEqual({ id: 'deep', label: null, retained: true, delegation: null })
   expect(system3RuntimeProjection.wire.viewSchema.parse(system3RuntimeProjection.wire.view(h.view()!)).entry?.route).toEqual({ id: 'deep', label: null, retained: true, delegation: null })
+})
+
+it('keeps the latest delegated-run snapshot without its version field', async () => {
+  const h = await setup()
+  const snapshot = { version: 1 as const, runId: 'run-1', provider: 'codex', state: 'running' as const, startedAt: 1, elapsedMs: 0, completed: {}, current: null }
+  h.session.append('system3/delegation-progress', snapshot)
+  h.session.append('system3/delegation-progress', { ...snapshot, state: 'completed', elapsedMs: 9, completed: { command: 2 } })
+  expect(h.view()?.subagentRun).toEqual({ runId: 'run-1', provider: 'codex', state: 'completed', startedAt: 1, elapsedMs: 9, completed: { command: 2 }, current: null })
+  expect(system3RuntimeProjection.wire.viewSchema.parse(system3RuntimeProjection.wire.view(h.view()!)).subagentRun?.state).toBe('completed')
 })

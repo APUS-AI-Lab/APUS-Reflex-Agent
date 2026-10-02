@@ -1,8 +1,8 @@
 /** Truthful execution feedback: advice, adoption and actual response stay separate. */
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { PropsLocale, PropsRuntime, TranslateNS } from '@deepseek-ai/dsh-client-ui-slots'
 import type { ModelSelection, ModelSelectionProjection, SessionRequestId } from '@deepseek-ai/dsh-api-session-controller/types'
-import type { System3RuntimeView } from '@deepseek-ai/dsh-experimental-system3/types'
+import type { System3RuntimeView, System3SubagentRunView } from '@deepseek-ai/dsh-experimental-system3/types'
 import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
 import type {} from '@deepseek-ai/dsh-client-ui-session/client'
 import type { System3Key } from './locales.ts'
@@ -44,6 +44,48 @@ function routeNotice(entry: System3RuntimeView['entry'] | undefined, pendingRequ
   const route = entry.route.label ?? model(entry.suggested ?? entry.adopted, t)
   return t(entry.route.retained ? 'routeRetained' : 'routeChosen', { route })
 }
+/** Step categories come from providers; unknown categories read as other. */
+function kindKey(kind: string): System3Key {
+  switch (kind) {
+    case 'message': return 'kindMessage'
+    case 'reasoning': return 'kindReasoning'
+    case 'command': return 'kindCommand'
+    case 'file-change': return 'kindFileChange'
+    case 'tool': return 'kindTool'
+    case 'web-search': return 'kindWebSearch'
+    default: return 'kindOther'
+  }
+}
+function kindLabel(kind: string, t: TranslateNS<'system3'>): string {
+  return t(kindKey(kind))
+}
+function runStateKey(state: string): System3Key {
+  if (state === 'running') return 'runRunning'
+  if (state === 'completed') return 'runCompleted'
+  return state === 'aborted' ? 'runAborted' : 'runIncomplete'
+}
+/** Progress of the latest delegated run; elapsed time advances locally while the run is running.
+ * @param props - The projected run snapshot and translations.
+ * @returns One status line with elapsed time, completed step counts, and the step in progress.
+ */
+export function DelegationRun({ run, t }: { readonly run: System3SubagentRunView; readonly t: TranslateNS<'system3'> }) {
+  const [now, setNow] = useState(() => Date.now())
+  const running = run.state === 'running'
+  useEffect(() => {
+    if (!running) return undefined
+    const timer = setInterval(() => { setNow(Date.now()) }, 1000)
+    return () => { clearInterval(timer) }
+  }, [running])
+  const elapsedMs = running ? Math.max(run.elapsedMs, now - run.startedAt) : run.elapsedMs
+  const counts = Object.entries(run.completed).filter(([, count]) => count > 0)
+    .map(([kind, count]) => `${kindLabel(kind, t)} ${String(count)}`)
+  return <p className={css.run} role="status" aria-live="polite">
+    <span>{t(runStateKey(run.state), { provider: run.provider })}</span>
+    <span>{t('runSeconds', { seconds: String(Math.round(elapsedMs / 1000)) })}</span>
+    {counts.length > 0 && <span>{counts.join(' · ')}</span>}
+    {running && run.current !== null && <span>{t('runCurrent', { kind: kindLabel(run.current, t) })}</span>}
+  </p>
+}
 /** Render observed progress and allow a fixed Session to return to automatic mode.
  * @param props - Persisted facts and live Session status.
  * @returns Compact, expandable execution feedback.
@@ -75,6 +117,7 @@ export function System3Feedback(props: System3FeedbackProps) {
         {t(switching ? 'resetting' : 'reset')}
       </button>}
     </div>
+    {facts?.subagentRun && <DelegationRun run={facts.subagentRun} t={t} />}
     <details className={css.details}>
       <summary>{t('details')}</summary>
       <p className={css.muted}>{t('cloud')}</p>
