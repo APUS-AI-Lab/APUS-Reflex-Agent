@@ -147,7 +147,8 @@ export function System3Feedback(props: System3FeedbackProps) {
       </button>}
     </div>
     {facts?.subagentRun && <DelegationRun run={facts.subagentRun} turnRunning={props.running} t={t} />}
-    {!facts?.subagentRun && facts?.entry?.route?.delegation?.injected === true && !facts.entry.route.delegation.called
+    {/* From the injected instruction until the delegated run's first snapshot, including the tool call's startup. */}
+    {!facts?.subagentRun && facts?.entry?.route?.delegation?.injected === true
       && props.running && <p className={css.run} role="status" aria-live="polite">{t('delegationPreparing')}</p>}
     <details className={css.details}>
       <summary>{t('details')}</summary>

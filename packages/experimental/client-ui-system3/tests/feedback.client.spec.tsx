@@ -142,6 +142,7 @@ it('shows each delegation stage separately: suggested, instruction injected, too
   expect(screen.getByText('正在准备委派')).toBeTruthy()
   rerender(<System3Feedback {...stage(true, true)} />)
   expect(screen.getByText('委派').nextSibling?.textContent).toBe('已调用 subagent_codex')
+  expect(screen.getByText('正在准备委派')).toBeTruthy()
 })
 it('names the delegation tool when the delegation route has no label', () => {
   render(<System3Feedback {...inputs({ facts: { subagentRun: null, skill: null, entry: { requestId: brandString<SessionRequestId>('d'), phase: 'decided', outcome: 'selected',
