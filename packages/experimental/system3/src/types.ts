@@ -11,7 +11,18 @@ export interface System3EntryView {
   readonly used: ModelSelection | null
   readonly elapsedMs: number | null
   /** Configured route chosen for this input, by Jev or by continuing the previous route; null when the baseline was kept. */
-  readonly route: { readonly id: string; readonly label: string | null; readonly retained: boolean } | null
+  readonly route: {
+    readonly id: string
+    readonly label: string | null
+    readonly retained: boolean
+    /** Delegation chosen for this input: instruction injected, then the named tool actually called. */
+    readonly delegation: {
+      readonly candidateId: string
+      readonly tool: string
+      readonly injected: boolean
+      readonly called: boolean
+    } | null
+  } | null
 }
 
 /** One automatic Skill recommendation; injection is confirmed by its durable user message. */

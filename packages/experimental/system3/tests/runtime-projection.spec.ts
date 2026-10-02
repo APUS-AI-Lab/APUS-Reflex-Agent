@@ -269,12 +269,12 @@ it('exposes the chosen route with its label and whether it continued the previou
   h.session.append('system3/entry-start', { requestId: first })
   h.session.append('system3/entry-decision', { version: 1, requestId: first, request: null, baseline: selected, candidateIds: ['deep'],
     dataClasses: ['public'], routeId: 'jev', executionDomain: 'local', outcome: 'selected', selected, candidate: { id: 'deep', label: 'Deep' }, elapsedMs: 1 })
-  expect(h.view()?.entry?.route).toEqual({ id: 'deep', label: 'Deep', retained: false })
+  expect(h.view()?.entry?.route).toEqual({ id: 'deep', label: 'Deep', retained: false, delegation: null })
   const second = brandString<SessionRequestId>('continued')
   h.session.append('system3/entry-start', { requestId: second })
   h.session.append('system3/entry-decision', { version: 1, requestId: second, request: null, baseline: selected, candidateIds: ['deep'],
     dataClasses: ['public'], routeId: 'jev', executionDomain: 'local', outcome: 'abstain', retained: { requestId: first, selection: selected },
     candidate: { id: 'deep' }, elapsedMs: 1 })
-  expect(h.view()?.entry?.route).toEqual({ id: 'deep', label: null, retained: true })
-  expect(system3RuntimeProjection.wire.viewSchema.parse(system3RuntimeProjection.wire.view(h.view()!)).entry?.route).toEqual({ id: 'deep', label: null, retained: true })
+  expect(h.view()?.entry?.route).toEqual({ id: 'deep', label: null, retained: true, delegation: null })
+  expect(system3RuntimeProjection.wire.viewSchema.parse(system3RuntimeProjection.wire.view(h.view()!)).entry?.route).toEqual({ id: 'deep', label: null, retained: true, delegation: null })
 })

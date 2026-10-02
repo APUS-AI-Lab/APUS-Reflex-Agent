@@ -81,6 +81,8 @@ export function System3Feedback(props: System3FeedbackProps) {
         <dt>{t('adoption')}</dt><dd>{model(facts?.entry?.adopted, t)}</dd>
         <dt>{t('actual')}</dt><dd>{model(facts?.entry?.used, t)}</dd>
         {facts?.entry?.elapsedMs !== null && facts?.entry?.elapsedMs !== undefined && <><dt>{t('decisionTime')}</dt><dd>{facts.entry.elapsedMs} {t('milliseconds')}</dd></>}
+        {facts?.entry?.route?.delegation && <><dt>{t('delegation')}</dt><dd>{t(facts.entry.route.delegation.called ? 'delegationCalled'
+          : facts.entry.route.delegation.injected ? 'delegationInjected' : 'delegationSuggested', { tool: facts.entry.route.delegation.tool })}</dd></>}
         <dt>{t('skill')}</dt><dd>{facts?.skill?.selected
           ? `${facts.skill.selected} · ${t(facts.skill.injected ? 'injected' : 'selected')}` : t('skillSkipped')}</dd>
       </dl>

@@ -96,11 +96,11 @@ it('uses live execution state when a fixed-model turn follows an unanswered auto
 })
 it('announces the chosen route as soon as the decision is recorded, before the model answers', () => {
   const entry = { requestId: brandString<SessionRequestId>('routed'), phase: 'decided' as const, outcome: 'selected',
-    suggested: model, adopted: model, used: null, elapsedMs: 480, route: { id: 'expert', label: '复杂专业任务 · GPT-5.6 Sol', retained: false } }
+    suggested: model, adopted: model, used: null, elapsedMs: 480, route: { id: 'expert', label: '复杂专业任务 · GPT-5.6 Sol', retained: false, delegation: null } }
   const { rerender } = render(<System3Feedback {...inputs({ pending: true, facts: { skill: null, entry } })} />)
   expect(screen.getByText('已判断：复杂专业任务 · GPT-5.6 Sol')).toBeTruthy()
   rerender(<System3Feedback {...inputs({ running: true, facts: { skill: null,
-    entry: { ...entry, outcome: 'abstain', suggested: null, route: { id: 'expert', label: null, retained: true } } } })} />)
+    entry: { ...entry, outcome: 'abstain', suggested: null, route: { id: 'expert', label: null, retained: true, delegation: null } } } })} />)
   expect(screen.getByText('延续上一轮：fidoo / generation · low')).toBeTruthy()
   expect(screen.getByText('建议模型').nextSibling?.textContent).toBe('延续上一轮')
   rerender(<System3Feedback {...inputs({ facts: { skill: null, entry: { ...entry, phase: 'deciding', route: null } } })} />)
@@ -108,7 +108,7 @@ it('announces the chosen route as soon as the decision is recorded, before the m
 })
 it('does not show the previous input\'s route while a newer submission waits for its decision', () => {
   const entry = { requestId: brandString<SessionRequestId>('earlier'), phase: 'decided' as const, outcome: 'selected',
-    suggested: model, adopted: model, used: model, elapsedMs: 480, route: { id: 'expert', label: 'Expert', retained: false } }
+    suggested: model, adopted: model, used: model, elapsedMs: 480, route: { id: 'expert', label: 'Expert', retained: false, delegation: null } }
   const { rerender } = render(<System3Feedback {...inputs({ pending: true, pendingRequestId: brandString<SessionRequestId>('newer'),
     facts: { skill: null, entry } })} />)
   expect(screen.queryByText('已判断：Expert')).toBeNull()
@@ -116,4 +116,18 @@ it('does not show the previous input\'s route while a newer submission waits for
   rerender(<System3Feedback {...inputs({ pending: true, pendingRequestId: brandString<SessionRequestId>('newer'),
     facts: { skill: null, entry: { ...entry, requestId: brandString<SessionRequestId>('newer') } } })} />)
   expect(screen.getByText('已判断：Expert')).toBeTruthy()
+})
+it('shows each delegation stage separately: suggested, instruction injected, tool called', () => {
+  const delegation = { candidateId: 'codex', tool: 'subagent_codex', injected: false, called: false }
+  const entry = { requestId: brandString<SessionRequestId>('delegate'), phase: 'decided' as const, outcome: 'selected',
+    suggested: null, adopted: null, used: null, elapsedMs: 480, route: { id: 'codex', label: '工程任务 · 委派 Codex', retained: false, delegation } }
+  const { rerender } = render(<System3Feedback {...inputs({ running: true, facts: { skill: null, entry } })} />)
+  expect(screen.getByText('已判断：工程任务 · 委派 Codex')).toBeTruthy()
+  expect(screen.getByText('委派').nextSibling?.textContent).toBe('已建议，等待注入指令')
+  const stage = (injected: boolean, called: boolean) => inputs({ running: true,
+    facts: { skill: null, entry: { ...entry, route: { ...entry.route, delegation: { ...delegation, injected, called } } } } })
+  rerender(<System3Feedback {...stage(true, false)} />)
+  expect(screen.getByText('委派').nextSibling?.textContent).toBe('已注入指令，等待调用 subagent_codex')
+  rerender(<System3Feedback {...stage(true, true)} />)
+  expect(screen.getByText('委派').nextSibling?.textContent).toBe('已调用 subagent_codex')
 })

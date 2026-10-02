@@ -10,6 +10,7 @@ export const zh = {
   unchanged: '保留当前处理方式', skillSkipped: '未自动注入专业指令',
   failed: '切换失败，请重试', decisionTime: '决策耗时', milliseconds: '毫秒', historical: '最近一次入口决策',
   routeChosen: '已判断：{route}', routeRetained: '延续上一轮：{route}', continued: '延续上一轮',
+  delegation: '委派', delegationSuggested: '已建议，等待注入指令', delegationInjected: '已注入指令，等待调用 {tool}', delegationCalled: '已调用 {tool}',
 } satisfies Record<string, string>
 /** Typed keys shared by both product locales. */
 export type System3Key = keyof typeof zh
@@ -24,6 +25,7 @@ export const en = {
   unchanged: 'Current route retained', skillSkipped: 'No automatic instructions injected',
   failed: 'Could not switch. Try again.', decisionTime: 'Decision time', milliseconds: 'ms', historical: 'Most recent entry decision',
   routeChosen: 'Routed: {route}', routeRetained: 'Continuing: {route}', continued: 'Continued from the previous turn',
+  delegation: 'Delegation', delegationSuggested: 'Suggested, instruction pending', delegationInjected: 'Instruction injected, waiting for {tool}', delegationCalled: 'Called {tool}',
 } satisfies Record<System3Key, string>
 
 declare module '@deepseek-ai/dsh-client-ui-slots' {

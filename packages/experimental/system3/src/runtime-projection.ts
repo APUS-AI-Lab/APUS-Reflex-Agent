@@ -7,6 +7,7 @@ import type { ProjectionDefinition } from '@deepseek-ai/dsh-session-projection'
 import type { System3RuntimeView } from './types.ts'
 import type {} from './entry-routing.ts'
 import type {} from './skill-selection.ts'
+import type {} from './delegation.ts'
 
 /** Host fold keeps request metadata private and exposes only the two public facts. */
 interface System3RuntimeState extends System3RuntimeView {
@@ -36,7 +37,10 @@ const viewSchema = z.object({
   entry: z.object({ requestId, phase: z.enum(['deciding', 'decided']), outcome: z.string().nullable(),
     suggested: selection.nullable(), adopted: selection.nullable(), used: selection.nullable(),
     elapsedMs: z.number().nullable(),
-    route: z.object({ id: z.string(), label: z.string().nullable(), retained: z.boolean() }).nullable() }).nullable(),
+    route: z.object({ id: z.string(), label: z.string().nullable(), retained: z.boolean(),
+      delegation: z.object({ candidateId: z.string(), tool: z.string(), injected: z.boolean(), called: z.boolean() })
+        .nullable() }).nullable(),
+  }).nullable(),
   skill: z.object({ requestId: requestId.nullable(), turn: z.number(), step: z.number(), outcome: z.string(),
     selected: z.string().nullable(), injected: z.boolean(), elapsedMs: z.number() }).nullable(),
 })
@@ -84,7 +88,9 @@ export const system3RuntimeProjection = {
           suggested: event.data.selected ?? null, adopted: previous?.adopted ?? null,
           used: previous?.used ?? null, elapsedMs: event.data.elapsedMs,
           route: event.data.candidate === undefined ? null : { id: event.data.candidate.id,
-            label: event.data.candidate.label ?? null, retained: event.data.retained !== undefined } } }
+            label: event.data.candidate.label ?? null, retained: event.data.retained !== undefined,
+            delegation: event.data.candidate.delegate === undefined ? null
+              : { candidateId: event.data.candidate.id, tool: event.data.candidate.delegate.tool, injected: false, called: false } } } }
     }
     if (event.type === 'model/automatic-selection' && state.entry?.requestId === event.data.requestId) {
       return { ...state, entry: { ...state.entry, adopted: event.data.selection } }
@@ -105,6 +111,16 @@ export const system3RuntimeProjection = {
       if (actual !== null && actual.provider === adopted.provider && actual.model === adopted.model
         && (adopted.reasoningEffort === undefined || actual.reasoningEffort === adopted.reasoningEffort)) {
         return { ...state, entry: { ...state.entry, used: actual } }
+      }
+    }
+    const delegation = state.entry?.route?.delegation
+    if (state.entry?.route && delegation) {
+      if (event.type === 'user/message' && event.data.source.kind === 'system3-delegation'
+        && event.data.source.requestId === state.entry.requestId) {
+        return { ...state, entry: { ...state.entry, route: { ...state.entry.route, delegation: { ...delegation, injected: true } } } }
+      }
+      if (event.type === 'tool/call' && delegation.injected && !delegation.called && event.data.name === delegation.tool) {
+        return { ...state, entry: { ...state.entry, route: { ...state.entry.route, delegation: { ...delegation, called: true } } } }
       }
     }
     if (event.type === 'system3/skill-decision') return { ...state, skillMessageId: event.data.injectionMessageId ?? null, skill: { requestId: event.data.requestId,
