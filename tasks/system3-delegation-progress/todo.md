@@ -45,6 +45,17 @@ Base: branch `feat-system3-g1`. Order follows [architecture section 11](../../do
 - [ ] The main model read files for about 25 s before calling `subagent_codex`; tighten the instruction so delegation starts at once.
 - [ ] Codex reported no step for its first ~26 s; only the running timer shows then.
 
+## Perceived speed and delegation monitoring (2026-10-02)
+
+- [x] ui-chat `conversation.chat.turnHead`; System3 route line in the Turn header; fallback notices.
+- [x] Dock phases: preparing hand-off, starting, running, checking result; minutes-and-seconds durations.
+- [x] Activity notes (child's own progress text, 200-character bound); `delegationProgress.monitor` alerts for slow start, stall, and overtime.
+- [x] Real Web run with low thresholds: starting alert at 16 s, keep-waiting dismissed it, notes showed Codex's plan and file scope, overtime alerts at 1 min and 2 min, stop ended the Turn within 2 s ("codex stopped · 16 s").
+- [ ] Expected-duration labels, end summary in `turnTail`, short follow-ups skipping Jev.
+- [ ] 8.2 composer model chip (not decided).
+- [ ] Browser or desktop notification when the page is not visible.
+- [ ] Delegated Codex reads the user's global `~/.codex` instructions through `CODEX_HOME`; product deployments need an isolated Codex home.
+
 ## Slice 2 · delegation supervision
 
 - [ ] Design only after slice 0 and 1 results.
