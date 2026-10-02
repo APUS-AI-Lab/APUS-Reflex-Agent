@@ -4,6 +4,9 @@
 .dot[data-active="true"] { background: #43a68c; box-shadow: 0 0 0 4px rgb(67 166 140 / 12%); }
 .route { color: var(--dsw-alias-label-secondary); overflow-wrap: anywhere; }
 .run { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 6px 0 2px; color: var(--dsw-alias-label-secondary); }
+.note { margin: 2px 0 0; color: var(--dsw-alias-label-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.alert { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin: 8px 0 2px; padding: 6px 10px; border: 1px solid var(--dsw-alias-border-l1); border-radius: 8px; }
+.alertActions { display: flex; gap: 8px; margin-inline-start: auto; }
 .mode { margin-inline-start: auto; color: var(--dsw-alias-label-secondary); }
 .button { padding: 5px 10px; color: inherit; background: transparent; border: 1px solid var(--dsw-alias-border-l1); border-radius: 8px; cursor: pointer; font: inherit; min-height: 32px; }
 .button:disabled { opacity: 0.5; cursor: default; }

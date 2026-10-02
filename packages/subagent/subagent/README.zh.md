@@ -194,7 +194,7 @@ You are a delegated subagent: your permission scope was fixed when you were star
 - **不回放已接受但未记录的消息**——崩溃可能丢失从未写入子会话日志、已被接受的提示词；丢失的消息不会自动回放。
 - **没有持久化 parent mailbox**——child 到 parent 的消息要求驻留的可继续 child 与在线直接 parent，提供的是接受标识，不保证恰好一次投递。
 - **生命周期事件只供观察**——影响运行的 `subagent/end` 延续或决策接口仍需等待具体消费方。
-- **步骤事件是实时且粗粒度的**——`subagent/activity` 为一次性运行携带步骤类别与阶段，不写入任何 Session，目前只有 Codex 和 Claude Code provider 上报。
+- **步骤事件是实时且粗粒度的**——`subagent/activity` 为一次性运行携带步骤类别、阶段以及可选的子 agent 自身进度说明（长度上限为 `SUBAGENT_ACTIVITY_NOTE_MAX_CHARS`），不写入任何 Session，目前只有 Codex 和 Claude Code provider 上报。
 
 <a id="dev-note"></a>
 ### 开发备注

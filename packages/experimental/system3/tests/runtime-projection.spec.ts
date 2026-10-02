@@ -284,6 +284,34 @@ it('keeps the latest delegated-run snapshot without its version field', async ()
   const snapshot = { version: 1 as const, runId: 'run-1', provider: 'codex', state: 'running' as const, startedAt: 1, elapsedMs: 0, completed: {}, current: null }
   h.session.append('system3/delegation-progress', snapshot)
   h.session.append('system3/delegation-progress', { ...snapshot, state: 'completed', elapsedMs: 9, completed: { command: 2 } })
-  expect(h.view()?.subagentRun).toEqual({ runId: 'run-1', provider: 'codex', state: 'completed', startedAt: 1, elapsedMs: 9, completed: { command: 2 }, current: null })
+  expect(h.view()?.subagentRun).toEqual({ runId: 'run-1', provider: 'codex', state: 'completed', startedAt: 1, elapsedMs: 9, completed: { command: 2 }, current: null,
+    lastStepAt: null, note: null, alert: null })
   expect(system3RuntimeProjection.wire.viewSchema.parse(system3RuntimeProjection.wire.view(h.view()!)).subagentRun?.state).toBe('completed')
+})
+
+it('keeps an overtime alert while running, clears a stall alert on the next step, and drops alerts at the end', async () => {
+  const h = await setup()
+  const running = { version: 1 as const, runId: 'run-1', provider: 'codex', state: 'running' as const, startedAt: 1, elapsedMs: 0,
+    completed: {}, current: null, lastStepAt: 5, note: 'Reading.' }
+  const alert = (kind: 'overtime' | 'stalled', elapsedMs: number, runId = 'run-1') => {
+    h.session.append('system3/delegation-alert', { version: 1, runId, provider: 'codex', kind, elapsedMs, lastStepAt: 5 })
+  }
+  alert('stalled', 9)
+  expect(h.view()?.subagentRun).toBeNull()
+  h.session.append('system3/delegation-progress', running)
+  alert('stalled', 9, 'other-run')
+  expect(h.view()?.subagentRun?.alert).toBeNull()
+  alert('stalled', 9)
+  expect(h.view()?.subagentRun).toMatchObject({ note: 'Reading.', alert: { kind: 'stalled', elapsedMs: 9 } })
+  h.session.append('system3/delegation-progress', { ...running, elapsedMs: 10 })
+  expect(h.view()?.subagentRun?.alert).toEqual({ kind: 'stalled', elapsedMs: 9 })
+  h.session.append('system3/delegation-progress', { ...running, elapsedMs: 11, lastStepAt: 11 })
+  expect(h.view()?.subagentRun?.alert).toBeNull()
+  alert('overtime', 12)
+  h.session.append('system3/delegation-progress', { ...running, elapsedMs: 13, lastStepAt: 13 })
+  expect(h.view()?.subagentRun?.alert).toEqual({ kind: 'overtime', elapsedMs: 12 })
+  h.session.append('system3/delegation-progress', { ...running, state: 'completed', elapsedMs: 14 })
+  expect(h.view()?.subagentRun?.alert).toBeNull()
+  alert('overtime', 15)
+  expect(h.view()?.subagentRun?.alert).toBeNull()
 })

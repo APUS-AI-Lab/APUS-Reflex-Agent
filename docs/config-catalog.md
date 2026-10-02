@@ -1305,10 +1305,12 @@ export interface System3SkillSelectionConfig {
   readonly deadlineMs: number
 }
 
-/** How often a running subagent's progress may be written to the parent Session. */
+/** How often a running subagent's progress may be written to the parent Session, and when it needs attention. */
 export interface System3DelegationProgressConfig {
   /** Minimum time between two running snapshots of one run; start and end are written at once. */
   readonly intervalMs: number
+  /** Alert thresholds; omission writes no alerts. */
+  readonly monitor?: System3DelegationMonitorConfig
 }
 
 /** One entry route Jev may choose. */
@@ -1320,6 +1322,16 @@ export interface System3KeepWarmConfig {
   readonly windowMs: number
   /** Interval between warm-up requests; shorter than the gateway's idle connection timeout. */
   readonly intervalMs: number
+}
+
+/** Thresholds after which a running delegation is reported to the person as needing attention. */
+export interface System3DelegationMonitorConfig {
+  /** Run time after which an overtime alert is written, again at every further multiple. */
+  readonly overtimeMs: number
+  /** Time without a new step, after the first step, before a stalled alert is written. */
+  readonly stallMs: number
+  /** Time without any step after start before a starting alert is written. */
+  readonly startupMs: number
 }
 
 /** Deployment-owned model route; choosing it switches the generation model for this input. */
@@ -3270,7 +3282,7 @@ export type JournalMode = 'wal' | 'delete' | 'truncate' | 'persist'
 ## `@deepseek-ai/dsh-subagent`
 
 - `refs`: `Volatile` (`@deepseek-ai/cordis`)
-- `source`: [`packages/subagent/subagent/src/index.ts:204`](../packages/subagent/subagent/src/index.ts)
+- `source`: [`packages/subagent/subagent/src/index.ts:205`](../packages/subagent/subagent/src/index.ts)
 
 ```ts config-catalog
 /** Host configuration for continuable subagent capacity. */

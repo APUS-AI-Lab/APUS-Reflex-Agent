@@ -126,6 +126,9 @@ export function createLifecycleEmitter(
   }
 }
 
+/** Upper bound, in UTF-16 code units, of a published activity note; longer notes are cut with an ellipsis. */
+export const SUBAGENT_ACTIVITY_NOTE_MAX_CHARS = 200
+
 /**
  * Emit the start/end lifecycle pair for one accepted one-shot run.
  * @param emit - the contained lifecycle emitter.
@@ -169,8 +172,11 @@ export function observeRun(
   emit('subagent/start', identity, parent)
   bindActivity((activity) => {
     if (settled) return
+    const note = activity.note?.trim()
     emit('subagent/activity', {
       runId: identity.runId, provider, id: run.id, kind: activity.kind, phase: activity.phase,
+      ...note === undefined || note === '' ? {} : { note: note.length <= SUBAGENT_ACTIVITY_NOTE_MAX_CHARS
+        ? note : `${note.slice(0, SUBAGENT_ACTIVITY_NOTE_MAX_CHARS - 1)}…` },
     }, parent)
   })
   return run

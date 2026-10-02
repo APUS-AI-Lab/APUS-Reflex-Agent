@@ -7317,7 +7317,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'SubagentActivity',
-    declaration: 'export interface SubagentActivity {\n    readonly kind: SubagentActivityKind;\n    readonly phase: \'started\' | \'completed\';\n}',
+    declaration: 'export interface SubagentActivity {\n    readonly kind: SubagentActivityKind;\n    readonly phase: \'started\' | \'completed\';\n    readonly note?: string;\n}',
   },
   {
     name: 'SubagentActivityInfo',

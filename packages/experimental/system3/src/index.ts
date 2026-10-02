@@ -21,7 +21,7 @@ export type { System3SkillSelectionConfig, System3SkillDecisionReceipt } from '.
 export type { System3EntryView, System3SkillView, System3RuntimeView } from './types.ts'
 export { createSystem3EntryRouter } from './entry-routing.ts'
 export type { System3DelegationSource } from './delegation.ts'
-export type { System3DelegationProgress, System3DelegationProgressConfig } from './delegation-progress.ts'
+export type { System3DelegationAlert, System3DelegationMonitorConfig, System3DelegationProgress, System3DelegationProgressConfig } from './delegation-progress.ts'
 export type { System3EntryCandidate, System3EntryDelegateCandidate, System3EntryModelCandidate, System3EntryRoutingConfig, System3EntryDecisionReceipt, System3EntryOutcome } from './entry-routing.ts'
 export type { System3KeepWarmConfig } from './keep-warm.ts'
 import { selectSystem3Evidence, type System3EvidenceRequest, type System3EvidenceSelection } from '@deepseek-ai/dsh-experimental-system3-evidence'
@@ -193,6 +193,11 @@ export default class System3 extends Service implements System3Service {
     })]).default(false),
     delegationProgress: z.union([z.const(false), z.object({
       intervalMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).required(),
+      monitor: z.union([z.const(undefined), z.object({
+        overtimeMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).required(),
+        stallMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).required(),
+        startupMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).required(),
+      })]),
     })]).default(false),
   })
 

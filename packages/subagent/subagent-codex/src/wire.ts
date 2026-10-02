@@ -644,11 +644,14 @@ export class CodexAppServerWire {
 
   /**
    * Report an item's category and phase. The echoed task item is not child
-   * work; item text, commands, paths, and arguments never leave this method.
+   * work. Only a completed non-final agent message contributes its text as the
+   * note; commands, paths, arguments, and results never leave this method.
    */
   private reportItem(item: JsonObject, phase: SubagentActivity['phase']): void {
     if (item.type === 'userMessage') return
-    this.onActivity?.({ kind: ITEM_ACTIVITY_KINDS[String(item.type)] ?? 'other', phase })
+    const note = phase === 'completed' && item.type === 'agentMessage' && item.phase !== 'final_answer'
+      && typeof item.text === 'string' ? item.text : undefined
+    this.onActivity?.({ kind: ITEM_ACTIVITY_KINDS[String(item.type)] ?? 'other', phase, ...note === undefined ? {} : { note } })
   }
 
   private handleNotification(

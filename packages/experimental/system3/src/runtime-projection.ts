@@ -45,7 +45,8 @@ const viewSchema = z.object({
   skill: z.object({ requestId: requestId.nullable(), turn: z.number(), step: z.number(), outcome: z.string(),
     selected: z.string().nullable(), injected: z.boolean(), elapsedMs: z.number() }).nullable(),
   subagentRun: z.object({ runId: z.string(), provider: z.string(), state: z.string(), startedAt: z.number(), elapsedMs: z.number(),
-    completed: z.record(z.string(), z.number()), current: z.string().nullable() }).nullable(),
+    completed: z.record(z.string(), z.number()), current: z.string().nullable(), lastStepAt: z.number().nullable(),
+    note: z.string().nullable(), alert: z.object({ kind: z.string(), elapsedMs: z.number() }).nullable() }).nullable(),
 })
 const stateSchema: ZodType<System3RuntimeState> = z.object({ entry: viewSchema.shape.entry, skill: viewSchema.shape.skill,
   subagentRun: viewSchema.shape.subagentRun,
@@ -63,7 +64,7 @@ function hasResponseContent(stream: readonly AssistantStreamRecord[]): boolean {
 
 /** Fold advice and adoption; confirm request use from output or a streamed attempt in the exact input turn. */
 export const system3RuntimeProjection = {
-  key: 'system3Runtime', stateVersion: 6, stateSchema,
+  key: 'system3Runtime', stateVersion: 7, stateSchema,
   init: () => ({ entry: null, skill: null, subagentRun: null, header: null, currentTurn: null, currentStep: null,
     entryTurn: null, startRequestId: null, skillMessageId: null, imageInSession: false, route: null }),
   wire: { viewSchema, view: state => ({ entry: state.entry, skill: state.skill, subagentRun: state.subagentRun }) },
@@ -128,8 +129,16 @@ export const system3RuntimeProjection = {
       }
     }
     if (event.type === 'system3/delegation-progress') {
-      const { version: _version, ...run } = event.data
-      return { ...state, subagentRun: run }
+      const { version: _version, lastStepAt = null, note = null, ...run } = event.data
+      const previous = state.subagentRun?.runId === run.runId ? state.subagentRun : null
+      // Overtime stays relevant while the run continues; a missing step is answered by the next step.
+      const alert = run.state !== 'running' || previous?.alert == null ? null
+        : previous.alert.kind === 'overtime' || lastStepAt === previous.lastStepAt ? previous.alert : null
+      return { ...state, subagentRun: { ...run, lastStepAt, note, alert } }
+    }
+    if (event.type === 'system3/delegation-alert' && state.subagentRun?.runId === event.data.runId
+      && state.subagentRun.state === 'running') {
+      return { ...state, subagentRun: { ...state.subagentRun, alert: { kind: event.data.kind, elapsedMs: event.data.elapsedMs } } }
     }
     if (event.type === 'system3/skill-decision') return { ...state, skillMessageId: event.data.injectionMessageId ?? null, skill: { requestId: event.data.requestId,
       turn: event.data.turn, step: event.data.step, outcome: event.data.outcome,

@@ -26,6 +26,10 @@ export function apply(ctx: Context): void {
         const result = await ctx.remote.session.resetModelSelection({ sessionId })
         if (!result.ok) throw result.error
       },
+      onStop: async () => {
+        const result = await ctx.remote.session.cancel({ sessionId })
+        if (!result.ok) throw result.error
+      },
     }),
   }, System3Dock))
   ctx.slots.inject('conversation.chat.turnHead', () => ctx.slots.register({

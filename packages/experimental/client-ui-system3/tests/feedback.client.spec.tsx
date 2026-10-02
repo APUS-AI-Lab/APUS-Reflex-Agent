@@ -10,11 +10,12 @@ import { System3TurnHead } from '../src/client/TurnHead.tsx'
 import { zh } from '../src/client/locales.ts'
 
 afterEach(cleanup)
+const noStop = async (): Promise<void> => {}
 const model = { provider: 'fidoo', model: 'generation', reasoningEffort: 'low' }
 function inputs(overrides: Partial<System3FeedbackProps> = {}): System3FeedbackProps {
   return { facts: { subagentRun: null, entry: null, skill: null }, selection: { mode: 'auto', lastUsed: null, next: null },
     pending: false, pendingRequestId: null, running: false, opening: false, failed: false, available: true,
-    onAutomatic: vi.fn(async () => {}), t: makeTranslate(zh, commonZh), ...overrides }
+    onAutomatic: vi.fn(async () => {}), onStop: vi.fn(async () => {}), t: makeTranslate(zh, commonZh), ...overrides }
 }
 it('acknowledges a local submission before a decision arrives', () => {
   render(<System3Feedback {...inputs({ pending: true })} />)
@@ -155,21 +156,21 @@ it('shows a running delegation with live elapsed time, step counts, and the step
   try {
     vi.setSystemTime(10_000)
     const run = { runId: 'run-1', provider: 'codex', state: 'running', startedAt: 4_000, elapsedMs: 3_000,
-      completed: { command: 3, 'file-change': 2, custom: 1, reasoning: 0 }, current: 'command' }
+      completed: { command: 3, 'file-change': 2, custom: 1, reasoning: 0 }, current: 'command', lastStepAt: 5_000, note: null, alert: null }
     const t = makeTranslate(zh, commonZh)
-    const { rerender } = render(<DelegationRun run={run} turnRunning t={t} />)
+    const { rerender } = render(<DelegationRun onStop={noStop} run={run} turnRunning t={t} />)
     expect(screen.getByRole('status').textContent).toBe('codex 运行中6 秒命令 3 · 改文件 2 · 其他 1当前：命令')
     act(() => { vi.advanceTimersByTime(2_000) })
     expect(screen.getByText('8 秒')).toBeTruthy()
-    rerender(<DelegationRun run={{ ...run, state: 'completed', elapsedMs: 98_400, current: null }} turnRunning t={t} />)
+    rerender(<DelegationRun onStop={noStop} run={{ ...run, state: 'completed', elapsedMs: 98_400, current: null }} turnRunning t={t} />)
     expect(screen.getByRole('status').textContent).toBe('codex 已完成，正在复核结果1 分 38 秒命令 3 · 改文件 2 · 其他 1')
-    rerender(<DelegationRun run={{ ...run, state: 'completed', elapsedMs: 98_400, current: null }} turnRunning={false} t={t} />)
+    rerender(<DelegationRun onStop={noStop} run={{ ...run, state: 'completed', elapsedMs: 98_400, current: null }} turnRunning={false} t={t} />)
     expect(screen.getByRole('status').textContent).toBe('codex 已完成1 分 38 秒命令 3 · 改文件 2 · 其他 1')
-    rerender(<DelegationRun run={{ ...run, completed: {}, current: null }} turnRunning t={t} />)
+    rerender(<DelegationRun onStop={noStop} run={{ ...run, completed: {}, current: null }} turnRunning t={t} />)
     expect(screen.getByRole('status').textContent).toBe('codex 正在启动8 秒')
-    rerender(<DelegationRun run={{ ...run, state: 'aborted', elapsedMs: 1_000, completed: {} }} turnRunning={false} t={t} />)
+    rerender(<DelegationRun onStop={noStop} run={{ ...run, state: 'aborted', elapsedMs: 1_000, completed: {} }} turnRunning={false} t={t} />)
     expect(screen.getByRole('status').textContent).toBe('codex 已中止1 秒')
-    rerender(<DelegationRun run={{ ...run, state: 'error', elapsedMs: 1_000, completed: { 'web-search': 1, tool: 1, message: 1, reasoning: 1 } }} turnRunning={false} t={t} />)
+    rerender(<DelegationRun onStop={noStop} run={{ ...run, state: 'error', elapsedMs: 1_000, completed: { 'web-search': 1, tool: 1, message: 1, reasoning: 1 } }} turnRunning={false} t={t} />)
     expect(screen.getByRole('status').textContent).toBe('codex 未完成1 秒搜索 1 · 工具 1 · 消息 1 · 推理 1')
   } finally {
     vi.useRealTimers()
@@ -178,7 +179,7 @@ it('shows a running delegation with live elapsed time, step counts, and the step
 
 it('renders the delegated run inside the dock when the projection carries one', () => {
   render(<System3Feedback {...inputs({ facts: { entry: null, skill: null, subagentRun: { runId: 'r', provider: 'codex', state: 'completed',
-    startedAt: 0, elapsedMs: 5_000, completed: {}, current: null } } })} />)
+    startedAt: 0, elapsedMs: 5_000, completed: {}, current: null, lastStepAt: null, note: null, alert: null } } })} />)
   expect(screen.getByText('codex 已完成')).toBeTruthy()
 })
 it('reads a continued route as the suggestion in the details', () => {
@@ -186,4 +187,34 @@ it('reads a continued route as the suggestion in the details', () => {
     outcome: 'abstain', suggested: null, adopted: model, used: null, elapsedMs: 1, turn: 3,
     route: { id: 'expert', label: 'Expert', retained: true, delegation: null } } } })} />)
   expect(screen.getByText('建议模型').nextSibling?.textContent).toBe('延续上一轮')
+})
+it('shows the latest note and an attention alert that can be dismissed until the next alert or stopped', async () => {
+  vi.useFakeTimers()
+  try {
+    vi.setSystemTime(200_000)
+    const t = makeTranslate(zh, commonZh)
+    const onStop = vi.fn<() => Promise<void>>().mockRejectedValueOnce(new Error('offline')).mockResolvedValue(undefined)
+    const run = { runId: 'run-1', provider: 'codex', state: 'running', startedAt: 0, elapsedMs: 180_000, completed: { command: 2 },
+      current: null, lastStepAt: 90_000, note: 'Checking the parser before editing.', alert: { kind: 'stalled', elapsedMs: 180_000 } }
+    const { rerender } = render(<DelegationRun run={run} turnRunning onStop={onStop} t={t} />)
+    expect(screen.getByText('最近说明：Checking the parser before editing.')).toBeTruthy()
+    expect(screen.getByRole('alert').textContent).toContain('codex 已 1 分 50 秒 没有新进展')
+    fireEvent.click(screen.getByRole('button', { name: '停止' }))
+    await act(async () => { await Promise.resolve() })
+    expect(screen.getByText('停止失败，请重试')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: '停止' }))
+    await act(async () => { await Promise.resolve() })
+    expect(onStop).toHaveBeenCalledTimes(2)
+    fireEvent.click(screen.getByRole('button', { name: '继续等待' }))
+    expect(screen.queryByRole('alert')).toBeNull()
+    rerender(<DelegationRun run={{ ...run, alert: { kind: 'overtime', elapsedMs: 360_000 } }} turnRunning onStop={onStop} t={t} />)
+    expect(screen.getByRole('alert').textContent).toContain('codex 已运行 6 分 0 秒，超出预期')
+    rerender(<DelegationRun run={{ ...run, lastStepAt: null, alert: { kind: 'starting', elapsedMs: 120_000 } }} turnRunning onStop={onStop} t={t} />)
+    expect(screen.getByRole('alert').textContent).toContain('codex 启动已超过 3 分 20 秒')
+    rerender(<DelegationRun run={{ ...run, state: 'completed' }} turnRunning={false} onStop={onStop} t={t} />)
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(screen.queryByText(/最近说明/)).toBeNull()
+  } finally {
+    vi.useRealTimers()
+  }
 })

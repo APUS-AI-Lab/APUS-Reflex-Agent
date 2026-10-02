@@ -240,8 +240,8 @@ const TOOL_ACTIVITY_KINDS: Readonly<Record<string, SubagentActivityKind>> = {
 }
 
 /**
- * Report the steps one SDK message carries as categories and phases. Message
- * text, tool input, and tool results never leave this function.
+ * Report the steps one SDK message carries as categories and phases. Assistant
+ * text becomes the step's note; tool input and tool results never leave this function.
  * @param message - one assistant or user SDK message.
  * @param pending - step category per unanswered tool-use id, updated in place.
  * @param report - receives each step.
@@ -261,7 +261,7 @@ function reportMessageActivity(
       pending.delete(block.tool_use_id)
       report({ kind, phase: 'completed' })
     } else if (block.type === 'text') {
-      report({ kind: 'message', phase: 'completed' })
+      report({ kind: 'message', phase: 'completed', note: block.text })
     } else if (block.type === 'thinking') {
       report({ kind: 'reasoning', phase: 'completed' })
     } else if (block.type === 'tool_use') {

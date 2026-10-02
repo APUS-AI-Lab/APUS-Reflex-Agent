@@ -1058,7 +1058,7 @@ describe('query options and result mapping', () => {
     ]), undefined, undefined, activity => void activities.push(activity))).resolves.toMatchObject({ stopReason: 'completed' })
     expect(activities).toEqual([
       { kind: 'reasoning', phase: 'completed' },
-      { kind: 'message', phase: 'completed' },
+      { kind: 'message', phase: 'completed', note: 'reading /private/secret.txt' },
       { kind: 'command', phase: 'started' },
       { kind: 'tool', phase: 'started' },
       { kind: 'command', phase: 'completed' },

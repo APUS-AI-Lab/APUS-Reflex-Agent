@@ -14,14 +14,14 @@ afterEach(async () => {
   for (const ctx of contexts.splice(0)) await ctx.fiber.dispose()
 })
 
-async function setup(intervalMs = 3000) {
+async function setup(intervalMs = 3000, monitor?: { overtimeMs: number; stallMs: number; startupMs: number }) {
   const ctx = new Context()
   contexts.push(ctx)
   await mountAgentLoopTestDependencies(ctx)
   await ctx.plugin(AgentLoop, { agents: [] })
   await ctx.plugin(SubagentRuntime, {})
   ctx.sessionProjections.register(system3RuntimeProjection)
-  installSystem3DelegationProgress(ctx, { intervalMs })
+  installSystem3DelegationProgress(ctx, { intervalMs, ...monitor === undefined ? {} : { monitor } })
   const settled = Promise.withResolvers<SubagentResult>()
   let report: ResolvedSubagentStartRequest['reportActivity'] = () => {}
   ctx.subagents.registerProvider({
@@ -35,8 +35,9 @@ async function setup(intervalMs = 3000) {
   })
   const parent = await ctx.agentLoop.create(SessionId('delegating-parent'), { provider: 'mock', model: 'mock' })
   const snapshots = () => parent.session.snapshotEvents().filter(event => event.type === 'system3/delegation-progress').map(event => event.data)
+  const alerts = () => parent.session.snapshotEvents().filter(event => event.type === 'system3/delegation-alert').map(event => event.data)
   const start = async () => await ctx.subagents.start('codex', { prompt: [{ type: 'text', text: 'task' }], parent, signal: new AbortController().signal })
-  return { ctx, parent, settled, report: (...args: Parameters<typeof report>) => { report(...args) }, snapshots, start }
+  return { ctx, parent, settled, report: (...args: Parameters<typeof report>) => { report(...args) }, snapshots, alerts, start }
 }
 
 it('writes the start at once, throttles running snapshots, and writes the end with the stop reason', async () => {
@@ -89,4 +90,38 @@ it('ignores activity for unknown runs and events without a delegating Agent, and
   h.ctx.emit('subagent/end', { runId: 'unknown' as never, provider: 'codex', id: SessionId('x'), local: false, stopReason: 'completed' })
   h.ctx.emit('subagent/start', { runId: 'unscoped' as never, provider: 'codex', id: SessionId('x'), local: false })
   expect(h.snapshots()).toEqual([])
+})
+
+it('alerts once for a slow start, once per stall episode, and at every overtime multiple, then stops at the end', async () => {
+  const h = await setup(1000, { overtimeMs: 10_000, stallMs: 3_000, startupMs: 4_000 })
+  const run = await h.start()
+  await vi.advanceTimersByTimeAsync(4_000)
+  expect(h.alerts()).toEqual([expect.objectContaining({ version: 1, provider: 'codex', kind: 'starting', elapsedMs: 4_000, lastStepAt: null })])
+  await vi.advanceTimersByTimeAsync(2_000)
+  h.report({ kind: 'message', phase: 'completed', note: 'Reading the parser.' })
+  await vi.advanceTimersByTimeAsync(1_000)
+  expect(h.snapshots().at(-1)).toMatchObject({ lastStepAt: 6_000, note: 'Reading the parser.' })
+  await vi.advanceTimersByTimeAsync(2_000)
+  expect(h.alerts().map(alert => alert.kind)).toEqual(['starting', 'stalled'])
+  expect(h.alerts().at(-1)).toMatchObject({ elapsedMs: 9_000, lastStepAt: 6_000 })
+  await vi.advanceTimersByTimeAsync(5_000)
+  expect(h.alerts().map(alert => alert.kind)).toEqual(['starting', 'stalled', 'overtime'])
+  h.report({ kind: 'command', phase: 'started' })
+  await vi.advanceTimersByTimeAsync(3_000)
+  expect(h.alerts().map(alert => alert.kind)).toEqual(['starting', 'stalled', 'overtime', 'stalled'])
+  await vi.advanceTimersByTimeAsync(3_000)
+  expect(h.alerts().map(alert => alert.kind)).toEqual(['starting', 'stalled', 'overtime', 'stalled', 'overtime'])
+  expect(h.snapshots().at(-1)?.note).toBe('Reading the parser.')
+  h.settled.resolve({ output: [], stopReason: 'completed' })
+  await run.result
+  await vi.advanceTimersByTimeAsync(60_000)
+  expect(h.alerts()).toHaveLength(5)
+})
+
+it('writes no alerts without monitor thresholds and rejects invalid ones', async () => {
+  const h = await setup()
+  await h.start()
+  await vi.advanceTimersByTimeAsync(3_600_000)
+  expect(h.alerts()).toEqual([])
+  expect(() => { installSystem3DelegationProgress(h.ctx, { intervalMs: 1000, monitor: { overtimeMs: 1, stallMs: 0, startupMs: 1 } }) }).toThrow('stallMs')
 })

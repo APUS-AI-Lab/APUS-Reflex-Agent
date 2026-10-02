@@ -66,7 +66,8 @@
 | `event:subagent/model-selection-policy` | event | `a6567ccb2e530606b775371eb4fa31468d72084339968e8b0440a516a23b39dc` | [`{ type: "subagent/model-selection-policy" }`](#persistence-type-sha256-a6567ccb2e530606b775371eb4fa31468d72084339968e8b0440a516a23b39dc) |
 | `event:system/message` | event | `69081694be231d56fd9580ba14645fd5e35373202605d5c5c841a9435b5fa3b1` | [`{ type: "system/message" }`](#persistence-type-sha256-69081694be231d56fd9580ba14645fd5e35373202605d5c5c841a9435b5fa3b1) |
 | `event:system3/decision` | event | `b923b60d7839c5e3d3e03be20abbe587b9029440c839b8459cd1672149f971fe` | [`{ type: "system3/decision" }`](#persistence-type-sha256-b923b60d7839c5e3d3e03be20abbe587b9029440c839b8459cd1672149f971fe) |
-| `event:system3/delegation-progress` | event | `b7a5287089022cc0d2f384d42fef9d4b853a4192785d29543b9502569d12423b` | [`{ type: "system3/delegation-progress" }`](#persistence-type-sha256-b7a5287089022cc0d2f384d42fef9d4b853a4192785d29543b9502569d12423b) |
+| `event:system3/delegation-alert` | event | `20dcc98052694791c25e6c5320ca2cd95d97ec162b4665bc76648da80f7033e0` | [`{ type: "system3/delegation-alert" }`](#persistence-type-sha256-20dcc98052694791c25e6c5320ca2cd95d97ec162b4665bc76648da80f7033e0) |
+| `event:system3/delegation-progress` | event | `5c3f9b13622a7f3243d94ac99789f33f66bc78d2774ac24184ed53685f3bf88e` | [`{ type: "system3/delegation-progress" }`](#persistence-type-sha256-5c3f9b13622a7f3243d94ac99789f33f66bc78d2774ac24184ed53685f3bf88e) |
 | `event:system3/entry-decision` | event | `0cfb145b502a904af1045bbed75063afa0713b8155f27b54d2fcc0d0ff2e6f29` | [`{ type: "system3/entry-decision" }`](#persistence-type-sha256-0cfb145b502a904af1045bbed75063afa0713b8155f27b54d2fcc0d0ff2e6f29) |
 | `event:system3/entry-start` | event | `0f109d50397f1d347b2f62df20bd1e21a200c839428c8bca5449e8ed37ab633a` | [`{ type: "system3/entry-start" }`](#persistence-type-sha256-0f109d50397f1d347b2f62df20bd1e21a200c839428c8bca5449e8ed37ab633a) |
 | `event:system3/skill-decision` | event | `2da260ec5f7fe67028206d4c6254ff01a52dfe9a7f9aa67dedf72324ac4748ce` | [`{ type: "system3/skill-decision" }`](#persistence-type-sha256-2da260ec5f7fe67028206d4c6254ff01a52dfe9a7f9aa67dedf72324ac4748ce) |
@@ -1010,16 +1011,30 @@ export type SessionEvent<T extends SessionEventType = SessionEventType> = {
 
 来源：[`packages/experimental/system3/src/decisions.ts:54`](../packages/experimental/system3/src/decisions.ts)
 
+<a id="system3delegation-alert--log-only"></a>
+
+#### `system3/delegation-alert` — log-only
+
+```ts persistence-catalog
+/** A delegated subagent run exceeded a configured time or progress threshold; not model-visible. */
+'system3/delegation-alert': System3DelegationAlert
+```
+
+来源：[`packages/experimental/system3/src/delegation-progress.ts:70`](../packages/experimental/system3/src/delegation-progress.ts)
+
 <a id="system3delegation-progress--log-only"></a>
 
 #### `system3/delegation-progress` — log-only
 
 ```ts persistence-catalog
-/** Throttled progress of a subagent run delegated by this Session's Agent; carries step categories, never child content. */
+/**
+ * Throttled progress of a subagent run this Session's Agent delegated: step categories, timing,
+ * and the child's latest note; not model-visible.
+ */
 'system3/delegation-progress': System3DelegationProgress
 ```
 
-来源：[`packages/experimental/system3/src/delegation-progress.ts:36`](../packages/experimental/system3/src/delegation-progress.ts)
+来源：[`packages/experimental/system3/src/delegation-progress.ts:68`](../packages/experimental/system3/src/delegation-progress.ts)
 
 <a id="system3entry-decision--log-only"></a>
 
@@ -2431,6 +2446,14 @@ SHA-256: `9d80129e13edfb6feb03ed327e6085c6ef60b97ad074244b2f5fd4667424a6a4`
 
 `"other"`
 
+<a id="persistence-type-sha256-28a97da9b45bb243ee8d2e3151ec31e3631b5811ea7102b280be758bdb7479f8"></a>
+
+### `"overtime"`
+
+SHA-256: `28a97da9b45bb243ee8d2e3151ec31e3631b5811ea7102b280be758bdb7479f8`
+
+`"overtime"`
+
 <a id="persistence-type-sha256-e6411b09c1d982f789bf741ca74e2bea69df56029847f86a6148e722039ee732"></a>
 
 ### `"parent"`
@@ -2879,6 +2902,22 @@ SHA-256: `03129cf158e22e615c82ecc5fa207c558c6015a81f935b2f92a79c917201e7fd`
 
 `"stale-goal"`
 
+<a id="persistence-type-sha256-9b63cc2d6cc06983317016d79999bf588dadfc96dd4fe818784859c3641cd475"></a>
+
+### `"stalled"`
+
+SHA-256: `9b63cc2d6cc06983317016d79999bf588dadfc96dd4fe818784859c3641cd475`
+
+`"stalled"`
+
+<a id="persistence-type-sha256-d1a8fd80253ae084d2ecb3e0a691c393a3ecfdef5ad0496bc36dff3a08c4bcef"></a>
+
+### `"starting"`
+
+SHA-256: `d1a8fd80253ae084d2ecb3e0a691c393a3ecfdef5ad0496bc36dff3a08c4bcef`
+
+`"starting"`
+
 <a id="persistence-type-sha256-c219efbdfd53b836786202ab4532913d555798f0a8615a4e9629736e3799fb70"></a>
 
 ### `"step/end"`
@@ -2990,6 +3029,14 @@ SHA-256: `fc9ea50524729ee321154670cf9ef23a5b0cc0ce6d9f9f03534e4aeae29ab4f4`
 SHA-256: `d74872f6b1aa352f81a5680d445f517d81ead9e575664893712978ceb90b5064`
 
 `"system3/decision"`
+
+<a id="persistence-type-sha256-ea91af6760a573c83c8b389d840811ea5dac22dd7b4b8bfcde577563a814ed98"></a>
+
+### `"system3/delegation-alert"`
+
+SHA-256: `ea91af6760a573c83c8b389d840811ea5dac22dd7b4b8bfcde577563a814ed98`
+
+`"system3/delegation-alert"`
 
 <a id="persistence-type-sha256-38a6e586c189de7265bbf6284218b30c46dd6e62d5d1b529d8e207acd787e06d"></a>
 
@@ -5481,7 +5528,28 @@ SHA-256: `ec42fc5b82fe479e4b3a5c61a755250c783a1fb46940b06def7bd4b71fe1d00c`
 | `turn` | 可选 | `number` |
 | `version` | 必需 | `1` |
 
-<a id="persistence-type-sha256-905648e0d17a4ce923c115f31fb3be2416e16a7f7c23792f35937edc89ea19f6"></a>
+<a id="persistence-type-sha256-9decd8b3699cea8a4eb9c9dbc3af58121a64910ca5cb36c40942eee2e1c66eca"></a>
+
+<a id="persistence-type-packagesexperimentalsystem3srcdelegation-progresstssystem3delegationalert"></a>
+
+<a id="persistence-type-system3delegationalert"></a>
+
+### `System3DelegationAlert`
+
+SHA-256: `9decd8b3699cea8a4eb9c9dbc3af58121a64910ca5cb36c40942eee2e1c66eca`
+
+来源：[`packages/experimental/system3/src/delegation-progress.ts:50`](../packages/experimental/system3/src/delegation-progress.ts)
+
+| 属性 | 存在性 | 类型 |
+|---|---|---|
+| `elapsedMs` | 必需 | `number` |
+| `kind` | 必需 | [`union (3 variants)`](#persistence-type-sha256-ba61547ea25860832a5c0adfff36362b139aadc28ac0f4d587d0249ab585cbd4) |
+| `lastStepAt` | 必需 | [`OptionalSessionSeq`](#persistence-type-sha256-3bd652ebfa8726b3ce3937a4f1bd2759e02f86b3a08a20f9e41a8513656fbc5f) |
+| `provider` | 必需 | `string` |
+| `runId` | 必需 | `string` |
+| `version` | 必需 | `1` |
+
+<a id="persistence-type-sha256-2eb8da90fe425d0095169c4a41da02627fe9aa1bd0c3035de76f1c217ae3f954"></a>
 
 <a id="persistence-type-packagesexperimentalsystem3srcdelegation-progresstssystem3delegationprogress"></a>
 
@@ -5489,15 +5557,17 @@ SHA-256: `ec42fc5b82fe479e4b3a5c61a755250c783a1fb46940b06def7bd4b71fe1d00c`
 
 ### `System3DelegationProgress`
 
-SHA-256: `905648e0d17a4ce923c115f31fb3be2416e16a7f7c23792f35937edc89ea19f6`
+SHA-256: `2eb8da90fe425d0095169c4a41da02627fe9aa1bd0c3035de76f1c217ae3f954`
 
-来源：[`packages/experimental/system3/src/delegation-progress.ts:15`](../packages/experimental/system3/src/delegation-progress.ts)
+来源：[`packages/experimental/system3/src/delegation-progress.ts:27`](../packages/experimental/system3/src/delegation-progress.ts)
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|
 | `completed` | 必需 | [`{ command?, file-change?, message?, other?, … }`](#persistence-type-sha256-0f5fca3b535342217224ea654c18c7dc0edb697c81d1a196dff8c3814b69badb) |
 | `current` | 必需 | [`union (8 variants)`](#persistence-type-sha256-9e235ea7f2a3560bf61b17a203bd5da0355dc0a22e464011acf23571b63b9af3) |
 | `elapsedMs` | 必需 | `number` |
+| `lastStepAt` | 可选 | [`OptionalSessionSeq`](#persistence-type-sha256-3bd652ebfa8726b3ce3937a4f1bd2759e02f86b3a08a20f9e41a8513656fbc5f) |
+| `note` | 可选 | [`union (2 variants)`](#persistence-type-sha256-799231ac91869a6695666505343003905638e1b4d11349bff953d4dbfe3191ba) |
 | `provider` | 必需 | `string` |
 | `runId` | 必需 | `string` |
 | `startedAt` | 必需 | `number` |
@@ -6515,6 +6585,18 @@ SHA-256: `904bf499d98be4a3a5f836fcac533b6c4899569b018071e6604e1d32657d00fd`
 - `"remove"`
 - `"replace"`
 - `"set"`
+
+<a id="persistence-type-sha256-ba61547ea25860832a5c0adfff36362b139aadc28ac0f4d587d0249ab585cbd4"></a>
+
+### `union (3 variants)`
+
+SHA-256: `ba61547ea25860832a5c0adfff36362b139aadc28ac0f4d587d0249ab585cbd4`
+
+以下类型之一：
+
+- `"overtime"`
+- `"stalled"`
+- `"starting"`
 
 <a id="persistence-type-sha256-fd0d91a1f9dd2efb8959bdf5e07f8f0a98b1cdfa38ce8d4732ebde0b44c3abd4"></a>
 
@@ -9691,17 +9773,33 @@ SHA-256: `b923b60d7839c5e3d3e03be20abbe587b9029440c839b8459cd1672149f971fe`
 | `time` | 必需 | `number` |
 | `type` | 必需 | `"system3/decision"` |
 
-<a id="persistence-type-sha256-b7a5287089022cc0d2f384d42fef9d4b853a4192785d29543b9502569d12423b"></a>
+<a id="persistence-type-sha256-20dcc98052694791c25e6c5320ca2cd95d97ec162b4665bc76648da80f7033e0"></a>
+
+<a id="persistence-type-eventsystem3delegation-alert"></a>
+
+### `{ type: "system3/delegation-alert" }`
+
+SHA-256: `20dcc98052694791c25e6c5320ca2cd95d97ec162b4665bc76648da80f7033e0`
+
+| 属性 | 存在性 | 类型 |
+|---|---|---|
+| `data` | 必需 | [`System3DelegationAlert`](#persistence-type-sha256-9decd8b3699cea8a4eb9c9dbc3af58121a64910ca5cb36c40942eee2e1c66eca) |
+| `ignorable` | 可选 | `true` |
+| `seq` | 必需 | `number` |
+| `time` | 必需 | `number` |
+| `type` | 必需 | `"system3/delegation-alert"` |
+
+<a id="persistence-type-sha256-5c3f9b13622a7f3243d94ac99789f33f66bc78d2774ac24184ed53685f3bf88e"></a>
 
 <a id="persistence-type-eventsystem3delegation-progress"></a>
 
 ### `{ type: "system3/delegation-progress" }`
 
-SHA-256: `b7a5287089022cc0d2f384d42fef9d4b853a4192785d29543b9502569d12423b`
+SHA-256: `5c3f9b13622a7f3243d94ac99789f33f66bc78d2774ac24184ed53685f3bf88e`
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|
-| `data` | 必需 | [`System3DelegationProgress`](#persistence-type-sha256-905648e0d17a4ce923c115f31fb3be2416e16a7f7c23792f35937edc89ea19f6) |
+| `data` | 必需 | [`System3DelegationProgress`](#persistence-type-sha256-2eb8da90fe425d0095169c4a41da02627fe9aa1bd0c3035de76f1c217ae3f954) |
 | `ignorable` | 可选 | `true` |
 | `seq` | 必需 | `number` |
 | `time` | 必需 | `number` |

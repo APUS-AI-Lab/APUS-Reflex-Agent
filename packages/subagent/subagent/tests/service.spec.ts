@@ -5,6 +5,7 @@ import { type Agent } from '@deepseek-ai/dsh-agent'
 import { HarnessError, ReasoningEffortId } from '@deepseek-ai/dsh-llm'
 import { carrierKeyOf } from '@deepseek-ai/dsh-scope'
 import SubagentRuntime, {
+  SUBAGENT_ACTIVITY_NOTE_MAX_CHARS,
   foldSubagentDescriptor,
   snapshotSubagentDescriptor,
   SUBAGENT_DESCRIPTOR_VERSION,
@@ -271,6 +272,29 @@ describe('SubagentRuntime', () => {
 
     expect(seen).toEqual([{ runId, provider: 'stepping', id: SessionId('child'), kind: 'command', phase: 'started' }])
     expect(keys).toEqual([parent])
+  })
+
+  it('publishes a trimmed, bounded note and omits an empty one', async () => {
+    const { ctx, subagents } = await service()
+    const result = Promise.withResolvers<SubagentResult>()
+    let report: ResolvedSubagentStartRequest['reportActivity'] | undefined
+    subagents.registerProvider({
+      name: 'noting', capabilities: NO_CAPS, inheritsParentContext: false,
+      async start(request) {
+        report = request.reportActivity
+        return { id: SessionId('child'), localAgent: undefined, result: result.promise, async dispose() {} }
+      },
+    })
+    const notes: unknown[] = []
+    ctx.on('subagent/activity', info => void notes.push(info.note))
+    await subagents.start('noting', baseRequest())
+    report?.({ kind: 'message', phase: 'completed', note: '  Reading the parser first.  ' })
+    report?.({ kind: 'message', phase: 'completed', note: '   ' })
+    report?.({ kind: 'message', phase: 'completed', note: 'x'.repeat(SUBAGENT_ACTIVITY_NOTE_MAX_CHARS + 5) })
+    report?.({ kind: 'message', phase: 'completed', note: 'y'.repeat(SUBAGENT_ACTIVITY_NOTE_MAX_CHARS) })
+    expect(notes).toEqual(['Reading the parser first.', undefined,
+      `${'x'.repeat(SUBAGENT_ACTIVITY_NOTE_MAX_CHARS - 1)}…`, 'y'.repeat(SUBAGENT_ACTIVITY_NOTE_MAX_CHARS)])
+    result.resolve({ output: [], stopReason: 'completed' })
   })
 
   it('stops publishing steps once the run rejects', async () => {

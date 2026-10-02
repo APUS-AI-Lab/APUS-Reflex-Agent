@@ -13,6 +13,8 @@ export interface System3Actions {
   readonly available: boolean
   /** Release the explicit human model choice through the native Session controller. */
   readonly onAutomatic: () => Promise<void>
+  /** Cancel the Session's in-flight Turn, which also cancels its delegated run, through the native Session controller. */
+  readonly onStop: () => Promise<void>
 }
 /** Pure view inputs, independent of transport subscription ownership. */
 export interface System3FeedbackProps extends System3Actions {
@@ -90,16 +92,27 @@ function runStateKey(run: System3SubagentRunView, turnRunning: boolean): System3
   if (run.state === 'completed') return turnRunning ? 'runReviewing' : 'runCompleted'
   return run.state === 'aborted' ? 'runAborted' : 'runIncomplete'
 }
+function alertText(run: System3SubagentRunView, alert: NonNullable<System3SubagentRunView['alert']>, now: number,
+  t: TranslateNS<'system3'>): string {
+  if (alert.kind === 'overtime') return t('alertOvertime', { provider: run.provider, duration: formatDuration(alert.elapsedMs, t) })
+  const since = now - run.startedAt - (run.lastStepAt ?? 0)
+  return t(alert.kind === 'starting' ? 'alertStarting' : 'alertStalled', { provider: run.provider, duration: formatDuration(since, t) })
+}
 /** Progress of the latest delegated run; elapsed time advances locally while the run is running.
- * @param props - The projected run snapshot and translations.
- * @returns One status line with elapsed time, completed step counts, and the step in progress.
+ * @param props - The projected run snapshot, the delegating Turn's state, the stop action, and translations.
+ * @returns The status line, the child's latest note, and any undismissed attention alert with keep-waiting and stop actions.
  */
-export function DelegationRun({ run, turnRunning, t }: {
+export function DelegationRun({ run, turnRunning, onStop, t }: {
   readonly run: System3SubagentRunView
   /** Whether the delegating Turn is still running, so a finished run is still being checked. */
   readonly turnRunning: boolean
+  /** Cancel the delegating Turn. */
+  readonly onStop: () => Promise<void>
   readonly t: TranslateNS<'system3'>
 }) {
+  const [dismissed, setDismissed] = useState<string | null>(null)
+  const [stopping, setStopping] = useState(false)
+  const [stopFailed, setStopFailed] = useState(false)
   const [now, setNow] = useState(() => Date.now())
   const running = run.state === 'running'
   useEffect(() => {
@@ -110,12 +123,28 @@ export function DelegationRun({ run, turnRunning, t }: {
   const elapsedMs = running ? Math.max(run.elapsedMs, now - run.startedAt) : run.elapsedMs
   const counts = Object.entries(run.completed).filter(([, count]) => count > 0)
     .map(([kind, count]) => `${kindLabel(kind, t)} ${String(count)}`)
-  return <p className={css.run} role="status" aria-live="polite">
-    <span>{t(runStateKey(run, turnRunning), { provider: run.provider })}</span>
-    <span>{formatDuration(elapsedMs, t)}</span>
-    {counts.length > 0 && <span>{counts.join(' · ')}</span>}
-    {running && run.current !== null && <span>{t('runCurrent', { kind: kindLabel(run.current, t) })}</span>}
-  </p>
+  const alertKey = run.alert === null ? null : `${run.runId}:${run.alert.kind}:${String(run.alert.elapsedMs)}`
+  const stop = async (): Promise<void> => {
+    setStopping(true); setStopFailed(false)
+    try { await onStop() } catch { setStopFailed(true) } finally { setStopping(false) }
+  }
+  return <div>
+    <p className={css.run} role="status" aria-live="polite">
+      <span>{t(runStateKey(run, turnRunning), { provider: run.provider })}</span>
+      <span>{formatDuration(elapsedMs, t)}</span>
+      {counts.length > 0 && <span>{counts.join(' · ')}</span>}
+      {running && run.current !== null && <span>{t('runCurrent', { kind: kindLabel(run.current, t) })}</span>}
+    </p>
+    {running && run.note !== null && <p className={css.note}>{t('runNote', { note: run.note })}</p>}
+    {running && run.alert !== null && alertKey !== dismissed && <div className={css.alert} role="alert">
+      <span>{alertText(run, run.alert, now, t)}</span>
+      <span className={css.alertActions}>
+        <button type="button" className={css.button} onClick={() => { setDismissed(alertKey) }}>{t('keepWaiting')}</button>
+        <button type="button" className={css.button} disabled={stopping} onClick={() => { void stop() }}>{t('stopRun')}</button>
+      </span>
+      {stopFailed && <span className={css.error}>{t('stopFailed')}</span>}
+    </div>}
+  </div>
 }
 /** Render observed progress and allow a fixed Session to return to automatic mode.
  * @param props - Persisted facts and live Session status.
@@ -146,7 +175,7 @@ export function System3Feedback(props: System3FeedbackProps) {
         {t(switching ? 'resetting' : 'reset')}
       </button>}
     </div>
-    {facts?.subagentRun && <DelegationRun run={facts.subagentRun} turnRunning={props.running} t={t} />}
+    {facts?.subagentRun && <DelegationRun run={facts.subagentRun} turnRunning={props.running} onStop={props.onStop} t={t} />}
     {/* From the injected instruction until the delegated run's first snapshot, including the tool call's startup. */}
     {!facts?.subagentRun && facts?.entry?.route?.delegation?.injected === true
       && props.running && <p className={css.run} role="status" aria-live="polite">{t('delegationPreparing')}</p>}
@@ -182,5 +211,5 @@ export function System3Dock(props: Pick<PropsRuntime<'conversation.input.dock'>,
   const failed = props.useSession(s => s.promptError !== null || s.lastAgentError !== null)
   return <System3Feedback key={props.sessionId} facts={facts} selection={selection} running={running} pending={pending}
     pendingRequestId={pendingRequestId}
-    opening={opening} failed={failed} available={props.available} onAutomatic={props.onAutomatic} t={props.t} />
+    opening={opening} failed={failed} available={props.available} onAutomatic={props.onAutomatic} onStop={props.onStop} t={props.t} />
 }

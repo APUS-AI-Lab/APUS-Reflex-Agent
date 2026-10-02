@@ -51,6 +51,12 @@ export interface System3SubagentRunView {
   readonly completed: Readonly<Record<string, number>>
   /** Category of the step in progress, or null. */
   readonly current: string | null
+  /** Milliseconds from start to the latest step, or null before the first step. */
+  readonly lastStepAt: number | null
+  /** Latest short progress text the child wrote for a person, or null. */
+  readonly note: string | null
+  /** Latest unresolved attention alert: overtime lasts while running; stalled and starting clear on the next step. */
+  readonly alert: { readonly kind: string; readonly elapsedMs: number } | null
 }
 
 /** Latest entry, Skill, and delegated-run facts; no prompt bodies, child content, or provider probabilities leave the Host. */

@@ -118,7 +118,7 @@ export interface SubagentRunEndInfo {
 
 /**
  * Category of work a running child reports. It names what kind of step is in
- * progress and never carries child content, paths, tool input, or credentials.
+ * progress and never carries paths, tool input, tool results, or credentials.
  */
 export type SubagentActivityKind = 'message' | 'reasoning' | 'command' | 'file-change' | 'tool' | 'web-search' | 'other'
 
@@ -128,6 +128,12 @@ export interface SubagentActivity {
   readonly kind: SubagentActivityKind
   /** Whether the child began or finished the step. */
   readonly phase: 'started' | 'completed'
+  /**
+   * Short progress text the child wrote for a person, such as a Codex commentary
+   * message, so the person can judge whether the work is on track. Providers send
+   * it only for the child's own messages, never for commands, tool input, or results.
+   */
+  readonly note?: string
 }
 
 /**

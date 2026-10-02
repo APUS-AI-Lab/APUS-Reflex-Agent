@@ -59,7 +59,7 @@ const decision = ctx.system3.route(candidates, 'local-9b')
 
 `entryRouting.deadlineMs` 对基线准备、Jev 建议和所选路由准备共同设限（默认 30000 ms，上限为 `MAX_TIMER_DELAY_MS`）。超时仅能准入已准备且合法的基线；基线未准备完成时拒绝请求，不写入 inbox。基线须匹配已准许的配置候选，或声明 `baseline.executionDomain` 与 `baseline.dataClasses`；独立远端基线使用隐私路由 id `baseline`。取消与提供方卸载会中止待准入请求，迟到建议不会授权再次准入。原生 `resetModelSelection` 为后续合格输入恢复自动路由；用户手选模型保持固定，直到重置。
 
-`delegationProgress: { intervalMs }` 把 Agent 委派的每个子 agent 运行的 `system3/delegation-progress` 快照写入该 Agent 的 Session：开始时一次，有步骤时每个 `intervalMs` 最多一次，结束时带停止原因再写一次。快照包含 provider、开始时间、已用时长、各类别已完成步骤数和进行中的步骤，不含子 agent 内容，也不对模型可见。运行时投影以 `subagentRun` 暴露最新一次运行，客户端将其显示为一行进度。只有上报活动的 provider（Codex 与 Claude Code）会产生运行中快照。
+`delegationProgress: { intervalMs, monitor? }` 把 Agent 委派的每个子 agent 运行的 `system3/delegation-progress` 快照写入该 Agent 的 Session：开始时一次，有步骤时每个 `intervalMs` 最多一次，结束时带停止原因再写一次。快照包含 provider、开始时间、已用时长、各类别已完成步骤数、进行中的步骤、最近一次步骤的时间以及子 agent 最近的简短进度说明；不含命令、路径、工具输入或结果，也不对模型可见。配置 `monitor: { overtimeMs, stallMs, startupMs }` 后，运行在 `startupMs` 内没有第一个步骤、每次超过 `stallMs` 没有新步骤、以及每到 `overtimeMs` 的整数倍时，System3 还会写入 `system3/delegation-alert`。运行时投影以 `subagentRun` 暴露最新一次运行及其说明和未解除的提醒；客户端显示说明，以及带继续等待和停止操作的提醒。只有上报活动的 provider（Codex 与 Claude Code）会产生运行中快照。
 
 `skillSelection` 在原生 `agent/pre-step` 扩展点为下游保留的用户输入选择至多一个当前作用域允许模型调用的 Skill。配置包含 `sessionDataClasses`、`minConfidence`、`maxInputBytes`、`maxContentBytes`、`maxCandidates`（1–254）和 `deadlineMs`。Jev 读取当前文本及完整且有界的目录描述，不读取 Skill 正文或会话历史。稳定候选 id 为独立弃权选项保留位置。隐私拒绝、发现不完整、目录超限、低置信度、超时、元数据过期或正文超限时，保留原生模型与工具流程。目录超过 `maxCandidates` 时不声称自动搜索过全部 Skill；显式 `/name` 调用继续使用自身调用策略。
 
