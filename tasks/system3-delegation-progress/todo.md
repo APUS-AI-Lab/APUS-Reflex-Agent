@@ -37,11 +37,13 @@ Base: branch `feat-system3-g1`. Order follows [architecture section 11](../../do
 - [ ] Delegation threshold: the model itself called the task a one-line fix; compare Flash / always-delegate / Jev on small and large coding tasks.
 - [ ] Python SDK snapshot verified only by hand-patching the committed log (the local runtime build bundles Office skills); CI must confirm.
 
-## Slice 1b · parent-session milestones and progress card
+## Slice 1b · delegation progress card
 
-- [ ] Persistent start / end / throttled milestone events, persistence-type acknowledgement, both SDK expected outputs, keyless snapshot.
-- [ ] Projection and System3Dock progress card.
-- [ ] Delegation suggestion injected at pre-step, with its persistent decision record.
+- [x] `delegationProgress`: start, throttled running, and end snapshots as `system3/delegation-progress` in the delegating Agent's Session; persistence change recorded.
+- [x] Projection `subagentRun` and the dock progress line with locally advancing elapsed time.
+- [x] Real Web run: slugify task delegated to Codex; the line updated every 2 s from start to "finished · 152 s" (reasoning 7, messages 7, commands 8, file changes 2); 25 snapshots; 8 / 8 tests pass; the line is restored after a page reload.
+- [ ] The main model read files for about 25 s before calling `subagent_codex`; tighten the instruction so delegation starts at once.
+- [ ] Codex reported no step for its first ~26 s; only the running timer shows then.
 
 ## Slice 2 · delegation supervision
 
