@@ -82,3 +82,12 @@ Base: branch `feat-system3-g1`. Order follows [architecture section 11](../../do
 - [x] Gates + real Web run: steer a running Codex and observe adoption.
 - Real Web run (personal Codex login, gpt-5.5): TaskQueue task delegated; at 21 s into the run a steer asked for an extra `snapshot()` method; the card showed "Added at 21 s" 0.4 s after send; Codex implemented `snapshot()` with tests, 35 / 35 pass; the steer line survived a page reload. A smaller task (textstats) finished before a steer could be sent, so simple delegations often last under a minute.
 - Gates: typecheck, lint, doc-sync 42/42, hygiene 18/18, 100 % coverage on changed files. `test:snapshot` and `packages/experimental` have failures only in browser-use-stagehand-native (Node load hook returns no source); the same test fails on main.
+
+## Server probes, delegation calibration, composer marker (2026-10-03)
+
+- [x] Server probes without releasing: Jev p50 274 ms / p95 406 ms on a reused connection; Codex 0.153.4 under the unit's hardening fixed a file in 38 s, and its sandbox refused a write outside the workspace. `CODEX_HOME` must not be under `/tmp`.
+- [x] Three-arm calibration (10 tasks x 2 runs, hidden tests): Flash alone and always-delegate both 20/20, median 36 s vs 203 s; Jev under the old wording delegated 8/10. Deployed Codex wording tightened; repository-scale probes still delegate 2/3. Four-tier eval unchanged at 29/30.
+- [x] Composer chip: verified in Web that a routed turn already showed the routed model; added an Auto caption during the routed turn (verified: "Auto gpt-5.6-sol-relay Medium" during, "deepseek-v4-flash Low" after).
+- [ ] Release to root@litellm: user chose to decide after the calibration result.
+- [ ] Tier routing for coding tasks: GPT-5.6 Sol took 321-581 s on two large tasks Flash did in 68-117 s; calibrate tiers separately.
+- [ ] Tasks Flash fails, to measure where delegation pays off.
