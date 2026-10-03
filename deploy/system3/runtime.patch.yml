@@ -80,7 +80,7 @@
           intervalMs: 2000
           monitor:
             overtimeMs: 360000
-            stallMs: 90000
+            stallMs: 180000
             startupMs: 120000
         skillSelection:
           sessionDataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'
@@ -140,6 +140,10 @@
               delegate:
                 provider: codex
                 tool: subagent_codex
+              explicitPatterns:
+                - '(交给|让|用|委派给?)\s*codex'
+                - 'subagent_codex'
+                - 'delegate (this |it )?to codex'
               executionDomain: network
               dataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'
     # Delegation target: Codex with the private home release.sh installs, calling the Fidoo relay.

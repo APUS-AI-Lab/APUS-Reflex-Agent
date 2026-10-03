@@ -69,7 +69,7 @@
 | `event:system3/decision` | event | `b923b60d7839c5e3d3e03be20abbe587b9029440c839b8459cd1672149f971fe` | [`{ type: "system3/decision" }`](#persistence-type-sha256-b923b60d7839c5e3d3e03be20abbe587b9029440c839b8459cd1672149f971fe) |
 | `event:system3/delegation-alert` | event | `20dcc98052694791c25e6c5320ca2cd95d97ec162b4665bc76648da80f7033e0` | [`{ type: "system3/delegation-alert" }`](#persistence-type-sha256-20dcc98052694791c25e6c5320ca2cd95d97ec162b4665bc76648da80f7033e0) |
 | `event:system3/delegation-progress` | event | `d2a568622f9a85d22c3f32d648d2f9a0b80f05b8f76e0c39268ddbc4c2e36ee2` | [`{ type: "system3/delegation-progress" }`](#persistence-type-sha256-d2a568622f9a85d22c3f32d648d2f9a0b80f05b8f76e0c39268ddbc4c2e36ee2) |
-| `event:system3/entry-decision` | event | `0cfb145b502a904af1045bbed75063afa0713b8155f27b54d2fcc0d0ff2e6f29` | [`{ type: "system3/entry-decision" }`](#persistence-type-sha256-0cfb145b502a904af1045bbed75063afa0713b8155f27b54d2fcc0d0ff2e6f29) |
+| `event:system3/entry-decision` | event | `b21037892a17d8375f1124a35300ccf73135bc598404d2f9d39ddcd03807d896` | [`{ type: "system3/entry-decision" }`](#persistence-type-sha256-b21037892a17d8375f1124a35300ccf73135bc598404d2f9d39ddcd03807d896) |
 | `event:system3/entry-start` | event | `0f109d50397f1d347b2f62df20bd1e21a200c839428c8bca5449e8ed37ab633a` | [`{ type: "system3/entry-start" }`](#persistence-type-sha256-0f109d50397f1d347b2f62df20bd1e21a200c839428c8bca5449e8ed37ab633a) |
 | `event:system3/skill-decision` | event | `2da260ec5f7fe67028206d4c6254ff01a52dfe9a7f9aa67dedf72324ac4748ce` | [`{ type: "system3/skill-decision" }`](#persistence-type-sha256-2da260ec5f7fe67028206d4c6254ff01a52dfe9a7f9aa67dedf72324ac4748ce) |
 | `event:team/member` | event | `4fb59762612c3e3ac3a3bd4f84c9c148d3c3893bd422ba2b201cc039fabd49bc` | [`{ type: "team/member" }`](#persistence-type-sha256-4fb59762612c3e3ac3a3bd4f84c9c148d3c3893bd422ba2b201cc039fabd49bc) |
@@ -1061,7 +1061,7 @@ export type SessionEvent<T extends SessionEventType = SessionEventType> = {
 'system3/entry-decision': System3EntryDecisionReceipt
 ```
 
-来源：[`packages/experimental/system3/src/entry-routing.ts:128`](../packages/experimental/system3/src/entry-routing.ts)
+来源：[`packages/experimental/system3/src/entry-routing.ts:135`](../packages/experimental/system3/src/entry-routing.ts)
 
 <a id="system3entry-start--log-only"></a>
 
@@ -1072,7 +1072,7 @@ export type SessionEvent<T extends SessionEventType = SessionEventType> = {
 'system3/entry-start': { readonly requestId: SessionRequestId }
 ```
 
-来源：[`packages/experimental/system3/src/entry-routing.ts:126`](../packages/experimental/system3/src/entry-routing.ts)
+来源：[`packages/experimental/system3/src/entry-routing.ts:133`](../packages/experimental/system3/src/entry-routing.ts)
 
 <a id="system3skill-decision--log-only"></a>
 
@@ -5637,7 +5637,7 @@ SHA-256: `42a78477f622034f05ace9fda7264c5dcb524b815eb10078b9bf35b4c091be0e`
 | `requestId` | 必需 | `string` |
 | `tool` | 必需 | `string` |
 
-<a id="persistence-type-sha256-4f069fd40f15039431cc2da4466e5206a13f4cc078c30ff5bf83b5ecbbf82b5f"></a>
+<a id="persistence-type-sha256-cc73d5eb613926a3930eabbfeef87e8f7d0c2d702ff28e2cec54993adc4b5cc9"></a>
 
 <a id="persistence-type-packagesexperimentalsystem3srcentry-routingtssystem3entrydecisionreceipt"></a>
 
@@ -5645,9 +5645,9 @@ SHA-256: `42a78477f622034f05ace9fda7264c5dcb524b815eb10078b9bf35b4c091be0e`
 
 ### `System3EntryDecisionReceipt`
 
-SHA-256: `4f069fd40f15039431cc2da4466e5206a13f4cc078c30ff5bf83b5ecbbf82b5f`
+SHA-256: `cc73d5eb613926a3930eabbfeef87e8f7d0c2d702ff28e2cec54993adc4b5cc9`
 
-来源：[`packages/experimental/system3/src/entry-routing.ts:95`](../packages/experimental/system3/src/entry-routing.ts)
+来源：[`packages/experimental/system3/src/entry-routing.ts:100`](../packages/experimental/system3/src/entry-routing.ts)
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|
@@ -5657,6 +5657,7 @@ SHA-256: `4f069fd40f15039431cc2da4466e5206a13f4cc078c30ff5bf83b5ecbbf82b5f`
 | `dataClasses` | 必需 | [`System3DataClass[]`](#persistence-type-sha256-7a07d713ef0579a8fcde543599e60247a372bd88e1d134ac198f4a39275a195b) |
 | `elapsedMs` | 必需 | `number` |
 | `executionDomain` | 必需 | [`System3ExecutionDomain`](#persistence-type-sha256-5bc0567a620ccf8b2810928108239344c0ffd73b70d036cab16490a8949269cc) |
+| `explicit` | 可选 | `true` |
 | `outcome` | 必需 | [`System3EntryOutcome`](#persistence-type-sha256-a3c362e0bd82c3cb56f36af9b44012717d9c81299cef799ca149bf6db18c8f96) |
 | `request` | 必需 | [`union (2 variants)`](#persistence-type-sha256-7ee064a4547ab8ee2673099ef72df06ab2a1f8795c7ad295ac42125289713156) |
 | `requestId` | 必需 | `string` |
@@ -5676,7 +5677,7 @@ SHA-256: `4f069fd40f15039431cc2da4466e5206a13f4cc078c30ff5bf83b5ecbbf82b5f`
 
 SHA-256: `a3c362e0bd82c3cb56f36af9b44012717d9c81299cef799ca149bf6db18c8f96`
 
-来源：[`packages/experimental/system3/src/entry-routing.ts:91`](../packages/experimental/system3/src/entry-routing.ts)
+来源：[`packages/experimental/system3/src/entry-routing.ts:96`](../packages/experimental/system3/src/entry-routing.ts)
 
 以下类型之一：
 
@@ -7186,7 +7187,7 @@ SHA-256: `374fdd68aee5ff844e378c0cbdd961d247a0f22e4ade0bb03d800cd2a46a2b8b`
 
 SHA-256: `c45f46c07aa5d4629edc34cbc88664217db0e0ef03391f974cf1e33cdc381611`
 
-来源：[`packages/experimental/system3/src/entry-routing.ts:109`](../packages/experimental/system3/src/entry-routing.ts)
+来源：[`packages/experimental/system3/src/entry-routing.ts:114`](../packages/experimental/system3/src/entry-routing.ts)
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|
@@ -8863,7 +8864,7 @@ SHA-256: `8a9c990773f798eac10ca8878e6bcc531ee080bc589cac956730e462cc6a09ad`
 
 SHA-256: `6dda6edcd5efa13288057e07a63d074f1ffa9a9397500c36821c7c1bc43a3b9c`
 
-来源：[`packages/experimental/system3/src/entry-routing.ts:112`](../packages/experimental/system3/src/entry-routing.ts)
+来源：[`packages/experimental/system3/src/entry-routing.ts:117`](../packages/experimental/system3/src/entry-routing.ts)
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|
@@ -8889,7 +8890,7 @@ SHA-256: `e481c46af3813e0010558e93f578b2986acd658404cec2d1679e3ac2a6c48654`
 
 SHA-256: `e9aab28f480d6bee8861944401a7f7e361df56c27606d9d2721518bfdfb07d35`
 
-来源：[`packages/experimental/system3/src/entry-routing.ts:126`](../packages/experimental/system3/src/entry-routing.ts)
+来源：[`packages/experimental/system3/src/entry-routing.ts:133`](../packages/experimental/system3/src/entry-routing.ts)
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|
@@ -8901,7 +8902,7 @@ SHA-256: `e9aab28f480d6bee8861944401a7f7e361df56c27606d9d2721518bfdfb07d35`
 
 SHA-256: `063a3a7dda2642105aa09aeab28b90e03af134e506b27cd50a5202b776d9e756`
 
-来源：[`packages/experimental/system3/src/entry-routing.ts:115`](../packages/experimental/system3/src/entry-routing.ts)
+来源：[`packages/experimental/system3/src/entry-routing.ts:122`](../packages/experimental/system3/src/entry-routing.ts)
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|
@@ -9869,17 +9870,17 @@ SHA-256: `d2a568622f9a85d22c3f32d648d2f9a0b80f05b8f76e0c39268ddbc4c2e36ee2`
 | `time` | 必需 | `number` |
 | `type` | 必需 | `"system3/delegation-progress"` |
 
-<a id="persistence-type-sha256-0cfb145b502a904af1045bbed75063afa0713b8155f27b54d2fcc0d0ff2e6f29"></a>
+<a id="persistence-type-sha256-b21037892a17d8375f1124a35300ccf73135bc598404d2f9d39ddcd03807d896"></a>
 
 <a id="persistence-type-eventsystem3entry-decision"></a>
 
 ### `{ type: "system3/entry-decision" }`
 
-SHA-256: `0cfb145b502a904af1045bbed75063afa0713b8155f27b54d2fcc0d0ff2e6f29`
+SHA-256: `b21037892a17d8375f1124a35300ccf73135bc598404d2f9d39ddcd03807d896`
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|
-| `data` | 必需 | [`System3EntryDecisionReceipt`](#persistence-type-sha256-4f069fd40f15039431cc2da4466e5206a13f4cc078c30ff5bf83b5ecbbf82b5f) |
+| `data` | 必需 | [`System3EntryDecisionReceipt`](#persistence-type-sha256-cc73d5eb613926a3930eabbfeef87e8f7d0c2d702ff28e2cec54993adc4b5cc9) |
 | `ignorable` | 可选 | `true` |
 | `seq` | 必需 | `number` |
 | `time` | 必需 | `number` |

@@ -175,6 +175,7 @@ export default class System3 extends Service implements System3Service {
         ...candidateFields, provider: z.string().required(), model: z.string().required(), reasoningEffort: z.string(),
       }), z.object({
         ...candidateFields, delegate: z.object({ provider: z.string().required(), tool: z.string().required() }).required(),
+        explicitPatterns: z.array(z.string()),
       })])).required(),
       sessionDataClasses: z.array(z.union([z.const('public'), z.const('workspace'), z.const('sensitive'), z.const('secret')])).required(),
       minConfidence: z.number().min(0).max(1).required(),

@@ -120,3 +120,37 @@ it('falls back to the tool name when the delegation route has no label and rejec
     signal: new AbortController().signal }, () => Promise.resolve({ kind: 'enter', messages: [h.message] }))
   expect(result.kind === 'enter' && result.messages.at(-1)?.content).toEqual([{ type: 'text', text: delegationInstruction('subagent_codex', 'subagent_codex') }])
 })
+
+it('delegates without asking Jev when the person explicitly asks for the delegate, and only while it is available', async () => {
+  const explicitConfig: System3EntryRoutingConfig = { ...config, candidates: [config.candidates[0]!,
+    { ...config.candidates[1]!, explicitPatterns: ['交给\\s*codex', 'subagent_codex'] } as System3EntryRoutingConfig['candidates'][number]] }
+  const route = (h: Awaited<ReturnType<typeof setup>>, text: string) => createSystem3EntryRouter(h.ctx, explicitConfig,
+    { mode: 'local-only' }, { routeId: 'jev', executionDomain: 'local', effort: 'low' }).route({ agent: h.agent, requestId: h.requestId,
+    baseline: { provider: 'mock', model: 'fast' },
+    message: createUserMessage({ content: [{ type: 'text', text }], source: { kind: 'user', rpcId: h.requestId } }) }, new AbortController().signal)
+  const h = await setup()
+  installSystem3Delegation(h.ctx)
+  expect(await route(h, '这个重构直接交给 Codex 做')).toBeUndefined()
+  expect(h.decide).not.toHaveBeenCalled()
+  expect(h.agent.session.snapshotEvents().at(-1)?.data).toMatchObject({ outcome: 'selected', explicit: true, request: null,
+    candidate: { id: 'codex', delegate: { provider: 'codex', tool: 'subagent_codex' } } })
+  expect(h.view()?.route?.delegation).toMatchObject({ candidateId: 'codex', injected: false })
+  await route(h, '解释一下这段代码')
+  expect(h.decide).toHaveBeenCalledOnce()
+  const unavailable = await setup({ provider: false, tool: true })
+  unavailable.decide.mockImplementation(async query => ({ kind: 'ok', spec: unavailable.ctx.jev.resolve(query),
+    response: { model: 'jev-test', answers: { route: { type: 'choice', choice: 'fast', confidence: 0.95, probabilities: { fast: 0.95 } } } } }))
+  await route(unavailable, '交给 codex')
+  expect(unavailable.decide).toHaveBeenCalledOnce()
+  expect(unavailable.agent.session.snapshotEvents().at(-1)?.data).toMatchObject({ outcome: 'selected', candidate: { id: 'fast' } })
+  expect(unavailable.agent.session.snapshotEvents().at(-1)?.data).not.toHaveProperty('explicit')
+})
+
+it('rejects blank and invalid explicit delegation patterns at load', async () => {
+  const h = await setup()
+  const create = (explicitPatterns: string[]) => createSystem3EntryRouter(h.ctx, { ...config, candidates: [config.candidates[0]!,
+    { ...config.candidates[1]!, explicitPatterns } as System3EntryRoutingConfig['candidates'][number]] },
+  { mode: 'local-only' }, { routeId: 'jev', executionDomain: 'local', effort: 'low' })
+  expect(() => create([' '])).toThrow('explicitPatterns must not be empty')
+  expect(() => create(['(unclosed'])).toThrow('not a valid regular expression: (unclosed')
+})
