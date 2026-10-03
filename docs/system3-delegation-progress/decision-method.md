@@ -47,7 +47,8 @@ The entry decides who receives the input before any model starts. Routes fall in
 **Delegation rules:**
 
 - Delegation is one kind of entry candidate, not a separate decision procedure.
-- A candidate's description states the task size it covers; small single-file changes should not be delegated (see [Not yet proven](#not-yet-proven)).
+- Codex and Claude Code receive only the highest-value, most complex, longest-running work: repository-scale tasks that need long exploration, changes across many files, and repeated build-and-test cycles beyond one conversation. Everything an owned model finishes in one conversation stays with that model, because the [delegation calibration](delegation-calibration.md) found no accepted result gained by delegating such tasks and a 4 to 13 times longer run.
+- A candidate's description states the task size it covers in observable terms (codebase size, files touched, expected duration); value itself is not visible in the input, so the person's explicit request to delegate is the signal for it.
 - When an external agent is unavailable, the entry decision falls back to owned models.
 
 <a id="process-control"></a>
