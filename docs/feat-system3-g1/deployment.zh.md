@@ -24,6 +24,8 @@ systemd 单元采用空 capability 集、NoNewPrivileges、ProtectSystem=strict�
 
 委派的 Codex 使用随应用打包的 Codex CLI，`CODEX_HOME` 为服务专属的 `/var/lib/xdan-system3/codex-home`（权限 0700）。每次发布都把 `deploy/system3/codex/config.toml` 以 0600 权限装入该目录：它让 Codex 通过 Fidoo 的 Responses API 调用 `gpt-5.6-sol-relay`，从 `SYSTEM3_LITELLM_API_KEY` 读取 key，设置 `approval_policy = "never"` 和 `sandbox_mode = "workspace-write"`，并关闭更新检查和分析上报。个人 ChatGPT 登录、插件和 MCP server 都不进入该目录。systemd 单元设置 `SYSTEM3_CODEX_HOME`；`runtime.patch.yml` 只把它和 key 传给 Codex 子进程。Codex 用随包附带的 bubblewrap 沙箱化它执行的命令。2026-10-03 在本机按该单元的加固参数（同一用户、NoNewPrivileges、空 capability 集、ProtectSystem=strict、ProtectHome、PrivateTmp、PrivateDevices 和 ReadWritePaths 的临时单元）运行 Codex 0.153.4：修复文件并通过测试，用时 38 秒；向工作区外写文件时报只读文件系统错误，尽管单元本身允许写该路径。`CODEX_HOME` 位于 `/tmp` 下时 Codex 拒绝创建沙箱辅助程序链接，因此该目录必须留在 `/var/lib/xdan-system3` 下。DSH 以普通托管进程启动 Codex，Codex 的沙箱不会嵌套在 DSH 的 bubblewrap 内。
 
+自 2026-10-03 起，也可以通过 `https://system3.xdan.work/` 访问 Harness。主机的 nginx 用 certbot HTTP-01 证书终止 TLS，要求先通过 Basic Auth，再代理到 loopback 端口；systemd 单元传入 `--trusted-host system3.xdan.work`，使 Harness 接受该主机名。站点文件为 `deploy/system3/nginx/system3.xdan.work.conf`，密码哈希在 `/etc/nginx/htpasswd/system3.xdan.work`，操作者把密码和公网启动 URL 保存在权限为 0600 的 `~/.config/xdan-system3/basic-auth` 与 `~/.config/xdan-system3/public-launch-url`。访问日志不记录查询参数，启动 token 不会写入磁盘。每个浏览器需要先通过一次 Basic Auth，再打开一次启动 URL 获取 Harness cookie，并选择一次 `workspace` 工作区。Harness 只有一个操作者：所有获准进入的人共享它的会话、工作区和凭据，只应把访问权限给可信的人。
+
 ## 发布和恢复
 
 在服务器的已审查源码归档目录运行 `deploy/system3/release.sh <immutable-release-id> <source-commit>`。脚本依据 lockfile 安装依赖，在固定 Node 镜像中构建 Linux 产物，提取应用及匹配的 Node/bubblewrap 二进制，建立归 root 所有的发布目录，原子切换后仅重启 System3 单元。源码 commit 写入客户端元数据和镜像标签。健康检查要求进程 active，且匿名 API 请求返回 HTTP 401。 只有健康发布才更新前一发布指针；发布失败保留已有回滚目标。每个发布保存自己的 `service.unit`；旧的活动发布在首次被替代前补存当时的单元一次。
@@ -38,6 +40,7 @@ systemd 单元采用空 capability 集、NoNewPrivileges、ProtectSystem=strict�
 | `deploy/system3/Dockerfile.dockerignore` | 排除本地依赖、构建输出和常见凭据文件 |
 | `deploy/system3/runtime.patch.yml` | Loopback 传输、模型路由和显式 System3 策略 |
 | `deploy/system3/xdan-system3.service` | 专用用户、文件系统隔离和资源限制 |
+| `deploy/system3/nginx/system3.xdan.work.conf` | 公网 TLS 站点，在 loopback 端口前加 Basic Auth |
 | `deploy/system3/codex/config.toml` | 委派运行使用的私有 Codex home 配置 |
 | `deploy/system3/release.sh` | 构建、提取、切换和健康验证 |
 | `deploy/system3/rollback.sh` | 恢复兼容的前一发布 |
