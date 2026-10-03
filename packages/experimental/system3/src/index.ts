@@ -13,6 +13,7 @@ import { installSystem3KeepWarm } from './keep-warm.ts'
 import { installSystem3Delegation } from './delegation.ts'
 import { installSystem3DelegationProgress, type System3DelegationProgressConfig } from './delegation-progress.ts'
 import { installSystem3ProcessSupervision, type System3ProcessSupervisionConfig } from './process-supervision.ts'
+import { installSystem3RouteHealth } from './route-health.ts'
 import type { Session } from '@deepseek-ai/dsh-session'
 import { recordSystem3Decision, type System3DecisionRequest, type System3DecisionReceipt, type System3JevOptions } from './decisions.ts'
 
@@ -25,6 +26,8 @@ export type { System3DelegationSource } from './delegation.ts'
 export type { System3DelegationAlert, System3DelegationMonitorConfig, System3DelegationProgress, System3DelegationProgressConfig } from './delegation-progress.ts'
 export type { System3EntryCandidate, System3EntryDelegateCandidate, System3EntryModelCandidate, System3EntryRoutingConfig, System3EntryDecisionReceipt, System3EntryOutcome } from './entry-routing.ts'
 export type { System3KeepWarmConfig } from './keep-warm.ts'
+export type { System3ProcessNotice, System3ProcessRule, System3ProcessSupervisionConfig, System3SupervisionSource } from './process-supervision.ts'
+export type { System3RouteHealth, System3RouteHealthConfig, System3RouteHealthReason, System3RouteHealthStatus } from './route-health.ts'
 import { selectSystem3Evidence, type System3EvidenceRequest, type System3EvidenceSelection } from '@deepseek-ai/dsh-experimental-system3-evidence'
 import { selectSystem3Route, type System3PrivacyMode, type System3RouteCandidate, type System3RouteSelection, type System3PrivacyPolicy } from '@deepseek-ai/dsh-experimental-system3-policy'
 import { compareSystem3Advice, superviseSystem3Advice, sumSystem3CostRecords, validateSystem3CostRecord, type System3AdviceAction, type System3CostRecord, type System3SupervisorRequest, type System3SupervisorResult, type System3ShadowComparison } from '@deepseek-ai/dsh-experimental-system3-supervisor'
@@ -188,6 +191,19 @@ export default class System3 extends Service implements System3Service {
         windowMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).required(),
         intervalMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).required(),
       })]),
+      routeHealth: z.union([z.const(undefined), z.object({
+        window: z.number().step(1).min(1).required(),
+        sampleTtlMs: z.number().step(1).min(1).required(),
+        minSamples: z.number().step(1).min(1).required(),
+        maxFirstTokenMs: z.number().min(0).required(),
+        minTokensPerSecond: z.number().min(0).required(),
+        minOutputTokens: z.number().step(1).min(1).required(),
+        maxErrorRate: z.number().min(0).max(1).required(),
+        probe: z.union([z.const(false), z.object({
+          idleMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).required(),
+          maxTokens: z.number().step(1).min(1).required(),
+        })]).required(),
+      })]),
     })]).default(false),
     skillSelection: z.union([z.const(false), z.object({
       sessionDataClasses: z.array(z.union([z.const('public'), z.const('workspace'), z.const('sensitive'), z.const('secret')])).required(),
@@ -235,7 +251,11 @@ export default class System3 extends Service implements System3Service {
       ctx.sessionProjections.register(system3RuntimeProjection)
     })
     if (config.entryRouting !== undefined && config.entryRouting !== false) {
-      const router = createSystem3EntryRouter(ctx, config.entryRouting, this.privacyPolicy, this.jevOptions)
+      const routes = config.entryRouting.candidates.filter(candidate => candidate.delegate === undefined)
+        .map(candidate => ({ provider: candidate.provider, model: candidate.model }))
+      const health = config.entryRouting.routeHealth === undefined ? undefined
+        : installSystem3RouteHealth(ctx, config.entryRouting.routeHealth, routes)
+      const router = createSystem3EntryRouter(ctx, config.entryRouting, this.privacyPolicy, this.jevOptions, health)
       const retains = config.entryRouting.retainOnAbstain === true
       ctx.inject(retains ? ['sessionController', 'llm', 'sessionProjections'] : ['sessionController', 'llm'], (ctx) => {
         ctx.effect(() => ctx.sessionController.registerPromptRouter(router))

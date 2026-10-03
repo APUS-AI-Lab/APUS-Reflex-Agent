@@ -12,6 +12,8 @@ export interface System3EntryView {
   readonly elapsedMs: number | null
   /** Turn that carried this input, once its user message is committed; null before admission. */
   readonly turn: number | null
+  /** Model candidates left out of this decision because their route was degraded, by display label. */
+  readonly avoided: readonly { readonly label: string; readonly reason: string }[]
   /** Configured route chosen for this input, by Jev or by continuing the previous route; null when the baseline was kept. */
   readonly route: {
     readonly id: string

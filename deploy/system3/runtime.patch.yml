@@ -111,6 +111,18 @@
           keepWarm:
             windowMs: 300000
             intervalMs: 2000
+          # Avoid only clearly broken lines: on prd the relay first token is about 26 s and every route streams 100+ tok/s.
+          routeHealth:
+            window: 20
+            sampleTtlMs: 1800000
+            minSamples: 3
+            maxFirstTokenMs: 45000
+            minTokensPerSecond: 10
+            minOutputTokens: 200
+            maxErrorRate: 0.5
+            probe:
+              idleMs: 1800000
+              maxTokens: 64
           candidates:
             - id: fast
               description: 简短问答、翻译、改写、归纳，以及范围明确、一步就能完成的常规任务。

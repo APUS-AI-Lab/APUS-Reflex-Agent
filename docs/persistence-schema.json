@@ -17560,7 +17560,7 @@
       "kind": "event",
       "event": "system3/entry-decision",
       "surface": false,
-      "digest": "b21037892a17d8375f1124a35300ccf73135bc598404d2f9d39ddcd03807d896",
+      "digest": "9c7cecd646b7d0ce7f1fbf3b341f2d1c1c31135d0de9e1cb556a51a0d33177ff",
       "schema": {
         "root": 0,
         "nodes": [
@@ -17574,22 +17574,22 @@
               },
               {
                 "name": "ignorable",
-                "type": 17,
+                "type": 23,
                 "optional": true
               },
               {
                 "name": "seq",
-                "type": 13,
+                "type": 19,
                 "optional": false
               },
               {
                 "name": "time",
-                "type": 13,
+                "type": 19,
                 "optional": false
               },
               {
                 "name": "type",
-                "type": 63,
+                "type": 69,
                 "optional": false
               }
             ],
@@ -17599,140 +17599,83 @@
             "kind": "object",
             "properties": [
               {
-                "name": "baseline",
+                "name": "avoided",
                 "type": 2,
+                "optional": true
+              },
+              {
+                "name": "baseline",
+                "type": 9,
                 "optional": false
               },
               {
                 "name": "candidate",
-                "type": 4,
+                "type": 10,
                 "optional": true
               },
               {
                 "name": "candidateIds",
-                "type": 6,
+                "type": 12,
                 "optional": false
               },
               {
                 "name": "dataClasses",
-                "type": 7,
-                "optional": false
-              },
-              {
-                "name": "elapsedMs",
                 "type": 13,
                 "optional": false
               },
               {
+                "name": "elapsedMs",
+                "type": 19,
+                "optional": false
+              },
+              {
                 "name": "executionDomain",
-                "type": 14,
+                "type": 20,
                 "optional": false
               },
               {
                 "name": "explicit",
-                "type": 17,
+                "type": 23,
                 "optional": true
               },
               {
                 "name": "outcome",
-                "type": 18,
+                "type": 24,
                 "optional": false
               },
               {
                 "name": "request",
-                "type": 34,
+                "type": 40,
                 "optional": false
               },
               {
                 "name": "requestId",
-                "type": 3,
+                "type": 4,
                 "optional": false
               },
               {
                 "name": "response",
-                "type": 54,
+                "type": 60,
                 "optional": true
               },
               {
                 "name": "retained",
-                "type": 61,
+                "type": 67,
                 "optional": true
               },
               {
                 "name": "routeId",
-                "type": 3,
+                "type": 4,
                 "optional": false
               },
               {
                 "name": "selected",
-                "type": 2,
+                "type": 9,
                 "optional": true
               },
               {
                 "name": "version",
-                "type": 62,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "model",
-                "type": 3,
-                "optional": false
-              },
-              {
-                "name": "provider",
-                "type": 3,
-                "optional": false
-              },
-              {
-                "name": "reasoningEffort",
-                "type": 3,
-                "optional": true
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "primitive",
-            "type": "string"
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "delegate",
-                "type": 5,
-                "optional": true
-              },
-              {
-                "name": "id",
-                "type": 3,
-                "optional": false
-              },
-              {
-                "name": "label",
-                "type": 3,
-                "optional": true
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "provider",
-                "type": 3,
-                "optional": false
-              },
-              {
-                "name": "tool",
-                "type": 3,
+                "type": 68,
                 "optional": false
               }
             ],
@@ -17743,17 +17686,128 @@
             "element": 3
           },
           {
-            "kind": "array",
-            "element": 8
+            "kind": "object",
+            "properties": [
+              {
+                "name": "id",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "label",
+                "type": 4,
+                "optional": true
+              },
+              {
+                "name": "reason",
+                "type": 5,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
           },
           {
             "kind": "union",
             "types": [
-              9,
-              10,
-              11,
-              12
+              6,
+              7,
+              8
             ]
+          },
+          {
+            "kind": "literal",
+            "value": "slow-first-token"
+          },
+          {
+            "kind": "literal",
+            "value": "slow-output"
+          },
+          {
+            "kind": "literal",
+            "value": "errors"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "model",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "provider",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "reasoningEffort",
+                "type": 4,
+                "optional": true
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "delegate",
+                "type": 11,
+                "optional": true
+              },
+              {
+                "name": "id",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "label",
+                "type": 4,
+                "optional": true
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "provider",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "tool",
+                "type": 4,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "array",
+            "element": 4
+          },
+          {
+            "kind": "array",
+            "element": 14
+          },
+          {
+            "kind": "union",
+            "types": [
+              15,
+              16,
+              17,
+              18
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "sensitive"
           },
           {
             "kind": "literal",
@@ -17768,27 +17822,23 @@
             "value": "secret"
           },
           {
-            "kind": "literal",
-            "value": "sensitive"
-          },
-          {
             "kind": "primitive",
             "type": "number"
           },
           {
             "kind": "union",
             "types": [
-              15,
-              16
+              21,
+              22
             ]
           },
           {
             "kind": "literal",
-            "value": "network"
+            "value": "local"
           },
           {
             "kind": "literal",
-            "value": "local"
+            "value": "network"
           },
           {
             "kind": "literal",
@@ -17797,12 +17847,6 @@
           {
             "kind": "union",
             "types": [
-              19,
-              20,
-              21,
-              22,
-              23,
-              24,
               25,
               26,
               27,
@@ -17811,7 +17855,13 @@
               30,
               31,
               32,
-              33
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39
             ]
           },
           {
@@ -17824,11 +17874,19 @@
           },
           {
             "kind": "literal",
+            "value": "unsupported-input"
+          },
+          {
+            "kind": "literal",
+            "value": "privacy-denied"
+          },
+          {
+            "kind": "literal",
             "value": "abstain"
           },
           {
             "kind": "literal",
-            "value": "unsupported-input"
+            "value": "provider-unavailable"
           },
           {
             "kind": "literal",
@@ -17836,11 +17894,15 @@
           },
           {
             "kind": "literal",
+            "value": "rate-limited"
+          },
+          {
+            "kind": "literal",
             "value": "missing-credential"
           },
           {
             "kind": "literal",
-            "value": "rate-limited"
+            "value": "cancelled"
           },
           {
             "kind": "literal",
@@ -17860,25 +17922,13 @@
           },
           {
             "kind": "literal",
-            "value": "cancelled"
-          },
-          {
-            "kind": "literal",
-            "value": "privacy-denied"
-          },
-          {
-            "kind": "literal",
-            "value": "provider-unavailable"
-          },
-          {
-            "kind": "literal",
             "value": "selected"
           },
           {
             "kind": "union",
             "types": [
-              35,
-              53
+              41,
+              59
             ]
           },
           {
@@ -17886,27 +17936,27 @@
             "properties": [
               {
                 "name": "effort",
-                "type": 36,
+                "type": 42,
                 "optional": true
               },
               {
                 "name": "model",
-                "type": 3,
+                "type": 4,
                 "optional": true
               },
               {
                 "name": "providerId",
-                "type": 3,
+                "type": 4,
                 "optional": true
               },
               {
                 "name": "questions",
-                "type": 39,
+                "type": 45,
                 "optional": false
               },
               {
                 "name": "state",
-                "type": 49,
+                "type": 55,
                 "optional": false
               }
             ],
@@ -17915,34 +17965,34 @@
           {
             "kind": "union",
             "types": [
-              37,
-              38
+              43,
+              44
             ]
-          },
-          {
-            "kind": "literal",
-            "value": "high"
           },
           {
             "kind": "literal",
             "value": "low"
           },
           {
+            "kind": "literal",
+            "value": "high"
+          },
+          {
             "kind": "object",
             "properties": [],
             "indices": [
               {
-                "key": 3,
-                "value": 40
+                "key": 4,
+                "value": 46
               }
             ]
           },
           {
             "kind": "union",
             "types": [
-              41,
-              43,
-              46
+              47,
+              49,
+              52
             ]
           },
           {
@@ -17950,17 +18000,17 @@
             "properties": [
               {
                 "name": "criteria",
-                "type": 6,
+                "type": 12,
                 "optional": false
               },
               {
                 "name": "instructions",
-                "type": 3,
+                "type": 4,
                 "optional": true
               },
               {
                 "name": "type",
-                "type": 42,
+                "type": 48,
                 "optional": false
               }
             ],
@@ -17975,17 +18025,17 @@
             "properties": [
               {
                 "name": "criteria",
-                "type": 44,
+                "type": 50,
                 "optional": false
               },
               {
                 "name": "instructions",
-                "type": 3,
+                "type": 4,
                 "optional": true
               },
               {
                 "name": "type",
-                "type": 45,
+                "type": 51,
                 "optional": false
               }
             ],
@@ -17996,8 +18046,8 @@
             "properties": [],
             "indices": [
               {
-                "key": 3,
-                "value": 3
+                "key": 4,
+                "value": 4
               }
             ]
           },
@@ -18010,17 +18060,17 @@
             "properties": [
               {
                 "name": "criteria",
-                "type": 47,
+                "type": 53,
                 "optional": true
               },
               {
                 "name": "instructions",
-                "type": 3,
+                "type": 4,
                 "optional": true
               },
               {
                 "name": "type",
-                "type": 48,
+                "type": 54,
                 "optional": false
               }
             ],
@@ -18031,12 +18081,12 @@
             "properties": [
               {
                 "name": "false",
-                "type": 3,
+                "type": 4,
                 "optional": false
               },
               {
                 "name": "true",
-                "type": 3,
+                "type": 4,
                 "optional": false
               }
             ],
@@ -18049,25 +18099,25 @@
           {
             "kind": "union",
             "types": [
-              3,
-              13,
-              50,
-              51,
-              52,
-              53
+              4,
+              19,
+              56,
+              57,
+              58,
+              59
             ]
           },
           {
             "kind": "array",
-            "element": 49
+            "element": 55
           },
           {
             "kind": "object",
             "properties": [],
             "indices": [
               {
-                "key": 3,
-                "value": 49
+                "key": 4,
+                "value": 55
               }
             ]
           },
@@ -18084,17 +18134,17 @@
             "properties": [
               {
                 "name": "answers",
-                "type": 55,
+                "type": 61,
                 "optional": false
               },
               {
                 "name": "model",
-                "type": 3,
+                "type": 4,
                 "optional": false
               },
               {
                 "name": "usage",
-                "type": 58,
+                "type": 64,
                 "optional": true
               }
             ],
@@ -18105,17 +18155,17 @@
             "properties": [],
             "indices": [
               {
-                "key": 3,
-                "value": 56
+                "key": 4,
+                "value": 62
               }
             ]
           },
           {
             "kind": "union",
             "types": [
-              57,
-              59,
-              60
+              63,
+              65,
+              66
             ]
           },
           {
@@ -18123,22 +18173,22 @@
             "properties": [
               {
                 "name": "choice",
-                "type": 3,
+                "type": 4,
                 "optional": false
               },
               {
                 "name": "confidence",
-                "type": 13,
+                "type": 19,
                 "optional": false
               },
               {
                 "name": "probabilities",
-                "type": 58,
+                "type": 64,
                 "optional": false
               },
               {
                 "name": "type",
-                "type": 45,
+                "type": 51,
                 "optional": false
               }
             ],
@@ -18149,8 +18199,8 @@
             "properties": [],
             "indices": [
               {
-                "key": 3,
-                "value": 13
+                "key": 4,
+                "value": 19
               }
             ]
           },
@@ -18159,38 +18209,22 @@
             "properties": [
               {
                 "name": "confidence",
-                "type": 13,
+                "type": 19,
                 "optional": false
               },
               {
                 "name": "legend",
-                "type": 44,
+                "type": 50,
                 "optional": false
               },
               {
                 "name": "probabilities",
-                "type": 58,
+                "type": 64,
                 "optional": false
               },
               {
                 "name": "score",
-                "type": 13,
-                "optional": false
-              },
-              {
-                "name": "type",
-                "type": 42,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "noul",
-                "type": 13,
+                "type": 19,
                 "optional": false
               },
               {
@@ -18205,13 +18239,29 @@
             "kind": "object",
             "properties": [
               {
+                "name": "noul",
+                "type": 19,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 54,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
                 "name": "requestId",
-                "type": 3,
+                "type": 4,
                 "optional": false
               },
               {
                 "name": "selection",
-                "type": 2,
+                "type": 9,
                 "optional": false
               }
             ],
@@ -25108,7 +25158,7 @@
       },
       "names": [],
       "sources": [
-        "packages/experimental/system3/src/entry-routing.ts:122"
+        "packages/experimental/system3/src/entry-routing.ts:127"
       ]
     },
     {
@@ -26005,6 +26055,40 @@
       "names": [],
       "sources": [
         "packages/subagent/tool-subagent/src/model-selection-state.ts:17"
+      ]
+    },
+    {
+      "digest": "0d5b22769081e1c85d7e48edc1f1d65be82d0a5eef2d5977fdb6079c59feb12e",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "union",
+            "types": [
+              1,
+              2,
+              3
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "errors"
+          },
+          {
+            "kind": "literal",
+            "value": "slow-first-token"
+          },
+          {
+            "kind": "literal",
+            "value": "slow-output"
+          }
+        ]
+      },
+      "names": [
+        "packages/experimental/system3/src/route-health.ts#System3RouteHealthReason"
+      ],
+      "sources": [
+        "packages/experimental/system3/src/route-health.ts:31"
       ]
     },
     {
@@ -30200,6 +30284,20 @@
           {
             "kind": "literal",
             "value": "relay"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "16ebd16b62b27bdb8ee0ddd3923c6976012b0e9fb20161cea7adaa852a16b4fc",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "slow-first-token"
           }
         ]
       },
@@ -42522,6 +42620,696 @@
       "names": [],
       "sources": [
         "packages/core/agent/src/types.ts:96"
+      ]
+    },
+    {
+      "digest": "29fac3cd6837488106c4944d14f066dd0be116a12ca8e50ab2669577d69f02c7",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "avoided",
+                "type": 1,
+                "optional": true
+              },
+              {
+                "name": "baseline",
+                "type": 8,
+                "optional": false
+              },
+              {
+                "name": "candidate",
+                "type": 9,
+                "optional": true
+              },
+              {
+                "name": "candidateIds",
+                "type": 11,
+                "optional": false
+              },
+              {
+                "name": "dataClasses",
+                "type": 12,
+                "optional": false
+              },
+              {
+                "name": "elapsedMs",
+                "type": 18,
+                "optional": false
+              },
+              {
+                "name": "executionDomain",
+                "type": 19,
+                "optional": false
+              },
+              {
+                "name": "explicit",
+                "type": 22,
+                "optional": true
+              },
+              {
+                "name": "outcome",
+                "type": 23,
+                "optional": false
+              },
+              {
+                "name": "request",
+                "type": 39,
+                "optional": false
+              },
+              {
+                "name": "requestId",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "response",
+                "type": 59,
+                "optional": true
+              },
+              {
+                "name": "retained",
+                "type": 66,
+                "optional": true
+              },
+              {
+                "name": "routeId",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "selected",
+                "type": 8,
+                "optional": true
+              },
+              {
+                "name": "version",
+                "type": 67,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "array",
+            "element": 2
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "id",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "label",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "reason",
+                "type": 4,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "union",
+            "types": [
+              5,
+              6,
+              7
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "slow-first-token"
+          },
+          {
+            "kind": "literal",
+            "value": "slow-output"
+          },
+          {
+            "kind": "literal",
+            "value": "errors"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "model",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "provider",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "reasoningEffort",
+                "type": 3,
+                "optional": true
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "delegate",
+                "type": 10,
+                "optional": true
+              },
+              {
+                "name": "id",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "label",
+                "type": 3,
+                "optional": true
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "provider",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "tool",
+                "type": 3,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "array",
+            "element": 3
+          },
+          {
+            "kind": "array",
+            "element": 13
+          },
+          {
+            "kind": "union",
+            "types": [
+              14,
+              15,
+              16,
+              17
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "sensitive"
+          },
+          {
+            "kind": "literal",
+            "value": "workspace"
+          },
+          {
+            "kind": "literal",
+            "value": "public"
+          },
+          {
+            "kind": "literal",
+            "value": "secret"
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "union",
+            "types": [
+              20,
+              21
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "local"
+          },
+          {
+            "kind": "literal",
+            "value": "network"
+          },
+          {
+            "kind": "literal",
+            "value": true
+          },
+          {
+            "kind": "union",
+            "types": [
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "timeout"
+          },
+          {
+            "kind": "literal",
+            "value": "transport"
+          },
+          {
+            "kind": "literal",
+            "value": "unsupported-input"
+          },
+          {
+            "kind": "literal",
+            "value": "privacy-denied"
+          },
+          {
+            "kind": "literal",
+            "value": "abstain"
+          },
+          {
+            "kind": "literal",
+            "value": "provider-unavailable"
+          },
+          {
+            "kind": "literal",
+            "value": "low-confidence"
+          },
+          {
+            "kind": "literal",
+            "value": "rate-limited"
+          },
+          {
+            "kind": "literal",
+            "value": "missing-credential"
+          },
+          {
+            "kind": "literal",
+            "value": "cancelled"
+          },
+          {
+            "kind": "literal",
+            "value": "http"
+          },
+          {
+            "kind": "literal",
+            "value": "input-too-large"
+          },
+          {
+            "kind": "literal",
+            "value": "invalid-response"
+          },
+          {
+            "kind": "literal",
+            "value": "no-candidates"
+          },
+          {
+            "kind": "literal",
+            "value": "selected"
+          },
+          {
+            "kind": "union",
+            "types": [
+              40,
+              58
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "effort",
+                "type": 41,
+                "optional": true
+              },
+              {
+                "name": "model",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "providerId",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "questions",
+                "type": 44,
+                "optional": false
+              },
+              {
+                "name": "state",
+                "type": 54,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "union",
+            "types": [
+              42,
+              43
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "low"
+          },
+          {
+            "kind": "literal",
+            "value": "high"
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 3,
+                "value": 45
+              }
+            ]
+          },
+          {
+            "kind": "union",
+            "types": [
+              46,
+              48,
+              51
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "criteria",
+                "type": 11,
+                "optional": false
+              },
+              {
+                "name": "instructions",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "type",
+                "type": 47,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "score"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "criteria",
+                "type": 49,
+                "optional": false
+              },
+              {
+                "name": "instructions",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "type",
+                "type": 50,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 3,
+                "value": 3
+              }
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "choice"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "criteria",
+                "type": 52,
+                "optional": true
+              },
+              {
+                "name": "instructions",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "type",
+                "type": 53,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "false",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "true",
+                "type": 3,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "noul"
+          },
+          {
+            "kind": "union",
+            "types": [
+              3,
+              18,
+              55,
+              56,
+              57,
+              58
+            ]
+          },
+          {
+            "kind": "array",
+            "element": 54
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 3,
+                "value": 54
+              }
+            ]
+          },
+          {
+            "kind": "primitive",
+            "type": "boolean"
+          },
+          {
+            "kind": "primitive",
+            "type": "null"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "answers",
+                "type": 60,
+                "optional": false
+              },
+              {
+                "name": "model",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "usage",
+                "type": 63,
+                "optional": true
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 3,
+                "value": 61
+              }
+            ]
+          },
+          {
+            "kind": "union",
+            "types": [
+              62,
+              64,
+              65
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "choice",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "confidence",
+                "type": 18,
+                "optional": false
+              },
+              {
+                "name": "probabilities",
+                "type": 63,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 50,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 3,
+                "value": 18
+              }
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "confidence",
+                "type": 18,
+                "optional": false
+              },
+              {
+                "name": "legend",
+                "type": 49,
+                "optional": false
+              },
+              {
+                "name": "probabilities",
+                "type": 63,
+                "optional": false
+              },
+              {
+                "name": "score",
+                "type": 18,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 47,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "noul",
+                "type": 18,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 53,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "requestId",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "selection",
+                "type": 8,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": 1
+          }
+        ]
+      },
+      "names": [
+        "packages/experimental/system3/src/entry-routing.ts#System3EntryDecisionReceipt"
+      ],
+      "sources": [
+        "packages/experimental/system3/src/entry-routing.ts:103"
       ]
     },
     {
@@ -71092,7 +71880,7 @@
       },
       "names": [],
       "sources": [
-        "packages/experimental/system3/src/entry-routing.ts:117"
+        "packages/experimental/system3/src/entry-routing.ts:120"
       ]
     },
     {
@@ -89471,6 +90259,65 @@
       "sources": []
     },
     {
+      "digest": "9637f98f6ac0fdaa0b9d9d072ce6a8250a267ac2a170d14955b10024d942ae04",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "array",
+            "element": 1
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "id",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "label",
+                "type": 2,
+                "optional": true
+              },
+              {
+                "name": "reason",
+                "type": 3,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "union",
+            "types": [
+              4,
+              5,
+              6
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "errors"
+          },
+          {
+            "kind": "literal",
+            "value": "slow-first-token"
+          },
+          {
+            "kind": "literal",
+            "value": "slow-output"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "96bfb916a727cd4445a594df264c523fc039749a31bfed924b8cc7bb308a5bb0",
       "schema": {
         "root": 0,
@@ -91045,6 +91892,727 @@
       "sources": []
     },
     {
+      "digest": "9c7cecd646b7d0ce7f1fbf3b341f2d1c1c31135d0de9e1cb556a51a0d33177ff",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "data",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "ignorable",
+                "type": 23,
+                "optional": true
+              },
+              {
+                "name": "seq",
+                "type": 19,
+                "optional": false
+              },
+              {
+                "name": "time",
+                "type": 19,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 69,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "avoided",
+                "type": 2,
+                "optional": true
+              },
+              {
+                "name": "baseline",
+                "type": 9,
+                "optional": false
+              },
+              {
+                "name": "candidate",
+                "type": 10,
+                "optional": true
+              },
+              {
+                "name": "candidateIds",
+                "type": 12,
+                "optional": false
+              },
+              {
+                "name": "dataClasses",
+                "type": 13,
+                "optional": false
+              },
+              {
+                "name": "elapsedMs",
+                "type": 19,
+                "optional": false
+              },
+              {
+                "name": "executionDomain",
+                "type": 20,
+                "optional": false
+              },
+              {
+                "name": "explicit",
+                "type": 23,
+                "optional": true
+              },
+              {
+                "name": "outcome",
+                "type": 24,
+                "optional": false
+              },
+              {
+                "name": "request",
+                "type": 40,
+                "optional": false
+              },
+              {
+                "name": "requestId",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "response",
+                "type": 60,
+                "optional": true
+              },
+              {
+                "name": "retained",
+                "type": 67,
+                "optional": true
+              },
+              {
+                "name": "routeId",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "selected",
+                "type": 9,
+                "optional": true
+              },
+              {
+                "name": "version",
+                "type": 68,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "array",
+            "element": 3
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "id",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "label",
+                "type": 4,
+                "optional": true
+              },
+              {
+                "name": "reason",
+                "type": 5,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "union",
+            "types": [
+              6,
+              7,
+              8
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "slow-first-token"
+          },
+          {
+            "kind": "literal",
+            "value": "slow-output"
+          },
+          {
+            "kind": "literal",
+            "value": "errors"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "model",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "provider",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "reasoningEffort",
+                "type": 4,
+                "optional": true
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "delegate",
+                "type": 11,
+                "optional": true
+              },
+              {
+                "name": "id",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "label",
+                "type": 4,
+                "optional": true
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "provider",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "tool",
+                "type": 4,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "array",
+            "element": 4
+          },
+          {
+            "kind": "array",
+            "element": 14
+          },
+          {
+            "kind": "union",
+            "types": [
+              15,
+              16,
+              17,
+              18
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "sensitive"
+          },
+          {
+            "kind": "literal",
+            "value": "workspace"
+          },
+          {
+            "kind": "literal",
+            "value": "public"
+          },
+          {
+            "kind": "literal",
+            "value": "secret"
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "union",
+            "types": [
+              21,
+              22
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "local"
+          },
+          {
+            "kind": "literal",
+            "value": "network"
+          },
+          {
+            "kind": "literal",
+            "value": true
+          },
+          {
+            "kind": "union",
+            "types": [
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "timeout"
+          },
+          {
+            "kind": "literal",
+            "value": "transport"
+          },
+          {
+            "kind": "literal",
+            "value": "unsupported-input"
+          },
+          {
+            "kind": "literal",
+            "value": "privacy-denied"
+          },
+          {
+            "kind": "literal",
+            "value": "abstain"
+          },
+          {
+            "kind": "literal",
+            "value": "provider-unavailable"
+          },
+          {
+            "kind": "literal",
+            "value": "low-confidence"
+          },
+          {
+            "kind": "literal",
+            "value": "rate-limited"
+          },
+          {
+            "kind": "literal",
+            "value": "missing-credential"
+          },
+          {
+            "kind": "literal",
+            "value": "cancelled"
+          },
+          {
+            "kind": "literal",
+            "value": "http"
+          },
+          {
+            "kind": "literal",
+            "value": "input-too-large"
+          },
+          {
+            "kind": "literal",
+            "value": "invalid-response"
+          },
+          {
+            "kind": "literal",
+            "value": "no-candidates"
+          },
+          {
+            "kind": "literal",
+            "value": "selected"
+          },
+          {
+            "kind": "union",
+            "types": [
+              41,
+              59
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "effort",
+                "type": 42,
+                "optional": true
+              },
+              {
+                "name": "model",
+                "type": 4,
+                "optional": true
+              },
+              {
+                "name": "providerId",
+                "type": 4,
+                "optional": true
+              },
+              {
+                "name": "questions",
+                "type": 45,
+                "optional": false
+              },
+              {
+                "name": "state",
+                "type": 55,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "union",
+            "types": [
+              43,
+              44
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "low"
+          },
+          {
+            "kind": "literal",
+            "value": "high"
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 4,
+                "value": 46
+              }
+            ]
+          },
+          {
+            "kind": "union",
+            "types": [
+              47,
+              49,
+              52
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "criteria",
+                "type": 12,
+                "optional": false
+              },
+              {
+                "name": "instructions",
+                "type": 4,
+                "optional": true
+              },
+              {
+                "name": "type",
+                "type": 48,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "score"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "criteria",
+                "type": 50,
+                "optional": false
+              },
+              {
+                "name": "instructions",
+                "type": 4,
+                "optional": true
+              },
+              {
+                "name": "type",
+                "type": 51,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 4,
+                "value": 4
+              }
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "choice"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "criteria",
+                "type": 53,
+                "optional": true
+              },
+              {
+                "name": "instructions",
+                "type": 4,
+                "optional": true
+              },
+              {
+                "name": "type",
+                "type": 54,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "false",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "true",
+                "type": 4,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "noul"
+          },
+          {
+            "kind": "union",
+            "types": [
+              4,
+              19,
+              56,
+              57,
+              58,
+              59
+            ]
+          },
+          {
+            "kind": "array",
+            "element": 55
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 4,
+                "value": 55
+              }
+            ]
+          },
+          {
+            "kind": "primitive",
+            "type": "boolean"
+          },
+          {
+            "kind": "primitive",
+            "type": "null"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "answers",
+                "type": 61,
+                "optional": false
+              },
+              {
+                "name": "model",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "usage",
+                "type": 64,
+                "optional": true
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 4,
+                "value": 62
+              }
+            ]
+          },
+          {
+            "kind": "union",
+            "types": [
+              63,
+              65,
+              66
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "choice",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "confidence",
+                "type": 19,
+                "optional": false
+              },
+              {
+                "name": "probabilities",
+                "type": 64,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 51,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 4,
+                "value": 19
+              }
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "confidence",
+                "type": 19,
+                "optional": false
+              },
+              {
+                "name": "legend",
+                "type": 50,
+                "optional": false
+              },
+              {
+                "name": "probabilities",
+                "type": 64,
+                "optional": false
+              },
+              {
+                "name": "score",
+                "type": 19,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 48,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "noul",
+                "type": 19,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 54,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "requestId",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "selection",
+                "type": 9,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": 1
+          },
+          {
+            "kind": "literal",
+            "value": "system3/entry-decision"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "9d40b3dd27c89280499a7bf5b3e26022fde3a2931829b0864ebb1527bd1e4384",
       "schema": {
         "root": 0,
@@ -92373,7 +93941,7 @@
         "packages/experimental/system3/src/entry-routing.ts#System3EntryOutcome"
       ],
       "sources": [
-        "packages/experimental/system3/src/entry-routing.ts:96"
+        "packages/experimental/system3/src/entry-routing.ts:99"
       ]
     },
     {
@@ -94659,677 +96227,6 @@
       "sources": []
     },
     {
-      "digest": "b21037892a17d8375f1124a35300ccf73135bc598404d2f9d39ddcd03807d896",
-      "schema": {
-        "root": 0,
-        "nodes": [
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "data",
-                "type": 1,
-                "optional": false
-              },
-              {
-                "name": "ignorable",
-                "type": 17,
-                "optional": true
-              },
-              {
-                "name": "seq",
-                "type": 13,
-                "optional": false
-              },
-              {
-                "name": "time",
-                "type": 13,
-                "optional": false
-              },
-              {
-                "name": "type",
-                "type": 63,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "baseline",
-                "type": 2,
-                "optional": false
-              },
-              {
-                "name": "candidate",
-                "type": 4,
-                "optional": true
-              },
-              {
-                "name": "candidateIds",
-                "type": 6,
-                "optional": false
-              },
-              {
-                "name": "dataClasses",
-                "type": 7,
-                "optional": false
-              },
-              {
-                "name": "elapsedMs",
-                "type": 13,
-                "optional": false
-              },
-              {
-                "name": "executionDomain",
-                "type": 14,
-                "optional": false
-              },
-              {
-                "name": "explicit",
-                "type": 17,
-                "optional": true
-              },
-              {
-                "name": "outcome",
-                "type": 18,
-                "optional": false
-              },
-              {
-                "name": "request",
-                "type": 34,
-                "optional": false
-              },
-              {
-                "name": "requestId",
-                "type": 3,
-                "optional": false
-              },
-              {
-                "name": "response",
-                "type": 54,
-                "optional": true
-              },
-              {
-                "name": "retained",
-                "type": 61,
-                "optional": true
-              },
-              {
-                "name": "routeId",
-                "type": 3,
-                "optional": false
-              },
-              {
-                "name": "selected",
-                "type": 2,
-                "optional": true
-              },
-              {
-                "name": "version",
-                "type": 62,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "model",
-                "type": 3,
-                "optional": false
-              },
-              {
-                "name": "provider",
-                "type": 3,
-                "optional": false
-              },
-              {
-                "name": "reasoningEffort",
-                "type": 3,
-                "optional": true
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "primitive",
-            "type": "string"
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "delegate",
-                "type": 5,
-                "optional": true
-              },
-              {
-                "name": "id",
-                "type": 3,
-                "optional": false
-              },
-              {
-                "name": "label",
-                "type": 3,
-                "optional": true
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "provider",
-                "type": 3,
-                "optional": false
-              },
-              {
-                "name": "tool",
-                "type": 3,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "array",
-            "element": 3
-          },
-          {
-            "kind": "array",
-            "element": 8
-          },
-          {
-            "kind": "union",
-            "types": [
-              9,
-              10,
-              11,
-              12
-            ]
-          },
-          {
-            "kind": "literal",
-            "value": "workspace"
-          },
-          {
-            "kind": "literal",
-            "value": "public"
-          },
-          {
-            "kind": "literal",
-            "value": "secret"
-          },
-          {
-            "kind": "literal",
-            "value": "sensitive"
-          },
-          {
-            "kind": "primitive",
-            "type": "number"
-          },
-          {
-            "kind": "union",
-            "types": [
-              15,
-              16
-            ]
-          },
-          {
-            "kind": "literal",
-            "value": "network"
-          },
-          {
-            "kind": "literal",
-            "value": "local"
-          },
-          {
-            "kind": "literal",
-            "value": true
-          },
-          {
-            "kind": "union",
-            "types": [
-              19,
-              20,
-              21,
-              22,
-              23,
-              24,
-              25,
-              26,
-              27,
-              28,
-              29,
-              30,
-              31,
-              32,
-              33
-            ]
-          },
-          {
-            "kind": "literal",
-            "value": "timeout"
-          },
-          {
-            "kind": "literal",
-            "value": "transport"
-          },
-          {
-            "kind": "literal",
-            "value": "abstain"
-          },
-          {
-            "kind": "literal",
-            "value": "unsupported-input"
-          },
-          {
-            "kind": "literal",
-            "value": "low-confidence"
-          },
-          {
-            "kind": "literal",
-            "value": "missing-credential"
-          },
-          {
-            "kind": "literal",
-            "value": "rate-limited"
-          },
-          {
-            "kind": "literal",
-            "value": "http"
-          },
-          {
-            "kind": "literal",
-            "value": "input-too-large"
-          },
-          {
-            "kind": "literal",
-            "value": "invalid-response"
-          },
-          {
-            "kind": "literal",
-            "value": "no-candidates"
-          },
-          {
-            "kind": "literal",
-            "value": "cancelled"
-          },
-          {
-            "kind": "literal",
-            "value": "privacy-denied"
-          },
-          {
-            "kind": "literal",
-            "value": "provider-unavailable"
-          },
-          {
-            "kind": "literal",
-            "value": "selected"
-          },
-          {
-            "kind": "union",
-            "types": [
-              35,
-              53
-            ]
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "effort",
-                "type": 36,
-                "optional": true
-              },
-              {
-                "name": "model",
-                "type": 3,
-                "optional": true
-              },
-              {
-                "name": "providerId",
-                "type": 3,
-                "optional": true
-              },
-              {
-                "name": "questions",
-                "type": 39,
-                "optional": false
-              },
-              {
-                "name": "state",
-                "type": 49,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "union",
-            "types": [
-              37,
-              38
-            ]
-          },
-          {
-            "kind": "literal",
-            "value": "high"
-          },
-          {
-            "kind": "literal",
-            "value": "low"
-          },
-          {
-            "kind": "object",
-            "properties": [],
-            "indices": [
-              {
-                "key": 3,
-                "value": 40
-              }
-            ]
-          },
-          {
-            "kind": "union",
-            "types": [
-              41,
-              43,
-              46
-            ]
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "criteria",
-                "type": 6,
-                "optional": false
-              },
-              {
-                "name": "instructions",
-                "type": 3,
-                "optional": true
-              },
-              {
-                "name": "type",
-                "type": 42,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "literal",
-            "value": "score"
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "criteria",
-                "type": 44,
-                "optional": false
-              },
-              {
-                "name": "instructions",
-                "type": 3,
-                "optional": true
-              },
-              {
-                "name": "type",
-                "type": 45,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "object",
-            "properties": [],
-            "indices": [
-              {
-                "key": 3,
-                "value": 3
-              }
-            ]
-          },
-          {
-            "kind": "literal",
-            "value": "choice"
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "criteria",
-                "type": 47,
-                "optional": true
-              },
-              {
-                "name": "instructions",
-                "type": 3,
-                "optional": true
-              },
-              {
-                "name": "type",
-                "type": 48,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "false",
-                "type": 3,
-                "optional": false
-              },
-              {
-                "name": "true",
-                "type": 3,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "literal",
-            "value": "noul"
-          },
-          {
-            "kind": "union",
-            "types": [
-              3,
-              13,
-              50,
-              51,
-              52,
-              53
-            ]
-          },
-          {
-            "kind": "array",
-            "element": 49
-          },
-          {
-            "kind": "object",
-            "properties": [],
-            "indices": [
-              {
-                "key": 3,
-                "value": 49
-              }
-            ]
-          },
-          {
-            "kind": "primitive",
-            "type": "boolean"
-          },
-          {
-            "kind": "primitive",
-            "type": "null"
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "answers",
-                "type": 55,
-                "optional": false
-              },
-              {
-                "name": "model",
-                "type": 3,
-                "optional": false
-              },
-              {
-                "name": "usage",
-                "type": 58,
-                "optional": true
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "object",
-            "properties": [],
-            "indices": [
-              {
-                "key": 3,
-                "value": 56
-              }
-            ]
-          },
-          {
-            "kind": "union",
-            "types": [
-              57,
-              59,
-              60
-            ]
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "choice",
-                "type": 3,
-                "optional": false
-              },
-              {
-                "name": "confidence",
-                "type": 13,
-                "optional": false
-              },
-              {
-                "name": "probabilities",
-                "type": 58,
-                "optional": false
-              },
-              {
-                "name": "type",
-                "type": 45,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "object",
-            "properties": [],
-            "indices": [
-              {
-                "key": 3,
-                "value": 13
-              }
-            ]
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "confidence",
-                "type": 13,
-                "optional": false
-              },
-              {
-                "name": "legend",
-                "type": 44,
-                "optional": false
-              },
-              {
-                "name": "probabilities",
-                "type": 58,
-                "optional": false
-              },
-              {
-                "name": "score",
-                "type": 13,
-                "optional": false
-              },
-              {
-                "name": "type",
-                "type": 42,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "noul",
-                "type": 13,
-                "optional": false
-              },
-              {
-                "name": "type",
-                "type": 48,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "requestId",
-                "type": 3,
-                "optional": false
-              },
-              {
-                "name": "selection",
-                "type": 2,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "literal",
-            "value": 1
-          },
-          {
-            "kind": "literal",
-            "value": "system3/entry-decision"
-          }
-        ]
-      },
-      "names": [],
-      "sources": []
-    },
-    {
       "digest": "b222069eea2d768065161c1147b1f2c78c1b54328c84b3586ae5c8f91b8ed35e",
       "schema": {
         "root": 0,
@@ -95425,6 +96322,20 @@
           {
             "kind": "literal",
             "value": "forked"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "b279b729c8076de9f4180d11d23c1b0f55895db43c6bc90fa3f361c068b04924",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "errors"
           }
         ]
       },
@@ -102024,7 +102935,7 @@
       },
       "names": [],
       "sources": [
-        "packages/experimental/system3/src/entry-routing.ts:114"
+        "packages/experimental/system3/src/entry-routing.ts:117"
       ]
     },
     {
@@ -102438,646 +103349,6 @@
       "names": [],
       "sources": [
         "packages/api/session-controller/src/types.ts:44"
-      ]
-    },
-    {
-      "digest": "cc73d5eb613926a3930eabbfeef87e8f7d0c2d702ff28e2cec54993adc4b5cc9",
-      "schema": {
-        "root": 0,
-        "nodes": [
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "baseline",
-                "type": 1,
-                "optional": false
-              },
-              {
-                "name": "candidate",
-                "type": 3,
-                "optional": true
-              },
-              {
-                "name": "candidateIds",
-                "type": 5,
-                "optional": false
-              },
-              {
-                "name": "dataClasses",
-                "type": 6,
-                "optional": false
-              },
-              {
-                "name": "elapsedMs",
-                "type": 12,
-                "optional": false
-              },
-              {
-                "name": "executionDomain",
-                "type": 13,
-                "optional": false
-              },
-              {
-                "name": "explicit",
-                "type": 16,
-                "optional": true
-              },
-              {
-                "name": "outcome",
-                "type": 17,
-                "optional": false
-              },
-              {
-                "name": "request",
-                "type": 33,
-                "optional": false
-              },
-              {
-                "name": "requestId",
-                "type": 2,
-                "optional": false
-              },
-              {
-                "name": "response",
-                "type": 53,
-                "optional": true
-              },
-              {
-                "name": "retained",
-                "type": 60,
-                "optional": true
-              },
-              {
-                "name": "routeId",
-                "type": 2,
-                "optional": false
-              },
-              {
-                "name": "selected",
-                "type": 1,
-                "optional": true
-              },
-              {
-                "name": "version",
-                "type": 61,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "model",
-                "type": 2,
-                "optional": false
-              },
-              {
-                "name": "provider",
-                "type": 2,
-                "optional": false
-              },
-              {
-                "name": "reasoningEffort",
-                "type": 2,
-                "optional": true
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "primitive",
-            "type": "string"
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "delegate",
-                "type": 4,
-                "optional": true
-              },
-              {
-                "name": "id",
-                "type": 2,
-                "optional": false
-              },
-              {
-                "name": "label",
-                "type": 2,
-                "optional": true
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "provider",
-                "type": 2,
-                "optional": false
-              },
-              {
-                "name": "tool",
-                "type": 2,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "array",
-            "element": 2
-          },
-          {
-            "kind": "array",
-            "element": 7
-          },
-          {
-            "kind": "union",
-            "types": [
-              8,
-              9,
-              10,
-              11
-            ]
-          },
-          {
-            "kind": "literal",
-            "value": "workspace"
-          },
-          {
-            "kind": "literal",
-            "value": "public"
-          },
-          {
-            "kind": "literal",
-            "value": "secret"
-          },
-          {
-            "kind": "literal",
-            "value": "sensitive"
-          },
-          {
-            "kind": "primitive",
-            "type": "number"
-          },
-          {
-            "kind": "union",
-            "types": [
-              14,
-              15
-            ]
-          },
-          {
-            "kind": "literal",
-            "value": "network"
-          },
-          {
-            "kind": "literal",
-            "value": "local"
-          },
-          {
-            "kind": "literal",
-            "value": true
-          },
-          {
-            "kind": "union",
-            "types": [
-              18,
-              19,
-              20,
-              21,
-              22,
-              23,
-              24,
-              25,
-              26,
-              27,
-              28,
-              29,
-              30,
-              31,
-              32
-            ]
-          },
-          {
-            "kind": "literal",
-            "value": "timeout"
-          },
-          {
-            "kind": "literal",
-            "value": "transport"
-          },
-          {
-            "kind": "literal",
-            "value": "unsupported-input"
-          },
-          {
-            "kind": "literal",
-            "value": "abstain"
-          },
-          {
-            "kind": "literal",
-            "value": "low-confidence"
-          },
-          {
-            "kind": "literal",
-            "value": "missing-credential"
-          },
-          {
-            "kind": "literal",
-            "value": "rate-limited"
-          },
-          {
-            "kind": "literal",
-            "value": "http"
-          },
-          {
-            "kind": "literal",
-            "value": "input-too-large"
-          },
-          {
-            "kind": "literal",
-            "value": "invalid-response"
-          },
-          {
-            "kind": "literal",
-            "value": "no-candidates"
-          },
-          {
-            "kind": "literal",
-            "value": "cancelled"
-          },
-          {
-            "kind": "literal",
-            "value": "privacy-denied"
-          },
-          {
-            "kind": "literal",
-            "value": "provider-unavailable"
-          },
-          {
-            "kind": "literal",
-            "value": "selected"
-          },
-          {
-            "kind": "union",
-            "types": [
-              34,
-              52
-            ]
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "effort",
-                "type": 35,
-                "optional": true
-              },
-              {
-                "name": "model",
-                "type": 2,
-                "optional": true
-              },
-              {
-                "name": "providerId",
-                "type": 2,
-                "optional": true
-              },
-              {
-                "name": "questions",
-                "type": 38,
-                "optional": false
-              },
-              {
-                "name": "state",
-                "type": 48,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "union",
-            "types": [
-              36,
-              37
-            ]
-          },
-          {
-            "kind": "literal",
-            "value": "high"
-          },
-          {
-            "kind": "literal",
-            "value": "low"
-          },
-          {
-            "kind": "object",
-            "properties": [],
-            "indices": [
-              {
-                "key": 2,
-                "value": 39
-              }
-            ]
-          },
-          {
-            "kind": "union",
-            "types": [
-              40,
-              42,
-              45
-            ]
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "criteria",
-                "type": 5,
-                "optional": false
-              },
-              {
-                "name": "instructions",
-                "type": 2,
-                "optional": true
-              },
-              {
-                "name": "type",
-                "type": 41,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "literal",
-            "value": "score"
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "criteria",
-                "type": 43,
-                "optional": false
-              },
-              {
-                "name": "instructions",
-                "type": 2,
-                "optional": true
-              },
-              {
-                "name": "type",
-                "type": 44,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "object",
-            "properties": [],
-            "indices": [
-              {
-                "key": 2,
-                "value": 2
-              }
-            ]
-          },
-          {
-            "kind": "literal",
-            "value": "choice"
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "criteria",
-                "type": 46,
-                "optional": true
-              },
-              {
-                "name": "instructions",
-                "type": 2,
-                "optional": true
-              },
-              {
-                "name": "type",
-                "type": 47,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "false",
-                "type": 2,
-                "optional": false
-              },
-              {
-                "name": "true",
-                "type": 2,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "literal",
-            "value": "noul"
-          },
-          {
-            "kind": "union",
-            "types": [
-              2,
-              12,
-              49,
-              50,
-              51,
-              52
-            ]
-          },
-          {
-            "kind": "array",
-            "element": 48
-          },
-          {
-            "kind": "object",
-            "properties": [],
-            "indices": [
-              {
-                "key": 2,
-                "value": 48
-              }
-            ]
-          },
-          {
-            "kind": "primitive",
-            "type": "boolean"
-          },
-          {
-            "kind": "primitive",
-            "type": "null"
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "answers",
-                "type": 54,
-                "optional": false
-              },
-              {
-                "name": "model",
-                "type": 2,
-                "optional": false
-              },
-              {
-                "name": "usage",
-                "type": 57,
-                "optional": true
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "object",
-            "properties": [],
-            "indices": [
-              {
-                "key": 2,
-                "value": 55
-              }
-            ]
-          },
-          {
-            "kind": "union",
-            "types": [
-              56,
-              58,
-              59
-            ]
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "choice",
-                "type": 2,
-                "optional": false
-              },
-              {
-                "name": "confidence",
-                "type": 12,
-                "optional": false
-              },
-              {
-                "name": "probabilities",
-                "type": 57,
-                "optional": false
-              },
-              {
-                "name": "type",
-                "type": 44,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "object",
-            "properties": [],
-            "indices": [
-              {
-                "key": 2,
-                "value": 12
-              }
-            ]
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "confidence",
-                "type": 12,
-                "optional": false
-              },
-              {
-                "name": "legend",
-                "type": 43,
-                "optional": false
-              },
-              {
-                "name": "probabilities",
-                "type": 57,
-                "optional": false
-              },
-              {
-                "name": "score",
-                "type": 12,
-                "optional": false
-              },
-              {
-                "name": "type",
-                "type": 41,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "noul",
-                "type": 12,
-                "optional": false
-              },
-              {
-                "name": "type",
-                "type": 47,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "requestId",
-                "type": 2,
-                "optional": false
-              },
-              {
-                "name": "selection",
-                "type": 1,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "literal",
-            "value": 1
-          }
-        ]
-      },
-      "names": [
-        "packages/experimental/system3/src/entry-routing.ts#System3EntryDecisionReceipt"
-      ],
-      "sources": [
-        "packages/experimental/system3/src/entry-routing.ts:100"
       ]
     },
     {
@@ -104912,6 +105183,63 @@
       },
       "names": [],
       "sources": []
+    },
+    {
+      "digest": "dcc436b526a7eee2bd641dafdd95bc340b4562974d07c1d05323bde87ec916de",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "id",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "label",
+                "type": 1,
+                "optional": true
+              },
+              {
+                "name": "reason",
+                "type": 2,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "union",
+            "types": [
+              3,
+              4,
+              5
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "errors"
+          },
+          {
+            "kind": "literal",
+            "value": "slow-first-token"
+          },
+          {
+            "kind": "literal",
+            "value": "slow-output"
+          }
+        ]
+      },
+      "names": [],
+      "sources": [
+        "packages/experimental/system3/src/entry-routing.ts:125"
+      ]
     },
     {
       "digest": "dd2780e7e07684332f7a9ab047237798d260e7eaffb1321cb38eca695d184c3d",
@@ -106938,7 +107266,7 @@
       },
       "names": [],
       "sources": [
-        "packages/experimental/system3/src/entry-routing.ts:133"
+        "packages/experimental/system3/src/entry-routing.ts:138"
       ]
     },
     {
@@ -108853,6 +109181,20 @@
           {
             "kind": "literal",
             "value": "compaction/summary"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "ef6d1462d61407ada14ec15f9ad9ca2c509bc50f31bc7867f95b6c0734e6d8d0",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "slow-output"
           }
         ]
       },

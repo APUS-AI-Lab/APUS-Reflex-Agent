@@ -12,6 +12,7 @@ import { MAX_JEV_CHOICES, type JevErrorCode, type JevRequest, type JevResponse }
 import { admitSystem3Routes, type System3DataClass, type System3ExecutionDomain, type System3PrivacyPolicy } from '@deepseek-ai/dsh-experimental-system3-policy'
 import type { System3JevOptions } from './decisions.ts'
 import type { System3KeepWarmConfig } from './keep-warm.ts'
+import type { System3RouteHealth, System3RouteHealthConfig, System3RouteHealthReason } from './route-health.ts'
 import type {} from './runtime-projection.ts'
 
 /** Fields every entry candidate declares, whatever kind of route it selects. */
@@ -90,6 +91,8 @@ export interface System3EntryRoutingConfig {
   readonly retainOnAbstain?: boolean
   /** Keep the Jev connection open after plugin start and after each turn ends; omission sends no warm-up requests. */
   readonly keepWarm?: System3KeepWarmConfig
+  /** Measure model candidates and leave degraded ones out of the choice; omission offers every candidate. */
+  readonly routeHealth?: System3RouteHealthConfig
 }
 
 /** Decision result, distinct from the Session API's later adoption outcome. */
@@ -118,6 +121,8 @@ export interface System3EntryDecisionReceipt {
   }
   /** Present when the input matched the selected candidate's `explicitPatterns`, so the person chose it and Jev was not asked. */
   readonly explicit?: true
+  /** Model candidates left out of this choice because their route was degraded; absent when none were. */
+  readonly avoided?: readonly { readonly id: string; readonly label?: string; readonly reason: System3RouteHealthReason }[]
   /** Route kept from an earlier decision of this Session; Jev suggested none for this input. */
   readonly retained?: {
     /** The earlier request whose route continues. */
@@ -191,10 +196,11 @@ function validateConfig(config: System3EntryRoutingConfig): void {
  * @param config - Explicit candidate, input-classification, confidence and size controls.
  * @param policy - Privacy admission shared with other System3 decisions.
  * @param options - Actual Jev execution location and effort.
+ * @param health - Route health that leaves degraded model candidates out of the choice; omission offers every candidate.
  * @returns Router recording decisions in the requesting Agent's Session; cancellation rejects.
  */
 export function createSystem3EntryRouter(
-  ctx: Context, config: System3EntryRoutingConfig, policy: System3PrivacyPolicy, options: System3JevOptions,
+  ctx: Context, config: System3EntryRoutingConfig, policy: System3PrivacyPolicy, options: System3JevOptions, health?: System3RouteHealth,
 ): SessionPromptRouter {
   validateConfig(config)
   const settings = structuredClone(config)
@@ -222,6 +228,7 @@ export function createSystem3EntryRouter(
       let retained: System3EntryDecisionReceipt['retained']
       let chosen: System3EntryCandidate | undefined
       let explicitRequest = false
+      let avoided: { id: string; label?: string; reason: System3RouteHealthReason }[] = []
       let outcome: System3EntryOutcome = 'provider-unavailable'
       let candidateIds: string[] = []
       let previous: {
@@ -301,7 +308,14 @@ export function createSystem3EntryRouter(
             || !(required ?? baseline.inputModalities).every(modality => model.inputModalities?.includes(modality))) continue
           compatible.push(candidate)
         }
-        allowed = compatible
+        // Leave degraded routes out only while another candidate remains.
+        const degraded = health === undefined ? [] : compatible.flatMap((candidate) => {
+          const reason = candidate.delegate === undefined ? health.statusOf(candidate.provider, candidate.model).degraded : undefined
+          return reason === undefined ? []
+            : [{ id: candidate.id, ...candidate.label === undefined ? {} : { label: candidate.label }, reason }]
+        })
+        if (degraded.length < compatible.length) avoided = degraded
+        allowed = compatible.filter(candidate => !avoided.some(value => value.id === candidate.id))
         candidateIds = allowed.map(candidate => candidate.id)
         if (allowed.length === 0) { outcome = 'no-candidates'; return undefined }
         // The person's explicit request decides without Jev; the admission and availability checks above still apply.
@@ -341,6 +355,7 @@ export function createSystem3EntryRouter(
           dataClasses: [...settings.sessionDataClasses], routeId: options.routeId, executionDomain: options.executionDomain,
           outcome, ...response === undefined ? {} : { response }, ...selected === undefined ? {} : { selected },
           ...retained === undefined ? {} : { retained }, ...explicitRequest ? { explicit: true as const } : {},
+          ...avoided.length === 0 ? {} : { avoided },
           ...chosen === undefined ? {} : { candidate: { id: chosen.id, ...chosen.label === undefined ? {} : { label: chosen.label },
             ...chosen.delegate === undefined ? {} : { delegate: { ...chosen.delegate } } } },
           elapsedMs: Date.now() - started,

@@ -57,7 +57,9 @@ export function routeNotice(entry: System3RuntimeView['entry'] | undefined, pend
   if (pendingRequestId !== null && entry.requestId !== pendingRequestId) return null
   if (entry.route !== null) {
     const route = entry.route.label ?? model(entry.suggested ?? entry.adopted, t)
-    return t(entry.route.retained ? 'routeRetained' : 'routeChosen', { route })
+    const chosen = t(entry.route.retained ? 'routeRetained' : 'routeChosen', { route })
+    return entry.avoided.length === 0 ? chosen
+      : `${chosen} · ${t('routeAvoided', { routes: entry.avoided.map(value => value.label).join('、') })}`
   }
   if (entry.adopted === null || entry.outcome === null) return null
   if (FALLBACK_TIMEOUT.has(entry.outcome)) return t('fallbackTimeout', { model: model(entry.adopted, t) })

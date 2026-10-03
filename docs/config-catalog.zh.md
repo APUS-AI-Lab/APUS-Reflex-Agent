@@ -1233,7 +1233,7 @@ export interface Config {
 ## `@deepseek-ai/dsh-experimental-system3`
 
 - `refs`: [`System3DataClass`](../packages/experimental/system3-policy/src/index.ts) · [`System3ExecutionDomain`](../packages/experimental/system3-policy/src/index.ts) · [`System3PrivacyMode`](../packages/experimental/system3-policy/src/index.ts)
-- `source`: [`packages/experimental/system3/src/index.ts:44`](../packages/experimental/system3/src/index.ts)
+- `source`: [`packages/experimental/system3/src/index.ts:47`](../packages/experimental/system3/src/index.ts)
 
 ```ts config-catalog
 /** Configures the default local-first privacy boundary. */
@@ -1291,6 +1291,8 @@ export interface System3EntryRoutingConfig {
   readonly retainOnAbstain?: boolean
   /** Keep the Jev connection open after plugin start and after each turn ends; omission sends no warm-up requests. */
   readonly keepWarm?: System3KeepWarmConfig
+  /** Measure model candidates and leave degraded ones out of the choice; omission offers every candidate. */
+  readonly routeHealth?: System3RouteHealthConfig
 }
 
 /** Explicit limits for automatically loading one model-invocable Skill per new user input. */
@@ -1348,6 +1350,31 @@ export interface System3KeepWarmConfig {
   readonly windowMs: number
   /** Interval between warm-up requests; shorter than the gateway's idle connection timeout. */
   readonly intervalMs: number
+}
+
+/** Thresholds and sampling for route health; deployment-owned. */
+export interface System3RouteHealthConfig {
+  /** Most recent samples kept per route. */
+  readonly window: number
+  /** Samples older than this many milliseconds are ignored, so an avoided route is offered again after it. */
+  readonly sampleTtlMs: number
+  /** Samples a metric needs before it can mark a route degraded. */
+  readonly minSamples: number
+  /** Median milliseconds from request start to the first token above which a route is slow. */
+  readonly maxFirstTokenMs: number
+  /** Median output tokens per second, after the first token, below which a route is slow. */
+  readonly minTokensPerSecond: number
+  /** Output tokens a sample needs before its rate counts; short outputs distort the rate. */
+  readonly minOutputTokens: number
+  /** Share of failed samples, from 0 to 1, above which a route is failing. */
+  readonly maxErrorRate: number
+  /** Small requests to routes without a recent sample; `false` samples only real requests. */
+  readonly probe: false | {
+    /** Milliseconds without a sample before a route is probed; also the probe check interval. */
+    readonly idleMs: number
+    /** Output token limit of each probe. */
+    readonly maxTokens: number
+  }
 }
 
 /** Thresholds after which a running delegation is reported to the person as needing attention. */

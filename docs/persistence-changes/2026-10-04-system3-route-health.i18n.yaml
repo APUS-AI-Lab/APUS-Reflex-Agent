@@ -1,0 +1,28 @@
+# Bilingual-pair consistency record for 2026-10-04-system3-route-health.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/persistence-changes/2026-10-04-system3-route-health.md
+/:
+  en: 3d5a424ae7d7e46b
+  zh: c22a8e4a62d8cc1a
+/2026-10-04-system3-route-health:
+  en: 3903974d92a645dd
+  zh: e3ebe8debce4865b
+/2026-10-04-system3-route-health/summary:
+  en: 795c35eff7b761d8
+  zh: 2a791a0f38890626
+/2026-10-04-system3-route-health/table-of-contents:
+  en: 6cf314a069ceb451
+  zh: 9adff678e9ecab3b
+/2026-10-04-system3-route-health/declaration:
+  en: 6907136f28e48c90
+  zh: 02f8298485f3d8e7
+/2026-10-04-system3-route-health/compatibility:
+  en: c37c3e945b9d1321
+  zh: 3f8d9fd98305d170
+/2026-10-04-system3-route-health/verification:
+  en: 4664abf93712c39c
+  zh: beb11b12fa7c02a8
+/2026-10-04-system3-route-health/dev-note:
+  en: b75c8458928b72b9
+  zh: 003ba4e17b4b5269
