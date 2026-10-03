@@ -6,11 +6,11 @@
   en: 28f4ed3f030c1c0d
   zh: 031d97dcb12c52e8
 /system3-server-deployment-reference/scope:
-  en: 6479ff4f33d3f8eb
-  zh: bd70d087bbb4c37a
+  en: b08fe0f29019b95f
+  zh: f2c1b9d094432565
 /system3-server-deployment-reference/access-and-isolation:
-  en: 03f6ab4f72967e17
-  zh: 2d62b415fdc312d4
+  en: 974b4f73cf0befff
+  zh: 76fd309ad8effa19
 /system3-server-deployment-reference/release-and-recovery:
   en: 1e06bbf5267391f9
   zh: 3c82a0d44d92ba17
@@ -18,5 +18,5 @@
   en: 87b32e39dfe53cdd
   zh: cb9849dfa8d1d953
 /system3-server-deployment-reference/verified-deployment-constraints:
-  en: 6ac203d8d689b840
-  zh: a19b7983579297a9
+  en: 200e6de974b9d483
+  zh: 254a689144e8a7e7

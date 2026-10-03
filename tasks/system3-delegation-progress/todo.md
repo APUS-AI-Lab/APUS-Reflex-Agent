@@ -94,3 +94,9 @@ Base: branch `feat-system3-g1`. Order follows [architecture section 11](../../do
 - [ ] Stall alert fired during 90 s of Codex reasoning without a step; consider a longer stallMs for reasoning-heavy runs.
 - [ ] Tier routing for coding tasks: GPT-5.6 Sol took 321-581 s on two large tasks Flash did in 68-117 s; calibrate tiers separately.
 - [ ] Tasks Flash fails, to measure where delegation pays off.
+
+## Moved to prd (2026-10-03)
+
+- [x] Deployed the `s3-delegation` release with explicit delegation to `prd` (release cases 8/8). Online: Flash / Pro routes correct; "交给 Codex" delegated without Jev (`explicit: true`), 389 s, hidden tests 13/13.
+- [x] Removed the System3 deployment from `litellm` (service, unit, 5 images, releases, data, credentials, user); data archive kept at `/root/xdan-system3-data-backup-20261003.tgz` there; other services unaffected; disk 83% -> 59%.
+- [ ] Steers are invisible to the main model: on `prd` Codex wrote the steered README and the main model deleted it during cleanup. Append accepted steers to the subagent tool result the main model reads.
