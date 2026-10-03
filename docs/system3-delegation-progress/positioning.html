@@ -1,5 +1,4 @@
 <title>System3 架构定位</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700&family=Noto+Sans+SC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 /* Layout: a single reading column for the argument, widening only for the comparison table and the layer diagram. */
@@ -17,8 +16,9 @@
   --bg: #0f131a; --surface: #161c26; --ink: #e7ebf2; --muted: #9aa5b6; --line: #2a3342;
   --accent: #8ea7ff; --accent-soft: #1d2747; --signal: #f0a64a; --signal-soft: #34261a; --ok: #63c793; --ok-soft: #173326; color-scheme: dark }
 body { background: var(--bg); color: var(--ink); font: 16px/1.75 var(--body); padding-inline: 20px; padding-block: 40px 72px; }
-main { max-width: 760px; margin: 0 auto; display: grid; gap: 56px; }
-.wide { max-width: 1080px; width: 100%; justify-self: center; }
+main { max-width: 1240px; margin: 0 auto; display: grid; gap: 56px; }
+main > * { width: 100%; max-width: 820px; justify-self: center; }
+main > .wide { max-width: 1240px; }
 h1, h2, h3 { font-family: var(--display); text-wrap: balance; line-height: 1.3; margin: 0; }
 h1 { font-size: clamp(30px, 5vw, 44px); letter-spacing: 0.01em; }
 h2 { font-size: 26px; }
@@ -43,7 +43,8 @@ ol.points li::before { content: counter(p); font: 600 20px/1.4 var(--display); c
 ol.points h3 { margin-bottom: 4px; }
 .vs { font-size: 14px; color: var(--muted); margin-top: 6px; }
 .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
-table { border-collapse: collapse; width: 100%; min-width: 880px; font-size: 14px; line-height: 1.6; }
+table { border-collapse: collapse; width: 100%; min-width: 960px; font-size: 14px; line-height: 1.6; table-layout: fixed; }
+table col.k { width: 13%; } table col.c { width: 19.5%; } table col.us { width: 28.5%; }
 th, td { text-align: left; vertical-align: top; padding: 12px 14px; border-bottom: 1px solid var(--line); }
 thead th { font: 500 13px/1.4 var(--body); color: var(--muted); background: var(--bg); position: sticky; top: 0; }
 tbody th { font-weight: 500; white-space: nowrap; color: var(--muted); }
@@ -70,6 +71,30 @@ tr:last-child th, tr:last-child td { border-bottom: 0; }
 .check li::before { content: ""; position: absolute; left: 2px; top: 8px; width: 12px; height: 12px; border: 1.5px solid var(--muted); border-radius: 3px; }
 footer { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; }
 code { font: 13px var(--mono); background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; }
+.diagram { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding: 24px; }
+.diagram svg { display: block; width: 100%; min-width: 1000px; height: auto; font-family: var(--body); }
+.diagram .zone { fill: var(--bg); stroke: var(--line); stroke-width: 1; stroke-dasharray: 4 4; }
+.diagram .node { fill: var(--surface); stroke: var(--ink); stroke-width: 1; }
+.diagram .user { fill: var(--bg); stroke: var(--muted); stroke-width: 1; }
+.diagram .store { fill: var(--bg); stroke: var(--muted); stroke-width: 1; }
+.diagram .focal { fill: var(--signal-soft); stroke: var(--signal); stroke-width: 1.5; }
+.diagram .tagbox { fill: none; stroke: var(--muted); stroke-width: 0.8; }
+.diagram .tagbox.f { stroke: var(--signal); }
+.diagram .tag { fill: var(--muted); font: 500 9px var(--mono); letter-spacing: 0.08em; }
+.diagram .tag.f { fill: var(--signal); }
+.diagram .zl { fill: var(--muted); font: 500 10px var(--mono); letter-spacing: 0.12em; }
+.diagram .name { fill: var(--ink); font-size: 15px; font-weight: 700; }
+.diagram .sub { fill: var(--muted); font-size: 12.5px; }
+.diagram .mono { fill: var(--muted); font: 12px var(--mono); }
+.diagram .mask { fill: var(--surface); }
+.diagram .zmask { fill: var(--bg); }
+.diagram .lbl { fill: var(--muted); font: 500 11px var(--body); letter-spacing: 0.04em; }
+.diagram .lbl.acc { fill: var(--accent); }
+.diagram .wire { fill: none; stroke: var(--muted); stroke-width: 1.2; }
+.diagram .wire.loop { stroke: var(--accent); stroke-width: 1; stroke-dasharray: 4 3; }
+.diagram .rule { stroke: var(--line); stroke-width: 0.8; }
+.diagram .head { fill: var(--muted); }
+.diagram .head.acc { fill: var(--accent); }
 @media (max-width: 560px) { .layer { grid-template-columns: 1fr; gap: 6px; } body { font-size: 15px; } }
 </style>
 
@@ -86,6 +111,108 @@ code { font: 13px var(--mono); background: var(--bg); border: 1px solid var(--li
     <p class="thesis">System3 把“谁来做、怎么盯、做得怎样”从执行模型里剥离出来，交给一个快速、可审计、可训练的决策层。</p>
     <p>今天的 Agent 架构，通常由正在干活的大模型自己决定要不要换模型、要不要派子 Agent：决策和执行挤在同一个昂贵的循环里，既慢又难以复盘。System3 的做法相反：在执行开始之前和执行过程中的有限几个节点，由专用的 9B 决策模型 Jev 给出结构化选择。确定性规则先划定合法范围，Jev 只在其中挑选或弃权。每一次建议、采用、执行和结果都写成会话事实。</p>
     <p>它不是又一个编程 Agent。Codex 和 Claude Code 在 System3 里是候选执行者，和多家厂商的模型档位放在同一个候选空间里，由同一个入口统一调度和监督。</p>
+  </section>
+
+  <section class="wide">
+    <div class="eyebrow">架构图</div>
+    <h2>一次请求如何流经 System3</h2>
+    <p class="muted">节点角标表示所属层，橙色标出唯一的决策点 Jev。所有建议、采用、执行和核验都落到底部的会话事实日志，蓝色虚线是事实回流到评测与 Jev 训练的闭环。</p>
+    <div class="diagram">
+      <svg viewBox="0 0 1200 652" role="img" aria-labelledby="system3-arch-title system3-arch-desc">
+        <title id="system3-arch-title">System3 架构：一次请求的流向</title>
+        <desc id="system3-arch-desc">用户输入先经过准入规则，再由 Jev 决策交给模型档位或专业 Agent 执行；专业 Agent 由过程监督管理；建议、采用、执行和核验写入会话事实日志，驱动产品界面，并回流到评测与 Jev 训练。</desc>
+        <defs>
+          <marker id="s3-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon class="head" points="0 0, 8 3, 0 6"/></marker>
+          <marker id="s3-arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon class="head acc" points="0 0, 8 3, 0 6"/></marker>
+        </defs>
+
+        <!-- zone -->
+        <rect class="zone" x="664" y="52" width="280" height="300" rx="8"/>
+        <rect class="zmask" x="676" y="56" width="132" height="14" rx="2"/>
+        <text class="zl" x="684" y="67">SYSTEM 2 · 深执行</text>
+
+        <!-- connectors (drawn before nodes) -->
+        <line class="wire" x1="164" y1="200" x2="203" y2="200" marker-end="url(#s3-arrow)"/>
+        <line class="wire" x1="384" y1="200" x2="423" y2="200" marker-end="url(#s3-arrow)"/>
+        <path class="wire" d="M624,180 H646 Q654,180 654,172 V144 Q654,136 662,136 H683" marker-end="url(#s3-arrow)"/>
+        <path class="wire" d="M624,220 H646 Q654,220 654,228 V264 Q654,272 662,272 H683" marker-end="url(#s3-arrow)"/>
+        <path class="wire" d="M924,136 H946 Q954,136 954,144 V176 Q954,184 962,184 H983" marker-end="url(#s3-arrow)"/>
+        <path class="wire" d="M924,272 H946 Q954,272 954,264 V224 Q954,216 962,216 H983" marker-end="url(#s3-arrow)"/>
+        <line class="wire" x1="792" y1="324" x2="792" y2="383" marker-end="url(#s3-arrow)"/>
+        <line class="wire" x1="816" y1="384" x2="816" y2="325" marker-end="url(#s3-arrow)"/>
+        <line class="wire" x1="556" y1="256" x2="556" y2="503" marker-end="url(#s3-arrow)"/>
+        <line class="wire" x1="804" y1="464" x2="804" y2="503" marker-end="url(#s3-arrow)"/>
+        <line class="wire" x1="1074" y1="240" x2="1074" y2="503" marker-end="url(#s3-arrow)"/>
+        <line class="wire" x1="204" y1="536" x2="165" y2="536" marker-end="url(#s3-arrow)"/>
+        <line class="wire loop" x1="492" y1="504" x2="492" y2="257" marker-end="url(#s3-arrow-link)"/>
+
+        <!-- connector labels: opaque mask, 6px clear of the stroke -->
+        <rect class="mask" x="562" y="370" width="76" height="16" rx="2"/><text class="lbl" x="566" y="382">建议 · 采用</text>
+        <rect class="mask" x="410" y="370" width="76" height="16" rx="2"/><text class="lbl acc" x="482" y="382" text-anchor="end">评测 · 训练</text>
+        <rect class="mask" x="730" y="352" width="56" height="16" rx="2"/><text class="lbl" x="782" y="364" text-anchor="end">进度上报</text>
+        <rect class="mask" x="822" y="352" width="76" height="16" rx="2"/><text class="lbl" x="826" y="364">补充 · 停止</text>
+        <rect class="mask" x="1080" y="370" width="76" height="16" rx="2"/><text class="lbl" x="1084" y="382">执行 · 核验</text>
+
+        <!-- nodes -->
+        <rect class="user" x="24" y="160" width="140" height="80" rx="6"/>
+        <text class="name" x="94" y="196" text-anchor="middle">用户输入</text>
+        <text class="sub" x="94" y="220" text-anchor="middle">文字 · 图片 · 追问</text>
+
+        <rect class="node" x="204" y="152" width="180" height="96" rx="6"/>
+        <rect class="tagbox" x="212" y="158" width="60" height="14" rx="2"/><text class="tag" x="242" y="168" text-anchor="middle">SYSTEM 3</text>
+        <text class="name" x="294" y="198" text-anchor="middle">准入规则</text>
+        <text class="sub" x="294" y="218" text-anchor="middle">模态 · 容量 · 权限</text>
+        <text class="sub" x="294" y="236" text-anchor="middle">数据能否出网</text>
+
+        <rect class="focal" x="424" y="144" width="200" height="112" rx="6"/>
+        <rect class="tagbox f" x="432" y="150" width="60" height="14" rx="2"/><text class="tag f" x="462" y="160" text-anchor="middle">SYSTEM 1</text>
+        <text class="name" x="524" y="192" text-anchor="middle">Jev 9B 决策</text>
+        <text class="sub" x="524" y="214" text-anchor="middle">选择 · 置信度 · 弃权</text>
+        <text class="mono" x="524" y="236" text-anchor="middle">p95 ≈ 0.4 s · 可复现</text>
+
+        <rect class="node" x="684" y="84" width="240" height="104" rx="6"/>
+        <text class="name" x="804" y="116" text-anchor="middle">模型档位</text>
+        <text class="sub" x="804" y="140" text-anchor="middle">DeepSeek Flash · DeepSeek Pro</text>
+        <text class="sub" x="804" y="160" text-anchor="middle">GPT-5.6 Sol · GPT-6 Sol</text>
+        <text class="sub" x="804" y="178" text-anchor="middle">一次对话内完成</text>
+
+        <rect class="node" x="684" y="220" width="240" height="104" rx="6"/>
+        <text class="name" x="804" y="252" text-anchor="middle">专业 Agent</text>
+        <text class="sub" x="804" y="276" text-anchor="middle">Codex · Claude Code</text>
+        <text class="sub" x="804" y="296" text-anchor="middle">只接仓库级长程任务</text>
+
+        <rect class="node" x="984" y="160" width="180" height="80" rx="6"/>
+        <text class="name" x="1074" y="196" text-anchor="middle">回答 / 交付物</text>
+        <text class="sub" x="1074" y="220" text-anchor="middle">主模型复核后交付</text>
+
+        <rect class="node" x="684" y="384" width="240" height="80" rx="6"/>
+        <rect class="tagbox" x="692" y="390" width="60" height="14" rx="2"/><text class="tag" x="722" y="400" text-anchor="middle">SYSTEM 3</text>
+        <text class="name" x="804" y="426" text-anchor="middle">过程监督</text>
+        <text class="sub" x="804" y="448" text-anchor="middle">进度 · 提醒 · 补充说明 · 停止</text>
+
+        <rect class="store" x="204" y="504" width="960" height="64" rx="6"/>
+        <rect class="tagbox" x="212" y="510" width="60" height="14" rx="2"/><text class="tag" x="242" y="520" text-anchor="middle">SYSTEM 3</text>
+        <text class="name" x="684" y="532" text-anchor="middle">会话事实日志</text>
+        <text class="sub" x="684" y="554" text-anchor="middle">建议 → 采用 → 执行 → 核验，分开记录 · 可回放 · 可复现</text>
+
+        <rect class="node" x="24" y="384" width="140" height="184" rx="6"/>
+        <rect class="tagbox" x="32" y="390" width="60" height="14" rx="2"/><text class="tag" x="62" y="400" text-anchor="middle">SYSTEM 3</text>
+        <text class="name" x="94" y="430" text-anchor="middle">产品界面</text>
+        <text class="sub" x="94" y="458" text-anchor="middle">路由说明 ≈ 1 s</text>
+        <text class="sub" x="94" y="482" text-anchor="middle">委派进度卡片</text>
+        <text class="sub" x="94" y="506" text-anchor="middle">提醒与补充说明</text>
+        <text class="sub" x="94" y="530" text-anchor="middle">输入框自动标记</text>
+
+        <!-- legend strip -->
+        <line class="rule" x1="24" y1="596" x2="1176" y2="596"/>
+        <text class="zl" x="24" y="628">图例</text>
+        <rect class="focal" x="80" y="616" width="16" height="16" rx="3"/><text class="sub" x="104" y="628">焦点：决策点</text>
+        <rect class="tagbox" x="216" y="617" width="60" height="14" rx="2"/><text class="tag" x="246" y="627" text-anchor="middle">SYSTEM N</text>
+        <text class="sub" x="284" y="628">所属层：1 快决策 · 2 深执行 · 3 编排与监督</text>
+        <line class="wire" x1="600" y1="624" x2="640" y2="624" marker-end="url(#s3-arrow)"/><text class="sub" x="652" y="628">请求与事实流向</text>
+        <line class="wire loop" x1="800" y1="624" x2="840" y2="624" marker-end="url(#s3-arrow-link)"/><text class="sub" x="852" y="628">回流：评测与 Jev 训练</text>
+      </svg>
+    </div>
   </section>
 
   <section class="wide">
@@ -131,6 +258,7 @@ code { font: 13px var(--mono); background: var(--bg); border: 1px solid var(--li
     <p class="muted">对比依据为截至 2026 年中的公开资料，描述各自的默认架构特点，不评价模型能力。三者都是优秀的执行系统，System3 把其中的 Codex 和 Claude Code 作为执行者接入。</p>
     <div class="table-wrap">
       <table>
+        <colgroup><col class="k"><col class="c"><col class="c"><col class="c"><col class="us"></colgroup>
         <thead><tr><th></th><th>OpenAI Agents SDK</th><th>Codex</th><th>Claude Code</th><th>System3</th></tr></thead>
         <tbody>
           <tr><th>定位</th><td>构建多 Agent 应用的开发框架</td><td>OpenAI 的编程 Agent（CLI、IDE、云端）</td><td>Anthropic 的编程 Agent（终端、IDE、桌面、网页）</td><td class="us">位于模型与专业 Agent 之上的决策与监督层</td></tr>
