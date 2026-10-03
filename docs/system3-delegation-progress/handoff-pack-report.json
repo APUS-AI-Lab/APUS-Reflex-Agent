@@ -1,0 +1,99 @@
+{
+  "minProbability": 0.3,
+  "precision": 1,
+  "recall": 1,
+  "results": [
+    {
+      "task": "把导出 CSV 的功能交给 codex 实现",
+      "expected": [
+        "函数名一律用 snake_case",
+        "不要改 README.md"
+      ],
+      "forwarded": [
+        "函数名一律用 snake_case",
+        "不要改 README.md"
+      ],
+      "nouls": [
+        0.06,
+        0.994,
+        0,
+        0.407
+      ],
+      "elapsedMs": 2233
+    },
+    {
+      "task": "让 codex 加一个按日期过滤账单的功能",
+      "expected": [
+        "以后提交前必须让 pytest 全部通过"
+      ],
+      "forwarded": [
+        "以后提交前必须让 pytest 全部通过"
+      ],
+      "nouls": [
+        0.001,
+        0.001,
+        0.994
+      ],
+      "elapsedMs": 585
+    },
+    {
+      "task": "交给 codex 把注册表单的校验做完",
+      "expected": [
+        "不许引入新的第三方依赖"
+      ],
+      "forwarded": [
+        "不许引入新的第三方依赖"
+      ],
+      "nouls": [
+        0.993,
+        0,
+        0.001
+      ],
+      "elapsedMs": 589
+    },
+    {
+      "task": "交给 codex 重构 utils 模块",
+      "expected": [],
+      "forwarded": [],
+      "nouls": [
+        0,
+        0.001
+      ],
+      "elapsedMs": 532
+    },
+    {
+      "task": "让 codex 实现用户注册接口",
+      "expected": [
+        "接口返回的错误信息要用中文",
+        "日志里不能打印用户手机号"
+      ],
+      "forwarded": [
+        "接口返回的错误信息要用中文",
+        "日志里不能打印用户手机号"
+      ],
+      "nouls": [
+        0.996,
+        0.988,
+        0
+      ],
+      "elapsedMs": 597
+    },
+    {
+      "task": "委派给 codex：给订单表加一个状态字段",
+      "expected": [
+        "数据库迁移脚本放在 migrations/ 目录下",
+        "写完记得把 CHANGELOG 更新一下"
+      ],
+      "forwarded": [
+        "数据库迁移脚本放在 migrations/ 目录下",
+        "写完记得把 CHANGELOG 更新一下"
+      ],
+      "nouls": [
+        0.994,
+        0.001,
+        0.997
+      ],
+      "elapsedMs": 586
+    }
+  ]
+}

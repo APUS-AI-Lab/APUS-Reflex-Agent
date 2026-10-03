@@ -81,8 +81,9 @@ it('forwards earlier requirements verbatim and records which messages they came 
   h.setNouls([0.9, 0.2, 0.8])
   expect(await h.step()).toBe(`${delegationInstruction('Codex', 'subagent_codex')}\n\n${handoffText('Codex', ['函数名一律用 snake_case', '不要改 README'])}`)
   const [query] = h.handoffCalls()
-  expect(query?.state).toEqual({ task: '把登录接口交给 Codex 实现', earlier: ['函数名一律用 snake_case', '今天先到这里', '不要改 README'] })
-  expect(Object.keys(query?.questions ?? {})).toEqual(['m1', 'm2', 'm3'])
+  expect(query?.state).toEqual({ task: '把登录接口交给 Codex 实现' })
+  expect(Object.values(query?.questions ?? {}).map(question => /^用户在本会话更早时说过：「(.*?)」。/u.exec(question.instructions ?? '')?.[1]))
+    .toEqual(['函数名一律用 snake_case', '今天先到这里', '不要改 README'])
   expect(h.pack()).toMatchObject({ version: 1, requestId: 'delegate', outcome: 'packed', constraints: [naming.id, readme.id], request: query })
 })
 

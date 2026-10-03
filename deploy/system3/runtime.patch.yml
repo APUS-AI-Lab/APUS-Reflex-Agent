@@ -123,10 +123,11 @@
             probe:
               idleMs: 1800000
               maxTokens: 64
+          # Real Jev on the hand-off e2e: requirements scored 0.41-0.997, other messages at most 0.06.
           handoffPack:
             recentMessages: 12
             maxMessageChars: 500
-            minProbability: 0.5
+            minProbability: 0.3
             deadlineMs: 5000
           candidates:
             - id: fast

@@ -111,12 +111,12 @@ export async function prepareSystem3HandoffPack(ctx: Context, agent: Agent, requ
     if (admission.allowed.length === 0) { outcome = 'privacy-denied'; return [] }
     if (jev === undefined) return []
     request = jev.resolve({
-      state: { task, earlier: earlier.map(message => message.text) },
+      state: { task },
       effort: settings.options.effort,
-      questions: Object.fromEntries(earlier.map((_message, index) => [`m${String(index + 1)}`, {
+      questions: Object.fromEntries(earlier.map((message, index) => [`m${String(index + 1)}`, {
         type: 'noul' as const,
-        instructions: `state.earlier[${String(index)}] 是用户在本会话更早时说的话，state.task 是现在要委派出去的任务。判断这句话是否是用户对这个任务提出的、执行者必须遵守的要求或约束（例如命名规范、不许改动的文件、必须通过的检查）。闲聊、已经结束的其他话题、对结果的评价都不算。`,
-        criteria: { true: '是执行者必须遵守的要求', false: '不是要求' },
+        instructions: `用户在本会话更早时说过：「${message.text}」。state.task 是现在要交给另一个执行者的任务。判断这句话是否是用户定下的、执行这个任务时仍然有效的工作要求或约束，例如命名规范、不许改动的文件或目录、提交前必须通过的检查、文件放置约定、需要同步更新的文档、输出语言或安全规定。闲聊、提问、感谢、对已完成工作的评价、与这个项目无关的请求都不算。`,
+        criteria: { true: '是仍然有效的工作要求或约束', false: '不是' },
       }])),
     })
     const deadline = AbortSignal.timeout(config.deadlineMs)
