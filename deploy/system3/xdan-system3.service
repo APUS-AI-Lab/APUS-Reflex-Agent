@@ -16,7 +16,7 @@ Environment=DSH_TELEMETRY_MODE=DISABLED
 Environment=DSH_TELEMETRY_DISABLED=1
 Environment=PATH=/opt/xdan-system3/current/bin:/usr/local/bin:/usr/bin:/bin
 EnvironmentFile=/etc/xdan-system3/runtime.env
-ExecStart=/opt/xdan-system3/current/bin/node /opt/xdan-system3/current/app/apps/cli/lib/bin.js web --patch /opt/xdan-system3/current/app/deploy/system3/runtime.patch.yml --no-open
+ExecStart=/opt/xdan-system3/current/bin/node /opt/xdan-system3/current/app/apps/cli/lib/bin.js web --patch /opt/xdan-system3/current/app/deploy/system3/runtime.patch.yml --trusted-host system3.xdan.work --no-open
 Restart=on-failure
 RestartSec=5
 TimeoutStopSec=20
