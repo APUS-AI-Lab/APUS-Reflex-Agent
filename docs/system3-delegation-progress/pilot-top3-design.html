@@ -1,0 +1,126 @@
+<title>pilot 前三项设计</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700&family=Noto+Sans+SC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column; the comparison tables widen. */
+:root {
+  --bg: #f6f7f9; --surface: #ffffff; --ink: #141a24; --muted: #5a6474; --line: #dde2ea; --accent: #2346c7; --accent-soft: #e6ebfb; --warn: #b8670a; --warn-soft: #fbf0e1;
+  --display: "Noto Serif SC", "Songti SC", serif; --body: "Noto Sans SC", "PingFang SC", system-ui, sans-serif; --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #0f131a; --surface: #161c26; --ink: #e7ebf2; --muted: #9aa5b6; --line: #2a3342; --accent: #8ea7ff; --accent-soft: #1d2747; --warn: #f0a64a; --warn-soft: #34261a; color-scheme: dark } }
+:root[data-theme="dark"] { --bg: #0f131a; --surface: #161c26; --ink: #e7ebf2; --muted: #9aa5b6; --line: #2a3342; --accent: #8ea7ff; --accent-soft: #1d2747; --warn: #f0a64a; --warn-soft: #34261a; color-scheme: dark }
+body { background: var(--bg); color: var(--ink); font: 16px/1.75 var(--body); padding-inline: 20px; padding-block: 40px 72px; }
+main { max-width: 1240px; margin: 0 auto; display: grid; gap: 44px; }
+main > * { width: 100%; max-width: 900px; justify-self: center; }
+main > .wide { max-width: 1240px; }
+h1, h2, h3 { font-family: var(--display); line-height: 1.3; margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(28px, 4.5vw, 38px); } h2 { font-size: 24px; } h3 { font-size: 18px; }
+p { margin: 0; } section { display: grid; gap: 14px; min-width: 0; }
+.eyebrow { font: 500 12px/1.4 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+.muted { color: var(--muted); }
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; min-width: 760px; font-size: 14px; line-height: 1.6; }
+th, td { text-align: left; vertical-align: top; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+thead th { font-weight: 500; color: var(--muted); background: var(--bg); }
+tr:last-child td { border-bottom: 0; }
+ul, ol { margin: 0; padding-left: 22px; display: grid; gap: 6px; }
+code { font: 13px var(--mono); background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; }
+pre { margin: 0; padding: 14px; overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; font: 13px/1.6 var(--mono); }
+.q { border-left: 3px solid var(--warn); background: var(--warn-soft); padding: 12px 16px; border-radius: 0 6px 6px 0; display: grid; gap: 6px; }
+footer { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; }
+</style>
+
+<main>
+  <header style="display:grid;gap:10px">
+    <div class="eyebrow">设计稿 · 待确认 · 2026-10-04</div>
+    <h1>把 agent-jev-pilot 的前三项落到 System3</h1>
+    <p class="muted">pilot 的前三项是上下文筛选、目标与进度裁判（含卡住监督）、中转线路监控。本稿把三项映射到 System3 已有的扩展点，给出范围、接口、测试与验收标准。确认后再开发。</p>
+  </header>
+
+  <section class="wide">
+    <div class="eyebrow">总览</div>
+    <h2>三项功能的落点</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>pilot 能力</th><th>System3 形态</th><th>接入点</th><th>Jev 的角色</th><th>估算</th></tr></thead>
+      <tbody>
+        <tr><td>1 · 上下文筛选</td><td><b>委派交接包</b>：委派时把主会话里用户定下的约束带给 Codex</td><td>委派指令的 pre-step 注入（<code>delegation.ts</code>）；工具参数按设计不可改写</td><td>逐条判断早先的用户消息是“必须原文带上”还是“只列标题”</td><td>1 天</td></tr>
+        <tr><td>2 · 目标与进度裁判 + 卡住监督</td><td><b>过程监督</b>：确定性卡住规则 + 交付前验收证据检查</td><td><code>tools/post-execute</code>（主循环）、Codex 活动新增失败结果、轮次结束检查</td><td>第一版只用规则；Jev 只在规则拿不准时给建议，放到第二版</td><td>1.5 天</td></tr>
+        <tr><td>3 · 中转线路监控</td><td><b>线路健康</b>：测首字延迟与生成速度，线路变慢时避开</td><td>被动观察真实请求 + 空闲时小探测（<code>ctx.llm.stream</code>）；入口路由候选过滤</td><td>不参与；健康状态是硬规则输入</td><td>0.5–1 天</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <div class="eyebrow">1 · 委派交接包</div>
+    <h2>用户之前说过的约束，委派时一起带给 Codex</h2>
+    <p><b>要解决的问题</b>：Codex 只看到主模型写的那段任务描述，看不到主会话历史。用户早先说过的“不要改 README”“函数名用 snake_case”“先保证测试通过”，经常在交接时丢失。</p>
+    <ol>
+      <li><b>规则先行</b>：当前这条输入原文必带；最近 N 条（默认 12）用户消息进入候选；更早的只列标题。</li>
+      <li><b>Jev 逐条判断</b>：一次请求、多个问题，每条候选回答“约束：必须原文带上 / 背景：只列标题 / 无关”。超时或不可用时全部按“只列标题”处理（不阻塞委派）。</li>
+      <li><b>写进委派指令</b>：注入的那条 <code>system3-delegation</code> 指令末尾附交接包，并要求主模型把“必须遵守的约束”原文写进给 Codex 的任务里。</li>
+      <li><b>事实记录</b>：新增 <code>system3/handoff-pack</code> 事件，记录候选消息序号、Jev 请求与回答、最终分类；指令消息本身已在日志里，满足“进入模型的内容可从日志重建”。</li>
+    </ol>
+    <pre>[System3 交接包]
+必须遵守的约束（用户原话）：
+- 第 3 条：函数名一律用 snake_case
+- 第 5 条：不要改 README
+其他背景（可在主会话查阅）：
+- 第 1 条：项目介绍……（标题）</pre>
+    <p><b>验收</b>：新增 6 道“约束题”（早先消息给出约束，之后说“交给 Codex 做”），隐藏测试检查约束是否被遵守；有交接包 vs 无交接包各跑 2 次，约束遵守率提升且耗时增加不超过 5 秒。</p>
+  </section>
+
+  <section>
+    <div class="eyebrow">2 · 过程监督</div>
+    <h2>自动发现卡住，交付前确认有验收证据</h2>
+    <h3>卡住规则（来自 pilot，确定性）</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>规则</th><th>判定</th><th>动作</th></tr></thead>
+      <tbody>
+        <tr><td>同一错误重复</td><td>同一工具、同一错误码或规整后的错误摘要，在本轮出现 ≥ 2 次</td><td>给主模型一条提示：先换思路或向用户确认；界面显示提醒</td></tr>
+        <tr><td>反复失败</td><td>本轮失败的工具调用累计 ≥ 3 次</td><td>建议请求用户输入</td></tr>
+        <tr><td>没有新进展</td><td>连续 K 步（默认 6）没有成功的写文件、成功的命令或新的有效结果</td><td>建议换策略</td></tr>
+        <tr><td>Codex 内部反复失败</td><td>委派运行中命令失败 ≥ 3 次（Codex 活动新增 <code>outcome: failed</code>）</td><td>委派提醒新增“反复失败”一类，附补充说明与停止</td></tr>
+        <tr><td>缺少验收证据</td><td>本轮改过文件或完成了委派，但之后没有成功的测试 / 构建命令</td><td>轮次结束前提示主模型先验证；界面不显示“已复核”，改为“未见验收证据”</td></tr>
+      </tbody>
+    </table></div>
+    <ul>
+      <li><b>介入方式</b>：主循环用 <code>tools/post-execute</code> 的附加上下文给主模型提示（不阻断执行）；同时写入 <code>system3/supervision</code> 事件，进度卡片和状态栏据此显示。</li>
+      <li><b>两种模式</b>：<code>observe</code> 只记录不提示，<code>advise</code> 记录并提示；部署先用 <code>advise</code>。规则命中的次数和误报都可以从日志统计。</li>
+      <li><b>与现有能力的关系</b>：现有的启动过慢 / 停滞 / 超时是按时间判断；这里补上按内容判断（错误重复、无进展、缺证据）。<code>guard/repeat-tool-reminder</code> 只管完全相同的重复调用，保留不动。</li>
+    </ul>
+    <p><b>验收</b>：用固定的失败脚本复现三种卡住情形，规则在第 2 / 3 / K 步准确命中；正常任务（对照题库 10 题）误报为 0；“缺少验收证据”在去掉验证步骤的回放里命中。</p>
+  </section>
+
+  <section>
+    <div class="eyebrow">3 · 线路健康</div>
+    <h2>线路变慢时提醒，必要时自动换一档</h2>
+    <ul>
+      <li><b>被动观察（零成本）</b>：每次真实请求记录该线路的首字延迟、每秒输出 token 数、是否出错，保留最近 20 次。</li>
+      <li><b>主动探测（只在空闲时）</b>：某条线路超过 30 分钟没有真实请求时，发一个极小请求（最多 32 个 token）测一次。</li>
+      <li><b>判定</b>（阈值可配置）：最近样本的首字延迟中位数超过 <code>ttftMs</code>，或生成速度低于 <code>minTokensPerSecond</code>，或错误率超过 <code>maxErrorRate</code>，则标记为“变慢”。</li>
+      <li><b>路由动作</b>：入口路由把“变慢”的候选从可选集合中排除（所有候选都变慢时不排除），决策记录写明被排除的候选和原因；路由说明附一句“GPT-5.6 线路较慢，已改由 Pro 处理”。</li>
+      <li><b>状态存放</b>：内存中保存，重启后重新积累；第二版再考虑持久化。</li>
+    </ul>
+    <p><b>验收</b>：用可控的假线路（注入延迟）验证标记与恢复；线上记录各档真实指标，展示在执行详情里。GPT-5.6 中转每秒约 18 token 的实测值应被识别为“变慢”（以配置阈值为准）。</p>
+  </section>
+
+  <section>
+    <div class="eyebrow">共同约束</div>
+    <h2>三项都遵守的规则</h2>
+    <ul>
+      <li>规则先行，失败即回退：任一检查超时或出错都不阻塞主流程。</li>
+      <li>新事件都走持久化类型变更记录；进入模型的内容都能从日志重建。</li>
+      <li>每项都有单元测试、组合测试和一次线上验收，改动文件覆盖率 100%。</li>
+      <li>功能开关和阈值都在部署配置里，不写死在代码里。</li>
+    </ul>
+  </section>
+
+  <section>
+    <div class="eyebrow">需要你决定</div>
+    <h2>开工前的三个问题</h2>
+    <div class="q"><b>顺序</b>：建议按 2 → 3 → 1 开发。过程监督最能体现“管得住”，最适合 8 号演示；线路健康改动最小、见效快；交接包需要新题库做对照，放最后。也可以严格按 1 → 2 → 3。</div>
+    <div class="q"><b>过程监督的力度</b>：第一版只“提示”（主模型和界面都能看到），不自动停止或换执行者。自动介入等误报率测出来再开。</div>
+    <div class="q"><b>线路变慢时是否自动换档</b>：建议自动避开并在路由说明里写明原因；也可以只提醒不换。</div>
+  </section>
+
+  <footer>依据：agent-jev-pilot 的 <code>docs/top3-decision-e2e/</code> 设计与校准报告；System3 扩展点调研（工具执行前不可改写参数，委派交接只能经指令注入）。</footer>
+</main>
