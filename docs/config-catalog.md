@@ -1231,7 +1231,7 @@ export interface Config {
 ## `@deepseek-ai/dsh-experimental-system3`
 
 - `refs`: [`System3DataClass`](../packages/experimental/system3-policy/src/index.ts) · [`System3ExecutionDomain`](../packages/experimental/system3-policy/src/index.ts) · [`System3PrivacyMode`](../packages/experimental/system3-policy/src/index.ts)
-- `source`: [`packages/experimental/system3/src/index.ts:43`](../packages/experimental/system3/src/index.ts)
+- `source`: [`packages/experimental/system3/src/index.ts:44`](../packages/experimental/system3/src/index.ts)
 
 ```ts config-catalog
 /** Configures the default local-first privacy boundary. */
@@ -1258,6 +1258,8 @@ export interface Config {
   readonly skillSelection?: false | System3SkillSelectionConfig
   /** Opt-in persistent progress snapshots of subagent runs, written to the delegating Agent's Session. */
   readonly delegationProgress?: false | System3DelegationProgressConfig
+  /** Stall rules and acceptance-evidence checks over each Agent loop; `false` or omission disables them. */
+  readonly processSupervision?: false | System3ProcessSupervisionConfig
 }
 
 /** Explicit controls for entry recommendations; omission leaves entry routing disabled. */
@@ -1311,6 +1313,28 @@ export interface System3DelegationProgressConfig {
   readonly intervalMs: number
   /** Alert thresholds; omission writes no alerts. */
   readonly monitor?: System3DelegationMonitorConfig
+}
+
+/** Thresholds and tool classes the supervision rules use; deployment-owned. */
+export interface System3ProcessSupervisionConfig {
+  /** `observe` records notices only; `advise` also tells the main model what to do next. */
+  readonly mode: 'observe' | 'advise'
+  /** Occurrences of the same tool failure in one turn that raise `repeated-error`. */
+  readonly repeatedError: number
+  /** Failed tool calls in one turn that raise `failed-attempts`. */
+  readonly failedAttempts: number
+  /** Consecutive calls without an edit, delegation, or passing verification that raise `no-progress`. */
+  readonly stalledSteps: number
+  /** Failed commands inside one delegated run that raise `delegate-failures`. */
+  readonly delegateFailures: number
+  /** Tools whose successful call changes files. */
+  readonly editTools: readonly string[]
+  /** Delegation tools whose successful call hands back delegated changes. */
+  readonly delegationTools: readonly string[]
+  /** Shell tools whose command text and exit code are inspected. */
+  readonly shellTools: readonly string[]
+  /** Case-insensitive regular expression for verification commands, such as tests or builds. */
+  readonly verifyPattern: string
 }
 
 /** One entry route Jev may choose. */

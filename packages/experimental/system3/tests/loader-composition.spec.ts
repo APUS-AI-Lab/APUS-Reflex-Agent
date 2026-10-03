@@ -122,6 +122,9 @@ it('loads Jev beside the unchanged main route and replays persisted shadow recei
     ] : [],
     ...name === '@deepseek-ai/dsh-experimental-system3' ? [
       '  config:', '    privacyMode: local-only', '    jevExecutionDomain: local', '    observeAgentLoop: true',
+      '    processSupervision:', '      mode: advise', '      repeatedError: 2', '      failedAttempts: 3', '      stalledSteps: 6',
+      '      delegateFailures: 3', '      editTools: [edit]', '      delegationTools: []', '      shellTools: [bash]',
+      "      verifyPattern: '\\bnpm test\\b'",
     ] : [],
   ]).join('\n') + '\n')
   const ctx = context = new Context()
@@ -173,6 +176,9 @@ it('loads Jev beside the unchanged main route and replays persisted shadow recei
   const restored = Session.fromRestore(id, persisted.events, stored.header, stored.inheritedEventCount, persisted.eventState)
   await stored.close()
   const receiptCount = requests.length
+  // A text-only turn changes nothing, so supervision leaves no finding and adds nothing to the main request.
+  expect(persisted.events.filter(event => event.type === 'system3/process-notice')).toEqual([])
+  expect(JSON.stringify(main[0]?.body)).not.toContain('System3 过程监督')
   const replayed = persisted.events.flatMap(event => event.type === 'system3/decision' ? [event.data] : [])
   expect(replayed).toEqual([first, second])
   expect(ctx.system3.lastDecision(restored)).toEqual(second)

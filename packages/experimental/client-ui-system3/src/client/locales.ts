@@ -20,6 +20,9 @@ export const zh = {
   runRunning: '{provider} 运行中', runCompleted: '{provider} 已完成', runAborted: '{provider} 已中止', runIncomplete: '{provider} 未完成',
   runSeconds: '{seconds} 秒', runCurrent: '当前：{kind}', kindMessage: '消息', kindReasoning: '推理', kindCommand: '命令',
   kindFileChange: '改文件', kindTool: '工具', kindWebSearch: '搜索', kindOther: '其他',
+  noticeRepeatedError: '{subject} 已连续 {count} 次以同样的错误失败', noticeFailedAttempts: '本轮已有 {count} 次操作失败',
+  noticeNoProgress: '最近 {count} 步没有新的修改或通过的验证', noticeMissingEvidence: '已修改文件，但还没有运行通过的测试或构建',
+  noticeDelegateFailures: '{subject} 已有 {count} 条命令失败', noticeOther: '过程监督提示', noticeAdvised: '已提醒模型调整做法',
 } satisfies Record<string, string>
 /** Typed keys shared by both product locales. */
 export type System3Key = keyof typeof zh
@@ -44,6 +47,9 @@ export const en = {
   runRunning: '{provider} running', runCompleted: '{provider} finished', runAborted: '{provider} stopped', runIncomplete: '{provider} did not finish',
   runSeconds: '{seconds} s', runCurrent: 'Now: {kind}', kindMessage: 'messages', kindReasoning: 'reasoning', kindCommand: 'commands',
   kindFileChange: 'file changes', kindTool: 'tools', kindWebSearch: 'searches', kindOther: 'other',
+  noticeRepeatedError: '{subject} failed {count} times with the same error', noticeFailedAttempts: '{count} actions failed this turn',
+  noticeNoProgress: 'No new changes or passing checks in the last {count} steps', noticeMissingEvidence: 'Files changed, but no test or build has passed yet',
+  noticeDelegateFailures: '{subject} has {count} failed commands', noticeOther: 'Process notice', noticeAdvised: 'The model was asked to change course',
 } satisfies Record<System3Key, string>
 
 declare module '@deepseek-ai/dsh-client-ui-slots' {

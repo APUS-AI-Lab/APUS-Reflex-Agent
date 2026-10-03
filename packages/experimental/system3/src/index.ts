@@ -12,6 +12,7 @@ import { installSystem3SkillSelection, type System3SkillSelectionConfig } from '
 import { installSystem3KeepWarm } from './keep-warm.ts'
 import { installSystem3Delegation } from './delegation.ts'
 import { installSystem3DelegationProgress, type System3DelegationProgressConfig } from './delegation-progress.ts'
+import { installSystem3ProcessSupervision, type System3ProcessSupervisionConfig } from './process-supervision.ts'
 import type { Session } from '@deepseek-ai/dsh-session'
 import { recordSystem3Decision, type System3DecisionRequest, type System3DecisionReceipt, type System3JevOptions } from './decisions.ts'
 
@@ -63,6 +64,8 @@ export interface Config {
   readonly skillSelection?: false | System3SkillSelectionConfig
   /** Opt-in persistent progress snapshots of subagent runs, written to the delegating Agent's Session. */
   readonly delegationProgress?: false | System3DelegationProgressConfig
+  /** Stall rules and acceptance-evidence checks over each Agent loop; `false` or omission disables them. */
+  readonly processSupervision?: false | System3ProcessSupervisionConfig
 }
 
 /** Small operational counters, intentionally free of user data. */
@@ -200,6 +203,17 @@ export default class System3 extends Service implements System3Service {
         startupMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).required(),
       })]),
     })]).default(false),
+    processSupervision: z.union([z.const(false), z.object({
+      mode: z.union([z.const('observe'), z.const('advise')]).required(),
+      repeatedError: z.number().step(1).min(1).required(),
+      failedAttempts: z.number().step(1).min(1).required(),
+      stalledSteps: z.number().step(1).min(1).required(),
+      delegateFailures: z.number().step(1).min(1).required(),
+      editTools: z.array(z.string()).required(),
+      delegationTools: z.array(z.string()).required(),
+      shellTools: z.array(z.string()).required(),
+      verifyPattern: z.string().required(),
+    })]).default(false),
   })
 
   readonly privacyPolicy: System3PrivacyPolicy
@@ -234,6 +248,9 @@ export default class System3 extends Service implements System3Service {
     }
     if (config.delegationProgress !== undefined && config.delegationProgress !== false) {
       installSystem3DelegationProgress(ctx, config.delegationProgress)
+    }
+    if (config.processSupervision !== undefined && config.processSupervision !== false) {
+      installSystem3ProcessSupervision(ctx, config.processSupervision)
     }
     if (config.observeAgentLoop === true) this.observeAgentLoop()
     if (config.skillSelection !== undefined && config.skillSelection !== false) {

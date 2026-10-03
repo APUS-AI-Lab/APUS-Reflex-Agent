@@ -195,6 +195,7 @@ export function observeRun(
     const note = activity.note?.trim()
     emit('subagent/activity', {
       runId: identity.runId, provider, id: run.id, kind: activity.kind, phase: activity.phase,
+      ...activity.outcome === undefined ? {} : { outcome: activity.outcome },
       ...note === undefined || note === '' ? {} : { note: note.length <= SUBAGENT_ACTIVITY_NOTE_MAX_CHARS
         ? note : `${note.slice(0, SUBAGENT_ACTIVITY_NOTE_MAX_CHARS - 1)}…` },
     }, parent)

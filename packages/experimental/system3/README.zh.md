@@ -61,6 +61,8 @@ const decision = ctx.system3.route(candidates, 'local-9b')
 
 `delegationProgress: { intervalMs, monitor? }` 把 Agent 委派的每个子 agent 运行的 `system3/delegation-progress` 快照写入该 Agent 的 Session：开始时一次，有步骤时每个 `intervalMs` 最多一次，结束时带停止原因再写一次。快照包含 provider、开始时间、已用时长、各类别已完成步骤数、进行中的步骤、最近一次步骤的时间以及子 agent 最近的简短进度说明；不含命令、路径、工具输入或结果，也不对模型可见。配置 `monitor: { overtimeMs, stallMs, startupMs }` 后，运行在 `startupMs` 内没有第一个步骤、每次超过 `stallMs` 没有新步骤、以及每到 `overtimeMs` 的整数倍时，System3 还会写入 `system3/delegation-alert`。快照还记录该运行是否接受运行中输入（`steerable`）。运行时投影以 `subagentRun` 暴露最新一次运行及其说明、未解除的提醒、运行期间的 `steerable`，以及它接受的最近三条 `subagent/steer` 文本；客户端显示说明、带继续等待、补充说明和停止操作的提醒，以及通过 `subagents.steerByParent` 发送文本的补充说明表单。只有上报活动的 provider（Codex 与 Claude Code）会产生运行中快照。
 
+`processSupervision: { mode, repeatedError, failedAttempts, stalledSteps, delegateFailures, editTools, delegationTools, shellTools, verifyPattern }` 对每个顶层 Agent 轮次应用确定性规则，规则触发时写入 `system3/process-notice`：同一工具失败达到 `repeatedError` 次（失败键由工具名、错误码或退出码，以及数字归一后的结果首行组成）；失败调用达到 `failedAttempts` 次；连续 `stalledSteps` 次调用没有成功的修改、委派或通过的验证；轮次在修改或委派之后、没有通过的验证就要结束（`missing-evidence`）；单次委派运行中失败命令达到 `delegateFailures` 条。结果为错误或报告非零 `exitCode` 的 shell 调用算失败；`command` 匹配不区分大小写的 `verifyPattern` 且成功的 shell 调用算验证。每条规则在每个轮次、每个对象上最多触发一次，用户的新消息会重新计数。`observe` 只记录；`advise` 还会给主模型建议：工具结果类规则把建议作为附加上下文挂在触发它的结果上，`missing-evidence` 对该轮次 steer 一次，让模型再运行一步。委派运行中的失败只记录、不建议。监督从不阻止、改写或重试工具调用。运行时投影以 `notices` 暴露当前轮次最近五条发现，客户端在 dock 中列出。
+
 `skillSelection` 在原生 `agent/pre-step` 扩展点为下游保留的用户输入选择至多一个当前作用域允许模型调用的 Skill。配置包含 `sessionDataClasses`、`minConfidence`、`maxInputBytes`、`maxContentBytes`、`maxCandidates`（1–254）和 `deadlineMs`。Jev 读取当前文本及完整且有界的目录描述，不读取 Skill 正文或会话历史。稳定候选 id 为独立弃权选项保留位置。隐私拒绝、发现不完整、目录超限、低置信度、超时、元数据过期或正文超限时，保留原生模型与工具流程。目录超过 `maxCandidates` 时不声称自动搜索过全部 Skill；显式 `/name` 调用继续使用自身调用策略。
 
 `system3/skill-decision` 记录准确请求、验证后的响应与提供方报告的用量、选择结果，以及拟注入的原生 `injectionMessageId`。加载的正文采用 `skill-invocation` 指令，只有 loop 提交准确的 `user/message` 后才成为模型可见内容，不授予工具权限。`system3Runtime` wire 投影分别呈现 `entry.suggested`、`entry.adopted` 和 `entry.used`，并区分 `skill.selected` 与 `skill.injected`。实际使用须由准确输入所属 turn 的模型输出，或含内容增量、完整内容块的流式 attempt 确认。用量、块占位及仅含结束错误或取消的记录不证明已收到响应；真实内容之后发生错误仍保留响应事实。仅准入不代表已发送模型请求。回放会重建这些事实而不调用 Jev，客户端无法从投影取得提供方原始输入或完整概率。
@@ -77,15 +79,21 @@ const decision = ctx.system3.route(candidates, 'local-9b')
 
 #### What the model sees
 
-未启用入口路由时，由宿主决定哪些服务结果进入模型历史。入口路由通过 `state.input` 向 Jev 提供当前文本，通过 `state.baseline` 提供当前模型选择，通过 `questions.route.criteria` 提供有界候选描述。Receipt 不进入生成模型历史。采纳后的模型变化遵循原生 Session API 的模型选择行为。
+未启用入口路由时，由宿主决定哪些服务结果进入模型历史。入口路由通过 `state.input` 向 Jev 提供当前文本，通过 `state.baseline` 提供当前模型选择，通过 `questions.route.criteria` 提供有界候选描述。Receipt 不进入生成模型历史。采纳后的模型变化遵循原生 Session API 的模型选择行为。`advise` 模式下，过程监督每触发一条规则就加入一条来源为 `system3-supervision` 的用户消息，例如：
+
+##### 缺少验证的建议
+
+```markdown
+[System3 过程监督] 本轮修改了文件或完成了委派，但还没有运行通过的测试或构建来验证。请先运行项目的验证命令，再向用户报告结果；如果无法验证，请明确说明原因。
+```
 
 #### Token effect
 
-在隐私和大小检查允许时，入口路由为每个符合条件的准入输入增加一次 Jev 调用；保留 provider 实际报告的 usage。evidence 方法限制调用方投影，usage 记录区分 provider 计数与估算。
+在隐私和大小检查允许时，入口路由为每个符合条件的准入输入增加一次 Jev 调用；保留 provider 实际报告的 usage。evidence 方法限制调用方投影，usage 记录区分 provider 计数与估算。每条监督建议增加 50 到 100 个输入 token；`advise` 模式下 `missing-evidence` 每个轮次最多增加一个模型步骤。
 
 #### KV Cache effect
 
-观测与 shadow receipt 不改变生成请求前缀。采纳生成模型切换可能失去 provider 缓存复用；工具 schema 不变。
+观测与 shadow receipt 不改变生成请求前缀。监督建议追加在最新工具结果之后，缓存前缀不变。采纳生成模型切换可能失去 provider 缓存复用；工具 schema 不变。
 
 ## 已知限制与后续工作
 

@@ -82,6 +82,16 @@
             overtimeMs: 360000
             stallMs: 180000
             startupMs: 120000
+        processSupervision:
+          mode: advise
+          repeatedError: 2
+          failedAttempts: 3
+          stalledSteps: 6
+          delegateFailures: 3
+          editTools: [write, edit]
+          delegationTools: [subagent_codex]
+          shellTools: [bash]
+          verifyPattern: '\b(pytest|unittest|vitest|jest|go test|cargo (test|build)|(npm|pnpm|yarn)( run)? (test|build|typecheck)|tsc|make (test|check|build))\b'
         skillSelection:
           sessionDataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'
           minConfidence: 0.5

@@ -86,8 +86,8 @@ it('restores the same wire facts without leaking effective headers or making mod
   h.session.append('request/header', { header: { config: selected }, reason: 'initial' }); h.input(id, 1); h.output(1)
   const restored = Session.fromRestore(h.session.id, h.session.snapshotEvents(), h.session.header, SessionLogOffset(0), 'shared-frozen')
   const state = h.ctx.sessionProjections.stateOf(restored, 'system3Runtime')!
-  expect(system3RuntimeProjection.wire.view(state)).toEqual({ entry: h.view()?.entry, skill: null, subagentRun: null })
-  expect(Object.keys(system3RuntimeProjection.wire.view(state))).toEqual(['entry', 'skill', 'subagentRun'])
+  expect(system3RuntimeProjection.wire.view(state)).toEqual({ entry: h.view()?.entry, skill: null, subagentRun: null, notices: [] })
+  expect(Object.keys(system3RuntimeProjection.wire.view(state))).toEqual(['entry', 'skill', 'subagentRun', 'notices'])
 })
 
 

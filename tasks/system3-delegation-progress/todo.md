@@ -100,3 +100,10 @@ Base: branch `feat-system3-g1`. Order follows [architecture section 11](../../do
 - [x] Deployed the `s3-delegation` release with explicit delegation to `prd` (release cases 8/8). Online: Flash / Pro routes correct; "交给 Codex" delegated without Jev (`explicit: true`), 389 s, hidden tests 13/13.
 - [x] Removed the System3 deployment from `litellm` (service, unit, 5 images, releases, data, credentials, user); data archive kept at `/root/xdan-system3-data-backup-20261003.tgz` there; other services unaffected; disk 83% -> 59%.
 - [x] Steers are restated to the main model: the run result lists accepted `steers` and the delegation tool appends them to its result; rerun on `prd` kept the README, hidden tests 13/13.
+
+## Pilot top three in System3 (approved 2026-10-04: all three; supervision advises only; degraded routes are avoided with a notice)
+
+- [ ] Supervision: repeated error >= 2, failed attempts >= 3, no progress for K steps, Codex command failures >= 3 (new `outcome` on subagent activity), missing acceptance evidence after file changes or delegation; `system3/supervision` event; post-execute nudge in advise mode; dock notices.
+- [ ] Route health: passive first-token / throughput / error samples per route, idle probes, degraded candidates excluded from entry routing with a recorded reason and route-notice text.
+- [ ] Hand-off pack: Jev classifies recent user messages as constraint / background / unrelated; constraints appended verbatim to the delegation instruction; `system3/handoff-pack` event; constraint-retention comparison.
+- [ ] Persistence records, READMEs, architecture doc, tests (100% changed files), gates, prd release, online acceptance.

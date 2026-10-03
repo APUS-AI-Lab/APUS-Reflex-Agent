@@ -71,6 +71,19 @@ export interface System3RuntimeView {
   readonly entry: System3EntryView | null
   readonly skill: System3SkillView | null
   readonly subagentRun: System3SubagentRunView | null
+  /** Process supervision findings of the latest turn, oldest first; cleared when a turn starts. */
+  readonly notices: readonly System3ProcessNoticeView[]
+}
+
+/** One process supervision finding as the Client shows it. */
+export interface System3ProcessNoticeView {
+  /** Rule identifier, such as `repeated-error` or `missing-evidence`. */
+  readonly rule: string
+  /** Tool or delegate provider the finding concerns, or null. */
+  readonly subject: string | null
+  readonly count: number
+  /** Whether the main model was told what to do next. */
+  readonly advised: boolean
 }
 
 declare module '@deepseek-ai/dsh-session-projection/types' {

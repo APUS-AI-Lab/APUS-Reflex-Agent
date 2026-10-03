@@ -196,7 +196,7 @@ These limits define when the seam is a poor fit or needs special operational car
 - **No replay of accepted-but-unlogged messages** — a crash can lose an accepted prompt that never reached the child's session log; the lost message is not replayed automatically.
 - **No durable parent mailbox** — child-to-parent messages require a resident continuable child and live direct parent, and provide acceptance identity rather than exactly-once delivery.
 - **Lifecycle events are observe-only** — a run-affecting `subagent/end` continuation or decision API waits for a concrete consumer.
-- **Step events are live and coarse** — `subagent/activity` carries a step category, phase, and an optional note of the child's own progress text (bounded to `SUBAGENT_ACTIVITY_NOTE_MAX_CHARS`) for one-shot runs, is not written to any Session, and is reported only by the Codex and Claude Code providers.
+- **Step events are live and coarse** — `subagent/activity` carries a step category, phase, an optional note of the child's own progress text (bounded to `SUBAGENT_ACTIVITY_NOTE_MAX_CHARS`), and `outcome: 'failed'` on a completed step the provider reports as failed, for one-shot runs, is not written to any Session, and is reported only by the Codex and Claude Code providers.
 - **Mid-run input is one-shot and Codex-only** — `steerByParent` reaches only runs that implement `SubagentRun.steer`, currently Codex; Claude Code needs streaming input first, and continuable children use the `prompt` Remote instead.
 
 <a id="dev-note"></a>

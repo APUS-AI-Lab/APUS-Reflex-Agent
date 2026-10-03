@@ -69,6 +69,7 @@ export const KNOWN_SESSION_EVENT_TYPES: ReadonlySet<string> = new Set([
   'system3/delegation-progress',
   'system3/entry-decision',
   'system3/entry-start',
+  'system3/process-notice',
   'system3/skill-decision',
   'team/member',
   'team/message/delivered',
