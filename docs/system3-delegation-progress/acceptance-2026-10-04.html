@@ -93,6 +93,21 @@ footer { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line)
     </div>
   </section>
 
+  <section class="wide">
+    <div class="eyebrow">pilot 前三项（下午发布）</div>
+    <h2>过程监督、线路健康、委派交接包</h2>
+    <div class="shots">
+      <figure><img src="acceptance/p1-supervision.jpg" alt="同一错误重复两次后，dock 显示过程监督提示，模型停止重试并请用户确认" loading="lazy"><figcaption><b>同一错误重复</b>：让模型连续执行一个必然失败的命令。dock 显示“bash failed 2 times with the same error”和“3 actions failed this turn”，模型回复“我按你的指示停在这里，不再自行重试”，并列出三个选项请用户确认。</figcaption></figure>
+      <figure><img src="acceptance/p2-missing-evidence.jpg" alt="写完文件后 dock 显示缺少验证的提示，模型随后自行验证" loading="lazy"><figcaption><b>修改后缺少验证</b>：只要求写一个文件。轮次结束前 System3 提示一次，模型随后运行 <code>py_compile</code> 和行内断言检查，清理缓存后才回复。</figcaption></figure>
+    </div>
+    <ul class="list">
+      <li><b>委派交接包（端到端）</b>：先说“函数名一律用 snake_case；不要创建或修改任何 README 文件”，下一条说“交给 codex 写 temperature.py 并测试”。Jev 用 915 毫秒判定前一条是要求（概率 0.998），原文附进委派指令；主模型在给 Codex 的任务里写了“硬性约定（来自用户前面的话，验收时逐条检查）”。Codex 的产出：函数为 <code>celsius_to_fahrenheit</code> / <code>fahrenheit_to_celsius</code>，没有 README；装上 pytest 后 20 个测试全部通过。</li>
+      <li><b>交接要求的识别率</b>：部署中的 Jev 在 6 段带标注的对话上，初版问法召回率只有 0.38（漏掉“不要改 README”“提交前必须通过 pytest”这类项目规矩）；改为在每个问题里引用原话、问“执行时仍然有效的工作要求”后，召回率和精确率都是 1.0，每次约 0.6 秒。阈值定为 0.3。</li>
+      <li><b>线路健康</b>：已上线，默认只避开明显故障的线路（首字超过 45 秒、低于每秒 10 个 token、或错误超过一半）。阈值来自 prd 会话日志：GPT-5.6 中转首字约 26 秒，各线路输出都在每秒 100 个 token 以上。本次没有线路达到降级条件，所以界面上没有出现“已避开较慢的线路”。</li>
+      <li><b>验收中发现的缺陷</b>：主模型用 <code>pytest -v 2&gt;&amp;1 | tail</code> 核对 Codex 结果，pytest 没装，但管道让退出码变成 0，监督把它当成了通过的验证。已修复：带管道的命令不再算验证证据，发布后复测“修改后缺少验证”能正常触发。</li>
+    </ul>
+  </section>
+
   <section>
     <div class="eyebrow">验收中发现并处理的问题</div>
     <h2>问题与状态</h2>
@@ -113,6 +128,8 @@ footer { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line)
       <li>Claude Code 委派、本机模型与隐私路由：尚未接入。</li>
       <li>启动过慢、停滞、超时提醒：之前的线上测试已触发；本次运行未超过阈值，未再出现。</li>
       <li>公网域名下的完整浏览器流程：需要在你的浏览器里确认一次。</li>
+      <li>线路降级后自动避开：单元测试覆盖；线上没有线路达到阈值，未实际触发。</li>
+      <li>交接包对 Codex 遵守率的对照（有/无交接包各跑多次）：本次只做了一次端到端验收，没有做成对比实验。</li>
     </ul>
   </section>
 
