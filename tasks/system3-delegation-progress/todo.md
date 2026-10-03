@@ -88,6 +88,9 @@ Base: branch `feat-system3-g1`. Order follows [architecture section 11](../../do
 - [x] Server probes without releasing: Jev p50 274 ms / p95 406 ms on a reused connection; Codex 0.153.4 under the unit's hardening fixed a file in 38 s, and its sandbox refused a write outside the workspace. `CODEX_HOME` must not be under `/tmp`.
 - [x] Three-arm calibration (10 tasks x 2 runs, hidden tests): Flash alone and always-delegate both 20/20, median 36 s vs 203 s; Jev under the old wording delegated 8/10. Deployed Codex wording tightened; repository-scale probes still delegate 2/3. Four-tier eval unchanged at 29/30.
 - [x] Composer chip: verified in Web that a routed turn already showed the routed model; added an Auto caption during the routed turn (verified: "Auto gpt-5.6-sol-relay Medium" during, "deepseek-v4-flash Low" after).
-- [ ] Release to root@litellm: user chose to decide after the calibration result.
+- [x] Released `s3-delegation-8d8e5f366e` to root@litellm on 2026-10-03 (release cases 8/8 first; rollback target `g1-stable-3127b62`). Online browser e2e: Flash / Pro / GPT-5.6 routes correct, follow-up retained, in-product decisions 638-1039 ms, route line 1.2-1.45 s with tunnel; explicit Codex delegation 374 s, steer 0.7 s, stalled + overtime alerts, hidden tests 13/13.
+- [ ] GPT-5.6 Sol through the Fidoo relay streams about 18 tok/s; a 10k-token design answer took 553 s. Consider an output budget or a faster expert route.
+- [ ] An explicit "交给 Codex" request got Jev low-confidence (baseline); the main model still delegated. Add the explicit-intent rule.
+- [ ] Stall alert fired during 90 s of Codex reasoning without a step; consider a longer stallMs for reasoning-heavy runs.
 - [ ] Tier routing for coding tasks: GPT-5.6 Sol took 321-581 s on two large tasks Flash did in 68-117 s; calibrate tiers separately.
 - [ ] Tasks Flash fails, to measure where delegation pays off.

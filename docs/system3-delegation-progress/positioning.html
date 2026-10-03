@@ -198,7 +198,7 @@ code { font: 13px var(--mono); background: var(--bg); border: 1px solid var(--li
         <rect class="node" x="24" y="384" width="140" height="184" rx="6"/>
         <rect class="tagbox" x="32" y="390" width="60" height="14" rx="2"/><text class="tag" x="62" y="400" text-anchor="middle">SYSTEM 3</text>
         <text class="name" x="94" y="430" text-anchor="middle">产品界面</text>
-        <text class="sub" x="94" y="458" text-anchor="middle">路由说明 ≈ 1 s</text>
+        <text class="sub" x="94" y="458" text-anchor="middle">路由说明 1–1.5 s</text>
         <text class="sub" x="94" y="482" text-anchor="middle">委派进度卡片</text>
         <text class="sub" x="94" y="506" text-anchor="middle">提醒与补充说明</text>
         <text class="sub" x="94" y="530" text-anchor="middle">输入框自动标记</text>
@@ -246,8 +246,8 @@ code { font: 13px var(--mono); background: var(--bg); border: 1px solid var(--li
       <div class="metric"><div class="n">274 / 406 ms</div><div class="k">Jev 决策延迟 p50 / p95</div><div class="c">服务器实测，复用连接，48 次，2026-10-03</div></div>
       <div class="metric"><div class="n">29 / 30</div><div class="k">四档入口路由与人工标注一致</div><div class="c">两档评测 48 / 50；人工标注，含对抗输入</div></div>
       <div class="metric"><div class="n">41 s vs 203 s</div><div class="k">同样 100% 通过时的耗时中位数</div><div class="c">Jev 路由组对比总是委派组；10 题各 2 次，隐藏测试验收；乐观上界</div></div>
-      <div class="metric"><div class="n">0.4 s</div><div class="k">运行中补充说明送达并显示</div><div class="c">Codex 随后按补充要求实现并补测试，35 个测试通过</div></div>
-      <div class="metric"><div class="n">≈ 1 s</div><div class="k">提交后看到“这一轮由谁处理”</div><div class="c">本机产品内 0.49–1.25 秒</div></div>
+      <div class="metric"><div class="n">0.7 s</div><div class="k">运行中补充说明送达并显示</div><div class="c">线上委派 Codex：374 秒完成，13 个隐藏验收测试全部通过，补充要求已落实</div></div>
+      <div class="metric"><div class="n">1.2–1.5 s</div><div class="k">提交后看到“这一轮由谁处理”</div><div class="c">线上实测，含 SSH 隧道；产品内决策 0.64–1.04 秒</div></div>
       <div class="metric"><div class="n">38 s</div><div class="k">Codex 在生产加固参数下完成修复</div><div class="c">工作区外写入被沙箱拦截；systemd 临时单元复刻正式服务</div></div>
     </div>
   </section>
@@ -313,7 +313,7 @@ code { font: 13px var(--mono); background: var(--bg); border: 1px solid var(--li
     <div class="eyebrow">10 月 8 日前</div>
     <h2>发布准备清单</h2>
     <ul class="check">
-      <li>发布到服务器，在线实测入口 p95 与一次完整的 Fidoo 委派，替换本页中的本机数据</li>
+      <li>已完成：发布到服务器并做线上端到端测试（2026-10-03）</li>
       <li>录制三段演示：简单问答秒回、复杂问题路由到 GPT-5.6 Sol、仓库级任务委派 Codex 并在运行中补充说明</li>
       <li>确定对外名称与主标语</li>
       <li>请设计或产品评审委派进度卡片与输入框“自动”标记</li>
