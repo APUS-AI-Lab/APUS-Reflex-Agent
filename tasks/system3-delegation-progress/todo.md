@@ -99,4 +99,4 @@ Base: branch `feat-system3-g1`. Order follows [architecture section 11](../../do
 
 - [x] Deployed the `s3-delegation` release with explicit delegation to `prd` (release cases 8/8). Online: Flash / Pro routes correct; "交给 Codex" delegated without Jev (`explicit: true`), 389 s, hidden tests 13/13.
 - [x] Removed the System3 deployment from `litellm` (service, unit, 5 images, releases, data, credentials, user); data archive kept at `/root/xdan-system3-data-backup-20261003.tgz` there; other services unaffected; disk 83% -> 59%.
-- [ ] Steers are invisible to the main model: on `prd` Codex wrote the steered README and the main model deleted it during cleanup. Append accepted steers to the subagent tool result the main model reads.
+- [x] Steers are restated to the main model: the run result lists accepted `steers` and the delegation tool appends them to its result; rerun on `prd` kept the README, hidden tests 13/13.
