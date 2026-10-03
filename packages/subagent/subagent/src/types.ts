@@ -338,6 +338,11 @@ export interface SubagentResult {
   readonly diagnostic?: string
   /** Why the run ended. A non-`completed` reason means `output` may be partial. */
   readonly stopReason: SubagentStopReason
+  /**
+   * Texts a person added to this run through `subagents.steerByParent` that the child accepted, in acceptance
+   * order. The subagent service sets it on the result it returns from `start`; providers leave it unset.
+   */
+  readonly steers?: readonly string[]
 }
 
 /**

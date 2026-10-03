@@ -93,8 +93,11 @@
   en: d83f1f25a3719c54
   zh: 445ca808e28dc936
 /deepseek-ai-dsh-tool-subagent/model-experience/foreground-result/what-the-model-sees:
-  en: 7e5d19839fa69495
-  zh: 0e7ff0d92571ec60
+  en: 59bebe5a5fd516a6
+  zh: 36e76a720334eed6
+/deepseek-ai-dsh-tool-subagent/model-experience/foreground-result/what-the-model-sees/mid-run-requirements:
+  en: 15f13e0162b0ce3b
+  zh: 5c583200f0b52e20
 /deepseek-ai-dsh-tool-subagent/model-experience/foreground-result/token-effect:
   en: 995810727b29f85f
   zh: 4ede7b437091d6ee

@@ -207,7 +207,8 @@ declare module '@deepseek-ai/dsh-session/types' {
   interface SessionEventMap {
     /**
      * A person's input that a running one-shot child accepted mid-run, written to the
-     * delegating parent's Session after the child accepted it; not model-visible to the parent.
+     * delegating parent's Session after the child accepted it. The event is not model-visible; the
+     * delegation tool restates accepted texts in the tool result the parent's model reads.
      * @param data - run identity and the delivered text.
      */
     'subagent/steer': SubagentSteerEvent
@@ -569,6 +570,7 @@ export class SubagentRuntime extends TypertRemoteService {
       if (signal.aborted) throw new RemoteError('gateway/cancelled', 'subagent input was cancelled', {}, { cause: error })
       throw new RemoteError('subagent/not-steerable', 'subagent run refused the input', { runId }, { cause: error })
     }
+    run.accepted.push(request.text)
     run.parent.session.append('subagent/steer', { version: 1, runId, provider: run.provider, text: request.text })
     return { accepted: true }
   }

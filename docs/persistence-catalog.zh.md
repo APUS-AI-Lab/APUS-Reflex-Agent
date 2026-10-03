@@ -982,13 +982,14 @@ export type SessionEvent<T extends SessionEventType = SessionEventType> = {
 ```ts persistence-catalog
 /**
  * A person's input that a running one-shot child accepted mid-run, written to the
- * delegating parent's Session after the child accepted it; not model-visible to the parent.
+ * delegating parent's Session after the child accepted it. The event is not model-visible; the
+ * delegation tool restates accepted texts in the tool result the parent's model reads.
  * @param data - run identity and the delivered text.
  */
 'subagent/steer': SubagentSteerEvent
 ```
 
-来源：[`packages/subagent/subagent/src/index.ts:213`](../packages/subagent/subagent/src/index.ts)
+来源：[`packages/subagent/subagent/src/index.ts:214`](../packages/subagent/subagent/src/index.ts)
 
 ### `system/*`
 

@@ -177,7 +177,14 @@ Prefix-stable while the section text and tool presence are unchanged; removing t
 
 #### What the model sees
 
-The call retains the description and prompt. Success contains only the child's final text; other outcomes become `Error: <stop reason>`, followed by a safe provider diagnostic when present and then any partial assistant text. Intermediate child steps stay out of the parent.
+The call retains the description and prompt. Success contains only the child's final text; other outcomes become `Error: <stop reason>`, followed by a safe provider diagnostic when present and then any partial assistant text. When the person added requirements mid-run through `subagents.steerByParent`, both forms end with them, so the parent checks the result against them too, and the foreground value also lists them as `steers`. Intermediate child steps stay out of the parent.
+
+##### Mid-run requirements
+
+```markdown
+During this run the user added these requirements; check the result against them as well:
+- <accepted text>
+```
 
 #### Token effect
 

@@ -40,6 +40,8 @@ export interface Config {
   structured?: unknown
   /** Observes each start; the child's result additionally waits for the returned promise. */
   onStart?: (request: SubagentStartRequest) => Promise<void> | void
+  /** Whether the run accepts mid-run input. */
+  acceptSteer?: boolean
 }
 
 /** Scripted provider whose result aborts if its signal or disposer wins first. */
@@ -97,6 +99,7 @@ class ScriptedSubagentProvider implements SubagentProvider {
         request.signal.removeEventListener('abort', onAbort)
         return Promise.resolve()
       },
+      ...this.config.acceptSteer === true ? { steer: () => Promise.resolve() } : {},
     }
   }
 }
