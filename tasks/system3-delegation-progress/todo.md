@@ -103,7 +103,9 @@ Base: branch `feat-system3-g1`. Order follows [architecture section 11](../../do
 
 ## Pilot top three in System3 (approved 2026-10-04: all three; supervision advises only; degraded routes are avoided with a notice)
 
-- [ ] Supervision: repeated error >= 2, failed attempts >= 3, no progress for K steps, Codex command failures >= 3 (new `outcome` on subagent activity), missing acceptance evidence after file changes or delegation; `system3/supervision` event; post-execute nudge in advise mode; dock notices.
-- [ ] Route health: passive first-token / throughput / error samples per route, idle probes, degraded candidates excluded from entry routing with a recorded reason and route-notice text.
-- [ ] Hand-off pack: Jev classifies recent user messages as constraint / background / unrelated; constraints appended verbatim to the delegation instruction; `system3/handoff-pack` event; constraint-retention comparison.
-- [ ] Persistence records, READMEs, architecture doc, tests (100% changed files), gates, prd release, online acceptance.
+- [x] Supervision (commit "supervise stalls and missing verification"): repeated error, failed attempts, no progress, Codex command failures (`outcome: 'failed'` on subagent activity), missing verification; `system3/process-notice`; advice attributed to `system3-supervision`; dock notices. 9 unit tests plus Loader composition.
+- [x] Route health (commit "measure model routes and avoid degraded ones"): `llm/stream` samples (first token, rate after first token, failures), window + TTL, idle probes, degraded model candidates left out of Jev with `avoided` on the receipt and in the route notice. Deploy thresholds from prd logs (relay first token about 26 s, all routes 100+ tok/s): avoid only above 45 s, below 10 tok/s, or over 50% errors.
+- [x] Hand-off pack (commits "forward the person's earlier requirements" and "quote each earlier message"): one Jev request with a yes/no question per earlier message; requirements appended verbatim; `system3/handoff-pack`. Real Jev e2e on 6 labelled conversations: question per message quoting it raised recall 0.38 -> 1.0 at precision 1.0, about 0.6 s; threshold 0.3. Simplified from the three-way classification in the design: the main model already sees the history, so only requirements are rendered.
+- [x] Persistence records, READMEs, tests (100% of new files), lint, typecheck, doc-sync, hygiene, release fault tests (8/8).
+- [ ] prd release, online acceptance via browse, acceptance doc.
+- [ ] Constraint-retention comparison with Codex end to end (with vs without pack) — not run yet; e2e above measures recognition only.

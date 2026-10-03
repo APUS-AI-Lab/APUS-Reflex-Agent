@@ -66,6 +66,9 @@ declare module '@deepseek-ai/dsh-llm' {
   }
 }
 
+/** A single `|` between commands; `||` is not a pipe. */
+const PIPE = /(?<!\|)\|(?!\|)/u
+
 interface TurnState {
   readonly failures: Map<string, number>
   failed: number
@@ -177,7 +180,9 @@ export function installSystem3ProcessSupervision(ctx: Context, config: System3Pr
     }
     const edited = !failed && config.editTools.includes(exec.name)
     const delegated = !failed && config.delegationTools.includes(exec.name)
-    const verified = !failed && shell && verify.test(commandOf(exec))
+    // A piped command reports the exit code of its last stage, so it cannot prove that a check passed.
+    const command = commandOf(exec)
+    const verified = !failed && shell && verify.test(command) && !PIPE.test(command)
     if (edited || delegated) { state.modified = true; state.verified = false }
     if (verified) state.verified = true
     if (edited || delegated || verified) state.streak = 0

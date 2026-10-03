@@ -89,6 +89,14 @@ it('advises once per repeated failure and per failure count, and shows the turn 
   ])
 })
 
+it('does not accept a piped check as evidence, because the pipe hides its exit code', async () => {
+  const h = await setup([call('e1', 'edit'), bash('v1', 'pnpm test 2>&1 | tail -5'), textResponse('done'),
+    bash('v2', 'pnpm test || exit 1'), textResponse('verified')])
+  await h.ask('change the parser')
+  expect(h.notices()).toEqual([{ version: 1, rule: 'missing-evidence', count: 1, advised: true }])
+  expect(h.adapter.requests).toHaveLength(5)
+})
+
 it('asks for verification once after changes, and accepts a passing check as evidence', async () => {
   const h = await setup([call('e1', 'edit'), textResponse('done'), bash('v1', 'pnpm test'), textResponse('verified'),
     call('e2', 'edit'), textResponse('done'), textResponse('cannot verify')])
