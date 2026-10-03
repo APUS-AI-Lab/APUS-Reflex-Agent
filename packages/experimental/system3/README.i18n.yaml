@@ -21,8 +21,8 @@
   en: 3dc70484ca0ec162
   zh: ffe2a312c704e222
 /deepseek-ai-dsh-experimental-system3/use-this-package/session-api-entry-routing:
-  en: 56318186a7743337
-  zh: 142edbad9d38041a
+  en: 4b3a1f33fa20c034
+  zh: 33f4c9342b1e6b9d
 /deepseek-ai-dsh-experimental-system3/understand-the-implementation:
   en: 0cdf95236b2b2e5c
   zh: 6a5f6dd3a124555b
@@ -33,14 +33,17 @@
   en: b022849fca97dc48
   zh: 9221dc8d7ceaee1e
 /deepseek-ai-dsh-experimental-system3/model-experience/unified-system3-seam/what-the-model-sees:
-  en: 272a07c11386ac22
-  zh: 4cd9fbaacbbc19a6
+  en: 04cf93165b360359
+  zh: a1bc13b58d738fe3
 /deepseek-ai-dsh-experimental-system3/model-experience/unified-system3-seam/what-the-model-sees/missing-verification-advice:
   en: bb8b86507d2637db
   zh: 546a9243de62810b
+/deepseek-ai-dsh-experimental-system3/model-experience/unified-system3-seam/what-the-model-sees/hand-off-requirements:
+  en: d551769fc7c989c6
+  zh: 2cd1009666adb602
 /deepseek-ai-dsh-experimental-system3/model-experience/unified-system3-seam/token-effect:
-  en: 00a02d2d2b3a1209
-  zh: e360829baecbd220
+  en: 510af2ec6c2f372d
+  zh: 7d847fe030cab706
 /deepseek-ai-dsh-experimental-system3/model-experience/unified-system3-seam/kv-cache-effect:
   en: 99534f436bb718ea
   zh: f2348566fe9c6d1f

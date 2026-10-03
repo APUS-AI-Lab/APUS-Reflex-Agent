@@ -11,6 +11,7 @@ import { system3RuntimeProjection } from './runtime-projection.ts'
 import { installSystem3SkillSelection, type System3SkillSelectionConfig } from './skill-selection.ts'
 import { installSystem3KeepWarm } from './keep-warm.ts'
 import { installSystem3Delegation } from './delegation.ts'
+import { validateSystem3HandoffPack } from './handoff-pack.ts'
 import { installSystem3DelegationProgress, type System3DelegationProgressConfig } from './delegation-progress.ts'
 import { installSystem3ProcessSupervision, type System3ProcessSupervisionConfig } from './process-supervision.ts'
 import { installSystem3RouteHealth } from './route-health.ts'
@@ -26,6 +27,7 @@ export type { System3DelegationSource } from './delegation.ts'
 export type { System3DelegationAlert, System3DelegationMonitorConfig, System3DelegationProgress, System3DelegationProgressConfig } from './delegation-progress.ts'
 export type { System3EntryCandidate, System3EntryDelegateCandidate, System3EntryModelCandidate, System3EntryRoutingConfig, System3EntryDecisionReceipt, System3EntryOutcome } from './entry-routing.ts'
 export type { System3KeepWarmConfig } from './keep-warm.ts'
+export type { System3HandoffOutcome, System3HandoffPack, System3HandoffPackConfig } from './handoff-pack.ts'
 export type { System3ProcessNotice, System3ProcessRule, System3ProcessSupervisionConfig, System3SupervisionSource } from './process-supervision.ts'
 export type { System3RouteHealth, System3RouteHealthConfig, System3RouteHealthReason, System3RouteHealthStatus } from './route-health.ts'
 import { selectSystem3Evidence, type System3EvidenceRequest, type System3EvidenceSelection } from '@deepseek-ai/dsh-experimental-system3-evidence'
@@ -204,6 +206,12 @@ export default class System3 extends Service implements System3Service {
           maxTokens: z.number().step(1).min(1).required(),
         })]).required(),
       })]),
+      handoffPack: z.union([z.const(undefined), z.object({
+        recentMessages: z.number().step(1).min(1).max(16).required(),
+        maxMessageChars: z.number().step(1).min(1).required(),
+        minProbability: z.number().min(0).max(1).required(),
+        deadlineMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).required(),
+      })]),
     })]).default(false),
     skillSelection: z.union([z.const(false), z.object({
       sessionDataClasses: z.array(z.union([z.const('public'), z.const('workspace'), z.const('sensitive'), z.const('secret')])).required(),
@@ -261,7 +269,11 @@ export default class System3 extends Service implements System3Service {
         ctx.effect(() => ctx.sessionController.registerPromptRouter(router))
       })
       if (config.entryRouting.candidates.some(candidate => candidate.delegate !== undefined)) {
-        ctx.inject(['sessionProjections'], (ctx) => { installSystem3Delegation(ctx) })
+        const handoff = config.entryRouting.handoffPack
+        if (handoff !== undefined) validateSystem3HandoffPack(handoff)
+        const settings = handoff === undefined ? undefined : { config: handoff, policy: this.privacyPolicy, options: this.jevOptions,
+          dataClasses: config.entryRouting.sessionDataClasses }
+        ctx.inject(['sessionProjections'], (ctx) => { installSystem3Delegation(ctx, settings) })
       }
       const keepWarm = config.entryRouting.keepWarm
       if (keepWarm !== undefined) ctx.inject(['jev'], (ctx) => { installSystem3KeepWarm(ctx, keepWarm) })

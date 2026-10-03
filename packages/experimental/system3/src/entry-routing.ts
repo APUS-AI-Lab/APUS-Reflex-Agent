@@ -11,6 +11,7 @@ import type {} from '@deepseek-ai/dsh-tools'
 import { MAX_JEV_CHOICES, type JevErrorCode, type JevRequest, type JevResponse } from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
 import { admitSystem3Routes, type System3DataClass, type System3ExecutionDomain, type System3PrivacyPolicy } from '@deepseek-ai/dsh-experimental-system3-policy'
 import type { System3JevOptions } from './decisions.ts'
+import type { System3HandoffPackConfig } from './handoff-pack.ts'
 import type { System3KeepWarmConfig } from './keep-warm.ts'
 import type { System3RouteHealth, System3RouteHealthConfig, System3RouteHealthReason } from './route-health.ts'
 import type {} from './runtime-projection.ts'
@@ -93,6 +94,8 @@ export interface System3EntryRoutingConfig {
   readonly keepWarm?: System3KeepWarmConfig
   /** Measure model candidates and leave degraded ones out of the choice; omission offers every candidate. */
   readonly routeHealth?: System3RouteHealthConfig
+  /** Forward the person's earlier requirements with a delegation instruction; omission sends the instruction alone. */
+  readonly handoffPack?: System3HandoffPackConfig
 }
 
 /** Decision result, distinct from the Session API's later adoption outcome. */

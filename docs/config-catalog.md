@@ -1231,7 +1231,7 @@ export interface Config {
 ## `@deepseek-ai/dsh-experimental-system3`
 
 - `refs`: [`System3DataClass`](../packages/experimental/system3-policy/src/index.ts) · [`System3ExecutionDomain`](../packages/experimental/system3-policy/src/index.ts) · [`System3PrivacyMode`](../packages/experimental/system3-policy/src/index.ts)
-- `source`: [`packages/experimental/system3/src/index.ts:47`](../packages/experimental/system3/src/index.ts)
+- `source`: [`packages/experimental/system3/src/index.ts:49`](../packages/experimental/system3/src/index.ts)
 
 ```ts config-catalog
 /** Configures the default local-first privacy boundary. */
@@ -1291,6 +1291,8 @@ export interface System3EntryRoutingConfig {
   readonly keepWarm?: System3KeepWarmConfig
   /** Measure model candidates and leave degraded ones out of the choice; omission offers every candidate. */
   readonly routeHealth?: System3RouteHealthConfig
+  /** Forward the person's earlier requirements with a delegation instruction; omission sends the instruction alone. */
+  readonly handoffPack?: System3HandoffPackConfig
 }
 
 /** Explicit limits for automatically loading one model-invocable Skill per new user input. */
@@ -1373,6 +1375,18 @@ export interface System3RouteHealthConfig {
     /** Output token limit of each probe. */
     readonly maxTokens: number
   }
+}
+
+/** How many earlier messages Jev reviews and how a requirement is recognized; deployment-owned. */
+export interface System3HandoffPackConfig {
+  /** Most recent earlier text messages of the person that Jev reviews, at most 16. */
+  readonly recentMessages: number
+  /** Messages longer than this many characters are not reviewed. */
+  readonly maxMessageChars: number
+  /** Jev probability, from 0 to 1, at or above which a message counts as a requirement. */
+  readonly minProbability: number
+  /** Milliseconds the review may take before the instruction is sent without a pack. */
+  readonly deadlineMs: number
 }
 
 /** Thresholds after which a running delegation is reported to the person as needing attention. */

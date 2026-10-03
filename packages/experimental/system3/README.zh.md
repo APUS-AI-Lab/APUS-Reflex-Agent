@@ -57,6 +57,8 @@ const decision = ctx.system3.route(candidates, 'local-9b')
 
 `minConfidence` 是采纳阈值，不是校准后的成功概率。弃权、低置信、隐私拒绝、无兼容候选、Jev 不可用和 provider 故障均不覆盖 baseline。设置 `retainOnAbstain: true` 后，弃权和低置信改为沿用该 Session 上一次入口决策选定或沿用的路由，前提是该路由仍是获准且兼容的候选；记录中以 `retained` 写明来源请求 id，不含 `selected`。provider 故障仍保留 baseline。此选项需要 `sessionProjections`。委派候选用 `delegate: { provider, tool }` 取代 `provider`/`model`，写明已注册的 subagent provider 及其面向模型的工具；只有该 provider 已注册且工具对发起请求的 Agent 可见时，才交给 Jev 选择。选中后保留 baseline 模型，在记录的 `candidate.delegate` 中写明目标，并在首次携带该输入的 pre-step 注入一条来源为 `system3-delegation` 的用户消息，请模型调用该工具；模型可以不采纳。投影分别报告指令已注入和之后的工具调用，沿用规则不会延续委派。委派候选可选的 `explicitPatterns` 列出用户明确要求委派时的表达，为不区分大小写的正则表达式，例如 `交给\s*codex`；通过准入与可用性检查后，输入命中即选定该候选，不发送 Jev 请求，记录中写明 `explicit: true`，`request` 为 null。无效或空白的规则在加载时报错。候选可选的 `label` 会随决策记录，客户端在决策到达时即可显示路由名称。`keepWarm: { windowMs, intervalMs }` 在插件启动后和每轮结束后的 `windowMs` 内按该间隔发送 Jev 预热请求，使下一次入口决策复用已打开的连接；`intervalMs` 应短于网关的空闲连接超时。候选必须支持会话中出现过的全部输入模态：一旦用户消息或工具结果带有图片，就要求候选能读图。没有 System3 运行时投影时，候选必须支持 baseline 支持的全部模态。取消会拒绝调用，不授权输入准入。`system3/entry-decision` 事件保留完整 Jev 请求（包括文本）、已校验响应和建议；未发起决策时 `request` 为 null。请求中的宿主字段 `providerId` 不进入 Jev HTTP 序列化正文。Session API 独立的 `model/automatic-selection` 事件通过相同 request id 标识实际采纳。回放两种事件均不请求模型。插件卸载时移除路由注册。
 
+`entryRouting.handoffPack: { recentMessages, maxMessageChars, minProbability, deadlineMs }` 在注入委派指令前审阅用户更早的消息。它取最近 `recentMessages` 条（最多 16 条）已提交、只含文本且不超过 `maxMessageChars` 个字符的用户消息（不含被委派的这条输入），向 Jev 发送一个请求：`state.task` 为被委派的文本，`state.earlier` 为这些消息，每条消息一个是否题，判断它是否是执行者必须遵守的要求。概率不低于 `minProbability` 的消息按时间顺序原文附在指令末尾，并要求模型把它们写进委派任务、核对结果时逐条检查。`system3/handoff-pack` 事件在指令之前记录完整请求、响应、结果和被转交消息的 id。隐私拒绝、Jev 缺失或失败、审阅超过 `deadlineMs` 时只发送指令本身；轮次被取消时 pre-step 拒绝。
+
 `entryRouting.deadlineMs` 对基线准备、Jev 建议和所选路由准备共同设限（默认 30000 ms，上限为 `MAX_TIMER_DELAY_MS`）。超时仅能准入已准备且合法的基线；基线未准备完成时拒绝请求，不写入 inbox。基线须匹配已准许的配置候选，或声明 `baseline.executionDomain` 与 `baseline.dataClasses`；独立远端基线使用隐私路由 id `baseline`。取消与提供方卸载会中止待准入请求，迟到建议不会授权再次准入。原生 `resetModelSelection` 为后续合格输入恢复自动路由；用户手选模型保持固定，直到重置。
 
 `entryRouting.routeHealth: { window, sampleTtlMs, minSamples, maxFirstTokenMs, minTokensPerSecond, minOutputTokens, maxErrorRate, probe }` 测量本上下文中经过 `llm/stream` 的每个模型流。每个完成的流记录从流开始到第一个 token 的延迟、产出至少 `minOutputTokens` 时首个 token 之后的每秒输出 token 数，以及是否以错误结束；被取消的流不记录。每条线路保留最近 `window` 个、未超过 `sampleTtlMs` 的样本。某项指标样本数达到 `minSamples` 后，错误占比超过 `maxErrorRate`、首字延迟中位数超过 `maxFirstTokenMs`，或输出速度中位数低于 `minTokensPerSecond` 时，线路判为降级，按此顺序检查。只要还有其他兼容候选，入口路由就把降级的模型候选排除在 Jev 请求之外，在决策的 `avoided` 中记录它们及原因；委派候选从不被避开。配置 `probe: { idleMs, maxTokens }` 后，超过 `idleMs` 没有样本的模型候选会收到一个最多输出 `maxTokens` 个 token、不含任何 Session 数据的固定请求，使被避开的线路能重新测量。样本只在进程内保存，重启后从空开始。运行时投影以 `entry.avoided` 暴露被避开的线路标签，客户端把它们附在路由说明后面。
@@ -81,7 +83,7 @@ const decision = ctx.system3.route(candidates, 'local-9b')
 
 #### What the model sees
 
-未启用入口路由时，由宿主决定哪些服务结果进入模型历史。入口路由通过 `state.input` 向 Jev 提供当前文本，通过 `state.baseline` 提供当前模型选择，通过 `questions.route.criteria` 提供有界候选描述。Receipt 不进入生成模型历史。采纳后的模型变化遵循原生 Session API 的模型选择行为。`advise` 模式下，过程监督每触发一条规则就加入一条来源为 `system3-supervision` 的用户消息，例如：
+未启用入口路由时，由宿主决定哪些服务结果进入模型历史。入口路由通过 `state.input` 向 Jev 提供当前文本，通过 `state.baseline` 提供当前模型选择，通过 `questions.route.criteria` 提供有界候选描述。Receipt 不进入生成模型历史。采纳后的模型变化遵循原生 Session API 的模型选择行为。配置 `handoffPack` 时，委派指令末尾可能附上用户更早提出的要求；`advise` 模式下，过程监督每触发一条规则就加入一条来源为 `system3-supervision` 的用户消息，例如：
 
 ##### 缺少验证的建议
 
@@ -89,9 +91,16 @@ const decision = ctx.system3.route(candidates, 'local-9b')
 [System3 过程监督] 本轮修改了文件或完成了委派，但还没有运行通过的测试或构建来验证。请先运行项目的验证命令，再向用户报告结果；如果无法验证，请明确说明原因。
 ```
 
+##### 交接包中的要求
+
+```markdown
+[System3 交接包] 用户在本会话前面提出过以下要求。委派时请把它们原文写进交给 <label> 的任务，并在核对结果时逐条检查：
+- <earlier message, verbatim>
+```
+
 #### Token effect
 
-在隐私和大小检查允许时，入口路由为每个符合条件的准入输入增加一次 Jev 调用；保留 provider 实际报告的 usage。evidence 方法限制调用方投影，usage 记录区分 provider 计数与估算。每条监督建议增加 50 到 100 个输入 token；`advise` 模式下 `missing-evidence` 每个轮次最多增加一个模型步骤。
+在隐私和大小检查允许时，入口路由为每个符合条件的准入输入增加一次 Jev 调用；保留 provider 实际报告的 usage。evidence 方法限制调用方投影，usage 记录区分 provider 计数与估算。每条监督建议增加 50 到 100 个输入 token，交接包增加被转交消息本身、约 60 个 token 和一次 Jev 请求；`advise` 模式下 `missing-evidence` 每个轮次最多增加一个模型步骤。
 
 #### KV Cache effect
 

@@ -71,6 +71,7 @@
 | `event:system3/delegation-progress` | event | `d2a568622f9a85d22c3f32d648d2f9a0b80f05b8f76e0c39268ddbc4c2e36ee2` | [`{ type: "system3/delegation-progress" }`](#persistence-type-sha256-d2a568622f9a85d22c3f32d648d2f9a0b80f05b8f76e0c39268ddbc4c2e36ee2) |
 | `event:system3/entry-decision` | event | `9c7cecd646b7d0ce7f1fbf3b341f2d1c1c31135d0de9e1cb556a51a0d33177ff` | [`{ type: "system3/entry-decision" }`](#persistence-type-sha256-9c7cecd646b7d0ce7f1fbf3b341f2d1c1c31135d0de9e1cb556a51a0d33177ff) |
 | `event:system3/entry-start` | event | `0f109d50397f1d347b2f62df20bd1e21a200c839428c8bca5449e8ed37ab633a` | [`{ type: "system3/entry-start" }`](#persistence-type-sha256-0f109d50397f1d347b2f62df20bd1e21a200c839428c8bca5449e8ed37ab633a) |
+| `event:system3/handoff-pack` | event | `c4519065a7d2c21ca6154ac2cfe65e97587ad8e210623c01371fee5f959d35d3` | [`{ type: "system3/handoff-pack" }`](#persistence-type-sha256-c4519065a7d2c21ca6154ac2cfe65e97587ad8e210623c01371fee5f959d35d3) |
 | `event:system3/process-notice` | event | `310a36ad49580b64f5f22ee000de5d58ec37334a253610f83bb3cf9102023108` | [`{ type: "system3/process-notice" }`](#persistence-type-sha256-310a36ad49580b64f5f22ee000de5d58ec37334a253610f83bb3cf9102023108) |
 | `event:system3/skill-decision` | event | `2da260ec5f7fe67028206d4c6254ff01a52dfe9a7f9aa67dedf72324ac4748ce` | [`{ type: "system3/skill-decision" }`](#persistence-type-sha256-2da260ec5f7fe67028206d4c6254ff01a52dfe9a7f9aa67dedf72324ac4748ce) |
 | `event:team/member` | event | `4fb59762612c3e3ac3a3bd4f84c9c148d3c3893bd422ba2b201cc039fabd49bc` | [`{ type: "team/member" }`](#persistence-type-sha256-4fb59762612c3e3ac3a3bd4f84c9c148d3c3893bd422ba2b201cc039fabd49bc) |
@@ -1063,7 +1064,7 @@ export type SessionEvent<T extends SessionEventType = SessionEventType> = {
 'system3/entry-decision': System3EntryDecisionReceipt
 ```
 
-来源：[`packages/experimental/system3/src/entry-routing.ts:140`](../packages/experimental/system3/src/entry-routing.ts)
+来源：[`packages/experimental/system3/src/entry-routing.ts:143`](../packages/experimental/system3/src/entry-routing.ts)
 
 <a id="system3entry-start--log-only"></a>
 
@@ -1074,7 +1075,18 @@ export type SessionEvent<T extends SessionEventType = SessionEventType> = {
 'system3/entry-start': { readonly requestId: SessionRequestId }
 ```
 
-来源：[`packages/experimental/system3/src/entry-routing.ts:138`](../packages/experimental/system3/src/entry-routing.ts)
+来源：[`packages/experimental/system3/src/entry-routing.ts:141`](../packages/experimental/system3/src/entry-routing.ts)
+
+<a id="system3handoff-pack--log-only"></a>
+
+#### `system3/handoff-pack` — log-only
+
+```ts persistence-catalog
+/** Earlier messages System3 forwards with a delegation; the instruction message carries their text to the model. */
+'system3/handoff-pack': System3HandoffPack
+```
+
+来源：[`packages/experimental/system3/src/handoff-pack.ts:43`](../packages/experimental/system3/src/handoff-pack.ts)
 
 <a id="system3process-notice--log-only"></a>
 
@@ -2443,6 +2455,14 @@ SHA-256: `f78ff9e932880c4aa94a16dbfba680f5146ad64c39f100900418fb06520ff960`
 
 `"no-candidates"`
 
+<a id="persistence-type-sha256-39788c0970bf5880e36ca2ddef98392e4b94347faf8103c7a11184e897632315"></a>
+
+### `"no-history"`
+
+SHA-256: `39788c0970bf5880e36ca2ddef98392e4b94347faf8103c7a11184e897632315`
+
+`"no-history"`
+
 <a id="persistence-type-sha256-7ec4ae20ffb0d41ba51006aba226ed9f294f937681beba256bda83db0d0c6aa8"></a>
 
 ### `"no-progress"`
@@ -2514,6 +2534,14 @@ SHA-256: `9d80129e13edfb6feb03ed327e6085c6ef60b97ad074244b2f5fd4667424a6a4`
 SHA-256: `28a97da9b45bb243ee8d2e3151ec31e3631b5811ea7102b280be758bdb7479f8`
 
 `"overtime"`
+
+<a id="persistence-type-sha256-bcec9f982ab7a6abdc3b219eff3cf5aaa2589f1176a68e12fa82a36b3a9c6cbe"></a>
+
+### `"packed"`
+
+SHA-256: `bcec9f982ab7a6abdc3b219eff3cf5aaa2589f1176a68e12fa82a36b3a9c6cbe`
+
+`"packed"`
 
 <a id="persistence-type-sha256-e6411b09c1d982f789bf741ca74e2bea69df56029847f86a6148e722039ee732"></a>
 
@@ -3162,6 +3190,14 @@ SHA-256: `f432bdf263098069d7487bf8fed6695d0ca84cb57d26f3dc750b2231043e6aca`
 SHA-256: `d16a6f399e8d8b19640f4aa05087d45ec32e6aaa9c5555718f3810a74ac11b10`
 
 `"system3/entry-start"`
+
+<a id="persistence-type-sha256-0e6652cff9f3a002e69c9daafd20708bf467c013da067ee0208acc1b8a71c734"></a>
+
+### `"system3/handoff-pack"`
+
+SHA-256: `0e6652cff9f3a002e69c9daafd20708bf467c013da067ee0208acc1b8a71c734`
+
+`"system3/handoff-pack"`
 
 <a id="persistence-type-sha256-1d9e98e26d153780d5649084d50995cc50c6a04c64f12f7aaee477b14fddcb1b"></a>
 
@@ -5714,7 +5750,7 @@ SHA-256: `4995274a009cfd321a28322083109913554d90577571f7c61a4c0bbf629bc523`
 
 SHA-256: `42a78477f622034f05ace9fda7264c5dcb524b815eb10078b9bf35b4c091be0e`
 
-来源：[`packages/experimental/system3/src/delegation.ts:10`](../packages/experimental/system3/src/delegation.ts)
+来源：[`packages/experimental/system3/src/delegation.ts:11`](../packages/experimental/system3/src/delegation.ts)
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|
@@ -5733,7 +5769,7 @@ SHA-256: `42a78477f622034f05ace9fda7264c5dcb524b815eb10078b9bf35b4c091be0e`
 
 SHA-256: `29fac3cd6837488106c4944d14f066dd0be116a12ca8e50ab2669577d69f02c7`
 
-来源：[`packages/experimental/system3/src/entry-routing.ts:103`](../packages/experimental/system3/src/entry-routing.ts)
+来源：[`packages/experimental/system3/src/entry-routing.ts:106`](../packages/experimental/system3/src/entry-routing.ts)
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|
@@ -5764,7 +5800,7 @@ SHA-256: `29fac3cd6837488106c4944d14f066dd0be116a12ca8e50ab2669577d69f02c7`
 
 SHA-256: `a3c362e0bd82c3cb56f36af9b44012717d9c81299cef799ca149bf6db18c8f96`
 
-来源：[`packages/experimental/system3/src/entry-routing.ts:99`](../packages/experimental/system3/src/entry-routing.ts)
+来源：[`packages/experimental/system3/src/entry-routing.ts:102`](../packages/experimental/system3/src/entry-routing.ts)
 
 以下类型之一：
 
@@ -5800,6 +5836,54 @@ SHA-256: `5bc0567a620ccf8b2810928108239344c0ffd73b70d036cab16490a8949269cc`
 
 - `"local"`
 - `"network"`
+
+<a id="persistence-type-sha256-e7e0d2dd1cf6ed6fe4c7020cc3073390fb2b65fbcfb23e65d98488d5c8eecd00"></a>
+
+<a id="persistence-type-packagesexperimentalsystem3srchandoff-packtssystem3handoffoutcome"></a>
+
+<a id="persistence-type-system3handoffoutcome"></a>
+
+### `System3HandoffOutcome`
+
+SHA-256: `e7e0d2dd1cf6ed6fe4c7020cc3073390fb2b65fbcfb23e65d98488d5c8eecd00`
+
+来源：[`packages/experimental/system3/src/handoff-pack.ts:24`](../packages/experimental/system3/src/handoff-pack.ts)
+
+以下类型之一：
+
+- `"http"`
+- `"invalid-response"`
+- `"transport"`
+- `"missing-credential"`
+- `"no-history"`
+- `"none"`
+- `"packed"`
+- `"privacy-denied"`
+- `"provider-unavailable"`
+- `"rate-limited"`
+- `"timeout"`
+
+<a id="persistence-type-sha256-cf6cbfd7374a2b585f2b618fb63b4b9c58aa124a8a5a715433eefe49a2d6f1d0"></a>
+
+<a id="persistence-type-packagesexperimentalsystem3srchandoff-packtssystem3handoffpack"></a>
+
+<a id="persistence-type-system3handoffpack"></a>
+
+### `System3HandoffPack`
+
+SHA-256: `cf6cbfd7374a2b585f2b618fb63b4b9c58aa124a8a5a715433eefe49a2d6f1d0`
+
+来源：[`packages/experimental/system3/src/handoff-pack.ts:27`](../packages/experimental/system3/src/handoff-pack.ts)
+
+| 属性 | 存在性 | 类型 |
+|---|---|---|
+| `constraints` | 必需 | [`string[]`](#persistence-type-sha256-93c33d9687613293f8c95d46c4d922fe9ceae83b84c384beff5c3315abe005f2) |
+| `elapsedMs` | 必需 | `number` |
+| `outcome` | 必需 | [`System3HandoffOutcome`](#persistence-type-sha256-e7e0d2dd1cf6ed6fe4c7020cc3073390fb2b65fbcfb23e65d98488d5c8eecd00) |
+| `request` | 必需 | [`union (2 variants)`](#persistence-type-sha256-7ee064a4547ab8ee2673099ef72df06ab2a1f8795c7ad295ac42125289713156) |
+| `requestId` | 必需 | `string` |
+| `response` | 可选 | [`JevResponse`](#persistence-type-sha256-693f3aa30e2f5006d86aef1dbf1459d83bf5a0820f8c82a11c64d99a24556eb8) |
+| `version` | 必需 | `1` |
 
 <a id="persistence-type-sha256-da0389dfad3e6e301ab8ef2da90fa7d34b343e7685c06fa2bd5892ed9aa43b16"></a>
 
@@ -7349,7 +7433,7 @@ SHA-256: `374fdd68aee5ff844e378c0cbdd961d247a0f22e4ade0bb03d800cd2a46a2b8b`
 
 SHA-256: `c45f46c07aa5d4629edc34cbc88664217db0e0ef03391f974cf1e33cdc381611`
 
-来源：[`packages/experimental/system3/src/entry-routing.ts:117`](../packages/experimental/system3/src/entry-routing.ts)
+来源：[`packages/experimental/system3/src/entry-routing.ts:120`](../packages/experimental/system3/src/entry-routing.ts)
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|
@@ -7535,7 +7619,7 @@ SHA-256: `0f46153645c297846a3fad3911636659ca4717a5e7d71c9f50bffacd312115ef`
 
 SHA-256: `dcc436b526a7eee2bd641dafdd95bc340b4562974d07c1d05323bde87ec916de`
 
-来源：[`packages/experimental/system3/src/entry-routing.ts:125`](../packages/experimental/system3/src/entry-routing.ts)
+来源：[`packages/experimental/system3/src/entry-routing.ts:128`](../packages/experimental/system3/src/entry-routing.ts)
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|
@@ -9048,7 +9132,7 @@ SHA-256: `8a9c990773f798eac10ca8878e6bcc531ee080bc589cac956730e462cc6a09ad`
 
 SHA-256: `6dda6edcd5efa13288057e07a63d074f1ffa9a9397500c36821c7c1bc43a3b9c`
 
-来源：[`packages/experimental/system3/src/entry-routing.ts:120`](../packages/experimental/system3/src/entry-routing.ts)
+来源：[`packages/experimental/system3/src/entry-routing.ts:123`](../packages/experimental/system3/src/entry-routing.ts)
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|
@@ -9074,7 +9158,7 @@ SHA-256: `e481c46af3813e0010558e93f578b2986acd658404cec2d1679e3ac2a6c48654`
 
 SHA-256: `e9aab28f480d6bee8861944401a7f7e361df56c27606d9d2721518bfdfb07d35`
 
-来源：[`packages/experimental/system3/src/entry-routing.ts:138`](../packages/experimental/system3/src/entry-routing.ts)
+来源：[`packages/experimental/system3/src/entry-routing.ts:141`](../packages/experimental/system3/src/entry-routing.ts)
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|
@@ -9086,7 +9170,7 @@ SHA-256: `e9aab28f480d6bee8861944401a7f7e361df56c27606d9d2721518bfdfb07d35`
 
 SHA-256: `063a3a7dda2642105aa09aeab28b90e03af134e506b27cd50a5202b776d9e756`
 
-来源：[`packages/experimental/system3/src/entry-routing.ts:127`](../packages/experimental/system3/src/entry-routing.ts)
+来源：[`packages/experimental/system3/src/entry-routing.ts:130`](../packages/experimental/system3/src/entry-routing.ts)
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|
@@ -10085,6 +10169,22 @@ SHA-256: `0f109d50397f1d347b2f62df20bd1e21a200c839428c8bca5449e8ed37ab633a`
 | `seq` | 必需 | `number` |
 | `time` | 必需 | `number` |
 | `type` | 必需 | `"system3/entry-start"` |
+
+<a id="persistence-type-sha256-c4519065a7d2c21ca6154ac2cfe65e97587ad8e210623c01371fee5f959d35d3"></a>
+
+<a id="persistence-type-eventsystem3handoff-pack"></a>
+
+### `{ type: "system3/handoff-pack" }`
+
+SHA-256: `c4519065a7d2c21ca6154ac2cfe65e97587ad8e210623c01371fee5f959d35d3`
+
+| 属性 | 存在性 | 类型 |
+|---|---|---|
+| `data` | 必需 | [`System3HandoffPack`](#persistence-type-sha256-cf6cbfd7374a2b585f2b618fb63b4b9c58aa124a8a5a715433eefe49a2d6f1d0) |
+| `ignorable` | 可选 | `true` |
+| `seq` | 必需 | `number` |
+| `time` | 必需 | `number` |
+| `type` | 必需 | `"system3/handoff-pack"` |
 
 <a id="persistence-type-sha256-310a36ad49580b64f5f22ee000de5d58ec37334a253610f83bb3cf9102023108"></a>
 

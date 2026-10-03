@@ -150,6 +150,9 @@ it('routes an API prompt through Loader-mounted Jev and records the actual HTTP 
       '        minTokensPerSecond: 8', '        minOutputTokens: 200', '        maxErrorRate: 0.5', '        probe: false',
       '      candidates:', '        - id: expert', '          description: Specialized reasoning',
       '          provider: fidoo-fixture', '          model: expert-fixture', '          executionDomain: local', '          dataClasses: [public]',
+      '        - id: codex', '          description: Long engineering work', '          delegate:', '            provider: codex',
+      '            tool: subagent_codex', '          executionDomain: local', '          dataClasses: [public]',
+      '      handoffPack:', '        recentMessages: 12', '        maxMessageChars: 500', '        minProbability: 0.5', '        deadlineMs: 5000',
     ] : [],
   ]).join('\n') + '\n')
   const ctx = context = new Context()

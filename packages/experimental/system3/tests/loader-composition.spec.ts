@@ -125,6 +125,7 @@ it('loads Jev beside the unchanged main route and replays persisted shadow recei
       '    processSupervision:', '      mode: advise', '      repeatedError: 2', '      failedAttempts: 3', '      stalledSteps: 6',
       '      delegateFailures: 3', '      editTools: [edit]', '      delegationTools: []', '      shellTools: [bash]',
       "      verifyPattern: '\\bnpm test\\b'",
+      '    delegationProgress:', '      intervalMs: 2000',
     ] : [],
   ]).join('\n') + '\n')
   const ctx = context = new Context()

@@ -123,6 +123,11 @@
             probe:
               idleMs: 1800000
               maxTokens: 64
+          handoffPack:
+            recentMessages: 12
+            maxMessageChars: 500
+            minProbability: 0.5
+            deadlineMs: 5000
           candidates:
             - id: fast
               description: 简短问答、翻译、改写、归纳，以及范围明确、一步就能完成的常规任务。
