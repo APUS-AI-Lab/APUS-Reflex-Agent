@@ -46,7 +46,7 @@ footer { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line)
   <header style="display:grid;gap:10px">
     <div class="eyebrow">线上验收 · prd · 2026-10-04</div>
     <h1>System3 线上验收：真实实现了什么</h1>
-    <p class="muted">在生产服务器 <code>prd</code> 上用真实浏览器逐项操作，路由与委派场景运行在版本 <code>e6c4bc7</code>，停止场景的修复运行在 <code>f14cbbc</code>。浏览器经 SSH 隧道访问同一服务；公网域名 <code>system3.xdan.work</code> 的 TLS、Basic Auth 与登录链路另用 curl 逐步验证。委派结果用 agent 看不到的隐藏测试独立验收。</p>
+    <p class="muted">在生产服务器 <code>prd</code> 上用真实浏览器逐项操作，路由与委派场景运行在启用公网域名后的版本上，停止场景运行在把委派固定为前台的修复版本上。浏览器经 SSH 隧道访问同一服务；公网域名 <code>system3.xdan.work</code> 的 TLS、Basic Auth 与登录链路另用 curl 逐步验证。委派结果用 agent 看不到的隐藏测试独立验收。</p>
   </header>
 
   <section class="wide">
