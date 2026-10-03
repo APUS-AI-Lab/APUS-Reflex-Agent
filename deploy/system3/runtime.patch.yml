@@ -160,4 +160,6 @@
         provider: codex
         toolName: subagent_codex
         backgroundMode: one-shot
+        # Foreground only: the System3 progress card and Stop act on the delegating turn, which a background job outlives.
+        enableRunInBackground: false
         maxDepth: provider-managed
