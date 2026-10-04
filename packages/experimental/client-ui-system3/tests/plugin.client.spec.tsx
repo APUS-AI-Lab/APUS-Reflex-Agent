@@ -28,10 +28,11 @@ it('registers and disposes the native dock and calls the live Session reset RPC'
   new TestRemote(ctx, { session: { resetModelSelection, cancel }, subagents: { steerByParent } })
   ctx.provide('locale', new LocaleRuntime(ctx))
   await ctx.plugin(SlotRegistry).await()
-  ctx.slots.register({ name: 'root', children: { 'conversation.input.dock': { kind: 'list', scope: 'session' }, 'conversation.chat.turnHead': { kind: 'list', scope: 'session' } } } as never, () => null)
+  ctx.slots.register({ name: 'root', children: { 'conversation.input.dock': { kind: 'list', scope: 'session' }, 'conversation.chat.turnHead': { kind: 'list', scope: 'session' }, 'conversation.input.right': { kind: 'list', scope: 'session' } } } as never, () => null)
   const fiber = ctx.plugin({ inject, apply }); await fiber.await()
   const entry = ctx.slots.entries('conversation.input.dock')[0]!
   expect(ctx.slots.entries('conversation.chat.turnHead')).toHaveLength(1)
+  expect(ctx.slots.entries('conversation.input.right')).toHaveLength(1)
   const actions = entry.inject!('root' as never)
   const onAutomatic = actions.onAutomatic as System3Actions['onAutomatic']
   const onStop = actions.onStop as System3Actions['onStop']
@@ -50,6 +51,7 @@ it('registers and disposes the native dock and calls the live Session reset RPC'
   await fiber.dispose()
   expect(ctx.slots.entries('conversation.input.dock')).toHaveLength(0)
   expect(ctx.slots.entries('conversation.chat.turnHead')).toHaveLength(0)
+  expect(ctx.slots.entries('conversation.input.right')).toHaveLength(0)
   expect(() => { hostApply() }).not.toThrow()
 })
 it('subscribes the dock to pending input and restored native projections', () => {

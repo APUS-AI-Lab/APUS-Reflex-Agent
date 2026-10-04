@@ -71,6 +71,8 @@ export interface System3SubagentRunView {
  */
 export interface System3RuntimeView {
   readonly entry: System3EntryView | null
+  /** Earlier entry decisions whose input reached a turn, oldest first, so earlier turns keep their route line. */
+  readonly history: readonly System3EntryView[]
   readonly skill: System3SkillView | null
   readonly subagentRun: System3SubagentRunView | null
   /** Process supervision findings of the latest turn, oldest first; cleared when a turn starts. */

@@ -86,8 +86,9 @@ it('restores the same wire facts without leaking effective headers or making mod
   h.session.append('request/header', { header: { config: selected }, reason: 'initial' }); h.input(id, 1); h.output(1)
   const restored = Session.fromRestore(h.session.id, h.session.snapshotEvents(), h.session.header, SessionLogOffset(0), 'shared-frozen')
   const state = h.ctx.sessionProjections.stateOf(restored, 'system3Runtime')!
-  expect(system3RuntimeProjection.wire.view(state)).toEqual({ entry: h.view()?.entry, skill: null, subagentRun: null, notices: [] })
-  expect(Object.keys(system3RuntimeProjection.wire.view(state))).toEqual(['entry', 'skill', 'subagentRun', 'notices'])
+  expect(system3RuntimeProjection.wire.view(state))
+    .toEqual({ entry: h.view()?.entry, history: [], skill: null, subagentRun: null, notices: [] })
+  expect(Object.keys(system3RuntimeProjection.wire.view(state))).toEqual(['entry', 'history', 'skill', 'subagentRun', 'notices'])
 })
 
 
@@ -340,4 +341,18 @@ it('keeps an overtime alert while running, clears a stall alert on the next step
   expect(h.view()?.subagentRun?.alert).toBeNull()
   alert('overtime', 15)
   expect(h.view()?.subagentRun?.alert).toBeNull()
+})
+
+it('keeps earlier decisions whose input reached a turn, so earlier turns keep their route line', async () => {
+  const h = await setup()
+  const first = h.begin('first'); h.input(first, 1); h.output(1)
+  h.begin('unadmitted')
+  const third = h.begin('third'); h.input(third, 2)
+  expect(h.view()?.history.map(entry => [entry.requestId, entry.turn])).toEqual([['first', 1]])
+  h.begin('fourth')
+  expect(h.view()?.history.map(entry => entry.requestId)).toEqual(['first', 'third'])
+  for (let turn = 3; turn < 103; turn++) { const id = h.begin(`r${String(turn)}`); h.input(id, turn) }
+  h.begin('last')
+  expect(h.view()?.history).toHaveLength(100)
+  expect(h.view()?.history[0]?.requestId).toBe('r3')
 })

@@ -25,3 +25,4 @@
 .muted { color: var(--dsw-alias-label-secondary); margin: 8px 0; }
 .error { color: var(--dsw-alias-label-primary); margin: 8px 0 0; }
 @media (max-width: 480px) { .dock { width: calc(100% - 16px); padding: 8px 10px; } .facts { grid-template-columns: 1fr; gap: 3px; } .facts dd { margin-bottom: 8px; } }
+.delegating { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 8px; min-width: 0; max-width: 160px; overflow: hidden; color: var(--dsw-alias-label-secondary); font-size: 13px; line-height: 20px; white-space: nowrap; text-overflow: ellipsis; }
