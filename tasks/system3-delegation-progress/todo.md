@@ -109,3 +109,6 @@ Base: branch `feat-system3-g1`. Order follows [architecture section 11](../../do
 - [x] Persistence records, READMEs, tests (100% of new files), lint, typecheck, doc-sync, hygiene, release fault tests (8/8).
 - [ ] prd release, online acceptance via browse, acceptance doc.
 - [ ] Constraint-retention comparison with Codex end to end (with vs without pack) — not run yet; e2e above measures recognition only.
+- [x] UI follow-ups (2026-10-04 evening): earlier turns keep their route line (projection `history`, 100 entries); composer marker "Handed to codex" beside the model selector during delegation. Verified on prd in the browser.
+- [x] Cold first route: not reproduced (restart 1.1 s, new session 1.5 s, entry decision after 2 h idle 0.7 s, new Jev connection about 0.3 s); no code change.
+- [ ] Main model's preparation before delegating (Codex started after 47 s once) — needs instruction wording changes and measurement.
