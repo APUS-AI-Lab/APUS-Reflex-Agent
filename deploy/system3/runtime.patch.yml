@@ -116,7 +116,9 @@
           editTools: [write, edit]
           delegationTools: [subagent_codex]
           shellTools: [bash]
+          progressTools: [web_search, web_fetch]
           verifyPattern: '\b(pytest|unittest|vitest|jest|go test|cargo (test|build)|(npm|pnpm|yarn)( run)? (test|build|typecheck)|tsc|make (test|check|build))\b'
+          failurePattern: '\bFAILED\b|\b[1-9][0-9]* (failed|errors?)\b|\bERROR\b|No module named|command not found|Traceback \(most recent call last\)|npm ERR!'
         skillSelection:
           sessionDataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'
           minConfidence: 0.5

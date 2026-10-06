@@ -1095,7 +1095,7 @@ Source: [`packages/experimental/system3/src/handoff-pack.ts:43`](../packages/exp
 'system3/process-notice': System3ProcessNotice
 ```
 
-Source: [`packages/experimental/system3/src/process-supervision.ts:55`](../packages/experimental/system3/src/process-supervision.ts)
+Source: [`packages/experimental/system3/src/process-supervision.ts:59`](../packages/experimental/system3/src/process-supervision.ts)
 
 <a id="system3skill-decision--log-only"></a>
 
@@ -5893,7 +5893,7 @@ Sources: [`packages/experimental/system3/src/handoff-pack.ts:27`](../packages/ex
 
 SHA-256: `da0389dfad3e6e301ab8ef2da90fa7d34b343e7685c06fa2bd5892ed9aa43b16`
 
-Sources: [`packages/experimental/system3/src/process-supervision.ts:35`](../packages/experimental/system3/src/process-supervision.ts)
+Sources: [`packages/experimental/system3/src/process-supervision.ts:39`](../packages/experimental/system3/src/process-supervision.ts)
 
 | Property | Presence | Type |
 |---|---|---|
@@ -5913,7 +5913,7 @@ Sources: [`packages/experimental/system3/src/process-supervision.ts:35`](../pack
 
 SHA-256: `6d12c12a4b0ef02abd57b998310b45bda6f220cab0f4dcfba67da7859cb753f0`
 
-Sources: [`packages/experimental/system3/src/process-supervision.ts:32`](../packages/experimental/system3/src/process-supervision.ts)
+Sources: [`packages/experimental/system3/src/process-supervision.ts:36`](../packages/experimental/system3/src/process-supervision.ts)
 
 One of:
 
@@ -6015,7 +6015,7 @@ One of:
 
 SHA-256: `13daea02f2a32a4ad96f4734d677194d6d632cd22c7b526ac3666a7f0ffa8d14`
 
-Sources: [`packages/experimental/system3/src/process-supervision.ts:47`](../packages/experimental/system3/src/process-supervision.ts)
+Sources: [`packages/experimental/system3/src/process-supervision.ts:51`](../packages/experimental/system3/src/process-supervision.ts)
 
 | Property | Presence | Type |
 |---|---|---|

@@ -16,11 +16,12 @@ afterEach(async () => { for (const ctx of contexts.splice(0)) await ctx.fiber.di
 
 const CONFIG: System3ProcessSupervisionConfig = {
   mode: 'advise', repeatedError: 2, failedAttempts: 3, stalledSteps: 6, delegateFailures: 2,
-  editTools: ['edit'], delegationTools: ['delegate'], shellTools: ['bash'], verifyPattern: '\\b(npm|pnpm) test\\b',
+  editTools: ['edit'], delegationTools: ['delegate'], shellTools: ['bash'], progressTools: ['search'],
+  verifyPattern: '\\b(npm|pnpm) test\\b', failurePattern: '\\b[1-9][0-9]* failed\\b|No module named',
 }
 
-/** Shell results keyed by command; unknown commands succeed with exit code 0. */
-type Shell = Readonly<Record<string, number>>
+/** Shell results keyed by command: an exit code, or an exit code with output; unknown commands succeed with exit code 0. */
+type Shell = Readonly<Record<string, number | { readonly exitCode: number; readonly output: string }>>
 
 async function setup(script: ConstructorParameters<typeof MockAdapter>[0], config: Partial<System3ProcessSupervisionConfig> = {},
   shell: Shell = {}) {
@@ -38,7 +39,11 @@ async function setup(script: ConstructorParameters<typeof MockAdapter>[0], confi
     name: 'bash', description: 'Run a command.', parameters: { command: { type: 'string', required: true } },
     output: { schema: { type: 'object', properties: { exitCode: { type: 'integer', required: true }, output: { type: 'string', required: true } }, additionalProperties: false },
       render: (_args, value) => [{ type: 'text', text: `${value.output}\nexit ${String(value.exitCode)}` }] },
-    execute: args => Promise.resolve({ exitCode: shell[args.command] ?? 0, output: `run ${String(++runs)}: ${args.command}` }),
+    execute: (args) => {
+      const planned = shell[args.command] ?? 0
+      runs += 1
+      return Promise.resolve(typeof planned === 'number' ? { exitCode: planned, output: `run ${String(runs)}: ${args.command}` } : planned)
+    },
   }))
   ctx.tools.register(defineTool({
     name: 'list', description: 'List names.', parameters: {},
@@ -51,7 +56,7 @@ async function setup(script: ConstructorParameters<typeof MockAdapter>[0], confi
       render: (_args, value) => [{ type: 'text', text: value.exitCode }] },
     execute: () => Promise.resolve({ exitCode: 'unknown' }),
   }))
-  for (const name of ['edit', 'delegate', 'read']) {
+  for (const name of ['edit', 'delegate', 'read', 'search']) {
     ctx.tools.register(defineTool({
       name, description: `${name} tool.`, parameters: { fail: { type: 'boolean' } },
       output: { schema: { type: 'string' }, render: (_args, value) => [{ type: 'text', text: value }] },
@@ -89,12 +94,21 @@ it('advises once per repeated failure and per failure count, and shows the turn 
   ])
 })
 
-it('does not accept a piped check as evidence, because the pipe hides its exit code', async () => {
+it('accepts a piped check as evidence only when its output shows no failure', async () => {
   const h = await setup([call('e1', 'edit'), bash('v1', 'pnpm test 2>&1 | tail -5'), textResponse('done'),
-    bash('v2', 'pnpm test || exit 1'), textResponse('verified')])
+    bash('v2', 'npm test 2>&1 | tail -5'), textResponse('verified')], {},
+  { 'pnpm test 2>&1 | tail -5': { exitCode: 0, output: '/usr/bin/python3: No module named pytest' },
+    'npm test 2>&1 | tail -5': { exitCode: 0, output: '8 passed in 0.01s' } })
   await h.ask('change the parser')
   expect(h.notices()).toEqual([{ version: 1, rule: 'missing-evidence', count: 1, advised: true }])
   expect(h.adapter.requests).toHaveLength(5)
+})
+
+it('counts a successful progress tool, such as a search, as progress', async () => {
+  const h = await setup([call('r1', 'read'), call('s1', 'search'), call('r2', 'read'), call('r3', 'read'), textResponse('found')],
+    { stalledSteps: 3 })
+  await h.ask('research it')
+  expect(h.notices()).toEqual([])
 })
 
 it('asks for verification once after changes, and accepts a passing check as evidence', async () => {
@@ -189,6 +203,7 @@ it('rejects invalid thresholds and patterns at load', async () => {
   contexts.push(ctx)
   expect(() => { installSystem3ProcessSupervision(ctx, { ...CONFIG, stalledSteps: 0 }) }).toThrow('processSupervision stalledSteps must be a positive integer')
   expect(() => { installSystem3ProcessSupervision(ctx, { ...CONFIG, verifyPattern: '(' }) }).toThrow('processSupervision verifyPattern is not a valid regular expression: (')
+  expect(() => { installSystem3ProcessSupervision(ctx, { ...CONFIG, failurePattern: '[' }) }).toThrow('processSupervision failurePattern is not a valid regular expression: [')
 })
 
 it('words each advice for the main model', () => {

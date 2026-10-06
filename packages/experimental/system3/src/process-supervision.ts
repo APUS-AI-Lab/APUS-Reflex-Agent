@@ -14,7 +14,7 @@ export interface System3ProcessSupervisionConfig {
   readonly repeatedError: number
   /** Failed tool calls in one turn that raise `failed-attempts`. */
   readonly failedAttempts: number
-  /** Consecutive calls without an edit, delegation, or passing verification that raise `no-progress`. */
+  /** Consecutive calls without an edit, delegation, passing verification, or successful progress tool that raise `no-progress`. */
   readonly stalledSteps: number
   /** Failed commands inside one delegated run that raise `delegate-failures`. */
   readonly delegateFailures: number
@@ -24,8 +24,12 @@ export interface System3ProcessSupervisionConfig {
   readonly delegationTools: readonly string[]
   /** Shell tools whose command text and exit code are inspected. */
   readonly shellTools: readonly string[]
+  /** Information tools, such as web search, whose successful call counts as progress. */
+  readonly progressTools: readonly string[]
   /** Case-insensitive regular expression for verification commands, such as tests or builds. */
   readonly verifyPattern: string
+  /** Regular expression for failure output; a piped verification whose result matches it is not evidence. */
+  readonly failurePattern: string
 }
 
 /** Which rule a notice reports. */
@@ -114,6 +118,10 @@ function failureDigest(result: Readonly<ToolExecutionResult>): string {
   return line.slice(0, 120).replace(/\d+/g, '#')
 }
 
+function resultText(result: Readonly<ToolExecutionResult>): string {
+  return result.content.filter(block => block.type === 'text').map(block => block.text).join('\n')
+}
+
 function commandOf(exec: ToolExecution): string {
   const args = exec.arguments
   return typeof args === 'object' && args !== null && 'command' in args && typeof args.command === 'string' ? args.command : ''
@@ -130,12 +138,15 @@ export function installSystem3ProcessSupervision(ctx: Context, config: System3Pr
   for (const [key, value] of Object.entries(limits)) {
     if (!Number.isSafeInteger(value) || value < 1) throw new Error(`processSupervision ${key} must be a positive integer`)
   }
-  let verify: RegExp
-  try {
-    verify = new RegExp(config.verifyPattern, 'iu')
-  } catch (error) {
-    throw new Error(`processSupervision verifyPattern is not a valid regular expression: ${config.verifyPattern}`, { cause: error })
+  const compile = (key: 'verifyPattern' | 'failurePattern', flags: string): RegExp => {
+    try {
+      return new RegExp(config[key], flags)
+    } catch (error) {
+      throw new Error(`processSupervision ${key} is not a valid regular expression: ${config[key]}`, { cause: error })
+    }
   }
+  const verify = compile('verifyPattern', 'iu')
+  const failure = compile('failurePattern', 'u')
   const advise = config.mode === 'advise'
   const turns = new WeakMap<Agent, TurnState>()
   const runs = new Map<string, number>()
@@ -180,12 +191,13 @@ export function installSystem3ProcessSupervision(ctx: Context, config: System3Pr
     }
     const edited = !failed && config.editTools.includes(exec.name)
     const delegated = !failed && config.delegationTools.includes(exec.name)
-    // A piped command reports the exit code of its last stage, so it cannot prove that a check passed.
+    const informed = !failed && config.progressTools.includes(exec.name)
+    // A pipeline reports the exit code of its last stage, so its output must also show no failure.
     const command = commandOf(exec)
-    const verified = !failed && shell && verify.test(command) && !PIPE.test(command)
+    const verified = !failed && shell && verify.test(command) && (!PIPE.test(command) || !failure.test(resultText(result)))
     if (edited || delegated) { state.modified = true; state.verified = false }
     if (verified) state.verified = true
-    if (edited || delegated || verified) state.streak = 0
+    if (edited || delegated || verified || informed) state.streak = 0
     else {
       state.streak += 1
       if (state.streak >= config.stalledSteps) fire('no-progress', state.streak)

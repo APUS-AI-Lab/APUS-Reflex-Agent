@@ -29654,7 +29654,7 @@
         "packages/experimental/system3/src/process-supervision.ts#System3SupervisionSource"
       ],
       "sources": [
-        "packages/experimental/system3/src/process-supervision.ts:47"
+        "packages/experimental/system3/src/process-supervision.ts:51"
       ]
     },
     {
@@ -72371,7 +72371,7 @@
         "packages/experimental/system3/src/process-supervision.ts#System3ProcessRule"
       ],
       "sources": [
-        "packages/experimental/system3/src/process-supervision.ts:32"
+        "packages/experimental/system3/src/process-supervision.ts:36"
       ]
     },
     {
@@ -106434,7 +106434,7 @@
         "packages/experimental/system3/src/process-supervision.ts#System3ProcessNotice"
       ],
       "sources": [
-        "packages/experimental/system3/src/process-supervision.ts:35"
+        "packages/experimental/system3/src/process-supervision.ts:39"
       ]
     },
     {
