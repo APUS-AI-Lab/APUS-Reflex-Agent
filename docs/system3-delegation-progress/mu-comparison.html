@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mu 与 System3 对照</title>
+<style>
+:root {
+  --paper: #f7f7f5; --card: #ffffff; --ink: #1d1f24; --muted: #5b6270; --rule: #e2e3e0;
+  --accent: #d9622b; --accent-tint: #fbeee6; --good: #2f7d5b; --good-tint: #e5f2ec;
+  --warn: #9a6a12; --warn-tint: #f8f0dc; --none: #7a7f89; --none-tint: #eff0f2; --link: #2e5aa8;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #15171b; --card: #1d2026; --ink: #e8e9ec; --muted: #a2a8b3; --rule: #30343c;
+    --accent: #f08a55; --accent-tint: #3a271d; --good: #6cc49c; --good-tint: #1d3329;
+    --warn: #e2b55a; --warn-tint: #3a311c; --none: #9aa0aa; --none-tint: #262a31; --link: #8db1f0;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #15171b; --card: #1d2026; --ink: #e8e9ec; --muted: #a2a8b3; --rule: #30343c;
+  --accent: #f08a55; --accent-tint: #3a271d; --good: #6cc49c; --good-tint: #1d3329;
+  --warn: #e2b55a; --warn-tint: #3a311c; --none: #9aa0aa; --none-tint: #262a31; --link: #8db1f0;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 15px/1.65 -apple-system, "PingFang SC", "Noto Sans SC", "Segoe UI", sans-serif; }
+main { max-width: 1280px; margin: 0 auto; padding: 40px 24px 64px; }
+h1 { font-size: 30px; line-height: 1.25; margin: 0 0 8px; font-weight: 600; }
+h2 { font-size: 21px; margin: 44px 0 12px; font-weight: 600; }
+h3 { font-size: 16px; margin: 24px 0 8px; font-weight: 600; }
+p { margin: 8px 0; }
+.sub { color: var(--muted); margin: 0 0 24px; }
+.eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+.card { background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: 18px 20px; }
+.tldr { border-left: 3px solid var(--accent); }
+.tldr li { margin: 4px 0; }
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 16px 0; }
+.stat { background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: 14px 16px; }
+.stat b { display: block; font-size: 26px; line-height: 1.2; }
+.stat span { color: var(--muted); font-size: 13px; }
+.table-wrap { overflow-x: auto; background: var(--card); border: 1px solid var(--rule); border-radius: 10px; }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+th, td { text-align: left; vertical-align: top; padding: 9px 12px; border-bottom: 1px solid var(--rule); }
+th { font-weight: 600; color: var(--muted); background: var(--card); position: sticky; top: 0; }
+tr.group td { background: var(--paper); font-weight: 600; color: var(--muted); font-size: 12.5px; letter-spacing: .04em; }
+tr:last-child td { border-bottom: 0; }
+code { font: 12.5px/1.4 ui-monospace, "SF Mono", Menlo, monospace; background: var(--none-tint); padding: 1px 5px; border-radius: 4px; }
+.pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.full { background: var(--good-tint); color: var(--good); }
+.part { background: var(--warn-tint); color: var(--warn); }
+.miss { background: var(--none-tint); color: var(--none); }
+.ours { background: var(--accent-tint); color: var(--accent); }
+.muted { color: var(--muted); }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+ol li, ul li { margin: 6px 0; }
+a { color: var(--link); }
+footer { margin-top: 48px; color: var(--muted); font-size: 13px; }
+@media (max-width: 760px) {
+  main { padding: 24px 16px 48px; }
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .two { grid-template-columns: 1fr; }
+  h1 { font-size: 24px; }
+}
+</style>
+</head>
+<body>
+<main>
+  <div class="eyebrow">对照分析 · 2026-10-07</div>
+  <h1>mu 的判定点与 System3 的实现对照</h1>
+  <p class="sub">mu：开源 Coding Agent pi 的扩展，判定内核 kyrn-judge（仓库 qybaihe/mu，2026-10-06 版本）。System3：DSH 内的原生插件，部署在 system3.xdan.work。mu 一栏来自代码和仓库文档；System3 一栏来自本仓库代码、单元测试和 prd 线上会话日志。</p>
+
+  <section class="card tldr">
+    <strong>结论</strong>
+    <ul>
+      <li><b>点数：</b>文章说 35 个，代码里是 38 个（2026-10-05 起 README 改为 38）。其中 3 个默认关闭，另有若干只在调用对应工具或特定模式下运行。</li>
+      <li><b>覆盖面：</b>mu 宽，用 Jev 把大量琐碎判断外包出去；System3 窄，但每个点的动作更重：真正切换模型、委派给 Codex、在界面展示过程、全部写入会话日志可回放。</li>
+      <li><b>对应情况：</b>38 个点中，System3 有等价或更强实现的 5 个，部分覆盖 14 个，没有的 19 个；没有的多为记忆、Hive 多代理和浏览器这类我们没走的方向。</li>
+      <li><b>System3 独有：</b>多供应商模型分档路由并验证实际使用的模型、线路健康、外部代理委派（进度、补充说明、停止、交接包）、隐私准入、过程提示上界面。</li>
+      <li><b>最该借鉴的不是点数，而是骨架：</b>统一的判定规格、off/shadow/active 三种模式、判定账本。今天线上发现的两处误报，正好说明确定性规则需要 Jev 这类语义判断来补。</li>
+    </ul>
+  </section>
+
+  <div class="stats">
+    <div class="stat"><b>38</b><span>mu 代码中的判定点（文章称 35）</span></div>
+    <div class="stat"><b>5</b><span>System3 等价或更强</span></div>
+    <div class="stat"><b>14</b><span>部分覆盖（多为确定性规则或 DSH 原生机制）</span></div>
+    <div class="stat"><b>19</b><span>没有对应实现</span></div>
+  </div>
+
+  <h2>逐点对照</h2>
+  <p class="muted">图例：<span class="pill full">等价/更强</span> <span class="pill part">部分</span> <span class="pill miss">无</span>。“确定性”指规则判断，不调用模型；“原生”指 DSH 自带包。</p>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th style="width:4%">#</th><th style="width:15%">mu 判定点</th><th style="width:22%">mu 做什么</th><th style="width:27%">System3 / DSH 对应</th><th style="width:8%">状态</th><th style="width:24%">差异与实证</th></tr></thead>
+    <tbody>
+      <tr class="group"><td colspan="6">用户输入</td></tr>
+      <tr><td>1</td><td><code>input.preflight</code></td><td>一次 10 题：轮次类型、是否需澄清、是否先规划、复杂度打分；给主模型一行提示，可调 thinking 等级</td><td><b>入口路由</b>：Jev 在 Flash / Pro / GPT-5.6 / GPT-6 / Codex 委派 / 弃权之间选择，真正切换本轮模型；明确说“交给 codex”时不问 Jev</td><td><span class="pill full">更强</span></td><td>mu 只给提示，System3 真的换模型并核对实际回答的模型。线上：路由决策 0.34–0.97 秒；Flash、Pro、GPT-5.6 各一轮路由正确。缺少 mu 的“需澄清 / 先规划”提示</td></tr>
+      <tr><td>2</td><td><code>task.frame</code></td><td>判断是新任务、约束、纠错还是子目标；有变化时由 LLM 改写任务框架（目标、原话约束、验收项）</td><td><b>交接包</b>只在委派时识别更早的约束并原文转交</td><td><span class="pill part">部分</span></td><td>没有持续维护的任务框架。交接包实测：6 段标注对话召回率和精确率 1.0，单次约 0.3–0.9 秒</td></tr>
+      <tr><td>3</td><td><code>input.interjection</code></td><td>代理运行中收到消息，判断是纠错、补充还是旁支问题，改投为 steer 或 followUp</td><td>委派运行中的“补充说明”由用户在卡片上主动发送，送达 Codex；主循环的插队方式由用户选择</td><td><span class="pill part">部分</span></td><td>无自动分类。补充说明线上 0.6–1.2 秒送达，并在结果里复述给主模型</td></tr>
+      <tr><td>4</td><td><code>skills.disclosure</code></td><td>首条消息时隐藏无关技能，会话内固定以保缓存</td><td><b>Skill 选择</b>：Jev 选出一个最合适的技能并注入正文</td><td><span class="pill full">等价（方向相反）</span></td><td>mu 做减法（藏），System3 做加法（选一个注入）。都有隐私和大小上限</td></tr>
+      <tr><td>5</td><td><code>capability.disclosure</code></td><td>按需开启工具包或 MCP，判为需要才启动进程</td><td>无</td><td><span class="pill miss">无</span></td><td>DSH 工具在 profile 里静态配置</td></tr>
+      <tr class="group"><td colspan="6">工具结果与上下文</td></tr>
+      <tr><td>6</td><td><code>tool.admission</code></td><td>长输出切块，16 块合一次请求，噪声块归档换成指针</td><td>原生 <code>spill</code>：超长输出存文件、给路径；<code>compaction-tool-result-pruner</code> 按规则裁剪</td><td><span class="pill part">部分</span></td><td>按大小，不按内容。注意：mu 作者自己的回测显示该点 194 批 2,412 块零裁剪，却花掉 54% 的 Jev 输入 token</td></tr>
+      <tr><td>7</td><td><code>tool.admission.test-log</code></td><td>测试日志无损折叠重复段（不调模型），可选 Jev 省略</td><td>无</td><td><span class="pill miss">无</span></td><td>mu 默认关闭。其规则档在 7 份日志上折叠 51%，可直接借鉴且不需要模型</td></tr>
+      <tr><td>8</td><td><code>context.forget</code></td><td>上下文到 50/70/85% 时，判断某次调用的完整输出以后还用不用，不用就缩成墓碑</td><td>原生裁剪器按规则处理旧工具结果</td><td><span class="pill part">部分</span></td><td>无语义判断</td></tr>
+      <tr><td>9</td><td><code>context.compact</code></td><td>逐字保留对话，按分数裁工具输出，替代摘要</td><td>原生 <code>compaction-basic</code>：最旧历史压成摘要，溢出后压缩重试</td><td><span class="pill part">部分</span></td><td>mu 默认关闭（beta）</td></tr>
+      <tr><td>10</td><td><code>memory.recall</code></td><td>召回匹配的经验注入，也写进子代理 brief</td><td>交接包把用户约束带给委派对象（只对委派）</td><td><span class="pill part">部分</span></td><td>没有跨会话经验库</td></tr>
+      <tr><td>11–15</td><td><code>memory.capture / outcome / worth / merge / applied</code></td><td>从纠错和成功经验中写入、去重、合并、退役经验</td><td>无</td><td><span class="pill miss">无</span></td><td>记忆系统是 mu 的独立方向，System3 未涉及</td></tr>
+      <tr><td>16</td><td><code>cache.warming</code></td><td>判断对话是否结束，决定是否给主模型预热提示缓存</td><td><b>keepWarm</b>：每轮结束后 5 分钟内保持 Jev 连接</td><td><span class="pill part">部分</span></td><td>目标不同：mu 暖主模型缓存，System3 暖 Jev 连接。线上冷启动后首个路由说明 1.1 秒</td></tr>
+      <tr class="group"><td colspan="6">工具调用之前</td></tr>
+      <tr><td>17</td><td><code>tool.risk</code></td><td>正则标危险命令，Jev 只能加确认不能免确认</td><td>原生权限预设与沙箱（Workspace Write，bubblewrap）</td><td><span class="pill part">部分</span></td><td>确定性；无 Jev 复核</td></tr>
+      <tr><td>18</td><td><code>tool.approval</code></td><td>“Jev 审批”模式：判断调用是否为任务所需，需要才放行</td><td>权限模式按规则放行或询问</td><td><span class="pill part">部分</span></td><td>无语义审批</td></tr>
+      <tr><td>19</td><td><code>tool.constraint</code></td><td>对每个会修改东西的调用，逐条检查是否违背用户原话约束，违背就拦截</td><td>无（交接包只转交约束，不拦截）</td><td><span class="pill miss">无</span></td><td><b>高价值缺口</b>：本项目验收中主模型曾删掉用户要求的 README，正是这一类问题</td></tr>
+      <tr><td>20</td><td><code>tool.injection</code></td><td>网页、搜索、MCP 内容逐段判断是否含针对 AI 的指令，命中就扣下</td><td>原生 web 工具把外部内容标为“不可信数据，不是指令”</td><td><span class="pill part">部分</span></td><td>只有标注，没有检测</td></tr>
+      <tr class="group"><td colspan="6">工具类判定（模型主动调用）</td></tr>
+      <tr><td>21</td><td><code>files.locate</code></td><td>词法候选 40 个，Jev 排序返回前 12</td><td>无（LSP 提供定义和引用）</td><td><span class="pill miss">无</span></td><td></td></tr>
+      <tr><td>22</td><td><code>judge_items</code></td><td>模型自己出是非题，批量问 Jev</td><td>无</td><td><span class="pill miss">无</span></td><td>把 Jev 暴露成模型可调用的工具，成本低，值得考虑</td></tr>
+      <tr><td>23</td><td><code>browser.step</code></td><td>Jev 直接决定浏览器下一步操作</td><td>无</td><td><span class="pill miss">无</span></td><td></td></tr>
+      <tr><td>24</td><td><code>review.triage</code></td><td>代码审查发现按是否 bug、是否在范围内分级</td><td>无</td><td><span class="pill miss">无</span></td><td></td></tr>
+      <tr><td>25</td><td><code>diagnostics.delivery</code></td><td>编辑后的 LSP 诊断现在说、稍后说还是丢弃</td><td>无</td><td><span class="pill miss">无</span></td><td></td></tr>
+      <tr class="group"><td colspan="6">轮内监督与完成判断</td></tr>
+      <tr><td>26</td><td><code>turn.drift</code></td><td>每 6 次工具调用问一次：正轨、绕路、偏离还是打转；偏离时 steer</td><td><b>过程监督</b>：同一错误重复、失败次数、连续无进展（确定性，每步检查）</td><td><span class="pill part">部分</span></td><td>线上实测“同一错误重复”后模型停下请用户确认。但今天发现确定性规则对研究型任务误报，已加 <code>progressTools</code> 修正</td></tr>
+      <tr><td>27</td><td><code>turn.rewind</code></td><td>陷入死路时提议回到检查点，由用户确认</td><td>无</td><td><span class="pill miss">无</span></td><td></td></tr>
+      <tr><td>28</td><td><code>turn.completion</code></td><td>模型声称完成但有未勾验收项或改了文件没跑检查时，催一次验证</td><td><b>缺少验证提醒</b>：改了文件或完成委派、没有通过的测试或构建就要结束时，steer 一次</td><td><span class="pill full">等价</span></td><td>线上：模型随后运行检查再回复。今天修正两处误报：管道检查按输出判断，<code>pytest | tail</code> 显示通过即算</td></tr>
+      <tr><td>29</td><td><code>turn.continue</code></td><td>模型承诺要做却停下、或在已要求的工作上问“要不要做”时，送回继续</td><td>原生 goal 自动续跑（仅 goal 模式）</td><td><span class="pill part">部分</span></td><td>无“答应了却停下”的识别</td></tr>
+      <tr><td>30</td><td><code>output.drift</code></td><td>流式输出违背规则时打断重写</td><td>无</td><td><span class="pill miss">无</span></td><td>mu 默认关闭（实验）</td></tr>
+      <tr><td>31</td><td><code>goal.met</code></td><td>goal 模式下判断目标是否达成，默认先由 LLM 检查</td><td>原生 goal 包；System3 的 <code>shadowDecision</code> 监督建议 API（未接入主循环）</td><td><span class="pill part">部分</span></td><td></td></tr>
+      <tr class="group"><td colspan="6">给人看与外部事件</td></tr>
+      <tr><td>32</td><td><code>board.read</code></td><td>判断有新进展才让写作模型重写看板</td><td><b>System3 dock</b>：路由说明、委派进度卡、提醒、过程提示，历史轮次保留路由</td><td><span class="pill full">更强（不同实现）</span></td><td>System3 用会话事件的确定性投影，刷新后可恢复；mu 看板每个项目默认关闭</td></tr>
+      <tr><td>33</td><td><code>notify.routing</code></td><td>外部事件现在说、下轮说还是丢弃</td><td>委派提醒：启动过慢、停滞、超时（确定性，给人看）</td><td><span class="pill part">部分</span></td><td></td></tr>
+      <tr class="group"><td colspan="6">多代理</td></tr>
+      <tr><td>34</td><td><code>swarm.routing</code></td><td>为子代理选角色、模型强度和 thinking 等级</td><td>入口路由里的 Codex 委派候选；GPT-5.6 也会自行派出进程内子代理</td><td><span class="pill full">等价（外部代理）</span></td><td>System3 委派到外部 Codex：线上 56 秒完成、8 个测试通过；可补充说明、1 秒内停止</td></tr>
+      <tr><td>35</td><td><code>swarm.patch</code></td><td>隔离 worktree 交回的 patch 是否越界，只给建议</td><td>无</td><td><span class="pill miss">无</span></td><td></td></tr>
+      <tr><td>36–38</td><td><code>hive.publish / deliver / relate</code></td><td>多只“蜂”之间共享发现、投递、判断互相更正或矛盾</td><td>无</td><td><span class="pill miss">无</span></td><td>Hive 是 mu 的多代理协作方向</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="muted">计数说明：11–15 计 5 个、36–38 计 3 个。等价/更强：1、4、28、32、34 共 5；部分 14；无 19；合计 38。</p>
+
+  <h2>System3 有、mu 没有的能力</h2>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th style="width:22%">能力</th><th style="width:44%">做了什么</th><th>线上实证</th></tr></thead>
+    <tbody>
+      <tr><td>多供应商分档路由</td><td>同一会话内按输入切换 DeepSeek 官方 Flash / Pro、GPT-5.6 / GPT-6 中转；记录建议、采纳、实际回答三个事实</td><td>会话日志显示实际回答者与路由一致：Flash 3 秒、Pro 11 秒、GPT-5.6 169 秒</td></tr>
+      <tr><td>线路健康</td><td>测每条线路的首字延迟、输出速度、错误率，降级线路自动不参与选择，并写明原因</td><td>阈值来自 prd 日志；本周尚未触发降级</td></tr>
+      <tr><td>外部代理委派全过程</td><td>委派 Codex 后有进度卡、启动/停滞/超时提醒、运行中补充说明、停止；补充说明在结果里复述给主模型；输入框标明“已交给 codex”</td><td>交接包 290 毫秒；Codex 56 秒；函数名遵守 snake_case、未建 README；8 个测试通过</td></tr>
+      <tr><td>隐私准入</td><td>每次 Jev 请求和每条路由都按数据类别与执行位置准入</td><td>单元测试覆盖拒绝路径</td></tr>
+      <tr><td>可回放与可审计</td><td>所有判定是会话事件：完整请求、响应、结果，刷新或回放不再调用模型；进入模型的内容都能从日志重建</td><td>每个新事件都有持久化类型变更记录</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>判定内核对比</h2>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th style="width:18%">维度</th><th style="width:41%">mu（kyrn-judge）</th><th>System3</th></tr></thead>
+    <tbody>
+      <tr><td>判定规格</td><td>统一 <code>defineDecision</code>：题型、带逃生选项的封闭选项、policy、fallback、对缓存的影响、延迟档位</td><td>每个功能各自实现，没有统一规格 <span class="pill miss">缺</span></td></tr>
+      <tr><td>运行模式</td><td>每个点 off / shadow / active，默认 active</td><td>过程监督有 observe / advise；入口路由和交接包只有开或关；另有独立的 shadowDecision API <span class="pill part">部分</span></td></tr>
+      <tr><td>账本</td><td>每次判定写一条记录（状态只存摘要），可在命令行和桌面端查看</td><td>会话事件，保存完整请求和响应，投影到界面 <span class="pill ours">更严格</span></td></tr>
+      <tr><td>判定后端</td><td>Jev / 本地 Laya / 普通 LLM 等级联，前一级不确定才交给下一级</td><td>只用 Jev，失败走确定性回退 <span class="pill part">单一</span></td></tr>
+      <tr><td>阈值</td><td>是非题 ≥0.8 算是、≤0.2 算否；选择题 ≥0.6 且必须有逃生选项</td><td>入口路由置信度 ≥0.8 且有弃权项；交接包 ≥0.3（依据实测数据定）</td></tr>
+      <tr><td>批量</td><td>工具输出 16 块合一次请求；超过 32 题自动拆分</td><td>交接包一次请求最多 16 题</td></tr>
+      <tr><td>连接与延迟</td><td>HTTP/2 保活，每 50 秒 ping；热连接单题 0.31 秒、16 块 0.44 秒（作者一次性实测，无可重跑脚本）</td><td>keepWarm 每 2 秒一次、轮后 5 分钟内；线上路由决策 0.34–0.97 秒，交接包 0.29–0.92 秒（prd 会话日志）</td></tr>
+      <tr><td>效果证据</td><td>测试日志折叠 51%；按目标裁剪 40%、必需行零丢失；作者回测承认 tool.admission 零裁剪、净收益未证明；无与 Claude Code / Codex 的端到端对比</td><td>入口路由三组对照与隐藏测试；交接包 6 段标注对话；委派门槛对照（委派准确率无提升、耗时 4–13 倍）；线上浏览器验收</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>建议：按证据而不是按点数补齐</h2>
+  <div class="two">
+    <div class="card">
+      <h3>先做（直接对应已发生的问题）</h3>
+      <ol>
+        <li><b>约束拦截（对应 <code>tool.constraint</code>）。</b>交接包已经能识别用户约束，把它扩展到修改类工具调用前检查，违背就拦截并引用原话。直接防住“删掉用户要求保留的文件”这类事故。</li>
+        <li><b>用 Jev 复核过程监督（对应 <code>turn.completion</code> / <code>turn.drift</code>）。</b>确定性规则今天线上误报两次；在规则触发时再问 Jev 一道是非题（约 0.3 秒），只有确认才提醒，误报会明显下降。</li>
+        <li><b>统一判定规格加 shadow 模式。</b>把入口路由、Skill 选择、交接包、过程监督收拢到一套规格：题目、阈值、回退、模式、会话事件。新增判定点的成本会大幅降低，也便于先 shadow 量化再开启。</li>
+      </ol>
+    </div>
+    <div class="card">
+      <h3>可以晚做或不做</h3>
+      <ul>
+        <li><b>测试日志无损折叠</b>：不需要模型，收益明确（mu 实测 51%），可作为小改动随时加。</li>
+        <li><b>运行中消息自动分类（<code>input.interjection</code>）</b>：现在由用户手动选择，体验够用。</li>
+        <li><b>工具输出语义裁剪（<code>tool.admission</code>）</b>：mu 自己的回测显示成本高、收益未证明，不建议照搬。</li>
+        <li><b>记忆系统、Hive、浏览器判定</b>：方向不同，演示前不建议展开。</li>
+      </ul>
+    </div>
+  </div>
+
+  <footer>
+    来源：mu 仓库 <code>packages/kyrn-judge/manifest.json</code>、<code>docs/reference/decision-points.md</code>、<code>kyrn/docs/04-injection-points.md</code>、<code>kyrn/docs/08-jev-retrospective.md</code>、<code>kyrn/docs/09-test-log-admission.md</code>；文章《把Jev整合进 Harness，开源项目拿下黑客松总冠军！》。System3：本仓库 <code>packages/experimental/system3</code>、<code>deploy/system3/runtime.patch.yml</code>、prd 会话日志（2026-10-04 至 10-07）。
+  </footer>
+</main>
+</body>
+</html>
