@@ -77,7 +77,7 @@ describe('ui-settings-models apply', () => {
       await host.await()
       const rows: IndexInjection[] = []
       ctx.emit('webserver/index-inject', rows)
-      expect(rows).toEqual([{ kind: 'global', name: ONBOARDING_CONFIG_GLOBAL, value: { credentialOnboarding: false } }])
+      expect(rows).toEqual([{ kind: 'global', name: ONBOARDING_CONFIG_GLOBAL, value: { credentialOnboarding: false, welcomeNotice: true } }])
       for (const row of rows) if (row.kind === 'global') vi.stubGlobal(row.name, row.value)
       const plugin = ctx.plugin({ inject: [...inject], apply })
       await plugin.await()
@@ -96,8 +96,26 @@ describe('ui-settings-models apply', () => {
     }
   })
 
+  it('omits the welcome notice when the deployment turns it off', async () => {
+    const { ctx, slots } = await bench()
+    declare(slots)
+    try {
+      const host = ctx.plugin(hostPlugin, { welcomeNotice: false })
+      await host.await()
+      const rows: IndexInjection[] = []
+      ctx.emit('webserver/index-inject', rows)
+      expect(rows).toEqual([{ kind: 'global', name: ONBOARDING_CONFIG_GLOBAL, value: { credentialOnboarding: true, welcomeNotice: false } }])
+      for (const row of rows) if (row.kind === 'global') vi.stubGlobal(row.name, row.value)
+      const plugin = ctx.plugin({ inject: [...inject], apply })
+      await plugin.await()
+      expect(slots.entries('settings.onboarding').map(entry => entry.options.id)).toEqual(['deepseek-official'])
+    } finally {
+      await ctx.fiber.dispose()
+    }
+  })
+
   it('defaults to browser onboarding and rejects malformed bootstrap options', async () => {
-    expect(hostPlugin.Config({})).toEqual({ credentialOnboarding: true })
+    expect(hostPlugin.Config({})).toEqual({ credentialOnboarding: true, welcomeNotice: true })
     expect(hostPlugin.Config['~standard'].validate({ credentialOnboarding: 'false' })).toHaveProperty('issues')
     const { ctx } = await bench()
     try {
