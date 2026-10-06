@@ -1,0 +1,483 @@
+{
+  "document": "architecture.html",
+  "date": "2026-10-01",
+  "purpose": "Offline product architecture and native execution flow validation; no new runtime or research acceptance.",
+  "runtimeBaseline": {
+    "implementationTag": "system3-g1-reviewed-rc2",
+    "acceptanceTag": "system3-g1-acceptance-rc2",
+    "runtimeChanged": false,
+    "realModelCalls": 0,
+    "serverRestarts": 0,
+    "desktopPackageChanges": 0
+  },
+  "browser": {
+    "tool": "gstack browse",
+    "isolatedState": true,
+    "responsive": [
+      {
+        "viewport": 320,
+        "documentWidth": 320,
+        "sections": 12,
+        "mainWidth": 320
+      },
+      {
+        "viewport": 390,
+        "documentWidth": 390,
+        "sections": 12,
+        "mainWidth": 390
+      },
+      {
+        "viewport": 768,
+        "documentWidth": 768,
+        "sections": 12,
+        "mainWidth": 768
+      },
+      {
+        "viewport": 850,
+        "documentWidth": 850,
+        "sections": 12,
+        "mainWidth": 850
+      },
+      {
+        "viewport": 1024,
+        "documentWidth": 1024,
+        "sections": 12,
+        "mainWidth": 809
+      },
+      {
+        "viewport": 1440,
+        "documentWidth": 1440,
+        "sections": 12,
+        "mainWidth": 1192
+      },
+      {
+        "viewport": 1920,
+        "documentWidth": 1920,
+        "sections": 12,
+        "mainWidth": 1300
+      }
+    ],
+    "architectures": [
+      {
+        "selected": "current",
+        "visible": [
+          "arch-current"
+        ],
+        "diagramTexts": 46
+      },
+      {
+        "selected": "target",
+        "visible": [
+          "arch-target"
+        ],
+        "diagramTexts": 61
+      }
+    ],
+    "journeys": [
+      {
+        "selected": "csv",
+        "state": "已发布实测",
+        "steps": 5,
+        "facts": 5,
+        "scope": "此卡解释体验与事实关系，非实时产品状态。"
+      },
+      {
+        "selected": "fallback",
+        "state": "已发布实测",
+        "steps": 5,
+        "facts": 5,
+        "scope": "此卡解释体验与事实关系，非实时产品状态。"
+      },
+      {
+        "selected": "cancel",
+        "state": "已发布实测",
+        "steps": 5,
+        "facts": 5,
+        "scope": "此卡解释体验与事实关系，非实时产品状态。"
+      },
+      {
+        "selected": "diagnosis",
+        "state": "目标接入",
+        "steps": 5,
+        "facts": 5,
+        "scope": "此卡解释体验与事实关系，非实时产品状态。"
+      },
+      {
+        "selected": "memory",
+        "state": "目标接入",
+        "steps": 5,
+        "facts": 5,
+        "scope": "此卡解释体验与事实关系，非实时产品状态。"
+      },
+      {
+        "selected": "lead",
+        "state": "后续演进",
+        "steps": 5,
+        "facts": 5,
+        "scope": "此卡解释体验与事实关系，非实时产品状态。"
+      }
+    ],
+    "themes": [
+      {
+        "theme": "dark",
+        "pressed": "true",
+        "background": "rgb(17, 29, 33)",
+        "text": "rgb(226, 239, 235)"
+      },
+      {
+        "theme": "light",
+        "pressed": "false",
+        "background": "rgb(245, 245, 240)",
+        "text": "rgb(26, 48, 53)"
+      }
+    ],
+    "keyboard": {
+      "focused": "target",
+      "selected": "target",
+      "outline": "solid",
+      "tabMoved": true
+    },
+    "printDetails": {
+      "count": 5,
+      "opened": true,
+      "restored": true
+    },
+    "reducedMotion": "CSS rule inspection; not OS preference emulation",
+    "navigation": {
+      "hash": "#journeys",
+      "current": "#overview"
+    },
+    "consoleErrors": 0,
+    "httpResources": [],
+    "legacyDiagramPages": [
+      {
+        "viewport": 390,
+        "documentWidth": 390,
+        "title": "Jev Native AgentLoop Harness 产品目标架构",
+        "nodes": 9,
+        "mainViewBox": "0 0 1280 900",
+        "nodeFills": [
+          "rgb(241, 245, 249)"
+        ],
+        "subFills": [
+          "rgb(203, 213, 225)"
+        ],
+        "duplicateIds": false,
+        "ariaValid": true,
+        "file": "docs/feat-independent-harness/jev-native-dsh-native-plan.html"
+      },
+      {
+        "viewport": 390,
+        "documentWidth": 390,
+        "title": "Jev Native AgentLoop Harness 产品目标架构",
+        "nodes": 9,
+        "mainViewBox": "0 0 1280 900",
+        "nodeFills": [
+          "rgb(241, 245, 249)"
+        ],
+        "subFills": [
+          "rgb(203, 213, 225)"
+        ],
+        "duplicateIds": false,
+        "ariaValid": true,
+        "file": "docs/feat-system3-desktop/system3-native-v1.html"
+      }
+    ],
+    "productArchitecturePages": [
+      {
+        "viewport": 390,
+        "documentWidth": 390,
+        "title": "Jev Native AgentLoop Harness 产品目标架构",
+        "nodes": 9,
+        "mainViewBox": "0 0 1280 900",
+        "nodeFills": [
+          "rgb(241, 245, 249)"
+        ],
+        "subFills": [
+          "rgb(203, 213, 225)"
+        ],
+        "duplicateIds": false,
+        "ariaValid": true,
+        "file": "docs/feat-system3-g1/architecture.html"
+      },
+      {
+        "viewport": 390,
+        "documentWidth": 390,
+        "title": "Jev Native AgentLoop Harness 产品目标架构",
+        "nodes": 9,
+        "mainViewBox": "0 0 1280 900",
+        "nodeFills": [
+          "rgb(241, 245, 249)"
+        ],
+        "subFills": [
+          "rgb(203, 213, 225)"
+        ],
+        "duplicateIds": false,
+        "ariaValid": true,
+        "file": "docs/feat-independent-harness/jev-native-dsh-native-plan.html"
+      },
+      {
+        "viewport": 390,
+        "documentWidth": 390,
+        "title": "Jev Native AgentLoop Harness 产品目标架构",
+        "nodes": 9,
+        "mainViewBox": "0 0 1280 900",
+        "nodeFills": [
+          "rgb(241, 245, 249)"
+        ],
+        "subFills": [
+          "rgb(203, 213, 225)"
+        ],
+        "duplicateIds": false,
+        "ariaValid": true,
+        "file": "docs/feat-system3-desktop/system3-native-v1.html"
+      }
+    ],
+    "flowDetails": {
+      "initial": false,
+      "ids": "embedded-system3-agent-loop-system3-fusion-title embedded-system3-agent-loop-system3-fusion-desc",
+      "nodes": 20,
+      "keyboardRestored": true
+    },
+    "narrowDiagramKeyboard": {
+      "focusable": true,
+      "scrolled": true
+    }
+  },
+  "static": {
+    "html": [
+      {
+        "file": "docs/feat-system3-g1/architecture.html",
+        "localLinks": 80,
+        "uniqueIds": 68,
+        "unresolvedLinks": [],
+        "unresolvedAriaReferences": [],
+        "scriptSyntax": "passed"
+      },
+      {
+        "file": "docs/feat-independent-harness/jev-native-dsh-native-plan.html",
+        "localLinks": 33,
+        "uniqueIds": 18,
+        "unresolvedLinks": [],
+        "unresolvedAriaReferences": [],
+        "scriptSyntax": "passed"
+      },
+      {
+        "file": "docs/feat-system3-desktop/system3-native-v1.html",
+        "localLinks": 39,
+        "uniqueIds": 31,
+        "unresolvedLinks": [],
+        "unresolvedAriaReferences": [],
+        "scriptSyntax": "passed"
+      }
+    ],
+    "svg": [
+      {
+        "file": "docs/feat-system3-g1/diagram/system3-agent-loop.svg",
+        "xml": "passed"
+      },
+      {
+        "file": "docs/feat-system3-g1/diagram/system3-current.svg",
+        "xml": "passed"
+      },
+      {
+        "file": "docs/feat-system3-g1/diagram/system3-deployment.svg",
+        "xml": "passed"
+      },
+      {
+        "file": "docs/feat-system3-g1/diagram/system3-fusion.svg",
+        "xml": "passed"
+      },
+      {
+        "file": "docs/feat-system3-g1/diagram/system3-target.svg",
+        "xml": "passed"
+      }
+    ]
+  },
+  "diagrams": [
+    {
+      "title": "当前发布：两个实例，同一套原生执行语义",
+      "width": 1280,
+      "height": 1050,
+      "overflow": []
+    },
+    {
+      "title": "目标设计：即时判断穿透同一任务",
+      "width": 1280,
+      "height": 1260,
+      "overflow": []
+    },
+    {
+      "title": "部署与数据归属：两套实例互不冒充",
+      "width": 1280,
+      "height": 880,
+      "overflow": []
+    },
+    {
+      "file": "docs/feat-system3-g1/diagram/system3-fusion.svg",
+      "title": "Jev Native AgentLoop Harness 产品目标架构",
+      "width": 1280,
+      "height": 900,
+      "nodes": 9,
+      "overflow": [],
+      "png": "docs/feat-system3-g1/diagram/system3-fusion@2x.png",
+      "pngWidth": 2560,
+      "pngHeight": 1800
+    },
+    {
+      "title": "Agent 执行单元 × N：Jev 与原生 Harness 闭环",
+      "width": 1280,
+      "height": 1760,
+      "nodes": 20,
+      "overflow": [],
+      "file": "docs/feat-system3-g1/diagram/system3-agent-loop.svg",
+      "png": "docs/feat-system3-g1/diagram/system3-agent-loop@2x.png",
+      "pngWidth": 2560,
+      "pngHeight": 3520
+    }
+  ],
+  "print": {
+    "format": "A4",
+    "pages": 21,
+    "output": "Local temporary PDF; HTML includes print controls.",
+    "visualReview": "Complete product architecture and caption on page 4; complete native execution flow and caption on page 5.",
+    "foldStatesRestored": true
+  },
+  "visualReview": {
+    "screenshots": [
+      "qa/product-architecture.png"
+    ],
+    "diagrams": [
+      "diagram/system3-fusion@2x.png",
+      "diagram/system3-agent-loop@2x.png"
+    ],
+    "reviewed": [
+      "new product architecture export",
+      "new native execution flow export",
+      "three HTML embedded node and secondary-label colors",
+      "A4 product architecture",
+      "A4 native execution flow"
+    ],
+    "retainedUnchangedScreenshots": [
+      "qa/desktop.png",
+      "qa/mobile.png",
+      "qa/target.png",
+      "qa/memory.png",
+      "qa/dnhm.png"
+    ]
+  },
+  "fixtureCorrection": {
+    "path": "snapshots/sdk/agui-persona/system-prompt.expected.md",
+    "change": "Seven stale tool guidance paragraphs aligned with existing rc.2 source; no Session fixture rewrite.",
+    "command": "DSH_TELEMETRY_DISABLED=1 DSH_EXAMPLE_MODE=lib DSH_SNAPSHOT=replay pnpm run test:snapshot snapshots/sdk/sdk.snapshot.ts -t 'system3-shadow|system3-entry-route|agui-persona'",
+    "result": {
+      "filesPassed": 1,
+      "testsPassed": 3,
+      "filteredOut": 24,
+      "realModelCalls": 0
+    },
+    "scope": "Retained preceding keyless SDK correction evidence; not repeated for this diagram-only revision."
+  },
+  "repositoryChecks": {
+    "state": "passed",
+    "commands": [
+      {
+        "command": "pnpm run test:docs",
+        "passed": 20,
+        "failed": 0
+      },
+      {
+        "command": "pnpm run doc-sync",
+        "passed": 42,
+        "failed": 0
+      },
+      {
+        "command": "pnpm run lint",
+        "result": "passed (includes Host build)"
+      },
+      {
+        "command": "ruff check .",
+        "result": "passed"
+      },
+      {
+        "command": "ruff format --check .",
+        "result": "33 files already formatted"
+      },
+      {
+        "command": "git diff --check",
+        "result": "passed"
+      },
+      {
+        "command": "pnpm run verify-md-wrap",
+        "result": "passed after final task-document edits"
+      },
+      {
+        "command": "pnpm run verify-repository-references",
+        "result": "passed after verification-record edits"
+      }
+    ]
+  },
+  "limits": [
+    "N is a parameter for identical Agent execution objects with independent Sessions and lifecycles; it specifies neither topology nor accepted concurrency.",
+    "MAAH is a research direction; no terminology priority or novelty claim.",
+    "Future process consumers and full task controls are not accepted runtime capabilities.",
+    "This document validation does not extend frozen Desktop or server acceptance.",
+    "DNHM and Runtime Harness Generalization remain research proposals; full nearest-method comparisons and formal training benchmarks are unfinished."
+  ],
+  "paperPositioning": {
+    "workingDefinition": "DNHM",
+    "researchQuestion": "Runtime Harness Generalization",
+    "keyboard": {
+      "open": true,
+      "rows": 3,
+      "focused": "SUMMARY"
+    },
+    "expandedResponsive": [
+      {
+        "viewport": 390,
+        "documentWidth": 390,
+        "experimentVisible": true,
+        "tableWidth": 312
+      },
+      {
+        "viewport": 1440,
+        "documentWidth": 1440,
+        "experimentVisible": true,
+        "tableWidth": 1054
+      }
+    ],
+    "closedByKeyboard": true,
+    "printRestored": true,
+    "productRuntimeChanged": false,
+    "scope": "Working definition and proposed experiments only; no training, novelty, or measured benefit claims."
+  },
+  "remoteWorkflowVerification": {
+    "url": "https://github.com/cryptoSUN2049/xDAN-System3-Harness/actions/runs/36833089898",
+    "status": "completed",
+    "conclusion": "success",
+    "verification": "GitHub REST",
+    "scope": "Preceding fixed DNHM documentation revision; this product diagram amendment requires CI verification at its own remote HEAD."
+  },
+  "validationScope": {
+    "currentAmendment": "Product architecture and execution flow exports, three embedded copies, main-page interactions, responsive and keyboard reading, print expansion/restoration and complete diagrams, local links and script syntax, both SVG skill self-checks, documentation gates, Ruff, and diff checks.",
+    "retainedUnchangedEvidence": "Current/target/deployment diagram exports, prior keyless SDK fixture correction, and unchanged DNHM experiments; no model, runtime, or deployment acceptance repeated."
+  },
+  "productArchitecture": {
+    "name": "Jev Native AgentLoop Harness",
+    "components": 9,
+    "executionObject": "Agent execution objects × N",
+    "responsibilities": [
+      "task delegation",
+      "task orchestration",
+      "Agent orchestration"
+    ],
+    "evolution": [
+      "single-model execution",
+      "multiple models and capabilities",
+      "multi-agent orchestration manager"
+    ],
+    "status": "Target product design; current accepted Jev consumers are entry routing and automatic Skill selection.",
+    "runtimeChanged": false,
+    "independentReview": "Separate Jev reviewer confirmed semantics, responsive presentation, folding, IDs, ARIA, colors, and PNG/SVG consistency; no repeated runtime tests."
+  }
+}

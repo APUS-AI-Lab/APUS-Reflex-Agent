@@ -210,6 +210,7 @@ describe('session.history projections block', () => {
     })
 
     expect(ctx.sessionProjections.snapshot(session).values.modelSelection).toEqual({
+      mode: 'fixed',
       lastUsed: { provider: 'p', model: 'used' },
       next: selected,
     })
@@ -218,6 +219,7 @@ describe('session.history projections block', () => {
       header: { config: selected }, reason: 'initial',
     })
     expect(ctx.sessionProjections.snapshot(session).values.modelSelection).toEqual({
+      mode: 'fixed',
       lastUsed: selected,
       next: selected,
     })
@@ -361,7 +363,8 @@ describe('session.history projections block', () => {
     const iterator = gateway.control(abort.signal)[Symbol.asyncIterator]()
     await iterator.next()
     const next = iterator.next()
-    seedMessages(session, 1)
+    // Change blank deterministically: two user events can share one millisecond.
+    session.append('turn/start', { turn: 1 })
     await new Promise(resolve => setTimeout(resolve, 0))
     await expect(next).resolves.toMatchObject({
       done: false,

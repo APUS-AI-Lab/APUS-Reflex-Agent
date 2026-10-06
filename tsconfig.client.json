@@ -43,6 +43,7 @@
     "packages/client/*/tests/**/*.host.spec.ts"
   ],
   "references": [
+    { "path": "./tsconfig.desktop-keyboard-tests.json" },
     { "path": "./apps/desktop/tsconfig.client.json" },
     { "path": "./packages/experimental/client-ui-voice-input" },
 
@@ -77,6 +78,8 @@
     { "path": "./packages/extensions/ui-cordis" },
     { "path": "./packages/test-support/client-runtime" },
     { "path": "./packages/test-support/remote-mock" },
+    { "path": "./packages/client/shortcuts/tsconfig.client.json" },
+    { "path": "./packages/client/ui-shortcuts" },
     { "path": "./packages/client/ui-layout" },
     { "path": "./packages/client/ui-sidebar" },
     { "path": "./packages/client/ui-brand-official" },
@@ -93,6 +96,7 @@
     { "path": "./packages/client/ui-reference" },
     { "path": "./packages/client/ui-subagent" },
     { "path": "./packages/experimental/client-ui-agent-team" },
+    { "path": "./packages/experimental/client-ui-system3" },
     { "path": "./packages/client/ui-dockkit" },
     { "path": "./packages/client/ui-sidebar-right" },
     { "path": "./packages/client/ui-sidebar-documentpreview/tsconfig.client.json" },

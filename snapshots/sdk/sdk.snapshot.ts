@@ -126,7 +126,11 @@ interface SdkAssertions {
 
 const SDK_ASSERTIONS: Readonly<Record<string, SdkAssertions>> = {
   'system3-shadow': { expectedFinalResponse: 'SDK snapshot OK' },
+  'system3-entry-route': { expectedFinalResponse: 'SDK snapshot OK' },
   'agui-persona': { expectedFinalResponse: 'SDK snapshot OK' },
+  'dynamic-tool-updates': {
+    expectedFinalResponse: 'DONE',
+  },
   'tool-error-details': {
     patches: [fileURLToPath(new URL('./tool-error-details/runtime.cordis.yml', import.meta.url))],
     expectedFinalResponse: 'ERROR_DETAILS_OK',
@@ -844,7 +848,7 @@ describe('TypeScript SDK snapshots over the jsonrpc runtime', () => {
       )
       reconcileCatalogCreationTimes(ordered.map(log => log.content), 'validate')
       const actualContext = contextOf(ordered, cwd)
-      if (scenario.name === 'system3-shadow') {
+      if (scenario.name === 'system3-shadow' || scenario.name === 'system3-entry-route') {
         const decisions = results.flatMap(result => result.events).filter(event => event.type === 'system3/decision')
         expect(decisions, JSON.stringify(results.at(-1)?.events.filter(event => event.type === 'turn/end'))).toHaveLength(1)
         expect(decisions[0]).toMatchObject({ data: {
@@ -855,6 +859,55 @@ describe('TypeScript SDK snapshots over the jsonrpc runtime', () => {
         const persisted = records(ordered[0]!.content).filter(event => event.type === 'system3/decision')
         expect(persisted).toHaveLength(1)
         expect(persisted[0]?.data).toEqual(decisions[0]?.data)
+      }
+      if (scenario.name === 'system3-entry-route') {
+        const events = results.flatMap(result => result.events)
+        const recommendations = events.filter(event => event.type === 'system3/entry-decision')
+        const adopted = events.filter(event => event.type === 'model/automatic-selection')
+        expect(recommendations).toHaveLength(1)
+        expect(adopted).toHaveLength(1)
+        expect(recommendations[0]).toMatchObject({ data: { outcome: 'selected', requestId: 'snapshot-entry-request' } })
+        expect(adopted[0]).toMatchObject({ data: { requestId: 'snapshot-entry-request' } })
+        for (const event of [...recommendations, ...adopted]) {
+          expect(event).not.toHaveProperty('surfaceOp')
+          const persisted = records(ordered[0]!.content).filter(record => record.type === event.type)
+          expect(persisted).toHaveLength(1)
+          expect(persisted[0]?.data).toEqual(event.data)
+        }
+      }
+      if (scenario.name === 'dynamic-tool-updates') {
+        const selectedTypes = new Set(['request/header', 'request/context', 'developer/message', 'tool/call', 'tool/result'])
+        const events = results.flatMap(result => result.events).filter(event => selectedTypes.has(event.type))
+        const subscribed = notifications.flatMap(notification => {
+          const event = notificationEvent(notification)
+          return event !== undefined && typeof event.type === 'string' && selectedTypes.has(event.type) ? [event] : []
+        })
+        expect(subscribed, 'SDK notifications retain the dynamic-tool events').toEqual(events)
+        expect(records(ordered[0]!.content).filter(event => typeof event.type === 'string' && selectedTypes.has(event.type)),
+          'SDK events agree with the durable log').toEqual(events)
+        const headers = events.filter(event => event.type === 'request/header')
+        expect(headers).toHaveLength(3)
+        const toolNames = headers.map(event => (event.data as { header: { tools: LoggedTool[] } }).header.tools.map(tool => tool.name))
+        expect(toolNames.map(names => names.includes('snapshot_ping'))).toEqual([false, true, false])
+        expect(toolNames[1]!.filter(name => !toolNames[0]!.includes(name))).toEqual(['snapshot_ping'])
+        expect(toolNames[2]).toEqual(toolNames[0])
+        const updates = events.filter(event => event.type === 'developer/message')
+        expect(updates).toMatchObject([
+          { data: { headerSeq: headers[1]!.seq, message: {
+            role: 'developer', source: { kind: 'tool-registry' },
+            content: [{ type: 'tool-addition', toolName: 'snapshot_ping' }],
+          } }, surfaceOp: 'append' },
+          { data: { message: {
+            role: 'developer', source: { kind: 'tool-registry' },
+            content: [{ type: 'tool-removal', toolName: 'snapshot_ping' }],
+          } }, surfaceOp: 'append' },
+        ])
+        expect(updates[1]!.data).not.toHaveProperty('headerSeq')
+        expect(events.filter(event => event.type === 'tool/call').map(event => event.data['name']))
+          .toEqual(['read', 'snapshot_ping'])
+        expect(events.filter(event => event.type === 'tool/result').at(-1)).toMatchObject({ data: { message: {
+          toolCallId: 'call_dynamic_ping', isError: false, content: [{ type: 'text', text: 'pong' }],
+        } } })
       }
       if (scenario.name === 'subagent-activation-limit') {
         expect(ordered).toHaveLength(2)

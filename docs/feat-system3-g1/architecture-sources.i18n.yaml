@@ -1,0 +1,25 @@
+# Bilingual-pair consistency record for architecture-sources.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-system3-g1/architecture-sources.md
+/system3-architecture-integration-sources:
+  en: d96661b2bc9f8ee0
+  zh: f1c401d20f9b5983
+/system3-architecture-integration-sources/scope-and-counts:
+  en: 25aa64e08ab415d1
+  zh: a2c96bdaef22cd3f
+/system3-architecture-integration-sources/current-factual-baseline:
+  en: edb9df8dc3ec2cb0
+  zh: c9ad62d5b460ccb7
+/system3-architecture-integration-sources/superseded-status-and-retained-objectives:
+  en: 025c667c4db2d0c4
+  zh: b26b945ddfc527ab
+/system3-architecture-integration-sources/page-organization-and-validation-scope:
+  en: 4b672b2e4ab2ee3d
+  zh: 010de0103e660697
+/system3-architecture-integration-sources/latest-design-focus:
+  en: 0a3fbee3b9b829bd
+  zh: d6ecc0d0c7b9449c
+/system3-architecture-integration-sources/product-architecture-and-execution-flow:
+  en: 7167d3eb712187b0
+  zh: 9406e742be3fb978

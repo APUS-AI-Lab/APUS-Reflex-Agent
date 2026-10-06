@@ -1,5 +1,7 @@
 /** Session commands whose activation policy is explicit at each Remote method. */
 
+import { SessionPromptRouting } from './prompt-router.ts'
+import { modelAvailable } from './catalog.ts'
 import { randomUUID } from 'node:crypto'
 import type { Context } from '@deepseek-ai/cordis'
 import { brandString } from '@deepseek-ai/dsh-brand'
@@ -48,6 +50,7 @@ import type {
   SessionRenameValue,
   SessionSelectModelRequest,
   SessionSelectModelValue,
+  SessionResetModelSelectionRequest,
   SessionUpdateQueueRequest,
   SessionUpdateQueueValue,
   SessionRequestId,
@@ -89,11 +92,13 @@ export class SessionCommandController {
    * @param ctx - Host context carrying Agent, model, attachment, title, and Workspace services.
    * @param agents - sole owner of create, resume, and Session-local model selection.
    * @param defaultCwd - project directory used when create names neither a Workspace nor a cwd.
+   * @param promptRouting - Optional controller-owned prompt routing provider.
    */
   constructor(
     private readonly ctx: Context,
     private readonly agents: ApiSessionAgentController,
     private readonly defaultCwd: string,
+    private readonly promptRouting?: SessionPromptRouting,
   ) {}
 
   /**
@@ -143,14 +148,15 @@ export class SessionCommandController {
   }
 
   /**
-   * Validate and install one Session-local model selection.
+   * Validate and install one Session-local model selection; save the default in the background.
    * @param request - Session identity and requested model selection.
-   * @returns the normalized selection installed for the Session.
+   * @returns the normalized selection installed for the Session, without waiting for default persistence.
    */
   async selectModel(request: SessionSelectModelRequest): Promise<SessionSelectModelValue> {
     const agent = await this.resolveAgent(request.sessionId)
     return this.agents.serializeImageAdmission(agent, async () => {
       try {
+        await this.requireModel(request)
         const resolved = await this.ctx.llm.resolveCallConfig({
           provider: request.provider,
           model: request.model,
@@ -166,13 +172,11 @@ export class SessionCommandController {
             : { reasoningEffort: resolved.reasoningEffort }),
         }
         this.agents.selectForNextRequest(agent, selected)
-        try {
-          await this.ctx.agentDefaultModel.saveSelection(selected)
-        } catch (error) {
+        void this.ctx.agentDefaultModel.saveSelection(selected).catch((error: unknown) => {
           this.ctx.logger.warn(
             `session-controller: model selection changed for the Session but the default was not saved: ${String(error)}`,
           )
-        }
+        })
         return { selected: { ...selected } }
       } catch (error) {
         if (remoteErrorOf(error) !== undefined) throw error
@@ -183,6 +187,18 @@ export class SessionCommandController {
         )
       }
     })
+  }
+
+  /**
+   * Release a Session's human model override without changing an in-flight request.
+   * @param request - Session whose later eligible inputs may use automatic routing.
+   * @returns Current model retained as the automatic baseline.
+   */
+  async resetModelSelection(request: SessionResetModelSelectionRequest): Promise<SessionSelectModelValue> {
+    const agent = await this.resolveAgent(request.sessionId)
+    return this.agents.serializeImageAdmission(agent, () => Promise.resolve({
+      selected: { ...this.agents.resetModelSelection(agent) },
+    }))
   }
 
   /**
@@ -328,21 +344,14 @@ export class SessionCommandController {
     }
     const agent = await this.resolveAgent(request.sessionId)
     if (hasPromptRequest(agent, request.requestId)) return { accepted: true }
-    const selection = this.agents.selectionFor(agent).current
-    if (!routeServed(this.ctx, selection.provider)) {
-      throw new RemoteError(
-        'session/model-unavailable',
-        `no adapter serves provider "${selection.provider}"; select a model for this session`,
-        { provider: selection.provider, model: selection.model },
-      )
-    }
     const source: MessageSource = {
       kind: 'user',
       rpcId: request.requestId,
       ...(clientTimeZone === undefined ? {} : { clientTimeZone }),
     }
     const hasImage = request.content.some(part => part.type === 'image')
-    const admit = async (): Promise<SessionPromptValue> => {
+    let routedMessage: UserMessage | undefined
+    const admit = async (signal?: AbortSignal, select?: () => void): Promise<SessionPromptValue> => {
       try {
         if (hasImage) {
           const current = this.agents.selectionFor(agent).current
@@ -360,7 +369,7 @@ export class SessionCommandController {
           receiptId => this.ctx.fileUploads.resolve(agent, receiptId),
         )
         const content = await this.ctx.attachments.admitPromptContent(admission.content)
-        const message: UserMessage = createUserMessage({ content, source })
+        const message: UserMessage = routedMessage ?? createUserMessage({ content, source })
         if (this.ctx.agents.get(agent.id) !== agent) {
           throw new RemoteError(
             'session/not-found',
@@ -368,9 +377,11 @@ export class SessionCommandController {
             { sessionId: agent.id },
           )
         }
+        signal?.throwIfAborted()
         using binding = this.ctx.fileUploads.bindPrompt(agent, admission.receiptIds, request.requestId)
         if (request.mode === 'steer') agent.steer(message)
         else agent.followup(message)
+        select?.()
         binding.commit()
       } catch (error) {
         if (remoteErrorOf(error) !== undefined) throw error
@@ -381,7 +392,26 @@ export class SessionCommandController {
       }
       return { accepted: true }
     }
-    return hasImage ? this.agents.serializeImageAdmission(agent, admit) : admit()
+    const routeAndAdmit = async (): Promise<SessionPromptValue> => {
+      if (hasPromptRequest(agent, request.requestId)) return { accepted: true }
+      if (this.promptRouting === undefined || request.content.some(part => part.type !== 'text')) return admit()
+      const message = createUserMessage({ content: request.content.flatMap(part => part.type === 'text' ? [part] : []), source })
+      routedMessage = message
+      return this.promptRouting.admit({
+        agent, requestId: request.requestId, message,
+        baseline: this.agents.selectionFor(agent).current,
+      }, admit)
+    }
+    return hasImage || this.promptRouting !== undefined
+      ? this.agents.serializeImageAdmission(agent, routeAndAdmit)
+      : admit()
+  }
+
+  private async requireModel(selection: Pick<AgentModelSelection, 'provider' | 'model'>): Promise<void> {
+    if (!await modelAvailable(this.ctx, selection)) {
+      throw new RemoteError('session/model-unavailable', 'Select an available model before sending a message.',
+        { provider: selection.provider, model: selection.model })
+    }
   }
 
   /**
@@ -689,8 +719,4 @@ function referencedImage(
     if (found !== undefined) return found
   }
   return undefined
-}
-
-function routeServed(ctx: Context, provider: string): boolean {
-  return ctx.llm.listProviders().some(entry => entry.id === provider)
 }

@@ -38,6 +38,14 @@ declare module '@deepseek-ai/dsh-session/types' {
      * assembly. Log-only: it never enters derived model history.
      */
     'model/selection': ModelSelection
+    /** Release a human model override; preserve its current route as the automatic baseline. */
+    'model/selection-reset': { readonly baseline: ModelSelection }
+    /** Automatic route for one input; baseline remains authoritative after its turn. */
+    'model/automatic-selection': {
+      readonly requestId: SessionRequestId
+      readonly baseline: ModelSelection
+      readonly selection: ModelSelection
+    }
   }
 }
 
@@ -109,10 +117,20 @@ export interface ModelSelectionProjectionState {
   readonly lastUsed: ModelSelection | null
   /** Later user selection not yet consumed by a matching model request. */
   readonly pending: ModelSelection | null
+  /** Last explicitly selected route; retained after request consumption. */
+  readonly explicit: ModelSelection | null
+  /** Baseline restored after an automatically routed turn or process restart. */
+  readonly automaticBaseline: ModelSelection | null
+  /** Automatic route reserved for the current input turn, cleared at turn end. */
+  readonly automatic: ModelSelection | null
+  /** Whether a request header adopted the reserved automatic route in the current turn. */
+  readonly automaticInUse: boolean
 }
 
 /** Client view of the durable model-selection fold. */
 export interface ModelSelectionProjection {
+  /** Automatic recommendations are eligible only without a human model override. */
+  readonly mode: 'auto' | 'fixed'
   /** Selection consumed by the latest recorded model request. */
   readonly lastUsed: ModelSelection | null
   /** Selection the next request should use, falling back to {@link lastUsed}. */
@@ -157,7 +175,7 @@ export interface ModelCatalogFailure {
 /** Host-generation model catalog and the default used by unconfigured Sessions. */
 export interface ModelCatalog {
   readonly default: ModelSelection
-  /** Provider routes currently able to serve a request, including empty catalogs. */
+  /** Provider routes with at least one currently available catalog model. */
   readonly routableProviders: readonly string[]
   readonly groups: readonly ModelProviderGroup[]
   readonly failures: readonly ModelCatalogFailure[]
@@ -201,7 +219,10 @@ export const SESSION_SEARCH_SNIPPET_MAX_CODE_POINTS = 240
 
 declare module '@deepseek-ai/dsh-typert-protocol' {
   interface RemoteErrorDetailsMap {
+    'session/provider-credentials-unavailable': Record<string, never>
+    'session/provider-models-unavailable': { readonly provider: string }
     'session/model-unavailable': { readonly provider: string; readonly model: string }
+    'session/route-denied': Record<string, never>
     'session/conflict': {
       readonly sessionId: SessionId
       readonly requestedCwd: string
@@ -295,6 +316,11 @@ export interface SessionCreateValue {
 
 /** Session model-selection request. */
 export interface SessionSelectModelRequest extends ModelSelection {
+  readonly sessionId: SessionId
+}
+
+/** Release this Session's fixed model choice while preserving its current baseline. */
+export interface SessionResetModelSelectionRequest {
   readonly sessionId: SessionId
 }
 

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="System3 桌面任务工作台离线设计：入口智能、过程智能、体感智能贯穿同一任务。">
+  <title>System3 · 桌面任务工作台 · v3 设计演示</title>
+  <link rel="stylesheet" href="system3-experience-v3.css">
+  <script src="system3-experience-v3.js" defer></script>
+</head>
+<body>
+<main class="page">
+  <header class="design-header">
+    <div><span class="design-label">设计演示 · v3</span><span class="design-description">一份任务，从接住到交付</span></div>
+    <nav aria-label="设计资料"><a href="system3-intelligence-design.html">三层智能设计</a><a href="system3-native-v1.html">完整架构</a><button id="theme-toggle" type="button">切换浅色</button></nav>
+  </header>
+  <div class="demo-toolbar" aria-label="离线设计演示控制">
+    <div class="intelligence" aria-label="三层智能贯穿同一任务"><span data-intelligence="entry">入口智能</span><span data-intelligence="process">过程智能</span><span data-intelligence="feel">体感智能</span></div>
+    <div class="demo-actions"><span id="event-position">尚未提交</span><button id="next-event" type="button">下一事件</button><button id="simulate-failure" type="button">模拟执行失败</button><button id="connection-toggle" type="button">模拟断线</button><button id="reset-current" type="button">重置当前样例</button></div>
+  </div>
+  <p class="demo-note">所有 Host 回执、模型、文件内容、专家结果和核验均为编写的样例。编辑输入仍按当前选定样例回放，不会执行自然语言任务。手动推进不会调用后端，不代表真实耗时或速度收益。文件选择仅读取文件名，不读取内容；本机通用 9B/27B Lead 尚待验证。</p>
+
+  <section class="desktop" id="desktop" data-side-open="true" data-workspaces-open="true" aria-label="System3 桌面工作台设计">
+    <header class="desktop-chrome">
+      <div class="app-brand"><span class="window-dots" aria-hidden="true"><i></i><i></i><i></i></span><strong>System3</strong><span class="desktop-label">Harness 工作台</span></div>
+      <div class="chrome-actions"><button id="workspaces-toggle" type="button" aria-expanded="true" aria-controls="workspace-nav">工作区</button><span id="runtime-status" class="runtime-status">样例 Runtime 就绪</span><button id="side-toggle" type="button" aria-expanded="true" aria-controls="task-sidebar">任务资料</button></div>
+    </header>
+    <div id="global-notice" class="global-notice" hidden><p id="global-message"></p><button id="reconnect" type="button">重连并补齐记录</button></div>
+    <div class="desktop-layout">
+      <nav class="workspace-nav" id="workspace-nav" aria-label="工作区与样例会话">
+        <div class="nav-heading">工作区</div>
+        <div class="workspace-name">▱ 经营资料与项目</div>
+        <div class="nav-heading sessions-heading">会话 · 三个贯穿任务</div>
+        <button class="session-item" data-scenario="monthly" type="button" aria-current="page"><span>经营月报</span><small>本机文件 · 口径 · 核验</small><span class="session-state" id="session-monthly">未开始</span></button>
+        <button class="session-item" data-scenario="expert" type="button"><span>接口升级</span><small>专家接力 · 父任务整合</small><span class="session-state" id="session-expert">未开始</span></button>
+        <button class="session-item" data-scenario="resume" type="button"><span>继续上次月报</span><small>历史资料 · 明确恢复</small><span class="session-state" id="session-resume">等待恢复</span></button>
+        <div class="nav-foot"><p>同一个 Harness 执行核心</p><p>切换会话保留各自草稿、成果与状态</p></div>
+      </nav>
+
+      <section class="task-main" aria-label="当前任务与成果">
+        <header class="task-heading"><div><h1 id="task-title">经营月报</h1><p id="task-subtitle">汇总本机资料，确认口径，再交付可核验的月报</p></div><span id="task-badge" class="task-badge">未开始</span></header>
+        <div class="main-tabs" role="group" aria-label="主内容视图"><button id="conversation-tab" type="button" aria-pressed="true">任务会话</button><button id="preview-tab" type="button" aria-pressed="false">成果预览 <span id="artifact-count">0</span></button></div>
+        <div class="task-state" id="task-state" data-tone="normal"><span class="state-indicator" aria-hidden="true"></span><div><strong id="state-title">把这份任务交给它</strong><p id="state-detail">先确认材料和处理范围，所有关键变化留在这份任务里</p></div></div>
+        <div id="blocking-panel" class="blocking-panel" hidden></div>
+        <div class="task-body">
+          <section id="conversation-pane" class="conversation-pane" aria-label="任务会话"><div id="conversation" class="conversation"><div class="empty-state"><span>从一份目标开始</span><p>编辑下方任务，添加材料。选路、实际使用与成果会在这里连续出现。</p></div></div><button id="new-progress" class="new-progress" type="button" hidden>有新进展 · 查看</button></section>
+          <section id="preview-pane" class="preview-pane" aria-label="中央成果预览" hidden><div class="preview-heading"><div><span id="preview-stage" class="micro-label">样例成果</span><h2 id="preview-title" tabindex="-1"></h2></div><button id="back-to-task" type="button">返回任务</button></div><p class="preview-warning">编写的样例内容 · 未读取真实文件 · 不代表真实业务结果</p><article id="preview-content" class="report-content"></article><div class="preview-actions"><button id="download-artifact" type="button">下载此样例成果</button><button id="copy-artifact" type="button">复制样例文字</button></div></section>
+        </div>
+        <section class="artifact-shelf" aria-label="本任务已有成果"><div class="shelf-heading"><strong>已有成果</strong><span id="artifact-summary">等待第一份产物</span></div><div id="artifact-list" class="artifact-list"></div></section>
+        <div class="task-controls"><button id="pause-current" type="button">暂停后续推进</button><button id="stop-current" type="button">停止当前任务</button><button id="continue-current" type="button" hidden>用已有成果继续</button><small id="control-scope">控制仅作用于当前样例任务及其子任务；保留已发生动作与成果</small></div>
+        <form class="composer" id="task-form">
+          <label for="task-input">任务目标</label><textarea id="task-input" rows="3" required>读取本工作区的订单和退款样例，按月汇总经营情况，生成月报和异常清单。原文件不要修改，先确认统计口径。</textarea>
+          <div id="material-list" class="material-list" aria-label="当前草稿材料"></div>
+          <div class="composer-row"><div class="material-actions"><button id="add-samples" type="button">＋ 样例材料</button><label class="file-button" for="file-input">添加文件名<input id="file-input" type="file" multiple></label><button id="scope-toggle" type="button" aria-expanded="false" aria-controls="scope-panel">材料与数据范围</button></div><div class="send-actions"><label class="inline-label" for="mode">处理模式</label><select id="mode"><option value="auto">自动</option><option value="fixed">固定 Pro</option></select><button class="primary" id="send-task" type="submit">提交样例任务</button></div></div>
+          <fieldset id="scope-panel" class="scope-panel" hidden><legend>当前草稿的处理范围</legend><label for="data-policy">下一次提交允许数据发送到哪里</label><select id="data-policy"><option value="minimized">允许文件名、汇总与脱敏片段外发</option><option value="local">仅本机处理，不外发</option><option value="selected">允许本次选定样例材料外发</option></select><p>文件工具在本机；样例 Jev 自有服务和 System2 远程运行。当前没有已验证的本机通用模型。仅本机策略会阻塞，绝不会悄悄换云。</p><p>提交后绑定输入快照，草稿修改用于下次提交；当前阻塞范围须在阻塞面板明确确认。手选文件只记录名称，不读取内容；已发送内容不撤回。</p></fieldset>
+          <p id="composer-policy" class="composer-policy"></p>
+        </form>
+      </section>
+
+      <aside class="task-sidebar" id="task-sidebar" aria-label="当前任务资料">
+        <div class="sidebar-tabs" role="group" aria-label="任务资料视图"><button data-side-panel="context" type="button" aria-pressed="true">上下文</button><button data-side-panel="experts" type="button" aria-pressed="false">专家</button><button data-side-panel="goal" type="button" aria-pressed="false">目标</button><button data-side-panel="records" type="button" aria-pressed="false">记录</button></div>
+        <section id="side-context" class="side-panel"><h2>本次使用的材料</h2><p class="panel-description">来源能检查，排除只影响后续请求</p><div id="context-list"></div></section>
+        <section id="side-experts" class="side-panel" hidden><h2>专业 Agent 接力</h2><p class="panel-description">Harness 委派与收结果；专家内部自行执行</p><div id="expert-list"></div></section>
+        <section id="side-goal" class="side-panel" hidden><h2>还有什么要完成</h2><p id="goal-state" class="goal-state"></p><ul id="goal-checks" class="goal-checks"></ul><p class="panel-description">回合结束、专家完成与有输出不等于目标验收</p></section>
+        <section id="side-records" class="side-panel" hidden><h2>采用与执行记录</h2><div id="decision-count" class="panel-description"></div><div id="record-list" class="record-list"></div><p class="panel-description">用量与费用：未知；演示没有真实模型请求，不显示虚构节省比例</p></section>
+      </aside>
+    </div>
+    <footer class="desktop-footer"><span id="execution-domain">文件工具：本机 · Jev：远程 · System2：云端</span><span>本机 9B/27B Lead · 待验证</span></footer>
+  </section>
+  <p id="announcement" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
+  <p class="bottom-note">设计范围：桌面优先，Web 使用同一投影；SDK 复用同一执行与事件语义。原生 IPC 负责目录和窗口，UI 不调用模型、不另建 AgentLoop。</p>
+</main>
+</body>
+</html>

@@ -137,15 +137,14 @@ export function isUserInvocable(skill: Pick<SkillSummary, 'invocation'>): boolea
 }
 
 /**
- * Durable source for the context message a user-explicit skill invocation
- * injects: the user's own words ride a plain user message, and the rendered
- * skill body follows as injected `instructions`-form context carrying this
- * source, so transcript consumers present the injection from metadata
- * instead of re-parsing the model-facing text.
+ * Durable source for loaded Skill instructions entering a model request.
+ * Human-explicit and automatic selectors validate their respective invocation
+ * policy before loading; their owning receipt records how selection happened.
+ * Transcript consumers present the loaded body from this metadata.
  */
 export interface SkillInvocationSource {
   readonly kind: 'skill-invocation'
-  /** Invoked skill name, validated user-invocable at the injecting boundary. */
+  /** Loaded Skill name, validated against the invoking consumer's policy. */
   readonly name: string
   /** Injected skill bodies are instructions for the model to follow. */
   readonly form: 'instructions'
@@ -153,14 +152,14 @@ export interface SkillInvocationSource {
 
 declare module '@deepseek-ai/dsh-llm' {
   interface MessageSourceMap {
-    /** A user-explicit skill invocation injected by the host. */
+    /** Loaded Skill instructions injected by the Host after invocation-policy validation. */
     'skill-invocation': SkillInvocationSource
   }
 }
 
 /**
  * Render one loaded skill for the model. The output is shared verbatim by the
- * `skill` tool result and the user-explicit invocation injection, so the model
+ * `skill` tool result and loaded instruction injections, so the model
  * sees one canonical `<skill_content>` shape on both paths. The name rides an
  * escaped attribute; the body is embedded verbatim (skills are trusted local
  * content, and user-supplied invocation text stays outside this wrapper).

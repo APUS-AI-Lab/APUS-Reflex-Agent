@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 1050" role="img" aria-labelledby="system3-current-title system3-current-desc">
+<title id="system3-current-title">当前发布：两个实例，同一套原生执行语义</title><desc id="system3-current-desc">实线是当前接入；两端拥有各自 Session 与工作区，网络模型供给不合并执行进程。</desc>
+<style>text{font-family:"PingFang SC","Microsoft YaHei",Arial,sans-serif}.title{font-size:26px;font-weight:700;fill:#f1f5f9}.label{font-size:17px;font-weight:650;fill:#f1f5f9}.copy{font-size:14px;fill:#cbd5e1}.small{font-size:13px;fill:#94a3b8}.group-label{font-size:14px;font-weight:650;fill:#94a3b8}.edge-label{font-size:13px;fill:#cbd5e1}</style>
+<defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#1e293b" stroke-width=".6"/></pattern>
+<marker id="ui-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#22d3ee"/></marker>
+<marker id="owner-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#34d399"/></marker>
+<marker id="store-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#a78bfa"/></marker>
+<marker id="model-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#fbbf24"/></marker>
+<marker id="policy-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#fb7185"/></marker>
+<marker id="future-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#60a5fa"/></marker>
+<marker id="wire-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#94a3b8"/></marker>
+</defs>
+<rect width="1280" height="1050" fill="#0f172a"/>
+<rect width="1280" height="1050" fill="url(#grid)"/>
+<rect x="30" y="110" width="800" height="346" rx="12" fill="#111d32" stroke="#475569" stroke-dasharray="7 5"/>
+<text class="group-label" x="48" y="136">本机 · System3 Desktop / Frontend</text>
+<rect x="30" y="490" width="800" height="346" rx="12" fill="#111d32" stroke="#475569" stroke-dasharray="7 5"/>
+<text class="group-label" x="48" y="516">远端 Web 访问链路 · 跨本机与服务器</text>
+<rect x="880" y="110" width="365" height="726" rx="12" fill="#111d32" stroke="#475569" stroke-dasharray="7 5"/>
+<text class="group-label" x="898" y="136">网络模型供给 · Host 侧持有凭据</text>
+<path d="M270 216H330" fill="none" stroke="#22d3ee" stroke-width="2" marker-end="url(#ui-arrow)"/>
+<rect x="279" y="188" width="80" height="22" rx="3" fill="#0f172a"/>
+<text class="edge-label" x="284" y="204">RPC</text>
+<path d="M270 596H330" fill="none" stroke="#22d3ee" stroke-width="2" marker-end="url(#ui-arrow)"/>
+<rect x="279" y="568" width="80" height="22" rx="3" fill="#0f172a"/>
+<text class="edge-label" x="284" y="584">RPC</text>
+<path d="M560 308V332H202V354" fill="none" stroke="#a78bfa" stroke-width="2" marker-end="url(#store-arrow)"/>
+<rect x="337" y="328" width="80" height="22" rx="3" fill="#0f172a"/>
+<text class="edge-label" x="342" y="344">持久事实</text>
+<path d="M640 308V354" fill="none" stroke="#a78bfa" stroke-width="2" marker-end="url(#store-arrow)"/>
+<path d="M560 688V712H202V734" fill="none" stroke="#a78bfa" stroke-width="2" marker-end="url(#store-arrow)"/>
+<rect x="337" y="708" width="80" height="22" rx="3" fill="#0f172a"/>
+<text class="edge-label" x="342" y="724">持久事实</text>
+<path d="M640 688V734" fill="none" stroke="#a78bfa" stroke-width="2" marker-end="url(#store-arrow)"/>
+<path d="M795 213H910" fill="none" stroke="#fbbf24" stroke-width="2" marker-end="url(#model-arrow)"/>
+<rect x="798" y="183" width="80" height="22" rx="3" fill="#0f172a"/>
+<text class="edge-label" x="803" y="199">决策请求</text>
+<path d="M795 246H860V602H910" fill="none" stroke="#fbbf24" stroke-width="2" marker-end="url(#model-arrow)"/>
+<rect x="802" y="424" width="80" height="22" rx="3" fill="#0f172a"/>
+<text class="edge-label" x="807" y="440">生成请求</text>
+<path d="M795 576H850V304H910" fill="none" stroke="#fbbf24" stroke-width="2" marker-end="url(#model-arrow)"/>
+<rect x="801" y="300" width="80" height="22" rx="3" fill="#0f172a"/>
+<text class="edge-label" x="806" y="316">决策请求</text>
+<path d="M795 630H910" fill="none" stroke="#fbbf24" stroke-width="2" marker-end="url(#model-arrow)"/>
+<rect x="802" y="630" width="80" height="22" rx="3" fill="#0f172a"/>
+<text class="edge-label" x="807" y="646">生成请求</text>
+<rect x="60" y="162" width="210" height="116" rx="8" fill="#0f172a"/>
+<rect x="60" y="162" width="210" height="116" rx="8" fill="#22d3ee" fill-opacity=".08" stroke="#22d3ee" stroke-width="1.5"/>
+<text class="label" x="78" y="192">Desktop / Electron</text>
+<text class="copy" x="78" y="218">原生对话 + System3 UI</text>
+<text class="copy" x="78" y="241">本机回环首选 43129</text>
+<rect x="330" y="162" width="465" height="146" rx="8" fill="#0f172a"/>
+<rect x="330" y="162" width="465" height="146" rx="8" fill="#34d399" fill-opacity=".08" stroke="#34d399" stroke-width="1.5"/>
+<text class="label" x="348" y="192">本机 Harness Host</text>
+<text class="copy" x="348" y="218">Session API → 合法候选 → 采用</text>
+<text class="copy" x="348" y="241">入口 / Skill Jev 消费者 + AgentLoop</text>
+<text class="copy" x="348" y="264">工具 / sandbox / 权限 / 取消</text>
+<rect x="60" y="354" width="285" height="75" rx="8" fill="#0f172a"/>
+<rect x="60" y="354" width="285" height="75" rx="8" fill="#a78bfa" fill-opacity=".08" stroke="#a78bfa" stroke-width="1.5"/>
+<text class="label" x="78" y="384">本机 Session / 原生存储</text>
+<text class="copy" x="78" y="410">DSH_HOME = userData/harness</text>
+<rect x="405" y="354" width="390" height="75" rx="8" fill="#0f172a"/>
+<rect x="405" y="354" width="390" height="75" rx="8" fill="#a78bfa" fill-opacity=".08" stroke="#a78bfa" stroke-width="1.5"/>
+<text class="label" x="423" y="384">本机所选工作区 / 产物</text>
+<text class="copy" x="423" y="410">文件写入与工具执行发生在本机</text>
+<rect x="60" y="542" width="210" height="116" rx="8" fill="#0f172a"/>
+<rect x="60" y="542" width="210" height="116" rx="8" fill="#22d3ee" fill-opacity=".08" stroke="#22d3ee" stroke-width="1.5"/>
+<text class="label" x="78" y="572">本机浏览器 / SSH</text>
+<text class="copy" x="78" y="598">原生 Web UI + System3 UI</text>
+<text class="copy" x="78" y="621">隧道连接远端回环 18731</text>
+<rect x="330" y="542" width="465" height="146" rx="8" fill="#0f172a"/>
+<rect x="330" y="542" width="465" height="146" rx="8" fill="#34d399" fill-opacity=".08" stroke="#34d399" stroke-width="1.5"/>
+<text class="label" x="348" y="572">litellm 服务器 · Harness Host</text>
+<text class="copy" x="348" y="598">Session API → 合法候选 → 采用</text>
+<text class="copy" x="348" y="621">同一实现，各自 AgentLoop 与 Session</text>
+<text class="copy" x="348" y="644">非 root systemd + 原生 bwrap</text>
+<rect x="60" y="734" width="285" height="75" rx="8" fill="#0f172a"/>
+<rect x="60" y="734" width="285" height="75" rx="8" fill="#a78bfa" fill-opacity=".08" stroke="#a78bfa" stroke-width="1.5"/>
+<text class="label" x="78" y="764">服务器 Session / 原生存储</text>
+<text class="copy" x="78" y="790">专属 DSH_HOME 与 Schedule 表</text>
+<rect x="405" y="734" width="390" height="75" rx="8" fill="#0f172a"/>
+<rect x="405" y="734" width="390" height="75" rx="8" fill="#a78bfa" fill-opacity=".08" stroke="#a78bfa" stroke-width="1.5"/>
+<text class="label" x="423" y="764">服务器工作区 / 产物</text>
+<text class="copy" x="423" y="790">/var/lib/xdan-system3/workspace</text>
+<rect x="910" y="192" width="300" height="146" rx="8" fill="#0f172a"/>
+<rect x="910" y="192" width="300" height="146" rx="8" fill="#fbbf24" fill-opacity=".08" stroke="#fbbf24" stroke-width="1.5"/>
+<text class="label" x="928" y="222">A100 · Jev 9B / high</text>
+<text class="copy" x="928" y="248">/v1/systemone 结构化决策</text>
+<text class="copy" x="928" y="271">有界合法候选 → 建议或弃权</text>
+<text class="copy" x="928" y="294">入口选模 + 自动 Skill</text>
+<rect x="910" y="540" width="300" height="123" rx="8" fill="#0f172a"/>
+<rect x="910" y="540" width="300" height="123" rx="8" fill="#fbbf24" fill-opacity=".08" stroke="#fbbf24" stroke-width="1.5"/>
+<text class="label" x="928" y="570">Fidoo / LiteLLM Proxy</text>
+<text class="copy" x="928" y="596">/v1 · Flash / Pro 生成</text>
+<text class="copy" x="928" y="619">生成内容及工具请求</text>
+<rect x="60" y="892" width="1150" height="102" rx="8" fill="#0f172a"/>
+<rect x="60" y="892" width="1150" height="102" rx="8" fill="#fb7185" fill-opacity=".08" stroke="#fb7185" stroke-width="1.5"/>
+<text class="label" x="78" y="922">每个实例均维护：决策 → 原生采用 → 实际响应 / 注入 → Session 事件 → UI 投影</text>
+<text class="copy" x="78" y="948">Jev 不执行工具；UI 不直调模型；固定模型跳过入口判断，Skill 判断仍可独立发生。</text>
+<text class="copy" x="78" y="971">当前未验收两端会话自动同步；本地应用不等于本地推理。</text>
+<text class="small" x="40" y="1025">当前范围：空闲纯文本入口、有界 Skill 原生注入、事实反馈与用户控制；更多过程节点仍需自己的消费者。</text>
+<text class="title" x="40" y="45">当前发布：两个实例，同一套原生执行语义</text>
+<text class="small" x="40" y="74">实线是当前接入；两端拥有各自 Session 与工作区，网络模型供给不合并执行进程。</text>
+</svg>

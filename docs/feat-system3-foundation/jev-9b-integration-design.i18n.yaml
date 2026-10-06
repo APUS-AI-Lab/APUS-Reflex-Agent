@@ -1,6 +1,31 @@
-# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
-# side as of the last confirmed-consistent state. Both languages carry equal authority;
-# after editing either side, bring the other along and re-record with:
+# Bilingual-pair consistency record for jev-9b-integration-design.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/feat-system3-foundation/jev-9b-integration-design.md
-jev-9b-integration-design.md: fa5a18bfd35db3802b2e561cd07f0be1a87d45a6
-jev-9b-integration-design.zh.md: 36718d8e81215c74dec43c65cc7fe9baff57d45e
+/:
+  en: ad0abed5e82b87ee
+  zh: 22aec07f7d745e1a
+/jev-integration-and-model-chain:
+  en: 1dcbaed90ab4c1c0
+  zh: 2986ee430098d2c5
+/jev-integration-and-model-chain/summary:
+  en: 7328a79d2d283d3a
+  zh: d46e4a55d7446309
+/jev-integration-and-model-chain/table-of-contents:
+  en: a317e26986d60ed0
+  zh: 83aa40fa331395dc
+/jev-integration-and-model-chain/architecture:
+  en: fa05d6d7d1866dc1
+  zh: b65ee8cd2bb0bb3e
+/jev-integration-and-model-chain/requests-and-receipts:
+  en: 997088d7ab8eb0a4
+  zh: 0d805e2316ba43fb
+/jev-integration-and-model-chain/deployment:
+  en: 173d8fc35229229d
+  zh: 10894f6248157ded
+/jev-integration-and-model-chain/verification-and-limits:
+  en: 9f4d34aa7efa9338
+  zh: 981712f8caa59479
+/jev-integration-and-model-chain/verification-and-limits/dev-note:
+  en: d03e7ba57003bb02
+  zh: 6b13ae6fa12192a3

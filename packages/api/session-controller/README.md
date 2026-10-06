@@ -15,6 +15,7 @@ English | [中文](README.zh.md)
 - [Use this package](#use-this-package)
 - [Client references](#client-references)
 - [Session media references](#session-media-references)
+- [Automatic prompt routing](#automatic-prompt-routing)
 - [Configuration](#configuration)
 - [Model Experience](#model-experience)
 - [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
@@ -78,9 +79,20 @@ References keep local Session data, scoped Contexts, and history streams alive, 
 
 `SessionMediaReferences` mounts `GET|HEAD /api/file?path=<absolute path>` on the authenticated `connection.fetch` channel when `connection`, `fs`, and `attachments` are composed. It reads ordinary files through `ctx.fs`, including temporary paths outside registered workspaces and files in remote providers. Neither directory containment nor MIME categories restrict access; `mime-types` supplies the response type, with `application/octet-stream` for unknown extensions. GET reuses `readBytes` for preflight and ongoing byte limits; HEAD reads metadata only. All files use `ctx.attachments.imageLimits.maxImageBytes` (normally 20 MiB); exceeding this limit returns 413. Responses contain the complete file, ignore Range, and carry `private, no-store`, `nosniff`, and a sandbox CSP so directly opened HTML/SVG cannot execute with the API origin. The Client rewrite lives in `ui-chat` (`AssistantMarkdown`); audio/video responses are available, while Markdown audio/video player nodes remain separate work.
 
-`workspacePathApplications({ path })` returns the serving desktop’s file handlers after the same filesystem mapping check used by `openWorkspacePath`. An optional `application` in the open request selects a currently registered handler without changing the system default. Application names, default selection, icons, and platform coverage come from [native-command](../../util/native-command/README.md). These operations do not activate an Agent or append Session events. Native failures return bounded messages; original command errors remain Host-side causes.
+GUI model selection requires the exact provider/model pair in the available catalog; unavailable choices reject with `session/model-unavailable`. Prompt admission retains the saved route without a catalog availability gate, so request execution reports missing credentials or unavailable models. `initializeDefaultModel()` saves the first available account model after login when no other provider has a configured API key; credential checks use configured references independently of model availability. A provider with no available models rejects initialization with `session/provider-models-unavailable`. Availability never substitutes another model or rewrites a Session selection.
+
+A successful `selectModel` response acknowledges the Session-local selection without waiting for the default profile setting to save. Default saves run in the background in submission order; a failure logs a warning and leaves the Session selection intact. New Sessions read the last successfully saved default.
 
 -----
+
+<a id="automatic-prompt-routing"></a>
+## Automatic prompt routing
+
+Host plugins register one `SessionPromptRouter` through `ctx.sessionController.registerPromptRouter(router)` and retain its disposer with `ctx.effect()`. Duplicate providers fail. `SessionPromptRouteRequest` carries the live Agent, request identity, exact text message, and current Session model baseline; `route(request, signal)` returns a validated generation model selection or `undefined` to use that baseline. The provider owns inference deadlines and fallback policy; errors reject admission.
+
+Routing covers idle text prompts without queued work. Images, files, active turns, and Sessions with an active human `model/selection` retain ordinary admission. `resetModelSelection({ sessionId })` records `model/selection-reset`, clears the human override, and retains the current model as the automatic baseline. It serializes with prompt admission and model selection; an in-flight provider request is unchanged. Repeating the reset in automatic mode preserves both the active turn override and the durable baseline. The `modelSelection` Client projection exposes `mode: auto | fixed` from durable history. This endpoint does not cover Headless, SDK, or ACP input.
+
+Prompt admission and manual model selection serialize per Agent. If another owner already holds maintenance, input keeps ordinary queue admission without routing. Maintenance prevents model execution while routing awaits; cancellation or provider removal rejects pending admission even if the provider ignores cancellation. Competing input prevents applying the recommendation. `model/automatic-selection` records the request identity, selected route, and restoration baseline after synchronous inbox acceptance, before execution. It is not proof of generation; `request/header` records actual use and activates the projected automatic route. Before that header, the projected next route remains the baseline; native interrupted-turn recovery clears an adopted automatic route. Automatic routes remain through the admitted turn, including tool continuations. Provider removal does not reroute admitted work; turn completion restores the baseline, and restored Sessions use that baseline rather than an interrupted automatic route. Later manual selection remains authoritative.
 
 <a id="configuration"></a>
 ## Configuration
@@ -96,11 +108,11 @@ The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-a
 <a id="model-experience"></a>
 ## Model Experience
 
-None, as invoked Agent commands own any model-visible effect.
+None, as this controller admits user messages and selects routes while the Agent and registered router own model-visible messages.
 
 #### KV Cache effect
 
-No direct effect; model requests remain owned by the Agent and LLM packages.
+Routing leaves prior Session messages intact. A provider or model change can prevent reuse of the previous route's cache; the LLM adapter owns provider-specific caching behavior.
 
 ## Known Limitations and Deferred Work
 

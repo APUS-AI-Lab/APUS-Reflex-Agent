@@ -1,0 +1,84 @@
+{
+  "date": "2026-09-30",
+  "scope": "Invocation architecture design, main HTML embedding, v2 navigation and diagram disclosure",
+  "skill": "baoyu-diagram",
+  "architectureReview": {
+    "review": "Independent source review of native call ownership",
+    "facts": [
+      "UI calls the native Host SessionController; eligible automatic input can invoke the System3 consumer.",
+      "ctx.jev currently uses Fetch; the shared official TypeSafe SDK adapter is a proposed replacement.",
+      "AgentLoop calls ctx.llm; model output can request tools and delegation, which Harness dispatches.",
+      "The subagent provider manages external expert startup and result ownership; expert runtimes own their internal execution.",
+      "Future local general 9B/27B Lead uses the same model and delegation services; its capabilities remain unverified.",
+      "Session events and Host projections return progress and results to the UI."
+    ],
+    "sourceFiles": [
+      "packages/api/session-controller/src/prompt-router.ts",
+      "packages/experimental/system3/src/entry-routing.ts",
+      "packages/experimental/apus-dsh-jev-plugin/src/client.ts",
+      "packages/core/agent-loop/src/agent.ts",
+      "packages/core/agent-loop/src/tool-calls.ts",
+      "packages/subagent/tool-subagent/src/index.ts",
+      "packages/subagent/subagent-codex/src/index.ts",
+      "packages/subagent/subagent-claude-code/src/index.ts"
+    ]
+  },
+  "checks": [
+    {
+      "name": "HTML local links and anchors, unique IDs, inline JavaScript parsing",
+      "result": "passed: main 29 IDs / 41 references; v2 26 IDs / 7 references"
+    },
+    {
+      "name": "SVG XML, accessible title/description and ji-prefixed IDs",
+      "result": "passed: 1600×1540 viewBox, 76 text nodes"
+    },
+    {
+      "name": "Canonical SVG equals main inline diagram",
+      "result": "passed"
+    },
+    {
+      "name": "Browser rendering",
+      "result": "passed: both pages at 1360×950 and 390×844; no page horizontal overflow; v2 image loads; inline SVG text stays within viewBox"
+    },
+    {
+      "name": "Navigation and keyboard disclosure",
+      "result": "passed: v2 navigation reaches diagram; Enter collapses and expands the focused summary"
+    },
+    {
+      "name": "Existing v2 interactive scenarios",
+      "result": "66 assertions passed"
+    },
+    {
+      "name": "Visual review and console",
+      "result": "diagram reviewed in v2; box overflow corrected; no console errors"
+    },
+    {
+      "name": "pnpm run verify-md-wrap",
+      "result": "passed: 2240 files"
+    },
+    {
+      "name": "pnpm run verify-md-links",
+      "result": "passed: 2218 files"
+    },
+    {
+      "name": "git diff --check",
+      "result": "passed"
+    }
+  ],
+  "notVerified": [
+    "Backend integration of the proposed extensions",
+    "Local Lead model capabilities",
+    "Real latency or quality benefits"
+  ],
+  "png": {
+    "width": 3200,
+    "height": 3080,
+    "renderer": "gstack browse at 2×; sharp previously omitted text on this host"
+  },
+  "artifacts": {
+    "system3-native-v1.html": "c566d04d11985a033bbe8d7951853faf82aa1341bf18658a299875f9410fa22b",
+    "system3-experience-v2.html": "57d56fedf0e0d90a81ae17f6b4380f1f5725d4c1e0b11f19f648d5307c996eb1",
+    "diagram/jev-harness-invocation.svg": "9c7a3454d1c9c4d3429d5fb86ca01833d12af2bdc8703a3ec2ffec9034e4f307",
+    "diagram/jev-harness-invocation@2x.png": "59c8223bc2d1240220208f44b3c097ebf09c0cd1af6f74e85714fe645284e20e"
+  }
+}

@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 900" role="img" aria-labelledby="system3-fusion-title system3-fusion-desc">
+<title id="system3-fusion-title">Jev Native AgentLoop Harness 产品目标架构</title>
+<desc id="system3-fusion-desc">用户任务经过入口智能进入 Jev Native AgentLoop Harness 编排总管；总管组织任务依赖并委派 Agent 执行对象，借助共享认知与执行能力，过程智能和任务记忆反馈调整，进展与成果回到用户。</desc>
+<style>text{font-family:"PingFang SC","Microsoft YaHei",Arial,sans-serif}.title{font-size:26px;font-weight:700;fill:#f1f5f9}.node-label{font-size:20px;font-weight:650;fill:#f1f5f9}.sub{font-size:13px;fill:#cbd5e1}.edge-label{font-size:13px;fill:#cbd5e1}.small{font-size:13px;fill:#94a3b8}.chip{font-size:14px;fill:#e2e8f0}</style>
+<defs>
+<marker id="core-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#34d399"/></marker>
+<marker id="model-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#fbbf24"/></marker>
+<marker id="state-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#a78bfa"/></marker>
+<marker id="user-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#22d3ee"/></marker>
+<marker id="target-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#60a5fa"/></marker>
+<marker id="plain-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#94a3b8"/></marker>
+</defs>
+<rect width="1280" height="900" fill="#0f172a"/>
+<path data-edge="user-entry" d="M224 384H272" fill="none" stroke="#22d3ee" stroke-width="2" marker-end="url(#user-arrow)"/>
+<path data-edge="entry-orchestrator" d="M472 384H536" fill="none" stroke="#34d399" stroke-width="2" marker-end="url(#core-arrow)"/>
+<path data-edge="orchestrator-agents" d="M824 384H944" fill="none" stroke="#60a5fa" stroke-width="2" marker-end="url(#target-arrow)"/>
+<path data-edge="cognition-request" d="M624 296V252" fill="none" stroke="#fbbf24" stroke-width="2" marker-end="url(#model-arrow)"/>
+<path data-edge="cognition-response" d="M736 252V296" fill="none" stroke="#fbbf24" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#model-arrow)"/>
+<path data-edge="agents-capabilities" d="M1088 492V556" fill="none" stroke="#94a3b8" stroke-width="2" marker-end="url(#plain-arrow)"/>
+<path data-edge="capabilities-agents" d="M1168 556V492" fill="none" stroke="#94a3b8" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#plain-arrow)"/>
+<path data-edge="agents-process" d="M944 452H920Q912 452 912 460V620Q912 628 904 628H848" fill="none" stroke="#60a5fa" stroke-width="2" marker-end="url(#target-arrow)"/>
+<path data-edge="process-memory" d="M848 708H944" fill="none" stroke="#a78bfa" stroke-width="2" marker-end="url(#state-arrow)"/>
+<path data-edge="memory-process" d="M944 760H848" fill="none" stroke="#a78bfa" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#state-arrow)"/>
+<path data-edge="process-orchestrator" d="M656 616V556" fill="none" stroke="#60a5fa" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#target-arrow)"/>
+<path data-edge="process-user" d="M496 708H140Q132 708 132 700V480" fill="none" stroke="#22d3ee" stroke-width="2" marker-end="url(#user-arrow)"/>
+<g data-edge-label="任务"><rect x="232" y="356" width="32" height="20" rx="3" fill="#0f172a"/><text class="edge-label" x="248.0" y="370" text-anchor="middle">任务</text></g>
+<g data-edge-label="目标"><rect x="480" y="356" width="48" height="20" rx="3" fill="#0f172a"/><text class="edge-label" x="504.0" y="370" text-anchor="middle">目标</text></g>
+<g data-edge-label="委派 / 编排"><rect x="844" y="356" width="80" height="20" rx="3" fill="#0f172a"/><text class="edge-label" x="884.0" y="370" text-anchor="middle">委派 / 编排</text></g>
+<g data-edge-label="请求"><rect x="548" y="256" width="64" height="20" rx="3" fill="#0f172a"/><text class="edge-label" x="580.0" y="270" text-anchor="middle">请求</text></g>
+<g data-edge-label="策略 / 计划"><rect x="748" y="256" width="64" height="20" rx="3" fill="#0f172a"/><text class="edge-label" x="780.0" y="270" text-anchor="middle">策略 / 计划</text></g>
+<g data-edge-label="使用能力"><rect x="992" y="512" width="84" height="20" rx="3" fill="#0f172a"/><text class="edge-label" x="1034.0" y="526" text-anchor="middle">使用能力</text></g>
+<g data-edge-label="结果"><rect x="1176" y="512" width="64" height="20" rx="3" fill="#0f172a"/><text class="edge-label" x="1208.0" y="526" text-anchor="middle">结果</text></g>
+<g data-edge-label="进展 / 证据"><rect x="848" y="600" width="64" height="20" rx="3" fill="#0f172a"/><text class="edge-label" x="880.0" y="614" text-anchor="middle">进展 / 证据</text></g>
+<g data-edge-label="调整 / 恢复（目标）"><rect x="656" y="568" width="156" height="20" rx="3" fill="#0f172a"/><text class="edge-label" x="734.0" y="582" text-anchor="middle">调整 / 恢复（目标）</text></g>
+<g data-edge-label="记录"><rect x="852" y="680" width="88" height="20" rx="3" fill="#0f172a"/><text class="edge-label" x="896.0" y="694" text-anchor="middle">记录</text></g>
+<g data-edge-label="召回"><rect x="852" y="772" width="88" height="20" rx="3" fill="#0f172a"/><text class="edge-label" x="896.0" y="786" text-anchor="middle">召回</text></g>
+<g data-edge-label="进度 / 成果 / 续做"><rect x="244" y="680" width="176" height="20" rx="3" fill="#0f172a"/><text class="edge-label" x="332.0" y="694" text-anchor="middle">进度 / 成果 / 续做</text></g>
+<g data-node="user-task"><rect x="40" y="336" width="184" height="144" rx="10" fill="#0f172a"/><rect x="40" y="336" width="184" height="144" rx="10" fill="#22d3ee" fill-opacity=".08" stroke="#22d3ee" stroke-width="1.5"/><text class="node-label" x="132.0" y="400.0" text-anchor="middle">用户任务</text><text class="sub" x="132.0" y="428.0" text-anchor="middle">输入 / 控制 / 看成果</text></g>
+<g data-node="entry-intelligence"><rect x="272" y="336" width="200" height="144" rx="10" fill="#0f172a"/><rect x="272" y="336" width="200" height="144" rx="10" fill="#34d399" fill-opacity=".08" stroke="#34d399" stroke-width="1.5"/><text class="node-label" x="372.0" y="400.0" text-anchor="middle">入口智能</text><text class="sub" x="372.0" y="428.0" text-anchor="middle">目标约束 / 模型方法</text></g>
+<g data-node="orchestration-manager"><rect x="536" y="296" width="288" height="260" rx="12" fill="#0f172a"/><rect x="536" y="296" width="288" height="260" rx="12" fill="#34d399" fill-opacity=".10" stroke="#34d399" stroke-width="2"/><text class="node-label" x="680" y="332" text-anchor="middle">编排智能 / 总管</text><text class="sub" x="680" y="356" text-anchor="middle">Jev Native AgentLoop Harness</text><text class="chip" x="680" y="394" text-anchor="middle">任务委派 · 任务编排 · 智能体编排</text></g>
+<g data-node="task-graph"><rect x="560" y="420" width="240" height="104" rx="10" fill="#0f172a"/><rect x="560" y="420" width="240" height="104" rx="10" fill="#94a3b8" fill-opacity=".08" stroke="#94a3b8" stroke-width="1.5"/><text class="node-label" x="680.0" y="464.0" text-anchor="middle">任务 / 依赖图</text><text class="sub" x="680.0" y="492.0" text-anchor="middle">分工 / 顺序 / 结果要求</text></g>
+<g data-node="agent-execution-objects"><rect x="944" y="336" width="296" height="156" rx="10" fill="#0f172a"/><rect x="944" y="336" width="296" height="156" rx="10" fill="#60a5fa" fill-opacity=".08" stroke="#60a5fa" stroke-width="1.5"/><text class="node-label" x="1092.0" y="406.0" text-anchor="middle">Agent 执行对象 × N</text><text class="sub" x="1092.0" y="434.0" text-anchor="middle">AgentLoop / 原生生命周期</text></g>
+<g data-node="execution-capabilities"><rect x="944" y="556" width="296" height="104" rx="10" fill="#0f172a"/><rect x="944" y="556" width="296" height="104" rx="10" fill="#94a3b8" fill-opacity=".08" stroke="#94a3b8" stroke-width="1.5"/><text class="node-label" x="1092.0" y="600.0" text-anchor="middle">所用执行能力</text><text class="sub" x="1092.0" y="628.0" text-anchor="middle">模型 / 技能 / 工具 / 专家</text></g>
+<g data-node="process-intelligence"><rect x="496" y="616" width="352" height="184" rx="10" fill="#0f172a"/><rect x="496" y="616" width="352" height="184" rx="10" fill="#60a5fa" fill-opacity=".08" stroke="#60a5fa" stroke-width="1.5"/><text class="node-label" x="672.0" y="700.0" text-anchor="middle">过程智能</text><text class="sub" x="672.0" y="728.0" text-anchor="middle">进度 / 证据 / 调整 / 恢复</text></g>
+<g data-node="task-memory"><path d="M944 704V784a148 16 0 0 0 296 0V704Z" fill="#0f172a" stroke="#a78bfa" stroke-width="1.5"/><ellipse cx="1092" cy="704" rx="148" ry="16" fill="#1d203c" stroke="#a78bfa" stroke-width="1.5"/><path d="M944 784a148 16 0 0 0 296 0" fill="none" stroke="#a78bfa" stroke-width="1.5"/><text class="node-label" x="1092" y="742" text-anchor="middle">任务记忆 / 执行状态</text><text class="sub" x="1092" y="770" text-anchor="middle">独立 Session / 事件 / 成果</text></g>
+<g data-node="cognitive-supply"><rect x="536" y="132" width="448" height="120" rx="10" fill="#0f172a"/><rect x="536" y="132" width="448" height="120" rx="10" fill="#fbbf24" fill-opacity=".08" stroke="#fbbf24" stroke-width="1.5"/><path d="M752 152V232" stroke="#475569"/><text class="node-label" x="644" y="182" text-anchor="middle">Jev 快决策</text><text class="sub" x="644" y="214" text-anchor="middle">System1 / 有界策略选择</text><text class="node-label" x="868" y="182" text-anchor="middle">大脑规划 / 推理</text><text class="sub" x="868" y="214" text-anchor="middle">System2 / 生成与整合</text></g>
+<path d="M40 840H1240" stroke="#475569"/>
+<text class="small" x="40" y="872">目标架构　主线：需求 → 组织 → 执行 → 进展与成果　虚线：响应 / 召回 / 目标反馈　原生 Harness 落实采用与控制</text>
+<text class="title" x="40" y="44">Jev Native AgentLoop Harness：从任务到智能体编排</text>
+<text class="small" x="40" y="76">产品技术目标架构 · 入口智能 / 编排智能 / 过程智能</text>
+</svg>

@@ -5,7 +5,8 @@
 - 新私有仓库：cryptoSUN2049/xDAN-System3-Harness；独立 Git 历史副本，无共享 object alternates。
 - 产品顺序：第一目标是 Jev 入口策略与调度，第二目标是执行环节更智能、更顺畅；总体为 Jev Native + DSH Native。
 - 独立底座与本地验收完成；初始化提交已推送并回读确认，正式目录迁移完成。
-- 最新设计入口：docs/feat-independent-harness/jev-native-dsh-native-plan.html；旧 design.html 为初始化方案。
+- M1a 首片已实现：显式启用的 Web/API 空闲文本选模，真实 Jev 9B → Fidoo Flash / Pro 已验证；其他入口及过程智能仍待后续。
+- 最新入口：docs/feat-independent-harness/README.zh.md；第 12 节记录 Web UI 选型及默认产品隔离修复，总体方案仍为 jev-native-dsh-native-plan.html。
 
 ## 2. 本轮交付物
 
@@ -104,7 +105,7 @@
 - 原项目代码、分支和部署未改；保留上游 MIT、历史与包名，不发布 npm 包。
 - 使用 DSH profile 与插件 extension point，不复制或修改 AgentLoop。
 - 模型建议不能改变权限、隐私、取消与权威预算；candidate_done 不能替代独立验收。
-- 现有 ctx.jev 与 ctx.system3.shadowDecision 是显式决策和影子记录；自动语义监督和执行控制未实现。
+- ctx.jev 与 ctx.system3.shadowDecision 保留显式决策和影子记录；entryRouting 显式启用 Web/API 空闲文本选模。自动过程监督与任务完成判断未实现。
 
 ## 4. 已踩坑与真实行为
 
@@ -141,7 +142,7 @@
 
 ## 5. 下一里程碑任务清单
 
-- [ ] M1a：共享入口决策服务与 Web/API 空闲文本适配，两个兼容模型，实际路由采用、请求准入、取消、过期和每回合有效期。
+- [x] M1a 首片：共享入口决策服务与 Web/API 空闲文本适配，两个兼容模型，实际路由采用、请求准入、取消、过期和每回合有效期；详见第 11 节。
 - [ ] M1b：专业委派与规划／澄清，附件／排队批次关联，headless／SDK／ACP 分别适配与验收。
 - [ ] M2：同一原生机制上的记忆、能力、恢复、升级、目标与沟通；完成证据相关缺口在自动完成判断前补齐。
 - [ ] M3：通过实测的本地 9B/27B Lead 与跨会话任务恢复、主动跟进。
@@ -227,3 +228,158 @@
 | `tasks/lessons.md` | 41 | 用户明确的目标顺序 |
 | `docs/feat-independent-harness/architecture@2x.png` | 2400×3540 | GitHub 架构图 |
 | `tasks/feat-independent-harness/handoff.md` | 229 | 冷启动与本次交付 |
+
+## 11. M1a 原生入口与 Fidoo
+
+### 已交付
+
+- SessionController 注册单一可释放 router，System3 原生 Jev consumer 通过 Cordis effect 挂载；不改 AgentLoop，不引入 Pilot。
+- 自动选型绑定已准入 requestId，只覆盖当前回合及工具续步；下一回合恢复 Session baseline，人工选型始终优先。
+- 维护占用保留排队，等待 Jev 可取消，卸载不切换正在运行的回合模型；恢复和模型展示按实际请求记录处理。
+- 两个新增 required-on-read Session 事件有持久类型声明，Session envelope 仍为 V4；新旧 SDK replay 各自独立。
+- Fidoo overlay 与入口 overlay 无凭据；配置必须显式声明会话数据分类，Jev 决策只收到当前文本。
+
+### 本轮文件清单
+
+行数为当前交付文件总行数；生成文件及 snapshot goldens 也列出，旧 generation 未改。
+
+| 文件 | 行数 |
+|---|---:|
+| `.github/workflows/independent-harness.yml` | 62 |
+| `README.i18n.yaml` | 6 |
+| `README.md` | 90 |
+| `README.zh.md` | 111 |
+| `docs/capability-seams.i18n.yaml` | 6 |
+| `docs/capability-seams.md` | 667 |
+| `docs/capability-seams.zh.md` | 669 |
+| `docs/config-catalog.i18n.yaml` | 6 |
+| `docs/config-catalog.md` | 4413 |
+| `docs/config-catalog.zh.md` | 4415 |
+| `docs/event-producer-consumer.i18n.yaml` | 6 |
+| `docs/event-producer-consumer.md` | 102 |
+| `docs/event-producer-consumer.zh.md` | 104 |
+| `docs/feat-independent-harness/README.i18n.yaml` | 6 |
+| `docs/feat-independent-harness/README.md` | 84 |
+| `docs/feat-independent-harness/README.zh.md` | 84 |
+| `docs/feat-independent-harness/entry-routing-implementation.html` | 19 |
+| `docs/feat-independent-harness/entry-routing-verification.html` | 15 |
+| `docs/feat-independent-harness/jev-native-dsh-native-plan.html` | 305 |
+| `docs/feat-independent-harness/system3-entry.patch.yml` | 29 |
+| `docs/feat-independent-harness/system3-fidoo.patch.yml` | 39 |
+| `docs/module-graph.i18n.yaml` | 6 |
+| `docs/module-graph.md` | 1679 |
+| `docs/module-graph.zh.md` | 1681 |
+| `docs/persistence-catalog.i18n.yaml` | 6 |
+| `docs/persistence-catalog.md` | 9792 |
+| `docs/persistence-catalog.zh.md` | 9794 |
+| `docs/persistence-changes/2026-09-29-system3-entry-routing.i18n.yaml` | 6 |
+| `docs/persistence-changes/2026-09-29-system3-entry-routing.md` | 52 |
+| `docs/persistence-changes/2026-09-29-system3-entry-routing.schema.json` | 712 |
+| `docs/persistence-changes/2026-09-29-system3-entry-routing.zh.md` | 52 |
+| `docs/persistence-changes/historical-formats/README.i18n.yaml` | 6 |
+| `docs/persistence-changes/historical-formats/README.md` | 75 |
+| `docs/persistence-changes/historical-formats/README.zh.md` | 75 |
+| `docs/persistence-schema.json` | 104836 |
+| `docs/subsystems/session.i18n.yaml` | 6 |
+| `docs/subsystems/session.md` | 1294 |
+| `docs/subsystems/session.zh.md` | 1298 |
+| `packages/api/session-controller/README.i18n.yaml` | 6 |
+| `packages/api/session-controller/README.md` | 137 |
+| `packages/api/session-controller/README.zh.md` | 137 |
+| `packages/api/session-controller/src/agent.ts` | 574 |
+| `packages/api/session-controller/src/commands.ts` | 714 |
+| `packages/api/session-controller/src/index.ts` | 525 |
+| `packages/api/session-controller/src/model-selection-projection.ts` | 95 |
+| `packages/api/session-controller/src/prompt-router.ts` | 136 |
+| `packages/api/session-controller/src/types.ts` | 638 |
+| `packages/api/session-controller/tests/prompt-router.host.spec.ts` | 345 |
+| `packages/api/session-controller/tsconfig.host.json` | 57 |
+| `packages/core/session/src/known-event-types.ts` | 90 |
+| `packages/experimental/system3/README.i18n.yaml` | 6 |
+| `packages/experimental/system3/README.md` | 95 |
+| `packages/experimental/system3/README.zh.md` | 95 |
+| `packages/experimental/system3/package.json` | 63 |
+| `packages/experimental/system3/src/entry-routing.ts` | 195 |
+| `packages/experimental/system3/src/index.ts` | 250 |
+| `packages/experimental/system3/tests/entry-loader-composition.spec.ts` | 186 |
+| `packages/experimental/system3/tests/entry-routing.spec.ts` | 250 |
+| `packages/experimental/system3/tsconfig.json` | 51 |
+| `packages/extensions/tool-cordis/src/api-catalog.ts` | 8156 |
+| `pnpm-lock.yaml` | 29255 |
+| `scripts/gen-cordis-catalog.ts` | 1321 |
+| `scripts/gen-doc-graphs.ts` | 1705 |
+| `scripts/smoke-python-runtime.py` | 3562 |
+| `scripts/snapshots/python-sdk-single-exe/system3-entry-route/model-visible.json` | 639 |
+| `scripts/snapshots/python-sdk-single-exe/system3-entry-route/result.json` | 1160 |
+| `scripts/snapshots/python-sdk-single-exe/system3-entry-route/session.v4.jsonl` | 21 |
+| `snapshots/sdk/sdk.snapshot.ts` | 1051 |
+| `snapshots/sdk/system3-entry-route/cordis.snapshot.yml` | 17 |
+| `snapshots/sdk/system3-entry-route/cordis.yml` | 33 |
+| `snapshots/sdk/system3-entry-route/decision-producer.mjs` | 106 |
+| `snapshots/sdk/system3-entry-route/notifications.expected.jsonl` | 19 |
+| `snapshots/sdk/system3-entry-route/result.expected.json` | 1 |
+| `snapshots/sdk/system3-entry-route/session.v4.jsonl` | 21 |
+| `snapshots/sdk/system3-entry-route/snapshot.yml` | 10 |
+| `tasks/lessons.md` | 45 |
+| `tasks/todo.md` | 69 |
+| `tasks/feat-independent-harness/handoff.md` | 345 |
+
+### 验证与部署状态
+
+- API/System3/Jev/policy：50 文件、934 测试；两个新增路由源文件 statements/branches/functions/lines 均 100%，非全仓覆盖率声明。
+- 真实 Loader：Jev 选择改变实际生成模型；HTTP 503 保留 baseline；JSONL 恢复无额外 HTTP。
+- 实网：同一 Web profile 中改写→Flash、设计→Pro；另两个模型均通过官方 headless 短答。SSH 隧道和 Web smoke 进程均已关闭，未部署常驻服务。
+- TS SDK：system3-shadow 与 system3-entry-route built replay；Python 新场景使用官方 dsh launcher wrapper，属于协议测试，非打包可执行文件验收。
+- 完整 build、最后 Host 构建与全仓 lint 通过；NodeNext 322 包声明、依赖策略、metadata 和应用启动入口检查通过。doc-sync 42/42、Ruff 双检查、actionlint 通过；最终双 SDK 回放通过。
+- 既存限制：verify-default-product-isolation 失败于 apps/cli 对 experimental-agui 的依赖；该 manifest 与本轮 HEAD 基线相同。本轮不声称完整 hygiene 通过，不修改现有 optional AG-UI 打包。
+- 当前工作分支 feat-independent-harness；主目录 main 保持不动。本轮以工作分支交付供审查，不创建部署。
+
+### 真实行为与下一轮
+
+- Agent.status=idle 包含 maintenance；runMaintenance 同步拒绝占用，不得吞异步任务异常。
+- 全局默认模型可能由其他会话更新，弃权必须保持当前会话基线。自动选型记录本身不是执行证据。
+- 远端 gateway 使用 APUS-OpenJev-v1-9B-5949；confidence 未校准。真实 SSH 主机由本次用户提供，不将凭据或专用连接写入公开配置。
+- [ ] 建立固定模型基线的路由任务集：分流错误、弃权率、延迟、总成本、重工。
+- [ ] 设计明确的自动／人工选型切换体验；首期人工选型后新建会话才能恢复自动。
+- [ ] 后续分别接附件／排队批次、SDK／ACP／headless、专业委派；再推进记忆、恢复、目标与沟通。
+- 冷启动先读本节与 entry-routing-verification.html，进入本 worktree 核对 git 状态，再按独立集成指南启动；不要运行来源项目的 App overlay。
+
+## 12. Web UI 选型与默认产品隔离修复
+
+- 用户补充希望配套好用的 DSH Web UI。调研候选为 zhu1090093659/dsh-web 与 MichengAI/dsh-codex-ui，报告与原生接入设计在 web-ui-selection.html，独立 README 双语已链接。未安装第三方插件，未新增 UI 运行时代码。
+- 建议保留原生 Web，会话只读决策卡为下一切片，自动／固定模式需要后续 Host 状态 API。第三方看板的 selectModel 会触发人工固定，Team 与 Goal 续轮不在 M1a 输入入口覆盖内。看板 succeeded 不等于独立验收。
+- 版本证据：本仓库 CLI 0.1.7-rc.1；dsh-web v0.4.4 要求 ≥0.2.0-rc.1，dev 要求 ≥0.2.0-rc.2；Codex UI 当前 manifest 显式列出 0.1.7-rc.1，但尚未本地联调。
+- 独立 review 修正了两处展示设计：header 在模型流开始前写入；输入关联经 user/message.source.rpcId 与 turn/step。缺档显示未知／等待确认，不自动判为未采用。
+- CLI 的 experimental-agui 移至 devDependencies，overlay 改为相对构建入口，默认生产隔离检查恢复通过。profile resolver 不暴露 devDependencies，单纯移动 manifest 会使裸包名 overlay 失效；相对入口沿用现有 inspector 机制，不放宽 resolver 或检查规则。README 明确已构建源码检出的支持范围。
+
+### 本轮文件（总行数）
+
+| 路径 | 行数 | 说明 |
+|---|---:|---|
+| `apps/cli/package.json` | 159 | 移除默认AGUI生产依赖 |
+| `pnpm-lock.yaml` | 29255 | 同步开发依赖 |
+| `packages/experimental/agui/cordis.patch.yml` | 12 | 按overlay相对位置加载构建入口 |
+| `packages/experimental/agui/README.md` | 123 | 源码组合支持范围 |
+| `packages/experimental/agui/README.zh.md` | 123 | 中文支持范围 |
+| `packages/experimental/agui/README.i18n.yaml` | 6 | 配对记录 |
+| `docs/feat-independent-harness/web-ui-selection.html` | 68 | 中文UI选型及接入设计 |
+| `docs/feat-independent-harness/README.md` | 84 | 报告入口 |
+| `docs/feat-independent-harness/README.zh.md` | 84 | 中文报告入口 |
+| `docs/feat-independent-harness/README.i18n.yaml` | 6 | 配对记录 |
+| `tasks/feat-independent-harness/notes.md` | 13 | 隔离修复与smoke记录 |
+| `tasks/lessons.md` | 46 | 展示语义经验 |
+| `tasks/todo.md` | 81 | 计划与验收 |
+| `tasks/feat-independent-harness/handoff.md` | 385 | 冷启动与剩余任务 |
+
+### 验证、分支与下一步
+
+- 完整 build、102 项相关测试、默认产品隔离、205 个 Cordis 配置、built AG-UI persona SDK 回放通过；派生图重新生成无差异。
+- 真实 built Web + AG-UI overlay：匿名 /agui/threads 返回 401，测试 Bearer 返回 200 和空 threads；没有调用模型，临时目录与自有进程已清理。故障与修复过程见本目录 notes.md。
+- 中文报告离线浏览器检查：1280px 与 390px 均无横向溢出，零外部资源；16 个链接，图文已人工检查。报告为设计，不是 UI 功能验收。
+- 最终文档快检 20/20、doc-sync 42/42、lint、依赖策略、包元数据、Ruff 双检查均通过；本轮以 feat-independent-harness 工作分支交付，main 不动，没有常驻部署。推送使用正常类型检查 hook，发布结果以远端 ref 回读为准。
+- 远端 CI 新核实：main 的 Independent harness run 36562864544 因 GitHub Actions budget 未开始执行；feature 无 run。不能声称远端 CI 通过，也不应为此修改测试逻辑。
+- [ ] 原生 System3 只读决策卡与回放展示。
+- [ ] 明确的自动／固定模式 Host 状态与 UI 操作。
+- [ ] 固定模型基线对照的路由质量、延迟、费用与返工评测。
+- [ ] 选定社区插件后在隔离 profile 实测版本、工具审批、恢复与 Jev 路由；不为界面直接升级整个 Harness。
+- 冷启动先读本节、web-ui-selection.html、entry-routing-verification.html，再检查工作分支状态；远端 CI 需要账户 Actions budget 恢复后才能补证。

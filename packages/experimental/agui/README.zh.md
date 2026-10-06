@@ -24,6 +24,8 @@ kind: "package-reference"
 <a id="use-this-package"></a>
 ## 使用本包
 
+本 overlay 用于已安装开发依赖并完成构建的源码检出；插件路径相对于 overlay 文件解析。默认 `dsh` 安装不包含 AG-UI；本包不提供可安装的 profile bundle。
+
 把插件挂到提供 `webServer`、`agents` 与 `sessions` 的 profile 上；Web profile 满足。先在配置行指定的环境变量里导出 bearer token，再应用随包提供的 overlay：
 
 ```sh

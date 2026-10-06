@@ -19,7 +19,7 @@
 
 ## 后续里程碑
 
-- [ ] M1a：入口共享决策服务、空闲文本请求适配及原生选模，校验语义输入、预算、请求绑定和策略有效期。
+- [x] M1a 首片：入口决策服务、空闲文本适配及原生选模，校验输入长度、候选准入、请求绑定与回合有效期；质量收益与累计费用预算仍需后续评测。
 - [ ] M1b：入口专业委派、规划／澄清、活跃输入批次与 headless／SDK／ACP 分别适配验收。
 - [ ] M2：沿同一机制增强记忆、能力、恢复、升级、长程目标与沟通；先修复 supervisor 空检查与证据引用缺口，再考虑自动完成判断。
 - [ ] M3：依据能力实测接入本地 9B／27B Lead，并补持久任务和主动跟进的恢复机制。
@@ -49,3 +49,195 @@
 - [x] 核实入口输入、模型选择与专业委派的原生时序，明确不同运行入口覆盖范围。
 - [x] 更新中文专项方案和主图：入口决策为第一目标，过程智能与顺畅协作为第二目标。
 - [x] 重排里程碑与验收，同步根 README 和集成指南双语；独立复核、离线页面、doc-sync 42/42、lint 和 Ruff 双检查通过。
+
+## Fidoo 与原生入口路由实施（用户已批准推进）
+
+- [x] 复核隔离 worktree、已有设计、原生 SessionController/ModelSelection 时序。
+- [x] 提供 API 原生可释放的 prompt router；取消、人工选型、持久恢复和单回合有效期。
+- [x] System3 opt-in Jev 入口消费者：有界语义、候选白名单、隐私准入、弃权与完整决策记录。
+- [x] 接入 Fidoo LiteLLM provider，核实已授权的模型与真实生成链路。
+- [x] 补行为测试、真实 Loader 集成、Session/SDK 回放与持久类型声明。
+- [x] 更新中英文使用说明与实施状态，完成构建、lint、934 相关测试、doc-sync 42/42、Ruff。
+- [x] 独立 review 完成，更新交接与验收记录，交付工作分支；既存默认发行版隔离失败单独记录。
+
+### 实施审查
+
+首期只覆盖 Web/API 空闲、无待处理输入的文本请求。没有 router 时保持原行为。LiteLLM 承担 System2 调用，Jev 使用原生决策协议；不从连通性推断决策收益。
+
+### M1a 最终 review
+
+独立审查发现并修复：弃权不得读取全局默认、其他 maintenance 期间输入应保留原生排队、冷恢复后的 next 模型展示必须与实际选择一致。934 个相关测试通过；两个新决策模块四项覆盖率均 100%。真实 Web profile 中 Jev 9B 将公开改写请求交给 Flash、复杂设计请求交给 Pro，采纳记录与实际 request/header 一致。SDK 测试仅证明事件协议和持久化，不声称 SDK 入口已有自动路由。
+
+## Web UI 选型与独立发行收尾
+
+- [x] 搜索 DSH 原生及社区 UI，核对宿主版本、入口调用与 Jev 决策所有权。
+- [x] 形成中文 UI 评估及原生接入方案；区分源码审计、兼容声明和实际运行验证。
+- [x] 修复 CLI 默认生产依赖引入 experimental AG-UI，保留源码按需组合及人格回放。
+- [x] 运行相关隔离、配置、构建、回放、文档与 lint 验证，更新交接，准备工作分支交付。
+- [x] 核实远端 CI：main 的任务未开始，GitHub Actions budget 阻止执行；feature 无 run，不能视为通过。
+
+### Web UI 与隔离修复 review
+
+完整构建、102 项相关测试、默认产品隔离、205 个 Cordis 配置、AG-UI built SDK 回放和真实 Web 鉴权 smoke 通过。文档快检 20/20、doc-sync 42/42、lint、依赖策略与包元数据通过，Ruff 双检查通过。UI 仅完成中文设计与原生／第三方源码审查，未安装候选插件或实现新 UI。独立评审纠正了 header 与执行成功的区别，以及缺档时不能推断未采用。交付保留工作分支，main 与常驻部署未变。
+
+## 第二名桌面与完整后端 Goal
+
+- [x] 用户选定 dataelement 桌面并允许对齐 rc.2；综合历史产品目标。
+- [x] 创建 feat-system3-desktop 隔离工作区并完成三项独立源码审计。
+- [x] 形成统一 v1.1 中文 HTML、交互示意、接口草案和 G1—G6 后端验收。
+- [x] 完成文档独立复核与浏览器验证，交付设计。
+- [x] 按用户补充统一正式 rc.2 与 TypeSafe SDK；官方、自有9B真实合成 smoke 和 DSH 响应解析通过。
+- [ ] 具体设计确认后，按 [当前工作区计划](feat-system3-desktop/plan.md) 持续实施完整后端 Goal。
+
+### Review
+
+当前交付为设计，不代表 rc.2、桌面、记忆或长期目标后端已经打通。统一方案在 [system3-native-v1.html](../docs/feat-system3-desktop/system3-native-v1.html)，冷启动先读 [handoff](feat-system3-desktop/handoff.md)。
+
+## 即时决策与能力感知交互评审
+
+- [x] 读取交接、经验、原设计与相关前端/交互 skills，确认既有 worktree 干净。
+- [x] 浏览器检查原型的默认视图、状态切换、展开层与窄屏。
+- [x] 并行审查任务旅程及能力反馈所需的原生事实。
+- [x] 形成交互改造评审与独立离线示意，覆盖入口、过程、记忆、委派、Goal、异常及用户控制。
+- [x] 验证示意交互、键盘、窄屏与文档检查，更新交接和评审结果。
+
+本轮是设计评审；产品代码实施仍以具体设计确认作为前置条件。
+
+### 本轮交互 Review
+
+主 HTML 升至 v1.2，嵌入完整 Jev/Harness 架构图，未来本机 9B/27B Lead 与专家编排有独立位置；增加七场景离线体验入口和页内回放。中英文评审与一致性记录完整。66 项交互断言、明暗主题/窄屏/键盘/减少动态效果、doc-sync 42/42 和 Host lint 通过。复核修正固定模型、历史恢复与后续排除的组合状态；不宣称新增后端或性能收益。证据见 [experience-verification.json](../docs/feat-system3-desktop/experience-verification.json)。
+
+## Jev / Harness 调用关系架构图
+
+- [x] 复核 worktree 与调用所有权，采用 baoyu-diagram 架构布局。
+- [x] 绘制调用和返回关系，标明本机 Lead 经原生工具委派专家。
+- [x] 嵌入主 HTML，给 v2 增加页内查看和独立 SVG / PNG 入口。
+- [x] 检查图中文字、链接、窄屏与原有交互，更新交接并打开 HTML。
+
+范围为设计交付：调用图补充现有流程图，沿用原生接口，不引入新 API 或产品代码；SDK 替换和本机 Lead 明确标为拟实施。
+
+### 调用图 Review
+
+新增独立调用关系 SVG / 2× PNG，主 HTML 内嵌，v2 提供导航与可折叠查看。独立源码审查确认原生调用所有权，图中区分自动入口的条件调用、固定或不适用的旁路、SDK 替换和未来本机 Lead。静态资源与脚本、1360/390px、键盘展开及 66 项原有交互断言通过，Markdown 链接和换行检查通过。证据见 [invocation-verification.json](../docs/feat-system3-desktop/invocation-verification.json)。
+
+## 对外三层智能体验设计与前端仓库
+
+- [x] 确认 dataelement 桌面选型及创建独立私有前端仓库的授权。
+- [x] 完成本地克隆、私有仓库首推与一致性核验，保留 upstream 和许可证。
+- [x] 复核入口、过程、体感三层机制及当前原型缺口。
+- [x] 形成跨 UI / Host / Agent / 模型 / 工具 / 事件 / SDK 的完整设计与验收。
+- [x] 制作基于桌面工作台结构的 v3 连续任务体验，覆盖业务文件、专业专家和中断续做。
+- [x] 验证交互、无障碍关键路径、窄屏、事实语义，更新主 HTML 与交接后打开。
+
+设计复用 dataelement 桌面壳与原生 Conversation；本轮不启动后端或产品代码实施。仓库复制保持上游源代码基线。
+
+### 三层智能 Review
+
+主设计升至 v1.3，v3 连续工作台与跨层实施设计已关联。私有前端仓库 main 首推并核验，保留 481 条上游历史；应用未接入自有 runtime。v3 浏览器状态 37 断言、独立 Node VM 62 断言、v2 回归 66 断言与 23 组布局检查通过；修正提交快照、停止后待答复/取证恢复、来源排除验收和普通任务/Goal 区分。验证记录见 [intelligence-verification.json](../docs/feat-system3-desktop/intelligence-verification.json)。
+
+## 三层智能目标记录与 UI/UX 接入完成度复核（2026-10-01）
+
+- [x] 核对当前设计工作区与前端初始化分支，读取交接和既有验收范围。
+- [x] 在当前工作区计划中记录完整产品目标、首条真实任务链和不可替代的完成标准。
+- [x] 分别复核交互设计成熟度、真实前端接口、运行时接入与用户验收缺口。
+- [x] 把缺口、优先级和验收动作补入设计 HTML，同步交接并检查文档。
+
+本轮授权为目标记录与设计复核，不把提问视作产品实现批准；不修改运行时或前端产品代码。
+
+### 目标与接入复核 Review
+
+已明确指定 Frontend 仓库与三个实际装配位置，记录五类完成度及八项 UX 缺口。结论为原型已验证、生产交互尚需收敛、前端接入及用户验收未完成；纳入独立 ops 工作区的公网 Jev 新进展。新增评审页1360/390px无整页溢出，三页共99个本地资源/链接引用通过检查，Markdown wrap/link和diff检查通过；未运行产品构建、模型调用或部署。
+
+## 入口智能与体感速度优化审查（2026-10-01）
+
+- [x] 读取性能技能与真实入口代码，核查已有乐观提交、串行决策与供给验证范围。
+- [x] 记录按用户路径排序的优化机会、测量方案和不可破坏的行为。
+- [x] 更新现有体验复核与工作区计划，交付优先级；本轮不修改产品代码或默认模型档位。
+
+### 速度审查 Review
+
+确认原生即时回显已存在，自动入口先等 Jev 再准入；默认 HTTP 超时30秒不等于入口总截止。文本流现有三帧合并可作为首块策略对照；Fidoo modelInfo 读取本地 snapshot，桌面已预热且稳定窗口为0，不重复提出已存在的优化。记录9项候选及测量卡，未宣称实测提速、未调用模型或改变high/low配置。现有评审页390/1360px无溢出，HTML链接、Markdown wrap/link与diff检查通过。
+
+# System3 G1 产品实施预检历史（运维会话，实施授权前）
+
+- [x] 读取三层产品设计、两仓交接和当前状态。
+- [x] 固定源码来源，完成 rc.2 只读合并预检与桌面补丁清单。
+- [x] 写出 G1 的文件范围、接口兼容义务和产品验证计划。
+- [ ] 用户确认产品 G1 或优先完成 Pod 自动恢复。
+- [ ] G1a：合并 rc.2 并验证 Session/System3 与双 SDK。
+- [ ] G1b：逐项适配桌面补丁。
+- [ ] G1c：固定自有 runtime，开发与目录安装包真实启动。
+- [ ] G1d：实网 high 装配、失败和恢复验证。
+
+## Review
+
+本轮仅完成源码预检和具体实施方案；模型服务保持已验收状态，产品实现待用户明确实施方向。既有 feat-system3-desktop 在读取过程中新增了 feat-system3-desktop 文档提交，本轮从该固定点另建 feat-system3-g1，避免干扰并行工作。未修改源码、未进行合并、未声称产品测试通过。
+
+## 当前产品实施与真实部署（2026-10-01，用户已授权）
+
+- [x] 接受完整打通、真实部署和统一 rc.2 的授权；固定双会话写入归属。
+- [x] 合并正式 dsh-v0.1.7-rc.2，六个自有包统一版本；提交 system3-g1-foundation。
+- [x] Jev 切换 TypeSafe SDK 0.6.0，验证整体超时、取消、协议解析和密钥不泄漏。
+- [x] 修复 rc.2 provider 配置，TypeScript 与 Python 的 System3 entry-route/shadow 回放通过。
+- [x] 完成入口总截止、合法回退、固定/自动模式和可重放的前端事实投影。
+- [x] 完成真实 Skill 选择与原生模型消息注入，补回归和快照。
+- [x] Frontend 接入自有 rc.2 runtime，开发与 Mac arm64 目录应用真实启动。
+- [x] 完成入口、过程和体感 UI，与实际模型、工具、交付物及原生用户控制联动。
+- [x] Linux 原生构建及非 root systemd 预检通过；原生工作区 sandbox 保留。
+- [x] 冻结最终源码，重新构建并发布到 litellm 独立 System3 服务。
+- [x] 真实浏览器执行公共 CSV 任务，验证 Jev、Fidoo、Skill、文件交付、取消及重启恢复。
+- [x] 独立审查并修复；运行相关构建、测试、lint、文档及 Ruff 门禁。
+- [x] 记录当前成果、未完成的后续里程碑、部署/回滚证据和冷启动 handoff；完成 ship（两仓 PR 已创建，远端 CI 预算受限，未合并）。
+- [x] 按追加的手动部署授权核对运行差异，恢复 SSH 隧道、验证认证页面、打开现有 Desktop 与默认浏览器并更新访问交接。
+
+### 当前 Review
+
+首个固定审查提交和检查证据见 [implementation-ready.md](feat-system3-g1/implementation-ready.md)，双会话归属见 [coordination-ack.md](feat-system3-g1/coordination-ack.md)。预检构建和接口健康不代表最终产品验收；最终发布必须对应完整固定提交。
+
+手动访问核验已交付，见 [deployment-notes.md](feat-system3-g1/deployment-notes.md#manual-access-verification--2026-10-01)。本轮仅更新访问文档和交接，test:docs 20/20、doc-sync 42/42、lint、Ruff check/format 与 diff 检查通过；未重新部署产物、重启服务或调用模型。远端 CI 仍因 Actions 预算未执行，保持未合并。
+
+## System3 统一架构总览（参考 Duse，用户要求融合既有文档）
+
+- [x] 读取参考 HTML 并盘点本项目既有架构设计与体验稿；保留历史来源。
+- [x] 按十二节结构整合已发布能力、三层体验、调用关系、数据和目标架构。
+- [x] 绘制当前 / 目标与双实例部署图，将未来本机 9B/27B 和专家编排放入正确位置。
+- [x] 完成浏览器、响应式和链接复核；四图、两种架构、六场景、七种屏宽均验证。
+- [x] 按追加要求将两路图抽象为 AgentLoop × N，同步指定旧方案的工作树副本。
+- [x] 修复新 Actions 实际执行后发现的 persona expected 提示词错配；三个相关 keyless SDK 回放通过。
+- [x] 完成仓库文档检查；更新 handoff、提交并打开新 HTML。
+
+详细范围与验证计划见 [architecture-plan.md](feat-system3-g1/architecture-plan.md)。
+
+### 统一架构 Review
+
+[统一架构](../docs/feat-system3-g1/architecture.html) 已完成；核心为大小脑融合与 AgentLoop × N。12 份既有 HTML 整合成十二节页面，四图及六场景验证；七种屏宽无整页横向溢出，两个指定旧方案同步新图。test:docs 20/20、doc-sync 42/42、lint、Ruff 与 diff 检查通过。相关 keyless SDK 回放 3/3，通过不代表未来过程节点、N=10 或模型收益验收。
+
+### 研究定位补充与 CI 收口
+
+- [x] REST 确认统一架构版本的 [独立 Harness CI](https://github.com/cryptoSUN2049/xDAN-System3-Harness/actions/runs/36831007221) 成功。
+- [x] 第 7 节补充 DNHM 工作定义、Runtime Harness Generalization 与三组可证伪实验。
+- [x] 复核新折叠内容、窄屏及打印，运行文档门禁，准备新的固定架构提交。
+- [x] DNHM 固定版本的独立 Harness CI 已核对成功并交接；后续文档提交另行核对，不扩展运行验收。
+
+## 产品架构主图表达修订
+
+- [x] 将固定数量对照合为参数化 Agent 执行对象 × N，每实例独立 Session / 生命周期。
+- [x] 主图改为业务标签优先的 Jev Native AgentLoop Harness 编排总管及 9 组件产品目标架构。
+- [x] 步骤 / 条件 / 重试 / 终态另存原生流程 SVG，置于 details；主图与流程 ID 前缀独立。
+- [x] 三页内嵌同步，独立只读验证语义、宽窄屏、颜色、ARIA、ID 与折叠。
+- [x] 导出实际 PNG、完成本地文档检查及固定提交；不改运行源码 / 部署 / 论文。
+
+本次 Review：最终产品主图与流程细节 PNG 已独立确认对应 SVG，三个 HTML 引用完整。test:docs 20/20、doc-sync 42/42、lint、Ruff 与 diff 检查通过；浏览器与打印证据更新至 architecture-verification.json，运行基线保持冻结。固定提交用于更新既有 PR；此前 CI 成功不代表新提交远端 CI 通过。
+
+## 下一阶段：CI 收口与首个过程恢复消费者
+
+- [x] 核对 Harness 固定产品图提交的 Independent harness 工作流实际成功。
+- [x] 核对 Frontend PR 的未启动原因及完整工作流条件；允许原有 Windows PR 检查实际执行。
+- [x] 只读分析原生重试、重复提醒、工具事实与 pre-step 接入；落盘 [过程恢复设计](../docs/feat-system3-g1/process-recovery-plan.html)。
+- [ ] 确认新增运行能力的具体设计，再实施恢复消费者与前端事实投影。
+- [ ] 完成失效状态 / 取消 / 去重、真实原生组合、两 SDK 与 Session 回放。
+- [ ] 用原生大脑、确定性规则、Jev 策略三组对照核验真实任务收益。
+- [x] Frontend Windows 实际 CI 通过，固定证据与双仓 PR 交接完成；两 PR 保持 OPEN。
+- [ ] 新过程恢复能力经设计确认、独立验收后再发布。
+
+本轮 CI Review：Windows 原生测试 1563 通过 / 4 跳过，固定自有 Harness 构建、27 补丁装配、Electron HTTP 200、开发安装包与隔离应用启动通过。固定提交、工作流步骤、产物 API 摘要及范围见 [review-regression.json](feat-system3-g1/review-regression.json) 的 windowsFrontendCiAcceptance。服务器和已安装 Mac App 未更新；过程恢复设计尚未实施。

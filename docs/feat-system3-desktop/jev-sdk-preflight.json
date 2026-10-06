@@ -1,0 +1,117 @@
+{
+  "checkedAtUtc": "2026-09-30T01:12:58.880Z",
+  "sdk": "@typesafe-ai/sdk@0.6.0",
+  "provider": "official",
+  "requestedModel": "jev-latest",
+  "elapsedMs": 1369,
+  "attempts": 1,
+  "checks": {
+    "actualModel": true,
+    "exactAnswerKeys": true,
+    "choice": true,
+    "noul": true,
+    "score": true,
+    "usage": true
+  },
+  "response": {
+    "model": "jev-1.13.0",
+    "answers": {
+      "color": {
+        "type": "choice",
+        "choice": "blue",
+        "confidence": 1,
+        "probabilities": {
+          "blue": 1,
+          "red": 0
+        }
+      },
+      "isBlue": {
+        "type": "noul",
+        "noul": 0.99
+      },
+      "blueLevel": {
+        "type": "score",
+        "score": 1,
+        "confidence": 1,
+        "legend": {
+          "0": "It is clearly not blue",
+          "1": "It clearly is blue"
+        },
+        "probabilities": {
+          "0": 0,
+          "1": 1
+        }
+      }
+    },
+    "usage": {
+      "input_tokens": 381,
+      "output_tokens": 65
+    }
+  },
+  "scope": "One synthetic protocol/auth smoke; not routing quality or full integration acceptance",
+  "sdkSourceTag": "v0.6.0",
+  "sdkSourceSha": "66880ccded6cb642dc1809620c2b108c33730214",
+  "source": "https://docs.typesafe.ai/sdk/javascript",
+  "selfHostedPreflight": {
+    "gatewayModels": [
+      "APUS-OpenJev-v1-9B-5949",
+      "jev-latest"
+    ],
+    "authenticatedModelsStatus": 200,
+    "temporarySshTunnel": "closed after smoke",
+    "liveSmoke": {
+      "checkedAtUtc": "2026-09-30T01:38:04.080Z",
+      "sdk": "@typesafe-ai/sdk@0.6.0",
+      "provider": "self-hosted-9b",
+      "requestedModel": "APUS-OpenJev-v1-9B-5949",
+      "elapsedMs": 563,
+      "attempts": 1,
+      "checks": {
+        "actualModel": true,
+        "exactAnswerKeys": true,
+        "choice": true,
+        "noul": true,
+        "score": true,
+        "usage": true
+      },
+      "response": {
+        "model": "APUS-OpenJev-v1-9B-5949",
+        "answers": {
+          "color": {
+            "type": "choice",
+            "probabilities": {
+              "blue": 0.9998088956941316,
+              "red": 0.0001911043058683285
+            },
+            "confidence": 0.9973635423343197,
+            "choice": "blue"
+          },
+          "isBlue": {
+            "type": "noul",
+            "noul": 0.9997040428088162
+          },
+          "blueLevel": {
+            "type": "score",
+            "probabilities": {
+              "0": 0.0002611903361797406,
+              "1": 0.9997388096638202
+            },
+            "confidence": 0.9965143842801771,
+            "score": 0.9997388096638202,
+            "legend": {
+              "0": "It is clearly not blue",
+              "1": "It clearly is blue"
+            }
+          }
+        },
+        "usage": {
+          "input_tokens": 303,
+          "output_tokens": 3,
+          "billing_units": 3
+        }
+      },
+      "scope": "One synthetic protocol/auth smoke; not routing quality or full integration acceptance"
+    }
+  },
+  "nativeDshResponseParser": "passed on official and self-hosted responses"
+}

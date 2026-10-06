@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>原生入口路由首期实施</title><style>body{font:17px/1.8 system-ui,sans-serif;background:#0b1220;color:#e2e8f0;max-width:960px;padding:40px 24px;margin:auto}h1,h2{color:#7dd3fc}p{overflow-wrap:anywhere}</style><main>
+<h1>原生入口路由首期实施</h1>
+<p>用户已批准沿专项 HTML 推进，并接入 proxy.fidoo.ai LiteLLM proxy。本实施补充收敛 M1a 的可验证交付，不改变总方案。</p>
+<h2>目标与流程</h2>
+<p>用户输入 → SessionController 准入（空闲、文本、无待处理消息、无人工固定选型）→ System3 隐私与候选校验 → Jev 原生 choice → 原生 ModelSelection → Fidoo 生成 → Session 记录与回合结束恢复。</p>
+<p>系统通过 Cordis 原生服务注册一个可释放的入口 router。AgentLoop 保持原实现。Jev 选择只绑定本次请求触发的回合；失败或弃权沿用已有合法 baseline。人工选型保持优先，自动选择不写人工 model/selection。</p>
+<h2>文件范围</h2>
+<p>- packages/api/session-controller：router 注册、准入串行化、维护期取消、临时选择与持久恢复、行为测试及包文档。</p>
+<p>- packages/experimental/system3：显式启用配置、入口决策消费者、完整 Jev 输入/输出记录、候选与隐私验证及测试。</p>
+<p>- docs/feat-independent-harness：无密钥 Fidoo/入口配置、运行与验收说明。</p>
+<p>- persistence 与 Cordis/config 派生目录、TypeScript/Python SDK 回放：同步新的持久事件。</p>
+<h2>服务与事件</h2>
+<p>SessionController.registerPromptRouter(router) 返回 disposer，只允许一个提供者。route({agent, requestId, message, baseline}, signal) 返回候选 ModelSelection 或 undefined。异步决策占用 agent.runMaintenance，完成后重新验证存活与取消，才能入队。</p>
+<p>model/automatic-selection 保存输入请求、baseline 与临时 selection，用于恢复；system3/entry-decision 记录候选、完整模型输入、响应或失败以及建议。建议与真正采用分别记录，request/header 是实际模型请求的证据。旧日志读取规则与 SDK 事件投影按仓库持久格式流程更新。</p>
+<h2>验证计划</h2>
+<p>先以失败测试固定路由、弃权、取消、重复注册、卸载、人工选型、下一回合恢复和重启恢复行为，再实现。真实 Loader fixture 验证 API 输入引起 Jev 请求且改变生成 provider/model；持久回放不得再次请求模型。Fidoo live smoke 使用已有专用凭据与公开短文本，不把密钥写入仓库或命令参数。</p>
+<p>入口范围外的附件、忙碌/排队输入继续原流程；headless、SDK、ACP、专业委派与过程决策留在后续里程碑。当前不声称自动路由有质量或成本收益，需后续任务集对照评测。</p>
+</main></html>

@@ -1,0 +1,87 @@
+{
+  "stage": "dirty packaged preflight, not final clean release",
+  "runtime": "0.1.7-rc.2",
+  "workspace": "synthetic public CSV",
+  "sessionId": "session-84ea5543-f409-4460-aec3-5ec0f186defd",
+  "initialEntry": {
+    "effort": "high",
+    "elapsedMs": 1530,
+    "adopted": "fidoo/deepseek-v4-flash low",
+    "actual": "fidoo/deepseek-v4-flash low"
+  },
+  "uiObservedTransitions": [
+    {
+      "ms": 1,
+      "state": "准备就绪"
+    },
+    {
+      "ms": 12,
+      "state": "已接收，正在准备"
+    },
+    {
+      "ms": 27,
+      "state": "正在选择处理方式"
+    },
+    {
+      "ms": 1563,
+      "state": "已接收，正在准备"
+    },
+    {
+      "ms": 1595,
+      "state": "已选择，等待模型响应"
+    },
+    {
+      "ms": 5078,
+      "state": "正在执行"
+    },
+    {
+      "ms": 140995,
+      "state": "本轮已结束"
+    },
+    {
+      "ms": 184164,
+      "state": "已接收，正在准备"
+    },
+    {
+      "ms": 184169,
+      "state": "正在选择处理方式"
+    },
+    {
+      "ms": 185815,
+      "state": "已接收，正在准备"
+    },
+    {
+      "ms": 185837,
+      "state": "已选择，等待模型响应"
+    },
+    {
+      "ms": 190887,
+      "state": "正在执行"
+    },
+    {
+      "ms": 219294,
+      "state": "本轮已结束"
+    }
+  ],
+  "automaticSkill": {
+    "outcome": "too-many-candidates",
+    "oldLimit": 12,
+    "releaseLimit": 32,
+    "status": "final automatic injection acceptance pending"
+  },
+  "recovery": {
+    "initialBlock": "local Python site initialization hung; native tools timed out",
+    "cancel": "native Stop button; stopped turn persisted",
+    "continued": "Node.js integer-cent aggregation"
+  },
+  "oracle": {
+    "artifact": "artifacts/region-totals.json",
+    "passed": true,
+    "inputUnchanged": true,
+    "paidOrders": 5,
+    "excludedOrders": 1,
+    "total": "475.25",
+    "artifactSha256": "cbe3d84eaa680f317bc8e4041197996bfde17cfd018829dd64ab31345efe1b8b",
+    "inputSha256": "b6bd231a96b9d9b9024587f0873a4a33bb18c405dbb02a087c3e47866fc316e1"
+  }
+}

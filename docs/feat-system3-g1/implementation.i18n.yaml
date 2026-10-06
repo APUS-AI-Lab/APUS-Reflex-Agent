@@ -1,0 +1,19 @@
+# Bilingual-pair consistency record for implementation.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-system3-g1/implementation.md
+/system3-implementation-and-deployment:
+  en: f1d27157a8dd3d15
+  zh: ac2f3048b51a39a6
+/system3-implementation-and-deployment/goal:
+  en: 36a907795d3ad8c5
+  zh: 5a9bb9b77fd778ab
+/system3-implementation-and-deployment/changes:
+  en: c8953c4f04936531
+  zh: 940f090569907843
+/system3-implementation-and-deployment/api-and-controls:
+  en: a88e9f00ac0dd7e3
+  zh: 42b520ad0cff72e5
+/system3-implementation-and-deployment/verification:
+  en: 3e45ce4387fbb620
+  zh: 70752cb44f72f296

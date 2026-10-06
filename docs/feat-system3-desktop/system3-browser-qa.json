@@ -1,0 +1,428 @@
+{
+  "checkedAtUTC": "2026-09-30T07:52:10Z",
+  "method": "gstack browse, isolated file:// tabs; real clicks/keys, DOM measurements and viewed screenshots",
+  "scope": [
+    "v3 responsive layouts and keyboard interaction",
+    "detailed design responsive layouts and keyboard scroll",
+    "v2 existing 66 assertion regression"
+  ],
+  "notCovered": [
+    "real Harness runtime or API",
+    "complete WCAG audit",
+    "v3 final semantic-state regression owned by root agent"
+  ],
+  "layout": [
+    {
+      "page": "v3",
+      "state": "initial",
+      "width": 1440,
+      "height": 1000,
+      "theme": "dark",
+      "pageOverflow": false,
+      "scrollWidth": 1440,
+      "unnamedControls": 0,
+      "clippedControls": 0,
+      "localHorizontalScrollRegions": 0
+    },
+    {
+      "page": "v3",
+      "state": "initial",
+      "width": 1440,
+      "height": 1000,
+      "theme": "light",
+      "pageOverflow": false,
+      "scrollWidth": 1440,
+      "unnamedControls": 0,
+      "clippedControls": 0,
+      "localHorizontalScrollRegions": 0
+    },
+    {
+      "page": "design",
+      "state": "initial",
+      "width": 1440,
+      "height": 1000,
+      "theme": "dark",
+      "pageOverflow": false,
+      "scrollWidth": 1440,
+      "unnamedControls": 0,
+      "clippedControls": 0,
+      "localHorizontalScrollRegions": 0
+    },
+    {
+      "page": "v3",
+      "state": "initial",
+      "width": 768,
+      "height": 1000,
+      "theme": "dark",
+      "pageOverflow": false,
+      "scrollWidth": 768,
+      "unnamedControls": 0,
+      "clippedControls": 0,
+      "localHorizontalScrollRegions": 0
+    },
+    {
+      "page": "v3",
+      "state": "initial",
+      "width": 768,
+      "height": 1000,
+      "theme": "light",
+      "pageOverflow": false,
+      "scrollWidth": 768,
+      "unnamedControls": 0,
+      "clippedControls": 0,
+      "localHorizontalScrollRegions": 0
+    },
+    {
+      "page": "design",
+      "state": "initial",
+      "width": 768,
+      "height": 1000,
+      "theme": "dark",
+      "pageOverflow": false,
+      "scrollWidth": 768,
+      "unnamedControls": 0,
+      "clippedControls": 0,
+      "localHorizontalScrollRegions": 10
+    },
+    {
+      "page": "v3",
+      "state": "initial",
+      "width": 390,
+      "height": 1000,
+      "theme": "dark",
+      "pageOverflow": false,
+      "scrollWidth": 390,
+      "unnamedControls": 0,
+      "clippedControls": 0,
+      "localHorizontalScrollRegions": 1
+    },
+    {
+      "page": "v3",
+      "state": "initial",
+      "width": 390,
+      "height": 1000,
+      "theme": "light",
+      "pageOverflow": false,
+      "scrollWidth": 390,
+      "unnamedControls": 0,
+      "clippedControls": 0,
+      "localHorizontalScrollRegions": 1
+    },
+    {
+      "page": "design",
+      "state": "initial",
+      "width": 390,
+      "height": 1000,
+      "theme": "dark",
+      "pageOverflow": false,
+      "scrollWidth": 390,
+      "unnamedControls": 0,
+      "clippedControls": 0,
+      "localHorizontalScrollRegions": 10
+    },
+    {
+      "page": "v3",
+      "state": "initial",
+      "width": 320,
+      "height": 1000,
+      "theme": "dark",
+      "pageOverflow": false,
+      "scrollWidth": 320,
+      "unnamedControls": 0,
+      "clippedControls": 0,
+      "localHorizontalScrollRegions": 1
+    },
+    {
+      "page": "v3",
+      "state": "initial",
+      "width": 320,
+      "height": 1000,
+      "theme": "light",
+      "pageOverflow": false,
+      "scrollWidth": 320,
+      "unnamedControls": 0,
+      "clippedControls": 0,
+      "localHorizontalScrollRegions": 1
+    },
+    {
+      "page": "design",
+      "state": "initial",
+      "width": 320,
+      "height": 1000,
+      "theme": "dark",
+      "pageOverflow": false,
+      "scrollWidth": 320,
+      "unnamedControls": 0,
+      "clippedControls": 0,
+      "localHorizontalScrollRegions": 10
+    },
+    {
+      "page": "v3",
+      "state": "expert-partial",
+      "width": 768,
+      "height": 1000,
+      "theme": "dark",
+      "pageOverflow": false,
+      "scrollWidth": 768,
+      "unnamedControls": 0,
+      "clippedControls": 0,
+      "localHorizontalScrollRegions": 0
+    },
+    {
+      "page": "v3",
+      "state": "expert-partial",
+      "width": 390,
+      "height": 1000,
+      "theme": "dark",
+      "pageOverflow": false,
+      "scrollWidth": 390,
+      "unnamedControls": 0,
+      "clippedControls": 0,
+      "localHorizontalScrollRegions": 1
+    },
+    {
+      "page": "v3",
+      "state": "expert-partial",
+      "width": 320,
+      "height": 1000,
+      "theme": "dark",
+      "pageOverflow": false,
+      "scrollWidth": 320,
+      "unnamedControls": 0,
+      "clippedControls": 0,
+      "localHorizontalScrollRegions": 1
+    },
+    {
+      "page": "v3",
+      "state": "expert-preview",
+      "width": 1440,
+      "height": 1000,
+      "theme": "dark",
+      "pageOverflow": false,
+      "scrollWidth": 1440,
+      "unnamedControls": 0,
+      "clippedControls": 0,
+      "localHorizontalScrollRegions": 0
+    },
+    {
+      "page": "v3",
+      "state": "expert-preview",
+      "width": 1440,
+      "height": 1000,
+      "theme": "light",
+      "pageOverflow": false,
+      "scrollWidth": 1440,
+      "unnamedControls": 0,
+      "clippedControls": 0,
+      "localHorizontalScrollRegions": 0
+    },
+    {
+      "page": "v3",
+      "state": "expert-preview",
+      "width": 768,
+      "height": 1000,
+      "theme": "dark",
+      "pageOverflow": false,
+      "scrollWidth": 768,
+      "unnamedControls": 0,
+      "clippedControls": 0,
+      "localHorizontalScrollRegions": 0
+    },
+    {
+      "page": "v3",
+      "state": "expert-preview",
+      "width": 768,
+      "height": 1000,
+      "theme": "light",
+      "pageOverflow": false,
+      "scrollWidth": 768,
+      "unnamedControls": 0,
+      "clippedControls": 0,
+      "localHorizontalScrollRegions": 0
+    },
+    {
+      "page": "v3",
+      "state": "expert-preview",
+      "width": 390,
+      "height": 1000,
+      "theme": "dark",
+      "pageOverflow": false,
+      "scrollWidth": 390,
+      "unnamedControls": 0,
+      "clippedControls": 0,
+      "localHorizontalScrollRegions": 1
+    },
+    {
+      "page": "v3",
+      "state": "expert-preview",
+      "width": 390,
+      "height": 1000,
+      "theme": "light",
+      "pageOverflow": false,
+      "scrollWidth": 390,
+      "unnamedControls": 0,
+      "clippedControls": 0,
+      "localHorizontalScrollRegions": 1
+    },
+    {
+      "page": "v3",
+      "state": "expert-preview",
+      "width": 320,
+      "height": 1000,
+      "theme": "dark",
+      "pageOverflow": false,
+      "scrollWidth": 320,
+      "unnamedControls": 0,
+      "clippedControls": 0,
+      "localHorizontalScrollRegions": 1
+    },
+    {
+      "page": "v3",
+      "state": "expert-preview",
+      "width": 320,
+      "height": 1000,
+      "theme": "light",
+      "pageOverflow": false,
+      "scrollWidth": 320,
+      "unnamedControls": 0,
+      "clippedControls": 0,
+      "localHorizontalScrollRegions": 1
+    }
+  ],
+  "keyPaths": {
+    "source": {
+      "open": true,
+      "focusTag": "SUMMARY",
+      "focusText": "查看原文与来源",
+      "source": "查看原文与来源保持原文件与生产库约束；列出统计或兼容性检查；必须取得独立检查结果。\n来源：编写的技能目录样例 v1"
+    },
+    "preview": {
+      "visible": true,
+      "conversationHidden": true,
+      "focus": "preview-title",
+      "title": "经营月报草稿",
+      "content": "经营月报 · 2026-08 · CNY\n\n统计口径\n订单与退款分别汇总；原文件只读。\n\n固定样例摘要\n订单收入：128,600\n退款金额：8,400\n净额草稿：120,200\n\n异常清单\n一条样例订单缺少业务分类；列入待人工核对。\n\n以上数字全部是独立编写的设计样例，未读取任何真实文件。\n最终合计仍待验收。"
+    },
+    "back": {
+      "conversationVisible": true,
+      "previewHidden": true,
+      "focus": "conversation-tab",
+      "focusText": "任务会话",
+      "sourceOpen": true
+    },
+    "retain": {
+      "draft": "QA会话保留：月报目标与只读约束",
+      "mode": "fixed",
+      "currency": "CNY",
+      "artifactCount": 1,
+      "contextCount": 2,
+      "sourceOpen": true,
+      "phase": "running",
+      "cursor": 3
+    },
+    "expertDraft": "QA接口会话独立草稿",
+    "keyboardFocusOutline": "rgb(123, 185, 255) solid 3px",
+    "questionWhenNextDisabledFocus": {
+      "beforeFix": "BODY",
+      "afterFix": "clarify-month"
+    },
+    "mobileSessionKeyboard": {
+      "scenario": "resume",
+      "navScrollLeft": 208,
+      "left": 141,
+      "right": 295,
+      "viewport": 320
+    }
+  },
+  "motionAndKeyboardScroll": {
+    "reducedMotion": {
+      "v3": true,
+      "buttonTransition": "0s",
+      "design": true,
+      "designScroll": "auto"
+    },
+    "tableKeyboard": {
+      "before": 0,
+      "after": {
+        "left": 40,
+        "focusClass": "table-scroll",
+        "outline": "rgb(123, 185, 255) solid 3px"
+      }
+    },
+    "previewPageDown": {
+      "previewScrollTop": 103,
+      "pageScrollY": 0,
+      "focus": "preview-title"
+    }
+  },
+  "contrast": [
+    {
+      "page": "v3",
+      "theme": "dark",
+      "minSampledTokenRatio": 6.98,
+      "allSampledTokenPairsAtLeast45": true
+    },
+    {
+      "page": "v3",
+      "theme": "light",
+      "minSampledTokenRatio": 5.56,
+      "allSampledTokenPairsAtLeast45": true
+    },
+    {
+      "page": "design",
+      "theme": "dark",
+      "minSampledTokenRatio": 7.82,
+      "allSampledTokenPairsAtLeast45": true
+    }
+  ],
+  "v2": {
+    "script": "/private/tmp/system3-experience-qa.js",
+    "passed": 66,
+    "failed": 0
+  },
+  "consoleErrors": {
+    "v3": 0,
+    "design": 0,
+    "v2": 0
+  },
+  "findings": [
+    {
+      "severity": "minor",
+      "id": "question-focus",
+      "status": "resolved and browser retested",
+      "observed": "Manual next-event enters waiting for clarification, next-event becomes disabled and keyboard focus falls to BODY",
+      "suggestion": "Preserve the same action-scoped focus rule; background events must not move focus.",
+      "resolution": "Explicit next-event action focuses #clarify-month with preventScroll; pageScrollY remains 0."
+    },
+    {
+      "severity": "limitation",
+      "id": "design-theme",
+      "observed": "Detailed design page provides dark theme only; light mode is supported and tested in v3."
+    }
+  ],
+  "screenshotsViewed": [
+    "/private/tmp/system3-v3-1440-dark.png",
+    "/private/tmp/system3-v3-390-light.png",
+    "/private/tmp/system3-v3-monthly-draft.png",
+    "/private/tmp/system3-v3-expert-partial.png",
+    "/private/tmp/system3-v3-expert-preview-390-dark.png",
+    "/private/tmp/system3-design-320-top.png",
+    "/private/tmp/system3-design-320-entry-readable.png"
+  ],
+  "targetedFocusRetest": {
+    "before": {
+      "phase": "running",
+      "focus": "next-event",
+      "page": 0,
+      "scroll": 0
+    },
+    "after": {
+      "phase": "waiting",
+      "focus": "clarify-month",
+      "focusVisible": true,
+      "page": 0,
+      "outline": "rgb(123, 185, 255) solid 3px"
+    },
+    "passed": true
+  }
+}

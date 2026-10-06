@@ -1,0 +1,44 @@
+---
+description: "Opt-in System3 execution feedback for native Web and Desktop conversations."
+kind: "package-reference"
+---
+
+# @deepseek-ai/dsh-experimental-client-ui-system3
+
+English | [中文](README.zh.md)
+
+## Summary
+
+This optional Client plugin adds a compact native Conversation dock. It displays local submission feedback and persisted System3 advice, Host adoption, actual model responses and Skill injection as separate facts. Both Web and Desktop load this plugin through the product profile.
+
+## Table of Contents
+
+- [Configuration](#configuration)
+- [Behavior](#behavior)
+- [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
+- [Model Experience](#model-experience)
+- [Dev Note](#dev-note)
+
+## Configuration
+
+Load this Host discovery entry alongside System3 and the native Conversation Client plugins. The package has no deployment settings. The product profile owns Jev, generation routes and data permissions. Labels belong to the typed English and Chinese dictionaries.
+
+## Behavior
+
+The dock observes native Session and projection subscriptions. Local submission appears before routing completes. Execution state follows the live Session, independently of historical entry advice; detailed decisions remain available after history replay. Ending a turn does not claim artifact verification. The fixed-model action calls the native reset API and waits for the persisted mode to change; failed mutations preserve the displayed mode. Addressed subagents cannot mutate root model selection.
+
+## Model Experience
+
+None, as this browser plugin adds no model-facing input. It renders Client-safe facts supplied by System3 and invokes the existing Session controller only on a user action.
+
+#### KV Cache effect
+
+No direct effect; native model selection owns any later request change.
+
+## Known Limitations and Deferred Work
+
+- Advice is not execution. A Skill is shown as injected only after the exact instruction message is committed. The dock has no synthetic percentage, timer-driven success, private prompt bodies or provider probabilities. Earlier automatic decisions remain historical when the user fixes a model. Native tools, deliverables, errors, cancellation, goals and expert sessions retain their existing UI owners.
+
+### Dev Note
+
+**Runtime invariant:** No companion is published. The Host projection owns runtime facts; this package owns a disposable Conversation slot registration.

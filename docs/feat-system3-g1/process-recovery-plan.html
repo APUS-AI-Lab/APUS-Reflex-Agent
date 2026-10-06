@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>System3 · 首个过程恢复闭环实施方案</title>
+<style>
+:root{color-scheme:light;--bg:#f5f5f0;--paper:#fff;--ink:#19343a;--muted:#52696e;--line:#d5dfdc;--accent:#126e60}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.8 system-ui,-apple-system,"PingFang SC",sans-serif;overflow-wrap:anywhere}main{max-width:1080px;margin:auto;padding:36px 24px 72px}h1{font-size:clamp(28px,4vw,42px);line-height:1.25}h2{font-size:23px;margin:34px 0 12px}h3{font-size:17px;margin:10px 0}p{margin:12px 0}a{color:var(--accent)}a:focus-visible,summary:focus-visible,[tabindex]:focus-visible{outline:3px solid #287ac0;outline-offset:4px}.status{display:inline-block;padding:5px 12px;background:#fff1ce;border-radius:5px;font-size:13px}.lead{color:var(--muted);font-size:18px}.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.card,details{background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:18px}.card p{font-size:14px;color:var(--muted)}.diagram{overflow:auto;border-radius:10px;background:#0f172a;margin:20px 0}.diagram svg{display:block;width:100%;min-width:850px;height:auto}.caption{font-size:13px;color:var(--muted)}.table-wrap{overflow:auto;background:var(--paper);border:1px solid var(--line);border-radius:8px}table{border-collapse:collapse;width:100%;min-width:670px;font-size:14px}th,td{padding:12px 15px;border-bottom:1px solid var(--line);vertical-align:top;text-align:left}th{background:#e7f0ec}tr:last-child td{border-bottom:0}code{background:#e8eeea;padding:2px 5px;border-radius:3px;font-size:.9em}li{margin:8px 0}summary{cursor:pointer;font-weight:650}.note{border-left:4px solid var(--accent);padding:12px 18px;background:#e7f0ec}footer{margin-top:38px;border-top:1px solid var(--line);padding-top:16px;color:var(--muted);font-size:13px}@media(max-width:700px){.cards{grid-template-columns:1fr}main{padding:24px 18px 48px}}@media print{body{background:white}main{max-width:none;padding:0}.diagram{overflow:visible}.diagram svg{min-width:0}.table-wrap{overflow:visible}table{min-width:0}.card,tr,figure{break-inside:avoid}details{display:block}}
+</style>
+</head>
+<body><main>
+<p><a href="architecture.html">← 统一产品架构</a></p>
+<span class="status">下一阶段拟定方案 · 尚未实现 · 运行基线为已验收 rc.2</span>
+<h1>遇到输入问题时，<br>让 Jev 选择下一种处理方法</h1>
+<p class="lead">先验证一个完整、可解释、可回放的过程决策：公开 CSV 或文档读取失败后，选择定位文件、请求明确输入或弃权，由原生 Harness 采用，大脑继续执行。</p>
+<p class="note">本方案的目标是证明过程决策能实际改变执行方法，并测量它是否带来收益。完整专家编排、本地 9B/27B Lead 与任务自动完成判定沿用各自后续里程碑。</p>
+
+<h2>1. 为什么选择这个场景</h2>
+<p>当前原生 <a href="../../packages/llm/llm-retry/src/index.ts">llm-retry</a> 已处理模型请求的重试与 backoff，<a href="../../packages/guard/repeat-tool-reminder/src/index.ts">repeat-tool-reminder</a> 已提示重复工具调用。新增恢复消费者只处理原生只读文件操作的明确缺失错误，选择下一种方法；原生重试和重复提醒继续拥有原来的职责。</p>
+<div class="cards">
+<article class="card"><h3>文件可能存在</h3><p>用户提供了过时路径，公开工作区内有明确目标。先定位真实文件，再读取和生成成果。</p></article>
+<article class="card"><h3>必要输入缺失</h3><p>工作区没有足够线索，或用户尚未提供资料。请求具体位置或补充输入，避免反复猜路径。</p></article>
+<article class="card"><h3>证据不足</h3><p>Jev 弃权、超时或返回无效结果时，由现有大脑与原生工具流程继续处理。</p></article>
+</div>
+
+<h2>2. 原生接入与事实闭环</h2>
+<figure style="margin:0">
+<div class="diagram" tabindex="0" role="region" aria-label="过程恢复组件与事实关系，可横向阅读">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 450" role="img" aria-labelledby="recovery-title recovery-desc">
+<title id="recovery-title">文件定位受阻后的 Jev 方法选择</title>
+<desc id="recovery-desc">原生工具失败记录进入 Session，在下一次 pre-step 经准入和状态核对后请求 Jev；原生采用固定策略指令，大脑继续工具执行，结果记录到 Session，前端展示已确认的事实。</desc>
+<defs><marker id="recovery-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#34d399"/></marker></defs>
+<rect width="1040" height="450" fill="#0f172a"/>
+<g fill="none" stroke="#34d399" stroke-width="2" marker-end="url(#recovery-arrow)"><path d="M290 115H390"/><path d="M650 115H750"/><path d="M880 164V278"/><path d="M750 325H650"/><path d="M390 325H290"/><path d="M160 278V164"/></g>
+<g fill="#0f252d" stroke="#34d399" stroke-width="1.5"><rect x="30" y="66" width="260" height="98" rx="10"/><rect x="390" y="66" width="260" height="98" rx="10"/><rect x="750" y="66" width="260" height="98" rx="10"/><rect x="750" y="278" width="260" height="98" rx="10"/><rect x="390" y="278" width="260" height="98" rx="10"/><rect x="30" y="278" width="260" height="98" rx="10"/></g>
+<g fill="#f1f5f9" font-family="system-ui,sans-serif" font-size="19" text-anchor="middle"><text x="160" y="106">工具事实 / Session</text><text x="520" y="106">恢复准入 / pre-step</text><text x="880" y="106">Jev 有界方法选择</text><text x="880" y="318">原生策略采用</text><text x="520" y="318">大脑继续 / 原生工具</text><text x="160" y="318">结果与前端事实</text></g>
+<g fill="#cbd5e1" font-family="system-ui,sans-serif" font-size="13" text-anchor="middle"><text x="160" y="136">read + FS_NOT_FOUND / 持久证据</text><text x="520" y="136">隐私 / 次数 / 时效 / 当前输入</text><text x="880" y="136">定位 / 请求输入 / 弃权</text><text x="880" y="348">固定指令 / 精确消息 ID</text><text x="520" y="348">原有权限 / 沙箱 / 取消</text><text x="160" y="348">采用记录 / 实际工具结果</text><text x="340" y="95">已提交失败</text><text x="700" y="95">有限状态</text><text x="941" y="218">选择 / 弃权</text><text x="700" y="307">下一步</text><text x="340" y="307">执行证据</text><text x="91" y="218">持续记录</text></g>
+<text x="30" y="420" fill="#94a3b8" font-family="system-ui,sans-serif" font-size="13">目标接入：Jev 提供候选策略；Harness 校验并采用；大脑和原生工具完成执行。</text>
+</svg>
+</div>
+<figcaption class="caption">在失败工具批次结算后的下一次 pre-step 处理。每次模型请求或每个 Token 都调用 Jev，不属于本方案。</figcaption>
+</figure>
+
+<h2>3. 准入与动作约束</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>项目</th><th>拟定行为</th></tr></thead><tbody>
+<tr><td>失败事实</td><td>只识别可核验为原生 <code>read</code> 的 <code>FS_NOT_FOUND</code>；从已提交 <code>tool/call</code> 与关联 <code>tool/result</code> 取事实。未知同名工具、任意错误文本和复合工具不参与。</td></tr>
+<tr><td>时机</td><td><code>agent/pre-step</code> 先委派 <code>next()</code>；拒绝、取消、新输入改变任务、工具能力变化或失败已处理时不采用恢复。并行工具批次完成后再读取一致事实。</td></tr>
+<tr><td><code>locate_input</code></td><td>注入固定指令：先用当前允许的只读定位能力核实输入位置，再决定是否继续。具体调用由大脑生成，仍走原生工具检查。</td></tr>
+<tr><td><code>request_input</code></td><td>注入固定指令：说明缺失的输入并请求明确位置或材料；交互使用现有原生能力。</td></tr>
+<tr><td><code>abstain</code> / 不可用</td><td>保持原生流程。Jev 超时、失联、低置信、无效候选和过期响应均不得产生迟到指令。</td></tr>
+<tr><td>副作用</td><td>第一版不接管写操作、权限拒绝、外部服务或任意 shell 失败；恢复消费者不直接执行工具、不重放失败动作、不批准权限。</td></tr>
+<tr><td>配置</td><td>恢复默认关闭，明确 profile 启用。输入字节上限、deadline、置信阈值、每回合次数和允许的数据分类均为有效 Config；实际 profile 显式 <code>high</code>。取消、deadline 和插件生命周期共同约束请求。</td></tr>
+</tbody></table></div>
+
+<h2>4. 数据与前端契约草案</h2>
+<p>新增 <code>system3/recovery-decision</code> 持久事件和专用消息来源 <code>system3-recovery</code>。精确字段在实现中沿现有 branded ID 与 Session 类型定义，不把自由生成的计划作为执行命令。</p>
+<div class="table-wrap"><table><thead><tr><th>记录</th><th>字段与关联要求</th></tr></thead><tbody>
+<tr><td>决策事实</td><td>decision ID、Session 内 turn/step、失败 call/result seq、当前输入消息 ID、候选动作、完整获准 Jev 请求和响应、outcome、elapsedMs、状态版本、精确 injectionMessageId。</td></tr>
+<tr><td>去重与时效</td><td>通过持久事件投影记录失败是否消费及回合次数；重复 pre-step、刷新和 resume 保持一致。返回时重新核对当前任务与能力，过期即弃用。</td></tr>
+<tr><td>采用事实</td><td>只由原生 <code>user/message</code> 提交且精确 injection ID 匹配确认。决策返回、拟注入和实际进入模型上下文分别记录。</td></tr>
+<tr><td>Client 投影</td><td><code>system3Runtime</code> 增加恢复摘要并升级缓存版本；只投影必要状态与动作，不传完整 prompt、原始错误或工作区路径。</td></tr>
+<tr><td>用户可见</td><td>“遇到输入问题”→“已选择：先定位文件 / 请求补充输入”→“策略已采用”。后续执行仍由实际工具卡片显示；没有目标文件关联证据时不显示“恢复成功”。</td></tr>
+<tr><td>兼容</td><td>新增 SessionEventMap / MessageSourceMap 需要持久化类型确认、两 SDK 同步及记录回放。先核对旧读者接受规则，再定义升级与回滚范围；不推定旧版可读新增事件。</td></tr>
+</tbody></table></div>
+
+<h2>5. 文件修改范围</h2>
+<ul>
+<li><code>packages/experimental/system3/src/recovery-selection.ts</code>：新恢复消费者；<code>index.ts</code> 增加可选配置与安装接线。</li>
+<li><code>types.ts</code>、<code>runtime-projection.ts</code>：持久去重、实际采用和 Client 摘要。</li>
+<li><code>packages/experimental/client-ui-system3/src/client/System3Dock.tsx</code>、<code>locales.ts</code>：本地化恢复状态与相关 UI 测试。</li>
+<li>System3 行为测试、实际 Loader / AgentLoop 组合、keyless recorded-session fixture、两 SDK expected 输出和持久化类型确认。</li>
+<li>System3 README 英中说明与独立验收 profile；已运行 profile 在新实现完成验收后才作为另一步发布更新。</li>
+</ul>
+<p class="caption">原生 AgentLoop、Tool Runtime、llm-retry 与通用 supervisor 继续承担原职责；本方案使用既有扩展点。</p>
+
+<h2>6. 验收与三组对照</h2>
+<ol>
+<li>错路径但工作区存在目标 CSV：选择定位方法、实际读入正确文件、生成成果，外部 oracle 核验文件内容。</li>
+<li>必要输入确实缺失：提出具体输入请求；不循环猜测路径。</li>
+<li>取消、超时、失联、低置信、非法候选、过期状态：无迟到注入；保持原生可继续状态。</li>
+<li>同一失败重复 pre-step 和 resume：最多一次采用；取消后晚到响应不改变状态。</li>
+<li>权限拒绝、写入失败和未知工具：不进入恢复消费者。</li>
+<li>只有建议、只有拟注入、真正采用三类投影负例；刷新、回放及两 SDK 对应事实一致。</li>
+</ol>
+<p class="note">对照组必须包含：原生大脑自行恢复、确定性“先定位”规则、Jev 三动作策略。固定任务、资料和质量门槛，保留失败，统计端到端耗时、无效工具调用、总 Token / 成本及成功率。单个文件错误很可能用规则即可解决；只有实测净收益才能支持扩大 Jev 控制范围。</p>
+
+<h2>7. 接入依据与进入实施的条件</h2>
+<p>依据 <a href="../../packages/core/agent-loop/src/tool-calls.ts">工具调用与结果持久关联</a>、<a href="../../packages/core/agent-loop/src/agent.ts">原生下一步与请求重试</a>、<a href="../../packages/experimental/system3/src/skill-selection.ts">现有 pre-step Skill 采用</a>、<a href="../../packages/experimental/system3/src/runtime-projection.ts">事实投影</a>以及 <a href="../../docs/testing.md">测试规则</a>。现有 evidence / supervisor 为基础函数，通用 Jev decision 为 shadow，均不作为恢复已实现的证据。</p>
+<p>本页提供目标、接入图、文件范围、事件草案和验收计划。按照用户提供的 Development Preflight / Human Gate，新增运行能力进入实现前需明确确认此具体设计；FrontEnd 现有 CI 核验可独立继续。</p>
+<footer>2026-10-01 · 设计草案 · 当前运行验收仍以 system3-g1-reviewed-rc2 与 system3-g1-acceptance-rc2 为准。</footer>
+</main></body></html>

@@ -87,6 +87,8 @@ const outcome = await ctx.jev.decide({
 
 The package does not own an AgentLoop, select an LLM generation route, edit prompts, authorize tools, or persist Session receipts. A System3 consumer must decide when to call Jev, apply privacy policy, and persist a replayable receipt. This keeps the Jev request visible and makes the provider replaceable.
 
+The transport uses `@typesafe-ai/sdk` 0.6.0 with automatic retries and SDK logging disabled. `protocol: openjev` sends the configured effort; `protocol: typesafe` omits that extension. Endpoints may name the API root or its `/v1` prefix. The timeout includes credential resolution and response delivery; cancellation prevents late network dispatch. State accepts text, objects, arrays and null.
+
 ### Source map
 
 | File | Role |

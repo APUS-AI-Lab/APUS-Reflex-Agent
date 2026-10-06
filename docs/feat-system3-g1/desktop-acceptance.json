@@ -1,0 +1,84 @@
+{
+  "sourceRevision": "3127b62274bf324a3eac0cba28d03a37c3b91a30",
+  "sourceDirty": false,
+  "runtimeVersion": "0.1.7-rc.2",
+  "platform": "darwin-arm64",
+  "session": "session-08b208b7-bf70-4de3-8b37-4510cb463f15",
+  "status": "passed",
+  "profileIsolation": "QA DSH_AGENTS_HOME excludes personal global catalog; workspace Skill discovered natively",
+  "entry": {
+    "requestId": "38d12957-261e-467e-8909-9969c198d299",
+    "effort": "high",
+    "elapsedMs": 1403,
+    "outcome": "selected",
+    "selected": {
+      "provider": "fidoo",
+      "model": "deepseek-v4-flash",
+      "reasoningEffort": "low"
+    }
+  },
+  "skill": {
+    "effort": "high",
+    "elapsedMs": 311,
+    "selected": "csv-reconciliation",
+    "injectionMessageId": "ce2d4dce-870d-43a1-aafd-4dc6de772c90",
+    "matchedNativeMessageId": "ce2d4dce-870d-43a1-aafd-4dc6de772c90",
+    "source": {
+      "kind": "skill-invocation",
+      "name": "csv-reconciliation",
+      "form": "instructions"
+    }
+  },
+  "actualResponse": {
+    "kind": "model",
+    "provider": "fidoo",
+    "model": "deepseek-v4-flash"
+  },
+  "artifact": {
+    "path": "artifacts/region-totals.json",
+    "value": {
+      "currency": "USD",
+      "paidOrders": 5,
+      "excludedOrders": 1,
+      "byRegion": {
+        "AMER": "225.25",
+        "APAC": "170.00",
+        "EMEA": "80.00"
+      },
+      "total": "475.25"
+    },
+    "externalOracle": "python3 apps/cli/tests/profiles/system3/fixtures/verify-artifact.py /private/tmp/system3-desktop-public-workspace",
+    "checks": 2,
+    "passed": true,
+    "inputSha256": "b6bd231a96b9d9b9024587f0873a4a33bb18c405dbb02a087c3e47866fc316e1"
+  },
+  "ui": {
+    "receivedMs": 5,
+    "decidingMs": 15,
+    "scope": "single observation, not latency distribution",
+    "skillInjectedVisible": true,
+    "responseModelVisible": true,
+    "screenshot": "/private/tmp/system3-3127-desktop-skill-task.png"
+  },
+  "startup": {
+    "normalReadyMs": 1435,
+    "safeReadyMs": 1234,
+    "safeExcludesSystem3Plugin": true,
+    "normalScreenshot": "/private/tmp/system3-3127-native-normal.png",
+    "safeScreenshot": "/private/tmp/system3-3127-native-safe.png"
+  },
+  "installation": {
+    "app": "~/Applications/xDAN System3.app",
+    "launcher": "~/.local/bin/xdan-system3",
+    "clickLauncher": "~/Applications/启动 xDAN System3.command",
+    "credentialFile": "~/.config/xdan-system3/runtime.env",
+    "credentialFileMode": "0600",
+    "credentialsEmbeddedInApp": false,
+    "installedReadyMs": 1951,
+    "profile": "isolated acceptance profile",
+    "unsigned": true,
+    "sameSessionRestoredAfterRestart": true,
+    "appAsarSha256": "c23a704f03e924dab221229cb8abfcc98e952c0e717d8a1f324aa224e1749743"
+  },
+  "frontendImplementationRevision": "d37959f4d482bde76b4290c44e2a3223d51cbafc"
+}

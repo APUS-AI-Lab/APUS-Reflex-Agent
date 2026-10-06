@@ -1,0 +1,43 @@
+# Bilingual-pair consistency record for system3-experience-review.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-system3-desktop/system3-experience-review.md
+/system3-a-task-workbench-that-takes-initiative:
+  en: 4d259f6fff5cb7dd
+  zh: fd0b11ef0cd7991d
+/system3-a-task-workbench-that-takes-initiative/direct-execution-experience-direction:
+  en: abbee03272ff53d9
+  zh: 226d47d7850f8b06
+/system3-a-task-workbench-that-takes-initiative/direct-execution-experience-direction/one-complete-experience:
+  en: fa317f2ce4391802
+  zh: 1d0447849f1f397a
+/system3-a-task-workbench-that-takes-initiative/direct-execution-experience-direction/how-the-experience-is-produced:
+  en: 2690923cd5cf4613
+  zh: f3ab1e46f6167d78
+/system3-a-task-workbench-that-takes-initiative/interface-structure-and-feedback-levels:
+  en: 1dda7e98826aeaa8
+  zh: 1cc58151c23b978f
+/system3-a-task-workbench-that-takes-initiative/specific-changes-to-the-original-draft:
+  en: fc3643613966419d
+  zh: 8616952391bda831
+/system3-a-task-workbench-that-takes-initiative/how-jev-capabilities-enter-the-experience:
+  en: 605659b651fd63f5
+  zh: d8990cdd27643761
+/system3-a-task-workbench-that-takes-initiative/where-local-9b-27b-belongs:
+  en: a097da039b20f269
+  zh: 1b7c47893f1e7c95
+/system3-a-task-workbench-that-takes-initiative/state-interfaces-and-reuse-requirements:
+  en: 338b87dcbae8673a
+  zh: 521c113177e47af5
+/system3-a-task-workbench-that-takes-initiative/motion-and-timing:
+  en: 5ad78a58b1bf9bb1
+  zh: 1634e9d807ad8deb
+/system3-a-task-workbench-that-takes-initiative/file-scope-and-verification-plan:
+  en: ea882666621c8a53
+  zh: 4edbca5df6f2fd3f
+/system3-a-task-workbench-that-takes-initiative/deeper-interaction-retained-tradeoffs:
+  en: ea48b3ed2bbc71fb
+  zh: 16775cca5ed9361c
+/system3-a-task-workbench-that-takes-initiative/dev-note:
+  en: 692a55e14b4785b2
+  zh: be6221a630c78491

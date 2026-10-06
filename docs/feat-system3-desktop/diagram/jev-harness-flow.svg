@@ -1,0 +1,137 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 1280" role="img" aria-labelledby="diagram-title diagram-desc">
+  <title id="diagram-title">Jev 融入 Harness：即时判断、原生执行与持续反馈</title>
+  <desc id="diagram-desc">完整设计示意，不表示全部已实现。用户输入经过 DSH 规则形成合法候选，Jev System1 做有界判断或弃权，所属原生服务校验与采用。唯一 DSH 执行核心支持云 System2、原生工具，以及待验证的本机 9B 或 27B 通用 Lead。未来 Lead 处理本机常用任务和数据，通过原生 subagent 接口委派已安装的专业 Agent，结果返回 Harness 并由 Lead 整合。真实结果写入统一 Session、有来源的记忆与 Goal，再重新形成合法候选供下一次判断。决策服务、Lead、云模型和专家的数据执行域分别管理，数据外发必须经过规则准入。</desc>
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#26313e" stroke-width="0.5"/></pattern>
+    <marker id="arrow-green" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><path d="M0 0L9 3.5L0 7Z" fill="#6ce4b0"/></marker>
+    <marker id="arrow-blue" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><path d="M0 0L9 3.5L0 7Z" fill="#7bb9ff"/></marker>
+    <marker id="arrow-amber" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><path d="M0 0L9 3.5L0 7Z" fill="#ffd38c"/></marker>
+  </defs>
+  <style>
+    text { font-family: "PingFang SC", "Noto Sans CJK SC", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif; fill: #e8edf2; }
+    .title { font-size: 32px; font-weight: 500; }
+    .subtitle { font-size: 19px; fill: #b3c0ce; }
+    .heading { font-size: 24px; font-weight: 500; }
+    .body { font-size: 20px; fill: #b3c0ce; }
+    .small { font-size: 18px; fill: #b3c0ce; }
+    .annotation { font-size: 18px; }
+    .green { fill: #6ce4b0; }
+    .blue { fill: #7bb9ff; }
+    .amber { fill: #ffd38c; }
+    .panel { fill: #19222d; stroke: #334354; stroke-width: 1.5; }
+    .decision { fill: #173127; stroke: #6ce4b0; stroke-width: 2; }
+    .owned { fill: #182b40; stroke: #7bb9ff; stroke-width: 2; }
+    .future { fill: #302a22; stroke: #ffd38c; stroke-width: 2; stroke-dasharray: 10 6; }
+    .suggestion { fill: none; stroke: #6ce4b0; stroke-width: 2.5; marker-end: url(#arrow-green); }
+    .execution { fill: none; stroke: #7bb9ff; stroke-width: 2.5; marker-end: url(#arrow-blue); }
+    .future-link { fill: none; stroke: #ffd38c; stroke-width: 2.5; stroke-dasharray: 10 6; marker-end: url(#arrow-amber); }
+    .feedback { fill: none; stroke: #7bb9ff; stroke-width: 2.5; stroke-dasharray: 2 7; stroke-linecap: round; marker-end: url(#arrow-blue); }
+  </style>
+  <rect width="1440" height="1280" fill="#10151d"/>
+  <rect width="1440" height="1280" fill="url(#grid)"/>
+
+  <!-- Regions precede connectors and opaque component panels. -->
+  <rect x="65" y="390" width="1310" height="465" rx="18" fill="#121b26" stroke="#7bb9ff" stroke-width="1.5"/>
+  <text x="90" y="425" class="heading blue">DSH 原生执行与编排 · 一个执行核心</text>
+  <text x="90" y="453" class="small">权限、工具、取消、预算与父子任务生命周期均由 Harness 维护</text>
+
+  <!-- Input flow: legal candidates, bounded suggestion, owned adoption. -->
+  <path d="M305 250H355" class="execution"/>
+  <path d="M655 250H705" class="suggestion"/>
+  <path d="M1005 250H1055" class="suggestion"/>
+  <text x="1030" y="229" class="annotation green" text-anchor="middle">建议</text>
+
+  <!-- Adopted execution enters the original Harness. -->
+  <path d="M1215 320V360H1355V675H1135V700" class="execution"/>
+  <path d="M1215 320V380H695V490" class="execution"/>
+  <text x="1280" y="349" class="annotation blue" text-anchor="middle">采用后执行</text>
+  <path d="M1215 360H50V550H100" class="future-link"/>
+  <rect x="590" y="339" width="350" height="31" fill="#10151d"/>
+  <text x="765" y="361" class="annotation amber" text-anchor="middle">未来可采用本机 Lead · 待验证</text>
+
+  <!-- The future Lead uses native subagent ownership and return paths. -->
+  <path d="M460 565H525" class="future-link"/>
+  <path d="M865 565H930" class="execution"/>
+  <path d="M1135 640V665H695V640" class="feedback"/>
+  <text x="970" y="686" class="annotation blue" text-anchor="middle">专家结果回 Harness</text>
+  <path d="M610 640V675H480V610H460" class="future-link"/>
+  <text x="545" y="664" class="small amber" text-anchor="middle">Lead 整合</text>
+  <path d="M280 640V700" class="future-link"/>
+  <path d="M695 640V700" class="execution"/>
+
+  <!-- Results settle before state update or subsequent decisions. -->
+  <path d="M280 800V830H695V885" class="future-link"/>
+  <path d="M695 800V885" class="execution"/>
+  <path d="M1135 800V830H695" class="execution"/>
+  <path d="M695 975V1020" class="execution"/>
+
+  <!-- Feedback returns to candidate formation, preserving rule ownership. -->
+  <path d="M100 1065H30V140H505V175" class="feedback"/>
+  <rect x="60" y="116" width="750" height="28" fill="#10151d"/>
+  <text x="65" y="136" class="annotation blue">新输入 / 新结果 / Goal 变化 → 重建合法候选 → 后续 Jev 判断</text>
+
+  <!-- Primary components. -->
+  <rect x="65" y="175" width="240" height="145" rx="12" class="panel"/>
+  <text x="185" y="215" class="heading" text-anchor="middle">用户 / 桌面</text>
+  <text x="185" y="252" class="body" text-anchor="middle">任务与人工意图</text>
+  <text x="185" y="282" class="small" text-anchor="middle">自动 / 固定 · 停止 / 恢复</text>
+  <rect x="355" y="175" width="300" height="145" rx="12" class="owned"/>
+  <text x="505" y="215" class="heading blue" text-anchor="middle">规则形成合法候选</text>
+  <text x="505" y="252" class="body" text-anchor="middle">权限 · 隐私 · 预算 · 可用性</text>
+  <text x="505" y="282" class="small" text-anchor="middle">只提交少量明确的候选</text>
+  <rect x="705" y="175" width="300" height="145" rx="12" class="decision"/>
+  <text x="855" y="213" class="heading green" text-anchor="middle">Jev · System1</text>
+  <text x="855" y="248" class="body" text-anchor="middle">choice / score / noul / 弃权</text>
+  <text x="855" y="277" class="small" text-anchor="middle">自有 9B / 官方 API</text>
+  <text x="855" y="304" class="small" text-anchor="middle">弃权沿基线 · 执行域按供给</text>
+  <rect x="1055" y="175" width="320" height="145" rx="12" class="owned"/>
+  <text x="1215" y="215" class="heading blue" text-anchor="middle">所属原生服务采用</text>
+  <text x="1215" y="252" class="body" text-anchor="middle">模型 · 能力 · 记忆 · Goal</text>
+  <text x="1215" y="282" class="small" text-anchor="middle">校验版本、取消与生效时点</text>
+
+  <!-- Execution components. -->
+  <rect x="100" y="490" width="360" height="150" rx="12" class="future"/>
+  <text x="280" y="528" class="heading amber" text-anchor="middle">未来：本机 9B / 27B Lead</text>
+  <text x="280" y="563" class="body" text-anchor="middle">通用 System2 · 待验证</text>
+  <text x="280" y="593" class="small" text-anchor="middle">常用任务 / 数据处理 / 目标跟踪</text>
+  <text x="280" y="622" class="small" text-anchor="middle">生成、编排并整合专家结果</text>
+  <rect x="525" y="490" width="340" height="150" rx="12" class="owned"/>
+  <text x="695" y="529" class="heading blue" text-anchor="middle">原生 subagent 交接</text>
+  <text x="695" y="567" class="body" text-anchor="middle">合法专家 · 上下文范围</text>
+  <text x="695" y="599" class="small" text-anchor="middle">任务归属 / 取消 / 结果回传</text>
+  <rect x="930" y="490" width="410" height="150" rx="12" class="owned"/>
+  <text x="1135" y="529" class="heading blue" text-anchor="middle">专业 Agent · 已安装才可选</text>
+  <text x="1135" y="567" class="body" text-anchor="middle">Codex / Claude / 领域 Agent</text>
+  <text x="1135" y="599" class="small" text-anchor="middle">分别明确实际执行域与数据规则</text>
+  <rect x="100" y="700" width="360" height="100" rx="12" class="future"/>
+  <text x="280" y="741" class="heading amber" text-anchor="middle">本机常用能力与数据处理</text>
+  <text x="280" y="775" class="small" text-anchor="middle">在本机执行 · 仍遵守原生权限</text>
+  <rect x="525" y="700" width="340" height="100" rx="12" class="owned"/>
+  <text x="695" y="741" class="heading blue" text-anchor="middle">原生工具与调用生命周期</text>
+  <text x="695" y="775" class="small" text-anchor="middle">文件 / 终端 / 模型调用 / 取消</text>
+  <rect x="930" y="700" width="410" height="100" rx="12" class="owned"/>
+  <text x="1135" y="741" class="heading blue" text-anchor="middle">云 System2 · 高难推理与生成</text>
+  <text x="1135" y="775" class="small" text-anchor="middle">远程执行 · 仅发送规则获准数据</text>
+
+  <!-- One result stream and one durable state projection. -->
+  <rect x="100" y="885" width="1240" height="90" rx="12" class="owned"/>
+  <text x="720" y="923" class="heading blue" text-anchor="middle">真实结果回到 Harness</text>
+  <text x="720" y="955" class="body" text-anchor="middle">实际模型输出 / 工具结果 / 专家返回 / 错误与取消 · 输出不等于任务验收通过</text>
+  <rect x="100" y="1020" width="1240" height="95" rx="12" class="owned"/>
+  <text x="720" y="1059" class="heading blue" text-anchor="middle">统一 Session · 有来源的记忆 · 原生 Goal · 桌面 / Web 反馈</text>
+  <text x="720" y="1093" class="body" text-anchor="middle">关键上下文保留与查回 · 真实进展与验收证据 · 同一日志回放 · 不另建执行核心</text>
+
+  <!-- Legend and notes remain outside the execution region. -->
+  <path d="M85 1158H140" class="suggestion"/>
+  <text x="155" y="1165" class="annotation">Jev 建议</text>
+  <path d="M320 1158H375" class="execution"/>
+  <text x="390" y="1165" class="annotation">原生采用 / 执行</text>
+  <path d="M620 1158H675" class="feedback"/>
+  <text x="690" y="1165" class="annotation">结果反馈</text>
+  <path d="M885 1158H940" class="future-link"/>
+  <text x="955" y="1165" class="annotation amber">未来本机 Lead 路径 · 待验证</text>
+  <text x="85" y="1201" class="small">角色边界：Jev 不生成完整规划、不执行工具；Lead 与专家执行均由 DSH 原生机制管理</text>
+  <text x="85" y="1230" class="small">数据边界：决策服务、Lead、云模型与专家各自准入；本机 Lead 不代表整个任务不外发</text>
+  <text x="65" y="56" class="title">Jev 融入 Harness：即时判断 → 原生执行 → 持续反馈</text>
+  <text x="65" y="91" class="subtitle">完整设计示意 · 实线不表示全部已实现 · 未来本机 Lead 使用虚线标注</text>
+</svg>

@@ -1,0 +1,61 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "lib/types",
+    "tsBuildInfoFile": "lib/tsconfig.host.tsbuildinfo"
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../skill/skill"
+    },
+    {
+      "path": "../../typert/protocol"
+    },
+    {
+      "path": "../../../vendor/cordis"
+    },
+    {
+      "path": "../../../vendor/schemastery"
+    },
+    {
+      "path": "../system3-evidence"
+    },
+    {
+      "path": "../system3-policy"
+    },
+    {
+      "path": "../system3-supervisor"
+    },
+    {
+      "path": "../apus-dsh-jev-plugin"
+    },
+    {
+      "path": "../../util/brand"
+    },
+    {
+      "path": "../../core/session"
+    },
+    {
+      "path": "../../util/values"
+    },
+    {
+      "path": "../../core/agent"
+    },
+    {
+      "path": "../../session/session-projection"
+    },
+    {
+      "path": "../../api/session-controller/tsconfig.host.json"
+    },
+    {
+      "path": "../../llm/llm"
+    },
+    {
+      "path": "../../util/timeout"
+    }
+  ]
+}

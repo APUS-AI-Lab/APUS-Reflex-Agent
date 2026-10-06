@@ -375,3 +375,85 @@ it('requires the local speech worker and locked runtime in the published payload
       .toEqual([expect.stringContaining('package.json files must be')])
   }
 })
+
+it('requires the standalone shortcut protocol and rejects unrelated runtime files', () => {
+  const dir = 'packages/client/shortcuts'
+  const manifest = JSON.parse(readFileSync(new URL(`../${dir}/package.json`, import.meta.url), 'utf8')) as WorkspaceManifest['manifest']
+  expect(checkWorkspaceManifest({ dir, manifest })).toEqual([])
+  for (const files of [
+    ['lib/index.js', 'lib/client.js', 'lib/types/**/*.d.ts'],
+    ['lib/index.js', 'lib/client.js', 'lib/protocol.js', 'lib/extra.js', 'lib/types/**/*.d.ts'],
+  ]) {
+    expect(checkWorkspaceManifest({ dir, manifest: { ...manifest, files } }))
+      .toEqual([expect.stringContaining('package.json files must be')])
+  }
+})
+
+
+describe('fork-owned release members', () => {
+  const forkUrl = 'git+https://github.com/cryptoSUN2049/xDAN-System3-Harness.git'
+  const upstreamUrl = 'git+https://github.com/deepseek-ai/deepseek-harness.git'
+  const members = [
+    'agui', 'apus-dsh-jev-plugin', 'client-ui-system3', 'system3',
+    'system3-evidence', 'system3-policy', 'system3-supervisor',
+  ]
+  const functions = ['system3-evidence', 'system3-policy', 'system3-supervisor']
+  const load = (name: string): WorkspaceManifest => {
+    const dir = `packages/experimental/${name}`
+    const manifest = JSON.parse(readFileSync(new URL(`../${dir}/package.json`, import.meta.url), 'utf8')) as WorkspaceManifest['manifest']
+    return { dir, manifest }
+  }
+
+  it.each(members)('requires the fork source and exact directory for %s', (name) => {
+    const member = load(name)
+    expect(checkWorkspaceManifest(member)).toEqual([])
+    expect(checkWorkspaceManifest({ ...member, manifest: {
+      ...member.manifest, repository: { ...member.manifest.repository, url: upstreamUrl },
+    } })).toEqual([expect.stringContaining(`repository must use ${forkUrl}`)])
+    expect(checkWorkspaceManifest({ ...member, manifest: {
+      ...member.manifest, repository: { ...member.manifest.repository, directory: `${member.dir}/other` },
+    } })).toEqual([expect.stringContaining(`with directory ${member.dir}`)])
+  })
+
+  it.each(functions)('limits the Cordis exemption to the exact function library %s', (name) => {
+    const { dir, manifest } = load(name)
+    expect(manifest.peerDependencies?.['@deepseek-ai/cordis']).toBeUndefined()
+    expect(manifest.devDependencies?.['@deepseek-ai/cordis']).toBeUndefined()
+    for (const altered of [
+      { dir, manifest: { ...manifest, name: '@deepseek-ai/dsh-experimental-unlisted' } },
+      { dir: `${dir}-unlisted`, manifest },
+    ]) {
+      const errors = checkWorkspaceManifest(altered)
+      expect(errors).toContainEqual(expect.stringContaining(`repository must use ${upstreamUrl}`))
+      expect(errors).toContainEqual(expect.stringContaining('@deepseek-ai/cordis must be a peerDependency'))
+      expect(errors).toContainEqual(expect.stringContaining('@deepseek-ai/cordis must also be a devDependency'))
+    }
+    expect(checkWorkspaceManifest({ dir, manifest: {
+      ...manifest,
+      peerDependencies: { '@deepseek-ai/cordis': 'workspace:~' },
+      devDependencies: { '@deepseek-ai/cordis': 'workspace:*' },
+    } })).toEqual([expect.stringContaining('peer (workspace:~) and dev (workspace:*) ranges must match')])
+  })
+
+  it.each(members.filter(name => !functions.includes(name)))('keeps Cordis mandatory for the plugin %s', (name) => {
+    const member = load(name)
+    const peerDependencies = { ...member.manifest.peerDependencies }
+    const devDependencies = { ...member.manifest.devDependencies }
+    delete peerDependencies['@deepseek-ai/cordis']
+    delete devDependencies['@deepseek-ai/cordis']
+    expect(checkWorkspaceManifest({ ...member, manifest: {
+      ...member.manifest, peerDependencies, devDependencies,
+    } })).toEqual([
+      expect.stringContaining('@deepseek-ai/cordis must be a peerDependency'),
+      expect.stringContaining('@deepseek-ai/cordis must also be a devDependency'),
+    ])
+  })
+
+  it('keeps the upstream repository mandatory for unrelated release members', () => {
+    const dir = 'packages/experimental/agent-team-profile'
+    const manifest = JSON.parse(readFileSync(new URL(`../${dir}/package.json`, import.meta.url), 'utf8')) as WorkspaceManifest['manifest']
+    expect(checkWorkspaceManifest({ dir, manifest: {
+      ...manifest, repository: { ...manifest.repository, url: forkUrl },
+    } })).toEqual([expect.stringContaining(`repository must use ${upstreamUrl}`)])
+  })
+})

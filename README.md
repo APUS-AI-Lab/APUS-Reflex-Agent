@@ -2,17 +2,17 @@
 
 English | [中文](README.zh.md)
 
-> **Jev Native + DSH Native.** System3 combines System1 (Jev-like bounded semantic decisions) with System2 (high-performance reasoning and generation), coordinated by DSH’s native state and execution mechanisms. This repository currently provides a typed Jev provider and replayable explicit shadow decisions; automatic hybrid scheduling is a design target. Start with the [integration guide](docs/feat-independent-harness/README.md).
+> **Jev Native + DSH Native.** System3 combines System1 (Jev-like bounded semantic decisions) with System2 (high-performance reasoning and generation), coordinated by DSH’s native state and execution mechanisms. This repository provides typed Jev decisions, replayable receipts, opt-in entry model routing through the native Web/API controller, and bounded native Skill selection. Start with the [integration guide](docs/feat-independent-harness/README.md).
 
 ## Architecture
 
-The first objective is **Jev-guided intake strategy and dispatch**: after user input, select an allowed processing path and let DSH route it to a suitable model or specialist. The second is **smarter, smoother execution** through evidence, memory, recovery, escalation and goal decisions. Both share native task state, decision records and action ownership; rules handle determined cases and System2 handles open reasoning and generation. Automatic integration is proposed, not enabled by mounting the current provider.
+The first objective is **Jev-guided intake strategy and dispatch**: after user input, select an allowed processing path and let DSH route it to a suitable model or specialist. The second is **smarter, smoother execution** through evidence, memory, recovery, escalation and goal decisions. Both share native task state, decision records and action ownership; rules handle determined cases and System2 handles open reasoning and generation. Entry routing requires an explicit candidate and privacy configuration; mounting the decision provider alone leaves it disabled.
 
 ![Jev Native + DSH Native: priority one is intake strategy and dispatch; priority two is intelligent execution, sharing native decisions and outcome feedback. Chinese architecture diagram.](docs/feat-independent-harness/architecture@2x.png)
 
 [SVG source](docs/feat-independent-harness/architecture.svg) · [Jev Native + DSH Native plan (Chinese)](docs/feat-independent-harness/jev-native-dsh-native-plan.html)
 
-The first proposed slice handles idle text requests through a Web/API adapter; specialist handoff, queued inputs and other DSH entry points require their own integration and verification. Memory, routing, long-horizon goals and proactive communication extend the same architecture. Future local 9B/27B Lead Agents remain a deployment option. Pilot is an experimental reference, not a code dependency.
+The implementation handles idle Web/API text requests with Fidoo LiteLLM generation routes, bounded Skill selection before native model steps, and a Conversation view that distinguishes advice, adoption, model response and Skill injection. See the [implementation and acceptance scope](docs/feat-system3-g1/implementation.md), [deployment guide](docs/feat-system3-g1/deployment.md), and [System3 configuration and limits](packages/experimental/system3/README.md). Specialist handoff, queued-entry routing, Jev-driven memory and sustained Goal decisions, and local 9B/27B Lead Agents require further integration and verification. Pilot remains an experimental reference.
 
 DeepSeek Harness (`dsh`) is an open-source agent harness developed by [DeepSeek AI](https://deepseek.com).
 

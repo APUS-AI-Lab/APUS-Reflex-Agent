@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-Mount this opt-in service to expose one `ctx.system3` seam for local-first route admission, recoverable evidence selection, completion supervision, shadow comparison, usage accounting, and an opt-in AgentLoop observation seam. It composes pure libraries; observation records boundaries but does not mutate prompts, routes, or model results.
+Mount this service for local-first route admission, evidence selection, completion supervision, shadow comparison, and usage accounting. Optional observation leaves AgentLoop behavior unchanged. Separately, `entryRouting` enables Jev model recommendations for idle text prompts admitted through the Session API; the API owns adoption and cancellation.
 
 ## Table of Contents
 
@@ -49,6 +49,20 @@ Mount the Jev plugin beside System3, then call `shadowDecision(session, request,
 
 Each explicit call appends `system3/decision` with a state digest, evidence references, model identity, full answer probabilities, usage when reported, and the unchanged baseline. The complete structured Jev payload is recorded for reconstruction; raw task text, tool output, and provider error text are omitted. `lastDecision(session)` reads the latest projected receipt from a live or restored Session without invoking Jev. Evidence references identify external checks; evidence storage remains the host's responsibility.
 
+### Session API entry routing
+
+`entryRouting` defaults to `false`. Enabling it requires `candidates`, `sessionDataClasses`, `minConfidence`, and `maxInputBytes`. Each candidate declares a unique `id`, task `description`, generation `provider` and `model`, optional `reasoningEffort`, actual `executionDomain`, and allowed `dataClasses`. Candidate ids use lower-kebab-case; `abstain` and `unknown` are reserved. Duplicate model/effort selections are rejected. `sessionDataClasses` conservatively classifies the whole session that generation may read, not just the new text; the host owns this classification.
+
+Candidate and Jev network admission both use the privacy policy before sending task text. Candidate metadata must expose context capacity at least as large as the baseline and support every baseline input modality; unknown metadata excludes that candidate. Unsupported reasoning efforts reject configuration at the first model resolution. Jev receives only the current text, baseline model identity, and admitted choice descriptions, with an explicit abstain choice for missing context or uncertain selection. `maxInputBytes` bounds the complete resolved Jev request in UTF-8, including criteria and metadata. Oversized inputs are not truncated and retain the baseline.
+
+`minConfidence` is an acceptance threshold, not a calibrated success probability. Abstention, low confidence, denied privacy, no compatible candidates, unavailable Jev, and provider failures return no override. Cancellation rejects without authorizing prompt admission. A `system3/entry-decision` event preserves the exact Jev request (including text), validated response, and recommendation; `request` is null when no decision was dispatched. The host-only `providerId` in that request is omitted by the Jev HTTP serializer. The Session API's separate `model/automatic-selection` event identifies actual adoption with the same request id. Replaying either event performs no model call. Router registration is disposed with the plugin.
+
+`entryRouting.deadlineMs` bounds baseline preparation, Jev advice, and selected-route preparation together (default 30000 ms; maximum `MAX_TIMER_DELAY_MS`). A timeout can admit only an already prepared legal baseline; incomplete baseline preparation rejects without inbox insertion. The baseline must match an admitted configured candidate or declare `baseline.executionDomain` and `baseline.dataClasses`; an independent remote baseline uses privacy route id `baseline`. Cancel and provider removal abort pending admission, and late advice never authorizes another admission. Native `resetModelSelection` restores automatic routing for later eligible inputs; a manual selection remains fixed until reset.
+
+`skillSelection` enables one scoped, model-invocable Skill selection for surviving user input at the native `agent/pre-step` seam. Configure `sessionDataClasses`, `minConfidence`, `maxInputBytes`, `maxContentBytes`, `maxCandidates` (1–254), and `deadlineMs`. Jev receives current text and complete bounded catalog descriptions; it receives no Skill bodies or conversation history. Stable candidate ids reserve an independent abstention choice. Privacy refusal, incomplete discovery, catalog overflow, low confidence, timeout, stale metadata, or an oversized body leaves the original native model/tool path intact. A catalog exceeding `maxCandidates` is never claimed to have been automatically searched, and explicit `/name` invocations retain their own invocation policy.
+
+A `system3/skill-decision` records the exact request, validated response and reported usage, selection, and proposed native `injectionMessageId`. The loaded body uses `skill-invocation` instructions and becomes model-visible only when the loop commits that exact `user/message`; it grants no tool permission. The `system3Runtime` wire projection exposes `entry.suggested`, `entry.adopted`, and `entry.used` independently, and `skill.selected` separately from `skill.injected`. Actual use requires model output or a streamed attempt carrying content deltas or completed content blocks in the exact input's turn. Usage, block placeholders, and finish-only errors or aborts do not confirm a response; content received before a later error still does. Admission alone never claims dispatch. Replay rebuilds these facts without Jev calls and exposes neither provider inputs nor complete probabilities to clients.
+
 <a id="understand-the-implementation"></a>
 ## Understand the implementation
 
@@ -61,23 +75,23 @@ The service owns no second agent loop. Its explicit `shadowDecision(session, req
 
 #### What the model sees
 
-Nothing is added automatically. A host decides which `ctx.system3` result enters its existing AgentLoop request or Session projection.
+Without entry routing, a host chooses which service results enter model history. Entry routing sends the current text in `state.input`, baseline selection in `state.baseline`, and bounded choice descriptions in `questions.route.criteria` to Jev. Its receipt is not added to generation history. An adopted model change follows the native Session API model-selection behavior.
 
 #### Token effect
 
-None by itself. The evidence method can bound a caller's projection, while the usage ledger records whether the resulting token count came from a provider or an estimate.
+Entry routing adds a Jev call for each eligible admitted prompt when privacy and size checks permit it; provider usage is retained when reported. The evidence method bounds caller projections, and usage records distinguish provider counts from estimates.
 
 #### KV Cache effect
 
-None by itself; mounting the service does not rewrite prompts or change tool schemas.
+Observation and shadow receipts do not change the generation prefix. Automatic Skill injection appends bounded native instruction content before generation. An adopted generation-model switch may lose provider cache reuse; tool schemas are unchanged.
 
 ## Known Limitations and Deferred Work
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- Observation does not edit messages, select a generation provider, or dispatch a subagent. Jev runs only through an explicit `shadowDecision` call; its receipt is not added to the main model history.
+- Entry routing covers the Session API's eligible idle text prompts, not headless, SDK, ACP, attachments, queued batches, or active steering. It does not dispatch experts or control task completion.
 - The service does not enforce OS privacy isolation. Workspaces, environment variables, subprocess egress, and export consent remain host responsibilities.
-- A follow-up integration must pin event schemas, replay behavior, cancellation, and built-profile smoke tests before claiming end-to-end System3 behavior.
+- Entry decisions lack conversation history and must abstain when the new text needs it. Declared data classes and candidate descriptions are deployment facts; this package cannot verify their accuracy or prove routing quality and cost savings.
 
 <a id="dev-note"></a>
 ### Dev Note

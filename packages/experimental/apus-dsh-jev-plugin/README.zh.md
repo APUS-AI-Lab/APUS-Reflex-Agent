@@ -27,6 +27,8 @@ kind: "package-reference"
 
 宿主需要类型化 Jev 决策时挂载本插件；默认 profile 不包含本包。Jev key 放在 harness credential plane 或启动环境中，由 `apiKeyEnv` 引用。
 
+传输使用 `@typesafe-ai/sdk` 0.6.0，禁用自动重试及 SDK 日志。`protocol: openjev` 发送配置的 effort，`protocol: typesafe` 不发送该扩展。端点可使用 API 根地址或 `/v1` 前缀。超时覆盖凭据解析与响应接收；取消后迟到的凭据不会触发网络调用。state 接受文本、对象、数组和 null。
+
 ### 配置 gateway
 
 ```yaml

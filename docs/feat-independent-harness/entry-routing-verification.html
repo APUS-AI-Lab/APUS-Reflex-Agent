@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>System3 入口路由验收</title>
+<style>body{font:17px/1.8 system-ui,sans-serif;background:#0b1220;color:#e2e8f0;max-width:1000px;padding:36px 24px;margin:auto}h1,h2,a{color:#7dd3fc}table{border-collapse:collapse;width:100%;font-size:15px}td,th{padding:12px;text-align:left;border:1px solid #334155}code{overflow-wrap:anywhere;color:#a7f3d0}.note{padding:16px;background:#172337;border-radius:12px}</style><main>
+<h1>原生入口路由 · 首期验收</h1><p>2026-09-29 · xDAN-System3-Harness · <a href="jev-native-dsh-native-plan.html">总体方案</a> · <a href="entry-routing-implementation.html">实施范围</a></p>
+<p class="note">用户输入 → DSH 原生准入 → Jev 9B 有界判断 → 临时 ModelSelection → Fidoo LiteLLM → Session 记录。首期为显式启用的 Web/API 空闲文本入口；附件、忙碌输入、其他入口及过程智能仍按后续里程碑推进。</p>
+<h2>真实部署链路</h2><p>Jev 原生 gateway 的模型列表确认 <code>APUS-OpenJev-v1-9B-5949</code>。Fidoo 专用凭据的 <code>/v1/models</code> 确认 Flash / Pro 权限；两个模型分别通过官方 DSH headless 入口返回 READY。随后在隔离 DSH_HOME 与空工作目录运行真实 Web profile，通过原生 SessionController 提交公开文本，记录完整链路。</p>
+<table><thead><tr><th>公开测试输入</th><th>Jev 建议</th><th>实际 request/header</th><th>结果</th></tr></thead><tbody>
+<tr><td>把“今天的会议推迟到明天下午”改得自然。</td><td>fidoo / deepseek-v4-flash</td><td>deepseek-v4-flash</td><td>返回一句自然改写。</td></tr>
+<tr><td>设计可恢复的分布式任务编排，分析幂等、租约、重复投递与部分失败。</td><td>fidoo / deepseek-v4-pro</td><td>deepseek-v4-pro</td><td>返回系统设计摘要。</td></tr>
+</tbody></table><p>两个请求均产生 <code>system3/entry-decision</code>、同 requestId 的 <code>model/automatic-selection</code> 与实际请求记录。此次客户端决策耗时约 1.08 秒 / 0.76 秒，包含网络开销，仅为单次样本。测试未保存或提交凭据；专用 SSH 隧道与 Web 进程已关闭。</p>
+<h2>工程验收</h2><p>真实 Loader fixture 组合 Jev、System3、SessionController、AgentLoop 与 HTTP 生成 adapter：第一次选中候选并验证实际模型请求；第二次 Jev HTTP 503 沿用基线；JSONL 恢复不再次调用模型。单元测试覆盖取消、人工选择、竞争输入、provider 卸载、工具续步、字节限制、隐私分类、候选容量与模态。</p>
+<div id="checks"><table><tr><th>检查</th><th>结果</th></tr><tr><td>API / System3 / Jev / policy</td><td>50 文件、934 测试通过。</td></tr><tr><td>两个新增路由模块</td><td>语句、分支、函数、行覆盖率均 100%；不代表全仓覆盖率。</td></tr><tr><td>构建与 lint</td><td>完整 build、最后 Host 产物构建及全仓 lint 通过。</td></tr><tr><td>TypeScript / Python SDK</td><td>新旧 TS 场景回放、新 Python 事件协议场景通过；Python 使用官方 dsh launcher，非打包 exe 验收。</td></tr><tr><td>文档与格式</td><td>doc-sync 42/42、Ruff 双检查、工作流 actionlint 与 diff 检查通过。</td></tr><tr><td>包声明与启动入口</td><td>依赖策略、包 metadata、NodeNext 声明与唯一 dsh 启动入口检查通过。</td></tr></table><p>另有一项既存默认产品隔离失败：未改动的 <code>apps/cli/package.json</code> 已依赖 experimental AG-UI，上游默认发行版隔离规则拒绝该依赖。本轮不改这项既有打包选择，也不声称默认 npm 发行版通过完整 hygiene。工作分支交付，main 与常驻服务不变。</p></div>
+<h2>结论与限制</h2><p>已验证原生决策与真实选型执行可以连通。两个公开任务不是路由质量基准，不能据此声称提升准确率、节省成本或替代规划与验收。Jev 仅收到当前文本和候选描述，依赖会话历史的指代应弃权；数据分类依赖部署声明。路由置信分数未校准。候选切换采用保守的容量与模态准入，不代表验证了所有跨模型工具历史兼容性。</p>
+<p>下一阶段先建立带固定基线的任务集，测量错误分流、弃权、额外延迟、总成本和重工，再扩展专业 Agent 交接、记忆与执行环节判断。</p>
+</main></html>

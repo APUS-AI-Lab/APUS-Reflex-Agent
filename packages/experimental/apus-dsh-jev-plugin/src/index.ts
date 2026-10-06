@@ -24,6 +24,8 @@ declare module '@deepseek-ai/cordis' {
 export interface Config {
   /** System One gateway URL; credentials must use apiKeyEnv rather than URL user information. */
   readonly endpoint: string
+  /** Wire protocol; the official API does not receive the OpenJev effort extension. @default 'openjev' */
+  readonly protocol?: 'openjev' | 'typesafe'
   /** Model identifier used when a decision request omits its model. */
   readonly model: string
   /** Decision effort used when a request omits it. @default 'low' */
@@ -43,6 +45,7 @@ const DEFAULT_PROVIDER_ID = 'system-one'
 export default class Jev extends Service {
   static Config = z.object({
     endpoint: z.string().required(),
+    protocol: z.union([z.const('openjev'), z.const('typesafe')]).default('openjev'),
     model: z.string().required(),
     effort: z.union([z.const('low'), z.const('high')]).default('low'),
     timeoutMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).default(DEFAULT_TIMEOUT_MS),
@@ -60,6 +63,7 @@ export default class Jev extends Service {
     const provider = new SystemOneProvider({
       id: providerId,
       endpoint: config.endpoint,
+      ...config.protocol === undefined ? {} : { protocol: config.protocol },
       model: config.model,
       effort: config.effort ?? 'low',
       timeoutMs: config.timeoutMs ?? DEFAULT_TIMEOUT_MS,

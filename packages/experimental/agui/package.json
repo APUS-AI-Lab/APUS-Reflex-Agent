@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-experimental-agui",
   "description": "AG-UI over HTTP: stream Harness turns, threads, approvals and questions to compatible clients",
-  "version": "0.1.7-rc.1",
+  "version": "0.1.7-rc.2",
   "publishConfig": {
     "access": "public"
   },
@@ -23,7 +23,6 @@
   },
   "files": [
     "lib/index.js",
-    "lib/types/**/*.js",
     "lib/types/**/*.d.ts"
   ],
   "license": "MIT",

@@ -1,6 +1,46 @@
-# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
-# side as of the last confirmed-consistent state. Both languages carry equal authority;
-# after editing either side, bring the other along and re-record with:
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/experimental/agui/README.md
-README.md: fc157d2ce8bb744353393545c38a985b4504d4ae
-README.zh.md: b1b66f73ef88fa3bc08f9b99843abb20bfbd0d92
+/:
+  en: 65fcb49bca6945d3
+  zh: 9d010cba90d049b5
+/deepseek-ai-dsh-experimental-agui:
+  en: 33038c7de1d574aa
+  zh: 8313914d69a6f36f
+/deepseek-ai-dsh-experimental-agui/summary:
+  en: 696eeb8b36d59758
+  zh: 37b8f87a240e1245
+/deepseek-ai-dsh-experimental-agui/table-of-contents:
+  en: 76368b6b1da79c80
+  zh: 52384aee991ac542
+/deepseek-ai-dsh-experimental-agui/use-this-package:
+  en: a802b326fe3c5ba4
+  zh: 4883e4ede99e86f6
+/deepseek-ai-dsh-experimental-agui/use-this-package/configuration:
+  en: b5f0dbc0de5a9217
+  zh: 94886e0578c6fed9
+/deepseek-ai-dsh-experimental-agui/understand-the-implementation:
+  en: 30c1272c1368680e
+  zh: 0c5eab21098bdf18
+/deepseek-ai-dsh-experimental-agui/model-experience:
+  en: 215e7ba838619b7b
+  zh: a311da3843709f90
+/deepseek-ai-dsh-experimental-agui/model-experience/bridge-persona-and-mounted-capabilities:
+  en: 9cc6600d442fd6fb
+  zh: 62ccc806aa8724de
+/deepseek-ai-dsh-experimental-agui/model-experience/bridge-persona-and-mounted-capabilities/what-the-model-sees:
+  en: 9ba104190f343a28
+  zh: 4bbf68cef5a17bd1
+/deepseek-ai-dsh-experimental-agui/model-experience/bridge-persona-and-mounted-capabilities/token-effect:
+  en: 9aca3bdfc1409342
+  zh: 8305d65c8dabb49f
+/deepseek-ai-dsh-experimental-agui/model-experience/bridge-persona-and-mounted-capabilities/kv-cache-effect:
+  en: 5f3af1f6f824b4f0
+  zh: 8bcb408383178d33
+/deepseek-ai-dsh-experimental-agui/known-limitations-and-deferred-work:
+  en: 92148f9a1b8520e9
+  zh: 2bc039b83aa7be3b
+/deepseek-ai-dsh-experimental-agui/known-limitations-and-deferred-work/dev-note:
+  en: 1fcaaf6e0b6f177c
+  zh: 081c95e4022ee657

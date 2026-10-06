@@ -1,0 +1,29 @@
+# Apply after system3-jev.patch.yml and system3-fidoo.patch.yml.
+# Classify the complete session explicitly before enabling network decisions.
+- id: system3
+  config:
+    privacyMode: controlled
+    approvedRemoteIds: [jev, fast, reasoning]
+    approvedRemoteDataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'
+    jevRouteId: jev
+    jevExecutionDomain: network
+    jevEffort: low
+    entryRouting:
+      sessionDataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'
+      minConfidence: 0.8
+      maxInputBytes: 16384
+      candidates:
+        - id: fast
+          description: 简短问答、改写、归纳以及范围明确的常规任务。
+          provider: fidoo
+          model: deepseek-v4-flash
+          reasoningEffort: low
+          executionDomain: network
+          dataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'
+        - id: reasoning
+          description: 复杂系统设计、困难代码分析、多步骤推理，以及需要权衡依赖与风险的任务。
+          provider: fidoo
+          model: deepseek-v4-pro
+          reasoningEffort: low
+          executionDomain: network
+          dataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'

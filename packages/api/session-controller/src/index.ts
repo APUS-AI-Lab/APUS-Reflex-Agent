@@ -6,7 +6,7 @@ import type { Agent } from '@deepseek-ai/dsh-agent'
 import type {} from '@deepseek-ai/dsh-fs'
 import { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
-import { errorChain } from '@deepseek-ai/dsh-llm'
+import { errorChain, ReasoningEffortId } from '@deepseek-ai/dsh-llm'
 import type {} from '@deepseek-ai/dsh-client-file-upload'
 import { canOpenNativePath, nativeFileManager, nativeFileApplications, openNativeFileApplication, openNativeAssociatedPath, revealNativePath } from '@deepseek-ai/dsh-native-command'
 import type { SessionId } from '@deepseek-ai/dsh-session'
@@ -18,12 +18,15 @@ import {
   inspectApiSession,
   type ApiSessionAgentResult,
 } from './agent.ts'
+import { SessionPromptRouting } from './prompt-router.ts'
+import type { SessionPromptRouter } from './prompt-router.ts'
+export type { SessionPromptRouter, SessionPromptRouteRequest } from './prompt-router.ts'
 import { SessionCommandController } from './commands.ts'
 import { SessionControlController } from './control.ts'
 import { SessionHistoryController } from './history.ts'
 import { SessionFileReferences } from './file-references.ts'
 import { ApiSessionList } from './list.ts'
-import { buildModelCatalog } from './catalog.ts'
+import { buildModelCatalog, hasProviderApiKey } from './catalog.ts'
 import { installModelSelectionProjection } from './model-selection-projection.ts'
 import { SessionSkillCatalog } from './skill-catalog.ts'
 import { SessionMediaReferences } from './media-references.ts'
@@ -56,6 +59,7 @@ import type {
   SessionSearchValue,
   SessionSelectModelRequest,
   SessionSelectModelValue,
+  SessionResetModelSelectionRequest,
   SessionProjectionsRequest,
   SessionProjectionsValue,
   SessionProjectionValues,
@@ -116,6 +120,7 @@ export class SessionController extends TypertRemoteService {
   })
 
   private readonly agents: ApiSessionAgentController
+  private readonly promptRouting: SessionPromptRouting
   private readonly commands: SessionCommandController
   private readonly controlState: SessionControlController
   private readonly history: SessionHistoryController
@@ -128,6 +133,16 @@ export class SessionController extends TypertRemoteService {
   private readonly promotions = new Set<Promise<void>>()
 
   /**
+   * Register the sole optional router for idle text prompts before inbox admission.
+   * Providers install the returned disposer with their own plugin effect.
+   * @param router - Host provider selecting a registered generation route.
+   * @returns Disposer cancelling pending decisions, without changing admitted turns.
+   */
+  registerPromptRouter(router: SessionPromptRouter): () => void {
+    return this.promptRouting.register(router)
+  }
+
+  /**
    * @param ctx - Host context containing the Session capability assembly.
    * @param config - native-opener deployment policy.
    * @param internals - host integrations replaceable by direct unit tests.
@@ -136,7 +151,8 @@ export class SessionController extends TypertRemoteService {
     super(ctx, 'sessionController', { namespace: 'session' })
     installModelSelectionProjection(ctx)
     this.agents = new ApiSessionAgentController(ctx)
-    this.commands = new SessionCommandController(ctx, this.agents, process.cwd())
+    this.promptRouting = new SessionPromptRouting(ctx, this.agents)
+    this.commands = new SessionCommandController(ctx, this.agents, process.cwd(), this.promptRouting)
     ctx.effect(() => ctx.fileUploads.registerAgentResolver(async (sessionId) => {
       const result = await this.agents.resolveAgent(sessionId)
       if ('error' in result) throw result.error
@@ -275,13 +291,41 @@ export class SessionController extends TypertRemoteService {
   }
 
   /**
-   * Select one Session-local model after explicitly resuming the Session.
+   * Select one Session-local model after explicitly resuming the Session; save the default in the background.
    * @param request - Session identity and requested model selection.
-   * @returns the normalized selection installed for the Session.
+   * @returns the normalized selection installed for the Session, without waiting for default persistence.
    */
   @Remote('selectModel')
   selectModel(request: SessionSelectModelRequest): Promise<SessionSelectModelValue> {
     return this.commands.selectModel(request)
+  }
+
+  /**
+   * Release a human model override so later eligible inputs may use automatic routing.
+   * @param request - Session identity.
+   * @returns Current model retained as the automatic baseline.
+   */
+  @Remote('resetModelSelection')
+  resetModelSelection(request: SessionResetModelSelectionRequest): Promise<SessionSelectModelValue> {
+    return this.commands.resetModelSelection(request)
+  }
+
+  /**
+   * Select the first available account model after login when no provider API key is configured.
+   * @returns after saving the first available model or retaining the existing default.
+   */
+  @Remote
+  async initializeDefaultModel(): Promise<void> {
+    const provider = 'deepseek-account'
+    if (await hasProviderApiKey(this.ctx)) return
+    const catalog = await buildModelCatalog(this.ctx)
+    const model = catalog.groups.find(group => group.id === provider)?.models[0]
+    if (model === undefined) throw new RemoteError('session/provider-models-unavailable',
+      `provider "${provider}" has no available models`, { provider })
+    const selection = { provider, model: model.id,
+      ...model.reasoning?.defaultEffort === undefined ? {} : { reasoningEffort: ReasoningEffortId(model.reasoning.defaultEffort) },
+    }
+    await this.ctx.agentDefaultModel.saveSelection(selection)
   }
 
   /**

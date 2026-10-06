@@ -1,0 +1,39 @@
+# Explicit generation route; credentials remain in the process environment.
+- id: llm-deepseek
+  disabled: true
+
+- id: llm-pi-ai
+  config:
+    providers:
+      fidoo:
+        displayName: Fidoo LiteLLM
+        api: openai-completions
+        baseURL: https://proxy.fidoo.ai/v1
+        apiKeyEnv: SYSTEM3_LITELLM_API_KEY
+        compat:
+          thinkingFormat: deepseek
+        models:
+          - id: deepseek-v4-flash
+            contextWindow: 131072
+            maxTokens: 8192
+            input: [text]
+            reasoningEfforts:
+              off: null
+              low: low
+              medium: medium
+              high: high
+          - id: deepseek-v4-pro
+            contextWindow: 131072
+            maxTokens: 8192
+            input: [text]
+            reasoningEfforts:
+              off: null
+              low: low
+              medium: medium
+              high: high
+
+- id: agent-default-model
+  config:
+    provider: fidoo
+    model: deepseek-v4-flash
+    reasoningEffort: low

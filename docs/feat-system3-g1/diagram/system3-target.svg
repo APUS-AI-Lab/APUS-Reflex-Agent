@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 1260" role="img" aria-labelledby="system3-target-title system3-target-desc">
+<title id="system3-target-title">目标设计：即时判断穿透同一任务</title><desc id="system3-target-desc">本图是目标组合；绿色为现有执行职责，蓝色虚线为尚待贯通的产品能力。</desc>
+<style>text{font-family:"PingFang SC","Microsoft YaHei",Arial,sans-serif}.title{font-size:26px;font-weight:700;fill:#f1f5f9}.label{font-size:17px;font-weight:650;fill:#f1f5f9}.copy{font-size:14px;fill:#cbd5e1}.small{font-size:13px;fill:#94a3b8}.group-label{font-size:14px;font-weight:650;fill:#94a3b8}.edge-label{font-size:13px;fill:#cbd5e1}</style>
+<defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#1e293b" stroke-width=".6"/></pattern>
+<marker id="ui-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#22d3ee"/></marker>
+<marker id="owner-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#34d399"/></marker>
+<marker id="store-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#a78bfa"/></marker>
+<marker id="model-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#fbbf24"/></marker>
+<marker id="policy-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#fb7185"/></marker>
+<marker id="future-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#60a5fa"/></marker>
+<marker id="wire-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#94a3b8"/></marker>
+</defs>
+<rect width="1280" height="1260" fill="#0f172a"/>
+<rect width="1280" height="1260" fill="url(#grid)"/>
+<rect x="30" y="110" width="1215" height="154" rx="12" fill="#111d32" stroke="#475569" stroke-dasharray="7 5"/>
+<text class="group-label" x="48" y="136">产品表达 · 入口智能 / 过程智能 / 体感智能</text>
+<rect x="30" y="304" width="790" height="645" rx="12" fill="#111d32" stroke="#475569" stroke-dasharray="7 5"/>
+<text class="group-label" x="48" y="330">每个 Harness Host · 唯一采用与执行 owner</text>
+<rect x="870" y="304" width="375" height="645" rx="12" fill="#111d32" stroke="#475569" stroke-dasharray="7 5"/>
+<text class="group-label" x="888" y="330">模型角色 · 可替换供给</text>
+<path d="M222 234V282H180V355" fill="none" stroke="#22d3ee" stroke-width="2" marker-end="url(#ui-arrow)"/>
+<rect x="185" y="269" width="117" height="22" rx="3" fill="#0f172a"/>
+<text class="edge-label" x="190" y="285">用户输入 / 控制</text>
+<path d="M627 234V282H624V355" fill="none" stroke="#60a5fa" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#future-arrow)"/>
+<rect x="475" y="267" width="143" height="22" rx="3" fill="#0f172a"/>
+<text class="edge-label" x="480" y="283">能力查询 / 用户控制</text>
+<path d="M710 355V294H745V234" fill="none" stroke="#60a5fa" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#future-arrow)"/>
+<rect x="643" y="269" width="80" height="22" rx="3" fill="#0f172a"/>
+<text class="edge-label" x="648" y="285">事实投影</text>
+<path d="M785 405H910" fill="none" stroke="#fbbf24" stroke-width="2" marker-end="url(#model-arrow)"/>
+<rect x="801" y="376" width="80" height="22" rx="3" fill="#0f172a"/>
+<text class="edge-label" x="806" y="392">有界判断</text>
+<path d="M785 535H808V489H893V447H910" fill="none" stroke="#60a5fa" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#future-arrow)"/>
+<rect x="815" y="470" width="80" height="22" rx="3" fill="#0f172a"/>
+<text class="edge-label" x="820" y="486">过程判断</text>
+<path d="M230 450V500" fill="none" stroke="#34d399" stroke-width="2" marker-end="url(#owner-arrow)"/>
+<path d="M617 450V500" fill="none" stroke="#60a5fa" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#future-arrow)"/>
+<path d="M400 562H450" fill="none" stroke="#60a5fa" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#future-arrow)"/>
+<path d="M230 622V672" fill="none" stroke="#34d399" stroke-width="2" marker-end="url(#owner-arrow)"/>
+<path d="M617 622V672" fill="none" stroke="#60a5fa" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#future-arrow)"/>
+<path d="M230 768V818" fill="none" stroke="#a78bfa" stroke-width="2" marker-end="url(#store-arrow)"/>
+<path d="M617 768V818" fill="none" stroke="#60a5fa" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#future-arrow)"/>
+<path d="M400 537H425V477H836V575H910" fill="none" stroke="#fbbf24" stroke-width="2" marker-end="url(#model-arrow)"/>
+<rect x="790" y="548" width="80" height="22" rx="3" fill="#0f172a"/>
+<text class="edge-label" x="795" y="564">生成请求</text>
+<path d="M400 596H430V645H848V720H910" fill="none" stroke="#60a5fa" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#future-arrow)"/>
+<rect x="795" y="686" width="130" height="22" rx="3" fill="#0f172a"/>
+<text class="edge-label" x="800" y="702">本地 Lead 接入</text>
+<path d="M400 720H422V972H1044V915" fill="none" stroke="#60a5fa" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#future-arrow)"/>
+<rect x="775" y="951" width="208" height="22" rx="3" fill="#0f172a"/>
+<text class="edge-label" x="780" y="967">原生专家委派 / 结果回到父任务</text>
+<path d="M230 914V1007" fill="none" stroke="#a78bfa" stroke-width="2" marker-end="url(#store-arrow)"/>
+<rect x="236" y="960" width="80" height="22" rx="3" fill="#0f172a"/>
+<text class="edge-label" x="241" y="976">持久事实</text>
+<path d="M617 914V1007" fill="none" stroke="#60a5fa" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#future-arrow)"/>
+<rect x="628" y="971" width="104" height="22" rx="3" fill="#0f172a"/>
+<text class="edge-label" x="633" y="987">新来源与采用收据</text>
+<rect x="60" y="157" width="345" height="77" rx="8" fill="#0f172a"/>
+<rect x="60" y="157" width="345" height="77" rx="8" fill="#22d3ee" fill-opacity=".08" stroke="#22d3ee" stroke-width="1.5"/>
+<text class="label" x="78" y="187">一个任务入口</text>
+<text class="copy" x="78" y="213">当前动作 / 已有成果 / 缺项 / 接管</text>
+<rect x="455" y="157" width="345" height="77" rx="8" fill="#0f172a"/>
+<rect x="455" y="157" width="345" height="77" rx="8" fill="#60a5fa" fill-opacity=".08" stroke="#60a5fa" stroke-width="1.5" stroke-dasharray="6 5"/>
+<text class="label" x="473" y="187">目标 TaskView / 来源与恢复</text>
+<text class="copy" x="473" y="213">读原文 / 排除 / 继续 / 检查结果</text>
+<rect x="850" y="157" width="365" height="77" rx="8" fill="#0f172a"/>
+<rect x="850" y="157" width="365" height="77" rx="8" fill="#22d3ee" fill-opacity=".08" stroke="#22d3ee" stroke-width="1.5"/>
+<text class="label" x="868" y="187">Desktop / Web / API / SDK</text>
+<text class="copy" x="868" y="213">共享事实语义，入口覆盖分别验收</text>
+<rect x="60" y="355" width="725" height="95" rx="8" fill="#0f172a"/>
+<rect x="60" y="355" width="725" height="95" rx="8" fill="#fb7185" fill-opacity=".08" stroke="#fb7185" stroke-width="1.5"/>
+<text class="label" x="78" y="385">原生准入与规则先行</text>
+<text class="copy" x="78" y="411">权限、数据分类、版本、取消、合法候选、预算；规则能明确判断时不额外调用 Jev。</text>
+<rect x="60" y="500" width="340" height="122" rx="8" fill="#0f172a"/>
+<rect x="60" y="500" width="340" height="122" rx="8" fill="#34d399" fill-opacity=".08" stroke="#34d399" stroke-width="1.5"/>
+<text class="label" x="78" y="530">原生 AgentLoop / Session</text>
+<text class="copy" x="78" y="556">当前 Fidoo 主执行</text>
+<text class="copy" x="78" y="579">步骤 → 工具 → 结果 → 下一步</text>
+<text class="copy" x="78" y="602">模型可见输入均有日志依据</text>
+<rect x="450" y="500" width="335" height="122" rx="8" fill="#0f172a"/>
+<rect x="450" y="500" width="335" height="122" rx="8" fill="#60a5fa" fill-opacity=".08" stroke="#60a5fa" stroke-width="1.5" stroke-dasharray="6 5"/>
+<text class="label" x="468" y="530">事件触发的过程消费者</text>
+<text class="copy" x="468" y="556">失败取证 / 约束与记忆 / 受保护压缩</text>
+<text class="copy" x="468" y="579">专家策略 / 无进展 / Goal 验收</text>
+<text class="copy" x="468" y="602">建议必须交由原生 owner 采用</text>
+<rect x="60" y="672" width="340" height="96" rx="8" fill="#0f172a"/>
+<rect x="60" y="672" width="340" height="96" rx="8" fill="#34d399" fill-opacity=".08" stroke="#34d399" stroke-width="1.5"/>
+<text class="label" x="78" y="702">原生工具 / sandbox / subagent</text>
+<text class="copy" x="78" y="728">工具 owner 管权限与生命周期</text>
+<text class="copy" x="78" y="751">专家内部执行由其 runtime 负责</text>
+<rect x="450" y="672" width="335" height="96" rx="8" fill="#0f172a"/>
+<rect x="450" y="672" width="335" height="96" rx="8" fill="#60a5fa" fill-opacity=".08" stroke="#60a5fa" stroke-width="1.5" stroke-dasharray="6 5"/>
+<text class="label" x="468" y="702">Task / Goal 证据与有限续做</text>
+<text class="copy" x="468" y="728">当前 GoalRef + 非空必需检查</text>
+<text class="copy" x="468" y="751">独立证据、暂停、预算、实际结算</text>
+<rect x="60" y="818" width="340" height="96" rx="8" fill="#0f172a"/>
+<rect x="60" y="818" width="340" height="96" rx="8" fill="#a78bfa" fill-opacity=".08" stroke="#a78bfa" stroke-width="1.5"/>
+<text class="label" x="78" y="848">Session + 原生数据服务</text>
+<text class="copy" x="78" y="874">执行日志 / 工作区 / Schedule 表</text>
+<text class="copy" x="78" y="897">不新增第二套 System3 任务状态库</text>
+<rect x="450" y="818" width="335" height="96" rx="8" fill="#0f172a"/>
+<rect x="450" y="818" width="335" height="96" rx="8" fill="#60a5fa" fill-opacity=".08" stroke="#60a5fa" stroke-width="1.5" stroke-dasharray="6 5"/>
+<text class="label" x="468" y="848">来源可查的约束与上下文</text>
+<text class="copy" x="468" y="874">原话 / 来源 / 版本 / 排除 / 查回</text>
+<text class="copy" x="468" y="897">压缩 replacement 由原生 owner 提交</text>
+<rect x="910" y="355" width="295" height="122" rx="8" fill="#0f172a"/>
+<rect x="910" y="355" width="295" height="122" rx="8" fill="#fbbf24" fill-opacity=".08" stroke="#fbbf24" stroke-width="1.5"/>
+<text class="label" x="928" y="385">Jev / System1</text>
+<text class="copy" x="928" y="411">有限候选判断或弃权</text>
+<text class="copy" x="928" y="434">当前：A100 9B / high</text>
+<text class="copy" x="928" y="457">未来供给本地化需另验收</text>
+<rect x="910" y="527" width="295" height="96" rx="8" fill="#0f172a"/>
+<rect x="910" y="527" width="295" height="96" rx="8" fill="#fbbf24" fill-opacity=".08" stroke="#fbbf24" stroke-width="1.5"/>
+<text class="label" x="928" y="557">当前 System2 / Fidoo</text>
+<text class="copy" x="928" y="583">复杂推理、生成、工具请求</text>
+<text class="copy" x="928" y="606">Flash / Pro 经 ctx.llm 接入</text>
+<rect x="910" y="673" width="295" height="96" rx="8" fill="#0f172a"/>
+<rect x="910" y="673" width="295" height="96" rx="8" fill="#60a5fa" fill-opacity=".08" stroke="#60a5fa" stroke-width="1.5" stroke-dasharray="6 5"/>
+<text class="label" x="928" y="703">未来本机 9B / 27B Lead</text>
+<text class="copy" x="928" y="729">常用能力 + 本地材料处理</text>
+<text class="copy" x="928" y="752">规划 / 编排 / 整合，仍经 ctx.llm</text>
+<rect x="910" y="819" width="295" height="96" rx="8" fill="#0f172a"/>
+<rect x="910" y="819" width="295" height="96" rx="8" fill="#60a5fa" fill-opacity=".08" stroke="#60a5fa" stroke-width="1.5" stroke-dasharray="6 5"/>
+<text class="label" x="928" y="849">专业 Agent / 外部 runtime</text>
+<text class="copy" x="928" y="875">限定材料、工具范围与输出</text>
+<text class="copy" x="928" y="898">原生委派；父子结果与取消可追溯</text>
+<rect x="60" y="1007" width="1150" height="109" rx="8" fill="#0f172a"/>
+<rect x="60" y="1007" width="1150" height="109" rx="8" fill="#60a5fa" fill-opacity=".08" stroke="#60a5fa" stroke-width="1.5" stroke-dasharray="6 5"/>
+<text class="label" x="78" y="1037">实际采用与结果驱动的任务反馈</text>
+<text class="copy" x="78" y="1063">模型建议、Host 采用、材料真正进入请求、产物校验和当前运行状态分别展示。</text>
+<text class="copy" x="78" y="1086">约束恢复不等于执行恢复；Goal active / disarmed 等待明确继续。</text>
+<text class="small" x="40" y="1171">实线：当前职责或基础调用；蓝色虚线：目标接入。图内所有新消费者必须独立完成真实采用、回放与效果验收。</text>
+<text class="small" x="40" y="1204">本机 Lead ≠ Jev 决策模型；Schedule 需要 Host 运行，不保证 exactly-once，外部通知与跨会话任务另行验收。</text>
+<text class="title" x="40" y="45">目标设计：即时判断穿透同一任务</text>
+<text class="small" x="40" y="74">本图是目标组合；绿色为现有执行职责，蓝色虚线为尚待贯通的产品能力。</text>
+</svg>

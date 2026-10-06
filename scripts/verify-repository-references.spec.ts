@@ -69,6 +69,55 @@ describe('maintained repository reference policy', () => {
     expect(scanRepositoryReferences(fixture.root)).toHaveLength(4)
   })
 
+  it('retains raw commit pins in the three exact tracked, staged and new machine evidence files', (test) => {
+    const fixture = repository(test)
+    fixture.write('docs/feat-system3-g1/desktop-acceptance.json', JSON.stringify({ sourceRevision: fixture.commit }))
+    fixture.git(['add', 'docs/feat-system3-g1/desktop-acceptance.json'])
+    fixture.git(['commit', '--quiet', '-m', 'tracked acceptance evidence'])
+    fixture.write('docs/feat-system3-g1/deployment-final.json', JSON.stringify({ releaseId: `system3-${fixture.commit}` }))
+    fixture.git(['add', 'docs/feat-system3-g1/deployment-final.json'])
+    fixture.write('tasks/feat-system3-g1/review-regression.json', JSON.stringify({ revision: fixture.commit.toUpperCase() }))
+
+    expect(scanRepositoryReferences(fixture.root)).toEqual([])
+  })
+
+  it('rejects commit pins in ordinary JSON, prose and near matches to evidence paths', (test) => {
+    const fixture = repository(test)
+    const ordinaryPaths = [
+      'docs/feat-system3-g1/other.json',
+      'docs/feat-system3-g1/deployment.md',
+      'docs/feat-system3-g1/desktop-acceptance.json.bak',
+      'docs/feat-system3-g1/subdir/deployment-final.json',
+      'docs/feat-system3-g2/desktop-acceptance.json',
+      'tasks/feat-system3-g1/review-regression.md',
+    ]
+    for (const file of ordinaryPaths) fixture.write(file, JSON.stringify({ revision: fixture.commit }))
+
+    expect(scanRepositoryReferences(fixture.root)).toEqual(
+      ordinaryPaths.sort().map(file => ({ file, line: 1, kind: 'commit-hash' })),
+    )
+  })
+
+  it('still rejects literal and escaped organization URLs in every allowed machine evidence file', (test) => {
+    const fixture = repository(test)
+    const evidencePaths = [
+      'docs/feat-system3-g1/desktop-acceptance.json',
+      'docs/feat-system3-g1/deployment-final.json',
+      'tasks/feat-system3-g1/review-regression.json',
+    ]
+    for (const file of evidencePaths) {
+      fixture.write(file, `${JSON.stringify({ sourceRevision: fixture.commit, repository: organizationUrl })}\n`
+        + JSON.stringify({ repository: organizationUrl }).replaceAll('/', String.raw`\u002f`))
+    }
+
+    expect(scanRepositoryReferences(fixture.root)).toEqual(
+      evidencePaths.sort().flatMap(file => [
+        { file, line: 1, kind: 'organization-url' },
+        { file, line: 2, kind: 'organization-url' },
+      ]),
+    )
+  })
+
   it('checks available unreachable commits without requiring a branch or network', (test) => {
     const fixture = repository(test)
     const unreachable = fixture.git(['commit-tree', fixture.tree, '-m', 'unreachable fixture'])

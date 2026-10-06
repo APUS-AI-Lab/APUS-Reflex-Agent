@@ -15,6 +15,7 @@ kind: "package-reference"
 - [使用本包](#use-this-package)
 - [Client 引用](#client-references)
 - [会话媒体引用](#session-media-references)
+- [自动提示词路由](#automatic-prompt-routing)
 - [配置](#configuration)
 - [模型体验](#model-experience)
 - [已知限制与延期工作](#known-limitations-and-deferred-work)
@@ -78,9 +79,20 @@ Client 的首次 `follow`、重连首屏与 `loadOlder()` 至少请求 50 条以
 
 当 `connection`、`fs` 与 `attachments` 均被组合时，`SessionMediaReferences` 在鉴权 `connection.fetch` 通道上挂载 `GET|HEAD /api/file?path=<绝对路径>`。它通过 `ctx.fs` 读取普通文件，包括已注册工作区之外的临时路径与远程提供方中的文件。目录包含关系与 MIME 类别均不限制访问；`mime-types` 提供响应类型，未知扩展名使用 `application/octet-stream`。GET 复用 `readBytes` 执行读取前及读取中的字节限制；HEAD 只读取元数据。所有文件均使用 `ctx.attachments.imageLimits.maxImageBytes`（通常为 20 MiB）；超过此上限返回 413。响应包含完整文件，忽略 Range，并携带 `private, no-store`、`nosniff` 与沙箱 CSP，使直接打开的 HTML/SVG 无法以 API 源身份执行脚本。客户端重写位于 `ui-chat`（`AssistantMarkdown`）；音视频文件响应已可用，Markdown 音视频播放器节点仍是独立工作。
 
-`workspacePathApplications({ path })` 使用与 `openWorkspacePath` 相同的文件系统映射校验，返回服务端桌面上该文件的关联应用。打开请求中的可选 `application` 指定当前关联的应用，不修改系统默认应用。应用名称、默认项、图标和平台支持范围由 [native-command](../../util/native-command/README.zh.md) 提供。这些操作不激活 Agent，也不追加会话事件。原生操作失败时返回简短消息，原始命令异常作为 Host 端原因保留。
+GUI 模型选择要求确切提供方／模型对出现在可用目录中；不可用的选择以 `session/model-unavailable` 拒绝。提示词准入保留已保存的路由，不按目录可用性阻断发送，由请求执行报告凭据缺失或模型不可用。`initializeDefaultModel()` 在账号登录后、其他提供方均未配置 API key 时，将第一个可用账号模型保存为默认模型；凭据检查使用已配置的引用，不依赖模型是否可用。提供方没有可用模型时，初始化以 `session/provider-models-unavailable` 拒绝。可用性变化不会替换模型或改写会话选择。
+
+`selectModel` 成功返回表示会话级模型选择已生效，不等待默认 profile 设置保存。默认设置在后台按提交顺序保存；保存失败会记录警告，并保留会话选择。新会话读取最近一次成功保存的默认值。
 
 -----
+
+<a id="automatic-prompt-routing"></a>
+## 自动提示词路由
+
+Host 插件通过 `ctx.sessionController.registerPromptRouter(router)` 注册一个 `SessionPromptRouter`，并用 `ctx.effect()` 持有 disposer。重复 provider 会报错。`SessionPromptRouteRequest` 携带存活的 Agent、请求标识、确切文本消息及当前 Session 模型 baseline；`route(request, signal)` 返回经校验的生成模型选择，或返回 `undefined` 使用 baseline。Provider 负责推理期限与降级策略；抛错会拒绝准入。
+
+路由仅覆盖空闲、没有排队工作时的文本提示词。图片、文件、活跃轮次，以及仍有人工 `model/selection` 生效的 Session 采用普通准入。`resetModelSelection({ sessionId })` 记录 `model/selection-reset`，清除人工固定，并保留当前模型作为自动模式的 baseline。该操作与提示词准入及选模串行，不改变已经发出的 provider 请求。在自动模式重复重置时，当前轮次的临时路由和持久 baseline 都保持不变。`modelSelection` Client 投影从持久历史提供 `mode: auto | fixed`。此入口不覆盖 Headless、SDK 或 ACP 输入。
+
+提示词准入与人工选模按 Agent 串行。若其他 owner 已持有 maintenance，输入仍按普通队列准入，不调用路由。Maintenance 在等待路由时阻止模型执行；取消或 provider 移除会拒绝尚未准入的输入，即使 provider 忽略取消信号。竞争输入会阻止建议生效。`model/automatic-selection` 在同步 inbox 接受后、执行前记录请求标识、所选路由和恢复 baseline；它不证明发生过生成，实际使用由 `request/header` 记录并激活投影中的自动路由。在该 header 之前，投影的下一路由仍为 baseline；原生中断轮次恢复会清除已采用的自动路由。自动路由维持整个已准入轮次，包括工具续步。移除 provider 不改变已准入工作的路由；轮次结束恢复 baseline，恢复的 Session 也使用 baseline，而非中断前的自动路由。后来人工选型仍拥有优先权。
 
 <a id="configuration"></a>
 ## 配置
@@ -96,11 +108,11 @@ Client 的首次 `follow`、重连首屏与 `loadOlder()` 至少请求 50 条以
 <a id="model-experience"></a>
 ## 模型体验
 
-无；任何模型可见效果都由被调用的 Agent 命令负责。
+无，因为此 controller 负责用户消息准入与路由选择，模型可见消息由 Agent 与注册的 router 拥有。
 
 #### KV Cache 影响
 
-无直接影响；模型请求仍由 Agent 和 LLM（大语言模型）包拥有。
+路由保留此前的 Session 消息。Provider 或模型改变可能无法复用上一条路由的缓存；provider 特定缓存行为由 LLM adapter 负责。
 
 ## 已知限制与延期工作
 
