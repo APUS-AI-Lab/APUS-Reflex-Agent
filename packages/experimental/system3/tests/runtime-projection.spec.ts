@@ -1,7 +1,8 @@
 import { Context } from '@deepseek-ai/cordis'
 import { brandString } from '@deepseek-ai/dsh-brand'
+import type { AttachmentId } from '@deepseek-ai/dsh-attachment'
 import type { SessionRequestId } from '@deepseek-ai/dsh-api-session-controller/types'
-import { createAssistantMessage, createUserMessage, ReasoningEffortId, ToolCallId, type AssistantStreamRecord } from '@deepseek-ai/dsh-llm'
+import { createAssistantMessage, createToolResultMessage, createUserMessage, ReasoningEffortId, ToolCallId, type AssistantStreamRecord } from '@deepseek-ai/dsh-llm'
 import { Session, SessionId, SessionLogOffset, type SessionEvent } from '@deepseek-ai/dsh-session'
 import Projections from '@deepseek-ai/dsh-session-projection'
 import { afterEach, expect, it } from 'vitest'
@@ -247,4 +248,33 @@ it('clears preceding Skill injection facts when the next decision proposes no in
   h.session.append('step/start', { turn: 2, step: 0 })
   h.session.append('user/message', injection, { surfaceOp: 'append' })
   expect(h.view()?.skill?.injected).toBe(false)
+})
+
+it('marks the Session as containing images from a user message or a tool result', async () => {
+  const attachment = { attachmentId: brandString<AttachmentId>('image-1'), mediaType: 'image/png' as const, bytes: 4, width: 1, height: 1 }
+  const image = { type: 'image' as const, attachment }
+  const fromTool = await setup()
+  fromTool.session.append('tool/result', { turn: 1, step: 0, message: createToolResultMessage({ callId: ToolCallId('call-1'), content: [{ type: 'text', text: 'plain' }], isError: false }) }, { surfaceOp: 'append' })
+  expect(fromTool.view()?.imageInSession).toBe(false)
+  fromTool.session.append('tool/result', { turn: 1, step: 0, message: createToolResultMessage({ callId: ToolCallId('call-2'), content: [image], isError: false }) }, { surfaceOp: 'append' })
+  expect(fromTool.view()?.imageInSession).toBe(true)
+  const fromUser = await setup()
+  fromUser.session.append('user/message', createUserMessage({ content: [image], source: { kind: 'user' } }), { surfaceOp: 'append' })
+  expect(fromUser.view()?.imageInSession).toBe(true)
+})
+
+it('exposes the chosen route with its label and whether it continued the previous route', async () => {
+  const h = await setup()
+  const first = brandString<SessionRequestId>('chosen')
+  h.session.append('system3/entry-start', { requestId: first })
+  h.session.append('system3/entry-decision', { version: 1, requestId: first, request: null, baseline: selected, candidateIds: ['deep'],
+    dataClasses: ['public'], routeId: 'jev', executionDomain: 'local', outcome: 'selected', selected, candidate: { id: 'deep', label: 'Deep' }, elapsedMs: 1 })
+  expect(h.view()?.entry?.route).toEqual({ id: 'deep', label: 'Deep', retained: false })
+  const second = brandString<SessionRequestId>('continued')
+  h.session.append('system3/entry-start', { requestId: second })
+  h.session.append('system3/entry-decision', { version: 1, requestId: second, request: null, baseline: selected, candidateIds: ['deep'],
+    dataClasses: ['public'], routeId: 'jev', executionDomain: 'local', outcome: 'abstain', retained: { requestId: first, selection: selected },
+    candidate: { id: 'deep' }, elapsedMs: 1 })
+  expect(h.view()?.entry?.route).toEqual({ id: 'deep', label: null, retained: true })
+  expect(system3RuntimeProjection.wire.viewSchema.parse(system3RuntimeProjection.wire.view(h.view()!)).entry?.route).toEqual({ id: 'deep', label: null, retained: true })
 })

@@ -49,6 +49,8 @@ kind: "package-reference"
 | `effort` | `low` | System One 推理 effort：`low` 或 `high` |
 | `timeoutMs` | `30000` | 请求期限，单位毫秒 |
 | `apiKeyEnv` | 无 | 每次请求解析的凭据引用 |
+| `keepAliveMs` | 无 | 专用直连连接空闲后保留复用的时长；省略时使用进程级传输。经已配置 HTTP 代理的请求始终使用代理的传输 |
+| `http2` | `false` | 在专用连接上协商 HTTP/2；需要 `keepAliveMs` |
 | `providerId` | `system-one` | 内置 provider 的 registry id |
 
 endpoint 可以是本地 SSH tunnel 或受控服务 URL。配置 URL 不以 `/v1` 结尾时，provider 会补上 `/v1/systemone`；只有 `apiKeyEnv` 解析出值时才会发送 Bearer credential。

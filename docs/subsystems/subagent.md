@@ -118,6 +118,12 @@ The caller-facing request does not carry catalog format details or continuation 
 interface ResolvedSubagentStartRequest extends SubagentStartRequest {
   /** Detached descriptor a session-backed provider persists in the child log. */
   readonly descriptor: SubagentDescriptorData
+  /**
+   * Report one step of the running child. The seam publishes it as
+   * `subagent/activity` only between this run's `subagent/start` and
+   * `subagent/end`; a call outside that interval is dropped. Never throws.
+   */
+  readonly reportActivity: (activity: SubagentActivity) => void
 }
 ```
 
@@ -677,6 +683,29 @@ Source: [`packages/subagent/subagent/src/index.ts`](../../packages/subagent/suba
 <a id="subagent-events"></a>
 
 ### `subagent/*` events
+
+<a id="subagentactivity--emit"></a>
+
+#### `subagent/activity` — emit
+
+A published one-shot child began or finished one step, reported only between that run's start and end. Scope-filtered dispatch uses the same delegating parent carrier as `subagent/start`. Providers that observe no steps emit none.
+
+```ts cordis-catalog
+/**
+ * A published one-shot child began or finished one step, reported only
+ * between that run's start and end. Scope-filtered dispatch uses the same
+ * delegating parent carrier as `subagent/start`. Providers that observe no
+ * steps emit none.
+ * @param info - the run identity, step category, and phase; never child content.
+ * @dshScopeScan unsupported
+ * @mode emit
+ */
+'subagent/activity'(this: Scoped<SubagentRuntime>, info: SubagentActivityInfo): void
+```
+
+Types: [Scoped](scope.md)
+
+Source: [`packages/subagent/subagent/src/index.ts`](../../packages/subagent/subagent/src/index.ts)
 
 <a id="subagentend--emit"></a>
 

@@ -53,6 +53,8 @@ export interface RunAgentInput {
 export const CUSTOM_APPROVAL = 'dsh.approval'
 /** Question event name carried in `CUSTOM.name`; the payload sits in `value`. */
 export const CUSTOM_QUESTION = 'dsh.question'
+/** Subagent step event name carried in `CUSTOM.name`; `value` holds the run id, step category, and phase. */
+export const CUSTOM_SUBAGENT_ACTIVITY = 'dsh.subagent.activity'
 
 /**
  * Text of a user message in either AG-UI content encoding.

@@ -2,6 +2,7 @@
 .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-height: 28px; }
 .dot { width: 7px; height: 7px; flex: none; border-radius: 50%; corner-shape: round; background: #85929e; }
 .dot[data-active="true"] { background: #43a68c; box-shadow: 0 0 0 4px rgb(67 166 140 / 12%); }
+.route { color: var(--dsw-alias-label-secondary); overflow-wrap: anywhere; }
 .mode { margin-inline-start: auto; color: var(--dsw-alias-label-secondary); }
 .button { padding: 5px 10px; color: inherit; background: transparent; border: 0.5px solid var(--dsw-alias-border-l1); border-radius: 8px; cursor: pointer; font: inherit; min-height: 32px; }
 .button:disabled { opacity: 0.5; cursor: default; }

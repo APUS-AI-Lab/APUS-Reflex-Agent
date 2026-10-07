@@ -3,6 +3,7 @@ import { Context, Service } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
 import { JevProviderError, SystemOneProvider, resolveJevApiKey } from './client.ts'
+import { createPooledFetch } from './pool.ts'
 import { validateJevRequest } from './protocol.ts'
 import type { JevFailure, JevOutcome, JevProvider, JevProviderInfo, JevRequest, JevSpec } from './types.ts'
 
@@ -36,6 +37,13 @@ export interface Config {
   readonly apiKeyEnv?: string
   /** Registry identity of the built-in provider, selected when a request omits providerId. @default 'system-one' */
   readonly providerId?: string
+  /**
+   * Idle time in milliseconds a direct connection to the gateway stays open for reuse. Omission keeps
+   * the process-wide transport. A request routed through a configured HTTP proxy always uses that proxy's transport.
+   */
+  readonly keepAliveMs?: number
+  /** Negotiate HTTP/2 on the dedicated direct connection; requires `keepAliveMs`. @default false */
+  readonly http2?: boolean
 }
 
 const DEFAULT_TIMEOUT_MS = 30_000
@@ -51,6 +59,8 @@ export default class Jev extends Service {
     timeoutMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).default(DEFAULT_TIMEOUT_MS),
     apiKeyEnv: z.string().role('credential-ref'),
     providerId: z.string().default(DEFAULT_PROVIDER_ID),
+    keepAliveMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS),
+    http2: z.boolean().default(false),
   })
 
   private readonly providers = new Map<string, JevProvider>()
@@ -60,8 +70,11 @@ export default class Jev extends Service {
     super(ctx, 'jev')
     const providerId = config.providerId ?? DEFAULT_PROVIDER_ID
     this.defaultProviderId = providerId
+    if (config.http2 === true && config.keepAliveMs === undefined) throw new Error('jev http2 requires keepAliveMs')
+    const fetcher = config.keepAliveMs === undefined ? undefined : createPooledFetch(ctx, config.keepAliveMs, config.http2 ?? false)
     const provider = new SystemOneProvider({
       id: providerId,
+      ...fetcher === undefined ? {} : { fetcher },
       endpoint: config.endpoint,
       ...config.protocol === undefined ? {} : { protocol: config.protocol },
       model: config.model,
@@ -106,6 +119,24 @@ export default class Jev extends Service {
     const provider = this.providers.get(providerId)
     if (provider === undefined) throw new Error(`jev provider "${providerId}" is not registered`)
     return { ...normalized, providerId, model: normalized.model ?? provider.info.model }
+  }
+
+  /**
+   * Open or keep alive a provider's transport; failures are reported, never thrown.
+   * @param providerId - Provider to warm; the default provider when omitted.
+   * @param signal - Caller cancellation.
+   * @returns Whether the provider answered; false when it has no transport to warm or the request failed.
+   */
+  async warm(providerId?: string, signal?: AbortSignal): Promise<boolean> {
+    const provider = this.providers.get(providerId ?? this.defaultProviderId)
+    if (provider?.warm === undefined) return false
+    try {
+      await provider.warm(signal)
+      return true
+    } catch (error) {
+      if (signal?.aborted) throw error
+      return false
+    }
   }
 
   /**

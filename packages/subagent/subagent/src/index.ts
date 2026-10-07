@@ -56,6 +56,8 @@ import type {
   ContinuableStart,
   ContinuableStartSpec,
   ResolvedSubagentStartRequest,
+  SubagentActivity,
+  SubagentActivityInfo,
   SubagentCapabilities,
   SubagentInterruptAuthority,
   SubagentProvider,
@@ -131,7 +133,7 @@ export type { ChildComposition, DelegatedPolicyOverrides } from './child-agent.t
 export type { AgentMessageSource, SubagentSettledMessageSource } from './continuation-messages.ts'
 export type * from './control-types.ts'
 export type { SubagentDescendantListEntry } from './list-children.ts'
-export type { SubagentRunEndInfo, SubagentRunInfo } from './types.ts'
+export type { SubagentActivity, SubagentActivityInfo, SubagentActivityKind, SubagentRunEndInfo, SubagentRunInfo } from './types.ts'
 export type { SubagentIdentityProjection, SubagentTimingProjection } from './projection-types.ts'
 
 declare module '@deepseek-ai/cordis' {
@@ -172,6 +174,16 @@ declare module '@deepseek-ai/cordis' {
      * @mode emit
      */
     'subagent/end'(this: Scoped<SubagentRuntime>, info: SubagentRunEndInfo): void
+    /**
+     * A published one-shot child began or finished one step, reported only
+     * between that run's start and end. Scope-filtered dispatch uses the same
+     * delegating parent carrier as `subagent/start`. Providers that observe no
+     * steps emit none.
+     * @param info - the run identity, step category, and phase; never child content.
+     * @dshScopeScan unsupported
+     * @mode emit
+     */
+    'subagent/activity'(this: Scoped<SubagentRuntime>, info: SubagentActivityInfo): void
   }
 }
 
@@ -566,7 +578,10 @@ export class SubagentRuntime extends TypertRemoteService {
       provider: name,
       ...request.label !== undefined ? { label: request.label } : {},
     })
-    const resolved: ResolvedSubagentStartRequest = { ...request, descriptor }
+    let publish: ((activity: SubagentActivity) => void) | undefined
+    const resolved: ResolvedSubagentStartRequest = {
+      ...request, descriptor, reportActivity: activity => publish?.(activity),
+    }
     const run = await provider.start(resolved)
     const child = run.localAgent?.session
     if (child !== undefined) {
@@ -585,7 +600,7 @@ export class SubagentRuntime extends TypertRemoteService {
         throw error
       }
     }
-    return observeRun(this.emitLifecycle, name, request.parent, run)
+    return observeRun(this.emitLifecycle, name, request.parent, run, (bound) => { publish = bound })
   }
 
   /**

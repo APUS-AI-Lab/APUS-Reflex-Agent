@@ -142,6 +142,7 @@ describe('SubagentRuntime', () => {
         mode: 'one-shot',
         provider: 'one-shot',
       },
+      reportActivity: expect.any(Function) as ResolvedSubagentStartRequest['reportActivity'],
     })
     expect(provider.lastRequest).not.toBe(request)
     expectTypeOf<Parameters<SubagentRuntime['start']>[1]>().toExtend<SubagentStartRequest>()
@@ -239,6 +240,61 @@ describe('SubagentRuntime', () => {
     expect(events).toEqual(['start', 'end'])
     expect(keys).toEqual([parent, parent])
     expect(runIds[0]).toBe(runIds[1])
+  })
+
+  it('publishes provider-reported steps only between start and end, carrying categories alone', async () => {
+    const { ctx, subagents } = await service()
+    const result = Promise.withResolvers<SubagentResult>()
+    let report: ResolvedSubagentStartRequest['reportActivity'] | undefined
+    subagents.registerProvider({
+      name: 'stepping',
+      capabilities: NO_CAPS,
+      inheritsParentContext: false,
+      async start(request) {
+        report = request.reportActivity
+        request.reportActivity({ kind: 'message', phase: 'started' })
+        return { id: SessionId('child'), localAgent: undefined, result: result.promise, async dispose() {} }
+      },
+    })
+    const parent = fakeParent('delegator')
+    const seen: unknown[] = []
+    const keys: unknown[] = []
+    let runId: string | undefined
+    ctx.on('subagent/start', info => void (runId = info.runId))
+    ctx.on('subagent/activity', function (info) { seen.push(info); keys.push(carrierKeyOf(this)) })
+
+    const run = await subagents.start('stepping', baseRequest({ parent }))
+    report?.({ kind: 'command', phase: 'started', text: 'rm -rf /' } as never)
+    result.resolve({ output: [], stopReason: 'completed' })
+    await run.result
+    report?.({ kind: 'command', phase: 'completed' })
+
+    expect(seen).toEqual([{ runId, provider: 'stepping', id: SessionId('child'), kind: 'command', phase: 'started' }])
+    expect(keys).toEqual([parent])
+  })
+
+  it('stops publishing steps once the run rejects', async () => {
+    const { ctx, subagents } = await service()
+    const result = Promise.withResolvers<SubagentResult>()
+    let report: ResolvedSubagentStartRequest['reportActivity'] | undefined
+    subagents.registerProvider({
+      name: 'rejecting',
+      capabilities: NO_CAPS,
+      inheritsParentContext: false,
+      async start(request) {
+        report = request.reportActivity
+        return { id: SessionId('child'), localAgent: undefined, result: result.promise, async dispose() {} }
+      },
+    })
+    const seen: unknown[] = []
+    ctx.on('subagent/activity', info => void seen.push(info))
+
+    const run = await subagents.start('rejecting', baseRequest())
+    result.reject(new Error('infrastructure'))
+    await run.result.catch(() => undefined)
+    report?.({ kind: 'tool', phase: 'started' })
+
+    expect(seen).toEqual([])
   })
 
   it('mints distinct lifecycle identities when provider and child ids repeat', async () => {

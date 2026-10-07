@@ -23,7 +23,9 @@ import { SessionLogOffset } from '@deepseek-ai/dsh-session'
 import type { SessionEvent, SessionId, SessionLogOffset as SessionLogOffsetType } from '@deepseek-ai/dsh-session'
 import { finalAssistantOutput } from './assistant-output.ts'
 import { SubagentRunId } from './types.ts'
-import type { SubagentResult, SubagentRun, SubagentRunEndInfo, SubagentRunInfo } from './types.ts'
+import type {
+  SubagentActivity, SubagentActivityInfo, SubagentResult, SubagentRun, SubagentRunEndInfo, SubagentRunInfo,
+} from './types.ts'
 
 /**
  * How one Activation's residency epoch ended, as both the terminal lifecycle
@@ -86,6 +88,7 @@ export interface ActivationObserver {
 export type LifecycleEmitter = {
   (name: 'subagent/start', info: SubagentRunInfo, parent: Agent): void
   (name: 'subagent/end', info: SubagentRunEndInfo, parent: Agent): void
+  (name: 'subagent/activity', info: SubagentActivityInfo, parent: Agent): void
   (name: 'subagent/provider-removed', info: string): void
 }
 
@@ -103,8 +106,8 @@ export function createLifecycleEmitter(
   carrier: (parent: Agent) => object,
 ): LifecycleEmitter {
   return (
-    name: 'subagent/start' | 'subagent/end' | 'subagent/provider-removed',
-    info: SubagentRunInfo | SubagentRunEndInfo | string,
+    name: 'subagent/start' | 'subagent/end' | 'subagent/activity' | 'subagent/provider-removed',
+    info: SubagentRunInfo | SubagentRunEndInfo | SubagentActivityInfo | string,
     parent?: Agent,
   ): void => {
     const dispatchArgs: unknown[] = parent === undefined
@@ -129,6 +132,7 @@ export function createLifecycleEmitter(
  * @param provider - the provider that established the run.
  * @param parent - the delegating parent keying scoped dispatch.
  * @param run - the published run whose settlement closes the pair.
+ * @param bindActivity - receives the publisher for this run's steps once start has been emitted.
  * @returns the same run, unchanged.
  */
 export function observeRun(
@@ -136,6 +140,7 @@ export function observeRun(
   provider: string,
   parent: Agent,
   run: SubagentRun,
+  bindActivity: (publish: (activity: SubagentActivity) => void) => void,
 ): SubagentRun {
   const identity = {
     runId: SubagentRunId(randomUUID()),
@@ -143,10 +148,12 @@ export function observeRun(
     id: run.id,
     local: run.localAgent !== undefined,
   }
+  let settled = false
   // Attach the terminal observer before dispatching start. Promise reactions
   // still run after this synchronous start emission, preserving start → end.
   void run.result.then(
     (result) => {
+      settled = true
       emit('subagent/end', {
         ...identity,
         stopReason: result.stopReason,
@@ -155,10 +162,17 @@ export function observeRun(
       }, parent)
     },
     () => {
+      settled = true
       emit('subagent/end', { ...identity, stopReason: 'error' }, parent)
     },
   )
   emit('subagent/start', identity, parent)
+  bindActivity((activity) => {
+    if (settled) return
+    emit('subagent/activity', {
+      runId: identity.runId, provider, id: run.id, kind: activity.kind, phase: activity.phase,
+    }, parent)
+  })
   return run
 }
 

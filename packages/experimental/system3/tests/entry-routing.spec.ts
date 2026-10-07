@@ -1,16 +1,18 @@
 import { Context, Service } from '@deepseek-ai/cordis'
 import type { SessionPromptRouter } from '@deepseek-ai/dsh-api-session-controller'
 import { brandString } from '@deepseek-ai/dsh-brand'
+import type { AttachmentId } from '@deepseek-ai/dsh-attachment'
 import type { SessionRequestId } from '@deepseek-ai/dsh-api-session-controller/types'
 import AgentLoop from '@deepseek-ai/dsh-agent-loop'
 import { mountAgentLoopTestDependencies } from '@deepseek-ai/dsh-agent-loop-testkit'
 import { createUserMessage, ReasoningEffortId } from '@deepseek-ai/dsh-llm'
 import { SessionId } from '@deepseek-ai/dsh-session'
-import { afterEach, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import Jev from '../../apus-dsh-jev-plugin/src/index.ts'
 import { MockAdapter } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import { createSystem3EntryRouter, type System3EntryRoutingConfig } from '../src/entry-routing.ts'
 import System3 from '../src/index.ts'
+import { system3RuntimeProjection } from '../src/runtime-projection.ts'
 
 const config: System3EntryRoutingConfig = {
   candidates: [{ id: 'fast', description: '简单任务', provider: 'mock', model: 'fast', executionDomain: 'local', dataClasses: ['workspace'] }],
@@ -47,7 +49,8 @@ it('records the exact Jev request and returns a suggestion without changing the 
   const { decide, request, router, signal } = await setup()
   expect(await router.route(request, signal)).toEqual({ provider: 'mock', model: 'fast' })
   const receipt = request.agent.session.snapshotEvents().find(event => event.type === 'system3/entry-decision')
-  expect(receipt?.data).toMatchObject({ requestId: request.requestId, outcome: 'selected', request: decide.mock.calls[0]?.[0] })
+  expect(receipt?.data).toMatchObject({ requestId: request.requestId, outcome: 'selected', request: decide.mock.calls[0]?.[0], candidate: { id: 'fast' } })
+  expect(receipt?.data).not.toHaveProperty('candidate.label')
   expect(request.agent.session.deriveMessages()).toEqual([])
 })
 
@@ -76,6 +79,86 @@ it.each(['abstain', 'low-confidence', 'timeout'] as const)('keeps the baseline o
     } } } })
   expect(await router.route(request, signal)).toBeUndefined()
   expect(request.agent.session.snapshotEvents().at(-1)?.data).toMatchObject({ outcome })
+})
+
+describe('retainOnAbstain', () => {
+  const twoRoutes: Partial<System3EntryRoutingConfig> = { retainOnAbstain: true, candidates: [
+    ...config.candidates,
+    { id: 'deep', description: '复杂任务', label: '复杂任务 · Deep', provider: 'mock', model: 'deep', executionDomain: 'local', dataClasses: ['workspace'] },
+  ] }
+  const answer = (ctx: Context, choice: string, confidence: number) => async (query: Parameters<Context['jev']['decide']>[0]) => ({
+    kind: 'ok' as const, spec: ctx.jev.resolve(query), response: { model: 'jev-test', answers: { route: {
+      type: 'choice' as const, choice, confidence, probabilities: { [choice]: confidence },
+    } } },
+  })
+  async function retaining(options: Partial<System3EntryRoutingConfig> = twoRoutes) {
+    const harness = await setup(options)
+    harness.ctx.sessionProjections.register(system3RuntimeProjection)
+    const next = (id: string) => ({ ...harness.request, requestId: brandString<SessionRequestId>(id) })
+    return { ...harness, next }
+  }
+
+  it.each([['abstain', 1], ['deep', 0.4]] as const)('continues the earlier route when Jev answers %s', async (choice, confidence) => {
+    const { ctx, decide, next, router, signal, request } = await retaining()
+    decide.mockImplementationOnce(answer(ctx, 'deep', 0.95))
+    expect(await router.route(next('first'), signal)).toEqual({ provider: 'mock', model: 'deep' })
+    decide.mockImplementation(answer(ctx, choice, confidence))
+    expect(await router.route(next('follow-up'), signal)).toEqual({ provider: 'mock', model: 'deep' })
+    expect(await router.route(next('second-follow-up'), signal)).toEqual({ provider: 'mock', model: 'deep' })
+    const receipt = request.agent.session.snapshotEvents().at(-1)?.data
+    expect(receipt).toMatchObject({ outcome: choice === 'abstain' ? 'abstain' : 'low-confidence',
+      retained: { requestId: 'first', selection: { provider: 'mock', model: 'deep' } }, candidate: { id: 'deep', label: '复杂任务 · Deep' } })
+    expect(receipt).not.toHaveProperty('selected')
+  })
+
+  it('keeps the baseline when no earlier route exists or the earlier decision chose none', async () => {
+    const { ctx, decide, next, router, signal, request } = await retaining()
+    decide.mockImplementation(answer(ctx, 'abstain', 1))
+    expect(await router.route(next('first'), signal)).toBeUndefined()
+    expect(await router.route(next('second'), signal)).toBeUndefined()
+    expect(request.agent.session.snapshotEvents().at(-1)?.data).not.toHaveProperty('retained')
+
+  })
+
+  it('keeps the baseline when the earlier route is no longer a candidate', async () => {
+    const { ctx, decide, next, router, signal } = await retaining()
+    decide.mockImplementationOnce(answer(ctx, 'deep', 0.95))
+    expect(await router.route(next('first'), signal)).toEqual({ provider: 'mock', model: 'deep' })
+    const narrowed = createSystem3EntryRouter(ctx, { ...config, retainOnAbstain: true }, { mode: 'local-only' },
+      { routeId: 'jev', executionDomain: 'local', effort: 'low' })
+    decide.mockImplementation(answer(ctx, 'abstain', 1))
+    expect(await narrowed.route(next('after-narrowing'), signal)).toBeUndefined()
+  })
+
+  it('uses the baseline, not the earlier route, when Jev is unavailable', async () => {
+    const { ctx, decide, next, router, signal } = await retaining()
+    decide.mockImplementationOnce(answer(ctx, 'deep', 0.95))
+    await router.route(next('first'), signal)
+    decide.mockImplementation(async query => ({ kind: 'unknown', spec: ctx.jev.resolve(query), failure: { code: 'timeout', message: 'timeout' } }))
+    expect(await router.route(next('second'), signal)).toBeUndefined()
+  })
+
+  it('requires session projections when enabled', async () => {
+    const { ctx, request, signal } = await setup()
+    const router = createSystem3EntryRouter(ctx, { ...config, retainOnAbstain: true }, { mode: 'local-only' }, { routeId: 'jev', executionDomain: 'local', effort: 'low' })
+    vi.spyOn(ctx, 'get').mockImplementation(((name: string) => name === 'sessionProjections' ? undefined : ctx[name as 'jev']) as Context['get'])
+    await expect(router.route(request, signal)).rejects.toThrow('requires sessionProjections')
+  })
+})
+
+it('requires image input from candidates only once the Session contains an image', async () => {
+  const { adapter, ctx, decide, request, router, signal } = await setup()
+  ctx.sessionProjections.register(system3RuntimeProjection)
+  vi.spyOn(adapter, 'resolveModel').mockImplementation(async (provider, model) => ({ provider, id: model, name: model,
+    context: { contextWindow: 10000 }, inputModalities: model === 'baseline' ? ['text', 'image'] : ['text'] }))
+  expect(await router.route(request, signal)).toEqual({ provider: 'mock', model: 'fast' })
+  request.agent.session.append('user/message', createUserMessage({
+    content: [{ type: 'text', text: 'see' }, { type: 'image', attachment: { attachmentId: brandString<AttachmentId>('image-1'), mediaType: 'image/png', bytes: 4, width: 1, height: 1 } }], source: { kind: 'user' },
+  }), { surfaceOp: 'append' })
+  decide.mockClear()
+  expect(await router.route({ ...request, requestId: brandString<SessionRequestId>('after-image') }, signal)).toBeUndefined()
+  expect(decide).not.toHaveBeenCalled()
+  expect(request.agent.session.snapshotEvents().at(-1)?.data).toMatchObject({ outcome: 'no-candidates' })
 })
 
 it('blocks the remote Jev before I/O even when its URL is loopback', async () => {

@@ -19,6 +19,7 @@ import {
   subprocessRunHandle,
   type SubagentResult,
   type SubagentRun,
+  type ResolvedSubagentStartRequest,
   type SubagentStartRequest,
   type SubagentStopReason,
 } from '@deepseek-ai/dsh-subagent'
@@ -223,7 +224,7 @@ export async function disposeCodexChild(
  * @returns the published run after initialization and ephemeral thread creation.
  */
 export async function startCodexRun(
-  request: SubagentStartRequest,
+  request: SubagentStartRequest & Pick<ResolvedSubagentStartRequest, 'reportActivity'>,
   spec: CodexRunSpec,
 ): Promise<SubagentRun> {
   const texts = textTask(request.prompt)
@@ -252,6 +253,7 @@ export async function startCodexRun(
     child.stdin as NonNullable<SubprocessHandle['stdin']>,
     spec.permissionMode,
     spec.model,
+    request.reportActivity,
   )
   const onStderr = (chunk: Buffer | string): void => {
     const bytes = typeof chunk === 'string' ? Buffer.from(chunk) : chunk

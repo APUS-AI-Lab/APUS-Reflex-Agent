@@ -3,9 +3,10 @@
 import type { Context } from '@deepseek-ai/cordis'
 import type { Agent } from '@deepseek-ai/dsh-agent'
 import { createUserMessage, type StreamChunk } from '@deepseek-ai/dsh-llm'
+import { carrierKeyOf } from '@deepseek-ai/dsh-scope'
 import type { SessionEvent, SessionId } from '@deepseek-ai/dsh-session'
 import type {} from '@deepseek-ai/dsh-subagent'
-import { type AguiEvent, type SseWriter } from './agui.ts'
+import { CUSTOM_SUBAGENT_ACTIVITY, type AguiEvent, type SseWriter } from './agui.ts'
 import { textOf } from './projection.ts'
 
 /** A running turn's client-facing state. */
@@ -146,12 +147,17 @@ export async function driveRun(ctx: Context, run: ActiveRun, text: string): Prom
     finished.resolve({ kind: 'error', error: { message: error instanceof Error ? error.message : String(error), code: 'AGENT_ERROR' } })
   }))
 
-  // Subagent events are process-wide; follow only children of this thread's session.
+  // Subagent events are process-wide; follow only runs this thread's agent delegated.
+  // An out-of-process child has no Session, so the delegating parent identifies it.
   const children = new Set<string>()
-  disposers.push(ctx.on('subagent/start', (info) => {
-    if (ctx.sessions.get(info.id)?.header.parentSession !== agent.session.id) return
+  disposers.push(ctx.on('subagent/start', function (info) {
+    if (carrierKeyOf(this) !== agent && ctx.sessions.get(info.id)?.header.parentSession !== agent.session.id) return
     children.add(info.runId)
     sse.send({ type: 'SUBAGENT_STARTED', subagentRunId: info.runId, name: info.provider })
+  }))
+  disposers.push(ctx.on('subagent/activity', (info) => {
+    if (!children.has(info.runId)) return
+    sse.send({ type: 'CUSTOM', name: CUSTOM_SUBAGENT_ACTIVITY, value: { subagentRunId: info.runId, kind: info.kind, phase: info.phase } })
   }))
   disposers.push(ctx.on('subagent/end', (info) => {
     if (!children.delete(info.runId)) return

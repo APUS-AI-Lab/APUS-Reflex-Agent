@@ -4,11 +4,13 @@ import type { Context } from '@deepseek-ai/cordis'
 import type { ModelSelection } from '@deepseek-ai/dsh-agent'
 import type { SessionPromptRouter } from '@deepseek-ai/dsh-api-session-controller'
 import type { SessionRequestId } from '@deepseek-ai/dsh-api-session-controller/types'
-import { ReasoningEffortId } from '@deepseek-ai/dsh-llm'
+import { ReasoningEffortId, type ModelModality } from '@deepseek-ai/dsh-llm'
 import { RemoteError } from '@deepseek-ai/dsh-typert-protocol'
 import { MAX_JEV_CHOICES, type JevErrorCode, type JevRequest, type JevResponse } from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
 import { admitSystem3Routes, type System3DataClass, type System3ExecutionDomain, type System3PrivacyPolicy } from '@deepseek-ai/dsh-experimental-system3-policy'
 import type { System3JevOptions } from './decisions.ts'
+import type { System3KeepWarmConfig } from './keep-warm.ts'
+import type {} from './runtime-projection.ts'
 
 /** Deployment-owned model route and its allowed session data classes. */
 export interface System3EntryCandidate {
@@ -16,6 +18,8 @@ export interface System3EntryCandidate {
   readonly id: string
   /** Task criteria presented to Jev for this candidate. */
   readonly description: string
+  /** Short route name the Client shows as soon as this candidate is chosen, such as a task class and model name. */
+  readonly label?: string
   /** Registered generation provider route. */
   readonly provider: string
   /** Exact generation model identifier. */
@@ -47,6 +51,14 @@ export interface System3EntryRoutingConfig {
   readonly minConfidence: number
   /** UTF-8 byte limit on the complete Jev request; larger inputs retain the baseline without truncation. */
   readonly maxInputBytes: number
+  /**
+   * Keep the previous entry decision's route when Jev abstains or answers below
+   * `minConfidence`, so an input that refers to earlier turns continues on the
+   * model already chosen for that work. Provider failures still use the baseline. @default false
+   */
+  readonly retainOnAbstain?: boolean
+  /** Keep the Jev connection open after plugin start and after each turn ends; omission sends no warm-up requests. */
+  readonly keepWarm?: System3KeepWarmConfig
 }
 
 /** Decision result, distinct from the Session API's later adoption outcome. */
@@ -67,6 +79,14 @@ export interface System3EntryDecisionReceipt {
   readonly outcome: System3EntryOutcome
   readonly response?: JevResponse
   readonly selected?: ModelSelection
+  /** Configured candidate whose model this decision selected or retained, with its display label. */
+  readonly candidate?: { readonly id: string; readonly label?: string }
+  /** Route kept from an earlier decision of this Session; Jev suggested none for this input. */
+  readonly retained?: {
+    /** The earlier request whose route continues. */
+    readonly requestId: SessionRequestId
+    readonly selection: ModelSelection
+  }
   readonly elapsedMs: number
 }
 
@@ -138,8 +158,35 @@ export function createSystem3EntryRouter(
       let request: JevRequest | null = null
       let response: JevResponse | undefined
       let selected: ModelSelection | undefined
+      let retained: System3EntryDecisionReceipt['retained']
+      let chosen: System3EntryCandidate | undefined
       let outcome: System3EntryOutcome = 'provider-unavailable'
       let candidateIds: string[] = []
+      let previous: {
+        readonly requestId: SessionRequestId
+        readonly provider: string
+        readonly model: string
+        readonly reasoningEffort?: string
+      } | undefined
+      if (settings.retainOnAbstain === true) {
+        const projections = ctx.get('sessionProjections')
+        if (projections === undefined) throw new Error('entryRouting retainOnAbstain requires sessionProjections')
+        // Read before entry-start so the fold still describes the preceding decision.
+        const route = projections.stateOf(input.agent.session, 'system3Runtime')?.route
+        if (route) previous = { requestId: route.requestId, ...route.selection }
+      }
+      // Continue only on a route that is still an admitted, compatible candidate; adopt that candidate's own selection.
+      const retain = (allowed: readonly System3EntryCandidate[]): ModelSelection | undefined => {
+        const prior = previous
+        if (prior === undefined) return undefined
+        const candidate = allowed.find(value => value.provider === prior.provider
+          && value.model === prior.model && value.reasoningEffort === prior.reasoningEffort)
+        if (candidate === undefined) return undefined
+        const selection = selectionOf(candidate)
+        retained = { requestId: prior.requestId, selection }
+        chosen = candidate
+        return selection
+      }
       input.agent.session.append('system3/entry-start', { requestId: input.requestId })
       try {
         signal.throwIfAborted()
@@ -167,6 +214,11 @@ export function createSystem3EntryRouter(
         if (llm === undefined) throw new Error('entryRouting requires the llm service')
         const baseline = await llm.resolveModelInfo(input.baseline.provider, input.baseline.model, signal)
         signal.throwIfAborted()
+        // The candidate will read the whole Session: require image input only once an image is in it.
+        // Without the System3 projection, fall back to every modality the baseline accepts.
+        const history = ctx.get('sessionProjections')?.stateOf(input.agent.session, 'system3Runtime')
+        const required: readonly ModelModality[] | undefined = history === undefined ? undefined
+          : history.imageInSession ? ['text', 'image'] : ['text']
         const compatible: System3EntryCandidate[] = []
         for (const candidate of allowed) {
           const model = await llm.resolveModelInfo(candidate.provider, candidate.model, signal)
@@ -178,7 +230,7 @@ export function createSystem3EntryRouter(
           if (baseline.context === undefined || model.context === undefined
             || model.context.contextWindow < baseline.context.contextWindow) continue
           if (baseline.inputModalities === undefined || model.inputModalities === undefined
-            || !baseline.inputModalities.every(modality => model.inputModalities?.includes(modality))) continue
+            || !(required ?? baseline.inputModalities).every(modality => model.inputModalities?.includes(modality))) continue
           compatible.push(candidate)
         }
         allowed = compatible
@@ -199,11 +251,12 @@ export function createSystem3EntryRouter(
         if (result.kind === 'unknown') { outcome = result.failure.code; return undefined }
         response = result.response
         const answer = response.answers.route
-        if (answer?.type !== 'choice' || answer.choice === 'abstain') { outcome = 'abstain'; return undefined }
-        if (answer.confidence < settings.minConfidence) { outcome = 'low-confidence'; return undefined }
+        if (answer?.type !== 'choice' || answer.choice === 'abstain') { outcome = 'abstain'; return retain(allowed) }
+        if (answer.confidence < settings.minConfidence) { outcome = 'low-confidence'; return retain(allowed) }
         const candidate = allowed.find(value => value.id === answer.choice)
         if (candidate === undefined) { outcome = 'invalid-response'; return undefined }
         selected = selectionOf(candidate)
+        chosen = candidate
         outcome = 'selected'
         return selected
       } catch (error) {
@@ -214,6 +267,8 @@ export function createSystem3EntryRouter(
           version: 1, requestId: input.requestId, request, baseline: { ...input.baseline }, candidateIds,
           dataClasses: [...settings.sessionDataClasses], routeId: options.routeId, executionDomain: options.executionDomain,
           outcome, ...response === undefined ? {} : { response }, ...selected === undefined ? {} : { selected },
+          ...retained === undefined ? {} : { retained },
+          ...chosen === undefined ? {} : { candidate: { id: chosen.id, ...chosen.label === undefined ? {} : { label: chosen.label } } },
           elapsedMs: Date.now() - started,
         })
       }

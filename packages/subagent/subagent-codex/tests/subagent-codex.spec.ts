@@ -8,7 +8,7 @@ import * as yaml from 'js-yaml'
 import { describe, expect, it, vi } from 'vitest'
 import type { Agent } from '@deepseek-ai/dsh-agent'
 import type { ContentBlock } from '@deepseek-ai/dsh-llm'
-import SubagentRuntime from '@deepseek-ai/dsh-subagent'
+import SubagentRuntime, { type SubagentActivity } from '@deepseek-ai/dsh-subagent'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
 import type {
@@ -79,11 +79,14 @@ const fakeParent = {
   session: { header: { cwd: process.cwd() } },
 } as unknown as Agent
 
+const activities: SubagentActivity[] = []
+const reportActivity = (activity: SubagentActivity): void => { activities.push(activity) }
+
 function request(
   prompt: ContentBlock[] = [{ type: 'text', text: 'do the task' }],
   signal = new AbortController().signal,
 ) {
-  return { prompt, parent: fakeParent, signal }
+  return { prompt, parent: fakeParent, signal, reportActivity }
 }
 
 async function nextTask(): Promise<void> {
@@ -1157,6 +1160,42 @@ describe('CodexAppServerWire', () => {
     expect(wire.collectDiagnostic()).not.toContain('SECRET_TOKEN')
     expect(wire.collectDiagnostic()).not.toContain('/private/secret.txt')
     wire.close()
+  })
+
+  it('reports each child item as a category and phase without its content', async () => {
+    activities.length = 0
+    const { child, run, turnStart } = await publishRun()
+    const item = (method: string, value: unknown, turnId = 'turn-1', threadId = 'thread-1'): JsonObject => ({
+      method, params: { threadId, turnId, item: value },
+    })
+    child.peer.send(item('item/started', { type: 'commandExecution', command: 'cat /private/secret.txt' }))
+    await nextTask()
+    expect(activities).toEqual([])
+    child.peer.respond(turnStart, { turn: { id: 'turn-1' } })
+    await nextTask()
+    child.peer.send(
+      item('item/started', { type: 'userMessage', text: 'do the task' }),
+      item('item/started', { type: 'commandExecution', command: 'cat /private/secret.txt' }),
+      item('item/started', { type: 'fileChange' }, 'turn-1', 'other-thread'),
+      item('item/started', { type: 'fileChange' }, 'other-turn'),
+      item('item/started', null),
+      item('item/started', ['fileChange']),
+      item('item/started', 'fileChange'),
+      item('item/completed', { type: 'commandExecution', status: 'completed', aggregatedOutput: 'SECRET_TOKEN' }),
+      item('item/started', { type: 'futureItem' }),
+      item('item/completed', { type: 'mcpToolCall', tool: 'private-tool' }),
+      item('item/completed', { type: 'agentMessage', text: 'done', phase: 'final_answer' }),
+      turnCompleted('completed'),
+    )
+    await expect(run.result).resolves.toMatchObject({ stopReason: 'completed' })
+    expect(activities).toEqual([
+      { kind: 'command', phase: 'started' },
+      { kind: 'command', phase: 'completed' },
+      { kind: 'other', phase: 'started' },
+      { kind: 'tool', phase: 'completed' },
+      { kind: 'message', phase: 'completed' },
+    ])
+    await run.dispose()
   })
 
   it('records declined command and file items without retaining their payloads', async () => {

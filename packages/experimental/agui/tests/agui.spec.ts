@@ -1,10 +1,12 @@
 import { agentEvents } from '@deepseek-ai/dsh-agent'
 import { ToolCallId, createUserMessage } from '@deepseek-ai/dsh-llm'
 import { SessionId } from '@deepseek-ai/dsh-session'
+import SubagentRuntime, { type SubagentResult } from '@deepseek-ai/dsh-subagent'
 import { defineContentToolFixture } from '@deepseek-ai/dsh-tools'
 import { afterEach, describe, expect, it } from 'vitest'
 import { textResponse, toolCallResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import { type AguiEvent, CUSTOM_APPROVAL, personaFrom } from '../src/index.ts'
+import { CUSTOM_SUBAGENT_ACTIVITY } from '../src/agui.ts'
 import { type AguiHarness, makeAguiHarness } from './harness.ts'
 
 let harness: AguiHarness | undefined
@@ -71,6 +73,41 @@ describe('AG-UI bridge', () => {
     expect(start).toMatchObject({ toolCallId: 'call-1', toolCallName: 'missing_tool' })
     expect(events.filter(event => event.type === 'TOOL_CALL_ARGS').map(event => event.delta).join('')).toBe('{"a":1}')
     expect(types(events).at(-1)).toBe('RUN_FINISHED')
+  })
+
+  it('forwards the steps of an out-of-process subagent delegated by the running thread', async () => {
+    harness = await makeAguiHarness([{ hangAfter: [{ type: 'block-start', index: 0, blockType: 'text' }, { type: 'text-delta', index: 0, text: 'x' }] }])
+    await harness.ctx.plugin(SubagentRuntime, {})
+    const settled = Promise.withResolvers<SubagentResult>()
+    harness.ctx.subagents.registerProvider({
+      name: 'external',
+      capabilities: { agentOptions: false, outputSchema: false, depthLimit: false, toolFilter: false, persona: false },
+      inheritsParentContext: false,
+      async start(request) {
+        setImmediate(() => {
+          request.reportActivity({ kind: 'command', phase: 'started' })
+          settled.resolve({ output: [], stopReason: 'completed' })
+        })
+        // No Session backs this child, as with the Codex and Claude Code providers.
+        return { id: SessionId('external-child'), localAgent: undefined, result: settled.promise, async dispose() {} }
+      },
+    })
+    const stream = await harness.openRun('thread-delegate', 'delegate this')
+    let event = await stream.next()
+    while (event !== undefined && event.type !== 'TEXT_MESSAGE_CONTENT') event = await stream.next()
+    const parent = harness.ctx.agents.get(SessionId('thread-delegate'))!
+    const signal = new AbortController().signal
+    const run = await harness.ctx.subagents.start('external', { prompt: [{ type: 'text', text: 'task' }], parent, signal })
+    await run.result
+    const seen: AguiEvent[] = []
+    while (event !== undefined && event.type !== 'SUBAGENT_FINISHED') { event = await stream.next(); if (event !== undefined) seen.push(event) }
+    const started = seen.find(candidate => candidate.type === 'SUBAGENT_STARTED')
+    expect(started).toMatchObject({ name: 'external' })
+    expect(seen.find(candidate => candidate.type === 'CUSTOM')).toEqual(expect.objectContaining({
+      name: CUSTOM_SUBAGENT_ACTIVITY, value: { subagentRunId: started?.subagentRunId, kind: 'command', phase: 'started' },
+    }))
+    stream.abort()
+    await stream.done
   })
 
   it('routes an approval raised during a run to the client and back', async () => {

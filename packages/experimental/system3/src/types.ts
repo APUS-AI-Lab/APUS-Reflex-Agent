@@ -10,6 +10,8 @@ export interface System3EntryView {
   readonly adopted: ModelSelection | null
   readonly used: ModelSelection | null
   readonly elapsedMs: number | null
+  /** Configured route chosen for this input, by Jev or by continuing the previous route; null when the baseline was kept. */
+  readonly route: { readonly id: string; readonly label: string | null; readonly retained: boolean } | null
 }
 
 /** One automatic Skill recommendation; injection is confirmed by its durable user message. */

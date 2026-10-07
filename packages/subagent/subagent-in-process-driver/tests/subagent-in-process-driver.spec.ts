@@ -53,6 +53,7 @@ function request(parent: Agent, signal = new AbortController().signal) {
       provider: 'test',
       label: 'child task',
     }),
+    reportActivity: () => {},
   }
 }
 

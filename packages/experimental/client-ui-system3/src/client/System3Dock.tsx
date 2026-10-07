@@ -1,7 +1,7 @@
 /** Truthful execution feedback: advice, adoption and actual response stay separate. */
 import { useRef, useState } from 'react'
 import type { PropsLocale, PropsRuntime, TranslateNS } from '@deepseek-ai/dsh-client-ui-slots'
-import type { ModelSelection, ModelSelectionProjection } from '@deepseek-ai/dsh-api-session-controller/types'
+import type { ModelSelection, ModelSelectionProjection, SessionRequestId } from '@deepseek-ai/dsh-api-session-controller/types'
 import type { System3RuntimeView } from '@deepseek-ai/dsh-experimental-system3/types'
 import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
 import type {} from '@deepseek-ai/dsh-client-ui-session/client'
@@ -20,6 +20,8 @@ export interface System3FeedbackProps extends System3Actions {
   readonly selection: ModelSelectionProjection | null | undefined
   readonly running: boolean
   readonly pending: boolean
+  /** Latest local submission not yet admitted; an entry decision for an earlier input is not shown as its route. */
+  readonly pendingRequestId: SessionRequestId | null
   readonly opening: boolean
   readonly failed: boolean
   readonly t: TranslateNS<'system3'>
@@ -33,6 +35,14 @@ function labelOf(props: System3FeedbackProps): System3Key {
 }
 function model(value: ModelSelection | null | undefined, t: TranslateNS<'system3'>): string {
   return value ? `${value.provider} / ${value.model}${value.reasoningEffort ? ` · ${value.reasoningEffort}` : ''}` : t('none')
+}
+/** The configured route shown as soon as the entry decision is recorded, before the model answers. */
+function routeNotice(entry: System3RuntimeView['entry'] | undefined, pendingRequestId: SessionRequestId | null,
+  t: TranslateNS<'system3'>): string | null {
+  if (entry?.phase !== 'decided' || entry.route === null) return null
+  if (pendingRequestId !== null && entry.requestId !== pendingRequestId) return null
+  const route = entry.route.label ?? model(entry.suggested ?? entry.adopted, t)
+  return t(entry.route.retained ? 'routeRetained' : 'routeChosen', { route })
 }
 /** Render observed progress and allow a fixed Session to return to automatic mode.
  * @param props - Persisted facts and live Session status.
@@ -51,10 +61,12 @@ export function System3Feedback(props: System3FeedbackProps) {
     finally { pending.current = false; setSwitching(false) }
   }
   const fixed = selection?.mode === 'fixed'
+  const notice = routeNotice(facts?.entry, props.pendingRequestId, t)
   return <section className={css.dock} aria-label={t('title')}>
     <div className={css.bar}>
       <span className={css.dot} data-active={props.running || props.pending} aria-hidden="true" />
       <span role="status" aria-live="polite">{t(labelOf(props))}</span>
+      {notice !== null && <span className={css.route} aria-live="polite">{notice}</span>}
       <span className={css.mode}>{t(fixed ? 'fixed' : 'auto')}</span>
       {fixed && props.available && <button className={css.button} disabled={switching || props.opening} onClick={() => { void change() }}>
         {t(switching ? 'resetting' : 'reset')}
@@ -65,7 +77,7 @@ export function System3Feedback(props: System3FeedbackProps) {
       <p className={css.muted}>{t('cloud')}</p>
       <p>{t('historical')}</p>
       <dl className={css.facts}>
-        <dt>{t('suggestion')}</dt><dd>{model(facts?.entry?.suggested, t)}</dd>
+        <dt>{t('suggestion')}</dt><dd>{facts?.entry?.route?.retained === true ? t('continued') : model(facts?.entry?.suggested, t)}</dd>
         <dt>{t('adoption')}</dt><dd>{model(facts?.entry?.adopted, t)}</dd>
         <dt>{t('actual')}</dt><dd>{model(facts?.entry?.used, t)}</dd>
         {facts?.entry?.elapsedMs !== null && facts?.entry?.elapsedMs !== undefined && <><dt>{t('decisionTime')}</dt><dd>{facts.entry.elapsedMs} {t('milliseconds')}</dd></>}
@@ -85,8 +97,10 @@ export function System3Dock(props: Pick<PropsRuntime<'conversation.input.dock'>,
   const selection = props.useProjection('modelSelection')
   const running = props.useSession(s => s.running)
   const pending = props.useSession(s => s.pendingSubmissions.length > 0 || s.awaitingFirstTurn)
+  const pendingRequestId = props.useSession(s => s.pendingSubmissions.at(-1)?.requestId ?? null)
   const opening = props.useSession(s => s.openState !== 'open')
   const failed = props.useSession(s => s.promptError !== null || s.lastAgentError !== null)
   return <System3Feedback key={props.sessionId} facts={facts} selection={selection} running={running} pending={pending}
+    pendingRequestId={pendingRequestId}
     opening={opening} failed={failed} available={props.available} onAutomatic={props.onAutomatic} t={props.t} />
 }

@@ -194,6 +194,7 @@ These limits define when the seam is a poor fit or needs special operational car
 - **No replay of accepted-but-unlogged messages** — a crash can lose an accepted prompt that never reached the child's session log; the lost message is not replayed automatically.
 - **No durable parent mailbox** — child-to-parent messages require a resident continuable child and live direct parent, and provide acceptance identity rather than exactly-once delivery.
 - **Lifecycle events are observe-only** — a run-affecting `subagent/end` continuation or decision API waits for a concrete consumer.
+- **Step events are live and coarse** — `subagent/activity` carries a step category and phase for one-shot runs, is not written to any Session, and is reported only by the Codex and Claude Code providers.
 
 <a id="dev-note"></a>
 ### Dev Note

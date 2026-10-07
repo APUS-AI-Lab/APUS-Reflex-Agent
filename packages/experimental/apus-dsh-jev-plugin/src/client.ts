@@ -84,6 +84,23 @@ export class SystemOneProvider implements JevProvider {
   }
 
   /**
+   * Send an authenticated model-list request so the next decision reuses an open connection.
+   * @param signal - Caller cancellation propagated to Fetch.
+   */
+  async warm(signal?: AbortSignal): Promise<void> {
+    const key = await this.options.resolveApiKey?.()
+    signal?.throwIfAborted()
+    const headers = key === undefined ? undefined : { authorization: `Bearer ${key}` }
+    const response = await this.fetcher(`${this.options.endpoint.replace(/\/v1$/, '')}/v1/models`, {
+      ...headers === undefined ? {} : { headers },
+      signal: AbortSignal.any([...signal === undefined ? [] : [signal], AbortSignal.timeout(this.options.timeoutMs)]),
+    })
+    // Drain the body so the connection returns to the pool.
+    await response.arrayBuffer()
+    if (!response.ok) throw failure('http', `jev provider returned HTTP ${response.status}`, response.status)
+  }
+
+  /**
    * Send one validated typed decision request and validate the complete answer.
    * @param request - JSON state and typed questions.
    * @param signal - Caller cancellation propagated to Fetch.
