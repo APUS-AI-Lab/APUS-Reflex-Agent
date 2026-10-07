@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>System3 管家方案</title>
+<style>
+:root { --paper:#f7f7f5; --card:#fff; --ink:#1d1f24; --muted:#5b6270; --rule:#e2e3e0; --accent:#d9622b; --accent-tint:#fbeee6; --good:#2f7d5b; --good-tint:#e5f2ec; --warn:#9a6a12; --warn-tint:#f8f0dc; --none:#7a7f89; --none-tint:#eff0f2; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --paper:#15171b; --card:#1d2026; --ink:#e8e9ec; --muted:#a2a8b3; --rule:#30343c; --accent:#f08a55; --accent-tint:#3a271d; --good:#6cc49c; --good-tint:#1d3329; --warn:#e2b55a; --warn-tint:#3a311c; --none:#9aa0aa; --none-tint:#262a31; } }
+:root[data-theme="dark"] { --paper:#15171b; --card:#1d2026; --ink:#e8e9ec; --muted:#a2a8b3; --rule:#30343c; --accent:#f08a55; --accent-tint:#3a271d; --good:#6cc49c; --good-tint:#1d3329; --warn:#e2b55a; --warn-tint:#3a311c; --none:#9aa0aa; --none-tint:#262a31; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--paper); color:var(--ink); font:15px/1.65 -apple-system,"PingFang SC","Noto Sans SC","Segoe UI",sans-serif; }
+main { max-width:1180px; margin:0 auto; padding:40px 24px 64px; }
+h1 { font-size:28px; margin:0 0 6px; font-weight:600; } h2 { font-size:21px; margin:44px 0 10px; font-weight:600; } h3 { font-size:16px; margin:18px 0 6px; font-weight:600; }
+.sub { color:var(--muted); margin:0 0 20px; }
+.eyebrow { font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); font-weight:600; }
+.card { background:var(--card); border:1px solid var(--rule); border-radius:10px; padding:16px 20px; margin:12px 0; }
+.key { border-left:3px solid var(--accent); }
+.table-wrap { overflow-x:auto; background:var(--card); border:1px solid var(--rule); border-radius:10px; margin:12px 0; }
+table { width:100%; border-collapse:collapse; font-size:13.5px; }
+th, td { text-align:left; vertical-align:top; padding:8px 11px; border-bottom:1px solid var(--rule); }
+th { color:var(--muted); font-weight:600; }
+tr:last-child td { border-bottom:0; }
+code { font:12px/1.4 ui-monospace,"SF Mono",Menlo,monospace; background:var(--none-tint); padding:1px 5px; border-radius:4px; }
+.grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.grid3 { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+.pill { display:inline-block; padding:1px 8px; border-radius:999px; font-size:12px; font-weight:600; white-space:nowrap; background:var(--accent-tint); color:var(--accent); }
+.before { color:var(--muted); }
+.after b { color:var(--good); }
+.flow { font:13px/1.6 ui-monospace,"SF Mono",Menlo,monospace; background:var(--card); border:1px solid var(--rule); border-radius:10px; padding:14px 18px; white-space:pre; overflow-x:auto; }
+ol li, ul li { margin:5px 0; }
+@media (max-width:760px) { main { padding:24px 16px 48px; } .grid, .grid3 { grid-template-columns:1fr; } h1 { font-size:23px; } }
+</style>
+</head>
+<body>
+<main>
+<div class="eyebrow">方案 · 待评审 · 2026-10-07</div>
+<h1>System3 管家方案：学 mu 的产品方法，分批完整实现 38 个能力</h1>
+<p class="sub">目标：System3 成为 agent 的高质量、可靠、快速的管家，并管理模型路由策略。本页先总结 mu 的产品方法并提出我们的升级版，再给出三项优先能力（任务卡、插话分流、按需亮工具）的具体设计和场景效果，最后是覆盖全部 38 个点的分批计划。所有扩展点都已在本仓库代码中核实，文件位置见各节。</p>
+
+<h2>一、mu 的产品方法（我们学到的）</h2>
+<div class="grid3">
+<div class="card"><h3>1. 从坏情况出发</h3>每个点都对应一个用户见过的坏情况：删了不该删的、说做完其实没做完、插话没生效。所以一句话就能讲清楚，用户也能判断值不值。</div>
+<div class="card"><h3>2. 把琐碎判断外包</h3>主模型不擅长时时自查。mu 把“这句是纠错吗”“这个调用违背约束吗”拆成小的封闭问题交给 Jev，又快又便宜，主模型专心干活。</div>
+<div class="card"><h3>3. 每个点单独开关</h3>每个点都能关闭、只记录（shadow）或生效（active）。出问题只关一个，新点可以先记录不生效。</div>
+<div class="card"><h3>4. 判断失败就放行</h3>超时、出错一律回到原来的行为，判断永远不挡主流程。</div>
+<div class="card"><h3>5. 每次判断留账</h3>账本记下问了什么、答了什么、做了什么，可以查、可以复盘。</div>
+<div class="card"><h3>6. 公开自己的失败</h3>作者公开了“工具输出语义裁剪零效果、成本 54%”的回测。</div>
+</div>
+
+<h2>二、升级：从 38 个开关到一个管家</h2>
+<div class="card key">
+<p style="margin:0 0 8px">mu 的不足：38 个点<b>各自独立</b>，彼此不共享对任务的理解；<b>提示多、动作少</b>，很多点只给主模型一行提示；效果证据多为一次性实测。我们的升级版有五条原则：</p>
+<ol style="margin:0">
+<li><b>一本笔记本</b>：所有判断都读同一张<b>任务卡</b>（目标、你的原话要求、怎样算做完）。约束检查、完成核验、偏离监控、交接给 Codex、路由升降级都用它，而不是各自猜你要什么。用户看到的是一个管家，不是 38 个功能。</li>
+<li><b>判断归 Jev，动作要直接</b>：Jev 只回答封闭问题；判断之后是确定的动作：换模型、弹确认卡、把插话送进当前步骤、亮出或收起工具。只有做不了动作时才退而给提示。进入模型或界面的文字只用你的原话，或由现有模型生成。</li>
+<li><b>看得见、能撤回</b>：管家每做一件事，侧边面板都用一句话说明原因，例如“因为你说过‘别动 README’”，并且可以撤回：删掉识别错的要求、把插话改回排队、找回被收起的工具。</li>
+<li><b>坏情况回归集就是验收标准</b>：把真实发生过的坏情况做成可重跑的会话场景。每项能力上线前后各跑一遍，数清挡住了几个；再配合真实 Jev 标注集定问法和阈值，prd 数据达标才从 shadow 转 active。</li>
+<li><b>不拖慢</b>：每条用户消息只发<b>一次</b> Jev 请求（最多 16 题，入口路由、任务卡、澄清提示、亮工具合并在一起），与现有入口路由同在一个等待里，不新增往返；其余判断与主模型并行，或只在规则筛选命中后才调用。每项上线都报告 P50 / P95 延迟增量。</li>
+</ol>
+</div>
+
+<div class="flow">用户消息 ──► 一次 Jev 请求（≤16 题）
+               ├─ 入口路由：本轮用哪个模型 / 是否交给 Codex（已上线）
+               ├─ 任务卡：新任务 / 补充要求 / 纠错 / 验收要求 / 闲聊
+               ├─ 澄清提示：需求明显不清时提醒先问
+               └─ 亮工具：这个任务需要网页 / 浏览器 / 某个 MCP 吗
+                        │
+                        ▼
+                ┌──────────────┐  读取   约束与风险守护（工具执行前）
+                │   任务卡      │ ─────►  完成核验（说做完时）
+                │ 原话 · 可编辑  │ ─────►  偏离监控 → 路由升降级
+                └──────────────┘ ─────►  交接给 Codex 的交接包
+运行中插话 ──► 插话分流：纠错 / 补充 / 旁支问题 / 新任务 ──► 插入当前步骤 · 转给 Codex · 排队</div>
+
+<h2>三、三项优先能力的具体设计</h2>
+
+<h3>A. 任务卡（mu <code>task.frame</code>，并入 <code>input.preflight</code> 的澄清提示）</h3>
+<div class="table-wrap"><table><tbody>
+<tr><th style="width:16%">解决的坏情况</th><td>你开头说“别改公开 API”“测试通过才算完”，二十步之后模型忘了；交接给 Codex 时只能临时回头找要求</td></tr>
+<tr><th>何时判断</th><td>每条用户消息。与入口路由合并成一次 Jev 请求（入口路由的接入点：<code>system3/src/index.ts:271</code> 注册的 prompt router）。问法沿用交接包已验证的问法（6 段标注对话召回率与精确率 1.0）</td></tr>
+<tr><th>Jev 问什么</th><td>选择题：新任务 / 补充要求 / 纠错 / 说明怎样算完成 / 闲聊或无关（带逃生选项）；是非题：需求是否明显不清、需要先澄清</td></tr>
+<tr><th>动作</th><td>把要求<b>原样</b>记进任务卡（不用模型改写，避免走样）；新任务时开一张新卡；需求不清时给主模型一行“先确认 X”提示</td></tr>
+<tr><th>存在哪里</th><td>新会话事件 <code>system3/task-frame</code>。DSH 目标的快照字段是封闭的（<code>packages/goal/goal/src/fold.ts:104</code>），不能挂额外字段，所以任务卡用目标的 id 与 revision 关联（<code>goal/changed</code> 事件可订阅）。没有目标时按会话记录</td></tr>
+<tr><th>模型怎么看到</th><td>系统提示里的一段“任务卡”，内容可从会话事件完整重建；DSH 目标续跑的提示只有目标和轮次（<code>goal-round-driver/src/prompt.ts:12</code>），任务卡补上要求与验收项</td></tr>
+<tr><th>用户看到什么</th><td>侧边面板新增“任务卡”：每条要求显示原话和来源消息，识别错了可以删除（删除也是会话事件）</td></tr>
+<tr><th>验收</th><td>标注集 30 条消息（含边界例子）精确率 ≥ 0.9；坏情况回归：二十步后仍遵守开头的要求</td></tr>
+</tbody></table></div>
+
+<h3>B. 插话分流（mu <code>input.interjection</code>）</h3>
+<div class="table-wrap"><table><tbody>
+<tr><th style="width:16%">解决的坏情况</th><td>它干活时你说“等等，用 pnpm 别用 npm”。默认设置下这句话会排队到本轮结束（<code>submission-settings.ts:12</code> 默认 queue），模型整轮继续用 npm；反过来，设成插入时，一句“顺便问下这个函数干嘛的”会打断正在做的事</td></tr>
+<tr><th>现状核实</th><td>运行中的消息由客户端决定排队或插入（<code>submission-policy.ts:30</code>），服务端在 <code>session-controller/src/commands.ts:382</code> 直接投递；prompt router 只在空闲时生效（<code>prompt-router.ts:97</code>）。<b>今天没有任何扩展点能在投递前改变方式</b></td></tr>
+<tr><th>需要的改动</th><td>在 <code>prompt()</code> 投递前新增一个扩展点（例如允许 prompt router 对运行中的消息返回投递方式）。这是对 DSH 会话控制器的改动，需同步更新 architecture 文档，并与“客户端决定消息显示位置”的既有约定对齐：服务端返回实际采用的方式，客户端按它放置</td></tr>
+<tr><th>Jev 问什么</th><td>选择题：纠正当前做法 / 补充信息 / 旁支问题 / 新任务 / 无法判断</td></tr>
+<tr><th>动作</th><td>纠正、补充 → 插入当前步骤；如果 Codex 正在运行且可补充，同时转给 Codex（复用已上线的补充说明通道 <code>subagent/steer</code>）；旁支问题、新任务 → 排队；纠正同时写进任务卡。<b>从不自动停止任务</b></td></tr>
+<tr><th>谁说了算</th><td>只在新设置“自动判断”下生效；你用 Cmd/Ctrl-Enter 明确选择的方式永远优先。判断超过 1.5 秒或失败，按你的默认设置投递</td></tr>
+<tr><th>用户看到什么</th><td>消息旁标注“已作为纠正插入当前步骤”或“已排队，本轮结束后回答”，可一键改成另一种</td></tr>
+<tr><th>验收</th><td>标注集 40 条运行中消息，纠正类召回率 ≥ 0.9、旁支问题误插入 ≤ 5%；坏情况回归：“用 pnpm 别用 npm”在下一步生效</td></tr>
+</tbody></table></div>
+
+<h3>C. 按需亮工具（mu <code>capability.disclosure</code>，并入 <code>skills.disclosure</code>）</h3>
+<div class="table-wrap"><table><tbody>
+<tr><th style="width:16%">解决的坏情况</th><td>写一首诗也带着网页、浏览器、电脑操作和全部 MCP 工具的说明，每次请求都更长、更贵；工具越多，模型越容易选错工具</td></tr>
+<tr><th>现状核实</th><td>DSH 有现成扩展点 <code>ctx.tools.restrict({allow, deny})</code>（<code>packages/core/tools/src/index.ts:1097</code>），官方 cookbook 推荐用它做“渐进披露”；工具变化会自动记入会话（<code>request/header</code> 与 tool-addition / tool-removal），不需要新事件。DeepSeek 路线支持中途<b>只增不减</b>地添加工具而不破坏缓存（<code>toolUpdate: 'addition-only'</code>）。MCP 服务器目前启动即连接，没有按需启动</td></tr>
+<tr><th>Jev 问什么</th><td>新任务的第一条消息里，对每个工具包问一题“这个任务需要 X 吗”（网页、浏览器、电脑操作、每个 MCP 服务器）；同一请求里判断哪些技能与任务无关</td></tr>
+<tr><th>动作</th><td>只在<b>很确定不需要</b>时收起（是非题 ≤ 0.2 才算否）；读写文件、命令行、目标、待办等核心工具永不收起。任务内只增不减：模型或用户需要时，通过一个“申请工具”入口把工具包加回来，加回走缓存友好的增量方式。新任务时才重新判断</td></tr>
+<tr><th>第二步</th><td>MCP 按需启动：被判为不需要的 MCP 服务器不启动进程，需要时再连接。需要一个新的加载插件，放在本批的第二个 PR</td></tr>
+<tr><th>用户看到什么</th><td>侧边面板一行：“本任务已收起：浏览器、电脑操作、2 个 MCP”，可一键全部恢复</td></tr>
+<tr><th>验收</th><td>每次请求的输入 token 与缓存命中率前后对照；“需要却被收起”在标注集里为 0，在 prd 上每 100 个任务 ≤ 1 次且都能通过申请入口恢复</td></tr>
+</tbody></table></div>
+
+<h2>四、场景效果（修改前后）</h2>
+<div class="table-wrap"><table>
+<thead><tr><th style="width:24%">场景</th><th style="width:28%">今天</th><th style="width:36%">之后</th><th style="width:12%">用到的能力</th></tr></thead>
+<tbody>
+<tr><td>“重构这个模块，别改公开 API，测试跑通才算完”</td><td class="before">要求只在第一条消息里；二十步后模型改了导出函数名，测试没跑就说完成</td><td class="after">任务卡记下两条原话；改导出函数前弹确认卡，引用“别改公开 API”；说完成时核验“测试跑通了吗”，没有就<b>继续干</b></td><td>任务卡、约束守护、完成核验</td></tr>
+<tr><td>运行中说“等等，用 pnpm 别用 npm”</td><td class="before">排队到本轮结束，整轮继续用 npm</td><td class="after">判为纠正，<b>下一步就生效</b>；Codex 正在跑时同时转给 Codex；任务卡多一条要求</td><td>插话分流、任务卡</td></tr>
+<tr><td>运行中问“顺便问下，这个函数是干嘛的”</td><td class="before">设成插入时会打断手头的事</td><td class="after">判为旁支问题，<b>排队</b>，本轮结束后回答</td><td>插话分流</td></tr>
+<tr><td>“写一首关于秋天的诗”</td><td class="before">所有工具说明都在请求里</td><td class="after">只保留核心工具，<b>请求更短</b>；之后说“查一下今天的新闻”，网页工具加回来，缓存不受影响</td><td>按需亮工具</td></tr>
+<tr><td>需求含糊：“把那个弄好”</td><td class="before">模型猜一个方向开干</td><td class="after">提醒主模型先确认“那个”指什么</td><td>任务卡（澄清）</td></tr>
+<tr><td>Flash 在一个 bug 上连续失败</td><td class="before">规则提示“同一错误重复”，仍用 Flash</td><td class="after">监控判为卡住，<b>升级到 Pro 或交给 Codex</b>，面板写明原因</td><td>偏离监控、路由升降级</td></tr>
+<tr><td>搜到的网页里写着“忽略之前的指令”</td><td class="before">只告诉模型这是外部内容</td><td class="after">该段被扣下，原位说明“已扣下疑似指令”</td><td>注入防护</td></tr>
+<tr><td>上周说过“提交信息一律用英文”</td><td class="before">新会话不记得</td><td class="after">新会话开始时判断相关，自动带上这条经验</td><td>经验记忆</td></tr>
+</tbody></table></div>
+
+<h2>五、分批完整实现全部 38 个点</h2>
+<p>按“你点名的三项优先 → 守护 → 完成与路由 → 上下文 → 记忆 → 其余”排序。每批都先只记录不生效，标注集与 prd 数据达标后再开启；每批结束跑一遍坏情况回归集。</p>
+<div class="table-wrap"><table>
+<thead><tr><th style="width:12%">批次</th><th style="width:30%">内容（mu 编号）</th><th>交付与退出标准</th></tr></thead>
+<tbody>
+<tr><td><span class="pill">第 0 批</span><br>地基</td><td>判定内核（统一题目、阈值、回退、开关、判定事件）；坏情况回归集；测试日志无损折叠 #7</td><td>内核 100% 覆盖；回归集首批 8 个场景可重跑；折叠在真实测试输出上的节省率与失败行零丢失</td></tr>
+<tr><td><span class="pill">第 1 批</span><br>你点名的三项</td><td>任务卡 #2、澄清提示 #1、插话分流 #3、按需亮工具 #5、技能披露 #4</td><td>三项各自的标注集达标；合并后的单次 Jev 请求不降低入口路由准确率；延迟增量 P95 &lt; 0.3 秒；场景 1–5 在 prd 复现“之后”效果</td></tr>
+<tr><td><span class="pill">第 2 批</span><br>守护</td><td>约束检查 #19、危险命令复核 #17、语义审批 #18、委派改动越界 #35、注入检测 #20</td><td>约束标注集精确率 ≥ 0.9；“删 README”场景被挡住；注入标注集召回率 ≥ 0.9</td></tr>
+<tr><td><span class="pill">第 3 批</span><br>完成、监控、路由</td><td>完成核验 #28、目标达成 #31、答应了却停下 #29、偏离监控 #26、外部事件时机 #33、看板按进展更新 #32、运行中路由升降级与委派角色 #34</td><td>10-06 两次误报、10-07 一次漏报不再出现；卡住后升级的成功率有数据；路由记录可用于后续调优</td></tr>
+<tr><td><span class="pill">第 4 批</span><br>上下文</td><td>工具输出语义裁剪 #6、旧输出缩成一行 #8、按分数压缩 #9、主模型缓存预热 #16、诊断时机 #25</td><td>只在净收益为正时开启：节省 token − Jev 成本 &gt; 0，且误删必需内容为 0（mu 的 #6 回测失败，必须先证明）</td></tr>
+<tr><td><span class="pill">第 5 批</span><br>记忆</td><td>召回 #10、记录 #11、成功经验 #12、值不值得记 #13、去重合并 #14、是否用上与淘汰 #15</td><td>先做存储与隐私设计评审；跨会话场景 8 在 prd 复现</td></tr>
+<tr><td><span class="pill">第 6 批</span><br>其余</td><td>找文件 #21、Jev 判断工具 #22、审查分级 #24、浏览器下一步 #23、流式输出打断 #30、退回检查点 #27、多代理互通 #36–#38</td><td>逐项评估：每项先 shadow 两周，有正收益才开启；没有收益的写明原因后保持关闭</td></tr>
+</tbody></table></div>
+<p class="sub">合计：第 0 批 1 个、第 1 批 5 个、第 2 批 5 个、第 3 批 7 个、第 4 批 5 个、第 5 批 6 个、第 6 批 9 个，共 38 个。</p>
+
+<h2>六、需要你确认的三件事</h2>
+<ol>
+<li><b>插话分流要改 DSH 会话控制器</b>：今天没有扩展点能在投递前改变方式，需要新增一个（同步更新 architecture 文档）。另一种做法是在客户端提交前判断，但违反“在做决定的操作里执行决定”的仓库规则，不推荐。</li>
+<li><b>插话分流先做成可选设置</b>：新增“自动判断”选项，先由你手动打开，prd 数据达标后再改为默认。</li>
+<li><b>任务卡对你可见、可删改</b>：识别错的要求你可以删除。建议同意，这是“看得见、能撤回”原则的核心。</li>
+</ol>
+</main>
+</body>
+</html>
