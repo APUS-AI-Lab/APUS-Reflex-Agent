@@ -122,7 +122,12 @@ function resultText(result: Readonly<ToolExecutionResult>): string {
   return result.content.filter(block => block.type === 'text').map(block => block.text).join('\n')
 }
 
-function commandOf(exec: ToolExecution): string {
+/**
+ * The command text of a shell call.
+ * @param exec - A tool call whose arguments may carry a `command` string.
+ * @returns The command, or an empty string when the arguments carry none.
+ */
+export function commandOf(exec: ToolExecution): string {
   const args = exec.arguments
   return typeof args === 'object' && args !== null && 'command' in args && typeof args.command === 'string' ? args.command : ''
 }

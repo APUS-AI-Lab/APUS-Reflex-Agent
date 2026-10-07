@@ -15,6 +15,7 @@ import { validateSystem3HandoffPack } from './handoff-pack.ts'
 import { installSystem3DelegationProgress, type System3DelegationProgressConfig } from './delegation-progress.ts'
 import { installSystem3ProcessSupervision, type System3ProcessSupervisionConfig } from './process-supervision.ts'
 import { installSystem3RouteHealth } from './route-health.ts'
+import { installSystem3OutputFolding, type System3OutputFoldingConfig } from './output-folding.ts'
 import type { Session } from '@deepseek-ai/dsh-session'
 import { recordSystem3Decision, type System3DecisionRequest, type System3DecisionReceipt, type System3JevOptions } from './decisions.ts'
 
@@ -71,6 +72,8 @@ export interface Config {
   readonly delegationProgress?: false | System3DelegationProgressConfig
   /** Stall rules and acceptance-evidence checks over each Agent loop; `false` or omission disables them. */
   readonly processSupervision?: false | System3ProcessSupervisionConfig
+  /** Lossless folding of repeated lines in matching shell results; `false` or omission disables it. */
+  readonly outputFolding?: false | System3OutputFoldingConfig
 }
 
 /** Small operational counters, intentionally free of user data. */
@@ -240,6 +243,15 @@ export default class System3 extends Service implements System3Service {
       verifyPattern: z.string().required(),
       failurePattern: z.string().required(),
     })]).default(false),
+    outputFolding: z.union([z.const(false), z.object({
+      mode: z.union([z.const('shadow'), z.const('active')]).required(),
+      shellTools: z.array(z.string()).required(),
+      commandPattern: z.string().required(),
+      minLines: z.number().step(1).min(1).required(),
+      minChars: z.number().step(1).min(1).required(),
+      minNetChars: z.number().step(1).min(1).required(),
+      minNetShare: z.number().min(0).max(1).required(),
+    })]).default(false),
   })
 
   readonly privacyPolicy: System3PrivacyPolicy
@@ -285,6 +297,9 @@ export default class System3 extends Service implements System3Service {
     }
     if (config.processSupervision !== undefined && config.processSupervision !== false) {
       installSystem3ProcessSupervision(ctx, config.processSupervision)
+    }
+    if (config.outputFolding !== undefined && config.outputFolding !== false) {
+      installSystem3OutputFolding(ctx, config.outputFolding)
     }
     if (config.observeAgentLoop === true) this.observeAgentLoop()
     if (config.skillSelection !== undefined && config.skillSelection !== false) {

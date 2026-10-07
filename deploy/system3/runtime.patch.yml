@@ -121,6 +121,14 @@
           progressTools: [web_search, web_fetch]
           verifyPattern: '\b(pytest|unittest|vitest|jest|go test|cargo (test|build)|(npm|pnpm|yarn)( run)? (test|build|typecheck)|tsc|make (test|check|build))\b'
           failurePattern: '\bFAILED\b|\b[1-9][0-9]* (failed|errors?)\b|No module named|No such file or directory|Permission denied|command not found|Traceback \(most recent call last\)|npm ERR!|\bfatal: |exit code:? [1-9]'
+        outputFolding:
+          mode: active
+          shellTools: [bash]
+          commandPattern: '\b(pytest|unittest|vitest|jest|mocha|go test|cargo (test|build)|(npm|pnpm|yarn|bun)( run)? (test|build|typecheck)|tsc|make (test|check|build))\b'
+          minLines: 6
+          minChars: 200
+          minNetChars: 300
+          minNetShare: 0.1
         skillSelection:
           sessionDataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'
           minConfidence: 0.5

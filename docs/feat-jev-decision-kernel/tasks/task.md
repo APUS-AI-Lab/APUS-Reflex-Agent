@@ -22,7 +22,7 @@ Approved 2026-10-07: implement all 38 of mu's decision points in seven batches, 
 
 - [ ] Decision kernel (`decision-kernel.ts`): questions, thresholds, fallback, off/shadow/active, the `system3/judgement` event; ships with its first consumer in batch 1
 - [ ] Bad-case regression suite: replayable sessions for deleting a protected README, `; echo $?` masking a failure, research counted as no progress, a promise left undone, a mid-run correction that waited a whole turn, and an over-long tool list
-- [ ] Lossless test-log folding (#7): fold byte-identical repeated runs into one line with a back-reference; never call a model; never drop failures or summaries
+- [x] Lossless test-log folding (#7): fold byte-identical repeated runs into one line with a back-reference; never call a model; never drop failures or summaries
 
 ## Batch 1: task frame, mid-run messages, on-demand tools
 
@@ -86,3 +86,4 @@ The article says 35, the number in mu's older README; the code (`packages/kyrn-j
 |---|---|---|
 | 2026-10-07 | Reopen a stalled Jev connection | Merged in #23; deployed to prd |
 | 2026-10-07 | Steward plan | Reviewed and approved |
+| 2026-10-07 | Lossless test-log folding (#7) | #25; prd: a failing unittest run folded 131 lines (5,097 characters), the model diagnosed the shared failure correctly; markers quote the first repeated line after the browser check |

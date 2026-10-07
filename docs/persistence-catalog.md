@@ -70,6 +70,7 @@ The [format references](persistence-changes/historical-formats/README.md) cover 
 | `event:system3/entry-decision` | event | `9c7cecd646b7d0ce7f1fbf3b341f2d1c1c31135d0de9e1cb556a51a0d33177ff` | [`{ type: "system3/entry-decision" }`](#persistence-type-sha256-9c7cecd646b7d0ce7f1fbf3b341f2d1c1c31135d0de9e1cb556a51a0d33177ff) |
 | `event:system3/entry-start` | event | `0f109d50397f1d347b2f62df20bd1e21a200c839428c8bca5449e8ed37ab633a` | [`{ type: "system3/entry-start" }`](#persistence-type-sha256-0f109d50397f1d347b2f62df20bd1e21a200c839428c8bca5449e8ed37ab633a) |
 | `event:system3/handoff-pack` | event | `c4519065a7d2c21ca6154ac2cfe65e97587ad8e210623c01371fee5f959d35d3` | [`{ type: "system3/handoff-pack" }`](#persistence-type-sha256-c4519065a7d2c21ca6154ac2cfe65e97587ad8e210623c01371fee5f959d35d3) |
+| `event:system3/output-fold` | event | `a08b64e63b930ddf31679dc4de8424786c7f497169323a50ab043b260545e26f` | [`{ type: "system3/output-fold" }`](#persistence-type-sha256-a08b64e63b930ddf31679dc4de8424786c7f497169323a50ab043b260545e26f) |
 | `event:system3/process-notice` | event | `310a36ad49580b64f5f22ee000de5d58ec37334a253610f83bb3cf9102023108` | [`{ type: "system3/process-notice" }`](#persistence-type-sha256-310a36ad49580b64f5f22ee000de5d58ec37334a253610f83bb3cf9102023108) |
 | `event:system3/skill-decision` | event | `2da260ec5f7fe67028206d4c6254ff01a52dfe9a7f9aa67dedf72324ac4748ce` | [`{ type: "system3/skill-decision" }`](#persistence-type-sha256-2da260ec5f7fe67028206d4c6254ff01a52dfe9a7f9aa67dedf72324ac4748ce) |
 | `event:team/member` | event | `4fb59762612c3e3ac3a3bd4f84c9c148d3c3893bd422ba2b201cc039fabd49bc` | [`{ type: "team/member" }`](#persistence-type-sha256-4fb59762612c3e3ac3a3bd4f84c9c148d3c3893bd422ba2b201cc039fabd49bc) |
@@ -1085,6 +1086,17 @@ Source: [`packages/experimental/system3/src/entry-routing.ts:141`](../packages/e
 ```
 
 Source: [`packages/experimental/system3/src/handoff-pack.ts:43`](../packages/experimental/system3/src/handoff-pack.ts)
+
+<a id="system3output-fold--log-only"></a>
+
+#### `system3/output-fold` — log-only
+
+```ts persistence-catalog
+/** A shell result was folded, or would have been in shadow mode; the folded text itself is the logged tool result. */
+'system3/output-fold': System3OutputFold
+```
+
+Source: [`packages/experimental/system3/src/output-folding.ts:43`](../packages/experimental/system3/src/output-folding.ts)
 
 <a id="system3process-notice--log-only"></a>
 
@@ -3196,6 +3208,14 @@ SHA-256: `d16a6f399e8d8b19640f4aa05087d45ec32e6aaa9c5555718f3810a74ac11b10`
 SHA-256: `0e6652cff9f3a002e69c9daafd20708bf467c013da067ee0208acc1b8a71c734`
 
 `"system3/handoff-pack"`
+
+<a id="persistence-type-sha256-1b600946d1ee3fc843b24fb0e79a2e5c6ca8b24a971619366a46f9730728661f"></a>
+
+### `"system3/output-fold"`
+
+SHA-256: `1b600946d1ee3fc843b24fb0e79a2e5c6ca8b24a971619366a46f9730728661f`
+
+`"system3/output-fold"`
 
 <a id="persistence-type-sha256-1d9e98e26d153780d5649084d50995cc50c6a04c64f12f7aaee477b14fddcb1b"></a>
 
@@ -5881,6 +5901,26 @@ Sources: [`packages/experimental/system3/src/handoff-pack.ts:27`](../packages/ex
 | `request` | required | [`union (2 variants)`](#persistence-type-sha256-7ee064a4547ab8ee2673099ef72df06ab2a1f8795c7ad295ac42125289713156) |
 | `requestId` | required | `string` |
 | `response` | optional | [`JevResponse`](#persistence-type-sha256-693f3aa30e2f5006d86aef1dbf1459d83bf5a0820f8c82a11c64d99a24556eb8) |
+| `version` | required | `1` |
+
+<a id="persistence-type-sha256-6ebb9b2d43fb0085b4264add7d76a8f4915c01a8aa9fc39b3f78c078928ed10e"></a>
+
+<a id="persistence-type-packagesexperimentalsystem3srcoutput-foldingtssystem3outputfold"></a>
+
+<a id="persistence-type-system3outputfold"></a>
+
+### `System3OutputFold`
+
+SHA-256: `6ebb9b2d43fb0085b4264add7d76a8f4915c01a8aa9fc39b3f78c078928ed10e`
+
+Sources: [`packages/experimental/system3/src/output-folding.ts:29`](../packages/experimental/system3/src/output-folding.ts)
+
+| Property | Presence | Type |
+|---|---|---|
+| `applied` | required | `boolean` |
+| `foldedLines` | required | `number` |
+| `savedChars` | required | `number` |
+| `tool` | required | `string` |
 | `version` | required | `1` |
 
 <a id="persistence-type-sha256-da0389dfad3e6e301ab8ef2da90fa7d34b343e7685c06fa2bd5892ed9aa43b16"></a>
@@ -10183,6 +10223,22 @@ SHA-256: `c4519065a7d2c21ca6154ac2cfe65e97587ad8e210623c01371fee5f959d35d3`
 | `seq` | required | `number` |
 | `time` | required | `number` |
 | `type` | required | `"system3/handoff-pack"` |
+
+<a id="persistence-type-sha256-a08b64e63b930ddf31679dc4de8424786c7f497169323a50ab043b260545e26f"></a>
+
+<a id="persistence-type-eventsystem3output-fold"></a>
+
+### `{ type: "system3/output-fold" }`
+
+SHA-256: `a08b64e63b930ddf31679dc4de8424786c7f497169323a50ab043b260545e26f`
+
+| Property | Presence | Type |
+|---|---|---|
+| `data` | required | [`System3OutputFold`](#persistence-type-sha256-6ebb9b2d43fb0085b4264add7d76a8f4915c01a8aa9fc39b3f78c078928ed10e) |
+| `ignorable` | optional | `true` |
+| `seq` | required | `number` |
+| `time` | required | `number` |
+| `type` | required | `"system3/output-fold"` |
 
 <a id="persistence-type-sha256-310a36ad49580b64f5f22ee000de5d58ec37334a253610f83bb3cf9102023108"></a>
 

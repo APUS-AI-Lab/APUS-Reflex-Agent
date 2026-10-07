@@ -9,8 +9,8 @@
   en: e7c80d1de4d328b4
   zh: d9f368c27fd9f998
 /session-persistence-event-catalog/persistence-type-fingerprints:
-  en: d7eb1c0ce6c34386
-  zh: 28526a04bfb7381c
+  en: ec30bebe21efb170
+  zh: d4e8359586c3737a
 /session-persistence-event-catalog/event-envelope:
   en: 7ebb1a2e0dd1f916
   zh: 8946f415dda5c1b8
@@ -240,8 +240,11 @@
   en: f174adec9a206a8e
   zh: 91cae168bbffc285
 /session-persistence-event-catalog/events/system3/system3-handoff-pack-log-only:
-  en: 559b6bba067488c0
-  zh: 9e3202f5c995a496
+  en: fdb6aa6cd0fd04ab
+  zh: d1fe31679517a614
+/session-persistence-event-catalog/events/system3/system3-output-fold-log-only:
+  en: dec139ffa19baaa2
+  zh: d6874a9b534394a1
 /session-persistence-event-catalog/events/system3/system3-process-notice-log-only:
   en: c2bce49adfa9b9ce
   zh: 0609a977e042b9be
@@ -987,8 +990,11 @@
   en: d3ac389c818134ab
   zh: d3ac389c818134ab
 /session-persistence-event-catalog/resolved-persistence-types/system3-handoff-pack:
-  en: 18d8c5f095c5bdd2
-  zh: 18d8c5f095c5bdd2
+  en: 344db677dad9e275
+  zh: 344db677dad9e275
+/session-persistence-event-catalog/resolved-persistence-types/system3-output-fold:
+  en: 4ae119e38eb49745
+  zh: 4ae119e38eb49745
 /session-persistence-event-catalog/resolved-persistence-types/system3-process-notice:
   en: e094e25b65d71669
   zh: e094e25b65d71669
@@ -1500,8 +1506,11 @@
   en: f8cd1404d156bd2e
   zh: d44340d2f43f5986
 /session-persistence-event-catalog/resolved-persistence-types/system3handoffpack:
-  en: 22e184982438c375
-  zh: dd1f3330fd9a3bed
+  en: 8befd5e7ce4f574f
+  zh: 482938d07944ce54
+/session-persistence-event-catalog/resolved-persistence-types/system3outputfold:
+  en: 4e119012ce9a8d03
+  zh: 607712805a1715a8
 /session-persistence-event-catalog/resolved-persistence-types/system3processnotice:
   en: 0bf073f6a6f1c76e
   zh: f78af8cea9d82852
@@ -2421,8 +2430,11 @@
   en: 16effe149d8ee52e
   zh: ebc250cb8b365ea2
 /session-persistence-event-catalog/resolved-persistence-types/type-system3-handoff-pack:
-  en: 7860d4952a42a4d9
-  zh: 7a3f572c8f18a0cb
+  en: 389f96329ce5e853
+  zh: 8d61119e3179d361
+/session-persistence-event-catalog/resolved-persistence-types/type-system3-output-fold:
+  en: d93e8759ebee8234
+  zh: 189b00ead2f83c2c
 /session-persistence-event-catalog/resolved-persistence-types/type-system3-process-notice:
   en: aecf0e03d732e344
   zh: 9c673348faa919a7

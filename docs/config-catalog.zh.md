@@ -1237,7 +1237,7 @@ export interface Config {
 ## `@deepseek-ai/dsh-experimental-system3`
 
 - `refs`: [`System3DataClass`](../packages/experimental/system3-policy/src/index.ts) · [`System3ExecutionDomain`](../packages/experimental/system3-policy/src/index.ts) · [`System3PrivacyMode`](../packages/experimental/system3-policy/src/index.ts)
-- `source`: [`packages/experimental/system3/src/index.ts:49`](../packages/experimental/system3/src/index.ts)
+- `source`: [`packages/experimental/system3/src/index.ts:50`](../packages/experimental/system3/src/index.ts)
 
 ```ts config-catalog
 /** Configures the default local-first privacy boundary. */
@@ -1266,6 +1266,8 @@ export interface Config {
   readonly delegationProgress?: false | System3DelegationProgressConfig
   /** Stall rules and acceptance-evidence checks over each Agent loop; `false` or omission disables them. */
   readonly processSupervision?: false | System3ProcessSupervisionConfig
+  /** Lossless folding of repeated lines in matching shell results; `false` or omission disables it. */
+  readonly outputFolding?: false | System3OutputFoldingConfig
 }
 
 /** Explicit controls for entry recommendations; omission leaves entry routing disabled. */
@@ -1349,6 +1351,24 @@ export interface System3ProcessSupervisionConfig {
   readonly verifyPattern: string
   /** Regular expression for failure output; a command list or pipeline that exits 0 with matching output counts as failed. */
   readonly failurePattern: string
+}
+
+/** Which shell results are folded and how large a repeat must be; deployment-owned. */
+export interface System3OutputFoldingConfig {
+  /** `shadow` records what folding would save without changing results; `active` also replaces the model-visible text. */
+  readonly mode: 'shadow' | 'active'
+  /** Shell tools whose single-text results are inspected. */
+  readonly shellTools: readonly string[]
+  /** Case-insensitive regular expression a command must match, such as test runners and builds. */
+  readonly commandPattern: string
+  /** Fewest consecutive repeated lines worth one marker. */
+  readonly minLines: number
+  /** Fewest repeated characters worth one marker. */
+  readonly minChars: number
+  /** Folding applies only when it saves at least this many characters ... */
+  readonly minNetChars: number
+  /** ... and at least this share of the original text. */
+  readonly minNetShare: number
 }
 
 /** One entry route Jev may choose. */
