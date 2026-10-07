@@ -28,7 +28,7 @@ Approved 2026-10-07: implement all 38 of mu's decision points in seven batches, 
 
 - [ ] Task frame (#2) with clarification hints (#1): merged into the entry-routing Jev request; verbatim requirements in the `system3/task-frame` event keyed by the DSH goal id and revision; a task-frame section in the system prompt; visible and deletable in the dock
 - [ ] On-demand tools (#5) with Skill disclosure (#4): hide a tool pack only when Jev is confident it is not needed, through `ctx.tools.restrict`; additions only within a task; a request entry restores hidden packs; MCP servers start on demand in a second PR
-- [ ] Mid-run message routing (#3): a new admission seam in the session controller before delivery; corrections and additions steer (and reach a running Codex), side questions and new tasks queue; an opt-in "decide automatically" setting; an explicit Cmd/Ctrl-Enter choice always wins; separate PR with the architecture update
+- [x] Mid-run message routing (#3): a new admission seam in the session controller before delivery; corrections and additions steer (and reach a running Codex), side questions and new tasks queue; an opt-in "decide automatically" setting; an explicit Cmd/Ctrl-Enter choice always wins; separate PR with the architecture update
 - [ ] Exit: labelled sets meet their targets; the merged request does not lower entry-routing accuracy; P95 latency increase under 0.3 s; scenarios 1–5 reproduce on prd
 
 ## Batch 2: guards
@@ -88,3 +88,5 @@ The article says 35, the number in mu's older README; the code (`packages/kyrn-j
 | 2026-10-07 | Steward plan | Reviewed and approved |
 | 2026-10-07 | Lossless test-log folding (#7) | #25; prd: a failing unittest run folded 131 lines (5,097 characters), the model diagnosed the shared failure correctly; markers quote the first repeated line after the browser check |
 | 2026-10-07 | Task frame (#2) and decision kernel | #26; labelled sets of 91 messages against the deployed Jev, final held-out set: keep precision and recall 1.0, new-task precision 1.0 and recall 2/3; prd browser check: requirement kept in 0.54 s, the model saw the card on the next turn and followed it, a switch to an unrelated request started a new frame. Clarification hints (#1) are not done yet |
+| 2026-10-08 | Task frame follows the DSH goal | #27; /goal starts the frame from the objective and an open goal cannot be replaced by a message; prd /goal run end to end |
+| 2026-10-08 | Mid-run message routing (#3) | #28; reuses the queue steer action instead of a new controller seam; prd /goal run: a requirement typed 10 s into the round moved into it (1.0 s) and the model renamed the test file before replying. Found: the goal can be marked complete before a late requirement arrives, which is batch 3 completion review |
