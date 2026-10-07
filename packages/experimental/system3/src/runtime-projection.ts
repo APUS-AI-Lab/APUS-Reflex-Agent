@@ -106,7 +106,8 @@ export const system3RuntimeProjection = {
     }
     if (event.type === 'system3/task-frame') return { ...state, taskFrame: { goal: event.data.goal, items: event.data.items } }
     if (event.type === 'step/start') return { ...state, currentTurn: event.data.turn, currentStep: event.data.step }
-    if (event.type === 'step/end' || event.type === 'turn/end') return { ...state, currentTurn: null, currentStep: null }
+    if (event.type === 'step/end') return { ...state, currentTurn: null, currentStep: null }
+    if (event.type === 'turn/end') return { ...state, currentTurn: null, currentStep: null, interjection: null }
     if (event.type === 'request/header') {
       const config = event.data.header.config
       return { ...state, header: { provider: config.provider, model: config.model,

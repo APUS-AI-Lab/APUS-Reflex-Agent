@@ -91,13 +91,13 @@ it('restores the same wire facts without leaking effective headers or making mod
   expect(Object.keys(system3RuntimeProjection.wire.view(state))).toEqual(['entry', 'history', 'skill', 'subagentRun', 'notices', 'taskFrame', 'interjection'])
 })
 
-it('shows a delivered interjection until the next turn starts', async () => {
+it('shows a delivered interjection until its turn ends', async () => {
   const h = await setup()
   h.session.append('system3/interjection', { version: 1, messageId: 'kept' as never, decision: 'keep', delivered: false })
   expect(h.view()?.interjection).toBeNull()
   h.session.append('system3/interjection', { version: 1, messageId: 'm2' as never, decision: 'steer', delivered: true })
   expect(h.view()?.interjection).toEqual({ messageId: 'm2' })
-  h.session.append('turn/start', { turn: 2 })
+  h.session.append('turn/end', { turn: 1, reason: { kind: 'completed' } })
   expect(h.view()?.interjection).toBeNull()
 })
 

@@ -79,7 +79,7 @@ export interface System3RuntimeView {
   readonly notices: readonly System3ProcessNoticeView[]
   /** The person's current goal and later requirements, verbatim; null before the first frame. */
   readonly taskFrame: System3TaskFrameView | null
-  /** The latest queued message System3 moved into the running turn; cleared when a turn starts. */
+  /** The latest queued message System3 moved into the running turn; cleared when that turn ends. */
   readonly interjection: { readonly messageId: string } | null
 }
 

@@ -266,7 +266,7 @@ it('shows the kept requirements as one line that opens to the task and each requ
 it('says when a queued requirement was moved into the current step', () => {
   render(<System3Feedback {...inputs({ running: true, facts: { entry: null, skill: null, subagentRun: null, history: [], notices: [],
     taskFrame: null, interjection: { messageId: 'm2' } } })} />)
-  expect(screen.getByText('已把你刚才补充的要求插入当前步骤，模型下一步就会看到')).toBeTruthy()
+  expect(screen.getByText('已把你刚才补充的要求插入正在进行的这一轮')).toBeTruthy()
 })
 it('reads a continued route as the suggestion in the details', () => {
   render(<System3Feedback {...inputs({ facts: { subagentRun: null, ...EMPTY, history: [], skill: null, entry: { requestId: brandString<SessionRequestId>('c'), phase: 'decided',
