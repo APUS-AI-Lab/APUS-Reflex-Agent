@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mu 判定点 Top 10</title>
+<style>
+:root { --paper:#f7f7f5; --card:#fff; --ink:#1d1f24; --muted:#5b6270; --rule:#e2e3e0; --accent:#d9622b; --accent-tint:#fbeee6; --good:#2f7d5b; --good-tint:#e5f2ec; --warn:#9a6a12; --warn-tint:#f8f0dc; --none:#7a7f89; --none-tint:#eff0f2; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --paper:#15171b; --card:#1d2026; --ink:#e8e9ec; --muted:#a2a8b3; --rule:#30343c; --accent:#f08a55; --accent-tint:#3a271d; --good:#6cc49c; --good-tint:#1d3329; --warn:#e2b55a; --warn-tint:#3a311c; --none:#9aa0aa; --none-tint:#262a31; } }
+:root[data-theme="dark"] { --paper:#15171b; --card:#1d2026; --ink:#e8e9ec; --muted:#a2a8b3; --rule:#30343c; --accent:#f08a55; --accent-tint:#3a271d; --good:#6cc49c; --good-tint:#1d3329; --warn:#e2b55a; --warn-tint:#3a311c; --none:#9aa0aa; --none-tint:#262a31; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--paper); color:var(--ink); font:15px/1.65 -apple-system,"PingFang SC","Noto Sans SC","Segoe UI",sans-serif; }
+main { max-width:1240px; margin:0 auto; padding:40px 24px 64px; }
+h1 { font-size:28px; margin:0 0 6px; font-weight:600; } h2 { font-size:20px; margin:40px 0 10px; font-weight:600; } h3 { font-size:16px; margin:18px 0 6px; font-weight:600; }
+.sub { color:var(--muted); margin:0 0 20px; }
+.eyebrow { font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); font-weight:600; }
+.card { background:var(--card); border:1px solid var(--rule); border-radius:10px; padding:16px 20px; margin:12px 0; }
+.key { border-left:3px solid var(--accent); }
+.table-wrap { overflow-x:auto; background:var(--card); border:1px solid var(--rule); border-radius:10px; }
+table { width:100%; border-collapse:collapse; font-size:13.5px; }
+th, td { text-align:left; vertical-align:top; padding:8px 11px; border-bottom:1px solid var(--rule); }
+th { color:var(--muted); font-weight:600; }
+tr:last-child td { border-bottom:0; }
+tr.group td { background:var(--paper); color:var(--muted); font-weight:600; font-size:12.5px; }
+code { font:12.5px/1.4 ui-monospace,"SF Mono",Menlo,monospace; background:var(--none-tint); padding:1px 5px; border-radius:4px; }
+.pill { display:inline-block; padding:1px 8px; border-radius:999px; font-size:12px; font-weight:600; white-space:nowrap; }
+.top { background:var(--accent-tint); color:var(--accent); } .merged { background:var(--good-tint); color:var(--good); } .has { background:var(--warn-tint); color:var(--warn); } .no { background:var(--none-tint); color:var(--none); }
+.grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+ol li, ul li { margin:5px 0; }
+@media (max-width:760px) { main { padding:24px 16px 48px; } .grid { grid-template-columns:1fr; } h1 { font-size:23px; } }
+</style>
+</head>
+<body>
+<main>
+<div class="eyebrow">分析与挑选 · 2026-10-07</div>
+<h1>mu 38 个判定点：横向对照与 Top 10</h1>
+<p class="sub">北极星：System3 是 agent 的<b>高质量、可靠、快速的管家</b>，也是<b>模型路由策略网络的管理层</b>。文章写 35 个，是 mu 旧版 README 的数字；代码里是 38 个（10-05 新增注入检测、继续判断、批量判断工具）。本页按“目标维护、跟踪、监控”主线，把 38 个点去重合并成 10 项能力，并说明每项如何利用 Jev 的特点、如何避免与 System3 和 DSH 已有能力重叠。</p>
+
+<div class="card key">
+<strong>结论</strong>
+<ul>
+<li><b>目标是主线</b>：DSH 原生 goal 包已能保存目标、让模型自报完成、空闲时自动续跑，但<b>完成与否全凭模型自己说</b>，没有验收项、没有偏离判断、没有独立核验。前三项（目标框架、完成核验、进度与偏离监控）正好补上“监督”这一层，且不另建目标存储。</li>
+<li><b>去重</b>：mu 里有 6 个点都在管“目标与完成”（task.frame、goal.met、turn.completion、turn.continue、turn.drift、board.read），合并成 3 项；工具执行前的 3 个点（tool.constraint、tool.risk、tool.approval）共用一次 Jev 请求；技能与能力披露并入现有的 Skill 选择。</li>
+<li><b>路由是管理层的一根轴</b>：入口路由只在用户发消息时选一次模型。管家发现卡住、答非所问或任务比预想难时，应能在运行中升级到更强的模型或交给 Codex，简单的后续再降回 Flash。新增第 7 项“运行中路由升降级”：仍是同一套路由策略（同样的候选、健康度、拿不准就保持），只是多了运行中的触发点，不另建第二个路由器。原第 4、7 项本就共用一次请求，合并为“约束与风险守护”，腾出名额。</li>
+<li><b>Jev 的位置</b>：Jev 只做“是非、选择、打分”，不写文字。所有进入模型或界面的文字都用用户原话或现有模型生成，Jev 只负责判断，这是每项设计的共同约束。</li>
+</ul>
+</div>
+
+<h2>Jev 的特点决定了怎么用它</h2>
+<div class="grid">
+<div class="card">
+<h3>擅长</h3>
+<ul>
+<li>封闭判断：是非（概率）、选择（含逃生选项）、打分；输出带概率，可设阈值和“拿不准”区间。</li>
+<li>快且便宜：热连接单次约 0.3–0.6 秒（prd 实测入口判断 0.29–0.97 秒）。</li>
+<li>一次请求多题：一个请求最多 16 题，适合“逐条约束”“逐个片段”的批量判断。</li>
+<li>确定性：同样输入给出同样结果（交接包两次实测结果完全一致），便于回放与评测。</li>
+</ul>
+</div>
+<div class="card">
+<h3>不擅长与约束</h3>
+<ul>
+<li>不生成文字：总结、改写、经验措辞要交给现有模型，或直接用用户原话。</li>
+<li>问法敏感：同一判断换个问法，召回率可以从 0.38 变到 1.0（交接包实测），每个判定都必须用标注集定问法和阈值。</li>
+<li>远程服务：受隐私准入约束，失败必须回退；连接卡死需防护（已上线 <code>resetAfterFailures</code>）。</li>
+<li>上下文有限：只能给它判断所需的摘要，不能给完整会话。</li>
+</ul>
+</div>
+</div>
+
+<h2>北极星对照：每项服务什么</h2>
+<div class="table-wrap"><table>
+<thead><tr><th style="width:16%">北极星维度</th><th style="width:34%">衡量指标</th><th>由哪几项负责</th></tr></thead>
+<tbody>
+<tr><td><b>高质量</b></td><td>“说完成其实没完成”的比例；偏离目标的轮次</td><td>1 目标框架、2 完成核验、3 进度与偏离监控、10 经验记忆</td></tr>
+<tr><td><b>可靠</b></td><td>违反用户约束、危险操作、注入命中的次数；判定失败时主流程是否照常</td><td>4 约束与风险守护、6 注入防护、判定内核的回退</td></tr>
+<tr><td><b>快速</b></td><td>判定延迟（目标单次 &lt; 1 秒，且与主模型并行）；上下文 token；用户纠偏生效时间</td><td>5 输入分流、8 无损瘦身、9 按需披露</td></tr>
+<tr><td><b>路由管理层</b></td><td>每轮实际使用的模型与价格；卡住后升级的成功率；路由健康度触发次数</td><td>7 运行中路由升降级（与已上线的入口路由、路由健康度、Codex 委派共用同一套策略）</td></tr>
+</tbody></table></div>
+
+<h2>挑选标准</h2>
+<p>每个点按五项打分后合并：<b>价值</b>（用户能感到的改善或防住的事故）、<b>频率</b>（多常发生）、<b>证据</b>（mu 实测或我们线上发生过）、<b>Jev 适配</b>（是不是封闭判断、能否批量）、<b>不重叠</b>（是否已被 System3 / DSH 覆盖）。与已有能力重叠的点不单独成项，只作为对应项的补强。</p>
+
+<h2>Top 10</h2>
+<div class="table-wrap"><table>
+<thead><tr><th style="width:3%">#</th><th style="width:13%">能力</th><th style="width:15%">合并的 mu 点</th><th style="width:24%">做什么（Jev 怎么用）</th><th style="width:22%">与已有能力的关系（避免重叠）</th><th style="width:15%">价值与证据</th><th style="width:8%">成本</th></tr></thead>
+<tbody>
+<tr class="group"><td colspan="7">目标主线</td></tr>
+<tr><td>1</td><td><b>目标框架</b></td><td><code>task.frame</code>、<code>input.preflight</code> 的澄清部分</td><td>每条用户消息一次请求，选择题：新任务 / 补充约束 / 纠错 / 验收要求 / 无关。约束与验收项<b>存用户原话</b>，挂在 DSH 当前目标上；需求明显不清时提示主模型先澄清</td><td>不另建目标存储，挂接 DSH goal 的目标 id；交接包改读这里的约束，取消现在的临时识别</td><td>目标、约束、验收是后面 2–4 项的共同输入；交接包已证明识别问法可达 1.0</td><td>中</td></tr>
+<tr><td>2</td><td><b>完成核验</b></td><td><code>goal.met</code>、<code>turn.completion</code>、<code>turn.continue</code></td><td>模型宣布完成（调用 goal 完成或轮次结束前）时，对每条验收项问一题“有证据表明已满足吗”，再问“是否答应了却没做”。结论：已完成 / 继续 / 需要用户</td><td>DSH 的 goal 完成目前全凭模型自报；本项在完成前加独立核验。现有“缺少验证”规则保留为零延迟的第一道筛选，触发后交给本项判断，不再单独提醒</td><td>直接对应“说做完了其实没做完”；我们线上出现过“缺少验证”的误报和漏报</td><td>中</td></tr>
+<tr><td>3</td><td><b>进度与偏离监控</b></td><td><code>turn.drift</code>、<code>board.read</code>、<code>notify.routing</code></td><td>每若干步问一次选择题：正轨 / 绕路 / 偏离目标 / 原地打转；偏离时提醒主模型，dock 上的目标看板显示验收项完成情况与偏离提示</td><td>现有过程监督的规则（重复错误、失败次数、无进展）保留为筛选，触发后由本项用 Jev 复核语义，替代原计划单列的“监督复核”；看板复用现有 System3 dock</td><td>去掉规则误报（10-06 两次）与漏报（10-07 一次）；长任务中最常见的失败形态是偏离</td><td>中</td></tr>
+<tr class="group"><td colspan="7">守护与安全</td></tr>
+<tr><td>4</td><td><b>约束与风险守护</b></td><td><code>tool.constraint</code>、<code>tool.risk</code>、<code>tool.approval</code>、<code>swarm.patch</code></td><td>修改类工具调用前，一次请求同时问：逐条约束“这个调用违反用户这句话吗”，以及规则标出的疑似危险命令“是否破坏性”“用户是否明确要求过”。委派结果交回时问“改动是否超出任务范围”。active 时用原生确认卡片引用用户原话</td><td>约束来自第 1 项；DSH 权限预设与沙箱仍是规则层，本项只做语义复核，且只能加确认、不能免确认</td><td>防住真实发生过的事故：主模型删掉用户要求保留的文件</td><td>中</td></tr>
+<tr><td>5</td><td><b>运行中输入分流</b></td><td><code>input.interjection</code></td><td>任务运行中收到用户新消息，选择题：纠错 / 补充 / 旁支问题 / 新任务，分别送往 steer、补充、单独回答或排队；委派运行中自动转给 Codex</td><td>现在是用户手动在卡片上“补充说明”；本项让普通输入框也能自动分流，复用已上线的 Codex steer 通道</td><td>减少“说了但没生效”；运行中纠偏是长任务的高频操作</td><td>中</td></tr>
+<tr><td>6</td><td><b>外部内容注入防护</b></td><td><code>tool.injection</code></td><td>web_fetch / web_search / MCP 结果切段，一次请求逐段问“是否含针对 AI 的指令”，命中段扣下并原位说明</td><td>DSH 目前只把外部内容标为“不可信”，不检测；本项补检测</td><td>联网搜索已上线，外部网页进入上下文的频率在上升；属于安全底线</td><td>低</td></tr>
+<tr class="group"><td colspan="7">路由管理层</td></tr>
+<tr><td>7</td><td><b>运行中路由升降级</b></td><td><code>swarm.routing</code>，及 <code>input.preflight</code> 的分档思路</td><td>第 2、3 项给出“卡住 / 偏离 / 未完成”结论时，用选择题问：保持当前模型 / 升级到更强档 / 交给 Codex；简单后续问是否降回 Flash。委派时再问角色与强度。概率低于阈值就保持现状</td><td>入口路由仍是唯一的路由策略；本项只增加运行中的触发点，复用同一批候选、路由健康度与“拿不准就保持”规则，结果写进现有路由记录与 dock 路由行</td><td>直接对应北极星的“路由管理层”；把监控结论变成行动，否则监控只能提醒</td><td>中</td></tr>
+<tr class="group"><td colspan="7">效率与积累</td></tr>
+<tr><td>8</td><td><b>工具输出无损瘦身</b></td><td><code>tool.admission.test-log</code>（规则档）</td><td>逐字节重复的输出段折成一行加回指，<b>不调用 Jev</b>，可完整还原</td><td>DSH 的长输出落盘按大小处理；本项按重复内容处理，不重叠</td><td>mu 在 7 份真实日志上折掉 51%，且全部来自这一条规则</td><td>低</td></tr>
+<tr><td>9</td><td><b>技能与能力按需披露</b></td><td><code>skills.disclosure</code>、<code>capability.disclosure</code></td><td>同一次请求里：选出最合适的技能（现有），并判断哪些技能、工具包、MCP 与任务无关可隐藏</td><td>并入现有 Skill 选择的请求，不新增调用；隐藏结果在会话内固定，保护提示缓存</td><td>技能和工具越多，提示越长；mu 实测隐藏了 511 个技能描述实例</td><td>中</td></tr>
+<tr><td>10</td><td><b>经验记忆（最小版）</b></td><td><code>memory.capture</code>、<code>memory.recall</code>、<code>memory.merge</code></td><td>用户纠错或定规矩时问“这是以后都要守的经验吗”，记下用户原话；新会话开始时逐条问“与当前任务相关吗”，相关的注入；新经验与旧经验问“相同 / 更新 / 矛盾”</td><td>与第 1 项分工：第 1 项管当前目标内的约束，本项管跨会话的长期经验；存储与隐私边界需单独设计评审</td><td>让系统“越用越懂你”；mu 的记忆闭环六个点中这三个是核心</td><td>高</td></tr>
+</tbody></table></div>
+
+<h2>没有进入 Top 10 的点</h2>
+<div class="table-wrap"><table>
+<thead><tr><th style="width:22%">mu 点</th><th style="width:14%">处理</th><th>理由</th></tr></thead>
+<tbody>
+<tr><td><code>input.preflight</code></td><td><span class="pill has">已有</span></td><td>System3 入口路由已真正切换模型，强于 mu 的提示；澄清部分并入第 1 项，分档思路用于第 7 项</td></tr>
+<tr><td><code>cache.warming</code></td><td><span class="pill has">已有</span></td><td>Jev 连接保温与防卡死已上线；主模型缓存预热收益小</td></tr>
+<tr><td><code>goal.met</code>、<code>turn.completion</code>、<code>turn.continue</code></td><td><span class="pill merged">并入 2</span></td><td>都是“完成了吗、该不该继续”</td></tr>
+<tr><td><code>turn.drift</code>、<code>board.read</code>、<code>notify.routing</code></td><td><span class="pill merged">并入 3</span></td><td>都是“进展如何、该不该说”</td></tr>
+<tr><td><code>swarm.patch</code></td><td><span class="pill merged">并入 4</span></td><td>委派改动越界是约束守护的一种</td></tr>
+<tr><td><code>tool.risk</code>、<code>tool.approval</code></td><td><span class="pill merged">并入 4</span></td><td>与约束检查同在工具执行前，共用一次请求</td></tr>
+<tr><td><code>swarm.routing</code></td><td><span class="pill merged">并入 7</span></td><td>入口路由已有委派候选；角色与强度选择并入运行中升降级</td></tr>
+<tr><td><code>memory.outcome</code>、<code>memory.worth</code>、<code>memory.applied</code></td><td><span class="pill merged">第 10 项二期</span></td><td>最小版跑通后再加</td></tr>
+<tr><td><code>judge.items</code></td><td><span class="pill no">第 11 候选</span></td><td>把 Jev 暴露给模型当工具，成本低但价值未证实；Top 10 完成后评估</td></tr>
+<tr><td><code>tool.admission</code>（语义档）</td><td><span class="pill no">不做</span></td><td>mu 自己回测 2,412 块零裁剪、占 54% Jev token</td></tr>
+<tr><td><code>context.forget</code>、<code>context.compact</code></td><td><span class="pill no">暂不做</span></td><td>DSH 已有压缩与裁剪；mu 的打分压缩默认关闭</td></tr>
+<tr><td><code>turn.rewind</code></td><td><span class="pill no">暂不做</span></td><td>依赖检查点机制，DSH 未提供；收益依赖第 3 项先识别死路</td></tr>
+<tr><td><code>files.locate</code>、<code>review.triage</code>、<code>diagnostics.delivery</code></td><td><span class="pill no">暂不做</span></td><td>已有 grep / LSP；审查与诊断场景频率低</td></tr>
+<tr><td><code>output.drift</code></td><td><span class="pill no">暂不做</span></td><td>mu 默认关闭（实验性）</td></tr>
+<tr><td><code>browser.step</code>、<code>hive.publish</code>、<code>hive.deliver</code>、<code>hive.relate</code></td><td><span class="pill no">暂不做</span></td><td>浏览器自动化与多代理蜂群不在当前主线</td></tr>
+</tbody></table></div>
+<p class="sub">合计：Top 10 覆盖 mu 的 20 个点（含合并），已有覆盖 2 个（input.preflight、cache.warming），二期与候选 4 个，暂不做或不做 12 个，共 38 个。</p>
+
+<h2>实施顺序（按依赖）</h2>
+<ol>
+<li><b>判定内核</b>（已完成代码与测试）：统一题目、阈值、回退、只记录 / 生效模式、会话事件。</li>
+<li><b>第 8 项 无损瘦身</b>：独立、不用 Jev，先上。</li>
+<li><b>第 1 项 目标框架</b> → <b>第 2 项 完成核验</b> → <b>第 3 项 进度与偏离监控</b>：目标主线，依次依赖。</li>
+<li><b>第 4 项 约束与风险守护</b>：工具执行前一次请求。</li>
+<li><b>第 7 项 运行中路由升降级</b>：依赖第 2、3 项的结论。</li>
+<li><b>第 5 项 输入分流</b>、<b>第 6 项 注入防护</b>、<b>第 9 项 按需披露</b>。</li>
+<li><b>第 10 项 经验记忆</b>：先做存储与隐私设计评审。</li>
+</ol>
+<p>每项：先用真实 Jev 标注集定问法和阈值，再写代码；上线默认只记录，prd 数据达标后才开启；修改前后对照与 prd 实测必做。</p>
+</main>
+</body>
+</html>

@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mu 产品对照</title>
+<style>
+:root { --paper:#f7f7f5; --card:#fff; --ink:#1d1f24; --muted:#5b6270; --rule:#e2e3e0; --accent:#d9622b; --accent-tint:#fbeee6; --good:#2f7d5b; --good-tint:#e5f2ec; --warn:#9a6a12; --warn-tint:#f8f0dc; --none:#7a7f89; --none-tint:#eff0f2; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --paper:#15171b; --card:#1d2026; --ink:#e8e9ec; --muted:#a2a8b3; --rule:#30343c; --accent:#f08a55; --accent-tint:#3a271d; --good:#6cc49c; --good-tint:#1d3329; --warn:#e2b55a; --warn-tint:#3a311c; --none:#9aa0aa; --none-tint:#262a31; } }
+:root[data-theme="dark"] { --paper:#15171b; --card:#1d2026; --ink:#e8e9ec; --muted:#a2a8b3; --rule:#30343c; --accent:#f08a55; --accent-tint:#3a271d; --good:#6cc49c; --good-tint:#1d3329; --warn:#e2b55a; --warn-tint:#3a311c; --none:#9aa0aa; --none-tint:#262a31; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--paper); color:var(--ink); font:15px/1.65 -apple-system,"PingFang SC","Noto Sans SC","Segoe UI",sans-serif; }
+main { max-width:1240px; margin:0 auto; padding:40px 24px 64px; }
+h1 { font-size:28px; margin:0 0 6px; font-weight:600; } h2 { font-size:20px; margin:40px 0 10px; font-weight:600; } h3 { font-size:16px; margin:16px 0 6px; font-weight:600; }
+.sub { color:var(--muted); margin:0 0 20px; }
+.eyebrow { font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); font-weight:600; }
+.card { background:var(--card); border:1px solid var(--rule); border-radius:10px; padding:16px 20px; margin:12px 0; }
+.key { border-left:3px solid var(--accent); }
+.stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:16px 0; }
+.stat { background:var(--card); border:1px solid var(--rule); border-radius:10px; padding:12px 16px; }
+.stat b { display:block; font-size:26px; font-weight:600; }
+.stat span { color:var(--muted); font-size:13px; }
+.table-wrap { overflow-x:auto; background:var(--card); border:1px solid var(--rule); border-radius:10px; }
+table { width:100%; border-collapse:collapse; font-size:13.5px; }
+th, td { text-align:left; vertical-align:top; padding:8px 11px; border-bottom:1px solid var(--rule); }
+th { color:var(--muted); font-weight:600; }
+tr:last-child td { border-bottom:0; }
+tr.group td { background:var(--paper); color:var(--ink); font-weight:600; font-size:13.5px; }
+code { font:12px/1.4 ui-monospace,"SF Mono",Menlo,monospace; background:var(--none-tint); padding:1px 5px; border-radius:4px; }
+.pill { display:inline-block; padding:1px 8px; border-radius:999px; font-size:12px; font-weight:600; white-space:nowrap; }
+.better { background:var(--good-tint); color:var(--good); } .even { background:var(--good-tint); color:var(--good); opacity:.85; } .weak { background:var(--warn-tint); color:var(--warn); } .none { background:var(--none-tint); color:var(--none); }
+.off { color:var(--muted); font-size:12px; }
+.grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+ul li { margin:5px 0; }
+@media (max-width:760px) { main { padding:24px 16px 48px; } .grid, .stats { grid-template-columns:1fr 1fr; } h1 { font-size:23px; } }
+</style>
+</head>
+<body>
+<main>
+<div class="eyebrow">产品视角 · 2026-10-07</div>
+<h1>mu 的判定点，用大白话对照我们的实际效果</h1>
+<p class="sub">每一行先说这个点“帮用户做了什么”，再说 System3 现在<b>实际做到什么程度</b>。我们一栏只写已上线、在 prd（system3.xdan.work）或测试中看到过的效果，没验证过的写明“未统计”。mu 一栏来自其代码与作者文档，数字多为作者一次性实测。文章说 35 个，代码里是 38 个。</p>
+
+<div class="stats">
+<div class="stat"><b>3</b><span>我们更强</span></div>
+<div class="stat"><b>2</b><span>打平</span></div>
+<div class="stat"><b>14</b><span>有，但弱</span></div>
+<div class="stat"><b>19</b><span>没有</span></div>
+</div>
+
+<div class="card key">
+<strong>一句话结论</strong>
+<p style="margin:6px 0 0">用 System3，用户今天能感到的是：<b>简单问题答得快、难题自动换强模型、大活交给 Codex 时有进度可看、能补充、能叫停</b>。还感受不到的是：<b>它不会拦住违背你原话的操作，做没做完靠它自己说，下次会话不记得你的要求</b>。mu 恰好在后三件事上做得细，这也是 Top 10 前四项要补的。</p>
+</div>
+
+<h2>逐点对照（按用户场景分组）</h2>
+<div class="table-wrap"><table>
+<thead><tr><th style="width:4%">#</th><th style="width:20%">mu 帮用户做什么（大白话）</th><th style="width:33%">System3 现在的实际效果</th><th style="width:9%">对比</th><th style="width:10%">对应 Top 10</th></tr></thead>
+<tbody>
+
+<tr class="group"><td colspan="5">你开口时</td></tr>
+<tr><td>1</td><td>先看你这句话是闲聊、提问还是大活，要不要先问清楚、先列计划，再决定想多深<br><code>input.preflight</code></td><td>不只是提示，是<b>真的换模型</b>：简单的走 Flash（prd 约 3 秒答完），推理题走 Pro（约 11 秒），大活交 GPT 或 Codex；判断本身 0.3–1 秒。会核对实际回答的是不是选中的模型。<b>不会</b>提醒“先问清楚”或“先列计划”</td><td><span class="pill better">我们更强</span></td><td>已有；澄清提示并入 1</td></tr>
+<tr><td>2</td><td>把“你要什么、不许什么、怎样算做完”记成一张任务卡，你补充或改口时随时更新<br><code>task.frame</code></td><td>没有任务卡。只在交给 Codex 时，把你早先说过的要求原话带过去（6 段标注对话全部识别正确）。在主对话里直接干活时，全靠模型自己记</td><td><span class="pill weak">弱</span></td><td>1</td></tr>
+<tr><td>3</td><td>它干活时你插话，自动分清是纠正、补充还是顺便一问，分别处理<br><code>input.interjection</code></td><td>交给 Codex 时，你在卡片上点“补充说明”，约 1 秒送达，Codex 的结果里会复述这句话。但要<b>你自己</b>选这个入口，普通输入框不会自动分</td><td><span class="pill weak">弱</span></td><td>5</td></tr>
+<tr><td>4</td><td>把和这次无关的技能说明藏起来，少占篇幅<br><code>skills.disclosure</code></td><td>方向相反：挑出最合适的一个技能，把全文直接给模型。无关技能的简介仍在。效果未统计</td><td><span class="pill even">打平</span></td><td>9</td></tr>
+<tr><td>5</td><td>用到哪类工具才把它打开<br><code>capability.disclosure</code></td><td>工具在配置里一开始就全部开好</td><td><span class="pill none">没有</span></td><td>9</td></tr>
+
+<tr class="group"><td colspan="5">它读工具输出时（省篇幅）</td></tr>
+<tr><td>6</td><td>长输出里没用的段落收起来，需要时再展开<br><code>tool.admission</code></td><td>超长输出存成文件、给模型一个路径，按大小处理，不看内容。<span class="off">注：mu 作者回测 2,412 段一段都没收起，却花掉 54% 的 Jev 用量</span></td><td><span class="pill weak">弱</span></td><td>不做</td></tr>
+<tr><td>7</td><td>测试日志里一模一样的重复段折成一行，不丢信息<br><code>tool.admission.test-log</code></td><td>没有。<span class="off">mu 在 7 份日志上折掉 51%，不用模型；但 mu 默认关闭</span></td><td><span class="pill none">没有</span></td><td>8</td></tr>
+<tr><td>8</td><td>对话快满时，把以后用不到的旧输出缩成一行<br><code>context.forget</code></td><td>按规则裁旧输出，不判断以后还用不用</td><td><span class="pill weak">弱</span></td><td>暂不做</td></tr>
+<tr><td>9</td><td>压缩对话时保留原话，只裁工具输出<br><code>context.compact</code></td><td>最旧的历史压成摘要，原话会丢。<span class="off">mu 此项默认关闭</span></td><td><span class="pill weak">弱</span></td><td>暂不做</td></tr>
+
+<tr class="group"><td colspan="5">它要动你的东西时</td></tr>
+<tr><td>17</td><td>删库、强推这类危险命令先问你<br><code>tool.risk</code></td><td>权限预设加沙箱，按规则询问；规则没写到的危险看不出来</td><td><span class="pill weak">弱</span></td><td>4</td></tr>
+<tr><td>18</td><td>按“这一步是不是任务需要”来放行<br><code>tool.approval</code></td><td>按规则放行或询问，不看任务</td><td><span class="pill weak">弱</span></td><td>4</td></tr>
+<tr><td>19</td><td>你说过“别动 README”，它要删 README 时拦下，并引用你的原话<br><code>tool.constraint</code></td><td><b>没有。</b>验收时真的发生过：主模型删掉了用户要求保留的 README</td><td><span class="pill none">没有</span></td><td>4</td></tr>
+<tr><td>20</td><td>网页里藏着“忽略之前的指令”这类话时扣下<br><code>tool.injection</code></td><td>只告诉模型“这是外部内容，不要当指令”，不检测</td><td><span class="pill weak">弱</span></td><td>6</td></tr>
+
+<tr class="group"><td colspan="5">它干活的过程中</td></tr>
+<tr><td>26</td><td>跑偏、绕路、原地打转时把它拉回来<br><code>turn.drift</code></td><td>规则版：同一错误连犯、失败过多、一直没进展就提醒，prd 上模型收到后会停下来问你。10-06 有两次误报（查资料被当成没进展、管道里的检查没算），10-07 一次漏报（<code>; echo $?</code> 掩盖了失败），都已修复并在 prd 复测。只看“卡没卡住”，<b>看不出“偏没偏离目标”</b></td><td><span class="pill weak">弱</span></td><td>3</td></tr>
+<tr><td>27</td><td>走进死胡同时，建议退回到之前的状态，由你确认<br><code>turn.rewind</code></td><td>没有</td><td><span class="pill none">没有</span></td><td>暂不做</td></tr>
+<tr><td>29</td><td>它说“我接下来去改”却停了，推它继续<br><code>turn.continue</code></td><td>只有在“目标模式”下，空闲时会自动续跑；识别不出“答应了却没做”</td><td><span class="pill weak">弱</span></td><td>2</td></tr>
+<tr><td>30</td><td>边写边检查，违反规则就打断重写<br><code>output.drift</code></td><td>没有。<span class="off">mu 默认关闭</span></td><td><span class="pill none">没有</span></td><td>暂不做</td></tr>
+<tr><td>32</td><td>有新进展才更新看板，不刷屏<br><code>board.read</code></td><td>侧边面板实时显示：本轮用了哪个模型、为什么，Codex 的进度、提醒和过程提示；刷新页面后还在，历史轮次也保留。<span class="off">mu 看板默认关闭</span></td><td><span class="pill better">我们更强</span></td><td>3 复用</td></tr>
+<tr><td>33</td><td>外部消息是现在告诉你、等一下说还是不说<br><code>notify.routing</code></td><td>Codex 启动太慢、停滞、超时时会提醒你；其他外部事件没有处理</td><td><span class="pill weak">弱</span></td><td>3</td></tr>
+
+<tr class="group"><td colspan="5">它说“做完了”时</td></tr>
+<tr><td>28</td><td>改了代码没跑测试就说做完，先催它验证<br><code>turn.completion</code></td><td>有。prd 上模型收到提醒后会去跑测试再回答；“管道里跑的测试”和“<code>; echo $?</code> 掩盖失败”两种误判已修正</td><td><span class="pill even">打平</span></td><td>2</td></tr>
+<tr><td>31</td><td>设了目标后，判断目标是不是真的达成<br><code>goal.met</code></td><td>DSH 有目标功能（保存目标、自动续跑），但<b>做没做完全凭模型自己说</b></td><td><span class="pill weak">弱</span></td><td>2</td></tr>
+
+<tr class="group"><td colspan="5">交给别的助手时</td></tr>
+<tr><td>34</td><td>决定派哪个助手、派多强的<br><code>swarm.routing</code></td><td>可以交给外部 Codex：prd 上一个任务 56 秒完成、8 个测试通过；交接时自动带上你的要求，过程中能补充说明，1 秒内能叫停。不会选角色和强度</td><td><span class="pill better">我们更强</span></td><td>7</td></tr>
+<tr><td>35</td><td>助手交回的改动有没有超出交代的范围<br><code>swarm.patch</code></td><td>没有</td><td><span class="pill none">没有</span></td><td>4</td></tr>
+<tr><td>36–38</td><td>多个助手之间互通发现、转交消息、互相更正<br><code>hive.publish</code> <code>hive.deliver</code> <code>hive.relate</code></td><td>没有</td><td><span class="pill none">没有</span></td><td>暂不做</td></tr>
+
+<tr class="group"><td colspan="5">它记住你</td></tr>
+<tr><td>10</td><td>新任务开始时，想起你以前的要求和习惯<br><code>memory.recall</code></td><td>只在交给 Codex 时带上<b>本次对话</b>里的要求；换个会话就不记得了</td><td><span class="pill weak">弱</span></td><td>10</td></tr>
+<tr><td>11–15</td><td>从你的纠正和成功经验里学规矩，去重、合并，长期没用就淘汰<br><code>memory.capture</code> 等 5 项</td><td>没有</td><td><span class="pill none">没有</span></td><td>10（记录、去重先做）</td></tr>
+
+<tr class="group"><td colspan="5">让它更快、更会用工具</td></tr>
+<tr><td>16</td><td>对话还没结束就提前热好缓存，下一句回得更快<br><code>cache.warming</code></td><td>热的是 Jev 连接：下一次判断不用等冷启动；连接卡死后连续 2 次没响应就自动重连（10-07 上线）。不热主模型的缓存</td><td><span class="pill weak">弱</span></td><td>已有</td></tr>
+<tr><td>21</td><td>帮模型猜出最可能要改的文件<br><code>files.locate</code></td><td>有搜索和代码跳转，没有排序</td><td><span class="pill none">没有</span></td><td>暂不做</td></tr>
+<tr><td>22</td><td>模型自己出是非题，交给 Jev 批量判<br><code>judge.items</code></td><td>没有</td><td><span class="pill none">没有</span></td><td>候选</td></tr>
+<tr><td>23</td><td>浏览器自动操作时决定下一步点哪里<br><code>browser.step</code></td><td>没有</td><td><span class="pill none">没有</span></td><td>暂不做</td></tr>
+<tr><td>24</td><td>代码审查的发现分出轻重，先看真 bug<br><code>review.triage</code></td><td>没有</td><td><span class="pill none">没有</span></td><td>暂不做</td></tr>
+<tr><td>25</td><td>改完代码后的报错，判断现在告诉模型还是稍后<br><code>diagnostics.delivery</code></td><td>没有</td><td><span class="pill none">没有</span></td><td>暂不做</td></tr>
+</tbody></table></div>
+<p class="sub">计数：更强 1、32、34；打平 4、28；弱 14 个；没有 19 个（11–15 计 5 个，36–38 计 3 个），合计 38。</p>
+
+<h2>反过来：System3 有、mu 没有的</h2>
+<div class="table-wrap"><table>
+<thead><tr><th style="width:22%">用户感受</th><th>实际效果</th></tr></thead>
+<tbody>
+<tr><td>同一个对话里自动换模型</td><td>DeepSeek 官方 Flash / Pro、GPT-5.6 / GPT-6 之间按问题切换，界面写明本轮用的是谁、为什么；会话日志能对上实际回答的模型</td></tr>
+<tr><td>坏掉的线路不会被选中</td><td>按首字延迟、速度、错误率给每条线路打分，变差就暂时不选，并写明原因。<b>上线后还没真正触发过</b></td></tr>
+<tr><td>大活交出去，过程看得见、管得住</td><td>交给 Codex 后有进度卡；启动慢、停滞、超时会提醒；能补充说明、能叫停；输入框标明“已交给 codex”</td></tr>
+<tr><td>数据不乱出门</td><td>每次调用 Jev 或切换线路前，按数据类别和执行位置检查是否允许</td></tr>
+<tr><td>每个判断都能查</td><td>所有判断写进会话记录，刷新、回放时不再重新调用模型，能复盘“当时为什么这么选”</td></tr>
+</tbody></table></div>
+
+<h2>值得学的是 mu 的产品方法，不只是功能</h2>
+<div class="grid">
+<div class="card">
+<h3>mu 做得好的</h3>
+<ul>
+<li><b>一句话能讲清楚</b>：每个点都对应一个用户见过的坏情况（删了不该删的、说做完其实没做完、插话没生效），而不是技术名词。</li>
+<li><b>开关粒度细</b>：每个点都能单独关闭、只记录、或生效，出问题可以只关一个。</li>
+<li><b>坦白自己的失败</b>：作者公开了“tool.admission 零裁剪、成本 54%”的回测。</li>
+</ul>
+</div>
+<div class="card">
+<h3>mu 的局限（我们不要照搬）</h3>
+<ul>
+<li>大多数效果数字是作者一次性实测，没有可重跑的脚本，也没有与 Claude Code / Codex 的端到端对比。</li>
+<li>有 4 个点默认关闭（7、9、30，看板按项目默认关闭），另有不少只在特定模式下运行，“38 个”不等于 38 个都在起作用。</li>
+<li>只给提示多、真正改变行为少；System3 的路由与委派是直接动作。</li>
+</ul>
+</div>
+</div>
+<p class="sub">来源：mu 仓库 packages/kyrn-judge/manifest.json 与 kyrn/docs；System3 代码、单元测试与 prd 会话记录（2026-10-04 至 10-07）。技术版对照见 <a href="../system3-delegation-progress/mu-comparison.html">mu-comparison.html</a>，挑选结果见 <a href="top10.html">top10.html</a>。</p>
+</main>
+</body>
+</html>
