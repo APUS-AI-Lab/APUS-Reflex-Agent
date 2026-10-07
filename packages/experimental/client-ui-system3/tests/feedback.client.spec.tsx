@@ -15,7 +15,7 @@ const noStop = async (): Promise<void> => {}
 const noSteer = async (): Promise<void> => {}
 const model = { provider: 'fidoo', model: 'generation', reasoningEffort: 'low' }
 /** Runtime facts this suite does not exercise. */
-const EMPTY = { notices: [], taskFrame: null } as const
+const EMPTY = { notices: [], taskFrame: null, interjection: null } as const
 function inputs(overrides: Partial<System3FeedbackProps> = {}): System3FeedbackProps {
   return { facts: { subagentRun: null, ...EMPTY, history: [], entry: null, skill: null }, selection: { mode: 'auto', lastUsed: null, next: null, automatic: false },
     pending: false, pendingRequestId: null, running: false, opening: false, failed: false, available: true,
@@ -162,7 +162,7 @@ it('names the delegate beside the model selector only while the running turn is 
   const session = (running: boolean) => ((select: (s: { running: boolean }) => boolean) => select({ running })) as never
   const view = (facts: object | undefined, running = true) => render(<System3ComposerDelegation
     useProjection={() => facts as never} useSession={session(running)} t={t} />)
-  const base = { entry, history: [], skill: null, notices: [], taskFrame: null }
+  const base = { entry, history: [], skill: null, notices: [], taskFrame: null, interjection: null }
   expect(view({ ...base, subagentRun: null }).container.textContent).toBe('正在交给子任务')
   cleanup()
   expect(view({ ...base, subagentRun: run }).container.textContent).toBe('已交给 codex')
@@ -240,11 +240,13 @@ it('renders the delegated run inside the dock when the projection carries one', 
   expect(screen.getByText('codex 已完成')).toBeTruthy()
 })
 it('lists the turn supervision findings and says when the model was asked to change course', () => {
-  render(<System3Feedback {...inputs({ facts: { entry: null, skill: null, subagentRun: null, history: [], taskFrame: null, notices: [
+  const notices = [
     { rule: 'repeated-error', subject: 'bash', count: 2, advised: true },
     { rule: 'missing-evidence', subject: null, count: 1, advised: false },
     { rule: 'future-rule', subject: null, count: 1, advised: false },
-  ] } })} />)
+  ]
+  render(<System3Feedback {...inputs({ facts: { entry: null, skill: null, subagentRun: null, history: [], ...EMPTY,
+    notices } })} />)
   expect(screen.getByText('bash 已连续 2 次以同样的错误失败 · 已提醒模型调整做法')).toBeTruthy()
   expect(screen.getByText('已修改文件，但还没有运行通过的测试或构建')).toBeTruthy()
   expect(screen.getByText('过程监督提示')).toBeTruthy()
@@ -252,14 +254,19 @@ it('lists the turn supervision findings and says when the model was asked to cha
 it('shows the kept requirements as one line that opens to the task and each requirement verbatim', () => {
   const goal = { messageId: 'm1', text: '加一个汇总命令' }
   const { rerender } = render(<System3Feedback {...inputs({ facts: { entry: null, skill: null, subagentRun: null, history: [], notices: [],
-    taskFrame: { goal, items: [] } } })} />)
+    interjection: null, taskFrame: { goal, items: [] } } })} />)
   expect(screen.queryByText(/任务卡/u)).toBeNull()
   rerender(<System3Feedback {...inputs({ facts: { entry: null, skill: null, subagentRun: null, history: [], notices: [],
-    taskFrame: { goal, items: [{ messageId: 'm2', text: '别动 README.md' }, { messageId: 'm3', text: '测试必须全部通过' }] } } })} />)
+    interjection: null, taskFrame: { goal, items: [{ messageId: 'm2', text: '别动 README.md' }, { messageId: 'm3', text: '测试必须全部通过' }] } } })} />)
   expect(screen.getByText('任务卡 · 已记下 2 条要求')).toBeTruthy()
   expect(screen.getByText('任务：加一个汇总命令')).toBeTruthy()
   expect(screen.getByText('· 别动 README.md')).toBeTruthy()
   expect(screen.getByText('· 测试必须全部通过')).toBeTruthy()
+})
+it('says when a queued requirement was moved into the current step', () => {
+  render(<System3Feedback {...inputs({ running: true, facts: { entry: null, skill: null, subagentRun: null, history: [], notices: [],
+    taskFrame: null, interjection: { messageId: 'm2' } } })} />)
+  expect(screen.getByText('已把你刚才补充的要求插入当前步骤，模型下一步就会看到')).toBeTruthy()
 })
 it('reads a continued route as the suggestion in the details', () => {
   render(<System3Feedback {...inputs({ facts: { subagentRun: null, ...EMPTY, history: [], skill: null, entry: { requestId: brandString<SessionRequestId>('c'), phase: 'decided',

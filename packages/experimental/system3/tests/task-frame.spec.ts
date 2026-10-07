@@ -6,7 +6,8 @@ import { brandString } from '@deepseek-ai/dsh-brand'
 import { createUserMessage, type GenerateOptions, type MessageId } from '@deepseek-ai/dsh-llm'
 import { SessionId, SessionSeq } from '@deepseek-ai/dsh-session'
 import { afterEach, expect, it, vi } from 'vitest'
-import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
+import { defineTool } from '@deepseek-ai/dsh-tools'
+import { MockAdapter, textResponse, toolCallResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import Jev from '../../apus-dsh-jev-plugin/src/index.ts'
 import GoalService, { GoalId } from '@deepseek-ai/dsh-goal'
 import { installSystem3TaskFrame, system3TaskFrameDecision, taskFrameText, validateSystem3TaskFrame,
@@ -64,7 +65,8 @@ it('rejects configurations that cannot work', () => {
 /** Answers keyed by message text; unknown messages are side remarks. */
 type Script = Readonly<Record<string, JevResponse>>
 
-async function setup(script: Script, config: Partial<System3TaskFrameConfig> = {}, turns = 6, goals = false) {
+async function setup(script: Script, config: Partial<System3TaskFrameConfig> = {}, turns = 6, goals = false,
+  responses?: ConstructorParameters<typeof MockAdapter>[0]) {
   const ctx = new Context()
   contexts.push(ctx)
   await mountAgentLoopTestDependencies(ctx)
@@ -76,7 +78,7 @@ async function setup(script: Script, config: Partial<System3TaskFrameConfig> = {
     const message = /又发来一条消息：「(.*)」。/u.exec(instructions)?.[1] ?? ''
     return Promise.resolve({ kind: 'ok', spec: ctx.jev.resolve(request), response: script[message] ?? answers('side', {}) })
   })
-  const adapter = new MockAdapter(Array.from({ length: turns }, (_, index) => textResponse(`reply ${String(index + 1)}`)))
+  const adapter = new MockAdapter(responses ?? Array.from({ length: turns }, (_, index) => textResponse(`reply ${String(index + 1)}`)))
   ctx.effect(() => ctx.llm.registerAdapter(['mock'], adapter))
   installSystem3TaskFrame(ctx, { config: { ...CONFIG, ...config },
     policy: { mode: 'controlled', approvedRemoteIds: ['jev'], approvedRemoteDataClasses: ['workspace'] },
@@ -237,4 +239,100 @@ it('logs an unexpected failure and stays quiet after disposal', async () => {
   blocked.reject(new Error('aborted'))
   await new Promise(resolve => setTimeout(resolve, 10))
   expect(warn).not.toHaveBeenCalled()
+})
+
+/** A turn held open by a tool until released, so a new message queues behind it. */
+async function running(script: Script, config: Partial<System3TaskFrameConfig>, controller: 'real' | 'failing' | 'none' = 'real') {
+  const h = await setup(script, config, 0, false, [toolCallResponse('c1', 'wait', {}), textResponse('step after the tool'), textResponse('next turn')])
+  const gate = Promise.withResolvers<undefined>()
+  const entered = Promise.withResolvers<undefined>()
+  h.ctx.tools.register(defineTool({ name: 'wait', description: 'Wait.', parameters: {}, output: { schema: { type: 'string' },
+    render: (_args, value) => [{ type: 'text', text: value }] },
+  execute: async () => { entered.resolve(undefined); await gate.promise; return 'released' } }))
+  const updateQueue = vi.fn(({ itemId }: { itemId: MessageId }) => {
+    if (controller === 'failing') return Promise.reject(new Error('session/steer-unavailable'))
+    const message = h.agent.inbox.nextTurn.find(queued => queued.id === itemId)!
+    h.agent.inbox.remove(itemId)
+    h.agent.steer(message)
+    return Promise.resolve({ accepted: true })
+  })
+  const get = h.ctx.get.bind(h.ctx)
+  vi.spyOn(h.ctx, 'get').mockImplementation(((name: string) => {
+    const value: unknown = name === 'sessionController' ? controller === 'none' ? undefined : { updateQueue } : Reflect.apply(get, h.ctx, [name])
+    return value
+  }) as Context['get'])
+  h.agent.followup(createUserMessage({ content: [{ type: 'text', text: '加一个汇总命令' }], source: { kind: 'user' } }))
+  await entered.promise
+  const queue = async (text: string): Promise<void> => {
+    h.agent.followup(createUserMessage({ content: [{ type: 'text', text }], source: { kind: 'user' } }))
+    await vi.waitFor(() => { expect(h.events('system3/interjection').length + h.decide.mock.calls.length).toBeGreaterThan(0) })
+  }
+  const release = async (): Promise<void> => { gate.resolve(undefined); await h.agent.whenIdle() }
+  const seen = (index: number) => JSON.stringify(h.adapter.requests[index]?.messages ?? [])
+  return { ...h, updateQueue, queue, release, seen }
+}
+
+it('moves a queued requirement into the running turn and does not judge it again when claimed', async () => {
+  const h = await running({ '别动 README.md': answers('continue', { requirement: 0.9 }) }, { interjection: 'active' })
+  await h.queue('别动 README.md')
+  await vi.waitFor(() => { expect(h.events('system3/interjection')).toHaveLength(1) })
+  expect(h.events('system3/interjection')[0]).toMatchObject({ decision: 'steer', delivered: true })
+  expect(h.updateQueue.mock.calls[0]?.[0]).toMatchObject({ sessionId: h.agent.session.id, action: { kind: 'steer' } })
+  await h.release()
+  // The step right after the tool already carries the requirement, inside the same turn.
+  expect(h.seen(1)).toContain('别动 README.md')
+  expect(h.adapter.requests).toHaveLength(2)
+  expect(h.decide).toHaveBeenCalledTimes(1)
+  expect(h.frames().at(-1)?.items.map(item => item.text)).toEqual(['别动 README.md'])
+})
+
+it('keeps a queued side question for the next turn', async () => {
+  const h = await running({ '这个命令要多久？': answers('side', {}) }, { interjection: 'active' })
+  await h.queue('这个命令要多久？')
+  h.agent.followup(createUserMessage({ content: [{ type: 'text', text: '谢谢' }], source: { kind: 'user' } }))
+  await vi.waitFor(() => { expect(h.events('system3/interjection')).toMatchObject([{ decision: 'keep' }, { decision: 'keep', delivered: false }]) })
+  await h.release()
+  expect(h.updateQueue).not.toHaveBeenCalled()
+  expect(h.seen(1)).not.toContain('这个命令要多久？')
+  expect(h.seen(2)).toContain('这个命令要多久？')
+  expect(h.decide).toHaveBeenCalledTimes(2)
+})
+
+it('records without moving in shadow mode, and leaves the item queued when the move fails or no controller exists', async () => {
+  const shadow = await running({ '别动 README.md': answers('continue', { requirement: 0.9 }) }, { interjection: 'shadow' })
+  await shadow.queue('别动 README.md')
+  await vi.waitFor(() => { expect(shadow.events('system3/interjection')).toMatchObject([{ decision: 'steer', delivered: false }]) })
+  expect(shadow.updateQueue).not.toHaveBeenCalled()
+  await shadow.release()
+
+  const failing = await running({ '别动 README.md': answers('continue', { requirement: 0.9 }) }, { interjection: 'active' }, 'failing')
+  const info = vi.spyOn(failing.ctx.logger, 'info')
+  await failing.queue('别动 README.md')
+  await vi.waitFor(() => { expect(failing.events('system3/interjection')).toMatchObject([{ decision: 'steer', delivered: false }]) })
+  expect(info).toHaveBeenCalledWith('system3 interjection not delivered: Error: session/steer-unavailable')
+  await failing.release()
+  expect(failing.seen(2)).toContain('别动 README.md')
+
+  const absent = await running({ '别动 README.md': answers('continue', { requirement: 0.9 }) }, { interjection: 'active' }, 'none')
+  await absent.queue('别动 README.md')
+  await vi.waitFor(() => { expect(absent.events('system3/interjection')).toMatchObject([{ decision: 'steer', delivered: false }]) })
+  await absent.release()
+})
+
+it('leaves queued messages to the next turn without interjection, and skips steered, attached, and failed ones', async () => {
+  const plain = await running({ '别动 README.md': answers('continue', { requirement: 0.9 }) }, {})
+  await plain.queue('别动 README.md').catch(() => undefined)
+  await plain.release()
+  expect(plain.events('system3/interjection')).toEqual([])
+  expect(plain.seen(2)).toContain('别动 README.md')
+
+  const h = await running({}, { interjection: 'active' })
+  h.agent.steer(createUserMessage({ content: [{ type: 'text', text: '直接插入的话' }], source: { kind: 'user' } }))
+  h.agent.followup(createUserMessage({ content: [{ type: 'text', text: 'see' }, { type: 'image', data: 'AA==', mimeType: 'image/png' }] as never,
+    source: { kind: 'user' } }))
+  h.decide.mockRejectedValueOnce(new Error('socket hang up'))
+  h.agent.followup(createUserMessage({ content: [{ type: 'text', text: '失败的判断' }], source: { kind: 'user' } }))
+  await vi.waitFor(() => { expect(h.decide).toHaveBeenCalledTimes(1) })
+  await h.release()
+  expect(h.events('system3/interjection')).toEqual([])
 })

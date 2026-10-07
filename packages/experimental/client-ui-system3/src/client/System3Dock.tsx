@@ -244,6 +244,7 @@ export function System3Feedback(props: System3FeedbackProps) {
     {facts?.subagentRun && <DelegationRun run={facts.subagentRun} turnRunning={props.running} onStop={props.onStop}
       onSteer={props.onSteer} t={t} />}
     {facts?.notices.map((notice, index) => <ProcessNotice key={`${String(index)}:${notice.rule}`} notice={notice} t={t} />)}
+    {facts?.interjection && <p className={css.note} role="status">{t('interjectionSteered')}</p>}
     {facts?.taskFrame && facts.taskFrame.items.length > 0 && <TaskFrame frame={facts.taskFrame} t={t} />}
     {/* From the injected instruction until the delegated run's first snapshot, including the tool call's startup. */}
     {!facts?.subagentRun && facts?.entry?.route?.delegation?.injected === true
