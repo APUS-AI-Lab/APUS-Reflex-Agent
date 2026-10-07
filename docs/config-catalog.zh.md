@@ -1233,7 +1233,7 @@ export interface Config {
 ## `@deepseek-ai/dsh-experimental-system3`
 
 - `refs`: [`System3DataClass`](../packages/experimental/system3-policy/src/index.ts) · [`System3ExecutionDomain`](../packages/experimental/system3-policy/src/index.ts) · [`System3PrivacyMode`](../packages/experimental/system3-policy/src/index.ts)
-- `source`: [`packages/experimental/system3/src/index.ts:43`](../packages/experimental/system3/src/index.ts)
+- `source`: [`packages/experimental/system3/src/index.ts:49`](../packages/experimental/system3/src/index.ts)
 
 ```ts config-catalog
 /** Configures the default local-first privacy boundary. */
@@ -1260,6 +1260,8 @@ export interface Config {
   readonly skillSelection?: false | System3SkillSelectionConfig
   /** Opt-in persistent progress snapshots of subagent runs, written to the delegating Agent's Session. */
   readonly delegationProgress?: false | System3DelegationProgressConfig
+  /** Stall rules and acceptance-evidence checks over each Agent loop; `false` or omission disables them. */
+  readonly processSupervision?: false | System3ProcessSupervisionConfig
 }
 
 /** Explicit controls for entry recommendations; omission leaves entry routing disabled. */
@@ -1289,6 +1291,10 @@ export interface System3EntryRoutingConfig {
   readonly retainOnAbstain?: boolean
   /** Keep the Jev connection open after plugin start and after each turn ends; omission sends no warm-up requests. */
   readonly keepWarm?: System3KeepWarmConfig
+  /** Measure model candidates and leave degraded ones out of the choice; omission offers every candidate. */
+  readonly routeHealth?: System3RouteHealthConfig
+  /** Forward the person's earlier requirements with a delegation instruction; omission sends the instruction alone. */
+  readonly handoffPack?: System3HandoffPackConfig
 }
 
 /** Explicit limits for automatically loading one model-invocable Skill per new user input. */
@@ -1315,6 +1321,28 @@ export interface System3DelegationProgressConfig {
   readonly monitor?: System3DelegationMonitorConfig
 }
 
+/** Thresholds and tool classes the supervision rules use; deployment-owned. */
+export interface System3ProcessSupervisionConfig {
+  /** `observe` records notices only; `advise` also tells the main model what to do next. */
+  readonly mode: 'observe' | 'advise'
+  /** Occurrences of the same tool failure in one turn that raise `repeated-error`. */
+  readonly repeatedError: number
+  /** Failed tool calls in one turn that raise `failed-attempts`. */
+  readonly failedAttempts: number
+  /** Consecutive calls without an edit, delegation, or passing verification that raise `no-progress`. */
+  readonly stalledSteps: number
+  /** Failed commands inside one delegated run that raise `delegate-failures`. */
+  readonly delegateFailures: number
+  /** Tools whose successful call changes files. */
+  readonly editTools: readonly string[]
+  /** Delegation tools whose successful call hands back delegated changes. */
+  readonly delegationTools: readonly string[]
+  /** Shell tools whose command text and exit code are inspected. */
+  readonly shellTools: readonly string[]
+  /** Case-insensitive regular expression for verification commands, such as tests or builds. */
+  readonly verifyPattern: string
+}
+
 /** One entry route Jev may choose. */
 export type System3EntryCandidate = System3EntryModelCandidate | System3EntryDelegateCandidate
 
@@ -1324,6 +1352,43 @@ export interface System3KeepWarmConfig {
   readonly windowMs: number
   /** Interval between warm-up requests; shorter than the gateway's idle connection timeout. */
   readonly intervalMs: number
+}
+
+/** Thresholds and sampling for route health; deployment-owned. */
+export interface System3RouteHealthConfig {
+  /** Most recent samples kept per route. */
+  readonly window: number
+  /** Samples older than this many milliseconds are ignored, so an avoided route is offered again after it. */
+  readonly sampleTtlMs: number
+  /** Samples a metric needs before it can mark a route degraded. */
+  readonly minSamples: number
+  /** Median milliseconds from request start to the first token above which a route is slow. */
+  readonly maxFirstTokenMs: number
+  /** Median output tokens per second, after the first token, below which a route is slow. */
+  readonly minTokensPerSecond: number
+  /** Output tokens a sample needs before its rate counts; short outputs distort the rate. */
+  readonly minOutputTokens: number
+  /** Share of failed samples, from 0 to 1, above which a route is failing. */
+  readonly maxErrorRate: number
+  /** Small requests to routes without a recent sample; `false` samples only real requests. */
+  readonly probe: false | {
+    /** Milliseconds without a sample before a route is probed; also the probe check interval. */
+    readonly idleMs: number
+    /** Output token limit of each probe. */
+    readonly maxTokens: number
+  }
+}
+
+/** How many earlier messages Jev reviews and how a requirement is recognized; deployment-owned. */
+export interface System3HandoffPackConfig {
+  /** Most recent earlier text messages of the person that Jev reviews, at most 16. */
+  readonly recentMessages: number
+  /** Messages longer than this many characters are not reviewed. */
+  readonly maxMessageChars: number
+  /** Jev probability, from 0 to 1, at or above which a message counts as a requirement. */
+  readonly minProbability: number
+  /** Milliseconds the review may take before the instruction is sent without a pack. */
+  readonly deadlineMs: number
 }
 
 /** Thresholds after which a running delegation is reported to the person as needing attention. */

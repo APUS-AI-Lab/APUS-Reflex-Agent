@@ -268,12 +268,14 @@ describe('SubagentRuntime', () => {
 
     const run = await subagents.start('stepping', baseRequest({ parent }))
     report?.({ kind: 'command', phase: 'started', text: 'rm -rf /' } as never)
+    report?.({ kind: 'command', phase: 'completed', outcome: 'failed' })
     result.resolve({ output: [], stopReason: 'completed' })
     await run.result
     report?.({ kind: 'command', phase: 'completed' })
 
-    expect(seen).toEqual([{ runId, provider: 'stepping', id: SessionId('child'), kind: 'command', phase: 'started' }])
-    expect(keys).toEqual([parent])
+    expect(seen).toEqual([{ runId, provider: 'stepping', id: SessionId('child'), kind: 'command', phase: 'started' },
+      { runId, provider: 'stepping', id: SessionId('child'), kind: 'command', phase: 'completed', outcome: 'failed' }])
+    expect(keys).toEqual([parent, parent])
   })
 
   it('publishes a trimmed, bounded note and omits an empty one', async () => {

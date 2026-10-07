@@ -82,6 +82,16 @@
             overtimeMs: 360000
             stallMs: 180000
             startupMs: 120000
+        processSupervision:
+          mode: advise
+          repeatedError: 2
+          failedAttempts: 3
+          stalledSteps: 6
+          delegateFailures: 3
+          editTools: [write, edit]
+          delegationTools: [subagent_codex]
+          shellTools: [bash]
+          verifyPattern: '\b(pytest|unittest|vitest|jest|go test|cargo (test|build)|(npm|pnpm|yarn)( run)? (test|build|typecheck)|tsc|make (test|check|build))\b'
         skillSelection:
           sessionDataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'
           minConfidence: 0.5
@@ -101,6 +111,24 @@
           keepWarm:
             windowMs: 300000
             intervalMs: 2000
+          # Avoid only clearly broken lines: on prd the relay first token is about 26 s and every route streams 100+ tok/s.
+          routeHealth:
+            window: 20
+            sampleTtlMs: 1800000
+            minSamples: 3
+            maxFirstTokenMs: 45000
+            minTokensPerSecond: 10
+            minOutputTokens: 200
+            maxErrorRate: 0.5
+            probe:
+              idleMs: 1800000
+              maxTokens: 64
+          # Real Jev on the hand-off e2e: requirements scored 0.41-0.997, other messages at most 0.06.
+          handoffPack:
+            recentMessages: 12
+            maxMessageChars: 500
+            minProbability: 0.3
+            deadlineMs: 5000
           candidates:
             - id: fast
               description: 简短问答、翻译、改写、归纳，以及范围明确、一步就能完成的常规任务。

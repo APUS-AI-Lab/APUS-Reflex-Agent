@@ -17,3 +17,10 @@
 - Basic Auth for `system3.xdan.work` leaked twice into tool output: curl's `%{redirect_url}` echoes `user:password@` from `-u`, and a URL with embedded credentials propagated into page script URLs that console stack traces printed. Both times the password was rotated.
 - Embedding credentials in a URL also breaks the page: browsers refuse `fetch` from such a document ("Request cannot be constructed from a URL that includes credentials").
 - Rule: print only status codes or booleans when a request carries credentials; never print redirect URLs, request URLs, console output or network logs unredacted; never put credentials in URLs. Rotate immediately if a secret appears in output.
+
+## 2026-10-04 — Pilot top three
+
+- **Exit codes lie through pipes.** A check like `pytest -v 2>&1 | tail` exits with `tail`'s status. Any rule that treats a successful command as evidence must refuse piped commands (or require `pipefail`). Found only by online acceptance with a real model, not by unit tests: test against how models actually write commands.
+- **Commit hashes in docs fail `verify-repository-references` — again.** Before writing todo/acceptance docs, refer to commits by subject, never by hash. Grep new doc text for `[0-9a-f]{7,}` before running doc-sync.
+- **Real-model wording beats intuition for Jev questions.** "Is this a requirement for this task?" missed standing project rules (recall 0.38); quoting the message in its own question and asking for "a working requirement still in force" reached 1.0. Always run the deployed Jev on labelled cases before choosing a threshold.
+- **Verify login claims before stating them.** I told the user every restart invalidated their login because the launch token changes; the signed cookie actually uses a persistent secret and survived a restart (checked with curl: 200 after restart). Read the auth code or test with a cookie jar before explaining login behavior.

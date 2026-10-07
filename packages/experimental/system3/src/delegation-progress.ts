@@ -90,8 +90,12 @@ interface RunState {
   stepAlerted: boolean
 }
 
-/** The carrier of subagent lifecycle events is the delegating parent Agent. */
-function delegatingAgent(carrier: unknown): Agent | undefined {
+/**
+ * Resolve the delegating parent Agent, which carries every subagent lifecycle event.
+ * @param carrier - The `this` of a subagent lifecycle listener.
+ * @returns The parent Agent, or undefined for an event emitted outside an Agent scope.
+ */
+export function delegatingAgent(carrier: unknown): Agent | undefined {
   const key = carrierKeyOf(carrier)
   return key !== undefined && 'session' in key && 'id' in key ? key as Agent : undefined
 }

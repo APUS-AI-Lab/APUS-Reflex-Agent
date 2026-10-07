@@ -146,8 +146,13 @@ it('routes an API prompt through Loader-mounted Jev and records the actual HTTP 
       '  config:', '    privacyMode: local-only', '    jevExecutionDomain: local', '    observeAgentLoop: true',
       '    skillSelection:', '      sessionDataClasses: [public]', '      minConfidence: 0.5', '      maxInputBytes: 16000', '      maxContentBytes: 24000', '      maxCandidates: 12', '      deadlineMs: 2000',
       '    entryRouting:', '      baseline:', '        executionDomain: local', '        dataClasses: [public]', '      minConfidence: 0.5', '      maxInputBytes: 16000', '      sessionDataClasses: [public]', '      retainOnAbstain: true', '      keepWarm:', '        windowMs: 60000', '        intervalMs: 60000',
+      '      routeHealth:', '        window: 20', '        sampleTtlMs: 1800000', '        minSamples: 3', '        maxFirstTokenMs: 20000',
+      '        minTokensPerSecond: 8', '        minOutputTokens: 200', '        maxErrorRate: 0.5', '        probe: false',
       '      candidates:', '        - id: expert', '          description: Specialized reasoning',
       '          provider: fidoo-fixture', '          model: expert-fixture', '          executionDomain: local', '          dataClasses: [public]',
+      '        - id: codex', '          description: Long engineering work', '          delegate:', '            provider: codex',
+      '            tool: subagent_codex', '          executionDomain: local', '          dataClasses: [public]',
+      '      handoffPack:', '        recentMessages: 12', '        maxMessageChars: 500', '        minProbability: 0.5', '        deadlineMs: 5000',
     ] : [],
   ]).join('\n') + '\n')
   const ctx = context = new Context()

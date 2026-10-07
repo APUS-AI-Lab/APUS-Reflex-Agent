@@ -139,6 +139,8 @@ export interface SubagentActivity {
    * it only for the child's own messages, never for commands, tool input, or results.
    */
   readonly note?: string
+  /** Present on a completed step that failed, such as a command with a nonzero exit code. */
+  readonly outcome?: 'failed'
 }
 
 /**

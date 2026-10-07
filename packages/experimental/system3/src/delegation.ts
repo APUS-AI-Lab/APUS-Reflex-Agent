@@ -5,6 +5,7 @@ import type { SessionRequestId } from '@deepseek-ai/dsh-api-session-controller/t
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import type {} from '@deepseek-ai/dsh-session-projection'
 import type {} from './runtime-projection.ts'
+import { handoffText, prepareSystem3HandoffPack, type System3HandoffSettings } from './handoff-pack.ts'
 
 /** Attribution of the instruction System3 injects after an entry decision chose a delegation route. */
 export interface System3DelegationSource {
@@ -42,19 +43,24 @@ export function delegationInstruction(label: string, tool: string): string {
  * Inject the delegation instruction once, in the pre-step that first carries the delegated input.
  * The entry decision, this injected message, and the later tool call remain separate Session facts.
  * @param ctx - Plugin context providing session projections.
+ * @param handoff - Review of earlier messages whose requirements the instruction carries; omission sends the instruction alone.
  */
-export function installSystem3Delegation(ctx: Context): void {
-  ctx.on('agent/pre-step', async ({ agent }, next): Promise<PreStepDecision> => {
+export function installSystem3Delegation(ctx: Context, handoff?: System3HandoffSettings): void {
+  ctx.on('agent/pre-step', async ({ agent, signal }, next): Promise<PreStepDecision> => {
     const decision = await next()
     if (decision.kind === 'reject') return decision
     const entry = ctx.sessionProjections.stateOf(agent.session, 'system3Runtime')?.entry
     const delegation = entry?.route?.delegation
     if (entry === undefined || entry === null || delegation === undefined || delegation === null || delegation.injected) return decision
-    const carriesInput = decision.messages.some(message => message.source.kind === 'user'
+    const input = decision.messages.find(message => message.source.kind === 'user'
       && 'rpcId' in message.source && message.source.rpcId === entry.requestId)
-    if (!carriesInput) return decision
+    if (input === undefined) return decision
+    const label = entry.route?.label ?? delegation.tool
+    const task = input.content.filter(block => block.type === 'text').map(block => block.text).join('\n')
+    const constraints = handoff === undefined ? [] : await prepareSystem3HandoffPack(ctx, agent, entry.requestId, task, handoff, signal)
+    const text = delegationInstruction(label, delegation.tool)
     const instruction = createUserMessage({
-      content: [{ type: 'text', text: delegationInstruction(entry.route?.label ?? delegation.tool, delegation.tool) }],
+      content: [{ type: 'text', text: constraints.length === 0 ? text : `${text}\n\n${handoffText(label, constraints)}` }],
       source: { kind: 'system3-delegation', requestId: entry.requestId, candidateId: delegation.candidateId, tool: delegation.tool },
     })
     return { ...decision, messages: [...decision.messages, instruction] }

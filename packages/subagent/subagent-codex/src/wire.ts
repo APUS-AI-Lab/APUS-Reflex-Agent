@@ -669,7 +669,11 @@ export class CodexAppServerWire {
     if (item.type === 'userMessage') return
     const note = phase === 'completed' && item.type === 'agentMessage' && item.phase !== 'final_answer'
       && typeof item.text === 'string' ? item.text : undefined
-    this.onActivity?.({ kind: ITEM_ACTIVITY_KINDS[String(item.type)] ?? 'other', phase, ...note === undefined ? {} : { note } })
+    // A finished command failed when Codex marks it failed or reports a nonzero exit code.
+    const failed = phase === 'completed' && item.type === 'commandExecution'
+      && (item.status === 'failed' || (typeof item.exitCode === 'number' && item.exitCode !== 0))
+    this.onActivity?.({ kind: ITEM_ACTIVITY_KINDS[String(item.type)] ?? 'other', phase,
+      ...note === undefined ? {} : { note }, ...failed ? { outcome: 'failed' as const } : {} })
   }
 
   private handleNotification(

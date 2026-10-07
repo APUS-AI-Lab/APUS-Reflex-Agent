@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { PropsLocale, PropsRuntime, TranslateNS } from '@deepseek-ai/dsh-client-ui-slots'
 import type { ModelSelection, ModelSelectionProjection, SessionRequestId } from '@deepseek-ai/dsh-api-session-controller/types'
-import type { System3RuntimeView, System3SubagentRunView } from '@deepseek-ai/dsh-experimental-system3/types'
+import type { System3ProcessNoticeView, System3RuntimeView, System3SubagentRunView } from '@deepseek-ai/dsh-experimental-system3/types'
 import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
 import type {} from '@deepseek-ai/dsh-client-ui-session/client'
 import { Input } from '@deepseek-ai/dsh-client-ui-primitives'
@@ -57,7 +57,9 @@ export function routeNotice(entry: System3RuntimeView['entry'] | undefined, pend
   if (pendingRequestId !== null && entry.requestId !== pendingRequestId) return null
   if (entry.route !== null) {
     const route = entry.route.label ?? model(entry.suggested ?? entry.adopted, t)
-    return t(entry.route.retained ? 'routeRetained' : 'routeChosen', { route })
+    const chosen = t(entry.route.retained ? 'routeRetained' : 'routeChosen', { route })
+    return entry.avoided.length === 0 ? chosen
+      : `${chosen} · ${t('routeAvoided', { routes: entry.avoided.map(value => value.label).join('、') })}`
   }
   if (entry.adopted === null || entry.outcome === null) return null
   if (FALLBACK_TIMEOUT.has(entry.outcome)) return t('fallbackTimeout', { model: model(entry.adopted, t) })
@@ -188,6 +190,17 @@ export function DelegationRun({ run, turnRunning, onStop, onSteer, t }: {
       : <button type="button" className={css.link} onClick={() => { setSteering(true) }}>{t('steerOpen')}</button>)}
   </div>
 }
+const NOTICE_KEYS: Readonly<Record<string, System3Key>> = { 'repeated-error': 'noticeRepeatedError',
+  'failed-attempts': 'noticeFailedAttempts', 'no-progress': 'noticeNoProgress', 'missing-evidence': 'noticeMissingEvidence',
+  'delegate-failures': 'noticeDelegateFailures' }
+/** Render one process supervision finding; rules unknown to this Client show a generic label.
+ * @param props - The finding and the translator.
+ * @returns One notice line.
+ */
+export function ProcessNotice({ notice, t }: { readonly notice: System3ProcessNoticeView; readonly t: TranslateNS<'system3'> }) {
+  const text = t(NOTICE_KEYS[notice.rule] ?? 'noticeOther', { subject: notice.subject ?? '', count: String(notice.count) })
+  return <p className={css.note}>{notice.advised ? `${text} · ${t('noticeAdvised')}` : text}</p>
+}
 /** Render observed progress and allow a fixed Session to return to automatic mode.
  * @param props - Persisted facts and live Session status.
  * @returns Compact, expandable execution feedback.
@@ -219,6 +232,7 @@ export function System3Feedback(props: System3FeedbackProps) {
     </div>
     {facts?.subagentRun && <DelegationRun run={facts.subagentRun} turnRunning={props.running} onStop={props.onStop}
       onSteer={props.onSteer} t={t} />}
+    {facts?.notices.map((notice, index) => <ProcessNotice key={`${String(index)}:${notice.rule}`} notice={notice} t={t} />)}
     {/* From the injected instruction until the delegated run's first snapshot, including the tool call's startup. */}
     {!facts?.subagentRun && facts?.entry?.route?.delegation?.injected === true
       && props.running && <p className={css.run} role="status" aria-live="polite">{t('delegationPreparing')}</p>}

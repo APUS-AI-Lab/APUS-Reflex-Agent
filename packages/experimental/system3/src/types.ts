@@ -12,6 +12,8 @@ export interface System3EntryView {
   readonly elapsedMs: number | null
   /** Turn that carried this input, once its user message is committed; null before admission. */
   readonly turn: number | null
+  /** Model candidates left out of this decision because their route was degraded, by display label. */
+  readonly avoided: readonly { readonly label: string; readonly reason: string }[]
   /** Configured route chosen for this input, by Jev or by continuing the previous route; null when the baseline was kept. */
   readonly route: {
     readonly id: string
@@ -69,8 +71,23 @@ export interface System3SubagentRunView {
  */
 export interface System3RuntimeView {
   readonly entry: System3EntryView | null
+  /** Earlier entry decisions whose input reached a turn, oldest first, so earlier turns keep their route line. */
+  readonly history: readonly System3EntryView[]
   readonly skill: System3SkillView | null
   readonly subagentRun: System3SubagentRunView | null
+  /** Process supervision findings of the latest turn, oldest first; cleared when a turn starts. */
+  readonly notices: readonly System3ProcessNoticeView[]
+}
+
+/** One process supervision finding as the Client shows it. */
+export interface System3ProcessNoticeView {
+  /** Rule identifier, such as `repeated-error` or `missing-evidence`. */
+  readonly rule: string
+  /** Tool or delegate provider the finding concerns, or null. */
+  readonly subject: string | null
+  readonly count: number
+  /** Whether the main model was told what to do next. */
+  readonly advised: boolean
 }
 
 declare module '@deepseek-ai/dsh-session-projection/types' {

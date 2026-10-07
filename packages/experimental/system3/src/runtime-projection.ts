@@ -9,6 +9,7 @@ import type {} from './entry-routing.ts'
 import type {} from './skill-selection.ts'
 import type {} from './delegation.ts'
 import type {} from './delegation-progress.ts'
+import type {} from './process-supervision.ts'
 import type {} from '@deepseek-ai/dsh-subagent'
 
 /** Host fold keeps request metadata private and exposes only the two public facts. */
@@ -35,23 +36,28 @@ declare module '@deepseek-ai/dsh-session-projection/types' {
 const selection = z.object({ provider: z.string(), model: z.string(), reasoningEffort: z.string().optional() })
   .transform(({ reasoningEffort, ...required }) => ({ ...required, ...reasoningEffort === undefined ? {} : { reasoningEffort } }))
 const requestId = z.string().transform(value => brandString<SessionRequestId>(value))
+const entrySchema = z.object({ requestId, phase: z.enum(['deciding', 'decided']), outcome: z.string().nullable(),
+  suggested: selection.nullable(), adopted: selection.nullable(), used: selection.nullable(),
+  elapsedMs: z.number().nullable(), turn: z.number().nullable(),
+  avoided: z.array(z.object({ label: z.string(), reason: z.string() })),
+  route: z.object({ id: z.string(), label: z.string().nullable(), retained: z.boolean(),
+    delegation: z.object({ candidateId: z.string(), tool: z.string(), injected: z.boolean(), called: z.boolean() })
+      .nullable() }).nullable(),
+})
 const viewSchema = z.object({
-  entry: z.object({ requestId, phase: z.enum(['deciding', 'decided']), outcome: z.string().nullable(),
-    suggested: selection.nullable(), adopted: selection.nullable(), used: selection.nullable(),
-    elapsedMs: z.number().nullable(), turn: z.number().nullable(),
-    route: z.object({ id: z.string(), label: z.string().nullable(), retained: z.boolean(),
-      delegation: z.object({ candidateId: z.string(), tool: z.string(), injected: z.boolean(), called: z.boolean() })
-        .nullable() }).nullable(),
-  }).nullable(),
+  entry: entrySchema.nullable(),
+  history: z.array(entrySchema),
   skill: z.object({ requestId: requestId.nullable(), turn: z.number(), step: z.number(), outcome: z.string(),
     selected: z.string().nullable(), injected: z.boolean(), elapsedMs: z.number() }).nullable(),
   subagentRun: z.object({ runId: z.string(), provider: z.string(), state: z.string(), startedAt: z.number(), elapsedMs: z.number(),
     completed: z.record(z.string(), z.number()), current: z.string().nullable(), lastStepAt: z.number().nullable(),
     note: z.string().nullable(), alert: z.object({ kind: z.string(), elapsedMs: z.number() }).nullable(),
     steerable: z.boolean(), steers: z.array(z.object({ text: z.string(), atMs: z.number() })) }).nullable(),
+  notices: z.array(z.object({ rule: z.string(), subject: z.string().nullable(), count: z.number(), advised: z.boolean() })),
 })
-const stateSchema: ZodType<System3RuntimeState> = z.object({ entry: viewSchema.shape.entry, skill: viewSchema.shape.skill,
-  subagentRun: viewSchema.shape.subagentRun,
+const stateSchema: ZodType<System3RuntimeState> = z.object({ entry: viewSchema.shape.entry, history: viewSchema.shape.history,
+  skill: viewSchema.shape.skill,
+  subagentRun: viewSchema.shape.subagentRun, notices: viewSchema.shape.notices,
   header: selection.nullable(), currentTurn: z.number().nullable(), currentStep: z.number().nullable(),
   entryTurn: z.number().nullable(), startRequestId: requestId.nullable(),
   skillMessageId: z.string().transform(value => brandString<MessageId>(value)).nullable(),
@@ -59,6 +65,10 @@ const stateSchema: ZodType<System3RuntimeState> = z.object({ entry: viewSchema.s
 
 /** Most recent accepted mid-run inputs kept per run for display. */
 const STEERS_KEPT = 3
+/** Most recent supervision findings kept per turn for display. */
+const NOTICES_KEPT = 5
+/** Most recent earlier entry decisions kept so their turns keep a route line. */
+const HISTORY_KEPT = 100
 
 /** Content deltas and completed content blocks prove response; protocol-only records do not. */
 function hasResponseContent(stream: readonly AssistantStreamRecord[]): boolean {
@@ -69,14 +79,20 @@ function hasResponseContent(stream: readonly AssistantStreamRecord[]): boolean {
 
 /** Fold advice and adoption; confirm request use from output or a streamed attempt in the exact input turn. */
 export const system3RuntimeProjection = {
-  key: 'system3Runtime', stateVersion: 8, stateSchema,
-  init: () => ({ entry: null, skill: null, subagentRun: null, header: null, currentTurn: null, currentStep: null,
+  key: 'system3Runtime', stateVersion: 11, stateSchema,
+  init: () => ({ entry: null, history: [], skill: null, subagentRun: null, notices: [], header: null, currentTurn: null, currentStep: null,
     entryTurn: null, startRequestId: null, skillMessageId: null, imageInSession: false, route: null }),
-  wire: { viewSchema, view: state => ({ entry: state.entry, skill: state.skill, subagentRun: state.subagentRun }) },
+  wire: { viewSchema, view: state => ({ entry: state.entry, history: state.history, skill: state.skill, subagentRun: state.subagentRun,
+    notices: state.notices }) },
   apply(state, event) {
     if (!state.imageInSession && (event.type === 'user/message' || event.type === 'tool/result')) {
       const content = event.type === 'user/message' ? event.data.content : event.data.message.content
       if (content.some(block => block.type === 'image')) state = { ...state, imageInSession: true }
+    }
+    if (event.type === 'turn/start' && state.notices.length > 0) state = { ...state, notices: [] }
+    if (event.type === 'system3/process-notice') {
+      const { rule, subject = null, count, advised } = event.data
+      return { ...state, notices: [...state.notices, { rule, subject, count, advised }].slice(-NOTICES_KEPT) }
     }
     if (event.type === 'step/start') return { ...state, currentTurn: event.data.turn, currentStep: event.data.step }
     if (event.type === 'step/end' || event.type === 'turn/end') return { ...state, currentTurn: null, currentStep: null }
@@ -85,8 +101,11 @@ export const system3RuntimeProjection = {
       return { ...state, header: { provider: config.provider, model: config.model,
         ...config.reasoningEffort === undefined ? {} : { reasoningEffort: String(config.reasoningEffort) } } }
     }
-    if (event.type === 'system3/entry-start') return { ...state, startRequestId: event.data.requestId, entryTurn: null, entry: { requestId: event.data.requestId,
-      phase: 'deciding', outcome: null, suggested: null, adopted: null, used: null, elapsedMs: null, turn: null, route: null } }
+    if (event.type === 'system3/entry-start') return { ...state, startRequestId: event.data.requestId, entryTurn: null,
+      // The decision being replaced keeps its route line only if its input reached a turn.
+      history: state.entry?.turn == null ? state.history : [...state.history, state.entry].slice(-HISTORY_KEPT),
+      entry: { requestId: event.data.requestId,
+        phase: 'deciding', outcome: null, suggested: null, adopted: null, used: null, elapsedMs: null, turn: null, avoided: [], route: null } }
     if (event.type === 'system3/entry-decision') {
       if (state.startRequestId !== null && state.startRequestId !== event.data.requestId) return state
       const previous = state.entry?.requestId === event.data.requestId ? state.entry : null
@@ -97,6 +116,7 @@ export const system3RuntimeProjection = {
         entry: { requestId: event.data.requestId, phase: 'decided', outcome: event.data.outcome,
           suggested: event.data.selected ?? null, adopted: previous?.adopted ?? null,
           used: previous?.used ?? null, elapsedMs: event.data.elapsedMs, turn: previous?.turn ?? null,
+          avoided: (event.data.avoided ?? []).map(value => ({ label: value.label ?? value.id, reason: value.reason })),
           route: event.data.candidate === undefined ? null : { id: event.data.candidate.id,
             label: event.data.candidate.label ?? null, retained: event.data.retained !== undefined,
             delegation: event.data.candidate.delegate === undefined ? null
