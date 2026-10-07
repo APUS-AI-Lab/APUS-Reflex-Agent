@@ -593,6 +593,8 @@ export type OnboardingProcess = 'compact' | 'standard' | 'detailed'
 export interface Config {
   /** Offer the browser API-key step when no native shell owns credential onboarding. */
   credentialOnboarding: boolean
+  /** Show the testing notice before a browser's first use; a deployment with its own introduction turns it off. */
+  welcomeNotice: boolean
 }
 ```
 <!-- END GENERATED config-catalog:@deepseek-ai/dsh-client-ui-settings-models -->
@@ -1329,7 +1331,7 @@ export interface System3ProcessSupervisionConfig {
   readonly repeatedError: number
   /** Failed tool calls in one turn that raise `failed-attempts`. */
   readonly failedAttempts: number
-  /** Consecutive calls without an edit, delegation, or passing verification that raise `no-progress`. */
+  /** Consecutive calls without an edit, delegation, passing verification, or successful progress tool that raise `no-progress`. */
   readonly stalledSteps: number
   /** Failed commands inside one delegated run that raise `delegate-failures`. */
   readonly delegateFailures: number
@@ -1339,8 +1341,12 @@ export interface System3ProcessSupervisionConfig {
   readonly delegationTools: readonly string[]
   /** Shell tools whose command text and exit code are inspected. */
   readonly shellTools: readonly string[]
+  /** Information tools, such as web search, whose successful call counts as progress. */
+  readonly progressTools: readonly string[]
   /** Case-insensitive regular expression for verification commands, such as tests or builds. */
   readonly verifyPattern: string
+  /** Regular expression for failure output; a piped verification whose result matches it is not evidence. */
+  readonly failurePattern: string
 }
 
 /** One entry route Jev may choose. */

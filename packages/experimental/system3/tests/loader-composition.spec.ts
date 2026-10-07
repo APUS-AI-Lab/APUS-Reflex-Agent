@@ -123,7 +123,8 @@ it('loads Jev beside the unchanged main route and replays persisted shadow recei
     ...name === '@deepseek-ai/dsh-experimental-system3' ? [
       '  config:', '    privacyMode: local-only', '    jevExecutionDomain: local', '    observeAgentLoop: true',
       '    processSupervision:', '      mode: advise', '      repeatedError: 2', '      failedAttempts: 3', '      stalledSteps: 6',
-      '      delegateFailures: 3', '      editTools: [edit]', '      delegationTools: []', '      shellTools: [bash]',
+      '      delegateFailures: 3', '      editTools: [edit]', '      delegationTools: []', '      shellTools: [bash]', '      progressTools: []',
+      "      failurePattern: 'FAILED'",
       "      verifyPattern: '\\bnpm test\\b'",
       '    delegationProgress:', '      intervalMs: 2000',
     ] : [],

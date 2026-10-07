@@ -236,7 +236,9 @@ export default class System3 extends Service implements System3Service {
       editTools: z.array(z.string()).required(),
       delegationTools: z.array(z.string()).required(),
       shellTools: z.array(z.string()).required(),
+      progressTools: z.array(z.string()).required(),
       verifyPattern: z.string().required(),
+      failurePattern: z.string().required(),
     })]).default(false),
   })
 

@@ -110,6 +110,21 @@ footer { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line)
     </ul>
   </section>
 
+  <section class="wide">
+    <div class="eyebrow">公网访问（10-06，去掉 Basic Auth 后）</div>
+    <h2>没有密码弹窗，登录一次后跨发布保持</h2>
+    <div class="shots">
+      <figure><img src="acceptance/pub-anon.jpg" alt="全新浏览器访问显示 DSH 认证提示" loading="lazy"><figcaption><b>未登录</b>：全新浏览器打开 system3.xdan.work，不再弹出密码框，返回 401 和 DSH 的提示“authentication required”。</figcaption></figure>
+      <figure><img src="acceptance/pub-chat.jpg" alt="经公网域名提问并收到回答" loading="lazy"><figcaption><b>登录后使用</b>：打开一次登录链接后，地址栏里的 token 被去掉；提问后显示“Routed: 简单问答 · DeepSeek Flash”，8 秒完成。</figcaption></figure>
+    </div>
+    <ul class="list">
+      <li>刷新页面、重启服务后再访问，都保持登录（会话列表正常显示）。</li>
+      <li>全新浏览器第一次进入会看到 DSH 自带的“Internal Testing Notice”，点 Continue 后才能输入；英文、面向开发者，演示前可考虑替换或关闭。</li>
+      <li>未登录页面只有一行英文“reopen the URL printed by dsh web”，对外部访客不友好。</li>
+      <li>模型回复提到 <code>web_search</code> 不可用（缺少 <code>DEEPSEEK_API_KEY</code>），联网搜索在 prd 上没有配置。</li>
+    </ul>
+  </section>
+
   <section>
     <div class="eyebrow">验收中发现并处理的问题</div>
     <h2>问题与状态</h2>

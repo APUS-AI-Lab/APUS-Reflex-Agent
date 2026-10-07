@@ -243,8 +243,8 @@
   en: 559b6bba067488c0
   zh: 9e3202f5c995a496
 /session-persistence-event-catalog/events/system3/system3-process-notice-log-only:
-  en: 1340fb3a9ec334c6
-  zh: 2dc99fada05cdf2a
+  en: c2bce49adfa9b9ce
+  zh: 0609a977e042b9be
 /session-persistence-event-catalog/events/system3/system3-skill-decision-log-only:
   en: 8bc39250a26f2c1c
   zh: 68714bc969193006
@@ -1503,11 +1503,11 @@
   en: 22e184982438c375
   zh: dd1f3330fd9a3bed
 /session-persistence-event-catalog/resolved-persistence-types/system3processnotice:
-  en: ffd8f32e46b80442
-  zh: 493f81447fc1e9ba
+  en: 0bf073f6a6f1c76e
+  zh: f78af8cea9d82852
 /session-persistence-event-catalog/resolved-persistence-types/system3processrule:
-  en: 9c14660c8a1127ad
-  zh: 8cb9f60a7e53d6bf
+  en: 7608da1f32314015
+  zh: d61d7d396706be7f
 /session-persistence-event-catalog/resolved-persistence-types/system3routehealthreason:
   en: 57d2d1ba4f280823
   zh: f3ffbc02ca75172a
@@ -1521,8 +1521,8 @@
   en: d93eb2936e265b8e
   zh: 6e980032451a2ead
 /session-persistence-event-catalog/resolved-persistence-types/system3supervisionsource:
-  en: 40cbd6462cc05389
-  zh: 79afebd358182fb6
+  en: 3612f39b40931916
+  zh: 2604bf1dc7453257
 /session-persistence-event-catalog/resolved-persistence-types/system3supervisorresult:
   en: fcedb2cba726fc02
   zh: 099852a813ff4f32

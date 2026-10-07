@@ -1097,7 +1097,7 @@ export type SessionEvent<T extends SessionEventType = SessionEventType> = {
 'system3/process-notice': System3ProcessNotice
 ```
 
-来源：[`packages/experimental/system3/src/process-supervision.ts:55`](../packages/experimental/system3/src/process-supervision.ts)
+来源：[`packages/experimental/system3/src/process-supervision.ts:59`](../packages/experimental/system3/src/process-supervision.ts)
 
 <a id="system3skill-decision--log-only"></a>
 
@@ -5895,7 +5895,7 @@ SHA-256: `cf6cbfd7374a2b585f2b618fb63b4b9c58aa124a8a5a715433eefe49a2d6f1d0`
 
 SHA-256: `da0389dfad3e6e301ab8ef2da90fa7d34b343e7685c06fa2bd5892ed9aa43b16`
 
-来源：[`packages/experimental/system3/src/process-supervision.ts:35`](../packages/experimental/system3/src/process-supervision.ts)
+来源：[`packages/experimental/system3/src/process-supervision.ts:39`](../packages/experimental/system3/src/process-supervision.ts)
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|
@@ -5915,7 +5915,7 @@ SHA-256: `da0389dfad3e6e301ab8ef2da90fa7d34b343e7685c06fa2bd5892ed9aa43b16`
 
 SHA-256: `6d12c12a4b0ef02abd57b998310b45bda6f220cab0f4dcfba67da7859cb753f0`
 
-来源：[`packages/experimental/system3/src/process-supervision.ts:32`](../packages/experimental/system3/src/process-supervision.ts)
+来源：[`packages/experimental/system3/src/process-supervision.ts:36`](../packages/experimental/system3/src/process-supervision.ts)
 
 以下类型之一：
 
@@ -6017,7 +6017,7 @@ SHA-256: `b311bb8040a29889a189533318a6ccbe305b2cc5ed55b926ece0f7e8b5462e99`
 
 SHA-256: `13daea02f2a32a4ad96f4734d677194d6d632cd22c7b526ac3666a7f0ffa8d14`
 
-来源：[`packages/experimental/system3/src/process-supervision.ts:47`](../packages/experimental/system3/src/process-supervision.ts)
+来源：[`packages/experimental/system3/src/process-supervision.ts:51`](../packages/experimental/system3/src/process-supervision.ts)
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|

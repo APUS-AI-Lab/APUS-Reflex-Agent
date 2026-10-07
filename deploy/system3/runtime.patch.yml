@@ -9,11 +9,36 @@
 - id: session-log-deepseek
   config:
     enabled: false
+# System3 visitors arrive from the public site; the Harness developer testing notice would block their first input on every load.
+- id: ui-settings-models
+  config:
+    welcomeNotice: false
 - id: llm-deepseek
   disabled: true
 - id: llm-pi-ai
   config:
     providers:
+      # Official DeepSeek API: DeepSeek-V4.1-Flash serves `deepseek-flash` (1M context, vision) and DeepSeek-V4-Pro-0813
+      # serves `deepseek-v4-pro` (1M context, text only); both think on request.
+      # The window matches the other tiers so entry routing can switch between them and compaction stays aligned.
+      deepseek-official:
+        displayName: DeepSeek 官方
+        api: openai-completions
+        baseURL: https://api.deepseek.com
+        apiKeyEnv: DEEPSEEK_API_KEY
+        compat:
+          thinkingFormat: deepseek
+        models:
+          - id: deepseek-flash
+            contextWindow: 131072
+            maxTokens: 8192
+            input: [text, image]
+            reasoningEfforts: {off: null, low: low, medium: medium, high: high}
+          - id: deepseek-v4-pro
+            contextWindow: 131072
+            maxTokens: 8192
+            input: [text]
+            reasoningEfforts: {off: null, low: low, medium: medium, high: high}
       fidoo:
         displayName: Fidoo LiteLLM
         api: openai-completions
@@ -50,8 +75,8 @@
             reasoningEfforts: {low: low, medium: medium, high: high}
 - id: agent-default-model
   config:
-    provider: fidoo
-    model: deepseek-v4-flash
+    provider: deepseek-official
+    model: deepseek-flash
     reasoningEffort: low
 - insert:
     - id: ui-system3
@@ -91,7 +116,9 @@
           editTools: [write, edit]
           delegationTools: [subagent_codex]
           shellTools: [bash]
+          progressTools: [web_search, web_fetch]
           verifyPattern: '\b(pytest|unittest|vitest|jest|go test|cargo (test|build)|(npm|pnpm|yarn)( run)? (test|build|typecheck)|tsc|make (test|check|build))\b'
+          failurePattern: '\bFAILED\b|\b[1-9][0-9]* (failed|errors?)\b|\bERROR\b|No module named|command not found|Traceback \(most recent call last\)|npm ERR!'
         skillSelection:
           sessionDataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'
           minConfidence: 0.5
@@ -132,16 +159,16 @@
           candidates:
             - id: fast
               description: 简短问答、翻译、改写、归纳，以及范围明确、一步就能完成的常规任务。
-              label: 简单问答 · DeepSeek Flash
-              provider: fidoo
-              model: deepseek-v4-flash
+              label: 简单问答 · DeepSeek V4.1 Flash
+              provider: deepseek-official
+              model: deepseek-flash
               reasoningEffort: low
               executionDomain: network
               dataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'
             - id: reasoning
               description: 需要几步推理的分析：解释原理、比较方案、阅读和排查一段代码、中等规模的计算或推导。
-              label: 推理分析 · DeepSeek Pro
-              provider: fidoo
+              label: 推理分析 · DeepSeek V4 Pro
+              provider: deepseek-official
               model: deepseek-v4-pro
               reasoningEffort: low
               executionDomain: network
