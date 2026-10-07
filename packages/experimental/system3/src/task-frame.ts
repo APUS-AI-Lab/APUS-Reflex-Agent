@@ -10,6 +10,7 @@ import type { System3DataClass } from '@deepseek-ai/dsh-experimental-system3-pol
 import type { MessageId, UserMessage } from '@deepseek-ai/dsh-llm'
 import type { GoalId } from '@deepseek-ai/dsh-goal/types'
 import type { GoalChangeMeta } from '@deepseek-ai/dsh-goal'
+import type {} from '@deepseek-ai/dsh-api-session-controller'
 import { choiceVerdict, noulVerdict, runSystem3Decision, validateSystem3DecisionSettings, type System3DecisionContext,
   type System3DecisionSettings, type System3DecisionSpec } from './decision-kernel.ts'
 import type { System3JevOptions } from './decisions.ts'
@@ -23,6 +24,22 @@ export interface System3TaskFrameConfig extends System3DecisionSettings {
   readonly maxItems: number
   /** Messages longer than this many characters are neither judged nor kept. */
   readonly maxMessageChars: number
+  /**
+   * Judge a message as soon as it is queued behind a running turn: `active` moves a requirement, acceptance criterion, or
+   * correction of the current task into that turn through the Session controller's queue `steer` action; `shadow` records
+   * the decision only. Omit to leave queued messages for the next turn. Moving needs an `active` task frame.
+   */
+  readonly interjection?: 'shadow' | 'active'
+}
+
+/** A message queued behind a running turn, judged for whether it belongs in that turn. */
+export interface System3Interjection {
+  readonly version: 1
+  readonly messageId: MessageId
+  /** `steer` for a requirement, acceptance criterion, or correction of the current task; otherwise `keep`. */
+  readonly decision: 'steer' | 'keep'
+  /** Whether the message moved into the running turn; false in shadow mode or once the turn no longer accepted it. */
+  readonly delivered: boolean
 }
 
 /** One message of the person, verbatim. */
@@ -53,6 +70,8 @@ declare module '@deepseek-ai/dsh-session/types' {
   interface SessionEventMap {
     /** The task frame changed; the main model sees it through the `system3:task-frame` runtime context. */
     'system3/task-frame': System3TaskFrame
+    /** A queued message was judged and possibly moved into the running turn; the move itself is the inbox steer. */
+    'system3/interjection': System3Interjection
   }
 }
 
@@ -152,7 +171,8 @@ export function validateSystem3TaskFrame(config: System3TaskFrameConfig): void {
 /**
  * Keep a task frame for every top-level Agent on this context. Creating a DSH goal starts the frame from its objective, and
  * while that goal is open no message replaces it. Otherwise the first message of a Session starts the frame; each later
- * message is judged after it is claimed, without delaying the step, and its result shapes the frame from the next step on.
+ * message is judged after it is claimed, without delaying the step, and its result shapes the frame from the next step on;
+ * with `interjection`, a message queued behind a running turn is judged on arrival and may move into that turn.
  * In `shadow` mode only judgements are recorded; the frame stays in memory and the model never sees it.
  * @param ctx - Plugin context with the system prompt; listeners are disposed with it.
  * @param settings - Task-frame settings, privacy policy, and Jev options.
@@ -200,19 +220,32 @@ export function installSystem3TaskFrame(ctx: Context, settings: System3TaskFrame
     if (active) agent.session.append('system3/task-frame', frame)
     frames.set(agent.session, frame)
   }
-  const judge = async (agent: Agent, message: System3TaskMessage): Promise<void> => {
+  const judge = async (agent: Agent, message: System3TaskMessage): Promise<FrameOutcome> => {
     const frame = frameOf(agent)
-    if (frame === null) { record(agent, message, []); return }
+    if (frame === null) { record(agent, message, []); return 'none' }
     const result = await runSystem3Decision(ctx, shared, system3TaskFrameDecision, config, agent,
       { goal: frame.goal.text, message: message.text }, lifetime.signal)
     // While a DSH goal is open it is the task, so a message cannot replace it.
     if (result.outcome === 'new-task' && !goalOpen(agent)) record(agent, message, [])
     else if (result.outcome === 'add') record(agent, frame.goal, [...frame.items, message].slice(-config.maxItems))
+    return result.outcome
   }
+  // Messages of one Agent are judged in order, so each judgement sees the frame its predecessor left.
+  const enqueue = (agent: Agent, message: System3TaskMessage): Promise<FrameOutcome | undefined> => {
+    const settled = (queues.get(agent) ?? Promise.resolve()).then(() => judge(agent, message)).catch((error: unknown) => {
+      if (!lifetime.signal.aborted) ctx.logger.warn(`system3 task frame: ${String(error)}`)
+      return undefined
+    })
+    queues.set(agent, settled.then(() => undefined))
+    return settled
+  }
+  // Queued messages judged on arrival; their claim at the next step reuses that judgement instead of asking again.
+  const early = new WeakMap<Session, Set<MessageId>>()
+  const topLevel = (agent: Agent): boolean => config.mode !== 'off' && (agent.session.header.delegationDepth ?? 0) === 0
 
   // A DSH goal sets the task: creating one starts a frame from its objective, editing the objective keeps the requirements.
   ctx.on('goal/changed', ({ agent, change }) => {
-    if (config.mode === 'off' || (agent.session.header.delegationDepth ?? 0) !== 0 || change.goal === undefined) return
+    if (!topLevel(agent) || change.goal === undefined) return
     const goal = { goalId: change.goal.id, text: change.goal.objective }
     const frame = frameOf(agent)
     if (change.operation === 'create') record(agent, goal, [])
@@ -221,20 +254,43 @@ export function installSystem3TaskFrame(ctx: Context, settings: System3TaskFrame
   })
 
   ctx.on('agent/pre-step', ({ agent, messages }, next) => {
-    if (config.mode !== 'off' && (agent.session.header.delegationDepth ?? 0) === 0) {
+    if (topLevel(agent)) {
       for (const message of messages) {
+        if (early.get(agent.session)?.delete(message.id) === true) continue
         const text = personText(message, config.maxMessageChars)
-        if (text === undefined) continue
-        const entry = { messageId: message.id, text }
-        // Messages of one Agent are judged in order, so each judgement sees the frame its predecessor left.
-        const queued = (queues.get(agent) ?? Promise.resolve()).then(() => judge(agent, entry)).catch((error: unknown) => {
-          if (!lifetime.signal.aborted) ctx.logger.warn(`system3 task frame: ${String(error)}`)
-        })
-        queues.set(agent, queued)
+        if (text !== undefined) void enqueue(agent, { messageId: message.id, text })
       }
     }
     return next()
   })
+
+  const interject = async (agent: Agent, messageId: MessageId, outcome: FrameOutcome | undefined): Promise<void> => {
+    if (outcome === undefined) return
+    const decision = outcome === 'add' ? 'steer' : 'keep'
+    let delivered = false
+    const controller = ctx.get('sessionController')
+    if (decision === 'steer' && config.interjection === 'active' && controller !== undefined) {
+      try {
+        await controller.updateQueue({ sessionId: agent.session.id, itemId: messageId, action: { kind: 'steer' } })
+        delivered = true
+      } catch (error) {
+        // The turn ended or the person edited or removed the item first; it stays where the person left it.
+        ctx.logger.info(`system3 interjection not delivered: ${String(error)}`)
+      }
+    }
+    agent.session.append('system3/interjection', { version: 1, messageId, decision, delivered })
+  }
+  if (config.interjection !== undefined) {
+    ctx.on('agent/inbox/inserted', ({ agent, message }) => {
+      if (!topLevel(agent) || agent.status !== 'running' || !agent.inbox.nextTurn.some(queued => queued.id === message.id)) return
+      const text = personText(message, config.maxMessageChars)
+      if (text === undefined) return
+      let ids = early.get(agent.session)
+      if (ids === undefined) { ids = new Set(); early.set(agent.session, ids) }
+      ids.add(message.id)
+      void enqueue(agent, { messageId: message.id, text }).then(outcome => interject(agent, message.id, outcome))
+    })
+  }
 
   if (active) {
     ctx.effect(() => ctx.systemPrompt.context({ name: 'system3:task-frame', order: ctx.systemPrompt.getContextOrder('SYSTEM3_TASK_FRAME'),

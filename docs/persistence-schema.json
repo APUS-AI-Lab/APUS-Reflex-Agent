@@ -18844,6 +18844,114 @@
       }
     },
     {
+      "key": "event:system3/interjection",
+      "kind": "event",
+      "event": "system3/interjection",
+      "surface": false,
+      "digest": "92745119ec7ac2871a3716b932458c18b2cacff7cb3d4e9aaef08b968fe7184d",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "data",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "ignorable",
+                "type": 8,
+                "optional": true
+              },
+              {
+                "name": "seq",
+                "type": 9,
+                "optional": false
+              },
+              {
+                "name": "time",
+                "type": 9,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 10,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "decision",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "delivered",
+                "type": 5,
+                "optional": false
+              },
+              {
+                "name": "messageId",
+                "type": 6,
+                "optional": false
+              },
+              {
+                "name": "version",
+                "type": 7,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "union",
+            "types": [
+              3,
+              4
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "keep"
+          },
+          {
+            "kind": "literal",
+            "value": "steer"
+          },
+          {
+            "kind": "primitive",
+            "type": "boolean"
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "literal",
+            "value": 1
+          },
+          {
+            "kind": "literal",
+            "value": true
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "literal",
+            "value": "system3/interjection"
+          }
+        ]
+      }
+    },
+    {
       "key": "event:system3/judgement",
       "kind": "event",
       "event": "system3/judgement",
@@ -31114,6 +31222,31 @@
           {
             "kind": "literal",
             "value": "never"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "15c505cf5cb374a2bb8ae586056cf60f789ceb8bce3a0f2845b38748a9669542",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "union",
+            "types": [
+              1,
+              2
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "keep"
+          },
+          {
+            "kind": "literal",
+            "value": "steer"
           }
         ]
       },
@@ -56275,7 +56408,7 @@
         "packages/experimental/system3/src/task-frame.ts#System3TaskGoal"
       ],
       "sources": [
-        "packages/experimental/system3/src/task-frame.ts:35"
+        "packages/experimental/system3/src/task-frame.ts:52"
       ]
     },
     {
@@ -72253,6 +72386,73 @@
       },
       "names": [],
       "sources": []
+    },
+    {
+      "digest": "68615812b21cd8905a2222acd9eb72bd2485cd59a8dc4a86e76fd1360ffd3717",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "decision",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "delivered",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "messageId",
+                "type": 5,
+                "optional": false
+              },
+              {
+                "name": "version",
+                "type": 6,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "union",
+            "types": [
+              2,
+              3
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "keep"
+          },
+          {
+            "kind": "literal",
+            "value": "steer"
+          },
+          {
+            "kind": "primitive",
+            "type": "boolean"
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "literal",
+            "value": 1
+          }
+        ]
+      },
+      "names": [
+        "packages/experimental/system3/src/task-frame.ts#System3Interjection"
+      ],
+      "sources": [
+        "packages/experimental/system3/src/task-frame.ts:36"
+      ]
     },
     {
       "digest": "688e853dc149f0d30b31765c12ec7e3be74169bdf1a4c6463a10b945d50cc1b8",
@@ -91828,6 +92028,112 @@
       "sources": []
     },
     {
+      "digest": "92745119ec7ac2871a3716b932458c18b2cacff7cb3d4e9aaef08b968fe7184d",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "data",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "ignorable",
+                "type": 8,
+                "optional": true
+              },
+              {
+                "name": "seq",
+                "type": 9,
+                "optional": false
+              },
+              {
+                "name": "time",
+                "type": 9,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 10,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "decision",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "delivered",
+                "type": 5,
+                "optional": false
+              },
+              {
+                "name": "messageId",
+                "type": 6,
+                "optional": false
+              },
+              {
+                "name": "version",
+                "type": 7,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "union",
+            "types": [
+              3,
+              4
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "keep"
+          },
+          {
+            "kind": "literal",
+            "value": "steer"
+          },
+          {
+            "kind": "primitive",
+            "type": "boolean"
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "literal",
+            "value": 1
+          },
+          {
+            "kind": "literal",
+            "value": true
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "literal",
+            "value": "system3/interjection"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "92d4a6cdd653e857958b4ab7cfe9b1b1ec36010d6f3d26997ab16b6886323a57",
       "schema": {
         "root": 0,
@@ -92471,7 +92777,7 @@
         "packages/experimental/system3/src/task-frame.ts#System3TaskFrame"
       ],
       "sources": [
-        "packages/experimental/system3/src/task-frame.ts:44"
+        "packages/experimental/system3/src/task-frame.ts:61"
       ]
     },
     {
@@ -94082,7 +94388,7 @@
         "packages/experimental/system3/src/task-frame.ts#System3TaskMessage"
       ],
       "sources": [
-        "packages/experimental/system3/src/task-frame.ts:29"
+        "packages/experimental/system3/src/task-frame.ts:46"
       ]
     },
     {
@@ -95184,6 +95490,20 @@
         "packages/compaction/compaction/src/types.ts:38",
         "packages/compaction/compaction/src/types.ts:84"
       ]
+    },
+    {
+      "digest": "9e4e6b726e20377a8e3c7d87aaa831103d40ed723c37eb4d1f00719ba33d0a15",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "system3/interjection"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
     },
     {
       "digest": "9edc162949abf93bd5ff049191b345454ba104f583937ce5580fb50f067d2b94",
@@ -109548,6 +109868,20 @@
       "sources": []
     },
     {
+      "digest": "e238196159cea23646c49d82be9fa532f7618e2d47082286d1c549ce2c451b3a",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "keep"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "e2ad8f5bcd813f268ffef1b10a12d7ddd2b8ced8b9b6d0275b3f6b7ed094a187",
       "schema": {
         "root": 0,
@@ -112910,6 +113244,20 @@
           {
             "kind": "primitive",
             "type": "string"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "ee0e0e288e8b20359827a9bd7f9678e062c6c0792844a1519a73249e9ddd1f70",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "steer"
           }
         ]
       },

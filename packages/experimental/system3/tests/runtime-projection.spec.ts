@@ -87,8 +87,18 @@ it('restores the same wire facts without leaking effective headers or making mod
   const restored = Session.fromRestore(h.session.id, h.session.snapshotEvents(), h.session.header, SessionLogOffset(0), 'shared-frozen')
   const state = h.ctx.sessionProjections.stateOf(restored, 'system3Runtime')!
   expect(system3RuntimeProjection.wire.view(state))
-    .toEqual({ entry: h.view()?.entry, history: [], skill: null, subagentRun: null, notices: [], taskFrame: null })
-  expect(Object.keys(system3RuntimeProjection.wire.view(state))).toEqual(['entry', 'history', 'skill', 'subagentRun', 'notices', 'taskFrame'])
+    .toEqual({ entry: h.view()?.entry, history: [], skill: null, subagentRun: null, notices: [], taskFrame: null, interjection: null })
+  expect(Object.keys(system3RuntimeProjection.wire.view(state))).toEqual(['entry', 'history', 'skill', 'subagentRun', 'notices', 'taskFrame', 'interjection'])
+})
+
+it('shows a delivered interjection until its turn ends', async () => {
+  const h = await setup()
+  h.session.append('system3/interjection', { version: 1, messageId: 'kept' as never, decision: 'keep', delivered: false })
+  expect(h.view()?.interjection).toBeNull()
+  h.session.append('system3/interjection', { version: 1, messageId: 'm2' as never, decision: 'steer', delivered: true })
+  expect(h.view()?.interjection).toEqual({ messageId: 'm2' })
+  h.session.append('turn/end', { turn: 1, reason: { kind: 'completed' } })
+  expect(h.view()?.interjection).toBeNull()
 })
 
 it('shows the latest task frame', async () => {

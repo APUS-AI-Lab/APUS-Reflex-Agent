@@ -1379,6 +1379,12 @@ export interface System3TaskFrameConfig extends System3DecisionSettings {
   readonly maxItems: number
   /** Messages longer than this many characters are neither judged nor kept. */
   readonly maxMessageChars: number
+  /**
+   * Judge a message as soon as it is queued behind a running turn: `active` moves a requirement, acceptance criterion, or
+   * correction of the current task into that turn through the Session controller's queue `steer` action; `shadow` records
+   * the decision only. Omit to leave queued messages for the next turn. Moving needs an `active` task frame.
+   */
+  readonly interjection?: 'shadow' | 'active'
 }
 
 /** One entry route Jev may choose. */

@@ -137,6 +137,7 @@
           sessionDataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'
           maxItems: 8
           maxMessageChars: 600
+          interjection: active
         skillSelection:
           sessionDataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'
           minConfidence: 0.5

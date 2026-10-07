@@ -70,6 +70,7 @@ The [format references](persistence-changes/historical-formats/README.md) cover 
 | `event:system3/entry-decision` | event | `9c7cecd646b7d0ce7f1fbf3b341f2d1c1c31135d0de9e1cb556a51a0d33177ff` | [`{ type: "system3/entry-decision" }`](#persistence-type-sha256-9c7cecd646b7d0ce7f1fbf3b341f2d1c1c31135d0de9e1cb556a51a0d33177ff) |
 | `event:system3/entry-start` | event | `0f109d50397f1d347b2f62df20bd1e21a200c839428c8bca5449e8ed37ab633a` | [`{ type: "system3/entry-start" }`](#persistence-type-sha256-0f109d50397f1d347b2f62df20bd1e21a200c839428c8bca5449e8ed37ab633a) |
 | `event:system3/handoff-pack` | event | `c4519065a7d2c21ca6154ac2cfe65e97587ad8e210623c01371fee5f959d35d3` | [`{ type: "system3/handoff-pack" }`](#persistence-type-sha256-c4519065a7d2c21ca6154ac2cfe65e97587ad8e210623c01371fee5f959d35d3) |
+| `event:system3/interjection` | event | `92745119ec7ac2871a3716b932458c18b2cacff7cb3d4e9aaef08b968fe7184d` | [`{ type: "system3/interjection" }`](#persistence-type-sha256-92745119ec7ac2871a3716b932458c18b2cacff7cb3d4e9aaef08b968fe7184d) |
 | `event:system3/judgement` | event | `a916521e7d79713dffb82460a2790977991d333ee61739f4c3c768964e0afcb4` | [`{ type: "system3/judgement" }`](#persistence-type-sha256-a916521e7d79713dffb82460a2790977991d333ee61739f4c3c768964e0afcb4) |
 | `event:system3/output-fold` | event | `a08b64e63b930ddf31679dc4de8424786c7f497169323a50ab043b260545e26f` | [`{ type: "system3/output-fold" }`](#persistence-type-sha256-a08b64e63b930ddf31679dc4de8424786c7f497169323a50ab043b260545e26f) |
 | `event:system3/process-notice` | event | `310a36ad49580b64f5f22ee000de5d58ec37334a253610f83bb3cf9102023108` | [`{ type: "system3/process-notice" }`](#persistence-type-sha256-310a36ad49580b64f5f22ee000de5d58ec37334a253610f83bb3cf9102023108) |
@@ -1089,6 +1090,17 @@ Source: [`packages/experimental/system3/src/entry-routing.ts:141`](../packages/e
 
 Source: [`packages/experimental/system3/src/handoff-pack.ts:43`](../packages/experimental/system3/src/handoff-pack.ts)
 
+<a id="system3interjection--log-only"></a>
+
+#### `system3/interjection` — log-only
+
+```ts persistence-catalog
+/** A queued message was judged and possibly moved into the running turn; the move itself is the inbox steer. */
+'system3/interjection': System3Interjection
+```
+
+Source: [`packages/experimental/system3/src/task-frame.ts:74`](../packages/experimental/system3/src/task-frame.ts)
+
 <a id="system3judgement--log-only"></a>
 
 #### `system3/judgement` — log-only
@@ -1142,7 +1154,7 @@ Source: [`packages/experimental/system3/src/skill-selection.ts:47`](../packages/
 'system3/task-frame': System3TaskFrame
 ```
 
-Source: [`packages/experimental/system3/src/task-frame.ts:55`](../packages/experimental/system3/src/task-frame.ts)
+Source: [`packages/experimental/system3/src/task-frame.ts:72`](../packages/experimental/system3/src/task-frame.ts)
 
 ### `team/*`
 
@@ -2313,6 +2325,14 @@ SHA-256: `37db4bfe2aca84613c349510e90773e58c30b1007b46100d895568adc28ab9d3`
 
 `"judged"`
 
+<a id="persistence-type-sha256-e238196159cea23646c49d82be9fa532f7618e2d47082286d1c549ce2c451b3a"></a>
+
+### `"keep"`
+
+SHA-256: `e238196159cea23646c49d82be9fa532f7618e2d47082286d1c549ce2c451b3a`
+
+`"keep"`
+
 <a id="persistence-type-sha256-ad3b56aa2fc1ad4250e7399295d34a8eae592e1907e85852e2291b2e498a30bc"></a>
 
 ### `"legacy"`
@@ -3089,6 +3109,14 @@ SHA-256: `d1a8fd80253ae084d2ecb3e0a691c393a3ecfdef5ad0496bc36dff3a08c4bcef`
 
 `"starting"`
 
+<a id="persistence-type-sha256-ee0e0e288e8b20359827a9bd7f9678e062c6c0792844a1519a73249e9ddd1f70"></a>
+
+### `"steer"`
+
+SHA-256: `ee0e0e288e8b20359827a9bd7f9678e062c6c0792844a1519a73249e9ddd1f70`
+
+`"steer"`
+
 <a id="persistence-type-sha256-c219efbdfd53b836786202ab4532913d555798f0a8615a4e9629736e3799fb70"></a>
 
 ### `"step/end"`
@@ -3256,6 +3284,14 @@ SHA-256: `d16a6f399e8d8b19640f4aa05087d45ec32e6aaa9c5555718f3810a74ac11b10`
 SHA-256: `0e6652cff9f3a002e69c9daafd20708bf467c013da067ee0208acc1b8a71c734`
 
 `"system3/handoff-pack"`
+
+<a id="persistence-type-sha256-9e4e6b726e20377a8e3c7d87aaa831103d40ed723c37eb4d1f00719ba33d0a15"></a>
+
+### `"system3/interjection"`
+
+SHA-256: `9e4e6b726e20377a8e3c7d87aaa831103d40ed723c37eb4d1f00719ba33d0a15`
+
+`"system3/interjection"`
 
 <a id="persistence-type-sha256-444ec7d381e06b98b38638c755e3d84414ae5c7120ba50c6e2c6efc3db2f1853"></a>
 
@@ -5993,6 +6029,25 @@ Sources: [`packages/experimental/system3/src/handoff-pack.ts:27`](../packages/ex
 | `response` | optional | [`JevResponse`](#persistence-type-sha256-693f3aa30e2f5006d86aef1dbf1459d83bf5a0820f8c82a11c64d99a24556eb8) |
 | `version` | required | `1` |
 
+<a id="persistence-type-sha256-68615812b21cd8905a2222acd9eb72bd2485cd59a8dc4a86e76fd1360ffd3717"></a>
+
+<a id="persistence-type-packagesexperimentalsystem3srctask-frametssystem3interjection"></a>
+
+<a id="persistence-type-system3interjection"></a>
+
+### `System3Interjection`
+
+SHA-256: `68615812b21cd8905a2222acd9eb72bd2485cd59a8dc4a86e76fd1360ffd3717`
+
+Sources: [`packages/experimental/system3/src/task-frame.ts:36`](../packages/experimental/system3/src/task-frame.ts)
+
+| Property | Presence | Type |
+|---|---|---|
+| `decision` | required | [`union (2 variants)`](#persistence-type-sha256-15c505cf5cb374a2bb8ae586056cf60f789ceb8bce3a0f2845b38748a9669542) |
+| `delivered` | required | `boolean` |
+| `messageId` | required | `string` |
+| `version` | required | `1` |
+
 <a id="persistence-type-sha256-0706ba841bb293c71cafc55db58407c79655c69a069f0c8697e6f293bcffcc87"></a>
 
 <a id="persistence-type-packagesexperimentalsystem3srcdecision-kerneltssystem3judgement"></a>
@@ -6234,7 +6289,7 @@ Sources: [`packages/experimental/system3-supervisor/src/index.ts:39`](../package
 
 SHA-256: `9594750e9543aa94f42c1e03d4c6f42e3b3e99d42dda6f8104db83abc8caff32`
 
-Sources: [`packages/experimental/system3/src/task-frame.ts:44`](../packages/experimental/system3/src/task-frame.ts)
+Sources: [`packages/experimental/system3/src/task-frame.ts:61`](../packages/experimental/system3/src/task-frame.ts)
 
 | Property | Presence | Type |
 |---|---|---|
@@ -6252,7 +6307,7 @@ Sources: [`packages/experimental/system3/src/task-frame.ts:44`](../packages/expe
 
 SHA-256: `44b144fad08c3486cc9996ff1c45ecebaa22a7bd0db5bba58cdd18f4642db126`
 
-Sources: [`packages/experimental/system3/src/task-frame.ts:35`](../packages/experimental/system3/src/task-frame.ts)
+Sources: [`packages/experimental/system3/src/task-frame.ts:52`](../packages/experimental/system3/src/task-frame.ts)
 
 | Property | Presence | Type |
 |---|---|---|
@@ -6270,7 +6325,7 @@ Sources: [`packages/experimental/system3/src/task-frame.ts:35`](../packages/expe
 
 SHA-256: `9ab87a30a2f233add14513a6aeb24f180faf4426a9bcc095083c81b702785b7e`
 
-Sources: [`packages/experimental/system3/src/task-frame.ts:29`](../packages/experimental/system3/src/task-frame.ts)
+Sources: [`packages/experimental/system3/src/task-frame.ts:46`](../packages/experimental/system3/src/task-frame.ts)
 
 | Property | Presence | Type |
 |---|---|---|
@@ -7029,6 +7084,17 @@ SHA-256: `b993441f8ce7d27b80e619e113e232ae8e62d3d5a8340f6bfe12d8c4c018e62f`
 | Position | Presence | Type |
 |---|---|---|
 | 0 | required | [`{ role: "user" }`](#persistence-type-sha256-9a2a9029f8d7ede05336980d8342737557f487b913bfd28853d0ab5214600ab5) |
+
+<a id="persistence-type-sha256-15c505cf5cb374a2bb8ae586056cf60f789ceb8bce3a0f2845b38748a9669542"></a>
+
+### `union (2 variants)`
+
+SHA-256: `15c505cf5cb374a2bb8ae586056cf60f789ceb8bce3a0f2845b38748a9669542`
+
+One of:
+
+- `"keep"`
+- `"steer"`
 
 <a id="persistence-type-sha256-1ab2ef1296f157ba96998f179bb5daa9d21a82480da2901127aeab2730797c92"></a>
 
@@ -10426,6 +10492,22 @@ SHA-256: `c4519065a7d2c21ca6154ac2cfe65e97587ad8e210623c01371fee5f959d35d3`
 | `seq` | required | `number` |
 | `time` | required | `number` |
 | `type` | required | `"system3/handoff-pack"` |
+
+<a id="persistence-type-sha256-92745119ec7ac2871a3716b932458c18b2cacff7cb3d4e9aaef08b968fe7184d"></a>
+
+<a id="persistence-type-eventsystem3interjection"></a>
+
+### `{ type: "system3/interjection" }`
+
+SHA-256: `92745119ec7ac2871a3716b932458c18b2cacff7cb3d4e9aaef08b968fe7184d`
+
+| Property | Presence | Type |
+|---|---|---|
+| `data` | required | [`System3Interjection`](#persistence-type-sha256-68615812b21cd8905a2222acd9eb72bd2485cd59a8dc4a86e76fd1360ffd3717) |
+| `ignorable` | optional | `true` |
+| `seq` | required | `number` |
+| `time` | required | `number` |
+| `type` | required | `"system3/interjection"` |
 
 <a id="persistence-type-sha256-a916521e7d79713dffb82460a2790977991d333ee61739f4c3c768964e0afcb4"></a>
 
