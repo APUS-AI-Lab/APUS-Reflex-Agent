@@ -1,0 +1,1548 @@
+{
+  "note": "Task-frame labelled sets against the deployed Jev, 2026-10-07. main, held-out and held-out-2 shaped the questions; held-out-3 was labelled before its only run and the questions were not changed after it.",
+  "sets": {
+    "main": {
+      "keep": {
+        "precision": 1,
+        "recall": 1
+      },
+      "reset": {
+        "precision": 1,
+        "recall": 1
+      },
+      "elapsedMs": {
+        "p50": 694,
+        "max": 2106
+      },
+      "cases": [
+        {
+          "goal": "帮我给记账命令行工具加一个按月汇总的命令",
+          "message": "函数名统一用 snake_case",
+          "label": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.994
+          },
+          "nouls": {
+            "request": 0.107,
+            "requirement": 0.999,
+            "acceptance": 0.006,
+            "correction": 0.06
+          }
+        },
+        {
+          "goal": "帮我给记账命令行工具加一个按月汇总的命令",
+          "message": "别动 README.md",
+          "label": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.999
+          },
+          "nouls": {
+            "request": 0.001,
+            "requirement": 0.986,
+            "acceptance": 0.001,
+            "correction": 0.076
+          }
+        },
+        {
+          "goal": "帮我给记账命令行工具加一个按月汇总的命令",
+          "message": "做完之后 pytest 必须全部通过",
+          "label": "acceptance",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.997
+          },
+          "nouls": {
+            "request": 0.349,
+            "requirement": 0.998,
+            "acceptance": 0.997,
+            "correction": 0.007
+          }
+        },
+        {
+          "goal": "帮我给记账命令行工具加一个按月汇总的命令",
+          "message": "输出要按金额从大到小排序",
+          "label": "requirement",
+          "also": "acceptance",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.998
+          },
+          "nouls": {
+            "request": 0.99,
+            "requirement": 0.995,
+            "acceptance": 0.984,
+            "correction": 0.818
+          }
+        },
+        {
+          "goal": "帮我给记账命令行工具加一个按月汇总的命令",
+          "message": "不对，我说的是按月，不是按周",
+          "label": "correction",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.994
+          },
+          "nouls": {
+            "request": 0.996,
+            "requirement": 0.992,
+            "acceptance": 0.531,
+            "correction": 0.998
+          }
+        },
+        {
+          "goal": "帮我给记账命令行工具加一个按月汇总的命令",
+          "message": "刚才那个文件放错目录了，应该放到 src/commands 下",
+          "label": "correction",
+          "also": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.995
+          },
+          "nouls": {
+            "request": 0.026,
+            "requirement": 0.998,
+            "acceptance": 0.002,
+            "correction": 0.995
+          }
+        },
+        {
+          "goal": "帮我给记账命令行工具加一个按月汇总的命令",
+          "message": "谢谢，辛苦了",
+          "label": "none",
+          "outcome": "none",
+          "intent": {
+            "choice": "side",
+            "probability": 1
+          },
+          "nouls": {
+            "request": 0,
+            "requirement": 0,
+            "acceptance": 0.001,
+            "correction": 0
+          }
+        },
+        {
+          "goal": "帮我给记账命令行工具加一个按月汇总的命令",
+          "message": "这个命令大概要多久能写完？",
+          "label": "none",
+          "outcome": "none",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.986
+          },
+          "nouls": {
+            "request": 0.002,
+            "requirement": 0.001,
+            "acceptance": 0.001,
+            "correction": 0.001
+          }
+        },
+        {
+          "goal": "帮我给记账命令行工具加一个按月汇总的命令",
+          "message": "顺便问一下，Python 的 dataclass 和 namedtuple 有什么区别？",
+          "label": "none",
+          "outcome": "none",
+          "intent": {
+            "choice": "side",
+            "probability": 0.999
+          },
+          "nouls": {
+            "request": 0,
+            "requirement": 0,
+            "acceptance": 0,
+            "correction": 0
+          }
+        },
+        {
+          "goal": "帮我给记账命令行工具加一个按月汇总的命令",
+          "message": "好了这个先放一边，帮我写一封请假邮件",
+          "label": "new-task",
+          "outcome": "new-task",
+          "intent": {
+            "choice": "switch",
+            "probability": 1
+          },
+          "nouls": {
+            "request": 0.995,
+            "requirement": 0,
+            "acceptance": 0.001,
+            "correction": 0.001
+          }
+        },
+        {
+          "goal": "帮我给记账命令行工具加一个按月汇总的命令",
+          "message": "换个事：把 nginx 配置里的超时改成 60 秒",
+          "label": "new-task",
+          "outcome": "new-task",
+          "intent": {
+            "choice": "switch",
+            "probability": 1
+          },
+          "nouls": {
+            "request": 0.989,
+            "requirement": 0,
+            "acceptance": 0.001,
+            "correction": 0.001
+          }
+        },
+        {
+          "goal": "帮我给记账命令行工具加一个按月汇总的命令",
+          "message": "汇总结果要能导出成 CSV",
+          "label": "requirement",
+          "also": "acceptance",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.998
+          },
+          "nouls": {
+            "request": 0.993,
+            "requirement": 0.998,
+            "acceptance": 0.994,
+            "correction": 0.012
+          }
+        },
+        {
+          "goal": "帮我给记账命令行工具加一个按月汇总的命令",
+          "message": "完成标准是 ledger summary --month 2026-09 能输出正确的总额",
+          "label": "acceptance",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.995
+          },
+          "nouls": {
+            "request": 0.995,
+            "requirement": 0.996,
+            "acceptance": 0.998,
+            "correction": 0.007
+          }
+        },
+        {
+          "goal": "帮我给记账命令行工具加一个按月汇总的命令",
+          "message": "提交前跑一下 ruff，必须零告警",
+          "label": "acceptance",
+          "also": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.992
+          },
+          "nouls": {
+            "request": 0.977,
+            "requirement": 0.996,
+            "acceptance": 0.986,
+            "correction": 0.005
+          }
+        },
+        {
+          "goal": "帮我给记账命令行工具加一个按月汇总的命令",
+          "message": "不要引入新的第三方依赖",
+          "label": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.998
+          },
+          "nouls": {
+            "request": 0.018,
+            "requirement": 0.997,
+            "acceptance": 0.02,
+            "correction": 0.905
+          }
+        },
+        {
+          "goal": "帮我给记账命令行工具加一个按月汇总的命令",
+          "message": "你刚才把测试删了？不行，恢复回来",
+          "label": "correction",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.549
+          },
+          "nouls": {
+            "request": 0.005,
+            "requirement": 0.001,
+            "acceptance": 0.001,
+            "correction": 0.98
+          }
+        },
+        {
+          "goal": "帮我给记账命令行工具加一个按月汇总的命令",
+          "message": "继续",
+          "label": "none",
+          "outcome": "none",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.998
+          },
+          "nouls": {
+            "request": 0.023,
+            "requirement": 0.001,
+            "acceptance": 0.001,
+            "correction": 0.001
+          }
+        },
+        {
+          "goal": "帮我给记账命令行工具加一个按月汇总的命令",
+          "message": "看起来不错",
+          "label": "none",
+          "outcome": "none",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.489
+          },
+          "nouls": {
+            "request": 0.001,
+            "requirement": 0,
+            "acceptance": 0.001,
+            "correction": 0
+          }
+        },
+        {
+          "goal": "帮我给记账命令行工具加一个按月汇总的命令",
+          "message": "日志里不要打印用户的银行卡号",
+          "label": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.99
+          },
+          "nouls": {
+            "request": 0.019,
+            "requirement": 0.996,
+            "acceptance": 0.001,
+            "correction": 0.029
+          }
+        },
+        {
+          "goal": "帮我给记账命令行工具加一个按月汇总的命令",
+          "message": "提交信息用中文写",
+          "label": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.994
+          },
+          "nouls": {
+            "request": 0.018,
+            "requirement": 0.996,
+            "acceptance": 0.004,
+            "correction": 0.068
+          }
+        },
+        {
+          "goal": "帮我给记账命令行工具加一个按月汇总的命令",
+          "message": "现在帮我查一下明天北京的天气",
+          "label": "new-task",
+          "outcome": "new-task",
+          "intent": {
+            "choice": "switch",
+            "probability": 1
+          },
+          "nouls": {
+            "request": 0.893,
+            "requirement": 0,
+            "acceptance": 0,
+            "correction": 0
+          }
+        },
+        {
+          "goal": "帮我给记账命令行工具加一个按月汇总的命令",
+          "message": "能不能把刚才的实现解释一下？",
+          "label": "none",
+          "outcome": "none",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.863
+          },
+          "nouls": {
+            "request": 0.005,
+            "requirement": 0.005,
+            "acceptance": 0.002,
+            "correction": 0.001
+          }
+        },
+        {
+          "goal": "帮我给记账命令行工具加一个按月汇总的命令",
+          "message": "这里应该用 Decimal 而不是 float，金额会有精度问题",
+          "label": "correction",
+          "also": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.991
+          },
+          "nouls": {
+            "request": 0.068,
+            "requirement": 0.992,
+            "acceptance": 0.002,
+            "correction": 0.994
+          }
+        },
+        {
+          "goal": "帮我给记账命令行工具加一个按月汇总的命令",
+          "message": "所有新函数都要有类型注解和 docstring",
+          "label": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.997
+          },
+          "nouls": {
+            "request": 0.133,
+            "requirement": 0.999,
+            "acceptance": 0.932,
+            "correction": 0.133
+          }
+        },
+        {
+          "goal": "帮我给记账命令行工具加一个按月汇总的命令",
+          "message": "等 CI 全绿了再告诉我完成",
+          "label": "acceptance",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.954
+          },
+          "nouls": {
+            "request": 0.002,
+            "requirement": 0.009,
+            "acceptance": 0.996,
+            "correction": 0.001
+          }
+        },
+        {
+          "goal": "帮我给记账命令行工具加一个按月汇总的命令",
+          "message": "这个方案太复杂了，简单点，一个函数就够",
+          "label": "correction",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.995
+          },
+          "nouls": {
+            "request": 0.593,
+            "requirement": 0.269,
+            "acceptance": 0.095,
+            "correction": 0.99
+          }
+        },
+        {
+          "goal": "帮我给记账命令行工具加一个按月汇总的命令",
+          "message": "我们另起一个任务：给项目加 GitHub Actions",
+          "label": "new-task",
+          "outcome": "new-task",
+          "intent": {
+            "choice": "switch",
+            "probability": 0.999
+          },
+          "nouls": {
+            "request": 0.993,
+            "requirement": 0.001,
+            "acceptance": 0.001,
+            "correction": 0.001
+          }
+        },
+        {
+          "goal": "帮我给记账命令行工具加一个按月汇总的命令",
+          "message": "嗯",
+          "label": "none",
+          "outcome": "none",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.88
+          },
+          "nouls": {
+            "request": 0.001,
+            "requirement": 0,
+            "acceptance": 0,
+            "correction": 0
+          }
+        },
+        {
+          "goal": "帮我给记账命令行工具加一个按月汇总的命令",
+          "message": "data/ledger.csv 只能读，不能修改",
+          "label": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.987
+          },
+          "nouls": {
+            "request": 0.012,
+            "requirement": 0.982,
+            "acceptance": 0.001,
+            "correction": 0.037
+          }
+        },
+        {
+          "goal": "帮我给记账命令行工具加一个按月汇总的命令",
+          "message": "性能要求：一万条记录汇总要在 1 秒内",
+          "label": "acceptance",
+          "also": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.998
+          },
+          "nouls": {
+            "request": 0.963,
+            "requirement": 0.995,
+            "acceptance": 0.991,
+            "correction": 0.003
+          }
+        },
+        {
+          "goal": "把登录页改成支持手机号验证码登录",
+          "message": "验证码 60 秒内只能发一次",
+          "label": "requirement",
+          "also": "acceptance",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.99
+          },
+          "nouls": {
+            "request": 0.029,
+            "requirement": 0.995,
+            "acceptance": 0.076,
+            "correction": 0.013
+          }
+        },
+        {
+          "goal": "把登录页改成支持手机号验证码登录",
+          "message": "按钮颜色用品牌橙色，别自己发明颜色",
+          "label": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.995
+          },
+          "nouls": {
+            "request": 0.985,
+            "requirement": 0.988,
+            "acceptance": 0.018,
+            "correction": 0.985
+          }
+        },
+        {
+          "goal": "把登录页改成支持手机号验证码登录",
+          "message": "在 iPhone SE 宽度下也不能出现横向滚动条才算完成",
+          "label": "acceptance",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.998
+          },
+          "nouls": {
+            "request": 0.991,
+            "requirement": 0.997,
+            "acceptance": 0.996,
+            "correction": 0.993
+          }
+        },
+        {
+          "goal": "把登录页改成支持手机号验证码登录",
+          "message": "我不是要删掉密码登录，两种都要保留",
+          "label": "correction",
+          "also": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.996
+          },
+          "nouls": {
+            "request": 0.915,
+            "requirement": 0.998,
+            "acceptance": 0.984,
+            "correction": 0.995
+          }
+        },
+        {
+          "goal": "把登录页改成支持手机号验证码登录",
+          "message": "你用的是哪个短信服务商？",
+          "label": "none",
+          "outcome": "none",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.954
+          },
+          "nouls": {
+            "request": 0.002,
+            "requirement": 0.002,
+            "acceptance": 0.001,
+            "correction": 0.002
+          }
+        },
+        {
+          "goal": "把登录页改成支持手机号验证码登录",
+          "message": "帮我把上周的周报整理一下",
+          "label": "new-task",
+          "outcome": "new-task",
+          "intent": {
+            "choice": "switch",
+            "probability": 1
+          },
+          "nouls": {
+            "request": 0.994,
+            "requirement": 0,
+            "acceptance": 0,
+            "correction": 0
+          }
+        }
+      ]
+    },
+    "held-out": {
+      "keep": {
+        "precision": 1,
+        "recall": 1
+      },
+      "reset": {
+        "precision": 1,
+        "recall": 1
+      },
+      "elapsedMs": {
+        "p50": 712,
+        "max": 1520
+      },
+      "cases": [
+        {
+          "goal": "帮我写一个爬取豆瓣电影 Top250 的 Python 脚本",
+          "message": "请求之间至少间隔 2 秒",
+          "label": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.994
+          },
+          "nouls": {
+            "request": 0.015,
+            "requirement": 0.994,
+            "acceptance": 0.002,
+            "correction": 0.977
+          }
+        },
+        {
+          "goal": "帮我写一个爬取豆瓣电影 Top250 的 Python 脚本",
+          "message": "结果存成 JSON，不要存 CSV",
+          "label": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.998
+          },
+          "nouls": {
+            "request": 0.991,
+            "requirement": 0.999,
+            "acceptance": 0.991,
+            "correction": 0.992
+          }
+        },
+        {
+          "goal": "帮我写一个爬取豆瓣电影 Top250 的 Python 脚本",
+          "message": "能跑完 250 条且没有重复才算完成",
+          "label": "acceptance",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.996
+          },
+          "nouls": {
+            "request": 0.994,
+            "requirement": 0.997,
+            "acceptance": 0.998,
+            "correction": 0.223
+          }
+        },
+        {
+          "goal": "帮我写一个爬取豆瓣电影 Top250 的 Python 脚本",
+          "message": "你怎么把 User-Agent 写死了，改成随机的",
+          "label": "correction",
+          "also": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.995
+          },
+          "nouls": {
+            "request": 0.984,
+            "requirement": 0.995,
+            "acceptance": 0.002,
+            "correction": 0.998
+          }
+        },
+        {
+          "goal": "帮我写一个爬取豆瓣电影 Top250 的 Python 脚本",
+          "message": "requests 和 httpx 哪个好？",
+          "label": "none",
+          "outcome": "none",
+          "intent": {
+            "choice": "side",
+            "probability": 0.966
+          },
+          "nouls": {
+            "request": 0.001,
+            "requirement": 0.002,
+            "acceptance": 0,
+            "correction": 0.001
+          }
+        },
+        {
+          "goal": "帮我写一个爬取豆瓣电影 Top250 的 Python 脚本",
+          "message": "帮我订一张明天去上海的高铁票",
+          "label": "new-task",
+          "outcome": "new-task",
+          "intent": {
+            "choice": "switch",
+            "probability": 1
+          },
+          "nouls": {
+            "request": 0.963,
+            "requirement": 0,
+            "acceptance": 0,
+            "correction": 0.001
+          }
+        },
+        {
+          "goal": "帮我写一个爬取豆瓣电影 Top250 的 Python 脚本",
+          "message": "好的",
+          "label": "none",
+          "outcome": "none",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.8
+          },
+          "nouls": {
+            "request": 0.001,
+            "requirement": 0,
+            "acceptance": 0,
+            "correction": 0
+          }
+        },
+        {
+          "goal": "把公司官网首页的轮播图换成视频背景",
+          "message": "视频不能超过 5MB",
+          "label": "requirement",
+          "also": "acceptance",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.998
+          },
+          "nouls": {
+            "request": 0.053,
+            "requirement": 0.996,
+            "acceptance": 0.593,
+            "correction": 0.438
+          }
+        },
+        {
+          "goal": "把公司官网首页的轮播图换成视频背景",
+          "message": "移动端不要自动播放",
+          "label": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.998
+          },
+          "nouls": {
+            "request": 0.867,
+            "requirement": 0.992,
+            "acceptance": 0.053,
+            "correction": 0.977
+          }
+        },
+        {
+          "goal": "把公司官网首页的轮播图换成视频背景",
+          "message": "Lighthouse 性能分不低于 90 才能上线",
+          "label": "acceptance",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.987
+          },
+          "nouls": {
+            "request": 0.008,
+            "requirement": 0.988,
+            "acceptance": 0.982,
+            "correction": 0.028
+          }
+        },
+        {
+          "goal": "把公司官网首页的轮播图换成视频背景",
+          "message": "不对，我要的是首页，你改的是关于我们页面",
+          "label": "correction",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.999
+          },
+          "nouls": {
+            "request": 0.963,
+            "requirement": 0.977,
+            "acceptance": 0.02,
+            "correction": 0.998
+          }
+        },
+        {
+          "goal": "把公司官网首页的轮播图换成视频背景",
+          "message": "给我讲讲 CSS 的 object-fit 是什么意思",
+          "label": "none",
+          "outcome": "none",
+          "intent": {
+            "choice": "side",
+            "probability": 0.998
+          },
+          "nouls": {
+            "request": 0,
+            "requirement": 0.001,
+            "acceptance": 0,
+            "correction": 0.001
+          }
+        },
+        {
+          "goal": "把公司官网首页的轮播图换成视频背景",
+          "message": "先不弄这个了，帮我起草一份年终总结",
+          "label": "new-task",
+          "outcome": "new-task",
+          "intent": {
+            "choice": "switch",
+            "probability": 1
+          },
+          "nouls": {
+            "request": 0.996,
+            "requirement": 0,
+            "acceptance": 0.001,
+            "correction": 0.002
+          }
+        },
+        {
+          "goal": "把公司官网首页的轮播图换成视频背景",
+          "message": "辛苦啦，今天就到这",
+          "label": "none",
+          "outcome": "none",
+          "intent": {
+            "choice": "side",
+            "probability": 0.997
+          },
+          "nouls": {
+            "request": 0,
+            "requirement": 0,
+            "acceptance": 0.001,
+            "correction": 0
+          }
+        },
+        {
+          "goal": "把公司官网首页的轮播图换成视频背景",
+          "message": "这个视频要静音播放",
+          "label": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.998
+          },
+          "nouls": {
+            "request": 0.994,
+            "requirement": 0.997,
+            "acceptance": 0.037,
+            "correction": 0.349
+          }
+        }
+      ]
+    },
+    "held-out-2": {
+      "keep": {
+        "precision": 1,
+        "recall": 1
+      },
+      "reset": {
+        "precision": 1,
+        "recall": 1
+      },
+      "elapsedMs": {
+        "p50": 705,
+        "max": 2454
+      },
+      "cases": [
+        {
+          "goal": "帮我把这篇英文技术文章翻译成中文",
+          "message": "术语保留英文原文，括号里给中文",
+          "label": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.994
+          },
+          "nouls": {
+            "request": 0.989,
+            "requirement": 0.998,
+            "acceptance": 0.953,
+            "correction": 0.223
+          }
+        },
+        {
+          "goal": "帮我把这篇英文技术文章翻译成中文",
+          "message": "代码块不要翻译",
+          "label": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.997
+          },
+          "nouls": {
+            "request": 0.971,
+            "requirement": 0.997,
+            "acceptance": 0.053,
+            "correction": 0.986
+          }
+        },
+        {
+          "goal": "帮我把这篇英文技术文章翻译成中文",
+          "message": "翻完通读一遍，确保没有漏段才算完",
+          "label": "acceptance",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.97
+          },
+          "nouls": {
+            "request": 0.992,
+            "requirement": 0.994,
+            "acceptance": 0.994,
+            "correction": 0.095
+          }
+        },
+        {
+          "goal": "帮我把这篇英文技术文章翻译成中文",
+          "message": "你把 latency 译成了“潜伏期”，这里应该是“延迟”",
+          "label": "correction",
+          "also": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.99
+          },
+          "nouls": {
+            "request": 0.974,
+            "requirement": 0.995,
+            "acceptance": 0.011,
+            "correction": 0.998
+          }
+        },
+        {
+          "goal": "帮我把这篇英文技术文章翻译成中文",
+          "message": "“幂等”这个词到底什么意思？",
+          "label": "none",
+          "outcome": "none",
+          "intent": {
+            "choice": "side",
+            "probability": 0.994
+          },
+          "nouls": {
+            "request": 0.002,
+            "requirement": 0.001,
+            "acceptance": 0.001,
+            "correction": 0.001
+          }
+        },
+        {
+          "goal": "帮我把这篇英文技术文章翻译成中文",
+          "message": "帮我把客厅的灯打开",
+          "label": "new-task",
+          "outcome": "new-task",
+          "intent": {
+            "choice": "switch",
+            "probability": 0.996
+          },
+          "nouls": {
+            "request": 0.983,
+            "requirement": 0,
+            "acceptance": 0,
+            "correction": 0.001
+          }
+        },
+        {
+          "goal": "帮我把这篇英文技术文章翻译成中文",
+          "message": "先这样吧，明天再说",
+          "label": "none",
+          "outcome": "none",
+          "intent": {
+            "choice": "switch",
+            "probability": 0.973
+          },
+          "nouls": {
+            "request": 0.001,
+            "requirement": 0,
+            "acceptance": 0,
+            "correction": 0.001
+          }
+        },
+        {
+          "goal": "给订单服务加一个按用户 ID 查询订单的接口",
+          "message": "接口路径用 /v2/orders，不要用 v1",
+          "label": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.997
+          },
+          "nouls": {
+            "request": 0.706,
+            "requirement": 0.998,
+            "acceptance": 0.02,
+            "correction": 0.987
+          }
+        },
+        {
+          "goal": "给订单服务加一个按用户 ID 查询订单的接口",
+          "message": "响应时间 P99 要小于 200ms",
+          "label": "acceptance",
+          "also": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.997
+          },
+          "nouls": {
+            "request": 0.053,
+            "requirement": 0.998,
+            "acceptance": 0.986,
+            "correction": 0.047
+          }
+        },
+        {
+          "goal": "给订单服务加一个按用户 ID 查询订单的接口",
+          "message": "单元测试覆盖率不能低于 80%",
+          "label": "acceptance",
+          "also": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.996
+          },
+          "nouls": {
+            "request": 0.047,
+            "requirement": 0.998,
+            "acceptance": 0.994,
+            "correction": 0.02
+          }
+        },
+        {
+          "goal": "给订单服务加一个按用户 ID 查询订单的接口",
+          "message": "你把字段名写成 userId 了，我们统一用 user_id",
+          "label": "correction",
+          "also": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.998
+          },
+          "nouls": {
+            "request": 0.94,
+            "requirement": 0.999,
+            "acceptance": 0.076,
+            "correction": 0.998
+          }
+        },
+        {
+          "goal": "给订单服务加一个按用户 ID 查询订单的接口",
+          "message": "这个接口要不要加缓存？你怎么看",
+          "label": "none",
+          "outcome": "none",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.99
+          },
+          "nouls": {
+            "request": 0.012,
+            "requirement": 0.009,
+            "acceptance": 0,
+            "correction": 0.001
+          }
+        },
+        {
+          "goal": "给订单服务加一个按用户 ID 查询订单的接口",
+          "message": "把这个接口的 SQL 换成参数化查询，防注入",
+          "label": "requirement",
+          "also": "correction",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.996
+          },
+          "nouls": {
+            "request": 0.997,
+            "requirement": 0.998,
+            "acceptance": 0.706,
+            "correction": 0.932
+          }
+        },
+        {
+          "goal": "给订单服务加一个按用户 ID 查询订单的接口",
+          "message": "好，继续吧",
+          "label": "none",
+          "outcome": "none",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.998
+          },
+          "nouls": {
+            "request": 0.003,
+            "requirement": 0,
+            "acceptance": 0.001,
+            "correction": 0
+          }
+        },
+        {
+          "goal": "帮我规划一下下周去杭州的三天行程",
+          "message": "预算控制在 3000 元以内",
+          "label": "requirement",
+          "also": "acceptance",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.999
+          },
+          "nouls": {
+            "request": 0.94,
+            "requirement": 0.999,
+            "acceptance": 0.988,
+            "correction": 0.015
+          }
+        },
+        {
+          "goal": "帮我规划一下下周去杭州的三天行程",
+          "message": "不要安排爬山，我膝盖不好",
+          "label": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.998
+          },
+          "nouls": {
+            "request": 0.245,
+            "requirement": 0.998,
+            "acceptance": 0.755,
+            "correction": 0.958
+          }
+        },
+        {
+          "goal": "帮我规划一下下周去杭州的三天行程",
+          "message": "你排的第二天太赶了，减少两个景点",
+          "label": "correction",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.997
+          },
+          "nouls": {
+            "request": 0.993,
+            "requirement": 0.992,
+            "acceptance": 0.679,
+            "correction": 0.998
+          }
+        },
+        {
+          "goal": "帮我规划一下下周去杭州的三天行程",
+          "message": "每天的行程都要留出午休时间",
+          "label": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.999
+          },
+          "nouls": {
+            "request": 0.978,
+            "requirement": 0.998,
+            "acceptance": 0.963,
+            "correction": 0.042
+          }
+        },
+        {
+          "goal": "帮我规划一下下周去杭州的三天行程",
+          "message": "杭州现在天气怎么样？",
+          "label": "none",
+          "outcome": "none",
+          "intent": {
+            "choice": "side",
+            "probability": 0.933
+          },
+          "nouls": {
+            "request": 0.002,
+            "requirement": 0.003,
+            "acceptance": 0.001,
+            "correction": 0.001
+          }
+        },
+        {
+          "goal": "帮我规划一下下周去杭州的三天行程",
+          "message": "帮我写一段 Python 冒泡排序",
+          "label": "new-task",
+          "outcome": "new-task",
+          "intent": {
+            "choice": "switch",
+            "probability": 0.999
+          },
+          "nouls": {
+            "request": 0.986,
+            "requirement": 0,
+            "acceptance": 0,
+            "correction": 0.001
+          }
+        }
+      ]
+    },
+    "held-out-3": {
+      "keep": {
+        "precision": 1,
+        "recall": 1
+      },
+      "reset": {
+        "precision": 1,
+        "recall": 0.6666666666666666
+      },
+      "elapsedMs": {
+        "p50": 709,
+        "max": 2155
+      },
+      "cases": [
+        {
+          "goal": "帮我做一个公司内部用的会议室预订小程序",
+          "message": "只允许公司邮箱登录",
+          "label": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.999
+          },
+          "nouls": {
+            "request": 0.992,
+            "requirement": 0.999,
+            "acceptance": 0.245,
+            "correction": 0.202
+          }
+        },
+        {
+          "goal": "帮我做一个公司内部用的会议室预订小程序",
+          "message": "同一时间段不能重复预订，这是硬性要求",
+          "label": "requirement",
+          "also": "acceptance",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.998
+          },
+          "nouls": {
+            "request": 0.947,
+            "requirement": 0.999,
+            "acceptance": 0.095,
+            "correction": 0.245
+          }
+        },
+        {
+          "goal": "帮我做一个公司内部用的会议室预订小程序",
+          "message": "能在 iOS 和安卓上都跑通才算交付",
+          "label": "acceptance",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.998
+          },
+          "nouls": {
+            "request": 0.993,
+            "requirement": 0.998,
+            "acceptance": 0.997,
+            "correction": 0.223
+          }
+        },
+        {
+          "goal": "帮我做一个公司内部用的会议室预订小程序",
+          "message": "你把预订时长上限写成 2 小时了，应该是 4 小时",
+          "label": "correction",
+          "also": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.999
+          },
+          "nouls": {
+            "request": 0.988,
+            "requirement": 0.995,
+            "acceptance": 0.438,
+            "correction": 0.998
+          }
+        },
+        {
+          "goal": "帮我做一个公司内部用的会议室预订小程序",
+          "message": "小程序和 H5 有什么区别？",
+          "label": "none",
+          "outcome": "none",
+          "intent": {
+            "choice": "side",
+            "probability": 0.996
+          },
+          "nouls": {
+            "request": 0.001,
+            "requirement": 0.001,
+            "acceptance": 0,
+            "correction": 0.002
+          }
+        },
+        {
+          "goal": "帮我做一个公司内部用的会议室预订小程序",
+          "message": "今天先到这里，拜拜",
+          "label": "none",
+          "outcome": "none",
+          "intent": {
+            "choice": "side",
+            "probability": 0.999
+          },
+          "nouls": {
+            "request": 0,
+            "requirement": 0,
+            "acceptance": 0,
+            "correction": 0
+          }
+        },
+        {
+          "goal": "帮我做一个公司内部用的会议室预订小程序",
+          "message": "帮我给张经理发个微信，说会议改到三点",
+          "label": "new-task",
+          "outcome": "none",
+          "intent": {
+            "choice": "switch",
+            "probability": 0.998
+          },
+          "nouls": {
+            "request": 0.017,
+            "requirement": 0.001,
+            "acceptance": 0.001,
+            "correction": 0.001
+          }
+        },
+        {
+          "goal": "帮我做一个公司内部用的会议室预订小程序",
+          "message": "嗯嗯好的",
+          "label": "none",
+          "outcome": "none",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.977
+          },
+          "nouls": {
+            "request": 0.001,
+            "requirement": 0,
+            "acceptance": 0,
+            "correction": 0
+          }
+        },
+        {
+          "goal": "帮我分析一下这份销售数据，找出下滑最严重的三个区域",
+          "message": "只看 2026 年第三季度的数据",
+          "label": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.998
+          },
+          "nouls": {
+            "request": 0.983,
+            "requirement": 0.997,
+            "acceptance": 0.01,
+            "correction": 0.679
+          }
+        },
+        {
+          "goal": "帮我分析一下这份销售数据，找出下滑最严重的三个区域",
+          "message": "结论要配图表",
+          "label": "requirement",
+          "also": "acceptance",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.998
+          },
+          "nouls": {
+            "request": 0.992,
+            "requirement": 0.996,
+            "acceptance": 0.985,
+            "correction": 0.974
+          }
+        },
+        {
+          "goal": "帮我分析一下这份销售数据，找出下滑最严重的三个区域",
+          "message": "你用的是销售额，我要的是销量",
+          "label": "correction",
+          "also": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.999
+          },
+          "nouls": {
+            "request": 0.798,
+            "requirement": 0.622,
+            "acceptance": 0.016,
+            "correction": 0.997
+          }
+        },
+        {
+          "goal": "帮我分析一下这份销售数据，找出下滑最严重的三个区域",
+          "message": "口径和财务报表保持一致",
+          "label": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.995
+          },
+          "nouls": {
+            "request": 0.01,
+            "requirement": 0.994,
+            "acceptance": 0.009,
+            "correction": 0.095
+          }
+        },
+        {
+          "goal": "帮我分析一下这份销售数据，找出下滑最严重的三个区域",
+          "message": "顺便说下，Excel 的数据透视表怎么用？",
+          "label": "none",
+          "outcome": "none",
+          "intent": {
+            "choice": "side",
+            "probability": 0.999
+          },
+          "nouls": {
+            "request": 0.009,
+            "requirement": 0.001,
+            "acceptance": 0.001,
+            "correction": 0.001
+          }
+        },
+        {
+          "goal": "帮我分析一下这份销售数据，找出下滑最严重的三个区域",
+          "message": "帮我把这个 PPT 的字体统一成微软雅黑",
+          "label": "new-task",
+          "outcome": "new-task",
+          "intent": {
+            "choice": "switch",
+            "probability": 0.996
+          },
+          "nouls": {
+            "request": 0.963,
+            "requirement": 0.001,
+            "acceptance": 0.001,
+            "correction": 0.001
+          }
+        },
+        {
+          "goal": "帮我分析一下这份销售数据，找出下滑最严重的三个区域",
+          "message": "晚安",
+          "label": "none",
+          "outcome": "none",
+          "intent": {
+            "choice": "side",
+            "probability": 0.999
+          },
+          "nouls": {
+            "request": 0,
+            "requirement": 0,
+            "acceptance": 0,
+            "correction": 0
+          }
+        },
+        {
+          "goal": "帮我写一份产品需求文档，主题是会员积分系统",
+          "message": "篇幅控制在 5 页以内",
+          "label": "requirement",
+          "also": "acceptance",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.997
+          },
+          "nouls": {
+            "request": 0.994,
+            "requirement": 0.998,
+            "acceptance": 0.977,
+            "correction": 0.037
+          }
+        },
+        {
+          "goal": "帮我写一份产品需求文档，主题是会员积分系统",
+          "message": "要包含竞品对比章节才算完整",
+          "label": "acceptance",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.999
+          },
+          "nouls": {
+            "request": 0.997,
+            "requirement": 0.998,
+            "acceptance": 0.997,
+            "correction": 0.987
+          }
+        },
+        {
+          "goal": "帮我写一份产品需求文档，主题是会员积分系统",
+          "message": "积分不能兑换现金，这点要写清楚",
+          "label": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.998
+          },
+          "nouls": {
+            "request": 0.995,
+            "requirement": 0.998,
+            "acceptance": 0.018,
+            "correction": 0.818
+          }
+        },
+        {
+          "goal": "帮我写一份产品需求文档，主题是会员积分系统",
+          "message": "先别写了，帮我查一下明天的汇率",
+          "label": "new-task",
+          "outcome": "new-task",
+          "intent": {
+            "choice": "switch",
+            "probability": 1
+          },
+          "nouls": {
+            "request": 0.996,
+            "requirement": 0.001,
+            "acceptance": 0.001,
+            "correction": 0.042
+          }
+        },
+        {
+          "goal": "帮我写一份产品需求文档，主题是会员积分系统",
+          "message": "写得挺好，继续",
+          "label": "none",
+          "outcome": "none",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.998
+          },
+          "nouls": {
+            "request": 0.947,
+            "requirement": 0.001,
+            "acceptance": 0.001,
+            "correction": 0.001
+          }
+        }
+      ]
+    }
+  },
+  "yes": 0.5,
+  "no": 0.3
+}

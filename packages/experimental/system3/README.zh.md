@@ -69,6 +69,8 @@ const decision = ctx.system3.route(candidates, 'local-9b')
 
 `outputFolding: { mode, shellTools, commandPattern, minLines, minChars, minNetChars, minNetShare }` 对顶层 `shellTools` 调用中 `command` 匹配不区分大小写的 `commandPattern` 的单段文本结果折叠重复行，例如测试运行为每个失败都打印同一段 diff 或堆栈。连续至少 `minLines` 行、`minChars` 个字符、与前面保留下来的行逐字节相同的一段，换成一行标记，标记按顺序并带次数写明它重复的是折叠后文本的哪几行，因此展开所有标记即可逐字节还原输出；标记还引用被重复那段的第一行（最多 60 个字符），方便阅读终端卡片的人在没有行号时找到它。比标记还短的一段保持原样。只有节省至少 `minNetChars` 个字符且至少 `minNetShare` 比例时才折叠。每次折叠写入 `system3/output-fold`，包含工具、折叠行数、节省字符数和是否已应用；`shadow` 只记录、不改变结果，`active` 替换模型可见文本。错误结果、委派中的子调用，以及 `value` 已被后续监听器替换的结果不折叠；工具的结构化 `value` 保留完整输出。该规则沿用 mu 的测试日志准入（MIT）。
 
+`taskFrame: { mode, yes, no, deadlineMs, sessionDataClasses, maxItems, maxMessageChars }` 为每个顶层 Agent 记住用户的目标和之后提出的要求。Session 的第一条纯文本消息建立任务卡。之后每条不超过 `maxMessageChars` 的消息在所在步骤取走后再判断，步骤不必等待：一次 Jev 请求引用当前任务和这条消息，问一道选择题（`continue`、`side`、`switch`、`unclear`），以及几道是非题：是否要求做具体工作，是否提出要求、完成标准或纠正。后三题任一回答为是（概率不低于 `yes`）时，消息原文追加进任务卡，只保留最近 `maxItems` 条；选 `switch`、要求做具体工作且不是纠正时，以这条消息开始新的任务卡；其他情况不变。每次判断写入 `system3/judgement`，包含完整请求和响应；失败、超过 `deadlineMs` 和隐私拒绝都不改变任务卡。`active` 模式下每次变化写入 `system3/task-frame`，任务卡里有要求后通过 `system3:task-frame` 运行时上下文进入模型；`shadow` 模式下任务卡只在内存中，只记录判断；`off` 不发请求。委派出的子 Agent、带附件的消息和更长的消息都跳过。运行时投影以 `taskFrame` 暴露任务卡，客户端在 dock 中显示为一行计数，点开可见任务和每条要求。问法依据在已部署 Jev 上运行的标注集确定（[报告](../../../docs/feat-jev-decision-kernel/task-frame-report.json)）。
+
 `skillSelection` 在原生 `agent/pre-step` 扩展点为下游保留的用户输入选择至多一个当前作用域允许模型调用的 Skill。配置包含 `sessionDataClasses`、`minConfidence`、`maxInputBytes`、`maxContentBytes`、`maxCandidates`（1–254）和 `deadlineMs`。Jev 读取当前文本及完整且有界的目录描述，不读取 Skill 正文或会话历史。稳定候选 id 为独立弃权选项保留位置。隐私拒绝、发现不完整、目录超限、低置信度、超时、元数据过期或正文超限时，保留原生模型与工具流程。目录超过 `maxCandidates` 时不声称自动搜索过全部 Skill；显式 `/name` 调用继续使用自身调用策略。
 
 `system3/skill-decision` 记录准确请求、验证后的响应与提供方报告的用量、选择结果，以及拟注入的原生 `injectionMessageId`。加载的正文采用 `skill-invocation` 指令，只有 loop 提交准确的 `user/message` 后才成为模型可见内容，不授予工具权限。`system3Runtime` wire 投影分别呈现 `entry.suggested`、`entry.adopted` 和 `entry.used`，在 `history` 中保留最多 100 条输入已进入轮次的更早决策，并区分 `skill.selected` 与 `skill.injected`。实际使用须由准确输入所属 turn 的模型输出，或含内容增量、完整内容块的流式 attempt 确认。用量、块占位及仅含结束错误或取消的记录不证明已收到响应；真实内容之后发生错误仍保留响应事实。仅准入不代表已发送模型请求。回放会重建这些事实而不调用 Jev，客户端无法从投影取得提供方原始输入或完整概率。
@@ -85,7 +87,7 @@ const decision = ctx.system3.route(candidates, 'local-9b')
 
 #### What the model sees
 
-未启用入口路由时，由宿主决定哪些服务结果进入模型历史。入口路由通过 `state.input` 向 Jev 提供当前文本，通过 `state.baseline` 提供当前模型选择，通过 `questions.route.criteria` 提供有界候选描述。Receipt 不进入生成模型历史。采纳后的模型变化遵循原生 Session API 的模型选择行为。配置 `handoffPack` 时，委派指令末尾可能附上用户更早提出的要求；`advise` 模式下，过程监督每触发一条规则就加入一条来源为 `system3-supervision` 的用户消息；`active` 模式下，输出折叠把 shell 结果中的重复行换成标记，例如：
+未启用入口路由时，由宿主决定哪些服务结果进入模型历史。入口路由通过 `state.input` 向 Jev 提供当前文本，通过 `state.baseline` 提供当前模型选择，通过 `questions.route.criteria` 提供有界候选描述。Receipt 不进入生成模型历史。采纳后的模型变化遵循原生 Session API 的模型选择行为。配置 `handoffPack` 时，委派指令末尾可能附上用户更早提出的要求；`advise` 模式下，过程监督每触发一条规则就加入一条来源为 `system3-supervision` 的用户消息；`active` 模式下，输出折叠把 shell 结果中的重复行换成标记，任务卡加入运行时上下文快照，例如：
 
 ##### 缺少验证的建议
 
@@ -106,13 +108,21 @@ const decision = ctx.system3.route(candidates, 'local-9b')
 [System3 已折叠 12 行：与上文第 6-17 行逐字相同，开头是 "- Expected"]
 ```
 
+##### 任务卡
+
+```markdown
+[System3 任务卡] 用户在当前任务中提出了以下要求（均为原话）。在整个任务中遵守它们，宣布完成前逐条核对：
+任务：<the message that started the task, verbatim>
+- <later requirement, verbatim>
+```
+
 #### Token effect
 
-在隐私和大小检查允许时，入口路由为每个符合条件的准入输入增加一次 Jev 调用；保留 provider 实际报告的 usage。evidence 方法限制调用方投影，usage 记录区分 provider 计数与估算。每条监督建议增加 50 到 100 个输入 token，交接包增加被转交消息本身、约 60 个 token 和一次 Jev 请求；`advise` 模式下 `missing-evidence` 每个轮次最多增加一个模型步骤。输出折叠不调用模型，并从工具结果中去掉被折叠的字符。
+在隐私和大小检查允许时，入口路由为每个符合条件的准入输入增加一次 Jev 调用；保留 provider 实际报告的 usage。evidence 方法限制调用方投影，usage 记录区分 provider 计数与估算。每条监督建议增加 50 到 100 个输入 token，交接包增加被转交消息本身、约 60 个 token 和一次 Jev 请求；`advise` 模式下 `missing-evidence` 每个轮次最多增加一个模型步骤。输出折叠不调用模型，并从工具结果中去掉被折叠的字符。任务卡为之后的每条消息增加一次 Jev 请求，与步骤并行；每次变化追加一条包含目标和已记要求的运行时上下文快照。
 
 #### KV Cache effect
 
-观测与 shadow receipt 不改变生成请求前缀。监督建议追加在最新工具结果之后，缓存前缀不变。工具结果在进入历史前就已折叠，之后的请求原样复用。采纳生成模型切换可能失去 provider 缓存复用；工具 schema 不变。
+观测与 shadow receipt 不改变生成请求前缀。监督建议追加在最新工具结果之后，缓存前缀不变。工具结果在进入历史前就已折叠，之后的请求原样复用。任务卡变化时在最新消息之后追加新的运行时上下文快照，缓存前缀不变。采纳生成模型切换可能失去 provider 缓存复用；工具 schema 不变。
 
 ## 已知限制与后续工作
 

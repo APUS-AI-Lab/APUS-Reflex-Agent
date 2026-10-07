@@ -77,6 +77,14 @@ export interface System3RuntimeView {
   readonly subagentRun: System3SubagentRunView | null
   /** Process supervision findings of the latest turn, oldest first; cleared when a turn starts. */
   readonly notices: readonly System3ProcessNoticeView[]
+  /** The person's current goal and later requirements, verbatim; null before the first frame. */
+  readonly taskFrame: System3TaskFrameView | null
+}
+
+/** The task frame as the Client shows it; texts are the person's own messages. */
+export interface System3TaskFrameView {
+  readonly goal: { readonly messageId: string; readonly text: string }
+  readonly items: readonly { readonly messageId: string; readonly text: string }[]
 }
 
 /** One process supervision finding as the Client shows it. */

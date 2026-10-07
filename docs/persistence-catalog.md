@@ -70,9 +70,11 @@ The [format references](persistence-changes/historical-formats/README.md) cover 
 | `event:system3/entry-decision` | event | `9c7cecd646b7d0ce7f1fbf3b341f2d1c1c31135d0de9e1cb556a51a0d33177ff` | [`{ type: "system3/entry-decision" }`](#persistence-type-sha256-9c7cecd646b7d0ce7f1fbf3b341f2d1c1c31135d0de9e1cb556a51a0d33177ff) |
 | `event:system3/entry-start` | event | `0f109d50397f1d347b2f62df20bd1e21a200c839428c8bca5449e8ed37ab633a` | [`{ type: "system3/entry-start" }`](#persistence-type-sha256-0f109d50397f1d347b2f62df20bd1e21a200c839428c8bca5449e8ed37ab633a) |
 | `event:system3/handoff-pack` | event | `c4519065a7d2c21ca6154ac2cfe65e97587ad8e210623c01371fee5f959d35d3` | [`{ type: "system3/handoff-pack" }`](#persistence-type-sha256-c4519065a7d2c21ca6154ac2cfe65e97587ad8e210623c01371fee5f959d35d3) |
+| `event:system3/judgement` | event | `a916521e7d79713dffb82460a2790977991d333ee61739f4c3c768964e0afcb4` | [`{ type: "system3/judgement" }`](#persistence-type-sha256-a916521e7d79713dffb82460a2790977991d333ee61739f4c3c768964e0afcb4) |
 | `event:system3/output-fold` | event | `a08b64e63b930ddf31679dc4de8424786c7f497169323a50ab043b260545e26f` | [`{ type: "system3/output-fold" }`](#persistence-type-sha256-a08b64e63b930ddf31679dc4de8424786c7f497169323a50ab043b260545e26f) |
 | `event:system3/process-notice` | event | `310a36ad49580b64f5f22ee000de5d58ec37334a253610f83bb3cf9102023108` | [`{ type: "system3/process-notice" }`](#persistence-type-sha256-310a36ad49580b64f5f22ee000de5d58ec37334a253610f83bb3cf9102023108) |
 | `event:system3/skill-decision` | event | `2da260ec5f7fe67028206d4c6254ff01a52dfe9a7f9aa67dedf72324ac4748ce` | [`{ type: "system3/skill-decision" }`](#persistence-type-sha256-2da260ec5f7fe67028206d4c6254ff01a52dfe9a7f9aa67dedf72324ac4748ce) |
+| `event:system3/task-frame` | event | `ac45da2b86d3e15e2fb89536caa52be80e721155be5489e1242afaf860661c42` | [`{ type: "system3/task-frame" }`](#persistence-type-sha256-ac45da2b86d3e15e2fb89536caa52be80e721155be5489e1242afaf860661c42) |
 | `event:team/member` | event | `4fb59762612c3e3ac3a3bd4f84c9c148d3c3893bd422ba2b201cc039fabd49bc` | [`{ type: "team/member" }`](#persistence-type-sha256-4fb59762612c3e3ac3a3bd4f84c9c148d3c3893bd422ba2b201cc039fabd49bc) |
 | `event:team/message/delivered` | event | `48f9c19417a1abbedfa59f4667bba36b93ac2db407adf5e84cb3ba0de30942cb` | [`{ type: "team/message/delivered" }`](#persistence-type-sha256-48f9c19417a1abbedfa59f4667bba36b93ac2db407adf5e84cb3ba0de30942cb) |
 | `event:team/message/queued` | event | `21fb6a90d5068f6a0003b7ab316ed2f56342477146a65c00db0f13c4d8df667d` | [`{ type: "team/message/queued" }`](#persistence-type-sha256-21fb6a90d5068f6a0003b7ab316ed2f56342477146a65c00db0f13c4d8df667d) |
@@ -1087,6 +1089,17 @@ Source: [`packages/experimental/system3/src/entry-routing.ts:141`](../packages/e
 
 Source: [`packages/experimental/system3/src/handoff-pack.ts:43`](../packages/experimental/system3/src/handoff-pack.ts)
 
+<a id="system3judgement--log-only"></a>
+
+#### `system3/judgement` — log-only
+
+```ts persistence-catalog
+/** A System3 decision asked Jev, or fell back; not model-visible by itself. */
+'system3/judgement': System3Judgement
+```
+
+Source: [`packages/experimental/system3/src/decision-kernel.ts:50`](../packages/experimental/system3/src/decision-kernel.ts)
+
 <a id="system3output-fold--log-only"></a>
 
 #### `system3/output-fold` — log-only
@@ -1119,6 +1132,17 @@ Source: [`packages/experimental/system3/src/process-supervision.ts:59`](../packa
 ```
 
 Source: [`packages/experimental/system3/src/skill-selection.ts:47`](../packages/experimental/system3/src/skill-selection.ts)
+
+<a id="system3task-frame--log-only"></a>
+
+#### `system3/task-frame` — log-only
+
+```ts persistence-catalog
+/** The task frame changed; the main model sees it through the `system3:task-frame` runtime context. */
+'system3/task-frame': System3TaskFrame
+```
+
+Source: [`packages/experimental/system3/src/task-frame.ts:44`](../packages/experimental/system3/src/task-frame.ts)
 
 ### `team/*`
 
@@ -1843,6 +1867,14 @@ SHA-256: `18fce9540bb20897a66275499faee6b8296c97e9901fa1ff45a191772448ad1a`
 
 `"danger-full-access"`
 
+<a id="persistence-type-sha256-825bc799f44243c0ace74009b6cac85ffd1048acb1e7bc1536ae240c55d20e4d"></a>
+
+### `"deadline"`
+
+SHA-256: `825bc799f44243c0ace74009b6cac85ffd1048acb1e7bc1536ae240c55d20e4d`
+
+`"deadline"`
+
 <a id="persistence-type-sha256-2a90870f6ff4c9a8e8976f7814d50c64ce56807dd44830bb109b54ec13449ece"></a>
 
 ### `"delegate-failures"`
@@ -2273,6 +2305,14 @@ SHA-256: `3a7f838475da01b85cc6da0bda902bc68d77e7f973b137e7207a7da047c55345`
 
 `"invalid-response"`
 
+<a id="persistence-type-sha256-37db4bfe2aca84613c349510e90773e58c30b1007b46100d895568adc28ab9d3"></a>
+
+### `"judged"`
+
+SHA-256: `37db4bfe2aca84613c349510e90773e58c30b1007b46100d895568adc28ab9d3`
+
+`"judged"`
+
 <a id="persistence-type-sha256-ad3b56aa2fc1ad4250e7399295d34a8eae592e1907e85852e2291b2e498a30bc"></a>
 
 ### `"legacy"`
@@ -2512,6 +2552,14 @@ SHA-256: `e8de0f457fed5b9ff94dc4950b59ef75fd8ba8af665cc7899485924a62653367`
 SHA-256: `d2299283b7882bd034056e56808bcd6a4ca68168df39de8fc5056f65b83dc9df`
 
 `"noul"`
+
+<a id="persistence-type-sha256-48afb9ebc9ec5fe87592a70caa35fb7da4adb05cada0eb9dabeb3a7dce35e421"></a>
+
+### `"off"`
+
+SHA-256: `48afb9ebc9ec5fe87592a70caa35fb7da4adb05cada0eb9dabeb3a7dce35e421`
+
+`"off"`
 
 <a id="persistence-type-sha256-0652ec1eb6d381974214f7960eda1fb1229b11549ce3faf6f9588dbc04ae2fe7"></a>
 
@@ -3209,6 +3257,14 @@ SHA-256: `0e6652cff9f3a002e69c9daafd20708bf467c013da067ee0208acc1b8a71c734`
 
 `"system3/handoff-pack"`
 
+<a id="persistence-type-sha256-444ec7d381e06b98b38638c755e3d84414ae5c7120ba50c6e2c6efc3db2f1853"></a>
+
+### `"system3/judgement"`
+
+SHA-256: `444ec7d381e06b98b38638c755e3d84414ae5c7120ba50c6e2c6efc3db2f1853`
+
+`"system3/judgement"`
+
 <a id="persistence-type-sha256-1b600946d1ee3fc843b24fb0e79a2e5c6ca8b24a971619366a46f9730728661f"></a>
 
 ### `"system3/output-fold"`
@@ -3232,6 +3288,14 @@ SHA-256: `1d9e98e26d153780d5649084d50995cc50c6a04c64f12f7aaee477b14fddcb1b`
 SHA-256: `3f56e8f2b23180437ae618b2bc1150b9e7822a89eabd205142d675c89d6d68ca`
 
 `"system3/skill-decision"`
+
+<a id="persistence-type-sha256-6157e90b34bbf984e2665aa9b8838f7b7023c818b47e06002352b186c5130a96"></a>
+
+### `"system3/task-frame"`
+
+SHA-256: `6157e90b34bbf984e2665aa9b8838f7b7023c818b47e06002352b186c5130a96`
+
+`"system3/task-frame"`
 
 <a id="persistence-type-sha256-f05fb85e715af4ab4de0b6ba111166dd0435bd8bb74a0fa0f32b9d174113fc7c"></a>
 
@@ -3536,6 +3600,14 @@ SHA-256: `491d9bc333e615c38449e442581a90bcc5d1d1ff8c3fe506ab417f18f274f8e7`
 SHA-256: `04a315321afc00166b8e0edde8090154e83f2315c7e890f9e8a921f4f8429c48`
 
 `"unsupported-input"`
+
+<a id="persistence-type-sha256-faa407a7c28264a997d13318692119dbbb6f257ba3a371063b0193b1a4b3feb8"></a>
+
+### `"unsure"`
+
+SHA-256: `faa407a7c28264a997d13318692119dbbb6f257ba3a371063b0193b1a4b3feb8`
+
+`"unsure"`
 
 <a id="persistence-type-sha256-0bdaf9cb63594be4ef034b68901fffe792fe09d6d5f6bac42d7f56f6e7834fb9"></a>
 
@@ -5659,6 +5731,24 @@ SHA-256: `7a07d713ef0579a8fcde543599e60247a372bd88e1d134ac198f4a39275a195b`
 
 Array of [`System3DataClass`](#persistence-type-sha256-07e0f8b8be750a4d003f7df86b627695c6783390252c0bac1fdfb180de4d50d4).
 
+<a id="persistence-type-sha256-8e864843108a0d21cd2301ab5d0f30774ce699b393eab6ce4574bf9bd2675acb"></a>
+
+<a id="persistence-type-packagesexperimentalsystem3srcdecision-kerneltssystem3decisionmode"></a>
+
+<a id="persistence-type-system3decisionmode"></a>
+
+### `System3DecisionMode`
+
+SHA-256: `8e864843108a0d21cd2301ab5d0f30774ce699b393eab6ce4574bf9bd2675acb`
+
+Sources: [`packages/experimental/system3/src/decision-kernel.ts:11`](../packages/experimental/system3/src/decision-kernel.ts)
+
+One of:
+
+- `"active"`
+- `"off"`
+- `"shadow"`
+
 <a id="persistence-type-sha256-7d58975098638ae4586e006b75edbcac6346a06952658a54b6589078cb3be68d"></a>
 
 <a id="persistence-type-packagesexperimentalsystem3srcdecisionstssystem3decisionoutcome"></a>
@@ -5903,6 +5993,58 @@ Sources: [`packages/experimental/system3/src/handoff-pack.ts:27`](../packages/ex
 | `response` | optional | [`JevResponse`](#persistence-type-sha256-693f3aa30e2f5006d86aef1dbf1459d83bf5a0820f8c82a11c64d99a24556eb8) |
 | `version` | required | `1` |
 
+<a id="persistence-type-sha256-0706ba841bb293c71cafc55db58407c79655c69a069f0c8697e6f293bcffcc87"></a>
+
+<a id="persistence-type-packagesexperimentalsystem3srcdecision-kerneltssystem3judgement"></a>
+
+<a id="persistence-type-system3judgement"></a>
+
+### `System3Judgement`
+
+SHA-256: `0706ba841bb293c71cafc55db58407c79655c69a069f0c8697e6f293bcffcc87`
+
+Sources: [`packages/experimental/system3/src/decision-kernel.ts:29`](../packages/experimental/system3/src/decision-kernel.ts)
+
+| Property | Presence | Type |
+|---|---|---|
+| `applied` | required | `boolean` |
+| `decision` | required | `string` |
+| `decisionVersion` | required | `number` |
+| `elapsedMs` | required | `number` |
+| `mode` | required | [`System3DecisionMode`](#persistence-type-sha256-8e864843108a0d21cd2301ab5d0f30774ce699b393eab6ce4574bf9bd2675acb) |
+| `outcome` | required | `string` |
+| `reason` | required | [`System3JudgementReason`](#persistence-type-sha256-dc8f53947b4c903618525b4d5bd2243bfa89a5bd8fae167e1a052a09344a6ac8) |
+| `request` | required | [`union (2 variants)`](#persistence-type-sha256-7ee064a4547ab8ee2673099ef72df06ab2a1f8795c7ad295ac42125289713156) |
+| `response` | optional | [`JevResponse`](#persistence-type-sha256-693f3aa30e2f5006d86aef1dbf1459d83bf5a0820f8c82a11c64d99a24556eb8) |
+| `version` | required | `1` |
+
+<a id="persistence-type-sha256-dc8f53947b4c903618525b4d5bd2243bfa89a5bd8fae167e1a052a09344a6ac8"></a>
+
+<a id="persistence-type-packagesexperimentalsystem3srcdecision-kerneltssystem3judgementreason"></a>
+
+<a id="persistence-type-system3judgementreason"></a>
+
+### `System3JudgementReason`
+
+SHA-256: `dc8f53947b4c903618525b4d5bd2243bfa89a5bd8fae167e1a052a09344a6ac8`
+
+Sources: [`packages/experimental/system3/src/decision-kernel.ts:26`](../packages/experimental/system3/src/decision-kernel.ts)
+
+One of:
+
+- `"deadline"`
+- `"http"`
+- `"transport"`
+- `"unsure"`
+- `"invalid-response"`
+- `"judged"`
+- `"missing-credential"`
+- `"off"`
+- `"privacy-denied"`
+- `"provider-unavailable"`
+- `"rate-limited"`
+- `"timeout"`
+
 <a id="persistence-type-sha256-6ebb9b2d43fb0085b4264add7d76a8f4915c01a8aa9fc39b3f78c078928ed10e"></a>
 
 <a id="persistence-type-packagesexperimentalsystem3srcoutput-foldingtssystem3outputfold"></a>
@@ -6081,6 +6223,49 @@ Sources: [`packages/experimental/system3-supervisor/src/index.ts:39`](../package
 | `missingChecks` | required | [`string[]`](#persistence-type-sha256-93c33d9687613293f8c95d46c4d922fe9ceae83b84c384beff5c3315abe005f2) |
 | `missingEvidenceRefs` | required | [`string[]`](#persistence-type-sha256-93c33d9687613293f8c95d46c4d922fe9ceae83b84c384beff5c3315abe005f2) |
 | `reason` | required | [`union (7 variants)`](#persistence-type-sha256-34e707d2606754b4c1fb67848d10beba9465e0a3384514116671da689240e397) |
+
+<a id="persistence-type-sha256-30cd1dcd18afae8cf42eab91c8959f44642a06454a7a6f9929c95639a3e73ce8"></a>
+
+<a id="persistence-type-packagesexperimentalsystem3srctask-frametssystem3taskframe"></a>
+
+<a id="persistence-type-system3taskframe"></a>
+
+### `System3TaskFrame`
+
+SHA-256: `30cd1dcd18afae8cf42eab91c8959f44642a06454a7a6f9929c95639a3e73ce8`
+
+Sources: [`packages/experimental/system3/src/task-frame.ts:33`](../packages/experimental/system3/src/task-frame.ts)
+
+| Property | Presence | Type |
+|---|---|---|
+| `goal` | required | [`System3TaskMessage`](#persistence-type-sha256-9ab87a30a2f233add14513a6aeb24f180faf4426a9bcc095083c81b702785b7e) |
+| `items` | required | [`System3TaskMessage[]`](#persistence-type-sha256-335b0c3adfce311418ea0dc7bca8b959b11cd6297bb78efa7d38484ac637d9b6) |
+| `version` | required | `1` |
+
+<a id="persistence-type-sha256-9ab87a30a2f233add14513a6aeb24f180faf4426a9bcc095083c81b702785b7e"></a>
+
+<a id="persistence-type-packagesexperimentalsystem3srctask-frametssystem3taskmessage"></a>
+
+<a id="persistence-type-system3taskmessage"></a>
+
+### `System3TaskMessage`
+
+SHA-256: `9ab87a30a2f233add14513a6aeb24f180faf4426a9bcc095083c81b702785b7e`
+
+Sources: [`packages/experimental/system3/src/task-frame.ts:27`](../packages/experimental/system3/src/task-frame.ts)
+
+| Property | Presence | Type |
+|---|---|---|
+| `messageId` | required | `string` |
+| `text` | required | `string` |
+
+<a id="persistence-type-sha256-335b0c3adfce311418ea0dc7bca8b959b11cd6297bb78efa7d38484ac637d9b6"></a>
+
+### `System3TaskMessage[]`
+
+SHA-256: `335b0c3adfce311418ea0dc7bca8b959b11cd6297bb78efa7d38484ac637d9b6`
+
+Array of [`System3TaskMessage`](#persistence-type-sha256-9ab87a30a2f233add14513a6aeb24f180faf4426a9bcc095083c81b702785b7e).
 
 <a id="persistence-type-sha256-09f3f8dc417f278257202714132f98ba7b52957d7b558c4a04456603890eb363"></a>
 
@@ -10224,6 +10409,22 @@ SHA-256: `c4519065a7d2c21ca6154ac2cfe65e97587ad8e210623c01371fee5f959d35d3`
 | `time` | required | `number` |
 | `type` | required | `"system3/handoff-pack"` |
 
+<a id="persistence-type-sha256-a916521e7d79713dffb82460a2790977991d333ee61739f4c3c768964e0afcb4"></a>
+
+<a id="persistence-type-eventsystem3judgement"></a>
+
+### `{ type: "system3/judgement" }`
+
+SHA-256: `a916521e7d79713dffb82460a2790977991d333ee61739f4c3c768964e0afcb4`
+
+| Property | Presence | Type |
+|---|---|---|
+| `data` | required | [`System3Judgement`](#persistence-type-sha256-0706ba841bb293c71cafc55db58407c79655c69a069f0c8697e6f293bcffcc87) |
+| `ignorable` | optional | `true` |
+| `seq` | required | `number` |
+| `time` | required | `number` |
+| `type` | required | `"system3/judgement"` |
+
 <a id="persistence-type-sha256-a08b64e63b930ddf31679dc4de8424786c7f497169323a50ab043b260545e26f"></a>
 
 <a id="persistence-type-eventsystem3output-fold"></a>
@@ -10271,6 +10472,22 @@ SHA-256: `2da260ec5f7fe67028206d4c6254ff01a52dfe9a7f9aa67dedf72324ac4748ce`
 | `seq` | required | `number` |
 | `time` | required | `number` |
 | `type` | required | `"system3/skill-decision"` |
+
+<a id="persistence-type-sha256-ac45da2b86d3e15e2fb89536caa52be80e721155be5489e1242afaf860661c42"></a>
+
+<a id="persistence-type-eventsystem3task-frame"></a>
+
+### `{ type: "system3/task-frame" }`
+
+SHA-256: `ac45da2b86d3e15e2fb89536caa52be80e721155be5489e1242afaf860661c42`
+
+| Property | Presence | Type |
+|---|---|---|
+| `data` | required | [`System3TaskFrame`](#persistence-type-sha256-30cd1dcd18afae8cf42eab91c8959f44642a06454a7a6f9929c95639a3e73ce8) |
+| `ignorable` | optional | `true` |
+| `seq` | required | `number` |
+| `time` | required | `number` |
+| `type` | required | `"system3/task-frame"` |
 
 <a id="persistence-type-sha256-4fb59762612c3e3ac3a3bd4f84c9c148d3c3893bd422ba2b201cc039fabd49bc"></a>
 

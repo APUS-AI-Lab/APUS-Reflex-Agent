@@ -1,0 +1,28 @@
+# Bilingual-pair consistency record for 2026-10-07-system3-task-frame.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/persistence-changes/2026-10-07-system3-task-frame.md
+/:
+  en: 3d5a424ae7d7e46b
+  zh: c22a8e4a62d8cc1a
+/2026-10-07-system3-task-frame:
+  en: 49cc82270045a4b4
+  zh: 088bfa37de0fce6b
+/2026-10-07-system3-task-frame/summary:
+  en: 80b9bc33476c3dd5
+  zh: 69f967ca9ecad73e
+/2026-10-07-system3-task-frame/table-of-contents:
+  en: 6cf314a069ceb451
+  zh: 9adff678e9ecab3b
+/2026-10-07-system3-task-frame/declaration:
+  en: 6907136f28e48c90
+  zh: 02f8298485f3d8e7
+/2026-10-07-system3-task-frame/compatibility:
+  en: 137c8f3f2b579db8
+  zh: 7dc923a70c860466
+/2026-10-07-system3-task-frame/verification:
+  en: ee8ffd56e01bc8ec
+  zh: 0dde3f1f6fab0431
+/2026-10-07-system3-task-frame/dev-note:
+  en: b75c8458928b72b9
+  zh: 003ba4e17b4b5269

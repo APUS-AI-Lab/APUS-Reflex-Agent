@@ -20,7 +20,7 @@ Approved 2026-10-07: implement all 38 of mu's decision points in seven batches, 
 
 ## Batch 0: foundation
 
-- [ ] Decision kernel (`decision-kernel.ts`): questions, thresholds, fallback, off/shadow/active, the `system3/judgement` event; ships with its first consumer in batch 1
+- [x] Decision kernel (`decision-kernel.ts`): questions, thresholds, fallback, off/shadow/active, the `system3/judgement` event; ships with its first consumer in batch 1
 - [ ] Bad-case regression suite: replayable sessions for deleting a protected README, `; echo $?` masking a failure, research counted as no progress, a promise left undone, a mid-run correction that waited a whole turn, and an over-long tool list
 - [x] Lossless test-log folding (#7): fold byte-identical repeated runs into one line with a back-reference; never call a model; never drop failures or summaries
 
@@ -87,3 +87,4 @@ The article says 35, the number in mu's older README; the code (`packages/kyrn-j
 | 2026-10-07 | Reopen a stalled Jev connection | Merged in #23; deployed to prd |
 | 2026-10-07 | Steward plan | Reviewed and approved |
 | 2026-10-07 | Lossless test-log folding (#7) | #25; prd: a failing unittest run folded 131 lines (5,097 characters), the model diagnosed the shared failure correctly; markers quote the first repeated line after the browser check |
+| 2026-10-07 | Task frame (#2) and decision kernel | #26; labelled sets of 91 messages against the deployed Jev, final held-out set: keep precision and recall 1.0, new-task precision 1.0 and recall 2/3; prd browser check: requirement kept in 0.54 s, the model saw the card on the next turn and followed it, a switch to an unrelated request started a new frame. Clarification hints (#1) are not done yet |

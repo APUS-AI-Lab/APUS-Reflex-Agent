@@ -10,6 +10,7 @@ import type {} from './skill-selection.ts'
 import type {} from './delegation.ts'
 import type {} from './delegation-progress.ts'
 import type {} from './process-supervision.ts'
+import type {} from './task-frame.ts'
 import type {} from '@deepseek-ai/dsh-subagent'
 
 /** Host fold keeps request metadata private and exposes only the two public facts. */
@@ -54,10 +55,12 @@ const viewSchema = z.object({
     note: z.string().nullable(), alert: z.object({ kind: z.string(), elapsedMs: z.number() }).nullable(),
     steerable: z.boolean(), steers: z.array(z.object({ text: z.string(), atMs: z.number() })) }).nullable(),
   notices: z.array(z.object({ rule: z.string(), subject: z.string().nullable(), count: z.number(), advised: z.boolean() })),
+  taskFrame: z.object({ goal: z.object({ messageId: z.string(), text: z.string() }),
+    items: z.array(z.object({ messageId: z.string(), text: z.string() })) }).nullable(),
 })
 const stateSchema: ZodType<System3RuntimeState> = z.object({ entry: viewSchema.shape.entry, history: viewSchema.shape.history,
   skill: viewSchema.shape.skill,
-  subagentRun: viewSchema.shape.subagentRun, notices: viewSchema.shape.notices,
+  subagentRun: viewSchema.shape.subagentRun, notices: viewSchema.shape.notices, taskFrame: viewSchema.shape.taskFrame,
   header: selection.nullable(), currentTurn: z.number().nullable(), currentStep: z.number().nullable(),
   entryTurn: z.number().nullable(), startRequestId: requestId.nullable(),
   skillMessageId: z.string().transform(value => brandString<MessageId>(value)).nullable(),
@@ -79,11 +82,11 @@ function hasResponseContent(stream: readonly AssistantStreamRecord[]): boolean {
 
 /** Fold advice and adoption; confirm request use from output or a streamed attempt in the exact input turn. */
 export const system3RuntimeProjection = {
-  key: 'system3Runtime', stateVersion: 11, stateSchema,
-  init: () => ({ entry: null, history: [], skill: null, subagentRun: null, notices: [], header: null, currentTurn: null, currentStep: null,
-    entryTurn: null, startRequestId: null, skillMessageId: null, imageInSession: false, route: null }),
+  key: 'system3Runtime', stateVersion: 12, stateSchema,
+  init: () => ({ entry: null, history: [], skill: null, subagentRun: null, notices: [], taskFrame: null, header: null, currentTurn: null,
+    currentStep: null, entryTurn: null, startRequestId: null, skillMessageId: null, imageInSession: false, route: null }),
   wire: { viewSchema, view: state => ({ entry: state.entry, history: state.history, skill: state.skill, subagentRun: state.subagentRun,
-    notices: state.notices }) },
+    notices: state.notices, taskFrame: state.taskFrame }) },
   apply(state, event) {
     if (!state.imageInSession && (event.type === 'user/message' || event.type === 'tool/result')) {
       const content = event.type === 'user/message' ? event.data.content : event.data.message.content
@@ -94,6 +97,7 @@ export const system3RuntimeProjection = {
       const { rule, subject = null, count, advised } = event.data
       return { ...state, notices: [...state.notices, { rule, subject, count, advised }].slice(-NOTICES_KEPT) }
     }
+    if (event.type === 'system3/task-frame') return { ...state, taskFrame: { goal: event.data.goal, items: event.data.items } }
     if (event.type === 'step/start') return { ...state, currentTurn: event.data.turn, currentStep: event.data.step }
     if (event.type === 'step/end' || event.type === 'turn/end') return { ...state, currentTurn: null, currentStep: null }
     if (event.type === 'request/header') {

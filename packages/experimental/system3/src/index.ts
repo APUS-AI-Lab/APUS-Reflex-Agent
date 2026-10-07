@@ -16,13 +16,14 @@ import { installSystem3DelegationProgress, type System3DelegationProgressConfig 
 import { installSystem3ProcessSupervision, type System3ProcessSupervisionConfig } from './process-supervision.ts'
 import { installSystem3RouteHealth } from './route-health.ts'
 import { installSystem3OutputFolding, type System3OutputFoldingConfig } from './output-folding.ts'
+import { installSystem3TaskFrame, type System3TaskFrameConfig } from './task-frame.ts'
 import type { Session } from '@deepseek-ai/dsh-session'
 import { recordSystem3Decision, type System3DecisionRequest, type System3DecisionReceipt, type System3JevOptions } from './decisions.ts'
 
 export type { System3DecisionId, System3DecisionRequest, System3DecisionReceipt, System3DecisionOutcome } from './decisions.ts'
 export type { System3JevOptions } from './decisions.ts'
 export type { System3SkillSelectionConfig, System3SkillDecisionReceipt } from './skill-selection.ts'
-export type { System3EntryView, System3SkillView, System3RuntimeView } from './types.ts'
+export type { System3EntryView, System3SkillView, System3RuntimeView, System3TaskFrameView } from './types.ts'
 export { createSystem3EntryRouter } from './entry-routing.ts'
 export type { System3DelegationSource } from './delegation.ts'
 export type { System3DelegationAlert, System3DelegationMonitorConfig, System3DelegationProgress, System3DelegationProgressConfig } from './delegation-progress.ts'
@@ -30,6 +31,8 @@ export type { System3EntryCandidate, System3EntryDelegateCandidate, System3Entry
 export type { System3KeepWarmConfig } from './keep-warm.ts'
 export type { System3HandoffOutcome, System3HandoffPack, System3HandoffPackConfig } from './handoff-pack.ts'
 export type { System3ProcessNotice, System3ProcessRule, System3ProcessSupervisionConfig, System3SupervisionSource } from './process-supervision.ts'
+export type { System3TaskFrame, System3TaskFrameConfig, System3TaskMessage } from './task-frame.ts'
+export type { System3DecisionMode, System3DecisionSettings, System3Judgement, System3JudgementReason } from './decision-kernel.ts'
 export type { System3RouteHealth, System3RouteHealthConfig, System3RouteHealthReason, System3RouteHealthStatus } from './route-health.ts'
 import { selectSystem3Evidence, type System3EvidenceRequest, type System3EvidenceSelection } from '@deepseek-ai/dsh-experimental-system3-evidence'
 import { selectSystem3Route, type System3PrivacyMode, type System3RouteCandidate, type System3RouteSelection, type System3PrivacyPolicy } from '@deepseek-ai/dsh-experimental-system3-policy'
@@ -74,6 +77,8 @@ export interface Config {
   readonly processSupervision?: false | System3ProcessSupervisionConfig
   /** Lossless folding of repeated lines in matching shell results; `false` or omission disables it. */
   readonly outputFolding?: false | System3OutputFoldingConfig
+  /** The person's goal and later requirements, judged by Jev and shown to the main model verbatim; `false` or omission disables it. */
+  readonly taskFrame?: false | System3TaskFrameConfig
 }
 
 /** Small operational counters, intentionally free of user data. */
@@ -252,6 +257,15 @@ export default class System3 extends Service implements System3Service {
       minNetChars: z.number().step(1).min(1).required(),
       minNetShare: z.number().min(0).max(1).required(),
     })]).default(false),
+    taskFrame: z.union([z.const(false), z.object({
+      mode: z.union([z.const('off'), z.const('shadow'), z.const('active')]).required(),
+      yes: z.number().min(0).max(1).required(),
+      no: z.number().min(0).max(1).required(),
+      deadlineMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).required(),
+      sessionDataClasses: z.array(z.union([z.const('public'), z.const('workspace'), z.const('sensitive'), z.const('secret')])).required(),
+      maxItems: z.number().step(1).min(1).required(),
+      maxMessageChars: z.number().step(1).min(1).required(),
+    })]).default(false),
   })
 
   readonly privacyPolicy: System3PrivacyPolicy
@@ -300,6 +314,10 @@ export default class System3 extends Service implements System3Service {
     }
     if (config.outputFolding !== undefined && config.outputFolding !== false) {
       installSystem3OutputFolding(ctx, config.outputFolding)
+    }
+    if (config.taskFrame !== undefined && config.taskFrame !== false) {
+      const taskFrame = { config: config.taskFrame, policy: this.privacyPolicy, options: this.jevOptions }
+      ctx.inject(['systemPrompt'], (ctx) => { installSystem3TaskFrame(ctx, taskFrame) })
     }
     if (config.observeAgentLoop === true) this.observeAgentLoop()
     if (config.skillSelection !== undefined && config.skillSelection !== false) {
