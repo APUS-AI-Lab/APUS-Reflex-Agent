@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jev 判定内核设计</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+:root { --paper:#f7f7f5; --card:#fff; --ink:#1d1f24; --muted:#5b6270; --rule:#e2e3e0; --accent:#d9622b; --accent-tint:#fbeee6; --good:#2f7d5b; --good-tint:#e5f2ec; --warn:#9a6a12; --warn-tint:#f8f0dc; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --paper:#15171b; --card:#1d2026; --ink:#e8e9ec; --muted:#a2a8b3; --rule:#30343c; --accent:#f08a55; --accent-tint:#3a271d; --good:#6cc49c; --good-tint:#1d3329; --warn:#e2b55a; --warn-tint:#3a311c; } }
+:root[data-theme="dark"] { --paper:#15171b; --card:#1d2026; --ink:#e8e9ec; --muted:#a2a8b3; --rule:#30343c; --accent:#f08a55; --accent-tint:#3a271d; --good:#6cc49c; --good-tint:#1d3329; --warn:#e2b55a; --warn-tint:#3a311c; }
+* { box-sizing: border-box; }
+body { margin:0; background:var(--paper); color:var(--ink); font:15px/1.65 -apple-system,"PingFang SC","Noto Sans SC","Segoe UI",sans-serif; }
+main { max-width:1100px; margin:0 auto; padding:40px 24px 64px; }
+h1 { font-size:28px; margin:0 0 6px; font-weight:600; } h2 { font-size:20px; margin:40px 0 10px; font-weight:600; } h3 { font-size:16px; margin:20px 0 6px; font-weight:600; }
+.sub { color:var(--muted); margin:0 0 20px; }
+.eyebrow { font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); font-weight:600; }
+.card { background:var(--card); border:1px solid var(--rule); border-radius:10px; padding:16px 20px; margin:12px 0; }
+.key { border-left:3px solid var(--accent); }
+table { width:100%; border-collapse:collapse; font-size:14px; background:var(--card); border:1px solid var(--rule); border-radius:10px; overflow:hidden; }
+th, td { text-align:left; vertical-align:top; padding:8px 12px; border-bottom:1px solid var(--rule); }
+th { color:var(--muted); font-weight:600; }
+tr:last-child td { border-bottom:0; }
+code { font:12.5px/1.4 ui-monospace,"SF Mono",Menlo,monospace; background:var(--warn-tint); padding:1px 5px; border-radius:4px; }
+pre { background:var(--card); border:1px solid var(--rule); border-radius:8px; padding:12px 14px; overflow-x:auto; font:12.5px/1.5 ui-monospace,"SF Mono",Menlo,monospace; }
+.pill { display:inline-block; padding:1px 8px; border-radius:999px; font-size:12px; font-weight:600; }
+.p1 { background:var(--accent-tint); color:var(--accent); } .p2 { background:var(--good-tint); color:var(--good); } .p3 { background:var(--warn-tint); color:var(--warn); }
+.mermaid { background:var(--card); border:1px solid var(--rule); border-radius:10px; padding:12px; }
+.table-wrap { overflow-x:auto; }
+ol li, ul li { margin:5px 0; }
+@media (max-width:720px) { main { padding:24px 16px 48px; } h1 { font-size:23px; } }
+</style>
+</head>
+<body>
+<main>
+<div class="eyebrow">设计稿 · 待确认 · 2026-10-07</div>
+<h1>Jev 判定内核：约束检查与过程监督复核</h1>
+<p class="sub">落实 mu 对照分析里证据最硬的三项：统一判定格式、修改前检查用户约束、规则触发后让 Jev 复核。确认后再开发。</p>
+
+<div class="card key">
+<strong>一句话</strong>：把“问 Jev 一道题、按阈值决定动作、失败回退、写进会话日志”做成一套统一格式，在它上面实现两个新判定。修改文件或执行命令前，检查是否违反用户说过的要求，违反就请用户确认。过程监督的规则触发后先问 Jev，Jev 确认了才提醒，以去掉误报。新判定默认只记录（shadow），用线上数据证明有效后再开启。
+</div>
+
+<h2>为什么做这三项</h2>
+<table>
+<tr><th>问题</th><th>证据</th><th>本设计的解法</th></tr>
+<tr><td>主模型删掉了用户要求保留的文件</td><td>本项目验收中真实发生过（补充说明修复前）</td><td>约束检查：修改前对照用户原话，违反时请用户确认</td></tr>
+<tr><td>纯规则的过程监督误报和漏报</td><td>10-06 线上误报 2 次（查资料、带管道验证）；10-07 漏报 1 次（命令后附加 echo）</td><td>规则只负责发现疑点，由 Jev 复核语义再决定是否提醒</td></tr>
+<tr><td>每加一个 Jev 判定都要从头写</td><td>入口路由、Skill 选择、交接包三处各自实现请求、阈值、回退、记录</td><td>统一判定格式：一次定义题目、阈值、回退、模式</td></tr>
+</table>
+
+<h2>架构</h2>
+<div class="mermaid">
+flowchart LR
+  U[用户消息] -->|pre-step| C1[约束识别<br/>是否是长期要求]
+  C1 -->|是| L[(system3/constraint<br/>会话事件)]
+  T[工具调用<br/>write / edit / bash / 委派] -->|tools/pre-execute| C2[约束检查<br/>是否违反某条约束]
+  L --> C2
+  C2 -->|违反且 active| ASK[原生审批卡片<br/>引用用户原话]
+  C2 -->|不违反或 shadow| GO[放行]
+  R[过程监督规则触发] --> C3[监督复核<br/>真的卡住了吗]
+  C3 -->|确认| N[提醒主模型 + dock 提示]
+  C3 -->|否定| S[只记录 不提醒]
+  C1 & C2 & C3 --> K{{判定内核<br/>题目 · 阈值 · 回退 · 模式}}
+  K --> J[Jev]
+  K --> E[(system3/judgement<br/>会话事件)]
+</div>
+
+<h2>一、统一判定格式（判定内核）</h2>
+<pre>interface System3DecisionSpec&lt;Input, Outcome&gt; {
+  id: string                       // 例如 'constraint.check'
+  version: number
+  mode: 'off' | 'shadow' | 'active' // 部署配置决定，默认 shadow
+  deadlineMs: number               // 超时即回退，不阻塞主流程
+  questions(input): JevQuestions   // 一次请求可含多题
+  decide(answers, input): Outcome  // 按阈值得出结论，含“拿不准”
+  fallback: Outcome                // 超时、出错、隐私拒绝时的结论
+}</pre>
+<ul>
+<li><b>阈值规则统一</b>：是非题 ≥ yes 阈值算“是”，≤ no 阈值算“否”，中间算“拿不准”并走回退（借鉴 mu 的 0.8 / 0.2；按每个判定的实测数据单独配置）。</li>
+<li><b>记录</b>：每次判定写一条 <code>system3/judgement</code> 会话事件：判定 id、版本、模式、完整请求与响应、结论、是否实际生效、耗时。shadow 模式也完整记录，用来事后统计误报率。</li>
+<li><b>隐私准入</b>：复用现有的数据类别与执行位置准入，不通过就回退。</li>
+<li><b>范围</b>：本期只让两个新判定使用内核。入口路由、Skill 选择、交接包保持现有事件格式不动（已有会话数据），下一期再迁移。</li>
+</ul>
+
+<h2>二、修改前检查用户约束</h2>
+<h3>约束从哪来</h3>
+<ul>
+<li>每条用户消息进入时，用一道是非题判断它是否包含“仍然有效的工作要求”（复用交接包已实测的问法，召回率与精确率均为 1.0）。</li>
+<li>判为“是”的消息原文写入 <code>system3/constraint</code> 会话事件，保留最近 6 条。这一步并行执行，不增加用户等待。</li>
+<li>交接包改为直接读取这份约束清单，不再在委派时临时识别，省掉一次 Jev 请求。</li>
+</ul>
+<h3>什么时候检查</h3>
+<ul>
+<li>只在有约束时检查，且只检查会修改东西的调用：<code>write</code>、<code>edit</code>、委派工具，以及 <code>bash</code>（先用规则排除明显只读的命令，如 <code>ls</code>、<code>cat</code>、<code>grep</code>、测试命令）。</li>
+<li>一次请求、每条约束一题：“这个调用会违反用户这句话吗？”，附调用的工具名与参数摘要（文件路径、命令文本，不含大段内容）。</li>
+</ul>
+<h3>违反时怎么办</h3>
+<table>
+<tr><th>模式</th><th>行为</th></tr>
+<tr><td>shadow（默认）</td><td>只记录判定，不影响执行；dock 显示“这一步可能违反你说过的要求”的提示</td></tr>
+<tr><td>active</td><td>返回 <code>ask</code>：弹出原生审批卡片，说明“你说过：〈原话〉”，由用户决定是否继续；用户拒绝时，模型收到拒绝理由并换做法</td></tr>
+</table>
+<p>不做硬拦截（deny）：用户可能改主意，判定也可能错，最终决定权留给人。</p>
+
+<h2>三、过程监督复核</h2>
+<ul>
+<li>现有规则（同一错误重复、失败次数、连续无进展、缺少验证）照常发现疑点。</li>
+<li>触发时把最近若干步的工具调用与结果摘要交给 Jev，问一道题。例如“连续无进展”问：“这几步是在有效推进（如查资料、读代码定位问题），还是在原地打转？”</li>
+<li>Jev 确认才提醒主模型；否定则只记录，不打扰。拿不准时按规则原样提醒（保持现状，不降低安全性）。</li>
+<li>只在规则触发时调用，平时零开销。</li>
+</ul>
+
+<h2>文件改动</h2>
+<div class="table-wrap"><table>
+<tr><th>文件</th><th>改动</th></tr>
+<tr><td><code>packages/experimental/system3/src/decision-kernel.ts</code></td><td>新增：判定规格、执行、阈值、回退、记录</td></tr>
+<tr><td><code>packages/experimental/system3/src/constraints.ts</code></td><td>新增：约束识别（pre-step）与约束检查（tools/pre-execute）</td></tr>
+<tr><td><code>packages/experimental/system3/src/process-supervision.ts</code></td><td>规则触发后经内核复核，再决定是否提醒</td></tr>
+<tr><td><code>packages/experimental/system3/src/handoff-pack.ts</code></td><td>改为读取约束清单</td></tr>
+<tr><td><code>packages/experimental/system3/src/runtime-projection.ts</code>、<code>client-ui-system3</code></td><td>dock 显示约束提示与复核结果</td></tr>
+<tr><td><code>packages/experimental/system3/src/index.ts</code>、<code>deploy/system3/runtime.patch.yml</code></td><td>配置项 <code>decisions: { constraintCheck, supervisionReview }</code>，含模式、阈值、超时</td></tr>
+<tr><td>持久化变更记录、README（中英）、测试</td><td>新增 <code>system3/judgement</code>、<code>system3/constraint</code> 两个事件</td></tr>
+</table></div>
+
+<h2>验证计划</h2>
+<ol>
+<li><b>单元与组合测试</b>：新代码覆盖率 100%；每个判定都测超时、出错、隐私拒绝时的回退。</li>
+<li><b>真实 Jev 标注集</b>（先做，用来定阈值）：
+  <ul>
+  <li>约束检查：20 个“工具调用 × 约束”样本，一半违反，一半不违反，含容易误判的近似情况（如约束“不要改 README”，调用为读取 README）。</li>
+  <li>监督复核：20 段真实工具轨迹，含本项目线上出现过的 2 次误报与 1 次漏报原样，以及真正卡住的样本。</li>
+  </ul>
+  目标：约束检查精确率 ≥ 0.9（宁可漏不可错拦），监督复核去掉已知误报且不漏掉真卡住。达不到就调整问法，不调宽阈值凑数。</li>
+<li><b>修改前后对照</b>：用 10-06、10-07 线上出现过的场景原样复现，对比修改前后是否提醒。</li>
+<li><b>prd shadow 运行</b>：发布后先 shadow，统计判定次数、误报率、耗时，数据达标再按判定逐个开启 active。</li>
+<li><b>门禁</b>：build、typecheck、lint、全量单测（只允许已知的 3 个上游失败）、doc-sync。</li>
+</ol>
+
+<h2>代价与风险</h2>
+<table>
+<tr><th>项目</th><th>估计</th><th>缓解</th></tr>
+<tr><td>延迟</td><td>约束识别并行执行，不增加等待；约束检查每次修改类调用约 0.3–0.6 秒，只在有约束时发生；监督复核只在规则触发时发生</td><td>每个判定设超时，超时放行</td></tr>
+<tr><td>Jev 用量</td><td>每条用户消息 1 次；每次修改类调用在有约束时 1 次</td><td>只读命令先用规则排除；一次请求合并多条约束</td></tr>
+<tr><td>误拦</td><td>判定错误会让用户多点一次确认</td><td>默认 shadow；active 用 ask 而非 deny；精确率不达标不开启</td></tr>
+</table>
+
+<h2>需要你决定</h2>
+<ol>
+<li><b>范围</b>：三项一起做（约 3–4 天，含标注集与 shadow 观察），还是先做约束检查（约 2 天）？</li>
+<li><b>开启方式</b>：上线默认 shadow，观察一段时间看数据再开 active（推荐）；还是约束检查直接 active（用 ask 让你确认）？</li>
+<li><b>入口路由等已有判定</b>：本期不迁移到内核（推荐，避免改动已有会话数据格式），还是一起迁移？</li>
+</ol>
+</main>
+<script>
+const dark = matchMedia('(prefers-color-scheme: dark)').matches && document.documentElement.dataset.theme !== 'light'
+mermaid.initialize({ startOnLoad: true, theme: dark ? 'dark' : 'neutral', securityLevel: 'strict' })
+</script>
+</body>
+</html>
