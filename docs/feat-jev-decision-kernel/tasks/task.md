@@ -1,115 +1,117 @@
-# feat-jev-decision-kernel — 吸收 mu 的可借鉴能力
+# feat-jev-decision-kernel — absorbing mu's reusable capabilities
 
-批准：2026-10-07，用户要求“mu 借鉴能力都要吸收”。设计稿：[../design.html](../design.html)；对照分析：[../../system3-delegation-progress/mu-comparison.html](../../system3-delegation-progress/mu-comparison.html)。
+English | [中文](task.zh.md)
 
-## 原则
+Approved 2026-10-07: the user asked to absorb every capability worth borrowing from mu. Design: [../design.html](../design.html); comparison: [mu-comparison.html](../../system3-delegation-progress/mu-comparison.html).
 
-- 先有证据再开启：每个新判定上线默认 `shadow`（只记录），用真实 Jev 标注集定阈值，prd 数据达标后才 `active`。
-- 达不到目标就改问法，不放宽阈值凑数。
-- 判定失败（超时、出错、隐私拒绝）一律回退，不阻塞主流程。
-- 进入模型的内容都能从会话日志重建：判定写 `system3/judgement`，约束写 `system3/constraint`。
-- 已有判定（入口路由、Skill 选择、交接包）的事件格式本期前几个阶段不动，最后阶段再迁移。
-- 每项交付：单元/组合测试（新代码覆盖率 100%）、修改前后对照、全量单测（只允许已知 3 个上游失败）、prd 实测。
+## Principles
 
-## 阶段一：地基与两个独立小项
+- Evidence before enabling: every new decision ships in `shadow` (record only), thresholds come from labelled sets run against the real Jev, and a decision becomes `active` only after its prd data meets the target.
+- When a target is missed, change the question, not the threshold.
+- A failed judgement (timeout, error, privacy denial) always falls back and never blocks the main flow.
+- Everything that reaches a model is reconstructable from the Session log: judgements go to `system3/judgement`, constraints to `system3/constraint`.
+- Existing decisions (entry routing, Skill selection, hand-off pack) keep their event formats until the last migration phase.
+- Every item delivers unit and composition tests (100% coverage of new code), a before/after comparison, the full unit suite (only the three known upstream failures allowed), and a prd run.
 
-- [ ] 1. 判定内核 `decision-kernel.ts`
-  - 规格：id、version、mode（off/shadow/active）、deadlineMs、questions、decide、fallback
-  - 统一阈值：是非题 yes/no 阈值与“拿不准”区间；选择题最低概率 + 逃生选项
-  - 隐私准入、超时、错误回退；`system3/judgement` 事件（请求、响应、结论、是否生效、耗时）
-  - 配置：`decisions.<id>: { mode, thresholds, deadlineMs }`
-- [ ] 2. Jev 连接防卡死（mu `judge-fetch`）
-  - 连续 N 次无响应即重建连接；记录重建次数
-  - 对照：模拟卡死连接，修改前判定持续回退，修改后自动恢复
-- [ ] 3. 测试日志无损折叠（mu `tool.admission.test-log` 规则档）
-  - 只折叠逐字重复的段落为一行加计数，不调用模型；失败项与摘要一律保留
-  - 用真实测试输出样本测折叠率，确认失败行零丢失
+## Phase 1: foundation and two independent items
 
-## 阶段二：约束（mu `task.frame` + `tool.constraint`）
+- [ ] 1. Decision kernel `decision-kernel.ts`
+  - Spec: id, version, mode (off/shadow/active), deadlineMs, questions, decide, fallback
+  - Shared thresholds: yes/no thresholds with an unsure band; minimum probability plus an escape choice for choice questions
+  - Privacy admission, deadline, and error fallback; the `system3/judgement` event (request, response, outcome, whether applied, duration)
+  - Configuration: `decisions.<id>: { mode, thresholds, deadlineMs }`
+- [ ] 2. Reopen a stalled Jev connection (mu `judge-fetch`)
+  - Rebuild the pool after N consecutive requests without a response, and log it
+  - Comparison: on a simulated stalled connection, decisions keep falling back before the change and recover after it
+- [ ] 3. Lossless test-log folding (mu `tool.admission.test-log`, rules arm)
+  - Fold byte-identical repeated runs into one line with a back-reference; never call a model; never drop failures or summaries
+  - Measure the fold rate on real test output and confirm no failure line is lost
 
-- [ ] 4. 约束识别：每条用户消息一道是非题（复用交接包已验证的问法），写 `system3/constraint`，保留最近 6 条；并行执行不增加等待
-- [ ] 5. 约束检查：`tools/pre-execute` 对 write/edit/委派/非只读 bash 检查是否违反约束；shadow 只记录并在 dock 提示，active 返回 `ask`（原生确认卡片引用用户原话）
-- [ ] 6. 交接包改读约束清单
-- [ ] 标注集：20 个“调用 × 约束”样本（含近似误导项），目标精确率 ≥ 0.9
+## Phase 2: constraints (mu `task.frame` + `tool.constraint`)
 
-## 阶段三：过程监督复核（mu `turn.completion` / `turn.drift`）
+- [ ] 4. Constraint recognition: one yes/no question per user message (the hand-off pack's validated wording), written to `system3/constraint`, keeping the latest six; runs in parallel without adding wait
+- [ ] 5. Constraint check: in `tools/pre-execute`, check write/edit/delegation and non-read-only bash calls against the constraints; shadow records and shows a dock notice, active returns `ask` (the native approval card quotes the user's words)
+- [ ] 6. The hand-off pack reads the constraint list
+- [ ] Labelled set: 20 call × constraint samples (including near misses); target precision ≥ 0.9
 
-- [ ] 7. 规则触发后经内核问 Jev 是否真的卡住或缺少验证；确认才提醒，否定只记录，拿不准按规则提醒
-- [ ] 标注集：20 段真实轨迹，原样包含 10-06 两次误报、10-07 一次漏报和真正卡住的样本
+## Phase 3: supervision review (mu `turn.completion` / `turn.drift`)
 
-## 阶段四：任务框架（mu `task.frame` 完整版）
+- [ ] 7. After a rule fires, ask Jev through the kernel whether the agent is really stuck or missing verification; confirmed findings advise, rejected ones only record, unsure ones advise as the rule does today
+- [ ] Labelled set: 20 real traces including the two 10-06 false positives, the 10-07 miss, and genuinely stuck runs
 
-- [ ] 8. 维护“目标 + 原话约束 + 验收项”；判断新消息是新任务、补充约束还是纠错
-- [ ] 9. 缺少验证提醒与交接包读取验收项
+## Phase 4: task frame (complete mu `task.frame`)
 
-## 阶段五：其余可借鉴判定点（按证据逐个评估，先 shadow）
+- [ ] 8. Maintain goal, verbatim constraints, and acceptance items; classify a new message as a new task, an added constraint, or a correction
+- [ ] 9. The missing-verification reminder and the hand-off pack read the acceptance items
 
-- [ ] 10. 运行中消息分类（mu `input.interjection`）：纠错改 steer、补充改 followUp
-- [ ] 11. 外部内容注入检测（mu `tool.injection`）：web_fetch / web_search 结果逐段判断是否含针对 AI 的指令
-- [ ] 12. 模型可调用的 Jev 批量判断工具（mu `judge_items`）
-- [ ] 13. “答应了却停下”的继续判断（mu `turn.continue`）
-- [ ] 14. 已有判定迁移到判定内核（入口路由、Skill 选择、交接包；需持久化格式评审）
-- [ ] 14a. 补强已有项：需澄清 / 先规划提示（#1）、隐藏无关技能（#4）、Jev 复核危险命令（#17）、Jev 审批模式（#18）、委派改动越界检查（#35）
+## Phase 5: remaining decision points (evaluated one by one, shadow first)
 
-## mu 全部 38 个判定点的处理方式
+- [ ] 10. Classify mid-run messages (mu `input.interjection`): corrections become steers, additions become follow-ups
+- [ ] 11. Injection detection in external content (mu `tool.injection`): judge web_fetch / web_search results segment by segment for instructions aimed at the AI
+- [ ] 12. A Jev batch-judgement tool the model can call (mu `judge_items`)
+- [ ] 13. Continue when the model promised work but stopped (mu `turn.continue`)
+- [ ] 14. Migrate existing decisions to the kernel (entry routing, Skill selection, hand-off pack; needs a persistence-format review)
+- [ ] 14a. Strengthen existing items: clarification / plan-first hints (#1), hiding irrelevant Skills (#4), Jev review of dangerous commands (#17), Jev approval mode (#18), delegated-change scope check (#35)
 
-文章写 35 个，是 mu 旧版 README 的数字；代码（`packages/kyrn-judge/manifest.json`）是 38 个，2026-10-05 新增 `tool.injection`、`turn.continue`、`judge.items`。下表逐项给出去向。“已有”表示 System3 / DSH 已有等价或更强的实现，只在差距处补强；证据存疑的项也吸收，但只以 shadow 上线，量化收益后再决定是否开启。
+## How each of mu's 38 decision points is handled
 
-| # | mu 判定点 | 去向 | 阶段 |
+The article says 35, the number in mu's older README; the code (`packages/kyrn-judge/manifest.json`) has 38 after `tool.injection`, `turn.continue`, and `judge.items` were added on 2026-10-05. "Exists" means System3 or DSH already has an equivalent or stronger implementation and only the gap is added; items with weak evidence are absorbed too, but ship in shadow and are enabled only after their benefit is measured.
+
+| # | mu decision point | Plan | Phase |
 |---|---|---|---|
-| 1 | `input.preflight` | 已有（入口路由，真切换模型）；补“需澄清 / 先规划”提示 | 五 |
-| 2 | `task.frame` | 吸收：约束识别 + 任务框架 | 二、四 |
-| 3 | `input.interjection` | 吸收：运行中消息自动分类 | 五 |
-| 4 | `skills.disclosure` | 已有（Skill 选择，方向相反）；补“隐藏无关技能” | 五 |
-| 5 | `capability.disclosure` | 吸收：按需开启工具包 / MCP | 六 |
-| 6 | `tool.admission` | 吸收（shadow）：mu 自身回测零裁剪，必须先证明净收益 | 六 |
-| 7 | `tool.admission.test-log` | 吸收：规则档无损折叠 | 一 |
-| 8 | `context.forget` | 吸收（shadow）：旧工具输出缩成墓碑 | 六 |
-| 9 | `context.compact` | 吸收（shadow）：按分数裁工具输出的压缩 | 六 |
-| 10 | `memory.recall` | 吸收：经验召回 | 七 |
-| 11 | `memory.capture` | 吸收：从纠错中记录经验 | 七 |
-| 12 | `memory.outcome` | 吸收：从先失败后成功中记录经验 | 七 |
-| 13 | `memory.worth` | 吸收：经验是否值得保存 | 七 |
-| 14 | `memory.merge` | 吸收：经验去重与矛盾处理 | 七 |
-| 15 | `memory.applied` | 吸收：经验是否被采用、退役 | 七 |
-| 16 | `cache.warming` | 已有（Jev 连接保温）；补主模型缓存预热判断 | 六 |
-| 17 | `tool.risk` | 已有（权限预设与沙箱）；补 Jev 复核危险命令 | 五 |
-| 18 | `tool.approval` | 吸收：Jev 审批模式 | 五 |
-| 19 | `tool.constraint` | 吸收：修改前检查用户约束 | 二 |
-| 20 | `tool.injection` | 吸收：外部内容注入检测 | 五 |
-| 21 | `files.locate` | 吸收：文件定位排序工具 | 六 |
-| 22 | `judge.items` | 吸收：模型可调用的批量判断工具 | 五 |
-| 23 | `browser.step` | 吸收（shadow）：浏览器下一步判定 | 七 |
-| 24 | `review.triage` | 吸收：代码审查发现分级 | 六 |
-| 25 | `diagnostics.delivery` | 吸收：编辑后诊断的送达时机 | 六 |
-| 26 | `turn.drift` | 已有（过程监督规则）；补 Jev 复核 | 三 |
-| 27 | `turn.rewind` | 吸收：死路时提议回到检查点（需用户确认） | 六 |
-| 28 | `turn.completion` | 已有（缺少验证提醒）；补 Jev 复核 | 三 |
-| 29 | `turn.continue` | 吸收：答应了却停下时继续 | 五 |
-| 30 | `output.drift` | 吸收（shadow）：流式输出违背规则时打断 | 七 |
-| 31 | `goal.met` | 已有（原生 goal 包）；补 Jev 判断目标达成 | 六 |
-| 32 | `board.read` | 已有（System3 dock，更强）；补“有新进展才更新”判断 | 六 |
-| 33 | `notify.routing` | 已有（委派提醒）；补外部事件的送达时机 | 六 |
-| 34 | `swarm.routing` | 已有（委派候选）；补角色与强度选择 | 七 |
-| 35 | `swarm.patch` | 吸收：委派交回的改动是否越界 | 五 |
-| 36 | `hive.publish` | 吸收：多代理共享发现 | 七 |
-| 37 | `hive.deliver` | 吸收：多代理消息投递 | 七 |
-| 38 | `hive.relate` | 吸收：多代理消息更正与矛盾 | 七 |
+| 1 | `input.preflight` | Exists (entry routing switches the model); add clarification / plan-first hints | 5 |
+| 2 | `task.frame` | Absorb: constraint recognition + task frame | 2, 4 |
+| 3 | `input.interjection` | Absorb: classify mid-run messages | 5 |
+| 4 | `skills.disclosure` | Exists (Skill selection, opposite direction); add hiding irrelevant Skills | 5 |
+| 5 | `capability.disclosure` | Absorb: enable tool packs / MCP on demand | 6 |
+| 6 | `tool.admission` | Absorb (shadow): mu's own replay pruned nothing, so net benefit must be shown first | 6 |
+| 7 | `tool.admission.test-log` | Absorb: lossless rules-arm folding | 1 |
+| 8 | `context.forget` | Absorb (shadow): shrink old tool output to tombstones | 6 |
+| 9 | `context.compact` | Absorb (shadow): compaction that drops tool output by score | 6 |
+| 10 | `memory.recall` | Absorb: recall lessons | 7 |
+| 11 | `memory.capture` | Absorb: record lessons from corrections | 7 |
+| 12 | `memory.outcome` | Absorb: record lessons from fail-then-succeed turns | 7 |
+| 13 | `memory.worth` | Absorb: decide whether a lesson is worth keeping | 7 |
+| 14 | `memory.merge` | Absorb: deduplicate lessons and resolve contradictions | 7 |
+| 15 | `memory.applied` | Absorb: track whether lessons are applied and retire unused ones | 7 |
+| 16 | `cache.warming` | Exists (Jev connection warming); add main-model cache warming | 6 |
+| 17 | `tool.risk` | Exists (permission presets and sandbox); add Jev review of dangerous commands | 5 |
+| 18 | `tool.approval` | Absorb: Jev approval mode | 5 |
+| 19 | `tool.constraint` | Absorb: check user constraints before changes | 2 |
+| 20 | `tool.injection` | Absorb: injection detection in external content | 5 |
+| 21 | `files.locate` | Absorb: file-location ranking tool | 6 |
+| 22 | `judge.items` | Absorb: batch-judgement tool for the model | 5 |
+| 23 | `browser.step` | Absorb (shadow): next browser step | 7 |
+| 24 | `review.triage` | Absorb: rank code-review findings | 6 |
+| 25 | `diagnostics.delivery` | Absorb: when to deliver post-edit diagnostics | 6 |
+| 26 | `turn.drift` | Exists (supervision rules); add Jev review | 3 |
+| 27 | `turn.rewind` | Absorb: propose returning to a checkpoint at a dead end (user confirms) | 6 |
+| 28 | `turn.completion` | Exists (missing-verification reminder); add Jev review | 3 |
+| 29 | `turn.continue` | Absorb: continue when the model promised work but stopped | 5 |
+| 30 | `output.drift` | Absorb (shadow): interrupt streaming output that breaks a rule | 7 |
+| 31 | `goal.met` | Exists (native goal package); add Jev judgement of goal completion | 6 |
+| 32 | `board.read` | Exists (System3 dock, stronger); add "update only on real progress" | 6 |
+| 33 | `notify.routing` | Exists (delegation alerts); add delivery timing for external events | 6 |
+| 34 | `swarm.routing` | Exists (delegation candidate); add role and strength selection | 7 |
+| 35 | `swarm.patch` | Absorb: check whether delegated changes stay in scope | 5 |
+| 36 | `hive.publish` | Absorb: share findings between agents | 7 |
+| 37 | `hive.deliver` | Absorb: deliver notes between agents | 7 |
+| 38 | `hive.relate` | Absorb: corrections and contradictions between agent notes | 7 |
 
-## 阶段六：上下文与工具层（均先 shadow）
+## Phase 6: context and tool layer (all shadow first)
 
-- [ ] 15. 按需开启工具包 / MCP（#5）
-- [ ] 16. 工具输出语义裁剪（#6）、旧输出墓碑（#8）、打分压缩（#9）：只记录判定，统计省下的 token 与误删，净收益为正才开启
-- [ ] 17. 主模型缓存预热判断（#16）、文件定位工具（#21）、审查分级（#24）、诊断送达（#25）
-- [ ] 18. 检查点回退提议（#27）、目标达成判断（#31）、看板更新判断（#32）、外部事件送达（#33）
+- [ ] 15. Enable tool packs / MCP on demand (#5)
+- [ ] 16. Semantic tool-output pruning (#6), tombstones for old output (#8), scored compaction (#9): record judgements only, measure saved tokens and wrongly dropped content, enable only when the net benefit is positive
+- [ ] 17. Main-model cache warming (#16), file-location tool (#21), review triage (#24), diagnostics delivery (#25)
+- [ ] 18. Checkpoint rewind proposal (#27), goal completion (#31), board updates (#32), external event delivery (#33)
 
-## 阶段七：记忆、多代理与浏览器（均先 shadow，需单独设计评审）
+## Phase 7: memory, multiple agents, and the browser (all shadow first, each with its own design review)
 
-- [ ] 19. 经验记忆六项（#10–#15）：存储位置、隐私与跨会话边界需先设计
-- [ ] 20. 多代理角色与强度（#34）、Hive 三项（#36–#38）
-- [ ] 21. 浏览器下一步判定（#23）、流式输出打断（#30）
+- [ ] 19. The six memory items (#10–#15): storage location, privacy, and cross-session boundaries need a design first
+- [ ] 20. Agent role and strength (#34), the three Hive items (#36–#38)
+- [ ] 21. Next browser step (#23), streaming-output interruption (#30)
 
-## 进度记录
+## Progress log
 
-| 日期 | 项 | 结果 |
+| Date | Item | Result |
 |---|---|---|

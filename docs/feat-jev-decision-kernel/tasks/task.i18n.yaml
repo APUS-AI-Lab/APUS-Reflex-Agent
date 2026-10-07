@@ -1,0 +1,37 @@
+# Bilingual-pair consistency record for task.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-jev-decision-kernel/tasks/task.md
+/feat-jev-decision-kernel-absorbing-mu-s-reusable-capabilities:
+  en: 2653cecc7e1c7667
+  zh: b78075532aa88508
+/feat-jev-decision-kernel-absorbing-mu-s-reusable-capabilities/principles:
+  en: 62c687b8cc78de8e
+  zh: c2ebd063aca3dd28
+/feat-jev-decision-kernel-absorbing-mu-s-reusable-capabilities/phase-1-foundation-and-two-independent-items:
+  en: 3ae37139361762f1
+  zh: a83211090793434b
+/feat-jev-decision-kernel-absorbing-mu-s-reusable-capabilities/phase-2-constraints-mu-task-frame-tool-constraint:
+  en: 247a648892552708
+  zh: 70293630fac918f0
+/feat-jev-decision-kernel-absorbing-mu-s-reusable-capabilities/phase-3-supervision-review-mu-turn-completion-turn-drift:
+  en: d7193c3ee880396d
+  zh: a2b681dc7d7cf349
+/feat-jev-decision-kernel-absorbing-mu-s-reusable-capabilities/phase-4-task-frame-complete-mu-task-frame:
+  en: ca3588d3f7c2af8b
+  zh: b24f5bda1301ac12
+/feat-jev-decision-kernel-absorbing-mu-s-reusable-capabilities/phase-5-remaining-decision-points-evaluated-one-by-one-shadow-first:
+  en: 55e3dc1cef5d3818
+  zh: c7d54deb8217635c
+/feat-jev-decision-kernel-absorbing-mu-s-reusable-capabilities/how-each-of-mu-s-38-decision-points-is-handled:
+  en: e201f27c79862a7f
+  zh: f60d1d8d7355dfce
+/feat-jev-decision-kernel-absorbing-mu-s-reusable-capabilities/phase-6-context-and-tool-layer-all-shadow-first:
+  en: ad4cab0d73665a76
+  zh: fadb5c943c0240e5
+/feat-jev-decision-kernel-absorbing-mu-s-reusable-capabilities/phase-7-memory-multiple-agents-and-the-browser-all-shadow-first-each-with-its-own-design-review:
+  en: ab936d232613c17d
+  zh: 3831f2077737cd0f
+/feat-jev-decision-kernel-absorbing-mu-s-reusable-capabilities/progress-log:
+  en: 7e99d2f5691cee6f
+  zh: cec733f5dcc384bc
