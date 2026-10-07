@@ -53,7 +53,7 @@ export const en = {
   noticeRepeatedError: '{subject} failed {count} times with the same error', noticeFailedAttempts: '{count} actions failed this turn',
   noticeNoProgress: 'No new changes or passing checks in the last {count} steps', noticeMissingEvidence: 'Files changed, but no test or build has passed yet',
   noticeDelegateFailures: '{subject} has {count} failed commands', noticeOther: 'Process notice', noticeAdvised: 'The model was asked to change course',
-  taskFrame: 'Task card · {count} requirements kept', taskGoal: 'Task: {text}', taskItem: '· {text}',
+  taskFrame: 'Task card · requirements kept: {count}', taskGoal: 'Task: {text}', taskItem: '· {text}',
 } satisfies Record<System3Key, string>
 
 declare module '@deepseek-ai/dsh-client-ui-slots' {
