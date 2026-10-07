@@ -10,8 +10,21 @@ export interface System3EntryView {
   readonly adopted: ModelSelection | null
   readonly used: ModelSelection | null
   readonly elapsedMs: number | null
+  /** Turn that carried this input, once its user message is committed; null before admission. */
+  readonly turn: number | null
   /** Configured route chosen for this input, by Jev or by continuing the previous route; null when the baseline was kept. */
-  readonly route: { readonly id: string; readonly label: string | null; readonly retained: boolean } | null
+  readonly route: {
+    readonly id: string
+    readonly label: string | null
+    readonly retained: boolean
+    /** Delegation chosen for this input: instruction injected, then the named tool actually called. */
+    readonly delegation: {
+      readonly candidateId: string
+      readonly tool: string
+      readonly injected: boolean
+      readonly called: boolean
+    } | null
+  } | null
 }
 
 /** One automatic Skill recommendation; injection is confirmed by its durable user message. */
@@ -25,10 +38,32 @@ export interface System3SkillView {
   readonly elapsedMs: number
 }
 
-/** Latest entry and Skill facts; no prompt bodies or provider probabilities leave the Host. */
+/** Latest progress snapshot of a subagent run delegated by this Session's Agent. */
+export interface System3SubagentRunView {
+  readonly runId: string
+  readonly provider: string
+  /** `running` until the run settles, then its stop reason. */
+  readonly state: string
+  /** Host wall-clock milliseconds when the run started; the Client derives live elapsed time from it. */
+  readonly startedAt: number
+  readonly elapsedMs: number
+  /** Completed steps per category. */
+  readonly completed: Readonly<Record<string, number>>
+  /** Category of the step in progress, or null. */
+  readonly current: string | null
+  /** Milliseconds from start to the latest step, or null before the first step. */
+  readonly lastStepAt: number | null
+  /** Latest short progress text the child wrote for a person, or null. */
+  readonly note: string | null
+  /** Latest unresolved attention alert: overtime lasts while running; stalled and starting clear on the next step. */
+  readonly alert: { readonly kind: string; readonly elapsedMs: number } | null
+}
+
+/** Latest entry, Skill, and delegated-run facts; no prompt bodies, child content, or provider probabilities leave the Host. */
 export interface System3RuntimeView {
   readonly entry: System3EntryView | null
   readonly skill: System3SkillView | null
+  readonly subagentRun: System3SubagentRunView | null
 }
 
 declare module '@deepseek-ai/dsh-session-projection/types' {

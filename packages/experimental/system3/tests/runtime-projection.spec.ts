@@ -85,8 +85,8 @@ it('restores the same wire facts without leaking effective headers or making mod
   h.session.append('request/header', { header: { config: selected }, reason: 'initial' }); h.input(id, 1); h.output(1)
   const restored = Session.fromRestore(h.session.id, h.session.snapshotEvents(), h.session.header, SessionLogOffset(0), 'shared-frozen')
   const state = h.ctx.sessionProjections.stateOf(restored, 'system3Runtime')!
-  expect(system3RuntimeProjection.wire.view(state)).toEqual({ entry: h.view()?.entry, skill: null })
-  expect(Object.keys(system3RuntimeProjection.wire.view(state))).toEqual(['entry', 'skill'])
+  expect(system3RuntimeProjection.wire.view(state)).toEqual({ entry: h.view()?.entry, skill: null, subagentRun: null })
+  expect(Object.keys(system3RuntimeProjection.wire.view(state))).toEqual(['entry', 'skill', 'subagentRun'])
 })
 
 
@@ -269,12 +269,49 @@ it('exposes the chosen route with its label and whether it continued the previou
   h.session.append('system3/entry-start', { requestId: first })
   h.session.append('system3/entry-decision', { version: 1, requestId: first, request: null, baseline: selected, candidateIds: ['deep'],
     dataClasses: ['public'], routeId: 'jev', executionDomain: 'local', outcome: 'selected', selected, candidate: { id: 'deep', label: 'Deep' }, elapsedMs: 1 })
-  expect(h.view()?.entry?.route).toEqual({ id: 'deep', label: 'Deep', retained: false })
+  expect(h.view()?.entry?.route).toEqual({ id: 'deep', label: 'Deep', retained: false, delegation: null })
   const second = brandString<SessionRequestId>('continued')
   h.session.append('system3/entry-start', { requestId: second })
   h.session.append('system3/entry-decision', { version: 1, requestId: second, request: null, baseline: selected, candidateIds: ['deep'],
     dataClasses: ['public'], routeId: 'jev', executionDomain: 'local', outcome: 'abstain', retained: { requestId: first, selection: selected },
     candidate: { id: 'deep' }, elapsedMs: 1 })
-  expect(h.view()?.entry?.route).toEqual({ id: 'deep', label: null, retained: true })
-  expect(system3RuntimeProjection.wire.viewSchema.parse(system3RuntimeProjection.wire.view(h.view()!)).entry?.route).toEqual({ id: 'deep', label: null, retained: true })
+  expect(h.view()?.entry?.route).toEqual({ id: 'deep', label: null, retained: true, delegation: null })
+  expect(system3RuntimeProjection.wire.viewSchema.parse(system3RuntimeProjection.wire.view(h.view()!)).entry?.route).toEqual({ id: 'deep', label: null, retained: true, delegation: null })
+})
+
+it('keeps the latest delegated-run snapshot without its version field', async () => {
+  const h = await setup()
+  const snapshot = { version: 1 as const, runId: 'run-1', provider: 'codex', state: 'running' as const, startedAt: 1, elapsedMs: 0, completed: {}, current: null }
+  h.session.append('system3/delegation-progress', snapshot)
+  h.session.append('system3/delegation-progress', { ...snapshot, state: 'completed', elapsedMs: 9, completed: { command: 2 } })
+  expect(h.view()?.subagentRun).toEqual({ runId: 'run-1', provider: 'codex', state: 'completed', startedAt: 1, elapsedMs: 9, completed: { command: 2 }, current: null,
+    lastStepAt: null, note: null, alert: null })
+  expect(system3RuntimeProjection.wire.viewSchema.parse(system3RuntimeProjection.wire.view(h.view()!)).subagentRun?.state).toBe('completed')
+})
+
+it('keeps an overtime alert while running, clears a stall alert on the next step, and drops alerts at the end', async () => {
+  const h = await setup()
+  const running = { version: 1 as const, runId: 'run-1', provider: 'codex', state: 'running' as const, startedAt: 1, elapsedMs: 0,
+    completed: {}, current: null, lastStepAt: 5, note: 'Reading.' }
+  const alert = (kind: 'overtime' | 'stalled', elapsedMs: number, runId = 'run-1') => {
+    h.session.append('system3/delegation-alert', { version: 1, runId, provider: 'codex', kind, elapsedMs, lastStepAt: 5 })
+  }
+  alert('stalled', 9)
+  expect(h.view()?.subagentRun).toBeNull()
+  h.session.append('system3/delegation-progress', running)
+  alert('stalled', 9, 'other-run')
+  expect(h.view()?.subagentRun?.alert).toBeNull()
+  alert('stalled', 9)
+  expect(h.view()?.subagentRun).toMatchObject({ note: 'Reading.', alert: { kind: 'stalled', elapsedMs: 9 } })
+  h.session.append('system3/delegation-progress', { ...running, elapsedMs: 10 })
+  expect(h.view()?.subagentRun?.alert).toEqual({ kind: 'stalled', elapsedMs: 9 })
+  h.session.append('system3/delegation-progress', { ...running, elapsedMs: 11, lastStepAt: 11 })
+  expect(h.view()?.subagentRun?.alert).toBeNull()
+  alert('overtime', 12)
+  h.session.append('system3/delegation-progress', { ...running, elapsedMs: 13, lastStepAt: 13 })
+  expect(h.view()?.subagentRun?.alert).toEqual({ kind: 'overtime', elapsedMs: 12 })
+  h.session.append('system3/delegation-progress', { ...running, state: 'completed', elapsedMs: 14 })
+  expect(h.view()?.subagentRun?.alert).toBeNull()
+  alert('overtime', 15)
+  expect(h.view()?.subagentRun?.alert).toBeNull()
 })

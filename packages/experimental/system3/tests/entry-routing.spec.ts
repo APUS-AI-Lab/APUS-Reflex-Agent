@@ -10,7 +10,7 @@ import { SessionId } from '@deepseek-ai/dsh-session'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import Jev from '../../apus-dsh-jev-plugin/src/index.ts'
 import { MockAdapter } from '../../../core/agent-loop/tests/mock-adapter.ts'
-import { createSystem3EntryRouter, type System3EntryRoutingConfig } from '../src/entry-routing.ts'
+import { createSystem3EntryRouter, type System3EntryModelCandidate, type System3EntryRoutingConfig } from '../src/entry-routing.ts'
 import System3 from '../src/index.ts'
 import { system3RuntimeProjection } from '../src/runtime-projection.ts'
 
@@ -192,6 +192,7 @@ it('requires valid and distinct configured candidates', async () => {
   expect(() => create({ ...config, minConfidence: 2 })).toThrow('minConfidence')
   expect(() => create({ ...config, maxInputBytes: 0 })).toThrow('maxInputBytes')
   expect(() => create({ ...config, candidates: config.candidates.map(candidate => ({ ...candidate, description: ' ' })) })).toThrow('must not be empty')
+  expect(() => create({ ...config, candidates: [{ ...config.candidates[0]!, provider: ' ' } as System3EntryModelCandidate] })).toThrow('must not be empty')
   expect(() => create({ ...config, candidates: config.candidates.map(candidate => ({ ...candidate, dataClasses: [] })) })).toThrow('declare dataClasses')
   expect(() => create({ ...config, sessionDataClasses: [] })).toThrow('classify session data')
 })

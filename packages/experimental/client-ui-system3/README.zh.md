@@ -9,7 +9,7 @@ kind: "package-reference"
 
 ## 概述
 
-这个可选 Client 插件增加紧凑的原生 Conversation 区块。它分别呈现本地提交反馈与持久化的 System3 建议、Host 采用、实际模型响应和 Skill 注入事实。Web 与桌面通过产品 profile 加载同一插件。
+这个可选 Client 插件增加紧凑的原生 Conversation 区块。它分别呈现本地提交反馈与持久化的 System3 建议、Host 采用、实际模型响应和 Skill 注入事实。它还在原生轮次标题（`conversation.chat.turnHead`）中提供一行路由说明：该轮次的入口决策记录到达时，立即写明由谁处理、延续上一轮的路由或回退使用的模型；区块保留调度模式、委派阶段和委派运行的进度，包括启动中和复核结果阶段。Web 与桌面通过产品 profile 加载同一插件。
 
 ## 目录
 

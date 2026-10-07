@@ -171,7 +171,7 @@ Append-only: foreground adds one result after the reusable parent prefix, while 
 
 These limits define when this provider is a poor fit or needs special operational care. They are current package constraints, not a general Claude Code comparison or a task backlog.
 
-- **One fresh query and process per run** — there is no continuation, resume, pooling, or product-session persistence. Progress is the category and phase of each assistant block and tool call, published as the live `subagent/activity` event; message text, tool input, and tool results are never forwarded.
+- **One fresh query and process per run** — there is no continuation, resume, pooling, or product-session persistence. Progress is the category and phase of each assistant block and tool call, published as the live `subagent/activity` event. Assistant text also becomes the step's note so a person can judge whether the work is on track; tool input and tool results are never forwarded.
 - **Static instance selection** — Profile rows fix provider names, optional models, and tool bindings; calls cannot choose or change either a provider or model dynamically, and every exposed tool needs a unique `toolName`.
 - **Host settings are intentionally authoritative** — when `model` is omitted, project and user settings choose it; native settings always retain the remaining tools and behavior, and the provider does not provide a filtered or hermetic production mode.
 - **Authentication and account state remain native** — the Bundle supplies the CLI but does not create an account, log in, or rewrite Claude settings; configuration and authentication failures surface with their lifecycle stage and the safe `unknown` fallback rather than a separate public classification.

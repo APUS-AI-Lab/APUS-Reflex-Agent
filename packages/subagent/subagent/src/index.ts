@@ -86,6 +86,7 @@ export type {} from './catalog.ts'
 export * from './out-of-process.ts'
 export { AssistantOutputFold, finalAssistantOutput } from './assistant-output.ts'
 export { SubagentRunId } from './types.ts'
+export { SUBAGENT_ACTIVITY_NOTE_MAX_CHARS } from './lifecycle.ts'
 export type {
   ContinuableCreateRequest,
   ContinuableCreateSpec,

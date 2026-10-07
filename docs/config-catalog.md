@@ -1231,7 +1231,7 @@ export interface Config {
 ## `@deepseek-ai/dsh-experimental-system3`
 
 - `refs`: [`System3DataClass`](../packages/experimental/system3-policy/src/index.ts) · [`System3ExecutionDomain`](../packages/experimental/system3-policy/src/index.ts) · [`System3PrivacyMode`](../packages/experimental/system3-policy/src/index.ts)
-- `source`: [`packages/experimental/system3/src/index.ts:39`](../packages/experimental/system3/src/index.ts)
+- `source`: [`packages/experimental/system3/src/index.ts:43`](../packages/experimental/system3/src/index.ts)
 
 ```ts config-catalog
 /** Configures the default local-first privacy boundary. */
@@ -1256,6 +1256,8 @@ export interface Config {
   readonly entryRouting?: false | System3EntryRoutingConfig
   /** Opt-in scoped Skill advice and native pre-step instruction injection. */
   readonly skillSelection?: false | System3SkillSelectionConfig
+  /** Opt-in persistent progress snapshots of subagent runs, written to the delegating Agent's Session. */
+  readonly delegationProgress?: false | System3DelegationProgressConfig
 }
 
 /** Explicit controls for entry recommendations; omission leaves entry routing disabled. */
@@ -1303,25 +1305,16 @@ export interface System3SkillSelectionConfig {
   readonly deadlineMs: number
 }
 
-/** Deployment-owned model route and its allowed session data classes. */
-export interface System3EntryCandidate {
-  /** Unique lower-kebab-case choice name, excluding abstain and unknown. */
-  readonly id: string
-  /** Task criteria presented to Jev for this candidate. */
-  readonly description: string
-  /** Short route name the Client shows as soon as this candidate is chosen, such as a task class and model name. */
-  readonly label?: string
-  /** Registered generation provider route. */
-  readonly provider: string
-  /** Exact generation model identifier. */
-  readonly model: string
-  /** Adapter-supported reasoning level for this model. */
-  readonly reasoningEffort?: string
-  /** Actual generation location, including a tunnel's remote destination. */
-  readonly executionDomain: System3ExecutionDomain
-  /** Session data classes this candidate may receive. */
-  readonly dataClasses: readonly System3DataClass[]
+/** How often a running subagent's progress may be written to the parent Session, and when it needs attention. */
+export interface System3DelegationProgressConfig {
+  /** Minimum time between two running snapshots of one run; start and end are written at once. */
+  readonly intervalMs: number
+  /** Alert thresholds; omission writes no alerts. */
+  readonly monitor?: System3DelegationMonitorConfig
 }
+
+/** One entry route Jev may choose. */
+export type System3EntryCandidate = System3EntryModelCandidate | System3EntryDelegateCandidate
 
 /** How long after activity, and how often, the Jev connection is kept open. */
 export interface System3KeepWarmConfig {
@@ -1329,6 +1322,57 @@ export interface System3KeepWarmConfig {
   readonly windowMs: number
   /** Interval between warm-up requests; shorter than the gateway's idle connection timeout. */
   readonly intervalMs: number
+}
+
+/** Thresholds after which a running delegation is reported to the person as needing attention. */
+export interface System3DelegationMonitorConfig {
+  /** Run time after which an overtime alert is written, again at every further multiple. */
+  readonly overtimeMs: number
+  /** Time without a new step, after the first step, before a stalled alert is written. */
+  readonly stallMs: number
+  /** Time without any step after start before a starting alert is written. */
+  readonly startupMs: number
+}
+
+/** Deployment-owned model route; choosing it switches the generation model for this input. */
+export interface System3EntryModelCandidate extends System3EntryCandidateBase {
+  /** Registered generation provider route. */
+  readonly provider: string
+  /** Exact generation model identifier. */
+  readonly model: string
+  /** Adapter-supported reasoning level for this model. */
+  readonly reasoningEffort?: string
+  /** Absent on a model route; its presence makes the candidate a delegation route. */
+  readonly delegate?: undefined
+}
+
+/**
+ * Deployment-owned delegation route; choosing it keeps the generation model and asks the model,
+ * through one injected instruction, to hand the task to a subagent tool. Offered only while the
+ * subagent provider is registered and the tool is visible to the requesting Agent.
+ */
+export interface System3EntryDelegateCandidate extends System3EntryCandidateBase {
+  /** Subagent provider and tool that carry out the delegated task. */
+  readonly delegate: {
+    /** Registered subagent provider name, such as `codex`. */
+    readonly provider: string
+    /** Model-facing subagent tool the instruction names, such as `subagent_codex`. */
+    readonly tool: string
+  }
+}
+
+/** Fields every entry candidate declares, whatever kind of route it selects. */
+interface System3EntryCandidateBase {
+  /** Unique lower-kebab-case choice name, excluding abstain and unknown. */
+  readonly id: string
+  /** Task criteria presented to Jev for this candidate. */
+  readonly description: string
+  /** Short route name the Client shows as soon as this candidate is chosen, such as a task class and model name. */
+  readonly label?: string
+  /** Actual execution location, including a tunnel's remote destination or a delegated agent's service. */
+  readonly executionDomain: System3ExecutionDomain
+  /** Session data classes this candidate may receive. */
+  readonly dataClasses: readonly System3DataClass[]
 }
 ```
 <!-- END GENERATED config-catalog:@deepseek-ai/dsh-experimental-system3 -->
@@ -3238,7 +3282,7 @@ export type JournalMode = 'wal' | 'delete' | 'truncate' | 'persist'
 ## `@deepseek-ai/dsh-subagent`
 
 - `refs`: `Volatile` (`@deepseek-ai/cordis`)
-- `source`: [`packages/subagent/subagent/src/index.ts:204`](../packages/subagent/subagent/src/index.ts)
+- `source`: [`packages/subagent/subagent/src/index.ts:205`](../packages/subagent/subagent/src/index.ts)
 
 ```ts config-catalog
 /** Host configuration for continuable subagent capacity. */

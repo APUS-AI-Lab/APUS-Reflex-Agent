@@ -6,31 +6,57 @@ import type { SessionPromptRouter } from '@deepseek-ai/dsh-api-session-controlle
 import type { SessionRequestId } from '@deepseek-ai/dsh-api-session-controller/types'
 import { ReasoningEffortId, type ModelModality } from '@deepseek-ai/dsh-llm'
 import { RemoteError } from '@deepseek-ai/dsh-typert-protocol'
+import type {} from '@deepseek-ai/dsh-subagent'
+import type {} from '@deepseek-ai/dsh-tools'
 import { MAX_JEV_CHOICES, type JevErrorCode, type JevRequest, type JevResponse } from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
 import { admitSystem3Routes, type System3DataClass, type System3ExecutionDomain, type System3PrivacyPolicy } from '@deepseek-ai/dsh-experimental-system3-policy'
 import type { System3JevOptions } from './decisions.ts'
 import type { System3KeepWarmConfig } from './keep-warm.ts'
 import type {} from './runtime-projection.ts'
 
-/** Deployment-owned model route and its allowed session data classes. */
-export interface System3EntryCandidate {
+/** Fields every entry candidate declares, whatever kind of route it selects. */
+interface System3EntryCandidateBase {
   /** Unique lower-kebab-case choice name, excluding abstain and unknown. */
   readonly id: string
   /** Task criteria presented to Jev for this candidate. */
   readonly description: string
   /** Short route name the Client shows as soon as this candidate is chosen, such as a task class and model name. */
   readonly label?: string
+  /** Actual execution location, including a tunnel's remote destination or a delegated agent's service. */
+  readonly executionDomain: System3ExecutionDomain
+  /** Session data classes this candidate may receive. */
+  readonly dataClasses: readonly System3DataClass[]
+}
+
+/** Deployment-owned model route; choosing it switches the generation model for this input. */
+export interface System3EntryModelCandidate extends System3EntryCandidateBase {
   /** Registered generation provider route. */
   readonly provider: string
   /** Exact generation model identifier. */
   readonly model: string
   /** Adapter-supported reasoning level for this model. */
   readonly reasoningEffort?: string
-  /** Actual generation location, including a tunnel's remote destination. */
-  readonly executionDomain: System3ExecutionDomain
-  /** Session data classes this candidate may receive. */
-  readonly dataClasses: readonly System3DataClass[]
+  /** Absent on a model route; its presence makes the candidate a delegation route. */
+  readonly delegate?: undefined
 }
+
+/**
+ * Deployment-owned delegation route; choosing it keeps the generation model and asks the model,
+ * through one injected instruction, to hand the task to a subagent tool. Offered only while the
+ * subagent provider is registered and the tool is visible to the requesting Agent.
+ */
+export interface System3EntryDelegateCandidate extends System3EntryCandidateBase {
+  /** Subagent provider and tool that carry out the delegated task. */
+  readonly delegate: {
+    /** Registered subagent provider name, such as `codex`. */
+    readonly provider: string
+    /** Model-facing subagent tool the instruction names, such as `subagent_codex`. */
+    readonly tool: string
+  }
+}
+
+/** One entry route Jev may choose. */
+export type System3EntryCandidate = System3EntryModelCandidate | System3EntryDelegateCandidate
 
 /** Explicit controls for entry recommendations; omission leaves entry routing disabled. */
 export interface System3EntryRoutingConfig {
@@ -79,8 +105,12 @@ export interface System3EntryDecisionReceipt {
   readonly outcome: System3EntryOutcome
   readonly response?: JevResponse
   readonly selected?: ModelSelection
-  /** Configured candidate whose model this decision selected or retained, with its display label. */
-  readonly candidate?: { readonly id: string; readonly label?: string }
+  /** Configured candidate this decision selected or retained, with its display label and any delegation target. */
+  readonly candidate?: {
+    readonly id: string
+    readonly label?: string
+    readonly delegate?: { readonly provider: string; readonly tool: string }
+  }
   /** Route kept from an earlier decision of this Session; Jev suggested none for this input. */
   readonly retained?: {
     /** The earlier request whose route continues. */
@@ -99,7 +129,7 @@ declare module '@deepseek-ai/dsh-session/types' {
   }
 }
 
-function selectionOf(candidate: System3EntryCandidate): ModelSelection {
+function selectionOf(candidate: System3EntryModelCandidate): ModelSelection {
   return { provider: candidate.provider, model: candidate.model,
     ...candidate.reasoningEffort === undefined ? {} : { reasoningEffort: ReasoningEffortId(candidate.reasoningEffort) } }
 }
@@ -114,12 +144,22 @@ function validateConfig(config: System3EntryRoutingConfig): void {
       throw new Error('entryRouting candidate ids must be unique lower-kebab-case names other than abstain or unknown')
     }
     ids.add(candidate.id)
-    if (!candidate.description.trim() || !candidate.provider.trim() || !candidate.model.trim() || candidate.reasoningEffort?.trim() === '') {
-      throw new Error('entryRouting candidate descriptions and model selections must not be empty')
+    if (!candidate.description.trim()) throw new Error('entryRouting candidate descriptions and model selections must not be empty')
+    if (candidate.delegate !== undefined) {
+      if (!candidate.delegate.provider.trim() || !candidate.delegate.tool.trim()) {
+        throw new Error('entryRouting delegate candidates must name a subagent provider and tool')
+      }
+      const route = `delegate:${candidate.delegate.provider}`
+      if (routes.has(route)) throw new Error('entryRouting candidates must select distinct models, efforts, or delegation providers')
+      routes.add(route)
+    } else {
+      if (!candidate.provider.trim() || !candidate.model.trim() || candidate.reasoningEffort?.trim() === '') {
+        throw new Error('entryRouting candidate descriptions and model selections must not be empty')
+      }
+      const route = JSON.stringify(selectionOf(candidate))
+      if (routes.has(route)) throw new Error('entryRouting candidates must select distinct models, efforts, or delegation providers')
+      routes.add(route)
     }
-    const route = JSON.stringify(selectionOf(candidate))
-    if (routes.has(route)) throw new Error('entryRouting candidates must select distinct models or efforts')
-    routes.add(route)
     if (candidate.dataClasses.length === 0) throw new Error('entryRouting candidates must declare dataClasses')
   }
   if (config.sessionDataClasses.length === 0) throw new Error('entryRouting must classify session data')
@@ -143,8 +183,8 @@ export function createSystem3EntryRouter(
   return {
     deadlineMs: settings.deadlineMs ?? 30000,
     validateBaseline(input) {
-      const candidate = settings.candidates.find(value =>
-        value.provider === input.baseline.provider && value.model === input.baseline.model)
+      const candidate = settings.candidates.find(value => value.delegate === undefined
+        && value.provider === input.baseline.provider && value.model === input.baseline.model)
       const baseline = settings.baseline ?? candidate
       const allowed = baseline !== undefined && settings.sessionDataClasses.every(value => baseline.dataClasses.includes(value))
         && admitSystem3Routes(policy, [{ id: candidate?.id ?? 'baseline', executionDomain: baseline.executionDomain,
@@ -179,8 +219,8 @@ export function createSystem3EntryRouter(
       const retain = (allowed: readonly System3EntryCandidate[]): ModelSelection | undefined => {
         const prior = previous
         if (prior === undefined) return undefined
-        const candidate = allowed.find(value => value.provider === prior.provider
-          && value.model === prior.model && value.reasoningEffort === prior.reasoningEffort)
+        const candidate = allowed.find((value): value is System3EntryModelCandidate => value.delegate === undefined
+          && value.provider === prior.provider && value.model === prior.model && value.reasoningEffort === prior.reasoningEffort)
         if (candidate === undefined) return undefined
         const selection = selectionOf(candidate)
         retained = { requestId: prior.requestId, selection }
@@ -221,6 +261,12 @@ export function createSystem3EntryRouter(
           : history.imageInSession ? ['text', 'image'] : ['text']
         const compatible: System3EntryCandidate[] = []
         for (const candidate of allowed) {
+          if (candidate.delegate !== undefined) {
+            // Offer delegation only when the instruction can be followed in this Agent's scope.
+            if (ctx.get('subagents')?.getProvider(candidate.delegate.provider) !== undefined
+              && ctx.get('tools')?.get(candidate.delegate.tool, input.agent) !== undefined) compatible.push(candidate)
+            continue
+          }
           const model = await llm.resolveModelInfo(candidate.provider, candidate.model, signal)
           signal.throwIfAborted()
           if (candidate.reasoningEffort !== undefined
@@ -255,9 +301,11 @@ export function createSystem3EntryRouter(
         if (answer.confidence < settings.minConfidence) { outcome = 'low-confidence'; return retain(allowed) }
         const candidate = allowed.find(value => value.id === answer.choice)
         if (candidate === undefined) { outcome = 'invalid-response'; return undefined }
-        selected = selectionOf(candidate)
         chosen = candidate
         outcome = 'selected'
+        // Delegation keeps the baseline model; the pre-step instruction asks it to call the subagent tool.
+        if (candidate.delegate !== undefined) return undefined
+        selected = selectionOf(candidate)
         return selected
       } catch (error) {
         if (signal.aborted) outcome = signal.reason instanceof DOMException && signal.reason.name === 'TimeoutError' ? 'timeout' : 'cancelled'
@@ -268,7 +316,8 @@ export function createSystem3EntryRouter(
           dataClasses: [...settings.sessionDataClasses], routeId: options.routeId, executionDomain: options.executionDomain,
           outcome, ...response === undefined ? {} : { response }, ...selected === undefined ? {} : { selected },
           ...retained === undefined ? {} : { retained },
-          ...chosen === undefined ? {} : { candidate: { id: chosen.id, ...chosen.label === undefined ? {} : { label: chosen.label } } },
+          ...chosen === undefined ? {} : { candidate: { id: chosen.id, ...chosen.label === undefined ? {} : { label: chosen.label },
+            ...chosen.delegate === undefined ? {} : { delegate: { ...chosen.delegate } } } },
           elapsedMs: Date.now() - started,
         })
       }

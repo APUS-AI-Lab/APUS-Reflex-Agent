@@ -7,6 +7,8 @@ import type { ProjectionDefinition } from '@deepseek-ai/dsh-session-projection'
 import type { System3RuntimeView } from './types.ts'
 import type {} from './entry-routing.ts'
 import type {} from './skill-selection.ts'
+import type {} from './delegation.ts'
+import type {} from './delegation-progress.ts'
 
 /** Host fold keeps request metadata private and exposes only the two public facts. */
 interface System3RuntimeState extends System3RuntimeView {
@@ -35,12 +37,19 @@ const requestId = z.string().transform(value => brandString<SessionRequestId>(va
 const viewSchema = z.object({
   entry: z.object({ requestId, phase: z.enum(['deciding', 'decided']), outcome: z.string().nullable(),
     suggested: selection.nullable(), adopted: selection.nullable(), used: selection.nullable(),
-    elapsedMs: z.number().nullable(),
-    route: z.object({ id: z.string(), label: z.string().nullable(), retained: z.boolean() }).nullable() }).nullable(),
+    elapsedMs: z.number().nullable(), turn: z.number().nullable(),
+    route: z.object({ id: z.string(), label: z.string().nullable(), retained: z.boolean(),
+      delegation: z.object({ candidateId: z.string(), tool: z.string(), injected: z.boolean(), called: z.boolean() })
+        .nullable() }).nullable(),
+  }).nullable(),
   skill: z.object({ requestId: requestId.nullable(), turn: z.number(), step: z.number(), outcome: z.string(),
     selected: z.string().nullable(), injected: z.boolean(), elapsedMs: z.number() }).nullable(),
+  subagentRun: z.object({ runId: z.string(), provider: z.string(), state: z.string(), startedAt: z.number(), elapsedMs: z.number(),
+    completed: z.record(z.string(), z.number()), current: z.string().nullable(), lastStepAt: z.number().nullable(),
+    note: z.string().nullable(), alert: z.object({ kind: z.string(), elapsedMs: z.number() }).nullable() }).nullable(),
 })
 const stateSchema: ZodType<System3RuntimeState> = z.object({ entry: viewSchema.shape.entry, skill: viewSchema.shape.skill,
+  subagentRun: viewSchema.shape.subagentRun,
   header: selection.nullable(), currentTurn: z.number().nullable(), currentStep: z.number().nullable(),
   entryTurn: z.number().nullable(), startRequestId: requestId.nullable(),
   skillMessageId: z.string().transform(value => brandString<MessageId>(value)).nullable(),
@@ -55,10 +64,10 @@ function hasResponseContent(stream: readonly AssistantStreamRecord[]): boolean {
 
 /** Fold advice and adoption; confirm request use from output or a streamed attempt in the exact input turn. */
 export const system3RuntimeProjection = {
-  key: 'system3Runtime', stateVersion: 4, stateSchema,
-  init: () => ({ entry: null, skill: null, header: null, currentTurn: null, currentStep: null,
+  key: 'system3Runtime', stateVersion: 7, stateSchema,
+  init: () => ({ entry: null, skill: null, subagentRun: null, header: null, currentTurn: null, currentStep: null,
     entryTurn: null, startRequestId: null, skillMessageId: null, imageInSession: false, route: null }),
-  wire: { viewSchema, view: state => ({ entry: state.entry, skill: state.skill }) },
+  wire: { viewSchema, view: state => ({ entry: state.entry, skill: state.skill, subagentRun: state.subagentRun }) },
   apply(state, event) {
     if (!state.imageInSession && (event.type === 'user/message' || event.type === 'tool/result')) {
       const content = event.type === 'user/message' ? event.data.content : event.data.message.content
@@ -72,7 +81,7 @@ export const system3RuntimeProjection = {
         ...config.reasoningEffort === undefined ? {} : { reasoningEffort: String(config.reasoningEffort) } } }
     }
     if (event.type === 'system3/entry-start') return { ...state, startRequestId: event.data.requestId, entryTurn: null, entry: { requestId: event.data.requestId,
-      phase: 'deciding', outcome: null, suggested: null, adopted: null, used: null, elapsedMs: null, route: null } }
+      phase: 'deciding', outcome: null, suggested: null, adopted: null, used: null, elapsedMs: null, turn: null, route: null } }
     if (event.type === 'system3/entry-decision') {
       if (state.startRequestId !== null && state.startRequestId !== event.data.requestId) return state
       const previous = state.entry?.requestId === event.data.requestId ? state.entry : null
@@ -82,16 +91,18 @@ export const system3RuntimeProjection = {
       return { ...state, route, entryTurn: previous === null ? null : state.entryTurn,
         entry: { requestId: event.data.requestId, phase: 'decided', outcome: event.data.outcome,
           suggested: event.data.selected ?? null, adopted: previous?.adopted ?? null,
-          used: previous?.used ?? null, elapsedMs: event.data.elapsedMs,
+          used: previous?.used ?? null, elapsedMs: event.data.elapsedMs, turn: previous?.turn ?? null,
           route: event.data.candidate === undefined ? null : { id: event.data.candidate.id,
-            label: event.data.candidate.label ?? null, retained: event.data.retained !== undefined } } }
+            label: event.data.candidate.label ?? null, retained: event.data.retained !== undefined,
+            delegation: event.data.candidate.delegate === undefined ? null
+              : { candidateId: event.data.candidate.id, tool: event.data.candidate.delegate.tool, injected: false, called: false } } } }
     }
     if (event.type === 'model/automatic-selection' && state.entry?.requestId === event.data.requestId) {
       return { ...state, entry: { ...state.entry, adopted: event.data.selection } }
     }
     if (event.type === 'user/message' && event.data.source.kind === 'user' && 'rpcId' in event.data.source
       && state.entry !== null && event.data.source.rpcId === state.entry.requestId && state.currentTurn !== null) {
-      return { ...state, entryTurn: state.currentTurn }
+      return { ...state, entryTurn: state.currentTurn, entry: { ...state.entry, turn: state.currentTurn } }
     }
     if (state.entry !== null && state.entry.adopted !== null && state.entryTurn !== null
       && ((event.type === 'assistant/message' && event.data.turn === state.entryTurn)
@@ -106,6 +117,28 @@ export const system3RuntimeProjection = {
         && (adopted.reasoningEffort === undefined || actual.reasoningEffort === adopted.reasoningEffort)) {
         return { ...state, entry: { ...state.entry, used: actual } }
       }
+    }
+    const delegation = state.entry?.route?.delegation
+    if (state.entry?.route && delegation) {
+      if (event.type === 'user/message' && event.data.source.kind === 'system3-delegation'
+        && event.data.source.requestId === state.entry.requestId) {
+        return { ...state, entry: { ...state.entry, route: { ...state.entry.route, delegation: { ...delegation, injected: true } } } }
+      }
+      if (event.type === 'tool/call' && delegation.injected && !delegation.called && event.data.name === delegation.tool) {
+        return { ...state, entry: { ...state.entry, route: { ...state.entry.route, delegation: { ...delegation, called: true } } } }
+      }
+    }
+    if (event.type === 'system3/delegation-progress') {
+      const { version: _version, lastStepAt = null, note = null, ...run } = event.data
+      const previous = state.subagentRun?.runId === run.runId ? state.subagentRun : null
+      // Overtime stays relevant while the run continues; a missing step is answered by the next step.
+      const alert = run.state !== 'running' || previous?.alert == null ? null
+        : previous.alert.kind === 'overtime' || lastStepAt === previous.lastStepAt ? previous.alert : null
+      return { ...state, subagentRun: { ...run, lastStepAt, note, alert } }
+    }
+    if (event.type === 'system3/delegation-alert' && state.subagentRun?.runId === event.data.runId
+      && state.subagentRun.state === 'running') {
+      return { ...state, subagentRun: { ...state.subagentRun, alert: { kind: event.data.kind, elapsedMs: event.data.elapsedMs } } }
     }
     if (event.type === 'system3/skill-decision') return { ...state, skillMessageId: event.data.injectionMessageId ?? null, skill: { requestId: event.data.requestId,
       turn: event.data.turn, step: event.data.step, outcome: event.data.outcome,

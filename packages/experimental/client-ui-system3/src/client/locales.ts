@@ -10,6 +10,14 @@ export const zh = {
   unchanged: '保留当前处理方式', skillSkipped: '未自动注入专业指令',
   failed: '切换失败，请重试', decisionTime: '决策耗时', milliseconds: '毫秒', historical: '最近一次入口决策',
   routeChosen: '已判断：{route}', routeRetained: '延续上一轮：{route}', continued: '延续上一轮',
+  fallbackTimeout: '判断超时，先由 {model} 回答', fallbackUnavailable: '暂时无法判断，先由 {model} 回答', delegationPreparing: '正在准备委派',
+  runStarting: '{provider} 正在启动', runReviewing: '{provider} 已完成，正在复核结果', runMinutes: '{minutes} 分 {seconds} 秒',
+  runNote: '最近说明：{note}', alertOvertime: '{provider} 已运行 {duration}，超出预期', alertStalled: '{provider} 已 {duration} 没有新进展',
+  alertStarting: '{provider} 启动已超过 {duration}', keepWaiting: '继续等待', stopRun: '停止', stopFailed: '停止失败，请重试',
+  delegation: '委派', delegationSuggested: '已建议，等待注入指令', delegationInjected: '已注入指令，等待调用 {tool}', delegationCalled: '已调用 {tool}',
+  runRunning: '{provider} 运行中', runCompleted: '{provider} 已完成', runAborted: '{provider} 已中止', runIncomplete: '{provider} 未完成',
+  runSeconds: '{seconds} 秒', runCurrent: '当前：{kind}', kindMessage: '消息', kindReasoning: '推理', kindCommand: '命令',
+  kindFileChange: '改文件', kindTool: '工具', kindWebSearch: '搜索', kindOther: '其他',
 } satisfies Record<string, string>
 /** Typed keys shared by both product locales. */
 export type System3Key = keyof typeof zh
@@ -24,6 +32,14 @@ export const en = {
   unchanged: 'Current route retained', skillSkipped: 'No automatic instructions injected',
   failed: 'Could not switch. Try again.', decisionTime: 'Decision time', milliseconds: 'ms', historical: 'Most recent entry decision',
   routeChosen: 'Routed: {route}', routeRetained: 'Continuing: {route}', continued: 'Continued from the previous turn',
+  fallbackTimeout: 'Routing timed out; {model} is answering', fallbackUnavailable: 'Routing is unavailable; {model} is answering', delegationPreparing: 'Preparing the hand-off',
+  runStarting: '{provider} is starting', runReviewing: '{provider} finished; checking the result', runMinutes: '{minutes} min {seconds} s',
+  runNote: 'Latest: {note}', alertOvertime: '{provider} has run for {duration}, longer than expected', alertStalled: '{provider} has made no progress for {duration}',
+  alertStarting: '{provider} has been starting for over {duration}', keepWaiting: 'Keep waiting', stopRun: 'Stop', stopFailed: 'Could not stop. Try again.',
+  delegation: 'Delegation', delegationSuggested: 'Suggested, instruction pending', delegationInjected: 'Instruction injected, waiting for {tool}', delegationCalled: 'Called {tool}',
+  runRunning: '{provider} running', runCompleted: '{provider} finished', runAborted: '{provider} stopped', runIncomplete: '{provider} did not finish',
+  runSeconds: '{seconds} s', runCurrent: 'Now: {kind}', kindMessage: 'messages', kindReasoning: 'reasoning', kindCommand: 'commands',
+  kindFileChange: 'file changes', kindTool: 'tools', kindWebSearch: 'searches', kindOther: 'other',
 } satisfies Record<System3Key, string>
 
 declare module '@deepseek-ai/dsh-client-ui-slots' {

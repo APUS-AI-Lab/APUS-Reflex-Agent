@@ -1,0 +1,28 @@
+# Bilingual-pair consistency record for 2026-10-02-system3-delegation-progress.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/persistence-changes/2026-10-02-system3-delegation-progress.md
+/:
+  en: 3d5a424ae7d7e46b
+  zh: c22a8e4a62d8cc1a
+/2026-10-02-system3-delegation-progress:
+  en: ba0679ebb91fb5ff
+  zh: c4ff50cb00c038e6
+/2026-10-02-system3-delegation-progress/summary:
+  en: 0fb34279c8f7039c
+  zh: 67378503ae453dd2
+/2026-10-02-system3-delegation-progress/table-of-contents:
+  en: 6cf314a069ceb451
+  zh: 9adff678e9ecab3b
+/2026-10-02-system3-delegation-progress/declaration:
+  en: 6907136f28e48c90
+  zh: 02f8298485f3d8e7
+/2026-10-02-system3-delegation-progress/compatibility:
+  en: 07eca2f8b3fe3424
+  zh: b6b9e7fe2251beb8
+/2026-10-02-system3-delegation-progress/verification:
+  en: e6c6cdb30e378701
+  zh: ff5a94abdea9eabf
+/2026-10-02-system3-delegation-progress/dev-note:
+  en: b75c8458928b72b9
+  zh: 003ba4e17b4b5269

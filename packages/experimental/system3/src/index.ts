@@ -10,6 +10,8 @@ import { system3DecisionProjection } from './decision-projection.ts'
 import { system3RuntimeProjection } from './runtime-projection.ts'
 import { installSystem3SkillSelection, type System3SkillSelectionConfig } from './skill-selection.ts'
 import { installSystem3KeepWarm } from './keep-warm.ts'
+import { installSystem3Delegation } from './delegation.ts'
+import { installSystem3DelegationProgress, type System3DelegationProgressConfig } from './delegation-progress.ts'
 import type { Session } from '@deepseek-ai/dsh-session'
 import { recordSystem3Decision, type System3DecisionRequest, type System3DecisionReceipt, type System3JevOptions } from './decisions.ts'
 
@@ -18,7 +20,9 @@ export type { System3JevOptions } from './decisions.ts'
 export type { System3SkillSelectionConfig, System3SkillDecisionReceipt } from './skill-selection.ts'
 export type { System3EntryView, System3SkillView, System3RuntimeView } from './types.ts'
 export { createSystem3EntryRouter } from './entry-routing.ts'
-export type { System3EntryCandidate, System3EntryRoutingConfig, System3EntryDecisionReceipt, System3EntryOutcome } from './entry-routing.ts'
+export type { System3DelegationSource } from './delegation.ts'
+export type { System3DelegationAlert, System3DelegationMonitorConfig, System3DelegationProgress, System3DelegationProgressConfig } from './delegation-progress.ts'
+export type { System3EntryCandidate, System3EntryDelegateCandidate, System3EntryModelCandidate, System3EntryRoutingConfig, System3EntryDecisionReceipt, System3EntryOutcome } from './entry-routing.ts'
 export type { System3KeepWarmConfig } from './keep-warm.ts'
 import { selectSystem3Evidence, type System3EvidenceRequest, type System3EvidenceSelection } from '@deepseek-ai/dsh-experimental-system3-evidence'
 import { selectSystem3Route, type System3PrivacyMode, type System3RouteCandidate, type System3RouteSelection, type System3PrivacyPolicy } from '@deepseek-ai/dsh-experimental-system3-policy'
@@ -57,6 +61,8 @@ export interface Config {
   readonly entryRouting?: false | System3EntryRoutingConfig
   /** Opt-in scoped Skill advice and native pre-step instruction injection. */
   readonly skillSelection?: false | System3SkillSelectionConfig
+  /** Opt-in persistent progress snapshots of subagent runs, written to the delegating Agent's Session. */
+  readonly delegationProgress?: false | System3DelegationProgressConfig
 }
 
 /** Small operational counters, intentionally free of user data. */
@@ -136,6 +142,13 @@ export interface System3Service {
   lastDecision(session: Session): System3DecisionReceipt | null
 }
 
+/** Schema fields shared by model and delegation entry candidates. */
+const candidateFields = {
+  id: z.string().required(), description: z.string().required(), label: z.string(),
+  executionDomain: z.union([z.const('local'), z.const('network')]).required(),
+  dataClasses: z.array(z.union([z.const('public'), z.const('workspace'), z.const('sensitive'), z.const('secret')])).required(),
+}
+
 /**
  * Cordis service that composes policy modules without owning an AgentLoop.
  *
@@ -158,12 +171,11 @@ export default class System3 extends Service implements System3Service {
       deadlineMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS),
       baseline: z.union([z.const(undefined), z.object({ executionDomain: z.union([z.const('local'), z.const('network')]).required(),
         dataClasses: z.array(z.union([z.const('public'), z.const('workspace'), z.const('sensitive'), z.const('secret')])).required() })]),
-      candidates: z.array(z.object({
-        id: z.string().required(), description: z.string().required(), label: z.string(),
-        provider: z.string().required(), model: z.string().required(),
-        reasoningEffort: z.string(), executionDomain: z.union([z.const('local'), z.const('network')]).required(),
-        dataClasses: z.array(z.union([z.const('public'), z.const('workspace'), z.const('sensitive'), z.const('secret')])).required(),
-      })).required(),
+      candidates: z.array(z.union([z.object({
+        ...candidateFields, provider: z.string().required(), model: z.string().required(), reasoningEffort: z.string(),
+      }), z.object({
+        ...candidateFields, delegate: z.object({ provider: z.string().required(), tool: z.string().required() }).required(),
+      })])).required(),
       sessionDataClasses: z.array(z.union([z.const('public'), z.const('workspace'), z.const('sensitive'), z.const('secret')])).required(),
       minConfidence: z.number().min(0).max(1).required(),
       maxInputBytes: z.number().step(1).min(1).required(),
@@ -178,6 +190,14 @@ export default class System3 extends Service implements System3Service {
       minConfidence: z.number().min(0).max(1).required(), maxInputBytes: z.number().step(1).min(1).required(),
       maxContentBytes: z.number().step(1).min(1).required(), maxCandidates: z.number().step(1).min(1).max(254).required(),
       deadlineMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).required(),
+    })]).default(false),
+    delegationProgress: z.union([z.const(false), z.object({
+      intervalMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).required(),
+      monitor: z.union([z.const(undefined), z.object({
+        overtimeMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).required(),
+        stallMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).required(),
+        startupMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).required(),
+      })]),
     })]).default(false),
   })
 
@@ -205,8 +225,14 @@ export default class System3 extends Service implements System3Service {
       ctx.inject(retains ? ['sessionController', 'llm', 'sessionProjections'] : ['sessionController', 'llm'], (ctx) => {
         ctx.effect(() => ctx.sessionController.registerPromptRouter(router))
       })
+      if (config.entryRouting.candidates.some(candidate => candidate.delegate !== undefined)) {
+        ctx.inject(['sessionProjections'], (ctx) => { installSystem3Delegation(ctx) })
+      }
       const keepWarm = config.entryRouting.keepWarm
       if (keepWarm !== undefined) ctx.inject(['jev'], (ctx) => { installSystem3KeepWarm(ctx, keepWarm) })
+    }
+    if (config.delegationProgress !== undefined && config.delegationProgress !== false) {
+      installSystem3DelegationProgress(ctx, config.delegationProgress)
     }
     if (config.observeAgentLoop === true) this.observeAgentLoop()
     if (config.skillSelection !== undefined && config.skillSelection !== false) {

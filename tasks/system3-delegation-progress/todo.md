@@ -28,11 +28,33 @@ Base: branch `feat-system3-g1`. Order follows [architecture section 11](../../do
 - [ ] Image input: modality filter before Jev; update deployed input modalities (Flash and both GPT relays read images, Pro does not).
 - [ ] Not yet deployed to the server or Desktop.
 
-## Slice 1b · parent-session milestones and progress card
+## Speed and delegation (2026-10-02)
 
-- [ ] Persistent start / end / throttled milestone events, persistence-type acknowledgement, both SDK expected outputs, keyless snapshot.
-- [ ] Projection and System3Dock progress card.
-- [ ] Delegation suggestion injected at pre-step, with its persistent decision record.
+- [x] Jev connection pool (`keepAliveMs`, `http2`) and System3 `keepWarm`; warm decisions 0.44–0.50 s, in-app 0.49–1.25 s on this Mac.
+- [x] Candidate `label`; route notice the moment the decision is recorded; stale notice hidden while a newer submission is pending.
+- [x] Delegation candidates (`delegate: { provider, tool }`), one `system3-delegation` instruction, suggested / injected / called stages.
+- [x] Real Web run: coding task routed to Codex in 0.69 s, instruction injected, `subagent_codex` called, fix and 4 tests added, 5 / 5 pass, 108 s total.
+- [ ] Delegation threshold: the model itself called the task a one-line fix; compare Flash / always-delegate / Jev on small and large coding tasks.
+- [ ] Python SDK snapshot verified only by hand-patching the committed log (the local runtime build bundles Office skills); CI must confirm.
+
+## Slice 1b · delegation progress card
+
+- [x] `delegationProgress`: start, throttled running, and end snapshots as `system3/delegation-progress` in the delegating Agent's Session; persistence change recorded.
+- [x] Projection `subagentRun` and the dock progress line with locally advancing elapsed time.
+- [x] Real Web run: slugify task delegated to Codex; the line updated every 2 s from start to "finished · 152 s" (reasoning 7, messages 7, commands 8, file changes 2); 25 snapshots; 8 / 8 tests pass; the line is restored after a page reload.
+- [ ] The main model read files for about 25 s before calling `subagent_codex`; tighten the instruction so delegation starts at once.
+- [ ] Codex reported no step for its first ~26 s; only the running timer shows then.
+
+## Perceived speed and delegation monitoring (2026-10-02)
+
+- [x] ui-chat `conversation.chat.turnHead`; System3 route line in the Turn header; fallback notices.
+- [x] Dock phases: preparing hand-off, starting, running, checking result; minutes-and-seconds durations.
+- [x] Activity notes (child's own progress text, 200-character bound); `delegationProgress.monitor` alerts for slow start, stall, and overtime.
+- [x] Real Web run with low thresholds: starting alert at 16 s, keep-waiting dismissed it, notes showed Codex's plan and file scope, overtime alerts at 1 min and 2 min, stop ended the Turn within 2 s ("codex stopped · 16 s").
+- [ ] Expected-duration labels, end summary in `turnTail`, short follow-ups skipping Jev.
+- [ ] 8.2 composer model chip (not decided).
+- [ ] Browser or desktop notification when the page is not visible.
+- [ ] Delegated Codex reads the user's global `~/.codex` instructions through `CODEX_HOME`; product deployments need an isolated Codex home.
 
 ## Slice 2 · delegation supervision
 

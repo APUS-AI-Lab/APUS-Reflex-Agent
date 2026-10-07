@@ -45,6 +45,11 @@ export interface OpenFileOptions {
   readonly line?: number
 }
 
+/** Owner currency of the Turn header extension list. */
+export interface TurnHeadOwnerProps {
+  turn: TurnLocation
+}
+
 /** Owner currency of the completed-Turn extension chain. */
 export interface TurnTailOwnerProps {
   turn: TurnLocation
@@ -307,6 +312,13 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
      * replaces that command renderer; an unoccupied key uses the generic card.
      */
     'conversation.chat.commandview': { kind: 'keyed'; scope: 'session'; owner: CommandRowOwnerProps }
+    /**
+     * Ordered feature contributions after the Turn's process label, in the header
+     * row shown from Turn start. Each entry receives the Turn location and renders
+     * inside the header's disclosure button, so it must be non-interactive phrasing
+     * content. A fresh `id` adds an entry; entries without content return null.
+     */
+    'conversation.chat.turnHead': { kind: 'list'; scope: 'session'; owner: TurnHeadOwnerProps }
     /**
      * Ordered feature contributions before a completed Turn's action row. Each
      * entry receives the Turn, closing sequence, and file opener. A fresh `id`

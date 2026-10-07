@@ -1184,6 +1184,7 @@ describe('CodexAppServerWire', () => {
       item('item/completed', { type: 'commandExecution', status: 'completed', aggregatedOutput: 'SECRET_TOKEN' }),
       item('item/started', { type: 'futureItem' }),
       item('item/completed', { type: 'mcpToolCall', tool: 'private-tool' }),
+      item('item/completed', { type: 'agentMessage', text: 'Checking the parser before editing.', phase: 'commentary' }),
       item('item/completed', { type: 'agentMessage', text: 'done', phase: 'final_answer' }),
       turnCompleted('completed'),
     )
@@ -1193,6 +1194,7 @@ describe('CodexAppServerWire', () => {
       { kind: 'command', phase: 'completed' },
       { kind: 'other', phase: 'started' },
       { kind: 'tool', phase: 'completed' },
+      { kind: 'message', phase: 'completed', note: 'Checking the parser before editing.' },
       { kind: 'message', phase: 'completed' },
     ])
     await run.dispose()
