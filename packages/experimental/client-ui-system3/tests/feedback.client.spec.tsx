@@ -167,6 +167,11 @@ it('names the delegate beside the model selector only while the running turn is 
   cleanup()
   expect(view({ ...base, subagentRun: { ...run, state: 'completed' } }).container.textContent).toBe('正在交给子任务')
   cleanup()
+  const called = { ...entry, route: { ...entry.route, delegation: { ...delegation, called: true } } }
+  expect(view({ ...base, entry: called, subagentRun: { ...run, state: 'completed' } }).container.textContent).toBe('')
+  cleanup()
+  expect(view({ ...base, entry: called, subagentRun: run }).container.textContent).toBe('已交给 codex')
+  cleanup()
   const notInjected = { ...entry, route: { ...entry.route, delegation: { ...delegation, injected: false } } }
   const undelegated = { ...entry, route: { ...entry.route, delegation: null } }
   for (const facts of [{ ...base, subagentRun: run, entry: notInjected }, { ...base, subagentRun: null, entry: undelegated },

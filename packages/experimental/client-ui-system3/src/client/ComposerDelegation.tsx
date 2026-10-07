@@ -17,8 +17,10 @@ export function System3ComposerDelegation(props: Pick<PropsRuntime<'conversation
   const delegation = facts?.entry?.route?.delegation
   if (!running || delegation === undefined || delegation === null || !delegation.injected) return null
   const run = facts?.subagentRun ?? null
-  // A settled run belongs to an earlier delegation; the new one has not reported yet.
   const active = run !== null && run.state === 'running'
+  // Once this turn has called the tool, a settled run is its own result under review, so the hand-off is over.
+  if (!active && run !== null && delegation.called) return null
+  // Before the call, a settled run belongs to an earlier delegation and the new one has not reported yet.
   const text = active ? props.t('composerDelegated', { provider: run.provider }) : props.t('composerDelegating')
   return <Tooltip label={props.t('composerDelegationHint')} side="top" delayMs={300}>
     <span className={css.delegating} role="status"><span className={css.dot} data-active="true" aria-hidden="true" />{text}</span>
