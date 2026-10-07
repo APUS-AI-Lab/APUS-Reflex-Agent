@@ -49,6 +49,7 @@ Mount this plugin when a host needs typed Jev decisions; it is absent from defau
 | `apiKeyEnv` | absent | Credential reference resolved for each request |
 | `keepAliveMs` | absent | Idle time a dedicated direct connection stays open for reuse; omission uses the process-wide transport. Requests routed through a configured HTTP proxy always use the proxy's transport |
 | `http2` | `false` | Negotiate HTTP/2 on the dedicated connection; requires `keepAliveMs` |
+| `resetAfterFailures` | absent | Consecutive requests without a response after which the dedicated pool is destroyed and the next request opens a fresh connection; on HTTP/2 every request shares one connection, so a stalled one otherwise fails every later decision. Requires `keepAliveMs`; omission never reopens the pool |
 | `providerId` | `system-one` | Built-in provider registry id |
 
 The endpoint may be a local SSH tunnel or a controlled service URL. The provider appends `/v1/systemone` when the configured URL does not already end in `/v1`; it sends a Bearer credential only when `apiKeyEnv` resolves to a value.

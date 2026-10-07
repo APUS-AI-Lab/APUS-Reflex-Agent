@@ -91,6 +91,8 @@
         timeoutMs: 15000
         keepAliveMs: 120000
         http2: true
+        # Two decisions without a response on the shared HTTP/2 connection reopen it.
+        resetAfterFailures: 2
     - id: system3
       name: ../../packages/experimental/system3/lib/index.js
       config:

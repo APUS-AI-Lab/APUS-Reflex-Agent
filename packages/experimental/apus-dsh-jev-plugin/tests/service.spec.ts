@@ -62,4 +62,10 @@ describe('apus-dsh-jev-plugin service', () => {
     await expect(ctx.plugin(Jev, { endpoint: 'http://localhost', model: 'default', http2: true })).rejects.toThrow('http2 requires keepAliveMs')
     await ctx.fiber.dispose()
   })
+
+  it('requires keepAliveMs for reopening a stalled pool', async () => {
+    const ctx = new Context()
+    await expect(ctx.plugin(Jev, { endpoint: 'http://localhost', model: 'default', resetAfterFailures: 2 })).rejects.toThrow('resetAfterFailures requires keepAliveMs')
+    await ctx.fiber.dispose()
+  })
 })
