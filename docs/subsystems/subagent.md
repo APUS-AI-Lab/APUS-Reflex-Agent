@@ -351,7 +351,7 @@ interface SubagentStopReasonMap {
 
 ## A one-shot run: `SubagentRun`
 
-`SubagentRun` is the consumer-owned handle for a published one-shot child — one disposable foreground delegation with one result, never a durable child handle. Prompt submission, turn work, and infrastructure faults after publication belong to `result`. Consumers await that result and always dispose the run to reach quiescence. Child failures resolve with a non-completed stop reason; only unrepresentable infrastructure faults reject. A run has no steering and no resume: continuable conversations have no run at all, because the continuation manager holds their `AgentHandle` directly and orders every turn through the child's own inbox.
+`SubagentRun` is the consumer-owned handle for a published one-shot child — one disposable foreground delegation with one result, never a durable child handle. Prompt submission, turn work, and infrastructure faults after publication belong to `result`. Consumers await that result and always dispose the run to reach quiescence. Child failures resolve with a non-completed stop reason; only unrepresentable infrastructure faults reject. A run has no resume; a run that implements the optional `steer` accepts a person's input during its active turn through `subagents.steerByParent`. Continuable conversations have no run at all, because the continuation manager holds their `AgentHandle` directly and orders every turn through the child's own inbox.
 
 ```ts type-equiv
 /**
@@ -384,6 +384,14 @@ interface SubagentRun {
    * represent as a stop reason.
    */
   readonly result: Promise<SubagentResult>
+  /**
+   * OPTIONAL: deliver additional input to the child's active turn without restarting it.
+   * Presence is the capability. Fulfills once the child accepted the input; rejects when the
+   * run no longer accepts input, such as before its turn started or after it ended.
+   * @param content - text blocks the child receives as user input.
+   * @param signal - caller cancellation before acceptance.
+   */
+  steer?(content: readonly ContentBlock[], signal: AbortSignal): Promise<void>
   /**
    * Cancel remaining work, reach child quiescence, and release resources.
    * Idempotent.
@@ -638,6 +646,19 @@ listDescendants(rootSessionId: SessionId, signal?: AbortSignal): Promise<Subagen
  *   otherwise `gateway/internal`.
  */
 @Remote('interruptByParent') interruptByParent( childSessionId: SessionId, parentSessionId: SessionId, mode: 'continuable', ): SubagentInterruptReceipt
+
+/**
+ * Deliver one person's text to a running one-shot child's active turn under the delegating
+ * parent's address. After the child accepts it, the text is appended to the parent Session as
+ * `subagent/steer`; a refused input appends nothing.
+ * @param request - lifecycle run id, claimed parent, and non-blank text.
+ * @param signal - carrier cancellation before the child accepts the input.
+ * @returns acknowledgement that the child accepted the input.
+ * @throws {RemoteError} `gateway/bad-request` for an empty id or blank or oversized text,
+ *   `subagent/not-steerable` when the run is not live under that parent, does not accept
+ *   input, or refused it, `gateway/cancelled`.
+ */
+@Remote('steerByParent') async steerByParent(request: SubagentSteerRequest, signal: AbortSignal): Promise<SubagentSteerReceipt>
 
 /**
  * Register a provider under its name. Registration is effect-scoped and HMR

@@ -29,6 +29,7 @@ const modelSelectionProjectionSchema = z.object({
   mode: z.enum(['auto', 'fixed']),
   lastUsed: modelSelectionSchema.nullable(),
   next: modelSelectionSchema.nullable(),
+  automatic: z.boolean(),
 }) as z.ZodType<ModelSelectionProjection>
 
 /**
@@ -80,6 +81,7 @@ const modelSelectionProjection = {
       mode: state.explicit === null ? 'auto' : 'fixed',
       lastUsed: state.lastUsed,
       next: state.pending ?? state.explicit ?? (state.automaticInUse ? state.automatic : null) ?? state.automaticBaseline ?? state.lastUsed,
+      automatic: state.pending === null && state.explicit === null && state.automaticInUse && state.automatic !== null,
     }),
   },
   stateVersion: 5,

@@ -353,7 +353,7 @@ interface SubagentStopReasonMap {
 
 ## 单次 run：`SubagentRun`
 
-`SubagentRun` 是消费方持有的、指向一个已发布单次子 agent 的句柄——一次可 dispose 的前台委派，只有一个结果，绝不是持久化子 agent handle。发布后的提示词提交、轮次工作与基础设施故障归 `result` 所有。消费方 await 该结果并始终 dispose 该 run，直至完全停稳。子 agent 失败时以非 completed 的 stop reason resolve；只有无法表示的基础设施故障才会 reject。run 没有 steering，也没有恢复：可继续对话根本没有 run，因为继续执行管理器直接持有它们的 `AgentHandle`，并通过子 agent 自己的收件箱为每个轮次排序。
+`SubagentRun` 是消费方持有的、指向一个已发布单次子 agent 的句柄——一次可 dispose 的前台委派，只有一个结果，绝不是持久化子 agent handle。发布后的提示词提交、轮次工作与基础设施故障归 `result` 所有。消费方 await 该结果并始终 dispose 该 run，直至完全停稳。子 agent 失败时以非 completed 的 stop reason resolve；只有无法表示的基础设施故障才会 reject。run 不能恢复；实现了可选 `steer` 的 run 可以在当前轮次中通过 `subagents.steerByParent` 接收用户输入。可继续对话根本没有 run，因为继续执行管理器直接持有它们的 `AgentHandle`，并通过子 agent 自己的收件箱为每个轮次排序。
 
 ```ts type-equiv
 /**
@@ -386,6 +386,14 @@ interface SubagentRun {
    * represent as a stop reason.
    */
   readonly result: Promise<SubagentResult>
+  /**
+   * OPTIONAL: deliver additional input to the child's active turn without restarting it.
+   * Presence is the capability. Fulfills once the child accepted the input; rejects when the
+   * run no longer accepts input, such as before its turn started or after it ended.
+   * @param content - text blocks the child receives as user input.
+   * @param signal - caller cancellation before acceptance.
+   */
+  steer?(content: readonly ContentBlock[], signal: AbortSignal): Promise<void>
   /**
    * Cancel remaining work, reach child quiescence, and release resources.
    * Idempotent.
@@ -642,6 +650,19 @@ listDescendants(rootSessionId: SessionId, signal?: AbortSignal): Promise<Subagen
  *   otherwise `gateway/internal`.
  */
 @Remote('interruptByParent') interruptByParent( childSessionId: SessionId, parentSessionId: SessionId, mode: 'continuable', ): SubagentInterruptReceipt
+
+/**
+ * Deliver one person's text to a running one-shot child's active turn under the delegating
+ * parent's address. After the child accepts it, the text is appended to the parent Session as
+ * `subagent/steer`; a refused input appends nothing.
+ * @param request - lifecycle run id, claimed parent, and non-blank text.
+ * @param signal - carrier cancellation before the child accepts the input.
+ * @returns acknowledgement that the child accepted the input.
+ * @throws {RemoteError} `gateway/bad-request` for an empty id or blank or oversized text,
+ *   `subagent/not-steerable` when the run is not live under that parent, does not accept
+ *   input, or refused it, `gateway/cancelled`.
+ */
+@Remote('steerByParent') async steerByParent(request: SubagentSteerRequest, signal: AbortSignal): Promise<SubagentSteerReceipt>
 
 /**
  * Register a provider under its name. Registration is effect-scoped and HMR

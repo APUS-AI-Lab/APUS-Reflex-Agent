@@ -47,7 +47,8 @@ The entry decides who receives the input before any model starts. Routes fall in
 **Delegation rules:**
 
 - Delegation is one kind of entry candidate, not a separate decision procedure.
-- A candidate's description states the task size it covers; small single-file changes should not be delegated (see [Not yet proven](#not-yet-proven)).
+- Codex and Claude Code receive only the highest-value, most complex, longest-running work: repository-scale tasks that need long exploration, changes across many files, and repeated build-and-test cycles beyond one conversation. Everything an owned model finishes in one conversation stays with that model, because the [delegation calibration](delegation-calibration.md) found no accepted result gained by delegating such tasks and a 4 to 13 times longer run.
+- A candidate's description states the task size it covers in observable terms (codebase size, files touched, expected duration); value itself is not visible in the input, so the person's explicit request to delegate is the signal for it.
 - When an external agent is unavailable, the entry decision falls back to owned models.
 
 <a id="process-control"></a>
@@ -120,7 +121,8 @@ All measured on 2026-10-02 on a development Mac against the real Jev and the Fid
 ## Not yet proven
 
 - Whether higher tiers answer their tasks better, and cost per successful task: the evaluation scores only the routing decision.
-- The delegation threshold: in the real test the main model itself noted the task was a one-line fix; Flash alone would likely take about 20 s, while delegation took 108 s. A three-arm comparison (Flash alone / always delegate / Jev) must set the threshold.
+- Where delegation pays off: in the [delegation calibration](delegation-calibration.md) Flash alone and always-delegate both passed 20 / 20 hidden tests, at a median of 36 s and 203 s; the Codex candidate wording now delegates only repository-scale work, but no measured task needed delegation, so the threshold above which it helps still needs tasks Flash fails.
+- Tier routing for coding tasks: Jev sends some coding tasks to Pro or GPT-5.6 Sol, which were slower than Flash on the calibration tasks without a measured quality gain.
 - The entry latency distribution on the server.
 - Local models and per-input privacy decisions: not implemented.
 - Automatic Skill selection in a real user environment: the user-level directory holds 115 Skills, above the limit of 32, so automatic selection does not run; a shortlist step must come before Jev's final choice.

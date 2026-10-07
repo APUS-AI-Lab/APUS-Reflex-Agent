@@ -34,6 +34,7 @@ const reasoning = {
 function state(overrides: Partial<ModelDirectoryState> = {}): ModelDirectoryState {
   return {
     current: { provider: 'deepseek-official', model: 'deepseek-v4-flash' },
+    automatic: false,
     routable: true,
     groups: [{
       id: 'deepseek-official',
@@ -54,6 +55,19 @@ function state(overrides: Partial<ModelDirectoryState> = {}): ModelDirectoryStat
 }
 
 afterEach(cleanup)
+
+describe('ModelSelect automatic turn route', () => {
+  it('marks an automatic route of the running turn and drops the marker once the default returns', () => {
+    const directory = createSnapshotStore<ModelDirectoryState>(state({ automatic: true }))
+    render(<ModelSelect locked={false} available directory={directory} load={vi.fn()} select={vi.fn()} t={t} />)
+    const trigger = screen.getByRole('button', { name: '选择模型，本轮自动使用 DeepSeek-V4-Flash · High' })
+    expect(trigger.textContent).toContain('自动')
+    expect(trigger.getAttribute('title')).toBe('本轮自动选择 DeepSeek-V4-Flash · High，结束后恢复默认')
+    act(() => { directory.set(state()) })
+    expect(trigger.textContent).not.toContain('自动')
+    expect(trigger.getAttribute('title')).toBe('DeepSeek-V4-Flash · High')
+  })
+})
 
 describe('ModelSelect reasoning effort', () => {
   it('renders effort names without descriptions and submits the effort as part of the session selection', async () => {

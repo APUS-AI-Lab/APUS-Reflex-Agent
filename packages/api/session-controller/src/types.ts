@@ -135,6 +135,11 @@ export interface ModelSelectionProjection {
   readonly lastUsed: ModelSelection | null
   /** Selection the next request should use, falling back to {@link lastUsed}. */
   readonly next: ModelSelection | null
+  /**
+   * Whether {@link next} is the automatic route a request of the current input turn adopted;
+   * false in fixed mode and once that turn ends.
+   */
+  readonly automatic: boolean
 }
 
 /** One adapter-owned reasoning effort for an exact model route. */

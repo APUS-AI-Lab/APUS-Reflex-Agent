@@ -35,6 +35,7 @@ const start = (overrides: Partial<SubagentRunInfo> = {}): SubagentRunInfo => ({
   provider: 'mock',
   id: SessionId('child-1'),
   local: false,
+  steerable: false,
   ...overrides,
 })
 
@@ -47,7 +48,7 @@ const end = (overrides: Partial<SubagentRunEndInfo> = {}): SubagentRunEndInfo =>
 function emitRun(ctx: Context, name: 'subagent/start', info: SubagentRunInfo): void
 function emitRun(ctx: Context, name: 'subagent/end', info: SubagentRunEndInfo): void
 function emitRun(ctx: Context, name: 'subagent/start' | 'subagent/end', info: SubagentRunInfo | SubagentRunEndInfo): void {
-  ctx.emit(scopeTarget(ctx.subagents, {}), name as 'subagent/start', info)
+  ctx.emit(scopeTarget(ctx.subagents, {}), name as 'subagent/start', info as SubagentRunInfo)
 }
 
 describe('subagent invariants', () => {

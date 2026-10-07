@@ -71,7 +71,7 @@
       config:
         privacyMode: controlled
         observeAgentLoop: true
-        approvedRemoteIds: [jev, fast, reasoning, expert, frontier]
+        approvedRemoteIds: [jev, fast, reasoning, expert, frontier, codex]
         approvedRemoteDataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'
         jevRouteId: jev
         jevExecutionDomain: network
@@ -80,7 +80,7 @@
           intervalMs: 2000
           monitor:
             overtimeMs: 360000
-            stallMs: 90000
+            stallMs: 180000
             startupMs: 120000
         skillSelection:
           sessionDataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'
@@ -134,3 +134,30 @@
               reasoningEffort: high
               executionDomain: network
               dataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'
+            - id: codex
+              description: 超出一次对话能完成的大型工程任务：在大型代码库里长时间探索、跨十个以上文件改造、反复构建和测试直到通过，通常要十分钟以上。几分钟内能直接改完的修复、函数实现或单个功能都不属于此类，交给模型直接完成。
+              label: 工程任务 · 委派 Codex
+              delegate:
+                provider: codex
+                tool: subagent_codex
+              explicitPatterns:
+                - '(交给|让|用|委派给?)\s*codex'
+                - 'subagent_codex'
+                - 'delegate (this |it )?to codex'
+              executionDomain: network
+              dataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'
+    # Delegation target: Codex with the private home release.sh installs, calling the Fidoo relay.
+    - id: subagent-codex
+      name: ../../packages/subagent/subagent-codex/lib/index.js
+      config:
+        permissionMode: never
+        env:
+          CODEX_HOME: !!js process.env.SYSTEM3_CODEX_HOME
+          SYSTEM3_LITELLM_API_KEY: !!js process.env.SYSTEM3_LITELLM_API_KEY
+    - id: tool-subagent-codex-system3
+      name: ../../packages/subagent/tool-subagent/lib/index.js
+      config:
+        provider: codex
+        toolName: subagent_codex
+        backgroundMode: one-shot
+        maxDepth: provider-managed

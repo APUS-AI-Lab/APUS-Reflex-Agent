@@ -232,6 +232,8 @@ export interface SubprocessRunHandleParts {
   requestCancel: () => void
   /** Tear the child process down to quiescence (backend-owned ladder). */
   teardown: () => Promise<void>
+  /** Mid-run input delivery, for backends whose protocol supports it (see {@link SubagentRun.steer}). */
+  steer?: (content: readonly ContentBlock[], signal: AbortSignal) => Promise<void>
 }
 
 /**
@@ -255,5 +257,6 @@ export function subprocessRunHandle(parts: SubprocessRunHandleParts): SubagentRu
       disposal = parts.teardown()
       return disposal
     },
+    ...parts.steer === undefined ? {} : { steer: parts.steer },
   }
 }

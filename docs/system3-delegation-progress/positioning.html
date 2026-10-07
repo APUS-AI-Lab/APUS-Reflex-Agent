@@ -1,0 +1,325 @@
+<title>System3 架构定位</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700&family=Noto+Sans+SC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a single reading column for the argument, widening only for the comparison table and the layer diagram. */
+:root {
+  --bg: #f6f7f9; --surface: #ffffff; --ink: #141a24; --muted: #5a6474; --line: #dde2ea;
+  --accent: #2346c7; --accent-soft: #e6ebfb; --signal: #b8670a; --signal-soft: #fbf0e1; --ok: #1f7a4d; --ok-soft: #e3f3ea;
+  --display: "Noto Serif SC", "Songti SC", "STSong", serif;
+  --body: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f131a; --surface: #161c26; --ink: #e7ebf2; --muted: #9aa5b6; --line: #2a3342;
+  --accent: #8ea7ff; --accent-soft: #1d2747; --signal: #f0a64a; --signal-soft: #34261a; --ok: #63c793; --ok-soft: #173326; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0f131a; --surface: #161c26; --ink: #e7ebf2; --muted: #9aa5b6; --line: #2a3342;
+  --accent: #8ea7ff; --accent-soft: #1d2747; --signal: #f0a64a; --signal-soft: #34261a; --ok: #63c793; --ok-soft: #173326; color-scheme: dark }
+body { background: var(--bg); color: var(--ink); font: 16px/1.75 var(--body); padding-inline: 20px; padding-block: 40px 72px; }
+main { max-width: 1240px; margin: 0 auto; display: grid; gap: 56px; }
+main > * { width: 100%; max-width: 820px; justify-self: center; }
+main > .wide { max-width: 1240px; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; line-height: 1.3; margin: 0; }
+h1 { font-size: clamp(30px, 5vw, 44px); letter-spacing: 0.01em; }
+h2 { font-size: 26px; }
+h3 { font-size: 18px; }
+p { margin: 0; }
+section { display: grid; gap: 18px; min-width: 0; }
+.eyebrow { font: 500 12px/1.4 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+.lead { font-size: 19px; color: var(--ink); }
+.muted { color: var(--muted); }
+.thesis { border-left: 3px solid var(--signal); padding: 4px 0 4px 18px; font-family: var(--display); font-size: 22px; line-height: 1.55; }
+.stack { display: grid; gap: 10px; }
+.layer { display: grid; grid-template-columns: 168px minmax(0, 1fr); gap: 16px; align-items: start; padding: 16px 18px; border: 1px solid var(--line); background: var(--surface); border-radius: 6px; }
+.layer.s3 { border-color: var(--accent); background: var(--accent-soft); }
+.layer.s1 { border-color: var(--signal); background: var(--signal-soft); }
+.layer b { font-family: var(--display); font-size: 17px; display: block; }
+.layer small { font: 12px/1.5 var(--mono); color: var(--muted); }
+.pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.pill { font: 12px/1.6 var(--mono); padding: 1px 8px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--muted); }
+ol.points { list-style: none; padding: 0; margin: 0; display: grid; gap: 22px; counter-reset: p; }
+ol.points li { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 12px; counter-increment: p; }
+ol.points li::before { content: counter(p); font: 600 20px/1.4 var(--display); color: var(--accent); }
+ol.points h3 { margin-bottom: 4px; }
+.vs { font-size: 14px; color: var(--muted); margin-top: 6px; }
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; min-width: 960px; font-size: 14px; line-height: 1.6; table-layout: fixed; }
+table col.k { width: 13%; } table col.c { width: 19.5%; } table col.us { width: 28.5%; }
+th, td { text-align: left; vertical-align: top; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+thead th { font: 500 13px/1.4 var(--body); color: var(--muted); background: var(--bg); position: sticky; top: 0; }
+tbody th { font-weight: 500; white-space: nowrap; color: var(--muted); }
+td.us { background: var(--accent-soft); }
+tr:last-child th, tr:last-child td { border-bottom: 0; }
+.metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+.metric { padding: 16px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); display: grid; gap: 4px; align-content: start; }
+.metric .n { font: 500 26px/1.2 var(--mono); font-variant-numeric: tabular-nums; }
+.metric .k { font-size: 14px; }
+.metric .c { font-size: 12px; color: var(--muted); }
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.box { padding: 18px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); display: grid; gap: 10px; min-width: 0; }
+.box.say { border-color: var(--ok); }
+.box.avoid { border-color: var(--signal); }
+.box ul { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+.tag { font: 500 12px/1.4 var(--mono); letter-spacing: 0.08em; }
+.say .tag { color: var(--ok); }
+.avoid .tag { color: var(--signal); }
+.slogans { display: grid; gap: 10px; }
+.slogan { padding: 14px 18px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+.slogan b { font-family: var(--display); font-size: 20px; display: block; }
+.check { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.check li { padding-left: 26px; position: relative; }
+.check li::before { content: ""; position: absolute; left: 2px; top: 8px; width: 12px; height: 12px; border: 1.5px solid var(--muted); border-radius: 3px; }
+footer { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; }
+code { font: 13px var(--mono); background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; }
+.diagram { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding: 24px; }
+.diagram svg { display: block; width: 100%; min-width: 1000px; height: auto; font-family: var(--body); }
+.diagram .zone { fill: var(--bg); stroke: var(--line); stroke-width: 1; stroke-dasharray: 4 4; }
+.diagram .node { fill: var(--surface); stroke: var(--ink); stroke-width: 1; }
+.diagram .user { fill: var(--bg); stroke: var(--muted); stroke-width: 1; }
+.diagram .store { fill: var(--bg); stroke: var(--muted); stroke-width: 1; }
+.diagram .focal { fill: var(--signal-soft); stroke: var(--signal); stroke-width: 1.5; }
+.diagram .tagbox { fill: none; stroke: var(--muted); stroke-width: 0.8; }
+.diagram .tagbox.f { stroke: var(--signal); }
+.diagram .tag { fill: var(--muted); font: 500 9px var(--mono); letter-spacing: 0.08em; }
+.diagram .tag.f { fill: var(--signal); }
+.diagram .zl { fill: var(--muted); font: 500 10px var(--mono); letter-spacing: 0.12em; }
+.diagram .name { fill: var(--ink); font-size: 15px; font-weight: 700; }
+.diagram .sub { fill: var(--muted); font-size: 12.5px; }
+.diagram .mono { fill: var(--muted); font: 12px var(--mono); }
+.diagram .mask { fill: var(--surface); }
+.diagram .zmask { fill: var(--bg); }
+.diagram .lbl { fill: var(--muted); font: 500 11px var(--body); letter-spacing: 0.04em; }
+.diagram .lbl.acc { fill: var(--accent); }
+.diagram .wire { fill: none; stroke: var(--muted); stroke-width: 1.2; }
+.diagram .wire.loop { stroke: var(--accent); stroke-width: 1; stroke-dasharray: 4 3; }
+.diagram .rule { stroke: var(--line); stroke-width: 0.8; }
+.diagram .head { fill: var(--muted); }
+.diagram .head.acc { fill: var(--accent); }
+@media (max-width: 560px) { .layer { grid-template-columns: 1fr; gap: 6px; } body { font-size: 15px; } }
+</style>
+
+<main>
+  <header class="stack">
+    <div class="eyebrow">System3 · 10 月 8 日发布定位稿 · 2026-10-03</div>
+    <h1>System3：决策原生的混合 Harness</h1>
+    <p class="lead">一个 0.4 秒的专用决策模型先判断这件事该交给谁，再由合适的模型或专业 Agent 去做，全程可见、可纠偏、可追溯。</p>
+  </header>
+
+  <section>
+    <div class="eyebrow">本质</div>
+    <h2>我们是什么</h2>
+    <p class="thesis">System3 把“谁来做、怎么盯、做得怎样”从执行模型里剥离出来，交给一个快速、可审计、可训练的决策层。</p>
+    <p>今天的 Agent 架构，通常由正在干活的大模型自己决定要不要换模型、要不要派子 Agent：决策和执行挤在同一个昂贵的循环里，既慢又难以复盘。System3 的做法相反：在执行开始之前和执行过程中的有限几个节点，由专用的 9B 决策模型 Jev 给出结构化选择。确定性规则先划定合法范围，Jev 只在其中挑选或弃权。每一次建议、采用、执行和结果都写成会话事实。</p>
+    <p>它不是又一个编程 Agent。Codex 和 Claude Code 在 System3 里是候选执行者，和多家厂商的模型档位放在同一个候选空间里，由同一个入口统一调度和监督。</p>
+  </section>
+
+  <section class="wide">
+    <div class="eyebrow">架构图</div>
+    <h2>一次请求如何流经 System3</h2>
+    <p class="muted">节点角标表示所属层，橙色标出唯一的决策点 Jev。所有建议、采用、执行和核验都落到底部的会话事实日志，蓝色虚线是事实回流到评测与 Jev 训练的闭环。</p>
+    <div class="diagram">
+      <svg viewBox="0 0 1200 652" role="img" aria-labelledby="system3-arch-title system3-arch-desc">
+        <title id="system3-arch-title">System3 架构：一次请求的流向</title>
+        <desc id="system3-arch-desc">用户输入先经过准入规则，再由 Jev 决策交给模型档位或专业 Agent 执行；专业 Agent 由过程监督管理；建议、采用、执行和核验写入会话事实日志，驱动产品界面，并回流到评测与 Jev 训练。</desc>
+        <defs>
+          <marker id="s3-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon class="head" points="0 0, 8 3, 0 6"/></marker>
+          <marker id="s3-arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon class="head acc" points="0 0, 8 3, 0 6"/></marker>
+        </defs>
+
+        <!-- zone -->
+        <rect class="zone" x="664" y="52" width="280" height="300" rx="8"/>
+        <rect class="zmask" x="676" y="56" width="132" height="14" rx="2"/>
+        <text class="zl" x="684" y="67">SYSTEM 2 · 深执行</text>
+
+        <!-- connectors (drawn before nodes) -->
+        <line class="wire" x1="164" y1="200" x2="203" y2="200" marker-end="url(#s3-arrow)"/>
+        <line class="wire" x1="384" y1="200" x2="423" y2="200" marker-end="url(#s3-arrow)"/>
+        <path class="wire" d="M624,180 H646 Q654,180 654,172 V144 Q654,136 662,136 H683" marker-end="url(#s3-arrow)"/>
+        <path class="wire" d="M624,220 H646 Q654,220 654,228 V264 Q654,272 662,272 H683" marker-end="url(#s3-arrow)"/>
+        <path class="wire" d="M924,136 H946 Q954,136 954,144 V176 Q954,184 962,184 H983" marker-end="url(#s3-arrow)"/>
+        <path class="wire" d="M924,272 H946 Q954,272 954,264 V224 Q954,216 962,216 H983" marker-end="url(#s3-arrow)"/>
+        <line class="wire" x1="792" y1="324" x2="792" y2="383" marker-end="url(#s3-arrow)"/>
+        <line class="wire" x1="816" y1="384" x2="816" y2="325" marker-end="url(#s3-arrow)"/>
+        <line class="wire" x1="556" y1="256" x2="556" y2="503" marker-end="url(#s3-arrow)"/>
+        <line class="wire" x1="804" y1="464" x2="804" y2="503" marker-end="url(#s3-arrow)"/>
+        <line class="wire" x1="1074" y1="240" x2="1074" y2="503" marker-end="url(#s3-arrow)"/>
+        <line class="wire" x1="204" y1="536" x2="165" y2="536" marker-end="url(#s3-arrow)"/>
+        <line class="wire loop" x1="492" y1="504" x2="492" y2="257" marker-end="url(#s3-arrow-link)"/>
+
+        <!-- connector labels: opaque mask, 6px clear of the stroke -->
+        <rect class="mask" x="562" y="370" width="76" height="16" rx="2"/><text class="lbl" x="566" y="382">建议 · 采用</text>
+        <rect class="mask" x="410" y="370" width="76" height="16" rx="2"/><text class="lbl acc" x="482" y="382" text-anchor="end">评测 · 训练</text>
+        <rect class="mask" x="730" y="352" width="56" height="16" rx="2"/><text class="lbl" x="782" y="364" text-anchor="end">进度上报</text>
+        <rect class="mask" x="822" y="352" width="76" height="16" rx="2"/><text class="lbl" x="826" y="364">补充 · 停止</text>
+        <rect class="mask" x="1080" y="370" width="76" height="16" rx="2"/><text class="lbl" x="1084" y="382">执行 · 核验</text>
+
+        <!-- nodes -->
+        <rect class="user" x="24" y="160" width="140" height="80" rx="6"/>
+        <text class="name" x="94" y="196" text-anchor="middle">用户输入</text>
+        <text class="sub" x="94" y="220" text-anchor="middle">文字 · 图片 · 追问</text>
+
+        <rect class="node" x="204" y="152" width="180" height="96" rx="6"/>
+        <rect class="tagbox" x="212" y="158" width="60" height="14" rx="2"/><text class="tag" x="242" y="168" text-anchor="middle">SYSTEM 3</text>
+        <text class="name" x="294" y="198" text-anchor="middle">准入规则</text>
+        <text class="sub" x="294" y="218" text-anchor="middle">模态 · 容量 · 权限</text>
+        <text class="sub" x="294" y="236" text-anchor="middle">数据能否出网</text>
+
+        <rect class="focal" x="424" y="144" width="200" height="112" rx="6"/>
+        <rect class="tagbox f" x="432" y="150" width="60" height="14" rx="2"/><text class="tag f" x="462" y="160" text-anchor="middle">SYSTEM 1</text>
+        <text class="name" x="524" y="192" text-anchor="middle">Jev 9B 决策</text>
+        <text class="sub" x="524" y="214" text-anchor="middle">选择 · 置信度 · 弃权</text>
+        <text class="mono" x="524" y="236" text-anchor="middle">p95 ≈ 0.4 s · 可复现</text>
+
+        <rect class="node" x="684" y="84" width="240" height="104" rx="6"/>
+        <text class="name" x="804" y="116" text-anchor="middle">模型档位</text>
+        <text class="sub" x="804" y="140" text-anchor="middle">DeepSeek Flash · DeepSeek Pro</text>
+        <text class="sub" x="804" y="160" text-anchor="middle">GPT-5.6 Sol · GPT-6 Sol</text>
+        <text class="sub" x="804" y="178" text-anchor="middle">一次对话内完成</text>
+
+        <rect class="node" x="684" y="220" width="240" height="104" rx="6"/>
+        <text class="name" x="804" y="252" text-anchor="middle">专业 Agent</text>
+        <text class="sub" x="804" y="276" text-anchor="middle">Codex · Claude Code</text>
+        <text class="sub" x="804" y="296" text-anchor="middle">只接仓库级长程任务</text>
+
+        <rect class="node" x="984" y="160" width="180" height="80" rx="6"/>
+        <text class="name" x="1074" y="196" text-anchor="middle">回答 / 交付物</text>
+        <text class="sub" x="1074" y="220" text-anchor="middle">主模型复核后交付</text>
+
+        <rect class="node" x="684" y="384" width="240" height="80" rx="6"/>
+        <rect class="tagbox" x="692" y="390" width="60" height="14" rx="2"/><text class="tag" x="722" y="400" text-anchor="middle">SYSTEM 3</text>
+        <text class="name" x="804" y="426" text-anchor="middle">过程监督</text>
+        <text class="sub" x="804" y="448" text-anchor="middle">进度 · 提醒 · 补充说明 · 停止</text>
+
+        <rect class="store" x="204" y="504" width="960" height="64" rx="6"/>
+        <rect class="tagbox" x="212" y="510" width="60" height="14" rx="2"/><text class="tag" x="242" y="520" text-anchor="middle">SYSTEM 3</text>
+        <text class="name" x="684" y="532" text-anchor="middle">会话事实日志</text>
+        <text class="sub" x="684" y="554" text-anchor="middle">建议 → 采用 → 执行 → 核验，分开记录 · 可回放 · 可复现</text>
+
+        <rect class="node" x="24" y="384" width="140" height="184" rx="6"/>
+        <rect class="tagbox" x="32" y="390" width="60" height="14" rx="2"/><text class="tag" x="62" y="400" text-anchor="middle">SYSTEM 3</text>
+        <text class="name" x="94" y="430" text-anchor="middle">产品界面</text>
+        <text class="sub" x="94" y="458" text-anchor="middle">路由说明 1–1.5 s</text>
+        <text class="sub" x="94" y="482" text-anchor="middle">委派进度卡片</text>
+        <text class="sub" x="94" y="506" text-anchor="middle">提醒与补充说明</text>
+        <text class="sub" x="94" y="530" text-anchor="middle">输入框自动标记</text>
+
+        <!-- legend strip -->
+        <line class="rule" x1="24" y1="596" x2="1176" y2="596"/>
+        <text class="zl" x="24" y="628">图例</text>
+        <rect class="focal" x="80" y="616" width="16" height="16" rx="3"/><text class="sub" x="104" y="628">焦点：决策点</text>
+        <rect class="tagbox" x="216" y="617" width="60" height="14" rx="2"/><text class="tag" x="246" y="627" text-anchor="middle">SYSTEM N</text>
+        <text class="sub" x="284" y="628">所属层：1 快决策 · 2 深执行 · 3 编排与监督</text>
+        <line class="wire" x1="600" y1="624" x2="640" y2="624" marker-end="url(#s3-arrow)"/><text class="sub" x="652" y="628">请求与事实流向</text>
+        <line class="wire loop" x1="800" y1="624" x2="840" y2="624" marker-end="url(#s3-arrow-link)"/><text class="sub" x="852" y="628">回流：评测与 Jev 训练</text>
+      </svg>
+    </div>
+  </section>
+
+  <section class="wide">
+    <div class="eyebrow">融合了什么</div>
+    <h2>三个系统，一个 Harness</h2>
+    <p class="muted">名字来自双过程理论：System 1 快速直觉，System 2 深度推理。System3 是两者之上的元认知层，负责分派、监督和记账。</p>
+    <div class="stack">
+      <div class="layer s3"><div><b>System 3 · 元认知编排</b><small>规则、监督、事实</small></div><div>确定性准入规则（模态、权限、数据分级）；委派进度、启动过慢、停滞、超时的提醒；运行中补充说明与停止；建议、采用、执行、核验四类事实分开写入会话日志，刷新与回放可恢复。<div class="pills"><span class="pill">DSH 插件内核</span><span class="pill">Session 事件</span><span class="pill">进度投影</span></div></div></div>
+      <div class="layer s1"><div><b>System 1 · 快决策</b><small>Jev 9B，约 0.3–0.4 秒</small></div><div>在有界决策点输出结构化答案：选择哪个候选、给出置信度，或者弃权。低于阈值、超时、不可用都回到默认模型，迟到的结果不生效。同一输入的决策可复现。<div class="pills"><span class="pill">入口路由</span><span class="pill">Skill 选择</span><span class="pill">委派判断</span></div></div></div>
+      <div class="layer"><div><b>System 2 · 深执行</b><small>多厂商模型与专业 Agent</small></div><div>DeepSeek Flash、DeepSeek Pro、GPT-5.6 Sol、GPT-6 Sol 四档模型，加上 Codex、Claude Code 两个专业编程 Agent。只有仓库级的长程工程任务才委派给专业 Agent，其余由模型在一次对话内完成。<div class="pills"><span class="pill">Flash</span><span class="pill">Pro</span><span class="pill">GPT-5.6 Sol</span><span class="pill">GPT-6 Sol</span><span class="pill">Codex</span><span class="pill">Claude Code</span></div></div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">定义点</div>
+    <h2>六个架构创新</h2>
+    <ol class="points">
+      <li><div><h3>决策与执行分离</h3><p>路由、Skill 选择、委派这类“谁来做”的问题，交给独立的小型决策模型，而不是让执行中的大模型在自己的循环里花 token 去想。决策在执行开始前约 0.3–0.4 秒完成，用户在模型开口前就能看到这一轮由谁处理。</p><p class="vs">对照：Agents SDK 的 handoff、Claude Code 的子 Agent，都由正在运行的主模型自己决定。</p></div></li>
+      <li><div><h3>规则先行，弃权即回退</h3><p>硬条件（读图能力、上下文容量、权限、数据能否出网）由确定性规则判定，Jev 只在剩下的合法候选里选，可以弃权。置信度不足就回到默认模型，同一输入得到同一决策，可审计、可复现。</p><p class="vs">对照：完全依赖大模型自由判断的路由，难以保证一致性和安全底线。</p></div></li>
+      <li><div><h3>异构执行者，统一候选空间</h3><p>多家厂商的模型档位和第三方专业 Agent 放在同一个候选列表里，由一个入口统一选择。模型和 Agent 都是可替换的插件，新增一个执行者不需要改主循环。</p><p class="vs">对照：Codex 与 Claude Code 各自主要服务自家模型，Agents SDK 让开发者为每个 Agent 手工指定模型。</p></div></li>
+      <li><div><h3>监督第三方 Agent 的过程层</h3><p>把 Codex 和 Claude Code 的执行步骤归一成不含内容的类别，持久写入父会话：进度卡片每 2 秒更新，启动过慢、停滞、超时会提醒，可以在运行中补充说明或停止。System3 是管理多个 Harness 的 Harness。</p><p class="vs">对照：单个 Agent 能看到自己的过程；System3 统一看见、统一干预它委派出去的外部 Agent。</p></div></li>
+      <li><div><h3>事实底座：建议、采用、执行、核验分开记</h3><p>“Jev 建议了什么、系统采用了什么、实际由哪个模型回答、结果是否核验通过”是四条独立的会话事实，进入模型的内容都能从日志重建。界面、评测和后续的 Jev 训练都从同一份事实推导。</p><p class="vs">对照：常见的 tracing 记录调用链，不区分“建议”和“实际执行”。</p></div></li>
+      <li><div><h3>用证据决定路由策略</h3><p>每条路由规则都要经过三组对照（固定基线、确定性规则、Jev），并用 Agent 看不到的隐藏测试独立验收。第一次对照就发现过度委派：小任务交给 Codex 正确率没有提高、耗时却长 4–13 倍，产品配置随即改正。</p><p class="vs">对照：多数 Agent 产品的路由与委派策略没有公开的对照评测。</p></div></li>
+    </ol>
+  </section>
+
+  <section class="wide">
+    <div class="eyebrow">实现了什么</div>
+    <h2>已经实测的数据</h2>
+    <div class="metrics">
+      <div class="metric"><div class="n">274 / 406 ms</div><div class="k">Jev 决策延迟 p50 / p95</div><div class="c">服务器实测，复用连接，48 次，2026-10-03</div></div>
+      <div class="metric"><div class="n">29 / 30</div><div class="k">四档入口路由与人工标注一致</div><div class="c">两档评测 48 / 50；人工标注，含对抗输入</div></div>
+      <div class="metric"><div class="n">41 s vs 203 s</div><div class="k">同样 100% 通过时的耗时中位数</div><div class="c">Jev 路由组对比总是委派组；10 题各 2 次，隐藏测试验收；乐观上界</div></div>
+      <div class="metric"><div class="n">0.7 s</div><div class="k">运行中补充说明送达并显示</div><div class="c">线上委派 Codex：374 秒完成，13 个隐藏验收测试全部通过，补充要求已落实</div></div>
+      <div class="metric"><div class="n">1.2–1.5 s</div><div class="k">提交后看到“这一轮由谁处理”</div><div class="c">线上实测，含 SSH 隧道；产品内决策 0.64–1.04 秒</div></div>
+      <div class="metric"><div class="n">38 s</div><div class="k">Codex 在生产加固参数下完成修复</div><div class="c">工作区外写入被沙箱拦截；systemd 临时单元复刻正式服务</div></div>
+    </div>
+  </section>
+
+  <section class="wide">
+    <div class="eyebrow">横向对比</div>
+    <h2>与主流 Agent 架构的区别</h2>
+    <p class="muted">对比依据为截至 2026 年中的公开资料，描述各自的默认架构特点，不评价模型能力。三者都是优秀的执行系统，System3 把其中的 Codex 和 Claude Code 作为执行者接入。</p>
+    <div class="table-wrap">
+      <table>
+        <colgroup><col class="k"><col class="c"><col class="c"><col class="c"><col class="us"></colgroup>
+        <thead><tr><th></th><th>OpenAI Agents SDK</th><th>Codex</th><th>Claude Code</th><th>System3</th></tr></thead>
+        <tbody>
+          <tr><th>定位</th><td>构建多 Agent 应用的开发框架</td><td>OpenAI 的编程 Agent（CLI、IDE、云端）</td><td>Anthropic 的编程 Agent（终端、IDE、桌面、网页）</td><td class="us">位于模型与专业 Agent 之上的决策与监督层</td></tr>
+          <tr><th>谁决定“谁来做”</th><td>当前 Agent 的模型通过 handoff 工具调用转交</td><td>用户选择模型；主循环内由模型自主规划</td><td>主模型决定是否派生子 Agent；用户选择模型</td><td class="us">专用决策模型 Jev 在执行前结构化选择，规则先行，可弃权</td></tr>
+          <tr><th>路由的成本与延迟</th><td>占用主模型一次推理</td><td>不涉及跨模型路由</td><td>占用主模型推理</td><td class="us">独立 9B 模型，服务器 p95 约 0.4 秒，不消耗执行模型 token</td></tr>
+          <tr><th>执行者</th><td>开发者为每个 Agent 指定模型，可接入多家</td><td>以 OpenAI 模型为主</td><td>以 Claude 模型为主</td><td class="us">多厂商四档模型 + Codex + Claude Code，统一候选空间</td></tr>
+          <tr><th>子任务委派</th><td>handoff 与 agents-as-tools</td><td>以单 Agent 主循环为主</td><td>子 Agent 拥有独立上下文，可并行</td><td class="us">只把仓库级长程任务委派给专业 Agent，门槛经过对照校准</td></tr>
+          <tr><th>子任务过程可见</th><td>tracing 面向开发者</td><td>自身步骤实时可见</td><td>自身与子 Agent 的过程可见</td><td class="us">跨 Agent 归一的进度卡片，持久化，刷新可恢复</td></tr>
+          <tr><th>运行中干预</th><td>由开发者在代码中实现</td><td>支持在运行中追加指令（turn/steer）</td><td>支持运行中插话与中断</td><td class="us">对委派出去的外部 Agent 补充说明、停止，并在父会话留下记录</td></tr>
+          <tr><th>异常提醒</th><td>由开发者实现</td><td>—</td><td>—</td><td class="us">启动过慢、停滞、超时三类提醒，附继续等待、补充说明、停止</td></tr>
+          <tr><th>决策可审计</th><td>tracing 记录调用链</td><td>会话记录</td><td>会话记录与 hooks</td><td class="us">建议、采用、执行、核验四类事实分开记录，决策可复现</td></tr>
+          <tr><th>安全边界</th><td>guardrails 由开发者配置</td><td>系统级沙箱与审批策略</td><td>权限模式、hooks、沙箱</td><td class="us">准入规则 + 复用执行者自身沙箱，生产环境加固参数下已验证</td></tr>
+          <tr><th>扩展方式</th><td>代码中组合 Agent 与工具</td><td>MCP、AGENTS.md、配置</td><td>MCP、Skills、hooks、插件</td><td class="us">DSH 插件与能力接口，执行者可替换，不改主循环</td></tr>
+          <tr><th>策略如何验证</th><td>由开发者自建评测</td><td>—</td><td>—</td><td class="us">三组对照 + 隐藏测试独立验收，数据驱动配置</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">对外口径</div>
+    <h2>宣传语备选</h2>
+    <div class="slogans">
+      <div class="slogan"><b>先想清楚谁来做，再开始做</b><span class="muted">强调决策与执行分离，适合主标题</span></div>
+      <div class="slogan"><b>0.4 秒，决定由谁来完成你的任务</b><span class="muted">强调速度，配合服务器实测数据</span></div>
+      <div class="slogan"><b>让 Codex、Claude Code 和多家大模型各尽其能</b><span class="muted">强调融合，避免与编程 Agent 正面对立</span></div>
+    </div>
+  </section>
+
+  <section class="wide">
+    <div class="eyebrow">口径边界</div>
+    <h2>能说什么，暂时不说什么</h2>
+    <div class="two">
+      <div class="box say"><div class="tag">可以说（有实测数据）</div><ul>
+        <li>专用决策模型在执行前完成路由，服务器 p95 约 0.4 秒</li>
+        <li>四档模型与 Codex 委派统一由一个入口调度</li>
+        <li>委派进度、提醒、补充说明、停止全程可见，刷新可恢复</li>
+        <li>路由策略经过隐藏测试对照验证，并据此修正了过度委派</li>
+        <li>决策可复现，建议与实际执行分开记录</li>
+      </ul></div>
+      <div class="box avoid"><div class="tag">暂不宣称（尚未完成或未验证）</div><ul>
+        <li>本机模型与隐私数据路由：在路线图上，尚未实现</li>
+        <li>自动纠偏、自动换执行者：目前由用户在提醒中决定</li>
+        <li>委派比单模型更强：对照中尚未出现需要委派的任务</li>
+        <li>Claude Code 运行中补充说明：目前只支持 Codex</li>
+        <li>任何“超越或替代 Codex、Claude Code”的说法</li>
+      </ul></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">10 月 8 日前</div>
+    <h2>发布准备清单</h2>
+    <ul class="check">
+      <li>已完成：发布到服务器并做线上端到端测试（2026-10-03）</li>
+      <li>录制三段演示：简单问答秒回、复杂问题路由到 GPT-5.6 Sol、仓库级任务委派 Codex 并在运行中补充说明</li>
+      <li>确定对外名称与主标语</li>
+      <li>请设计或产品评审委派进度卡片与输入框“自动”标记</li>
+      <li>对比表请熟悉三家产品的同事复核一遍措辞</li>
+    </ul>
+  </section>
+
+  <footer>数据来源：<code>docs/system3-delegation-progress/</code> 下的入口评测、委派门槛校准与部署记录；服务器数据测于 2026-10-03，其余为开发机实测。对比表依据各产品截至 2026 年中的公开资料。</footer>
+</main>

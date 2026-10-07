@@ -54,7 +54,11 @@ Base: branch `feat-system3-g1`. Order follows [architecture section 11](../../do
 - [ ] Expected-duration labels, end summary in `turnTail`, short follow-ups skipping Jev.
 - [ ] 8.2 composer model chip (not decided).
 - [ ] Browser or desktop notification when the page is not visible.
-- [ ] Delegated Codex reads the user's global `~/.codex` instructions through `CODEX_HOME`; product deployments need an isolated Codex home.
+- [x] Delegated Codex reads a service-owned `CODEX_HOME` (`deploy/system3/codex/config.toml`, Fidoo Responses API, gpt-5.6-sol-relay); committed. Real Web run: routed to Codex, wordcount task done, 8 / 8 tests pass, nothing written outside the private home.
+- [ ] That run's first step took 5 min 39 s: Codex's first 5 POSTs to Fidoo each failed at the connection layer after ~62 s (`logs_2.sqlite`, `error sending request`), then succeeded. Same config via `codex exec`: 11 s and 27 s. Local network path (Clash TUN, fake-IP 198.18.x), not configuration; re-measure on the server.
+- [ ] Server unverified: Codex's own Linux command sandbox on a kernel without Landlock; release.spec.sh not rerun (needs the server's Docker).
+- [ ] Locally, Codex shell commands still source the user's `~/.zshenv` (login shell); the server's private HOME has none.
+- [x] Mid-run steer: design `docs/system3-delegation-progress/steer-design.html`, awaiting approval.
 
 ## Slice 2 · delegation supervision
 
@@ -67,3 +71,26 @@ Base: branch `feat-system3-g1`. Order follows [architecture section 11](../../do
 - `test:snapshot`: 177 pass; `browser-use-stagehand-native` fails in this worktree with a Node loader-hook error inside its fixture, in code this branch does not touch. Not yet compared against the base branch.
 - `packages/experimental/agui/src` is below the per-file coverage threshold before and after this change.
 - Real Codex run (bundled CLI, local ChatGPT login, model `gpt-5.5`): the first step arrived about 22 s after start, so a progress view needs a visible started state before any step. The local default model `gpt-6.1-sol` is rejected by the bundled CLI for ChatGPT accounts; the provider needs an explicit `model`.
+
+## Mid-run steer (approved 2026-10-02; parent model does not see steers; Claude Code later)
+
+- [x] dsh-subagent: `SubagentRun.steer?`, `SubagentRunInfo.steerable`, live steerable-run registry in `observeRun`, `@Remote('steerByParent')`, parent Session event `subagent/steer`, `subagent/not-steerable` error.
+- [x] subagent-codex: `turn/steer` with `expectedTurnId`; reject before turn start / after completion / after close.
+- [x] System3: progress snapshot `steerable`; projection `subagentRun.steerable` and `steers` (latest 3); stateVersion 8.
+- [x] Client: DelegationRun steer input + sent list + failure notice; zh/en copy; inject `remote.subagents`.
+- [x] Persistence records, READMEs, architecture section 05, SDK expected outputs / snapshots.
+- [x] Gates + real Web run: steer a running Codex and observe adoption.
+- Real Web run (personal Codex login, gpt-5.5): TaskQueue task delegated; at 21 s into the run a steer asked for an extra `snapshot()` method; the card showed "Added at 21 s" 0.4 s after send; Codex implemented `snapshot()` with tests, 35 / 35 pass; the steer line survived a page reload. A smaller task (textstats) finished before a steer could be sent, so simple delegations often last under a minute.
+- Gates: typecheck, lint, doc-sync 42/42, hygiene 18/18, 100 % coverage on changed files. `test:snapshot` and `packages/experimental` have failures only in browser-use-stagehand-native (Node load hook returns no source); the same test fails on main.
+
+## Server probes, delegation calibration, composer marker (2026-10-03)
+
+- [x] Server probes without releasing: Jev p50 274 ms / p95 406 ms on a reused connection; Codex 0.153.4 under the unit's hardening fixed a file in 38 s, and its sandbox refused a write outside the workspace. `CODEX_HOME` must not be under `/tmp`.
+- [x] Three-arm calibration (10 tasks x 2 runs, hidden tests): Flash alone and always-delegate both 20/20, median 36 s vs 203 s; Jev under the old wording delegated 8/10. Deployed Codex wording tightened; repository-scale probes still delegate 2/3. Four-tier eval unchanged at 29/30.
+- [x] Composer chip: verified in Web that a routed turn already showed the routed model; added an Auto caption during the routed turn (verified: "Auto gpt-5.6-sol-relay Medium" during, "deepseek-v4-flash Low" after).
+- [x] Released the `s3-delegation` release to root@litellm on 2026-10-03 (release cases 8/8 first; rollback target the `g1-stable` release). Online browser e2e: Flash / Pro / GPT-5.6 routes correct, follow-up retained, in-product decisions 638-1039 ms, route line 1.2-1.45 s with tunnel; explicit Codex delegation 374 s, steer 0.7 s, stalled + overtime alerts, hidden tests 13/13.
+- [ ] GPT-5.6 Sol through the Fidoo relay streams about 18 tok/s; a 10k-token design answer took 553 s. Consider an output budget or a faster expert route.
+- [ ] An explicit "交给 Codex" request got Jev low-confidence (baseline); the main model still delegated. Add the explicit-intent rule.
+- [ ] Stall alert fired during 90 s of Codex reasoning without a step; consider a longer stallMs for reasoning-heavy runs.
+- [ ] Tier routing for coding tasks: GPT-5.6 Sol took 321-581 s on two large tasks Flash did in 68-117 s; calibrate tiers separately.
+- [ ] Tasks Flash fails, to measure where delegation pays off.

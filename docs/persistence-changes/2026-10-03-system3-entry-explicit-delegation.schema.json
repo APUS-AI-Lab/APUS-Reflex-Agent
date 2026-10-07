@@ -1,0 +1,679 @@
+{
+  "formatVersion": 2,
+  "roots": [
+    {
+      "key": "event:system3/entry-decision",
+      "kind": "event",
+      "event": "system3/entry-decision",
+      "surface": false,
+      "digest": "b21037892a17d8375f1124a35300ccf73135bc598404d2f9d39ddcd03807d896",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "data",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "ignorable",
+                "type": 17,
+                "optional": true
+              },
+              {
+                "name": "seq",
+                "type": 13,
+                "optional": false
+              },
+              {
+                "name": "time",
+                "type": 13,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 63,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "baseline",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "candidate",
+                "type": 4,
+                "optional": true
+              },
+              {
+                "name": "candidateIds",
+                "type": 6,
+                "optional": false
+              },
+              {
+                "name": "dataClasses",
+                "type": 7,
+                "optional": false
+              },
+              {
+                "name": "elapsedMs",
+                "type": 13,
+                "optional": false
+              },
+              {
+                "name": "executionDomain",
+                "type": 14,
+                "optional": false
+              },
+              {
+                "name": "explicit",
+                "type": 17,
+                "optional": true
+              },
+              {
+                "name": "outcome",
+                "type": 18,
+                "optional": false
+              },
+              {
+                "name": "request",
+                "type": 34,
+                "optional": false
+              },
+              {
+                "name": "requestId",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "response",
+                "type": 54,
+                "optional": true
+              },
+              {
+                "name": "retained",
+                "type": 61,
+                "optional": true
+              },
+              {
+                "name": "routeId",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "selected",
+                "type": 2,
+                "optional": true
+              },
+              {
+                "name": "version",
+                "type": 62,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "model",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "provider",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "reasoningEffort",
+                "type": 3,
+                "optional": true
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "delegate",
+                "type": 5,
+                "optional": true
+              },
+              {
+                "name": "id",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "label",
+                "type": 3,
+                "optional": true
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "provider",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "tool",
+                "type": 3,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "array",
+            "element": 3
+          },
+          {
+            "kind": "array",
+            "element": 8
+          },
+          {
+            "kind": "union",
+            "types": [
+              9,
+              10,
+              11,
+              12
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "workspace"
+          },
+          {
+            "kind": "literal",
+            "value": "public"
+          },
+          {
+            "kind": "literal",
+            "value": "secret"
+          },
+          {
+            "kind": "literal",
+            "value": "sensitive"
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "union",
+            "types": [
+              15,
+              16
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "network"
+          },
+          {
+            "kind": "literal",
+            "value": "local"
+          },
+          {
+            "kind": "literal",
+            "value": true
+          },
+          {
+            "kind": "union",
+            "types": [
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "timeout"
+          },
+          {
+            "kind": "literal",
+            "value": "transport"
+          },
+          {
+            "kind": "literal",
+            "value": "abstain"
+          },
+          {
+            "kind": "literal",
+            "value": "unsupported-input"
+          },
+          {
+            "kind": "literal",
+            "value": "low-confidence"
+          },
+          {
+            "kind": "literal",
+            "value": "missing-credential"
+          },
+          {
+            "kind": "literal",
+            "value": "rate-limited"
+          },
+          {
+            "kind": "literal",
+            "value": "http"
+          },
+          {
+            "kind": "literal",
+            "value": "input-too-large"
+          },
+          {
+            "kind": "literal",
+            "value": "invalid-response"
+          },
+          {
+            "kind": "literal",
+            "value": "no-candidates"
+          },
+          {
+            "kind": "literal",
+            "value": "cancelled"
+          },
+          {
+            "kind": "literal",
+            "value": "privacy-denied"
+          },
+          {
+            "kind": "literal",
+            "value": "provider-unavailable"
+          },
+          {
+            "kind": "literal",
+            "value": "selected"
+          },
+          {
+            "kind": "union",
+            "types": [
+              35,
+              53
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "effort",
+                "type": 36,
+                "optional": true
+              },
+              {
+                "name": "model",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "providerId",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "questions",
+                "type": 39,
+                "optional": false
+              },
+              {
+                "name": "state",
+                "type": 49,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "union",
+            "types": [
+              37,
+              38
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "high"
+          },
+          {
+            "kind": "literal",
+            "value": "low"
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 3,
+                "value": 40
+              }
+            ]
+          },
+          {
+            "kind": "union",
+            "types": [
+              41,
+              43,
+              46
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "criteria",
+                "type": 6,
+                "optional": false
+              },
+              {
+                "name": "instructions",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "type",
+                "type": 42,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "score"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "criteria",
+                "type": 44,
+                "optional": false
+              },
+              {
+                "name": "instructions",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "type",
+                "type": 45,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 3,
+                "value": 3
+              }
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "choice"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "criteria",
+                "type": 47,
+                "optional": true
+              },
+              {
+                "name": "instructions",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "type",
+                "type": 48,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "false",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "true",
+                "type": 3,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "noul"
+          },
+          {
+            "kind": "union",
+            "types": [
+              3,
+              13,
+              50,
+              51,
+              52,
+              53
+            ]
+          },
+          {
+            "kind": "array",
+            "element": 49
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 3,
+                "value": 49
+              }
+            ]
+          },
+          {
+            "kind": "primitive",
+            "type": "boolean"
+          },
+          {
+            "kind": "primitive",
+            "type": "null"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "answers",
+                "type": 55,
+                "optional": false
+              },
+              {
+                "name": "model",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "usage",
+                "type": 58,
+                "optional": true
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 3,
+                "value": 56
+              }
+            ]
+          },
+          {
+            "kind": "union",
+            "types": [
+              57,
+              59,
+              60
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "choice",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "confidence",
+                "type": 13,
+                "optional": false
+              },
+              {
+                "name": "probabilities",
+                "type": 58,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 45,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [],
+            "indices": [
+              {
+                "key": 3,
+                "value": 13
+              }
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "confidence",
+                "type": 13,
+                "optional": false
+              },
+              {
+                "name": "legend",
+                "type": 44,
+                "optional": false
+              },
+              {
+                "name": "probabilities",
+                "type": 58,
+                "optional": false
+              },
+              {
+                "name": "score",
+                "type": 13,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 42,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "noul",
+                "type": 13,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 48,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "requestId",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "selection",
+                "type": 2,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": 1
+          },
+          {
+            "kind": "literal",
+            "value": "system3/entry-decision"
+          }
+        ]
+      }
+    }
+  ],
+  "types": []
+}

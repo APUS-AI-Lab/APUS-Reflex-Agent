@@ -62,6 +62,8 @@ One-shot children run once and settle with a single result, plus an optional str
 
 Every exact live Agent can use `sendMessage()` with a direct continuable child; a resident continuable child can also use it with its direct parent. A working target receives the Agent message through Steer at its nearest step; an idle target starts a turn, and only a direct child can be cold-resumed. The parent can also interrupt a running descendant or list its children at any time. A browser continuation prompt independently selects Queue or Steer and may carry image parts: the Host admits and persists each image batch through the attachment store before the child inbox accepts the message, and refuses delivery when the child's declared model does not accept image input. Direct-child discovery reads the parent-owned `subagentCatalog` projection. `listChildren(parentSessionId, signal?)` owns a live-preferred Session observation and returns the catalog asynchronously without reading child logs. It forwards cancellation and releases the observation after materialization. Materialization preserves parent event order in O(D) time for D facts. Descendant discovery recursively reads those child catalogs in parent event order, observing each reachable Session once. It skips branches whose catalogs cannot be read and returns diagnostics for them; neither path loads or resumes a child Agent.
 
+A running one-shot child whose run implements the optional `SubagentRun.steer` accepts a person's text mid-run through the `steerByParent` Remote, addressed by the lifecycle run id and the delegating parent's Session id. `subagent/start` reports this as `steerable`. The service holds such runs only between their start and end events; after the child accepts the text, it appends `subagent/steer` to the parent Session, which the parent's model does not see. An unknown, settled, or foreign run, a refusal, and a blank or oversized text (above `SUBAGENT_STEER_MAX_CHARS`) are rejected and record nothing.
+
 ### Failure and recovery
 
 Requests that need a capability the chosen provider lacks fail loudly at start rather than being silently ignored. A failed child run returns a stop reason, and provider backends add a safe diagnostic; a cancelled request settles as `aborted`. Children are isolated: a crashed or misbehaving child cannot corrupt the parent's session.
@@ -195,6 +197,7 @@ These limits define when the seam is a poor fit or needs special operational car
 - **No durable parent mailbox** — child-to-parent messages require a resident continuable child and live direct parent, and provide acceptance identity rather than exactly-once delivery.
 - **Lifecycle events are observe-only** — a run-affecting `subagent/end` continuation or decision API waits for a concrete consumer.
 - **Step events are live and coarse** — `subagent/activity` carries a step category, phase, and an optional note of the child's own progress text (bounded to `SUBAGENT_ACTIVITY_NOTE_MAX_CHARS`) for one-shot runs, is not written to any Session, and is reported only by the Codex and Claude Code providers.
+- **Mid-run input is one-shot and Codex-only** — `steerByParent` reaches only runs that implement `SubagentRun.steer`, currently Codex; Claude Code needs streaming input first, and continuable children use the `prompt` Remote instead.
 
 <a id="dev-note"></a>
 ### Dev Note

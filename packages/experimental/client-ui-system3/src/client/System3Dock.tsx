@@ -5,6 +5,7 @@ import type { ModelSelection, ModelSelectionProjection, SessionRequestId } from 
 import type { System3RuntimeView, System3SubagentRunView } from '@deepseek-ai/dsh-experimental-system3/types'
 import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
 import type {} from '@deepseek-ai/dsh-client-ui-session/client'
+import { Input } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { System3Key } from './locales.ts'
 import css from './System3Dock.module.css'
 
@@ -15,6 +16,8 @@ export interface System3Actions {
   readonly onAutomatic: () => Promise<void>
   /** Cancel the Session's in-flight Turn, which also cancels its delegated run, through the native Session controller. */
   readonly onStop: () => Promise<void>
+  /** Deliver the person's text to the running delegated run; rejects when the run refused it. */
+  readonly onSteer: (runId: string, text: string) => Promise<void>
 }
 /** Pure view inputs, independent of transport subscription ownership. */
 export interface System3FeedbackProps extends System3Actions {
@@ -98,18 +101,51 @@ function alertText(run: System3SubagentRunView, alert: NonNullable<System3Subage
   const since = now - run.startedAt - (run.lastStepAt ?? 0)
   return t(alert.kind === 'starting' ? 'alertStarting' : 'alertStalled', { provider: run.provider, duration: formatDuration(since, t) })
 }
-/** Progress of the latest delegated run; elapsed time advances locally while the run is running.
- * @param props - The projected run snapshot, the delegating Turn's state, the stop action, and translations.
- * @returns The status line, the child's latest note, and any undismissed attention alert with keep-waiting and stop actions.
+/** Upper bound of one mid-run input, matching the Host's `SUBAGENT_STEER_MAX_CHARS`. */
+const STEER_MAX_CHARS = 2000
+/** Inline form that sends one correction to the running delegated run; the text stays when sending fails.
+ * @param props - The run id, the steer action, and translations.
+ * @returns The input with its send button and failure notice.
  */
-export function DelegationRun({ run, turnRunning, onStop, t }: {
+function SteerForm({ runId, onSteer, t }: {
+  readonly runId: string
+  readonly onSteer: (runId: string, text: string) => Promise<void>
+  readonly t: TranslateNS<'system3'>
+}) {
+  const [text, setText] = useState('')
+  const [sending, setSending] = useState(false)
+  const [failed, setFailed] = useState(false)
+  const send = async (): Promise<void> => {
+    const value = text.trim()
+    if (value === '' || sending) return
+    setSending(true); setFailed(false)
+    try { await onSteer(runId, value); setText('') } catch { setFailed(true) } finally { setSending(false) }
+  }
+  return <form className={css.steer} onSubmit={(event) => { event.preventDefault(); void send() }}>
+    <div className={css.steerInput}>
+      <Input value={text} maxLength={STEER_MAX_CHARS} disabled={sending} aria-label={t('steerLabel')}
+        placeholder={t('steerPlaceholder')} onChange={(event) => { setText(event.target.value) }} />
+    </div>
+    <button type="submit" className={css.button} disabled={sending || text.trim() === ''}>{t(sending ? 'steerSending' : 'steerSend')}</button>
+    {failed && <span role="alert" className={css.error}>{t('steerFailed')}</span>}
+  </form>
+}
+/** Progress of the latest delegated run; elapsed time advances locally while the run is running.
+ * @param props - The projected run snapshot, the delegating Turn's state, the stop and steer actions, and translations.
+ * @returns The status line, the child's latest note, accepted inputs, any undismissed attention alert with keep-waiting,
+ *   steer, and stop actions, and the steer form while it is open.
+ */
+export function DelegationRun({ run, turnRunning, onStop, onSteer, t }: {
   readonly run: System3SubagentRunView
   /** Whether the delegating Turn is still running, so a finished run is still being checked. */
   readonly turnRunning: boolean
   /** Cancel the delegating Turn. */
   readonly onStop: () => Promise<void>
+  /** Deliver one correction to the run. */
+  readonly onSteer: (runId: string, text: string) => Promise<void>
   readonly t: TranslateNS<'system3'>
 }) {
+  const [steering, setSteering] = useState(false)
   const [dismissed, setDismissed] = useState<string | null>(null)
   const [stopping, setStopping] = useState(false)
   const [stopFailed, setStopFailed] = useState(false)
@@ -136,14 +172,20 @@ export function DelegationRun({ run, turnRunning, onStop, t }: {
       {running && run.current !== null && <span>{t('runCurrent', { kind: kindLabel(run.current, t) })}</span>}
     </p>
     {running && run.note !== null && <p className={css.note}>{t('runNote', { note: run.note })}</p>}
+    {run.steers.map(steer => <p key={`${String(steer.atMs)}:${steer.text}`} className={css.note}>
+      {t('steerSent', { duration: formatDuration(steer.atMs, t), text: steer.text })}</p>)}
     {running && run.alert !== null && alertKey !== dismissed && <div className={css.alert} role="alert">
       <span>{alertText(run, run.alert, now, t)}</span>
       <span className={css.alertActions}>
         <button type="button" className={css.button} onClick={() => { setDismissed(alertKey) }}>{t('keepWaiting')}</button>
+        {run.steerable && !steering && <button type="button" className={css.button} onClick={() => { setSteering(true) }}>{t('steerOpen')}</button>}
         <button type="button" className={css.button} disabled={stopping} onClick={() => { void stop() }}>{t('stopRun')}</button>
       </span>
       {stopFailed && <span className={css.error}>{t('stopFailed')}</span>}
     </div>}
+    {run.steerable && (steering
+      ? <SteerForm runId={run.runId} onSteer={onSteer} t={t} />
+      : <button type="button" className={css.link} onClick={() => { setSteering(true) }}>{t('steerOpen')}</button>)}
   </div>
 }
 /** Render observed progress and allow a fixed Session to return to automatic mode.
@@ -175,7 +217,8 @@ export function System3Feedback(props: System3FeedbackProps) {
         {t(switching ? 'resetting' : 'reset')}
       </button>}
     </div>
-    {facts?.subagentRun && <DelegationRun run={facts.subagentRun} turnRunning={props.running} onStop={props.onStop} t={t} />}
+    {facts?.subagentRun && <DelegationRun run={facts.subagentRun} turnRunning={props.running} onStop={props.onStop}
+      onSteer={props.onSteer} t={t} />}
     {/* From the injected instruction until the delegated run's first snapshot, including the tool call's startup. */}
     {!facts?.subagentRun && facts?.entry?.route?.delegation?.injected === true
       && props.running && <p className={css.run} role="status" aria-live="polite">{t('delegationPreparing')}</p>}
@@ -211,5 +254,6 @@ export function System3Dock(props: Pick<PropsRuntime<'conversation.input.dock'>,
   const failed = props.useSession(s => s.promptError !== null || s.lastAgentError !== null)
   return <System3Feedback key={props.sessionId} facts={facts} selection={selection} running={running} pending={pending}
     pendingRequestId={pendingRequestId}
-    opening={opening} failed={failed} available={props.available} onAutomatic={props.onAutomatic} onStop={props.onStop} t={props.t} />
+    opening={opening} failed={failed} available={props.available} onAutomatic={props.onAutomatic} onStop={props.onStop}
+    onSteer={props.onSteer} t={props.t} />
 }

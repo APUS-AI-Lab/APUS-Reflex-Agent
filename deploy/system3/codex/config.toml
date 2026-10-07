@@ -1,0 +1,17 @@
+# Isolated Codex home for System3 delegation. release.sh installs this file into the
+# service user's private CODEX_HOME; credentials come from the protected runtime environment.
+model = "gpt-5.6-sol-relay"
+model_provider = "fidoo"
+approval_policy = "never"
+sandbox_mode = "workspace-write"
+check_for_update_on_startup = false
+
+[model_providers.fidoo]
+name = "Fidoo LiteLLM"
+base_url = "https://proxy.fidoo.ai/v1"
+env_key = "SYSTEM3_LITELLM_API_KEY"
+wire_api = "responses"
+requires_openai_auth = false
+
+[analytics]
+enabled = false

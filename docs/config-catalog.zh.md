@@ -1361,6 +1361,11 @@ export interface System3EntryDelegateCandidate extends System3EntryCandidateBase
     /** Model-facing subagent tool the instruction names, such as `subagent_codex`. */
     readonly tool: string
   }
+  /**
+   * Case-insensitive regular expressions for the person's explicit request to delegate, such as `交给\s*codex`.
+   * A matching input selects this candidate without asking Jev once the hard rules admit it; omission leaves the choice to Jev.
+   */
+  readonly explicitPatterns?: readonly string[]
 }
 
 /** Fields every entry candidate declares, whatever kind of route it selects. */
@@ -3284,7 +3289,7 @@ export type JournalMode = 'wal' | 'delete' | 'truncate' | 'persist'
 ## `@deepseek-ai/dsh-subagent`
 
 - `refs`: `Volatile` (`@deepseek-ai/cordis`)
-- `source`: [`packages/subagent/subagent/src/index.ts:205`](../packages/subagent/subagent/src/index.ts)
+- `source`: [`packages/subagent/subagent/src/index.ts:231`](../packages/subagent/subagent/src/index.ts)
 
 ```ts config-catalog
 /** Host configuration for continuable subagent capacity. */

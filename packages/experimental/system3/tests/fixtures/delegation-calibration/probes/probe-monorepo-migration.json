@@ -1,0 +1,6 @@
+{
+  "id": "probe-monorepo-migration",
+  "size": "repo",
+  "prompt": "把这个 monorepo 里 40 多个包的构建从 webpack 4 迁移到 vite，保留每个包现有的入口和产物格式，更新 CI 脚本，然后跑完整的构建和测试，把出现的问题逐个修到全部通过。",
+  "note": "Repository-wide migration with many build-and-fix iterations."
+}

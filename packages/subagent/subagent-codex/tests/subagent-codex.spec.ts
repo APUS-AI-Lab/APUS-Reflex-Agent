@@ -615,8 +615,13 @@ describe('task admission and package contracts', () => {
     child.peer.respond(threadStart, { thread: { id: 'thread-1', ephemeral: true } })
     const run = await starting
     const turnStart = await child.peer.nextMethod('turn/start')
+    child.peer.send({ id: turnStart.id, result: { turn: { id: 'turn-1' } } })
+    await nextTask()
+    const steered = run.steer?.([{ type: 'text', text: 'prefer the native model' }], new AbortController().signal)
+    const steer = await child.peer.nextMethod('turn/steer')
+    child.peer.respond(steer, { turnId: 'turn-1' })
+    await expect(steered).resolves.toBeUndefined()
     child.peer.send(
-      { id: turnStart.id, result: { turn: { id: 'turn-1' } } },
       agentMessage('native model answer', 'final_answer'),
       turnCompleted('completed'),
     )
@@ -1426,6 +1431,33 @@ describe('CodexAppServerWire', () => {
     await expect(result).resolves.toMatchObject({ stopReason: 'completed' })
     wire.close()
     wire.interrupt()
+  })
+
+  it('steers only the committed open turn and surfaces a refusal', async () => {
+    const { child, wire } = await initializeWire()
+    const signal = new AbortController().signal
+    await expect(wire.steer(['early'], signal)).rejects.toThrow('no active turn accepts input')
+    const result = wire.runTurn(['task'], signal)
+    const turnStart = await child.peer.nextMethod('turn/start')
+    child.peer.respond(turnStart, { turn: { id: 'turn-1' } })
+    await nextTask()
+    const accepted = wire.steer(['use snake_case'], signal)
+    const steer = await child.peer.nextMethod('turn/steer')
+    expect(steer.params).toEqual({
+      threadId: 'thread-1',
+      expectedTurnId: 'turn-1',
+      input: [{ type: 'text', text: 'use snake_case', text_elements: [] }],
+    })
+    child.peer.respond(steer, { turnId: 'turn-1' })
+    await expect(accepted).resolves.toBeUndefined()
+    const refused = wire.steer(['again'], signal)
+    const second = await child.peer.nextMethod('turn/steer')
+    child.peer.send({ id: second.id, error: { code: -32000, message: 'turn mismatch' } })
+    await expect(refused).rejects.toThrow()
+    child.peer.send(agentMessage('answer', 'final_answer'), turnCompleted('completed'))
+    await expect(result).resolves.toMatchObject({ stopReason: 'completed' })
+    await expect(wire.steer(['late'], signal)).rejects.toThrow('no active turn accepts input')
+    wire.close()
   })
 
   it('ignores unrelated and out-of-window notifications', async () => {

@@ -437,5 +437,6 @@ export async function startCodexRun(
     onAbort,
     requestCancel,
     teardown: disposeProcess,
+    steer: (content, signal) => wire.steer(textTask(content), signal),
   })
 }

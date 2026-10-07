@@ -44,6 +44,8 @@ export interface System3DelegationProgress {
   readonly lastStepAt?: number | null
   /** Latest short progress text the child wrote for a person, or null. Not model-visible. */
   readonly note?: string | null
+  /** Whether the run accepts a person's mid-run input; absent in snapshots written before the field existed. */
+  readonly steerable?: boolean
 }
 
 /** One alert that a delegated run needs the person's attention. */
@@ -76,6 +78,7 @@ interface RunState {
   readonly runId: string
   readonly provider: string
   readonly startedAt: number
+  readonly steerable: boolean
   readonly completed: Partial<Record<SubagentActivityKind, number>>
   current: SubagentActivityKind | null
   note: string | null
@@ -135,7 +138,7 @@ export function installSystem3DelegationProgress(ctx: Context, config: System3De
     run.agent.session.append('system3/delegation-progress', {
       version: 1, runId: run.runId, provider: run.provider, state, startedAt: run.startedAt,
       elapsedMs: now - run.startedAt, completed: { ...run.completed }, current: run.current,
-      lastStepAt: run.lastStepAt, note: run.note,
+      lastStepAt: run.lastStepAt, note: run.note, steerable: run.steerable,
     })
   }
   ctx.effect(() => () => {
@@ -145,7 +148,7 @@ export function installSystem3DelegationProgress(ctx: Context, config: System3De
   ctx.on('subagent/start', function (info: SubagentRunInfo) {
     const agent = delegatingAgent(this)
     if (agent === undefined) return
-    const run: RunState = { agent, runId: info.runId, provider: info.provider, startedAt: Date.now(),
+    const run: RunState = { agent, runId: info.runId, provider: info.provider, startedAt: Date.now(), steerable: info.steerable,
       completed: {}, current: null, note: null, lastStepAt: null, lastWrite: 0, timer: undefined, monitor: undefined,
       overtimeAlerts: 0, stepAlerted: false }
     runs.set(info.runId, run)

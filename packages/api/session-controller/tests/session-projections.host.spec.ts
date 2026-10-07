@@ -213,6 +213,7 @@ describe('session.history projections block', () => {
       mode: 'fixed',
       lastUsed: { provider: 'p', model: 'used' },
       next: selected,
+      automatic: false,
     })
 
     session.append('request/header', {
@@ -222,7 +223,23 @@ describe('session.history projections block', () => {
       mode: 'fixed',
       lastUsed: selected,
       next: selected,
+      automatic: false,
     })
+  })
+
+  it('marks the next route automatic only while a request of the routed turn uses it', async () => {
+    const { ctx, session } = await harness(true)
+    remote(ctx)
+    await new Promise(resolve => setTimeout(resolve, 0))
+    const baseline = { provider: 'p', model: 'default' }
+    const routed = { provider: 'p', model: 'routed' }
+    const view = () => ctx.sessionProjections.snapshot(session).values.modelSelection
+    session.append('model/automatic-selection', { requestId: 'r1' as never, selection: routed, baseline })
+    expect(view()).toMatchObject({ mode: 'auto', next: baseline, automatic: false })
+    session.append('request/header', { header: { config: routed }, reason: 'initial' })
+    expect(view()).toEqual({ mode: 'auto', lastUsed: routed, next: routed, automatic: true })
+    session.append('turn/end', { turn: 1, reason: { kind: 'completed' } })
+    expect(view()).toEqual({ mode: 'auto', lastUsed: routed, next: baseline, automatic: false })
   })
 
   it('serves the unit value on the tail page with asOfSeq = last event seq', async () => {

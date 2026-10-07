@@ -53,6 +53,11 @@ export interface System3EntryDelegateCandidate extends System3EntryCandidateBase
     /** Model-facing subagent tool the instruction names, such as `subagent_codex`. */
     readonly tool: string
   }
+  /**
+   * Case-insensitive regular expressions for the person's explicit request to delegate, such as `交给\s*codex`.
+   * A matching input selects this candidate without asking Jev once the hard rules admit it; omission leaves the choice to Jev.
+   */
+  readonly explicitPatterns?: readonly string[]
 }
 
 /** One entry route Jev may choose. */
@@ -111,6 +116,8 @@ export interface System3EntryDecisionReceipt {
     readonly label?: string
     readonly delegate?: { readonly provider: string; readonly tool: string }
   }
+  /** Present when the input matched the selected candidate's `explicitPatterns`, so the person chose it and Jev was not asked. */
+  readonly explicit?: true
   /** Route kept from an earlier decision of this Session; Jev suggested none for this input. */
   readonly retained?: {
     /** The earlier request whose route continues. */
@@ -134,6 +141,14 @@ function selectionOf(candidate: System3EntryModelCandidate): ModelSelection {
     ...candidate.reasoningEffort === undefined ? {} : { reasoningEffort: ReasoningEffortId(candidate.reasoningEffort) } }
 }
 
+function compileExplicitPattern(pattern: string): RegExp {
+  try {
+    return new RegExp(pattern, 'iu')
+  } catch (error) {
+    throw new Error(`entryRouting explicitPattern is not a valid regular expression: ${pattern}`, { cause: error })
+  }
+}
+
 function validateConfig(config: System3EntryRoutingConfig): void {
   if (config.candidates.length === 0 || config.candidates.length >= MAX_JEV_CHOICES) throw new Error('entryRouting requires 1-254 candidates')
   if (config.deadlineMs !== undefined && (!Number.isSafeInteger(config.deadlineMs) || config.deadlineMs <= 0 || config.deadlineMs > MAX_TIMER_DELAY_MS)) throw new Error('entryRouting deadlineMs must fit the timer range')
@@ -148,6 +163,9 @@ function validateConfig(config: System3EntryRoutingConfig): void {
     if (candidate.delegate !== undefined) {
       if (!candidate.delegate.provider.trim() || !candidate.delegate.tool.trim()) {
         throw new Error('entryRouting delegate candidates must name a subagent provider and tool')
+      }
+      if (candidate.explicitPatterns?.some(pattern => !pattern.trim()) === true) {
+        throw new Error('entryRouting explicitPatterns must not be empty')
       }
       const route = `delegate:${candidate.delegate.provider}`
       if (routes.has(route)) throw new Error('entryRouting candidates must select distinct models, efforts, or delegation providers')
@@ -180,6 +198,9 @@ export function createSystem3EntryRouter(
 ): SessionPromptRouter {
   validateConfig(config)
   const settings = structuredClone(config)
+  // Compiled at load, so an invalid expression fails here rather than at the first matching input.
+  const explicit = new Map(settings.candidates.map(candidate => [candidate.id,
+    candidate.delegate === undefined ? [] : (candidate.explicitPatterns ?? []).map(compileExplicitPattern)]))
   return {
     deadlineMs: settings.deadlineMs ?? 30000,
     validateBaseline(input) {
@@ -200,6 +221,7 @@ export function createSystem3EntryRouter(
       let selected: ModelSelection | undefined
       let retained: System3EntryDecisionReceipt['retained']
       let chosen: System3EntryCandidate | undefined
+      let explicitRequest = false
       let outcome: System3EntryOutcome = 'provider-unavailable'
       let candidateIds: string[] = []
       let previous: {
@@ -282,6 +304,9 @@ export function createSystem3EntryRouter(
         allowed = compatible
         candidateIds = allowed.map(candidate => candidate.id)
         if (allowed.length === 0) { outcome = 'no-candidates'; return undefined }
+        // The person's explicit request decides without Jev; the admission and availability checks above still apply.
+        const requested = allowed.find(candidate => explicit.get(candidate.id)?.some(pattern => pattern.test(text)) === true)
+        if (requested !== undefined) { chosen = requested; explicitRequest = true; outcome = 'selected'; return undefined }
         const query: JevRequest = {
           state: { input: text, baseline: { ...input.baseline } },
           effort: options.effort,
@@ -315,7 +340,7 @@ export function createSystem3EntryRouter(
           version: 1, requestId: input.requestId, request, baseline: { ...input.baseline }, candidateIds,
           dataClasses: [...settings.sessionDataClasses], routeId: options.routeId, executionDomain: options.executionDomain,
           outcome, ...response === undefined ? {} : { response }, ...selected === undefined ? {} : { selected },
-          ...retained === undefined ? {} : { retained },
+          ...retained === undefined ? {} : { retained }, ...explicitRequest ? { explicit: true as const } : {},
           ...chosen === undefined ? {} : { candidate: { id: chosen.id, ...chosen.label === undefined ? {} : { label: chosen.label },
             ...chosen.delegate === undefined ? {} : { delegate: { ...chosen.delegate } } } },
           elapsedMs: Date.now() - started,

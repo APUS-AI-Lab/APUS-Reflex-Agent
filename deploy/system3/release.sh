@@ -28,6 +28,9 @@ chmod -R go-w "$release"
 chmod 755 "$release/bin/node" "$release/bin/bwrap"
 id xdan-system3 >/dev/null 2>&1 || useradd --system --home-dir /var/lib/xdan-system3/home --shell /usr/sbin/nologin xdan-system3
 install -d -m 700 -o xdan-system3 -g xdan-system3 /var/lib/xdan-system3 /var/lib/xdan-system3/home /var/lib/xdan-system3/workspace
+# Delegated Codex runs read only this private home, never an operator's personal Codex configuration.
+install -d -m 700 -o xdan-system3 -g xdan-system3 /var/lib/xdan-system3/codex-home
+install -m 600 -o xdan-system3 -g xdan-system3 "$root/deploy/system3/codex/config.toml" /var/lib/xdan-system3/codex-home/config.toml
 "$release/bin/node" "$release/app/apps/cli/lib/bin.js" --version
 previous=
 if [[ -L /opt/xdan-system3/current ]]; then

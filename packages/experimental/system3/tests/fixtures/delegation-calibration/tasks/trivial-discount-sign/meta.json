@@ -1,0 +1,6 @@
+{
+  "id": "trivial-discount-sign",
+  "size": "trivial",
+  "prompt": "shop/pricing.py 里的 apply_discount 算出来的价格反而变贵了：apply_discount(100, 20) 现在返回 120.0，应该返回 80.0（打八折）。帮我修一下，结果仍然保留两位小数；line_total 依赖它，也要跟着算对。percent 不在 0 到 100 之间时照旧抛 ValueError。",
+  "note": "A single wrong operator in one expression; the fix is a one-character change."
+}

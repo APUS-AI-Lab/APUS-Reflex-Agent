@@ -1,0 +1,6 @@
+{
+  "id": "small-wrap-fix",
+  "size": "small",
+  "prompt": "formatting/wrap.py 的 wrap(text, width) 用户反馈了两个问题，帮我修掉：\n1. 一行长度刚好等于 width 时也被折到下一行了。例如 wrap('aaa bbb', 7) 应该返回 ['aaa bbb']，现在返回两行。\n2. 输入里用空行分隔的段落（中间隔着一个或多个空行，空行可以只含空格/制表符）在输出里被合并成一段了。正确行为：每段单独折行，段与段之间插入一个空字符串 '' 作为分隔行。例如 wrap('one two\\n\\nthree', 20) 应该得到 ['one two', '', 'three']。连续多个空行也只产生一个 ''；文本开头和结尾的空行不产生分隔行；段落内部的单个换行仍然当普通空白处理。\n其它现有行为保持不变（单词不拆分、超过 width 的单词独占一行、width < 1 抛 ValueError、空字符串返回 []）。formatting/notify.py 依赖它，tests/ 下现有测试都要继续通过。",
+  "note": "A bug fix in one function needing a few lines of logic while keeping existing visible tests green."
+}

@@ -1,0 +1,6 @@
+{
+  "id": "large-invoice-debug",
+  "size": "large",
+  "prompt": "billing 包里 tests/test_billing.py::test_summary_consistent_with_discounts 一直挂，其他测试是过的。帮我定位根因并修好，不要通过修改测试来让它通过。代码在 billing/ 下（money.py、lines.py、discounts.py、invoice.py、render.py）。完成标准：\n1. tests/ 下所有测试通过；\n2. 对同一个 Invoice，subtotal()、tax()、total()、summary() 以及 billing.render.render_invoice(invoice) 不管调用多少次、按什么顺序调用，结果都保持一致且正确（有折扣时，tax 基于折扣后的 subtotal 计算，total = subtotal + tax）；\n3. render_invoice 每一行显示的是折扣前的原始单价；\n4. billing 包里的公开函数和方法都不能修改调用方传进来的对象（比如传进去的 Line 列表和其中的 Line 对象）。\n现有函数和方法的名字、参数、返回值类型保持不变。",
+  "note": "A debugging task where the failing test in one module is caused by hidden in-place mutation in another module, observable only through call ordering."
+}

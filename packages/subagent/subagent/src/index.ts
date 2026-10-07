@@ -49,6 +49,8 @@ import type {
   SubagentPromptReceipt,
   SubagentPromptRequest,
   SubagentPromptRequestId,
+  SubagentSteerReceipt,
+  SubagentSteerRequest,
 } from './control-types.ts'
 import type {
   ContinuableCreateRequest,
@@ -67,10 +69,11 @@ import type {
   SubagentSendMessageOptions,
   SubagentStartRequest,
 } from './types.ts'
+import { SubagentRunId } from './types.ts'
 import { SubagentError } from './error.ts'
 import { assertSubagentMaxDepth } from './depth.ts'
 import { createActivationObserver, createLifecycleEmitter, observeRun } from './lifecycle.ts'
-import type { ActivationObserver, LifecycleEmitter } from './lifecycle.ts'
+import type { ActivationObserver, LifecycleEmitter, SteerableRun } from './lifecycle.ts'
 import SubagentContinuationManager from './continuation.ts'
 import type { SubagentDelivery } from './inbox.ts'
 import { listChildren as listSubagentChildren, listDescendants as listSubagentDescendants } from './list-children.ts'
@@ -87,6 +90,7 @@ export * from './out-of-process.ts'
 export { AssistantOutputFold, finalAssistantOutput } from './assistant-output.ts'
 export { SubagentRunId } from './types.ts'
 export { SUBAGENT_ACTIVITY_NOTE_MAX_CHARS } from './lifecycle.ts'
+export { SUBAGENT_STEER_MAX_CHARS } from './control.ts'
 export type {
   ContinuableCreateRequest,
   ContinuableCreateSpec,
@@ -188,6 +192,28 @@ declare module '@deepseek-ai/cordis' {
   }
 }
 
+/** One person's mid-run input that a running one-shot child accepted. */
+export interface SubagentSteerEvent {
+  readonly version: 1
+  /** The lifecycle run id carried by `subagent/start`. */
+  readonly runId: SubagentRunId
+  /** Provider that established the run. */
+  readonly provider: string
+  /** The exact text the child received. */
+  readonly text: string
+}
+
+declare module '@deepseek-ai/dsh-session/types' {
+  interface SessionEventMap {
+    /**
+     * A person's input that a running one-shot child accepted mid-run, written to the
+     * delegating parent's Session after the child accepted it; not model-visible to the parent.
+     * @param data - run identity and the delivered text.
+     */
+    'subagent/steer': SubagentSteerEvent
+  }
+}
+
 /**
  * Durable attribution of one browser-authored follow-up. The Session
  * Controller declares this `user-rpc` message source and depends on this
@@ -216,6 +242,8 @@ export class SubagentRuntime extends TypertRemoteService {
     maxActiveSubagents: z.number().step(1).min(1).max(Number.MAX_SAFE_INTEGER).default(8).volatile(),
   })
   private providers = new Map<string, SubagentProvider>()
+  /** Live one-shot runs whose provider accepts mid-run input, keyed by lifecycle run id. */
+  private readonly steerableRuns = new Map<SubagentRunId, SteerableRun>()
   private continuations: SubagentContinuationManager | undefined
   /**
    * The contained lifecycle-edge publisher. Built here because scoped dispatch
@@ -516,6 +544,36 @@ export class SubagentRuntime extends TypertRemoteService {
   }
 
   /**
+   * Deliver one person's text to a running one-shot child's active turn under the delegating
+   * parent's address. After the child accepts it, the text is appended to the parent Session as
+   * `subagent/steer`; a refused input appends nothing.
+   * @param request - lifecycle run id, claimed parent, and non-blank text.
+   * @param signal - carrier cancellation before the child accepts the input.
+   * @returns acknowledgement that the child accepted the input.
+   * @throws {RemoteError} `gateway/bad-request` for an empty id or blank or oversized text,
+   *   `subagent/not-steerable` when the run is not live under that parent, does not accept
+   *   input, or refused it, `gateway/cancelled`.
+   */
+  @Remote('steerByParent')
+  async steerByParent(request: SubagentSteerRequest, signal: AbortSignal): Promise<SubagentSteerReceipt> {
+    validateControlRequest('subagent.steer', request)
+    const runId = SubagentRunId(request.runId)
+    const run = this.steerableRuns.get(runId)
+    // Another parent's run is refused like an absent one, so the address reveals nothing about it.
+    if (run === undefined || run.parent.session.id !== request.parentSessionId) {
+      throw new RemoteError('subagent/not-steerable', 'subagent run does not accept input', { runId })
+    }
+    try {
+      await run.steer([{ type: 'text', text: request.text }], signal)
+    } catch (error: unknown) {
+      if (signal.aborted) throw new RemoteError('gateway/cancelled', 'subagent input was cancelled', {}, { cause: error })
+      throw new RemoteError('subagent/not-steerable', 'subagent run refused the input', { runId }, { cause: error })
+    }
+    run.parent.session.append('subagent/steer', { version: 1, runId, provider: run.provider, text: request.text })
+    return { accepted: true }
+  }
+
+  /**
    * Register a provider under its name. Registration is effect-scoped and HMR
    * safe; removing a provider blocks new starts but does not revoke runs that
    * were already returned to their holders.
@@ -601,7 +659,7 @@ export class SubagentRuntime extends TypertRemoteService {
         throw error
       }
     }
-    return observeRun(this.emitLifecycle, name, request.parent, run, (bound) => { publish = bound })
+    return observeRun(this.emitLifecycle, name, request.parent, run, (bound) => { publish = bound }, this.steerableRuns)
   }
 
   /**

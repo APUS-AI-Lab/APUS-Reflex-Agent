@@ -335,13 +335,17 @@ export function ModelSelect(
     : currentChoice?.model.name
       ?? (state.current === null ? t('trigger.fallback') : `${state.current.provider}/${state.current.model}`)
   const triggerLabel = effortLabel === undefined ? modelLabel : `${modelLabel} · ${effortLabel}`
+  // An automatic route lasts only for the running turn; the marker keeps it from reading as a lasting choice.
+  const automatic = !waiting && state.current !== null && state.automatic
   const triggerAria = waiting
     ? t('trigger.loading')
     : state.current === null
       ? t('trigger.selectAria')
-      : effortLabel === undefined
-        ? t('trigger.aria', { model: modelLabel })
-        : t('trigger.ariaEffort', { model: modelLabel, effort: effortLabel })
+      : automatic
+        ? t('trigger.ariaAuto', { model: triggerLabel })
+        : effortLabel === undefined
+          ? t('trigger.aria', { model: modelLabel })
+          : t('trigger.ariaEffort', { model: modelLabel, effort: effortLabel })
   itemRefs.current = []
   let itemIndex = 0
   const itemRef = () => {
@@ -368,7 +372,7 @@ export function ModelSelect(
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={open ? `${id}-menu` : undefined}
-        title={triggerLabel}
+        title={automatic ? t('trigger.autoTitle', { model: triggerLabel }) : triggerLabel}
         aria-busy={busy}
         disabled={locked}
         onClick={() => {
@@ -380,6 +384,7 @@ export function ModelSelect(
         }}
       >
         <IconDataOutlineRegular className={css.triggerIcon} size={16} />
+        {automatic && <span className={css.triggerEffort}>{t('trigger.auto')}</span>}
         <span className={css.triggerLabel}>{modelLabel}</span>
         {effortLabel !== undefined && <span className={css.triggerEffort}>{effortLabel}</span>}
         {busy

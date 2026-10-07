@@ -126,6 +126,16 @@ export function createLifecycleEmitter(
   }
 }
 
+/** One live one-shot run that accepts mid-run input, registered from its start edge until its end edge. */
+export interface SteerableRun {
+  /** Provider that established the run. */
+  readonly provider: string
+  /** The delegating parent whose Session owns the run. */
+  readonly parent: Agent
+  /** The run's own input delivery. */
+  readonly steer: NonNullable<SubagentRun['steer']>
+}
+
 /** Upper bound, in UTF-16 code units, of a published activity note; longer notes are cut with an ellipsis. */
 export const SUBAGENT_ACTIVITY_NOTE_MAX_CHARS = 200
 
@@ -136,6 +146,7 @@ export const SUBAGENT_ACTIVITY_NOTE_MAX_CHARS = 200
  * @param parent - the delegating parent keying scoped dispatch.
  * @param run - the published run whose settlement closes the pair.
  * @param bindActivity - receives the publisher for this run's steps once start has been emitted.
+ * @param steerable - live runs accepting input; a run with `steer` is held here between its start and end edges.
  * @returns the same run, unchanged.
  */
 export function observeRun(
@@ -144,12 +155,15 @@ export function observeRun(
   parent: Agent,
   run: SubagentRun,
   bindActivity: (publish: (activity: SubagentActivity) => void) => void,
+  steerable: Map<SubagentRunId, SteerableRun>,
 ): SubagentRun {
+  const steer = run.steer?.bind(run)
   const identity = {
     runId: SubagentRunId(randomUUID()),
     provider,
     id: run.id,
     local: run.localAgent !== undefined,
+    steerable: steer !== undefined,
   }
   let settled = false
   // Attach the terminal observer before dispatching start. Promise reactions
@@ -157,6 +171,7 @@ export function observeRun(
   void run.result.then(
     (result) => {
       settled = true
+      steerable.delete(identity.runId)
       emit('subagent/end', {
         ...identity,
         stopReason: result.stopReason,
@@ -166,9 +181,11 @@ export function observeRun(
     },
     () => {
       settled = true
+      steerable.delete(identity.runId)
       emit('subagent/end', { ...identity, stopReason: 'error' }, parent)
     },
   )
+  if (steer !== undefined) steerable.set(identity.runId, { provider, parent, steer })
   emit('subagent/start', identity, parent)
   bindActivity((activity) => {
     if (settled) return
@@ -199,7 +216,7 @@ export function createActivationObserver(
   childId: SessionId,
   parent: Agent,
 ): ActivationObserver {
-  const identity = { runId: SubagentRunId(randomUUID()), provider, id: childId, local: true }
+  const identity = { runId: SubagentRunId(randomUUID()), provider, id: childId, local: true, steerable: false }
   // A cold resume replays earlier turns, so this epoch's telemetry must come
   // from the suffix it actually produced — never the whole session, which
   // would report a previous epoch's answer when this one opened no turn.

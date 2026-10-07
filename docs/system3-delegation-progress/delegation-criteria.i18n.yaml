@@ -1,0 +1,31 @@
+# Bilingual-pair consistency record for delegation-criteria.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/system3-delegation-progress/delegation-criteria.md
+/system3-delegation-criteria-what-besides-time-decides-delegation:
+  en: fd5860859912ca33
+  zh: 823ed02fdf66c022
+/system3-delegation-criteria-what-besides-time-decides-delegation/summary:
+  en: 1cafba61cd035f5a
+  zh: a51f84d7d10915a5
+/system3-delegation-criteria-what-besides-time-decides-delegation/contents:
+  en: dfc6e598228b6a97
+  zh: a592e055dac8d994
+/system3-delegation-criteria-what-besides-time-decides-delegation/benefit:
+  en: 3b00976f15344791
+  zh: e5f3fa2fb6971030
+/system3-delegation-criteria-what-besides-time-decides-delegation/cost:
+  en: 4d62681cb8dc6b88
+  zh: deaed18f4bd32c4e
+/system3-delegation-criteria-what-besides-time-decides-delegation/risk:
+  en: 50422814003c6f6f
+  zh: 16a016217b90e9b3
+/system3-delegation-criteria-what-besides-time-decides-delegation/control:
+  en: 469b407c7e7ed37d
+  zh: b03aeed79df06b55
+/system3-delegation-criteria-what-besides-time-decides-delegation/decision-layers:
+  en: 39a27966bef64ecd
+  zh: 8b733919c1de9d5b
+/system3-delegation-criteria-what-besides-time-decides-delegation/open-questions:
+  en: f16cc2d38a9520fe
+  zh: e1d12295fb6bb6f9

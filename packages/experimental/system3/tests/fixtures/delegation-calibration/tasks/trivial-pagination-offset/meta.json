@@ -1,0 +1,6 @@
+{
+  "id": "trivial-pagination-offset",
+  "size": "trivial",
+  "prompt": "catalog/paging.py 里的 page_slice 有 bug：页码是从 1 开始的，但现在第 1 页返回的是第二页的数据。比如 items=list(range(10))、per_page=3 时，page=1 应该返回 [0, 1, 2]，page=4 应该返回 [9]。修好它，要求：最后一页可以不满；页码超过最后一页时返回空列表；page < 1 或 per_page < 1 照旧抛 ValueError；返回值是 list。page_count 不用动，tests/test_paging.py 要继续通过。",
+  "note": "An off-by-one in a single slice offset inside one function."
+}

@@ -22,6 +22,8 @@ systemd 单元采用空 capability 集、NoNewPrivileges、ProtectSystem=strict�
 
 仅 root 可读的 `/etc/xdan-system3/runtime.env` 复用既有 `system3-dsh` virtual key，提供 `SYSTEM3_LITELLM_API_KEY`、`JEV_API_KEY` 和显式 JSON `SYSTEM3_SESSION_DATA_CLASSES`。验收环境仅声明公开材料；操作人员不得将个人或机密文件放入该工作区。分类是部署声明，不是自动脱敏。凭据不进入构建产物或前端 bundle。原生浏览器凭据持久保存在私有 Harness home。禁用 DeepSeek 会话日志贡献和遥测投递。
 
+委派的 Codex 使用随应用打包的 Codex CLI，`CODEX_HOME` 为服务专属的 `/var/lib/xdan-system3/codex-home`（权限 0700）。每次发布都把 `deploy/system3/codex/config.toml` 以 0600 权限装入该目录：它让 Codex 通过 Fidoo 的 Responses API 调用 `gpt-5.6-sol-relay`，从 `SYSTEM3_LITELLM_API_KEY` 读取 key，设置 `approval_policy = "never"` 和 `sandbox_mode = "workspace-write"`，并关闭更新检查和分析上报。个人 ChatGPT 登录、插件和 MCP server 都不进入该目录。systemd 单元设置 `SYSTEM3_CODEX_HOME`；`runtime.patch.yml` 只把它和 key 传给 Codex 子进程。Codex 用随包附带的 bubblewrap 沙箱化它执行的命令。2026-10-03 在本机按该单元的加固参数（同一用户、NoNewPrivileges、空 capability 集、ProtectSystem=strict、ProtectHome、PrivateTmp、PrivateDevices 和 ReadWritePaths 的临时单元）运行 Codex 0.153.4：修复文件并通过测试，用时 38 秒；向工作区外写文件时报只读文件系统错误，尽管单元本身允许写该路径。`CODEX_HOME` 位于 `/tmp` 下时 Codex 拒绝创建沙箱辅助程序链接，因此该目录必须留在 `/var/lib/xdan-system3` 下。DSH 以普通托管进程启动 Codex，Codex 的沙箱不会嵌套在 DSH 的 bubblewrap 内。
+
 ## 发布和恢复
 
 在服务器的已审查源码归档目录运行 `deploy/system3/release.sh <immutable-release-id> <source-commit>`。脚本依据 lockfile 安装依赖，在固定 Node 镜像中构建 Linux 产物，提取应用及匹配的 Node/bubblewrap 二进制，建立归 root 所有的发布目录，原子切换后仅重启 System3 单元。源码 commit 写入客户端元数据和镜像标签。健康检查要求进程 active，且匿名 API 请求返回 HTTP 401。 只有健康发布才更新前一发布指针；发布失败保留已有回滚目标。每个发布保存自己的 `service.unit`；旧的活动发布在首次被替代前补存当时的单元一次。
@@ -36,12 +38,13 @@ systemd 单元采用空 capability 集、NoNewPrivileges、ProtectSystem=strict�
 | `deploy/system3/Dockerfile.dockerignore` | 排除本地依赖、构建输出和常见凭据文件 |
 | `deploy/system3/runtime.patch.yml` | Loopback 传输、模型路由和显式 System3 策略 |
 | `deploy/system3/xdan-system3.service` | 专用用户、文件系统隔离和资源限制 |
+| `deploy/system3/codex/config.toml` | 委派运行使用的私有 Codex home 配置 |
 | `deploy/system3/release.sh` | 构建、提取、切换和健康验证 |
 | `deploy/system3/rollback.sh` | 恢复兼容的前一发布 |
 | `deploy/system3/tests/release.spec.sh` | 发布和回滚的隔离故障注入 |
 
 ## 已验证的部署约束
 
-目标运行 TencentOS x86_64、内核 6.6.117、glibc 2.38、systemd 255 和 Docker 29.8.1。固定 Node 镜像运行 24.21.0。System3 专属 key 成功列出两个配置的 Fidoo 模型；A100 Jev 健康端点报告 ready/high32。基线 rc.2 Linux 构建通过 native 编译、Host 和 Client TypeScript/bundling、desktop bundle 与 Web 构建（343 个客户端产物）。
+目标运行 TencentOS x86_64、内核 6.6.117、glibc 2.38、systemd 255 和 Docker 29.8.1。2026-10-03 从该主机实测的延迟：复用连接时 Jev 决策 48 次的 p50 为 274 毫秒、p95 为 406 毫秒，新连接 1051 毫秒，使用 Node 默认 keep-alive 空闲 5 至 30 秒后为 700 至 940 毫秒；Fidoo 首个 token 的 p50：deepseek-v4-flash 463 毫秒（5 次中有一次 10.6 秒的离群值），deepseek-v4-pro 806 毫秒，gpt-5.6-sol-relay 1576 毫秒。固定 Node 镜像运行 24.21.0。System3 专属 key 成功列出两个配置的 Fidoo 模型；A100 Jev 健康端点报告 ready/high32。基线 rc.2 Linux 构建通过 native 编译、Host 和 Client TypeScript/bundling、desktop bundle 与 Web 构建（343 个客户端产物）。2026-10-03 发布 `s3-delegation` 版本，替换 `g1-stable` 版本，后者保留为回滚目标；发布前八个发布脚本场景先通过。随后通过 SSH 隧道做浏览器端到端测试：翻译路由到 DeepSeek Flash，协议问题路由到 DeepSeek Pro，系统设计路由到 GPT-5.6 Sol，后续消息沿用 GPT-5.6 Sol；产品内入口决策用时 638 至 1039 毫秒，提交后 1.2 至 1.45 秒出现路由说明（含隧道）。GPT-5.6 Sol 经 Fidoo 中转每秒约输出 18 个 token，一个 10067 token 的回答用了 553 秒。一次明确要求的 Codex 委派 12 秒开始启动，运行中补充说明 0.7 秒送达，触发一次停滞和一次超时提醒，374 秒完成，13 个隐藏验收测试和 6 个已有测试全部通过，补充要求的 README 也已写出。
 
 内核没有启用 Landlock LSM。采用默认 Docker seccomp 的非 root 容器无法创建 bubblewrap namespace；临时诊断容器取消该过滤后仍无法挂载私有 proc 文件系统。因此部署使用原生 systemd，未放宽容器权限。宿主以及选定 systemd 加固下的 bubblewrap 均可写工作区，并以只读文件系统错误拒绝写入同一用户的 home。原生环境清理也通过子进程检查，两项部署凭据仅存在于父进程。八种隔离发布脚本场景通过：发布/手动回滚、激活失败、HTTP/鉴权健康失败、提取失败、非法发布标识、第三次发布失败保留更早回滚目标、重复回滚不修改服务，以及回滚失败恢复原版本和单元配对。初次浏览器任务证据见 `deployment-preflight.json`。已审查标签 `system3-g1-reviewed-rc2` 从验收发布成功回滚到同一提交的稳定发布，稳定发布保持运行，回滚目标已消费。两次 Linux 构建和发布健康检查通过；实际 CLI 在 Node 24.21.0 上报告 `0.1.7-rc.2`。匿名 API 返回 401，不可信 Origin/Host 返回 403，启用的非 root 服务仅监听 loopback。基础设施证据及准确源码提交见 [deployment-final.json](deployment-final.json)；真实浏览器任务、凭据清理、取消、模型重置、严格产物 oracle，以及重启和回滚后的同会话浏览器回放均已通过。首次产物多出一个字段，经原生继续执行移除后才通过最终 oracle。真实入口决策因低置信度放弃选择并使用配置基线；Skill 决策将选中的指令注入实际 Fidoo 请求。
