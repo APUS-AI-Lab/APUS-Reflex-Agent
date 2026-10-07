@@ -30,7 +30,7 @@ function failureLog(failures: number, eol = '\n'): string {
 function expand(folded: string): string {
   const shown = folded.split(/(?<=\n)/u)
   return shown.map((line) => {
-    const marker = /^\[System3 已折叠 \d+ 行：与上文(.+)逐字相同\]\r?\n$/u.exec(line)
+    const marker = /^\[System3 已折叠 \d+ 行：与上文(.+?)逐字相同(?:，开头是 ".*")?\]\r?\n$/u.exec(line)
     if (marker === null) return line
     return (marker[1] as string).split('、').map((ref) => {
       const [, first, last, times] = /^第 (\d+)-(\d+) 行(?: ×(\d+))?$/u.exec(ref) as RegExpExecArray
@@ -49,14 +49,14 @@ it('folds a diff printed again for each failure into back-references that restor
   expect(folded?.foldedLines).toBe(48)
   // Each failure keeps its own title and message; only the shared diff is folded.
   for (let index = 1; index <= 5; index++) expect(text).toContain(`AssertionError: expected messages to match case ${String(index)}`)
-  expect(text).toContain('[System3 已折叠 12 行：与上文第 6-17 行逐字相同]\n')
+  expect(text).toContain('[System3 已折叠 12 行：与上文第 6-17 行逐字相同，开头是 "- Expected"]\n')
   expect(text).toContain('Tests  5 failed (5)')
 })
 
 it('keeps CRLF line endings and still restores the log byte for byte', () => {
   const log = failureLog(4, '\r\n')
   const folded = foldRepeatedLines(log, LIMITS)
-  expect(folded?.text).toContain('逐字相同]\r\n')
+  expect(folded?.text).toContain('开头是 "- Expected"]\r\n')
   expect(expand(folded?.text ?? '')).toBe(log)
 })
 
@@ -64,7 +64,7 @@ it('merges adjacent repeats of one block into a counted reference to its first c
   const block = Array.from({ length: 8 }, (_, index) => `    at Object.<anonymous> (/work/node_modules/vitest/dist/runner.js:${String(100 + index)}:7)\n`).join('')
   const log = `start\n${block.repeat(5)}end\n`
   const folded = foldRepeatedLines(log, LIMITS)
-  expect(folded?.text).toBe(`start\n${block}[System3 已折叠 32 行：与上文第 2-9 行 ×4逐字相同]\nend\n`)
+  expect(folded?.text).toBe(`start\n${block}[System3 已折叠 32 行：与上文第 2-9 行 ×4逐字相同，开头是 "at Object.<anonymous> (/work/node_modules/vitest/dist/runner…"]\nend\n`)
   expect(folded?.foldedLines).toBe(32)
   expect(expand(folded?.text ?? '')).toBe(log)
 })
@@ -81,7 +81,15 @@ it('points a later copy at the first one when the copy in between was folded', (
   const block = (tag: string) => Array.from({ length: 6 }, (_, index) => `${tag} frame ${String(index)} ${'.'.repeat(40)}\n`).join('')
   const log = `${block('A')}one\n${block('A')}two\n${block('A')}${block('B')}three\n`
   const text = foldRepeatedLines(log, LIMITS)?.text ?? ''
-  expect(text.match(/与上文第 1-6 行逐字相同/gu)).toHaveLength(2)
+  expect(text.match(/与上文第 1-6 行逐字相同，开头是 "A frame 0 \.+"/gu)).toHaveLength(2)
+  expect(expand(text)).toBe(log)
+})
+
+it('quotes nothing when the repeated block starts with a blank line', () => {
+  const block = `\n${Array.from({ length: 7 }, (_, index) => `    at frame ${String(index)} ${'.'.repeat(40)}\n`).join('')}`
+  const log = `head\n${block}${block}${block}`
+  const text = foldRepeatedLines(log, LIMITS)?.text ?? ''
+  expect(text).toBe(`head\n${block}[System3 已折叠 16 行：与上文第 2-9 行 ×2逐字相同]\n`)
   expect(expand(text)).toBe(log)
 })
 

@@ -67,7 +67,7 @@ const decision = ctx.system3.route(candidates, 'local-9b')
 
 `processSupervision: { mode, repeatedError, failedAttempts, stalledSteps, delegateFailures, editTools, delegationTools, shellTools, progressTools, verifyPattern, failurePattern }` 对每个顶层 Agent 轮次应用确定性规则，规则触发时写入 `system3/process-notice`：同一工具失败达到 `repeatedError` 次（失败键由工具名、错误码或退出码，以及数字归一后的结果首行组成）；失败调用达到 `failedAttempts` 次；连续 `stalledSteps` 次调用没有成功的修改、委派、通过的验证，或 `progressTools`（例如联网搜索）中工具的成功调用；轮次在修改或委派之后、没有通过的验证就要结束（`missing-evidence`）；单次委派运行中失败命令达到 `delegateFailures` 条。结果为错误或报告非零 `exitCode` 的 shell 调用算失败；命令列表或管道（`;`、`&&`、`||`、`|`）只报告最后一条命令的退出码，因此退出码为 0 但输出匹配 `failurePattern` 时也算失败。`command` 匹配不区分大小写的 `verifyPattern` 且成功的 shell 调用算验证。每条规则在每个轮次、每个对象上最多触发一次，用户的新消息会重新计数。`observe` 只记录；`advise` 还会给主模型建议：工具结果类规则把建议作为附加上下文挂在触发它的结果上，`missing-evidence` 对该轮次 steer 一次，让模型再运行一步。委派运行中的失败只记录、不建议。监督从不阻止、改写或重试工具调用。运行时投影以 `notices` 暴露当前轮次最近五条发现，客户端在 dock 中列出。
 
-`outputFolding: { mode, shellTools, commandPattern, minLines, minChars, minNetChars, minNetShare }` 对顶层 `shellTools` 调用中 `command` 匹配不区分大小写的 `commandPattern` 的单段文本结果折叠重复行，例如测试运行为每个失败都打印同一段 diff 或堆栈。连续至少 `minLines` 行、`minChars` 个字符、与前面保留下来的行逐字节相同的一段，换成一行标记，标记按顺序并带次数写明它重复的是折叠后文本的哪几行，因此展开所有标记即可逐字节还原输出；比标记还短的一段保持原样。只有节省至少 `minNetChars` 个字符且至少 `minNetShare` 比例时才折叠。每次折叠写入 `system3/output-fold`，包含工具、折叠行数、节省字符数和是否已应用；`shadow` 只记录、不改变结果，`active` 替换模型可见文本。错误结果、委派中的子调用，以及 `value` 已被后续监听器替换的结果不折叠；工具的结构化 `value` 保留完整输出。该规则沿用 mu 的测试日志准入（MIT）。
+`outputFolding: { mode, shellTools, commandPattern, minLines, minChars, minNetChars, minNetShare }` 对顶层 `shellTools` 调用中 `command` 匹配不区分大小写的 `commandPattern` 的单段文本结果折叠重复行，例如测试运行为每个失败都打印同一段 diff 或堆栈。连续至少 `minLines` 行、`minChars` 个字符、与前面保留下来的行逐字节相同的一段，换成一行标记，标记按顺序并带次数写明它重复的是折叠后文本的哪几行，因此展开所有标记即可逐字节还原输出；标记还引用被重复那段的第一行（最多 60 个字符），方便阅读终端卡片的人在没有行号时找到它。比标记还短的一段保持原样。只有节省至少 `minNetChars` 个字符且至少 `minNetShare` 比例时才折叠。每次折叠写入 `system3/output-fold`，包含工具、折叠行数、节省字符数和是否已应用；`shadow` 只记录、不改变结果，`active` 替换模型可见文本。错误结果、委派中的子调用，以及 `value` 已被后续监听器替换的结果不折叠；工具的结构化 `value` 保留完整输出。该规则沿用 mu 的测试日志准入（MIT）。
 
 `skillSelection` 在原生 `agent/pre-step` 扩展点为下游保留的用户输入选择至多一个当前作用域允许模型调用的 Skill。配置包含 `sessionDataClasses`、`minConfidence`、`maxInputBytes`、`maxContentBytes`、`maxCandidates`（1–254）和 `deadlineMs`。Jev 读取当前文本及完整且有界的目录描述，不读取 Skill 正文或会话历史。稳定候选 id 为独立弃权选项保留位置。隐私拒绝、发现不完整、目录超限、低置信度、超时、元数据过期或正文超限时，保留原生模型与工具流程。目录超过 `maxCandidates` 时不声称自动搜索过全部 Skill；显式 `/name` 调用继续使用自身调用策略。
 
@@ -103,7 +103,7 @@ const decision = ctx.system3.route(candidates, 'local-9b')
 ##### 折叠后的 shell 输出
 
 ```markdown
-[System3 已折叠 12 行：与上文第 6-17 行逐字相同]
+[System3 已折叠 12 行：与上文第 6-17 行逐字相同，开头是 "- Expected"]
 ```
 
 #### Token effect

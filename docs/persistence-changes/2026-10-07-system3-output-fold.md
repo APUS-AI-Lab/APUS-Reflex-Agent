@@ -40,7 +40,7 @@ This is an addition; existing Sessions do not contain it. System3 writes system3
 <a id="verification"></a>
 ## Verification
 
-pnpm exec vitest run packages/experimental/system3/tests/output-folding.spec.ts: 12 tests passed, covering exact restoration of folded logs including CRLF, counted adjacent repeats, chained copies, the size and saving thresholds, active and shadow modes through the agent loop, skipped calls, and load-time rejection of invalid thresholds and patterns.
+pnpm exec vitest run packages/experimental/system3/tests/output-folding.spec.ts: 13 tests passed, covering exact restoration of folded logs including CRLF, counted adjacent repeats, chained copies, the size and saving thresholds, active and shadow modes through the agent loop, skipped calls, and load-time rejection of invalid thresholds and patterns.
 
 <a id="dev-note"></a>
 ## Dev Note

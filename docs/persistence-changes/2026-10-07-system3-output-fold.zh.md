@@ -40,7 +40,7 @@ changes:
 <a id="verification"></a>
 ## 验证
 
-pnpm exec vitest run packages/experimental/system3/tests/output-folding.spec.ts：12 个测试通过，覆盖折叠日志（含 CRLF）的逐字节还原、相邻重复的计数、链式副本、大小与节省门槛、经由 agent loop 的 active 与 shadow 模式、跳过的调用，以及加载时拒绝无效阈值和正则。
+pnpm exec vitest run packages/experimental/system3/tests/output-folding.spec.ts：13 个测试通过，覆盖折叠日志（含 CRLF）的逐字节还原、相邻重复的计数、链式副本、大小与节省门槛、经由 agent loop 的 active 与 shadow 模式、跳过的调用，以及加载时拒绝无效阈值和正则。
 
 <a id="dev-note"></a>
 ## 开发备注

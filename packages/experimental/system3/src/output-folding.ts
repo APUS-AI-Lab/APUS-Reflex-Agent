@@ -56,6 +56,8 @@ export interface System3FoldedText {
 
 /** Earlier occurrences of one window tried per line, so text of identical lines stays linear. */
 const MAX_SOURCES = 16
+/** Characters of the repeated block's first line quoted in a marker, so a person can find it without line numbers. */
+const OPENING_CHARS = 60
 
 interface Repeat {
   readonly start: number
@@ -102,7 +104,8 @@ function findRepeats(lines: readonly string[], limits: System3FoldLimits): Repea
 /**
  * Fold runs of lines that repeat earlier kept lines byte for byte. Each marker names the
  * lines of the returned text it repeats, in order and with counts, so expanding every
- * marker restores the original exactly.
+ * marker restores the original exactly, and quotes the first line of the first repeated
+ * block, shortened to 60 characters, for readers without line numbers.
  * @param text - Shell output; line endings are compared and kept as they are.
  * @param limits - Smallest repeat worth a marker and smallest saving worth folding.
  * @returns The folded text, or `undefined` when nothing repeats or the saving is too small.
@@ -145,7 +148,9 @@ export function foldRepeatedLines(text: string, limits: System3FoldLimits): Syst
     }
     const total = line - (run[0] as Repeat).start
     const list = refs.map(ref => ref.times > 1 ? `第 ${ref.range} 行 ×${String(ref.times)}` : `第 ${ref.range} 行`).join('、')
-    const marker = `[System3 已折叠 ${String(total)} 行：与上文${list}逐字相同]${eol}`
+    const opening = (lines[(run[0] as Repeat).source] as string).trim()
+    const quoted = opening.length > OPENING_CHARS ? `${opening.slice(0, OPENING_CHARS)}…` : opening
+    const marker = `[System3 已折叠 ${String(total)} 行：与上文${list}逐字相同${quoted === '' ? '' : `，开头是 "${quoted}"`}]${eol}`
     const original = lines.slice((run[0] as Repeat).start, line).join('')
     // A run shorter than its own marker stays as it is.
     if (original.length > marker.length) {
