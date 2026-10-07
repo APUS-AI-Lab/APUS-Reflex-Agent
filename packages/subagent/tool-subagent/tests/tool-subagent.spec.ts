@@ -190,6 +190,29 @@ describe('dsh-tool-subagent', () => {
     )
   })
 
+  it.each([
+    { stopReason: 'completed' as const, prefix: 'child done', isError: false },
+    { stopReason: 'error' as const, prefix: 'Error: subagent run failed\nPartial output before the run ended:\nchild done', isError: true },
+  ])('restates requirements the person added mid-run after a $stopReason result', async ({ stopReason, prefix, isError }) => {
+    const parent = fakeAgent('steering-parent')
+    let runId: string | undefined
+    const holder: { ctx?: Context } = {}
+    holder.ctx = await setup({ provider: 'mock' }, {
+      reply: 'child done', stopReason, acceptSteer: true,
+      onStart: async () => {
+        await new Promise((resolve) => { setTimeout(resolve, 0) })
+        await holder.ctx!.subagents.steerByParent({ runId: runId as never, parentSessionId: parent.session.id,
+          text: 'also write a README' }, new AbortController().signal)
+      },
+    })
+    holder.ctx.on('subagent/start', (info) => { runId = info.runId })
+    const result = await callSubagent(holder.ctx, { description: 'd', prompt: 'p' }, { agent: parent })
+    expect(result.isError).toBe(isError)
+    expect(text(result)).toBe(`${prefix}\n\nDuring this run the user added these requirements; check the result against them as well:\n`
+      + '- also write a README')
+    if (!result.isError) expect(result.value).toMatchObject({ steers: ['also write a README'] })
+  })
+
   it('registers under a configurable toolName so multiple providers can coexist', async () => {
     // The defining multi-provider use case: two loads, two distinct tool names,
     // each bound to a different provider — the tool registry rejects duplicate

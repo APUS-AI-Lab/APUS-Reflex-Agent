@@ -177,7 +177,14 @@ Start independent subagent delegations together in one assistant message and con
 
 #### 模型看到什么
 
-调用会保留描述与提示词。成功时只包含子 agent 的最终文本；其他结果变为 `Error: <stop reason>`，随后在存在时附上安全的提供方诊断，再附上任何部分 assistant 文本。子 agent 中间步骤不会进入父级。
+调用会保留描述与提示词。成功时只包含子 agent 的最终文本；其他结果变为 `Error: <stop reason>`，随后在存在时附上安全的提供方诊断，再附上任何部分 assistant 文本。用户在运行中通过 `subagents.steerByParent` 补充过要求时，两种形式的末尾都会列出这些要求，让父级连同它们一起核对结果，前台结果值也以 `steers` 列出这些要求。子 agent 中间步骤不会进入父级。
+
+##### 运行中补充的要求
+
+```markdown
+During this run the user added these requirements; check the result against them as well:
+- <accepted text>
+```
 
 #### Token 影响
 

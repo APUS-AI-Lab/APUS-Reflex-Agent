@@ -181,6 +181,16 @@ function stopReasonError(result: SubagentResult): string | undefined {
  * @param result - the child's terminal result.
  * @returns the headline, diagnostic, and partial text that are present.
  */
+/**
+ * Restate the requirements a person added mid-run so the parent checks the result against them too.
+ * @param steers - accepted mid-run texts, in order.
+ * @returns the restatement, or an empty string when there are none.
+ */
+function steersText(steers: readonly string[] | undefined): string {
+  return steers === undefined || steers.length === 0 ? ''
+    : `\n\nDuring this run the user added these requirements; check the result against them as well:\n${steers.map(text => `- ${text}`).join('\n')}`
+}
+
 function withDiagnosticAndPartialText(error: string, result: SubagentResult): string {
   const diagnostic = result.diagnostic === undefined
     ? ''
@@ -192,13 +202,15 @@ function withDiagnosticAndPartialText(error: string, result: SubagentResult): st
   const partial = text.length === 0
     ? ''
     : `\nPartial output before the run ended:\n${text}`
-  return `${error}${diagnostic}${partial}`
+  return `${error}${diagnostic}${partial}${steersText(result.steers)}`
 }
 
 type ForegroundToolResult = {
   readonly kind: 'foreground'
   readonly runId: SubagentRun['id']
   readonly output: JsonValue[]
+  /** Requirements a person added mid-run, restated after the output for the parent. */
+  readonly steers?: string[]
 }
 
 /**
@@ -220,6 +232,7 @@ async function settleForegroundRun(run: SubagentRun): Promise<ForegroundToolResu
         // Content blocks already cross durable JSON boundaries elsewhere;
         // the registry performs the authoritative lossless snapshot here.
         output: result.output as unknown as JsonValue[],
+        ...result.steers === undefined ? {} : { steers: [...result.steers] },
       }
     }),
   ])
@@ -452,6 +465,7 @@ export function apply(ctx: Context, config: Config, session?: Session): void {
                   kind: { type: 'string', required: true, const: 'foreground' },
                   runId: { type: 'string', required: true },
                   output: { type: 'array', required: true, items: { type: 'json' } },
+                  steers: { type: 'array', items: { type: 'string' } },
                 },
               },
             ],
@@ -462,7 +476,7 @@ export function apply(ctx: Context, config: Config, session?: Session): void {
               ? `started background subagent job ${value.jobId}`
               : value.kind === 'continuable'
                 ? `started subagent ${value.subagentId}`
-                : outputValueText(value.output),
+                : `${outputValueText(value.output)}${steersText(value.steers)}`,
           }],
         },
         // Children never mutate the parent session; the one parent-owned write

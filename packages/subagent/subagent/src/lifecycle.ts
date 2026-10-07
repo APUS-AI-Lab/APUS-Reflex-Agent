@@ -134,6 +134,8 @@ export interface SteerableRun {
   readonly parent: Agent
   /** The run's own input delivery. */
   readonly steer: NonNullable<SubagentRun['steer']>
+  /** Texts the child accepted, in order; reported on the run's result. */
+  readonly accepted: string[]
 }
 
 /** Upper bound, in UTF-16 code units, of a published activity note; longer notes are cut with an ellipsis. */
@@ -147,7 +149,7 @@ export const SUBAGENT_ACTIVITY_NOTE_MAX_CHARS = 200
  * @param run - the published run whose settlement closes the pair.
  * @param bindActivity - receives the publisher for this run's steps once start has been emitted.
  * @param steerable - live runs accepting input; a run with `steer` is held here between its start and end edges.
- * @returns the same run, unchanged.
+ * @returns the published run, whose result also lists the steers the child accepted.
  */
 export function observeRun(
   emit: LifecycleEmitter,
@@ -158,6 +160,7 @@ export function observeRun(
   steerable: Map<SubagentRunId, SteerableRun>,
 ): SubagentRun {
   const steer = run.steer?.bind(run)
+  const accepted: string[] = []
   const identity = {
     runId: SubagentRunId(randomUUID()),
     provider,
@@ -185,7 +188,7 @@ export function observeRun(
       emit('subagent/end', { ...identity, stopReason: 'error' }, parent)
     },
   )
-  if (steer !== undefined) steerable.set(identity.runId, { provider, parent, steer })
+  if (steer !== undefined) steerable.set(identity.runId, { provider, parent, steer, accepted })
   emit('subagent/start', identity, parent)
   bindActivity((activity) => {
     if (settled) return
@@ -196,7 +199,12 @@ export function observeRun(
         ? note : `${note.slice(0, SUBAGENT_ACTIVITY_NOTE_MAX_CHARS - 1)}…` },
     }, parent)
   })
-  return run
+  // The holder reads steers from the result, so the parent model can check the output against them.
+  const result = run.result.then(value => accepted.length === 0 ? value : { ...value, steers: [...accepted] })
+  return {
+    id: run.id, localAgent: run.localAgent, result, dispose: () => run.dispose(),
+    ...steer === undefined ? {} : { steer },
+  }
 }
 
 /**

@@ -326,13 +326,14 @@ describe('SubagentRuntime', () => {
 
     it('delivers text to the live run and records it in the parent Session after acceptance', async () => {
       const steer = vi.fn(async () => {})
-      const { subagents, runId, starts, parent, result } = await steerableRun(steer)
+      const { subagents, runId, starts, parent, result, run } = await steerableRun(steer)
       expect(starts[0]!.steerable).toBe(true)
       await expect(subagents.steerByParent({ runId, parentSessionId: SessionId('delegator'), text: 'use snake_case' }, signal()))
         .resolves.toEqual({ accepted: true })
       expect(steer).toHaveBeenCalledWith([{ type: 'text', text: 'use snake_case' }], expect.any(AbortSignal))
       expect(parent.append).toHaveBeenCalledWith('subagent/steer', { version: 1, runId, provider: 'steerable', text: 'use snake_case' })
       result.resolve({ output: [], stopReason: 'completed' })
+      await expect(run.result).resolves.toEqual({ output: [], stopReason: 'completed', steers: ['use snake_case'] })
     })
 
     it('refuses another parent, an unknown run, and a settled run without recording anything', async () => {
@@ -361,7 +362,7 @@ describe('SubagentRuntime', () => {
     it('maps a refusal to not-steerable and caller cancellation to cancelled', async () => {
       const controller = new AbortController()
       const steer = vi.fn(async () => { throw new Error('turn ended') })
-      const { subagents, runId, parent, result } = await steerableRun(steer)
+      const { subagents, runId, parent, result, run } = await steerableRun(steer)
       await expect(subagents.steerByParent({ runId, parentSessionId: SessionId('delegator'), text: 'x' }, signal()))
         .rejects.toMatchObject({ code: 'subagent/not-steerable' })
       controller.abort()
@@ -369,6 +370,7 @@ describe('SubagentRuntime', () => {
         .rejects.toMatchObject({ code: 'gateway/cancelled' })
       expect(parent.append).not.toHaveBeenCalled()
       result.resolve({ output: [], stopReason: 'completed' })
+      await expect(run.result).resolves.not.toHaveProperty('steers')
     })
 
     it('rejects blank and oversized text before reaching the run', async () => {
@@ -385,11 +387,13 @@ describe('SubagentRuntime', () => {
     })
 
     it('marks a run without input delivery as not steerable', async () => {
-      const { subagents, runId, starts, result } = await steerableRun(undefined)
+      const { subagents, runId, starts, result, run } = await steerableRun(undefined)
       expect(starts[0]!.steerable).toBe(false)
       await expect(subagents.steerByParent({ runId, parentSessionId: SessionId('delegator'), text: 'x' }, signal()))
         .rejects.toMatchObject({ code: 'subagent/not-steerable' })
       result.resolve({ output: [], stopReason: 'completed' })
+      await expect(run.result).resolves.toEqual({ output: [], stopReason: 'completed' })
+      expect('steer' in run).toBe(false)
     })
   })
 

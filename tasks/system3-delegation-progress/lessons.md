@@ -11,3 +11,9 @@
 
 - I reported "the composer chip still shows Flash after routing" from one delegation screenshot; the projection already shows the routed model during the turn (verified in Web: `gpt-5.6-sol-relay Medium` during, `deepseek-v4-flash Low` after). The delegation case shows the main model, which is correct.
 - Rule: before naming a UI inconsistency, reproduce it in the product for each route kind (model route, delegation, fallback).
+
+## Never let credentials reach tool output during verification (2026-10-04)
+
+- Basic Auth for `system3.xdan.work` leaked twice into tool output: curl's `%{redirect_url}` echoes `user:password@` from `-u`, and a URL with embedded credentials propagated into page script URLs that console stack traces printed. Both times the password was rotated.
+- Embedding credentials in a URL also breaks the page: browsers refuse `fetch` from such a document ("Request cannot be constructed from a URL that includes credentials").
+- Rule: print only status codes or booleans when a request carries credentials; never print redirect URLs, request URLs, console output or network logs unredacted; never put credentials in URLs. Rotate immediately if a secret appears in output.
