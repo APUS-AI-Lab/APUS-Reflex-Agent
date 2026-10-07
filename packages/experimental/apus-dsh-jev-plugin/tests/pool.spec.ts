@@ -24,6 +24,24 @@ async function listen(): Promise<{ url: string; connections: () => number }> {
 }
 
 describe('Jev pooled transport', () => {
+  it('forwards a request body and returns a response without one', async () => {
+    const received: string[] = []
+    server = createServer((request, response) => {
+      let body = ''
+      request.on('data', (chunk: Buffer) => { body += chunk.toString('utf8') })
+      request.on('end', () => { received.push(body); response.statusCode = 204; response.end() })
+    })
+    await new Promise<void>((resolve) => { server!.listen(0, '127.0.0.1', resolve) })
+    const ctx = new Context()
+    const pooled = createPooledFetch(ctx, 60_000, false, 2)
+    const response = await pooled(`http://127.0.0.1:${String((server.address() as AddressInfo).port)}/v1/systemone`,
+      { method: 'POST', body: '{"q":1}', headers: { 'content-type': 'application/json' } })
+    expect(response.status).toBe(204)
+    expect(await response.text()).toBe('')
+    expect(received).toEqual(['{"q":1}'])
+    await ctx.fiber.dispose()
+  })
+
   it('reuses one direct connection across idle gaps shorter than keepAliveMs and closes with the plugin', async () => {
     const { url, connections } = await listen()
     const ctx = new Context()

@@ -912,6 +912,8 @@ export interface Config {
   readonly keepAliveMs?: number
   /** Negotiate HTTP/2 on the dedicated direct connection; requires `keepAliveMs`. @default false */
   readonly http2?: boolean
+  /** Consecutive requests without a response after which the dedicated pool reopens; requires `keepAliveMs`. Omission never reopens it. */
+  readonly resetAfterFailures?: number
 }
 ```
 <!-- END GENERATED config-catalog:@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin -->

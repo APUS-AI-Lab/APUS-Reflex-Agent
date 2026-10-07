@@ -51,6 +51,7 @@ kind: "package-reference"
 | `apiKeyEnv` | 无 | 每次请求解析的凭据引用 |
 | `keepAliveMs` | 无 | 专用直连连接空闲后保留复用的时长；省略时使用进程级传输。经已配置 HTTP 代理的请求始终使用代理的传输 |
 | `http2` | `false` | 在专用连接上协商 HTTP/2；需要 `keepAliveMs` |
+| `resetAfterFailures` | 无 | 连续这么多次请求没有响应后销毁专用连接池，下一次请求打开新连接；HTTP/2 下所有请求共用一条连接，否则一条卡住的连接会让之后的每次判定都失败。需要 `keepAliveMs`；省略时从不重建连接池 |
 | `providerId` | `system-one` | 内置 provider 的 registry id |
 
 endpoint 可以是本地 SSH tunnel 或受控服务 URL。配置 URL 不以 `/v1` 结尾时，provider 会补上 `/v1/systemone`；只有 `apiKeyEnv` 解析出值时才会发送 Bearer credential。

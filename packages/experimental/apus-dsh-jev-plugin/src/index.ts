@@ -44,6 +44,8 @@ export interface Config {
   readonly keepAliveMs?: number
   /** Negotiate HTTP/2 on the dedicated direct connection; requires `keepAliveMs`. @default false */
   readonly http2?: boolean
+  /** Consecutive requests without a response after which the dedicated pool reopens; requires `keepAliveMs`. Omission never reopens it. */
+  readonly resetAfterFailures?: number
 }
 
 const DEFAULT_TIMEOUT_MS = 30_000
@@ -61,6 +63,7 @@ export default class Jev extends Service {
     providerId: z.string().default(DEFAULT_PROVIDER_ID),
     keepAliveMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS),
     http2: z.boolean().default(false),
+    resetAfterFailures: z.number().step(1).min(1),
   })
 
   private readonly providers = new Map<string, JevProvider>()
@@ -71,7 +74,9 @@ export default class Jev extends Service {
     const providerId = config.providerId ?? DEFAULT_PROVIDER_ID
     this.defaultProviderId = providerId
     if (config.http2 === true && config.keepAliveMs === undefined) throw new Error('jev http2 requires keepAliveMs')
-    const fetcher = config.keepAliveMs === undefined ? undefined : createPooledFetch(ctx, config.keepAliveMs, config.http2 ?? false)
+    if (config.resetAfterFailures !== undefined && config.keepAliveMs === undefined) throw new Error('jev resetAfterFailures requires keepAliveMs')
+    const fetcher = config.keepAliveMs === undefined ? undefined
+      : createPooledFetch(ctx, config.keepAliveMs, config.http2 ?? false, config.resetAfterFailures)
     const provider = new SystemOneProvider({
       id: providerId,
       ...fetcher === undefined ? {} : { fetcher },
