@@ -3,6 +3,7 @@ import { resolve } from 'node:path'
 import { runInNewContext } from 'node:vm'
 import * as yaml from 'js-yaml'
 import { describe, expect, it } from 'vitest'
+import { stripForkGate } from './ci-fork-gate.ts'
 
 function evaluateRunsOn(selector: unknown, context: Record<string, unknown>): unknown {
   if (typeof selector !== 'string') throw new TypeError('Runner selector must be a string')
@@ -1199,7 +1200,7 @@ describe('Git hooks', () => {
 })
 
 function loadWorkflow(path: string): Record<string, unknown> {
-  const workflow: unknown = yaml.load(readFileSync(resolve(root, path), 'utf8'))
+  const workflow: unknown = stripForkGate(yaml.load(readFileSync(resolve(root, path), 'utf8')))
   if (!isRecord(workflow)) throw new TypeError(`${path} must define a workflow`)
   return workflow
 }
