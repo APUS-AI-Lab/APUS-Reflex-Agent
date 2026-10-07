@@ -5,6 +5,7 @@ import { spawnSync } from 'node:child_process'
 import { runInNewContext } from 'node:vm'
 import * as yaml from 'js-yaml'
 import { describe, expect, it } from 'vitest'
+import { stripForkGate } from './ci-fork-gate.ts'
 
 interface Step {
   name?: string
@@ -23,7 +24,7 @@ interface CompatibilityJob {
   steps: Step[]
 }
 
-const workflow = yaml.load(readFileSync(resolve(import.meta.dirname, '../.github/workflows/ci.yml'), 'utf8')) as {
+const workflow = stripForkGate(yaml.load(readFileSync(resolve(import.meta.dirname, '../.github/workflows/ci.yml'), 'utf8'))) as {
   jobs: { 'node-compat': CompatibilityJob; 'python-sdk': { 'runs-on': string } }
 }
 const job = workflow.jobs['node-compat']
