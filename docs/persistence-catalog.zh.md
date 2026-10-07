@@ -76,7 +76,7 @@
 | `event:system3/output-fold` | event | `a08b64e63b930ddf31679dc4de8424786c7f497169323a50ab043b260545e26f` | [`{ type: "system3/output-fold" }`](#persistence-type-sha256-a08b64e63b930ddf31679dc4de8424786c7f497169323a50ab043b260545e26f) |
 | `event:system3/process-notice` | event | `310a36ad49580b64f5f22ee000de5d58ec37334a253610f83bb3cf9102023108` | [`{ type: "system3/process-notice" }`](#persistence-type-sha256-310a36ad49580b64f5f22ee000de5d58ec37334a253610f83bb3cf9102023108) |
 | `event:system3/skill-decision` | event | `2da260ec5f7fe67028206d4c6254ff01a52dfe9a7f9aa67dedf72324ac4748ce` | [`{ type: "system3/skill-decision" }`](#persistence-type-sha256-2da260ec5f7fe67028206d4c6254ff01a52dfe9a7f9aa67dedf72324ac4748ce) |
-| `event:system3/task-frame` | event | `ac45da2b86d3e15e2fb89536caa52be80e721155be5489e1242afaf860661c42` | [`{ type: "system3/task-frame" }`](#persistence-type-sha256-ac45da2b86d3e15e2fb89536caa52be80e721155be5489e1242afaf860661c42) |
+| `event:system3/task-frame` | event | `77495110dac52ca61c5c0e3cf585ab45269bcf0e36d5273f2c06f9cb09c343f5` | [`{ type: "system3/task-frame" }`](#persistence-type-sha256-77495110dac52ca61c5c0e3cf585ab45269bcf0e36d5273f2c06f9cb09c343f5) |
 | `event:team/member` | event | `4fb59762612c3e3ac3a3bd4f84c9c148d3c3893bd422ba2b201cc039fabd49bc` | [`{ type: "team/member" }`](#persistence-type-sha256-4fb59762612c3e3ac3a3bd4f84c9c148d3c3893bd422ba2b201cc039fabd49bc) |
 | `event:team/message/delivered` | event | `48f9c19417a1abbedfa59f4667bba36b93ac2db407adf5e84cb3ba0de30942cb` | [`{ type: "team/message/delivered" }`](#persistence-type-sha256-48f9c19417a1abbedfa59f4667bba36b93ac2db407adf5e84cb3ba0de30942cb) |
 | `event:team/message/queued` | event | `21fb6a90d5068f6a0003b7ab316ed2f56342477146a65c00db0f13c4d8df667d` | [`{ type: "team/message/queued" }`](#persistence-type-sha256-21fb6a90d5068f6a0003b7ab316ed2f56342477146a65c00db0f13c4d8df667d) |
@@ -1144,7 +1144,7 @@ export type SessionEvent<T extends SessionEventType = SessionEventType> = {
 'system3/task-frame': System3TaskFrame
 ```
 
-来源：[`packages/experimental/system3/src/task-frame.ts:44`](../packages/experimental/system3/src/task-frame.ts)
+来源：[`packages/experimental/system3/src/task-frame.ts:55`](../packages/experimental/system3/src/task-frame.ts)
 
 ### `team/*`
 
@@ -6226,7 +6226,7 @@ SHA-256: `e32643ce60f31a6aa26e4a7ee32759135d8ad2871acec6bdcff0d83e94133f9f`
 | `missingEvidenceRefs` | 必需 | [`string[]`](#persistence-type-sha256-93c33d9687613293f8c95d46c4d922fe9ceae83b84c384beff5c3315abe005f2) |
 | `reason` | 必需 | [`union (7 variants)`](#persistence-type-sha256-34e707d2606754b4c1fb67848d10beba9465e0a3384514116671da689240e397) |
 
-<a id="persistence-type-sha256-30cd1dcd18afae8cf42eab91c8959f44642a06454a7a6f9929c95639a3e73ce8"></a>
+<a id="persistence-type-sha256-9594750e9543aa94f42c1e03d4c6f42e3b3e99d42dda6f8104db83abc8caff32"></a>
 
 <a id="persistence-type-packagesexperimentalsystem3srctask-frametssystem3taskframe"></a>
 
@@ -6234,15 +6234,33 @@ SHA-256: `e32643ce60f31a6aa26e4a7ee32759135d8ad2871acec6bdcff0d83e94133f9f`
 
 ### `System3TaskFrame`
 
-SHA-256: `30cd1dcd18afae8cf42eab91c8959f44642a06454a7a6f9929c95639a3e73ce8`
+SHA-256: `9594750e9543aa94f42c1e03d4c6f42e3b3e99d42dda6f8104db83abc8caff32`
 
-来源：[`packages/experimental/system3/src/task-frame.ts:33`](../packages/experimental/system3/src/task-frame.ts)
+来源：[`packages/experimental/system3/src/task-frame.ts:44`](../packages/experimental/system3/src/task-frame.ts)
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|
-| `goal` | 必需 | [`System3TaskMessage`](#persistence-type-sha256-9ab87a30a2f233add14513a6aeb24f180faf4426a9bcc095083c81b702785b7e) |
+| `goal` | 必需 | [`System3TaskGoal`](#persistence-type-sha256-44b144fad08c3486cc9996ff1c45ecebaa22a7bd0db5bba58cdd18f4642db126) |
 | `items` | 必需 | [`System3TaskMessage[]`](#persistence-type-sha256-335b0c3adfce311418ea0dc7bca8b959b11cd6297bb78efa7d38484ac637d9b6) |
 | `version` | 必需 | `1` |
+
+<a id="persistence-type-sha256-44b144fad08c3486cc9996ff1c45ecebaa22a7bd0db5bba58cdd18f4642db126"></a>
+
+<a id="persistence-type-packagesexperimentalsystem3srctask-frametssystem3taskgoal"></a>
+
+<a id="persistence-type-system3taskgoal"></a>
+
+### `System3TaskGoal`
+
+SHA-256: `44b144fad08c3486cc9996ff1c45ecebaa22a7bd0db5bba58cdd18f4642db126`
+
+来源：[`packages/experimental/system3/src/task-frame.ts:35`](../packages/experimental/system3/src/task-frame.ts)
+
+| 属性 | 存在性 | 类型 |
+|---|---|---|
+| `goalId` | 可选 | `string` |
+| `messageId` | 可选 | `string` |
+| `text` | 必需 | `string` |
 
 <a id="persistence-type-sha256-9ab87a30a2f233add14513a6aeb24f180faf4426a9bcc095083c81b702785b7e"></a>
 
@@ -6254,7 +6272,7 @@ SHA-256: `30cd1dcd18afae8cf42eab91c8959f44642a06454a7a6f9929c95639a3e73ce8`
 
 SHA-256: `9ab87a30a2f233add14513a6aeb24f180faf4426a9bcc095083c81b702785b7e`
 
-来源：[`packages/experimental/system3/src/task-frame.ts:27`](../packages/experimental/system3/src/task-frame.ts)
+来源：[`packages/experimental/system3/src/task-frame.ts:29`](../packages/experimental/system3/src/task-frame.ts)
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|
@@ -10475,17 +10493,17 @@ SHA-256: `2da260ec5f7fe67028206d4c6254ff01a52dfe9a7f9aa67dedf72324ac4748ce`
 | `time` | 必需 | `number` |
 | `type` | 必需 | `"system3/skill-decision"` |
 
-<a id="persistence-type-sha256-ac45da2b86d3e15e2fb89536caa52be80e721155be5489e1242afaf860661c42"></a>
+<a id="persistence-type-sha256-77495110dac52ca61c5c0e3cf585ab45269bcf0e36d5273f2c06f9cb09c343f5"></a>
 
 <a id="persistence-type-eventsystem3task-frame"></a>
 
 ### `{ type: "system3/task-frame" }`
 
-SHA-256: `ac45da2b86d3e15e2fb89536caa52be80e721155be5489e1242afaf860661c42`
+SHA-256: `77495110dac52ca61c5c0e3cf585ab45269bcf0e36d5273f2c06f9cb09c343f5`
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|
-| `data` | 必需 | [`System3TaskFrame`](#persistence-type-sha256-30cd1dcd18afae8cf42eab91c8959f44642a06454a7a6f9929c95639a3e73ce8) |
+| `data` | 必需 | [`System3TaskFrame`](#persistence-type-sha256-9594750e9543aa94f42c1e03d4c6f42e3b3e99d42dda6f8104db83abc8caff32) |
 | `ignorable` | 可选 | `true` |
 | `seq` | 必需 | `number` |
 | `time` | 必需 | `number` |

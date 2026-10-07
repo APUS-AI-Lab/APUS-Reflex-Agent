@@ -83,7 +83,8 @@ export interface System3RuntimeView {
 
 /** The task frame as the Client shows it; texts are the person's own messages. */
 export interface System3TaskFrameView {
-  readonly goal: { readonly messageId: string; readonly text: string }
+  /** The DSH goal's objective (`goalId`) or the message that started the task (`messageId`). */
+  readonly goal: { readonly text: string; readonly messageId?: string; readonly goalId?: string }
   readonly items: readonly { readonly messageId: string; readonly text: string }[]
 }
 
