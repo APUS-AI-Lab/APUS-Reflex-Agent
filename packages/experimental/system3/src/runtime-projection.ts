@@ -45,6 +45,10 @@ const entrySchema = z.object({ requestId, phase: z.enum(['deciding', 'decided'])
     delegation: z.object({ candidateId: z.string(), tool: z.string(), injected: z.boolean(), called: z.boolean() })
       .nullable() }).nullable(),
 })
+/** A task goal keeps only the identity it has: the starting message or the DSH goal. */
+const taskGoal = z.object({ text: z.string(), messageId: z.string().optional(), goalId: z.string().optional() })
+  .transform(({ text, messageId, goalId }) => ({ text, ...messageId === undefined ? {} : { messageId },
+    ...goalId === undefined ? {} : { goalId } }))
 const viewSchema = z.object({
   entry: entrySchema.nullable(),
   history: z.array(entrySchema),
@@ -55,8 +59,7 @@ const viewSchema = z.object({
     note: z.string().nullable(), alert: z.object({ kind: z.string(), elapsedMs: z.number() }).nullable(),
     steerable: z.boolean(), steers: z.array(z.object({ text: z.string(), atMs: z.number() })) }).nullable(),
   notices: z.array(z.object({ rule: z.string(), subject: z.string().nullable(), count: z.number(), advised: z.boolean() })),
-  taskFrame: z.object({ goal: z.object({ messageId: z.string(), text: z.string() }),
-    items: z.array(z.object({ messageId: z.string(), text: z.string() })) }).nullable(),
+  taskFrame: z.object({ goal: taskGoal, items: z.array(z.object({ messageId: z.string(), text: z.string() })) }).nullable(),
 })
 const stateSchema: ZodType<System3RuntimeState> = z.object({ entry: viewSchema.shape.entry, history: viewSchema.shape.history,
   skill: viewSchema.shape.skill,

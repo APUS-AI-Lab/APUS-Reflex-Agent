@@ -20067,7 +20067,7 @@
       "kind": "event",
       "event": "system3/task-frame",
       "surface": false,
-      "digest": "ac45da2b86d3e15e2fb89536caa52be80e721155be5489e1242afaf860661c42",
+      "digest": "77495110dac52ca61c5c0e3cf585ab45269bcf0e36d5273f2c06f9cb09c343f5",
       "schema": {
         "root": 0,
         "nodes": [
@@ -20081,22 +20081,22 @@
               },
               {
                 "name": "ignorable",
-                "type": 6,
+                "type": 7,
                 "optional": true
               },
               {
                 "name": "seq",
-                "type": 7,
+                "type": 8,
                 "optional": false
               },
               {
                 "name": "time",
-                "type": 7,
+                "type": 8,
                 "optional": false
               },
               {
                 "name": "type",
-                "type": 8,
+                "type": 9,
                 "optional": false
               }
             ],
@@ -20117,11 +20117,40 @@
               },
               {
                 "name": "version",
-                "type": 5,
+                "type": 6,
                 "optional": false
               }
             ],
             "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "goalId",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "messageId",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "text",
+                "type": 3,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "array",
+            "element": 5
           },
           {
             "kind": "object",
@@ -20138,14 +20167,6 @@
               }
             ],
             "indices": []
-          },
-          {
-            "kind": "primitive",
-            "type": "string"
-          },
-          {
-            "kind": "array",
-            "element": 2
           },
           {
             "kind": "literal",
@@ -52301,69 +52322,6 @@
       ]
     },
     {
-      "digest": "30cd1dcd18afae8cf42eab91c8959f44642a06454a7a6f9929c95639a3e73ce8",
-      "schema": {
-        "root": 0,
-        "nodes": [
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "goal",
-                "type": 1,
-                "optional": false
-              },
-              {
-                "name": "items",
-                "type": 3,
-                "optional": false
-              },
-              {
-                "name": "version",
-                "type": 4,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "messageId",
-                "type": 2,
-                "optional": false
-              },
-              {
-                "name": "text",
-                "type": 2,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "primitive",
-            "type": "string"
-          },
-          {
-            "kind": "array",
-            "element": 1
-          },
-          {
-            "kind": "literal",
-            "value": 1
-          }
-        ]
-      },
-      "names": [
-        "packages/experimental/system3/src/task-frame.ts#System3TaskFrame"
-      ],
-      "sources": [
-        "packages/experimental/system3/src/task-frame.ts:33"
-      ]
-    },
-    {
       "digest": "30d5a537b296685770b1241c4b4bbde19d5a31ff81aa23df73fab5e90b8fc65f",
       "schema": {
         "root": 0,
@@ -56280,6 +56238,45 @@
       },
       "names": [],
       "sources": []
+    },
+    {
+      "digest": "44b144fad08c3486cc9996ff1c45ecebaa22a7bd0db5bba58cdd18f4642db126",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "goalId",
+                "type": 1,
+                "optional": true
+              },
+              {
+                "name": "messageId",
+                "type": 1,
+                "optional": true
+              },
+              {
+                "name": "text",
+                "type": 1,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          }
+        ]
+      },
+      "names": [
+        "packages/experimental/system3/src/task-frame.ts#System3TaskGoal"
+      ],
+      "sources": [
+        "packages/experimental/system3/src/task-frame.ts:35"
+      ]
     },
     {
       "digest": "44c8c77aa9aa100b0d74d2deee85474b29faa6eee0ac0f662f7abe9931ddd7f2",
@@ -77675,6 +77672,129 @@
       "sources": []
     },
     {
+      "digest": "77495110dac52ca61c5c0e3cf585ab45269bcf0e36d5273f2c06f9cb09c343f5",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "data",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "ignorable",
+                "type": 7,
+                "optional": true
+              },
+              {
+                "name": "seq",
+                "type": 8,
+                "optional": false
+              },
+              {
+                "name": "time",
+                "type": 8,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 9,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "goal",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "items",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "version",
+                "type": 6,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "goalId",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "messageId",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "text",
+                "type": 3,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "array",
+            "element": 5
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "messageId",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "text",
+                "type": 3,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": 1
+          },
+          {
+            "kind": "literal",
+            "value": true
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "literal",
+            "value": "system3/task-frame"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "78a9be340090b735a39980e7222ce730c972fbcf1de7c9e0aef2125884b7caee",
       "schema": {
         "root": 0,
@@ -92271,6 +92391,90 @@
       ]
     },
     {
+      "digest": "9594750e9543aa94f42c1e03d4c6f42e3b3e99d42dda6f8104db83abc8caff32",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "goal",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "items",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "version",
+                "type": 5,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "goalId",
+                "type": 2,
+                "optional": true
+              },
+              {
+                "name": "messageId",
+                "type": 2,
+                "optional": true
+              },
+              {
+                "name": "text",
+                "type": 2,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "array",
+            "element": 4
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "messageId",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "text",
+                "type": 2,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": 1
+          }
+        ]
+      },
+      "names": [
+        "packages/experimental/system3/src/task-frame.ts#System3TaskFrame"
+      ],
+      "sources": [
+        "packages/experimental/system3/src/task-frame.ts:44"
+      ]
+    },
+    {
       "digest": "95c0e88fcf0bafb2087f912ad9e2369de6ae6530cc0c4c2772c96205b57f7f60",
       "schema": {
         "root": 0,
@@ -93878,7 +94082,7 @@
         "packages/experimental/system3/src/task-frame.ts#System3TaskMessage"
       ],
       "sources": [
-        "packages/experimental/system3/src/task-frame.ts:27"
+        "packages/experimental/system3/src/task-frame.ts:29"
       ]
     },
     {
@@ -98107,108 +98311,6 @@
       "sources": [
         "packages/experimental/apus-dsh-jev-plugin/src/types.ts:12"
       ]
-    },
-    {
-      "digest": "ac45da2b86d3e15e2fb89536caa52be80e721155be5489e1242afaf860661c42",
-      "schema": {
-        "root": 0,
-        "nodes": [
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "data",
-                "type": 1,
-                "optional": false
-              },
-              {
-                "name": "ignorable",
-                "type": 6,
-                "optional": true
-              },
-              {
-                "name": "seq",
-                "type": 7,
-                "optional": false
-              },
-              {
-                "name": "time",
-                "type": 7,
-                "optional": false
-              },
-              {
-                "name": "type",
-                "type": 8,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "goal",
-                "type": 2,
-                "optional": false
-              },
-              {
-                "name": "items",
-                "type": 4,
-                "optional": false
-              },
-              {
-                "name": "version",
-                "type": 5,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "messageId",
-                "type": 3,
-                "optional": false
-              },
-              {
-                "name": "text",
-                "type": 3,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "primitive",
-            "type": "string"
-          },
-          {
-            "kind": "array",
-            "element": 2
-          },
-          {
-            "kind": "literal",
-            "value": 1
-          },
-          {
-            "kind": "literal",
-            "value": true
-          },
-          {
-            "kind": "primitive",
-            "type": "number"
-          },
-          {
-            "kind": "literal",
-            "value": "system3/task-frame"
-          }
-        ]
-      },
-      "names": [],
-      "sources": []
     },
     {
       "digest": "ad0c38a0adb82a94c925456df41586d9b5f9202fca18593eae2213d4445b4585",

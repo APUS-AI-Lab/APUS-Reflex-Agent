@@ -31,7 +31,7 @@ export type { System3EntryCandidate, System3EntryDelegateCandidate, System3Entry
 export type { System3KeepWarmConfig } from './keep-warm.ts'
 export type { System3HandoffOutcome, System3HandoffPack, System3HandoffPackConfig } from './handoff-pack.ts'
 export type { System3ProcessNotice, System3ProcessRule, System3ProcessSupervisionConfig, System3SupervisionSource } from './process-supervision.ts'
-export type { System3TaskFrame, System3TaskFrameConfig, System3TaskMessage } from './task-frame.ts'
+export type { System3TaskFrame, System3TaskFrameConfig, System3TaskGoal, System3TaskMessage } from './task-frame.ts'
 export type { System3DecisionMode, System3DecisionSettings, System3Judgement, System3JudgementReason } from './decision-kernel.ts'
 export type { System3RouteHealth, System3RouteHealthConfig, System3RouteHealthReason, System3RouteHealthStatus } from './route-health.ts'
 import { selectSystem3Evidence, type System3EvidenceRequest, type System3EvidenceSelection } from '@deepseek-ai/dsh-experimental-system3-evidence'

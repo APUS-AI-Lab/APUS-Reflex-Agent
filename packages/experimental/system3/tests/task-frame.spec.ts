@@ -4,10 +4,11 @@ import { mountAgentLoopTestDependencies } from '@deepseek-ai/dsh-agent-loop-test
 import type { JevRequest, JevResponse } from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import { createUserMessage, type GenerateOptions, type MessageId } from '@deepseek-ai/dsh-llm'
-import { SessionId } from '@deepseek-ai/dsh-session'
+import { SessionId, SessionSeq } from '@deepseek-ai/dsh-session'
 import { afterEach, expect, it, vi } from 'vitest'
 import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import Jev from '../../apus-dsh-jev-plugin/src/index.ts'
+import GoalService, { GoalId } from '@deepseek-ai/dsh-goal'
 import { installSystem3TaskFrame, system3TaskFrameDecision, taskFrameText, validateSystem3TaskFrame,
   type System3TaskFrameConfig } from '../src/task-frame.ts'
 
@@ -63,11 +64,12 @@ it('rejects configurations that cannot work', () => {
 /** Answers keyed by message text; unknown messages are side remarks. */
 type Script = Readonly<Record<string, JevResponse>>
 
-async function setup(script: Script, config: Partial<System3TaskFrameConfig> = {}, turns = 6) {
+async function setup(script: Script, config: Partial<System3TaskFrameConfig> = {}, turns = 6, goals = false) {
   const ctx = new Context()
   contexts.push(ctx)
   await mountAgentLoopTestDependencies(ctx)
   await ctx.plugin(AgentLoop, { agents: [] })
+  if (goals) await ctx.plugin(GoalService)
   await ctx.plugin(Jev, { endpoint: 'http://localhost:1', model: 'jev-test' })
   const decide = vi.spyOn(ctx.jev, 'decide').mockImplementation((request: JevRequest) => {
     const instructions = request.questions.intent?.instructions ?? ''
@@ -121,6 +123,58 @@ it('starts a new frame when the person switches to unrelated work', async () => 
   await h.say('别动 README.md', 3)
   await h.say('帮我写一封请假邮件', 5)
   expect(h.frames().at(-1)).toMatchObject({ goal: { text: '帮我写一封请假邮件' }, items: [] })
+})
+
+it('takes the task from a DSH goal and keeps it while the goal is open', async () => {
+  const h = await setup({ '别动 README.md': answers('continue', { requirement: 0.9 }), '帮我写一封请假邮件': answers('switch', { request: 0.9 }) }, {}, 6, true)
+  const created = h.ctx.goals.create(h.agent, { objective: '把记账工具的测试覆盖率提到 90%' })
+  expect(h.frames()).toMatchObject([{ goal: { goalId: created.id, text: '把记账工具的测试覆盖率提到 90%' }, items: [] }])
+  await h.say('别动 README.md', 2)
+  // While the goal is open, a request for other work does not replace it.
+  await h.say('帮我写一封请假邮件', 3)
+  expect(h.frames().at(-1)).toMatchObject({ goal: { goalId: created.id }, items: [{ text: '别动 README.md' }] })
+  const edited = h.ctx.goals.edit(h.agent, created, { objective: '把记账工具的测试覆盖率提到 95%' })
+  expect(h.frames().at(-1)).toMatchObject({ goal: { text: '把记账工具的测试覆盖率提到 95%' }, items: [{ text: '别动 README.md' }] })
+  const count = h.frames().length
+  h.ctx.goals.edit(h.agent, edited, { maxGoalRounds: 3 })
+  expect(h.frames()).toHaveLength(count)
+  h.ctx.goals.complete(h.agent, h.ctx.goals.get(h.agent)!)
+  await h.say('帮我写一封请假邮件', count + 2)
+  expect(h.frames().at(-1)).toMatchObject({ goal: { text: '帮我写一封请假邮件' }, items: [] })
+})
+
+it('restores whether a goal is open from the Session log', async () => {
+  const h = await setup({ '帮我写一封请假邮件': answers('switch', { request: 0.9 }) }, {}, 6, true)
+  const goal = h.ctx.goals.create(h.agent, { objective: '整理发布说明' })
+  h.ctx.goals.clear(h.agent, goal)
+  await h.say('帮我写一封请假邮件', 3)
+  expect(h.frames().at(-1)).toMatchObject({ goal: { text: '帮我写一封请假邮件' } })
+
+  // A Session loaded with an open goal in its history keeps that goal as the task.
+  const restored = await setup({ '帮我写一封请假邮件': answers('switch', { request: 0.9 }) }, {}, 6)
+  const { agent } = await restored.ctx.agents.create({ sessionId: SessionId('loaded'), agentOptions: { provider: 'mock', model: 'mock' }, seed: [
+    { type: 'goal/change', seq: SessionSeq(0), time: 1, data: { kind: 'goal/change', version: 1, operation: 'create', roundsStarted: 0, createdAt: 1,
+      updatedAt: 1, goal: { id: GoalId('g1'), revision: 1, objective: '整理发布说明', phase: 'active', maxGoalRounds: 5 } } },
+    { type: 'system3/task-frame', seq: SessionSeq(1), time: 2, data: { version: 1, goal: { goalId: GoalId('g1'), text: '整理发布说明' }, items: [] } },
+  ] })
+  agent.followup(createUserMessage({ content: [{ type: 'text', text: '帮我写一封请假邮件' }], source: { kind: 'user' } }))
+  await agent.whenIdle()
+  const loaded = (type: string) => agent.session.snapshotEvents().filter(event => event.type === type).map(event => event.data)
+  await vi.waitFor(() => { expect(loaded('system3/judgement')).toMatchObject([{ outcome: 'new-task' }]) })
+  expect(loaded('system3/task-frame')).toHaveLength(1)
+})
+
+it('ignores goal changes of delegated Agents, clears, and an off task frame', async () => {
+  const off = await setup({}, { mode: 'off' }, 6, true)
+  off.ctx.goals.create(off.agent, { objective: '整理发布说明' })
+  expect(off.frames()).toEqual([])
+  const h = await setup({}, {}, 6, true)
+  const goal = h.ctx.goals.create(h.agent, { objective: '整理发布说明' })
+  h.ctx.goals.clear(h.agent, goal)
+  const { agent: child } = await h.ctx.agents.create({ sessionId: SessionId('child-goal'), meta: { delegationDepth: 1 }, agentOptions: { provider: 'mock', model: 'mock' } })
+  h.ctx.goals.create(child, { objective: '子任务目标' })
+  expect(h.frames()).toHaveLength(1)
+  expect(child.session.snapshotEvents().filter(event => event.type === 'system3/task-frame')).toEqual([])
 })
 
 it('skips long, non-text, and delegated messages', async () => {

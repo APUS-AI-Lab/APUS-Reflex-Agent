@@ -9,8 +9,8 @@
   en: e7c80d1de4d328b4
   zh: d9f368c27fd9f998
 /session-persistence-event-catalog/persistence-type-fingerprints:
-  en: 8ea661cad571995a
-  zh: ec008d0d906f6995
+  en: b88ce83476e395f7
+  zh: 7de3726bb41ab317
 /session-persistence-event-catalog/event-envelope:
   en: 7ebb1a2e0dd1f916
   zh: 8946f415dda5c1b8
@@ -255,8 +255,8 @@
   en: 5023397160b8c38c
   zh: 34a469d69d55b87c
 /session-persistence-event-catalog/events/system3/system3-task-frame-log-only:
-  en: 1aa32d48bea99547
-  zh: c80155ab871c6124
+  en: 0a4bf71317b37577
+  zh: ec51f8fb14147285
 /session-persistence-event-catalog/events/team:
   en: a640800a38b3c874
   zh: a640800a38b3c874
@@ -1566,14 +1566,17 @@
   en: 3612f39b40931916
   zh: 2604bf1dc7453257
 /session-persistence-event-catalog/resolved-persistence-types/system3supervisorresult:
-  en: 6fe668d95b8e7394
-  zh: 7dfcec7c49efce53
+  en: 30219dd0cb695f26
+  zh: e41c05419c2afa7d
 /session-persistence-event-catalog/resolved-persistence-types/system3taskframe:
-  en: 90bc5e878578e04a
-  zh: 2b944036d1d6e441
+  en: 5535b303e2089234
+  zh: ae45bd1b0d89b700
+/session-persistence-event-catalog/resolved-persistence-types/system3taskgoal:
+  en: 907c75fdfa69667d
+  zh: f3e4108aa61b8184
 /session-persistence-event-catalog/resolved-persistence-types/system3taskmessage:
-  en: c710bc07b6e3430f
-  zh: d57abcf4c10da734
+  en: a63b570cf4384597
+  zh: 67512d85e775c3d1
 /session-persistence-event-catalog/resolved-persistence-types/system3taskmessage~2:
   en: dda3459f61d9877e
   zh: e531b9cad5c9442e
@@ -2484,11 +2487,11 @@
   en: aecf0e03d732e344
   zh: 9c673348faa919a7
 /session-persistence-event-catalog/resolved-persistence-types/type-system3-skill-decision:
-  en: 517854fa12136a98
-  zh: e9da5c5eca25263a
+  en: 74b2f13c11001df3
+  zh: 961c97619bbda517
 /session-persistence-event-catalog/resolved-persistence-types/type-system3-task-frame:
-  en: a26041561f6c0232
-  zh: 3e5101d9419f0f16
+  en: 2ac6ff0cafabee0a
+  zh: 7def2d7b622ff9c5
 /session-persistence-event-catalog/resolved-persistence-types/type-team-member:
   en: d21fd23a5254e74f
   zh: effe5a8971aaeef5

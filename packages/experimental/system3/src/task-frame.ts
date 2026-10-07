@@ -8,6 +8,8 @@ import type { Session } from '@deepseek-ai/dsh-session'
 import type { JevResponse } from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
 import type { System3DataClass } from '@deepseek-ai/dsh-experimental-system3-policy'
 import type { MessageId, UserMessage } from '@deepseek-ai/dsh-llm'
+import type { GoalId } from '@deepseek-ai/dsh-goal/types'
+import type { GoalChangeMeta } from '@deepseek-ai/dsh-goal'
 import { choiceVerdict, noulVerdict, runSystem3Decision, validateSystem3DecisionSettings, type System3DecisionContext,
   type System3DecisionSettings, type System3DecisionSpec } from './decision-kernel.ts'
 import type { System3JevOptions } from './decisions.ts'
@@ -29,11 +31,20 @@ export interface System3TaskMessage {
   readonly text: string
 }
 
+/** What set the current task, verbatim: exactly one of `messageId` and `goalId` is present. */
+export interface System3TaskGoal {
+  readonly text: string
+  /** The person's message that started the task. */
+  readonly messageId?: MessageId
+  /** The DSH goal whose objective is the task. */
+  readonly goalId?: GoalId
+}
+
 /** The current task frame, recorded whole each time it changes. */
 export interface System3TaskFrame {
   readonly version: 1
-  /** The message that started the current task. */
-  readonly goal: System3TaskMessage
+  /** The DSH goal's objective when a goal set the task, otherwise the message that started it. */
+  readonly goal: System3TaskGoal
   /** Later messages judged to be requirements, acceptance criteria, or corrections, oldest first. */
   readonly items: readonly System3TaskMessage[]
 }
@@ -139,7 +150,8 @@ export function validateSystem3TaskFrame(config: System3TaskFrameConfig): void {
 }
 
 /**
- * Keep a task frame for every top-level Agent on this context. The first message of a Session starts the frame; each later
+ * Keep a task frame for every top-level Agent on this context. Creating a DSH goal starts the frame from its objective, and
+ * while that goal is open no message replaces it. Otherwise the first message of a Session starts the frame; each later
  * message is judged after it is claimed, without delaying the step, and its result shapes the frame from the next step on.
  * In `shadow` mode only judgements are recorded; the frame stays in memory and the model never sees it.
  * @param ctx - Plugin context with the system prompt; listeners are disposed with it.
@@ -162,14 +174,28 @@ export function installSystem3TaskFrame(ctx: Context, settings: System3TaskFrame
     }
     return frame
   }
+  // Whether the Session's DSH goal is still open (not complete or cleared), restored once from history like the frame.
+  const goals = new WeakMap<Session, boolean>()
+  const isOpen = (change: GoalChangeMeta): boolean => change.operation !== 'complete' && change.operation !== 'clear'
+  const goalOpen = (agent: Agent): boolean => {
+    let open = goals.get(agent.session)
+    if (open === undefined) {
+      // oxlint-disable-next-line typescript/no-deprecated -- Existing Session history read; migration deferred.
+      const last = agent.session.snapshotEvents().findLast(event => event.type === 'goal/change')?.data
+      open = last !== undefined && isOpen(last)
+      goals.set(agent.session, open)
+    }
+    return open
+  }
   ctx.on('session/event', (session, event) => {
     if (event.type === 'system3/task-frame') frames.set(session, event.data)
+    if (event.type === 'goal/change') goals.set(session, isOpen(event.data))
   })
   const lifetime = new AbortController()
   ctx.effect(() => () => { lifetime.abort() }, 'system3.taskFrame()')
 
   // In shadow mode the frame lives only in memory, so later messages are still judged against the current task.
-  const record = (agent: Agent, goal: System3TaskMessage, items: System3TaskFrame['items']): void => {
+  const record = (agent: Agent, goal: System3TaskFrame['goal'], items: System3TaskFrame['items']): void => {
     const frame: System3TaskFrame = { version: 1, goal, items }
     if (active) agent.session.append('system3/task-frame', frame)
     frames.set(agent.session, frame)
@@ -179,9 +205,20 @@ export function installSystem3TaskFrame(ctx: Context, settings: System3TaskFrame
     if (frame === null) { record(agent, message, []); return }
     const result = await runSystem3Decision(ctx, shared, system3TaskFrameDecision, config, agent,
       { goal: frame.goal.text, message: message.text }, lifetime.signal)
-    if (result.outcome === 'new-task') record(agent, message, [])
+    // While a DSH goal is open it is the task, so a message cannot replace it.
+    if (result.outcome === 'new-task' && !goalOpen(agent)) record(agent, message, [])
     else if (result.outcome === 'add') record(agent, frame.goal, [...frame.items, message].slice(-config.maxItems))
   }
+
+  // A DSH goal sets the task: creating one starts a frame from its objective, editing the objective keeps the requirements.
+  ctx.on('goal/changed', ({ agent, change }) => {
+    if (config.mode === 'off' || (agent.session.header.delegationDepth ?? 0) !== 0 || change.goal === undefined) return
+    const goal = { goalId: change.goal.id, text: change.goal.objective }
+    const frame = frameOf(agent)
+    if (change.operation === 'create') record(agent, goal, [])
+    else if (change.operation === 'edit' && frame !== null && frame.goal.goalId === goal.goalId
+      && frame.goal.text !== goal.text) record(agent, goal, frame.items)
+  })
 
   ctx.on('agent/pre-step', ({ agent, messages }, next) => {
     if (config.mode !== 'off' && (agent.session.header.delegationDepth ?? 0) === 0) {
