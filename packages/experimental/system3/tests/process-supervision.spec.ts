@@ -17,7 +17,7 @@ afterEach(async () => { for (const ctx of contexts.splice(0)) await ctx.fiber.di
 const CONFIG: System3ProcessSupervisionConfig = {
   mode: 'advise', repeatedError: 2, failedAttempts: 3, stalledSteps: 6, delegateFailures: 2,
   editTools: ['edit'], delegationTools: ['delegate'], shellTools: ['bash'], progressTools: ['search'],
-  verifyPattern: '\\b(npm|pnpm) test\\b', failurePattern: '\\b[1-9][0-9]* failed\\b|No module named',
+  verifyPattern: '\\b(npm|pnpm) test\\b', failurePattern: '\\b[1-9][0-9]* failed\\b|No module named|No such file or directory|exit code:? [1-9]',
 }
 
 /** Shell results keyed by command: an exit code, or an exit code with output; unknown commands succeed with exit code 0. */
@@ -92,6 +92,29 @@ it('advises once per repeated failure and per failure count, and shows the turn 
     { rule: 'repeated-error', subject: 'bash', count: 2, advised: true },
     { rule: 'failed-attempts', subject: null, count: 3, advised: true },
   ])
+})
+
+it('counts a command list that exits 0 after a failed command as a failure, as a real model ran it', async () => {
+  // Recorded from local acceptance: the model appended an exit-code echo, so the bash tool reported exit 0.
+  const command = 'cat /nonexistent/system3-check.txt; echo "[exit code: $?]"'
+  const output = '[exit code: 1]\n[stderr]\ncat: /nonexistent/system3-check.txt: No such file or directory\n'
+  const h = await setup([bash('c1', command), bash('c2', command), bash('c3', command), textResponse('still missing')], {},
+    { [command]: { exitCode: 0, output } })
+  await h.ask('read the file')
+  expect(h.notices()).toEqual([
+    { version: 1, rule: 'repeated-error', subject: 'bash', count: 2, advised: true },
+    { version: 1, rule: 'failed-attempts', count: 3, advised: true },
+  ])
+})
+
+it('keeps judging single commands by exit code and successful command lists as successes', async () => {
+  const h = await setup([bash('a', 'grep -n missing notes.txt | head -3'), bash('b', 'ls; pwd'), bash('c', 'echo "No such file or directory"'),
+    textResponse('done')], { failedAttempts: 1, stalledSteps: 9 },
+  { 'grep -n missing notes.txt | head -3': { exitCode: 0, output: '3: missing values are skipped' },
+    'ls; pwd': { exitCode: 0, output: 'notes.txt\n/work' },
+    'echo "No such file or directory"': { exitCode: 0, output: 'No such file or directory' } })
+  await h.ask('look around')
+  expect(h.notices()).toEqual([])
 })
 
 it('accepts a piped check as evidence only when its output shows no failure', async () => {

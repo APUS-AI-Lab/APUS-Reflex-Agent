@@ -28,7 +28,7 @@ export interface System3ProcessSupervisionConfig {
   readonly progressTools: readonly string[]
   /** Case-insensitive regular expression for verification commands, such as tests or builds. */
   readonly verifyPattern: string
-  /** Regular expression for failure output; a piped verification whose result matches it is not evidence. */
+  /** Regular expression for failure output; a command list or pipeline that exits 0 with matching output counts as failed. */
   readonly failurePattern: string
 }
 
@@ -70,8 +70,8 @@ declare module '@deepseek-ai/dsh-llm' {
   }
 }
 
-/** A single `|` between commands; `||` is not a pipe. */
-const PIPE = /(?<!\|)\|(?!\|)/u
+/** A command list or pipeline (`;`, `&&`, `||`, `|`) reports only the exit code of its last command. */
+const COMPOUND = /;|&&|\|/u
 
 interface TurnState {
   readonly failures: Map<string, number>
@@ -172,7 +172,10 @@ export function installSystem3ProcessSupervision(ctx: Context, config: System3Pr
     const state = stateOf(agent)
     const shell = config.shellTools.includes(exec.name)
     const exit = shell ? exitCodeOf(result) : null
-    const failed = result.isError || (exit !== null && exit !== 0)
+    const command = commandOf(exec)
+    // A command list or pipeline can exit 0 after an earlier command failed, so its output must also show no failure.
+    const masked = exit === 0 && COMPOUND.test(command) && failure.test(resultText(result))
+    const failed = result.isError || (exit !== null && exit !== 0) || masked
     const found: UserMessage[] = []
     const fire = (rule: Exclude<System3ProcessRule, 'delegate-failures'>, count: number, subject?: string): void => {
       const key = `${rule}:${subject ?? ''}`
@@ -182,7 +185,8 @@ export function installSystem3ProcessSupervision(ctx: Context, config: System3Pr
       if (advise) found.push(advice(rule, subject, count))
     }
     if (failed) {
-      const key = `${exec.name}\u0000${result.isError ? result.error.info?.code ?? '' : `exit ${String(exit)}`}\u0000${failureDigest(result)}`
+      const kind = result.isError ? result.error.info?.code ?? '' : masked ? 'output' : `exit ${String(exit)}`
+      const key = `${exec.name}\u0000${kind}\u0000${failureDigest(result)}`
       const repeats = (state.failures.get(key) ?? 0) + 1
       state.failures.set(key, repeats)
       if (repeats >= config.repeatedError) fire('repeated-error', repeats, exec.name)
@@ -192,9 +196,7 @@ export function installSystem3ProcessSupervision(ctx: Context, config: System3Pr
     const edited = !failed && config.editTools.includes(exec.name)
     const delegated = !failed && config.delegationTools.includes(exec.name)
     const informed = !failed && config.progressTools.includes(exec.name)
-    // A pipeline reports the exit code of its last stage, so its output must also show no failure.
-    const command = commandOf(exec)
-    const verified = !failed && shell && verify.test(command) && (!PIPE.test(command) || !failure.test(resultText(result)))
+    const verified = !failed && shell && verify.test(command)
     if (edited || delegated) { state.modified = true; state.verified = false }
     if (verified) state.verified = true
     if (edited || delegated || verified || informed) state.streak = 0

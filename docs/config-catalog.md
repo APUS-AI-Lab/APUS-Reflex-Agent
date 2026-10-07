@@ -1343,7 +1343,7 @@ export interface System3ProcessSupervisionConfig {
   readonly progressTools: readonly string[]
   /** Case-insensitive regular expression for verification commands, such as tests or builds. */
   readonly verifyPattern: string
-  /** Regular expression for failure output; a piped verification whose result matches it is not evidence. */
+  /** Regular expression for failure output; a command list or pipeline that exits 0 with matching output counts as failed. */
   readonly failurePattern: string
 }
 
