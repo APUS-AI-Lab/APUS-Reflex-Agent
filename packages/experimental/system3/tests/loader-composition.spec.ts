@@ -129,6 +129,8 @@ it('loads Jev beside the unchanged main route and replays persisted shadow recei
       '    delegationProgress:', '      intervalMs: 2000',
       '    outputFolding:', '      mode: active', '      shellTools: [bash]', "      commandPattern: '\\bnpm test\\b'",
       '      minLines: 6', '      minChars: 200', '      minNetChars: 300', '      minNetShare: 0.1',
+      '    taskFrame:', '      mode: active', '      yes: 0.5', '      no: 0.3', '      deadlineMs: 2000', '      sessionDataClasses: [workspace]',
+      '      maxItems: 8', '      maxMessageChars: 600',
     ] : [],
   ]).join('\n') + '\n')
   const ctx = context = new Context()
@@ -184,6 +186,8 @@ it('loads Jev beside the unchanged main route and replays persisted shadow recei
   expect(persisted.events.filter(event => event.type === 'system3/process-notice')).toEqual([])
   expect(JSON.stringify(main[0]?.body)).not.toContain('System3 过程监督')
   expect(persisted.events.filter(event => event.type === 'system3/output-fold')).toEqual([])
+  // The first message starts the task frame without asking Jev; local-only privacy would refuse it anyway.
+  expect(persisted.events.filter(event => event.type === 'system3/task-frame').map(event => event.data.goal.text)).toEqual(['run one bounded step'])
   const replayed = persisted.events.flatMap(event => event.type === 'system3/decision' ? [event.data] : [])
   expect(replayed).toEqual([first, second])
   expect(ctx.system3.lastDecision(restored)).toEqual(second)

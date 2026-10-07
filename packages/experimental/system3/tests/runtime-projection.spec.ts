@@ -87,8 +87,16 @@ it('restores the same wire facts without leaking effective headers or making mod
   const restored = Session.fromRestore(h.session.id, h.session.snapshotEvents(), h.session.header, SessionLogOffset(0), 'shared-frozen')
   const state = h.ctx.sessionProjections.stateOf(restored, 'system3Runtime')!
   expect(system3RuntimeProjection.wire.view(state))
-    .toEqual({ entry: h.view()?.entry, history: [], skill: null, subagentRun: null, notices: [] })
-  expect(Object.keys(system3RuntimeProjection.wire.view(state))).toEqual(['entry', 'history', 'skill', 'subagentRun', 'notices'])
+    .toEqual({ entry: h.view()?.entry, history: [], skill: null, subagentRun: null, notices: [], taskFrame: null })
+  expect(Object.keys(system3RuntimeProjection.wire.view(state))).toEqual(['entry', 'history', 'skill', 'subagentRun', 'notices', 'taskFrame'])
+})
+
+it('shows the latest task frame', async () => {
+  const h = await setup()
+  const goal = { messageId: 'm1' as never, text: '加一个汇总命令' }
+  h.session.append('system3/task-frame', { version: 1, goal, items: [] })
+  h.session.append('system3/task-frame', { version: 1, goal, items: [{ messageId: 'm2' as never, text: '别动 README.md' }] })
+  expect(h.view()?.taskFrame).toEqual({ goal, items: [{ messageId: 'm2', text: '别动 README.md' }] })
 })
 
 

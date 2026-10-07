@@ -1237,7 +1237,7 @@ export interface Config {
 ## `@deepseek-ai/dsh-experimental-system3`
 
 - `refs`: [`System3DataClass`](../packages/experimental/system3-policy/src/index.ts) · [`System3ExecutionDomain`](../packages/experimental/system3-policy/src/index.ts) · [`System3PrivacyMode`](../packages/experimental/system3-policy/src/index.ts)
-- `source`: [`packages/experimental/system3/src/index.ts:50`](../packages/experimental/system3/src/index.ts)
+- `source`: [`packages/experimental/system3/src/index.ts:53`](../packages/experimental/system3/src/index.ts)
 
 ```ts config-catalog
 /** Configures the default local-first privacy boundary. */
@@ -1268,6 +1268,8 @@ export interface Config {
   readonly processSupervision?: false | System3ProcessSupervisionConfig
   /** Lossless folding of repeated lines in matching shell results; `false` or omission disables it. */
   readonly outputFolding?: false | System3OutputFoldingConfig
+  /** The person's goal and later requirements, judged by Jev and shown to the main model verbatim; `false` or omission disables it. */
+  readonly taskFrame?: false | System3TaskFrameConfig
 }
 
 /** Explicit controls for entry recommendations; omission leaves entry routing disabled. */
@@ -1371,6 +1373,16 @@ export interface System3OutputFoldingConfig {
   readonly minNetShare: number
 }
 
+/** Mode, thresholds, and size limits of the task frame; deployment-owned. */
+export interface System3TaskFrameConfig extends System3DecisionSettings {
+  /** Data classes of Session text sent to Jev, checked against the privacy policy. */
+  readonly sessionDataClasses: readonly System3DataClass[]
+  /** Most recent requirements kept in the frame. */
+  readonly maxItems: number
+  /** Messages longer than this many characters are neither judged nor kept. */
+  readonly maxMessageChars: number
+}
+
 /** One entry route Jev may choose. */
 export type System3EntryCandidate = System3EntryModelCandidate | System3EntryDelegateCandidate
 
@@ -1429,6 +1441,18 @@ export interface System3DelegationMonitorConfig {
   readonly startupMs: number
 }
 
+/** Deployment settings of one decision. */
+export interface System3DecisionSettings {
+  /** `off` asks nothing; `shadow` records judgements without acting on them; `active` acts on confident judgements. */
+  readonly mode: System3DecisionMode
+  /** Probability, from 0 to 1, at or above which a yes/no answer is yes or a choice is accepted. */
+  readonly yes: number
+  /** Probability, from 0 to 1, at or below which a yes/no answer is no; between the two it is unsure. */
+  readonly no: number
+  /** Milliseconds the judgement may take before the fallback applies. */
+  readonly deadlineMs: number
+}
+
 /** Deployment-owned model route; choosing it switches the generation model for this input. */
 export interface System3EntryModelCandidate extends System3EntryCandidateBase {
   /** Registered generation provider route. */
@@ -1460,6 +1484,9 @@ export interface System3EntryDelegateCandidate extends System3EntryCandidateBase
    */
   readonly explicitPatterns?: readonly string[]
 }
+
+/** `off` asks nothing; `shadow` asks and records but never changes behavior; `active` lets the judgement act. */
+export type System3DecisionMode = 'off' | 'shadow' | 'active'
 
 /** Fields every entry candidate declares, whatever kind of route it selects. */
 interface System3EntryCandidateBase {
@@ -3615,7 +3642,7 @@ export interface Config {
 
 ## `@deepseek-ai/dsh-system-prompt`
 
-- `source`: [`packages/core/system-prompt/src/index.ts:247`](../packages/core/system-prompt/src/index.ts)
+- `source`: [`packages/core/system-prompt/src/index.ts:248`](../packages/core/system-prompt/src/index.ts)
 
 ```ts config-catalog
 /** Plugin config: the deployment-authored fragment of the system prompt (see {@link Config.personaPrefix} for its contract). */

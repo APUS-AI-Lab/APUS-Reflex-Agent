@@ -129,6 +129,14 @@
           minChars: 200
           minNetChars: 300
           minNetShare: 0.1
+        taskFrame:
+          mode: active
+          yes: 0.5
+          no: 0.3
+          deadlineMs: 8000
+          sessionDataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'
+          maxItems: 8
+          maxMessageChars: 600
         skillSelection:
           sessionDataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'
           minConfidence: 0.5

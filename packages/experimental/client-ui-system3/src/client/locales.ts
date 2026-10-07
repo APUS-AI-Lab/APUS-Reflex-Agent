@@ -24,6 +24,7 @@ export const zh = {
   noticeRepeatedError: '{subject} 已连续 {count} 次以同样的错误失败', noticeFailedAttempts: '本轮已有 {count} 次操作失败',
   noticeNoProgress: '最近 {count} 步没有新的修改或通过的验证', noticeMissingEvidence: '已修改文件，但还没有运行通过的测试或构建',
   noticeDelegateFailures: '{subject} 已有 {count} 条命令失败', noticeOther: '过程监督提示', noticeAdvised: '已提醒模型调整做法',
+  taskFrame: '任务卡 · 已记下 {count} 条要求', taskGoal: '任务：{text}', taskItem: '· {text}',
 } satisfies Record<string, string>
 /** Typed keys shared by both product locales. */
 export type System3Key = keyof typeof zh
@@ -52,6 +53,7 @@ export const en = {
   noticeRepeatedError: '{subject} failed {count} times with the same error', noticeFailedAttempts: '{count} actions failed this turn',
   noticeNoProgress: 'No new changes or passing checks in the last {count} steps', noticeMissingEvidence: 'Files changed, but no test or build has passed yet',
   noticeDelegateFailures: '{subject} has {count} failed commands', noticeOther: 'Process notice', noticeAdvised: 'The model was asked to change course',
+  taskFrame: 'Task card · {count} requirements kept', taskGoal: 'Task: {text}', taskItem: '· {text}',
 } satisfies Record<System3Key, string>
 
 declare module '@deepseek-ai/dsh-client-ui-slots' {

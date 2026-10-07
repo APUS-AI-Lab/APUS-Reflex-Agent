@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { PropsLocale, PropsRuntime, TranslateNS } from '@deepseek-ai/dsh-client-ui-slots'
 import type { ModelSelection, ModelSelectionProjection, SessionRequestId } from '@deepseek-ai/dsh-api-session-controller/types'
-import type { System3ProcessNoticeView, System3RuntimeView, System3SubagentRunView } from '@deepseek-ai/dsh-experimental-system3/types'
+import type { System3ProcessNoticeView, System3RuntimeView, System3SubagentRunView, System3TaskFrameView } from '@deepseek-ai/dsh-experimental-system3/types'
 import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
 import type {} from '@deepseek-ai/dsh-client-ui-session/client'
 import { Input } from '@deepseek-ai/dsh-client-ui-primitives'
@@ -201,6 +201,17 @@ export function ProcessNotice({ notice, t }: { readonly notice: System3ProcessNo
   const text = t(NOTICE_KEYS[notice.rule] ?? 'noticeOther', { subject: notice.subject ?? '', count: String(notice.count) })
   return <p className={css.note}>{notice.advised ? `${text} · ${t('noticeAdvised')}` : text}</p>
 }
+/** The person's requirements System3 keeps for the current task, collapsed to one line until opened.
+ * @param props - The projected task frame and the translator.
+ * @returns The count line and, when opened, the task and each requirement verbatim.
+ */
+export function TaskFrame({ frame, t }: { readonly frame: System3TaskFrameView; readonly t: TranslateNS<'system3'> }) {
+  return <details className={css.details}>
+    <summary>{t('taskFrame', { count: String(frame.items.length) })}</summary>
+    <p className={css.muted}>{t('taskGoal', { text: frame.goal.text })}</p>
+    {frame.items.map(item => <p key={item.messageId} className={css.note}>{t('taskItem', { text: item.text })}</p>)}
+  </details>
+}
 /** Render observed progress and allow a fixed Session to return to automatic mode.
  * @param props - Persisted facts and live Session status.
  * @returns Compact, expandable execution feedback.
@@ -233,6 +244,7 @@ export function System3Feedback(props: System3FeedbackProps) {
     {facts?.subagentRun && <DelegationRun run={facts.subagentRun} turnRunning={props.running} onStop={props.onStop}
       onSteer={props.onSteer} t={t} />}
     {facts?.notices.map((notice, index) => <ProcessNotice key={`${String(index)}:${notice.rule}`} notice={notice} t={t} />)}
+    {facts?.taskFrame && facts.taskFrame.items.length > 0 && <TaskFrame frame={facts.taskFrame} t={t} />}
     {/* From the injected instruction until the delegated run's first snapshot, including the tool call's startup. */}
     {!facts?.subagentRun && facts?.entry?.route?.delegation?.injected === true
       && props.running && <p className={css.run} role="status" aria-live="polite">{t('delegationPreparing')}</p>}
