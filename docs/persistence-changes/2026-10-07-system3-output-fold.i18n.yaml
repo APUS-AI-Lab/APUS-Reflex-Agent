@@ -1,0 +1,28 @@
+# Bilingual-pair consistency record for 2026-10-07-system3-output-fold.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/persistence-changes/2026-10-07-system3-output-fold.md
+/:
+  en: 3d5a424ae7d7e46b
+  zh: c22a8e4a62d8cc1a
+/2026-10-07-system3-output-fold:
+  en: 078938c5ca26f79b
+  zh: e4b69b1efc62d7c7
+/2026-10-07-system3-output-fold/summary:
+  en: a7d2e993797e412b
+  zh: f10c8ae74e06794d
+/2026-10-07-system3-output-fold/table-of-contents:
+  en: 6cf314a069ceb451
+  zh: 9adff678e9ecab3b
+/2026-10-07-system3-output-fold/declaration:
+  en: 6907136f28e48c90
+  zh: 02f8298485f3d8e7
+/2026-10-07-system3-output-fold/compatibility:
+  en: 6f9ffe189e44e3e5
+  zh: 54a8244318548614
+/2026-10-07-system3-output-fold/verification:
+  en: 28c80f59bd532330
+  zh: 1c634185f4ee5219
+/2026-10-07-system3-output-fold/dev-note:
+  en: b75c8458928b72b9
+  zh: 003ba4e17b4b5269

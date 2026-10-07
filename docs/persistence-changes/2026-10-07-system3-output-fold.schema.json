@@ -1,0 +1,104 @@
+{
+  "formatVersion": 2,
+  "roots": [
+    {
+      "key": "event:system3/output-fold",
+      "kind": "event",
+      "event": "system3/output-fold",
+      "surface": false,
+      "digest": "a08b64e63b930ddf31679dc4de8424786c7f497169323a50ab043b260545e26f",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "data",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "ignorable",
+                "type": 6,
+                "optional": true
+              },
+              {
+                "name": "seq",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "time",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 7,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "applied",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "foldedLines",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "savedChars",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "tool",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "version",
+                "type": 5,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "boolean"
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "literal",
+            "value": 1
+          },
+          {
+            "kind": "literal",
+            "value": true
+          },
+          {
+            "kind": "literal",
+            "value": "system3/output-fold"
+          }
+        ]
+      }
+    }
+  ],
+  "types": []
+}

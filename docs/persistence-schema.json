@@ -18844,6 +18844,104 @@
       }
     },
     {
+      "key": "event:system3/output-fold",
+      "kind": "event",
+      "event": "system3/output-fold",
+      "surface": false,
+      "digest": "a08b64e63b930ddf31679dc4de8424786c7f497169323a50ab043b260545e26f",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "data",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "ignorable",
+                "type": 6,
+                "optional": true
+              },
+              {
+                "name": "seq",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "time",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 7,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "applied",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "foldedLines",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "savedChars",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "tool",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "version",
+                "type": 5,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "boolean"
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "literal",
+            "value": 1
+          },
+          {
+            "kind": "literal",
+            "value": true
+          },
+          {
+            "kind": "literal",
+            "value": "system3/output-fold"
+          }
+        ]
+      }
+    },
+    {
       "key": "event:system3/process-notice",
       "kind": "event",
       "event": "system3/process-notice",
@@ -31259,6 +31357,20 @@
       "sources": [
         "packages/session/session-title/src/types.ts:29"
       ]
+    },
+    {
+      "digest": "1b600946d1ee3fc843b24fb0e79a2e5c6ca8b24a971619366a46f9730728661f",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "system3/output-fold"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
     },
     {
       "digest": "1b912703e2d64f91c99c675b8f805b01076c8325b905c1218ad81ef0b24909d5",
@@ -72506,6 +72618,67 @@
       "sources": []
     },
     {
+      "digest": "6ebb9b2d43fb0085b4264add7d76a8f4915c01a8aa9fc39b3f78c078928ed10e",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "applied",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "foldedLines",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "savedChars",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "tool",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "version",
+                "type": 4,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "boolean"
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "literal",
+            "value": 1
+          }
+        ]
+      },
+      "names": [
+        "packages/experimental/system3/src/output-folding.ts#System3OutputFold"
+      ],
+      "sources": [
+        "packages/experimental/system3/src/output-folding.ts:29"
+      ]
+    },
+    {
       "digest": "6ebcc2dbec9f2dabca9f668ae6d39e877899b180740570f453409db339221df3",
       "schema": {
         "root": 0,
@@ -93537,6 +93710,102 @@
           {
             "kind": "literal",
             "value": "tmux-context"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "a08b64e63b930ddf31679dc4de8424786c7f497169323a50ab043b260545e26f",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "data",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "ignorable",
+                "type": 6,
+                "optional": true
+              },
+              {
+                "name": "seq",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "time",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 7,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "applied",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "foldedLines",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "savedChars",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "tool",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "version",
+                "type": 5,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "boolean"
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "literal",
+            "value": 1
+          },
+          {
+            "kind": "literal",
+            "value": true
+          },
+          {
+            "kind": "literal",
+            "value": "system3/output-fold"
           }
         ]
       },

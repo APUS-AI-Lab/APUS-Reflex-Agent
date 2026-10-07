@@ -127,6 +127,8 @@ it('loads Jev beside the unchanged main route and replays persisted shadow recei
       "      failurePattern: 'FAILED'",
       "      verifyPattern: '\\bnpm test\\b'",
       '    delegationProgress:', '      intervalMs: 2000',
+      '    outputFolding:', '      mode: active', '      shellTools: [bash]', "      commandPattern: '\\bnpm test\\b'",
+      '      minLines: 6', '      minChars: 200', '      minNetChars: 300', '      minNetShare: 0.1',
     ] : [],
   ]).join('\n') + '\n')
   const ctx = context = new Context()
@@ -178,9 +180,10 @@ it('loads Jev beside the unchanged main route and replays persisted shadow recei
   const restored = Session.fromRestore(id, persisted.events, stored.header, stored.inheritedEventCount, persisted.eventState)
   await stored.close()
   const receiptCount = requests.length
-  // A text-only turn changes nothing, so supervision leaves no finding and adds nothing to the main request.
+  // A text-only turn changes nothing, so supervision and output folding leave no record and add nothing to the main request.
   expect(persisted.events.filter(event => event.type === 'system3/process-notice')).toEqual([])
   expect(JSON.stringify(main[0]?.body)).not.toContain('System3 过程监督')
+  expect(persisted.events.filter(event => event.type === 'system3/output-fold')).toEqual([])
   const replayed = persisted.events.flatMap(event => event.type === 'system3/decision' ? [event.data] : [])
   expect(replayed).toEqual([first, second])
   expect(ctx.system3.lastDecision(restored)).toEqual(second)
