@@ -18848,7 +18848,7 @@
       "kind": "event",
       "event": "system3/interjection",
       "surface": false,
-      "digest": "92745119ec7ac2871a3716b932458c18b2cacff7cb3d4e9aaef08b968fe7184d",
+      "digest": "9780e6c61638f34589fadb53836173b40d7c8a18ab51dc805ad9c7ffd15cbbd0",
       "schema": {
         "root": 0,
         "nodes": [
@@ -18895,6 +18895,11 @@
                 "name": "delivered",
                 "type": 5,
                 "optional": false
+              },
+              {
+                "name": "forwardedTo",
+                "type": 6,
+                "optional": true
               },
               {
                 "name": "messageId",
@@ -56408,7 +56413,7 @@
         "packages/experimental/system3/src/task-frame.ts#System3TaskGoal"
       ],
       "sources": [
-        "packages/experimental/system3/src/task-frame.ts:52"
+        "packages/experimental/system3/src/task-frame.ts:58"
       ]
     },
     {
@@ -72386,73 +72391,6 @@
       },
       "names": [],
       "sources": []
-    },
-    {
-      "digest": "68615812b21cd8905a2222acd9eb72bd2485cd59a8dc4a86e76fd1360ffd3717",
-      "schema": {
-        "root": 0,
-        "nodes": [
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "decision",
-                "type": 1,
-                "optional": false
-              },
-              {
-                "name": "delivered",
-                "type": 4,
-                "optional": false
-              },
-              {
-                "name": "messageId",
-                "type": 5,
-                "optional": false
-              },
-              {
-                "name": "version",
-                "type": 6,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "union",
-            "types": [
-              2,
-              3
-            ]
-          },
-          {
-            "kind": "literal",
-            "value": "keep"
-          },
-          {
-            "kind": "literal",
-            "value": "steer"
-          },
-          {
-            "kind": "primitive",
-            "type": "boolean"
-          },
-          {
-            "kind": "primitive",
-            "type": "string"
-          },
-          {
-            "kind": "literal",
-            "value": 1
-          }
-        ]
-      },
-      "names": [
-        "packages/experimental/system3/src/task-frame.ts#System3Interjection"
-      ],
-      "sources": [
-        "packages/experimental/system3/src/task-frame.ts:36"
-      ]
     },
     {
       "digest": "688e853dc149f0d30b31765c12ec7e3be74169bdf1a4c6463a10b945d50cc1b8",
@@ -92028,112 +91966,6 @@
       "sources": []
     },
     {
-      "digest": "92745119ec7ac2871a3716b932458c18b2cacff7cb3d4e9aaef08b968fe7184d",
-      "schema": {
-        "root": 0,
-        "nodes": [
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "data",
-                "type": 1,
-                "optional": false
-              },
-              {
-                "name": "ignorable",
-                "type": 8,
-                "optional": true
-              },
-              {
-                "name": "seq",
-                "type": 9,
-                "optional": false
-              },
-              {
-                "name": "time",
-                "type": 9,
-                "optional": false
-              },
-              {
-                "name": "type",
-                "type": 10,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "decision",
-                "type": 2,
-                "optional": false
-              },
-              {
-                "name": "delivered",
-                "type": 5,
-                "optional": false
-              },
-              {
-                "name": "messageId",
-                "type": 6,
-                "optional": false
-              },
-              {
-                "name": "version",
-                "type": 7,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "union",
-            "types": [
-              3,
-              4
-            ]
-          },
-          {
-            "kind": "literal",
-            "value": "keep"
-          },
-          {
-            "kind": "literal",
-            "value": "steer"
-          },
-          {
-            "kind": "primitive",
-            "type": "boolean"
-          },
-          {
-            "kind": "primitive",
-            "type": "string"
-          },
-          {
-            "kind": "literal",
-            "value": 1
-          },
-          {
-            "kind": "literal",
-            "value": true
-          },
-          {
-            "kind": "primitive",
-            "type": "number"
-          },
-          {
-            "kind": "literal",
-            "value": "system3/interjection"
-          }
-        ]
-      },
-      "names": [],
-      "sources": []
-    },
-    {
       "digest": "92d4a6cdd653e857958b4ab7cfe9b1b1ec36010d6f3d26997ab16b6886323a57",
       "schema": {
         "root": 0,
@@ -92777,7 +92609,7 @@
         "packages/experimental/system3/src/task-frame.ts#System3TaskFrame"
       ],
       "sources": [
-        "packages/experimental/system3/src/task-frame.ts:61"
+        "packages/experimental/system3/src/task-frame.ts:67"
       ]
     },
     {
@@ -92915,6 +92747,117 @@
       "sources": [
         "packages/core/agent/src/types.ts:39"
       ]
+    },
+    {
+      "digest": "9780e6c61638f34589fadb53836173b40d7c8a18ab51dc805ad9c7ffd15cbbd0",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "data",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "ignorable",
+                "type": 8,
+                "optional": true
+              },
+              {
+                "name": "seq",
+                "type": 9,
+                "optional": false
+              },
+              {
+                "name": "time",
+                "type": 9,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 10,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "decision",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "delivered",
+                "type": 5,
+                "optional": false
+              },
+              {
+                "name": "forwardedTo",
+                "type": 6,
+                "optional": true
+              },
+              {
+                "name": "messageId",
+                "type": 6,
+                "optional": false
+              },
+              {
+                "name": "version",
+                "type": 7,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "union",
+            "types": [
+              3,
+              4
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "keep"
+          },
+          {
+            "kind": "literal",
+            "value": "steer"
+          },
+          {
+            "kind": "primitive",
+            "type": "boolean"
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "literal",
+            "value": 1
+          },
+          {
+            "kind": "literal",
+            "value": true
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "literal",
+            "value": "system3/interjection"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
     },
     {
       "digest": "97d751143b235019214b79807637f6de19c1761c5c5b1deb70fa2d56f26626fb",
@@ -94388,7 +94331,7 @@
         "packages/experimental/system3/src/task-frame.ts#System3TaskMessage"
       ],
       "sources": [
-        "packages/experimental/system3/src/task-frame.ts:46"
+        "packages/experimental/system3/src/task-frame.ts:52"
       ]
     },
     {
@@ -114264,6 +114207,78 @@
       },
       "names": [],
       "sources": []
+    },
+    {
+      "digest": "f43af9c46ec9ca37135e4a51b4732f4158164fbcd3cf69a6ee34dcc9115666a2",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "decision",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "delivered",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "forwardedTo",
+                "type": 5,
+                "optional": true
+              },
+              {
+                "name": "messageId",
+                "type": 5,
+                "optional": false
+              },
+              {
+                "name": "version",
+                "type": 6,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "union",
+            "types": [
+              2,
+              3
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "keep"
+          },
+          {
+            "kind": "literal",
+            "value": "steer"
+          },
+          {
+            "kind": "primitive",
+            "type": "boolean"
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "literal",
+            "value": 1
+          }
+        ]
+      },
+      "names": [
+        "packages/experimental/system3/src/task-frame.ts#System3Interjection"
+      ],
+      "sources": [
+        "packages/experimental/system3/src/task-frame.ts:40"
+      ]
     },
     {
       "digest": "f4a66f654996c093aae700ea4c434ff2ee3569fea9c0e5813ccf6afdccabd163",

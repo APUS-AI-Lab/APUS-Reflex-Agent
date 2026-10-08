@@ -7,3 +7,5 @@
 - In the browser, tool cards sit under "Took Ns" → "Ran commands and read files" → the card itself; terminal lines render as `div`s, so locate text with a tree walker, not `pre`.
 - The worktree guard rejects compound shell commands that export variables or start interpreters with computed input; put them in a scratchpad script and run `bash script`.
 - `gh pr create` fails with this token (GraphQL permission); create pull requests through `gh api repos/<owner>/<repo>/pulls`.
+- Run `bash -n` on every browser acceptance script before a prd run, and re-read a scratchpad file after a guarded edit: a fix the worktree guard refused left a syntax error that stopped two prd runs right after the first message.
+- In a shell `case` pattern, quote any part containing spaces (`*"moved into the current step"*`); an unquoted space ends the pattern.

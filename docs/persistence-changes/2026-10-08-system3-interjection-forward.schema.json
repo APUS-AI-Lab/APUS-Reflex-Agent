@@ -1,0 +1,119 @@
+{
+  "formatVersion": 2,
+  "roots": [
+    {
+      "key": "event:system3/interjection",
+      "kind": "event",
+      "event": "system3/interjection",
+      "surface": false,
+      "digest": "9780e6c61638f34589fadb53836173b40d7c8a18ab51dc805ad9c7ffd15cbbd0",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "data",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "ignorable",
+                "type": 8,
+                "optional": true
+              },
+              {
+                "name": "seq",
+                "type": 9,
+                "optional": false
+              },
+              {
+                "name": "time",
+                "type": 9,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 10,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "decision",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "delivered",
+                "type": 5,
+                "optional": false
+              },
+              {
+                "name": "forwardedTo",
+                "type": 6,
+                "optional": true
+              },
+              {
+                "name": "messageId",
+                "type": 6,
+                "optional": false
+              },
+              {
+                "name": "version",
+                "type": 7,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "union",
+            "types": [
+              3,
+              4
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "keep"
+          },
+          {
+            "kind": "literal",
+            "value": "steer"
+          },
+          {
+            "kind": "primitive",
+            "type": "boolean"
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "literal",
+            "value": 1
+          },
+          {
+            "kind": "literal",
+            "value": true
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "literal",
+            "value": "system3/interjection"
+          }
+        ]
+      }
+    }
+  ],
+  "types": []
+}

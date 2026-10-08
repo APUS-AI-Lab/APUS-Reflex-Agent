@@ -1,0 +1,28 @@
+# Bilingual-pair consistency record for 2026-10-08-system3-interjection-forward.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/persistence-changes/2026-10-08-system3-interjection-forward.md
+/:
+  en: 3d5a424ae7d7e46b
+  zh: c22a8e4a62d8cc1a
+/2026-10-08-system3-interjection-forward:
+  en: acca53988949edb6
+  zh: d2bbd5a86194974a
+/2026-10-08-system3-interjection-forward/summary:
+  en: f819d6680d6d5dd0
+  zh: c9239d2e01e64f06
+/2026-10-08-system3-interjection-forward/table-of-contents:
+  en: 6cf314a069ceb451
+  zh: 9adff678e9ecab3b
+/2026-10-08-system3-interjection-forward/declaration:
+  en: 6907136f28e48c90
+  zh: 02f8298485f3d8e7
+/2026-10-08-system3-interjection-forward/compatibility:
+  en: 173a00d7528c4302
+  zh: ec9605bb23be747b
+/2026-10-08-system3-interjection-forward/verification:
+  en: 61336355ee263a0f
+  zh: a4a42e7466cda17d
+/2026-10-08-system3-interjection-forward/dev-note:
+  en: b75c8458928b72b9
+  zh: 003ba4e17b4b5269

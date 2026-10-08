@@ -1,5 +1,5 @@
 {
-  "note": "Task-frame labelled sets against the deployed Jev, 2026-10-07. main, held-out and held-out-2 shaped the questions; held-out-3 was labelled before its only run and the questions were not changed after it.",
+  "note": "Task-frame labelled sets against the deployed Jev, decision version 2, 2026-10-08. main, held-out, held-out-2, held-out-3 and interjection shaped the questions (interjection missed an interruption, which added the interrupt question); held-out-4 was labelled before its only run after the last change. Empty answers are Jev timeouts, which leave the frame unchanged.",
   "sets": {
     "main": {
       "keep": {
@@ -11,8 +11,8 @@
         "recall": 1
       },
       "elapsedMs": {
-        "p50": 694,
-        "max": 2106
+        "p50": 685,
+        "max": 2204
       },
       "cases": [
         {
@@ -28,6 +28,7 @@
             "request": 0.107,
             "requirement": 0.999,
             "acceptance": 0.006,
+            "interrupt": 0.003,
             "correction": 0.06
           }
         },
@@ -44,6 +45,7 @@
             "request": 0.001,
             "requirement": 0.986,
             "acceptance": 0.001,
+            "interrupt": 0.202,
             "correction": 0.076
           }
         },
@@ -60,6 +62,7 @@
             "request": 0.349,
             "requirement": 0.998,
             "acceptance": 0.997,
+            "interrupt": 0.012,
             "correction": 0.007
           }
         },
@@ -77,6 +80,7 @@
             "request": 0.99,
             "requirement": 0.995,
             "acceptance": 0.984,
+            "interrupt": 0.006,
             "correction": 0.818
           }
         },
@@ -93,6 +97,7 @@
             "request": 0.996,
             "requirement": 0.992,
             "acceptance": 0.531,
+            "interrupt": 0.026,
             "correction": 0.998
           }
         },
@@ -110,6 +115,7 @@
             "request": 0.026,
             "requirement": 0.998,
             "acceptance": 0.002,
+            "interrupt": 0.01,
             "correction": 0.995
           }
         },
@@ -126,6 +132,7 @@
             "request": 0,
             "requirement": 0,
             "acceptance": 0.001,
+            "interrupt": 0.002,
             "correction": 0
           }
         },
@@ -142,6 +149,7 @@
             "request": 0.002,
             "requirement": 0.001,
             "acceptance": 0.001,
+            "interrupt": 0.002,
             "correction": 0.001
           }
         },
@@ -158,6 +166,7 @@
             "request": 0,
             "requirement": 0,
             "acceptance": 0,
+            "interrupt": 0.002,
             "correction": 0
           }
         },
@@ -174,6 +183,7 @@
             "request": 0.995,
             "requirement": 0,
             "acceptance": 0.001,
+            "interrupt": 0.996,
             "correction": 0.001
           }
         },
@@ -190,6 +200,7 @@
             "request": 0.989,
             "requirement": 0,
             "acceptance": 0.001,
+            "interrupt": 0.924,
             "correction": 0.001
           }
         },
@@ -207,6 +218,7 @@
             "request": 0.993,
             "requirement": 0.998,
             "acceptance": 0.994,
+            "interrupt": 0.004,
             "correction": 0.012
           }
         },
@@ -223,6 +235,7 @@
             "request": 0.995,
             "requirement": 0.996,
             "acceptance": 0.998,
+            "interrupt": 0.006,
             "correction": 0.007
           }
         },
@@ -240,6 +253,7 @@
             "request": 0.977,
             "requirement": 0.996,
             "acceptance": 0.986,
+            "interrupt": 0.023,
             "correction": 0.005
           }
         },
@@ -256,6 +270,7 @@
             "request": 0.018,
             "requirement": 0.997,
             "acceptance": 0.02,
+            "interrupt": 0.026,
             "correction": 0.905
           }
         },
@@ -272,6 +287,7 @@
             "request": 0.005,
             "requirement": 0.001,
             "acceptance": 0.001,
+            "interrupt": 0.053,
             "correction": 0.98
           }
         },
@@ -288,6 +304,7 @@
             "request": 0.023,
             "requirement": 0.001,
             "acceptance": 0.001,
+            "interrupt": 0.001,
             "correction": 0.001
           }
         },
@@ -304,6 +321,7 @@
             "request": 0.001,
             "requirement": 0,
             "acceptance": 0.001,
+            "interrupt": 0.002,
             "correction": 0
           }
         },
@@ -320,6 +338,7 @@
             "request": 0.019,
             "requirement": 0.996,
             "acceptance": 0.001,
+            "interrupt": 0.007,
             "correction": 0.029
           }
         },
@@ -336,6 +355,7 @@
             "request": 0.018,
             "requirement": 0.996,
             "acceptance": 0.004,
+            "interrupt": 0.007,
             "correction": 0.068
           }
         },
@@ -352,6 +372,7 @@
             "request": 0.893,
             "requirement": 0,
             "acceptance": 0,
+            "interrupt": 0.003,
             "correction": 0
           }
         },
@@ -368,6 +389,7 @@
             "request": 0.005,
             "requirement": 0.005,
             "acceptance": 0.002,
+            "interrupt": 0.008,
             "correction": 0.001
           }
         },
@@ -385,6 +407,7 @@
             "request": 0.068,
             "requirement": 0.992,
             "acceptance": 0.002,
+            "interrupt": 0.007,
             "correction": 0.994
           }
         },
@@ -401,6 +424,7 @@
             "request": 0.133,
             "requirement": 0.999,
             "acceptance": 0.932,
+            "interrupt": 0.014,
             "correction": 0.133
           }
         },
@@ -417,6 +441,7 @@
             "request": 0.002,
             "requirement": 0.009,
             "acceptance": 0.996,
+            "interrupt": 0.042,
             "correction": 0.001
           }
         },
@@ -433,6 +458,7 @@
             "request": 0.593,
             "requirement": 0.269,
             "acceptance": 0.095,
+            "interrupt": 0.023,
             "correction": 0.99
           }
         },
@@ -449,6 +475,7 @@
             "request": 0.993,
             "requirement": 0.001,
             "acceptance": 0.001,
+            "interrupt": 0.068,
             "correction": 0.001
           }
         },
@@ -465,6 +492,7 @@
             "request": 0.001,
             "requirement": 0,
             "acceptance": 0,
+            "interrupt": 0.001,
             "correction": 0
           }
         },
@@ -481,6 +509,7 @@
             "request": 0.012,
             "requirement": 0.982,
             "acceptance": 0.001,
+            "interrupt": 0.004,
             "correction": 0.037
           }
         },
@@ -498,6 +527,7 @@
             "request": 0.963,
             "requirement": 0.995,
             "acceptance": 0.991,
+            "interrupt": 0.018,
             "correction": 0.003
           }
         },
@@ -515,6 +545,7 @@
             "request": 0.029,
             "requirement": 0.995,
             "acceptance": 0.076,
+            "interrupt": 0.007,
             "correction": 0.013
           }
         },
@@ -531,6 +562,7 @@
             "request": 0.985,
             "requirement": 0.988,
             "acceptance": 0.018,
+            "interrupt": 0.013,
             "correction": 0.985
           }
         },
@@ -547,6 +579,7 @@
             "request": 0.991,
             "requirement": 0.997,
             "acceptance": 0.996,
+            "interrupt": 0.047,
             "correction": 0.993
           }
         },
@@ -564,6 +597,7 @@
             "request": 0.915,
             "requirement": 0.998,
             "acceptance": 0.984,
+            "interrupt": 0.019,
             "correction": 0.995
           }
         },
@@ -580,6 +614,7 @@
             "request": 0.002,
             "requirement": 0.002,
             "acceptance": 0.001,
+            "interrupt": 0.004,
             "correction": 0.002
           }
         },
@@ -596,6 +631,7 @@
             "request": 0.994,
             "requirement": 0,
             "acceptance": 0,
+            "interrupt": 0.002,
             "correction": 0
           }
         }
@@ -611,8 +647,8 @@
         "recall": 1
       },
       "elapsedMs": {
-        "p50": 712,
-        "max": 1520
+        "p50": 707,
+        "max": 2161
       },
       "cases": [
         {
@@ -628,6 +664,7 @@
             "request": 0.015,
             "requirement": 0.994,
             "acceptance": 0.002,
+            "interrupt": 0.029,
             "correction": 0.977
           }
         },
@@ -644,6 +681,7 @@
             "request": 0.991,
             "requirement": 0.999,
             "acceptance": 0.991,
+            "interrupt": 0.012,
             "correction": 0.992
           }
         },
@@ -660,6 +698,7 @@
             "request": 0.994,
             "requirement": 0.997,
             "acceptance": 0.998,
+            "interrupt": 0.01,
             "correction": 0.223
           }
         },
@@ -677,6 +716,7 @@
             "request": 0.984,
             "requirement": 0.995,
             "acceptance": 0.002,
+            "interrupt": 0.02,
             "correction": 0.998
           }
         },
@@ -693,6 +733,7 @@
             "request": 0.001,
             "requirement": 0.002,
             "acceptance": 0,
+            "interrupt": 0.003,
             "correction": 0.001
           }
         },
@@ -709,6 +750,7 @@
             "request": 0.963,
             "requirement": 0,
             "acceptance": 0,
+            "interrupt": 0.001,
             "correction": 0.001
           }
         },
@@ -725,6 +767,7 @@
             "request": 0.001,
             "requirement": 0,
             "acceptance": 0,
+            "interrupt": 0.002,
             "correction": 0
           }
         },
@@ -742,6 +785,7 @@
             "request": 0.053,
             "requirement": 0.996,
             "acceptance": 0.593,
+            "interrupt": 0.037,
             "correction": 0.438
           }
         },
@@ -758,6 +802,7 @@
             "request": 0.867,
             "requirement": 0.992,
             "acceptance": 0.053,
+            "interrupt": 0.047,
             "correction": 0.977
           }
         },
@@ -774,6 +819,7 @@
             "request": 0.008,
             "requirement": 0.988,
             "acceptance": 0.982,
+            "interrupt": 0.095,
             "correction": 0.028
           }
         },
@@ -790,6 +836,7 @@
             "request": 0.963,
             "requirement": 0.977,
             "acceptance": 0.02,
+            "interrupt": 0.706,
             "correction": 0.998
           }
         },
@@ -806,6 +853,7 @@
             "request": 0,
             "requirement": 0.001,
             "acceptance": 0,
+            "interrupt": 0.002,
             "correction": 0.001
           }
         },
@@ -822,6 +870,7 @@
             "request": 0.996,
             "requirement": 0,
             "acceptance": 0.001,
+            "interrupt": 0.997,
             "correction": 0.002
           }
         },
@@ -838,6 +887,7 @@
             "request": 0,
             "requirement": 0,
             "acceptance": 0.001,
+            "interrupt": 0.852,
             "correction": 0
           }
         },
@@ -854,6 +904,7 @@
             "request": 0.994,
             "requirement": 0.997,
             "acceptance": 0.037,
+            "interrupt": 0.005,
             "correction": 0.349
           }
         }
@@ -862,15 +913,15 @@
     "held-out-2": {
       "keep": {
         "precision": 1,
-        "recall": 1
+        "recall": 0.9230769230769231
       },
       "reset": {
         "precision": 1,
         "recall": 1
       },
       "elapsedMs": {
-        "p50": 705,
-        "max": 2454
+        "p50": 714,
+        "max": 15002
       },
       "cases": [
         {
@@ -886,6 +937,7 @@
             "request": 0.989,
             "requirement": 0.998,
             "acceptance": 0.953,
+            "interrupt": 0.005,
             "correction": 0.223
           }
         },
@@ -902,6 +954,7 @@
             "request": 0.971,
             "requirement": 0.997,
             "acceptance": 0.053,
+            "interrupt": 0.076,
             "correction": 0.986
           }
         },
@@ -918,6 +971,7 @@
             "request": 0.992,
             "requirement": 0.994,
             "acceptance": 0.994,
+            "interrupt": 0.017,
             "correction": 0.095
           }
         },
@@ -935,6 +989,7 @@
             "request": 0.974,
             "requirement": 0.995,
             "acceptance": 0.011,
+            "interrupt": 0.107,
             "correction": 0.998
           }
         },
@@ -951,6 +1006,7 @@
             "request": 0.002,
             "requirement": 0.001,
             "acceptance": 0.001,
+            "interrupt": 0.002,
             "correction": 0.001
           }
         },
@@ -967,6 +1023,7 @@
             "request": 0.983,
             "requirement": 0,
             "acceptance": 0,
+            "interrupt": 0.002,
             "correction": 0.001
           }
         },
@@ -983,6 +1040,7 @@
             "request": 0.001,
             "requirement": 0,
             "acceptance": 0,
+            "interrupt": 0.993,
             "correction": 0.001
           }
         },
@@ -999,6 +1057,7 @@
             "request": 0.706,
             "requirement": 0.998,
             "acceptance": 0.02,
+            "interrupt": 0.007,
             "correction": 0.987
           }
         },
@@ -1016,6 +1075,7 @@
             "request": 0.053,
             "requirement": 0.998,
             "acceptance": 0.986,
+            "interrupt": 0.026,
             "correction": 0.047
           }
         },
@@ -1024,16 +1084,14 @@
           "message": "单元测试覆盖率不能低于 80%",
           "label": "acceptance",
           "also": "requirement",
-          "outcome": "add",
-          "intent": {
-            "choice": "continue",
-            "probability": 0.996
-          },
+          "outcome": "none",
+          "intent": null,
           "nouls": {
-            "request": 0.047,
-            "requirement": 0.998,
-            "acceptance": 0.994,
-            "correction": 0.02
+            "request": -1,
+            "requirement": -1,
+            "acceptance": -1,
+            "interrupt": -1,
+            "correction": -1
           }
         },
         {
@@ -1050,6 +1108,7 @@
             "request": 0.94,
             "requirement": 0.999,
             "acceptance": 0.076,
+            "interrupt": 0.053,
             "correction": 0.998
           }
         },
@@ -1066,6 +1125,7 @@
             "request": 0.012,
             "requirement": 0.009,
             "acceptance": 0,
+            "interrupt": 0.004,
             "correction": 0.001
           }
         },
@@ -1083,6 +1143,7 @@
             "request": 0.997,
             "requirement": 0.998,
             "acceptance": 0.706,
+            "interrupt": 0.037,
             "correction": 0.932
           }
         },
@@ -1099,6 +1160,7 @@
             "request": 0.003,
             "requirement": 0,
             "acceptance": 0.001,
+            "interrupt": 0.001,
             "correction": 0
           }
         },
@@ -1116,6 +1178,7 @@
             "request": 0.94,
             "requirement": 0.999,
             "acceptance": 0.988,
+            "interrupt": 0.003,
             "correction": 0.015
           }
         },
@@ -1132,6 +1195,7 @@
             "request": 0.245,
             "requirement": 0.998,
             "acceptance": 0.755,
+            "interrupt": 0.018,
             "correction": 0.958
           }
         },
@@ -1148,6 +1212,7 @@
             "request": 0.993,
             "requirement": 0.992,
             "acceptance": 0.679,
+            "interrupt": 0.037,
             "correction": 0.998
           }
         },
@@ -1164,6 +1229,7 @@
             "request": 0.978,
             "requirement": 0.998,
             "acceptance": 0.963,
+            "interrupt": 0.002,
             "correction": 0.042
           }
         },
@@ -1180,6 +1246,7 @@
             "request": 0.002,
             "requirement": 0.003,
             "acceptance": 0.001,
+            "interrupt": 0.003,
             "correction": 0.001
           }
         },
@@ -1196,6 +1263,7 @@
             "request": 0.986,
             "requirement": 0,
             "acceptance": 0,
+            "interrupt": 0.002,
             "correction": 0.001
           }
         }
@@ -1211,8 +1279,8 @@
         "recall": 0.6666666666666666
       },
       "elapsedMs": {
-        "p50": 709,
-        "max": 2155
+        "p50": 728,
+        "max": 3051
       },
       "cases": [
         {
@@ -1228,6 +1296,7 @@
             "request": 0.992,
             "requirement": 0.999,
             "acceptance": 0.245,
+            "interrupt": 0.01,
             "correction": 0.202
           }
         },
@@ -1245,6 +1314,7 @@
             "request": 0.947,
             "requirement": 0.999,
             "acceptance": 0.095,
+            "interrupt": 0.009,
             "correction": 0.245
           }
         },
@@ -1261,6 +1331,7 @@
             "request": 0.993,
             "requirement": 0.998,
             "acceptance": 0.997,
+            "interrupt": 0.009,
             "correction": 0.223
           }
         },
@@ -1278,6 +1349,7 @@
             "request": 0.988,
             "requirement": 0.995,
             "acceptance": 0.438,
+            "interrupt": 0.037,
             "correction": 0.998
           }
         },
@@ -1294,6 +1366,7 @@
             "request": 0.001,
             "requirement": 0.001,
             "acceptance": 0,
+            "interrupt": 0.003,
             "correction": 0.002
           }
         },
@@ -1310,6 +1383,7 @@
             "request": 0,
             "requirement": 0,
             "acceptance": 0,
+            "interrupt": 0.182,
             "correction": 0
           }
         },
@@ -1326,6 +1400,7 @@
             "request": 0.017,
             "requirement": 0.001,
             "acceptance": 0.001,
+            "interrupt": 0.001,
             "correction": 0.001
           }
         },
@@ -1342,6 +1417,7 @@
             "request": 0.001,
             "requirement": 0,
             "acceptance": 0,
+            "interrupt": 0.001,
             "correction": 0
           }
         },
@@ -1358,6 +1434,7 @@
             "request": 0.983,
             "requirement": 0.997,
             "acceptance": 0.01,
+            "interrupt": 0.015,
             "correction": 0.679
           }
         },
@@ -1375,6 +1452,7 @@
             "request": 0.992,
             "requirement": 0.996,
             "acceptance": 0.985,
+            "interrupt": 0.033,
             "correction": 0.974
           }
         },
@@ -1392,6 +1470,7 @@
             "request": 0.798,
             "requirement": 0.622,
             "acceptance": 0.016,
+            "interrupt": 0.469,
             "correction": 0.997
           }
         },
@@ -1408,6 +1487,7 @@
             "request": 0.01,
             "requirement": 0.994,
             "acceptance": 0.009,
+            "interrupt": 0.005,
             "correction": 0.095
           }
         },
@@ -1424,6 +1504,7 @@
             "request": 0.009,
             "requirement": 0.001,
             "acceptance": 0.001,
+            "interrupt": 0.002,
             "correction": 0.001
           }
         },
@@ -1440,6 +1521,7 @@
             "request": 0.963,
             "requirement": 0.001,
             "acceptance": 0.001,
+            "interrupt": 0.003,
             "correction": 0.001
           }
         },
@@ -1456,6 +1538,7 @@
             "request": 0,
             "requirement": 0,
             "acceptance": 0,
+            "interrupt": 0.004,
             "correction": 0
           }
         },
@@ -1473,6 +1556,7 @@
             "request": 0.994,
             "requirement": 0.998,
             "acceptance": 0.977,
+            "interrupt": 0.002,
             "correction": 0.037
           }
         },
@@ -1489,6 +1573,7 @@
             "request": 0.997,
             "requirement": 0.998,
             "acceptance": 0.997,
+            "interrupt": 0.006,
             "correction": 0.987
           }
         },
@@ -1505,6 +1590,7 @@
             "request": 0.995,
             "requirement": 0.998,
             "acceptance": 0.018,
+            "interrupt": 0.007,
             "correction": 0.818
           }
         },
@@ -1521,6 +1607,7 @@
             "request": 0.996,
             "requirement": 0.001,
             "acceptance": 0.001,
+            "interrupt": 0.998,
             "correction": 0.042
           }
         },
@@ -1537,6 +1624,644 @@
             "request": 0.947,
             "requirement": 0.001,
             "acceptance": 0.001,
+            "interrupt": 0.001,
+            "correction": 0.001
+          }
+        }
+      ]
+    },
+    "interjection": {
+      "keep": {
+        "precision": 1,
+        "recall": 1
+      },
+      "reset": {
+        "precision": 1,
+        "recall": 0.5
+      },
+      "elapsedMs": {
+        "p50": 723,
+        "max": 2331
+      },
+      "cases": [
+        {
+          "goal": "给订单服务加一个导出 Excel 的接口",
+          "message": "等等，先别跑全量测试，只跑 orders 相关的",
+          "label": "correction",
+          "also": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.873
+          },
+          "nouls": {
+            "request": 0.012,
+            "requirement": 0.012,
+            "acceptance": 0.004,
+            "interrupt": 0.997,
+            "correction": 0.119
+          }
+        },
+        {
+          "goal": "给订单服务加一个导出 Excel 的接口",
+          "message": "对了，导出的文件名要带上日期",
+          "label": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.998
+          },
+          "nouls": {
+            "request": 0.985,
+            "requirement": 0.999,
+            "acceptance": 0.982,
+            "interrupt": 0.023,
+            "correction": 0.989
+          }
+        },
+        {
+          "goal": "给订单服务加一个导出 Excel 的接口",
+          "message": "用 openpyxl 就行，别引入 pandas",
+          "label": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.996
+          },
+          "nouls": {
+            "request": 0.245,
+            "requirement": 0.998,
+            "acceptance": 0.095,
+            "interrupt": 0.023,
+            "correction": 0.988
+          }
+        },
+        {
+          "goal": "给订单服务加一个导出 Excel 的接口",
+          "message": "刚才那个接口路径写错了，应该是 /orders/export",
+          "label": "correction",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.997
+          },
+          "nouls": {
+            "request": 0.995,
+            "requirement": 0.996,
+            "acceptance": 0.026,
+            "interrupt": 0.033,
+            "correction": 0.998
+          }
+        },
+        {
+          "goal": "给订单服务加一个导出 Excel 的接口",
+          "message": "导出 1 万行要在 3 秒内完成",
+          "label": "acceptance",
+          "also": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.998
+          },
+          "nouls": {
+            "request": 0.983,
+            "requirement": 0.997,
+            "acceptance": 0.996,
+            "interrupt": 0.037,
+            "correction": 0.047
+          }
+        },
+        {
+          "goal": "给订单服务加一个导出 Excel 的接口",
+          "message": "你现在跑到哪一步了？",
+          "label": "none",
+          "outcome": "none",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.994
+          },
+          "nouls": {
+            "request": 0.015,
+            "requirement": 0,
+            "acceptance": 0.001,
+            "interrupt": 0.003,
+            "correction": 0.001
+          }
+        },
+        {
+          "goal": "给订单服务加一个导出 Excel 的接口",
+          "message": "openpyxl 和 xlsxwriter 有啥区别？",
+          "label": "none",
+          "outcome": "none",
+          "intent": {
+            "choice": "side",
+            "probability": 0.999
+          },
+          "nouls": {
+            "request": 0.001,
+            "requirement": 0.002,
+            "acceptance": 0,
+            "interrupt": 0.005,
+            "correction": 0.001
+          }
+        },
+        {
+          "goal": "给订单服务加一个导出 Excel 的接口",
+          "message": "辛苦了",
+          "label": "none",
+          "outcome": "none",
+          "intent": {
+            "choice": "side",
+            "probability": 0.994
+          },
+          "nouls": {
+            "request": 0,
+            "requirement": 0,
+            "acceptance": 0,
+            "interrupt": 0.001,
+            "correction": 0
+          }
+        },
+        {
+          "goal": "给订单服务加一个导出 Excel 的接口",
+          "message": "等你忙完帮我看下今天的邮件",
+          "label": "new-task",
+          "outcome": "none",
+          "intent": {
+            "choice": "switch",
+            "probability": 0.985
+          },
+          "nouls": {
+            "request": 0.002,
+            "requirement": 0,
+            "acceptance": 0,
+            "interrupt": 0.001,
+            "correction": 0
+          }
+        },
+        {
+          "goal": "把首页的加载速度优化到 2 秒以内",
+          "message": "图片别压得太狠，画质要保留",
+          "label": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.995
+          },
+          "nouls": {
+            "request": 0.037,
+            "requirement": 0.881,
+            "acceptance": 0.002,
+            "interrupt": 0.003,
+            "correction": 0.349
+          }
+        },
+        {
+          "goal": "把首页的加载速度优化到 2 秒以内",
+          "message": "不要改动后端接口",
+          "label": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.999
+          },
+          "nouls": {
+            "request": 0.029,
+            "requirement": 0.995,
+            "acceptance": 0.007,
+            "interrupt": 0.076,
+            "correction": 0.622
+          }
+        },
+        {
+          "goal": "把首页的加载速度优化到 2 秒以内",
+          "message": "你把 lazy load 加到首屏图片上了，首屏不要懒加载",
+          "label": "correction",
+          "also": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.999
+          },
+          "nouls": {
+            "request": 0.991,
+            "requirement": 0.994,
+            "acceptance": 0.026,
+            "interrupt": 0.974,
+            "correction": 0.998
+          }
+        },
+        {
+          "goal": "把首页的加载速度优化到 2 秒以内",
+          "message": "Lighthouse 跑三次取平均才算数",
+          "label": "acceptance",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.998
+          },
+          "nouls": {
+            "request": 0.053,
+            "requirement": 0.963,
+            "acceptance": 0.974,
+            "interrupt": 0.01,
+            "correction": 0.349
+          }
+        },
+        {
+          "goal": "把首页的加载速度优化到 2 秒以内",
+          "message": "这个优化大概能提升多少？",
+          "label": "none",
+          "outcome": "none",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.991
+          },
+          "nouls": {
+            "request": 0.006,
+            "requirement": 0.001,
+            "acceptance": 0.013,
+            "interrupt": 0.003,
+            "correction": 0.001
+          }
+        },
+        {
+          "goal": "把首页的加载速度优化到 2 秒以内",
+          "message": "顺便帮我写个周报",
+          "label": "new-task",
+          "outcome": "new-task",
+          "intent": {
+            "choice": "switch",
+            "probability": 0.999
+          },
+          "nouls": {
+            "request": 0.993,
+            "requirement": 0,
+            "acceptance": 0.002,
+            "interrupt": 0.007,
+            "correction": 0
+          }
+        },
+        {
+          "goal": "把首页的加载速度优化到 2 秒以内",
+          "message": "ok",
+          "label": "none",
+          "outcome": "none",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.976
+          },
+          "nouls": {
+            "request": 0.003,
+            "requirement": 0.001,
+            "acceptance": 0.002,
+            "interrupt": 0.001,
+            "correction": 0.001
+          }
+        },
+        {
+          "goal": "把首页的加载速度优化到 2 秒以内",
+          "message": "我看到你删了 analytics 脚本，那个必须保留",
+          "label": "correction",
+          "also": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.994
+          },
+          "nouls": {
+            "request": 0.06,
+            "requirement": 0.531,
+            "acceptance": 0.001,
+            "interrupt": 0.076,
+            "correction": 0.996
+          }
+        },
+        {
+          "goal": "把首页的加载速度优化到 2 秒以内",
+          "message": "CDN 用阿里云的，不要换",
+          "label": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.997
+          },
+          "nouls": {
+            "request": 0.165,
+            "requirement": 0.996,
+            "acceptance": 0.006,
+            "interrupt": 0.006,
+            "correction": 0.932
+          }
+        },
+        {
+          "goal": "把首页的加载速度优化到 2 秒以内",
+          "message": "今天先到这",
+          "label": "none",
+          "outcome": "none",
+          "intent": {
+            "choice": "side",
+            "probability": 0.99
+          },
+          "nouls": {
+            "request": 0,
+            "requirement": 0,
+            "acceptance": 0.001,
+            "interrupt": 0.987,
+            "correction": 0
+          }
+        }
+      ]
+    },
+    "held-out-4": {
+      "keep": {
+        "precision": 1,
+        "recall": 1
+      },
+      "reset": {
+        "precision": 1,
+        "recall": 1
+      },
+      "elapsedMs": {
+        "p50": 743,
+        "max": 2114
+      },
+      "cases": [
+        {
+          "goal": "把用户注册流程改成支持邮箱验证码",
+          "message": "等一下，先别提交代码，我还要再看看",
+          "label": "correction",
+          "also": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.813
+          },
+          "nouls": {
+            "request": 0.003,
+            "requirement": 0.002,
+            "acceptance": 0.001,
+            "interrupt": 0.998,
+            "correction": 0.002
+          }
+        },
+        {
+          "goal": "把用户注册流程改成支持邮箱验证码",
+          "message": "停一下，别删数据库里的测试数据",
+          "label": "correction",
+          "also": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.967
+          },
+          "nouls": {
+            "request": 0.01,
+            "requirement": 0.294,
+            "acceptance": 0.001,
+            "interrupt": 0.988,
+            "correction": 0.755
+          }
+        },
+        {
+          "goal": "把用户注册流程改成支持邮箱验证码",
+          "message": "先不要跑迁移脚本",
+          "label": "correction",
+          "also": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.996
+          },
+          "nouls": {
+            "request": 0.011,
+            "requirement": 0.321,
+            "acceptance": 0.001,
+            "interrupt": 0.995,
+            "correction": 0.202
+          }
+        },
+        {
+          "goal": "把用户注册流程改成支持邮箱验证码",
+          "message": "验证码有效期设为 5 分钟",
+          "label": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.997
+          },
+          "nouls": {
+            "request": 0.994,
+            "requirement": 0.996,
+            "acceptance": 0.269,
+            "interrupt": 0.018,
+            "correction": 0.014
+          }
+        },
+        {
+          "goal": "把用户注册流程改成支持邮箱验证码",
+          "message": "你把发件人写成个人邮箱了，要用 noreply@ 开头的地址",
+          "label": "correction",
+          "also": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.998
+          },
+          "nouls": {
+            "request": 0.963,
+            "requirement": 0.998,
+            "acceptance": 0.5,
+            "interrupt": 0.037,
+            "correction": 0.998
+          }
+        },
+        {
+          "goal": "把用户注册流程改成支持邮箱验证码",
+          "message": "晚安，明天继续",
+          "label": "none",
+          "outcome": "none",
+          "intent": {
+            "choice": "side",
+            "probability": 0.995
+          },
+          "nouls": {
+            "request": 0,
+            "requirement": 0,
+            "acceptance": 0,
+            "interrupt": 0.006,
+            "correction": 0
+          }
+        },
+        {
+          "goal": "把用户注册流程改成支持邮箱验证码",
+          "message": "先这样，下次再说",
+          "label": "none",
+          "outcome": "none",
+          "intent": {
+            "choice": "switch",
+            "probability": 0.949
+          },
+          "nouls": {
+            "request": 0,
+            "requirement": 0.001,
+            "acceptance": 0,
+            "interrupt": 0.94,
+            "correction": 0.001
+          }
+        },
+        {
+          "goal": "把用户注册流程改成支持邮箱验证码",
+          "message": "先别弄注册了，帮我订个明天下午的会议室",
+          "label": "new-task",
+          "outcome": "new-task",
+          "intent": {
+            "choice": "switch",
+            "probability": 0.999
+          },
+          "nouls": {
+            "request": 0.992,
+            "requirement": 0.001,
+            "acceptance": 0,
+            "interrupt": 0.996,
+            "correction": 0.002
+          }
+        },
+        {
+          "goal": "把用户注册流程改成支持邮箱验证码",
+          "message": "停，帮我看看生产服务器为什么挂了",
+          "label": "new-task",
+          "outcome": "new-task",
+          "intent": {
+            "choice": "switch",
+            "probability": 0.998
+          },
+          "nouls": {
+            "request": 0.953,
+            "requirement": 0.001,
+            "acceptance": 0,
+            "interrupt": 0.998,
+            "correction": 0.001
+          }
+        },
+        {
+          "goal": "把用户注册流程改成支持邮箱验证码",
+          "message": "验证码是 6 位数字吗？",
+          "label": "none",
+          "outcome": "none",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.98
+          },
+          "nouls": {
+            "request": 0.002,
+            "requirement": 0.009,
+            "acceptance": 0.002,
+            "interrupt": 0.005,
+            "correction": 0.004
+          }
+        },
+        {
+          "goal": "写一个把 Markdown 转成 PDF 的命令行工具",
+          "message": "先别装 LaTeX，太大了，换个轻量方案",
+          "label": "correction",
+          "also": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.995
+          },
+          "nouls": {
+            "request": 0.995,
+            "requirement": 0.992,
+            "acceptance": 0.007,
+            "interrupt": 0.349,
+            "correction": 0.995
+          }
+        },
+        {
+          "goal": "写一个把 Markdown 转成 PDF 的命令行工具",
+          "message": "别用 Node 写，用 Python",
+          "label": "requirement",
+          "also": "correction",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.993
+          },
+          "nouls": {
+            "request": 0.996,
+            "requirement": 0.998,
+            "acceptance": 0.002,
+            "interrupt": 0.003,
+            "correction": 0.995
+          }
+        },
+        {
+          "goal": "写一个把 Markdown 转成 PDF 的命令行工具",
+          "message": "能处理带图片的 Markdown 才算完成",
+          "label": "acceptance",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.998
+          },
+          "nouls": {
+            "request": 0.994,
+            "requirement": 0.998,
+            "acceptance": 0.997,
+            "interrupt": 0.076,
+            "correction": 0.967
+          }
+        },
+        {
+          "goal": "写一个把 Markdown 转成 PDF 的命令行工具",
+          "message": "哈哈不错",
+          "label": "none",
+          "outcome": "none",
+          "intent": {
+            "choice": "side",
+            "probability": 0.996
+          },
+          "nouls": {
+            "request": 0,
+            "requirement": 0,
+            "acceptance": 0,
+            "interrupt": 0.001,
+            "correction": 0
+          }
+        },
+        {
+          "goal": "写一个把 Markdown 转成 PDF 的命令行工具",
+          "message": "这个工具就叫 md2pdf",
+          "label": "requirement",
+          "outcome": "add",
+          "intent": {
+            "choice": "continue",
+            "probability": 0.99
+          },
+          "nouls": {
+            "request": 0.165,
+            "requirement": 0.993,
+            "acceptance": 0.001,
+            "interrupt": 0.003,
+            "correction": 0.005
+          }
+        },
+        {
+          "goal": "写一个把 Markdown 转成 PDF 的命令行工具",
+          "message": "帮我把下周的会议纪要整理一下",
+          "label": "new-task",
+          "outcome": "new-task",
+          "intent": {
+            "choice": "switch",
+            "probability": 0.998
+          },
+          "nouls": {
+            "request": 0.977,
+            "requirement": 0.001,
+            "acceptance": 0.001,
+            "interrupt": 0.001,
             "correction": 0.001
           }
         }
