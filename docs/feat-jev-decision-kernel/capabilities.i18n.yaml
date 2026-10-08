@@ -1,0 +1,16 @@
+# Bilingual-pair consistency record for capabilities.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-jev-decision-kernel/capabilities.md
+/system3-capabilities-compared-with-stock-dsh:
+  en: 31a6b9c9e12e309d
+  zh: 8ba9b45738ad1c8d
+/system3-capabilities-compared-with-stock-dsh/implemented:
+  en: 31ee11bfe171af58
+  zh: e899fec037f5e5db
+/system3-capabilities-compared-with-stock-dsh/planned:
+  en: 799c2f1fab0e3b6e
+  zh: d9a92076433b362b
+/system3-capabilities-compared-with-stock-dsh/limits:
+  en: 3f1190d27a2a6ba5
+  zh: 5484d6307b5d756a
