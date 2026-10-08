@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>APUS REFLEX Harness</title>
+<title>APUS Reflex 瞬策</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700;900&family=Noto+Sans+SC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 :root {
@@ -58,6 +58,34 @@ th, td { text-align: left; vertical-align: top; padding: 10px 14px; border-botto
 thead th { color: var(--muted); font-weight: 500; background: var(--bg); }
 tr:last-child td { border-bottom: 0; }
 td.soon { color: var(--muted); }
+.arch-wrap { overflow-x: auto; }
+.arch .zone { fill: none; stroke: var(--muted); stroke-opacity: 0.6; stroke-dasharray: 4 4; }
+.arch { display: block; width: 100%; min-width: 760px; height: auto; font-family: var(--body); }
+.arch .box { stroke-width: 1; }
+.arch .node { fill: var(--surface); stroke: var(--ink); }
+.arch .input { fill: var(--surface); stroke: var(--muted); }
+.arch .ext { fill: var(--bg); stroke: var(--muted); stroke-opacity: 0.6; }
+.arch .store { fill: var(--line); fill-opacity: 0.45; stroke: var(--muted); }
+.arch .focal { fill: var(--signal-soft); stroke: var(--signal); }
+.arch .chip { fill: var(--surface); stroke: var(--signal); stroke-opacity: 0.5; }
+.arch .chip.base { stroke: var(--muted); stroke-opacity: 0.6; }
+.arch .chip.plan { fill: none; stroke: var(--muted); stroke-opacity: 1; stroke-dasharray: 4 3; }
+.arch .wire { stroke: var(--muted); stroke-width: 1.2; fill: none; }
+.arch .wire.sig { stroke: var(--signal); }
+.arch .wire.link { stroke: var(--accent); }
+.arch .wire.dash { stroke-dasharray: 5 4; stroke-width: 1; }
+.arch .tip { fill: var(--muted); }
+.arch .tip.sig { fill: var(--signal); }
+.arch .tip.link { fill: var(--accent); }
+.arch .mask { fill: var(--bg); }
+.arch .rule { stroke: var(--line); }
+.arch .name { fill: var(--ink); font-size: 14px; font-weight: 700; }
+.arch .sub { fill: var(--muted); font-size: 11px; }
+.arch .tag { fill: var(--muted); font: 500 9px var(--mono); letter-spacing: 0.1em; }
+.arch .tag.sig, .arch .lbl.sig { fill: var(--signal); }
+.arch .lbl { fill: var(--muted); font-size: 11px; }
+.arch .chiptext { fill: var(--ink); font-size: 12px; }
+.arch .chiptext.plan { fill: var(--muted); }
 .story { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--surface); }
 .story h3 { grid-column: 1 / -1; padding: 14px 18px; border-bottom: 1px solid var(--line); font-size: 17px; }
 .story .before, .story .after { padding: 14px 18px; font-size: 15px; display: grid; gap: 6px; align-content: start; }
@@ -91,9 +119,9 @@ a { color: var(--accent); }
 <main>
 
 <header class="hero">
-  <div class="brand">APUS REFLEX HARNESS · v0.1 · 2026-10-08</div>
-  <h1>APUS REFLEX Harness</h1>
-  <p class="tagline">即时决策融合的 agent harness：给 agent 装上反射神经。</p>
+  <div class="brand">APUS REFLEX 瞬策 · v0.1 · 2026-10-08</div>
+  <h1>APUS Reflex 瞬策</h1>
+  <p class="tagline">agent 的即时决策层：给 agent 装上反射神经。</p>
   <p class="sub">在 agent 的每个关键时刻，由 9B 的 Jev 做亚秒级判断，判断结果直接驱动动作，大模型专心推理和执行。选模型、记要求、听插话、管委派，都在反射层完成。</p>
   <div class="big">
     <div><span class="n">~1 s</span><br><span class="k">运行中补一句要求就生效</span><br><span class="c">此前要等这一轮做完</span></div>
@@ -106,11 +134,239 @@ a { color: var(--accent); }
 <section>
   <div class="eyebrow">定位</div>
   <h2>即时决策融合：反射层 + 推理层</h2>
-  <p class="thesis">人碰到烫的东西会先缩手、再思考。今天的 agent 却把“该不该换个模型”“这句是不是新要求”“现在能不能插话”这些本该条件反射的判断，全部交给大模型慢慢想，或者干脆不判断。APUS REFLEX Harness 把这些判断抽出来，交给专门做即时决策的 Jev，融合进 harness 的每个关键节点。</p>
+  <p class="thesis">人碰到烫的东西会先缩手、再思考。今天的 agent 却把“该不该换个模型”“这句是不是新要求”“现在能不能插话”这些本该条件反射的判断，全部交给大模型慢慢想，或者干脆不判断。APUS Reflex 瞬策把这些判断抽出来，交给专门做即时决策的 Jev，融合进 harness 的每个关键节点。</p>
+  <div class="arch-wrap">
+  <svg class="arch" viewBox="0 0 1120 752" role="img" aria-labelledby="product-arch-title product-arch-desc">
+    <title id="product-arch-title">APUS Reflex 瞬策产品架构：小脑、大脑与 harness 底座</title>
+    <desc id="product-arch-desc">APUS Reflex 瞬策是一个完整的 agent harness：用户的每条消息先经过瞬策小脑（System 1，Jev 9B 亚秒级封闭判断），小脑给深度推理大脑（System 2）派活、插话并核验完成，经下游管理与编排选择和监控本地模型、云端模型和专业 agent；两者都建立在 DeepSeek Harness 的原生能力之上。</desc>
+    <defs>
+      <marker id="parch-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon class="tip" points="0 0, 8 3, 0 6"/></marker>
+      <marker id="parch-arrow-sig" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon class="tip sig" points="0 0, 8 3, 0 6"/></marker>
+    </defs>
+
+    <!-- Product boundary: the whole harness. -->
+    <rect class="zone" x="40" y="136" width="740" height="536" rx="8"/>
+    <text class="tag sig" x="56" y="158">APUS REFLEX 瞬策 HARNESS</text>
+    <text class="sub" x="764" y="158" text-anchor="end">瞬策决策层 + DSH 底座 = 一个完整 harness</text>
+
+    <!-- Connectors -->
+    <line class="wire" x1="344" y1="104" x2="344" y2="174" marker-end="url(#parch-arrow)"/>
+    <line class="wire dash" x1="384" y1="176" x2="384" y2="106" marker-end="url(#parch-arrow)"/>
+    <line class="wire sig" x1="400" y1="224" x2="518" y2="224" marker-end="url(#parch-arrow-sig)"/>
+    <line class="wire dash" x1="520" y1="268" x2="402" y2="268" marker-end="url(#parch-arrow)"/>
+    <line class="wire sig" x1="280" y1="312" x2="280" y2="374" marker-end="url(#parch-arrow-sig)"/>
+    <line class="wire sig" x1="600" y1="376" x2="600" y2="314" marker-end="url(#parch-arrow-sig)"/>
+    <path class="wire" d="M680,392 H792 Q800,392 800,384 V232 Q800,224 808,224 H858" marker-end="url(#parch-arrow)"/>
+    <path class="wire" d="M680,420 H808 Q816,420 816,412 V360 Q816,352 824,352 H858" marker-end="url(#parch-arrow)"/>
+    <path class="wire" d="M680,448 H824 Q832,448 832,456 V472 Q832,480 840,480 H858" marker-end="url(#parch-arrow)"/>
+
+    <!-- Connector labels -->
+    <rect class="mask" x="264" y="124" width="72" height="16" rx="2"/><text class="lbl" x="330" y="136" text-anchor="end">每条消息</text>
+    <rect class="mask" x="392" y="124" width="72" height="16" rx="2"/><text class="lbl" x="398" y="136">dock 呈现</text>
+    <rect class="mask" x="416" y="200" width="88" height="16" rx="2"/><text class="lbl sig" x="460" y="212" text-anchor="middle">派活 · 插话</text>
+    <rect class="mask" x="412" y="276" width="96" height="16" rx="2"/><text class="lbl" x="460" y="288" text-anchor="middle">进展 · 完成声明</text>
+    <rect class="mask" x="188" y="336" width="84" height="16" rx="2"/><text class="lbl sig" x="266" y="348" text-anchor="end">选择 · 监控</text>
+    <rect class="mask" x="608" y="336" width="72" height="16" rx="2"/><text class="lbl sig" x="614" y="348">指派大脑</text>
+
+    <!-- User -->
+    <rect class="box input" x="260" y="32" width="280" height="72" rx="6"/>
+    <text class="tag" x="272" y="50">USER</text>
+    <text class="name" x="400" y="70" text-anchor="middle">用户</text>
+    <text class="sub" x="400" y="91" text-anchor="middle">对话 · 运行中随时补充</text>
+
+    <!-- System 1 -->
+    <rect class="box focal" x="64" y="176" width="336" height="136" rx="8"/>
+    <text class="tag sig" x="76" y="195">SYSTEM 1</text>
+    <text class="name" x="232" y="222" text-anchor="middle">瞬策小脑 · 即时决策</text>
+    <text class="sub" x="232" y="243" text-anchor="middle">Jev 9B · 0.3–1 s · 只答封闭问题，拿不准就不动</text>
+    <rect class="chip" x="90" y="264" width="52" height="28" rx="4"/><text class="chiptext" x="116" y="283" text-anchor="middle">路由</text>
+    <rect class="chip" x="148" y="264" width="52" height="28" rx="4"/><text class="chiptext" x="174" y="283" text-anchor="middle">任务卡</text>
+    <rect class="chip" x="206" y="264" width="52" height="28" rx="4"/><text class="chiptext" x="232" y="283" text-anchor="middle">插话</text>
+    <rect class="chip" x="264" y="264" width="52" height="28" rx="4"/><text class="chiptext" x="290" y="283" text-anchor="middle">折叠</text>
+    <rect class="chip plan" x="322" y="264" width="52" height="28" rx="4"/><text class="chiptext plan" x="348" y="283" text-anchor="middle">完成核验</text>
+
+    <!-- System 2 -->
+    <rect class="box node" x="520" y="176" width="236" height="136" rx="8"/>
+    <text class="tag" x="532" y="195">SYSTEM 2</text>
+    <text class="name" x="638" y="222" text-anchor="middle">深度推理大脑</text>
+    <text class="sub" x="638" y="243" text-anchor="middle">长链推理 · 写代码 · 调用工具</text>
+    <text class="sub" x="638" y="283" text-anchor="middle">由下游资源担任，按任务更换</text>
+
+    <!-- Downstream management (focal) -->
+    <rect class="box focal" x="160" y="376" width="520" height="88" rx="8"/>
+    <text class="tag sig" x="172" y="395">DOWNSTREAM</text>
+    <text class="name" x="420" y="404" text-anchor="middle">下游管理与编排</text>
+    <rect class="chip" x="176" y="420" width="116" height="28" rx="4"/><text class="chiptext" x="234" y="439" text-anchor="middle">按任务选模型</text>
+    <rect class="chip" x="300" y="420" width="116" height="28" rx="4"/><text class="chiptext" x="358" y="439" text-anchor="middle">线路健康</text>
+    <rect class="chip plan" x="424" y="420" width="116" height="28" rx="4"/><text class="chiptext plan" x="482" y="439" text-anchor="middle">降智与偷换监控</text>
+    <rect class="chip" x="548" y="420" width="116" height="28" rx="4"/><text class="chiptext" x="606" y="439" text-anchor="middle">专业 agent 编排</text>
+
+    <!-- DSH native capabilities -->
+    <rect class="box node" x="64" y="512" width="692" height="136" rx="8"/>
+    <text class="tag" x="76" y="531">DSH NATIVE</text>
+    <text class="name" x="160" y="534">DeepSeek Harness 原生能力</text>
+    <text class="sub" x="742" y="534" text-anchor="end">瞬策只经公开扩展点接入，不改 agent loop</text>
+    <rect class="chip base" x="78" y="556" width="160" height="28" rx="4"/><text class="chiptext" x="158" y="575" text-anchor="middle">agent loop · 会话日志</text>
+    <rect class="chip base" x="246" y="556" width="160" height="28" rx="4"/><text class="chiptext" x="326" y="575" text-anchor="middle">工具 · 沙箱 · 终端</text>
+    <rect class="chip base" x="414" y="556" width="160" height="28" rx="4"/><text class="chiptext" x="494" y="575" text-anchor="middle">子 agent · 后台任务</text>
+    <rect class="chip base" x="582" y="556" width="160" height="28" rx="4"/><text class="chiptext" x="662" y="575" text-anchor="middle">目标 · 计划 · 待办</text>
+    <rect class="chip base" x="78" y="596" width="160" height="28" rx="4"/><text class="chiptext" x="158" y="615" text-anchor="middle">上下文 · 压缩</text>
+    <rect class="chip base" x="246" y="596" width="160" height="28" rx="4"/><text class="chiptext" x="326" y="615" text-anchor="middle">技能 · MCP · hooks</text>
+    <rect class="chip base" x="414" y="596" width="160" height="28" rx="4"/><text class="chiptext" x="494" y="615" text-anchor="middle">工作流 · 定时 · webhook</text>
+    <rect class="chip base" x="582" y="596" width="160" height="28" rx="4"/><text class="chiptext" x="662" y="615" text-anchor="middle">Web · 桌面 · SDK</text>
+
+    <!-- Downstream pools -->
+    <rect class="box ext" x="860" y="176" width="220" height="96" rx="6"/>
+    <text class="tag" x="872" y="194">LOCAL</text>
+    <text class="name" x="970" y="214" text-anchor="middle">本地模型</text>
+    <text class="sub" x="970" y="236" text-anchor="middle">Jev 9B 私有部署</text>
+    <text class="sub" x="970" y="256" text-anchor="middle">本地开源推理模型 · 规划</text>
+
+    <rect class="box ext" x="860" y="304" width="220" height="96" rx="6"/>
+    <text class="tag" x="872" y="322">CLOUD</text>
+    <text class="name" x="970" y="342" text-anchor="middle">云端模型</text>
+    <text class="sub" x="970" y="364" text-anchor="middle">DeepSeek Flash / Pro 官方</text>
+    <text class="sub" x="970" y="384" text-anchor="middle">GPT-5.6 / GPT-6 中转</text>
+
+    <rect class="box ext" x="860" y="432" width="220" height="96" rx="6"/>
+    <text class="tag" x="872" y="450">AGENTS</text>
+    <text class="name" x="970" y="470" text-anchor="middle">专业 agent</text>
+    <text class="sub" x="970" y="492" text-anchor="middle">Codex · DSH 子 agent</text>
+    <text class="sub" x="970" y="512" text-anchor="middle">更多专业 agent · 规划</text>
+
+    <!-- Legend -->
+    <line class="rule" x1="40" y1="704" x2="1080" y2="704"/>
+    <text class="tag" x="40" y="732">LEGEND</text>
+    <rect class="box focal" x="112" y="720" width="20" height="14" rx="3"/><text class="lbl" x="140" y="732">瞬策决策层</text>
+    <rect class="box node" x="228" y="720" width="20" height="14" rx="3"/><text class="lbl" x="256" y="732">推理大脑</text>
+    <rect class="chip base" x="332" y="720" width="20" height="14" rx="3"/><text class="lbl" x="360" y="732">DSH 原生能力</text>
+    <rect class="box ext" x="456" y="720" width="20" height="14" rx="3"/><text class="lbl" x="484" y="732">下游资源</text>
+    <rect class="chip plan" x="564" y="720" width="20" height="14" rx="3"/><text class="lbl" x="592" y="732">开发中 / 规划</text>
+    <line class="wire sig" x1="696" y1="727" x2="728" y2="727" marker-end="url(#parch-arrow-sig)"/><text class="lbl" x="736" y="732">瞬策驱动的动作</text>
+    <line class="wire dash" x1="852" y1="727" x2="884" y2="727" marker-end="url(#parch-arrow)"/><text class="lbl" x="892" y="732">进展与事件</text>
+  </svg>
+  </div>
   <div class="layers">
-    <div class="layer reflex"><div><b>REFLEX 反射层</b><small>Jev 9B · 0.3–1 s</small></div><div>只回答封闭问题（是非、选择、打分），给出概率；拿不准就弃权。判断之后由 harness 直接执行动作：换模型、记要求、插入当前轮、转发 Codex、折叠日志。每一次判断都完整记录，可回放。</div></div>
-    <div class="layer think"><div><b>推理层</b><small>DeepSeek Flash / Pro · GPT · Codex</small></div><div>按反射层的选择接手任务，专心推理、写代码、调用工具。用户的要求由任务卡持续提供，中途的补充由反射层及时送达。</div></div>
+    <div class="layer reflex"><div><b>System 1 · 瞬策小脑</b><small>Jev 9B · 0.3–1 s</small></div><div>只回答封闭问题（是非、选择、打分），给出概率；拿不准就弃权。判断之后由 harness 直接执行动作：换模型、记要求、插入当前轮、转发 Codex、折叠日志。每一次判断都完整记录，可回放。</div></div>
+    <div class="layer think"><div><b>System 2 · 推理大脑</b><small>DeepSeek Flash / Pro · GPT · Codex</small></div><div>按反射层的选择接手任务，专心推理、写代码、调用工具。用户的要求由任务卡持续提供，中途的补充由反射层及时送达。</div></div>
     <div class="layer"><div><b>Harness 底座</b><small>DeepSeek Harness</small></div><div>agent loop、会话日志、工具、子 agent、目标与待办。反射层通过公开扩展点接入，不改 agent loop。</div></div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">系统架构</div>
+  <h2>反射层如何接进 harness</h2>
+  <p>瞬策本身就是一个完整的 harness：底座沿用 DeepSeek Harness 的全部原生能力，瞬策反射插件挂在它的公开扩展点上。每个反射点把当下的问题交给判定内核，内核向 Jev 提封闭问题，再把带概率的判断交回插件，由插件直接执行动作；推理层模型只管干活。</p>
+  <div class="arch-wrap">
+  <svg class="arch" viewBox="0 0 1080 772" role="img" aria-labelledby="reflex-arch-title reflex-arch-desc">
+    <title id="reflex-arch-title">APUS Reflex 瞬策技术架构</title>
+    <desc id="reflex-arch-desc">浏览器消息进入 DeepSeek Harness 底座（agent loop、会话日志、工具、子 agent、目标、上下文、技能与 MCP、Web 客户端）；瞬策反射插件经公开扩展点接入，通过判定内核向 Jev 9B 提封闭问题，把判断直接变成换模型、插话、转发 Codex 等动作，每次判断写入会话日志，进展通过 dock 呈现给用户。</desc>
+    <defs>
+      <marker id="arch-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon class="tip" points="0 0, 8 3, 0 6"/></marker>
+      <marker id="arch-arrow-sig" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon class="tip sig" points="0 0, 8 3, 0 6"/></marker>
+      <marker id="arch-arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon class="tip link" points="0 0, 8 3, 0 6"/></marker>
+    </defs>
+
+    <!-- Connectors first, so nodes paint over their ends. -->
+    <line class="wire" x1="420" y1="112" x2="420" y2="182" marker-end="url(#arch-arrow)"/>
+    <line class="wire dash" x1="500" y1="184" x2="500" y2="114" marker-end="url(#arch-arrow)"/>
+    <line class="wire link" x1="720" y1="260" x2="798" y2="260" marker-end="url(#arch-arrow-link)"/>
+    <line class="wire" x1="420" y1="336" x2="420" y2="406" marker-end="url(#arch-arrow)"/>
+    <line class="wire sig" x1="500" y1="408" x2="500" y2="338" marker-end="url(#arch-arrow-sig)"/>
+    <line class="wire link" x1="720" y1="476" x2="798" y2="476" marker-end="url(#arch-arrow-link)"/>
+    <line class="wire" x1="420" y1="544" x2="420" y2="614" marker-end="url(#arch-arrow)"/>
+    <line class="wire" x1="500" y1="616" x2="500" y2="546" marker-end="url(#arch-arrow)"/>
+    <line class="wire link" x1="600" y1="652" x2="798" y2="652" marker-end="url(#arch-arrow-link)"/>
+    <line class="wire" x1="320" y1="652" x2="242" y2="652" marker-end="url(#arch-arrow)"/>
+
+    <!-- Connector labels: masked, 8px clear of their strokes. -->
+    <rect class="mask" x="352" y="140" width="60" height="16" rx="2"/><text class="lbl" x="406" y="152" text-anchor="end">发消息</text>
+    <rect class="mask" x="508" y="140" width="72" height="16" rx="2"/><text class="lbl" x="514" y="152">dock 事件</text>
+    <rect class="mask" x="728" y="236" width="64" height="16" rx="2"/><text class="lbl" x="760" y="248" text-anchor="middle">调用模型</text>
+    <rect class="mask" x="328" y="364" width="84" height="16" rx="2"/><text class="lbl" x="406" y="376" text-anchor="end">扩展点触发</text>
+    <rect class="mask" x="508" y="364" width="72" height="16" rx="2"/><text class="lbl sig" x="514" y="376">直接动作</text>
+    <rect class="mask" x="728" y="452" width="64" height="16" rx="2"/><text class="lbl" x="760" y="464" text-anchor="middle">转发任务</text>
+    <rect class="mask" x="340" y="572" width="72" height="16" rx="2"/><text class="lbl" x="406" y="584" text-anchor="end">封闭问题</text>
+    <rect class="mask" x="508" y="572" width="84" height="16" rx="2"/><text class="lbl" x="514" y="584">判断 + 概率</text>
+    <rect class="mask" x="664" y="628" width="72" height="16" rx="2"/><text class="lbl" x="700" y="640" text-anchor="middle">隐私准入后</text>
+    <rect class="mask" x="248" y="628" width="64" height="16" rx="2"/><text class="lbl" x="280" y="640" text-anchor="middle">记录判断</text>
+
+    <!-- Client -->
+    <rect class="box input" x="320" y="40" width="280" height="72" rx="6"/>
+    <text class="tag" x="332" y="58">CLIENT</text>
+    <text class="name" x="460" y="78" text-anchor="middle">浏览器 · DSH Web</text>
+    <text class="sub" x="460" y="99" text-anchor="middle">输入框上方是瞬策 dock</text>
+
+    <!-- Harness base with its native capabilities -->
+    <rect class="box node" x="200" y="184" width="520" height="152" rx="8"/>
+    <text class="tag" x="212" y="203">HARNESS</text>
+    <text class="name" x="276" y="206">DeepSeek Harness 底座</text>
+    <text class="sub" x="708" y="206" text-anchor="end">DSH 0.1.7 原生能力</text>
+    <rect class="chip base" x="224" y="220" width="112" height="28" rx="4"/><text class="chiptext" x="280" y="239" text-anchor="middle">agent loop</text>
+    <rect class="chip base" x="344" y="220" width="112" height="28" rx="4"/><text class="chiptext" x="400" y="239" text-anchor="middle">会话日志</text>
+    <rect class="chip base" x="464" y="220" width="112" height="28" rx="4"/><text class="chiptext" x="520" y="239" text-anchor="middle">工具 · 沙箱</text>
+    <rect class="chip base" x="584" y="220" width="112" height="28" rx="4"/><text class="chiptext" x="640" y="239" text-anchor="middle">子 agent · 任务</text>
+    <rect class="chip base" x="224" y="256" width="112" height="28" rx="4"/><text class="chiptext" x="280" y="275" text-anchor="middle">目标 · 待办</text>
+    <rect class="chip base" x="344" y="256" width="112" height="28" rx="4"/><text class="chiptext" x="400" y="275" text-anchor="middle">上下文压缩</text>
+    <rect class="chip base" x="464" y="256" width="112" height="28" rx="4"/><text class="chiptext" x="520" y="275" text-anchor="middle">技能 · MCP</text>
+    <rect class="chip base" x="584" y="256" width="112" height="28" rx="4"/><text class="chiptext" x="640" y="275" text-anchor="middle">Web · SDK</text>
+    <text class="sub" x="460" y="316" text-anchor="middle">扩展点：入口路由 · pre-step · 工具执行前后 · 系统上下文 · dock 插槽</text>
+
+    <!-- Reasoning models -->
+    <rect class="box ext" x="800" y="224" width="240" height="72" rx="6"/>
+    <text class="tag" x="812" y="242">REASONING</text>
+    <text class="name" x="920" y="262" text-anchor="middle">推理层模型</text>
+    <text class="sub" x="920" y="283" text-anchor="middle">DeepSeek Flash / Pro · GPT 中转</text>
+
+    <!-- Reflex plugin (focal) -->
+    <rect class="box focal" x="200" y="408" width="520" height="136" rx="8"/>
+    <text class="tag sig" x="212" y="427">REFLEX</text>
+    <text class="name" x="268" y="430">瞬策反射插件</text>
+    <text class="sub" x="708" y="430" text-anchor="end">只用公开扩展点，不改 agent loop</text>
+    <rect class="chip" x="224" y="448" width="112" height="28" rx="4"/><text class="chiptext" x="280" y="467" text-anchor="middle">入口路由</text>
+    <rect class="chip" x="344" y="448" width="112" height="28" rx="4"/><text class="chiptext" x="400" y="467" text-anchor="middle">任务卡</text>
+    <rect class="chip" x="464" y="448" width="112" height="28" rx="4"/><text class="chiptext" x="520" y="467" text-anchor="middle">插话送达</text>
+    <rect class="chip" x="584" y="448" width="112" height="28" rx="4"/><text class="chiptext" x="640" y="467" text-anchor="middle">输出折叠</text>
+    <rect class="chip" x="224" y="488" width="112" height="28" rx="4"/><text class="chiptext" x="280" y="507" text-anchor="middle">Codex 转发</text>
+    <rect class="chip" x="344" y="488" width="112" height="28" rx="4"/><text class="chiptext" x="400" y="507" text-anchor="middle">线路健康</text>
+    <rect class="chip plan" x="464" y="488" width="112" height="28" rx="4"/><text class="chiptext plan" x="520" y="507" text-anchor="middle">完成前核验</text>
+    <rect class="chip plan" x="584" y="488" width="112" height="28" rx="4"/><text class="chiptext plan" x="640" y="507" text-anchor="middle">降智与偷换监控</text>
+
+    <!-- External Codex agent -->
+    <rect class="box ext" x="800" y="440" width="160" height="72" rx="6"/>
+    <text class="tag" x="812" y="458">AGENT</text>
+    <text class="name" x="880" y="478" text-anchor="middle">Codex agent</text>
+    <text class="sub" x="880" y="499" text-anchor="middle">外部编码 agent</text>
+
+    <!-- Decision kernel (focal) -->
+    <rect class="box focal" x="320" y="616" width="280" height="72" rx="6"/>
+    <text class="tag sig" x="332" y="634">KERNEL</text>
+    <text class="name" x="460" y="654" text-anchor="middle">判定内核</text>
+    <text class="sub" x="460" y="675" text-anchor="middle">阈值 · 弃权 · 期限 · 出错回退</text>
+
+    <!-- Jev -->
+    <rect class="box ext" x="800" y="616" width="240" height="72" rx="6"/>
+    <text class="tag" x="812" y="634">REFLEX MODEL</text>
+    <text class="name" x="920" y="654" text-anchor="middle">Jev 9B</text>
+    <text class="sub" x="920" y="675" text-anchor="middle">0.3–1 s · 只答封闭问题</text>
+
+    <!-- Session log -->
+    <rect class="box store" x="40" y="616" width="200" height="72" rx="6"/>
+    <text class="tag" x="52" y="634">LOG</text>
+    <text class="name" x="140" y="654" text-anchor="middle">会话日志</text>
+    <text class="sub" x="140" y="675" text-anchor="middle">每次判断可回放</text>
+
+    <!-- Legend -->
+    <line class="rule" x1="40" y1="720" x2="1040" y2="720"/>
+    <text class="tag" x="40" y="752">LEGEND</text>
+    <rect class="box focal" x="112" y="740" width="20" height="14" rx="3"/><text class="lbl" x="140" y="752">瞬策反射层</text>
+    <rect class="chip base" x="228" y="740" width="20" height="14" rx="3"/><text class="lbl" x="256" y="752">DSH 原生能力</text>
+    <rect class="box ext" x="352" y="740" width="20" height="14" rx="3"/><text class="lbl" x="380" y="752">外部模型 / agent</text>
+    <rect class="chip plan" x="504" y="740" width="20" height="14" rx="3"/><text class="lbl" x="532" y="752">v0.2 P0，开发中</text>
+    <line class="wire sig" x1="660" y1="747" x2="692" y2="747" marker-end="url(#arch-arrow-sig)"/><text class="lbl" x="700" y="752">反射驱动的动作</text>
+    <line class="wire link" x1="808" y1="747" x2="840" y2="747" marker-end="url(#arch-arrow-link)"/><text class="lbl" x="848" y="752">对外部请求</text>
+    <line class="wire dash" x1="936" y1="747" x2="968" y2="747" marker-end="url(#arch-arrow)"/><text class="lbl" x="976" y="752">实时事件</text>
+  </svg>
   </div>
 </section>
 
@@ -124,6 +380,7 @@ a { color: var(--accent); }
     <div class="point"><span class="no">04</span><h3>概率可控，拿不准就不动</h3><p>每个判断带概率和阈值，设有弃权选项。拿不准、超时或出错时回退到原有行为，永远不挡主流程。</p><span class="proof">只改问法、不调阈值；精确率优先</span></div>
     <div class="point"><span class="no">05</span><h3>每个反射都能复盘</h3><p>完整的判断请求与响应写入会话日志，刷新、回放不再调用模型，随时回答“当时为什么这么做”。每次判断前做隐私准入。</p><span class="proof">判定内核统一记录</span></div>
     <div class="point"><span class="no">06</span><h3>一套反射层，调度所有模型</h3><p>DeepSeek 官方 Flash 与 Pro、GPT-5.6 与 GPT-6、外部 Codex agent，统一由反射层按任务调度，变慢的线路自动避开。</p><span class="proof">简单问题 Flash 约 3 秒，难题交给更强的模型</span></div>
+    <div class="point"><span class="no">07</span><h3>反射看得见：瞬策 dock</h3><p>输入框上方的 dock 实时呈现每一次反射：这一轮交给了谁、记下了哪些要求、刚补的话是否已插入、Codex 跑到哪一步、哪里卡住了；决策依据随时可展开。</p><span class="proof">任务卡、插话提示、Codex 卡片、过程提示、执行依据</span></div>
   </div>
 </section>
 
@@ -139,6 +396,7 @@ a { color: var(--accent); }
       <tr><td>工具输出</td><td>（规则反射）这段输出与上文逐字重复吗？</td><td>折叠成一行回指，可逐字节还原</td><td>失败日志节省 57–65%</td></tr>
       <tr><td>委派运行中</td><td>（规则反射）启动是否过慢、是否停滞、是否超时？</td><td>在 dock 提醒，可补充说明或叫停</td><td>Codex 委派全程可见</td></tr>
       <tr><td class="soon">宣布完成前</td><td class="soon">按任务卡逐条：有没有证据表明已满足？</td><td class="soon">没满足就拦下，让模型继续或问用户</td><td class="soon">v0.2 即将上线；34 条标注集验证中</td></tr>
+      <tr><td class="soon">每条线路（定期）</td><td class="soon">探针回答符合该模型的基线特征吗？中转站自报的模型对得上吗？</td><td class="soon">在 dock 和线路健康里告警并避开，附带证据</td><td class="soon">v0.2 规划：模型降智与偷换监控</td></tr>
     </tbody>
   </table></div>
 </section>
@@ -198,7 +456,8 @@ a { color: var(--accent); }
       <li>入口路由与线路健康</li><li>自动选技能</li><li>委派 Codex 全过程管理</li><li>过程监督（规则版）</li>
       <li>测试日志无损折叠</li><li>任务卡（跟随目标）</li><li>插话分流、打断识别、转发 Codex</li><li>判定内核与可回放审计</li><li>浏览器验收集与一键发布验收</li></ul></div>
     <div class="box"><h3>v0.2（P0）</h3><ul>
-      <li>完成前核验：标记完成前按任务卡逐条核对，没满足就拦下</li></ul>
+      <li>完成前核验：标记完成前按任务卡逐条核对，没满足就拦下</li>
+      <li>模型降智与偷换监控：记录中转站自报的模型并核对；每条线路定期跑行为指纹探针，偏离基线就告警并避开</li></ul>
       <h3 style="margin-top:8px">之后</h3><ul>
       <li>约束守护：修改前检查是否违背用户原话</li><li>卡住时自动升级模型或交给 Codex</li><li>外部内容注入防护</li></ul></div>
   </div>
@@ -226,22 +485,23 @@ a { color: var(--accent); }
       <li>“保证做对”：完成前核验和约束守护还没上线，完成仍由模型自报</li>
       <li>“全面超越某某 agent”：还没有端到端的任务成功率对比</li>
       <li>“节省多少成本”：路由的成本收益还没有系统统计</li>
-      <li>“毫秒级”：单次反射是 0.3–1 秒，应说“亚秒级”</li></ul></div>
+      <li>“毫秒级”：单次反射是 0.3–1 秒，应说“亚秒级”</li>
+      <li>“能发现中转站偷换模型”：监控在 v0.2 规划中，目前只能发现线路变慢和出错</li></ul></div>
   </div>
 </section>
 
 <section>
   <div class="eyebrow">汇报用</div>
   <h2>30 秒电梯稿</h2>
-  <p class="pitch">APUS REFLEX Harness 是一个即时决策融合的 agent harness 架构。我们把“该用哪个模型”“这句是不是新要求”“能不能马上插进去”这类判断，从大模型里抽出来，交给 9B 的 Jev 在亚秒级内完成，判断结果直接驱动动作：每条消息 0.3–1 秒选对模型，用户的要求按原话记成任务卡，运行中补一句话约 1 秒生效，连正在跑的 Codex 也能收到。每一次反射都完整记录、可以回放，每次发布都在公网做真实的浏览器验收。下一步是完成前核验，让它在宣布完成之前先自己验收。</p>
+  <p class="pitch">APUS Reflex 瞬策是 agent 的即时决策层。我们把“该用哪个模型”“这句是不是新要求”“能不能马上插进去”这类判断，从大模型里抽出来，交给 9B 的 Jev 在亚秒级内完成，判断结果直接驱动动作：每条消息 0.3–1 秒选对模型，用户的要求按原话记成任务卡，运行中补一句话约 1 秒生效，连正在跑的 Codex 也能收到。每一次反射都完整记录、可以回放，每次发布都在公网做真实的浏览器验收。下一步是完成前核验和模型降智、偷换监控：让它在宣布完成之前先自己验收，并看住每一条模型线路。</p>
   <h2>3 分钟汇报提纲</h2>
   <ol class="outline">
     <li><b>问题</b>：agent 把本该条件反射的判断全交给大模型慢慢想，结果是忘要求、听不进中途的话、委派出去就失控。</li>
-    <li><b>定位</b>：APUS REFLEX Harness，即时决策融合的 harness 架构。反射层（Jev 9B）做亚秒级判断，推理层（大模型）专心干活。</li>
+    <li><b>定位</b>：APUS Reflex 瞬策，agent 的即时决策层。瞬策小脑（System 1，Jev 9B）做亚秒级判断并管理下游的本地模型、云端模型和专业 agent，推理大脑（System 2）专心干活。</li>
     <li><b>卖点</b>：亚秒级决策、决策与生成分离、覆盖完整生命周期、拿不准就不动、每个反射可复盘、一套反射层调度所有模型。</li>
     <li><b>效果</b>：演示目标运行中补一句改名，dock 提示插入当前轮，模型先改名再测试，交付即符合要求。</li>
     <li><b>证据</b>：126 条标注集、留出集只跑一次、5 个公网浏览器验收场景、验收中发现并修复 6 处体验问题。</li>
-    <li><b>下一步</b>：v0.2 完成前核验；需要的支持是更多真实用户会话，用来扩充标注集。</li>
+    <li><b>下一步</b>：v0.2 两项 P0，完成前核验与模型降智、偷换监控；需要的支持是更多真实用户会话，用来扩充标注集。</li>
   </ol>
 </section>
 

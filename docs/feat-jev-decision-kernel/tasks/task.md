@@ -18,6 +18,13 @@ Approved 2026-10-07: implement all 38 of mu's decision points in seven batches, 
 - Every item delivers unit and composition tests (100% coverage of new code), a before/after comparison, and a prd run.
 - After the e2e acceptance passes, each item is also checked from the user's side in a real browser on the public prd site: the scenario is typed as a user would, and what the user sees (dock text, approval cards, message placement, latency) is recorded with screenshots.
 
+## P0 scope (2026-10-08)
+
+v0.1 is sealed as `apus-reflex-v0.1.0`. Work now covers only these two items; everything else in the batches below is frozen until they ship.
+
+- [ ] Completion review: before the model marks a DSH goal complete, Jev checks the goal and each task-frame requirement against the tool calls and results; a confident "not met" refuses the completion (at most twice per goal)
+- [ ] Model degradation and swap monitoring: record the model each relay reports and flag a mismatch; run behavioral fingerprint probes per route against a per-model baseline, alert in the dock and route health, and avoid the route, showing evidence without unproven attribution
+
 ## Batch 0: foundation
 
 - [x] Decision kernel (`decision-kernel.ts`): questions, thresholds, fallback, off/shadow/active, the `system3/judgement` event; ships with its first consumer in batch 1
