@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>APUS REFLEX Harness</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700;900&family=Noto+Sans+SC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #f6f7f9; --surface: #ffffff; --ink: #141a24; --muted: #5a6474; --line: #dde2ea;
+  --accent: #2346c7; --accent-soft: #e6ebfb; --signal: #b8670a; --signal-soft: #fbf0e1; --ok: #1f7a4d; --ok-soft: #e3f3ea;
+  --display: "Noto Serif SC", "Songti SC", "STSong", serif;
+  --body: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f131a; --surface: #161c26; --ink: #e7ebf2; --muted: #9aa5b6; --line: #2a3342;
+  --accent: #8ea7ff; --accent-soft: #1d2747; --signal: #f0a64a; --signal-soft: #34261a; --ok: #63c793; --ok-soft: #173326; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0f131a; --surface: #161c26; --ink: #e7ebf2; --muted: #9aa5b6; --line: #2a3342;
+  --accent: #8ea7ff; --accent-soft: #1d2747; --signal: #f0a64a; --signal-soft: #34261a; --ok: #63c793; --ok-soft: #173326; color-scheme: dark }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 16px/1.75 var(--body); margin: 0; padding: 0 16px 80px; }
+main { max-width: 1120px; margin: 0 auto; display: grid; gap: 64px; }
+h1, h2, h3 { font-family: var(--display); line-height: 1.3; margin: 0; }
+h2 { font-size: 26px; }
+h3 { font-size: 18px; }
+p { margin: 0; }
+section { display: grid; gap: 18px; min-width: 0; }
+.eyebrow { font: 500 12px/1.4 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); }
+.muted { color: var(--muted); }
+.hero { padding: 72px 0 8px; display: grid; gap: 22px; }
+.brand { font: 600 16px/1.4 var(--mono); letter-spacing: 0.12em; color: var(--signal); }
+.hero h1 { font-size: clamp(36px, 6.4vw, 62px); font-weight: 900; letter-spacing: 0.01em; }
+.hero .tagline { font: 700 clamp(20px, 3vw, 26px)/1.5 var(--display); }
+.hero .sub { font-size: clamp(17px, 2.4vw, 20px); color: var(--muted); max-width: 880px; }
+.big { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-top: 8px; }
+.big div { border-top: 3px solid var(--accent); padding-top: 10px; }
+.big .n { font: 500 34px/1.1 var(--mono); }
+.big .k { font-size: 15px; }
+.big .c { font-size: 12px; color: var(--muted); }
+.thesis { border-left: 3px solid var(--signal); padding: 4px 0 4px 18px; font-family: var(--display); font-size: 21px; line-height: 1.6; }
+.layers { display: grid; gap: 10px; }
+.layer { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 16px; padding: 16px 18px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.layer.reflex { border-color: var(--signal); background: var(--signal-soft); }
+.layer.think { border-color: var(--accent); background: var(--accent-soft); }
+.layer b { font-family: var(--display); font-size: 17px; display: block; }
+.layer small { font: 12px/1.5 var(--mono); color: var(--muted); }
+.points { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; }
+.point { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 18px 20px; display: grid; gap: 8px; align-content: start; }
+.point .no { font: 600 13px/1 var(--mono); color: var(--signal); }
+.point h3 { font-size: 18px; }
+.point p { font-size: 15px; }
+.point .proof { font: 12px/1.5 var(--mono); color: var(--muted); }
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; min-width: 820px; font-size: 14px; line-height: 1.6; }
+th, td { text-align: left; vertical-align: top; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+thead th { color: var(--muted); font-weight: 500; background: var(--bg); }
+tr:last-child td { border-bottom: 0; }
+td.soon { color: var(--muted); }
+.story { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--surface); }
+.story h3 { grid-column: 1 / -1; padding: 14px 18px; border-bottom: 1px solid var(--line); font-size: 17px; }
+.story .before, .story .after { padding: 14px 18px; font-size: 15px; display: grid; gap: 6px; align-content: start; }
+.story .before { color: var(--muted); border-right: 1px solid var(--line); }
+.story .after { background: var(--ok-soft); }
+.story .label { font: 500 12px/1.4 var(--mono); letter-spacing: 0.1em; }
+.stories { display: grid; gap: 14px; }
+.diff { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.diff div { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px; font-size: 15px; display: grid; gap: 6px; align-content: start; }
+.diff b { font-family: var(--display); font-size: 16px; }
+.slogans { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+.slogan { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 18px; display: grid; gap: 6px; }
+.slogan q { font: 700 20px/1.5 var(--display); quotes: "“" "”"; }
+.slogan small { color: var(--muted); font-size: 13px; }
+.pitch { background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 8px; padding: 20px; font-size: 17px; line-height: 1.8; }
+ol.outline { margin: 0; padding-left: 22px; display: grid; gap: 8px; }
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.box { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 18px; display: grid; gap: 8px; align-content: start; }
+.box.yes { border-color: var(--ok); }
+.box.no { border-color: var(--signal); }
+.box ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 15px; }
+a { color: var(--accent); }
+@media (max-width: 720px) {
+  .story { grid-template-columns: 1fr; }
+  .story .before { border-right: 0; border-bottom: 1px solid var(--line); }
+  .layer { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<main>
+
+<header class="hero">
+  <div class="brand">APUS REFLEX HARNESS · v0.1 · 2026-10-08</div>
+  <h1>APUS REFLEX Harness</h1>
+  <p class="tagline">即时决策融合的 agent harness：给 agent 装上反射神经。</p>
+  <p class="sub">在 agent 的每个关键时刻，由 9B 的 Jev 做亚秒级判断，判断结果直接驱动动作，大模型专心推理和执行。选模型、记要求、听插话、管委派，都在反射层完成。</p>
+  <div class="big">
+    <div><span class="n">~1 s</span><br><span class="k">运行中补一句要求就生效</span><br><span class="c">此前要等这一轮做完</span></div>
+    <div><span class="n">0.3–1 s</span><br><span class="k">每条消息自动选对模型</span><br><span class="c">简单问题 Flash 约 3 秒答完</span></div>
+    <div><span class="n">1.0</span><br><span class="k">要求识别的精确率</span><br><span class="c">126 条真实 Jev 标注，留出集只跑一次</span></div>
+    <div><span class="n">5 / 5</span><br><span class="k">公网浏览器验收场景通过</span><br><span class="c">每次发布后重跑</span></div>
+  </div>
+</header>
+
+<section>
+  <div class="eyebrow">定位</div>
+  <h2>即时决策融合：反射层 + 推理层</h2>
+  <p class="thesis">人碰到烫的东西会先缩手、再思考。今天的 agent 却把“该不该换个模型”“这句是不是新要求”“现在能不能插话”这些本该条件反射的判断，全部交给大模型慢慢想，或者干脆不判断。APUS REFLEX Harness 把这些判断抽出来，交给专门做即时决策的 Jev，融合进 harness 的每个关键节点。</p>
+  <div class="layers">
+    <div class="layer reflex"><div><b>REFLEX 反射层</b><small>Jev 9B · 0.3–1 s</small></div><div>只回答封闭问题（是非、选择、打分），给出概率；拿不准就弃权。判断之后由 harness 直接执行动作：换模型、记要求、插入当前轮、转发 Codex、折叠日志。每一次判断都完整记录，可回放。</div></div>
+    <div class="layer think"><div><b>推理层</b><small>DeepSeek Flash / Pro · GPT · Codex</small></div><div>按反射层的选择接手任务，专心推理、写代码、调用工具。用户的要求由任务卡持续提供，中途的补充由反射层及时送达。</div></div>
+    <div class="layer"><div><b>Harness 底座</b><small>DeepSeek Harness</small></div><div>agent loop、会话日志、工具、子 agent、目标与待办。反射层通过公开扩展点接入，不改 agent loop。</div></div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">核心卖点</div>
+  <h2>融合 Jev 之后，harness 多了什么</h2>
+  <div class="points">
+    <div class="point"><span class="no">01</span><h3>亚秒级即时决策</h3><p>每个判断 0.3–1 秒，任务卡和插话在后台进行，不拖慢回答。一次请求可同时问多道题，判断成本远低于让大模型自查。</p><span class="proof">prd 实测：入口路由 0.3–1 s，插话约 1 s 生效</span></div>
+    <div class="point"><span class="no">02</span><h3>决策与生成分离</h3><p>小模型负责“判断”，大模型负责“干活”。判断结果不是塞给大模型的一段提示，而是 harness 直接执行的动作。</p><span class="proof">换模型、插入当前轮、转发 Codex 都是直接动作</span></div>
+    <div class="point"><span class="no">03</span><h3>反射点覆盖完整生命周期</h3><p>从用户开口、每条新消息、运行中插话、工具输出，到宣布完成之前，每个关键时刻都有对应的反射判断。</p><span class="proof">5 个反射点已上线，完成前核验即将上线</span></div>
+    <div class="point"><span class="no">04</span><h3>概率可控，拿不准就不动</h3><p>每个判断带概率和阈值，设有弃权选项。拿不准、超时或出错时回退到原有行为，永远不挡主流程。</p><span class="proof">只改问法、不调阈值；精确率优先</span></div>
+    <div class="point"><span class="no">05</span><h3>每个反射都能复盘</h3><p>完整的判断请求与响应写入会话日志，刷新、回放不再调用模型，随时回答“当时为什么这么做”。每次判断前做隐私准入。</p><span class="proof">判定内核统一记录</span></div>
+    <div class="point"><span class="no">06</span><h3>一套反射层，调度所有模型</h3><p>DeepSeek 官方 Flash 与 Pro、GPT-5.6 与 GPT-6、外部 Codex agent，统一由反射层按任务调度，变慢的线路自动避开。</p><span class="proof">简单问题 Flash 约 3 秒，难题交给更强的模型</span></div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">反射点地图</div>
+  <h2>每个关键时刻，一次反射，一个动作</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th style="width:16%">时刻</th><th style="width:30%">反射判断</th><th style="width:30%">直接动作</th><th>实测</th></tr></thead>
+    <tbody>
+      <tr><td>用户开口</td><td>这句该交给 Flash、Pro、GPT，还是委派 Codex？</td><td>切换本轮模型，或注入委派指令；路由行写明交给谁</td><td>0.3–1 s；翻译走 Flash，推理走更强的模型</td></tr>
+      <tr><td>每条新消息</td><td>这是新要求、完成标准、纠正，还是换了任务？</td><td>原话写入任务卡，作为运行时上下文给模型；换任务时开新卡</td><td>126 条标注集，精确率 1.0</td></tr>
+      <tr><td>运行中插话</td><td>这是当前任务的要求、纠正或打断吗？</td><td>插入正在运行的这一轮，同时转给运行中的 Codex</td><td>约 1 s；Codex 第 24 秒收到补充并照做</td></tr>
+      <tr><td>工具输出</td><td>（规则反射）这段输出与上文逐字重复吗？</td><td>折叠成一行回指，可逐字节还原</td><td>失败日志节省 57–65%</td></tr>
+      <tr><td>委派运行中</td><td>（规则反射）启动是否过慢、是否停滞、是否超时？</td><td>在 dock 提醒，可补充说明或叫停</td><td>Codex 委派全程可见</td></tr>
+      <tr><td class="soon">宣布完成前</td><td class="soon">按任务卡逐条：有没有证据表明已满足？</td><td class="soon">没满足就拦下，让模型继续或问用户</td><td class="soon">v0.2 即将上线；34 条标注集验证中</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section>
+  <div class="eyebrow">真实效果</div>
+  <h2>修改前后：都在线上真实跑过</h2>
+  <div class="stories">
+    <div class="story"><h3>目标运行中，用户补一句“测试文件改名为 check_ledger.py”</h3>
+      <div class="before"><span class="label">以前</span>消息排队到这一轮结束；目标已被标记完成，模型才看到要求，只能事后核对。</div>
+      <div class="after"><span class="label">现在</span>约 1 秒判为当前任务的要求，插入正在运行的这一轮；模型先改名、再跑测试，最终交付的就是 check_ledger.py。</div></div>
+    <div class="story"><h3>交给 Codex 后，中途补充要求</h3>
+      <div class="before"><span class="label">以前</span>Codex 跑完才轮到主模型看到补充，Codex 按原来的理解交付。</div>
+      <div class="after"><span class="label">现在</span>补充同时转给正在运行的 Codex，卡片上显示“已补充（24 秒）”，Codex 交付即符合要求。</div></div>
+    <div class="story"><h3>说“等一下，先别运行测试，先改名”</h3>
+      <div class="before"><span class="label">以前</span>“打断”这类话不像要求，容易被当成闲聊排队。</div>
+      <div class="after"><span class="label">现在</span>单独识别“打断当前操作”，留出集 16/16 全对；道别（“今天先到这”）不会被误当成打断。</div></div>
+    <div class="story"><h3>测试大面积失败，日志又长又重复</h3>
+      <div class="before"><span class="label">以前</span>同一段 diff 和堆栈为每个失败各打印一遍，模型读一大堆重复内容。</div>
+      <div class="after"><span class="label">现在</span>重复段折成一行，写明“与上文第几行相同，开头是……”；真实失败日志节省 57–65%，展开可逐字节还原。</div></div>
+    <div class="story"><h3>翻译一句话 vs 推理一道题</h3>
+      <div class="before"><span class="label">以前</span>整个会话固定一个模型，要么慢要么不够强。</div>
+      <div class="after"><span class="label">现在</span>翻译交给 Flash（约 3 秒），推理题交给更强的模型；每轮开头写明“这次交给谁、为什么”。</div></div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">为什么做在 harness 层</div>
+  <h2>反射应该长在系统里，而不是写在提示里</h2>
+  <div class="diff">
+    <div><b>比提示词更可靠</b>把“记得核对要求”写进提示，大模型可能忘、可能不照做。反射层在固定时刻必然触发，判断后由系统执行。</div>
+    <div><b>比换更强的大模型更便宜</b>让大模型每一步自查，成本和延迟成倍增加。9B 的 Jev 亚秒级完成，一次请求可同时回答多道题。</div>
+    <div><b>比规则更懂语义</b>“先别跑全量测试”“等你忙完帮我看邮件”，规则很难区分；反射层按语义判断，并给出概率。</div>
+    <div><b>不绑定任何大模型</b>反射层与推理层解耦，DeepSeek、GPT、Codex 可随时替换或组合，反射能力保持不变。</div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">严格验证</div>
+  <h2>我们怎么证明它有效</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th style="width:22%">验证层次</th><th style="width:42%">做法</th><th>结果</th></tr></thead>
+    <tbody>
+      <tr><td>真实 Jev 标注集</td><td>先写标签再运行；问法调整后必须换一组从未见过的留出集，只跑一次</td><td>126 条；最后两组留出集全对；只改问法，不调阈值</td></tr>
+      <tr><td>单元与组合测试</td><td>新代码 100% 覆盖；用真实 agent loop 和目标服务组合测试</td><td>全部通过</td></tr>
+      <tr><td>公网浏览器验收</td><td>以用户身份在 system3.xdan.work 操作，断言用户看到的和日志记录的</td><td>入口路由、日志折叠、任务卡、目标加打断、转发 Codex，5/5 通过</td></tr>
+      <tr><td>发现问题就修再测</td><td>验收中只要发现体验问题，修复后重新发布再测</td><td>修复了标记行号不可用、提示过期、单复数、打断识别遗漏等 6 处</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section>
+  <div class="eyebrow">路线图</div>
+  <h2>v0.1 封版，下一步</h2>
+  <div class="two">
+    <div class="box yes"><h3>v0.1 已上线</h3><ul>
+      <li>入口路由与线路健康</li><li>自动选技能</li><li>委派 Codex 全过程管理</li><li>过程监督（规则版）</li>
+      <li>测试日志无损折叠</li><li>任务卡（跟随目标）</li><li>插话分流、打断识别、转发 Codex</li><li>判定内核与可回放审计</li><li>浏览器验收集与一键发布验收</li></ul></div>
+    <div class="box"><h3>v0.2（P0）</h3><ul>
+      <li>完成前核验：标记完成前按任务卡逐条核对，没满足就拦下</li></ul>
+      <h3 style="margin-top:8px">之后</h3><ul>
+      <li>约束守护：修改前检查是否违背用户原话</li><li>卡住时自动升级模型或交给 Codex</li><li>外部内容注入防护</li></ul></div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">宣传</div>
+  <h2>宣传语备选</h2>
+  <div class="slogans">
+    <div class="slogan"><q>给 agent 装上反射神经。</q><small>主打整体定位</small></div>
+    <div class="slogan"><q>先反应，再思考。</q><small>主打反射层与推理层的分工</small></div>
+    <div class="slogan"><q>快思考，管住慢思考。</q><small>主打 Jev 与大模型的融合</small></div>
+    <div class="slogan"><q>你说一句，它立刻听进去。</q><small>主打运行中插话约 1 秒生效</small></div>
+    <div class="slogan"><q>记住你说过的每一条要求。</q><small>主打任务卡与目标</small></div>
+    <div class="slogan"><q>每一次反射，都能复盘。</q><small>主打可审计、可回放</small></div>
+  </div>
+  <div class="two">
+    <div class="box yes"><h3>可以说</h3><ul>
+      <li>运行中补充的要求约 1 秒插入当前轮，并转给运行中的 Codex</li>
+      <li>要求识别在真实 Jev 留出集上精确率 1.0</li>
+      <li>每条消息 0.3–1 秒选择模型；简单问题约 3 秒答完</li>
+      <li>失败日志节省 57–65%，可逐字节还原</li>
+      <li>每次发布后在公网做浏览器验收</li></ul></div>
+    <div class="box no"><h3>暂时不说</h3><ul>
+      <li>“保证做对”：完成前核验和约束守护还没上线，完成仍由模型自报</li>
+      <li>“全面超越某某 agent”：还没有端到端的任务成功率对比</li>
+      <li>“节省多少成本”：路由的成本收益还没有系统统计</li>
+      <li>“毫秒级”：单次反射是 0.3–1 秒，应说“亚秒级”</li></ul></div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">汇报用</div>
+  <h2>30 秒电梯稿</h2>
+  <p class="pitch">APUS REFLEX Harness 是一个即时决策融合的 agent harness 架构。我们把“该用哪个模型”“这句是不是新要求”“能不能马上插进去”这类判断，从大模型里抽出来，交给 9B 的 Jev 在亚秒级内完成，判断结果直接驱动动作：每条消息 0.3–1 秒选对模型，用户的要求按原话记成任务卡，运行中补一句话约 1 秒生效，连正在跑的 Codex 也能收到。每一次反射都完整记录、可以回放，每次发布都在公网做真实的浏览器验收。下一步是完成前核验，让它在宣布完成之前先自己验收。</p>
+  <h2>3 分钟汇报提纲</h2>
+  <ol class="outline">
+    <li><b>问题</b>：agent 把本该条件反射的判断全交给大模型慢慢想，结果是忘要求、听不进中途的话、委派出去就失控。</li>
+    <li><b>定位</b>：APUS REFLEX Harness，即时决策融合的 harness 架构。反射层（Jev 9B）做亚秒级判断，推理层（大模型）专心干活。</li>
+    <li><b>卖点</b>：亚秒级决策、决策与生成分离、覆盖完整生命周期、拿不准就不动、每个反射可复盘、一套反射层调度所有模型。</li>
+    <li><b>效果</b>：演示目标运行中补一句改名，dock 提示插入当前轮，模型先改名再测试，交付即符合要求。</li>
+    <li><b>证据</b>：126 条标注集、留出集只跑一次、5 个公网浏览器验收场景、验收中发现并修复 6 处体验问题。</li>
+    <li><b>下一步</b>：v0.2 完成前核验；需要的支持是更多真实用户会话，用来扩充标注集。</li>
+  </ol>
+</section>
+
+<section class="muted" style="font-size:14px">
+  <p>相关文档：<a href="architecture.html">架构与体验总览</a> · <a href="capabilities.zh.md">能力清单</a> · <a href="steward-plan.html">管家方案</a> · <a href="tasks/task.zh.md">任务清单</a> · <a href="../../deploy/system3/acceptance/README.zh.md">浏览器验收集</a> · <a href="task-frame-report.json">标注集报告</a></p>
+</section>
+
+</main>
+</body>
+</html>
