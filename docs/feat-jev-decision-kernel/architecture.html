@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>System3 架构总览</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700&family=Noto+Sans+SC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #f6f7f9; --surface: #ffffff; --ink: #141a24; --muted: #5a6474; --line: #dde2ea;
+  --accent: #2346c7; --accent-soft: #e6ebfb; --signal: #b8670a; --signal-soft: #fbf0e1; --ok: #1f7a4d; --ok-soft: #e3f3ea;
+  --display: "Noto Serif SC", "Songti SC", "STSong", serif;
+  --body: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f131a; --surface: #161c26; --ink: #e7ebf2; --muted: #9aa5b6; --line: #2a3342;
+  --accent: #8ea7ff; --accent-soft: #1d2747; --signal: #f0a64a; --signal-soft: #34261a; --ok: #63c793; --ok-soft: #173326; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0f131a; --surface: #161c26; --ink: #e7ebf2; --muted: #9aa5b6; --line: #2a3342;
+  --accent: #8ea7ff; --accent-soft: #1d2747; --signal: #f0a64a; --signal-soft: #34261a; --ok: #63c793; --ok-soft: #173326; color-scheme: dark }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 16px/1.75 var(--body); margin: 0; padding: 40px 16px 72px; }
+main { max-width: 1180px; margin: 0 auto; display: grid; gap: 52px; }
+h1, h2, h3 { font-family: var(--display); line-height: 1.3; margin: 0; }
+h1 { font-size: clamp(28px, 5vw, 40px); }
+h2 { font-size: 24px; }
+h3 { font-size: 17px; }
+p { margin: 0; }
+section { display: grid; gap: 16px; min-width: 0; }
+.eyebrow { font: 500 12px/1.4 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+.lead { font-size: 18px; }
+.muted { color: var(--muted); }
+.thesis { border-left: 3px solid var(--signal); padding: 4px 0 4px 18px; font-family: var(--display); font-size: 20px; line-height: 1.6; }
+.stack { display: grid; gap: 10px; }
+.layer { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 16px; padding: 16px 18px; border: 1px solid var(--line); background: var(--surface); border-radius: 6px; }
+.layer.s3 { border-color: var(--accent); background: var(--accent-soft); }
+.layer.ext { border-color: var(--signal); background: var(--signal-soft); }
+.layer b { font-family: var(--display); font-size: 17px; display: block; }
+.layer small { font: 12px/1.5 var(--mono); color: var(--muted); }
+.groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; }
+.group { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; font-size: 14px; line-height: 1.6; }
+.group h4 { margin: 0 0 4px; font: 600 14px/1.4 var(--body); }
+.pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.pill { font: 12px/1.6 var(--mono); padding: 1px 8px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--muted); }
+.pill.done { border-color: var(--ok); color: var(--ok); background: var(--ok-soft); }
+.pill.plan { border-style: dashed; }
+ol.flow { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; counter-reset: f; }
+ol.flow li { display: grid; grid-template-columns: 40px 130px minmax(0, 1fr); gap: 12px; align-items: start; padding: 12px 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); counter-increment: f; }
+ol.flow li::before { content: counter(f); font: 600 20px/1.3 var(--display); color: var(--accent); }
+ol.flow li.planned { border-style: dashed; background: transparent; }
+.where { font: 12px/1.6 var(--mono); color: var(--muted); }
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; min-width: 860px; font-size: 14px; line-height: 1.6; }
+th, td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+thead th { font: 500 13px/1.4 var(--body); color: var(--muted); background: var(--bg); }
+tr:last-child td { border-bottom: 0; }
+code { font: 13px/1.4 var(--mono); background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; }
+.metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.metric { padding: 14px 16px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); display: grid; gap: 2px; }
+.metric .n { font: 500 24px/1.2 var(--mono); }
+.metric .k { font-size: 14px; }
+.metric .c { font-size: 12px; color: var(--muted); }
+ul.links { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+a { color: var(--accent); }
+@media (max-width: 720px) {
+  .layer { grid-template-columns: 1fr; }
+  ol.flow li { grid-template-columns: 32px minmax(0, 1fr); }
+  ol.flow li .where { grid-column: 2; }
+}
+</style>
+</head>
+<body>
+<main>
+<header style="display:grid;gap:12px">
+  <div class="eyebrow">System3 · 架构与体验总览 · 2026-10-08</div>
+  <h1>System3：agent 的管家与模型路由管理层</h1>
+  <p class="lead muted">当前版总览：分层架构、一条消息的完整流程、用户在界面上看到什么、产品设计原则，以及每项能力的现状。所有内容对应 prd（system3.xdan.work）上运行的 main，并由浏览器验收集逐项验证。</p>
+  <p class="thesis">DSH 负责“让 agent 能干活”，System3 负责“让 agent 干对、干快、按用户说的干”。Jev 只做快速、可回放的封闭判断，动作由 System3 直接执行，文字只用用户原话或模型生成。</p>
+</header>
+
+<section>
+  <h2>一、分层架构</h2>
+  <p class="muted">从上到下是用户可见的客户端、System3 插件层、DSH 底座和外部服务。System3 只通过 DSH 公开的扩展点接入，不改 agent loop；唯一触及 DSH 核心的是一个运行时上下文位置。</p>
+  <div class="stack">
+    <div class="layer">
+      <div><b>客户端</b><small>DSH Web / 桌面</small></div>
+      <div class="pills">
+        <span class="pill">DSH：对话流、过程卡片、目标条、待办、排队列表、问题卡</span>
+        <span class="pill done">System3 dock：路由行、任务卡、插话提示、过程提示、Codex 卡片、执行依据</span>
+        <span class="pill done">每轮开头的路由行</span>
+        <span class="pill done">输入框的委派标记</span>
+      </div>
+    </div>
+    <div class="layer s3">
+      <div><b>System3 插件层</b><small>packages/experimental/system3<br>client-ui-system3</small></div>
+      <div class="groups">
+        <div class="group"><h4>路由管理</h4>入口路由（Flash / Pro / GPT / 委派 Codex）、沿用上一轮、图片筛选、线路健康、Jev 保温与重连<div class="pills"><span class="pill done">已上线</span><span class="pill plan">运行中升降级 · 规划</span></div></div>
+        <div class="group"><h4>目标与要求</h4>任务卡（原话记录、跟随 DSH 目标、作为运行时上下文给模型）<div class="pills"><span class="pill done">已上线</span><span class="pill plan">完成核验 · 下一个</span></div></div>
+        <div class="group"><h4>运行中沟通</h4>插话分流（要求、纠正、打断插入当前轮）、转发给运行中的 Codex<div class="pills"><span class="pill done">已上线</span></div></div>
+        <div class="group"><h4>委派管理</h4>委派指令、交接包、进度快照、启动 / 停滞 / 超时提醒、补充说明、停止<div class="pills"><span class="pill done">已上线</span></div></div>
+        <div class="group"><h4>过程与输出</h4>过程监督规则、日志无损折叠<div class="pills"><span class="pill done">已上线</span><span class="pill plan">约束守护 · 注入防护 · 规划</span></div></div>
+        <div class="group"><h4>判定内核</h4>统一题目、阈值、回退、off / shadow / active、判定事件、隐私准入<div class="pills"><span class="pill done">已上线</span></div></div>
+      </div>
+    </div>
+    <div class="layer">
+      <div><b>DSH 底座</b><small>0.1.7-rc.2</small></div>
+      <div class="pills">
+        <span class="pill">agent loop</span><span class="pill">会话日志与回放</span><span class="pill">提示路由</span><span class="pill">工具执行前后钩子</span>
+        <span class="pill">动态运行时上下文</span><span class="pill">收件箱与队列 steer</span><span class="pill">目标与自动续跑</span><span class="pill">待办</span>
+        <span class="pill">技能</span><span class="pill">子 agent 与补充输入</span><span class="pill">长输出落盘</span><span class="pill">沙箱与审批</span>
+      </div>
+    </div>
+    <div class="layer ext">
+      <div><b>外部服务</b><small>network</small></div>
+      <div class="pills">
+        <span class="pill">Jev 9B（RunPod，HTTP/2 保活）</span><span class="pill">DeepSeek 官方 API：Flash、Pro</span>
+        <span class="pill">中转：GPT-5.6、GPT-6</span><span class="pill">Codex（外部 agent）</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>二、一条消息的完整流程</h2>
+  <p class="muted">以“运行中补充要求、交给 Codex 的任务”为例。虚线框是规划中的环节。</p>
+  <ol class="flow">
+    <li><span class="where">用户 → 输入框</span><div>用户发出消息；说“交给 codex”会直接委派。</div></li>
+    <li><span class="where">System3 · Jev</span><div><b>入口路由</b>：一次 Jev 判断（0.3–1 秒）选出模型或委派；路由行立即出现在这一轮开头。</div></li>
+    <li><span class="where">System3 · 后台</span><div><b>任务卡</b>：第一条消息建立任务卡（或用 <code>/goal</code> 的目标）；之后每条消息在后台由 Jev 判断要不要记，不让步骤等待。</div></li>
+    <li><span class="where">DSH · 主模型</span><div>主模型执行；任务卡作为运行时上下文追加在历史末尾，缓存前缀不变；委派时交接包把更早的要求原话带给 Codex。</div></li>
+    <li><span class="where">System3 · 工具前后</span><div><b>日志折叠</b>去掉重复的失败输出；<b>过程监督</b>在重复失败、没有进展、没验证时提示模型。</div></li>
+    <li><span class="where">用户 → 排队</span><div>用户运行中补一句；<b>插话分流</b>约 1 秒判为当前任务的要求、纠正或打断，就插入正在运行的这一轮，并通过 <code>steerByParent</code> 转给运行中的 Codex；dock 提示“已插入正在进行的这一轮”。</div></li>
+    <li><span class="where">Codex · DSH</span><div>Codex 照做；Codex 卡片显示进度和“已补充”；主模型核对产物后回复。</div></li>
+    <li class="planned"><span class="where">System3 · 规划</span><div><b>完成核验</b>：标记完成前按任务卡逐条核对；<b>约束守护</b>：修改前检查是否违背用户原话。</div></li>
+  </ol>
+  <p class="muted">每一步的判断都写入会话日志（完整的 Jev 请求与响应），刷新或回放时不再调用模型。</p>
+</section>
+
+<section>
+  <h2>三、界面与体验地图</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th style="width:18%">界面位置</th><th style="width:34%">用户看到什么</th><th style="width:20%">何时出现</th><th>来源与验收</th></tr></thead>
+    <tbody>
+      <tr><td>每轮开头的路由行</td><td>“已判断：工程任务 · 委派 Codex”“延续上一轮”“判断超时，先由 X 回答”</td><td>入口判断完成时</td><td>入口路由；<code>accept.py routing</code></td></tr>
+      <tr><td>dock 状态行</td><td>准备就绪 / 正在选择处理方式 / 正在执行 / 本轮已结束；自动调度或固定模型</td><td>始终</td><td>运行时投影</td></tr>
+      <tr><td>dock · 任务卡</td><td>“任务卡 · 已记下 N 条要求”，点开是任务原文和每条要求原话</td><td>有要求后</td><td>任务卡；<code>accept.py task-frame</code></td></tr>
+      <tr><td>dock · 插话提示</td><td>“已把你刚才补充的要求插入正在进行的这一轮”</td><td>插入成功到这一轮结束</td><td>插话分流；<code>accept.py goal-interrupt</code></td></tr>
+      <tr><td>dock · Codex 卡片</td><td>运行时长、步骤计数、最新说明、“已补充（N 秒）：……”、补充说明与停止、启动慢 / 停滞 / 超时提醒</td><td>委派运行时</td><td>委派管理；<code>accept.py codex-forward</code></td></tr>
+      <tr><td>dock · 过程提示</td><td>“同一错误已连续 N 次”“已修改文件，但还没有通过的测试”</td><td>规则触发后的这一轮</td><td>过程监督</td></tr>
+      <tr><td>终端卡片</td><td>“[System3 已折叠 33 行：与上文第 13-45 行逐字相同，开头是 "AssertionError…"]”</td><td>测试或构建输出有重复时</td><td>日志折叠；<code>accept.py folding</code></td></tr>
+      <tr><td>输入框右侧</td><td>“已交给 codex”</td><td>委派指令注入后</td><td>委派标记</td></tr>
+      <tr><td>dock · 执行依据</td><td>建议模型、采用模型、实际响应模型、决策耗时、技能注入</td><td>点开时</td><td>运行时投影</td></tr>
+    </tbody>
+  </table></div>
+  <p class="muted">体验验收中发现并修复过：标记里的行号在卡片上没法用（改为引用首行）、英文单复数、轮次结束后插话提示过期。</p>
+</section>
+
+<section>
+  <h2>四、产品设计原则</h2>
+  <p class="muted">从 mu 的产品方法升级而来（详见 <a href="steward-plan.html">管家方案</a>）。</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th style="width:22%">原则</th><th style="width:44%">含义</th><th>现状</th></tr></thead>
+    <tbody>
+      <tr><td>从坏情况出发</td><td>每项能力对应一个用户见过的坏情况，一句话讲清</td><td>✅ 每个 PR 都写明坏情况与修改前后对照</td></tr>
+      <tr><td>一本笔记本</td><td>所有判断共用任务卡</td><td>🟡 模型与插话分流在用；完成核验、约束守护待接入</td></tr>
+      <tr><td>判断归 Jev，动作要直接</td><td>Jev 只回答封闭问题，动作由 System3 执行</td><td>✅ 换模型、插入当前轮、转发 Codex、折叠都是直接动作</td></tr>
+      <tr><td>看得见、能撤回</td><td>每个动作在 dock 说明原因，并可撤回</td><td>🟡 看得见 ✅；撤回（删要求、改回排队）待做</td></tr>
+      <tr><td>证据先于开启</td><td>标注集定问法；实现不等于开启</td><td>✅ 任务卡 126 条标注集；留出集只跑一次</td></tr>
+      <tr><td>浏览器用户视角验收</td><td>e2e 通过后，在公网以用户身份验证，发现问题就修再测</td><td>✅ 浏览器验收集 5 个场景，每次发布后重跑</td></tr>
+      <tr><td>不拖慢</td><td>判断在后台或与主流程并行</td><td>✅ 任务卡与插话在后台；入口路由 0.3–1 秒</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section>
+  <h2>五、实测数据</h2>
+  <div class="metrics">
+    <div class="metric"><span class="n">0.3–1 s</span><span class="k">入口路由判断</span><span class="c">prd 会话日志</span></div>
+    <div class="metric"><span class="n">~1 s</span><span class="k">运行中插话生效</span><span class="c">判断加插入，prd 多次实测</span></div>
+    <div class="metric"><span class="n">126 条</span><span class="k">任务卡与插话标注集</span><span class="c">最后两组留出集全对</span></div>
+    <div class="metric"><span class="n">57–65%</span><span class="k">失败日志节省</span><span class="c">可逐字节还原</span></div>
+    <div class="metric"><span class="n">5 / 5</span><span class="k">浏览器验收场景</span><span class="c">main 发布到 prd 后</span></div>
+  </div>
+</section>
+
+<section>
+  <h2>六、相关文档</h2>
+  <ul class="links">
+    <li><a href="capabilities.zh.md">能力清单：对照 DSH 原版</a>（<a href="capabilities.md">English</a>）</li>
+    <li><a href="steward-plan.html">管家方案</a> · <a href="top10.html">Top 10</a> · <a href="mu-product-view.html">mu 大白话对照</a> · <a href="tasks/task.zh.md">任务清单与进度记录</a></li>
+    <li><a href="../../deploy/system3/acceptance/README.zh.md">浏览器验收集</a> · <a href="task-frame-report.json">标注集报告</a></li>
+    <li class="muted">历史版本：<a href="../system3-delegation-progress/positioning.html">架构定位（10-04）</a> · <a href="../system3-delegation-progress/perceived-speed-design.html">体感交互设计</a> · <a href="../system3-delegation-progress/steer-design.html">补充说明设计</a> · <a href="design.html">判定内核设计（10-07）</a> · <a href="../feat-independent-harness/architecture.svg">最早的架构图</a></li>
+  </ul>
+</section>
+</main>
+</body>
+</html>
