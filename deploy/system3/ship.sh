@@ -21,9 +21,16 @@ ssh -n -o BatchMode=yes "$host" "set -e; rm -rf /root/system3-release; mkdir -p 
   (setsid nohup bash deploy/system3/release.sh $id $commit > /root/xdan-system3-release-$id.log 2>&1 < /dev/null &)"
 echo "releasing $id"
 # release.sh prints "Deployed <id>" on success; anything else after it exits is a failure.
-until ssh -n -o BatchMode=yes "$host" "grep -q '^Deployed' /root/xdan-system3-release-$id.log || ! pgrep -f 'release.sh $id' >/dev/null"; do sleep 20; done
-if ! ssh -n -o BatchMode=yes "$host" "grep -q '^Deployed' /root/xdan-system3-release-$id.log"; then
-  ssh -n -o BatchMode=yes "$host" "tail -20 /root/xdan-system3-release-$id.log" >&2
+# The bracketed pattern keeps pgrep from matching the remote shell that runs this check.
+# The host rate-limits SSH, so polls are 30 s apart and a refused connection counts as "still running".
+remote=(ssh -n -o BatchMode=yes -o ConnectTimeout=20 "$host")
+deadline=$((SECONDS + 45 * 60))
+until "${remote[@]}" "grep -q '^Deployed' /root/xdan-system3-release-$id.log || ! pgrep -f '[r]elease.sh $id' >/dev/null"; do
+  ((SECONDS < deadline)) || { echo "release $id did not finish within 45 minutes" >&2; exit 1; }
+  sleep 30
+done
+if ! "${remote[@]}" "grep -q '^Deployed' /root/xdan-system3-release-$id.log"; then
+  "${remote[@]}" "tail -20 /root/xdan-system3-release-$id.log" >&2
   echo "release $id failed" >&2
   exit 1
 fi
