@@ -14,6 +14,10 @@ if docker image inspect "$image" >/dev/null 2>&1; then
   echo 'Release image already exists; choose a new immutable release id' >&2
   exit 1
 fi
+# A build plus its extracted release takes about 8 GB; a full disk also stops systemd from starting the service.
+min_free_gb=${SYSTEM3_MIN_FREE_GB:-20}
+free_gb=$(df -BG --output=avail /opt /var/lib/docker 2>/dev/null | awk 'NR > 1 { gsub("G", ""); if (min == "" || $1 < min) min = $1 } END { print min + 0 }')
+((free_gb >= min_free_gb)) || { echo "Only ${free_gb} GB free; release needs ${min_free_gb} GB" >&2; exit 1; }
 docker build --build-arg "DSH_CLIENT_COMMIT_HASH=$source_commit" -f "$root/deploy/system3/Dockerfile" -t "$image" "$root"
 install -d -m 755 "$release/bin"
 container=$(docker create "$image")
@@ -63,6 +67,18 @@ activate() {
     systemctl enable xdan-system3.service >/dev/null &&
     systemctl restart xdan-system3.service
 }
+# Each release keeps about 2.5 GB on disk and a 5 GB image; keep the newest releases plus current and previous.
+prune_releases() {
+  local keep=${SYSTEM3_KEEP_RELEASES:-3} current_target previous_target dir
+  current_target=$(readlink -f /opt/xdan-system3/current)
+  previous_target=$(readlink -f /opt/xdan-system3/previous 2>/dev/null || true)
+  # shellcheck disable=SC2012 # release ids are validated alphanumeric names, so ls output is unambiguous.
+  while IFS= read -r dir; do
+    [[ $dir == "$current_target" || $dir == "$previous_target" ]] && continue
+    rm -rf -- "$dir"
+    docker rmi "xdan-system3:$(basename "$dir")" >/dev/null 2>&1 || true
+  done < <(ls -1dt /opt/xdan-system3/releases/*/ | sed 's:/$::' | tail -n "+$((keep + 1))")
+}
 ln -s "$release" "$switch"
 mv -Tf "$switch" /opt/xdan-system3/current
 if ! activate; then
@@ -77,6 +93,7 @@ for attempt in $(seq 1 60); do
       ln -s "$previous" "$previous_switch"
       mv -Tf "$previous_switch" /opt/xdan-system3/previous
     fi
+    prune_releases
     printf 'Deployed %s: authenticated loopback service is ready\n' "$release_id"
     exit 0
   fi
