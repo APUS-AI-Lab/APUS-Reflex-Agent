@@ -19,6 +19,14 @@ python3 deploy/system3/acceptance/accept.py goal-interrupt  # one scenario
 
 `goal-interrupt` answers a question card with its first option, as the recommended choice. Scenarios that write files use `goal-check` or `fold-check` under the service workspace and remove them afterwards.
 
+## Release and accept
+
+`deploy/system3/ship.sh` runs both steps from a workstation: it refuses uncommitted tracked changes and an unpushed HEAD, releases HEAD to the host as `<prefix>-<first ten characters of the commit>`, waits for `release.sh` to print `Deployed`, prints the release log and exits on failure, then runs this suite with any scenario names given after the prefix.
+
+```sh
+deploy/system3/ship.sh s3-frame
+```
+
 ## Requirements
 
 - An SSH alias for the deployment host (`SYSTEM3_HOST`, default `prd`); the script reads Session logs and, when the browser is signed out, the latest launch token from the service log. It writes the launch URL to `~/.config/xdan-system3/public-launch-url` with mode 600 and never prints it.

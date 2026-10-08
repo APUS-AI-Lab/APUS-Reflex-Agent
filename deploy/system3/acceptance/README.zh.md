@@ -19,6 +19,14 @@ python3 deploy/system3/acceptance/accept.py goal-interrupt  # one scenario
 
 `goal-interrupt` 遇到问题卡时选择第一个选项，即推荐项。会写文件的场景使用服务工作区下的 `goal-check` 或 `fold-check`，结束后删除。
 
+## 发布并验收
+
+`deploy/system3/ship.sh` 在本机一次完成两步：有未提交的已跟踪改动或 HEAD 尚未推送时拒绝执行；把 HEAD 以 `<前缀>-<提交的前十个字符>` 发布到主机；等待 `release.sh` 打印 `Deployed`，失败时打印发布日志并退出；然后运行本验收集，前缀之后给出的场景名会原样传入。
+
+```sh
+deploy/system3/ship.sh s3-frame
+```
+
 ## 前置条件
 
 - 部署主机的 SSH 别名（`SYSTEM3_HOST`，默认 `prd`）；脚本读取 Session 日志，浏览器未登录时还会从服务日志读取最新的启动令牌。启动链接写入 `~/.config/xdan-system3/public-launch-url`，权限 600，从不打印。
