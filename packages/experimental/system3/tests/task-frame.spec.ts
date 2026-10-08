@@ -250,7 +250,8 @@ it('logs an unexpected failure and stays quiet after disposal', async () => {
 })
 
 /** A turn held open by a tool until released, so a new message queues behind it. */
-async function running(script: Script, config: Partial<System3TaskFrameConfig>, controller: 'real' | 'failing' | 'none' = 'real') {
+async function running(script: Script, config: Partial<System3TaskFrameConfig>, controller: 'real' | 'failing' | 'none' = 'real',
+  services: Readonly<Record<string, unknown>> = {}) {
   const h = await setup(script, config, 0, false, [toolCallResponse('c1', 'wait', {}), textResponse('step after the tool'), textResponse('next turn')])
   const gate = Promise.withResolvers<undefined>()
   const entered = Promise.withResolvers<undefined>()
@@ -266,7 +267,8 @@ async function running(script: Script, config: Partial<System3TaskFrameConfig>, 
   })
   const get = h.ctx.get.bind(h.ctx)
   vi.spyOn(h.ctx, 'get').mockImplementation(((name: string) => {
-    const value: unknown = name === 'sessionController' ? controller === 'none' ? undefined : { updateQueue } : Reflect.apply(get, h.ctx, [name])
+    const value: unknown = name === 'sessionController' ? controller === 'none' ? undefined : { updateQueue }
+      : name in services ? services[name] : Reflect.apply(get, h.ctx, [name])
     return value
   }) as Context['get'])
   h.agent.followup(createUserMessage({ content: [{ type: 'text', text: '加一个汇总命令' }], source: { kind: 'user' } }))
@@ -343,4 +345,44 @@ it('leaves queued messages to the next turn without interjection, and skips stee
   await vi.waitFor(() => { expect(h.decide).toHaveBeenCalledTimes(1) })
   await h.release()
   expect(h.events('system3/interjection')).toEqual([])
+})
+
+/** Session projections whose System3 runtime state shows one delegated run. */
+const delegated = (run: { readonly state: string; readonly steerable: boolean }) => ({
+  stateOf: () => ({ subagentRun: { runId: 'run-1', provider: 'codex', ...run } }),
+})
+
+it('also sends a moved requirement to a running delegated run that accepts input', async () => {
+  const steerByParent = vi.fn(() => Promise.resolve({ accepted: true }))
+  const h = await running({ '别动 README.md': answers('continue', { requirement: 0.9 }) }, { interjection: 'active' }, 'real',
+    { sessionProjections: delegated({ state: 'running', steerable: true }), subagents: { steerByParent } })
+  await h.queue('别动 README.md')
+  await vi.waitFor(() => { expect(h.events('system3/interjection')).toMatchObject([{ delivered: true, forwardedTo: 'codex' }]) })
+  expect(steerByParent).toHaveBeenCalledWith({ runId: 'run-1', parentSessionId: h.agent.session.id, text: '别动 README.md' }, expect.any(AbortSignal))
+  await h.release()
+})
+
+it('does not forward to a finished or non-steerable run, a run that refuses, or without the subagent service', async () => {
+  const refused = vi.fn(() => Promise.reject(new Error('subagent/not-steerable')))
+  const cases: readonly Readonly<Record<string, unknown>>[] = [
+    { sessionProjections: delegated({ state: 'completed', steerable: false }), subagents: { steerByParent: refused } },
+    { sessionProjections: delegated({ state: 'running', steerable: false }), subagents: { steerByParent: refused } },
+    { sessionProjections: delegated({ state: 'running', steerable: true }), subagents: undefined },
+  ]
+  for (const services of cases) {
+    const h = await running({ '别动 README.md': answers('continue', { requirement: 0.9 }) }, { interjection: 'active' }, 'real', services)
+    await h.queue('别动 README.md')
+    await vi.waitFor(() => { expect(h.events('system3/interjection')).toMatchObject([{ delivered: true }]) })
+    expect(h.events('system3/interjection')[0]).not.toHaveProperty('forwardedTo')
+    await h.release()
+  }
+  expect(refused).not.toHaveBeenCalled()
+
+  const h = await running({ '别动 README.md': answers('continue', { requirement: 0.9 }) }, { interjection: 'active' }, 'real',
+    { sessionProjections: delegated({ state: 'running', steerable: true }), subagents: { steerByParent: refused } })
+  const info = vi.spyOn(h.ctx.logger, 'info')
+  await h.queue('别动 README.md')
+  await vi.waitFor(() => { expect(info).toHaveBeenCalledWith('system3 interjection not forwarded: Error: subagent/not-steerable') })
+  expect(h.events('system3/interjection')[0]).not.toHaveProperty('forwardedTo')
+  await h.release()
 })

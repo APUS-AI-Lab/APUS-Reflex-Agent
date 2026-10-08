@@ -9,8 +9,8 @@
   en: e7c80d1de4d328b4
   zh: d9f368c27fd9f998
 /session-persistence-event-catalog/persistence-type-fingerprints:
-  en: 2e1883ba81cae4d9
-  zh: 5140f43237321f22
+  en: cc363612f0e251a5
+  zh: d07e7ccca43e0147
 /session-persistence-event-catalog/event-envelope:
   en: 7ebb1a2e0dd1f916
   zh: 8946f415dda5c1b8
@@ -243,8 +243,8 @@
   en: d3b84e0fdc05bc70
   zh: 38aa5cd89caaf56d
 /session-persistence-event-catalog/events/system3/system3-interjection-log-only:
-  en: 2f448bd5e880fda3
-  zh: 38ca921a41d49e57
+  en: c880067f6c8df38f
+  zh: fb9286ea486ae57c
 /session-persistence-event-catalog/events/system3/system3-judgement-log-only:
   en: c5d2180b419f6345
   zh: 350d07902128d721
@@ -258,8 +258,8 @@
   en: 5023397160b8c38c
   zh: 34a469d69d55b87c
 /session-persistence-event-catalog/events/system3/system3-task-frame-log-only:
-  en: 14524312611d04d7
-  zh: aaceeb7ad8579803
+  en: 1ef73702468e064e
+  zh: 80cc15d45ea96058
 /session-persistence-event-catalog/events/team:
   en: a640800a38b3c874
   zh: a640800a38b3c874
@@ -1545,11 +1545,11 @@
   en: f8cd1404d156bd2e
   zh: d44340d2f43f5986
 /session-persistence-event-catalog/resolved-persistence-types/system3handoffpack:
-  en: ed436931108e6420
-  zh: dcc580e11faa5de1
+  en: 29030afe0982a7fd
+  zh: 0f44a26e24e2496c
 /session-persistence-event-catalog/resolved-persistence-types/system3interjection:
-  en: 360e1effe3dea163
-  zh: 5424868a6f0f8318
+  en: b79825a4986a0a69
+  zh: fa4f19d4ad6bc00c
 /session-persistence-event-catalog/resolved-persistence-types/system3judgement:
   en: 0ad378134bf45b55
   zh: 469935efdd1d10e6
@@ -1584,14 +1584,14 @@
   en: 30219dd0cb695f26
   zh: e41c05419c2afa7d
 /session-persistence-event-catalog/resolved-persistence-types/system3taskframe:
-  en: 8f9f24ccd6887663
-  zh: b51c229cda034a40
+  en: f01c7e4683dd9edc
+  zh: 7daf3731cf6dec3c
 /session-persistence-event-catalog/resolved-persistence-types/system3taskgoal:
-  en: e6180e998a422925
-  zh: 5ddcb63033e65210
+  en: 81c24adfb58d722a
+  zh: c3248c08f04a6c97
 /session-persistence-event-catalog/resolved-persistence-types/system3taskmessage:
-  en: 47a6105881244fbc
-  zh: 350db3be77fc6f7c
+  en: ff84d6bf36446a1f
+  zh: c60c62530445fc61
 /session-persistence-event-catalog/resolved-persistence-types/system3taskmessage~2:
   en: dda3459f61d9877e
   zh: e531b9cad5c9442e
@@ -2493,11 +2493,11 @@
   en: 16effe149d8ee52e
   zh: ebc250cb8b365ea2
 /session-persistence-event-catalog/resolved-persistence-types/type-system3-handoff-pack:
-  en: 12a0acba6c6db364
-  zh: 64a3f1597d61082f
+  en: dd77e548e809ea3a
+  zh: 4ea1fc9ceffe4f5b
 /session-persistence-event-catalog/resolved-persistence-types/type-system3-interjection:
-  en: d86cdbc3ec5f0168
-  zh: 09662501d8679d79
+  en: ab45daecfe5f83bc
+  zh: 17ce45703a660e5c
 /session-persistence-event-catalog/resolved-persistence-types/type-system3-judgement:
   en: 7ec39d1c232d7355
   zh: e26b1b605f62b00f

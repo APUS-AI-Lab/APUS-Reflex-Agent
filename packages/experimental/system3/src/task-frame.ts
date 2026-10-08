@@ -11,6 +11,9 @@ import type { MessageId, UserMessage } from '@deepseek-ai/dsh-llm'
 import type { GoalId } from '@deepseek-ai/dsh-goal/types'
 import type { GoalChangeMeta } from '@deepseek-ai/dsh-goal'
 import type {} from '@deepseek-ai/dsh-api-session-controller'
+import { brandString } from '@deepseek-ai/dsh-brand'
+import type { SubagentLiveRunId } from '@deepseek-ai/dsh-subagent'
+import type {} from './types.ts'
 import { choiceVerdict, noulVerdict, runSystem3Decision, validateSystem3DecisionSettings, type System3DecisionContext,
   type System3DecisionSettings, type System3DecisionSpec } from './decision-kernel.ts'
 import type { System3JevOptions } from './decisions.ts'
@@ -26,8 +29,9 @@ export interface System3TaskFrameConfig extends System3DecisionSettings {
   readonly maxMessageChars: number
   /**
    * Judge a message as soon as it is queued behind a running turn: `active` moves a requirement, acceptance criterion, or
-   * correction of the current task into that turn through the Session controller's queue `steer` action; `shadow` records
-   * the decision only. Omit to leave queued messages for the next turn. Moving needs an `active` task frame.
+   * correction of the current task into that turn through the Session controller's queue `steer` action, and also sends its
+   * text to a running delegated run that accepts input; `shadow` records the decision only. Omit to leave queued messages for
+   * the next turn. Moving needs an `active` task frame.
    */
   readonly interjection?: 'shadow' | 'active'
 }
@@ -40,6 +44,8 @@ export interface System3Interjection {
   readonly decision: 'steer' | 'keep'
   /** Whether the message moved into the running turn; false in shadow mode or once the turn no longer accepted it. */
   readonly delivered: boolean
+  /** Provider of the running delegated run that also received the text, when one accepted it. */
+  readonly forwardedTo?: string
 }
 
 /** One message of the person, verbatim. */
@@ -268,21 +274,38 @@ export function installSystem3TaskFrame(ctx: Context, settings: System3TaskFrame
     return next()
   })
 
-  const interject = async (agent: Agent, messageId: MessageId, outcome: FrameOutcome | undefined): Promise<void> => {
+  // A delegated run works while the turn waits on it, so it gets the moved text now rather than when the turn resumes.
+  const forward = async (agent: Agent, text: string): Promise<string | undefined> => {
+    const run = ctx.get('sessionProjections')?.stateOf(agent.session, 'system3Runtime')?.subagentRun
+    const subagents = ctx.get('subagents')
+    if (run?.state !== 'running' || !run.steerable || subagents === undefined) return undefined
+    try {
+      await subagents.steerByParent({ runId: brandString<SubagentLiveRunId>(run.runId), parentSessionId: agent.session.id, text },
+        lifetime.signal)
+      return run.provider
+    } catch (error) {
+      // The run finished or refused input; the main turn still has the message.
+      ctx.logger.info(`system3 interjection not forwarded: ${String(error)}`)
+      return undefined
+    }
+  }
+  const interject = async (agent: Agent, message: System3TaskMessage, outcome: FrameOutcome | undefined): Promise<void> => {
     if (outcome === undefined) return
     const decision = outcome === 'add' ? 'steer' : 'keep'
     let delivered = false
     const controller = ctx.get('sessionController')
     if (decision === 'steer' && config.interjection === 'active' && controller !== undefined) {
       try {
-        await controller.updateQueue({ sessionId: agent.session.id, itemId: messageId, action: { kind: 'steer' } })
+        await controller.updateQueue({ sessionId: agent.session.id, itemId: message.messageId, action: { kind: 'steer' } })
         delivered = true
       } catch (error) {
         // The turn ended or the person edited or removed the item first; it stays where the person left it.
         ctx.logger.info(`system3 interjection not delivered: ${String(error)}`)
       }
     }
-    agent.session.append('system3/interjection', { version: 1, messageId, decision, delivered })
+    const forwardedTo = delivered ? await forward(agent, message.text) : undefined
+    agent.session.append('system3/interjection', { version: 1, messageId: message.messageId, decision, delivered,
+      ...forwardedTo === undefined ? {} : { forwardedTo } })
   }
   if (config.interjection !== undefined) {
     ctx.on('agent/inbox/inserted', ({ agent, message }) => {
@@ -292,7 +315,8 @@ export function installSystem3TaskFrame(ctx: Context, settings: System3TaskFrame
       let ids = early.get(agent.session)
       if (ids === undefined) { ids = new Set(); early.set(agent.session, ids) }
       ids.add(message.id)
-      void enqueue(agent, { messageId: message.id, text }).then(outcome => interject(agent, message.id, outcome))
+      const entry = { messageId: message.id, text }
+      void enqueue(agent, entry).then(outcome => interject(agent, entry, outcome))
     })
   }
 
