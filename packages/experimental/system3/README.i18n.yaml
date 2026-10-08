@@ -21,8 +21,11 @@
   en: 3dc70484ca0ec162
   zh: ffe2a312c704e222
 /deepseek-ai-dsh-experimental-system3/use-this-package/session-api-entry-routing:
-  en: 8cbd50aa2cbfbf41
-  zh: 72b4c12081107138
+  en: 0886761f4da56ee5
+  zh: 9aff0bc9dd343c2b
+/deepseek-ai-dsh-experimental-system3/use-this-package/completion-review:
+  en: 826ab3549179a131
+  zh: 82935e584d2cfe95
 /deepseek-ai-dsh-experimental-system3/understand-the-implementation:
   en: 0cdf95236b2b2e5c
   zh: 6a5f6dd3a124555b
@@ -33,8 +36,8 @@
   en: b022849fca97dc48
   zh: 9221dc8d7ceaee1e
 /deepseek-ai-dsh-experimental-system3/model-experience/unified-system3-seam/what-the-model-sees:
-  en: 8cfe4042101440a5
-  zh: 6def9a571f61c8ec
+  en: f52dcb069be60632
+  zh: 7c77e35ee1b77d43
 /deepseek-ai-dsh-experimental-system3/model-experience/unified-system3-seam/what-the-model-sees/missing-verification-advice:
   en: bb8b86507d2637db
   zh: 546a9243de62810b
@@ -47,15 +50,21 @@
 /deepseek-ai-dsh-experimental-system3/model-experience/unified-system3-seam/what-the-model-sees/task-frame:
   en: ea96da212282eb61
   zh: 68c76eba6b92ef97
+/deepseek-ai-dsh-experimental-system3/model-experience/unified-system3-seam/what-the-model-sees/completion-refusal:
+  en: 688d55c49157a8a0
+  zh: 5771e6ff2e845f89
+/deepseek-ai-dsh-experimental-system3/model-experience/unified-system3-seam/what-the-model-sees/obsolete-completion-review:
+  en: 930765e6b86968b3
+  zh: 905dcef49d254e45
 /deepseek-ai-dsh-experimental-system3/model-experience/unified-system3-seam/token-effect:
-  en: 4fe27ab754c104b2
-  zh: 0780e03efe0962e2
+  en: cee5a3dea86c133d
+  zh: e4f4ec6b8e162f65
 /deepseek-ai-dsh-experimental-system3/model-experience/unified-system3-seam/kv-cache-effect:
-  en: 66dccd6aa1fd1f98
-  zh: ecc5cdafee95b034
+  en: 0c28b2339754fdf6
+  zh: 0070624383ca063c
 /deepseek-ai-dsh-experimental-system3/known-limitations-and-deferred-work:
-  en: 766a5bcb320b22ee
-  zh: a9c2bac933aaacac
+  en: 1cd091af03adb2db
+  zh: f58dd4287b47a664
 /deepseek-ai-dsh-experimental-system3/known-limitations-and-deferred-work/dev-note:
   en: d3b44bc6feb5c012
   zh: 0ded2f6de7be4d58

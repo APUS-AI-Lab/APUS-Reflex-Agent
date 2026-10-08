@@ -108,6 +108,39 @@ it('rejects without a record when the caller cancels or Jev throws unexpectedly'
   expect([...cancelled.judgements(), ...broken.judgements()]).toEqual([])
 })
 
+it('does not ask the provider or record when the caller is already cancelled', async () => {
+  const h = await setup()
+  const abort = new AbortController()
+  abort.abort(new Error('cancelled before review'))
+  await expect(h.run(ACTIVE, SHARED, abort.signal)).rejects.toThrow('cancelled before review')
+  expect(h.decide).not.toHaveBeenCalled()
+  expect(h.judgements()).toEqual([])
+})
+
+it.each(['success', 'unknown'] as const)('rejects a late %s without a record after caller cancellation', async (outcome) => {
+  const h = await setup()
+  const entered = Promise.withResolvers<undefined>()
+  const held = Promise.withResolvers<undefined>()
+  h.decide.mockImplementation(async (request) => {
+    entered.resolve(undefined)
+    await held.promise
+    const resolved = h.ctx.jev.resolve(request)
+    return outcome === 'unknown' ? { kind: 'unknown', spec: resolved, failure: { code: 'transport', message: 'late failure' } }
+      : { kind: 'ok', spec: resolved, response: { model: 'jev-test', answers: { act: { type: 'noul', noul: 0.9 } } } }
+  })
+  const abort = new AbortController()
+  const pending = h.run(ACTIVE, SHARED, abort.signal)
+  const rejected = expect(pending).rejects.toThrow('cancelled during review')
+  try {
+    await entered.promise
+    abort.abort(new Error('cancelled during review'))
+  } finally {
+    held.resolve(undefined)
+    await rejected
+  }
+  expect(h.judgements()).toEqual([])
+})
+
 it('reads yes/no answers against the thresholds and rejects unusable settings', () => {
   expect([0.8, 0.79, 0.2, 0.21].map(p => noulVerdict(p, ACTIVE))).toEqual(['yes', 'unsure', 'no', 'unsure'])
   const choice = (probabilities: Record<string, number>) => ({ type: 'choice' as const, choice: 'switch', probabilities, confidence: 0 })

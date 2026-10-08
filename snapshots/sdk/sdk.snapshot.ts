@@ -127,6 +127,8 @@ interface SdkAssertions {
 const SDK_ASSERTIONS: Readonly<Record<string, SdkAssertions>> = {
   'system3-shadow': { expectedFinalResponse: 'SDK snapshot OK' },
   'system3-entry-route': { expectedFinalResponse: 'SDK snapshot OK' },
+  'system3-completion-review': { expectedFinalResponse: 'COMPLETION_REVIEW_OK' },
+  'system3-completion-review-stale': { expectedFinalResponse: 'COMPLETION_REVIEW_STALE_OK' },
   'agui-persona': { expectedFinalResponse: 'SDK snapshot OK' },
   'dynamic-tool-updates': {
     expectedFinalResponse: 'DONE',
@@ -848,6 +850,55 @@ describe('TypeScript SDK snapshots over the jsonrpc runtime', () => {
       )
       reconcileCatalogCreationTimes(ordered.map(log => log.content), 'validate')
       const actualContext = contextOf(ordered, cwd)
+      if (scenario.name === 'system3-completion-review' || scenario.name === 'system3-completion-review-stale') {
+        const stale = scenario.name === 'system3-completion-review-stale'
+        const updatedObjective = 'Read completion-evidence.txt and verify COMPLETION_EVIDENCE_OK for the updated goal before completing.'
+        const events = results.flatMap(result => result.events)
+        const reviews = events.filter(event => event.type === 'system3/completion-review')
+        expect(reviews, JSON.stringify(events.filter(event => event.type === 'turn/end'))).toMatchObject([
+          { data: { version: 1, decision: stale ? 'unsure' : 'incomplete', unmet: [], goalUnmet: !stale, refused: true } },
+          { data: { version: 1, decision: 'complete', unmet: [], goalUnmet: false, refused: false } },
+        ])
+        expect(reviews).toHaveLength(2)
+        const changes = events.filter(event => event.type === 'goal/change')
+        expect(changes).toMatchObject([
+          { data: { operation: 'create', goal: { phase: 'active', revision: 1 } } },
+          ...stale ? [{ data: { operation: 'edit', goal: { phase: 'active', revision: 2, objective: updatedObjective } } }] : [],
+          { data: { operation: 'complete', goal: { phase: 'complete', revision: stale ? 3 : 2 } } },
+        ])
+        expect(changes).toHaveLength(stale ? 3 : 2)
+        if (stale) expect(changes[1]!.seq).toBeLessThan(reviews[0]!.seq)
+        const selectedTypes = new Set(['system3/judgement', 'system3/completion-review', 'goal/change', 'tool/result'])
+        const selected = events.filter(event => selectedTypes.has(event.type))
+        const stored = records(ordered[0]!.content).filter(event => typeof event.type === 'string' && selectedTypes.has(event.type))
+        expect(stored, 'SDK completion-review events retain the real durable payloads').toEqual(selected)
+        const subscribed = notifications.flatMap(notification => {
+          const event = notificationEvent(notification)
+          return event !== undefined && typeof event.type === 'string' && selectedTypes.has(event.type) ? [event] : []
+        })
+        expect(subscribed, 'SDK subscriptions include completion review and native Goal changes').toEqual(selected)
+        const toolMessages = events.filter(event => event.type === 'tool/result')
+          .map(event => event.data['message'] as { toolCallId: string; isError: boolean; content: { type: string; text?: string }[] })
+        const refusal = toolMessages.find(message => message.toolCallId === 'completion-premature')
+        expect(refusal).toMatchObject({ isError: true })
+        const refusalText = refusal?.content.map(block => block.text ?? '').join('\n')
+        if (stale) {
+          expect(refusalText).toBe('Error: [System3 完成核验] 任务卡在核验期间更新，请按当前目标和要求重新核验后再标记完成。\n'
+            + `- 当前目标：${updatedObjective}`)
+        } else {
+          expect(refusalText).toContain('[System3 完成核验] 执行记录里还看不到以下内容已经完成的证据：')
+        }
+        const current = toolMessages.find(message => message.toolCallId === 'completion-current')
+        expect(current).toMatchObject({ isError: false })
+        expect(JSON.parse(current!.content.map(block => block.text ?? '').join('\n')))
+          .toMatchObject({ goal: { phase: 'active', revision: stale ? 2 : 1 } })
+        const currentSeq = events.find(event => event.type === 'tool/result' && event.data['message'] === current)?.seq
+        expect(currentSeq).toBeGreaterThan(reviews[0]!.seq)
+        expect(currentSeq).toBeLessThan(reviews[1]!.seq)
+        expect(changes.at(-1)!.seq).toBeGreaterThan(reviews[1]!.seq)
+        expect(toolMessages.find(message => message.toolCallId === 'completion-confirmed')).toMatchObject({ isError: false })
+        for (const review of reviews) expect(review).not.toHaveProperty('surfaceOp')
+      }
       if (scenario.name === 'system3-shadow' || scenario.name === 'system3-entry-route') {
         const decisions = results.flatMap(result => result.events).filter(event => event.type === 'system3/decision')
         expect(decisions, JSON.stringify(results.at(-1)?.events.filter(event => event.type === 'turn/end'))).toHaveLength(1)

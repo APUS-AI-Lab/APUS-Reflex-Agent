@@ -1,0 +1,11 @@
+version: 1
+scenario: system3-completion-review
+profile: sdk
+composition: sdk-system3-completion-review
+recording: authored
+header:
+  class: sdk-system3-completion-review
+  pin: true
+  toolSchemasSource: text-turn
+replay:
+  override: true

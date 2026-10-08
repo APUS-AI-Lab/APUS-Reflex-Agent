@@ -12,7 +12,7 @@ Approved 2026-10-07: implement all 38 of mu's decision points in seven batches, 
 - Bad-case regression suite as acceptance: recorded real failures replay before and after each item.
 - Evidence before enabling: each decision ships in `shadow`, thresholds come from labelled sets run against the real Jev, and it becomes `active` only after its prd data meets the target. Implemented does not mean enabled; an item without measured benefit stays off with the reason recorded.
 - When a target is missed, change the question, not the threshold.
-- A failed judgement (timeout, error, privacy denial) always falls back and never blocks the main flow.
+- A failed semantic judgement (timeout, error, privacy denial) falls back without overriding native permissions or definite prohibitions.
 - No extra wait: one Jev request per user message (at most 16 questions) carries entry routing, the task frame, clarification, and tool disclosure; other decisions run in parallel with the main model or only after a rule fires. Each item reports its P50 / P95 latency increase.
 - Everything that reaches a model is reconstructable from the Session log.
 - Every item delivers unit and composition tests (100% coverage of new code), a before/after comparison, and a prd run.
@@ -20,10 +20,18 @@ Approved 2026-10-07: implement all 38 of mu's decision points in seven batches, 
 
 ## P0 scope (2026-10-08)
 
-v0.1 is sealed as `apus-reflex-v0.1.0`. Work now covers only these two items; everything else in the batches below is frozen until they ship.
+v0.1 is sealed as `apus-reflex-v0.1.0`. The two approved items below remain in scope. The user's latest request advances three additional candidates for concrete design review; the rest of the seven-batch plan remains queued. [P0 review and proposed interfaces](../mu-p0-review.html) records upstream evidence, scope and acceptance; [feature acceptance](../feature-acceptance.html) maps every signature and native capability to implementation and real E2E gaps.
 
 - [ ] Completion review: before the model marks a DSH goal complete, Jev checks the goal and each task-frame requirement against the tool calls and results; a confident "not met" refuses the completion (at most twice per goal)
 - [ ] Model degradation and swap monitoring: record the model each relay reports and flag a mismatch; run behavioral fingerprint probes per route against a per-model baseline, alert in the dock and route health, and avoid the route, showing evidence without unproven attribution
+
+Proposed delivery order: task-card acceptance → pre-execution constraints (#19) → completion review (#28/#31) → non-goal continuation (#29) → semantic stall recovery (#26). Route-quality experiments run in parallel. The three additional capabilities remain proposed until their concrete design is confirmed; neither this ordering nor source availability marks an item complete.
+
+- [ ] Pre-execution constraints: preserve native permissions, check actual operations against current user requirements, and cover supported delegated execution; protected artifacts remain unchanged while an allowed solution passes its real tests.
+- [ ] Non-goal continuation: resume a promised action after an unintended stop, with bounded per-request nudges; finished answers, human questions, approval waits, cancellation and native goal continuation do not start another round.
+- [ ] Semantic stall recovery: distinguish a failed loop from necessary investigation, then suggest a different approach; real tasks reach verified completion, with normal polling and converging debugging retained.
+
+Every item needs complete implementation and a fixed-source real E2E with actual model, Jev and product tools, followed by the shipped-profile/browser acceptance appropriate to its user flow. Positive cases, negative cases, cancellation, reopened logs and final artifacts are independent assertions. Unit coverage and keyless replay supplement this evidence. Two live completion cases pass locally; production browser acceptance, independent labelled evaluation and the remaining feature gaps are still open.
 
 ## Batch 0: foundation
 

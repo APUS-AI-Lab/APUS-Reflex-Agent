@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>模型线路核对设计</title>
+<style>
+:root { --bg: #f6f7f9; --surface: #fff; --ink: #141a24; --muted: #5a6474; --line: #dde2ea; --accent: #2346c7; --signal: #b8670a; --signal-soft: #fbf0e1; --ok: #1f7a4d; --ok-soft: #e3f3ea; --bad: #b42318; --bad-soft: #fdecea; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #0f131a; --surface: #161c26; --ink: #e7ebf2; --muted: #9aa5b6; --line: #2a3342; --accent: #8ea7ff; --signal: #f0a64a; --signal-soft: #34261a; --ok: #63c793; --ok-soft: #173326; --bad: #f97066; --bad-soft: #3a1d1b; color-scheme: dark } }
+:root[data-theme="dark"] { --bg: #0f131a; --surface: #161c26; --ink: #e7ebf2; --muted: #9aa5b6; --line: #2a3342; --accent: #8ea7ff; --signal: #f0a64a; --signal-soft: #34261a; --ok: #63c793; --ok-soft: #173326; --bad: #f97066; --bad-soft: #3a1d1b; color-scheme: dark }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.7 "PingFang SC", "Noto Sans SC", system-ui, sans-serif; margin: 0; padding: 0 16px 64px; }
+main { max-width: 1040px; margin: 0 auto; display: grid; gap: 40px; padding-top: 48px; }
+h1 { font-size: 30px; margin: 0; } h2 { font-size: 21px; margin: 0 0 12px; } h3 { font-size: 16px; margin: 0; }
+p { margin: 0 0 10px; } ul, ol { margin: 0; padding-left: 22px; } li { margin: 4px 0; }
+code { font: 13px ui-monospace, Menlo, monospace; background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; }
+.muted { color: var(--muted); }
+.eyebrow { font: 500 12px ui-monospace, Menlo, monospace; letter-spacing: .12em; color: var(--accent); text-transform: uppercase; }
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; min-width: 760px; font-size: 14px; }
+th, td { text-align: left; vertical-align: top; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+thead th { color: var(--muted); font-weight: 500; background: var(--bg); }
+tr:last-child td { border-bottom: 0; }
+.good { color: var(--ok); } .warn { color: var(--signal); } .bad { color: var(--bad); }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; }
+.card.key { border-color: var(--signal); background: var(--signal-soft); }
+.mock { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; display: grid; gap: 8px; font-size: 14px; }
+.mock .line { border-left: 3px solid var(--line); padding-left: 10px; }
+.mock .line.warn { border-color: var(--signal); }
+.mock .line.bad { border-color: var(--bad); }
+.gate { border: 2px solid var(--accent); border-radius: 8px; padding: 14px 16px; background: var(--surface); }
+</style>
+</head>
+<body>
+<main>
+
+<header>
+  <div class="eyebrow">APUS Reflex 瞬策 · v0.2 P0 · 设计稿 · 2026-10-08</div>
+  <h1>模型降智与偷换监控（模型线路核对）</h1>
+  <p class="muted">目标：每条模型线路都能回答“它还是不是它声称的那个模型、有没有变差”。只展示证据，不做未经证实的归因；证据充分时自动避开这条线路。</p>
+</header>
+
+<section>
+  <h2>1. 真实可行性验证（今天已跑）</h2>
+  <p>同一批题目（每次随机生成操作数，中转站无法缓存答案）发给 6 条线路，每条 25 次请求。对照组设计：官方 Pro 对中转 Pro 是阴性对照，同一个模型，应该一致；官方 Pro 对官方 Flash 是阳性对照，模型不同，应该能区分。</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>线路</th><th>固定提示的 prompt_tokens</th><th>上游通道（LiteLLM 响应头）</th><th>能力题通过</th><th>p50 延迟</th><th>回包 model 字段</th></tr></thead>
+    <tbody>
+      <tr><td>官方 deepseek-v4-pro</td><td>88</td><td>—</td><td>17 / 18</td><td>7.0 s</td><td>原样回显</td></tr>
+      <tr><td>中转 deepseek-v4-pro</td><td class="good">88（与官方一致）</td><td><code>0f883714-…</code></td><td>18 / 18</td><td>16.6 s</td><td>原样回显</td></tr>
+      <tr><td>官方 deepseek-flash</td><td>35</td><td>—</td><td>17 / 18</td><td>5.1 s</td><td>原样回显</td></tr>
+      <tr><td>中转 deepseek-v4-flash</td><td class="good">35（与官方一致）</td><td><code>2228d7fd-…</code></td><td>15 / 15</td><td>7.5 s</td><td>原样回显</td></tr>
+      <tr><td>中转 gpt-5.6-sol-relay</td><td class="bad">4391</td><td><code>relay:uuapi-openai-0.4x</code></td><td>13 / 16</td><td>20.9 s</td><td>原样回显</td></tr>
+      <tr><td>中转 gpt-6-sol-relay</td><td>11</td><td><code>relay:uuapi-codex-0.2x</code></td><td>10 / 12</td><td>34.7 s</td><td>原样回显</td></tr>
+    </tbody>
+  </table></div>
+  <div class="cards" style="margin-top:12px">
+    <div class="card key"><h3 class="good">有效：分词指纹</h3><p>固定提示的 <code>prompt_tokens</code> 由分词器和服务端模板决定，结果确定、成本约 40 token。阴性对照两组都完全一致（88 = 88，35 = 35），阳性对照能区分（88 ≠ 35）。</p></div>
+    <div class="card key"><h3 class="bad">新发现：GPT-5.6 中转注入了约 4.4K token 的隐藏提示</h3><p>同一句 “Reply with exactly: OK”，GPT-6 线路计 11 个 token，GPT-5.6 线路计 4391 个。说明中转在请求前加了一大段我们看不到的提示，每次请求都要为它付费，也可能影响回答。这正是监控要暴露的问题。</p></div>
+    <div class="card"><h3 class="good">有效：上游通道变化</h3><p>LiteLLM 响应头 <code>x-litellm-model-id</code> 标出实际走的上游通道，通道一换就能记录下来，例如 <code>0.4x</code> 换成 <code>0.2x</code>。这能说明配置变了，但说明不了模型变了。</p></div>
+    <div class="card"><h3 class="bad">无效：回包里的 model 字段</h3><p>6 条线路都原样回显请求时用的别名，用它核对等于没核对。模型的自我介绍也不可信：GPT-5.6 和 GPT-6 都自称 “GPT-5”。两者都不作为判断依据。</p></div>
+    <div class="card"><h3 class="warn">需加强：能力题</h3><p>4 位乘法、数字母、数位和、倒写这几道题，Pro 和 Flash 都是 17/18，区分不开。降智检测需要更难、能拉开差距的题，每条线路累计至少 20 个样本，并用置信区间比较，不能凭一两次失败下结论。</p></div>
+    <div class="card"><h3 class="warn">注意：错误率要在服务器上测</h3><p>本机测试里，官方线路也出现 SSL 中断（2–3 次 / 25），是本机网络的问题，不是线路的问题。延迟和错误率只采信 prd 服务器上的线路健康数据。</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>2. 判断依据与动作</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>依据</th><th>怎么测</th><th>基线</th><th>异常时</th></tr></thead>
+    <tbody>
+      <tr><td>分词指纹</td><td>每条线路定期发送一组固定提示（3 条长度不同），记录 <code>prompt_tokens</code></td><td>有官方直连的模型（DeepSeek）用官方线路的值；没有直连的（GPT 中转）用这条线路首次核对的值，并人工确认</td><td>连续 2 次不一致：状态改为“已避开”，dock 和线路行显示证据</td></tr>
+      <tr><td>隐藏提示</td><td>同一组固定提示的 token 数减去分词基线</td><td>同上</td><td>多出 500 token 以上：提醒，不避开（可能只是中转的配置）</td></tr>
+      <tr><td>上游通道</td><td>记录探针响应头 <code>x-litellm-model-id</code></td><td>上一次的值</td><td>变化就记录一条“配置变化”，并把能力题基线标为待复核</td></tr>
+      <tr><td>能力题</td><td>随机操作数的精确答案题（改为更难的一组），累计样本</td><td>该线路最近 7 天的通过率；有官方线路的同时对比官方</td><td>通过率比基线低，且 95% 置信区间不重叠：状态改为“可疑”；连续两个窗口都可疑才避开</td></tr>
+      <tr><td>延迟与错误</td><td>沿用现有线路健康（prd 实测）</td><td>现有阈值</td><td>沿用“已避开较慢的线路”</td></tr>
+    </tbody>
+  </table></div>
+  <p style="margin-top:10px"><b>Jev 的位置。</b>判定以可复核的规则为准，因为精确率优先，避免误伤正常线路。Jev 先以影子模式回答一个封闭问题：给定这些派生出的证据，这条线路是“正常 / 配置变化 / 疑似降级 / 证据不足”中的哪一种。标注集达标后，才允许 Jev 参与“可疑”这一档的判断；“已避开”始终要求规则证据。</p>
+</section>
+
+<section>
+  <h2>3. 界面显示</h2>
+  <p>按“和这一轮有没有关系”分层显示。没有异常时，界面上不多出任何内容。</p>
+  <div class="mock">
+    <div class="muted">dock：本轮避开了异常线路（复用现有路由行）</div>
+    <div class="line">已判断：复杂专业任务 · DeepSeek V4 Pro · 已避开：GPT-5.6（分词指纹与基线不符）</div>
+    <div class="muted">dock：本轮所用线路处于可疑状态，还没到避开的程度</div>
+    <div class="line warn">GPT-5.6 中转：最近 20 道核对题通过率 65%，基线 90%，结果仅供参考 · 查看证据</div>
+    <div class="muted">执行依据（折叠区）新增“线路核对”</div>
+    <div class="line">线路核对：分词指纹一致 · 上游通道未变 · 10 分钟前核对</div>
+    <div class="line bad">线路核对：固定提示多出约 4,380 token，中转可能注入了隐藏提示</div>
+  </div>
+  <p style="margin-top:10px">全局视图放在右侧边栏，新增“模型线路”标签，按 DSH 规范注册到现有侧边栏。每条线路一张卡，显示状态、指纹、通道、能力题曲线和延迟，点开能看每次核对的原始证据。这一部分放在 v0.2 第二步，先保证 dock 和执行依据可用。</p>
+  <p><b>文案原则：</b>写“指纹与基线不符”“多出约 4,380 token”，不写“偷换了模型”“降智了”。是否追责由用户根据证据决定。</p>
+</section>
+
+<section>
+  <h2>4. 实现方案</h2>
+  <ul>
+    <li><b>新模块</b> <code>packages/experimental/system3/src/route-integrity.ts</code>：挂在现有线路健康的探针调度上，不另起定时器。探针不走 pi-ai，而是按 provider 配置（baseURL、apiKeyEnv）直接发 HTTP，因为 pi-ai 不暴露响应头。</li>
+    <li><b>配置</b>（cordis.yml 的 <code>routeIntegrity</code>，全部可调）：mode（off / shadow / active）、intervalMs、fingerprintPrompts、referenceRoutes（例如中转 Pro 对应官方 Pro）、capabilityWindow、hiddenPromptTokens、dailyBudgetTokens。</li>
+    <li><b>状态</b>：基线和核对历史跨会话保存，存进 DSH storage 的 system3 命名空间，不写会话日志；线路状态并入现有线路健康的视图，路由避开时复用现有理由字段。</li>
+    <li><b>会话日志</b>：只有核对结果改变了本轮路由时才记录，即给已有的路由事件新增一个可选的避开理由 <code>integrity</code>（同版本内新增可选字段）。“模型可见的内容都能从日志重建”这一条不受影响。</li>
+    <li><b>成本</b>：分词指纹每次约 120 token，能力题每次约 2K token。按每条线路每 30 分钟一次计算，6 条线路一天约 60 万 token，受 dailyBudgetTokens 封顶。</li>
+  </ul>
+</section>
+
+<section>
+  <h2>5. 验收计划</h2>
+  <ol>
+    <li><b>单元测试</b>：覆盖率 100%，包括指纹比较、隐藏提示、通道变化、置信区间、预算封顶、出错回退。</li>
+    <li><b>真实 e2e</b>：阴性对照，官方 Pro 与中转 Pro 连续核对 24 小时，要求零误报；阳性对照，配置一条测试线路，宣称是 deepseek-v4-pro，实际指向 deepseek-flash，要求在 2 次核对内标为已避开。</li>
+    <li><b>prd 浏览器验收</b>（新增 accept.py 场景 <code>route-integrity</code>）：在 prd 用 overlay 打开这条“偷换”测试线路，从用户视角确认 dock 显示“已避开：…（分词指纹与基线不符）”，执行依据可展开看到证据，正常线路没有任何提示。</li>
+  </ol>
+</section>
+
+<section class="gate">
+  <h2>待你确认</h2>
+  <ol>
+    <li>第一版只把分词指纹和上游通道作为“已避开”的依据；能力题先只显示“可疑”，攒够样本后再参与避开。是否同意？</li>
+    <li>GPT 中转没有官方直连可比：基线取这条线路首次核对的结果并人工确认，监控的是“有没有变化”，不判断“是不是真的 GPT”。是否接受？</li>
+    <li>GPT-5.6 线路每次请求多出约 4.4K token 的隐藏提示：先在界面上提醒，要不要同时去查中转配置？</li>
+  </ol>
+</section>
+
+</main>
+</body>
+</html>

@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "date": "2026-10-08",
+  "scope": "Read-only documented directory access; no inference, key creation/deletion or account changes.",
+  "sites": [
+    {
+      "name": "UUAPI",
+      "endpoint": "https://uuapi.io/v1/models",
+      "group": "Codex-限时",
+      "requestCount": 1,
+      "httpStatus": 200,
+      "modelCount": 9,
+      "sampleModels": [
+        "gpt-5.6",
+        "gpt-6",
+        "gpt-6.1-sol"
+      ],
+      "directoryVerified": true,
+      "inferenceVerified": false,
+      "officialReference": "https://uuapi.io/docs"
+    },
+    {
+      "name": "AILink",
+      "group": "GPT pro",
+      "requestCount": 0,
+      "directoryVerified": false,
+      "inferenceVerified": false,
+      "reason": "Official homepage exposes chat-completions examples; directory endpoint not confirmed. No guessed URL request."
+    },
+    {
+      "name": "OpenOx",
+      "group": "gpt-wallet-unified",
+      "requestCount": 0,
+      "directoryVerified": false,
+      "inferenceVerified": false,
+      "reason": "Linked official Yuque tutorial loaded empty; console /api/v1/models is not an API-key inference directory. No guessed URL request."
+    }
+  ],
+  "credentialCompleteness": {
+    "AILink": "12/12",
+    "UUAPI": "15/15",
+    "OpenOx": "8/8",
+    "storage": "Outside repository, mode 0600; complete keys do not prove model inference access."
+  },
+  "rawEvidence": "/private/tmp/relay-directory-audit/ (0700 directory, 0600 files)",
+  "limitations": [
+    "Directory response is a gateway advertisement, not model identity certification.",
+    "No real inference or comparative quality measurement was executed in this audit."
+  ]
+}

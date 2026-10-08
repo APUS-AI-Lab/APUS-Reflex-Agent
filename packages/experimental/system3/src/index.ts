@@ -17,6 +17,7 @@ import { installSystem3ProcessSupervision, type System3ProcessSupervisionConfig 
 import { installSystem3RouteHealth } from './route-health.ts'
 import { installSystem3OutputFolding, type System3OutputFoldingConfig } from './output-folding.ts'
 import { installSystem3TaskFrame, type System3TaskFrameConfig } from './task-frame.ts'
+import { installSystem3CompletionReview, type System3CompletionReviewConfig } from './completion-review.ts'
 import type { Session } from '@deepseek-ai/dsh-session'
 import { recordSystem3Decision, type System3DecisionRequest, type System3DecisionReceipt, type System3JevOptions } from './decisions.ts'
 
@@ -31,6 +32,7 @@ export type { System3EntryCandidate, System3EntryDelegateCandidate, System3Entry
 export type { System3KeepWarmConfig } from './keep-warm.ts'
 export type { System3HandoffOutcome, System3HandoffPack, System3HandoffPackConfig } from './handoff-pack.ts'
 export type { System3ProcessNotice, System3ProcessRule, System3ProcessSupervisionConfig, System3SupervisionSource } from './process-supervision.ts'
+export type { System3CompletionReview, System3CompletionReviewConfig } from './completion-review.ts'
 export type { System3Interjection, System3TaskFrame, System3TaskFrameConfig, System3TaskGoal, System3TaskMessage } from './task-frame.ts'
 export type { System3DecisionMode, System3DecisionSettings, System3Judgement, System3JudgementReason } from './decision-kernel.ts'
 export type { System3RouteHealth, System3RouteHealthConfig, System3RouteHealthReason, System3RouteHealthStatus } from './route-health.ts'
@@ -79,6 +81,11 @@ export interface Config {
   readonly outputFolding?: false | System3OutputFoldingConfig
   /** The person's goal and later requirements, judged by Jev and shown to the main model verbatim; `false` or omission disables it. */
   readonly taskFrame?: false | System3TaskFrameConfig
+  /**
+   * Jev review of each goal completion; needs `taskFrame`, with mode `shadow` or `active` when the review is not `off`.
+   * `false` or omission disables it.
+   */
+  readonly completionReview?: false | System3CompletionReviewConfig
 }
 
 /** Small operational counters, intentionally free of user data. */
@@ -267,6 +274,16 @@ export default class System3 extends Service implements System3Service {
       maxMessageChars: z.number().step(1).min(1).required(),
       interjection: z.union([z.const(undefined), z.const('shadow'), z.const('active')]),
     })]).default(false),
+    completionReview: z.union([z.const(false), z.object({
+      mode: z.union([z.const('off'), z.const('shadow'), z.const('active')]).required(),
+      yes: z.number().min(0).max(1).required(),
+      no: z.number().min(0).max(1).required(),
+      deadlineMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).required(),
+      sessionDataClasses: z.array(z.union([z.const('public'), z.const('workspace'), z.const('sensitive'), z.const('secret')])).required(),
+      maxRefusals: z.number().step(1).min(1).required(),
+      evidenceCalls: z.number().step(1).min(1).required(),
+      resultChars: z.number().step(1).min(1).required(),
+    })]).default(false),
   })
 
   readonly privacyPolicy: System3PrivacyPolicy
@@ -318,7 +335,17 @@ export default class System3 extends Service implements System3Service {
     }
     if (config.taskFrame !== undefined && config.taskFrame !== false) {
       const taskFrame = { config: config.taskFrame, policy: this.privacyPolicy, options: this.jevOptions }
-      ctx.inject(['systemPrompt'], (ctx) => { installSystem3TaskFrame(ctx, taskFrame) })
+      const review = config.completionReview === undefined || config.completionReview === false ? undefined : config.completionReview
+      if (review !== undefined && review.mode !== 'off' && taskFrame.config.mode === 'off') {
+        throw new Error('completionReview needs taskFrame mode shadow or active')
+      }
+      ctx.inject(['systemPrompt'], (ctx) => {
+        const frameOf = installSystem3TaskFrame(ctx, taskFrame)
+        if (review === undefined) return
+        installSystem3CompletionReview(ctx, { config: review, policy: this.privacyPolicy, options: this.jevOptions, frameOf })
+      })
+    } else if (config.completionReview !== undefined && config.completionReview !== false) {
+      throw new Error('completionReview needs taskFrame')
     }
     if (config.observeAgentLoop === true) this.observeAgentLoop()
     if (config.skillSelection !== undefined && config.skillSelection !== false) {

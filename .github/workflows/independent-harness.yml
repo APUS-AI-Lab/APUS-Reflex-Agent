@@ -59,4 +59,6 @@ jobs:
           packages/api/session-controller/tests
           --maxWorkers=2
       - name: Replay System3 and AG-UI persona sessions
-        run: pnpm run test:snapshot snapshots/sdk/sdk.snapshot.ts -t 'system3-shadow|system3-entry-route|agui-persona'
+        run: pnpm run test:snapshot snapshots/sdk/sdk.snapshot.ts -t 'system3-shadow|system3-entry-route|system3-completion-review|agui-persona'
+      - name: Python SDK completion review
+        run: PYTHONPATH=python/sdk/src python scripts/smoke-python-runtime.py --scenario sdk-system3-completion-review --exe apps/cli/lib/bin.js

@@ -12,6 +12,7 @@ import Jev from '../../apus-dsh-jev-plugin/src/index.ts'
 import GoalService, { GoalId } from '@deepseek-ai/dsh-goal'
 import { installSystem3TaskFrame, system3TaskFrameDecision, taskFrameText, validateSystem3TaskFrame,
   type System3TaskFrameConfig } from '../src/task-frame.ts'
+import * as DecisionKernel from '../src/decision-kernel.ts'
 
 const contexts: Context[] = []
 afterEach(async () => { for (const ctx of contexts.splice(0)) await ctx.fiber.dispose() })
@@ -74,7 +75,7 @@ it('rejects configurations that cannot work', () => {
 type Script = Readonly<Record<string, JevResponse>>
 
 async function setup(script: Script, config: Partial<System3TaskFrameConfig> = {}, turns = 6, goals = false,
-  responses?: ConstructorParameters<typeof MockAdapter>[0]) {
+  responses?: ConstructorParameters<typeof MockAdapter>[0], owned = false) {
   const ctx = new Context()
   contexts.push(ctx)
   await mountAgentLoopTestDependencies(ctx)
@@ -88,9 +89,15 @@ async function setup(script: Script, config: Partial<System3TaskFrameConfig> = {
   })
   const adapter = new MockAdapter(responses ?? Array.from({ length: turns }, (_, index) => textResponse(`reply ${String(index + 1)}`)))
   ctx.effect(() => ctx.llm.registerAdapter(['mock'], adapter))
-  installSystem3TaskFrame(ctx, { config: { ...CONFIG, ...config },
+  const settings = { config: { ...CONFIG, ...config },
     policy: { mode: 'controlled', approvedRemoteIds: ['jev'], approvedRemoteDataClasses: ['workspace'] },
-    options: { routeId: 'jev', executionDomain: 'network', effort: 'low' } })
+    options: { routeId: 'jev', executionDomain: 'network', effort: 'low' } } as const
+  const readers: ReturnType<typeof installSystem3TaskFrame>[] = []
+  const frameFiber = owned ? await ctx.plugin({ name: 'task-frame-fixture', inject: ['systemPrompt'], apply(owner: Context) {
+    readers.push(installSystem3TaskFrame(owner, settings))
+  } }) : undefined
+  const frameOf = owned ? readers[0] : installSystem3TaskFrame(ctx, settings)
+  if (frameOf === undefined) throw new Error('task-frame fixture did not install its reader')
   const agent = await ctx.agentLoop.create(SessionId('framed'), { provider: 'mock', model: 'mock' })
   const events = (type: string) => agent.session.snapshotEvents().filter(event => event.type === type).map(event => event.data)
   const frames = () => events('system3/task-frame') as { goal: { text: string }; items: { text: string }[] }[]
@@ -102,8 +109,71 @@ async function setup(script: Script, config: Partial<System3TaskFrameConfig> = {
   const card = (request: GenerateOptions | undefined): string | undefined => request?.messages
     .filter(message => message.role === 'user' && message.source?.kind === 'runtime-context')
     .flatMap(message => message.content.flatMap(block => block.type === 'text' ? [block.text] : [])).at(-1)
-  return { ctx, agent, adapter, decide, events, frames, say, card }
+  return { ctx, agent, adapter, decide, events, frames, say, card, frameOf, frameFiber }
 }
+
+/** Hold one Jev response while another producer replaces the current task frame. */
+function holdNextJudgement(h: Awaited<ReturnType<typeof setup>>) {
+  const entered = Promise.withResolvers<undefined>()
+  const response = Promise.withResolvers<JevResponse>()
+  h.decide.mockImplementationOnce(async (request, signal) => {
+    const aborted = () => { response.reject(new Error('fixture judgement aborted')) }
+    signal?.addEventListener('abort', aborted, { once: true })
+    entered.resolve(undefined)
+    try {
+      return { kind: 'ok', spec: h.ctx.jev.resolve(request), response: await response.promise }
+    } finally {
+      signal?.removeEventListener('abort', aborted)
+    }
+  })
+  return { entered: entered.promise, answer: (value: JevResponse) => { response.resolve(value) } }
+}
+
+it.each(['active', 'shadow'] as const)('keeps a goal edited during a pending %s requirement judgement', async (mode) => {
+  const h = await setup({}, { mode }, 2, true)
+  const goal = h.ctx.goals.create(h.agent, { objective: '整理旧发布说明' })
+  const held = holdNextJudgement(h)
+  h.agent.followup(createUserMessage({ content: [{ type: 'text', text: '别动 README.md' }], source: { kind: 'user' } }))
+  await held.entered
+  h.ctx.goals.edit(h.agent, goal, { objective: '整理新发布说明' })
+  const current = h.frameOf(h.agent)
+  held.answer(answers('continue', { requirement: 0.9 }))
+  await h.agent.whenIdle()
+  await vi.waitFor(() => { expect(h.events('system3/judgement')).toHaveLength(1) })
+  expect(h.frameOf(h.agent)).toBe(current)
+  expect(h.frameOf(h.agent)).toMatchObject({ goal: { goalId: goal.id, text: '整理新发布说明' }, items: [] })
+})
+
+it.each(['active', 'shadow'] as const)('keeps a goal created during a pending %s message judgement', async (mode) => {
+  const h = await setup({}, { mode }, 2, true)
+  await h.say('整理旧发布说明', mode === 'active' ? 1 : 0)
+  const held = holdNextJudgement(h)
+  h.agent.followup(createUserMessage({ content: [{ type: 'text', text: '别动 README.md' }], source: { kind: 'user' } }))
+  await held.entered
+  const goal = h.ctx.goals.create(h.agent, { objective: '整理新发布说明' })
+  const current = h.frameOf(h.agent)
+  held.answer(answers('continue', { requirement: 0.9 }))
+  await h.agent.whenIdle()
+  await vi.waitFor(() => { expect(h.events('system3/judgement')).toHaveLength(1) })
+  expect(h.frameOf(h.agent)).toBe(current)
+  expect(h.frameOf(h.agent)).toMatchObject({ goal: { goalId: goal.id, text: '整理新发布说明' }, items: [] })
+})
+
+it('keeps a frame committed by another producer while an unrelated-task judgement waits', async () => {
+  const h = await setup({})
+  await h.say('整理旧发布说明', 1)
+  const held = holdNextJudgement(h)
+  h.agent.followup(createUserMessage({ content: [{ type: 'text', text: '帮我写一封邮件' }], source: { kind: 'user' } }))
+  await held.entered
+  h.agent.session.append('system3/task-frame', { version: 1,
+    goal: { messageId: brandString<MessageId>('new-task'), text: '整理新发布说明' }, items: [] })
+  const current = h.frameOf(h.agent)
+  held.answer(answers('switch', { request: 0.9 }))
+  await h.agent.whenIdle()
+  await vi.waitFor(() => { expect(h.events('system3/judgement')).toHaveLength(1) })
+  expect(h.frameOf(h.agent)).toBe(current)
+  expect(h.frames()).toHaveLength(2)
+})
 
 it('starts the frame from the first message, keeps later requirements, and shows them to the model from the next step', async () => {
   const h = await setup({ '别动 README.md': answers('continue', { requirement: 0.9 }), '谢谢': answers('side', {}),
@@ -251,10 +321,11 @@ it('logs an unexpected failure and stays quiet after disposal', async () => {
 
 /** A turn held open by a tool until released, so a new message queues behind it. */
 async function running(script: Script, config: Partial<System3TaskFrameConfig>, controller: 'real' | 'failing' | 'none' = 'real',
-  services: Readonly<Record<string, unknown>> = {}) {
-  const h = await setup(script, config, 0, false, [toolCallResponse('c1', 'wait', {}), textResponse('step after the tool'), textResponse('next turn')])
+  services: Readonly<Record<string, unknown>> = {}, goals = false) {
+  const h = await setup(script, config, 0, goals, [toolCallResponse('c1', 'wait', {}), textResponse('step after the tool'), textResponse('next turn')])
   const gate = Promise.withResolvers<undefined>()
   const entered = Promise.withResolvers<undefined>()
+  h.ctx.effect(() => () => { gate.resolve(undefined) })
   h.ctx.tools.register(defineTool({ name: 'wait', description: 'Wait.', parameters: {}, output: { schema: { type: 'string' },
     render: (_args, value) => [{ type: 'text', text: value }] },
   execute: async () => { entered.resolve(undefined); await gate.promise; return 'released' } }))
@@ -281,6 +352,126 @@ async function running(script: Script, config: Partial<System3TaskFrameConfig>, 
   const seen = (index: number) => JSON.stringify(h.adapter.requests[index]?.messages ?? [])
   return { ...h, updateQueue, queue, release, seen }
 }
+
+it.each(['active', 'shadow'] as const)('leaves a stale %s interjection queued and classifies it against the current goal when claimed', async (mode) => {
+  const h = await running({ '别动 README.md': answers('continue', { requirement: 0.9 }) }, { mode, interjection: 'active' }, 'real', {}, true)
+  const goal = h.ctx.goals.create(h.agent, { objective: '整理旧发布说明' })
+  const held = holdNextJudgement(h)
+  await h.queue('别动 README.md')
+  await held.entered
+  h.ctx.goals.edit(h.agent, goal, { objective: '整理新发布说明' })
+  const current = h.frameOf(h.agent)
+  held.answer(answers('continue', { requirement: 0.9 }))
+  await vi.waitFor(() => { expect(h.events('system3/judgement')).toHaveLength(1) })
+  expect(h.frameOf(h.agent)).toBe(current)
+  expect(h.updateQueue).not.toHaveBeenCalled()
+  expect(h.agent.inbox.nextTurn.map(message => message.content)).toEqual([[{ type: 'text', text: '别动 README.md' }]])
+  await h.release()
+  await vi.waitFor(() => { expect(h.decide).toHaveBeenCalledTimes(2) })
+  expect(h.decide.mock.calls[1]?.[0].state).toEqual({ task: '整理新发布说明', message: '别动 README.md' })
+  expect(h.events('system3/interjection')).toEqual([])
+  expect(h.frameOf(h.agent)).toMatchObject({ goal: { text: '整理新发布说明' }, items: mode === 'active' ? [{ text: '别动 README.md' }] : [] })
+  expect(h.seen(2)).toContain('别动 README.md')
+})
+
+it.each(['active', 'shadow'] as const)('classifies an already claimed stale %s interjection once against the current goal', async (mode) => {
+  const h = await running({ '别动 README.md': answers('continue', { requirement: 0.9 }) }, { mode, interjection: 'active' }, 'real', {}, true)
+  const goal = h.ctx.goals.create(h.agent, { objective: '整理旧发布说明' })
+  const held = holdNextJudgement(h)
+  await h.queue('别动 README.md')
+  await held.entered
+  await h.release()
+  expect(h.agent.inbox.nextTurn).toEqual([])
+  h.ctx.goals.edit(h.agent, goal, { objective: '整理新发布说明' })
+  held.answer(answers('continue', { requirement: 0.9 }))
+  await vi.waitFor(() => { expect(h.decide).toHaveBeenCalledTimes(2) })
+  expect(h.decide.mock.calls[1]?.[0].state).toEqual({ task: '整理新发布说明', message: '别动 README.md' })
+  await vi.waitFor(() => { expect(h.events('system3/judgement')).toHaveLength(2) })
+  expect(h.events('system3/interjection')).toEqual([])
+  expect(h.updateQueue).not.toHaveBeenCalled()
+  expect(h.frameOf(h.agent)).toMatchObject({ goal: { text: '整理新发布说明' }, items: mode === 'active' ? [{ text: '别动 README.md' }] : [] })
+  expect(h.seen(2)).toContain('别动 README.md')
+})
+
+it('discards an already claimed interjection when its single replacement judgement also becomes stale', async () => {
+  const h = await running({}, { interjection: 'active' }, 'real', {}, true)
+  const goal = h.ctx.goals.create(h.agent, { objective: '整理旧发布说明' })
+  const first = holdNextJudgement(h)
+  const replacement = holdNextJudgement(h)
+  await h.queue('别动 README.md')
+  await first.entered
+  await h.release()
+  const edited = h.ctx.goals.edit(h.agent, goal, { objective: '整理新发布说明' })
+  first.answer(answers('continue', { requirement: 0.9 }))
+  await replacement.entered
+  h.ctx.goals.edit(h.agent, edited, { objective: '整理最终发布说明' })
+  const current = h.frameOf(h.agent)
+  replacement.answer(answers('continue', { requirement: 0.9 }))
+  await vi.waitFor(() => { expect(h.events('system3/judgement')).toHaveLength(2) })
+  expect(h.frameOf(h.agent)).toBe(current)
+  expect(h.decide).toHaveBeenCalledTimes(2)
+  expect(h.events('system3/interjection')).toEqual([])
+  expect(h.updateQueue).not.toHaveBeenCalled()
+  expect(h.seen(2)).toContain('别动 README.md')
+})
+
+it('does not replace a pending claimed judgement after the task-frame plugin is disposed', async () => {
+  const h = await running({}, { interjection: 'active' }, 'real', {}, true)
+  h.ctx.goals.create(h.agent, { objective: '整理发布说明' })
+  const current = h.frameOf(h.agent)
+  const held = holdNextJudgement(h)
+  await h.queue('别动 README.md')
+  await held.entered
+  await h.release()
+  expect(h.agent.inbox.nextTurn).toEqual([])
+  await h.ctx.fiber.dispose()
+  expect(h.decide).toHaveBeenCalledTimes(1)
+  expect(h.decide.mock.calls[0]?.[1]?.aborted).toBe(true)
+  expect(h.frameOf(h.agent)).toBe(current)
+  expect(h.events('system3/judgement')).toEqual([])
+  expect(h.events('system3/interjection')).toEqual([])
+})
+
+it('does not start waiting queued judgements after the task-frame plugin is disposed', async () => {
+  const h = await running({}, { interjection: 'active' }, 'real', {}, true)
+  h.ctx.goals.create(h.agent, { objective: '整理发布说明' })
+  const current = h.frameOf(h.agent)
+  const held = holdNextJudgement(h)
+  await h.queue('别动 README.md')
+  await held.entered
+  await h.queue('测试必须通过')
+  await h.ctx.fiber.dispose()
+  expect(h.decide).toHaveBeenCalledTimes(1)
+  expect(h.frameOf(h.agent)).toBe(current)
+  expect(h.events('system3/judgement')).toEqual([])
+  expect(h.events('system3/interjection')).toEqual([])
+})
+
+it('does not write a completed judgement after the task-frame plugin unloads before its continuation', async () => {
+  const h = await setup({ '别动 README.md': answers('continue', { requirement: 0.9 }) }, {}, 2, false, undefined, true)
+  await h.say('整理发布说明', 1)
+  const current = h.frameOf(h.agent)
+  const finished = Promise.withResolvers<undefined>()
+  const run = DecisionKernel.runSystem3Decision
+  const spy = vi.spyOn(DecisionKernel, 'runSystem3Decision').mockImplementation(async (...args) => {
+    const result = await run(...args)
+    await h.frameFiber?.dispose()
+    finished.resolve(undefined)
+    return result
+  })
+  try {
+    h.agent.followup(createUserMessage({ content: [{ type: 'text', text: '别动 README.md' }], source: { kind: 'user' } }))
+    await finished.promise
+    await h.agent.whenIdle()
+    // The kernel already returned; the event-loop checkpoint drains the frame's synchronous continuation and queue handlers.
+    await setImmediate()
+  } finally {
+    spy.mockRestore()
+  }
+  expect(h.frameOf(h.agent)).toBe(current)
+  expect(h.frames()).toHaveLength(1)
+  expect(h.events('system3/judgement')).toHaveLength(1)
+})
 
 it('moves a queued requirement into the running turn and does not judge it again when claimed', async () => {
   const h = await running({ '别动 README.md': answers('continue', { requirement: 0.9 }) }, { interjection: 'active' })
@@ -386,3 +577,4 @@ it('does not forward to a finished or non-steerable run, a run that refuses, or 
   expect(h.events('system3/interjection')[0]).not.toHaveProperty('forwardedTo')
   await h.release()
 })
+import { setImmediate } from 'node:timers/promises'

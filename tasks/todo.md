@@ -241,3 +241,57 @@
 - [ ] 新过程恢复能力经设计确认、独立验收后再发布。
 
 本轮 CI Review：Windows 原生测试 1563 通过 / 4 跳过，固定自有 Harness 构建、27 补丁装配、Electron HTTP 200、开发安装包与隔离应用启动通过。固定提交、工作流步骤、产物 API 摘要及范围见 [review-regression.json](feat-system3-g1/review-regression.json) 的 windowsFrontendCiAcceptance。服务器和已安装 Mac App 未更新；过程恢复设计尚未实施。
+
+## Codex 接管核验（2026-10-08）
+
+- [x] 阅读两份指定 HTML、历史任务、经验与 Claude 续接记录。
+- [x] 核对主目录和目标 worktree 的分支、HEAD、未提交文件与 stash；保留原有 WIP。
+- [x] 找到 v0.1 五场景历史验收日志；核对凭据文件权限，不复制密钥。
+- [x] 独立运行完成核验相关 keyless 测试，审查实现与设计差异。
+- [x] 核实远端 release / main；记录本地与发布基线差异。
+- [x] 写入本 worktree 冷启动 handoff、P0 顺序与验收缺口。
+
+### 接管 Review
+
+本轮接管与基线审计不等于 v0.2 验收；新增模型监控实现须先完成对照实验与设计确认。既有源码、部署配置和文档 WIP 保持原样。
+
+接管结果：52 项相关 keyless 测试通过，但完成核验缺持久事件登记；prd 根盘本轮实测 100%、可用 0，为最高优先级运行阻断。详见 [接管 handoff](feat-jev-decision-kernel/handoff.md)。
+
+## prd 根盘在线扩容（2026-10-08，用户已授权）
+
+- [x] 检查 vda / vda2 / ext4、工具与 growpart dry-run，确认分区起点保持不变。
+- [x] 将分区表备份到 /run，用 TMPDIR=/run 扩展 vda2，再在线扩展 ext4。
+- [x] 验证分区表、rw 挂载、System3 服务用户 write/fsync/read、服务状态及鉴权接口。
+
+### 扩容 Review
+
+根文件系统 984G，使用 788G、可用 156G、使用率 84%；容量阻断已解除。分区表无错误，文件写入验证通过，服务 active，无需重启。完整 Session API 未验收；共享磁盘增长来源仍待调查。当前证据见 [handoff](feat-jev-decision-kernel/handoff.md)。
+
+## Claude 历史继承与完成核验 P0（2026-10-08）
+
+- [x] 读取主会话、最近用户指令和压缩摘要，确认 P0 开发已授权；Claude 最后因 organization disabled 停止。
+- [x] 保留当前 worktree 与既有 WIP，写出 completion-continuation.html 接续设计。
+- [x] 真实 Loader / Goal / JSONL 重读回归，先复现词表缺失，再验证生成物修复。
+- [x] 新增 keyless TypeScript 与 Python SDK 完成核验场景。
+- [x] 持久化 acknowledgement、config/catalog 与相关验证。
+- [x] 修复异步任务卡过期、旧Goal回写、fork额度及配置/卸载/取消，补确定性屏障与真实原生Goal回归。
+- [x] 核查真实 Jev 历史评测，完成当前本地 built Web 的完成核验浏览器闭环；生产升级与独立评测仍待收口。
+
+### 完成核验接续 Review
+
+状态隔离、关闭依赖与卸载/取消已修；System3包243项/18文件通过，completion-review.ts、task-frame.ts和decision-kernel.ts均100%覆盖；真实 Loader 持久化回归、稳定和 stale 两条 TS SDK 回放、Python 当前 built CLI 通过。真实 DeepSeek + Jev 的基础与追加要求 E2E 2/2 通过，均重开日志一致。两场景为 in-process production services；另有当前 built Web 本地浏览器闭环：61事件/62条JSONL记录，第一次拒绝、真实读写后完成rev2，刷新保留拒绝且未新增判断。生产升级尚未验收；历史 Jev 留出集未达标，部署 WIP 保持 shadow，模型线路监控仍是设计与历史探针。完整背景与后续顺序见 [handoff](feat-jev-decision-kernel/handoff.md)。
+
+## 完整实现与真实 E2E（2026-10-08，追加要求）
+
+- [ ] 将报告中每个功能点对应到完整实现、真实外部模型 / 工具 / 浏览器场景与固定版本证据；mock 与 keyless 回放仅为补充。
+- [x] 修复完成核验三项状态隔离问题，并执行真实 Jev 与原生 Goal 完成闭环 E2E。
+- [x] Review 最新 mu 源码，按用户收益、宣传定位、DSH 已有基础和真实验收成本重排候选 P0。
+- [x] 交付可 review 的 mu P0 设计与逐功能验收矩阵，标注已发布 / 已实现未验 / 缺失；新增能力实施按已授权范围和具体设计确认推进。
+
+### 追加要求 Review
+
+[mu P0 设计](../docs/feat-jev-decision-kernel/mu-p0-review.html)提前执行前约束、普通任务续跑和语义卡住恢复；[逐项验收矩阵](../docs/feat-jev-decision-kernel/feature-acceptance.html)覆盖报告实际14项招牌、8组原生和3个候选。候选尚待具体设计确认，未当已实现；线路 probe 继续并行。每项完整实现及真实 E2E 仍是总完成条件，本轮两条完成核验真实场景不替代全部功能验收。
+
+### 当前构建浏览器 Review
+
+[浏览器报告](../docs/feat-jev-decision-kernel/completion-browser-result.json)、[原始日志](../docs/feat-jev-decision-kernel/completion-browser-session.jsonl)和[截图](../docs/feat-jev-decision-kernel/completion-browser.png)绑定当前源码与 built Web：真实 DeepSeek + Jev，拒绝 → read/write/read → complete rev2；Jev 2914/1960ms；刷新没有新增事件。此为本地 shipped profile，未部署到 prd，专用核验依据 UI 和独立准确率评测未完成。初始用户额外限制会在 create_goal 重置任务卡时丢失，已加入 mu 设计 v2 的共同前提，不能称约束已受保护。OpenOx 8/8 完整 key 已私密保存；三站真实模型权限仍待验证。

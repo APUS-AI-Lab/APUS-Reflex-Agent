@@ -69,7 +69,7 @@ describe('maintained repository reference policy', () => {
     expect(scanRepositoryReferences(fixture.root)).toHaveLength(4)
   })
 
-  it('retains raw commit pins in the three exact tracked, staged and new machine evidence files', (test) => {
+  it('retains raw commit pins in exact tracked, staged and new machine evidence files', (test) => {
     const fixture = repository(test)
     fixture.write('docs/feat-system3-g1/desktop-acceptance.json', JSON.stringify({ sourceRevision: fixture.commit }))
     fixture.git(['add', 'docs/feat-system3-g1/desktop-acceptance.json'])
@@ -77,6 +77,7 @@ describe('maintained repository reference policy', () => {
     fixture.write('docs/feat-system3-g1/deployment-final.json', JSON.stringify({ releaseId: `system3-${fixture.commit}` }))
     fixture.git(['add', 'docs/feat-system3-g1/deployment-final.json'])
     fixture.write('tasks/feat-system3-g1/review-regression.json', JSON.stringify({ revision: fixture.commit.toUpperCase() }))
+    fixture.write('docs/feat-jev-decision-kernel/completion-browser-result.json', JSON.stringify({ uiVersion: `0.1.7-rc.2-${fixture.commit}-dirty` }))
 
     expect(scanRepositoryReferences(fixture.root)).toEqual([])
   })
@@ -90,6 +91,8 @@ describe('maintained repository reference policy', () => {
       'docs/feat-system3-g1/subdir/deployment-final.json',
       'docs/feat-system3-g2/desktop-acceptance.json',
       'tasks/feat-system3-g1/review-regression.md',
+      'docs/feat-jev-decision-kernel/completion-browser-result.json.bak',
+      'docs/feat-jev-decision-kernel/feature-acceptance.json',
     ]
     for (const file of ordinaryPaths) fixture.write(file, JSON.stringify({ revision: fixture.commit }))
 
@@ -101,6 +104,7 @@ describe('maintained repository reference policy', () => {
   it('still rejects literal and escaped organization URLs in every allowed machine evidence file', (test) => {
     const fixture = repository(test)
     const evidencePaths = [
+      'docs/feat-jev-decision-kernel/completion-browser-result.json',
       'docs/feat-system3-g1/desktop-acceptance.json',
       'docs/feat-system3-g1/deployment-final.json',
       'tasks/feat-system3-g1/review-regression.json',

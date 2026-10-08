@@ -1,0 +1,28 @@
+# Bilingual-pair consistency record for 2026-10-08-system3-completion-review.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/persistence-changes/2026-10-08-system3-completion-review.md
+/:
+  en: 3d5a424ae7d7e46b
+  zh: c22a8e4a62d8cc1a
+/2026-10-08-system3-completion-review:
+  en: 436ff568d7bb7708
+  zh: 3e1478ddefda6166
+/2026-10-08-system3-completion-review/summary:
+  en: 97d3f44328a9a261
+  zh: 6d99d424959ee4a5
+/2026-10-08-system3-completion-review/table-of-contents:
+  en: 6cf314a069ceb451
+  zh: 9adff678e9ecab3b
+/2026-10-08-system3-completion-review/declaration:
+  en: 6907136f28e48c90
+  zh: 02f8298485f3d8e7
+/2026-10-08-system3-completion-review/compatibility:
+  en: fd9e6ab353b8b89d
+  zh: 1fa9ff6370774b73
+/2026-10-08-system3-completion-review/verification:
+  en: 3d5c99c2f03366a6
+  zh: b52b622fe9803a8f
+/2026-10-08-system3-completion-review/dev-note:
+  en: b75c8458928b72b9
+  zh: 003ba4e17b4b5269

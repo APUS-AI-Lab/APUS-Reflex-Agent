@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>完成核验 P0 接续设计</title>
+<style>body{max-width:960px;margin:40px auto;padding:0 20px;font:16px/1.8 system-ui;color:#182333;background:#f6f8fa}section{background:white;padding:20px;margin:20px 0;border:1px solid #dce3eb;border-radius:10px}pre{white-space:pre-wrap}a{color:#2248b5}</style>
+<h1>完成核验 P0 接续设计</h1>
+<p>2026-10-08 · 继承已批准的 v0.2 P0 · 实施及验证记录见本 worktree handoff。</p>
+<section><h2>目标与授权</h2><p>收口现有 completion-review WIP，证明它在真实 Goal 执行、会话持久化重读和两个 SDK 中有效。Claude 主会话 2026-10-08 07:58:48 UTC 的用户指令已批准完成前核验与模型线路监控加入开发；本轮继续已有实现。模型线路监控仍先验证探针，再确定自动避开条件。</p></section>
+<section><h2>执行与记录</h2><pre>真实 update_goal(action=complete)
+  → tools/pre-execute → 当前任务卡 + 最近工具执行记录 → Jev 封闭判断
+  → 拒绝：工具返回原话要求，Goal 仍进行中 → 模型补齐证据再申请完成
+  → 允许：原生 Goal 执行完成
+  → system3/judgement + system3/completion-review → Session JSONL
+  → 持久化词表验证 → 重新打开 → TypeScript / Python SDK 投影</pre><p>超时、隐私拒绝、未知判断与拒绝次数上限沿用现有配置。只审查关联任务卡的顶层 Goal 完成调用；本轮不扩大自然语言结束检查的范围，不增加原生 agent loop 分支。</p></section>
+<section><h2>文件范围与接口</h2><ul><li>packages/experimental/system3：保留现有 Config、System3CompletionReview 和 SessionEventMap 定义；补真实 Loader/Goal/persistence 测试。</li><li>snapshots/sdk：新增 system3-completion-review keyless 场景、外部 Jev fixture 与对应会话记录；检验拒绝文本及事件。</li><li>scripts/smoke-python-runtime.py 和 owner-local expected：用当前 runtime 验证相同完成核验场景的 Python SDK 投影。</li><li>source-derived persistence/config catalogs：按 owning generator 更新；新增 same-version acknowledgement，不手改事件词表，不覆盖历史 Session 代际。</li><li>tasks/feat-jev-decision-kernel：记录历史授权、活跃会话断点、本轮证据与下一步。report.html 保持宣传稿定位。</li></ul><p>事件仍为 version=1，字段为 goalId、decision、unmet、goalUnmet、refused；新普通事件不改变 SESSION_FORMAT_VERSION。两 SDK 消费实际持久事件，不新增 SDK 私有接口。</p></section>
+<section><h2>验收顺序</h2><ol><li>先用真实 JSONL 重读复现当前词表缺失；补生成物后同一用例通过。</li><li>确认拒绝不改变 Goal 状态，拒绝理由成为模型可见且持久的工具结果；随后有证据时允许真实 Goal 完成。</li><li>TypeScript keyless replay 与 Python 当前 runtime smoke 输出对应同一场景。</li><li>相关单元/组合测试、Host 编译与 lint、文档生成物检查；真实 Jev 标注与生产浏览器验收作为发布前证据，缺失时明确保持未发布。</li></ol></section>
+<section><h2>真实限制</h2><p>工具结果摘要会截断，未知判断和拒绝上限会放行，次数在进程内存中。监控探针 token 差异先记录观察，不推定具体模型身份或隐藏提示原因。详细事实归工程记录；宣传目标用于约束后续实现。</p></section>
+<section><h2>异步状态与 Session 隔离补充</h2><p>独立终审发现：等待 Jev 期间新要求可以更新任务卡，旧判断不能代替新要求的核验；任务卡的旧判断也不能覆盖期间创建或编辑后的 Goal。修复以最新已提交状态为依据，使用确定性屏障覆盖竞态。拒绝额度归属 Session 和 GoalId，独立 fork 不共享额度；仍保留进程内存与配置上限语义。源场景与双 SDK 验收继续验证稳定路径，新增竞态由 owning 行为测试覆盖。</p></section>
+<section><h2>真实 E2E 补充</h2><p>每个功能点以完整实现和真实端到端验收为完成条件。新增 completion-product.e2e.ts 使用真实生成模型与 Jev、原生 Goal 和文件读写工具、真实临时工作区与 JSONL；验收提前申请被拒、实际读写补证、重试完成以及持久日志重开。成功结果须对应固定源码与配置，未携带凭据时跳过不能算通过。确定性竞态、keyless Session 和 SDK 回放作为补充证据。</p></section>
+<section><h2>配置依赖与插件卸载补充</h2><p>当前终审复现 taskFrame off 时仍可启用核验并读取旧卡，以及卸载 System3 后旧 Jev 答案仍然拒绝工具。配置校验在加载时拒绝非 off review 依赖 off task frame，保留 shadow frame 的明确语义。完成核验自有生命周期取消；插件移除后不再记录或应用旧判断，原生工具继续；用户取消仍传播，不继续工具。公共决策内核在记录前检查取消，任务卡在 await 后再检查生命周期。使用确定性屏障复现并验证，再刷新相关单元、真实源码组合与当前 built Web 的固定版本证据；不改变新增持久事件字段。</p></section>
+</html>

@@ -116,6 +116,7 @@ export function validateSystem3DecisionSettings(id: string, settings: System3Dec
 /**
  * Ask Jev one decision for an Agent, apply the thresholds, and record the judgement in its Session.
  * Jev failures, the deadline, and privacy denial yield the fallback and are recorded; caller cancellation rejects without a record.
+ * An already-cancelled caller dispatches nothing; a provider response received after cancellation is discarded.
  * @param ctx - Context providing the optional Jev service.
  * @param shared - Privacy policy, Jev route, and data classes.
  * @param spec - The decision.
@@ -128,6 +129,7 @@ export function validateSystem3DecisionSettings(id: string, settings: System3Dec
 export async function runSystem3Decision<Input, Outcome extends string>(ctx: Context, shared: System3DecisionContext,
   spec: System3DecisionSpec<Input, Outcome>, settings: System3DecisionSettings, agent: Agent, input: Input,
   signal: AbortSignal): Promise<System3DecisionResult<Outcome>> {
+  signal.throwIfAborted()
   const started = Date.now()
   let request: JevRequest | null = null
   let response: JevResponse | undefined
@@ -156,6 +158,7 @@ export async function runSystem3Decision<Input, Outcome extends string>(ctx: Con
   return finish()
 
   function finish(): System3DecisionResult<Outcome> {
+    signal.throwIfAborted()
     const applied = settings.mode === 'active' && judged !== 'unsure'
     const outcome = judged === 'unsure' ? spec.fallback : judged
     const judgement: System3Judgement = {

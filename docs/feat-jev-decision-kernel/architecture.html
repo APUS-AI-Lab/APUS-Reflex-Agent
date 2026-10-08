@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>System3 架构总览</title>
+<title>APUS Reflex Harness 架构总览</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700&family=Noto+Sans+SC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 :root {
@@ -74,8 +74,8 @@ a { color: var(--accent); }
 <main>
 <header style="display:grid;gap:12px">
   <div class="eyebrow">System3 · 架构与体验总览 · 2026-10-08</div>
-  <h1>System3：agent 的管家与模型路由管理层</h1>
-  <p class="lead muted">当前版总览：分层架构、一条消息的完整流程、用户在界面上看到什么、产品设计原则，以及每项能力的现状。所有内容对应 prd（system3.xdan.work）上运行的 main，并由浏览器验收集逐项验证。</p>
+  <h1>APUS Reflex Harness：agent 的管家与模型路由管理层</h1>
+  <p class="lead muted">分层架构包含 System3 即时决策层与 DSH 原生底座。下文运行流程和历史数据对应 v0.1 基线；第六节列出新一轮 P0 设计与真实验收进度。每项完整实现和当前构建验收见<a href="feature-acceptance.html">逐项验收矩阵</a>。</p>
   <p class="thesis">DSH 负责“让 agent 能干活”，System3 负责“让 agent 干对、干快、按用户说的干”。Jev 只做快速、可回放的封闭判断，动作由 System3 直接执行，文字只用用户原话或模型生成。</p>
 </header>
 
@@ -163,7 +163,7 @@ a { color: var(--accent); }
     <thead><tr><th style="width:22%">原则</th><th style="width:44%">含义</th><th>现状</th></tr></thead>
     <tbody>
       <tr><td>从坏情况出发</td><td>每项能力对应一个用户见过的坏情况，一句话讲清</td><td>✅ 每个 PR 都写明坏情况与修改前后对照</td></tr>
-      <tr><td>一本笔记本</td><td>所有判断共用任务卡</td><td>🟡 模型与插话分流在用；完成核验、约束守护待接入</td></tr>
+      <tr><td>一本笔记本</td><td>所有判断共用任务卡</td><td>模型与插话分流在用；完成核验已接入并通过源码组合与本地 built Web 真实闭环；独立评测、生产升级和约束守护仍待收口</td></tr>
       <tr><td>判断归 Jev，动作要直接</td><td>Jev 只回答封闭问题，动作由 System3 执行</td><td>✅ 换模型、插入当前轮、转发 Codex、折叠都是直接动作</td></tr>
       <tr><td>看得见、能撤回</td><td>每个动作在 dock 说明原因，并可撤回</td><td>🟡 看得见 ✅；撤回（删要求、改回排队）待做</td></tr>
       <tr><td>证据先于开启</td><td>标注集定问法；实现不等于开启</td><td>✅ 任务卡 126 条标注集；留出集只跑一次</td></tr>
@@ -185,7 +185,22 @@ a { color: var(--accent); }
 </section>
 
 <section>
-  <h2>六、相关文档</h2>
+  <h2>六、下一批 P0：可靠执行的三个增量</h2>
+  <p class="thesis">拟议定位：接得住要求，执行有约束，完成有证据。</p>
+  <p>保留已经批准的完成核验和线路质量监控；mu 的三个增量按下表提前。总顺序为任务卡验收 → 执行前约束 → 完成核验 → 普通任务续跑 → 卡住恢复，线路探针并行。新增能力的具体设计待确认，尚未实现或通过真实 E2E。</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>新增顺序</th><th>拟议招牌表达</th><th>架构接入</th><th>真实验收</th></tr></thead>
+    <tbody>
+      <tr><td>1 · 执行前约束</td><td>你说别改的地方，动手前拦住</td><td>独立人类指令来源 + 原生权限 + tools/pre-execute；覆盖只读工具与受支持委派，模型目标不能撤销要求</td><td>初始与追加要求不丢失，禁止文件 hash 不变、禁止只读工具未执行，替代修复通过；撤销与子代理反例</td></tr>
+      <tr><td>2 · 普通任务续跑</td><td>说了接着做，就真的接着做</td><td>自然停顿处语义判断；复用原生 steer、取消与预算，避开 goal 的现有续跑</td><td>真实承诺变为工具执行；已完成、等人工、等审批及用户停止零额外轮次</td></tr>
+      <tr><td>3 · 卡住恢复</td><td>卡住会换路，结果能验证</td><td>过程规则触发 Jev 语义复核，按执行证据提示换方法；不自动回滚文件</td><td>重复失败后实际换方法并通过测试；合法轮询、必要排查和收敛调试不被误伤</td></tr>
+    </tbody>
+  </table></div>
+  <p>完成核验本轮已用真实 DeepSeek、Jev、原生 Goal 和文件工具通过基础及追加要求两个场景，并验证日志重开；另有当前本地 built Web 提前拒绝→真实读写→完成及刷新复现；结果不替代生产升级、专用依据 UI 和独立题库评测。<a href="mu-p0-review.html">具体文件、接口、降级与正反例设计</a> · <a href="feature-acceptance.html">14 项招牌、8 组原生能力与新增 P0 的验收排程</a></p>
+</section>
+
+<section>
+  <h2>七、相关文档</h2>
   <ul class="links">
     <li><a href="capabilities.zh.md">能力清单：对照 DSH 原版</a>（<a href="capabilities.md">English</a>）</li>
     <li><a href="steward-plan.html">管家方案</a> · <a href="top10.html">Top 10</a> · <a href="mu-product-view.html">mu 大白话对照</a> · <a href="tasks/task.zh.md">任务清单与进度记录</a></li>

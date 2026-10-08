@@ -1237,7 +1237,7 @@ export interface Config {
 ## `@deepseek-ai/dsh-experimental-system3`
 
 - `refs`: [`System3DataClass`](../packages/experimental/system3-policy/src/index.ts) · [`System3ExecutionDomain`](../packages/experimental/system3-policy/src/index.ts) · [`System3PrivacyMode`](../packages/experimental/system3-policy/src/index.ts)
-- `source`: [`packages/experimental/system3/src/index.ts:53`](../packages/experimental/system3/src/index.ts)
+- `source`: [`packages/experimental/system3/src/index.ts:55`](../packages/experimental/system3/src/index.ts)
 
 ```ts config-catalog
 /** Configures the default local-first privacy boundary. */
@@ -1270,6 +1270,11 @@ export interface Config {
   readonly outputFolding?: false | System3OutputFoldingConfig
   /** The person's goal and later requirements, judged by Jev and shown to the main model verbatim; `false` or omission disables it. */
   readonly taskFrame?: false | System3TaskFrameConfig
+  /**
+   * Jev review of each goal completion; needs `taskFrame`, with mode `shadow` or `active` when the review is not `off`.
+   * `false` or omission disables it.
+   */
+  readonly completionReview?: false | System3CompletionReviewConfig
 }
 
 /** Explicit controls for entry recommendations; omission leaves entry routing disabled. */
@@ -1388,6 +1393,18 @@ export interface System3TaskFrameConfig extends System3DecisionSettings {
    * the next turn. Moving needs an `active` task frame.
    */
   readonly interjection?: 'shadow' | 'active'
+}
+
+/** Mode, thresholds, and limits of the completion review; deployment-owned. */
+export interface System3CompletionReviewConfig extends System3DecisionSettings {
+  /** Data classes of Session text sent to Jev, checked against the privacy policy. */
+  readonly sessionDataClasses: readonly System3DataClass[]
+  /** Refusals per Session and goal before later completions are reviewed without refusal. */
+  readonly maxRefusals: number
+  /** Most recent tool calls summarized for Jev. */
+  readonly evidenceCalls: number
+  /** Characters kept from the start and from the end of each tool result. */
+  readonly resultChars: number
 }
 
 /** One entry route Jev may choose. */

@@ -1,0 +1,488 @@
+{
+  "version": 1,
+  "status": "acceptance-schedule-not-completion-report",
+  "sourceReport": "report.html",
+  "sourceCount": {
+    "actualSignatureItems": 14,
+    "groups": {
+      "入口智能": 3,
+      "过程智能": 4,
+      "体感智能": 4,
+      "管理智能": 3
+    },
+    "nativeGroups": 8
+  },
+  "configurationScope": "Repository base/web/production overlay read; current built shipped local Web verified with a dedicated active overlay and isolated workspace. Production current deployed files and live loader state not re-read; local active and repository shadow do not prove production settings.",
+  "historicalBaseline": {
+    "version": "apus-reflex-v0.1.0 (runtime 0.1.7-rc.2)",
+    "source": "/private/tmp/claude-501/-Users-gumpm5-Documents-Code-xDAN-System3-Harness/2fc262b9-ecd1-419a-9f1c-8aee03ecb971/scratchpad/seal-v01d/accept.log",
+    "result": "5 passed, 0 failed",
+    "scenarioSeconds": {
+      "routing": 26,
+      "folding": 38,
+      "task-frame": 64,
+      "goal-interrupt": 67,
+      "codex-forward": 99
+    },
+    "scope": "historical v0.1 only"
+  },
+  "currentLive": {
+    "result": "2/2 passed",
+    "scope": "in-process-production-services; live main+Jev; production FS/Goal; JSONL reopened; not shipped profile/browser",
+    "cases": [
+      {
+        "report": "completion-live-product-result.json",
+        "caseId": "goal",
+        "passed": true,
+        "reopened": true,
+        "recordedAt": "2026-10-08T14:25:54.772Z",
+        "execution": "in-process-production-services",
+        "sourceHashes": {
+          "completion-review.ts": "9f60e4dbaa07a6d22af964382e4e674abdc7a593402548625e20769015e509ba",
+          "task-frame.ts": "893bf341b256d9bca94d211af0394869729ee8e2ba5d6a9f86966e7a8ba3b99a",
+          "decision-kernel.ts": "a9bbb692c592aa0d29fe47569e97f97dbef9ad0c29732e0ce1f249034219fa8a",
+          "index.ts": "181db1f6305908fd38346be68fca69c0f4176fec83653778d480886ca3ebb2e4"
+        },
+        "events": 49,
+        "sessionDurationMs": 47105,
+        "judgementElapsedMs": [
+          2306,
+          3768
+        ],
+        "judgementReasons": [
+          "judged",
+          "judged"
+        ],
+        "phase": "complete",
+        "revision": 2,
+        "model": "deepseek-flash",
+        "jevModel": "APUS-OpenJev-v1-9B-5949"
+      },
+      {
+        "report": "completion-live-product-result-requirement.json",
+        "caseId": "requirement",
+        "passed": true,
+        "reopened": true,
+        "recordedAt": "2026-10-08T14:26:10.506Z",
+        "execution": "in-process-production-services",
+        "sourceHashes": {
+          "completion-review.ts": "9f60e4dbaa07a6d22af964382e4e674abdc7a593402548625e20769015e509ba",
+          "task-frame.ts": "893bf341b256d9bca94d211af0394869729ee8e2ba5d6a9f86966e7a8ba3b99a",
+          "decision-kernel.ts": "a9bbb692c592aa0d29fe47569e97f97dbef9ad0c29732e0ce1f249034219fa8a",
+          "index.ts": "181db1f6305908fd38346be68fca69c0f4176fec83653778d480886ca3ebb2e4"
+        },
+        "events": 65,
+        "sessionDurationMs": 15699,
+        "judgementElapsedMs": [
+          1496,
+          2331
+        ],
+        "judgementReasons": [
+          "judged",
+          "judged"
+        ],
+        "phase": "complete",
+        "revision": 2,
+        "model": "deepseek-flash",
+        "jevModel": "APUS-OpenJev-v1-9B-5949"
+      }
+    ],
+    "appendedRequirementEvidence": {
+      "eventSeq": 56,
+      "question": "r1",
+      "instructions": "state.evidence 是 AI 为完成任务实际执行的工具调用和结果。用户提出过这条要求：「副本文件名必须为 approved-copy.txt。」。根据执行记录，这条要求是否已经满足？禁止类要求（不要、不许、别）在记录里没有违反的操作就算满足；必须做到的要求要在记录里看到做到的证据。",
+      "answerNoul": 0.9994472214907443,
+      "taskFrameEventSeq": 32,
+      "requirement": "副本文件名必须为 approved-copy.txt。"
+    },
+    "testRunTotalSeconds": 63.97,
+    "testRunTotalSecondsSource": "coordinating-agent execution log; distinct from per-Session event spans"
+  },
+  "signature": [
+    {
+      "id": "S01",
+      "group": "入口智能",
+      "name": "一句话，自动选对模型",
+      "source": "entry-routing.ts 已实现",
+      "configuration": "runtime entryRouting：5候选；默认官方Flash",
+      "historicalLiveEvidence": "routing PASS：翻译Flash、推理更强模型；26s",
+      "currentLiveEvidence": "本轮未跑该能力真实 E2E",
+      "remaining": "未覆盖五档全部、弃权/坏线路/隐私拒绝；3秒不是本场景断言",
+      "nextAction": "生产候选逐档真实请求；加入错选反例与端到端延迟分布"
+    },
+    {
+      "id": "S02",
+      "group": "入口智能",
+      "name": "你的要求，原话记牢",
+      "source": "task-frame.ts 已实现；旧卡异步判断与卸载保护已回归；初始要求来源保留尚未实现",
+      "configuration": "taskFrame active；本地浏览器与源码组合均显式 active；maxItems 8/maxMessageChars 600",
+      "historicalLiveEvidence": "task-frame PASS：一条约束进入dock与模型；64s",
+      "currentLiveEvidence": "追加要求真实E2E通过：65事件；seq32任务卡保留「副本文件名必须为 approved-copy.txt。」；seq56 completion.review的r1原文包含此要求，Jev noul=0.9994472214907443；实际write/read目标文件并完成，JSONL重开。本地built Web seq6保留完整初始原话，但create_goal后的seq18以模型objective替换且items=[]，初始附加限制未进入完成核验。",
+      "remaining": "已证初始附加要求丢失，涵盖工具、路径、依赖、输出和验收要求，不只本场景的五类工具。超过600字符不采集，超过8条只保留最新项，不能宣称全部要求受保护；长约束、多条、委派与来源状态仍待验收。",
+      "nextAction": "按P0来源保留设计先独立保存人类要求，再验初始/追加、明确替代或撤销、超限、委派与重开；禁止用模型恰好遵守限制替代保护断言。",
+      "acceptanceState": "partial-evidence-known-gap",
+      "design": "mu-p0-review.html#instruction-retention"
+    },
+    {
+      "id": "S03",
+      "group": "入口智能",
+      "name": "分清新任务和补充",
+      "source": "task-frame 分类决策已实现",
+      "configuration": "taskFrame active",
+      "historicalLiveEvidence": "task-frame PASS：天气切换清空旧要求",
+      "currentLiveEvidence": "本轮未跑该能力真实 E2E",
+      "remaining": "侧问、纠错、冲突要求、切换并发尚无本轮真实闭环",
+      "nextAction": "固定语义正反例，每类真实主模型+Jev+UI断言"
+    },
+    {
+      "id": "S04",
+      "group": "过程智能",
+      "name": "插话 1 秒生效",
+      "source": "task-frame interjection 已实现",
+      "configuration": "interjection active",
+      "historicalLiveEvidence": "goal-interrupt PASS：当前轮收到并先改名；67s",
+      "currentLiveEvidence": "本轮未跑该能力真实 E2E",
+      "remaining": "旧脚本两秒轮询，不能证明1秒SLA；新竞态修复后未重跑浏览器",
+      "nextAction": "记录提交/判定/入轮时间，取消与并发消息反例"
+    },
+    {
+      "id": "S05",
+      "group": "过程智能",
+      "name": "委派不失控",
+      "source": "delegation/progress/handoff、Codex steer 已实现",
+      "configuration": "Codex启用；前台one-shot；进度2秒采样；monitor阈值已配",
+      "historicalLiveEvidence": "codex-forward PASS：卡片补充→steer→目标文件；99s",
+      "currentLiveEvidence": "本轮未跑该能力真实 E2E",
+      "remaining": "该场景没逐项断言命令/文件计数、停机、越界防止、断线恢复，也没断言测试非零",
+      "nextAction": "验收计数与文件实际变化、Stop生效、失败结算；约束拦截另行实现"
+    },
+    {
+      "id": "S06",
+      "group": "过程智能",
+      "name": "没做完，不说做完",
+      "source": "completion-review.ts 已实现；配置依赖/卸载/取消回归修复已通过focused验证；fresh真实源码组合2场景与本地built Web1场景通过",
+      "configuration": "仓库 runtime overlay 为 shadow；本轮源码组合与本地built Web专用overlay为active；未核对生产当前设置",
+      "historicalLiveEvidence": "v0.1五场景不覆盖完成核验",
+      "currentLiveEvidence": "2/2真实main+Jev通过：goal 49事件、47.105s会话跨度，判断2306/3768ms；requirement 65事件、15.699s会话跨度，判断1496/2331ms；均read/write/read后complete rev2，JSONL重开。追加要求seq32入任务卡，seq56入Jev r1；首次审查期间任务卡改变，旧判断被拒，最终按新要求完成。本地shipped Web真实DeepSeek+Jev通过：62条JSONL记录含header（61事件）；首次提前完成被拒，实际read/write/read后complete rev2；两次judged 2914/1960ms；会话跨度45.839s；reload不增事件且拒绝卡重现。",
+      "remaining": "本地不等于prd验收。初始附加人类要求在create_goal后丢失，未保留的要求不参与核验；专用核验依据UI未实现。失败/零用例、禁止类/多条冲突、长证据与生产完整回归未验；当前不确定或请求失败放行，拒绝次数按Session/Goal限额，不是绝对禁止假完成。",
+      "nextAction": "先按P0来源保留设计补齐初始与追加要求，再覆盖真实失败/零用例、禁止类、多条冲突、证据窗口与限额；交付专用核验依据UI并完成生产验收。",
+      "acceptanceState": "local-basic-scenario-passed-known-gap",
+      "design": "mu-p0-review.html#instruction-retention"
+    },
+    {
+      "id": "S07",
+      "group": "过程智能",
+      "name": "日志不刷屏",
+      "source": "output-folding.ts 已实现",
+      "configuration": "outputFolding active；bash测试/构建输出",
+      "historicalLiveEvidence": "folding PASS：折叠事件、终端marker、模型识别role；38s",
+      "currentLiveEvidence": "本轮未跑该能力真实 E2E",
+      "remaining": "旧浏览器场景没有逐字还原hash，没验证折叠后修复通过",
+      "nextAction": "长日志中间唯一错误+原文还原hash；真实修复、测试非零通过"
+    },
+    {
+      "id": "S08",
+      "group": "体感智能",
+      "name": "第一秒告诉你交给了谁",
+      "source": "System3Dock 已实现入口显示",
+      "configuration": "ui-system3 overlay已加载",
+      "historicalLiveEvidence": "历史routing记录实际模型，但脚本不量第一秒",
+      "currentLiveEvidence": "本轮未跑该能力真实 E2E",
+      "remaining": "移入对话流尚设计；1秒显示不可由26s场景总时长证明",
+      "nextAction": "输入到dock首次路由显示独立计时；慢Jev/失败/刷新反例"
+    },
+    {
+      "id": "S09",
+      "group": "体感智能",
+      "name": "等待不沉默",
+      "source": "Codex进度卡已有；统一计时/预计耗时待实现",
+      "configuration": "delegationProgress intervalMs=2000；不等于3秒用户可见SLA",
+      "historicalLiveEvidence": "codex-forward有running卡断言",
+      "currentLiveEvidence": "本轮未跑该能力真实 E2E",
+      "remaining": "统一计时、预计耗时、无进度阶段反馈未实现；3秒必可见未验收",
+      "nextAction": "实现真实开始时间/计时/阶段；ETA需明确估算与无数据状态；浏览器测慢启动/停顿"
+    },
+    {
+      "id": "S10",
+      "group": "体感智能",
+      "name": "每个判断都能展开看依据",
+      "source": "decision/runtime projection 与dock已有",
+      "configuration": "ui-system3 + observeAgentLoop true",
+      "historicalLiveEvidence": "五场景部分查看dock；未逐项展开所有依据",
+      "currentLiveEvidence": "本地built Web可展开原生update_goal拒绝卡，reload后拒绝原话重现且Session事件未增加；完整Jev请求/响应可在JSONL查看。",
+      "remaining": "专用完成核验依据卡及其runtime投影未实现；当前工具错误卡不等于“每个判断均能展开依据”。全判断类型与隐私降级说明未完成本轮web验收。",
+      "nextAction": "实现专用核验依据UI并逐类验请求/响应/降级、持久化恢复与隐私展示；保留已证reload不增判定。",
+      "acceptanceState": "partial-evidence-ui-not-implemented"
+    },
+    {
+      "id": "S11",
+      "group": "体感智能",
+      "name": "可信的结束总结",
+      "source": "独立结束总结设计未实施",
+      "configuration": "未发现专用结束总结配置",
+      "historicalLiveEvidence": "无",
+      "currentLiveEvidence": "本轮未跑该能力真实 E2E",
+      "remaining": "耗时、改动、复核证据与最终文案一致性缺闭环；普通模型final不等于证据生成总结",
+      "nextAction": "从日志产出摘要，覆盖完成/阻塞/取消/拒绝耗尽；只写可验证状态"
+    },
+    {
+      "id": "S12",
+      "group": "管理智能",
+      "name": "慢了自动换",
+      "source": "route-health.ts 已实现",
+      "configuration": "routeHealth window20/minSamples3/TTFT45000ms/minTPS10；probe idle30min",
+      "historicalLiveEvidence": "五场景没有坏线路切换断言",
+      "currentLiveEvidence": "本轮未跑该能力真实 E2E",
+      "remaining": "生产受控慢线/错误线切换、恢复与无候选反例未验收",
+      "nextAction": "隔离fixture代理注入延迟/失败，真实请求验证避开与恢复，不影响生产线路"
+    },
+    {
+      "id": "S13",
+      "group": "管理智能",
+      "name": "看住中转站",
+      "source": "model-integrity设计；route-integrity源码未发现",
+      "configuration": "无routeIntegrity配置；普通routeHealth不能替代",
+      "historicalLiveEvidence": "report声称4.4K额外token观察，不等于监控闭环",
+      "currentLiveEvidence": "本轮未跑该能力真实 E2E",
+      "remaining": "未实现降智/偷换质量监控。主代理已取到AILink12/12、UUAPI15/15、OpenOx8/8完整key并保存在仓库外0600文件；三个中转站的模型调用权限仍待实测。key非空不等于请求获准；指纹不足认证模型身份。",
+      "nextAction": "先用最小请求验证三站模型调用权限，再准备有授权的正常/受控错配基线，保留样本/能力/usage/延迟；实现告警与路由排除后真实反例验收。"
+    },
+    {
+      "id": "S14",
+      "group": "管理智能",
+      "name": "一个大脑，按需更换",
+      "source": "云端provider与Codex已有；本地/Claude/Hermes产品集成规划",
+      "configuration": "overlay云端Flash/Pro/GPT与Codex；未配置本地/Claude/Hermes",
+      "historicalLiveEvidence": "routing+codex-forward覆盖部分云端与Codex",
+      "currentLiveEvidence": "本轮未跑该能力真实 E2E",
+      "remaining": "本地推理模型未验收；DSH已有Claude provider不等于此部署集成；Hermes未接入；统一取消/隐私/错误语义未覆盖",
+      "nextAction": "分成local、Claude、Hermes独立子任务，每类真实启动/产物/中止/失败/隐私验收"
+    }
+  ],
+  "native": [
+    {
+      "id": "N01",
+      "name": "agent loop · 会话日志",
+      "source": "packages/core/agent-loop、session及packages/session",
+      "configuration": "base：agent-loop/session/session-persistence-jsonl；overlay关闭session-log-deepseek不等于关闭JSONL",
+      "realEvidence": "历史5场景依赖loop/log；fresh源码组合49/65事件与JSONL重开；本地built Web61事件（62条记录含header），reload不增事件且历史拒绝卡重现。",
+      "remaining": "浏览器reload不等于进程重启；该组合之外的断电/损坏/并发持久化未本轮真实验收。",
+      "nextAction": "新版本启动、会话恢复与取消保存smoke"
+    },
+    {
+      "id": "N02",
+      "name": "工具 · 沙箱 · 终端",
+      "source": "packages/core/tools、sandbox、terminal、shell",
+      "configuration": "base：sandbox/sandbox-policy/bash-sandbox/fs-sandbox；web：terminal-controller；平台条件存在",
+      "realEvidence": "历史bash场景、两份源码组合真实FS；本地built Web实际read/write/read，源文件和副本SHA-256一致。未在本轮浏览器覆盖终端。",
+      "remaining": "未证明所有sandbox策略/终端重连/越权负例；声明配置≠服务器生效",
+      "nextAction": "固定非法路径/网络负例，终端重连及退出码实测"
+    },
+    {
+      "id": "N03",
+      "name": "子 agent · 后台任务",
+      "source": "packages/subagent、jobs",
+      "configuration": "base jobs/tool-jobs+in-process子代理；overlay Codex enableRunInBackground=false",
+      "realEvidence": "历史Codex前台转发通过",
+      "remaining": "Codex后台被明确禁用；原生jobs与其他provider没有本轮真实验收",
+      "nextAction": "jobs启动/查询/取消/重开；不要宣称Codex后台可用"
+    },
+    {
+      "id": "N04",
+      "name": "目标 · 计划 · 待办",
+      "source": "packages/goal、plan、todo",
+      "configuration": "base：goal/goal-round-driver/plan-mode/tool-todo/tool-goal",
+      "realEvidence": "历史goal-interrupt；两份源码组合与本地built Web真实Goal完成，浏览器首次拒绝不改Goal，最终complete rev2。",
+      "remaining": "plan/todo编辑与持久化；goal停止/预算不由这两个场景全部覆盖",
+      "nextAction": "计划→待办→goal取消/恢复/预算分别真实验收"
+    },
+    {
+      "id": "N05",
+      "name": "上下文 · 压缩",
+      "source": "packages/context、compaction、spill",
+      "configuration": "base token-meter/compaction-basic/tool-result-pruner/image-offload/spill",
+      "realEvidence": "历史System3折叠场景只证明折叠",
+      "remaining": "原生pressure压缩/图片offload/证据保真本轮未实跑",
+      "nextAction": "长上下文实际触发并完成任务，记录前后关键证据与token"
+    },
+    {
+      "id": "N06",
+      "name": "技能 · MCP · hooks",
+      "source": "packages/skill、mcp、hooks",
+      "configuration": "base skill/skill-filesystem/tool-skill/mcp-resources；overlay skillSelection；未证明已连MCP服务/hooks端点",
+      "realEvidence": "历史5场景未专门断言；本轮无",
+      "remaining": "MCP服务可用性、hook协议、技能自动命中与错误回退未验收",
+      "nextAction": "真实本地MCP服务/skill/hook各正反例；逐项核对实例配置"
+    },
+    {
+      "id": "N07",
+      "name": "工作流 · 定时 · webhook",
+      "source": "packages/workflow、schedule、webhook",
+      "configuration": "base workflow-ptc/tool-workflow；web schedule；未找到此次overlay显式webhook配置",
+      "realEvidence": "无专用真实场景结果",
+      "remaining": "定时触发/跨重启/重复投递/webhook鉴权未证；有包不代表公网开放",
+      "nextAction": "隔离workflow→schedule→认证webhook逐项交付，避免开放未授权端口"
+    },
+    {
+      "id": "N08",
+      "name": "Web · 桌面 · SDK",
+      "source": "apps/web、desktop及TS/Python SDK",
+      "configuration": "systemd命令launch web + runtime.patch；不是desktop部署；SDK是客户端能力",
+      "realEvidence": "历史生产Web5场景；本轮本地built shipped Web完成核验1场景及reload通过；源码组合JSONL重开；keyless SDK另列不算live。",
+      "remaining": "本地Web不等于生产部署，原五场景新版回归未实跑；desktop和两SDK真实远程客户端未验收。",
+      "nextAction": "新版Web原五场景与实际生产配置回归；桌面smoke；TS/Python连真实session并恢复。"
+    }
+  ],
+  "planned": [
+    {
+      "id": "initial-instruction-retention",
+      "source": "demonstrated-gap-proposed-p0",
+      "design": "mu-p0-review.html#instruction-retention",
+      "liveE2E": "gap-observed; fix-not-implemented"
+    },
+    {
+      "id": "pre-execution-constraints",
+      "source": "planned-no-implementation",
+      "liveE2E": "not-run"
+    },
+    {
+      "id": "non-goal-carry-on",
+      "source": "planned-no-implementation",
+      "liveE2E": "not-run"
+    },
+    {
+      "id": "semantic-stall-recovery",
+      "source": "planned-no-implementation",
+      "liveE2E": "not-run"
+    }
+  ],
+  "unitAndKeyless": "主代理实跑243 unit/18文件通过，completion-review/task-frame/decision-kernel三个文件各100%覆盖；配置依赖、卸载及取消回归已修复并验证。SDK/keyless结果不计为真实E2E，不代表生产已验收。",
+  "nextOrder": [
+    "initial-instruction-retention-after-design-approval",
+    "completion-negative-requirements-and-dedicated-review-criteria-ui",
+    "task-card-and-existing-five-browser-regression",
+    "constraints-then-carry-on-and-semantic-recovery-after-design-approval",
+    "three-relay-model-permission-checks-then-model-integrity-probes-in-parallel",
+    "timing-eta-summary",
+    "local-model-claude-hermes-and-native-smokes"
+  ],
+  "acceptanceAssessment": {
+    "allSignatureItemsAccepted": false,
+    "signatureItemCount": 14,
+    "historicalProductionBrowserCasesPassed": 5,
+    "currentInProcessLiveCasesPassed": 2,
+    "currentLocalShippedWebCasesPassed": 1,
+    "currentProductionAcceptance": "not-run",
+    "scope": "Counts refer to distinct verified scenarios, not fully accepted signature items. S02/S06 retain a demonstrated initial-instruction loss; S10 dedicated review-criteria UI is not implemented."
+  },
+  "currentBrowser": {
+    "result": "1/1 passed",
+    "scope": "built-shipped-web-profile-local-browser; live DeepSeek+Jev; native Goal/FS; isolated temporary workspace; not production deployment",
+    "report": "completion-browser-result.json",
+    "sessionLog": "completion-browser-session.jsonl",
+    "screenshot": "completion-browser.png",
+    "recordedAt": "2026-10-08T14:29:27Z",
+    "recordCount": 62,
+    "eventCountExcludingHeader": 61,
+    "recordCountDefinition": "62 JSONL records include one Session header; 61 events are seq0..60. The two in-process reports contain 49/65 events without a header.",
+    "sessionDurationMs": 45839,
+    "modes": {
+      "taskFrame": "active",
+      "completionReview": "active"
+    },
+    "mainModel": "deepseek-flash",
+    "jevModel": "APUS-OpenJev-v1-9B-5949",
+    "judgementElapsedMs": [
+      2914,
+      1960
+    ],
+    "judgementReasons": [
+      "judged",
+      "judged"
+    ],
+    "reviews": [
+      {
+        "eventSeq": 25,
+        "version": 1,
+        "goalId": "goal-1a0e493d-68f3-4f7d-b078-183d496ca4d3",
+        "decision": "incomplete",
+        "unmet": [],
+        "goalUnmet": true,
+        "refused": true
+      },
+      {
+        "eventSeq": 52,
+        "version": 1,
+        "goalId": "goal-1a0e493d-68f3-4f7d-b078-183d496ca4d3",
+        "decision": "complete",
+        "unmet": [],
+        "goalUnmet": false,
+        "refused": false
+      }
+    ],
+    "goal": {
+      "phase": "complete",
+      "revision": 2,
+      "completeEventSeq": 53
+    },
+    "evidenceSequence": "update_goal complete call seq23 -> review incomplete/refused seq25 -> error tool result seq26 -> actual read seq30/write seq35/read seq40 -> native get_goal seq45 -> complete review seq52 -> native Goal complete revision2 seq53",
+    "artifact": {
+      "name": "acceptance-copy.txt",
+      "content": "approved\n",
+      "sourceUnchanged": true,
+      "sourceSHA256": "7f8518f7db5e9a55049f49c4ea6d6e8f509695231e60cbd607bcb36c88a75a14",
+      "copySHA256": "7f8518f7db5e9a55049f49c4ea6d6e8f509695231e60cbd607bcb36c88a75a14"
+    },
+    "reload": {
+      "retainsCompletionAndDenial": true,
+      "doesNotAddEvents": true,
+      "doesNotAddJudgements": true,
+      "scope": "browser reload; not a process restart or independent JSONL close/open"
+    },
+    "reviewCriteriaUi": "not-implemented; current UI shows the native tool denial; full review criteria and responses are in logged judgements",
+    "limitation": "One explicitly induced premature-completion scenario passed. This does not establish general completion accuracy, instruction enforcement, production deployment, or all 14 signature items.",
+    "runtimeVersion": "0.1.7-rc.2",
+    "exactUIVersionSource": "completion-browser-result.json /uiVersion",
+    "sourceHashes": {
+      "completion-review.ts": "9f60e4dbaa07a6d22af964382e4e674abdc7a593402548625e20769015e509ba",
+      "task-frame.ts": "893bf341b256d9bca94d211af0394869729ee8e2ba5d6a9f86966e7a8ba3b99a",
+      "decision-kernel.ts": "a9bbb692c592aa0d29fe47569e97f97dbef9ad0c29732e0ce1f249034219fa8a",
+      "index.ts": "181db1f6305908fd38346be68fca69c0f4176fec83653778d480886ca3ebb2e4"
+    }
+  },
+  "knownGaps": [
+    {
+      "id": "initial-instruction-retention",
+      "status": "demonstrated-gap-proposed-p0",
+      "affects": [
+        "S02",
+        "S06"
+      ],
+      "evidence": "completion-browser-session.jsonl: seq6 task-frame.goal holds the full human message; seq18 after native create_goal replaces it with the model-written objective and items=[]; completion reviews only receive that objective and no initial extra requirements.",
+      "scope": "Initial additional human requirements can be absent from review, including allowed/forbidden tools, paths, dependencies, output and acceptance requirements. This is not limited to the five tools used by this scenario.",
+      "capacity": "Messages longer than maxMessageChars are skipped by the task frame; additions beyond maxItems retain only the most recent items. Neither limit is a safety guarantee or proof that all human requirements are preserved.",
+      "design": "mu-p0-review.html#instruction-retention",
+      "nextAction": "After design approval, preserve human instruction sources independently of model Goal objectives, then validate initial/appended requirements, explicit replacement/revocation, capacity overflow, reopen and covered execution paths with real E2E."
+    }
+  ],
+  "configurationAndLifecycleVerification": {
+    "status": "fixed-and-focused-verified",
+    "configurationDependency": "An active/shadow completion review rejects taskFrame.mode=off at load; a missing taskFrame is rejected. Off review may use an off frame; shadow/active frames remain supported.",
+    "unload": "Plugin unload aborts a pending review and delegates to remaining tool policies without refusing native completion or appending a late completion-review record. Caller cancellation still prevents execution; late provider answers after abort do not append a new judgement. A judgement committed before unload remains logged but its result is not applied after unload.",
+    "taskFrameUnload": "Task-frame asynchronous work does not append a late frame after unload.",
+    "verificationOwner": "coordinating agent; focused unit regression execution",
+    "unitTestsPassed": 243,
+    "unitTestFilesPassed": 18,
+    "perFileCoveragePercent": {
+      "completion-review.ts": 100,
+      "task-frame.ts": 100,
+      "decision-kernel.ts": 100
+    },
+    "tests": [
+      "../../packages/experimental/system3/tests/completion-review.spec.ts",
+      "../../packages/experimental/system3/tests/task-frame.spec.ts",
+      "../../packages/experimental/system3/tests/decision-kernel.spec.ts"
+    ],
+    "limitation": "These configuration/lifecycle mechanisms are deterministic focused regressions; the three fresh real scenarios validate normal active execution, not fault injection of every lifecycle path."
+  }
+}

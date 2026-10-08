@@ -1,0 +1,175 @@
+{
+  "schemaVersion": 1,
+  "status": "design-review-draft-not-implemented",
+  "checkedDate": "2026-10-08",
+  "upstream": {
+    "repository": "https://github.com/qybaihe/mu",
+    "defaultBranch": "main",
+    "verifiedHead": "537d028f483eae210f049a922e9c8e473a1b005d",
+    "localReadHead": "47c51b0c68f622e9953b7f501d165fe474eec588",
+    "reviewedJudgeFilesUnchangedBetweenHeads": true,
+    "muExecuted": false,
+    "remoteJudgeCalled": false
+  },
+  "retainP0": [
+    "completion-review-release-closure",
+    "model-integrity-route-quality"
+  ],
+  "scores": {
+    "scale": "1-5 higher is better; engineering judgement, not measurement",
+    "order": [
+      "userValue",
+      "demoClarity",
+      "expectedReliability",
+      "costAdvantage"
+    ]
+  },
+  "candidates": [
+    {
+      "rank": 1,
+      "id": "pre-execution-constraints",
+      "priority": "P0-proposed",
+      "scores": [
+        5,
+        5,
+        3,
+        3
+      ],
+      "mu": "implemented-with-fail-open-limits",
+      "dsh": "native-permissions-and-task-frame-exist-semantic-check-missing",
+      "e2e": "initial-only-five-tools -> simplified native Goal -> forbidden read-only tool never executes -> allowed task completes; initial/appended sources reach completion review; over-limit/reopen/quotes/PTC/child coverage; permitted edit and explicit revocation pass"
+    },
+    {
+      "rank": 2,
+      "id": "non-goal-carry-on",
+      "priority": "P0-proposed",
+      "scores": [
+        5,
+        5,
+        4,
+        4
+      ],
+      "mu": "implemented-bounded-nudges",
+      "dsh": "goal-continuation-exists-non-goal-semantic-stop-check-missing",
+      "e2e": "promised-tool-actually-runs; completed-answer-approval-stop-and-goal-have-no-extra-round"
+    },
+    {
+      "rank": 3,
+      "id": "semantic-stall-recovery",
+      "priority": "P0-proposed",
+      "scores": [
+        5,
+        5,
+        3,
+        3
+      ],
+      "mu": "monitor-and-confirmed-rewind-implemented",
+      "dsh": "repeat-and-supervision-rules-exist-semantic-course-check-missing",
+      "e2e": "alternate-approach-fixes-fixture; legitimate-polling-and-converging-debug-not-interrupted"
+    },
+    {
+      "rank": 4,
+      "id": "recoverable-context-evidence",
+      "priority": "P1; preserve-existing-lossless-P0",
+      "scores": [
+        4,
+        4,
+        4,
+        3
+      ],
+      "mu": "implemented-measurements-not-task-e2e",
+      "dsh": "native-pruner-compaction-spill-and-system3-folding-exist",
+      "e2e": "long-log-task-passes-and-source-hash-restores; all-tests-query-keeps-passing-evidence"
+    },
+    {
+      "rank": 5,
+      "id": "capability-disclosure",
+      "priority": "P1",
+      "scores": [
+        3,
+        3,
+        4,
+        3
+      ],
+      "mu": "catalog-discovery-and-opening-implemented",
+      "dsh": "deferLoading-and-skill-selection-exist-not-equivalent-to-capability-catalog",
+      "e2e": "hidden-tool-discovered-and-real-artifact-valid; wrong-or-missing-judge-retains-search-and-permissions"
+    },
+    {
+      "rank": 6,
+      "id": "necessary-clarification",
+      "priority": "P1-narrow",
+      "scores": [
+        3,
+        4,
+        3,
+        2
+      ],
+      "mu": "preflight-hint-implemented-not-forced-clarify-gate",
+      "dsh": "questions-and-approval-exist-semantic-advice-missing",
+      "e2e": "one-essential-choice-before-dependent-write; inferable-task-and-answered-question-no-extra-prompt"
+    },
+    {
+      "rank": 7,
+      "id": "external-injection-screen",
+      "priority": "P1-shadow-threat-dependent",
+      "scores": [
+        4,
+        5,
+        2,
+        2
+      ],
+      "mu": "pure-text-screen-implemented-not-security-guarantee",
+      "dsh": "native-permission-base-exists-semantic-screen-not-found-in-system3",
+      "e2e": "local-canary-not-exfiltrated-and-task-correct; quoted-security-research-and-install-docs-retained"
+    }
+  ],
+  "allCandidateE2EResults": "not-run-proposed-acceptance-only",
+  "defer": [
+    "automatic-memory-generalization",
+    "model-identity-certification",
+    "judge-only-destructive-rewind",
+    "hive-expansion-before-outcome-baseline"
+  ],
+  "report": "mu-p0-review.html",
+  "existingBaseline": [
+    "process-supervision",
+    "task-frame"
+  ],
+  "proposedTotalDeliveryOrder": [
+    "task-frame-product-acceptance",
+    "pre-execution-constraints",
+    "completion-review",
+    "non-goal-carry-on",
+    "semantic-stall-recovery",
+    "route-quality-measurement"
+  ],
+  "parallelWork": "Model-integrity route-quality probes continue alongside new candidate work; no identity certification and no freeze until monitoring is fully implemented.",
+  "humanGate": "Review three proposed implementations, file scope, extension hooks, durable events, configuration and real E2E before coding.",
+  "proposedTaglines": [
+    "你补充的要求，任务卡实时记住。",
+    "你说别改的地方，动手前拦住。",
+    "做完有证据，验收看得见。",
+    "说了接着做，就真的接着做。",
+    "卡住会换路，结果能验证。",
+    "线路表现变差，有实测、有依据。"
+  ],
+  "designRevision": 2,
+  "prerequisite": "Persist the applicable original human instructions independently of model-authored Goal objectives; retain initial and appended requirements across create/edit/reopen. Presentation caps do not revoke constraints.",
+  "candidateSharedSemantics": {
+    "humanInstructionSource": "Human messageId + taskScopeId + original text in Session; derived applicability, explicit supersession/revocation and instruction revision are persisted. Model goal creation/edit is not revocation.",
+    "coverage": "All actual tool calls first use local explicit capability/path/allowlist/denylist checks, including read-only and delegation. Jev only handles relevant unresolved intent.",
+    "initialParsing": "Related tool execution waits once for a bounded current-input parse. Cancel or instruction-version changes invalidate pending judgements.",
+    "limits": "Display and prompt caps never silently discard effective prohibitions; incomplete coverage is visible, while explicit deterministic prohibitions remain enforced.",
+    "continuationAndRecovery": "Neither can bypass a denied tool, required approval, user stop or valid instructions. State-version keyed semantic reuse and shared per-request budgets prevent repeated judge calls."
+  },
+  "reviewFindings": [
+    {
+      "id": "initial-requirements-overwritten",
+      "status": "verified-code-and-local-browser-log",
+      "evidence": "completion-browser-session.jsonl seq6 preserves full human instruction; seq18 native create_goal replaces goal text and clears items. Clean browser case follows allowed tools; an earlier isolated fixture run used glob outside the five-tool restriction and later completed. Not counted as accepted browser run.",
+      "next": "Implement instruction-source retention as a prerequisite of the proposed constraint P0; add forbidden read-only tool E2E."
+    }
+  ],
+  "publicCopyRule": "All slogans are proposals; published claims must state supported execution scope and measured scenarios. Unknown judge answers and bounded completion refusals are not absolute enforcement."
+}

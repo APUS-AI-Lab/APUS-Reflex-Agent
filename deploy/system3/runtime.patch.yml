@@ -138,6 +138,15 @@
           maxItems: 8
           maxMessageChars: 600
           interjection: active
+        completionReview:
+          mode: shadow
+          yes: 0.5
+          no: 0.3
+          deadlineMs: 15000
+          sessionDataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'
+          maxRefusals: 2
+          evidenceCalls: 20
+          resultChars: 300
         skillSelection:
           sessionDataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'
           minConfidence: 0.5

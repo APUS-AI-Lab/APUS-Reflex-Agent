@@ -183,11 +183,14 @@ export function validateSystem3TaskFrame(config: System3TaskFrameConfig): void {
  * while that goal is open no message replaces it. Otherwise the first message of a Session starts the frame; each later
  * message is judged after it is claimed, without delaying the step, and its result shapes the frame from the next step on;
  * with `interjection`, a message queued behind a running turn is judged on arrival and may move into that turn.
+ * A judgement of a replaced frame is discarded; a message claimed while that judgement waits is judged once more against
+ * the current frame without delaying the step.
  * In `shadow` mode only judgements are recorded; the frame stays in memory and the model never sees it.
  * @param ctx - Plugin context with the system prompt; listeners are disposed with it.
  * @param settings - Task-frame settings, privacy policy, and Jev options.
+ * @returns The reader of an Agent's current frame, for decisions that check work against it.
  */
-export function installSystem3TaskFrame(ctx: Context, settings: System3TaskFrameSettings): void {
+export function installSystem3TaskFrame(ctx: Context, settings: System3TaskFrameSettings): (agent: Agent) => System3TaskFrame | null {
   const { config } = settings
   validateSystem3TaskFrame(config)
   const active = config.mode === 'active'
@@ -230,11 +233,14 @@ export function installSystem3TaskFrame(ctx: Context, settings: System3TaskFrame
     if (active) agent.session.append('system3/task-frame', frame)
     frames.set(agent.session, frame)
   }
-  const judge = async (agent: Agent, message: System3TaskMessage): Promise<FrameOutcome> => {
+  const judge = async (agent: Agent, message: System3TaskMessage): Promise<FrameOutcome | undefined> => {
+    if (lifetime.signal.aborted) return undefined
     const frame = frameOf(agent)
     if (frame === null) { record(agent, message, []); return 'none' }
     const result = await runSystem3Decision(ctx, shared, system3TaskFrameDecision, config, agent,
       { goal: frame.goal.text, message: message.text }, lifetime.signal)
+    lifetime.signal.throwIfAborted()
+    if (frameOf(agent) !== frame) return undefined
     // While a DSH goal is open it is the task, so a message cannot replace it.
     if (result.outcome === 'new-task' && !goalOpen(agent)) record(agent, message, [])
     else if (result.outcome === 'add') record(agent, frame.goal, [...frame.items, message].slice(-config.maxItems))
@@ -249,8 +255,8 @@ export function installSystem3TaskFrame(ctx: Context, settings: System3TaskFrame
     queues.set(agent, settled.then(() => undefined))
     return settled
   }
-  // Queued messages judged on arrival; their claim at the next step reuses that judgement instead of asking again.
-  const early = new WeakMap<Session, Set<MessageId>>()
+  // A claimed message reuses its pending judgement, or gets one replacement if that judgement becomes stale.
+  const early = new WeakMap<Session, Map<MessageId, Promise<FrameOutcome | undefined>>>()
   const topLevel = (agent: Agent): boolean => config.mode !== 'off' && (agent.session.header.delegationDepth ?? 0) === 0
 
   // A DSH goal sets the task: creating one starts a frame from its objective, editing the objective keeps the requirements.
@@ -266,9 +272,15 @@ export function installSystem3TaskFrame(ctx: Context, settings: System3TaskFrame
   ctx.on('agent/pre-step', ({ agent, messages }, next) => {
     if (topLevel(agent)) {
       for (const message of messages) {
-        if (early.get(agent.session)?.delete(message.id) === true) continue
+        const pending = early.get(agent.session)?.get(message.id)
+        early.get(agent.session)?.delete(message.id)
         const text = personText(message, config.maxMessageChars)
-        if (text !== undefined) void enqueue(agent, { messageId: message.id, text })
+        if (text === undefined) continue
+        const entry = { messageId: message.id, text }
+        if (pending === undefined) void enqueue(agent, entry)
+        else void pending.then((outcome) => {
+          if (outcome === undefined && !lifetime.signal.aborted) void enqueue(agent, entry)
+        })
       }
     }
     return next()
@@ -289,8 +301,7 @@ export function installSystem3TaskFrame(ctx: Context, settings: System3TaskFrame
       return undefined
     }
   }
-  const interject = async (agent: Agent, message: System3TaskMessage, outcome: FrameOutcome | undefined): Promise<void> => {
-    if (outcome === undefined) return
+  const interject = async (agent: Agent, message: System3TaskMessage, outcome: FrameOutcome): Promise<void> => {
     const decision = outcome === 'add' ? 'steer' : 'keep'
     let delivered = false
     const controller = ctx.get('sessionController')
@@ -312,11 +323,18 @@ export function installSystem3TaskFrame(ctx: Context, settings: System3TaskFrame
       if (!topLevel(agent) || agent.status !== 'running' || !agent.inbox.nextTurn.some(queued => queued.id === message.id)) return
       const text = personText(message, config.maxMessageChars)
       if (text === undefined) return
-      let ids = early.get(agent.session)
-      if (ids === undefined) { ids = new Set(); early.set(agent.session, ids) }
-      ids.add(message.id)
+      const judgements = early.get(agent.session) ?? new Map<MessageId, Promise<FrameOutcome | undefined>>()
+      early.set(agent.session, judgements)
       const entry = { messageId: message.id, text }
-      void enqueue(agent, entry).then(outcome => interject(agent, entry, outcome))
+      const pending = enqueue(agent, entry)
+      judgements.set(message.id, pending)
+      void pending.then((outcome) => {
+        if (outcome === undefined) {
+          if (judgements.get(message.id) === pending) judgements.delete(message.id)
+          return
+        }
+        return interject(agent, entry, outcome)
+      })
     })
   }
 
@@ -324,4 +342,5 @@ export function installSystem3TaskFrame(ctx: Context, settings: System3TaskFrame
     ctx.effect(() => ctx.systemPrompt.context({ name: 'system3:task-frame', order: ctx.systemPrompt.getContextOrder('SYSTEM3_TASK_FRAME'),
       text: ({ agent }) => agent === undefined ? '' : taskFrameText(frameOf(agent)) }), 'system3.taskFrame.context()')
   }
+  return frameOf
 }

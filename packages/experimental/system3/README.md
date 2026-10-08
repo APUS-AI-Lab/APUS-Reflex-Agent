@@ -75,6 +75,10 @@ Candidate and Jev network admission both use the privacy policy before sending t
 
 A `system3/skill-decision` records the exact request, validated response and reported usage, selection, and proposed native `injectionMessageId`. The loaded body uses `skill-invocation` instructions and becomes model-visible only when the loop commits that exact `user/message`; it grants no tool permission. The `system3Runtime` wire projection exposes `entry.suggested`, `entry.adopted`, and `entry.used` independently, keeps up to 100 earlier decisions whose input reached a turn in `history`, and `skill.selected` separately from `skill.injected`. Actual use requires model output or a streamed attempt carrying content deltas or completed content blocks in the exact input's turn. Usage, block placeholders, and finish-only errors or aborts do not confirm a response; content received before a later error still does. Admission alone never claims dispatch. Replay rebuilds these facts without Jev calls and exposes neither provider inputs nor complete probabilities to clients.
 
+### Completion review
+
+`completionReview: { mode, yes, no, deadlineMs, sessionDataClasses, maxRefusals, evidenceCalls, resultChars }` defaults to `false` and requires `taskFrame`; enabling it without one fails at load. An `active` or `shadow` review requires `taskFrame.mode` to be `active` or `shadow`; an `off` review may use an `off` task frame. Every field is required. When a top-level Agent calls `update_goal` with action `complete` for the DSH goal its task frame follows, one Jev request (decision `completion.review`) asks a yes/no question for the goal and one for each requirement in the frame (`goal`, `r1`…`rN`) before the tool runs. Jev reads only a digest of the latest `evidenceCalls` tool calls, each with its main argument (a command, path, action, query, or URL) and the first and last `resultChars` characters of its result; the model's own text and its `update_goal` calls are left out. A probability at or below `no` is a confident "not met" and one at or above `yes` is "met". In `active` mode a confident "not met" on the goal or any requirement denies the call, and the model receives the refusal as the tool result; after `maxRefusals` refusals of one goal in one Session later completions of that goal run without refusal. Independent root forks have separate allowances. If the task frame changes while a successful Jev response is pending, the old answer becomes `unsure`; active mode uses the same allowance to refuse that obsolete application and quotes the current frame for a new review. `shadow` records reviews without refusing, and `off` asks nothing. Unloading the plugin cancels pending reviews and delegates their calls to the remaining tool policies without a refusal or new review record. Caller cancellation still prevents execution. Decision calls already cancelled at entry dispatch nothing, and provider responses received after cancellation produce no judgement. Every review writes `system3/judgement` with the exact request and response, then `system3/completion-review` with `goalId`, `decision` (`complete`, `incomplete`, or `unsure`), the message ids of `unmet` requirements, `goalUnmet`, and `refused`. Privacy refusal, a Jev failure, and the `deadlineMs` timeout let the completion run as `unsure`. Delegated child Agents, nested calls, other goal actions, and goals the task frame does not follow are not reviewed. The questions and thresholds were set on labelled sets run against the deployed Jev ([test](tests/completion-review.e2e.ts)).
+
 <a id="understand-the-implementation"></a>
 ## Understand the implementation
 
@@ -87,7 +91,7 @@ The service owns no second agent loop. Its explicit `shadowDecision(session, req
 
 #### What the model sees
 
-Without entry routing, a host chooses which service results enter model history. Entry routing sends the current text in `state.input`, baseline selection in `state.baseline`, and bounded choice descriptions in `questions.route.criteria` to Jev. Its receipt is not added to generation history. An adopted model change follows the native Session API model-selection behavior. With `handoffPack`, the delegation instruction may end with the person's earlier requirements, and in `advise` mode, process supervision adds one user message with source `system3-supervision` per fired rule, in `active` mode output folding replaces repeated lines of a shell result with markers, and the task frame adds a runtime-context snapshot, for example:
+Without entry routing, a host chooses which service results enter model history. Entry routing sends the current text in `state.input`, baseline selection in `state.baseline`, and bounded choice descriptions in `questions.route.criteria` to Jev. Its receipt is not added to generation history. An adopted model change follows the native Session API model-selection behavior. With `handoffPack`, the delegation instruction may end with the person's earlier requirements, and in `advise` mode, process supervision adds one user message with source `system3-supervision` per fired rule, in `active` mode output folding replaces repeated lines of a shell result with markers, the task frame adds a runtime-context snapshot, and in `active` mode a refused goal completion returns the completion refusal as the `update_goal` result, for example:
 
 ##### Missing verification advice
 
@@ -116,13 +120,30 @@ Without entry routing, a host chooses which service results enter model history.
 - <later requirement, verbatim>
 ```
 
+##### Completion refusal
+
+```markdown
+[System3 完成核验] 执行记录里还看不到以下内容已经完成的证据：
+- 目标：<the goal, verbatim, when judged not met>
+- 用户要求：<each unmet requirement, verbatim>
+请先完成并验证；如果做不到或要求之间有冲突，请向用户说明并请用户决定，不要标记完成。
+```
+
+##### Obsolete completion review
+
+```markdown
+[System3 完成核验] 任务卡在核验期间更新，请按当前目标和要求重新核验后再标记完成。
+- 当前目标：<当前目标原话>
+- 当前用户要求：<当前要求原话>
+```
+
 #### Token effect
 
-Entry routing adds a Jev call for each eligible admitted prompt when privacy and size checks permit it; provider usage is retained when reported. The evidence method bounds caller projections, and usage records distinguish provider counts from estimates. Each supervision advice adds 50 to 100 input tokens, and a hand-off pack adds its forwarded messages plus about 60 tokens and one Jev request; `missing-evidence` in `advise` mode adds at most one model step per turn. Output folding calls no model and removes the folded characters from the tool result. The task frame adds one Jev request per later message, in parallel with the step, and a runtime-context snapshot of the goal and the kept requirements each time they change.
+Entry routing adds a Jev call for each eligible admitted prompt when privacy and size checks permit it; provider usage is retained when reported. The evidence method bounds caller projections, and usage records distinguish provider counts from estimates. Each supervision advice adds 50 to 100 input tokens, and a hand-off pack adds its forwarded messages plus about 60 tokens and one Jev request; `missing-evidence` in `advise` mode adds at most one model step per turn. Output folding calls no model and removes the folded characters from the tool result. The task frame discards answers for replaced frames; a queued message stays for the next turn, and one already claimed gets at most one replacement judgement. It adds one Jev request per later message, in parallel with the step, and a runtime-context snapshot of the goal and the kept requirements each time they change. The completion review adds one Jev request per reviewed completion, which the `update_goal` call waits for up to `deadlineMs`, and a refusal adds about 80 tokens plus the quoted goal and requirements.
 
 #### KV Cache effect
 
-Observation and shadow receipts do not change the generation prefix. Automatic Skill injection appends bounded native instruction content before generation. Supervision advice is appended after the latest tool result, so the cached prefix is unchanged. A folded tool result is folded before it enters history, so later requests reuse it unchanged. A task-frame change appends a new runtime-context snapshot after the latest message and leaves the cached prefix unchanged. An adopted generation-model switch may lose provider cache reuse; tool schemas are unchanged.
+Observation and shadow receipts do not change the generation prefix. Automatic Skill injection appends bounded native instruction content before generation. Supervision advice is appended after the latest tool result, so the cached prefix is unchanged. A folded tool result is folded before it enters history, so later requests reuse it unchanged. A task-frame change appends a new runtime-context snapshot after the latest message and leaves the cached prefix unchanged. A completion refusal is a tool result appended after the latest message, so the cached prefix is unchanged. An adopted generation-model switch may lose provider cache reuse; tool schemas are unchanged.
 
 ## Known Limitations and Deferred Work
 
@@ -131,6 +152,7 @@ Observation and shadow receipts do not change the generation prefix. Automatic S
 - Entry routing covers the Session API's eligible idle text prompts, not headless, SDK, ACP, attachments, queued batches, or active steering. It does not dispatch experts or control task completion.
 - The service does not enforce OS privacy isolation. Workspaces, environment variables, subprocess egress, and export consent remain host responsibilities.
 - Entry decisions lack conversation history and must abstain when the new text needs it. Declared data classes and candidate descriptions are deployment facts; this package cannot verify their accuracy or prove routing quality and cost savings.
+- The completion review relies on a 9B Jev model reading a bounded digest: it can refuse finished work or pass unfinished work, it sees only what the digest keeps, and it fails open. Once `maxRefusals` refusals of a goal are used, later completions of that goal run even when judged not met.
 
 <a id="dev-note"></a>
 ### Dev Note

@@ -64,6 +64,7 @@ The [format references](persistence-changes/historical-formats/README.md) cover 
 | `event:subagent/model-selection-policy` | event | `a6567ccb2e530606b775371eb4fa31468d72084339968e8b0440a516a23b39dc` | [`{ type: "subagent/model-selection-policy" }`](#persistence-type-sha256-a6567ccb2e530606b775371eb4fa31468d72084339968e8b0440a516a23b39dc) |
 | `event:subagent/steer` | event | `124270b202ad483c85f6c8bbb226d0e6e7f58f8510d5d22aadeb246f77671ec5` | [`{ type: "subagent/steer" }`](#persistence-type-sha256-124270b202ad483c85f6c8bbb226d0e6e7f58f8510d5d22aadeb246f77671ec5) |
 | `event:system/message` | event | `69081694be231d56fd9580ba14645fd5e35373202605d5c5c841a9435b5fa3b1` | [`{ type: "system/message" }`](#persistence-type-sha256-69081694be231d56fd9580ba14645fd5e35373202605d5c5c841a9435b5fa3b1) |
+| `event:system3/completion-review` | event | `75ad06e893027545fee49d958f7cdaaee1ef6411d8de5d14295a5befca1e1214` | [`{ type: "system3/completion-review" }`](#persistence-type-sha256-75ad06e893027545fee49d958f7cdaaee1ef6411d8de5d14295a5befca1e1214) |
 | `event:system3/decision` | event | `b923b60d7839c5e3d3e03be20abbe587b9029440c839b8459cd1672149f971fe` | [`{ type: "system3/decision" }`](#persistence-type-sha256-b923b60d7839c5e3d3e03be20abbe587b9029440c839b8459cd1672149f971fe) |
 | `event:system3/delegation-alert` | event | `20dcc98052694791c25e6c5320ca2cd95d97ec162b4665bc76648da80f7033e0` | [`{ type: "system3/delegation-alert" }`](#persistence-type-sha256-20dcc98052694791c25e6c5320ca2cd95d97ec162b4665bc76648da80f7033e0) |
 | `event:system3/delegation-progress` | event | `d2a568622f9a85d22c3f32d648d2f9a0b80f05b8f76e0c39268ddbc4c2e36ee2` | [`{ type: "system3/delegation-progress" }`](#persistence-type-sha256-d2a568622f9a85d22c3f32d648d2f9a0b80f05b8f76e0c39268ddbc4c2e36ee2) |
@@ -1020,6 +1021,17 @@ Source: [`packages/subagent/subagent/src/index.ts:214`](../packages/subagent/sub
 Source: [`packages/core/session/src/types.ts:330`](../packages/core/session/src/types.ts)
 
 ### `system3/*`
+
+<a id="system3completion-review--log-only"></a>
+
+#### `system3/completion-review` — log-only
+
+```ts persistence-catalog
+/** A goal completion was reviewed; a refusal reaches the model as the `update_goal` denial reason. */
+'system3/completion-review': System3CompletionReview
+```
+
+Source: [`packages/experimental/system3/src/completion-review.ts:51`](../packages/experimental/system3/src/completion-review.ts)
 
 <a id="system3decision--log-only"></a>
 
@@ -2261,6 +2273,14 @@ SHA-256: `94c56aeb1564ad735eb773d88636b40761d063efa1610f1308004d32923f5378`
 
 `"in_progress"`
 
+<a id="persistence-type-sha256-b9bed1a761ad00bc82071a939e2b7f1ff2658c7d0decfca9c52ef8c3bc4009f7"></a>
+
+### `"incomplete"`
+
+SHA-256: `b9bed1a761ad00bc82071a939e2b7f1ff2658c7d0decfca9c52ef8c3bc4009f7`
+
+`"incomplete"`
+
 <a id="persistence-type-sha256-e7ce49f12953583fad217bf80fb9f1463acff2c3e9471a823782661675fb124c"></a>
 
 ### `"initial"`
@@ -3236,6 +3256,14 @@ SHA-256: `fc9ea50524729ee321154670cf9ef23a5b0cc0ce6d9f9f03534e4aeae29ab4f4`
 SHA-256: `e1fc9a8f1f3e4a6dcf579dd940ed677327b03010fbafdd06e1b664afaaa89036`
 
 `"system3-supervision"`
+
+<a id="persistence-type-sha256-c127f32490a924e4323e6d6b0236cf8f6ce86d7c28756d76a74579e5bf91f653"></a>
+
+### `"system3/completion-review"`
+
+SHA-256: `c127f32490a924e4323e6d6b0236cf8f6ce86d7c28756d76a74579e5bf91f653`
+
+`"system3/completion-review"`
 
 <a id="persistence-type-sha256-d74872f6b1aa352f81a5680d445f517d81ead9e575664893712978ceb90b5064"></a>
 
@@ -5740,6 +5768,27 @@ One of:
 - `"retry"`
 - `"unknown"`
 
+<a id="persistence-type-sha256-bef9004986cdb659d4d1d8bef971c83f32387d81fa1cf3d37d52f6939b5fdb91"></a>
+
+<a id="persistence-type-packagesexperimentalsystem3srccompletion-reviewtssystem3completionreview"></a>
+
+<a id="persistence-type-system3completionreview"></a>
+
+### `System3CompletionReview`
+
+SHA-256: `bef9004986cdb659d4d1d8bef971c83f32387d81fa1cf3d37d52f6939b5fdb91`
+
+Sources: [`packages/experimental/system3/src/completion-review.ts:32`](../packages/experimental/system3/src/completion-review.ts)
+
+| Property | Presence | Type |
+|---|---|---|
+| `decision` | required | [`union (3 variants)`](#persistence-type-sha256-62b28bb2ad4bbac6748b8f5a278a039f353f4382a6586544179f16fb8030944c) |
+| `goalId` | required | `string` |
+| `goalUnmet` | required | `boolean` |
+| `refused` | required | `boolean` |
+| `unmet` | required | [`string[]`](#persistence-type-sha256-93c33d9687613293f8c95d46c4d922fe9ceae83b84c384beff5c3315abe005f2) |
+| `version` | required | `1` |
+
 <a id="persistence-type-sha256-07e0f8b8be750a4d003f7df86b627695c6783390252c0bac1fdfb180de4d50d4"></a>
 
 <a id="persistence-type-packagesexperimentalsystem3-policysrcindextssystem3dataclass"></a>
@@ -7176,6 +7225,18 @@ One of:
 - [`{ ignorable?, seq, sourceEventSeqs?, surfaceOp, … }`](#persistence-type-sha256-998f22585a5d73ec005365e203f07fc3b3a029e82323fdda3fd7f13b0a9639d0)
 - [`{ ignorable?, seq, surfaceOp, time, … }`](#persistence-type-sha256-7af85bf70d4eafce63e739adae38ea85501e68df3a0e22f97f3a0be90fd9e4cb)
 - [`{ ignorable?, seq, time, type }`](#persistence-type-sha256-e3e77b26f0148755a505f5b8ea843a3be117827d4703bb5754d9dc8ddbef521f)
+
+<a id="persistence-type-sha256-62b28bb2ad4bbac6748b8f5a278a039f353f4382a6586544179f16fb8030944c"></a>
+
+### `union (3 variants)`
+
+SHA-256: `62b28bb2ad4bbac6748b8f5a278a039f353f4382a6586544179f16fb8030944c`
+
+One of:
+
+- `"complete"`
+- `"incomplete"`
+- `"unsure"`
 
 <a id="persistence-type-sha256-904bf499d98be4a3a5f836fcac533b6c4899569b018071e6604e1d32657d00fd"></a>
 
@@ -10397,6 +10458,22 @@ SHA-256: `69081694be231d56fd9580ba14645fd5e35373202605d5c5c841a9435b5fa3b1`
 | `surfaceOp` | required | [`SurfaceOp`](#persistence-type-sha256-335e242de1fcc17b6ca920fc420d71bec2d76e53e37955c00948b65ab77f05c5) |
 | `time` | required | `number` |
 | `type` | required | `"system/message"` |
+
+<a id="persistence-type-sha256-75ad06e893027545fee49d958f7cdaaee1ef6411d8de5d14295a5befca1e1214"></a>
+
+<a id="persistence-type-eventsystem3completion-review"></a>
+
+### `{ type: "system3/completion-review" }`
+
+SHA-256: `75ad06e893027545fee49d958f7cdaaee1ef6411d8de5d14295a5befca1e1214`
+
+| Property | Presence | Type |
+|---|---|---|
+| `data` | required | [`System3CompletionReview`](#persistence-type-sha256-bef9004986cdb659d4d1d8bef971c83f32387d81fa1cf3d37d52f6939b5fdb91) |
+| `ignorable` | optional | `true` |
+| `seq` | required | `number` |
+| `time` | required | `number` |
+| `type` | required | `"system3/completion-review"` |
 
 <a id="persistence-type-sha256-b923b60d7839c5e3d3e03be20abbe587b9029440c839b8459cd1672149f971fe"></a>
 

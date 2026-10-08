@@ -1,6 +1,6 @@
 /**
  * Reject maintained commit references and the disallowed organization URL.
- * Three exact machine release-evidence files retain raw revisions for artifact
+ * Exact machine acceptance-evidence files retain raw revisions for artifact
  * identification; their organization URLs remain subject to the same policy.
  */
 
@@ -18,6 +18,7 @@ const kitRepositoryUrl = new RegExp(`\\bgithub\\.com/${organization}/libreoffice
 const commitCandidate = /(?<![a-z0-9])[\da-f]{7,40}(?![a-z0-9])/gi
 const excludedPrefixes = ['vendor/', '.agents/notes/archived/']
 const machineReleaseEvidenceFiles = new Set([
+  'docs/feat-jev-decision-kernel/completion-browser-result.json',
   'docs/feat-system3-g1/desktop-acceptance.json',
   'docs/feat-system3-g1/deployment-final.json',
   'tasks/feat-system3-g1/review-regression.json',

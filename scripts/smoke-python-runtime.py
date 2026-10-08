@@ -40,6 +40,11 @@ MINIMAL_PROMPT = "Exercise the packaged minimal agent's persistent shell."
 MINIMAL_TEXT = "minimal agent smoke ok"
 DYNAMIC_TOOLS_PROMPT = "Read dynamic-tool-task.txt, call the newly available snapshot_ping tool once, then reply DYNAMIC_TOOLS_OK."
 DYNAMIC_TOOLS_TEXT = "DYNAMIC_TOOLS_OK"
+COMPLETION_REVIEW_PROMPT = "Create a goal to read completion-evidence.txt and verify COMPLETION_EVIDENCE_OK before completing it."
+COMPLETION_REVIEW_OBJECTIVE = (
+    "Read completion-evidence.txt and verify COMPLETION_EVIDENCE_OK before completing."
+)
+COMPLETION_REVIEW_TEXT = "COMPLETION_REVIEW_OK"
 FS_SEARCH_PROMPT = "Exercise the packaged filesystem search tools."
 FS_SEARCH_TEXT = "filesystem search smoke ok"
 FS_SEARCH_MARKER = "PACKAGED_FS_SEARCH_OK"
@@ -372,6 +377,12 @@ def completion_chunks(body: dict[str, object]) -> list[dict[str, object]]:
         for block in latest.get("content", [])
         if isinstance(block, dict) and block.get("type") == "tool_result"
     ]
+    if any(
+        isinstance(message, dict)
+        and COMPLETION_REVIEW_PROMPT in message_text(message.get("content"))
+        for message in messages
+    ):
+        return completion_review_chunks(body, messages, tool_results)
     if tool_results:
         result = tool_results[-1]
         call_id, tool_name = latest_tool_call(messages, result.get("tool_use_id"))
@@ -844,6 +855,78 @@ def latest_tool_call(messages: list[object], result_id: object) -> tuple[str, st
     )
 
 
+def completion_review_chunks(
+    body: dict[str, object],
+    messages: list[object],
+    tool_results: list[dict[str, object]],
+) -> list[dict[str, object]]:
+    """Drive the same native Goal/refusal/read/completion sequence as the TS SDK fixture."""
+    if not tool_results:
+        assert_advertised_tool(body, "create_goal")
+        return tool_call_chunks(
+            "completion-create",
+            "create_goal",
+            {"objective": COMPLETION_REVIEW_OBJECTIVE, "max_goal_rounds": 3},
+        )
+    result = tool_results[-1]
+    call_id, tool_name = latest_tool_call(messages, result.get("tool_use_id"))
+    text = message_text(result.get("content"))
+    if call_id == "completion-create" and tool_name == "create_goal":
+        goal = json.loads(text)["goal"]
+        if result.get("is_error") or goal["phase"] != "active" or goal["revision"] != 1:
+            raise AssertionError(f"native Goal was not created: {text}")
+        return tool_call_chunks(
+            "completion-premature",
+            "update_goal",
+            {"goal_id": goal["id"], "revision": 1, "action": "complete"},
+        )
+    if call_id == "completion-premature" and tool_name == "update_goal":
+        if (
+            not result.get("is_error")
+            or "[System3 完成核验]" not in text
+            or COMPLETION_REVIEW_OBJECTIVE not in text
+        ):
+            raise AssertionError(f"completion review did not refuse the claim: {text}")
+        return tool_call_chunks("completion-current", "get_goal", {})
+    if call_id == "completion-current" and tool_name == "get_goal":
+        goal = json.loads(text)["goal"]
+        if result.get("is_error") or goal["phase"] != "active" or goal["revision"] != 1:
+            raise AssertionError(f"refused completion changed Goal state: {text}")
+        return tool_call_chunks(
+            "completion-read", "read", {"file_path": "completion-evidence.txt"}
+        )
+    if call_id == "completion-read" and tool_name == "read":
+        if result.get("is_error") or "COMPLETION_EVIDENCE_OK" not in text:
+            raise AssertionError(
+                f"native read did not obtain completion evidence: {text}"
+            )
+        current = next(
+            block
+            for message in reversed(messages)
+            if isinstance(message, dict)
+            for block in message.get("content", [])
+            if isinstance(block, dict)
+            and block.get("type") == "tool_result"
+            and block.get("tool_use_id") == "completion-current"
+        )
+        goal = json.loads(message_text(current.get("content")))["goal"]
+        return tool_call_chunks(
+            "completion-confirmed",
+            "update_goal",
+            {"goal_id": goal["id"], "revision": 1, "action": "complete"},
+        )
+    if call_id == "completion-confirmed" and tool_name == "update_goal":
+        goal = json.loads(text)["goal"]
+        if (
+            result.get("is_error")
+            or goal["phase"] != "complete"
+            or goal["revision"] != 2
+        ):
+            raise AssertionError(f"native Goal did not complete after evidence: {text}")
+        return text_chunks(COMPLETION_REVIEW_TEXT)
+    raise AssertionError(f"unexpected completion review call: {call_id} {tool_name}")
+
+
 def message_text(content: object) -> str:
     """Read Messages text content in either string or block-list form."""
     if isinstance(content, str):
@@ -911,6 +994,7 @@ def main() -> None:
             "sdk-snapshot",
             "sdk-system3-shadow",
             "sdk-system3-entry-route",
+            "sdk-system3-completion-review",
             "sdk-restart",
             "sdk-profile-plugin",
             "sdk-office",
@@ -952,6 +1036,7 @@ def main() -> None:
             "sdk-snapshot",
             "sdk-system3-shadow",
             "sdk-system3-entry-route",
+            "sdk-system3-completion-review",
             "sdk-restart",
             "sdk-office",
             "sdk-authoring",
@@ -971,11 +1056,12 @@ def main() -> None:
         "sdk-snapshot",
         "sdk-system3-shadow",
         "sdk-system3-entry-route",
+        "sdk-system3-completion-review",
         "sdk-restart",
         "sdk-authoring",
     }:
         parser.error(
-            "--update-snapshots requires --scenario sdk-minimal, sdk-minimal-in-history, sdk-snapshot, sdk-system3-shadow, sdk-system3-entry-route, sdk-restart, sdk-authoring, or all"
+            "--update-snapshots requires --scenario sdk-minimal, sdk-minimal-in-history, sdk-snapshot, sdk-system3-shadow, sdk-system3-entry-route, sdk-system3-completion-review, sdk-restart, sdk-authoring, or all"
         )
     if args.exe is not None and not args.exe.is_file():
         parser.error(f"runtime executable does not exist: {args.exe}")
@@ -1048,6 +1134,11 @@ def main() -> None:
         if args.scenario in {"all", "sdk-restart"}:
             assert args.exe is not None
             smoke_sdk_restart_snapshot(
+                model.url, args.exe.resolve(), args.update_snapshots
+            )
+        if args.scenario in {"all", "sdk-system3-completion-review"}:
+            assert args.exe is not None
+            smoke_sdk_system3_completion_review(
                 model.url, args.exe.resolve(), args.update_snapshots
             )
         if args.installed_wheel and args.scenario in {"all", "sdk-profile-plugin"}:
@@ -2130,6 +2221,178 @@ def smoke_sdk_system3_shadow(
                     0, session_header_version(log_content, "System3 Session")
                 ),
             ),
+            native_writer_output=True,
+        )
+
+
+def smoke_sdk_system3_completion_review(
+    base_url: str, executable: Path, update_snapshots: bool
+) -> None:
+    """Verify production completion review through Python SDK events, notifications, and disk."""
+    from deepseek_harness import DeepSeekHarness
+
+    scenario = "system3-completion-review"
+    session_id = f"{scenario}-smoke"
+    fixture_root = Path(__file__).resolve().parent.parent / f"snapshots/sdk/{scenario}"
+    with tempfile.TemporaryDirectory(prefix=f"dsh-sdk-{scenario}-") as temporary:
+        root = Path(temporary).resolve()
+        sessions = root / "home/sessions"
+        shutil.copyfile(
+            fixture_root / "workspace/completion-evidence.txt",
+            root / "completion-evidence.txt",
+        )
+        patch = write_profile_patch(
+            root,
+            f"{scenario}.patch.yml",
+            sessions,
+            [
+                {"id": "skill-filesystem", "config": {"includeDefaultRoots": False}},
+                {
+                    "insert": [
+                        {
+                            "id": "snapshot-system3-completion-review-fixture",
+                            "name": (fixture_root / "jev-fixture.mjs").as_uri(),
+                        }
+                    ]
+                },
+            ],
+        )
+        request_start = len(MockModelHandler.requests)
+        with DeepSeekHarness(
+            provider="deepseek-official",
+            model="smoke-model",
+            cwd=str(root),
+            dsh_bin=str(executable),
+            dsh_home=str(root / "home"),
+            patches=(str(patch),),
+            env={
+                "DSH_PERMISSION_MODE": "danger-full-access",
+                "DSH_TELEMETRY_DISABLED": "1",
+            },
+            api_key="sk-keyless-smoke",
+            base_url=base_url,
+            request_timeout_seconds=60,
+        ) as harness:
+            result = harness.run(COMPLETION_REVIEW_PROMPT, session_id=session_id)
+        if result.final_response != COMPLETION_REVIEW_TEXT:
+            raise AssertionError(f"completion review did not finish: {result.events}")
+        turn_ends = [
+            event for event in result.events if event.get("type") == "turn/end"
+        ]
+        if len(turn_ends) != 1 or turn_ends[0]["data"]["reason"]["kind"] != "completed":
+            raise AssertionError(
+                f"completion review turn did not finish normally: {turn_ends}"
+            )
+        reviews = [
+            event
+            for event in result.events
+            if event.get("type") == "system3/completion-review"
+        ]
+        changes = [
+            event for event in result.events if event.get("type") == "goal/change"
+        ]
+        if len(reviews) != 2 or len(changes) != 2:
+            raise AssertionError(
+                "Expected two real reviews and create/complete Goal changes"
+            )
+        goal_id = changes[0]["data"]["goal"]["id"]
+        expected_reviews = [
+            {
+                "version": 1,
+                "goalId": goal_id,
+                "decision": decision,
+                "unmet": [],
+                "goalUnmet": refused,
+                "refused": refused,
+            }
+            for decision, refused in (("incomplete", True), ("complete", False))
+        ]
+        if [event["data"] for event in reviews] != expected_reviews or any(
+            "surfaceOp" in event for event in reviews
+        ):
+            raise AssertionError(f"SDK changed completion-review payloads: {reviews}")
+        if [event["data"]["operation"] for event in changes] != ["create", "complete"]:
+            raise AssertionError("Refused completion changed the native Goal")
+        if changes[-1]["data"]["goal"]["phase"] != "complete":
+            raise AssertionError(
+                "Evidence-backed completion did not reach the native Goal"
+            )
+        logs = read_session_logs(sessions)
+        selected_types = {
+            "system3/judgement",
+            "system3/completion-review",
+            "goal/change",
+            "tool/result",
+        }
+        projected = [
+            event for event in result.events if event.get("type") in selected_types
+        ]
+        persisted = [
+            event for event in logs[session_id] if event.get("type") in selected_types
+        ]
+        notified = [
+            item.payload["event"]
+            for item in result.notifications
+            if item.method == "session.event"
+            and item.payload["event"].get("type") in selected_types
+        ]
+        if projected != persisted or projected != notified:
+            raise AssertionError(
+                "Python SDK completion events differ from notifications or disk"
+            )
+        requests = MockModelHandler.requests[request_start:]
+        if len(requests) != 6:
+            raise AssertionError(
+                f"Expected six real Goal/refusal/evidence requests: {len(requests)}"
+            )
+        replacements = [
+            (str(root), "{{cwd}}"),
+            (session_id, "{{parent}}"),
+            (goal_id, "{{goal:1}}"),
+        ]
+        initial_frame = next(
+            event["data"]
+            for event in result.events
+            if event.get("type") == "system3/task-frame"
+            and "messageId" in event["data"]["goal"]
+        )
+        replacements.append((initial_frame["goal"]["messageId"], "{{message:1}}"))
+        result_value = {
+            "session_id": result.session_id,
+            "final_response": result.final_response,
+            "events": result.events,
+            "notifications": [
+                {"method": item.method, "payload": item.payload}
+                for item in result.notifications
+            ],
+        }
+        normalized_log = normalize_snapshot_value(logs[session_id], replacements)
+        assert isinstance(normalized_log, list)
+        log_content = render_jsonl(project_session_snapshot(normalized_log))
+        model_visible = build_minimal_snapshot_files(requests, root)[
+            "model-visible.json"
+        ]
+        for actual, token in replacements:
+            model_visible = model_visible.replace(actual, token)
+        filename = snapshot_session_filename(
+            0, session_header_version(log_content, "System3 completion Session")
+        )
+        files = {
+            "result.json": json.dumps(
+                normalize_snapshot_value(result_value, replacements),
+                indent=2,
+                ensure_ascii=False,
+            )
+            + "\n",
+            "model-visible.json": model_visible,
+            filename: log_content,
+        }
+        compare_snapshot_files(
+            files,
+            update_snapshots,
+            Path(__file__).resolve().parent
+            / f"snapshots/python-sdk-single-exe/{scenario}",
+            ("result.json", "model-visible.json", filename),
             native_writer_output=True,
         )
 
@@ -3376,6 +3639,12 @@ def normalize_snapshot_value(
         data = normalized.get("data")
         if isinstance(data, dict) and "childCreatedAt" in data:
             data["childCreatedAt"] = 0
+    if normalized.get("type") == "goal/change":
+        data = normalized.get("data")
+        if isinstance(data, dict):
+            for key in ("createdAt", "updatedAt"):
+                if key in data:
+                    data[key] = 0
     if "seq" in normalized and "time" in normalized:
         normalized["time"] = 0
     if normalized.get("type") in ("assistant/message", "assistant/attempt"):

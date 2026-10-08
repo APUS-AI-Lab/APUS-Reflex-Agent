@@ -30,6 +30,8 @@ BROWSE = os.environ.get(
 )
 OUT = Path(os.environ.get("ACCEPT_OUT") or tempfile.mkdtemp(prefix="system3-accept-"))
 LAUNCH_URL_FILE = Path.home() / ".config/xdan-system3/public-launch-url"
+# Seconds to wait for the app after sign-in; a fresh release needs about a minute.
+READY_TIMEOUT = int(os.environ.get("ACCEPT_READY_TIMEOUT", "180"))
 FIXTURES = Path(__file__).parent / "fixtures"
 TURN_ENDED = ("Turn ended", "本轮已结束", "Ready", "准备就绪")
 
@@ -124,7 +126,19 @@ class Browser:
             LAUNCH_URL_FILE.chmod(0o600)
             self.run("goto", LAUNCH_URL_FILE.read_text().strip())
             time.sleep(6)
-        return self.js("document.body.innerText.match(/0\\.1\\.7[^\\n]*/)?.[0] ?? ''")
+        # Right after a release the service answers before the app is ready: requests stay pending and
+        # the sidebar is empty. Wait for the version label and the New session button, reloading now and then.
+        started = time.time()
+        while time.time() - started < READY_TIMEOUT:
+            version = self.js(
+                "document.body.innerText.match(/0\\.1\\.7[^\\n]*/)?.[0] ?? ''"
+            )
+            if version and self.ref(r'"New session"'):
+                return version
+            time.sleep(5)
+            if int(time.time() - started) % 30 < 5:
+                self.run("goto", SITE)
+        raise RuntimeError(f"site not ready after {READY_TIMEOUT} s")
 
     def new_session(self) -> None:
         """Start a new session from the sidebar."""
