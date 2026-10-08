@@ -103,6 +103,57 @@ const HELD_OUT_2: typeof CASES = [
   { goal: TRIP, message: '杭州现在天气怎么样？', label: 'none' },
   { goal: TRIP, message: '帮我写一段 Python 冒泡排序', label: 'new-task' },
 ]
+const EXPORT = '给订单服务加一个导出 Excel 的接口'
+const SPEED = '把首页的加载速度优化到 2 秒以内'
+/**
+ * Messages typed while a turn runs; a kept message moves into that turn, the rest stay queued.
+ * Labelled before the only run of this set, with the questions unchanged from held-out-3.
+ */
+const INTERJECTION: typeof CASES = [
+  { goal: EXPORT, message: '等等，先别跑全量测试，只跑 orders 相关的', label: 'correction', also: 'requirement' },
+  { goal: EXPORT, message: '对了，导出的文件名要带上日期', label: 'requirement' },
+  { goal: EXPORT, message: '用 openpyxl 就行，别引入 pandas', label: 'requirement' },
+  { goal: EXPORT, message: '刚才那个接口路径写错了，应该是 /orders/export', label: 'correction' },
+  { goal: EXPORT, message: '导出 1 万行要在 3 秒内完成', label: 'acceptance', also: 'requirement' },
+  { goal: EXPORT, message: '你现在跑到哪一步了？', label: 'none' },
+  { goal: EXPORT, message: 'openpyxl 和 xlsxwriter 有啥区别？', label: 'none' },
+  { goal: EXPORT, message: '辛苦了', label: 'none' },
+  { goal: EXPORT, message: '等你忙完帮我看下今天的邮件', label: 'new-task' },
+  { goal: SPEED, message: '图片别压得太狠，画质要保留', label: 'requirement' },
+  { goal: SPEED, message: '不要改动后端接口', label: 'requirement' },
+  { goal: SPEED, message: '你把 lazy load 加到首屏图片上了，首屏不要懒加载', label: 'correction', also: 'requirement' },
+  { goal: SPEED, message: 'Lighthouse 跑三次取平均才算数', label: 'acceptance' },
+  { goal: SPEED, message: '这个优化大概能提升多少？', label: 'none' },
+  { goal: SPEED, message: '顺便帮我写个周报', label: 'new-task' },
+  { goal: SPEED, message: 'ok', label: 'none' },
+  { goal: SPEED, message: '我看到你删了 analytics 脚本，那个必须保留', label: 'correction', also: 'requirement' },
+  { goal: SPEED, message: 'CDN 用阿里云的，不要换', label: 'requirement' },
+  { goal: SPEED, message: '今天先到这', label: 'none' },
+]
+const SIGNUP = '把用户注册流程改成支持邮箱验证码'
+const MD2PDF = '写一个把 Markdown 转成 PDF 的命令行工具'
+/**
+ * Fourth held-out set after the interrupt question was added: interruptions, farewells, and stop-and-switch messages.
+ * Labelled before its only run; interruptions of the current task are labelled as corrections.
+ */
+const HELD_OUT_4: typeof CASES = [
+  { goal: SIGNUP, message: '等一下，先别提交代码，我还要再看看', label: 'correction', also: 'requirement' },
+  { goal: SIGNUP, message: '停一下，别删数据库里的测试数据', label: 'correction', also: 'requirement' },
+  { goal: SIGNUP, message: '先不要跑迁移脚本', label: 'correction', also: 'requirement' },
+  { goal: SIGNUP, message: '验证码有效期设为 5 分钟', label: 'requirement' },
+  { goal: SIGNUP, message: '你把发件人写成个人邮箱了，要用 noreply@ 开头的地址', label: 'correction', also: 'requirement' },
+  { goal: SIGNUP, message: '晚安，明天继续', label: 'none' },
+  { goal: SIGNUP, message: '先这样，下次再说', label: 'none' },
+  { goal: SIGNUP, message: '先别弄注册了，帮我订个明天下午的会议室', label: 'new-task' },
+  { goal: SIGNUP, message: '停，帮我看看生产服务器为什么挂了', label: 'new-task' },
+  { goal: SIGNUP, message: '验证码是 6 位数字吗？', label: 'none' },
+  { goal: MD2PDF, message: '先别装 LaTeX，太大了，换个轻量方案', label: 'correction', also: 'requirement' },
+  { goal: MD2PDF, message: '别用 Node 写，用 Python', label: 'requirement', also: 'correction' },
+  { goal: MD2PDF, message: '能处理带图片的 Markdown 才算完成', label: 'acceptance' },
+  { goal: MD2PDF, message: '哈哈不错', label: 'none' },
+  { goal: MD2PDF, message: '这个工具就叫 md2pdf', label: 'requirement' },
+  { goal: MD2PDF, message: '帮我把下周的会议纪要整理一下', label: 'new-task' },
+]
 const ROOMS = '帮我做一个公司内部用的会议室预订小程序'
 const SALES = '帮我分析一下这份销售数据，找出下滑最严重的三个区域'
 const PRD = '帮我写一份产品需求文档，主题是会员积分系统'
@@ -148,13 +199,14 @@ describe.skipIf(!process.env.JEV_API_KEY)('System3 task frame against the deploy
     const shared = { policy: { mode: 'controlled' as const, approvedRemoteIds: ['jev'], approvedRemoteDataClasses: ['workspace' as const] },
       options: { routeId: 'jev', executionDomain: 'network' as const, effort: 'high' as const }, dataClasses: ['workspace' as const] }
     const results = []
-    const sets: Readonly<Record<string, typeof CASES>> = { 'held-out': HELD_OUT, 'held-out-2': HELD_OUT_2, 'held-out-3': HELD_OUT_3 }
+    const sets: Readonly<Record<string, typeof CASES>> = { 'held-out': HELD_OUT, 'held-out-2': HELD_OUT_2,
+      'held-out-3': HELD_OUT_3, interjection: INTERJECTION, 'held-out-4': HELD_OUT_4 }
     const set = sets[process.env.SYSTEM3_TASK_FRAME_SET ?? ''] ?? CASES
     for (const sample of set) {
       const result = await runSystem3Decision(ctx, shared, system3TaskFrameDecision, settings, agent,
         { goal: sample.goal, message: sample.message }, AbortSignal.timeout(30_000))
       const answers = result.judgement.response?.answers ?? {}
-      const nouls = Object.fromEntries(['request', 'requirement', 'acceptance', 'correction'].map((key) => {
+      const nouls = Object.fromEntries(['request', 'requirement', 'acceptance', 'interrupt', 'correction'].map((key) => {
         const answer = answers[key]
         return [key, answer?.type === 'noul' ? Math.round(answer.noul * 1000) / 1000 : -1]
       }))

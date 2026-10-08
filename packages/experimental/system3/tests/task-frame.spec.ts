@@ -20,11 +20,15 @@ const CONFIG: System3TaskFrameConfig = { mode: 'active', yes: 0.5, no: 0.3, dead
 const SETTINGS = { yes: 0.5, no: 0.3 }
 
 /** Jev answers: intent choice and the four yes/no probabilities. */
-function answers(intent: string, nouls: { request?: number; requirement?: number; acceptance?: number; correction?: number }): JevResponse {
+/** Yes/no probabilities by question; omitted questions answer 0. */
+type Nouls = Partial<Record<'request' | 'requirement' | 'acceptance' | 'interrupt' | 'correction', number>>
+
+function answers(intent: string, nouls: Nouls): JevResponse {
   return { model: 'jev-test', answers: {
     intent: { type: 'choice', choice: intent, probabilities: { [intent]: 0.9 }, confidence: 0.9 },
     request: { type: 'noul', noul: nouls.request ?? 0 }, requirement: { type: 'noul', noul: nouls.requirement ?? 0 },
-    acceptance: { type: 'noul', noul: nouls.acceptance ?? 0 }, correction: { type: 'noul', noul: nouls.correction ?? 0 },
+    acceptance: { type: 'noul', noul: nouls.acceptance ?? 0 }, interrupt: { type: 'noul', noul: nouls.interrupt ?? 0 },
+    correction: { type: 'noul', noul: nouls.correction ?? 0 },
   } }
 }
 
@@ -35,6 +39,10 @@ it('decides from the intent choice and the yes/no answers', () => {
   expect(decide(answers('switch', { request: 0.1 }))).toBe('none')
   expect(decide(answers('continue', { acceptance: 0.8 }))).toBe('add')
   expect(decide(answers('side', {}))).toBe('none')
+  // Stopping an action counts while the person continues the task; a farewell or a switch also says stop.
+  expect(decide(answers('continue', { interrupt: 0.9 }))).toBe('add')
+  expect(decide(answers('side', { interrupt: 0.9 }))).toBe('none')
+  expect(decide(answers('switch', { interrupt: 0.9, request: 0.9 }))).toBe('new-task')
   expect(decide(answers('continue', { requirement: 0.4 }))).toBe('unsure')
   expect(decide(answers('unclear', {}))).toBe('unsure')
   expect(decide({ model: 'jev-test', answers: { intent: { type: 'choice', choice: 'continue', probabilities: { continue: 0.4 }, confidence: 0.4 } } })).toBe('unsure')
@@ -43,7 +51,7 @@ it('decides from the intent choice and the yes/no answers', () => {
 
 it('quotes the task and the message in every question', () => {
   const questions = system3TaskFrameDecision.questions({ goal: '加一个汇总命令', message: '别动 README.md' })
-  expect(Object.keys(questions)).toEqual(['intent', 'request', 'requirement', 'acceptance', 'correction'])
+  expect(Object.keys(questions)).toEqual(['intent', 'request', 'requirement', 'acceptance', 'interrupt', 'correction'])
   for (const question of Object.values(questions)) expect(question.instructions).toContain('「加一个汇总命令」。用户刚刚又发来一条消息：「别动 README.md」')
   expect(system3TaskFrameDecision.state({ goal: 'g', message: 'm' })).toEqual({ task: 'g', message: 'm' })
 })

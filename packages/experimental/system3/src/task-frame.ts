@@ -90,12 +90,12 @@ type FrameOutcome = 'new-task' | 'add' | 'none'
 const note = (input: FrameInput): string => `用户正在让 AI 完成的任务是：「${input.goal}」。用户刚刚又发来一条消息：「${input.message}」。`
 
 /**
- * The task-frame decision: one request with a choice and four yes/no questions about the new message.
+ * The task-frame decision: one request with a choice and five yes/no questions about the new message.
  * The requirement wording follows the hand-off pack, whose labelled set it passed.
  */
 export const system3TaskFrameDecision: System3DecisionSpec<FrameInput, FrameOutcome> = {
   id: 'task.frame',
-  version: 1,
+  version: 2,
   state: input => ({ task: input.goal, message: input.message }),
   questions: input => ({
     intent: { type: 'choice', instructions: `${note(input)}这条消息属于哪一类？`, criteria: {
@@ -110,6 +110,8 @@ export const system3TaskFrameDecision: System3DecisionSpec<FrameInput, FrameOutc
       criteria: { true: '是仍然有效的工作要求或约束', false: '不是' } },
     acceptance: { type: 'noul', instructions: `${note(input)}判断这条新消息是否说明了当前任务怎样才算完成，例如必须通过的测试或检查、必须达到的结果、数值或性能指标、交付前要满足的条件。`,
       criteria: { true: '说明了完成标准', false: '没有说明完成标准' } },
+    interrupt: { type: 'noul', instructions: `${note(input)}判断这条新消息是否让 AI 停下、先别做或改做它正在进行的某个操作，例如“先别跑全量测试”“等等，别提交”。`,
+      criteria: { true: '让 AI 停下或改做正在进行的操作', false: '没有' } },
     correction: { type: 'noul', instructions: `${note(input)}判断这条新消息是否在纠正 AI 之前的做法、理解或结果，例如指出做错了、要求改回或撤销、要求换一种做法。`,
       criteria: { true: '是在纠正 AI', false: '不是纠正' } },
   }),
@@ -118,7 +120,9 @@ export const system3TaskFrameDecision: System3DecisionSpec<FrameInput, FrameOutc
     const intent = choiceVerdict(response.answers.intent, settings)
     // A new task asks for concrete work; a correction refers to what the AI already did for the current one.
     if (intent === 'switch' && verdict('request') === 'yes' && verdict('correction') !== 'yes') return 'new-task'
-    if (KEEP.some(key => verdict(key) === 'yes')) return 'add'
+    // Stopping an action in progress is a requirement only while the person continues the task; a farewell also says stop.
+    const interrupts = intent === 'continue' && verdict('interrupt') === 'yes'
+    if (interrupts || KEEP.some(key => verdict(key) === 'yes')) return 'add'
     return intent !== undefined && intent !== 'unclear' && KEEP.every(key => verdict(key) === 'no') ? 'none' : 'unsure'
   },
   fallback: 'none',
