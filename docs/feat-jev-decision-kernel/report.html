@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>APUS Reflex 瞬策</title>
+<title>APUS Reflex Harness 瞬策</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700;900&family=Noto+Sans+SC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 :root {
@@ -128,11 +128,11 @@ a { color: var(--accent); }
 <main>
 
 <header class="hero">
-  <div class="brand">APUS REFLEX 瞬策 · v0.1 · 2026-10-08</div>
-  <h1>APUS Reflex 瞬策</h1>
-  <p class="tagline">agent 的即时决策层：给 agent 装上反射神经。</p>
-  <p class="sub">在 agent 的每个关键时刻，由 9B 的 Jev 做亚秒级判断，判断结果直接驱动动作，大模型专心推理和执行。选模型、记要求、听插话、管委派，都在反射层完成。</p>
-  <p class="sub"><a href="architecture.html">产品与技术架构总览</a> · <a href="mu-p0-review.html">mu 参考与下一批 P0 排序</a> · <a href="feature-acceptance.html">逐项实现及真实验收</a></p>
+  <div class="brand">APUS REFLEX 瞬策 · v0.1 · 战略更新 2026-10-09</div>
+  <h1>APUS Reflex Harness 瞬策</h1>
+  <p class="tagline">瞬时执行，深度思考</p>
+  <p class="sub">我们的战略是 Model as Harness：让大小脑混合模型成为 Harness 的运行管理者，接管 tools、skills、memory、context、subagent 等事务的决策与调度。小脑负责即时判断，大脑负责复杂推理、规划与执行，运行时落实权限、执行动作并记录结果；五类事务分阶段接入，以真实任务验收。</p>
+  <p class="sub"><a href="report-ceo-onepage.html">CEO 一页战略汇报</a> · <a href="APUS-Reflex-Harness-CEO-brief.pptx">六页汇报 PPT</a> · <a href="APUS-Reflex-Harness-CEO-brief.pdf">分页 PDF</a> · <a href="architecture.html">产品与技术架构总览</a> · <a href="mu-p0-review.html">mu 参考与下一批 P0 排序</a> · <a href="feature-acceptance.html">逐项实现及真实验收</a></p>
   <div class="big">
     <div><span class="n">~1 s</span><br><span class="k">运行中补一句要求就生效</span><br><span class="c">此前要等这一轮做完</span></div>
     <div><span class="n">0.3–1 s</span><br><span class="k">每条消息自动选对模型</span><br><span class="c">简单问题 Flash 约 3 秒答完</span></div>
@@ -536,11 +536,11 @@ a { color: var(--accent); }
 <section>
   <div class="eyebrow">汇报用</div>
   <h2>30 秒电梯稿</h2>
-  <p class="pitch">APUS Reflex 瞬策是 agent 的即时决策层。我们把“该用哪个模型”“这句是不是新要求”“能不能马上插进去”这类判断，从大模型里抽出来，交给 9B 的 Jev 在亚秒级内完成，判断结果直接驱动动作：每条消息 0.3–1 秒选对模型，用户的要求按原话记成任务卡，运行中补一句话约 1 秒生效，连正在跑的 Codex 也能收到。每一次反射都完整记录、可以回放，每次发布都在公网做真实的浏览器验收。下一步是完成前核验和模型降智、偷换监控：让它在宣布完成之前先自己验收，并看住每一条模型线路。</p>
+  <p class="pitch">APUS Reflex Harness 瞬策的战略是 Model as Harness。我们让大小脑混合模型共同管理 agent 的工具、技能、记忆、上下文与子 agent：小脑即时判断，大脑深度思考，运行时执行动作、落实权限并保存事实。已接入选模型、选技能、任务卡、插话与 Codex 管理；完成核验已有本地真实闭环。下一步逐项贯通五类运行事务，验证任务成功率、人工介入和成功交付的时间与成本，让模型管理能力复用到更多业务场景。</p>
   <h2>3 分钟汇报提纲</h2>
   <ol class="outline">
     <li><b>问题</b>：agent 把本该条件反射的判断全交给大模型慢慢想，结果是忘要求、听不进中途的话、委派出去就失控。</li>
-    <li><b>定位</b>：APUS Reflex 瞬策，agent 的即时决策层。瞬策小脑（System 1，Jev 9B）做亚秒级判断并管理下游的本地模型、云端模型和专业 agent，推理大脑（System 2）专心干活。</li>
+    <li><b>定位</b>：Model as Harness，大小脑混合模型接管工具、技能、记忆、上下文与子 agent 等运行事务；Jev 小脑即时判断，推理大脑深度思考，运行时执行并记录事实。具体事务分阶段验收。</li>
     <li><b>卖点</b>：亚秒级决策、决策与生成分离、覆盖完整生命周期、拿不准就不动、每个反射可复盘、一套反射层调度所有模型。</li>
     <li><b>效果</b>：演示目标运行中补一句改名，dock 提示插入当前轮，模型先改名再测试，交付即符合要求。</li>
     <li><b>证据</b>：126 条标注集、留出集只跑一次、5 个公网浏览器验收场景、验收中发现并修复 6 处体验问题。</li>

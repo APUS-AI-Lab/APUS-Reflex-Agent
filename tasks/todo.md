@@ -311,3 +311,29 @@
 交付：[一页 HTML](../docs/feat-jev-decision-kernel/report-ceo-onepage.html)、[A4 单页 PDF](../docs/feat-jev-decision-kernel/report-ceo-onepage.pdf)及[布局核对](../docs/feat-jev-decision-kernel/report-ceo-onepage-verification.json)。实际核对375/768/1440宽度、离线资源、SVG文字与PDF页内文本；独立内容审查后限定可见依据范围，去掉未由精确计时证据支撑的时延大字。
 
 文档检查：test:docs20/20、doc-sync42/42、lint:contracts-ready、相对链接、Ruff check/format及diff检查通过；本轮未重复运行产品模型测试，既有验证范围保持原样。
+
+## Model as Harness 战略表达修订（2026-10-09）
+
+- [x] 采用用户确认战略：大小脑混合模型接管 tools、skills、memory、context、subagent 的事务管理；Slogan为“瞬时执行，深度思考”。
+- [x] 重画一页架构，明确模型管理层、五类事务、运行时执行与场景交付；同步完整报告定位。
+- [x] 复核实际浏览器、A4单页PDF与事实范围，更新交接和用户纠正经验。
+- [x] 完成文档检查及本地提交。
+
+### 战略修订 Review
+
+一页图明确模型管理层、五类Harness事务、DSH执行/权限/事实记录与结果回流；实际PDF为A4一页，375/768/1440宽度无文档越界，Slogan逐字核对。独立审查通过，完整五域管理仍为战略目标，未宣称自动学习已实现；完整report同步战略、标题与电梯稿，原案例和度量保留。doc-quick20/20、doc-sync42/42、lint:contracts-ready与Ruff检查通过，运行源码及部署未变。
+
+## CEO 分页 PPT（2026-10-09）
+
+- [x] 核对现有 worktree/WIP，读取参考 PPT 的六页、16:9、苹方字体与暖白/深绿/橙色版式；保留参考文件原样。
+- [x] 制作六页可编辑 PPT：战略 → 大小脑架构 → 五类事务 → 场景交付 → 真实验证 → 试点决策，沿用用户指定 Slogan。
+- [x] 用实际演示应用打开并导出分页 PDF，检查六页渲染、文本、架构箭头和版面，独立复核事实范围。
+- [x] 更新汇报入口、验证记录和 handoff；运行相关文档检查，本地提交并打开交付文件。
+
+### 分页 PPT Review
+
+交付六页可编辑PPT、Keynote实际导出的分页PDF、六页预览及验证记录。参考原PPT的16:9、苹方、暖白/深绿/橙色版式；大小脑、五类事务与场景成果使用原生形状和文本，六页均含讲稿备注。独立内容复核通过，生产历史基线、当前本地闭环和战略目标分别表达。
+
+真实导入先暴露备注母版未在presentation.xml登记导致Keynote报“文件格式无效”；补齐notesMasterIdLst引用后，最终交付文件直接打开成功，六页PDF全部文本与PPT匹配，形状及PDF文字均无页外越界。该修复保留备注，不要求用户更换软件。
+
+检查：当前分页批次test:docs20/20（38.37s）、Ruff check/format与diff通过；实际Keynote回读六页备注，并核对最终PPT全部页内文本与六页PDF一致。产品源码与部署未改，本轮仅本地提交。

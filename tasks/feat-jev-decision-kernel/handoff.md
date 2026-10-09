@@ -6,7 +6,7 @@
 - 当前 worktree `.claude/worktrees/feat-jev-decision-kernel`，分支 `worktree-feat-jev-decision-kernel`；主目录 main 保持干净，未同步或部署。
 - prd 已在线完成云盘后的分区与 ext4 扩展，最终检查 984G / 156G 可用 / 84%，服务 active，无重启。
 - 完成核验补齐持久化及两 SDK；三项状态隔离问题已修，System3 包243项回归、完成核验/任务卡/内核三源码100%覆盖、真实 DeepSeek + Jev E2E 2/2 通过。
-- 新增 mu P0 审查、14 项招牌 + 8 组原生能力 + 3 个候选验收矩阵；新候选尚待具体设计确认。当前本地 built Web 完成核验浏览器闭环已通过；生产升级、专用依据 UI 及独立 Jev 评测仍未收口，部署 WIP 保持 shadow。
+- 战略为 Model as Harness：大小脑混合模型接管五类运行事务；CEO一页图、六页可编辑PPT和Slogan“瞬时执行，深度思考”已同步。完成核验本地浏览器闭环通过；完整五域接管、新候选P0、生产升级与独立评测仍未收口，部署WIP保持shadow。
 
 ## 本轮交付物
 
@@ -14,6 +14,11 @@
 
 | 文件 | 行数或大小 | 说明 |
 |---|---:|---|
+| `tasks/lessons.md` | 120 | 用户战略纠正和PPT导入要求 |
+| `docs/feat-jev-decision-kernel/report-ceo-ppt-verification.json` | 130 | 六页文本/尺寸/备注/兼容性核对 |
+| `docs/feat-jev-decision-kernel/APUS-Reflex-Harness-CEO-brief-preview.png` | 359511 bytes | 最终六页版面预览 |
+| `docs/feat-jev-decision-kernel/APUS-Reflex-Harness-CEO-brief.pdf` | 228253 bytes | Keynote实际导出的六页汇报 |
+| `docs/feat-jev-decision-kernel/APUS-Reflex-Harness-CEO-brief.pptx` | 60459 bytes | 可编辑六页CEO汇报与逐页讲稿备注 |
 | `.github/workflows/independent-harness.yml` | 64 | CI中双SDK核验场景 |
 | `deploy/system3/acceptance/accept.py` | 569 | 验收脚本或固定构建证据检查 |
 | `deploy/system3/runtime.patch.yml` | 248 | 验收脚本或固定构建证据检查 |
@@ -36,9 +41,9 @@
 | `docs/feat-jev-decision-kernel/mu-p0-review.json` | 175 | mu源码评审、P0排序及待确认设计v2 |
 | `docs/feat-jev-decision-kernel/relay-directory-status.json` | 50 | 三站只读目录审查，不含凭据 |
 | `docs/feat-jev-decision-kernel/report.html` | 557 | 架构/设计及配对任务更新 |
-| `docs/feat-jev-decision-kernel/report-ceo-onepage.html` | 189 | CEO一页价值、大小脑架构与场景交付汇报 |
-| `docs/feat-jev-decision-kernel/report-ceo-onepage.pdf` | 979509 bytes | 实际导出的A4单页，中文文字与架构可读 |
-| `docs/feat-jev-decision-kernel/report-ceo-onepage-verification.json` | 62 | 三种宽度及PDF页面文字核对 |
+| `docs/feat-jev-decision-kernel/report-ceo-onepage.html` | 190 | CEO一页价值、大小脑架构与场景交付汇报 |
+| `docs/feat-jev-decision-kernel/report-ceo-onepage.pdf` | 988351 bytes | 实际导出的A4单页，中文文字与架构可读 |
+| `docs/feat-jev-decision-kernel/report-ceo-onepage-verification.json` | 95 | 三种宽度及PDF页面文字核对 |
 | `docs/feat-jev-decision-kernel/tasks/task.i18n.yaml` | 40 | 架构/设计及配对任务更新 |
 | `docs/feat-jev-decision-kernel/tasks/task.md` | 109 | 架构/设计及配对任务更新 |
 | `docs/feat-jev-decision-kernel/tasks/task.zh.md` | 109 | 架构/设计及配对任务更新 |
@@ -94,14 +99,15 @@
 | `snapshots/sdk/system3-completion-review/snapshot.yml` | 11 | 双SDK/Session回放及owner-local期望输出 |
 | `snapshots/sdk/system3-completion-review/system-prompt.expected.md` | 27 | 双SDK/Session回放及owner-local期望输出 |
 | `snapshots/sdk/system3-completion-review/workspace/completion-evidence.txt` | 1 | 双SDK/Session回放及owner-local期望输出 |
-| `tasks/feat-jev-decision-kernel/handoff.md` | 190 | 计划、经验与冷启动交接 |
-| `tasks/feat-jev-decision-kernel/lessons.md` | 19 | 计划、经验与冷启动交接 |
+| `tasks/feat-jev-decision-kernel/handoff.md` | 197 | 计划、经验与冷启动交接 |
+| `tasks/feat-jev-decision-kernel/lessons.md` | 21 | 计划、经验与冷启动交接 |
 | `tasks/feat-jev-decision-kernel/notes.md` | 19 | 计划、经验与冷启动交接 |
-| `tasks/todo.md` | 313 | 计划、经验与冷启动交接 |
+| `tasks/todo.md` | 339 | 计划、经验与冷启动交接 |
 
 ## 设计约束
 
 - 产品是完整 APUS Reflex Harness：Jev 决策、System2 推理执行与 DSH 原生能力共同构成产品，产品和技术图都保留底座。
+- Model as Harness 为用户确认战略：大小脑模型管理 tools、skills、memory、context、subagent；运行时执行动作、落实权限并记录事实。完整管理能力是分阶段验收目标，不能缩成选路或把记忆等未接入事务宣称完成。
 - 继续历史已批准的两个 P0。用户最新要求提前评审 mu 的执行前约束、普通任务续跑、语义卡住恢复；交付顺序与范围见 docs/feat-jev-decision-kernel/mu-p0-review.html 和 tasks/task.zh.md。
 - 三个候选有文件、接口、状态、降级和真实正反例设计；具体设计确认后再实施。主模型、权限、取消与原生 goal 生命周期不能被 Jev 重写。
 - 只用公开扩展点，不改 agent-loop；模型可见文本必须能从 Session 重建，新增持久事件同步声明、生成物与两 SDK。
@@ -174,7 +180,7 @@
 
 ## 冷启动 checklist
 
-- [ ] 先读本文件、lessons.md、mu-p0-review.html、feature-acceptance.html、completion-continuation.html 和 tasks/task.zh.md。
+- [ ] 先读本文件、lessons.md、report-ceo-onepage.html、APUS-Reflex-Harness-CEO-brief.pptx、mu-p0-review.html、feature-acceptance.html、completion-continuation.html 和 tasks/task.zh.md。
 - [ ] 核对 status、diff、stash、branch、HEAD、worktree list 及其他会话写入归属，不覆盖 WIP。
 - [ ] 修改 packages 前读 architecture.md、defensive-patterns.md、相关 AGENTS；review 来源文件而非复述稿。
 - [ ] 保持 shadow；先补独立评测与当前构建浏览器证据，再决定上线。
@@ -188,3 +194,17 @@
 - gstack browse实际核对375/768/1440宽度；文档本身无横向越界，手机架构区域可横滑。PDF为A4一页，所有文字块在页内；无外部资源、SVG文字无越界、三个本地链接有效。
 - 独立CEO内容审查完成。当前完成核验为本地验证未生产发布，质量监控和新增P0仍待完善；汇报不扩大运行验收范围，不变更产品源码或生产环境。
 - 文档检查：test:docs20/20、doc-sync42/42、lint:contracts-ready、相对链接、Ruff check/format与diff通过。此次仅本地提交，未推送或部署；默认浏览器已打开HTML供用户查看。
+
+### Model as Harness 与 Slogan 修订
+
+- 用户明确模型接管Harness事务的战略，Slogan按原文使用“瞬时执行，深度思考”。CEO图现为大小脑模型管理层 → Tools/Skills/Memory/Context/Subagent五类事务 → DSH运行时 → 场景成果，并画出执行事实回流。
+- 原report的战略定位、标题、电梯稿及CEO链接同步更新，原案例与度量保留。独立内容复核通过；完整五域管理与自动学习未当已实现。全局和worktree lessons已记录用户纠正。
+- 新版实际A4一页，三个宽度、五域可见性、Slogan逐字、SVG文字与PDF页内文本通过；doc-quick20/20、doc-sync42/42、lint:contracts-ready、Ruff及diff通过。无运行源码和部署变更。
+
+### CEO 分页 PPT
+
+- 六页汇报为战略、大小脑架构、五类事务、场景交付、真实验证和试点决策；参考用户指定2026-09-30协同计划PPT的16:9、苹方与暖白/深绿/橙色。原参考文件未写入。
+- APUS-Reflex-Harness-CEO-brief.pptx为可编辑原生文本/形状，每页有讲稿备注；配套六页PDF、六页预览和report-ceo-ppt-verification.json。主report提供PPT/PDF入口。
+- Keynote最初拒绝导入，因为生成的备注母版未在presentation.xml的notesMasterIdLst登记；引用已有notesMaster关系后最终交付文件实际导入、备注回读和六页PDF导出通过。全部页内文本与PPT匹配，图形与PDF文字均未越界；独立CEO事实复核通过。
+- 用户可重点讲1/2/4/6页，3/5页支撑进展和证据。当前本地完成核验未生产发布，五域完整接管仍为目标；不变更运行源码或生产。
+- 当前分页批次test:docs20/20（38.37s）、Ruff check/format与diff通过；本地提交、未推送或部署，最终PPT已在Keynote打开。

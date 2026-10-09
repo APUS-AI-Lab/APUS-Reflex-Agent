@@ -1,31 +1,56 @@
 {
-  "version": 1,
-  "checkedAt": "2026-10-09T02:02:43.089200+00:00",
+  "version": 2,
+  "checkedAt": "2026-10-09T02:43:38.585605+00:00",
   "html": "report-ceo-onepage.html",
   "pdf": "report-ceo-onepage.pdf",
+  "strategy": "Model as Harness",
+  "slogan": "瞬时执行，深度思考",
+  "managedDomains": [
+    "Tools",
+    "Skills",
+    "Memory",
+    "Context",
+    "Subagent"
+  ],
   "layouts": [
     {
       "viewportWidth": 375,
       "documentWidth": 375,
       "pageWidth": 375,
-      "pageHeight": 1531.1875,
+      "pageHeight": 1431.4375,
       "diagramViewport": 339,
       "diagramScrollableWidth": 700,
       "diagramTextOutsideViewBox": [],
       "externalResources": [],
       "duplicateIds": [],
+      "slogan": "瞬时执行，深度思考",
+      "managedDomains": [
+        "Tools",
+        "Skills",
+        "Memory",
+        "Context",
+        "Subagent"
+      ],
       "name": "mobile"
     },
     {
       "viewportWidth": 768,
       "documentWidth": 768,
       "pageWidth": 768,
-      "pageHeight": 1111.5625,
+      "pageHeight": 1100,
       "diagramViewport": 720,
       "diagramScrollableWidth": 720,
       "diagramTextOutsideViewBox": [],
       "externalResources": [],
       "duplicateIds": [],
+      "slogan": "瞬时执行，深度思考",
+      "managedDomains": [
+        "Tools",
+        "Skills",
+        "Memory",
+        "Context",
+        "Subagent"
+      ],
       "name": "tablet"
     },
     {
@@ -38,6 +63,14 @@
       "diagramTextOutsideViewBox": [],
       "externalResources": [],
       "duplicateIds": [],
+      "slogan": "瞬时执行，深度思考",
+      "managedDomains": [
+        "Tools",
+        "Skills",
+        "Memory",
+        "Context",
+        "Subagent"
+      ],
       "name": "desktop"
     }
   ],
@@ -54,9 +87,9 @@
       841.9199829101562
     ],
     "textBlocksOutsidePage": 0,
-    "tagged": true,
-    "allRequiredTextPresent": true
+    "allRequiredTextPresent": true,
+    "tagged": true
   },
-  "scope": "Presentation layout and content audit; no new runtime feature or inference was executed.",
-  "contentReview": "CEO narrative independently reviewed; local versus production evidence and planned capabilities explicitly scoped; no latency SLA or unmeasured business saving claimed."
+  "contentReview": "Hybrid models manage Harness responsibilities; runtime executes, enforces permissions and records facts. Full five-domain management is a strategic target, not a completed release.",
+  "scope": "Presentation layout and content audit only; no runtime feature or new inference executed."
 }

@@ -1,0 +1,130 @@
+{
+  "version": 1,
+  "verified_at_utc": "2026-10-09T03:50:18.204695+00:00",
+  "style_reference": "2026-09-30-APUS协同计划.pptx",
+  "style": {
+    "ratio": "16:9",
+    "font": "PingFang SC",
+    "colors": [
+      "F6F5F1",
+      "34594D",
+      "D96832",
+      "202625",
+      "DBDED7"
+    ]
+  },
+  "artifacts": {
+    "APUS-Reflex-Harness-CEO-brief.pptx": {
+      "bytes": 60459,
+      "sha256": "d020ae9aa869abdc1656127f035578c0f60d3b1444de2b1fedadd85b3368aa8c"
+    },
+    "APUS-Reflex-Harness-CEO-brief.pdf": {
+      "bytes": 228253,
+      "sha256": "07bf4a410d65c655487e7602bf67682f3cfffd7dff03195ae584ffbdc1673be7"
+    }
+  },
+  "slides": [
+    {
+      "page": 1,
+      "editable_shapes": 34,
+      "text_items": 23,
+      "speaker_notes_chars": 213,
+      "page_size_pt": [
+        959.0,
+        540.0
+      ],
+      "missing_text": [],
+      "shapes_outside_slide": [],
+      "text_blocks_outside_pdf_page": []
+    },
+    {
+      "page": 2,
+      "editable_shapes": 60,
+      "text_items": 34,
+      "speaker_notes_chars": 265,
+      "page_size_pt": [
+        959.0,
+        540.0
+      ],
+      "missing_text": [],
+      "shapes_outside_slide": [],
+      "text_blocks_outside_pdf_page": []
+    },
+    {
+      "page": 3,
+      "editable_shapes": 49,
+      "text_items": 29,
+      "speaker_notes_chars": 250,
+      "page_size_pt": [
+        959.0,
+        540.0
+      ],
+      "missing_text": [],
+      "shapes_outside_slide": [],
+      "text_blocks_outside_pdf_page": []
+    },
+    {
+      "page": 4,
+      "editable_shapes": 37,
+      "text_items": 27,
+      "speaker_notes_chars": 201,
+      "page_size_pt": [
+        959.0,
+        540.0
+      ],
+      "missing_text": [],
+      "shapes_outside_slide": [],
+      "text_blocks_outside_pdf_page": []
+    },
+    {
+      "page": 5,
+      "editable_shapes": 35,
+      "text_items": 23,
+      "speaker_notes_chars": 510,
+      "page_size_pt": [
+        959.0,
+        540.0
+      ],
+      "missing_text": [],
+      "shapes_outside_slide": [],
+      "text_blocks_outside_pdf_page": []
+    },
+    {
+      "page": 6,
+      "editable_shapes": 31,
+      "text_items": 24,
+      "speaker_notes_chars": 302,
+      "page_size_pt": [
+        959.0,
+        540.0
+      ],
+      "missing_text": [],
+      "shapes_outside_slide": [],
+      "text_blocks_outside_pdf_page": []
+    }
+  ],
+  "assertions": {
+    "six_slide_ppt_and_pdf": true,
+    "all_slide_text_present_in_pdf": true,
+    "native_editable_text_shapes_and_architecture": true,
+    "speaker_notes_on_all_six_slides": true,
+    "slogan_exact": true,
+    "five_management_domains_visible": true,
+    "no_external_relationships": true
+  },
+  "rendering": {
+    "application": "Keynote",
+    "opened_actual_delivered_ppt": true,
+    "exported_all_slides_to_pdf": true,
+    "visual_review": "PASS: all six pages inspected; architecture and pages 3/5 inspected at full size",
+    "speaker_notes_read_back_from_keynote": true
+  },
+  "compatibility_fix": {
+    "symptom": "Keynote: file format invalid",
+    "cause": "Generated speaker notes master missing from p:notesMasterIdLst in ppt/presentation.xml",
+    "fix": "Declare the notes master using its existing notesMaster relationship id; preserve six speaker notes",
+    "after": "Final PPT opened by Keynote and exported to six-page PDF"
+  },
+  "scope": "Presentation only; current verification and strategic targets remain distinct. No product-source or deployment changes.",
+  "content_review": "PASS: independent CEO review; current local verification, historical production baseline, and strategic targets are distinguished"
+}
