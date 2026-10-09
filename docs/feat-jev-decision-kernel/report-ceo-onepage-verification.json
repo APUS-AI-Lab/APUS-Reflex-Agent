@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "checkedAt": "2026-10-09T02:02:43.089200+00:00",
+  "html": "report-ceo-onepage.html",
+  "pdf": "report-ceo-onepage.pdf",
+  "layouts": [
+    {
+      "viewportWidth": 375,
+      "documentWidth": 375,
+      "pageWidth": 375,
+      "pageHeight": 1531.1875,
+      "diagramViewport": 339,
+      "diagramScrollableWidth": 700,
+      "diagramTextOutsideViewBox": [],
+      "externalResources": [],
+      "duplicateIds": [],
+      "name": "mobile"
+    },
+    {
+      "viewportWidth": 768,
+      "documentWidth": 768,
+      "pageWidth": 768,
+      "pageHeight": 1111.5625,
+      "diagramViewport": 720,
+      "diagramScrollableWidth": 720,
+      "diagramTextOutsideViewBox": [],
+      "externalResources": [],
+      "duplicateIds": [],
+      "name": "tablet"
+    },
+    {
+      "viewportWidth": 1440,
+      "documentWidth": 1440,
+      "pageWidth": 793.6875,
+      "pageHeight": 1122.515625,
+      "diagramViewport": 703,
+      "diagramScrollableWidth": 703,
+      "diagramTextOutsideViewBox": [],
+      "externalResources": [],
+      "duplicateIds": [],
+      "name": "desktop"
+    }
+  ],
+  "localLinks": [
+    "report.html",
+    "feature-acceptance.html",
+    "mu-p0-review.html"
+  ],
+  "print": {
+    "pages": 1,
+    "format": "A4 portrait",
+    "sizePoints": [
+      594.9599609375,
+      841.9199829101562
+    ],
+    "textBlocksOutsidePage": 0,
+    "tagged": true,
+    "allRequiredTextPresent": true
+  },
+  "scope": "Presentation layout and content audit; no new runtime feature or inference was executed.",
+  "contentReview": "CEO narrative independently reviewed; local versus production evidence and planned capabilities explicitly scoped; no latency SLA or unmeasured business saving claimed."
+}

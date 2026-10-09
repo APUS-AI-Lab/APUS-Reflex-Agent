@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="APUS Reflex Harness 瞬策：面向管理者的一页架构与价值汇报。小脑即时判断、大脑深度执行、Harness 管理任务交付。">
+<title>APUS Reflex Harness 瞬策｜一页汇报</title>
+<style>
+:root { color-scheme: light; --ink: #162434; --muted: #596773; --line: #dce3e8; --blue: #2158a8; --amber: #aa6415; --paper: #ffffff; }
+* { box-sizing: border-box; }
+body { margin: 0; padding: 28px 16px; background: #e9edf0; color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; line-height: 1.4; -webkit-font-smoothing: antialiased; }
+.sheet { width: 210mm; min-height: 297mm; margin: 0 auto; padding: 9mm 12mm 8mm; background: var(--paper); box-shadow: 0 8px 42px #16243414; display: flex; flex-direction: column; }
+.masthead { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 10px; letter-spacing: .09em; }
+.wordmark { font-weight: 750; color: var(--blue); font-size: 12px; letter-spacing: .1em; }
+.dateline { color: var(--muted); letter-spacing: .03em; }
+h1 { margin: 13px 0 3px; font-size: 29px; line-height: 1.18; letter-spacing: -.045em; font-weight: 750; }
+.subtitle { margin: 0; font-size: 13px; color: var(--muted); letter-spacing: .025em; }
+.thesis { margin: 12px 0 7px; font-size: 23px; line-height: 1.4; font-weight: 700; letter-spacing: -.035em; }
+.thesis em { color: var(--blue); font-style: normal; }
+.summary { margin: 0; max-width: 650px; font-size: 12.5px; line-height: 1.8; color: #405260; }
+.value-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 17px; margin-top: 12px; padding: 10px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.value-label { display: block; margin-bottom: 4px; color: var(--blue); font-size: 9.5px; letter-spacing: .04em; }
+.value h2 { margin: 0 0 4px; font-size: 14px; font-weight: 700; }
+.value p { margin: 0; font-size: 11px; line-height: 1.65; color: var(--muted); }
+.section-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 14px 0 8px; }
+.section-heading h2 { margin: 0; font-size: 15px; font-weight: 700; letter-spacing: -.02em; }
+.section-heading span { font-size: 9.5px; color: var(--muted); }
+.architecture { width: 100%; height: auto; display: block; overflow: visible; font-family: inherit; }
+.architecture-scroll:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+.mobile-hint { display: none; }
+.architecture .small { font-size: 12px; }
+.architecture .body { font-size: 14px; }
+.architecture .name { font-size: 24px; font-weight: 700; letter-spacing: -.03em; }
+.architecture .label { font-size: 11px; }
+.architecture .outcome { font-size: 16px; font-weight: 650; }
+.architecture .wire { stroke: #738391; stroke-width: 1.4; fill: none; }
+.architecture .blue-wire { stroke: #2158a8; stroke-width: 1.5; fill: none; }
+.architecture .planned { stroke-dasharray: 5 4; }
+.architecture-caption { margin: 5px 0 0; font-size: 9.5px; line-height: 1.6; color: var(--muted); }
+.capabilities { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 11px; }
+.capability { padding-left: 9px; border-left: 2px solid #d5e1ef; }
+.capability h3 { margin: 0 0 4px; font-size: 12px; font-weight: 700; }
+.capability p { margin: 0; font-size: 10.5px; line-height: 1.7; color: var(--muted); }
+.evidence { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; padding: 10px 14px; background: #f3f6f9; border-radius: 6px; }
+.evidence strong { display: block; font-size: 22px; line-height: 1.3; color: var(--blue); font-weight: 700; }
+.evidence b { display: block; margin-top: 3px; font-size: 10.5px; font-weight: 650; }
+.evidence p { margin: 4px 0 0; font-size: 9.5px; line-height: 1.55; color: var(--muted); }
+.next { margin-top: 12px; padding: 10px 14px; border: 1px solid #d6e1ed; border-left: 3px solid var(--blue); border-radius: 5px; }
+.next h2 { margin: 0 0 5px; font-size: 13px; }
+.next p { margin: 0; font-size: 11px; line-height: 1.75; color: #405260; }
+.next .roadmap { margin-top: 6px; color: var(--muted); font-size: 10px; }
+footer { display: flex; align-items: baseline; justify-content: space-between; gap: 15px; margin-top: auto; padding-top: 12px; font-size: 9px; color: var(--muted); }
+footer p { margin: 0; line-height: 1.6; }
+footer a { color: #516b86; text-decoration: none; border-bottom: 1px solid #becddb; }
+footer a:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+@media screen and (max-width: 820px) {
+ body { padding: 0; }
+ .sheet { width: 100%; min-height: 100vh; padding: 28px 24px; box-shadow: none; }
+}
+@media screen and (max-width: 540px) {
+ .sheet { padding: 24px 18px; }
+ .masthead { align-items: flex-start; }
+ .dateline { max-width: 108px; text-align: right; line-height: 1.5; }
+ h1 { font-size: 26px; }
+ .thesis { font-size: 22px; }
+ .summary { font-size: 13px; }
+ .value-grid { grid-template-columns: 1fr; gap: 12px; }
+ .value { display: grid; grid-template-columns: 105px 1fr; align-items: start; column-gap: 9px; }
+ .value-label { grid-row: 1 / 3; }
+ .value h2 { font-size: 13px; }
+ .value p { font-size: 12px; }
+ .section-heading { align-items: flex-start; }
+ .section-heading span { max-width: 115px; text-align: right; }
+ .architecture-scroll { overflow-x: auto; }
+ .architecture { min-width: 700px; }
+ .mobile-hint { display: inline; }
+ .architecture-caption { font-size: 11px; }
+ .capabilities { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+ .capability p { font-size: 12px; }
+ .evidence { grid-template-columns: 1fr; gap: 14px; }
+ .evidence > div { display: grid; grid-template-columns: 80px 1fr; }
+ .evidence strong { grid-row: 1 / 3; }
+ .evidence b { font-size: 12px; }
+ .evidence p { font-size: 11px; }
+ .next p { font-size: 12px; }
+ footer { flex-direction: column; gap: 6px; font-size: 10px; }
+}
+@page { size: A4 portrait; margin: 0; }
+@media print {
+ html, body { margin: 0; padding: 0; background: white; }
+ body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+ .sheet { width: 210mm; min-height: 297mm; box-shadow: none; margin: 0; }
+ section, header, footer, svg { break-inside: avoid; }
+ footer a { border-bottom: 0; color: inherit; }
+}
+</style>
+</head>
+<body>
+<main class="sheet" aria-label="APUS Reflex Harness CEO 一页汇报">
+  <header>
+    <div class="masthead"><span class="wordmark">APUS / REFLEX</span><span class="dateline">管理层汇报 · 2026.10.09</span></div>
+    <h1>APUS Reflex Harness</h1>
+    <p class="subtitle">瞬策 · 即时决策融合 Agent 架构</p>
+    <p class="thesis">让 AI 会思考，也能<em>把事办成。</em></p>
+    <p class="summary">融合即时判断、深度推理与执行底座，让用户能指挥过程、看见进展、核对成果。</p>
+  </header>
+
+  <section class="value-grid" aria-label="业务价值与发展潜力">
+    <div class="value"><span class="value-label">用户价值 / 掌控感</span><h2>能接话，过程看得见</h2><p>补充及时送达，路由与委派进展可见。</p></div>
+    <div class="value"><span class="value-label">经济潜力 / 资源效率</span><h2>把强模型用在难处</h2><p>按任务分配模型，验证成功交付的成本。</p></div>
+    <div class="value"><span class="value-label">平台潜力 / 场景复用</span><h2>一套体系，多种交付</h2><p>复用底座与决策策略，扩展业务场景。</p></div>
+  </section>
+
+  <section aria-labelledby="architecture-heading">
+    <div class="section-heading"><h2 id="architecture-heading">大小脑协作，把能力变成成果</h2><span>产品目标架构 · 含下一阶段能力</span></div>
+    <div class="architecture-scroll" tabindex="0" role="region" aria-label="大小脑架构图，窄屏可横向滚动">
+    <svg class="architecture" viewBox="0 0 700 374" role="img" aria-labelledby="architecture-title architecture-desc">
+      <title id="architecture-title">APUS Reflex Harness：小脑即时判断，大脑深度执行，共享底座并交付场景成果</title>
+      <desc id="architecture-desc">用户目标及补充先进入小脑。Jev 小脑选择执行者、送达补充并判断介入时机；大脑负责理解、规划、使用工具和生成成果，并把进展和结果反馈给小脑。两者共同建立在 DSH Harness 的工具、权限、目标、任务记录和专业 Agent 协作能力上。下游交付软件、文档成果，并向业务助手扩展。完成核验已在本地验证；原始约束保真、执行前检查、停滞恢复和线路质量监控属于下一阶段。</desc>
+      <defs>
+        <marker id="ceo-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#738391"/></marker>
+        <marker id="ceo-blue-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#2158a8"/></marker>
+      </defs>
+      <rect x="155" y="1" width="390" height="35" rx="17.5" fill="#eef3f8"/>
+      <text x="350" y="23" text-anchor="middle" class="body" fill="#405260">用户目标与随时补充：把这件事交付好</text>
+      <rect x="1" y="52" width="698" height="233" rx="12" fill="#fafbfd" stroke="#dce3e8"/>
+      <path class="wire" d="M180 36V74" marker-end="url(#ceo-arrow)"/>
+      <text x="679" y="66" text-anchor="end" font-size="10" letter-spacing=".5" fill="#687a89">APUS REFLEX HARNESS</text>
+      <rect x="18" y="77" width="287" height="125" rx="9" fill="#fff4e5" stroke="#e6c99f"/>
+      <text x="34" y="98" class="small" fill="#956025">System 1 / Jev 9B</text>
+      <text x="34" y="127" class="name" fill="#704716">小脑 · 即时判断</text>
+      <text x="34" y="150" class="body" fill="#795b35">选谁来做 · 接住补充 · 何时介入</text>
+      <rect x="34" y="164" width="183" height="23" rx="5" fill="#ffffff" stroke="#e2caa8"/>
+      <text x="125.5" y="180" text-anchor="middle" class="label" fill="#795b35">完成核验：本地真实验证</text>
+      <rect x="395" y="77" width="287" height="125" rx="9" fill="#183c66"/>
+      <text x="411" y="98" class="small" fill="#b8cee5">System 2 / 大模型与专业 Agent</text>
+      <text x="411" y="127" class="name" fill="#ffffff">大脑 · 深度执行</text>
+      <text x="411" y="150" class="body" fill="#dae6f1">理解与规划 · 使用工具 · 生成成果</text>
+      <text x="411" y="179" class="small" fill="#b8cee5">云端模型 / Codex 专业 Agent</text>
+      <path class="blue-wire" d="M306 114H392" marker-end="url(#ceo-blue-arrow)"/>
+      <text x="350" y="104" text-anchor="middle" class="label" fill="#2158a8">派活 · 插话</text>
+      <path class="wire" d="M394 163H308" marker-end="url(#ceo-arrow)"/>
+      <text x="350" y="185" text-anchor="middle" class="label" fill="#596773">进展 · 结果</text>
+      <path class="wire" d="M161 202V216M539 202V216"/>
+      <rect x="18" y="216" width="664" height="54" rx="7" fill="#edf1f5"/>
+      <text x="34" y="239" font-size="15" font-weight="650" fill="#344b60">执行底座 / DSH</text>
+      <text x="215" y="238" class="small" fill="#4c6171">工具与权限 · 目标与任务记录 · 专业 Agent 协作</text>
+      <text x="34" y="257" class="label" fill="#607484">共同承载：持续执行、过程可见、记录可回放、成果可核对</text>
+      <path class="wire" d="M350 271V296M113 296H587M113 296V313M350 296V313M587 296V313" marker-end="url(#ceo-arrow)"/>
+      <path class="wire" d="M113 305V313M350 305V313" marker-end="url(#ceo-arrow)"/>
+      <rect x="1" y="318" width="224" height="55" rx="7" fill="#f1f5fa" stroke="#d5e1ee"/>
+      <text x="16" y="339" class="outcome" fill="#294d75">软件交付</text><text x="209" y="338" text-anchor="end" font-size="10" fill="#5d768f">已有验收场景</text>
+      <text x="16" y="359" class="small" fill="#526779">代码 / 测试结果 / 变更文件</text>
+      <rect x="238" y="318" width="224" height="55" rx="7" fill="#f1f5fa" stroke="#d5e1ee"/>
+      <text x="253" y="339" class="outcome" fill="#294d75">文档任务</text><text x="446" y="338" text-anchor="end" font-size="10" fill="#5d768f">本地真实验证</text>
+      <text x="253" y="359" class="small" fill="#526779">文件处理 / 成果核对</text>
+      <rect x="475" y="318" width="224" height="55" rx="7" fill="#ffffff" stroke="#a9b8c5" class="planned"/>
+      <text x="490" y="339" class="outcome" fill="#4a5c6b">业务助手</text><text x="683" y="338" text-anchor="end" font-size="10" fill="#687a89">拓展方向</text>
+      <text x="490" y="359" class="small" fill="#607484">调研方案 / 工作推进</text>
+    </svg>
+    </div>
+    <p class="architecture-caption"><span class="mobile-hint">横向滑动查看完整架构。 </span>架构价值：即时判断直接驱动执行动作；更换大脑时，任务管理和交付记录仍可复用。虚线表示场景拓展方向。</p>
+    <div class="capabilities" aria-label="四项招牌能力">
+      <div class="capability"><h3>入口智能</h3><p>按任务选模型<br>按需要派专业 Agent</p></div>
+      <div class="capability"><h3>过程智能</h3><p>补充送达当前任务<br>委派过程持续可见</p></div>
+      <div class="capability"><h3>体感智能</h3><p>看见交给谁、到哪了<br>部分决策可展开查看</p></div>
+      <div class="capability"><h3>管理智能</h3><p>监测线路慢与故障<br>质量异常监控待完善</p></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="evidence-heading">
+    <div class="section-heading"><h2 id="evidence-heading">已有真实闭环，下一步验证业务收益</h2><span>证据截至 2026.10.08 · 各自限定范围</span></div>
+    <div class="evidence">
+      <div><strong>随时补充</strong><b>要求送达当前任务</b><p>历史线上场景：改测试文件名，要求送达当前轮与 Codex。</p></div>
+      <div><strong>5 / 5</strong><b>v0.1 公网浏览器场景通过</b><p>路由、日志折叠、任务卡、目标打断、转发 Codex。</p></div>
+      <div><strong>2 + 1</strong><b>完成核验本地真实验证</b><p>2 个真实模型任务 + 1 个浏览器闭环；尚未生产发布。</p></div>
+    </div>
+  </section>
+
+  <section class="next" aria-labelledby="next-heading">
+    <h2 id="next-heading">建议：先做深工程交付，再复用到业务场景</h2>
+    <p>选择一个真实业务试点，对照现有 Agent，验证<b>任务成功率、人工介入次数、成功交付的时间与成本</b>。以可验收成果推进投入，沉淀可复用的决策策略与任务记录。</p>
+    <p class="roadmap">下一阶段：原始要求保真与执行前约束 → 完成核验上线 → 提前收工检测与停滞恢复；模型线路质量监控并行推进。</p>
+  </section>
+
+  <footer><p>核心方向：让模型的推理能力，转化为用户可掌控的交付能力。</p><p><a href="report.html">完整报告</a> · <a href="feature-acceptance.html">验证依据</a> · <a href="mu-p0-review.html">下一阶段设计</a></p></footer>
+</main>
+</body>
+</html>

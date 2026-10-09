@@ -36,6 +36,9 @@
 | `docs/feat-jev-decision-kernel/mu-p0-review.json` | 175 | mu源码评审、P0排序及待确认设计v2 |
 | `docs/feat-jev-decision-kernel/relay-directory-status.json` | 50 | 三站只读目录审查，不含凭据 |
 | `docs/feat-jev-decision-kernel/report.html` | 557 | 架构/设计及配对任务更新 |
+| `docs/feat-jev-decision-kernel/report-ceo-onepage.html` | 189 | CEO一页价值、大小脑架构与场景交付汇报 |
+| `docs/feat-jev-decision-kernel/report-ceo-onepage.pdf` | 979509 bytes | 实际导出的A4单页，中文文字与架构可读 |
+| `docs/feat-jev-decision-kernel/report-ceo-onepage-verification.json` | 62 | 三种宽度及PDF页面文字核对 |
 | `docs/feat-jev-decision-kernel/tasks/task.i18n.yaml` | 40 | 架构/设计及配对任务更新 |
 | `docs/feat-jev-decision-kernel/tasks/task.md` | 109 | 架构/设计及配对任务更新 |
 | `docs/feat-jev-decision-kernel/tasks/task.zh.md` | 109 | 架构/设计及配对任务更新 |
@@ -91,10 +94,10 @@
 | `snapshots/sdk/system3-completion-review/snapshot.yml` | 11 | 双SDK/Session回放及owner-local期望输出 |
 | `snapshots/sdk/system3-completion-review/system-prompt.expected.md` | 27 | 双SDK/Session回放及owner-local期望输出 |
 | `snapshots/sdk/system3-completion-review/workspace/completion-evidence.txt` | 1 | 双SDK/Session回放及owner-local期望输出 |
-| `tasks/feat-jev-decision-kernel/handoff.md` | 170 | 计划、经验与冷启动交接 |
+| `tasks/feat-jev-decision-kernel/handoff.md` | 190 | 计划、经验与冷启动交接 |
 | `tasks/feat-jev-decision-kernel/lessons.md` | 19 | 计划、经验与冷启动交接 |
 | `tasks/feat-jev-decision-kernel/notes.md` | 19 | 计划、经验与冷启动交接 |
-| `tasks/todo.md` | 297 | 计划、经验与冷启动交接 |
+| `tasks/todo.md` | 313 | 计划、经验与冷启动交接 |
 
 ## 设计约束
 
@@ -177,3 +180,11 @@
 - [ ] 保持 shadow；先补独立评测与当前构建浏览器证据，再决定上线。
 - [ ] 新候选按已确认具体设计推进；每次固定源码和配置、验收产物/反例，再更新矩阵及交接。
 - [ ] 构建与 built smoke 顺序执行，只报告实际检查和范围。
+
+## CEO 汇报交付（2026-10-09）
+
+- 用户明确要求将 report 浓缩为一页老板汇报；原 report 保留，新增 report-ceo-onepage.html/pdf 与布局证据，均在本 worktree 文档目录。
+- 叙事为业务价值、大小脑和DSH执行底座、软件/文档/业务助手成果、限定范围的真实证据、可衡量的试点建议；以可复用交付体系表达潜力，不宣称尚未测得的成本收益或全部功能完成。
+- gstack browse实际核对375/768/1440宽度；文档本身无横向越界，手机架构区域可横滑。PDF为A4一页，所有文字块在页内；无外部资源、SVG文字无越界、三个本地链接有效。
+- 独立CEO内容审查完成。当前完成核验为本地验证未生产发布，质量监控和新增P0仍待完善；汇报不扩大运行验收范围，不变更产品源码或生产环境。
+- 文档检查：test:docs20/20、doc-sync42/42、lint:contracts-ready、相对链接、Ruff check/format与diff通过。此次仅本地提交，未推送或部署；默认浏览器已打开HTML供用户查看。
