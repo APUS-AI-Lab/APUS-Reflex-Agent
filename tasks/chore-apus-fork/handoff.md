@@ -15,7 +15,7 @@ Model as Harness：共享大小脑决策、Host 投影和 System3 UI 在此维�
 
 ## 已发现的真实行为
 
-同一账号的原生 GitHub fork API 返回原仓库，因此新建保留历史的私有副本，GitHub 页面无 fork 关系。source remote 指向旧 xDAN 仓库，upstream 指向 DeepSeek Harness。原 main 保存为 source-main，新 main 继承当前功能分支。
+同一账号的原生 GitHub fork API 返回原仓库，因此新建保留历史的私有副本，GitHub 页面无 fork 关系。source remote 指向旧 xDAN 仓库，upstream 指向 DeepSeek Harness。旧 GitHub main 保存为 source-main，本地旧 main 保存为 source-local-main；新 main 继承当前功能分支。
 
 Frontend 当前固定的 3127b62274bf324a3eac0cba28d03a37c3b91a30 已在当前历史中。复制新仓库不代表把安装包升级到新 main。xDAN System3 与 Harness Dev 可以同时运行，应按可执行文件和 runtime manifest 判断测试对象。
 
@@ -28,7 +28,7 @@ Frontend 当前固定的 3127b62274bf324a3eac0cba28d03a37c3b91a30 已在当前�
 
 ## 分支与部署状态
 
-main 是新产品基线。原工作树、安装包、服务器和旧远端保持不变；导入历史标签期间关闭新仓库 Actions，避免触发历史版本发行。未声称旧功能在新安装包上已重新验收。
+main 是新产品基线。原工作树、安装包、服务器和旧远端保持不变；导入历史标签期间关闭新仓库 Actions，避免触发历史版本发行。已配置仅供新 Frontend CI 获取源码的只读 Deploy Key。未声称旧功能在新安装包上已重新验收，未声称新 CI 已运行。
 
 ## 冷启动 checklist
 
