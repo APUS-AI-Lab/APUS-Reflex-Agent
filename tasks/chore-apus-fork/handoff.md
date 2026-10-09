@@ -2,11 +2,12 @@
 
 ## TL;DR
 
-新仓库 cryptoSUN2049/APUS-Reflex-Harness 为私有独立副本，保留 Git 历史、分支和标签。新 main 以 worktree-feat-jev-decision-kernel 的 a2f3e160e6b0cf7844450ece301201067cabdccd 为基线，包含当前产品报告、CEO PPT 和演示方案。原 xDAN 仓库及应用未修改。
+新仓库 cryptoSUN2049/APUS-Reflex-Harness 为私有独立副本，保留 Git 提交历史与版本标签；按用户要求清理历史分支。新 main 以 worktree-feat-jev-decision-kernel 的 a2f3e160e6b0cf7844450ece301201067cabdccd 为基线，包含当前产品报告、CEO PPT 和演示方案。原 xDAN 仓库及应用未修改。
 
 ## 本轮交付物
 
 - tasks/chore-apus-fork/handoff.md：新仓库接续与边界。
+- tasks/chore-apus-fork/branch-cleanup-verification.json：历史分支清理后的远端核验。
 - tasks/chore-apus-fork/import-verification.json：最终远端提交、分支与标签数量、验证记录。
 
 ## 设计约束
@@ -15,9 +16,11 @@ Model as Harness：共享大小脑决策、Host 投影和 System3 UI 在此维�
 
 ## 已发现的真实行为
 
-同一账号的原生 GitHub fork API 返回原仓库，因此新建保留历史的私有副本，GitHub 页面无 fork 关系。source remote 指向旧 xDAN 仓库，upstream 指向 DeepSeek Harness。旧 GitHub main 保存为 source-main，本地旧 main 保存为 source-local-main；新 main 继承当前功能分支。
+同一账号的原生 GitHub fork API 返回原仓库，因此新建保留历史的私有副本，GitHub 页面无 fork 关系。source remote 指向旧 xDAN 仓库，upstream 指向 DeepSeek Harness。历史分支留在原 xDAN 仓库；新仓库只保留 main，继承当前产品功能分支。
 
 Frontend 当前固定的 3127b62274bf324a3eac0cba28d03a37c3b91a30 已在当前历史中。复制新仓库不代表把安装包升级到新 main。xDAN System3 与 Harness Dev 可以同时运行，应按可执行文件和 runtime manifest 判断测试对象。
+
+`import-verification.json` 是首次导入的历史核验快照；当前分支策略与清理结果以 `branch-cleanup-verification.json` 为准。
 
 ## 下一里程碑
 
