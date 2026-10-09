@@ -6,7 +6,7 @@
 - 当前 worktree `.claude/worktrees/feat-jev-decision-kernel`，分支 `worktree-feat-jev-decision-kernel`；主目录 main 保持干净，未同步或部署。
 - prd 已在线完成云盘后的分区与 ext4 扩展，最终检查 984G / 156G 可用 / 84%，服务 active，无重启。
 - 完成核验补齐持久化及两 SDK；三项状态隔离问题已修，System3 包243项回归、完成核验/任务卡/内核三源码100%覆盖、真实 DeepSeek + Jev E2E 2/2 通过。
-- 战略为 Model as Harness：大小脑混合模型接管五类运行事务；CEO一页图、六页可编辑PPT和Slogan“瞬时执行，深度思考”已同步。完成核验本地浏览器闭环通过；完整五域接管、新候选P0、生产升级与独立评测仍未收口，部署WIP保持shadow。
+- 战略为 Model as Harness：大小脑混合模型接管五类运行事务；CEO一页图、v2四页主讲+两页备查PPT、六场景演示稿和Slogan“瞬时执行，深度思考”已同步。完成核验本地浏览器闭环通过；完整五域接管、新候选P0、生产升级与独立评测仍未收口，部署WIP保持shadow。
 
 ## 本轮交付物
 
@@ -14,6 +14,18 @@
 
 | 文件 | 行数或大小 | 说明 |
 |---|---:|---|
+| `docs/feat-jev-decision-kernel/APUS-Reflex-Harness-CEO-brief-v2.pptx` | 61819 bytes | CEO v2或演示方案交付/验证 |
+| `docs/feat-jev-decision-kernel/APUS-Reflex-Harness-CEO-brief-v2.pdf` | 232514 bytes | CEO v2或演示方案交付/验证 |
+| `docs/feat-jev-decision-kernel/APUS-Reflex-Harness-CEO-brief-v2-preview.png` | 370701 bytes | CEO v2或演示方案交付/验证 |
+| `docs/feat-jev-decision-kernel/report-ceo-ppt-v2-verification.json` | 93 | CEO v2或演示方案交付/验证 |
+| `docs/feat-jev-decision-kernel/demo-plan.html` | 111 | CEO v2或演示方案交付/验证 |
+| `docs/feat-jev-decision-kernel/demo-plan.md` | 177 | CEO v2或演示方案交付/验证 |
+| `docs/feat-jev-decision-kernel/demo-plan.zh.md` | 177 | CEO v2或演示方案交付/验证 |
+| `docs/feat-jev-decision-kernel/demo-plan.i18n.yaml` | 46 | CEO v2或演示方案交付/验证 |
+| `docs/feat-jev-decision-kernel/demo-plan-verification.json` | 143 | CEO v2或演示方案交付/验证 |
+| `docs/feat-jev-decision-kernel/demo-capability-coverage.json` | 411 | CEO v2或演示方案交付/验证 |
+| `docs/feat-jev-decision-kernel/APUS-Reflex-demo-kit.zip` | 2980 bytes | CEO v2或演示方案交付/验证 |
+| `docs/feat-jev-decision-kernel/demo-fixture-verification.json` | 44 | CEO v2或演示方案交付/验证 |
 | `tasks/lessons.md` | 120 | 用户战略纠正和PPT导入要求 |
 | `docs/feat-jev-decision-kernel/report-ceo-ppt-verification.json` | 130 | 六页文本/尺寸/备注/兼容性核对 |
 | `docs/feat-jev-decision-kernel/APUS-Reflex-Harness-CEO-brief-preview.png` | 359511 bytes | 最终六页版面预览 |
@@ -180,7 +192,7 @@
 
 ## 冷启动 checklist
 
-- [ ] 先读本文件、lessons.md、report-ceo-onepage.html、APUS-Reflex-Harness-CEO-brief.pptx、mu-p0-review.html、feature-acceptance.html、completion-continuation.html 和 tasks/task.zh.md。
+- [ ] 先读本文件、lessons.md、report-ceo-onepage.html、APUS-Reflex-Harness-CEO-brief-v2.pptx、demo-plan.html、mu-p0-review.html、feature-acceptance.html、completion-continuation.html 和 tasks/task.zh.md。
 - [ ] 核对 status、diff、stash、branch、HEAD、worktree list 及其他会话写入归属，不覆盖 WIP。
 - [ ] 修改 packages 前读 architecture.md、defensive-patterns.md、相关 AGENTS；review 来源文件而非复述稿。
 - [ ] 保持 shadow；先补独立评测与当前构建浏览器证据，再决定上线。
@@ -211,5 +223,17 @@
 
 ### CEO 汇报思维复核
 
-- 用户要求吸收既有战略、成果定位与沟通方法；已阅读四份指定材料及关联模型/产品说明，独立内容复核完成。本次是分析建议，PPT尚未按此轮意见重构。
+- 用户要求吸收既有战略、成果定位与沟通方法；已阅读四份指定材料及关联模型/产品说明，独立内容复核完成。该轮分析建议已落实到独立v2：4页主讲、2页备查。
 - 下一次重构补齐：独立模型与Harness各自身份、APUS具体产品任务、获准数据到评测/训练的目标循环，以及推荐/取舍/责任承接/继续或调整条件。自有品牌、当前部署版本须核对；不把日志回流当训练闭环或把局部E2E当业务收益。
+
+### CEO PPT v2、Mac试用与演示材料
+
+- v2先讲既有APUS模型与Harness资产，再讲大小脑管理五类事务、公司产品任务与获准数据积累、推荐/取舍/责任和扩展条件。Rivon Browse/Bibble为候选，模型品牌使用APUS即时决策模型，实际调用alias留备注；未将训练循环或产品接入说成完成。Keynote真实导入、6页备注和导出通过；246原生对象与155文本匹配PDF，六页预览和独立内容复核通过。
+- 当前原生应用Harness Dev已打开，私密测试根目录为 ~/Library/Application Support/APUS Reflex Test/20261009-142957，打开 APUS Reflex.command可再次进入。旧/Applications/xDAN System3.app未改。专用配置启用active核验，其余项目/生产未改；后续仅在用户要求时操作正在手测的会话。
+- 新Mac smoke有真实APUS选路1401ms、主模型write/read/bash和mac-smoke.txt字节核对，四份source/build与先前Web验收一致。凭据/入口token不输出，readiness.json、startup-session.jsonl和截图留私密目录，不复制敏感日志。
+- 用户“你可以做什么呢”截图是该Mac窗口，Host本地19387；正文自称Web GUI是模型自述。入口1659ms、turn跨度8757ms（不含入口），轮内skill878ms、主模型step7827ms，无工具。原UI向下取整显示8秒，不能称完整端到端或纯主模型生成时间。
+- 两层排版提案在demo-plan.html：入口行独立于本轮执行折叠。原turnHead在折叠button内，需要后续结构调整、本地化与界面回归；没有改运行源码或重启应用。缺失不造0ms，按本轮关联，不把固定/弃权/失败混成成功决策。
+- UIUX相对本地原版标签dsh-v0.1.7-rc.2只读审计：新增System3状态/依据、要求卡、插话、专业委派、过程提醒与自动选择说明；Dock静态光晕无CSS动画。原生箭头/加载点/Tooltip等动效未改；设计呼吸动画、ETA、专用核验与质量面板未落地。窄屏长路由截断及秒表aria-live频率后续需实测。
+- 演示稿六场景：入口、改要求、受控提前完成、Codex委派、长日志、Web同会话刷新。14原招牌脚本覆盖6直接/6部分/2缺失；战略补充及五域、八组原生分别审查。全部新提示待真实彩排；初始要求丢失和核验放行边界保持明示。
+- 合成材料仅入zip，不写用户工作区：6行9月CSV净收入4420；ledger初始1测试过；log真实3测试中1失败，错误位于376行输出中段，修复副本3通过。测试材料本身不证明产品折叠/修复E2E。
+- 最终本地文档检查及交互证据见demo-plan-verification.json、demo-fixture-verification.json、report-ceo-ppt-v2-verification.json。未推送、合并或生产部署。下一步为新脚本逐一实测、初始要求保留及已列P0继续交付。

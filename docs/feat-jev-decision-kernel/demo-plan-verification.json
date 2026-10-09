@@ -1,0 +1,143 @@
+{
+  "scope": "Static demo-document interaction; no product session or model calls",
+  "viewports": [
+    {
+      "width": 1440,
+      "pageWidth": 1440,
+      "scenes": 6,
+      "coverageRows": 19,
+      "externalResources": 0
+    },
+    {
+      "width": 768,
+      "pageWidth": 768,
+      "scenes": 6,
+      "coverageRows": 19,
+      "externalResources": 0
+    },
+    {
+      "width": 375,
+      "pageWidth": 375,
+      "scenes": 6,
+      "coverageRows": 19,
+      "externalResources": 0
+    }
+  ],
+  "scenes": [
+    {
+      "button": "1",
+      "visible": [
+        "scene-1"
+      ],
+      "pressed": "true"
+    },
+    {
+      "button": "2",
+      "visible": [
+        "scene-2"
+      ],
+      "pressed": "true"
+    },
+    {
+      "button": "3",
+      "visible": [
+        "scene-3"
+      ],
+      "pressed": "true"
+    },
+    {
+      "button": "4",
+      "visible": [
+        "scene-4"
+      ],
+      "pressed": "true"
+    },
+    {
+      "button": "5",
+      "visible": [
+        "scene-5"
+      ],
+      "pressed": "true"
+    },
+    {
+      "button": "6",
+      "visible": [
+        "scene-6"
+      ],
+      "pressed": "true"
+    }
+  ],
+  "plans": [
+    {
+      "id": "short",
+      "pressed": "true",
+      "summary": "② 中途改要求 → 打开真实成果 → 讲清大小脑分工。讲解约3分钟，运行等待另计；没有现场通过时使用明确标注的历史证据。"
+    },
+    {
+      "id": "standard",
+      "pressed": "true",
+      "summary": "① 入口选路 → ② 中途改要求 → ③ 完成前核验 → ⑥ 刷新查看证据。讲解时间为建议，真实运行等待另计。"
+    },
+    {
+      "id": "deep",
+      "pressed": "true",
+      "summary": "完整故事后加演④专业委派、⑤长日志诊断，并打开能力覆盖表说明缺口。讲解约20分钟，真实运行等待另计。"
+    }
+  ],
+  "timing": [
+    {
+      "id": "done",
+      "entryVisible": true,
+      "text": "本轮执行 · 8.8 秒　⌄"
+    },
+    {
+      "id": "running",
+      "entryVisible": true,
+      "text": "本轮执行中　⌄"
+    },
+    {
+      "id": "stopped",
+      "entryVisible": true,
+      "text": "本轮执行 · 已停止　⌄"
+    },
+    {
+      "id": "missing",
+      "entryVisible": false,
+      "text": "本轮执行 · 8.8 秒　⌄"
+    }
+  ],
+  "toggle": {
+    "closed": true,
+    "reopened": true
+  },
+  "clipboard": {
+    "write": {
+      "writeSucceeded": false,
+      "denied": "NotAllowedError"
+    },
+    "selectionFallback": true
+  },
+  "timing_independent": {
+    "entryOutsideExecutionButton": true,
+    "entryAboveExecution": true
+  },
+  "print_details": {
+    "allOpen": true,
+    "restored": true
+  },
+  "errors": "No browser console errors",
+  "links_checked": 20,
+  "download_name": "演示方案.md",
+  "archive_integrity": "PASS",
+  "print_pages": 19,
+  "all_six_scene_titles_and_prompts_in_print": true,
+  "pdf_text_outside_page": [],
+  "verified_at_utc": "2026-10-09T07:47:09.130832+00:00",
+  "content_review": "PASS after replacing ambiguous current-month wording with September 2026 sample period",
+  "visual_review": "PASS: desktop scene, two-layer timing proposal, mobile layout and original-Web UIUX comparison viewed",
+  "docs_checks": {
+    "test_docs": "20/20 passed",
+    "final_pair_check": "PASS: 1 named pair consistent after final update"
+  },
+  "html_sha256": "cfa33eabdf69e55e564c06c504ff216277cf87201447a0d5a3ef8eb421bfee8c"
+}

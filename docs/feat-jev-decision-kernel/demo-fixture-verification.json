@@ -1,0 +1,44 @@
+{
+  "scope": "Synthetic fixture checks only; no claim of product or new prompt E2E. The delivered log fixture retains its intentional bug.",
+  "sales": {
+    "rows": 6,
+    "totals": {
+      "gross": 5000,
+      "discount": 370,
+      "refund": 210,
+      "net": 4420
+    },
+    "channels": {
+      "App": 1620,
+      "Partner": 1450,
+      "Web": 1350
+    }
+  },
+  "ledger_baseline": {
+    "tests": 1,
+    "exit_code": 0
+  },
+  "log_baseline": {
+    "tests": 3,
+    "failures": 1,
+    "exit_code": 1,
+    "lines": 376,
+    "chars": 23969,
+    "assertion_position_fraction": 0.513
+  },
+  "log_fixed_copy": {
+    "tests": 3,
+    "exit_code": 0
+  },
+  "archive_sha256": "89984cc9e2d15e19542085822f06d3ad014801dbc23f49a8fdba38e7763866fc",
+  "files": {
+    "sales.csv": "08770e1cd3127d329b2de023eb199afd6e65134fb4770924bafcbe39b7d2e5b5",
+    "acceptance.txt": "7f8518f7db5e9a55049f49c4ea6d6e8f509695231e60cbd607bcb36c88a75a14",
+    "demo-ledger/ledger.py": "0d47bd76f37ddb3929b997e3b04e38fadc52b6873ce8e2ab15fb3eff2903c4b4",
+    "demo-ledger/test_ledger.py": "4a73f0763b8d985bfbb32b6aab9a47178beb8630c494ec52228ff65603775183",
+    "demo-log/ledger.py": "7f02f2cad051cba8c6e070c94bdf15cefb2b3611331ba5131ee5b4a41d1b3c3b",
+    "demo-log/test_ledger.py": "5d19bb0fa495ef8373b87e0b041ad0d4437a093f89a9eaab8765c43f2a7e95e1",
+    "demo-log/run_tests.py": "8c933d8466a6baeca2bfff4b3af1950b81a60b0c968924d3fea054cb83163766",
+    "使用说明.txt": "b360f44599b98f3a3b4a00d6d6d1899bc351162c11b5c7d63f5857ea5631d585"
+  }
+}
