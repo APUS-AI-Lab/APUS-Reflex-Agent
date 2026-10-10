@@ -48,7 +48,7 @@ const receiptSchema: ZodType<System3DecisionReceipt | null> = z.object({
   stateDigest: z.string(), evidenceRefs: z.array(z.string()), goalRevision: z.string(),
   dataClasses: z.array(z.enum(['public', 'workspace', 'sensitive', 'secret'])), routeId: z.string(),
   executionDomain: z.enum(['local', 'network']), providerId: z.string().optional(), requestedModel: z.string().optional(),
-  effort: z.enum(['low', 'high']), turn: z.number().optional(), step: z.number().optional(), elapsedMs: z.number(),
+  effort: z.enum(['low', 'high']).optional(), turn: z.number().optional(), step: z.number().optional(), elapsedMs: z.number(),
   baseline: z.object({
     action: supervised, accepted: z.boolean(),
     reason: z.enum(['accepted', 'stale-goal', 'missing-evidence', 'failed-checks', 'unknown-checks', 'budget-exhausted', 'invalid-advice']),
@@ -63,7 +63,7 @@ const receiptSchema: ZodType<System3DecisionReceipt | null> = z.object({
     z.object({ kind: z.literal('unknown'), code: z.enum(['missing-credential', 'timeout', 'rate-limited', 'http',
       'invalid-response', 'transport', 'privacy-denied', 'provider-unavailable', 'cancelled']), status: z.number().optional() }),
   ]),
-}).transform(({ providerId, requestedModel, turn, step, outcome, ...required }): System3DecisionReceipt => {
+}).transform(({ providerId, requestedModel, effort, turn, step, outcome, ...required }): System3DecisionReceipt => {
   let normalizedOutcome: System3DecisionOutcome
   if (outcome.kind === 'ok') {
     const { usage, ...response } = outcome.response
@@ -73,7 +73,7 @@ const receiptSchema: ZodType<System3DecisionReceipt | null> = z.object({
     normalizedOutcome = { ...failure, ...status === undefined ? {} : { status } }
   }
   return {
-    ...required, outcome: normalizedOutcome,
+    ...required, outcome: normalizedOutcome, ...effort === undefined ? {} : { effort },
     ...providerId === undefined ? {} : { providerId }, ...requestedModel === undefined ? {} : { requestedModel },
     ...turn === undefined ? {} : { turn }, ...step === undefined ? {} : { step },
   }
@@ -81,6 +81,6 @@ const receiptSchema: ZodType<System3DecisionReceipt | null> = z.object({
 
 /** Host-only latest receipt fold; unrelated events retain the same state reference. */
 export const system3DecisionProjection: ProjectionDefinition<'lastSystem3Decision'> = {
-  key: 'lastSystem3Decision', stateSchema: receiptSchema, stateVersion: 1, init: () => null,
+  key: 'lastSystem3Decision', stateSchema: receiptSchema, stateVersion: 2, init: () => null,
   apply: (state, event) => event.type === 'system3/decision' ? event.data : state,
 }

@@ -1,0 +1,19 @@
+# Bilingual-pair consistency record for cache-benchmark-design.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-reflex-control/cache-benchmark-design.md
+/c-06-paired-cache-acceptance:
+  en: 18fa47c12a8635f6
+  zh: d700f057d8636de2
+/c-06-paired-cache-acceptance/scope-and-matrix:
+  en: 0c23a21f3d4ffc82
+  zh: 70b71334740df730
+/c-06-paired-cache-acceptance/measurements-and-acceptance:
+  en: dc3cf920ce55d60a
+  zh: 8e191d173a16f5d3
+/c-06-paired-cache-acceptance/running-and-artifacts:
+  en: 3fd4d3b254096594
+  zh: fbc103ec4ad47712
+/c-06-paired-cache-acceptance/current-run-status:
+  en: 71d4efe5492834f6
+  zh: 22523f791795eecd

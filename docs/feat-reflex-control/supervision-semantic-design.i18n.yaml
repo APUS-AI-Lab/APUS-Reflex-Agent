@@ -1,0 +1,22 @@
+# Bilingual-pair consistency record for supervision-semantic-design.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-reflex-control/supervision-semantic-design.md
+/semantic-goal-supervision-design:
+  en: 8ef4d61da3e2eb6c
+  zh: 951f1259f6fd406a
+/semantic-goal-supervision-design/evidence-and-api:
+  en: 51c164267d2f9e4e
+  zh: 58d54a273d8a6ec0
+/semantic-goal-supervision-design/privacy-and-decision:
+  en: 1164f637d59a19ec
+  zh: 7d7fe2a2c3e5dc27
+/semantic-goal-supervision-design/files-and-acceptance:
+  en: b07a4df3b3a21a79
+  zh: 828426e570e02aa3
+/semantic-goal-supervision-design/contiguous-semantic-observation-window:
+  en: ba70269bf838ed0a
+  zh: ae5be471f9f27796
+/semantic-goal-supervision-design/persistent-delegated-route-acceptance-case:
+  en: 61d65b6be0ddae03
+  zh: 1aa410db41e805eb

@@ -1,0 +1,52 @@
+# Bilingual-pair consistency record for acceptance-checklist.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-reflex-control/acceptance-checklist.md
+/apus-reflex-harness-acceptance-checklist:
+  en: 002e9ab9af0affc3
+  zh: d11afabaa7bdca3e
+/apus-reflex-harness-acceptance-checklist/summary:
+  en: 95dd1133004efe32
+  zh: 58944aeeed0eda37
+/apus-reflex-harness-acceptance-checklist/table-of-contents:
+  en: 6873d0e699d9d48e
+  zh: 02c8aba4e2f2a5dd
+/apus-reflex-harness-acceptance-checklist/requirements-and-designs:
+  en: 1ea87d91e57369c4
+  zh: e5f19f7f686ceb7b
+/apus-reflex-harness-acceptance-checklist/verdict-rules:
+  en: a317c44fe84f7fe6
+  zh: db7e8d444af70829
+/apus-reflex-harness-acceptance-checklist/acceptance-cases:
+  en: ad4a223da5298ed1
+  zh: 8ae0e170e4e72fb2
+/apus-reflex-harness-acceptance-checklist/acceptance-cases/user-entry-routing:
+  en: 7ecd1df9d1b10cc1
+  zh: 4fbde75665dd754c
+/apus-reflex-harness-acceptance-checklist/acceptance-cases/long-goal-supervision-and-correction:
+  en: 54e15696f3231ece
+  zh: 5961a13891b8a408
+/apus-reflex-harness-acceptance-checklist/acceptance-cases/dynamic-context-memory-and-cache:
+  en: ddb1b8674b844a7f
+  zh: 69d120038bc233b5
+/apus-reflex-harness-acceptance-checklist/acceptance-cases/reflex-model-settings:
+  en: 5f8dfcbf32cc07f6
+  zh: ff9c31ac8f5d472e
+/apus-reflex-harness-acceptance-checklist/acceptance-cases/branding-licensing-and-delivery:
+  en: 9cc846ba3879a9bf
+  zh: a1dc07abe7e8de9e
+/apus-reflex-harness-acceptance-checklist/acceptance-cases/ui-ux-acceptance:
+  en: 9cb55812e2aaad09
+  zh: 9d5feb7c0f3310bf
+/apus-reflex-harness-acceptance-checklist/complete-user-journeys:
+  en: 374762bc93831d52
+  zh: 93545adf7fde3d18
+/apus-reflex-harness-acceptance-checklist/evidence-and-execution-order:
+  en: fe1b4bfb8ab74531
+  zh: 39ddb24a2eacd7ea
+/apus-reflex-harness-acceptance-checklist/release-completion-criteria:
+  en: b7a95650ffe9c68c
+  zh: 5f0a24eec61c4b38
+/apus-reflex-harness-acceptance-checklist/dev-note:
+  en: 1bc2605d0f771b56
+  zh: 55ec4e6454d6911b

@@ -34,7 +34,11 @@ export interface SystemOneProviderOptions {
 }
 
 
-function publicEndpoint(endpoint: string): string {
+/** Normalize an HTTP endpoint without accepting embedded credentials.
+ * @param endpoint - Configured gateway URL.
+ * @returns Absolute URL without a trailing slash.
+ */
+export function normalizeJevEndpoint(endpoint: string): string {
   try {
     const url = new URL(endpoint)
     if (url.protocol !== 'http:' && url.protocol !== 'https:') throw new Error('unsupported protocol')
@@ -77,7 +81,7 @@ export class SystemOneProvider implements JevProvider {
   private readonly options: SystemOneProviderOptions
 
   constructor(options: SystemOneProviderOptions) {
-    this.options = { ...options, endpoint: publicEndpoint(options.endpoint) }
+    this.options = { ...options, endpoint: normalizeJevEndpoint(options.endpoint) }
     this.info = { id: options.id, endpoint: this.options.endpoint, model: options.model }
     this.fetcher = options.fetcher ?? fetch
     if (options.timeoutMs <= 0 || options.timeoutMs > MAX_TIMER_DELAY_MS || !Number.isFinite(options.timeoutMs)) throw new Error(`jev timeoutMs must be a positive finite number no greater than ${MAX_TIMER_DELAY_MS}`)
@@ -118,20 +122,18 @@ export class SystemOneProvider implements JevProvider {
         questions[name] = question
       } else {
         const [first, second, ...rest] = question.criteria
-        if (first === undefined || second === undefined) throw new JevProtocolError('score requires at least two levels')
-        questions[name] = { ...question, criteria: [first, second, ...rest] }
+        // oxlint-disable-next-line typescript/no-non-null-assertion -- validateJevRequest requires at least two score criteria.
+        questions[name] = { ...question, criteria: [first!, second!, ...rest] }
       }
     }
     const controller = new AbortController()
     const timer = setTimeout(() => { controller.abort() }, this.options.timeoutMs)
     const combined = signal === undefined ? controller.signal : AbortSignal.any([signal, controller.signal])
-    let abortWait: (() => void) | undefined
-    const cancelled = new Promise<never>((_resolve, reject) => {
-      abortWait = () => { reject(combined.reason instanceof Error ? combined.reason : new Error('Jev request aborted', { cause: combined.reason })) }
-      combined.addEventListener('abort', abortWait, { once: true })
-    })
+    const cancelled = Promise.withResolvers<never>()
+    const abortWait = () => { cancelled.reject(combined.reason instanceof Error ? combined.reason : new Error('Jev request aborted', { cause: combined.reason })) }
+    combined.addEventListener('abort', abortWait, { once: true })
     try {
-      const key = await Promise.race([this.options.resolveApiKey?.(), cancelled])
+      const key = await Promise.race([this.options.resolveApiKey?.(), cancelled.promise])
       combined.throwIfAborted()
       const client = new TypeSafeClient({
         // The SDK requires a nonempty key even for explicitly unauthenticated local gateways.
@@ -154,13 +156,12 @@ export class SystemOneProvider implements JevProvider {
         model: normalized.model ?? this.options.model,
         ...this.options.protocol === 'typesafe' ? {} : { effort: normalized.effort ?? this.options.effort },
       }
-      const raw = await Promise.race([client.systemOne(body, { signal: combined }), cancelled])
+      const raw = await Promise.race([client.systemOne(body, { signal: combined }), cancelled.promise])
       combined.throwIfAborted()
       try {
         return parseJevResponse(raw, normalized)
       } catch (error) {
-        if (error instanceof JevProtocolError) throw failure('invalid-response', 'jev provider response failed validation', undefined, error)
-        throw error
+        throw failure('invalid-response', 'jev provider response failed validation', undefined, error)
       }
     } catch (error) {
       signal?.throwIfAborted()
@@ -172,7 +173,7 @@ export class SystemOneProvider implements JevProvider {
       throw failure('transport', 'jev provider request failed', undefined, error)
     } finally {
       clearTimeout(timer)
-      if (abortWait !== undefined) combined.removeEventListener('abort', abortWait)
+      combined.removeEventListener('abort', abortWait)
     }
   }
 }

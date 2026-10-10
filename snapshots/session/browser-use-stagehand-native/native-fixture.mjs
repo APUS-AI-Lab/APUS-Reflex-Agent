@@ -23,6 +23,13 @@ export function installExternalBrowserHooks() {
     },
     // Built profiles use plain Node; only the external fixtures need transpilation.
     load(url, context, nextLoad) {
+      if (url.startsWith('data:text/javascript,')) {
+        return {
+          format: 'module',
+          source: decodeURIComponent(url.slice('data:text/javascript,'.length)),
+          shortCircuit: true,
+        }
+      }
       if (url !== sdkFixture && url !== chromiumFixture) return nextLoad(url, context)
       return {
         format: 'module',

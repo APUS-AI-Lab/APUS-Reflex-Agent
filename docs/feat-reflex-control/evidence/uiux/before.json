@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "stage": "before-built-fix",
+  "runtime": "Host17 / Client11 / server13",
+  "liveBrowser": true,
+  "modelRequestsSent": 0,
+  "providerSettingsSaved": false,
+  "themeRestored": "system",
+  "cases": [
+    {
+      "id": "entry-375",
+      "result": "pass",
+      "evidence": "entry-375-light-settled.png"
+    },
+    {
+      "id": "settings-375-light-dark",
+      "result": "fail",
+      "fieldWidthPx": 59,
+      "evidence": [
+        "reflex-375-light.png",
+        "reflex-375-dark.png"
+      ]
+    },
+    {
+      "id": "settings-768-1280-light-dark",
+      "result": "pass",
+      "scope": "visual inspection; save/probe were not invoked"
+    },
+    {
+      "id": "invalid-drafts",
+      "result": "pass",
+      "fields": [
+        "endpoint",
+        "effort",
+        "timeoutMs"
+      ],
+      "scope": "aria-invalid and associated error; unsaved drafts discarded on close",
+      "evidence": "settings-invalid.png"
+    },
+    {
+      "id": "keyboard-modal",
+      "result": "pass",
+      "tabSteps": 16,
+      "allFocusWithinModal": true,
+      "escapeRestoresSettingsButton": true,
+      "evidence": "keyboard-before.json"
+    },
+    {
+      "id": "native-200percent",
+      "result": "pending",
+      "scope": "640x450 CSS reflow proxy only; headless Ctrl++ did not change native zoom"
+    },
+    {
+      "id": "saving-probing-feedback",
+      "result": "pending",
+      "reason": "No model requests or saved provider changes during concurrent native acceptance"
+    },
+    {
+      "id": "unknown-delivery",
+      "result": "source-regression-pass",
+      "scope": "controlled React rendering; real provider unknown not induced"
+    }
+  ],
+  "fixes": {
+    "responsiveSettings": "source frozen; awaiting Client rebuild and browser replay",
+    "unknownCopy": "source frozen; awaiting Client rebuild; 59 source regressions passed"
+  }
+}

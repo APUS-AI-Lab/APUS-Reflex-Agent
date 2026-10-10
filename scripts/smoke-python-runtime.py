@@ -418,6 +418,14 @@ def completion_chunks(body: dict[str, object]) -> list[dict[str, object]]:
             if "snapshot_ping" in advertised_tool_names(body):
                 raise AssertionError("addition-only request retained the removed tool")
             return text_chunks(DYNAMIC_TOOLS_TEXT)
+        if call_id == "reflex-snapshot-restore" and tool_name == "reflex_memory":
+            if result.get("is_error") or not tool_text.startswith("Restored "):
+                raise AssertionError(f"Reflex memory restoration failed: {tool_text}")
+            if "[Reflex recovered memory" not in json.dumps(messages):
+                raise AssertionError(
+                    "Restored memory was not appended to the model request"
+                )
+            return text_chunks(EXPECTED_TEXT)
         advanced = advanced_tool_followup(body, call_id, tool_name, tool_text)
         if advanced is not None:
             return advanced
@@ -994,6 +1002,11 @@ def main() -> None:
             "sdk-snapshot",
             "sdk-system3-shadow",
             "sdk-system3-entry-route",
+            "sdk-reflex-context",
+            "sdk-reflex-supervision",
+            "sdk-reflex-semantic-supervision",
+            "sdk-goal-entry-routing",
+            "sdk-reflex-native-recovery",
             "sdk-system3-completion-review",
             "sdk-restart",
             "sdk-profile-plugin",
@@ -1036,6 +1049,11 @@ def main() -> None:
             "sdk-snapshot",
             "sdk-system3-shadow",
             "sdk-system3-entry-route",
+            "sdk-reflex-context",
+            "sdk-reflex-supervision",
+            "sdk-reflex-semantic-supervision",
+            "sdk-goal-entry-routing",
+            "sdk-reflex-native-recovery",
             "sdk-system3-completion-review",
             "sdk-restart",
             "sdk-office",
@@ -1056,12 +1074,17 @@ def main() -> None:
         "sdk-snapshot",
         "sdk-system3-shadow",
         "sdk-system3-entry-route",
+        "sdk-reflex-context",
+        "sdk-reflex-supervision",
+        "sdk-reflex-semantic-supervision",
+        "sdk-goal-entry-routing",
+        "sdk-reflex-native-recovery",
         "sdk-system3-completion-review",
         "sdk-restart",
         "sdk-authoring",
     }:
         parser.error(
-            "--update-snapshots requires --scenario sdk-minimal, sdk-minimal-in-history, sdk-snapshot, sdk-system3-shadow, sdk-system3-entry-route, sdk-system3-completion-review, sdk-restart, sdk-authoring, or all"
+            "--update-snapshots requires --scenario sdk-minimal, sdk-minimal-in-history, sdk-snapshot, sdk-system3-shadow, sdk-reflex-context, sdk-reflex-supervision, sdk-reflex-semantic-supervision, sdk-goal-entry-routing, sdk-reflex-native-recovery, sdk-system3-entry-route, sdk-system3-completion-review, sdk-restart, sdk-authoring, or all"
         )
     if args.exe is not None and not args.exe.is_file():
         parser.error(f"runtime executable does not exist: {args.exe}")
@@ -1130,6 +1153,37 @@ def main() -> None:
                 args.exe.resolve(),
                 args.update_snapshots,
                 entry_route=True,
+            )
+        if args.scenario in {"all", "sdk-goal-entry-routing"}:
+            assert args.exe is not None
+            smoke_sdk_goal_entry_routing(
+                model.url, args.exe.resolve(), args.update_snapshots
+            )
+        if args.scenario in {"all", "sdk-reflex-native-recovery"}:
+            assert args.exe is not None
+            smoke_sdk_goal_entry_routing(
+                model.url,
+                args.exe.resolve(),
+                args.update_snapshots,
+                native_recovery=True,
+            )
+        if args.scenario in {"all", "sdk-reflex-supervision"}:
+            assert args.exe is not None
+            smoke_sdk_reflex_supervision(
+                model.url, args.exe.resolve(), args.update_snapshots
+            )
+        if args.scenario in {"all", "sdk-reflex-semantic-supervision"}:
+            assert args.exe is not None
+            smoke_sdk_reflex_supervision(
+                model.url,
+                args.exe.resolve(),
+                args.update_snapshots,
+                semantic_supervision=True,
+            )
+        if args.scenario in {"all", "sdk-reflex-context"}:
+            assert args.exe is not None
+            smoke_sdk_reflex_context(
+                model.url, args.exe.resolve(), args.update_snapshots
             )
         if args.scenario in {"all", "sdk-restart"}:
             assert args.exe is not None
@@ -2221,6 +2275,539 @@ def smoke_sdk_system3_shadow(
                     0, session_header_version(log_content, "System3 Session")
                 ),
             ),
+            native_writer_output=True,
+        )
+
+
+def smoke_sdk_reflex_context(
+    base_url: str, executable: Path, update_snapshots: bool
+) -> None:
+    """Project real context removal and restoration through the public Python SDK."""
+    from deepseek_harness import DeepSeekHarness
+
+    scenario = "reflex-context"
+    session_id = "reflex-context-smoke"
+    producer = (
+        Path(__file__).resolve().parent.parent
+        / "snapshots/sdk/reflex-context/decision-producer.mjs"
+    )
+    with tempfile.TemporaryDirectory(prefix="dsh-sdk-reflex-context-") as temporary:
+        root = Path(temporary).resolve()
+        sessions = root / "home/sessions"
+        patch = write_profile_patch(
+            root,
+            "reflex-context.patch.yml",
+            sessions,
+            [
+                {"id": "skill-filesystem", "config": {"includeDefaultRoots": False}},
+                {
+                    "insert": [
+                        {
+                            "id": "snapshot-reflex-context-producer",
+                            "name": producer.as_uri(),
+                        }
+                    ]
+                },
+            ],
+        )
+        request_start = len(MockModelHandler.requests)
+        with DeepSeekHarness(
+            provider="deepseek-official",
+            model="smoke-model",
+            cwd=str(root),
+            dsh_bin=str(executable),
+            dsh_home=str(root / "home"),
+            patches=(str(patch),),
+            env={
+                "DSH_PERMISSION_MODE": "danger-full-access",
+                "DSH_TELEMETRY_DISABLED": "1",
+            },
+            api_key="sk-keyless-smoke",
+            base_url=base_url,
+            request_timeout_seconds=60,
+        ) as harness:
+            harness.run(
+                "The old travel diary says the Kyoto hotel was Sakura House, and breakfast was matcha pancakes. This trip is finished and unrelated to the current task.",
+                session_id=session_id,
+            )
+            result = harness.run("reply with the smoke text", session_id=session_id)
+            diagnostics = harness.client._runtime_diagnostics()
+        assert result.final_response == EXPECTED_TEXT, result.final_response
+        changes = [
+            event
+            for event in result.events
+            if event.get("type") == "reflex/context-projection"
+        ]
+        assert [event["data"]["action"] for event in changes] == [
+            "remove",
+        ], {
+            "events": [
+                (
+                    event.get("type"),
+                    event.get("data")
+                    if event.get("type") == "system3/judgement"
+                    else None,
+                )
+                for event in result.events
+            ],
+            "runtime": diagnostics,
+            "tools": [
+                [
+                    tool.get("function", {}).get("name")
+                    for tool in request.get("tools", [])
+                ]
+                for request in MockModelHandler.requests[request_start:]
+            ],
+        }
+        logs = read_session_logs(sessions)
+        persisted = [
+            event
+            for event in logs[session_id]
+            if event.get("type") == "reflex/context-projection"
+        ]
+        assert [event["data"] for event in changes] == [
+            event["data"] for event in persisted
+        ]
+        requests = MockModelHandler.requests[request_start:]
+        assert len(requests) == 2, requests
+        assert "[Reflex omitted]" in json.dumps(requests[-1]["messages"])
+        assert any(
+            event.get("type") == "user/message"
+            and event["data"]["source"]["kind"] == "reflex-memory"
+            for event in result.events
+        )
+        replacements = [(str(root), "{{cwd}}"), (session_id, "{{parent}}")]
+        frame_message_ids = dict.fromkeys(
+            event["data"]["goal"]["messageId"]
+            for event in logs[session_id]
+            if event.get("type") == "system3/task-frame"
+        )
+        replacements.extend(
+            (message_id, f"{{{{message:{index}}}}}")
+            for index, message_id in enumerate(frame_message_ids, start=1)
+        )
+        value = {
+            "session_id": result.session_id,
+            "final_response": result.final_response,
+            "events": result.events,
+            "notifications": [
+                {"method": item.method, "payload": item.payload}
+                for item in result.notifications
+            ],
+        }
+        normalized = normalize_snapshot_value(logs[session_id], replacements)
+        assert isinstance(normalized, list)
+        log_content = render_jsonl(project_session_snapshot(normalized))
+        session_name = snapshot_session_filename(
+            0, session_header_version(log_content, "Reflex context Session")
+        )
+        files = {
+            "result.json": json.dumps(
+                normalize_snapshot_value(value, replacements),
+                indent=2,
+                ensure_ascii=False,
+            )
+            + "\n",
+            **build_minimal_snapshot_files(requests, root),
+            session_name: log_content,
+        }
+        compare_snapshot_files(
+            files,
+            update_snapshots,
+            Path(__file__).resolve().parent
+            / f"snapshots/python-sdk-single-exe/{scenario}",
+            ("result.json", "model-visible.json", session_name),
+            native_writer_output=True,
+        )
+
+
+def smoke_sdk_goal_entry_routing(
+    base_url: str,
+    executable: Path,
+    update_snapshots: bool,
+    *,
+    native_recovery: bool = False,
+) -> None:
+    """Observe native Goal continuation and attributed delegation through Python subscriptions."""
+    from deepseek_harness import DeepSeekHarness
+
+    scenario = "reflex-native-recovery" if native_recovery else "goal-entry-routing"
+    session_id = "goal-entry-smoke"
+    producer = (
+        Path(__file__).resolve().parent.parent
+        / f"snapshots/sdk/{scenario}/decision-producer.mjs"
+    )
+    with tempfile.TemporaryDirectory(prefix="dsh-sdk-goal-entry-") as temporary:
+        root = Path(temporary).resolve()
+        sessions = root / "home/sessions"
+        patch = write_profile_patch(
+            root,
+            "goal-entry.patch.yml",
+            sessions,
+            [
+                {"id": "skill-filesystem", "config": {"includeDefaultRoots": False}},
+                {
+                    "insert": [
+                        {
+                            "id": "snapshot-goal-entry-producer",
+                            "name": producer.as_uri(),
+                        }
+                    ]
+                },
+            ],
+        )
+        request_start = len(MockModelHandler.requests)
+        notifications = []
+        with DeepSeekHarness(
+            provider="deepseek-official",
+            model="smoke-model",
+            cwd=str(root),
+            dsh_bin=str(executable),
+            dsh_home=str(root / "home"),
+            patches=(str(patch),),
+            env={
+                "DSH_PERMISSION_MODE": "danger-full-access",
+                "DSH_TELEMETRY_DISABLED": "1",
+            },
+            api_key="sk-keyless-smoke",
+            base_url=base_url,
+            request_timeout_seconds=60,
+        ) as harness:
+            with harness.client.subscribe_session_notifications(
+                session_id
+            ) as subscription:
+                result = harness.run("reply with the smoke text", session_id=session_id)
+                deadline = time.monotonic() + 30
+                while True:
+                    subscription.drain(notifications.append)
+                    events = [
+                        item.payload["event"]
+                        for item in notifications
+                        if item.method == "session.event"
+                        and item.payload.get("sessionId") == session_id
+                    ]
+                    finished = next(
+                        (
+                            index
+                            for index, item in enumerate(notifications)
+                            if item.method == "session.event"
+                            and item.payload.get("sessionId") == session_id
+                            and item.payload["event"].get("type") == "turn/end"
+                            and item.payload["event"]["data"].get("turn") == 2
+                        ),
+                        None,
+                    )
+                    if finished is not None and any(
+                        item.method == "session.status"
+                        and item.payload.get("sessionId") == session_id
+                        and item.payload.get("status") == "idle"
+                        for item in notifications[finished + 1 :]
+                    ):
+                        break
+                    if time.monotonic() >= deadline:
+                        raise AssertionError(
+                            "Native Goal continuation did not finish its second turn"
+                        )
+                    time.sleep(0.01)
+        assert result.final_response == EXPECTED_TEXT, result.final_response
+        routing = [
+            event for event in events if event.get("type") == "system3/goal-entry"
+        ]
+        assert [event["data"]["state"] for event in routing] == [
+            "reserved",
+            "started",
+            "completed",
+        ], routing
+        delegated = [
+            event
+            for event in events
+            if event.get("type") == "user/message"
+            and event["data"]["source"]["kind"] == "system3-goal-delegation"
+        ]
+        assert len(delegated) == 1 and delegated[0]["seq"] > routing[-1]["seq"], (
+            delegated
+        )
+        assert any(
+            event.get("type") == "goal/change"
+            and event["data"]["goal"]["phase"] == "complete"
+            for event in events
+        )
+        logs = read_session_logs(sessions)
+        assert [
+            event
+            for event in logs[session_id]
+            if event.get("type") == "system3/goal-entry"
+        ] == routing
+        requests = MockModelHandler.requests[request_start:]
+        assert len(requests) == 2, requests
+        expected_output = (
+            "NATIVE_RECOVERY_OK"
+            if native_recovery
+            else "GOAL_DELEGATION_OK: independent verification passed."
+        )
+        assert expected_output in json.dumps(requests[1])
+        if native_recovery:
+            for event_type in (
+                "system3/reflex-recovery",
+                "subagent/supervision-recovery",
+            ):
+                selected = [
+                    event for event in events if event.get("type") == event_type
+                ]
+                assert [event["data"]["state"] for event in selected] == [
+                    "intent",
+                    "continued",
+                ], selected
+                assert [
+                    event
+                    for event in logs[session_id]
+                    if event.get("type") == event_type
+                ] == selected
+            assert not any(event.get("type") == "subagent/steer" for event in events)
+            assert any(
+                event.get("type") == "system3/judgement"
+                and event["data"].get("decision") == "reflex.native-recovery"
+                and event["data"].get("decisionVersion") == 2
+                and event["data"].get("outcome") == "recover"
+                and event["data"].get("applied") is True
+                for event in events
+            )
+            receipt = next(
+                event["data"]
+                for event in events
+                if event.get("type") == "subagent/supervision-recovery"
+                and event["data"].get("state") == "continued"
+            )
+            assert receipt["source"] == "reflex-supervision"
+            assert receipt["observation"]["threadId"] == "snapshot-native-thread"
+            assert receipt["observation"]["turnId"] == "snapshot-native-turn-1"
+            assert receipt["turnId"] == "snapshot-native-turn-2"
+            assert {
+                event["data"]["runId"]
+                for event in events
+                if event.get("type")
+                in {"system3/reflex-recovery", "subagent/supervision-recovery"}
+            } == {receipt["runId"]}
+            assert expected_output in json.dumps(delegated[0])
+        replacements = [
+            (str(root), "{{cwd}}"),
+            (session_id, "{{parent}}"),
+            (routing[0]["data"]["goalId"], "{{goal:1}}"),
+        ]
+        if native_recovery:
+            replacements.append((receipt["runId"], "{{subagent:1}}"))
+        normalized = normalize_snapshot_value(logs[session_id], replacements)
+        assert isinstance(normalized, list)
+        log_content = render_jsonl(project_session_snapshot(normalized))
+        session_name = snapshot_session_filename(
+            0, session_header_version(log_content, "Goal entry Session")
+        )
+        value = {
+            "session_id": session_id,
+            "initial_response": result.final_response,
+            "events": events,
+            "notifications": [
+                {"method": item.method, "payload": item.payload}
+                for item in notifications
+            ],
+        }
+        files = {
+            "result.json": json.dumps(
+                normalize_snapshot_value(value, replacements),
+                indent=2,
+                ensure_ascii=False,
+            )
+            + "\n",
+            **build_minimal_snapshot_files(requests, root),
+            session_name: log_content,
+        }
+        compare_snapshot_files(
+            files,
+            update_snapshots,
+            Path(__file__).resolve().parent
+            / f"snapshots/python-sdk-single-exe/{scenario}",
+            ("result.json", "model-visible.json", session_name),
+            native_writer_output=True,
+        )
+
+
+def smoke_sdk_reflex_supervision(
+    base_url: str,
+    executable: Path,
+    update_snapshots: bool,
+    *,
+    semantic_supervision: bool = False,
+) -> None:
+    """Project automatic supervision, attributed input and verification through the public Python SDK."""
+    from deepseek_harness import DeepSeekHarness
+
+    scenario = (
+        "reflex-semantic-supervision" if semantic_supervision else "reflex-supervision"
+    )
+    session_id = f"{scenario}-smoke"
+    producer = (
+        Path(__file__).resolve().parent.parent
+        / f"snapshots/sdk/{scenario}/decision-producer.mjs"
+    )
+    with tempfile.TemporaryDirectory(prefix="dsh-sdk-reflex-supervision-") as temporary:
+        root = Path(temporary).resolve()
+        sessions = root / "home/sessions"
+        patch = write_profile_patch(
+            root,
+            "reflex-supervision.patch.yml",
+            sessions,
+            [
+                {"id": "skill-filesystem", "config": {"includeDefaultRoots": False}},
+                {
+                    "insert": [
+                        {
+                            "id": "snapshot-reflex-supervision-producer",
+                            "name": producer.as_uri(),
+                        }
+                    ]
+                },
+            ],
+        )
+        request_start = len(MockModelHandler.requests)
+        with DeepSeekHarness(
+            provider="deepseek-official",
+            model="smoke-model",
+            cwd=str(root),
+            dsh_bin=str(executable),
+            dsh_home=str(root / "home"),
+            patches=(str(patch),),
+            env={
+                "DSH_PERMISSION_MODE": "danger-full-access",
+                "DSH_TELEMETRY_DISABLED": "1",
+            },
+            api_key="sk-keyless-smoke",
+            base_url=base_url,
+            request_timeout_seconds=60,
+        ) as harness:
+            result = harness.run("reply with the smoke text", session_id=session_id)
+        assert result.final_response == EXPECTED_TEXT, (
+            result.final_response,
+            [event for event in result.events if event.get("type") == "turn/end"],
+        )
+        selected_types = {
+            "system3/reflex-supervision",
+            "system3/reflex-evidence",
+            "subagent/supervision-steer",
+        }
+        if semantic_supervision:
+            selected_types.add("system3/judgement")
+        changes = [
+            event for event in result.events if event.get("type") in selected_types
+        ]
+        assert [
+            event["data"]["state"]
+            for event in changes
+            if event["type"] == "system3/reflex-supervision"
+        ] == ["intent", "accepted", "improved"], changes
+        advice = [
+            event for event in changes if event["type"] == "subagent/supervision-steer"
+        ]
+        assert len(advice) == 1, advice
+        assert "[Reflex 自动监督 / reflex-supervision]" in json.dumps(
+            advice, ensure_ascii=False
+        )
+        assert not any(event["type"] == "subagent/steer" for event in result.events)
+        logs = read_session_logs(sessions)
+        persisted = [
+            event for event in logs[session_id] if event.get("type") in selected_types
+        ]
+        assert [event["data"] for event in changes] == [
+            event["data"] for event in persisted
+        ]
+        if semantic_supervision:
+            evidence = [
+                event["data"]["evidence"]
+                for event in changes
+                if event["type"] == "system3/reflex-evidence"
+            ]
+            assert len(evidence) == 3, evidence
+            assert [item["operationDigest"] for item in evidence[:2]] == [
+                "unrelated-edit-0",
+                "unrelated-edit-1",
+            ], evidence
+            assert all(item["outcome"] == "succeeded" for item in evidence), evidence
+            assert [item["semantic"]["actions"][0]["path"] for item in evidence] == [
+                "marketing/banner.svg",
+                "marketing/landing.css",
+                "finance/decimal-total.test.ts",
+            ], evidence
+            assert (
+                evidence[2]["semantic"]["actions"][0]["kind"] == "verification-target"
+            ), evidence[2]
+            decisions = [
+                event["data"]
+                for event in changes
+                if event["type"] == "system3/judgement"
+            ]
+            assert [item["outcome"] for item in decisions] == ["realign", "improved"]
+            assert all(item["applied"] for item in decisions)
+            assert [item["decisionVersion"] for item in decisions] == [3, 2]
+            assert decisions[0]["request"]["state"]["semanticReady"] is True
+            assert decisions[0]["request"]["state"]["evidence"] == evidence[:2]
+            assert decisions[0]["request"]["state"]["semanticEvidence"] == evidence[:2]
+            assert decisions[1]["request"]["state"]["after"] == evidence[2:]
+            assert (
+                decisions[1]["response"]["answers"]["relevantVerification"]["noul"] == 1
+            )
+            subscribed = [
+                item.payload["event"]
+                for item in result.notifications
+                if item.method == "session.event"
+                and item.payload.get("event", {}).get("type") in selected_types
+            ]
+            assert [event["data"] for event in subscribed] == [
+                event["data"] for event in changes
+            ]
+        requests = MockModelHandler.requests[request_start:]
+        assert len(requests) == 1, requests
+        replacements = [(str(root), "{{cwd}}"), (session_id, "{{parent}}")]
+        supervision = next(
+            event["data"]
+            for event in changes
+            if event["type"] == "system3/reflex-supervision"
+        )
+        replacements.extend(
+            [
+                (supervision["goalId"], "{{goal:1}}"),
+                (supervision["runId"], "{{workflow:1}}"),
+            ]
+        )
+        value = {
+            "session_id": result.session_id,
+            "final_response": result.final_response,
+            "events": result.events,
+            "notifications": [
+                {"method": item.method, "payload": item.payload}
+                for item in result.notifications
+            ],
+        }
+        normalized = normalize_snapshot_value(logs[session_id], replacements)
+        assert isinstance(normalized, list)
+        log_content = render_jsonl(project_session_snapshot(normalized))
+        session_name = snapshot_session_filename(
+            0, session_header_version(log_content, "Reflex supervision Session")
+        )
+        files = {
+            "result.json": json.dumps(
+                normalize_snapshot_value(value, replacements),
+                indent=2,
+                ensure_ascii=False,
+            )
+            + "\n",
+            **build_minimal_snapshot_files(requests, root),
+            session_name: log_content,
+        }
+        compare_snapshot_files(
+            files,
+            update_snapshots,
+            Path(__file__).resolve().parent
+            / f"snapshots/python-sdk-single-exe/{scenario}",
+            ("result.json", "model-visible.json", session_name),
             native_writer_output=True,
         )
 

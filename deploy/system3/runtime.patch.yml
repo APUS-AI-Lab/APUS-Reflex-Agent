@@ -81,18 +81,6 @@
 - insert:
     - id: ui-system3
       name: ../../packages/experimental/client-ui-system3/lib/index.js
-    - id: jev
-      name: ../../packages/experimental/apus-dsh-jev-plugin/lib/index.js
-      config:
-        endpoint: https://owb1q1vidflfhp-8086.proxy.runpod.net
-        model: APUS-OpenJev-v1-9B-5949
-        apiKeyEnv: JEV_API_KEY
-        effort: high
-        timeoutMs: 15000
-        keepAliveMs: 120000
-        http2: true
-        # Two decisions without a response on the shared HTTP/2 connection reopen it.
-        resetAfterFailures: 2
     - id: system3
       name: ../../packages/experimental/system3/lib/index.js
       config:
@@ -102,13 +90,46 @@
         approvedRemoteDataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'
         jevRouteId: jev
         jevExecutionDomain: network
-        jevEffort: high
         delegationProgress:
           intervalMs: 2000
           monitor:
             overtimeMs: 360000
             stallMs: 180000
             startupMs: 120000
+        reflexContext:
+          mode: active
+          yes: 0.9
+          no: 0.1
+          deadlineMs: 5000
+          sessionDataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'
+          maxRequestChars: 4000
+          maxCandidates: 16
+          maxFragmentChars: 1024
+          protectRecentMessages: 4
+          maxRestoredChars: 8192
+          maxSearchResults: 8
+        reflexSupervision:
+          mode: active
+          yes: 0.8
+          no: 0.2
+          deadlineMs: 5000
+          sessionDataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'
+          intervalMs: 15000
+          stallMs: 180000
+          repeatedFailures: 3
+          evidenceLimit: 16
+          cooldownMs: 60000
+          maxInterventions: 3
+          feedbackMs: 60000
+          semantic:
+            minObservations: 2
+          recovery:
+            nativeSilenceMs: 180000
+            reassessmentMs: 30000
+            retryLimit: 3
+            interruptGraceMs: 15000
+            cooldownMs: 120000
+            maxRecoveries: 2
         processSupervision:
           mode: advise
           repeatedError: 2
@@ -118,7 +139,7 @@
           editTools: [write, edit]
           delegationTools: [subagent_codex]
           shellTools: [bash]
-          progressTools: [web_search, web_fetch]
+          progressTools: [web_search, web_fetch, read, grep, glob]
           verifyPattern: '\b(pytest|unittest|vitest|jest|go test|cargo (test|build)|(npm|pnpm|yarn)( run)? (test|build|typecheck)|tsc|make (test|check|build))\b'
           failurePattern: '\bFAILED\b|\b[1-9][0-9]* (failed|errors?)\b|No module named|No such file or directory|Permission denied|command not found|Traceback \(most recent call last\)|npm ERR!|\bfatal: |exit code:? [1-9]'
         outputFolding:
@@ -218,7 +239,7 @@
               executionDomain: network
               dataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'
             - id: codex
-              description: 超出一次对话能完成的大型工程任务：在大型代码库里长时间探索、跨十个以上文件改造、反复构建和测试直到通过，通常要十分钟以上。几分钟内能直接改完的修复、函数实现或单个功能都不属于此类，交给模型直接完成。
+              description: 用户真实、肯定地指定 Codex 执行时优先遵守，不以工作量限制；否定、引用和仅讨论名称不构成指定，也不增加权限。用户未指定执行者时，默认用于大型工程任务：长时间探索代码库、跨多个文件改造、反复构建和测试。小型修复、函数实现或单个功能默认由当前模型处理。
               label: 工程任务 · 委派 Codex
               delegate:
                 provider: codex
@@ -234,6 +255,11 @@
       name: ../../packages/subagent/subagent-codex/lib/index.js
       config:
         permissionMode: never
+        evidenceSummary:
+          maxActions: 8
+          maxPathChars: 160
+          verificationTargets:
+            maxCommandChars: 4096
         env:
           CODEX_HOME: !!js process.env.SYSTEM3_CODEX_HOME
           SYSTEM3_LITELLM_API_KEY: !!js process.env.SYSTEM3_LITELLM_API_KEY

@@ -141,7 +141,8 @@ export async function runSystem3Decision<Input, Outcome extends string>(ctx: Con
   if (admission.allowed.length === 0) { reason = 'privacy-denied'; return finish() }
   const jev = ctx.get('jev')
   if (jev === undefined) return finish()
-  request = jev.resolve({ state: spec.state(input), effort: shared.options.effort, questions: spec.questions(input) })
+  request = jev.resolve({ state: spec.state(input),
+    ...shared.options.effort === undefined ? {} : { effort: shared.options.effort }, questions: spec.questions(input) })
   const deadline = AbortSignal.timeout(settings.deadlineMs)
   try {
     const result = await jev.decide(request, AbortSignal.any([signal, deadline]))

@@ -72,6 +72,19 @@ export interface System3TaskFrame {
   readonly items: readonly System3TaskMessage[]
 }
 
+declare module '@deepseek-ai/cordis' {
+  interface Events {
+    /**
+     * Await task-frame judgements already admitted for this step before capturing context-removal constraints.
+     * Later queued input is excluded; cancellation ends the wait without cancelling background frame work.
+     * @param agent - Agent whose claimed input established the finite admission batch.
+     * @param signal - Context plugin lifetime and turn cancellation.
+     * @mode parallel
+     */
+    'system3/context-prepare'(agent: Agent, signal: AbortSignal): Promise<void> | void
+  }
+}
+
 declare module '@deepseek-ai/dsh-session/types' {
   interface SessionEventMap {
     /** The task frame changed; the main model sees it through the `system3:task-frame` runtime context. */
@@ -181,7 +194,8 @@ export function validateSystem3TaskFrame(config: System3TaskFrameConfig): void {
 /**
  * Keep a task frame for every top-level Agent on this context. Creating a DSH goal starts the frame from its objective, and
  * while that goal is open no message replaces it. Otherwise the first message of a Session starts the frame; each later
- * message is judged after it is claimed, without delaying the step, and its result shapes the frame from the next step on;
+ * message is judged after it is claimed. Only Reflex context review awaits the admitted batch;
+ * runtime context reflects its result from the next step on;
  * with `interjection`, a message queued behind a running turn is judged on arrival and may move into that turn.
  * A judgement of a replaced frame is discarded; a message claimed while that judgement waits is judged once more against
  * the current frame without delaying the step.
@@ -196,6 +210,7 @@ export function installSystem3TaskFrame(ctx: Context, settings: System3TaskFrame
   const active = config.mode === 'active'
   const shared: System3DecisionContext = { policy: settings.policy, options: settings.options, dataClasses: config.sessionDataClasses }
   const queues = new WeakMap<Agent, Promise<void>>()
+  const admissions = new WeakMap<Agent, Promise<void>>()
   // The latest committed frame per Session, restored once from history and then followed through Session events.
   const frames = new WeakMap<Session, System3TaskFrame | null>()
   const frameOf = (agent: Agent): System3TaskFrame | null => {
@@ -270,6 +285,7 @@ export function installSystem3TaskFrame(ctx: Context, settings: System3TaskFrame
   })
 
   ctx.on('agent/pre-step', ({ agent, messages }, next) => {
+    const admitted: Promise<FrameOutcome | undefined>[] = []
     if (topLevel(agent)) {
       for (const message of messages) {
         const pending = early.get(agent.session)?.get(message.id)
@@ -277,13 +293,22 @@ export function installSystem3TaskFrame(ctx: Context, settings: System3TaskFrame
         const text = personText(message, config.maxMessageChars)
         if (text === undefined) continue
         const entry = { messageId: message.id, text }
-        if (pending === undefined) void enqueue(agent, entry)
-        else void pending.then((outcome) => {
-          if (outcome === undefined && !lifetime.signal.aborted) void enqueue(agent, entry)
-        })
+        admitted.push(pending === undefined ? enqueue(agent, entry) : pending.then((outcome) => {
+          if (outcome === undefined && !lifetime.signal.aborted) return enqueue(agent, entry)
+          return outcome
+        }))
       }
     }
+    admissions.set(agent, Promise.all(admitted).then(() => undefined))
     return next()
+  })
+  ctx.on('system3/context-prepare', async (agent, signal) => {
+    const pending = admissions.get(agent)
+    if (pending === undefined || signal.aborted) return
+    const cancelled = Promise.withResolvers<void>()
+    const stop = (): void => { cancelled.resolve() }
+    signal.addEventListener('abort', stop, { once: true })
+    try { await Promise.race([pending, cancelled.promise]) } finally { signal.removeEventListener('abort', stop) }
   })
 
   // A delegated run works while the turn waits on it, so it gets the moved text now rather than when the turn resumes.

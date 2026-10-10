@@ -1,0 +1,7 @@
+# Bilingual-pair consistency record for semantic-codex-host19-persistent.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-reflex-control/evidence/semantic-codex-host19-persistent.md
+/host19-persistent-delegated-semantic-trial:
+  en: 937fec9572dce348
+  zh: ae704f3ec8bbae52

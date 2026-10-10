@@ -1,0 +1,85 @@
+{
+  "caseIds": [
+    "R-03",
+    "UX-03"
+  ],
+  "status": "passed",
+  "sessionId": "session-ba42b62d-0210-44ed-9c1d-fb9ddba7a06c",
+  "build": "full Host18 + System3 incremental Host19 / Client12 / Web12",
+  "dirtyWorktree": true,
+  "realBrowser": true,
+  "modelMocks": false,
+  "checks": {
+    "fixedUsesSelectedModel": true,
+    "fixedLowEffort": true,
+    "fixedSkipsEntry": true,
+    "resetRecorded": true,
+    "autoDecisionSelected": true,
+    "autoUsesSelectedModel": true,
+    "bothCorrect": true,
+    "bothCompleted": true
+  },
+  "requests": [
+    {
+      "seq": 15,
+      "config": {
+        "provider": "deepseek-official",
+        "model": "deepseek-v4-pro",
+        "reasoningEffort": "low",
+        "maxTokens": 8192
+      }
+    },
+    {
+      "seq": 37,
+      "config": {
+        "provider": "deepseek-official",
+        "model": "deepseek-flash",
+        "reasoningEffort": "low",
+        "maxTokens": 8192
+      }
+    }
+  ],
+  "entry": [
+    {
+      "seq": 26,
+      "outcome": "selected",
+      "selected": {
+        "provider": "deepseek-official",
+        "model": "deepseek-flash",
+        "reasoningEffort": "low"
+      },
+      "elapsedMs": 1850
+    }
+  ],
+  "answers": [
+    {
+      "turn": 1,
+      "text": "0.30元"
+    },
+    {
+      "turn": 2,
+      "text": "0.90元"
+    }
+  ],
+  "reset": {
+    "type": "model/selection-reset",
+    "seq": 24,
+    "time": 1791624483027,
+    "data": {
+      "baseline": {
+        "provider": "deepseek-official",
+        "model": "deepseek-v4-pro",
+        "reasoningEffort": "low"
+      }
+    }
+  },
+  "uiReportedSeconds": [
+    4,
+    2
+  ],
+  "limitations": [
+    "Two functional examples, not a paired latency benchmark or SLO.",
+    "SDK mock recording/replay ran concurrently; no other real model tasks ran.",
+    "Failure/abstention branches are covered by 93 focused controller/entry/Goal regressions, not injected in this real case."
+  ]
+}

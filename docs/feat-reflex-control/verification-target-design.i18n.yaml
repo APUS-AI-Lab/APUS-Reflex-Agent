@@ -1,0 +1,22 @@
+# Bilingual-pair consistency record for verification-target-design.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-reflex-control/verification-target-design.md
+/verification-target-evidence-addendum:
+  en: bb72acf43c2619a9
+  zh: fb8157bc47ea7910
+/verification-target-evidence-addendum/status-and-problem:
+  en: 7a9f90828de6f2e7
+  zh: b6b8b0d3267e5d5c
+/verification-target-evidence-addendum/native-protocol-evidence:
+  en: 14e1cae844e1bff2
+  zh: 3fa7ef2b44212ebf
+/verification-target-evidence-addendum/proposed-extraction:
+  en: c33766dd5b35d8a6
+  zh: 8daee83e3b6358c1
+/verification-target-evidence-addendum/feedback-and-limits:
+  en: 9646a5dca8544240
+  zh: 0bb5811af5286d8f
+/verification-target-evidence-addendum/change-and-acceptance-scope:
+  en: f639263ce5f8c21d
+  zh: fdfa3f04ff6b5c54

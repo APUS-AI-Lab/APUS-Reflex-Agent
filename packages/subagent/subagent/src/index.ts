@@ -1,3 +1,5 @@
+import type { SubagentSupervisorRecovery } from './recovery.ts'
+import type { SubagentRecoveryState, SubagentRecoveryReceipt } from './types.ts'
 /**
  * Service Definition for the subagent capability seam (`ctx.subagents`): a named-provider registry plus a
  * capability-validating asynchronous start API. Providers establish a
@@ -58,6 +60,8 @@ import type {
   ContinuableStart,
   ContinuableStartSpec,
   ResolvedSubagentStartRequest,
+  SubagentEvidence,
+  SubagentEvidenceInfo,
   SubagentActivity,
   SubagentActivityInfo,
   SubagentCapabilities,
@@ -138,7 +142,7 @@ export type { ChildComposition, DelegatedPolicyOverrides } from './child-agent.t
 export type { AgentMessageSource, SubagentSettledMessageSource } from './continuation-messages.ts'
 export type * from './control-types.ts'
 export type { SubagentDescendantListEntry } from './list-children.ts'
-export type { SubagentActivity, SubagentActivityInfo, SubagentActivityKind, SubagentRunEndInfo, SubagentRunInfo } from './types.ts'
+export type { SubagentEvidence, SubagentEvidenceInfo, SubagentEvidenceTurnId, SubagentActivity, SubagentActivityInfo, SubagentActivityKind, SubagentRunEndInfo, SubagentRunInfo } from './types.ts'
 export type { SubagentIdentityProjection, SubagentTimingProjection } from './projection-types.ts'
 
 declare module '@deepseek-ai/cordis' {
@@ -189,6 +193,14 @@ declare module '@deepseek-ai/cordis' {
      * @mode emit
      */
     'subagent/activity'(this: Scoped<SubagentRuntime>, info: SubagentActivityInfo): void
+    /**
+     * Content-free execution evidence for a published child. Scope-filtered dispatch
+     * uses the delegating parent carrier, matching the run lifecycle events.
+     * @param info - operation fingerprints and outcome, without command or output text.
+     * @dshScopeScan unsupported
+     * @mode emit
+     */
+    'subagent/evidence'(this: Scoped<SubagentRuntime>, info: SubagentEvidenceInfo): void
   }
 }
 
@@ -212,6 +224,8 @@ declare module '@deepseek-ai/dsh-session/types' {
      * @param data - run identity and the delivered text.
      */
     'subagent/steer': SubagentSteerEvent
+    /** Autonomous supervision input accepted by a child; never attributed to a person. */
+    'subagent/supervision-steer': SubagentSteerEvent & { readonly source: 'reflex-supervision' }
   }
 }
 
@@ -561,9 +575,10 @@ export class SubagentRuntime extends TypertRemoteService {
     const runId = SubagentRunId(request.runId)
     const run = this.steerableRuns.get(runId)
     // Another parent's run is refused like an absent one, so the address reveals nothing about it.
-    if (run === undefined || run.parent.session.id !== request.parentSessionId) {
+    if (run === undefined || run.steer === undefined || run.parent.session.id !== request.parentSessionId) {
       throw new RemoteError('subagent/not-steerable', 'subagent run does not accept input', { runId })
     }
+    run.humanRevision += 1
     try {
       await run.steer([{ type: 'text', text: request.text }], signal)
     } catch (error: unknown) {
@@ -573,6 +588,82 @@ export class SubagentRuntime extends TypertRemoteService {
     run.accepted.push(request.text)
     run.parent.session.append('subagent/steer', { version: 1, runId, provider: run.provider, text: request.text })
     return { accepted: true }
+  }
+
+  /**
+   * Deliver attributed supervisor advice through the same live-run authority check as human steering.
+   * This Host-only method is not exposed to remote clients.
+   * @param parent - exact delegating Agent, supplying the authority for this run.
+   * @param runId - live run addressed by the supervisor.
+   * @param text - bounded advice, explicitly labelled as autonomous supervision.
+   * @param signal - supervision lifecycle cancellation.
+   * @param isCurrent - Optional Host authority fence rechecked at serialized dispatch.
+   * @returns acknowledgement only after the provider accepts the advice.
+   */
+  async steerFromSupervisor(
+    parent: Agent, runId: SubagentRunId, text: string, signal: AbortSignal, isCurrent?: () => boolean,
+  ): Promise<SubagentSteerReceipt> {
+    validateControlRequest('subagent.steer', { runId, parentSessionId: parent.session.id, text })
+    signal.throwIfAborted()
+    const run = this.steerableRuns.get(runId)
+    if (run === undefined || run.steer === undefined || run.parent !== parent) {
+      throw new RemoteError('subagent/not-steerable', 'subagent run does not accept supervisor input', { runId })
+    }
+    const humanRevision = run.humanRevision
+    const observed = run.recoveryState?.()
+    await run.steer([{ type: 'text', text }], signal, () => {
+      const current = run.recoveryState?.()
+      return this.steerableRuns.get(runId) === run && run.humanRevision === humanRevision
+        && current?.turnId === observed?.turnId && current?.threadId === observed?.threadId
+        && (isCurrent === undefined || isCurrent())
+    })
+    parent.session.append('subagent/supervision-steer', { version: 1, runId, provider: run.provider, text, source: 'reflex-supervision' })
+    return { accepted: true }
+  }
+
+  /** Read native observations only for the exact delegating parent.
+   * @param parent - Delegating Agent authority.
+   * @param runId - Live lifecycle run identity.
+   * @returns Content-free state when this run supports recovery.
+   */
+  recoveryState(parent: Agent, runId: SubagentRunId): SubagentRecoveryState | undefined {
+    const run = this.steerableRuns.get(runId)
+    return run?.parent === parent ? run.recoveryState?.() : undefined
+  }
+
+  /** Recover a stalled native turn without impersonating a person or granting authority.
+   * @param parent - Exact delegating Agent.
+   * @param runId - Live lifecycle identity.
+   * @param request - Reserved intent, observed identity, and current Goal/input fence.
+   * @param signal - Supervisor lifetime cancellation.
+   * @returns Native continuation receipt; acceptance does not prove progress.
+   */
+  async recoverFromSupervisor(
+    parent: Agent, runId: SubagentRunId, request: SubagentSupervisorRecovery, signal: AbortSignal,
+  ): Promise<SubagentRecoveryReceipt> {
+    validateControlRequest('subagent.steer', { runId, parentSessionId: parent.session.id, text: request.text })
+    signal.throwIfAborted()
+    const run = this.steerableRuns.get(runId)
+    if (run?.parent !== parent || run.recover === undefined) throw new Error('subagent: run does not accept supervisor recovery')
+    const humanRevision = run.humanRevision
+    const current = () => !signal.aborted && this.steerableRuns.get(runId) === run
+      && run.humanRevision === humanRevision && request.isCurrent()
+    const base = { version: 1 as const, id: request.id, runId, provider: run.provider, source: 'reflex-supervision' as const,
+      text: request.text, observation: request.observation }
+    if (!current()) return { state: 'stale', threadId: request.observation.threadId, previousTurnId: request.observation.turnId }
+    parent.session.append('subagent/supervision-recovery', { ...base, state: 'intent' })
+    try {
+      const receipt = await run.recover({ expectedTurnId: request.observation.turnId,
+        expectedActivity: { lastActivityAt: request.observation.lastActivityAt, retryCount: request.observation.retryCount },
+        interruptGraceMs: request.interruptGraceMs,
+        continuation: () => current() ? [{ type: 'text', text: request.text }] : undefined }, signal)
+      parent.session.append('subagent/supervision-recovery', { ...base, state: receipt.state,
+        ...receipt.turnId === undefined ? {} : { turnId: receipt.turnId } })
+      return receipt
+    } catch (error) {
+      parent.session.append('subagent/supervision-recovery', { ...base, state: 'unknown' })
+      throw error
+    }
   }
 
   /**
@@ -640,8 +731,9 @@ export class SubagentRuntime extends TypertRemoteService {
       ...request.label !== undefined ? { label: request.label } : {},
     })
     let publish: ((activity: SubagentActivity) => void) | undefined
+    let evidence: ((value: SubagentEvidence) => void) | undefined
     const resolved: ResolvedSubagentStartRequest = {
-      ...request, descriptor, reportActivity: activity => publish?.(activity),
+      ...request, descriptor, reportActivity: activity => publish?.(activity), reportEvidence: value => evidence?.(value),
     }
     const run = await provider.start(resolved)
     const child = run.localAgent?.session
@@ -661,7 +753,8 @@ export class SubagentRuntime extends TypertRemoteService {
         throw error
       }
     }
-    return observeRun(this.emitLifecycle, name, request.parent, run, (bound) => { publish = bound }, this.steerableRuns)
+    return observeRun(this.emitLifecycle, name, request.parent, run, (bound) => { publish = bound },
+      this.steerableRuns, (bound) => { evidence = bound })
   }
 
   /**
@@ -737,3 +830,8 @@ export class SubagentRuntime extends TypertRemoteService {
 }
 
 export default SubagentRuntime
+
+export type { SubagentNativeThreadId, SubagentRecoveryState, SubagentRecoveryRequest, SubagentRecoveryReceipt } from './types.ts'
+export type { SubagentRecoveryId, SubagentSupervisorRecovery, SubagentSupervisionRecoveryEvent } from './recovery.ts'
+
+export { SubagentSupervisorStaleError } from './recovery.ts'

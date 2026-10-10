@@ -1,0 +1,1336 @@
+{
+  "scenario": "natural",
+  "writtenAt": 1791608050918,
+  "stopReason": "completed",
+  "activity": [
+    {
+      "at": 1791608007193,
+      "event": "start"
+    },
+    {
+      "at": 1791608013749,
+      "event": "activity",
+      "kind": "reasoning",
+      "phase": "started"
+    },
+    {
+      "at": 1791608014113,
+      "event": "activity",
+      "kind": "reasoning",
+      "phase": "completed"
+    },
+    {
+      "at": 1791608014119,
+      "event": "activity",
+      "kind": "message",
+      "phase": "started"
+    },
+    {
+      "at": 1791608014120,
+      "event": "activity",
+      "kind": "message",
+      "phase": "completed"
+    },
+    {
+      "at": 1791608014993,
+      "event": "activity",
+      "kind": "command",
+      "phase": "started"
+    },
+    {
+      "at": 1791608018667,
+      "event": "activity",
+      "kind": "command",
+      "phase": "completed"
+    },
+    {
+      "at": 1791608025417,
+      "event": "activity",
+      "kind": "reasoning",
+      "phase": "started"
+    },
+    {
+      "at": 1791608026046,
+      "event": "activity",
+      "kind": "reasoning",
+      "phase": "completed"
+    },
+    {
+      "at": 1791608026361,
+      "event": "activity",
+      "kind": "command",
+      "phase": "started"
+    },
+    {
+      "at": 1791608026363,
+      "event": "activity",
+      "kind": "command",
+      "phase": "completed"
+    },
+    {
+      "at": 1791608031905,
+      "event": "activity",
+      "kind": "reasoning",
+      "phase": "started"
+    },
+    {
+      "at": 1791608033379,
+      "event": "activity",
+      "kind": "reasoning",
+      "phase": "completed"
+    },
+    {
+      "at": 1791608033380,
+      "event": "activity",
+      "kind": "message",
+      "phase": "started"
+    },
+    {
+      "at": 1791608033603,
+      "event": "activity",
+      "kind": "message",
+      "phase": "completed"
+    },
+    {
+      "at": 1791608034615,
+      "event": "activity",
+      "kind": "command",
+      "phase": "started"
+    },
+    {
+      "at": 1791608034638,
+      "event": "activity",
+      "kind": "command",
+      "phase": "completed"
+    },
+    {
+      "at": 1791608050463,
+      "event": "activity",
+      "kind": "message",
+      "phase": "started"
+    },
+    {
+      "at": 1791608050584,
+      "event": "activity",
+      "kind": "message",
+      "phase": "completed"
+    },
+    {
+      "at": 1791608050593,
+      "event": "end",
+      "outcome": "completed"
+    }
+  ],
+  "events": [
+    {
+      "type": "system3/reflex-evidence",
+      "at": 1791608018665,
+      "data": {
+        "version": 1,
+        "goalId": "goal-4d1424cb-0b0a-49f0-ac8b-1acd83e79758",
+        "goalRevision": 1,
+        "observedAt": 1791608018664,
+        "evidence": {
+          "turnId": "01a12428-aa1c-7041-bf55-fc0685da332f",
+          "kind": "command",
+          "operation": "verification",
+          "operationDigest": "34c3866c1102c234ad78ddddea4f9263ac694924354fcd706227be55f2d1f738",
+          "resultDigest": "53a481b6980020c92d5596a82185b3ca332309bd34ea5300a01d4b4e95825c7c",
+          "outcome": "succeeded",
+          "runId": "218e5416-6297-425b-94b0-12e2c842b705",
+          "provider": "codex",
+          "id": "89a828b0-cee0-465e-b10a-11e65e46272e"
+        }
+      }
+    },
+    {
+      "type": "system3/reflex-evidence",
+      "at": 1791608026363,
+      "data": {
+        "version": 1,
+        "goalId": "goal-4d1424cb-0b0a-49f0-ac8b-1acd83e79758",
+        "goalRevision": 1,
+        "observedAt": 1791608026362,
+        "evidence": {
+          "turnId": "01a12428-aa1c-7041-bf55-fc0685da332f",
+          "kind": "command",
+          "operation": "verification",
+          "operationDigest": "c42a897e1cb9da2e192d90f1a3a2998f391f0965a000f8abb1924cadfeb3543f",
+          "resultDigest": "ccf210e223e726958fc715b158b417a14b7ee2d5c8ebf3f1b9ca6e949398d46c",
+          "outcome": "succeeded",
+          "runId": "218e5416-6297-425b-94b0-12e2c842b705",
+          "provider": "codex",
+          "id": "89a828b0-cee0-465e-b10a-11e65e46272e"
+        }
+      }
+    },
+    {
+      "type": "system3/reflex-evidence",
+      "at": 1791608034637,
+      "data": {
+        "version": 1,
+        "goalId": "goal-4d1424cb-0b0a-49f0-ac8b-1acd83e79758",
+        "goalRevision": 1,
+        "observedAt": 1791608034637,
+        "evidence": {
+          "turnId": "01a12428-aa1c-7041-bf55-fc0685da332f",
+          "kind": "command",
+          "operation": "verification",
+          "operationDigest": "7f17a4c5d0443a9af242e4697244637878de1dd8b2a33d84411fd991e616f1d2",
+          "resultDigest": "530e1061dd40b0cd583c3633cb05e1c17ef1e993bf3d7bd4e593689f7d30eec8",
+          "outcome": "succeeded",
+          "runId": "218e5416-6297-425b-94b0-12e2c842b705",
+          "provider": "codex",
+          "id": "89a828b0-cee0-465e-b10a-11e65e46272e"
+        }
+      }
+    }
+  ],
+  "initialFiles": [
+    {
+      "name": "expected.txt",
+      "unavailable": "Error"
+    },
+    {
+      "name": "result.txt",
+      "unavailable": "Error"
+    },
+    {
+      "name": "verify.py",
+      "bytes": 378,
+      "sha256": "0a314db78b340661ac15af03d379aefe9b8ad34b0141be8913ae814a55f4408c"
+    },
+    {
+      "name": "ledger.py",
+      "bytes": 234,
+      "sha256": "ba6461fef2f03172cbf6523bc71f2a5f01a695b66e08e79f1197a887977d790b"
+    }
+  ],
+  "files": [
+    {
+      "name": "expected.txt",
+      "unavailable": "Error"
+    },
+    {
+      "name": "result.txt",
+      "unavailable": "Error"
+    },
+    {
+      "name": "verify.py",
+      "bytes": 378,
+      "sha256": "0a314db78b340661ac15af03d379aefe9b8ad34b0141be8913ae814a55f4408c"
+    },
+    {
+      "name": "ledger.py",
+      "bytes": 290,
+      "sha256": "59a23ff8bd48e00019963c16d8ed82b221f4edddc2fce2531fa2da8446da8dcf"
+    }
+  ],
+  "providerTelemetry": [
+    {
+      "at": 1791608034000,
+      "level": "INFO",
+      "target": "codex_http_client::custom_ca",
+      "status": null,
+      "kind": "request-start",
+      "categories": [
+        "stream"
+      ]
+    },
+    {
+      "at": 1791608034000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608034000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608034000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608034000,
+      "level": "INFO",
+      "target": "codex_core::tools::parallel",
+      "status": null,
+      "kind": "tool-end",
+      "categories": [
+        "stream"
+      ]
+    },
+    {
+      "at": 1791608034000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608034000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608034000,
+      "level": "INFO",
+      "target": "codex_core::stream_events_utils",
+      "status": null,
+      "kind": "tool-start",
+      "categories": [
+        "stream"
+      ]
+    },
+    {
+      "at": 1791608033000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608033000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608033000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608033000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608033000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608033000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608033000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608033000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608033000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608033000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608033000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608033000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608033000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608033000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608033000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608033000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608033000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608033000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608033000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608033000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608033000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608033000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608033000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608033000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608033000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608033000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608033000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608033000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608033000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608033000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608033000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608033000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608033000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608033000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608033000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608031000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608031000,
+      "level": "INFO",
+      "target": "feedback_tags",
+      "status": null,
+      "kind": "request-start",
+      "categories": [
+        "connection",
+        "retry",
+        "stream",
+        "auth"
+      ]
+    },
+    {
+      "at": 1791608031000,
+      "level": "DEBUG",
+      "target": "codex_http_client::client",
+      "status": 200,
+      "kind": "http",
+      "categories": [
+        "timeout",
+        "connection",
+        "retry",
+        "stream",
+        "auth"
+      ]
+    },
+    {
+      "at": 1791608026000,
+      "level": "INFO",
+      "target": "codex_http_client::custom_ca",
+      "status": null,
+      "kind": "request-start",
+      "categories": [
+        "stream"
+      ]
+    },
+    {
+      "at": 1791608026000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608026000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608026000,
+      "level": "INFO",
+      "target": "codex_core::tools::parallel",
+      "status": null,
+      "kind": "tool-end",
+      "categories": [
+        "stream"
+      ]
+    },
+    {
+      "at": 1791608026000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608026000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608026000,
+      "level": "INFO",
+      "target": "codex_core::stream_events_utils",
+      "status": null,
+      "kind": "tool-start",
+      "categories": [
+        "stream"
+      ]
+    },
+    {
+      "at": 1791608026000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608025000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608025000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608025000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608024000,
+      "level": "INFO",
+      "target": "feedback_tags",
+      "status": null,
+      "kind": "request-start",
+      "categories": [
+        "connection",
+        "retry",
+        "stream",
+        "auth"
+      ]
+    },
+    {
+      "at": 1791608024000,
+      "level": "DEBUG",
+      "target": "codex_http_client::client",
+      "status": 200,
+      "kind": "http",
+      "categories": [
+        "timeout",
+        "connection",
+        "retry",
+        "stream",
+        "auth"
+      ]
+    },
+    {
+      "at": 1791608018000,
+      "level": "INFO",
+      "target": "codex_http_client::custom_ca",
+      "status": null,
+      "kind": "request-start",
+      "categories": [
+        "stream"
+      ]
+    },
+    {
+      "at": 1791608018000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608018000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608018000,
+      "level": "INFO",
+      "target": "codex_core::tools::parallel",
+      "status": null,
+      "kind": "tool-end",
+      "categories": [
+        "stream"
+      ]
+    },
+    {
+      "at": 1791608018000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608018000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608018000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608018000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608017000,
+      "level": "WARN",
+      "target": "codex_core_plugins::manifest",
+      "status": null,
+      "kind": "diagnostic",
+      "categories": []
+    },
+    {
+      "at": 1791608017000,
+      "level": "WARN",
+      "target": "codex_core_plugins::manifest",
+      "status": null,
+      "kind": "diagnostic",
+      "categories": []
+    },
+    {
+      "at": 1791608014000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608014000,
+      "level": "INFO",
+      "target": "codex_core::stream_events_utils",
+      "status": null,
+      "kind": "tool-start",
+      "categories": [
+        "stream"
+      ]
+    },
+    {
+      "at": 1791608014000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608014000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608014000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608014000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608014000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608014000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608014000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608014000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608014000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608014000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608014000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608014000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608014000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608014000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608014000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608014000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608014000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608014000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608014000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608014000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608014000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608014000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608014000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608014000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608013000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608013000,
+      "level": "INFO",
+      "target": "feedback_tags",
+      "status": null,
+      "kind": "request-start",
+      "categories": [
+        "connection",
+        "retry",
+        "stream",
+        "auth"
+      ]
+    },
+    {
+      "at": 1791608013000,
+      "level": "DEBUG",
+      "target": "codex_http_client::client",
+      "status": 200,
+      "kind": "http",
+      "categories": [
+        "timeout",
+        "connection",
+        "retry",
+        "stream",
+        "auth"
+      ]
+    },
+    {
+      "at": 1791608009000,
+      "level": "WARN",
+      "target": "codex_core_plugins::manager",
+      "status": null,
+      "kind": "diagnostic",
+      "categories": [
+        "auth"
+      ]
+    },
+    {
+      "at": 1791608007000,
+      "level": "INFO",
+      "target": "codex_http_client::custom_ca",
+      "status": null,
+      "kind": "request-start",
+      "categories": [
+        "stream"
+      ]
+    },
+    {
+      "at": 1791608007000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608007000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608007000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608007000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608007000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608007000,
+      "level": "WARN",
+      "target": "codex_models_manager::model_info",
+      "status": null,
+      "kind": "diagnostic",
+      "categories": []
+    },
+    {
+      "at": 1791608007000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608007000,
+      "level": "WARN",
+      "target": "codex_models_manager::model_info",
+      "status": null,
+      "kind": "diagnostic",
+      "categories": [
+        "connection"
+      ]
+    },
+    {
+      "at": 1791608006000,
+      "level": "TRACE",
+      "target": "codex_app_server::outgoing_message",
+      "status": null,
+      "kind": "outgoing-event",
+      "categories": [
+        "connection"
+      ]
+    }
+  ]
+}

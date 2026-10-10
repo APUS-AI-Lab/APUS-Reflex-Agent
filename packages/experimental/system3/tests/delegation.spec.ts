@@ -121,7 +121,7 @@ it('falls back to the tool name when the delegation route has no label and rejec
   expect(result.kind === 'enter' && result.messages.at(-1)?.content).toEqual([{ type: 'text', text: delegationInstruction('subagent_codex', 'subagent_codex') }])
 })
 
-it('delegates without asking Jev when the person explicitly asks for the delegate, and only while it is available', async () => {
+it('requires Reflex semantic selection for delegation mentions and only offers available delegates', async () => {
   const explicitConfig: System3EntryRoutingConfig = { ...config, candidates: [config.candidates[0]!,
     { ...config.candidates[1]!, explicitPatterns: ['交给\\s*codex', 'subagent_codex'] } as System3EntryRoutingConfig['candidates'][number]] }
   const route = (h: Awaited<ReturnType<typeof setup>>, text: string) => createSystem3EntryRouter(h.ctx, explicitConfig,
@@ -131,12 +131,15 @@ it('delegates without asking Jev when the person explicitly asks for the delegat
   const h = await setup()
   installSystem3Delegation(h.ctx)
   expect(await route(h, '这个重构直接交给 Codex 做')).toBeUndefined()
-  expect(h.decide).not.toHaveBeenCalled()
-  expect(h.agent.session.snapshotEvents().at(-1)?.data).toMatchObject({ outcome: 'selected', explicit: true, request: null,
+  expect(h.decide).toHaveBeenCalledOnce()
+  expect(h.decide.mock.calls[0]?.[0].state).toMatchObject({ matchingDelegateHints: ['codex'] })
+  expect(JSON.stringify(h.decide.mock.calls[0]?.[0].questions)).toContain('不论任务大小')
+  expect(h.agent.session.snapshotEvents().at(-1)?.data).not.toHaveProperty('explicit')
+  expect(h.agent.session.snapshotEvents().at(-1)?.data).toMatchObject({ outcome: 'selected',
     candidate: { id: 'codex', delegate: { provider: 'codex', tool: 'subagent_codex' } } })
   expect(h.view()?.route?.delegation).toMatchObject({ candidateId: 'codex', injected: false })
   await route(h, '解释一下这段代码')
-  expect(h.decide).toHaveBeenCalledOnce()
+  expect(h.decide).toHaveBeenCalledTimes(2)
   const unavailable = await setup({ provider: false, tool: true })
   unavailable.decide.mockImplementation(async query => ({ kind: 'ok', spec: unavailable.ctx.jev.resolve(query),
     response: { model: 'jev-test', answers: { route: { type: 'choice', choice: 'fast', confidence: 0.95, probabilities: { fast: 0.95 } } } } }))
@@ -153,4 +156,21 @@ it('rejects blank and invalid explicit delegation patterns at load', async () =>
   { mode: 'local-only' }, { routeId: 'jev', executionDomain: 'local', effort: 'low' })
   expect(() => create([' '])).toThrow('explicitPatterns must not be empty')
   expect(() => create(['(unclosed'])).toThrow('not a valid regular expression: (unclosed')
+})
+
+it.each(['不要用 Codex，直接解释原理', '分析文档中的“用 Codex”这句话'])('does not inject delegation for a semantic abstention despite matching keywords: %s', async (text) => {
+  const h = await setup()
+  installSystem3Delegation(h.ctx)
+  h.decide.mockImplementation(async query => ({ kind: 'ok', spec: h.ctx.jev.resolve(query), response: { model: 'jev-test',
+    answers: { route: { type: 'choice', choice: 'abstain', confidence: 1, probabilities: { abstain: 1 } } } } }))
+  const router = createSystem3EntryRouter(h.ctx, { ...config, candidates: [config.candidates[0]!,
+    { ...config.candidates[1]!, explicitPatterns: ['codex'] } as System3EntryRoutingConfig['candidates'][number]] },
+  { mode: 'local-only' }, { routeId: 'jev', executionDomain: 'local' })
+  const message = createUserMessage({ content: [{ type: 'text', text }], source: { kind: 'user', rpcId: h.requestId } })
+  await router.route({ agent: h.agent, requestId: h.requestId, baseline: { provider: 'mock', model: 'fast' }, message }, new AbortController().signal)
+  expect(h.decide).toHaveBeenCalledOnce()
+  expect(h.agent.session.snapshotEvents().at(-1)?.data).toMatchObject({ outcome: 'abstain' })
+  const result = await agentEvents(h.ctx, h.agent).waterfall('agent/pre-step', { messages: [message], turn: 1, step: 0,
+    signal: new AbortController().signal }, () => Promise.resolve({ kind: 'enter', messages: [message] }))
+  expect(result).toEqual({ kind: 'enter', messages: [message] })
 })

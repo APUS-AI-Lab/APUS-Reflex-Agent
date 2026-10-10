@@ -1,0 +1,663 @@
+{
+  "scenario": "fault",
+  "writtenAt": 1791607287913,
+  "stopReason": "aborted",
+  "activity": [
+    {
+      "at": 1791607139903,
+      "event": "start"
+    },
+    {
+      "at": 1791607163840,
+      "event": "activity",
+      "kind": "reasoning",
+      "phase": "started"
+    },
+    {
+      "at": 1791607163926,
+      "event": "activity",
+      "kind": "reasoning",
+      "phase": "completed"
+    },
+    {
+      "at": 1791607163928,
+      "event": "activity",
+      "kind": "message",
+      "phase": "started"
+    },
+    {
+      "at": 1791607163929,
+      "event": "activity",
+      "kind": "message",
+      "phase": "completed"
+    },
+    {
+      "at": 1791607168612,
+      "event": "activity",
+      "kind": "command",
+      "phase": "started"
+    },
+    {
+      "at": 1791607171716,
+      "event": "activity",
+      "kind": "command",
+      "phase": "completed",
+      "outcome": "failed"
+    },
+    {
+      "at": 1791607181699,
+      "event": "activity",
+      "kind": "command",
+      "phase": "started"
+    },
+    {
+      "at": 1791607181890,
+      "event": "activity",
+      "kind": "command",
+      "phase": "completed",
+      "outcome": "failed"
+    },
+    {
+      "at": 1791607188508,
+      "event": "activity",
+      "kind": "command",
+      "phase": "started"
+    },
+    {
+      "at": 1791607188538,
+      "event": "activity",
+      "kind": "command",
+      "phase": "completed",
+      "outcome": "failed"
+    },
+    {
+      "at": 1791607193838,
+      "event": "activity",
+      "kind": "reasoning",
+      "phase": "started"
+    },
+    {
+      "at": 1791607193838,
+      "event": "activity",
+      "kind": "reasoning",
+      "phase": "completed"
+    },
+    {
+      "at": 1791607193838,
+      "event": "activity",
+      "kind": "message",
+      "phase": "started"
+    },
+    {
+      "at": 1791607193897,
+      "event": "activity",
+      "kind": "message",
+      "phase": "completed"
+    },
+    {
+      "at": 1791607194082,
+      "event": "activity",
+      "kind": "command",
+      "phase": "started"
+    },
+    {
+      "at": 1791607208987,
+      "event": "activity",
+      "kind": "command",
+      "phase": "completed"
+    },
+    {
+      "at": 1791607214759,
+      "event": "activity",
+      "kind": "reasoning",
+      "phase": "started"
+    },
+    {
+      "at": 1791607214760,
+      "event": "activity",
+      "kind": "reasoning",
+      "phase": "completed"
+    },
+    {
+      "at": 1791607214760,
+      "event": "activity",
+      "kind": "message",
+      "phase": "started"
+    },
+    {
+      "at": 1791607214761,
+      "event": "activity",
+      "kind": "message",
+      "phase": "completed"
+    },
+    {
+      "at": 1791607215266,
+      "event": "activity",
+      "kind": "command",
+      "phase": "started"
+    },
+    {
+      "at": 1791607215267,
+      "event": "activity",
+      "kind": "command",
+      "phase": "completed"
+    },
+    {
+      "at": 1791607222104,
+      "event": "activity",
+      "kind": "reasoning",
+      "phase": "started"
+    },
+    {
+      "at": 1791607222104,
+      "event": "activity",
+      "kind": "reasoning",
+      "phase": "completed"
+    },
+    {
+      "at": 1791607222259,
+      "event": "activity",
+      "kind": "file-change",
+      "phase": "started"
+    },
+    {
+      "at": 1791607222405,
+      "event": "activity",
+      "kind": "file-change",
+      "phase": "completed"
+    },
+    {
+      "at": 1791607237886,
+      "event": "activity",
+      "kind": "reasoning",
+      "phase": "started"
+    },
+    {
+      "at": 1791607237887,
+      "event": "activity",
+      "kind": "reasoning",
+      "phase": "completed"
+    },
+    {
+      "at": 1791607238318,
+      "event": "activity",
+      "kind": "command",
+      "phase": "started"
+    },
+    {
+      "at": 1791607238884,
+      "event": "activity",
+      "kind": "command",
+      "phase": "completed"
+    },
+    {
+      "at": 1791607287868,
+      "event": "end",
+      "outcome": "aborted"
+    }
+  ],
+  "events": [
+    {
+      "type": "system3/reflex-evidence",
+      "at": 1791607171715,
+      "data": {
+        "version": 1,
+        "goalId": "goal-18e3f127-5487-4a53-a699-212189945adc",
+        "goalRevision": 1,
+        "observedAt": 1791607171714,
+        "evidence": {
+          "turnId": "01a1241b-6e44-7cb3-9faa-e7889fc53950",
+          "kind": "command",
+          "operation": "verification",
+          "operationDigest": "57d636dd51684dfae57655449bbef67b0923e2c5e8ac1a4d3b0092babe531cdb",
+          "resultDigest": "28bdcc89d512d9182431cc02cc6d8c6f154e73da5ee63dc4517d57924a8c25a9",
+          "outcome": "failed",
+          "runId": "72752688-b813-411a-8eac-9dd4989d7588",
+          "provider": "codex",
+          "id": "b7170f2a-c7ea-4ca3-9915-f80081c46ba0"
+        }
+      }
+    },
+    {
+      "type": "system3/judgement",
+      "at": 1791607176332,
+      "data": {
+        "decision": "reflex.supervision",
+        "reason": "transport",
+        "outcome": "observe",
+        "applied": false,
+        "elapsedMs": 5912
+      }
+    },
+    {
+      "type": "system3/judgement",
+      "at": 1791607180071,
+      "data": {
+        "decision": "reflex.supervision",
+        "reason": "judged",
+        "outcome": "diagnose",
+        "applied": true,
+        "elapsedMs": 3353,
+        "response": {
+          "model": "APUS-OpenJev-v1-9B-5949",
+          "answers": {
+            "action": {
+              "type": "choice",
+              "choice": "diagnose",
+              "probabilities": {
+                "observe": 0.00045759778162045647,
+                "diagnose": 0.9979822393604019,
+                "verify": 0.0001581415617277676,
+                "narrow": 0.0001581415617277676,
+                "realign": 0.0012438797345220571
+              },
+              "confidence": 0.9896712353610568
+            }
+          },
+          "usage": {
+            "input_tokens": 591,
+            "output_tokens": 1,
+            "billing_units": 1
+          }
+        }
+      }
+    },
+    {
+      "type": "system3/reflex-supervision",
+      "at": 1791607180074,
+      "data": {
+        "version": 1,
+        "id": "122a60cc-0aec-4d91-8b10-1c7619262cd5",
+        "goalId": "goal-18e3f127-5487-4a53-a699-212189945adc",
+        "goalRevision": 1,
+        "runId": "72752688-b813-411a-8eac-9dd4989d7588",
+        "state": "inconclusive",
+        "action": "observe",
+        "evidenceCount": 1
+      }
+    },
+    {
+      "type": "system3/judgement",
+      "at": 1791607180692,
+      "data": {
+        "decision": "reflex.supervision",
+        "reason": "judged",
+        "outcome": "diagnose",
+        "applied": true,
+        "elapsedMs": 585,
+        "response": {
+          "model": "APUS-OpenJev-v1-9B-5949",
+          "answers": {
+            "action": {
+              "type": "choice",
+              "choice": "diagnose",
+              "probabilities": {
+                "observe": 0.00048705189872893536,
+                "diagnose": 0.99786256054256,
+                "verify": 0.00015812260065391795,
+                "narrow": 0.00016832063222577712,
+                "realign": 0.00132394432583134
+              },
+              "confidence": 0.9891449758007776
+            }
+          },
+          "usage": {
+            "input_tokens": 591,
+            "output_tokens": 1,
+            "billing_units": 1
+          }
+        }
+      }
+    },
+    {
+      "type": "system3/reflex-supervision",
+      "at": 1791607180693,
+      "data": {
+        "version": 1,
+        "id": "9b171e60-e5fc-4dd5-8a0c-e808d97cce95",
+        "goalId": "goal-18e3f127-5487-4a53-a699-212189945adc",
+        "goalRevision": 1,
+        "runId": "72752688-b813-411a-8eac-9dd4989d7588",
+        "state": "inconclusive",
+        "action": "observe",
+        "evidenceCount": 1
+      }
+    },
+    {
+      "type": "system3/judgement",
+      "at": 1791607181684,
+      "data": {
+        "decision": "reflex.supervision",
+        "reason": "judged",
+        "outcome": "diagnose",
+        "applied": true,
+        "elapsedMs": 535,
+        "response": {
+          "model": "APUS-OpenJev-v1-9B-5949",
+          "answers": {
+            "action": {
+              "type": "choice",
+              "choice": "diagnose",
+              "probabilities": {
+                "observe": 0.00048712765739174587,
+                "diagnose": 0.9980178196749887,
+                "verify": 0.00016834689399310745,
+                "narrow": 0.0001581472713012006,
+                "realign": 0.0011685585023251282
+              },
+              "confidence": 0.9897898713052166
+            }
+          },
+          "usage": {
+            "input_tokens": 591,
+            "output_tokens": 1,
+            "billing_units": 1
+          }
+        }
+      }
+    },
+    {
+      "type": "system3/reflex-supervision",
+      "at": 1791607181685,
+      "data": {
+        "version": 1,
+        "id": "095157b7-2209-4d58-80d6-2ec5267aeec4",
+        "goalId": "goal-18e3f127-5487-4a53-a699-212189945adc",
+        "goalRevision": 1,
+        "runId": "72752688-b813-411a-8eac-9dd4989d7588",
+        "state": "inconclusive",
+        "action": "observe",
+        "evidenceCount": 1
+      }
+    },
+    {
+      "type": "system3/reflex-evidence",
+      "at": 1791607181889,
+      "data": {
+        "version": 1,
+        "goalId": "goal-18e3f127-5487-4a53-a699-212189945adc",
+        "goalRevision": 1,
+        "observedAt": 1791607181889,
+        "evidence": {
+          "turnId": "01a1241b-6e44-7cb3-9faa-e7889fc53950",
+          "kind": "command",
+          "operation": "verification",
+          "operationDigest": "57d636dd51684dfae57655449bbef67b0923e2c5e8ac1a4d3b0092babe531cdb",
+          "resultDigest": "28bdcc89d512d9182431cc02cc6d8c6f154e73da5ee63dc4517d57924a8c25a9",
+          "outcome": "failed",
+          "runId": "72752688-b813-411a-8eac-9dd4989d7588",
+          "provider": "codex",
+          "id": "b7170f2a-c7ea-4ca3-9915-f80081c46ba0"
+        }
+      }
+    },
+    {
+      "type": "system3/judgement",
+      "at": 1791607183309,
+      "data": {
+        "decision": "reflex.supervision",
+        "reason": "judged",
+        "outcome": "diagnose",
+        "applied": true,
+        "elapsedMs": 1153,
+        "response": {
+          "model": "APUS-OpenJev-v1-9B-5949",
+          "answers": {
+            "action": {
+              "type": "choice",
+              "choice": "diagnose",
+              "probabilities": {
+                "observe": 0.00009025805409348664,
+                "diagnose": 0.999662529018955,
+                "verify": 0.00003320408250113367,
+                "narrow": 0.00004538459976441443,
+                "realign": 0.00016862424468585524
+              },
+              "confidence": 0.9978630785759189
+            }
+          },
+          "usage": {
+            "input_tokens": 852,
+            "output_tokens": 1,
+            "billing_units": 1
+          }
+        }
+      }
+    },
+    {
+      "type": "system3/reflex-supervision",
+      "at": 1791607183314,
+      "data": {
+        "version": 1,
+        "id": "f50c4866-1747-40c0-990a-a152be631eae",
+        "goalId": "goal-18e3f127-5487-4a53-a699-212189945adc",
+        "goalRevision": 1,
+        "runId": "72752688-b813-411a-8eac-9dd4989d7588",
+        "state": "intent",
+        "action": "diagnose",
+        "evidenceCount": 2
+      }
+    },
+    {
+      "type": "subagent/supervision-steer",
+      "at": 1791607183332,
+      "data": {
+        "source": "reflex-supervision",
+        "runId": "72752688-b813-411a-8eac-9dd4989d7588",
+        "provider": "codex"
+      }
+    },
+    {
+      "type": "system3/reflex-supervision",
+      "at": 1791607183334,
+      "data": {
+        "version": 1,
+        "id": "f50c4866-1747-40c0-990a-a152be631eae",
+        "goalId": "goal-18e3f127-5487-4a53-a699-212189945adc",
+        "goalRevision": 1,
+        "runId": "72752688-b813-411a-8eac-9dd4989d7588",
+        "state": "accepted",
+        "action": "diagnose",
+        "evidenceCount": 2
+      }
+    },
+    {
+      "type": "system3/reflex-evidence",
+      "at": 1791607188537,
+      "data": {
+        "version": 1,
+        "goalId": "goal-18e3f127-5487-4a53-a699-212189945adc",
+        "goalRevision": 1,
+        "observedAt": 1791607188537,
+        "evidence": {
+          "turnId": "01a1241b-6e44-7cb3-9faa-e7889fc53950",
+          "kind": "command",
+          "operation": "verification",
+          "operationDigest": "57d636dd51684dfae57655449bbef67b0923e2c5e8ac1a4d3b0092babe531cdb",
+          "resultDigest": "28bdcc89d512d9182431cc02cc6d8c6f154e73da5ee63dc4517d57924a8c25a9",
+          "outcome": "failed",
+          "runId": "72752688-b813-411a-8eac-9dd4989d7588",
+          "provider": "codex",
+          "id": "b7170f2a-c7ea-4ca3-9915-f80081c46ba0"
+        }
+      }
+    },
+    {
+      "type": "system3/reflex-evidence",
+      "at": 1791607208986,
+      "data": {
+        "version": 1,
+        "goalId": "goal-18e3f127-5487-4a53-a699-212189945adc",
+        "goalRevision": 1,
+        "observedAt": 1791607208986,
+        "evidence": {
+          "turnId": "01a1241b-6e44-7cb3-9faa-e7889fc53950",
+          "kind": "command",
+          "operation": "command",
+          "operationDigest": "c449e93325861f88282bb9e288b47caf0410ef178dcef56e687e79a18322c1b5",
+          "outcome": "succeeded",
+          "runId": "72752688-b813-411a-8eac-9dd4989d7588",
+          "provider": "codex",
+          "id": "b7170f2a-c7ea-4ca3-9915-f80081c46ba0"
+        }
+      }
+    },
+    {
+      "type": "system3/reflex-evidence",
+      "at": 1791607215267,
+      "data": {
+        "version": 1,
+        "goalId": "goal-18e3f127-5487-4a53-a699-212189945adc",
+        "goalRevision": 1,
+        "observedAt": 1791607215267,
+        "evidence": {
+          "turnId": "01a1241b-6e44-7cb3-9faa-e7889fc53950",
+          "kind": "command",
+          "operation": "diagnostic",
+          "operationDigest": "4edb98d1ae3dbc7fd379efa07a5b7fac39c81fb5bf4fb3275399f17ceb78f361",
+          "resultDigest": "9c09a6b14e45c13c9046479d097e80b8c6a92ecb924c8e9c408a97d1be0378d7",
+          "outcome": "succeeded",
+          "runId": "72752688-b813-411a-8eac-9dd4989d7588",
+          "provider": "codex",
+          "id": "b7170f2a-c7ea-4ca3-9915-f80081c46ba0"
+        }
+      }
+    },
+    {
+      "type": "system3/reflex-evidence",
+      "at": 1791607222405,
+      "data": {
+        "version": 1,
+        "goalId": "goal-18e3f127-5487-4a53-a699-212189945adc",
+        "goalRevision": 1,
+        "observedAt": 1791607222404,
+        "evidence": {
+          "turnId": "01a1241b-6e44-7cb3-9faa-e7889fc53950",
+          "kind": "file-change",
+          "operation": "file-change",
+          "operationDigest": "08c77094f8c712161540290fd1dc3a80c17fffbf931d0891ae794dc845880de9",
+          "outcome": "succeeded",
+          "runId": "72752688-b813-411a-8eac-9dd4989d7588",
+          "provider": "codex",
+          "id": "b7170f2a-c7ea-4ca3-9915-f80081c46ba0"
+        }
+      }
+    },
+    {
+      "type": "system3/reflex-evidence",
+      "at": 1791607238883,
+      "data": {
+        "version": 1,
+        "goalId": "goal-18e3f127-5487-4a53-a699-212189945adc",
+        "goalRevision": 1,
+        "observedAt": 1791607238882,
+        "evidence": {
+          "turnId": "01a1241b-6e44-7cb3-9faa-e7889fc53950",
+          "kind": "command",
+          "operation": "verification",
+          "operationDigest": "57d636dd51684dfae57655449bbef67b0923e2c5e8ac1a4d3b0092babe531cdb",
+          "resultDigest": "5cd256331ab6e53f86595a98e676888e96745cdaa6e8249d8197ced8ed8ae356",
+          "outcome": "succeeded",
+          "runId": "72752688-b813-411a-8eac-9dd4989d7588",
+          "provider": "codex",
+          "id": "b7170f2a-c7ea-4ca3-9915-f80081c46ba0"
+        }
+      }
+    },
+    {
+      "type": "system3/judgement",
+      "at": 1791607246243,
+      "data": {
+        "decision": "reflex.supervision-feedback",
+        "reason": "judged",
+        "outcome": "improved",
+        "applied": true,
+        "elapsedMs": 2509,
+        "response": {
+          "model": "APUS-OpenJev-v1-9B-5949",
+          "answers": {
+            "improved": {
+              "type": "noul",
+              "noul": 0.9988304895755645
+            }
+          },
+          "usage": {
+            "input_tokens": 1909,
+            "output_tokens": 1,
+            "billing_units": 1
+          }
+        }
+      }
+    },
+    {
+      "type": "system3/reflex-supervision",
+      "at": 1791607246248,
+      "data": {
+        "version": 1,
+        "id": "f50c4866-1747-40c0-990a-a152be631eae",
+        "goalId": "goal-18e3f127-5487-4a53-a699-212189945adc",
+        "goalRevision": 1,
+        "runId": "72752688-b813-411a-8eac-9dd4989d7588",
+        "state": "improved",
+        "action": "diagnose",
+        "evidenceCount": 7
+      }
+    },
+    {
+      "type": "system3/reflex-supervision",
+      "at": 1791607269362,
+      "data": {
+        "version": 1,
+        "id": "3401ea00-fbcf-47c8-9a9d-0d35a96cc181",
+        "goalId": "goal-18e3f127-5487-4a53-a699-212189945adc",
+        "goalRevision": 1,
+        "runId": "72752688-b813-411a-8eac-9dd4989d7588",
+        "state": "limit",
+        "action": "observe",
+        "evidenceCount": 7
+      }
+    }
+  ],
+  "initialFiles": [
+    {
+      "name": "expected.txt",
+      "bytes": 37,
+      "sha256": "8537e2001a780d88e3e88a15901044e4ae63597b699e377817622f5da2148321"
+    },
+    {
+      "name": "result.txt",
+      "bytes": 10,
+      "sha256": "df1a225671a8e4a4ecf107bf110a35902c822fa775f37ee85d540aa3c09991ce"
+    },
+    {
+      "name": "verify.py",
+      "bytes": 226,
+      "sha256": "fe18dc7e754974d5ada0b85d8897299a9eabd459b66f3bcf0bd9e3c932840e33"
+    },
+    {
+      "name": "ledger.py",
+      "unavailable": "Error"
+    }
+  ],
+  "files": [
+    {
+      "name": "expected.txt",
+      "bytes": 37,
+      "sha256": "8537e2001a780d88e3e88a15901044e4ae63597b699e377817622f5da2148321"
+    },
+    {
+      "name": "result.txt",
+      "bytes": 37,
+      "sha256": "8537e2001a780d88e3e88a15901044e4ae63597b699e377817622f5da2148321"
+    },
+    {
+      "name": "verify.py",
+      "bytes": 226,
+      "sha256": "fe18dc7e754974d5ada0b85d8897299a9eabd459b66f3bcf0bd9e3c932840e33"
+    },
+    {
+      "name": "ledger.py",
+      "unavailable": "Error"
+    }
+  ]
+}

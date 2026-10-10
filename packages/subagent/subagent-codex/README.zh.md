@@ -97,7 +97,7 @@ dsh --profile <name>
 
 ### 设计理念
 
-- **每次运行一个全新进程、线程与轮次。** 每次运行都会 spawn 全新 app-server、创建一个临时线程并恰好执行一个轮次；没有续接、恢复或池化。
+- **每次运行一个全新进程和临时线程。** Host 监督可以中断已确认的原生轮次并在存活线程中继续；进程死亡后不恢复临时线程，不提供进程池。
 - **原生配置是权威。** Codex 配置与身份验证经父级 cwd、`HOME` 与 `CODEX_HOME` 保持原生；提供方只覆盖可选模型以及线程的 approval、reviewer 与 sandbox 字段。
 - **刻意无人值守。** 审批、用户输入与 MCP 请求都会在无人参与的情况下被应答或拒绝；未知服务器请求会使运行失败。
 
@@ -112,7 +112,9 @@ dsh --profile <name>
 
 ### 运行流程
 
-一次启动只接受非空的文本块序列，并根据父会话确定子级 cwd。它经子进程 seam spawn 固定命令，完成 `initialize` → `initialized` 握手，把 Profile 选择的模式与可选模型映射为官方 `thread/start` 字段并与 `{ cwd, ephemeral: true }` 一起发送，且仅在 Codex 返回有效的临时线程后发布运行。已发布的结果恰好启动一个轮次，只接受与此次运行的线程和轮次匹配的通知，并等待权威的 `turn/completed` 终态。以最后一条 `phase: "final_answer"` 的 `agentMessage` 为准；若 Codex 没有发出明确的最终阶段，则以最后一条 `phase: null` 的消息作为兼容性回退。成功完成的轮次若没有非空白答案，结果也会判为错误。失败轮次使用粗粒度类别 `limit`、`access-policy`、`service`、`transport`、`product-error`、`invalid-result` 或 `unknown`；app-server 提前退出使用 `process`，适用的连接与 stream 失败保留数值 `httpStatusCode`。
+一次启动只接受非空的文本块序列，并根据父会话确定子级 cwd。它经子进程 seam spawn 固定命令，完成 `initialize` → `initialized` 握手，把 Profile 选择的模式与可选模型映射为官方 `thread/start` 字段并与 `{ cwd, ephemeral: true }` 一起发送，且仅在 Codex 返回有效的临时线程后发布运行。已发布的结果启动首个轮次，只接受与此次运行的线程和轮次匹配的通知，并等待权威的 `turn/completed` 终态。以最后一条 `phase: "final_answer"` 的 `agentMessage` 为准；若 Codex 没有发出明确的最终阶段，则以最后一条 `phase: null` 的消息作为兼容性回退。成功完成的轮次若没有非空白答案，结果也会判为错误。失败轮次使用粗粒度类别 `limit`、`access-policy`、`service`、`transport`、`product-error`、`invalid-result` 或 `unknown`；app-server 提前退出使用 `process`，适用的连接与 stream 失败保留数值 `httpStatusCode`。
+
+可选的 Host 专用恢复能力报告原生活动、重试次数、审批等待和在途副作用。恢复必须等到对应的 `interrupted` 终态才能启动下一轮次，保持权限与一个逻辑结果；原轮次若先正常完成，则以正常完成为准。中断前和继续前都重验权限。中断或启动回执不明时停止拥有的进程并等到完全退出，不重复请求；公开取消仍为终止操作。流式活动和受保护等待阻止策略性中断。协议字段已按包内 Codex 0.153.4 核对。
 
 </details>
 
@@ -130,6 +132,14 @@ dsh --profile <name>
 - [生成配置目录](../../../docs/config-catalog.zh.md#deepseek-aidsh-subagent-codex)——每个受支持配置字段及其源声明。
 
 -----
+
+已完成的命令与文件变更还会发布不含原文的 `subagent/evidence`：当前 turn id、操作/结果的 SHA-256 指纹、结果和操作类别。部署配置 `evidencePatterns.verification` 与 `.diagnostic` 用于分类命令；类别或零退出码本身不证明 Goal 已完成。该事件不转发命令、diff、输出原文或推理内容。Reflex 自动建议复用当前 turn 校验，并在父会话中使用独立来源归属。
+
+可选配置 `evidenceSummary: { maxActions: 8, maxPathChars: 160 }` 启用有界 `semantic` 证据，仅取 Codex 0.153.4 的结构化读取、列举、搜索与文件新增、修改、删除操作。省略时关闭采集，两个预算必须为正安全整数。只包含词法归一化后的工作区相对路径；命令相对目标必须有原生 item cwd。工作区外、格式异常或超长路径会被省略，不截断成另一个路径。未知操作被省略，丢弃信息以 `truncated` 标记，全部未知的 item 不附语义摘要。采集不读取文件。路径仍是不可信项目数据，监督消费者必须先通过数据类别准入才能外发；截断不等于秘密脱敏。摘要本身不证明工作与 Goal 相关或已成功。
+
+可选 `evidenceSummary.verificationTargets: { maxCommandChars: 4096 }` 使用公开 `@yarnpkg/parsers` API 在本机静态解析有界命令。只识别 `pytest`、`python[3] -m pytest` 或 `python[3] -m unittest` 的明确字面量 `.py` 文件目标，允许裸命令或单层 POSIX `sh`/`bash`/`zsh -c/-lc`。参数选项、节点选择器、展开、赋值、管道、重定向、嵌套 wrapper 与 Windows 均不支持。独立 `verification-target` 操作只携带获准的工作区相对文件路径，不携带命令。原生成功与 Goal 相关性仍分别要求；读取测试文件不能证明执行过验证。
+
+公开纯函数 `verificationTargets(command, maxCommandChars, platform)` 与采集器复用同一解析实现，返回目标或固定 `VerificationRejection` 类别。诊断消费者不得记录传入的命令参数；拒绝类别不构成验证成功证据。
 
 <a id="model-experience"></a>
 ## 模型体验
@@ -169,7 +179,7 @@ Codex 子级会在一个全新的临时线程中，以单个轮次接收这些�
 
 这些限制说明本提供方何时不合适，或何时需要特别的运维注意。它们是当前包约束，不是通用 Codex 对比或任务积压。
 
-- **每次运行均新建一个进程、一个线程和一个轮次**——不支持续接、恢复、池化或产品会话持久化。进度是每个子项的类别与阶段，以实时事件 `subagent/activity` 发布。已完成的非最终 agent 消息还会把其文本作为该步骤的说明，供用户判断工作是否偏离；命令、路径、参数和结果不会被转发。状态为 `failed` 或退出码非零的已完成命令项会带 `outcome: 'failed'` 发布。轮次进行中，`SubagentRun.steer` 通过 `turn/steer` 发送用户文本，并以已确认的轮次 id 作为 `expectedTurnId`；轮次开始之前、完成之后或连接关闭之后，输入会被拒绝。
+- **每次运行均新建一个进程和临时线程**——有界 Host 恢复可以在同一存活线程中继续下一原生轮次；不支持进程池或产品会话持久化。进度是每个子项的类别与阶段，以实时事件 `subagent/activity` 发布。已完成的非最终 agent 消息还会把其文本作为该步骤的说明，供用户判断工作是否偏离；命令、路径、参数和结果不会被转发。状态为 `failed` 或退出码非零的已完成命令项会带 `outcome: 'failed'` 发布。轮次进行中，`SubagentRun.steer` 通过 `turn/steer` 发送用户文本，并以已确认的轮次 id 作为 `expectedTurnId`；轮次开始之前、完成之后或连接关闭之后，输入会被拒绝。
 - **静态选择实例**——Profile 配置项固定提供方名称、可选模型与工具绑定；调用无法动态选择或修改提供方与模型，而且每个公开工具都需要唯一的 `toolName`。
 - **身份验证与账户状态仍由原生机制管理**——Bundle 会提供 CLI，但不会创建账户、登录、信任项目或改写 Codex 设置；配置与身份验证失败会公开其生命周期阶段与安全的 `unknown` 回退，而不会增加单独的公开分类体系。
 - **委派时必须存在原生平台载荷**——省略 optional dependencies 的安装、不受支持的平台以及缺失或损坏的载荷都会在第一次运行时失败；不会回退到宿主 CLI。
@@ -193,3 +203,5 @@ Codex 子级会在一个全新的临时线程中，以单个轮次接收这些�
 </details>
 
 **运行时不变式：** 不发布伴生入口。生命周期配对属于共享 subagent service，受管范围的所有权属于 subprocess service。
+
+带 `expectedActivity` 的恢复请求在中断前发现原生活动或重试次数变化时，返回失效结果。确认中断后的继续授权不使用该活动检查。

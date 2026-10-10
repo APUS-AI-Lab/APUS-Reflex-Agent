@@ -70,6 +70,22 @@ export interface System3SubagentRunView {
  * Steer texts are the person's own input.
  */
 export interface System3RuntimeView {
+  /** Latest durable Reflex actions; absent until this session records one. */
+  readonly reflex?: {
+    /** Whether a delegated Codex run is currently being observed by Reflex. */
+    readonly observing: boolean
+    readonly recovery?: { readonly state: string; readonly reason: string; readonly runId: string } | undefined
+    readonly supervision: { readonly state: string; readonly action: string; readonly evidenceCount: number; readonly runId: string } | null
+    readonly context: { readonly revision: number; readonly action: 'remove' | 'restore'; readonly targetsCount: number } | null
+    /** Recent content-free Reflex milestones, newest last. */
+    readonly timeline: readonly {
+      readonly kind: 'supervision' | 'recovery' | 'context' | 'evidence'
+      readonly at: number
+      readonly state: string | null
+      readonly action: string | null
+      readonly count: number | null
+    }[]
+  } | undefined
   readonly entry: System3EntryView | null
   /** Earlier entry decisions whose input reached a turn, oldest first, so earlier turns keep their route line. */
   readonly history: readonly System3EntryView[]

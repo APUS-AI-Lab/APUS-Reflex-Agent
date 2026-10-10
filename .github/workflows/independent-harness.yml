@@ -59,6 +59,16 @@ jobs:
           packages/api/session-controller/tests
           --maxWorkers=2
       - name: Replay System3 and AG-UI persona sessions
-        run: pnpm run test:snapshot snapshots/sdk/sdk.snapshot.ts -t 'system3-shadow|system3-entry-route|system3-completion-review|agui-persona'
+        run: pnpm run test:snapshot snapshots/sdk/sdk.snapshot.ts -t 'system3-shadow|system3-entry-route|system3-completion-review|reflex-context|reflex-supervision|reflex-semantic-supervision|reflex-native-recovery|goal-entry-routing|agui-persona'
       - name: Python SDK completion review
         run: uv run --project python/sdk python scripts/smoke-python-runtime.py --scenario sdk-system3-completion-review --exe apps/cli/lib/bin.js
+      - name: Python SDK Reflex context restoration
+        run: uv run --project python/sdk python scripts/smoke-python-runtime.py --scenario sdk-reflex-context --exe apps/cli/lib/bin.js
+      - name: Python SDK Reflex supervision feedback
+        run: uv run --project python/sdk python scripts/smoke-python-runtime.py --scenario sdk-reflex-supervision --exe apps/cli/lib/bin.js
+      - name: Python SDK semantic Goal supervision
+        run: uv run --project python/sdk python scripts/smoke-python-runtime.py --scenario sdk-reflex-semantic-supervision --exe apps/cli/lib/bin.js
+      - name: Python SDK Goal entry delegation
+        run: uv run --project python/sdk python scripts/smoke-python-runtime.py --scenario sdk-goal-entry-routing --exe apps/cli/lib/bin.js
+      - name: Python SDK native Reflex recovery
+        run: uv run --project python/sdk python scripts/smoke-python-runtime.py --scenario sdk-reflex-native-recovery --exe apps/cli/lib/bin.js

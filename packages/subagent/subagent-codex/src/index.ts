@@ -27,10 +27,16 @@ import {
   type CodexRunSpec,
 } from './run.ts'
 
+export { verificationTargets, type VerificationEnvelope, type VerificationRejection } from './verification-target.ts'
+
 export const name = 'subagent-codex'
 export const inject = ['subagents', 'subprocess']
 
 const DEFAULT_PROVIDER_NAME = 'codex'
+const DEFAULT_EVIDENCE_PATTERNS = {
+  verification: '(?:^|\\s)(?:test|pytest|vitest|jest|tsc|build|check)(?:\\s|$)',
+  diagnostic: '(?:^|\\s)(?:cat|head|tail|rg|grep|ls|stat)(?:\\s|$)',
+}
 
 /** Deployment-owned model, permission, environment, and process-release settings. */
 export interface Config {
@@ -47,6 +53,25 @@ export interface Config {
   permissionMode?: CodexPermissionMode
   /** Grace in milliseconds between app-server managed-range termination tiers. */
   disposeGraceMs?: number
+  /** Opt in to workspace operation labels and relative paths; omitted disables semantic collection. */
+  evidenceSummary?: {
+    /** Maximum structured actions per completed native item. */
+    maxActions: number
+    /** Maximum relative path length; longer paths are omitted, never cut into a different path. */
+    maxPathChars: number
+    /** Opt in to strictly parsed literal test-file targets from native command text. */
+    verificationTargets?: {
+      /** Maximum command characters accepted before static parsing. */
+      maxCommandChars: number
+    } | undefined
+  } | undefined
+  /** Command classification for fingerprint evidence; patterns never establish correctness. */
+  evidencePatterns?: {
+    /** Unicode regular expression matching verification command text emitted by Codex. */
+    verification: string
+    /** Unicode regular expression matching diagnostic command text when verification does not match. */
+    diagnostic: string
+  }
 }
 
 export const Config: z<Config> = z.object({
@@ -56,9 +81,17 @@ export const Config: z<Config> = z.object({
   permissionMode: z.union([...CODEX_PERMISSION_MODES])
     .default(DEFAULT_CODEX_PERMISSION_MODE),
   disposeGraceMs: z.number().default(DEFAULT_DISPOSE_GRACE_MS),
+  evidenceSummary: z.union([z.const(undefined), z.object({
+    maxActions: z.number().step(1).min(1).max(Number.MAX_SAFE_INTEGER).required(),
+    maxPathChars: z.number().step(1).min(1).max(Number.MAX_SAFE_INTEGER).required(),
+    verificationTargets: z.union([z.const(undefined), z.object({
+      maxCommandChars: z.number().step(1).min(1).max(Number.MAX_SAFE_INTEGER).required(),
+    })]),
+  })]),
+  evidencePatterns: z.object({ verification: z.string(), diagnostic: z.string() }).default(DEFAULT_EVIDENCE_PATTERNS),
 })
 
-type ResolvedConfig = Omit<Required<Config>, 'model'> & Pick<Config, 'model'>
+type ResolvedConfig = Omit<Required<Config>, 'model' | 'evidenceSummary'> & Pick<Config, 'model' | 'evidenceSummary'>
 
 class CodexProvider implements SubagentProvider {
   readonly capabilities: SubagentCapabilities = NO_START_CAPABILITIES
@@ -98,6 +131,8 @@ class CodexProvider implements SubagentProvider {
       permissionMode: this.config.permissionMode,
       env: this.config.env,
       disposeGraceMs: this.config.disposeGraceMs,
+      evidencePatterns: this.config.evidencePatterns,
+      ...this.config.evidenceSummary === undefined ? {} : { evidenceSummary: this.config.evidenceSummary },
       spawn: spawnSpec => this.ctx.subprocess.spawn(spawnSpec),
       onError: (error, stopReason) => {
         this.ctx.logger.warn(
@@ -121,6 +156,8 @@ export function apply(ctx: Context, config: Config): void {
     env: config.env as Record<string, string>,
     permissionMode: config.permissionMode ?? DEFAULT_CODEX_PERMISSION_MODE,
     disposeGraceMs: config.disposeGraceMs as number,
+    evidencePatterns: config.evidencePatterns ?? DEFAULT_EVIDENCE_PATTERNS,
+    ...config.evidenceSummary === undefined ? {} : { evidenceSummary: config.evidenceSummary },
   }
   assertPositiveFinite(
     'subagent-codex',
@@ -132,6 +169,7 @@ export function apply(ctx: Context, config: Config): void {
       `subagent-codex: disposeGraceMs must be no greater than ${MAX_TIMER_DELAY_MS}`,
     )
   }
+  for (const pattern of Object.values(resolved.evidencePatterns)) new RegExp(pattern, 'u')
   ctx.subagents.registerProvider(new CodexProvider(
     resolved.providerName,
     ctx,

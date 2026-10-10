@@ -166,3 +166,46 @@ describe('System One provider warm-up', () => {
     await expect(provider.warm(aborted.signal)).rejects.toThrow('stop')
   })
 })
+
+it.each([0, Infinity, 2147483648])('rejects invalid request timeout %s before transport setup', (timeoutMs) => {
+  expect(() => new SystemOneProvider({ id: 'test', endpoint: 'http://localhost', model: 'fixture', effort: 'low', timeoutMs })).toThrow('timeoutMs')
+})
+
+it.each([true, 1])('rejects SDK-incompatible primitive state %s without a network request', async (state) => {
+  const provider = new SystemOneProvider({ id: 'test', endpoint: 'http://localhost', model: 'fixture', effort: 'low', timeoutMs: 1000,
+    fetcher: async () => { throw new Error('transport must not be reached') } })
+  await expect(provider.decide({ ...request, state })).rejects.toThrow('SDK state')
+})
+
+it('sends an authenticated score request and preserves an explicit per-request model', async () => {
+  let body: string | undefined
+  let authorization: string | null = null
+  const provider = new SystemOneProvider({ id: 'test', endpoint: 'http://localhost', model: 'fixture', effort: 'low', timeoutMs: 1000,
+    resolveApiKey: async () => 'score-key', fetcher: async (_url, init) => {
+      if (typeof init?.body !== 'string') throw new Error('Expected a serialized JSON request body')
+      body = init.body
+      authorization = new Headers(init?.headers).get('authorization')
+      return response({ model: 'override', answers: { impact: { type: 'score', score: 0,
+        legend: { '0': 'low', '1': 'high' }, probabilities: { '0': 1, '1': 0 }, confidence: 1 } } })
+    } })
+  expect((await provider.decide({ state: null, model: 'override', questions: { impact: { type: 'score', criteria: ['low', 'high'] } } })).model).toBe('override')
+  expect(body).toContain('"model":"override"')
+  expect(authorization).toBe('Bearer score-key')
+})
+
+it('classifies a failed credential resolver as transport failure without exposing its error', async () => {
+  const provider = new SystemOneProvider({ id: 'test', endpoint: 'http://localhost', model: 'fixture', effort: 'low', timeoutMs: 1000,
+    resolveApiKey: async () => { throw new Error('private store failure') } })
+  await expect(provider.decide(request)).rejects.toMatchObject({ failure: { code: 'transport', message: 'jev provider request failed' } })
+})
+
+it('preserves a non-Error caller abort reason while cancelling pending credential lookup', async () => {
+  const credential = Promise.withResolvers<string>()
+  const provider = new SystemOneProvider({ id: 'test', endpoint: 'http://localhost', model: 'fixture', effort: 'low', timeoutMs: 1000,
+    resolveApiKey: () => credential.promise })
+  const abort = new AbortController()
+  const result = provider.decide(request, abort.signal)
+  abort.abort('caller-stopped')
+  await expect(result).rejects.toBe('caller-stopped')
+  credential.resolve('late-key')
+})

@@ -1,0 +1,243 @@
+{
+  "scenario": "natural",
+  "writtenAt": 1791607440470,
+  "stopReason": "aborted",
+  "activity": [
+    {
+      "at": 1791607291191,
+      "event": "start"
+    },
+    {
+      "at": 1791607305180,
+      "event": "activity",
+      "kind": "reasoning",
+      "phase": "started"
+    },
+    {
+      "at": 1791607305180,
+      "event": "activity",
+      "kind": "reasoning",
+      "phase": "completed"
+    },
+    {
+      "at": 1791607305191,
+      "event": "activity",
+      "kind": "message",
+      "phase": "started"
+    },
+    {
+      "at": 1791607305293,
+      "event": "activity",
+      "kind": "message",
+      "phase": "completed"
+    },
+    {
+      "at": 1791607308192,
+      "event": "activity",
+      "kind": "command",
+      "phase": "started"
+    },
+    {
+      "at": 1791607308200,
+      "event": "activity",
+      "kind": "command",
+      "phase": "completed"
+    },
+    {
+      "at": 1791607324238,
+      "event": "activity",
+      "kind": "reasoning",
+      "phase": "started"
+    },
+    {
+      "at": 1791607324238,
+      "event": "activity",
+      "kind": "reasoning",
+      "phase": "completed"
+    },
+    {
+      "at": 1791607335334,
+      "event": "activity",
+      "kind": "file-change",
+      "phase": "started"
+    },
+    {
+      "at": 1791607335571,
+      "event": "activity",
+      "kind": "file-change",
+      "phase": "completed"
+    },
+    {
+      "at": 1791607440451,
+      "event": "end",
+      "outcome": "aborted"
+    }
+  ],
+  "events": [
+    {
+      "type": "system3/reflex-evidence",
+      "at": 1791607308199,
+      "data": {
+        "version": 1,
+        "goalId": "goal-45d5f5c4-7ed6-40d6-85e1-e1b5bd06db58",
+        "goalRevision": 1,
+        "observedAt": 1791607308198,
+        "evidence": {
+          "turnId": "01a1241d-bd38-7033-920e-dc312888f02a",
+          "kind": "command",
+          "operation": "verification",
+          "operationDigest": "b624ff64a2cbbf1fbc7d50155536f616dfded3792c6de9322869dfd20fff29a0",
+          "resultDigest": "0a314db78b340661ac15af03d379aefe9b8ad34b0141be8913ae814a55f4408c",
+          "outcome": "succeeded",
+          "runId": "9bbac30c-dc2b-41d0-952e-beb6794c3eff",
+          "provider": "codex",
+          "id": "4187a89e-37e1-4f42-9372-aa3daf7dd870"
+        }
+      }
+    },
+    {
+      "type": "system3/reflex-evidence",
+      "at": 1791607335570,
+      "data": {
+        "version": 1,
+        "goalId": "goal-45d5f5c4-7ed6-40d6-85e1-e1b5bd06db58",
+        "goalRevision": 1,
+        "observedAt": 1791607335570,
+        "evidence": {
+          "turnId": "01a1241d-bd38-7033-920e-dc312888f02a",
+          "kind": "file-change",
+          "operation": "file-change",
+          "operationDigest": "580afec3f8739e7913524925fc2d981545068a5634565a0a9e80c545a8e8fa49",
+          "outcome": "succeeded",
+          "runId": "9bbac30c-dc2b-41d0-952e-beb6794c3eff",
+          "provider": "codex",
+          "id": "4187a89e-37e1-4f42-9372-aa3daf7dd870"
+        }
+      }
+    },
+    {
+      "type": "system3/judgement",
+      "at": 1791607341662,
+      "data": {
+        "decision": "reflex.supervision",
+        "reason": "judged",
+        "outcome": "realign",
+        "applied": true,
+        "elapsedMs": 3023,
+        "response": {
+          "model": "APUS-OpenJev-v1-9B-5949",
+          "answers": {
+            "action": {
+              "type": "choice",
+              "choice": "realign",
+              "probabilities": {
+                "observe": 0.026764284184399512,
+                "diagnose": 0.003855759793550868,
+                "verify": 0.044126844629882506,
+                "narrow": 0.038941803706703,
+                "realign": 0.8863113076854641
+              },
+              "confidence": 0.6959178260153667
+            }
+          },
+          "usage": {
+            "input_tokens": 816,
+            "output_tokens": 1,
+            "billing_units": 1
+          }
+        }
+      }
+    },
+    {
+      "type": "system3/reflex-supervision",
+      "at": 1791607341664,
+      "data": {
+        "version": 1,
+        "id": "8a20dc5c-17b9-495b-aeed-555773d2ea4a",
+        "goalId": "goal-45d5f5c4-7ed6-40d6-85e1-e1b5bd06db58",
+        "goalRevision": 1,
+        "runId": "9bbac30c-dc2b-41d0-952e-beb6794c3eff",
+        "state": "intent",
+        "action": "realign",
+        "evidenceCount": 2
+      }
+    },
+    {
+      "type": "subagent/supervision-steer",
+      "at": 1791607341665,
+      "data": {
+        "source": "reflex-supervision",
+        "runId": "9bbac30c-dc2b-41d0-952e-beb6794c3eff",
+        "provider": "codex"
+      }
+    },
+    {
+      "type": "system3/reflex-supervision",
+      "at": 1791607341666,
+      "data": {
+        "version": 1,
+        "id": "8a20dc5c-17b9-495b-aeed-555773d2ea4a",
+        "goalId": "goal-45d5f5c4-7ed6-40d6-85e1-e1b5bd06db58",
+        "goalRevision": 1,
+        "runId": "9bbac30c-dc2b-41d0-952e-beb6794c3eff",
+        "state": "accepted",
+        "action": "realign",
+        "evidenceCount": 2
+      }
+    },
+    {
+      "type": "system3/reflex-supervision",
+      "at": 1791607401687,
+      "data": {
+        "version": 1,
+        "id": "8a20dc5c-17b9-495b-aeed-555773d2ea4a",
+        "goalId": "goal-45d5f5c4-7ed6-40d6-85e1-e1b5bd06db58",
+        "goalRevision": 1,
+        "runId": "9bbac30c-dc2b-41d0-952e-beb6794c3eff",
+        "state": "inconclusive",
+        "action": "realign",
+        "evidenceCount": 2
+      }
+    }
+  ],
+  "initialFiles": [
+    {
+      "name": "expected.txt",
+      "unavailable": "Error"
+    },
+    {
+      "name": "result.txt",
+      "unavailable": "Error"
+    },
+    {
+      "name": "verify.py",
+      "bytes": 378,
+      "sha256": "0a314db78b340661ac15af03d379aefe9b8ad34b0141be8913ae814a55f4408c"
+    },
+    {
+      "name": "ledger.py",
+      "bytes": 234,
+      "sha256": "ba6461fef2f03172cbf6523bc71f2a5f01a695b66e08e79f1197a887977d790b"
+    }
+  ],
+  "files": [
+    {
+      "name": "expected.txt",
+      "unavailable": "Error"
+    },
+    {
+      "name": "result.txt",
+      "unavailable": "Error"
+    },
+    {
+      "name": "verify.py",
+      "bytes": 378,
+      "sha256": "0a314db78b340661ac15af03d379aefe9b8ad34b0141be8913ae814a55f4408c"
+    },
+    {
+      "name": "ledger.py",
+      "bytes": 322,
+      "sha256": "376f6f683107a9529afb232bbc1ab369361bff579a0c2ddfd08bfabda7808ec9"
+    }
+  ]
+}

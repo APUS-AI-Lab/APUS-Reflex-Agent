@@ -383,3 +383,59 @@ PPT v2为4页主讲+2页备查，实际Keynote打开、六页备注回读和PDF�
 
 - [x] MIT 原版权、许可分发和上游致谢；GitHub 品牌描述、topics、反馈链接。
 - [x] 按用户追加授权合并两仓 main，推送并核对 CI；Python SDK CI 依赖与品牌期望补修后复验。
+
+## Reflex 完整能力实现（用户已批准设计）
+
+- [x] 统一设计与测试验收目标清单：用户需求 → 场景 → 通过/失败标准 → 证据 → 当前状态。
+- [x] 用户“开始”批准；隔离工作树 feat-reflex-control，main保持不动。
+- [x] 专用配置页面与Host凭据/真实连接测试。
+- [ ] Codex监督证据、Reflex判定、自动steer和反馈。
+- [x] 按行上下文投影、检索与重启恢复（Harness 会话范围；不改 Codex 私有上下文）。
+- [ ] 前后端装配与单元/回归/快照/真实E2E。
+- [ ] Review、交接、提交与授权范围内合并。
+
+### 真实验收收尾与新增缓存约束
+
+- [x] Reflex配置页保存low、刷新及Host重启后保留low；真实task.frame/context请求effort=low。
+- [x] taskFrame/context组合真实Loader的TypeScript、Python SDK录制与重放。
+- [x] Goal首轮路由在主模型编辑前真实委派Codex，独立端到端验收。
+- [ ] 区分重复失败纠偏与模型请求挂起恢复；确认中断终态和恢复有效性。
+- [x] 强制冻结已提交请求前缀，只整理未提交尾部；恢复追加并去重，逐相邻请求验收（TS/Python SDK）。
+- [ ] 提供方缓存命中与成本基准单独记录；不能用token估算代替实测。
+- [x] 浏览器实际移除、完整 Host 重启、Reflex 自动追加恢复与正确回答；旧 44 条事件保持，记录逐请求用量但不冒称配对成本基准。
+
+### 最新真实验收 Review（2026-10-10）
+
+真实 native recovery v4 通过：127.41 秒，真实 Reflex 判断一次、Codex 确认中断并在原线程续跑、正常 completed、独立结果验证和输入/验证脚本哈希保持。该场景为受控挂起首次上游请求，不替代仍失败的 steer-only 重复失败场景。
+
+浏览器 Goal 账龄 JSON 增量任务正常完成，10 项测试及独立 Decimal 金额核对通过，原 CSV 哈希保持；Codex 终态先于父模型编辑。首轮真实上下文场景答案 1137.41 正确，但误删必要订单 A，严格相关性验收失败。v2 浏览器必要金额全部保留、旧旅行移出通过；完整 Host 重启后能经 4 次记忆检索找回旅行信息，但 Reflex 自动恢复因旧任务范围干扰失败。v3 已明确有序当前请求与旧约束区别，39 项回归、严格覆盖率与固定 5 次真实模型对照通过；Host16 浏览器 v3 完整流程已通过：财务仅 6 次读取，金额保留；完整重启后 Reflex 在主模型请求前自动追加旅行原文，无工具调用、正确回答；旧 44 条事件及输入哈希保持。v3 首次多余检索失败保留，工具说明改进后有限复验通过。
+
+结构化操作/工作区路径语义监督已实现，workspace 未批准时保留指纹监督；96 项消费者回归四模块四项覆盖率均 100%，79 项采集回归通过。真实语义对照保留初始低置信失败及最终成功响应；完整 Codex 语义回正 E2E 仍待验证。人工输入入队及已领取未准入期间会阻止旧监督干预。TypeScript 与 Python 的 Goal、native recovery、普通监督最终录制及独立重放均通过；普通及新增语义监督双 SDK 在 Host14 录制和独立重放通过；context v3 与新增 verification-target 的 TypeScript/Python 场景在 Host16 最终录制及独立重放均通过。
+
+最终 doc-sync 首轮33/42通过；9项失败涉及新API类型文档/分类、生成catalog陈旧、README bundle分类与排版，均已修正并分别取得有效通过证据。随后只读文档编译88 blocks、双语配对1192对、网站构建及5862个片段引用检查通过。品牌/MIT已在main，本批代码仍未提交或合并，不宣称完整交付。
+
+监督 Host16 真实语义场景未通过：原生任务正常结束、独立金额及哈希检查成功，但测试的 20 秒 native recovery 在首个工具前抢先中断故障注入，没有实际偏航/realign/improved。部署阈值为 180 秒；Host17 已补固定类别解析诊断，独立 literal unittest 试验在150秒内无命令返回，下一步先增加无内容修改的传输时序观测。不能用上述结果声称完整语义闭环通过。Full lint 修正后通过，Ruff check/format 105 文件通过。
+
+### 统一验收清单 Review
+
+新增[测试验收目标清单](../docs/feat-reflex-control/acceptance-checklist.zh.md)，以27项目标和8条完整用户流程关联设计、通过/失败条件、证据及缺口；英文版本与配对记录同步。独立复核纠正入口测试链接，并明确手动选型优先级未验收、配置effort通过不代表服务地址/模型修改全链路已通过。本次不新增产品通过结论，不重试真实模型任务。
+
+检查：`test:docs` 首轮18/20通过；中英文目录锚点已统一并通过两组相关配对复验，会话格式索引由生成器刷新当前v4类型数量并通过复验。历史v0–v3 schema未修改；新增文档的全部本地链接、六个稳定目录锚点及diff检查通过，不为提交重复通过项。
+
+### 完整测试与 UI/UX 验收（用户已授权）
+
+- [x] 补齐用户视角 UI/UX 标准：首次使用、配置反馈、进度与纠偏、取消及追加要求、上下文恢复、明暗/窄屏/键盘、桌面启动与重启。
+- [ ] 通过无内容修改的传输观测定位 Codex 等待位置，修复实际原因，完成重复失败及语义偏航的真实闭环与部署默认配置验收。
+- [ ] 核对入口手动选型优先级、失败处理，以及配置服务地址/模型/effort 的实际生效链路。
+- [ ] 完成有限配对的路由及上下文缓存基准，保留失败、实际用量与性能限制。
+- [ ] 修复真实 UI/UX 问题并复测；独立审查与最终干净 Electron 包验收，按既有授权完成两仓提交和合并。
+
+## feat-reflex-control 收尾 Review（2026-10-10）
+
+- [x] C-06 真实跨进程配对：四条件、12 轮、三个独立 CLI 进程；答案、按行 `remove`、恢复、输入/持久化前缀、请求前缀、路由和工具稳定性通过；脱敏报告写入 `docs/feat-reflex-control/evidence/cache-c06-real.json`。
+- [x] F-01 Web Reflex 模型配置：真实连接判断、无效模型预期失败、low 保存、跨 server 进程重启恢复、实际请求采用 low、恢复 high 并清除用户覆盖项；脱敏报告写入 `docs/feat-reflex-control/evidence/reflex-settings-real.json`。
+- [x] 监控 UI/UX：加入明确 observing 状态、最近 12 条无内容执行时间线，新人工消息清除陈旧判断；projection/client focused tests、typecheck 通过。
+- [x] C-06 设计文档、验收清单、中英文配对记录和 handoff 已同步。
+- [ ] Codex 真实语义偏航后的 realign→消费→相关 verification-target→improved 闭环仍未通过；不得以回归或受控 native recovery 代替。
+- [ ] Frontend 固定 Harness SHA、最终构建与 Electron 正常/safe mode 用户验收。
+- [ ] 最终 lint/build/test、MIT/NOTICE、文档门禁、Ruff 双检查，随后按授权 commit/push/PR/main 合并并回读远端。

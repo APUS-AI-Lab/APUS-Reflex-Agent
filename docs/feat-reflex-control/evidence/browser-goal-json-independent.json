@@ -1,0 +1,145 @@
+{
+  "case": "goal-codex-json-export",
+  "status": "passed",
+  "inputAndCsvUnchanged": true,
+  "expected": {
+    "甲店": {
+      "未到期": "100.00",
+      "逾期1-30天": "50.20",
+      "逾期31-60天": "0.00",
+      "逾期61天以上": "0.00",
+      "总未收": "150.20"
+    },
+    "乙店": {
+      "未到期": "0.00",
+      "逾期1-30天": "0.00",
+      "逾期31-60天": "180.00",
+      "逾期61天以上": "300.30",
+      "总未收": "480.30"
+    }
+  },
+  "actual": [
+    {
+      "客户": "甲店",
+      "未到期": "100.00",
+      "逾期1-30天": "50.20",
+      "逾期31-60天": "0.00",
+      "逾期61天以上": "0.00",
+      "总未收": "150.20"
+    },
+    {
+      "客户": "乙店",
+      "未到期": "0.00",
+      "逾期1-30天": "0.00",
+      "逾期31-60天": "180.00",
+      "逾期61天以上": "300.30",
+      "总未收": "480.30"
+    }
+  ],
+  "sessionId": "session-641ed2ee-3b42-43fc-9ab5-7f87263ee137",
+  "delegationStates": [
+    "reserved",
+    "started",
+    "completed"
+  ],
+  "firstParentToolSeq": 69,
+  "delegationCompletedSeq": 59,
+  "goalEvents": [
+    {
+      "type": "goal/change",
+      "seq": 4,
+      "time": 1791615578113,
+      "data": {
+        "kind": "goal/change",
+        "version": 1,
+        "operation": "create",
+        "goal": {
+          "id": "goal-a8bba552-0958-47e9-ad26-0ea5a916bbf1",
+          "revision": 1,
+          "objective": "请用 Codex 完成 receivables 目录应收账龄工具的 JSON 导出功能。在现有 aging.py 上增加 --format json，CSV 仍为默认格式且输出保持兼容。按 2026-10-10 计算 invoices.csv 的应收账款，JSON 按客户汇总未到期、1–30天、31–60天、61天以上及合计，金额保留两位小数，过量付款不得产生负数；生成 aging.json，补充测试并运行现有和新增测试。不要修改 invoices.csv，不要覆盖现有 aging.csv；最终给出验收命令和实际结果。",
+          "phase": "active",
+          "maxGoalRounds": 256
+        },
+        "roundsStarted": 0,
+        "createdAt": 1791615578113,
+        "updatedAt": 1791615578113
+      }
+    },
+    {
+      "type": "goal/change",
+      "seq": 114,
+      "time": 1791616068616,
+      "data": {
+        "kind": "goal/change",
+        "version": 1,
+        "operation": "complete",
+        "goal": {
+          "id": "goal-a8bba552-0958-47e9-ad26-0ea5a916bbf1",
+          "revision": 2,
+          "objective": "请用 Codex 完成 receivables 目录应收账龄工具的 JSON 导出功能。在现有 aging.py 上增加 --format json，CSV 仍为默认格式且输出保持兼容。按 2026-10-10 计算 invoices.csv 的应收账款，JSON 按客户汇总未到期、1–30天、31–60天、61天以上及合计，金额保留两位小数，过量付款不得产生负数；生成 aging.json，补充测试并运行现有和新增测试。不要修改 invoices.csv，不要覆盖现有 aging.csv；最终给出验收命令和实际结果。",
+          "phase": "complete",
+          "maxGoalRounds": 256
+        },
+        "roundsStarted": 1,
+        "createdAt": 1791615578113,
+        "updatedAt": 1791616068616
+      }
+    }
+  ],
+  "entryEvents": [
+    {
+      "type": "system3/goal-entry",
+      "seq": 11,
+      "time": 1791615579294,
+      "data": {
+        "version": 1,
+        "goalId": "goal-a8bba552-0958-47e9-ad26-0ea5a916bbf1",
+        "goalRevision": 1,
+        "round": 1,
+        "state": "reserved",
+        "candidateId": "codex",
+        "provider": "codex",
+        "childSessionId": null,
+        "reason": null,
+        "input": "[Reflex Goal delegation]\nAuthorized objective: 请用 Codex 完成 receivables 目录应收账龄工具的 JSON 导出功能。在现有 aging.py 上增加 --format json，CSV 仍为默认格式且输出保持兼容。按 2026-10-10 计算 invoices.csv 的应收账款，JSON 按客户汇总未到期、1–30天、31–60天、61天以上及合计，金额保留两位小数，过量付款不得产生负数；生成 aging.json，补充测试并运行现有和新增测试。不要修改 invoices.csv，不要覆盖现有 aging.csv；最终给出验收命令和实际结果。\nConfirmed requirements:\n\nPreserve existing permissions. Verify the actual result and report evidence.",
+        "output": null
+      }
+    },
+    {
+      "type": "system3/goal-entry",
+      "seq": 13,
+      "time": 1791615582252,
+      "data": {
+        "version": 1,
+        "goalId": "goal-a8bba552-0958-47e9-ad26-0ea5a916bbf1",
+        "goalRevision": 1,
+        "round": 1,
+        "state": "started",
+        "candidateId": "codex",
+        "provider": "codex",
+        "childSessionId": "78a5d952-07fb-44af-bc91-1b019cee54ff",
+        "reason": null,
+        "input": "[Reflex Goal delegation]\nAuthorized objective: 请用 Codex 完成 receivables 目录应收账龄工具的 JSON 导出功能。在现有 aging.py 上增加 --format json，CSV 仍为默认格式且输出保持兼容。按 2026-10-10 计算 invoices.csv 的应收账款，JSON 按客户汇总未到期、1–30天、31–60天、61天以上及合计，金额保留两位小数，过量付款不得产生负数；生成 aging.json，补充测试并运行现有和新增测试。不要修改 invoices.csv，不要覆盖现有 aging.csv；最终给出验收命令和实际结果。\nConfirmed requirements:\n\nPreserve existing permissions. Verify the actual result and report evidence.",
+        "output": null
+      }
+    },
+    {
+      "type": "system3/goal-entry",
+      "seq": 59,
+      "time": 1791616022089,
+      "data": {
+        "version": 1,
+        "goalId": "goal-a8bba552-0958-47e9-ad26-0ea5a916bbf1",
+        "goalRevision": 1,
+        "round": 1,
+        "state": "completed",
+        "candidateId": "codex",
+        "provider": "codex",
+        "childSessionId": "78a5d952-07fb-44af-bc91-1b019cee54ff",
+        "reason": "completed",
+        "input": "[Reflex Goal delegation]\nAuthorized objective: 请用 Codex 完成 receivables 目录应收账龄工具的 JSON 导出功能。在现有 aging.py 上增加 --format json，CSV 仍为默认格式且输出保持兼容。按 2026-10-10 计算 invoices.csv 的应收账款，JSON 按客户汇总未到期、1–30天、31–60天、61天以上及合计，金额保留两位小数，过量付款不得产生负数；生成 aging.json，补充测试并运行现有和新增测试。不要修改 invoices.csv，不要覆盖现有 aging.csv；最终给出验收命令和实际结果。\nConfirmed requirements:\n\nPreserve existing permissions. Verify the actual result and report evidence.",
+        "output": "[{\"type\":\"text\",\"text\":\"已完成 `--format json`：JSON 按客户汇总四个账龄区间和总额，金额以两位小数字符串输出；超额付款仍计为 `0.00`。默认格式保持 CSV，且未修改 `receivables/invoices.csv` 或覆盖 `receivables/aging.csv`。\\n\\n生成的 `receivables/aging.json`（按 2026-10-10 计算）：甲店合计 `150.20`，乙店合计 `480.30`。乙店超额付款发票没有产生负数。\\n\\n验收命令：`python -m unittest -v`。实际结果：10 项测试全部通过。生成 JSON 的命令为：`python receivables/aging.py --input receivables/invoices.csv --output receivables/aging.json --as-of 2026-10-10 --format json`。\"}]"
+      }
+    }
+  ]
+}

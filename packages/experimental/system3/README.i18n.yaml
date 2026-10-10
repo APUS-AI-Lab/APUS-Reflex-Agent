@@ -21,14 +21,17 @@
   en: 3dc70484ca0ec162
   zh: ffe2a312c704e222
 /deepseek-ai-dsh-experimental-system3/use-this-package/session-api-entry-routing:
-  en: 0886761f4da56ee5
-  zh: 9aff0bc9dd343c2b
+  en: be0ae51373772aab
+  zh: 71f3d47a5de2c9fd
 /deepseek-ai-dsh-experimental-system3/use-this-package/completion-review:
-  en: 826ab3549179a131
-  zh: 82935e584d2cfe95
+  en: cdcaae530ffd6372
+  zh: 302c2eff352ae35b
+/deepseek-ai-dsh-experimental-system3/use-this-package/reflex-goal-supervision-and-context-memory:
+  en: fc7feba5b545b44b
+  zh: a40d724a95288f54
 /deepseek-ai-dsh-experimental-system3/understand-the-implementation:
-  en: 0cdf95236b2b2e5c
-  zh: 6a5f6dd3a124555b
+  en: 1201bb8eb528722c
+  zh: 13fe475bf9c4e586
 /deepseek-ai-dsh-experimental-system3/model-experience:
   en: 215e7ba838619b7b
   zh: a311da3843709f90
@@ -57,8 +60,8 @@
   en: 930765e6b86968b3
   zh: 905dcef49d254e45
 /deepseek-ai-dsh-experimental-system3/model-experience/unified-system3-seam/token-effect:
-  en: cee5a3dea86c133d
-  zh: e4f4ec6b8e162f65
+  en: a741f7a74e7c3797
+  zh: 46773ab736a2a683
 /deepseek-ai-dsh-experimental-system3/model-experience/unified-system3-seam/kv-cache-effect:
   en: 0c28b2339754fdf6
   zh: 0070624383ca063c
@@ -66,5 +69,5 @@
   en: 1cd091af03adb2db
   zh: f58dd4287b47a664
 /deepseek-ai-dsh-experimental-system3/known-limitations-and-deferred-work/dev-note:
-  en: d3b44bc6feb5c012
-  zh: 0ded2f6de7be4d58
+  en: 9e47a86c2d5b1294
+  zh: 47d12658824ae894

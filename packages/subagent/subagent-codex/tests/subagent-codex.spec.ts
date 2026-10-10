@@ -8,7 +8,7 @@ import * as yaml from 'js-yaml'
 import { describe, expect, it, vi } from 'vitest'
 import type { Agent } from '@deepseek-ai/dsh-agent'
 import type { ContentBlock } from '@deepseek-ai/dsh-llm'
-import SubagentRuntime, { type SubagentActivity } from '@deepseek-ai/dsh-subagent'
+import SubagentRuntime, { type SubagentActivity, type SubagentEvidence } from '@deepseek-ai/dsh-subagent'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
 import type {
@@ -258,12 +258,17 @@ function runSpec(
   }
 }
 
-async function initializeWire(): Promise<{
+async function initializeWire(onEvidence?: (evidence: SubagentEvidence) => void,
+  evidenceSummary?: { readonly maxActions: number
+    readonly maxPathChars: number
+    readonly verificationTargets?: { readonly maxCommandChars: number } }): Promise<{
   readonly child: FakeChild
   readonly wire: CodexAppServerWire
 }> {
   const child = fakeChild()
-  const wire = defaultWire(child)
+  const wire = new CodexAppServerWire(child.handle.stdout!, child.handle.stdin!, DEFAULT_CODEX_PERMISSION_MODE,
+    undefined, undefined, onEvidence,
+    { verification: 'verify|test', diagnostic: '^cat ' }, evidenceSummary)
   wire.start()
   const initializing = wire.initialize(new AbortController().signal)
   const initialize = await child.peer.nextMethod('initialize')
@@ -604,7 +609,9 @@ describe('task admission and package contracts', () => {
     await ctx.plugin(LocalSubprocessRuntime)
     const child = fakeChild()
     vi.spyOn(ctx.subprocess, 'spawn').mockReturnValue(child.handle)
-    codex.apply(ctx, { env: {}, disposeGraceMs: 3_000 })
+    const evidence: SubagentEvidence[] = []
+    ctx.on('subagent/evidence', (item) => { evidence.push(item) })
+    codex.apply(ctx, { env: {}, disposeGraceMs: 3_000, evidenceSummary: { maxActions: 2, maxPathChars: 80 } })
     expect(ctx.subagents.getProvider('codex')).toBeDefined()
     const starting = ctx.subagents.start('codex', request())
     const initialize = await child.peer.nextMethod('initialize')
@@ -617,6 +624,11 @@ describe('task admission and package contracts', () => {
     const turnStart = await child.peer.nextMethod('turn/start')
     child.peer.send({ id: turnStart.id, result: { turn: { id: 'turn-1' } } })
     await nextTask()
+    child.peer.send({ method: 'item/completed', params: { threadId: 'thread-1', turnId: 'turn-1', item: {
+      type: 'fileChange', status: 'completed', changes: [{ kind: { type: 'add' }, path: 'artifact.txt', diff: 'SECRET' }],
+    } } })
+    await nextTask()
+    expect(evidence[0]?.semantic).toEqual({ version: 1, truncated: false, actions: [{ kind: 'file-add', path: 'artifact.txt' }] })
     const steered = run.steer?.([{ type: 'text', text: 'prefer the native model' }], new AbortController().signal)
     const steer = await child.peer.nextMethod('turn/steer')
     child.peer.respond(steer, { turnId: 'turn-1' })
@@ -1199,6 +1211,7 @@ describe('CodexAppServerWire', () => {
     await expect(run.result).resolves.toMatchObject({ stopReason: 'completed' })
     expect(activities).toEqual([
       { kind: 'command', phase: 'started' },
+      { kind: 'command', phase: 'started' },
       { kind: 'command', phase: 'completed' },
       { kind: 'command', phase: 'completed' },
       { kind: 'command', phase: 'completed', outcome: 'failed' },
@@ -1437,6 +1450,76 @@ describe('CodexAppServerWire', () => {
     await expect(result).resolves.toMatchObject({ stopReason: 'completed' })
     wire.close()
     wire.interrupt()
+  })
+
+  it('publishes operation fingerprints without raw command, paths or credentials only for the active turn', async () => {
+    const evidence: SubagentEvidence[] = []
+    const { child, wire } = await initializeWire((value) => { evidence.push(value) })
+    const result = wire.runTurn(['task'], new AbortController().signal)
+    const start = await child.peer.nextMethod('turn/start')
+    child.peer.respond(start, { turn: { id: 'turn-1' } })
+    await nextTask()
+    const failed = { type: 'commandExecution', command: 'python3 verify.py --token secret-value', aggregatedOutput: 'failed /private/path', exitCode: 1, status: 'completed',
+      cwd: process.cwd(), commandActions: [{ type: 'read', path: 'verify.py' }] }
+    const item = (value: object, turnId = 'turn-1') => ({ method: 'item/completed', params: { threadId: 'thread-1', turnId, item: value } })
+    child.peer.send(item(failed), item(failed), item({ ...failed, aggregatedOutput: 'passed', exitCode: 0 }),
+      item({ type: 'fileChange', status: 'completed', changes: [{ path: '/private/file', diff: 'secret-value' }] }), item(failed, 'foreign-turn'))
+    await nextTask()
+    expect(evidence).toHaveLength(4)
+    expect(evidence.every(item => item.semantic === undefined)).toBe(true)
+    expect(evidence[0]).toMatchObject({ turnId: 'turn-1', operation: 'verification', outcome: 'failed' })
+    expect(evidence[1]).toEqual(evidence[0])
+    expect(evidence[2]?.operationDigest).toBe(evidence[0]?.operationDigest)
+    expect(evidence[2]?.resultDigest).not.toBe(evidence[0]?.resultDigest)
+    expect(evidence[3]?.operation).toBe('file-change')
+    expect(JSON.stringify(evidence)).not.toMatch(/secret-value|private|verify\.py/)
+    child.peer.send(agentMessage('answer', 'final_answer'), turnCompleted('completed'))
+    await result
+    wire.close()
+  })
+
+  it('publishes only opted-in bounded native semantics for completed items of the current turn', async () => {
+    const evidence: SubagentEvidence[] = []
+    const { child, wire } = await initializeWire((value) => { evidence.push(value) }, { maxActions: 2, maxPathChars: 80 })
+    const result = wire.runTurn(['task'], new AbortController().signal)
+    const start = await child.peer.nextMethod('turn/start')
+    child.peer.respond(start, { turn: { id: 'turn-1' } })
+    await nextTask()
+    const item = { type: 'commandExecution', cwd: process.cwd(), command: 'SECRET', aggregatedOutput: 'SECRET',
+      exitCode: 0, commandActions: [{ type: 'read', path: 'src/main.ts', command: 'SECRET', name: 'SECRET' }] }
+    const event = (method: string, turnId: string) => ({ method, params: { threadId: 'thread-1', turnId, item } })
+    child.peer.send(event('item/started', 'turn-1'), event('item/completed', 'foreign'), event('item/completed', 'turn-1'))
+    await nextTask()
+    expect(evidence).toHaveLength(1)
+    expect(evidence[0]?.semantic).toEqual({ version: 1, actions: [{ kind: 'read', path: 'src/main.ts' }], truncated: false })
+    expect(JSON.stringify(evidence)).not.toContain('SECRET')
+    child.peer.send(agentMessage('answer', 'final_answer'), turnCompleted('completed'))
+    await result
+    wire.close()
+  })
+
+  it.skipIf(process.platform === 'win32').each([0, 1, undefined])('records literal verification targets with actual native exit status: %s', async (exitCode) => {
+    const evidence: SubagentEvidence[] = []
+    const { child, wire } = await initializeWire((value) => { evidence.push(value) }, {
+      maxActions: 2, maxPathChars: 80, verificationTargets: { maxCommandChars: 4096 },
+    })
+    const result = wire.runTurn(['task'], new AbortController().signal)
+    const start = await child.peer.nextMethod('turn/start')
+    child.peer.respond(start, { turn: { id: 'turn-1' } })
+    await nextTask()
+    child.peer.send({ method: 'item/completed', params: { threadId: 'thread-1', turnId: 'turn-1', item: {
+      type: 'commandExecution', cwd: process.cwd(), status: 'completed', ...exitCode === undefined ? {} : { exitCode },
+      command: "sh -lc 'python3 -m unittest finance/test_total.py'", commandActions: [{ type: 'unknown' }],
+    } } })
+    await nextTask()
+    expect(evidence[0]?.operation).toBe('verification')
+    expect(evidence[0]?.outcome).toBe(exitCode === 0 ? 'succeeded' : exitCode === 1 ? 'failed' : 'unknown')
+    expect(evidence[0]?.semantic).toEqual({ version: 1, truncated: false,
+      actions: [{ kind: 'verification-target', path: 'finance/test_total.py' }] })
+    expect(JSON.stringify(evidence)).not.toContain('python3')
+    child.peer.send(agentMessage('answer', 'final_answer'), turnCompleted('completed'))
+    await result
+    wire.close()
   })
 
   it('steers only the committed open turn and surfaces a refusal', async () => {
@@ -2387,4 +2470,223 @@ describe('disposeCodexChild', () => {
     child.settle()
     await disposal
   })
+})
+
+describe('bounded native recovery', () => {
+  it.each(['timestamp', 'retries'] as const)('rejects a stale queued %s snapshot after native reasoning resumes without interrupting', async (change) => {
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(1000)
+    const { child, run, turnStart } = await publishRun()
+    child.peer.respond(turnStart, { turn: { id: 'turn-1' } })
+    await nextTask()
+    child.peer.send({ method: 'error', params: { threadId: 'thread-1', turnId: 'turn-1', willRetry: true } })
+    await nextTask()
+    const observed = run.recoveryState!()!
+    if (change === 'timestamp') clock.mockReturnValue(1001)
+    child.peer.send({ method: 'item/reasoning/textDelta', params: { threadId: 'thread-1', turnId: 'turn-1', delta: 'healthy progress' } })
+    await nextTask()
+    expect(await run.recover!({ expectedTurnId: observed.turnId,
+      expectedActivity: { lastActivityAt: observed.lastActivityAt, retryCount: observed.retryCount }, interruptGraceMs: 1000,
+      continuation: () => [{ type: 'text', text: 'reconcile' }] }, new AbortController().signal)).toMatchObject({ state: 'stale' })
+    child.peer.send(agentMessage('healthy completion', 'final_answer'), turnCompleted('completed'))
+    expect(await run.result).toMatchObject({ stopReason: 'completed' })
+    expect(child.terminate).not.toHaveBeenCalled()
+    await run.dispose()
+    clock.mockRestore()
+  })
+
+  it('keeps one result pending until a confirmed interrupted turn continues on the same thread', async () => {
+    const { child, run, turnStart } = await publishRun()
+    child.peer.respond(turnStart, { turn: { id: 'turn-1' } })
+    await nextTask()
+    const before = run.recoveryState!()!
+    const continuing = run.recover!({ expectedTurnId: before.turnId,
+      expectedActivity: { lastActivityAt: before.lastActivityAt, retryCount: before.retryCount }, interruptGraceMs: 1000,
+      continuation: () => [{ type: 'text', text: '[reflex-supervision] reconcile; keep the human constraint' }] }, new AbortController().signal)
+    const interrupt = await child.peer.nextMethod('turn/interrupt')
+    expect(interrupt.params).toEqual({ threadId: 'thread-1', turnId: 'turn-1' })
+    child.peer.respond(interrupt, {})
+    let done = false
+    void run.result.then(() => { done = true })
+    await nextTask()
+    expect(done).toBe(false)
+    child.peer.send(turnCompleted('interrupted'))
+    const start = await child.peer.nextMethod('turn/start')
+    expect(start.params).toMatchObject({ threadId: 'thread-1', input: [{ text: '[reflex-supervision] reconcile; keep the human constraint' }] })
+    // A duplicate terminal for the retired turn cannot claim the new turn.
+    child.peer.send(turnCompleted('interrupted'))
+    child.peer.respond(start, { turn: { id: 'turn-2' } })
+    expect(await continuing).toMatchObject({ state: 'continued', previousTurnId: 'turn-1', turnId: 'turn-2' })
+    expect(done).toBe(false)
+    child.peer.send(agentMessage('verified', 'final_answer', 'turn-2'), turnCompleted('completed', 'turn-2'))
+    expect(await run.result).toMatchObject({ stopReason: 'completed', output: [{ text: 'verified' }] })
+    await run.dispose()
+  })
+
+  it('lets a late normal completion win without starting a replacement turn', async () => {
+    const { child, run, turnStart } = await publishRun()
+    child.peer.respond(turnStart, { turn: { id: 'turn-1' } })
+    await nextTask()
+    const continuing = run.recover!({ expectedTurnId: run.recoveryState!()!.turnId, interruptGraceMs: 1000,
+      continuation: () => [{ type: 'text', text: 'supervisor' }] }, new AbortController().signal)
+    const interrupt = await child.peer.nextMethod('turn/interrupt')
+    child.peer.respond(interrupt, {})
+    child.peer.send(agentMessage('already verified', 'final_answer'), turnCompleted('completed'))
+    expect(await continuing).toMatchObject({ state: 'completed' })
+    expect(await run.result).toMatchObject({ stopReason: 'completed' })
+    expect(run.recoveryState!()).toBeUndefined()
+    await run.dispose()
+  })
+
+  it('does not continue when authority changes during interruption', async () => {
+    const { child, run, turnStart } = await publishRun()
+    child.peer.respond(turnStart, { turn: { id: 'turn-1' } })
+    await nextTask()
+    let current = true
+    const continuing = run.recover!({ expectedTurnId: run.recoveryState!()!.turnId, interruptGraceMs: 1000,
+      continuation: () => current ? [{ type: 'text', text: 'supervisor' }] : undefined }, new AbortController().signal)
+    const interrupt = await child.peer.nextMethod('turn/interrupt')
+    child.peer.respond(interrupt, {})
+    current = false
+    child.peer.send(turnCompleted('interrupted'))
+    expect(await continuing).toMatchObject({ state: 'stale' })
+    expect(await run.result).toMatchObject({ stopReason: 'error' })
+    await run.dispose()
+  })
+
+  it('reaches process quiescence when the interrupted terminal never arrives', async () => {
+    const { child, run, turnStart } = await publishRun()
+    child.peer.respond(turnStart, { turn: { id: 'turn-1' } })
+    await nextTask()
+    const continuing = run.recover!({ expectedTurnId: run.recoveryState!()!.turnId, interruptGraceMs: 10,
+      continuation: () => [{ type: 'text', text: 'supervisor' }] }, new AbortController().signal)
+    const failure = expect(continuing).rejects.toThrow()
+    const interrupt = await child.peer.nextMethod('turn/interrupt')
+    child.peer.respond(interrupt, {})
+    await failure
+    expect(child.terminate).toHaveBeenCalled()
+    expect(await child.handle.waitForExit()).toBe(true)
+    await run.dispose()
+  })
+
+  it('stops the process when continuation acknowledgement is lost, without replaying start', async () => {
+    const { child, run, turnStart } = await publishRun()
+    child.peer.respond(turnStart, { turn: { id: 'turn-1' } })
+    await nextTask()
+    const continuing = run.recover!({ expectedTurnId: run.recoveryState!()!.turnId, interruptGraceMs: 30,
+      continuation: () => [{ type: 'text', text: 'reconcile' }] }, new AbortController().signal)
+    const failure = expect(continuing).rejects.toThrow('unconfirmed')
+    const interrupt = await child.peer.nextMethod('turn/interrupt')
+    child.peer.respond(interrupt, {})
+    child.peer.send(turnCompleted('interrupted'))
+    await child.peer.nextMethod('turn/start')
+    await failure
+    expect(child.terminate).toHaveBeenCalled()
+    expect(await child.handle.waitForExit()).toBe(true)
+    await run.dispose()
+  })
+
+  it('honors supervisor cancellation during interrupt by stopping the owned process', async () => {
+    const { child, run, turnStart } = await publishRun()
+    child.peer.respond(turnStart, { turn: { id: 'turn-1' } })
+    await nextTask()
+    const control = new AbortController()
+    const continuing = run.recover!({ expectedTurnId: run.recoveryState!()!.turnId, interruptGraceMs: 1000,
+      continuation: () => [{ type: 'text', text: 'reconcile' }] }, control.signal)
+    const failure = expect(continuing).rejects.toThrow('unconfirmed')
+    await child.peer.nextMethod('turn/interrupt')
+    control.abort()
+    await failure
+    expect(await child.handle.waitForExit()).toBe(true)
+    await run.dispose()
+  })
+
+  it('observes meaningful native deltas, retries, protected approval waits and in-flight tools', async () => {
+    const { child, run, turnStart } = await publishRun()
+    child.peer.respond(turnStart, { turn: { id: 'turn-1' } })
+    await nextTask()
+    const turn = run.recoveryState!()!
+    child.peer.send({ method: 'error', params: { threadId: 'thread-1', turnId: 'turn-1', willRetry: true } },
+      { method: 'item/reasoning/textDelta', params: { threadId: 'thread-1', turnId: 'turn-1', delta: 'thinking' } },
+      { method: 'thread/status/changed', params: { threadId: 'thread-1', status: { type: 'active', activeFlags: ['waitingOnApproval'] } } })
+    await nextTask()
+    expect(run.recoveryState!()).toMatchObject({ waiting: true, retryCount: 0 })
+    expect(run.recoveryState!()!.lastActivityAt).toBeGreaterThanOrEqual(turn.lastActivityAt)
+    child.peer.send({ method: 'thread/status/changed', params: { threadId: 'thread-1', status: { type: 'active', activeFlags: [] } } },
+      { method: 'item/started', params: { threadId: 'thread-1', turnId: 'turn-1', item: { type: 'commandExecution', id: 'command-1' } } })
+    await nextTask()
+    expect(run.recoveryState!()).toMatchObject({ waiting: false, activeSideEffects: 1 })
+    child.peer.send({ method: 'item/completed', params: { threadId: 'thread-1', turnId: 'turn-1', item: { type: 'commandExecution', id: 'command-1', exitCode: 0 } } })
+    await nextTask()
+    expect(run.recoveryState!()).toMatchObject({ activeSideEffects: 0 })
+    await run.dispose()
+  })
+})
+
+it('refuses stale or protected recovery without disposing the healthy native run', async () => {
+  const { child, run, turnStart } = await publishRun()
+  child.peer.respond(turnStart, { turn: { id: 'turn-1' } })
+  await nextTask()
+  const before = run.recoveryState!()!
+  const current = { expectedTurnId: before.turnId, interruptGraceMs: 1000, continuation: () => [{ type: 'text' as const, text: 'reconcile' }] }
+  await expect(run.recover!({ ...current, expectedTurnId: 'different' as typeof before.turnId }, new AbortController().signal)).rejects.toThrow('not recoverable')
+  expect(await run.recover!({ ...current, continuation: () => undefined }, new AbortController().signal)).toMatchObject({ state: 'stale' })
+  child.peer.send(agentMessage('healthy completion', 'final_answer'), turnCompleted('completed'))
+  expect(await run.result).toMatchObject({ stopReason: 'completed' })
+  expect(child.terminate).not.toHaveBeenCalled()
+  await run.dispose()
+})
+
+it('does not undo a confirmed continuation when the old interrupt acknowledgement later fails', async () => {
+  const { child, run, turnStart } = await publishRun()
+  child.peer.respond(turnStart, { turn: { id: 'turn-1' } })
+  await nextTask()
+  const continuing = run.recover!({ expectedTurnId: run.recoveryState!()!.turnId, interruptGraceMs: 1000,
+    continuation: () => [{ type: 'text', text: 'reconcile' }] }, new AbortController().signal)
+  const interrupt = await child.peer.nextMethod('turn/interrupt')
+  child.peer.send(turnCompleted('interrupted'))
+  const next = await child.peer.nextMethod('turn/start')
+  child.peer.respond(next, { turn: { id: 'turn-2' } })
+  expect(await continuing).toMatchObject({ state: 'continued' })
+  child.peer.send({ id: interrupt.id, error: { code: -32000, message: 'already interrupted' } })
+  await nextTask()
+  child.peer.send(agentMessage('verified', 'final_answer', 'turn-2'), turnCompleted('completed', 'turn-2'))
+  expect(await run.result).toMatchObject({ stopReason: 'completed' })
+  await run.dispose()
+})
+
+it('rejects unsupported recovery content instead of sending hidden reasoning to the next native turn', async () => {
+  const { child, run, turnStart } = await publishRun()
+  child.peer.respond(turnStart, { turn: { id: 'turn-1' } })
+  await nextTask()
+  const continuing = run.recover!({ expectedTurnId: run.recoveryState!()!.turnId, interruptGraceMs: 20,
+    continuation: () => [{ type: 'reasoning', text: 'private reasoning' }] }, new AbortController().signal)
+  const failure = expect(continuing).rejects.toThrow('unconfirmed')
+  const interrupt = await child.peer.nextMethod('turn/interrupt')
+  child.peer.respond(interrupt, {})
+  child.peer.send(turnCompleted('interrupted'))
+  await failure
+  expect(await run.result).toMatchObject({ stopReason: 'error' })
+  expect(await child.handle.waitForExit()).toBe(true)
+  await run.dispose()
+})
+
+it('distinguishes diagnostic, general and unknown operation evidence without exposing raw content', async () => {
+  const evidence: SubagentEvidence[] = []
+  const { child, wire } = await initializeWire(value => evidence.push(value))
+  const result = wire.runTurn(['task'], new AbortController().signal)
+  const start = await child.peer.nextMethod('turn/start')
+  child.peer.respond(start, { turn: { id: 'turn-1' } })
+  await nextTask()
+  for (const item of [
+    { type: 'commandExecution', id: 'read', command: 'cat secret.txt', status: 'completed', exitCode: 0 },
+    { type: 'commandExecution', id: 'general', command: 'arbitrary', status: 'unknown' },
+    { type: 'fileChange', id: 'unknown-change', status: 'unknown' },
+  ]) child.peer.send({ method: 'item/completed', params: { threadId: 'thread-1', turnId: 'turn-1', item } })
+  child.peer.send(agentMessage('done', 'final_answer'), turnCompleted('completed'))
+  await result
+  expect(evidence.map(item => [item.operation, item.outcome])).toEqual([
+    ['diagnostic', 'succeeded'], ['command', 'unknown'], ['file-change', 'unknown'],
+  ])
+  expect(JSON.stringify(evidence)).not.toContain('secret.txt')
+  wire.close()
 })

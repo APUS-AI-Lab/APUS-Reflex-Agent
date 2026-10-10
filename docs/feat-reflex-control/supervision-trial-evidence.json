@@ -1,0 +1,465 @@
+{
+  "description": "Bounded metadata from preserved real Codex and Reflex trials. Terminal completion and whole-test acceptance are distinct.",
+  "trials": [
+    {
+      "trial": "attempt2",
+      "scenario": "fault",
+      "model": "gpt-5.6-sol-relay",
+      "reasoningEffort": "native-default",
+      "acceptanceRevision": "prior implementation",
+      "budgetMs": 150000,
+      "terminal": "aborted",
+      "elapsedSeconds": 147.965,
+      "supervision": [
+        {
+          "seconds": 43.411,
+          "state": "intent",
+          "action": "diagnose"
+        },
+        {
+          "seconds": 43.431,
+          "state": "accepted",
+          "action": "diagnose"
+        },
+        {
+          "seconds": 106.345,
+          "state": "improved",
+          "action": "diagnose"
+        }
+      ],
+      "nativeSupervisionInputSeconds": [],
+      "evidence": [
+        {
+          "seconds": 31.811,
+          "operation": "verification",
+          "outcome": "failed"
+        },
+        {
+          "seconds": 41.986,
+          "operation": "verification",
+          "outcome": "failed"
+        },
+        {
+          "seconds": 48.634,
+          "operation": "verification",
+          "outcome": "failed"
+        },
+        {
+          "seconds": 69.083,
+          "operation": "command",
+          "outcome": "succeeded"
+        },
+        {
+          "seconds": 75.364,
+          "operation": "diagnostic",
+          "outcome": "succeeded"
+        },
+        {
+          "seconds": 82.501,
+          "operation": "file-change",
+          "outcome": "succeeded"
+        },
+        {
+          "seconds": 98.979,
+          "operation": "verification",
+          "outcome": "succeeded"
+        }
+      ],
+      "resultMatchesExpected": true,
+      "verificationScriptUnchanged": true,
+      "sourceReport": "/private/tmp/reflex-supervision-attempt2.fault.json",
+      "sourceSha256": "a01c1501cb86cd09557f328c5b7df43227de463e4cec656a5147d680f87e2809",
+      "wholeTestPassed": false
+    },
+    {
+      "trial": "attempt2",
+      "scenario": "natural",
+      "model": "gpt-5.6-sol-relay",
+      "reasoningEffort": "native-default",
+      "acceptanceRevision": "prior implementation",
+      "budgetMs": 150000,
+      "terminal": "aborted",
+      "elapsedSeconds": 149.26,
+      "supervision": [
+        {
+          "seconds": 50.473,
+          "state": "intent",
+          "action": "realign"
+        },
+        {
+          "seconds": 50.475,
+          "state": "accepted",
+          "action": "realign"
+        }
+      ],
+      "nativeSupervisionInputSeconds": [],
+      "evidence": [
+        {
+          "seconds": 17.007,
+          "operation": "verification",
+          "outcome": "succeeded"
+        },
+        {
+          "seconds": 44.379,
+          "operation": "file-change",
+          "outcome": "succeeded"
+        }
+      ],
+      "resultMatchesExpected": null,
+      "verificationScriptUnchanged": true,
+      "sourceReport": "/private/tmp/reflex-supervision-attempt2.natural.json",
+      "sourceSha256": "8b91138e33f3e656fa331f22c079708846c81a568dd02f139d3b1b991d735e44",
+      "wholeTestPassed": false
+    },
+    {
+      "trial": "attempt3",
+      "scenario": "natural",
+      "model": "gpt-5.6-sol-relay",
+      "reasoningEffort": "native-default",
+      "acceptanceRevision": "prior implementation",
+      "budgetMs": 150000,
+      "terminal": "aborted",
+      "elapsedSeconds": 149.596,
+      "supervision": [],
+      "nativeSupervisionInputSeconds": [],
+      "evidence": [
+        {
+          "seconds": 20.488,
+          "operation": "verification",
+          "outcome": "succeeded"
+        },
+        {
+          "seconds": 46.641,
+          "operation": "file-change",
+          "outcome": "succeeded"
+        },
+        {
+          "seconds": 148.433,
+          "operation": "verification",
+          "outcome": "failed"
+        }
+      ],
+      "resultMatchesExpected": null,
+      "verificationScriptUnchanged": true,
+      "sourceReport": "/private/tmp/reflex-supervision-attempt3.natural.json",
+      "sourceSha256": "1a7ff3da597a66a900e9238e7330b3bcb40d84d64cd0edab167b6945ff497e7c",
+      "wholeTestPassed": false
+    },
+    {
+      "trial": "gpt6-diagnostic",
+      "scenario": "natural",
+      "model": "gpt-6-sol-relay",
+      "reasoningEffort": "native-default",
+      "acceptanceRevision": "prior implementation",
+      "budgetMs": 150000,
+      "terminal": "completed",
+      "elapsedSeconds": 43.4,
+      "supervision": [],
+      "nativeSupervisionInputSeconds": [],
+      "evidence": [
+        {
+          "seconds": 11.471,
+          "operation": "verification",
+          "outcome": "succeeded"
+        },
+        {
+          "seconds": 19.169,
+          "operation": "verification",
+          "outcome": "succeeded"
+        },
+        {
+          "seconds": 27.444,
+          "operation": "verification",
+          "outcome": "succeeded"
+        }
+      ],
+      "resultMatchesExpected": null,
+      "verificationScriptUnchanged": true,
+      "sourceReport": "/private/tmp/reflex-supervision-gpt6-diagnostic.natural.json",
+      "sourceSha256": "42c279e03669c3916b8197ef100227b746639a8d73c1efd2982c8b242a1daa83",
+      "wholeTestPassed": true
+    },
+    {
+      "trial": "gpt6-fault",
+      "scenario": "fault",
+      "model": "gpt-6-sol-relay",
+      "reasoningEffort": "native-default",
+      "acceptanceRevision": "prior implementation",
+      "budgetMs": 150000,
+      "terminal": "aborted",
+      "elapsedSeconds": 149.303,
+      "supervision": [
+        {
+          "seconds": 69.709,
+          "state": "intent",
+          "action": "diagnose"
+        },
+        {
+          "seconds": 69.715,
+          "state": "accepted",
+          "action": "diagnose"
+        },
+        {
+          "seconds": 131.623,
+          "state": "improved",
+          "action": "diagnose"
+        }
+      ],
+      "nativeSupervisionInputSeconds": [],
+      "evidence": [
+        {
+          "seconds": 23.336,
+          "operation": "verification",
+          "outcome": "failed"
+        },
+        {
+          "seconds": 50.646,
+          "operation": "verification",
+          "outcome": "failed"
+        },
+        {
+          "seconds": 67.009,
+          "operation": "verification",
+          "outcome": "failed"
+        },
+        {
+          "seconds": 107.791,
+          "operation": "command",
+          "outcome": "succeeded"
+        },
+        {
+          "seconds": 140.54,
+          "operation": "verification",
+          "outcome": "succeeded"
+        }
+      ],
+      "resultMatchesExpected": false,
+      "verificationScriptUnchanged": true,
+      "sourceReport": "/private/tmp/reflex-supervision-gpt6-fault.fault.json",
+      "sourceSha256": "4b3287f608525c3386657ea5157ce29e4072978b178cd34a602b9d49869bc98e",
+      "wholeTestPassed": false
+    },
+    {
+      "trial": "gpt6-low-fault",
+      "scenario": "fault",
+      "model": "gpt-6-sol-relay",
+      "reasoningEffort": "low",
+      "acceptanceRevision": "prior implementation",
+      "budgetMs": 150000,
+      "terminal": "aborted",
+      "elapsedSeconds": 149.546,
+      "supervision": [
+        {
+          "seconds": 85.903,
+          "state": "intent",
+          "action": "diagnose"
+        },
+        {
+          "seconds": 85.906,
+          "state": "accepted",
+          "action": "diagnose"
+        }
+      ],
+      "nativeSupervisionInputSeconds": [],
+      "evidence": [
+        {
+          "seconds": 39.385,
+          "operation": "command",
+          "outcome": "failed"
+        },
+        {
+          "seconds": 67.011,
+          "operation": "command",
+          "outcome": "failed"
+        },
+        {
+          "seconds": 84.949,
+          "operation": "command",
+          "outcome": "failed"
+        }
+      ],
+      "resultMatchesExpected": false,
+      "verificationScriptUnchanged": true,
+      "sourceReport": "/private/tmp/reflex-supervision-gpt6-low-fault.fault.json",
+      "sourceSha256": "4033a5172e870b8f1700e7075b45f68d56b1acea0e4ac148445146bf11396bb6",
+      "wholeTestPassed": false
+    },
+    {
+      "trial": "gpt6-low-wire",
+      "scenario": "fault",
+      "model": "gpt-6-sol-relay",
+      "reasoningEffort": "low",
+      "acceptanceRevision": "prior implementation",
+      "budgetMs": 150000,
+      "terminal": "aborted",
+      "elapsedSeconds": 149.516,
+      "supervision": [
+        {
+          "seconds": 66.211,
+          "state": "intent",
+          "action": "diagnose"
+        },
+        {
+          "seconds": 66.215,
+          "state": "accepted",
+          "action": "diagnose"
+        }
+      ],
+      "nativeSupervisionInputSeconds": [
+        98.738,
+        98.738
+      ],
+      "evidence": [
+        {
+          "seconds": 23.462,
+          "operation": "verification",
+          "outcome": "failed"
+        },
+        {
+          "seconds": 52.167,
+          "operation": "verification",
+          "outcome": "failed"
+        },
+        {
+          "seconds": 65.736,
+          "operation": "verification",
+          "outcome": "failed"
+        },
+        {
+          "seconds": 98.736,
+          "operation": "command",
+          "outcome": "succeeded"
+        },
+        {
+          "seconds": 141.709,
+          "operation": "diagnostic",
+          "outcome": "succeeded"
+        },
+        {
+          "seconds": 141.727,
+          "operation": "diagnostic",
+          "outcome": "succeeded"
+        },
+        {
+          "seconds": 141.737,
+          "operation": "command",
+          "outcome": "succeeded"
+        }
+      ],
+      "resultMatchesExpected": false,
+      "verificationScriptUnchanged": true,
+      "sourceReport": "/private/tmp/reflex-supervision-gpt6-low-wire.fault.json",
+      "sourceSha256": "7af2a88d077c6815cadd66fa0d266677ecdeb5f65db1a4703e826ff1d6e03510",
+      "wholeTestPassed": false
+    },
+    {
+      "trial": "gpt6-long300",
+      "scenario": "fault",
+      "model": "gpt-6-sol-relay",
+      "reasoningEffort": "low",
+      "acceptanceRevision": "prior implementation",
+      "budgetMs": 300000,
+      "terminal": "aborted",
+      "elapsedSeconds": 299.385,
+      "supervision": [
+        {
+          "seconds": 71.256,
+          "state": "intent",
+          "action": "diagnose"
+        },
+        {
+          "seconds": 71.261,
+          "state": "accepted",
+          "action": "diagnose"
+        }
+      ],
+      "nativeSupervisionInputSeconds": [
+        79.941,
+        79.941
+      ],
+      "evidence": [
+        {
+          "seconds": 18.454,
+          "operation": "verification",
+          "outcome": "failed"
+        },
+        {
+          "seconds": 49.242,
+          "operation": "verification",
+          "outcome": "failed"
+        },
+        {
+          "seconds": 70.571,
+          "operation": "verification",
+          "outcome": "failed"
+        },
+        {
+          "seconds": 139.342,
+          "operation": "diagnostic",
+          "outcome": "succeeded"
+        },
+        {
+          "seconds": 181.834,
+          "operation": "command",
+          "outcome": "succeeded"
+        }
+      ],
+      "resultMatchesExpected": true,
+      "verificationScriptUnchanged": true,
+      "sourceReport": "/private/tmp/reflex-supervision-gpt6-long300.fault.json",
+      "sourceSha256": "a0f25f687b1de83a48a8dcf0e2bf6e244a213e43d8b8fadad235f3b1e52c3c54",
+      "wholeTestPassed": false,
+      "independentVerification": {
+        "scenario": "old-feedback-300s",
+        "independentVerificationExitCode": 0,
+        "verificationScriptUnchanged": true,
+        "exactExpectedResult": true
+      }
+    },
+    {
+      "trial": "gpt6-final300",
+      "scenario": "fault",
+      "model": "gpt-6-sol-relay",
+      "reasoningEffort": "low",
+      "acceptanceRevision": "feedback-reassessment-v2",
+      "budgetMs": 300000,
+      "terminal": "aborted",
+      "elapsedSeconds": 299.381,
+      "supervision": [
+        {
+          "seconds": 94.475,
+          "state": "intent",
+          "action": "diagnose"
+        },
+        {
+          "seconds": 94.484,
+          "state": "accepted",
+          "action": "diagnose"
+        }
+      ],
+      "nativeSupervisionInputSeconds": [],
+      "evidence": [
+        {
+          "seconds": 81.844,
+          "operation": "verification",
+          "outcome": "failed"
+        },
+        {
+          "seconds": 87.825,
+          "operation": "verification",
+          "outcome": "failed"
+        },
+        {
+          "seconds": 93.256,
+          "operation": "verification",
+          "outcome": "failed"
+        }
+      ],
+      "resultMatchesExpected": false,
+      "verificationScriptUnchanged": true,
+      "sourceReport": "/private/tmp/reflex-supervision-gpt6-final300.fault.json",
+      "sourceSha256": "c9ebab6d841f2893a931a4215680e4906f09a3ba1ded2086cb0ffecd4cc759fb",
+      "wholeTestPassed": false
+    }
+  ]
+}

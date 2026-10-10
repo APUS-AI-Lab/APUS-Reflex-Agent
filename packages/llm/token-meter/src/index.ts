@@ -33,6 +33,7 @@ import type {
 import { contextBreakdownProjectionDefinition } from './breakdown-projection.ts'
 import { contextPressureProjectionDefinition, tokenUsageProjectionDefinition } from './usage-projection.ts'
 import { estimateContent, estimateMessage, estimateToolsTokens, ROLE_OVERHEAD } from './estimate.ts'
+import { repriceReflexNodes } from './reflex-projection.ts'
 import { commitSurfaceTokens, planSurfaceTokens } from './surface-fold.ts'
 import type { MeterSurfaceNode } from './surface-fold.ts'
 import { priceSurface } from './route-pricing.ts'
@@ -250,6 +251,9 @@ export class TokenMeter extends Service {
     let nextAnchor = state.anchor
 
     switch (event.type) {
+      case 'reflex/context-projection':
+        state.surface = repriceReflexNodes(state.surface, event)
+        break
       case 'image/offload': {
         const offloaded = new Map(event.data.targets.map(target => [target.seq, new Set(target.imageIndexes)]))
         state.surface = state.surface.map((node) => {

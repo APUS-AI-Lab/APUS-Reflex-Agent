@@ -31,7 +31,11 @@
       "default": "./lib/types/checkpoint.js"
     },
     "./src/*": "./src/*",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./reflex-context-projection": {
+      "types": "./lib/types/reflex-context-projection.d.ts",
+      "default": "./lib/types/reflex-context-projection.js"
+    }
   },
   "files": [
     "lib/index.js",
@@ -55,5 +59,8 @@
     "@deepseek-ai/dsh-llm": "workspace:*",
     "@deepseek-ai/dsh-session": "workspace:*",
     "@deepseek-ai/cordis": "workspace:~"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
   }
 }

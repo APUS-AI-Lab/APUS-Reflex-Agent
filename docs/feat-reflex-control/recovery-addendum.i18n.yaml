@@ -1,0 +1,22 @@
+# Bilingual-pair consistency record for recovery-addendum.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-reflex-control/recovery-addendum.md
+/codex-timeout-recovery-design-reference:
+  en: cdd115b48b619a27
+  zh: 21554ee910d9abbc
+/codex-timeout-recovery-design-reference/observed-behavior-and-code-evidence:
+  en: b9d70fd0520cec91
+  zh: c41ea4b183d373fc
+/codex-timeout-recovery-design-reference/verified-local-protocol:
+  en: 69f34faf55a71ab9
+  zh: 8408d44fa90c8ce3
+/codex-timeout-recovery-design-reference/recovery-policy-and-ownership:
+  en: 904ee7590c460010
+  zh: 323a195d570fb1a8
+/codex-timeout-recovery-design-reference/proposed-state-transition:
+  en: b688526cc7e8b0fa
+  zh: 0bc351b17c362641
+/codex-timeout-recovery-design-reference/proposed-files-and-acceptance:
+  en: c7b7231d4e45697f
+  zh: a73b26e7951b64ad

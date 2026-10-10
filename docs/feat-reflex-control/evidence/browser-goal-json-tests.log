@@ -1,0 +1,15 @@
+test_boundary_days (test_aging.BucketBoundaryTests.test_boundary_days) ... ok
+test_due_date_boundaries (test_aging.BucketBoundaryTests.test_due_date_boundaries) ... ok
+test_buckets_are_exhaustive (test_aging.ConsistencyTests.test_buckets_are_exhaustive) ... ok
+test_default_format_remains_csv (test_aging.JsonExportTests.test_default_format_remains_csv) ... ok
+test_json_cli_summarizes_customer_buckets (test_aging.JsonExportTests.test_json_cli_summarizes_customer_buckets) ... ok
+test_amount_parsing_and_precision (test_aging.RoundingTests.test_amount_parsing_and_precision) ... ok
+test_half_up_to_two_places (test_aging.RoundingTests.test_half_up_to_two_places) ... ok
+test_paid_exceeds_amount_is_zero (test_aging.UnpaidTests.test_paid_exceeds_amount_is_zero) ... ok
+test_partial_payment (test_aging.UnpaidTests.test_partial_payment) ... ok
+test_sample_months (test_ledger.LedgerTests.test_sample_months) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.281s
+
+OK

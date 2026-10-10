@@ -1,0 +1,8 @@
+version: 1
+scenario: reflex-native-recovery
+profile: sdk
+composition: sdk-reflex-native-recovery
+recording: authored
+header:
+  class: sdk-reflex-native-recovery
+  pin: true

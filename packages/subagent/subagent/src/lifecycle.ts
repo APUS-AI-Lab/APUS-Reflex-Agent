@@ -17,6 +17,7 @@
 import { randomUUID } from 'node:crypto'
 import type { Context } from '@deepseek-ai/cordis'
 import type { Agent } from '@deepseek-ai/dsh-agent'
+import { SubagentSupervisorStaleError } from './recovery.ts'
 import type { ContentBlock } from '@deepseek-ai/dsh-llm'
 import { foldConsumedWork } from '@deepseek-ai/dsh-agent'
 import { SessionLogOffset } from '@deepseek-ai/dsh-session'
@@ -24,7 +25,8 @@ import type { SessionEvent, SessionId, SessionLogOffset as SessionLogOffsetType 
 import { finalAssistantOutput } from './assistant-output.ts'
 import { SubagentRunId } from './types.ts'
 import type {
-  SubagentActivity, SubagentActivityInfo, SubagentResult, SubagentRun, SubagentRunEndInfo, SubagentRunInfo,
+  SubagentEvidence, SubagentEvidenceInfo, SubagentActivity, SubagentActivityInfo,
+  SubagentResult, SubagentRun, SubagentRunEndInfo, SubagentRunInfo,
 } from './types.ts'
 
 /**
@@ -89,6 +91,7 @@ export type LifecycleEmitter = {
   (name: 'subagent/start', info: SubagentRunInfo, parent: Agent): void
   (name: 'subagent/end', info: SubagentRunEndInfo, parent: Agent): void
   (name: 'subagent/activity', info: SubagentActivityInfo, parent: Agent): void
+  (name: 'subagent/evidence', info: SubagentEvidenceInfo, parent: Agent): void
   (name: 'subagent/provider-removed', info: string): void
 }
 
@@ -106,8 +109,8 @@ export function createLifecycleEmitter(
   carrier: (parent: Agent) => object,
 ): LifecycleEmitter {
   return (
-    name: 'subagent/start' | 'subagent/end' | 'subagent/activity' | 'subagent/provider-removed',
-    info: SubagentRunInfo | SubagentRunEndInfo | SubagentActivityInfo | string,
+    name: 'subagent/start' | 'subagent/end' | 'subagent/activity' | 'subagent/evidence' | 'subagent/provider-removed',
+    info: SubagentRunInfo | SubagentRunEndInfo | SubagentActivityInfo | SubagentEvidenceInfo | string,
     parent?: Agent,
   ): void => {
     const dispatchArgs: unknown[] = parent === undefined
@@ -126,16 +129,20 @@ export function createLifecycleEmitter(
   }
 }
 
-/** One live one-shot run that accepts mid-run input, registered from its start edge until its end edge. */
+/** One live one-shot run offering input or native recovery, registered from start until its end edge. */
 export interface SteerableRun {
   /** Provider that established the run. */
   readonly provider: string
   /** The delegating parent whose Session owns the run. */
   readonly parent: Agent
   /** The run's own input delivery. */
-  readonly steer: NonNullable<SubagentRun['steer']>
+  readonly steer: ((content: readonly ContentBlock[], signal: AbortSignal, isCurrent?: () => boolean) => Promise<void>) | undefined
   /** Texts the child accepted, in order; reported on the run's result. */
   readonly accepted: string[]
+  /** Human admission invalidates older autonomous recovery proposals. */
+  humanRevision: number
+  readonly recoveryState: SubagentRun['recoveryState']
+  readonly recover: SubagentRun['recover']
 }
 
 /** Upper bound, in UTF-16 code units, of a published activity note; longer notes are cut with an ellipsis. */
@@ -149,6 +156,7 @@ export const SUBAGENT_ACTIVITY_NOTE_MAX_CHARS = 200
  * @param run - the published run whose settlement closes the pair.
  * @param bindActivity - receives the publisher for this run's steps once start has been emitted.
  * @param steerable - live runs accepting input; a run with `steer` is held here between its start and end edges.
+ * @param bindEvidence - optional publisher binding for content-free execution evidence.
  * @returns the published run, whose result also lists the steers the child accepted.
  */
 export function observeRun(
@@ -158,8 +166,25 @@ export function observeRun(
   run: SubagentRun,
   bindActivity: (publish: (activity: SubagentActivity) => void) => void,
   steerable: Map<SubagentRunId, SteerableRun>,
+  bindEvidence?: (publish: (evidence: SubagentEvidence) => void) => void,
 ): SubagentRun {
-  const steer = run.steer?.bind(run)
+  let controls: Promise<unknown> = Promise.resolve()
+  const ordered = <T>(action: () => Promise<T>): Promise<T> => {
+    const next = controls.then(action, action)
+    controls = next.catch(() => undefined)
+    return next
+  }
+  const deliver = run.steer?.bind(run)
+  const recoverNative = run.recover?.bind(run)
+  const steer: SteerableRun['steer'] = deliver === undefined ? undefined
+    : (content, signal, isCurrent) => ordered(() => {
+      signal.throwIfAborted()
+      if (isCurrent !== undefined && !isCurrent()) throw new SubagentSupervisorStaleError('subagent: supervisor input became stale before dispatch')
+      return deliver(content, signal)
+    })
+  const recover: SubagentRun['recover'] = recoverNative === undefined ? undefined
+    : (request, signal) => ordered(() => recoverNative(request, signal))
+  const recoveryState = run.recoveryState?.bind(run)
   const accepted: string[] = []
   const identity = {
     runId: SubagentRunId(randomUUID()),
@@ -188,7 +213,9 @@ export function observeRun(
       emit('subagent/end', { ...identity, stopReason: 'error' }, parent)
     },
   )
-  if (steer !== undefined) steerable.set(identity.runId, { provider, parent, steer, accepted })
+  if (steer !== undefined || recover !== undefined) {
+    steerable.set(identity.runId, { provider, parent, steer, accepted, humanRevision: 0, recover, recoveryState })
+  }
   emit('subagent/start', identity, parent)
   bindActivity((activity) => {
     if (settled) return
@@ -200,11 +227,16 @@ export function observeRun(
         ? note : `${note.slice(0, SUBAGENT_ACTIVITY_NOTE_MAX_CHARS - 1)}…` },
     }, parent)
   })
+  bindEvidence?.((evidence) => {
+    if (!settled) emit('subagent/evidence', { ...evidence, runId: identity.runId, provider, id: run.id }, parent)
+  })
   // The holder reads steers from the result, so the parent model can check the output against them.
   const result = run.result.then(value => accepted.length === 0 ? value : { ...value, steers: [...accepted] })
   return {
     id: run.id, localAgent: run.localAgent, result, dispose: () => run.dispose(),
     ...steer === undefined ? {} : { steer },
+    ...recover === undefined ? {} : { recover },
+    ...recoveryState === undefined ? {} : { recoveryState },
   }
 }
 
