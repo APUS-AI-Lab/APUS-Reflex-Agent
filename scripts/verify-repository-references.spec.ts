@@ -79,6 +79,7 @@ describe('maintained repository reference policy', () => {
     fixture.write('tasks/feat-system3-g1/review-regression.json', JSON.stringify({ revision: fixture.commit.toUpperCase() }))
     fixture.write('docs/feat-jev-decision-kernel/completion-browser-result.json', JSON.stringify({ uiVersion: `0.1.7-rc.2-${fixture.commit}-dirty` }))
 
+    fixture.write('docs/feat-reflex-control/evidence/supervision-audit-20261011.json', JSON.stringify({ sourceBase: fixture.commit }))
     fixture.write('tasks/chore-apus-fork/import-verification.json', JSON.stringify({ importedMainAtVerification: fixture.commit }))
     fixture.write('tasks/chore-apus-fork/branch-cleanup-verification.json', JSON.stringify({ retainedBranches: { main: fixture.commit } }))
 
@@ -88,6 +89,9 @@ describe('maintained repository reference policy', () => {
   it('rejects commit pins in ordinary JSON, prose and near matches to evidence paths', (test) => {
     const fixture = repository(test)
     const ordinaryPaths = [
+      'docs/feat-reflex-control/evidence/supervision-audit-20261011.md',
+      'docs/feat-reflex-control/evidence/supervision-audit-20261011.json.bak',
+      'docs/feat-reflex-control/evidence/supervision-audit-20261012.json',
       'docs/feat-system3-g1/other.json',
       'docs/feat-system3-g1/deployment.md',
       'docs/feat-system3-g1/desktop-acceptance.json.bak',
@@ -111,6 +115,7 @@ describe('maintained repository reference policy', () => {
   it('still rejects literal and escaped organization URLs in every allowed machine evidence file', (test) => {
     const fixture = repository(test)
     const evidencePaths = [
+      'docs/feat-reflex-control/evidence/supervision-audit-20261011.json',
       'docs/feat-jev-decision-kernel/completion-browser-result.json',
       'docs/feat-system3-g1/desktop-acceptance.json',
       'docs/feat-system3-g1/deployment-final.json',
