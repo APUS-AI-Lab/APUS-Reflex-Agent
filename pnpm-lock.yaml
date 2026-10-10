@@ -7183,6 +7183,18 @@ importers:
         specifier: workspace:*
         version: link:../../core/tools
 
+  packages/context/continuum:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:~
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-brand':
+        specifier: workspace:*
+        version: link:../../util/brand
+      '@deepseek-ai/dsh-session':
+        specifier: workspace:*
+        version: link:../../core/session
+
   packages/context/file-reference:
     devDependencies:
       '@deepseek-ai/cordis':

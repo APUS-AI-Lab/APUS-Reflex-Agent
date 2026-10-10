@@ -328,6 +328,7 @@
     { "path": "./packages/context/file-reference-local" },
     { "path": "./packages/context/tmux-context" },
     { "path": "./packages/context/session-reference" },
+    { "path": "./packages/context/continuum" },
     { "path": "./packages/interaction/user-questions" },
     { "path": "./packages/interaction/user-approval" },
     { "path": "./packages/interaction/permission-presets" },

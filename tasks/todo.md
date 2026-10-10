@@ -412,7 +412,8 @@ PPT v2为4页主讲+2页备查，实际Keynote打开、六页备注回读和PDF�
 - [x] P0.2：设计补齐六模块、P0–P5、摘要树/cache 独立取舍和三层真实验收门禁。
 - [x] P0.3：实现原生 Loop/Session/TokenMeter 接入可行性测试；验证当步召回、pending 计量缺口、最终路由、末端拒绝、日志重建、off、卸载与取消。
 - [ ] P0.4：冻结真实模型评测 manifest、代表性任务、期望产物和 A0/A1 原版基线；实跑并保存来源证据。
-- [ ] P1.1：证据记录模块；精确来源、revision、串行持久提交、明确停用；同步持久类型确认和 SDK 投影。
+- [x] P1.1：实现独立 Continuum 记录语义库；不可变来源记录、revision 冲突、原子 supersede、deactivate 及错误码测试通过。
+- [ ] P1.2：复用 Session.append 与 ctx.sessions.flush 接入真实持久事件；完成 persistence acknowledgement、重启恢复和 failure semantics。
 - [ ] P1.2：原文精确回读与同一步采用；最小 profile 贯通，重启从原日志恢复；未出现完整检索前不增加抽象 provider。
 - [ ] P1.3：Reflex 公共 Jev 接口 adapter，显式依赖校验、shadow、取消；真实双模型与文件产物验收。
 - [ ] P2：任务工作集、supersedes、FTS、权限与尾部覆盖；新 Session 续做、旧版本拒绝、索引重建与积压。
@@ -424,3 +425,7 @@ PPT v2为4页主讲+2页备查，实际Keynote打开、六页备注回读和PDF�
 ### 本批验证记录
 
 已在本 worktree 安装锁定依赖。真实模型凭据前置检查：当前进程无 JEV_API_KEY/DEEPSEEK_API_KEY，worktree 与主目录均无 .env；已请求现有测试配置路径，不请求密钥明文。接入测试的 adapter 为受控替身，Session 为内存日志，不证明磁盘持久化、真实模型效果或完整产品。
+
+### P1.1 Review
+
+新增 `packages/context/continuum`，当前是纯内存语义库，不接入产品 profile。`MemoryRecordStore` 的旧记录、新记录、来源引用、revision、superseded/deactivated 状态均为 immutable snapshot；冲突和重复 ID 不产生部分提交。`records.spec.ts` 4/4 通过，包级 Oxlint 与 TypeScript 构建通过。下一批必须复用现有 Session persistence，不得新增第二事实源。
