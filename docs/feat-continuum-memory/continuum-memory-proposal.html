@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>APUS Continuum · 连续记忆设计提案</title>
+<style>
+:root{color-scheme:light;--ink:#173f36;--muted:#52665d;--paper:#f7f5ef;--line:#ccd7cc;--accent:#a94c2e}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.8 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}main{max-width:1160px;margin:auto;padding:36px 28px 72px}h1{font-size:38px;line-height:1.2;margin:14px 0}h2{font-size:25px;margin:36px 0 12px}h3{font-size:18px;margin:20px 0 8px}p{margin:10px 0}a{color:#24654e;text-underline-offset:3px}code{font:13px/1.6 ui-monospace,Consolas,monospace;overflow-wrap:anywhere}nav{display:flex;flex-wrap:wrap;gap:8px 20px;padding:16px 0;border-block:1px solid var(--line);margin:24px 0}.eyebrow{font:12px/1.5 ui-monospace,monospace;letter-spacing:1.8px;color:var(--muted)}.lead{font-size:21px;max-width:960px}.status{background:#fbeee5;border-left:4px solid var(--accent);padding:14px 18px}.muted,figcaption{color:var(--muted);font-size:14px}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.card{border:1px solid var(--line);border-radius:10px;padding:18px;background:#fffdf9}.card h3{margin-top:0}.table-wrap{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:14px}th,td{text-align:left;vertical-align:top;border-bottom:1px solid var(--line);padding:11px 12px}th{background:#eaf0e9}ul,ol{padding-left:24px}li{margin:6px 0}.diagram{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:#fffdf9}svg{display:block;width:100%;min-width:820px;height:auto}figure{margin:20px 0}.diagram:focus-visible,summary:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-offset:4px}details{margin:14px 0;border:1px solid var(--line);border-radius:8px;padding:14px 18px}summary{cursor:pointer;font-weight:600}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#eaf0e9;padding:16px;border-radius:8px;font-size:13px}.footer{margin-top:32px;border-top:1px solid var(--line);padding-top:16px;color:var(--muted);font-size:13px}@media(max-width:720px){main{padding:22px 16px 48px}h1{font-size:30px}.lead{font-size:18px}.grid{grid-template-columns:1fr}th,td{padding:9px 8px}nav{gap:8px 14px}}@media print{main{max-width:none;padding:0}nav{display:none}details{break-inside:avoid}.diagram{overflow:visible}svg{min-width:0}body{font-size:12px}.lead{font-size:16px}h1{font-size:28px}h2{font-size:20px}.card{break-inside:avoid}}
+</style>
+</head>
+<body><main>
+<div class="eyebrow">APUS REFLEX HARNESS / DESIGN PROPOSAL / 2026-10-10</div>
+<h1>APUS Continuum · 连续记忆</h1>
+<p class="lead">让历史持续积累，让每次推理只携带当前所需的信息。默认 Reflex 管理，也完整支持不接 Jev 的原版 Harness。</p>
+<p class="status"><strong>状态：待评审的目标方案，尚未实现。</strong> 当前 main 已有自动摘要压缩、原始 Session 日志和可选历史查询；默认全文检索关闭。本页基于本地源码核对，不代表线上实例验收。命名为候选，尚未做重名核验。</p>
+<nav aria-label="提案目录"><a href="#goal">目标与命名</a><a href="#architecture">架构</a><a href="#compatibility">兼容模式</a><a href="#memory">记忆组织</a><a href="#control">运行与决策</a><a href="#engineering">原生接入</a><a href="#validation">验收与分期</a><a href="#challenge">取舍</a></nav>
+
+<section id="goal"><h2>1. 目标与命名</h2>
+<p>“无限”指在存储与保留策略允许时，不因模型窗口固定而被迫放弃历史；它不承诺无限存储、零成本、任意问题全量召回或语义无损。产品目标是：长任务可续做、旧要求可找回、纠正后不沿用过期结论，单次请求的上下文和召回开销受控。</p>
+<div class="table-wrap"><table><thead><tr><th>候选名</th><th>含义与取舍</th></tr></thead><tbody>
+<tr><td><strong>APUS Continuum（连续记忆）</strong></td><td>推荐。表达跨回合、跨会话的连续性；记忆能力不绑定某一种模型。</td></tr>
+<tr><td>APUS Recall（记忆召回）</td><td>简洁，但偏重读取，不能充分表达任务状态、纠正和记忆维护。</td></tr>
+<tr><td>Reflex Memory</td><td>突出自有模型，但容易让用户误以为不接 Reflex 就没有记忆。</td></tr>
+</tbody></table></div>
+<p>推荐对外关系：<strong>APUS Reflex Harness 是产品，Continuum 是记忆子系统，Reflex 是默认决策引擎，Jev 是可替换的决策接口。</strong> 原生成模型负责摘要与复杂理解；没有 Jev 时，Continuum 仍然完整运行。</p>
+</section>
+
+<section id="architecture"><h2>2. 一套记忆系统，两种决策策略</h2>
+<figure><div class="diagram" tabindex="0" role="region" aria-label="Continuum 组件架构图，可横向滚动查看">
+<svg viewBox="0 0 1100 510" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="diagram-title diagram-desc">
+<title id="diagram-title">Continuum 原生记忆架构</title><desc id="diagram-desc">Session证据进入Continuum索引和任务记忆；Continuum可请求Reflex或其他Jev提供有限判断，也可独立使用确定性策略。上下文装配交给生成模型，原生AgentLoop执行工具并记录结果。</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0 0L8 3L0 6Z" fill="#527263"/></marker><style>.box{fill:#f7f5ef;stroke:#91a99a;stroke-width:1.2}.focus{fill:#fbeee5;stroke:#a94c2e;stroke-width:1.5}.wire{fill:none;stroke:#527263;stroke-width:1.8;marker-end:url(#arrow)}.dashed{stroke-dasharray:5 4}text{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;fill:#173f36}.title{font-size:20px;font-weight:600}.body{font-size:15px;fill:#52665d}.label{font-size:13px;fill:#52665d}</style></defs>
+<text x="35" y="36" class="body">目标架构 · 所有模型选择都由 Harness 校验后采用</text>
+<rect x="35" y="75" width="245" height="130" rx="10" class="box"/><text x="55" y="108" class="title">原始证据与记忆记录</text><text x="55" y="137" class="body">Session 日志 / 完整产物引用</text><text x="55" y="162" class="body">来源、作用域、版本与纠正</text><text x="55" y="187" class="body">原文保存不由模型打分决定</text>
+<rect x="365" y="75" width="355" height="130" rx="10" class="focus"/><text x="385" y="108" class="title">Continuum 记忆服务</text><text x="385" y="137" class="body">任务工作集 · 全文 / 实体 / 时间索引</text><text x="385" y="162" class="body">候选检索 · 来源回读 · 分层摘要</text><text x="385" y="187" class="body">Baseline 策略始终可用</text>
+<rect x="805" y="75" width="260" height="130" rx="10" class="box"/><text x="825" y="108" class="title">可选决策引擎</text><text x="825" y="137" class="body">默认：APUS Reflex</text><text x="825" y="162" class="body">可替换：其他 Jev provider</text><text x="825" y="187" class="body">相关性 / 展开动作 / 弃权</text>
+<rect x="35" y="300" width="245" height="115" rx="10" class="box"/><text x="55" y="334" class="title">原生执行与结果</text><text x="55" y="364" class="body">AgentLoop × N / Tools / Jobs</text><text x="55" y="390" class="body">工具结果、纠正与任务状态</text>
+<rect x="365" y="300" width="355" height="115" rx="10" class="focus"/><text x="385" y="334" class="title">上下文装配</text><text x="385" y="364" class="body">有效约束 + 近期历史 + 召回证据</text><text x="385" y="390" class="body">Token 预算 / 权限 / 日志化 / 版本复核</text>
+<rect x="805" y="300" width="260" height="115" rx="10" class="box"/><text x="825" y="334" class="title">推理与生成模型</text><text x="825" y="364" class="body">完成任务、复杂消歧与摘要</text><text x="825" y="390" class="body">需要细节时继续请求读取</text>
+<path class="wire" d="M280 140H365"/><text x="300" y="128" class="label">索引</text>
+<path class="wire" d="M720 126H805"/><text x="738" y="114" class="label">候选</text><path class="wire dashed" d="M805 178H720"/><text x="738" y="168" class="label">建议</text>
+<path class="wire" d="M540 205V300"/><text x="555" y="255" class="label">已读取的证据</text>
+<path class="wire" d="M720 360H805"/><text x="736" y="346" class="label">当前输入</text>
+<path class="wire" d="M935 415V465H155V415"/><text x="455" y="454" class="label">任务执行请求，经原生工具与权限机制</text>
+<path class="wire" d="M155 300V205"/><text x="170" y="255" class="label">持久记录</text>
+</svg></div><figcaption>箭头表示主要运行路径。后台摘要同样使用配置的生成模型；Reflex 不生成摘要。生成模型的记忆读取请求回到同一个 Continuum 服务，使用相同权限、版本和预算规则。</figcaption></figure>
+<div class="grid"><div class="card"><h3>Harness：可用与可追溯</h3><p>持久化、索引、授权、版本、预算、原文回读、实际输入记录和故障恢复。</p></div><div class="card"><h3>Reflex：有界策略判断</h3><p>在检索到的合法候选中选择相关信息、建议展开或扩大检索。不能写入事实、授予权限或增加预算。</p></div><div class="card"><h3>生成模型：理解与生成</h3><p>提炼有来源的摘要，理解跨片段关系，处理无法确定的冲突，并完成用户任务。</p></div></div>
+</section>
+
+<section id="compatibility"><h2>3. 无 Jev 是完整模式，不是残缺降级</h2>
+<div class="table-wrap"><table><thead><tr><th>装配</th><th>完整记忆功能</th><th>决策策略</th></tr></thead><tbody>
+<tr><td>原版，不启用 Continuum</td><td>保持现有压缩、持久化和原配置</td><td>不新增记忆调用、事件或工具</td></tr>
+<tr><td>原版 + Continuum</td><td>写入、摘要、检索、回读、纠正、恢复、预算控制</td><td>Baseline；不安装 Jev 插件也能运行</td></tr>
+<tr><td>APUS 默认组合</td><td>同一套 Continuum 功能与数据</td><td>自有 Reflex；判断不可用时执行 Baseline</td></tr>
+<tr><td>Continuum + 其他 Jev</td><td>同一套 Continuum 功能与数据</td><td>显式替换 provider，分别校准和验证</td></tr>
+</tbody></table></div>
+<p>配置分成两个维度：<code>memory.enabled</code> 决定记忆是否启用；<code>decision.provider</code> 选择 <code>baseline</code> 或某个 Jev provider。通用组件默认 Baseline，APUS profile 显式选择 Reflex，核心不暗设网络端点。以下字段是拟议配置，尚不是现有 API。</p>
+<p>Jev 的 <code>off / shadow / active</code> 仅控制增强判断：off 不调用；shadow 调用并计费但实际执行 Baseline，不影响写入、注入和摘要；active 经校验后采用。关闭 Jev 不关闭记忆。</p>
+<p>显式配置不存在的 provider、缺少必要模型配置或预算冲突属于配置错误，须在加载或最早可解析处报错。有效配置运行时超时、弃权、低置信或隐私不允许调用时，记录原因并回退 Baseline。用户取消直接传播，不通过降级继续执行。摘要模型失败时保留原文与索引，后台稍后重试。</p>
+</section>
+
+<section id="memory"><h2>4. 三类记忆，多个检索入口</h2>
+<div class="table-wrap"><table><thead><tr><th>类别</th><th>内容</th><th>使用方式</th></tr></thead><tbody>
+<tr><td>任务工作集</td><td>目标、有效要求、最新纠正、未完成事项、关键证据引用</td><td>每轮保留适用约束；不按最近 N 条静默淘汰</td></tr>
+<tr><td>长期事实与决策</td><td>已确认的用户偏好、项目约定、历史决定、可验证结论</td><td>按主体、项目、任务和有效时间检索；区分用户确认与模型推断</td></tr>
+<tr><td>历史证据</td><td>用户消息、工具结果、产物、子 Agent 报告、操作与失败记录</td><td>保留精确来源；按需读取原文或分页展开</td></tr>
+</tbody></table></div>
+<p>摘要树只承担时间概览与逐层展开。全文索引保留摘要可能遗漏的路径、数字、名字和错误；任务与实体字段连接跨会话的相关记录。先复用全文检索和显式标签，再按评测增加摘要层级；不要求首版部署向量数据库或知识图谱。</p>
+<p>Markdown 作为用户可读、可编辑的记忆视图和导入格式。稳定 ID、版本、权限和引用由记忆服务管理。修改 Markdown 经明确导入生成新记忆事件，不允许文件变化直接提升为系统指令，也不自动修改 AGENTS.md。</p>
+<details open><summary>数据约定：证据和推导必须能区分</summary>
+<p>拟议 <code>MemoryRecord</code> 包括：品牌化的记忆 ID、revision、kind、scope、subject、content、sourceRefs、有效时间、记录时间、状态、supersedes 和确认来源。<code>sourceRefs</code> 至少包含 Session ID 与事件序号；跨会话引用不能复用仅表示同 Session 的 <code>sourceEventSeqs</code>。</p>
+<p>原始证据继续归原生 Session 与附件/产物存储。新增记忆事实、纠正和停用以持久 Session 事件为权威；跨会话查询维护可重建投影。单个记忆域由一个 Host 写入者持锁、按 revision 串行提交并等待持久化完成；并发旧版本写入返回冲突，不由 Jev 选择覆盖。多 Host 并发写同一记忆域不纳入首版。</p>
+<p>全文索引、摘要树和工作集投影都是派生数据，重建不得丢失唯一的记忆记录。后台任务维护索引 watermark；读取固定版本，在独立读取预算内检索和分页读取尚未索引的授权尾部，返回已覆盖区间与未覆盖范围。最新未解析的用户要求进入任务工作集；其余未扫描历史不能被当作无命中。队列积压时保留原文读取路径，不无限等待全部摘要完成。</p>
+<p>明确关联的用户更正建立 supersedes，旧证据仍可解释；“最新一条”不自动等于真相。模型提炼默认保存为推断候选，只有明确用户来源或独立验证依据才能进入已确认记忆；用户说过某事也只证明该陈述的来源，不证明所有外部事实为真。推断的关联或冲突只标为待核查，不能自动停用既有要求。普通导航摘要无需逐条向用户确认；适用环境不同的两条记录可同时成立。子 Agent 报告可贡献候选和证据，不能静默覆盖用户约束。</p>
+</details>
+</section>
+
+<section id="control"><h2>5. 在线召回与离线整理</h2>
+<ol>
+<li><strong>先记录。</strong> 原生机制保存已接收消息与工具结果。大输出保留可回读产物引用；已有截断且未保存的内容标为缺口，不能宣称可恢复。是否保存证据不经过 Reflex。</li>
+<li><strong>维护当前任务。</strong> 显式记忆操作和带目标引用的更正确定性提交；自由文本中的疑似要求立即保留为未解析输入，再由模型分类，不凭关键词猜测更正对象。当前约束不能因模型低分消失。</li>
+<li><strong>按需检索。</strong> 新任务、跨会话续做、明确历史引用或执行中信息不足触发检索；已有精确引用直接读，不每个工具调用都问 Reflex。Harness 先限制权限、有效版本和候选量，再执行全文、任务或时间检索。</li>
+<li><strong>可选优化。</strong> Baseline 按精确匹配、任务关联、有效性、相关分数和确定性顺序选取。Reflex 可批量重排有限候选，建议展开、扩大检索或弃权；不得取消强制保留的任务约束。</li>
+<li><strong>读原文再装配。</strong> 对精确数字、路径、承诺和待验证结论读来源片段；Harness 再检查版本、授权、取消与预算，记录实际注入文本。摘要仅作导航或带标签的概览。</li>
+<li><strong>使用后整理。</strong> 生成模型按需写有来源的摘要与候选事实；原生执行记录用于核对任务成果。后台维护索引和摘要，不把“模型引用过”直接当作记忆正确或用于自动训练的标签。</li>
+</ol>
+<p>多条记忆可以同时相关，不能把一次互斥 <code>choice</code> 的概率当作多条独立相关概率。Reflex 的 <code>score</code> 或 <code>noul</code> 需要任务评测校准；分数不是事实正确率。首版以一次批量候选选择为主要增强点，不在摘要树每一层强制插入一次模型往返。</p>
+<details open><summary>预算、缓存与不会静默遗忘的约束</summary>
+<pre>可用输入预算 = 当前路由模型窗口 − 输出预留 − 安全余量
+系统与工具 + 当前有效约束 + 近期历史 + 召回内容 + 新输入 ≤ 可用输入预算
+召回另外受候选数、展开次数、总字节、总 Token、截止时间与费用限制。</pre>
+<p>以当前路由的 token meter 和图片计价为依据，字节数只作传输上限。预算字段由配置验证，不把 64–128KB 写死为所有模型通用窗口。模型切换须重新校验预算；不可拆分的新输入或强制约束本身超限时，显式报告并要求缩小任务或选择有容量的获准路由，不偷偷丢弃要求。</p>
+<p>稳定系统/工具前缀、稳定任务片段与动态召回分别组织；只在内容变化时产生新注入，按压力批量压缩，避免每次请求重排全部历史。复用原生 AgentLoop 与 Session，不为模仿 gist 强制每回合新建会话。缓存收益让位于纠正、授权变化与数据停用。</p>
+<p>Baseline 和 Reflex 使用相同候选池、原文读取、预算、版本校验和最终装配代码。候选召回遗漏不能靠重排弥补；无命中只能表示本次检索未找到，允许在预算内扩大关键词、任务或时间范围，仍不足则明确说明缺少证据。</p>
+</details>
+<details><summary>权限、隐私、停用与回放</summary>
+<p>首版跨会话沿用当前工具的精确 cwd 授权规则，接口中保留主体与记忆域；不能将相同 cwd 外推为多租户用户授权。跨工作区的个人偏好需单独显式授权。每次读取和实际注入前重新授权；子 Agent 不因父代理可读就自动获得权限。</p>
+<p>检索内容作为有来源的数据使用；网页、工具输出、摘要与子 Agent 报告不能伪装为用户指令。摘要模型、最终生成模型与可选 Reflex/Jev 都通过同一个不依赖 Jev 的宿主数据准入接口；若复用的策略当前属于 System3，则抽取共同依赖或由宿主显式注入。Baseline 不要求安装 System3 或 Jev 才有隐私准入。本地隧道不等于本地计算。</p>
+<p>首版“停用记忆”阻止未来检索和使用，并使相关摘要与当前工作集失效。它不等于物理删除。真正擦除需独立的保留/擦除设计，覆盖源事件、派生索引、已注入的 Session、缓存与备份，不在本方案冒充已支持的操作。</p>
+<p>停用提交使记忆域 revision 更新；尚未发送的已准备请求、后台摘要提交和索引发布必须重新核验，旧结果不得重新激活停用记忆。已发送的远端请求不能撤回内容，应取消后续采用并准确记录。提交与最后发送检查的顺序由宿主串行化，而不是仅在检索开始时检查一次。</p>
+<p>重放使用当时日志中的记忆版本、引用和完整注入文本，不重新搜索当前索引或重新调用 Jev。恢复后新一轮才重新授权和检索。停用后的新请求必须移除相关历史投影并开始合适的新请求序列；不能只删除 FTS 条目而继续发送旧上下文。历史审计记录和曾经发送到模型服务的内容不能被声称已撤回。</p>
+</details>
+</section>
+
+<section id="engineering"><h2>6. 原生接入与拟议接口</h2>
+<p>新增一个 <code>packages/context/continuum/</code> 包，初期在同包包含 Service Definition、本地 Provider、自动召回消费者、Baseline 和模型读取工具。再增加可选 <code>packages/experimental/continuum-jev/</code> 适配包，将同一决策接口接到现有 <code>ctx.jev</code>。Reflex 与其他 Jev 只改变 provider 配置，不各复制一套记忆系统。Continuum 核心不依赖 System3 或 Jev。</p>
+<div class="table-wrap"><table><thead><tr><th>拟议接口</th><th>输入与结果约定</th></tr></thead><tbody>
+<tr><td><code>resolve(request) → spec</code></td><td>从宿主身份解析授权范围、模型容量、查询及预算。调用者不能用请求字段提升身份。</td></tr>
+<tr><td><code>record / supersede / deactivate</code></td><td>来源引用、期望 revision 和明确动作；持久化成功后返回版本，否则报告冲突或失败。模型只能提议，写入由宿主校验。</td></tr>
+<tr><td><code>retrieve(spec) → candidates</code></td><td>已授权候选、记忆/索引版本、来源、覆盖范围和未索引尾部信息。</td></tr>
+<tr><td><code>read(refs, budget) → evidence</code></td><td>指定版本的原文片段或分页、缺失/停用状态和实际预算。工具与自动召回使用同一服务。</td></tr>
+<tr><td><code>decide(candidates, actions, budget)</code></td><td>Baseline 或可选 Jev 返回允许动作和候选 ID；不返回可执行任意代码或可覆盖权限的指令。</td></tr>
+<tr><td><code>prepareContext(spec, evidence)</code></td><td>返回待准入的记忆消息、引用、预算和采用回执；只有原生 Session 实际提交后才标记为 injected。</td></tr>
+</tbody></table></div>
+<p>配置须区分记忆启停、provider、增强模式、作用域、候选/读取/摘要预算、期限和保留策略；用户配置未知字段或不可满足预算时报错。所有跨包 ID 使用项目品牌类型，外部数据、模型响应和持久数据在对应入口验证。</p>
+<details open><summary>已核实的接入限制</summary>
+<ul>
+<li>当前 runtime-context 在 <code>agent/pre-step</code> 之前已生成。同步召回不能只更新 context 回调并声称本步生效；参考 Skill 注入，保留原 enter 决定的字段，并追加带专属 source 的 accepted message，由 loop 记录。稳定任务快照可继续使用 runtime-context。</li>
+<li>现有 compaction 测量最近已持久化请求，新输入和召回尚不在其中。实现须提供包含待准入消息的计量/预留，并在路由与 prepared call 确认后验证完整请求容量；不能以现有压缩成功代替硬预算证明。优先沿 token-meter、compaction 与 request 扩展点补齐，若需改 loop，另行更新架构设计。</li>
+<li>当前任务卡只保存有限最近要求且分类异步。Continuum 接管完整的有效要求记录，System3 从同一投影读任务状态，避免两个任务卡竞争或重复注入；不可解析的输入保留出处与待处理状态。</li>
+<li>现有 Session FTS 不自动提取自定义事件，SQLite 查询库可重建。新记忆事件必须提供明确的索引提取器或本包派生索引，不能将唯一记忆存在该缓存库。</li>
+<li>共享记忆的异步返回须重核 task revision、索引/记录 revision 和权限。晚到结果不能注入已取消或已换任务的步骤；插件卸载先停止订阅，再等待工作收敛。</li>
+<li>新增 Session 事件须更新已知类型、持久 schema 和变更确认。是否 ignorable 由重放语义决定，不为绕过旧 reader 拒绝而标记可忽略；TypeScript 与 Python SDK 的预期输出同步更新。</li>
+</ul>
+</details>
+<details><summary>预计文件改动清单（实施前在隔离工作树确认）</summary>
+<ul>
+<li><code>packages/context/continuum/</code>：配置、接口、本地持久事件、投影、索引、Baseline、预算、自动召回、工具、README 双语及测试。</li>
+<li><code>packages/experimental/continuum-jev/</code>：可选 provider 适配、隐私与 deadline、shadow/active、取消与回退、README 双语及测试。</li>
+<li><code>packages/experimental/system3/src/task-frame.ts</code> 及安装处：共享任务要求投影，保留未启用 Continuum 时原行为。</li>
+<li><code>packages/llm/token-meter/</code> 与 <code>packages/compaction/compaction-basic/</code>：核对待准入内容和实际路由的预算能力，按最小缺口扩展。</li>
+<li><code>packages/session-query/</code>：复用检索接口，明确新事件提取/派生索引职责，不隐式改变现有默认设置。</li>
+<li><code>packages/bundle/</code> 与 <code>deploy/system3/runtime.patch.yml</code>：新增可选装配；APUS 明确选择 Reflex，原版可选 Baseline，关闭特性保留旧行为。</li>
+<li><code>packages/client/</code> 与指定 Frontend 仓库：同一投影展示记忆出处、更正、停用和本轮已采用记忆；客户端产品文案由 locale 管理，运行时未采用不能显示已记住或已使用。</li>
+<li>所属子系统文档、schema 生成产物与变更确认、Session 场景快照、TypeScript/Python SDK 快照：随新输入与持久类型同批更新。</li>
+</ul>
+</details>
+</section>
+
+<section id="validation"><h2>7. 分期与可证伪的验收</h2>
+<div class="table-wrap"><table><thead><tr><th>阶段</th><th>交付</th><th>结束条件</th></tr></thead><tbody>
+<tr><td>M1 可恢复记忆</td><td>独立 Continuum、任务工作集、全文/来源回读、预算、纠正、重启恢复；同时交付 Reflex adapter 的 shadow 路径和最小 UI</td><td>不安装 Jev 也完成同一记忆用例；新增模型输入可回放；遗忘、越权、取消和超预算负例通过</td></tr>
+<tr><td>M2 Reflex 增强</td><td>候选选择与读取动作决策、active/fallback、调用与端到端度量</td><td>相对相同 Baseline 的质量或总成本有可重复收益，才按 APUS 默认策略放量</td></tr>
+<tr><td>M3 历史规模化</td><td>多分辨率摘要、缓存稳定视图、后台积压恢复；按实际召回缺口选择语义检索</td><td>在增长的历史规模下报告检索覆盖、总成本与尾延迟，不仅报告缓存命中率</td></tr>
+</tbody></table></div>
+<p>目标默认引擎为自有 Reflex；shadow 是上线前验证步骤，不是最终默认值的变更。通用版 Baseline 从 M1 起就是完整支持路径，后续所有功能均保留这条路径。</p>
+<h3>对照与消融</h3>
+<p>A0：当前默认压缩；A1：压缩加已存在历史工具并启用检索；B：Continuum + Baseline；C：同一 Continuum + Reflex；D：同一 Continuum + 其他 Jev。C 与 B 固定检索候选、生成模型和上下文预算，另在相同总费用上比较，防止把新增检索能力的收益算给 Reflex。摘要树另做有/无消融，避免一次引入多个变量。</p>
+<h3>必须覆盖的行为</h3>
+<ul>
+<li>跨多轮与多会话找回精确数字、路径和历史承诺；高层摘要遗漏关键词时仍能读到原文。</li>
+<li>用户连续纠正、任务交错与重启后继续遵循适用版本；原版不启用功能的行为保持不变。</li>
+<li>索引落后、摘要失败、索引重建、并发旧版本提交和原文缺失时，输出准确状态。</li>
+<li>未安装 Jev、正常 Reflex、shadow、其他 provider、运行故障、隐私不允许、低置信和取消均走真实装配。</li>
+<li>停用记忆后既不再召回，也不从现存模型历史重新带入；跨 scope 请求拒绝，外部文本不能升级权限或用户要求。</li>
+<li>新用户输入、图片、工具 schemas、召回内容及路由改变共同计费，拒绝不可满足的预算；硬限制由规则验收。</li>
+<li>Session 回放不访问外部记忆服务或重新请求 Jev；两个 SDK 与默认产品 profile 的关键场景快照匹配。</li>
+</ul>
+<p>指标为最终任务成功率、要求遵循率、有效事实召回、过期记忆误用、引用正确率，以及包含后台摘要、检索展开和 Reflex 的总费用、P50/P95 延迟。权限与版本拒绝用确定性测试作发布阻断；质量目标在冻结代表性任务集和 Baseline 后预注册，不在测后挑选有利阈值。检索到、已注入、模型引用和任务验收分别记录，不推断不可观察的内部“记住”。</p>
+<p>实施验证包括单元负例、原生 profile 集成、keyless recorded-session 快照、两个 SDK 投影和真实模型对照。只运行受影响面的测试与要求的构建/检查；不把 mock 通过称作模型质量证明。</p>
+</section>
+
+<section id="challenge"><h2>8. 审慎取舍</h2>
+<p><strong>创新应落在模型参与的记忆管理及其可验证收益。</strong> 日志、摘要树或 Markdown 本身不能证明“不会忘”。Continuum 提供一致的记忆能力，Reflex 优化同一任务下选什么、读多深、何时补查；两者独立，才能兼容原版并测出小模型的实际贡献。</p>
+<p>不复制 gist 的“只能沿树 zoom”限制；保留原文全文与任务索引，避免摘要遗漏变成不可发现。不把每次存储和每一层展开都变成 Reflex 网络调用。首版不训练新的记忆模型；先收集经任务验收的候选、选择和采用结果，再单独设计受授权的数据与训练流程。</p>
+<p>用户体验示例：上周已将交付目录从 A 改为 B，今天在新会话说“继续上次任务”。Continuum 恢复当前任务和 B 的有效更正，找到并读回原消息；Baseline 能完成这条链。候选很多时 Reflex 帮助选择相关任务与证据，UI 显示实际采用的出处。输出应写入 B，并由实际文件结果验收，而不是因为记忆评分高就宣布成功。</p>
+</section>
+
+<section id="evidence"><h2>9. 设计依据</h2>
+<p>以下为本地 main 源码/配置审查入口；实际部署、模型收益和新方案行为尚未验证。</p>
+<ul>
+<li><a href="../architecture.md">原生扩展点、Session 与 model-visible/logged 约束</a>；<a href="../../packages/bundle/base/cordis.patch.yml">base 持久化、默认关闭全文搜索及压缩装配</a>。</li>
+<li><a href="../../packages/compaction/compaction-basic/src/index.ts">压缩触发与最近持久请求计量</a>；<a href="../../packages/core/agent-loop/src/agent.ts">runtime-context 与 pre-step 时序</a>。</li>
+<li><a href="../../packages/experimental/system3/src/skill-selection.ts">当前步骤的原生消息注入示例</a>；<a href="../../packages/experimental/system3/src/task-frame.ts">任务卡范围与有限保留</a>。</li>
+<li><a href="../../packages/experimental/apus-dsh-jev-plugin/src/protocol.ts">Jev choice/score/noul 协议</a>；<a href="../../packages/experimental/system3/src/decision-kernel.ts">判断回执、隐私、截止与回退</a>。</li>
+<li><a href="../../packages/session-query/tool-session-query/README.md">历史查询与授权</a>；<a href="../../packages/session-query/session-query/src/extraction.ts">可搜索事件提取</a>；<a href="../../packages/session-query/session-query-sqlite/src/schema.ts">可重建 SQLite 索引</a>。</li>
+<li><a href="https://gist.github.com/VictorTaelin/91837951a5ce5b38f341ec1ba1df6449">UniiChat 设计</a>：分层摘要、按需展开和缓存批量合并的参考，不作为本项目已实现或无损保证的证据。</li>
+</ul>
+</section>
+<p class="footer">设计已置于独立工作树 <code>.Codex/worktrees/feat-continuum-memory</code>，分支 <code>worktree-feat-continuum-memory</code>。依据用户提供的 AGENTS.md Development Preflight / Human Gate，产品代码实现须在用户明确确认本设计后开始。主目录既有 README 审阅等未提交文档保持原样；本轮没有修改运行源码、安装依赖或启动模型调用。</p>
+</main></body>
+</html>

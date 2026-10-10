@@ -143,3 +143,7 @@ Frontend runtime prepare 复制 Harness 构建树时，Harness pre-push 的 type
 ## 2026-10-10：模拟fetch必须处理已经取消的信号
 
 动态导入或调度延迟可能使取消先于fetch注册listener。测试双应像真实fetch一样检查signal.aborted，不能仅等待未来abort事件；用预取消信号构造确定性负例，不通过增大超时隐藏竞态。
+
+## 2026-10-10：连续记忆独立于默认 Reflex 引擎
+
+用户要求无限记忆方案默认采用自有 Reflex，同时支持其他 Jev 与完全不接 Jev 的原版 Harness。记忆读写、摘要、检索、恢复、权限与上下文预算必须由独立能力提供，Baseline 是完整路径；Reflex 只增强有限候选决策，不能成为存储或安全的必需依赖。通过同候选、同上下文预算的消融验证实际增益，不能把检索能力本身算成 Jev 收益。HTML 设计、隔离工作树和未来产品实现分别报告状态。
