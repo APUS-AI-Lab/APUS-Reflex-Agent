@@ -15,6 +15,7 @@ const fake = vi.hoisted(() => {
     }
   }
   const fetch = (_url: string, init: { dispatcher: Agent; signal?: AbortSignal }) => {
+    if (init.signal?.aborted) return Promise.reject(new Error('request timed out'))
     if (!init.dispatcher.stalled) {
       return Promise.resolve({ status: 200, statusText: 'OK', headers: [], body: '{}', arrayBuffer: () => Promise.resolve(new TextEncoder().encode('{}').buffer) })
     }
@@ -41,9 +42,9 @@ function pooled(resetAfterFailures?: number) {
   const ctx = new Context()
   contexts.push(ctx)
   const warn = vi.spyOn(ctx.logger, 'warn').mockImplementation(() => {})
-  const request = async () => {
+  const request = async (signal: AbortSignal = AbortSignal.timeout(20)) => {
     try {
-      const response = await createdFetch(URL_, { signal: AbortSignal.timeout(20) })
+      const response = await createdFetch(URL_, { signal })
       return response.status
     } catch {
       return 'no response'
@@ -79,5 +80,12 @@ it('logs a failed destroy without breaking the next request', async () => {
   const h = pooled(1)
   expect(await h.request()).toBe('no response')
   await vi.waitFor(() => { expect(h.warn).toHaveBeenCalledWith('jev: connection pool destroy failed: Error: socket busy') })
+  expect(await h.request()).toBe(200)
+})
+
+it('settles cancellation that happened before the pooled transport starts', async () => {
+  const h = pooled(1)
+  expect(await h.request(AbortSignal.abort())).toBe('no response')
+  expect(fake.agents[0]?.destroyed).toBe(1)
   expect(await h.request()).toBe(200)
 })

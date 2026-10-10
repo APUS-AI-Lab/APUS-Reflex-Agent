@@ -139,3 +139,7 @@ README 可能滞后；先查 package 与固定来源，再核对 git 共同祖�
 ## 2026-10-10：装配必须避开隐式重建
 
 Frontend runtime prepare 复制 Harness 构建树时，Harness pre-push 的 typecheck 也会重建 Host lib。即使显式 build 已完成，也必须等待推送钩子结束再复制，或等待装配完成再推送；不得仅冻结源码而允许重建产物。
+
+## 2026-10-10：模拟fetch必须处理已经取消的信号
+
+动态导入或调度延迟可能使取消先于fetch注册listener。测试双应像真实fetch一样检查signal.aborted，不能仅等待未来abort事件；用预取消信号构造确定性负例，不通过增大超时隐藏竞态。

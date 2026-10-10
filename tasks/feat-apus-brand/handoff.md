@@ -77,3 +77,5 @@ GitHub 两仓描述、topics、Issues 链接与 MIT 标识已核对。Harness �
 最终装配曾遇到 Harness pre-push 重建 lib 与 Frontend 复制并发；在 hook 完成后重试，检查临时副本 bin.js 存在。后续遵守冻结产物而不只是冻结源码的要求。
 
 远端首轮 Independent harness 的 TypeScript 行为及 Session 回放通过，Python SDK 步骤缺 pydantic。改为 uv 按 python/sdk 项目安装依赖，并实际刷新和重放 completion-review、entry-route、shadow 三场景通过；仅品牌提示词与当前原生 writer 输出元数据变化，历史 Session 文件无改动。
+
+后续 CI 暴露 pool-reset 测试模拟器遗漏已取消 AbortSignal：动态 import 在负载下晚于20ms期限，模拟fetch只等未来abort事件而挂住。新增预取消确定性负例先复现5000ms超时，再让模拟器立即拒绝已取消信号；Jev provider目录28项通过，未改生产transport、未延长超时。
