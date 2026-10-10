@@ -1,12 +1,18 @@
-import { SessionId, SessionSeq } from '@deepseek-ai/dsh-session'
+/** Source-backed record transitions; no persistence or authorization is performed here. */
+import type { SessionId, SessionSeq } from '@deepseek-ai/dsh-session'
+import { brandString, type Branded } from '@deepseek-ai/dsh-brand'
 
 /** Stable identifier for one derived memory record. */
-export type MemoryId = string & { readonly __memoryId: unique symbol }
+export type MemoryId = Branded<'MemoryId'>
 
-/** Admit a non-empty memory identifier. */
+/**
+ * Admit a non-empty memory identifier.
+ * @param value - caller-owned identifier, unique within the store.
+ * @returns the identifier with its memory brand.
+ */
 export function MemoryId(value: string): MemoryId {
   if (value.length === 0) throw new TypeError('memory id must not be empty')
-  return value as MemoryId
+  return brandString<MemoryId>(value)
 }
 
 /** A source event that can be opened again from the Session log. */
@@ -25,16 +31,20 @@ export interface MemoryRecord {
   readonly kind: 'fact' | 'task' | 'decision'
   readonly scope: string
   readonly content: string
-  readonly sourceRefs: readonly MemorySourceRef[]
+  readonly sourceRefs: readonly [MemorySourceRef, ...MemorySourceRef[]]
   readonly status: MemoryStatus
   readonly supersedes?: MemoryId
 }
 
+/** Caller-supplied record fields; lifecycle and correction links belong to the store. */
+export type NewMemoryRecord = Omit<MemoryRecord, 'revision' | 'status' | 'supersedes'>
+
 /** Errors that callers must handle instead of silently overwriting memory. */
-export type MemoryRecordErrorCode = 'MEMORY_REVISION_CONFLICT' | 'MEMORY_NOT_FOUND' | 'MEMORY_ALREADY_DEACTIVATED'
+export type MemoryRecordErrorCode = 'MEMORY_REVISION_CONFLICT' | 'MEMORY_NOT_FOUND' | 'MEMORY_INACTIVE' | 'MEMORY_SCOPE_MISMATCH'
 
 /** Record-store failure with a stable code for product and tests. */
 export class MemoryRecordError extends Error {
+  /** Stable failure category independent of human-facing text. */
   readonly code: MemoryRecordErrorCode
 
   constructor(message: string, code: MemoryRecordErrorCode) {
@@ -47,27 +57,43 @@ export class MemoryRecordError extends Error {
 /**
  * Pure revisioned store used by the first Continuum slice.
  *
- * It is an in-memory semantic owner only. A later provider will append the same
- * operations to Session events and rebuild this projection after restart.
+ * Snapshots retain retired records for inspection. Callers own source validation
+ * and authorization; scope equality prevents corrections from moving records to
+ * another domain but does not grant access. Operations have no I/O or callbacks.
  */
 export class MemoryRecordStore {
   private readonly records = new Map<MemoryId, MemoryRecord>()
 
-  /** Create a record at revision one. */
-  create(record: Omit<MemoryRecord, 'revision' | 'status'>): MemoryRecord {
+  /**
+   * Create an active record at revision one; reject a previously used ID.
+   * @param record - source-backed content admitted by the caller.
+   * @returns the immutable created record.
+   */
+  create(record: NewMemoryRecord): MemoryRecord {
     if (this.records.has(record.id)) throw new MemoryRecordError(`memory ${record.id} already exists`, 'MEMORY_REVISION_CONFLICT')
     const created: MemoryRecord = freezeRecord({ ...record, revision: 1, status: 'active' })
     this.records.set(created.id, created)
     return created
   }
 
-  /** Replace an active record only when its caller saw the current revision. */
-  supersede(id: MemoryId, expectedRevision: number, replacement: Omit<MemoryRecord, 'revision' | 'status' | 'supersedes'>): MemoryRecord {
+  /**
+   * Atomically retire an active record and create its same-scope successor.
+   * All validation precedes mutation. The old revision increments; the new ID
+   * starts at revision one. Previous snapshots remain unchanged.
+   * @param id - active record to retire.
+   * @param expectedRevision - version observed by the caller.
+   * @param replacement - new content with a never-used ID and the same scope.
+   * @returns the immutable successor carrying its predecessor ID.
+   */
+  supersede(id: MemoryId, expectedRevision: number, replacement: NewMemoryRecord): MemoryRecord {
     const previous = this.require(id)
     this.assertRevision(previous, expectedRevision)
-    if (previous.status !== 'active') throw new MemoryRecordError(`memory ${id} is deactivated`, 'MEMORY_ALREADY_DEACTIVATED')
+    this.assertActive(previous)
     if (replacement.id === id || this.records.has(replacement.id)) {
       throw new MemoryRecordError(`replacement memory ${replacement.id} already exists`, 'MEMORY_REVISION_CONFLICT')
+    }
+    if (previous.scope !== replacement.scope) {
+      throw new MemoryRecordError('memory correction must retain its scope', 'MEMORY_SCOPE_MISMATCH')
     }
     const retired = freezeRecord({ ...previous, revision: previous.revision + 1, status: 'superseded' })
     const next: MemoryRecord = freezeRecord({ ...replacement, revision: 1, status: 'active', supersedes: id })
@@ -76,25 +102,36 @@ export class MemoryRecordStore {
     return next
   }
 
-  /** Mark one active record unavailable without deleting its source history. */
+  /**
+   * Retire one active record without removing its source references.
+   * @param id - record to deactivate.
+   * @param expectedRevision - version observed by the caller.
+   * @returns the immutable retired record at its next revision.
+   */
   deactivate(id: MemoryId, expectedRevision: number): MemoryRecord {
     const previous = this.require(id)
     this.assertRevision(previous, expectedRevision)
-    if (previous.status !== 'active') throw new MemoryRecordError(`memory ${id} is already deactivated`, 'MEMORY_ALREADY_DEACTIVATED')
+    this.assertActive(previous)
     const next = freezeRecord({ ...previous, revision: previous.revision + 1, status: 'deactivated' })
     this.records.set(id, next)
     return next
   }
 
-  /** Return a detached immutable snapshot, or undefined when absent. */
+  /**
+   * Read the current record, including retired records, without granting access.
+   * @param id - exact record identifier.
+   * @returns an immutable record, or undefined when the ID is absent.
+   */
   get(id: MemoryId): MemoryRecord | undefined {
-    const record = this.records.get(id)
-    return record === undefined ? undefined : freezeRecord({ ...record, sourceRefs: [...record.sourceRefs] })
+    return this.records.get(id)
   }
 
-  /** Return every current record in insertion order. */
+  /**
+   * Inspect current records, including retired ones, in insertion order.
+   * @returns an immutable array unaffected by subsequent store operations.
+   */
   snapshot(): readonly MemoryRecord[] {
-    return [...this.records.values()].map(record => freezeRecord({ ...record, sourceRefs: [...record.sourceRefs] }))
+    return Object.freeze([...this.records.values()])
   }
 
   private require(id: MemoryId): MemoryRecord {
@@ -108,8 +145,18 @@ export class MemoryRecordStore {
       throw new MemoryRecordError(`memory ${record.id} revision conflict`, 'MEMORY_REVISION_CONFLICT')
     }
   }
+
+  private assertActive(record: MemoryRecord): void {
+    if (record.status !== 'active') {
+      throw new MemoryRecordError(`memory ${record.id} is ${record.status}`, 'MEMORY_INACTIVE')
+    }
+  }
 }
 
 function freezeRecord(record: MemoryRecord): MemoryRecord {
-  return Object.freeze({ ...record, sourceRefs: Object.freeze([...record.sourceRefs]) })
+  const [first, ...remaining] = record.sourceRefs
+  const sourceRefs: [MemorySourceRef, ...MemorySourceRef[]] = [
+    Object.freeze({ ...first }), ...remaining.map(ref => Object.freeze({ ...ref })),
+  ]
+  return Object.freeze({ ...record, sourceRefs: Object.freeze(sourceRefs) })
 }

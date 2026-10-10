@@ -428,4 +428,4 @@ PPT v2为4页主讲+2页备查，实际Keynote打开、六页备注回读和PDF�
 
 ### P1.1 Review
 
-新增 `packages/context/continuum`，当前是纯内存语义库，不接入产品 profile。`MemoryRecordStore` 的旧记录、新记录、来源引用、revision、superseded/deactivated 状态均为 immutable snapshot；冲突和重复 ID 不产生部分提交。`records.spec.ts` 4/4 通过，包级 Oxlint 与 TypeScript 构建通过。下一批必须复用现有 Session persistence，不得新增第二事实源。
+新增 `packages/context/continuum`，当前是纯内存语义库，不接入产品 profile。`MemoryRecordStore` 的旧记录、新记录、来源引用、revision、superseded/deactivated 状态均为 immutable snapshot；冲突和重复 ID 不产生部分提交。`records.spec.ts` 15/15 通过，包级 Oxlint、TypeScript 构建、README Model Experience、双语配对与文档门禁通过。下一批必须复用现有 Session persistence，不得新增第二事实源。

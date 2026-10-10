@@ -1,0 +1,46 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/context/continuum/README.md
+/:
+  en: 6fb045a72c72c7f5
+  zh: a5870b6378f92b46
+/continuum-record-semantics:
+  en: cfff0504a5714a34
+  zh: fe06f3b1c6eb7b1c
+/continuum-record-semantics/summary:
+  en: a8cb35dce4b7587b
+  zh: 448914a3c6922fe2
+/continuum-record-semantics/table-of-contents:
+  en: d152484eb41ac6b4
+  zh: 1d8cdedc2e2ba1d6
+/continuum-record-semantics/use-this-package:
+  en: 8eef98499fb270df
+  zh: ff57774ffb053c39
+/continuum-record-semantics/understand-the-implementation:
+  en: 04567d6da31d547e
+  zh: 3eca5493e0238f47
+/continuum-record-semantics/further-exploration:
+  en: dfb9e1d34df19b3f
+  zh: ed0bf49fdfe52536
+/continuum-record-semantics/model-experience:
+  en: 215e7ba838619b7b
+  zh: 215e7ba838619b7b
+/continuum-record-semantics/model-experience/record-semantics:
+  en: 017b7a6de664e87d
+  zh: 6b884fb6c27bb363
+/continuum-record-semantics/model-experience/record-semantics/what-the-model-sees:
+  en: 3f0b51f84375a644
+  zh: c00ab84fd75bc0ef
+/continuum-record-semantics/model-experience/record-semantics/token-effect:
+  en: 3db31a8f6b46fd9d
+  zh: c201bef80e05b7d3
+/continuum-record-semantics/model-experience/record-semantics/kv-cache-effect:
+  en: a0c8203ac3ee6398
+  zh: fbc9b83d42df3c2d
+/continuum-record-semantics/known-limitations-and-deferred-work:
+  en: fc0dbf5267497808
+  zh: 721fc96099b96142
+/continuum-record-semantics/known-limitations-and-deferred-work/dev-note:
+  en: d0b7d9cf2d07bcc6
+  zh: 0e8f06fe5ec49ae4

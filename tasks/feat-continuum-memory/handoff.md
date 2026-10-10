@@ -12,7 +12,7 @@
 - docs/feat-continuum-memory/continuum-memory-proposal.html：249 行；模块 D/I/R/J/C/O、P0–P5、摘要树/cache 取舍和三层真实验收门禁。
 - packages/core/agent-loop/tests/continuum-admission.spec.ts：312 行；8 项覆盖当步召回、完整 envelope 计量、最终路由、末端拒绝、重建、off、卸载和取消。
 - packages/core/agent-loop/package.json / pnpm-lock.yaml：测试所需 token-meter workspace devDependency。
-- packages/context/continuum/：P1.1 纯内存记录语义库、README 双语、包配置和 4 项单元测试；尚未写 Session 或磁盘。
+- packages/context/continuum/：P1.1 纯内存记录语义库、README 双语、包配置和 15 项单元测试；尚未写 Session 或磁盘。
 - tasks/todo.md：426 行；追加分模块 P0–P5 checklist 和结果；保留原有任务。
 - tasks/lessons.md：149 行；记录用户纠正的专属开关与原版兼容含义，避免误推无 Jev 产品模式。
 - tasks/feat-continuum-memory/handoff.md：本交接，包含范围、约束与冷启动路径。
@@ -49,7 +49,7 @@ Harness 持有事实、权限、预算、版本和执行权。模型提炼先成
 
 工作树：.Codex/worktrees/feat-continuum-memory。分支：feat-continuum-memory。从 main 当前基线创建；创建前已检查 status、diff、stash、branch、HEAD 和 worktree list，stash 为空。主目录已有 README 设计和未跟踪 undefined 文件，未带入或改动这些用户工作。运行源码、配置与服务器未变，分支未推送，CI 未触发。
 
-最终版 HTML 浏览器检查通过：桌面/手机无页面横向溢出，13 维对比表、模块/验收章节完整，无 console 错误。P0 测试使用 scripted adapter 和内存 Session，不证明磁盘持久化、真实模型效果或精确 token 上限。`node node_modules/vitest/vitest.mjs run packages/core/agent-loop/tests/continuum-admission.spec.ts` 通过 8/8；P1.1 `records.spec.ts` 通过 4/4；focused Oxlint 与两个局部 TypeScript 构建通过。`pnpm run test:docs` 已重跑 20/20；真实模型因缺 JEV_API_KEY/DEEPSEEK_API_KEY 未运行。
+最终版 HTML 浏览器检查通过：桌面/手机无页面横向溢出，13 维对比表、模块/验收章节完整，无 console 错误。P0 测试使用 scripted adapter 和内存 Session，不证明磁盘持久化、真实模型效果或精确 token 上限。P0 `continuum-admission.spec.ts` 通过 8/8；P1.1 `records.spec.ts` 通过 15/15；focused Oxlint、两个局部 TypeScript 构建、README Model Experience 和相对链接门禁通过。完整 `pnpm run test:docs` 正在最后一次重跑；真实模型因缺 JEV_API_KEY/DEEPSEEK_API_KEY 未运行。
 
 ## 冷启动 checklist
 
