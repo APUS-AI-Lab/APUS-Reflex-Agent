@@ -4,19 +4,19 @@
 
 - 当前为方案评审阶段，已创建 feat-continuum-memory 工作树，没有实现产品功能。
 - 推荐名称 APUS Continuum（连续记忆）；HTML 是本轮设计入口，候选名未做重名核验。
-- 默认自有 Reflex、其他 Jev、无 Jev Baseline 共享完整记忆能力；不启用 Continuum 时保持原行为。
+- 无限记忆为 Reflex 专属开关；关闭或未接入时兼容原版，不提供无 Reflex 的同等产品模式。
 - 下一步须取得用户对具体 HTML 设计的明确确认，再推进 M1 开发和验证。
 
 ## 本轮交付物
 
-- docs/feat-continuum-memory/continuum-memory-proposal.html：182 行；目标、组件图、三种装配、记忆与接口、运行语义、文件范围、对照验收和分期。
-- tasks/todo.md：404 行；追加 Continuum 设计、开发与验证 checklist 和结果；保留原有任务。
-- tasks/lessons.md：149 行；追加用户明确要求的默认 Reflex 与无 Jev 完整兼容原则。
+- docs/feat-continuum-memory/continuum-memory-proposal.html：209 行；目标、组件图、专属开关、记忆与接口、UniiChat 13 维横向表、文件范围和验收分期。
+- tasks/todo.md：405 行；追加 Continuum 设计、开发与验证 checklist 和结果；保留原有任务。
+- tasks/lessons.md：149 行；记录用户纠正的专属开关与原版兼容含义，避免误推无 Jev 产品模式。
 - tasks/feat-continuum-memory/handoff.md：56 行；本交接，包含范围、约束与冷启动路径。
 
 ## 设计约束
 
-Continuum 核心包含 Service Definition、Provider 和消费者，不依赖 System3/Jev；可选适配器连接 ctx.jev。APUS profile 显式选择 Reflex，通用组件使用 Baseline。关闭 Jev 不关闭记忆；缺失显式必需配置时报错，运行期超时/弃权才回退，用户取消不回退继续执行。
+Continuum 包含完整 Service Definition、Provider 和消费者；Reflex 通过 ctx.jev 管理记忆。底层存储、授权与预算模块化，但产品开启必须具有 Reflex 控制器。关闭或未接入回到原版；Baseline 只用于测试和有限故障兜底。显式开启缺必需配置时报错，运行故障显示降级，用户取消不继续执行。开关关闭不删除数据，后续请求停止记忆管理与注入。
 
 Harness 持有事实、权限、预算、版本和执行权。模型提炼先成为候选；明确用户来源或独立验证才能确认，不把模型摘要提升为用户指令。Markdown 是可读视图/导入格式。原事件与实际注入均须可追溯；回放禁止重新检索或再次调用 Jev。
 
@@ -37,8 +37,8 @@ Harness 持有事实、权限、预算、版本和执行权。模型提炼先成
 
 - [ ] 用户确认设计后，先读根 AGENTS.md、docs/architecture.md、docs/defensive-patterns.md、packages/AGENTS.md 和相关子树规则。
 - [ ] 验证新注入、实际路由、token-meter、compaction 的预算组合，再冻结 M1 接口和事件类型。
-- [ ] 实现独立 Continuum 的持久记忆事件、任务工作集、索引、原文回读、纠正/停用、权限和 Baseline。
-- [ ] 接入可选 Jev adapter，原版无 Jev 用例必须完整通过；Reflex 先 shadow，比较后再 active。
+- [ ] 实现 Continuum 的持久记忆事件、任务工作集、索引、原文回读、纠正/停用、权限和确定性兜底。
+- [ ] 接入 Reflex adapter 与专属开关；无 Reflex 兼容原版；用内部 Baseline 消融，先 shadow 再 active。
 - [ ] 按行为面构建、lint、单元/集成、keyless Session 与两个 SDK 快照；随后真实模型对照。
 - [ ] 用户明确授权前不推送、建 PR 或部署；推送前执行 dsh-pre-push-checks 与 Ruff 双检查。
 
@@ -46,7 +46,7 @@ Harness 持有事实、权限、预算、版本和执行权。模型提炼先成
 
 工作树：.Codex/worktrees/feat-continuum-memory。分支：worktree-feat-continuum-memory。从 main 的 bcbc2cc7e4 创建；创建前已检查 status、diff、stash、branch、HEAD 和 worktree list，stash 为空。主目录已有 README 设计和未跟踪 undefined 文件，未带入或改动这些用户工作。产品代码、运行配置与服务器均未变，未运行产品测试；新分支未推送，CI 未触发。
 
-最终 HTML 的 20 个链接、12 个 ID、SVG XML 与尾换行有效，无外部资源；1440px/390px 真实页面无横向溢出，图内可滚动，SVG 文本不越 viewBox，折叠交互通过，清空旧 console 后无错误。git diff --check 通过。仓库没有 node_modules，未安装依赖，未运行产品测试或全仓文档门禁；本轮仅提交设计文档，不推送。
+最终版 22 个链接、13 个 ID、SVG XML、尾换行及 git diff --check 通过；真实 1440px/390px 页面无横向溢出，13 维 5 列表完整，手机表内横向滚动且可聚焦，无 console 错误。独立审阅未发现对方能力失实、目标冒充当前或无 Reflex 产品模式残留。对比仅据作者设计与本地源码，未执行 UniiChat 原程序或新记忆模型评测。未安装依赖、未运行产品测试或全仓文档门禁；仅本地提交设计文档，不推送。
 
 ## 冷启动 checklist
 
