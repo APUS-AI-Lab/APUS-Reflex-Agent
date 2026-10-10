@@ -56,7 +56,14 @@ function pooled(resetAfterFailures?: number) {
 
 it('stays stuck on a stalled connection when no reset is configured', async () => {
   const h = pooled()
-  expect([await h.request(), await h.request(), await h.request()]).toEqual(['no response', 'no response', 'no response'])
+  const request = async () => {
+    const controller = new AbortController()
+    const response = h.request(controller.signal)
+    await vi.waitFor(() => { expect(fake.agents).toHaveLength(1) })
+    controller.abort()
+    return await response
+  }
+  expect([await request(), await request(), await request()]).toEqual(['no response', 'no response', 'no response'])
   expect(fake.agents).toHaveLength(1)
 })
 
