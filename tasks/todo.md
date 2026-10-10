@@ -425,10 +425,11 @@ PPT v2为4页主讲+2页备查，实际Keynote打开、六页备注回读和PDF�
 ### 完整测试与 UI/UX 验收（用户已授权）
 
 - [x] 补齐用户视角 UI/UX 标准：首次使用、配置反馈、进度与纠偏、取消及追加要求、上下文恢复、明暗/窄屏/键盘、桌面启动与重启。
-- [ ] 通过无内容修改的传输观测定位 Codex 等待位置，修复实际原因，完成重复失败及语义偏航的真实闭环与部署默认配置验收。
+- [ ] 通过无内容修改的传输观测定位 Codex 等待位置，修复实际原因，完成语义偏航的真实闭环与部署默认配置验收；重复失败真实闭环已单独通过。
 - [ ] 核对入口手动选型优先级、失败处理，以及配置服务地址/模型/effort 的实际生效链路。
 - [ ] 完成有限配对的路由及上下文缓存基准，保留失败、实际用量与性能限制。
-- [ ] 修复真实 UI/UX 问题并复测；独立审查与最终干净 Electron 包验收，按既有授权完成两仓提交和合并。
+- [x] 修复真实 UI/UX 问题并复测；独立审查与最终 Electron 正常、重启、Safe Mode 及配置恢复验收已完成。
+- [ ] 完成 200% 原生缩放验收、Frontend 提交与推送，并按既有授权完成两仓提交和合并。
 
 ## feat-reflex-control 收尾 Review（2026-10-10）
 
@@ -436,6 +437,7 @@ PPT v2为4页主讲+2页备查，实际Keynote打开、六页备注回读和PDF�
 - [x] F-01 Web Reflex 模型配置：真实连接判断、无效模型预期失败、low 保存、跨 server 进程重启恢复、实际请求采用 low、恢复 high 并清除用户覆盖项；脱敏报告写入 `docs/feat-reflex-control/evidence/reflex-settings-real.json`。
 - [x] 监控 UI/UX：加入明确 observing 状态、最近 12 条无内容执行时间线，新人工消息清除陈旧判断；projection/client focused tests、typecheck 通过。
 - [x] C-06 设计文档、验收清单、中英文配对记录和 handoff 已同步。
+- [x] 重复失败真实闭环：gpt-6 relay 在 300 秒预算内完成三次失败观察、Reflex 诊断、监督消息消费、修复、相关验证和 `improved`；受保护文件哈希保持不变，脱敏证据写入 `docs/feat-reflex-control/evidence/supervision-real-repeated-failure.json`。
 - [ ] Codex 真实语义偏航后的 realign→消费→相关 verification-target→improved 闭环仍未通过；不得以回归或受控 native recovery 代替。
-- [ ] Frontend 固定 Harness SHA、最终构建与 Electron 正常/safe mode 用户验收。
-- [ ] 最终 lint/build/test、MIT/NOTICE、文档门禁、Ruff 双检查，随后按授权 commit/push/PR/main 合并并回读远端。
+- [x] Frontend 已固定 Harness SHA、完成最终构建与 Electron 正常/Safe Mode 用户验收；200% 原生缩放尚未执行。
+- [ ] 最终门禁复核、Frontend commit/push、两仓 PR/main 合并并回读远端；Harness 已完成其 commit/push 与 Ruff 双检查。

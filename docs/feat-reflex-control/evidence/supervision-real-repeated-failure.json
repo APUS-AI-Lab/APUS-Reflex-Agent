@@ -1,0 +1,209 @@
+{
+  "scenario": "real-repeated-failure-correction",
+  "acceptanceRevision": "queued-supervision-real-fault-v1",
+  "model": "gpt-6-sol-relay",
+  "reasoningEffort": "low",
+  "budgetMs": 300000,
+  "stopReason": "completed",
+  "fixture": "isolated result.txt mismatch; three independent python3 verify.py failures were injected before Reflex advice; expected.txt and verify.py were protected.",
+  "assertions": {
+    "reflexObservedThreeFailures": true,
+    "adviceSource": "reflex-supervision",
+    "codexConsumedAdvice": true,
+    "resultMatchedExpected": true,
+    "verificationPassed": true,
+    "protectedFilesUnchanged": true,
+    "normalCompletion": true
+  },
+  "eventSequence": [
+    {
+      "type": "system3/reflex-evidence",
+      "at": 1791644327422,
+      "evidence": {
+        "operation": "verification",
+        "outcome": "failed"
+      }
+    },
+    {
+      "type": "system3/judgement",
+      "at": 1791644338571,
+      "outcome": "diagnose",
+      "reason": "judged",
+      "reflexChoice": "diagnose"
+    },
+    {
+      "type": "system3/reflex-supervision",
+      "at": 1791644338577,
+      "state": "inconclusive",
+      "action": "observe",
+      "evidenceCount": 1
+    },
+    {
+      "type": "system3/reflex-evidence",
+      "at": 1791644355907,
+      "evidence": {
+        "operation": "verification",
+        "outcome": "failed"
+      }
+    },
+    {
+      "type": "system3/judgement",
+      "at": 1791644364497,
+      "outcome": "diagnose",
+      "reason": "judged",
+      "reflexChoice": "diagnose"
+    },
+    {
+      "type": "system3/reflex-supervision",
+      "at": 1791644364499,
+      "state": "inconclusive",
+      "action": "observe",
+      "evidenceCount": 2
+    },
+    {
+      "type": "system3/reflex-evidence",
+      "at": 1791644372258,
+      "evidence": {
+        "operation": "verification",
+        "outcome": "failed"
+      }
+    },
+    {
+      "type": "system3/judgement",
+      "at": 1791644374280,
+      "outcome": "diagnose",
+      "reason": "judged",
+      "reflexChoice": "diagnose"
+    },
+    {
+      "type": "system3/reflex-supervision",
+      "at": 1791644374288,
+      "state": "intent",
+      "action": "diagnose",
+      "evidenceCount": 3
+    },
+    {
+      "type": "subagent/supervision-steer",
+      "at": 1791644374300,
+      "source": "reflex-supervision",
+      "provider": "codex"
+    },
+    {
+      "type": "system3/reflex-supervision",
+      "at": 1791644374300,
+      "state": "accepted",
+      "action": "diagnose",
+      "evidenceCount": 3
+    },
+    {
+      "type": "system3/reflex-evidence",
+      "at": 1791644431403,
+      "evidence": {
+        "operation": "diagnostic",
+        "outcome": "succeeded"
+      }
+    },
+    {
+      "type": "system3/judgement",
+      "at": 1791644436339,
+      "outcome": "inconclusive",
+      "reason": "unsure",
+      "improvedScore": 0.817574478416099
+    },
+    {
+      "type": "system3/reflex-supervision",
+      "at": 1791644436343,
+      "state": "inconclusive",
+      "action": "diagnose",
+      "evidenceCount": 4
+    },
+    {
+      "type": "system3/reflex-evidence",
+      "at": 1791644475996,
+      "evidence": {
+        "operation": "file-change",
+        "outcome": "succeeded"
+      }
+    },
+    {
+      "type": "system3/judgement",
+      "at": 1791644477874,
+      "outcome": "inconclusive",
+      "reason": "unsure",
+      "improvedScore": 0.3775406617944891
+    },
+    {
+      "type": "system3/reflex-supervision",
+      "at": 1791644477875,
+      "state": "inconclusive",
+      "action": "diagnose",
+      "evidenceCount": 5
+    },
+    {
+      "type": "system3/reflex-evidence",
+      "at": 1791644501556,
+      "evidence": {
+        "operation": "verification",
+        "outcome": "succeeded"
+      }
+    },
+    {
+      "type": "system3/judgement",
+      "at": 1791644506761,
+      "outcome": "improved",
+      "reason": "judged",
+      "improvedScore": 0.9991440995355838
+    },
+    {
+      "type": "system3/reflex-supervision",
+      "at": 1791644506765,
+      "state": "improved",
+      "action": "diagnose",
+      "evidenceCount": 6
+    }
+  ],
+  "artifactHashes": [
+    {
+      "name": "expected.txt",
+      "sha256": "bf042e6853235a2279429ad09533c09a6ec1fe4b02309b84d9c5c3d71847f391"
+    },
+    {
+      "name": "result.txt",
+      "sha256": "bf042e6853235a2279429ad09533c09a6ec1fe4b02309b84d9c5c3d71847f391"
+    },
+    {
+      "name": "verify.py",
+      "sha256": "fe18dc7e754974d5ada0b85d8897299a9eabd459b66f3bcf0bd9e3c932840e33"
+    },
+    {
+      "name": "ledger.py",
+      "unavailable": "Error"
+    },
+    {
+      "name": "finance/invoices.csv",
+      "unavailable": "Error"
+    },
+    {
+      "name": "finance/payments.csv",
+      "unavailable": "Error"
+    },
+    {
+      "name": "finance/remaining.csv",
+      "unavailable": "Error"
+    },
+    {
+      "name": "finance/test_remaining.py",
+      "unavailable": "Error"
+    },
+    {
+      "name": "marketing/landing.txt",
+      "unavailable": "Error"
+    },
+    {
+      "name": "marketing/campaign.txt",
+      "unavailable": "Error"
+    }
+  ],
+  "providerTelemetryCount": 91,
+  "capturedAt": 1791644522090
+}

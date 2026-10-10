@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-- 本轮能力仍为 WIP，未 commit / push / merge；上一批品牌、MIT 与 GitHub 工作已合 main。用户授权完成前后端并最终合 main，授权持续有效。
+- Harness 本轮实现已提交并推送：`d0836eff395ad54a032b3f1665741985ff7130f7`；尚未创建 PR 或合并 main。上一批品牌、MIT 与 GitHub 工作已合 main，用户授权完成前后端并最终合 main，授权持续有效。
 - 统一验收入口为 [测试验收目标清单](../../docs/feat-reflex-control/acceptance-checklist.zh.md)：37 项目标、12 条完整用户流程，分别标明真实证据、回归与缺口；收尾先核对此页。
 - Context v3 的 Host16 真实浏览器财务→完整 Host 重启→自动恢复，以及 TS/Python 录制与独立重放全部通过；旧误删、自动恢复失败与多余检索证据仍保留。
 - Goal 首轮 Codex 真实浏览器增量 JSON 任务通过；受控 native stall 恢复 v4 真实 API / Codex / 正常终态 / 产物通过。普通语义监督真实闭环仍未通过，不能以 SDK fixture 通过替代。
@@ -21,6 +21,7 @@
 - Context Host16：`evidence/browser-context-v3.json`、`reflex-context-v3-finance.png`、`reflex-context-v3-restored.png`。财务仅六次 read、无额外 memory 调用，必要金额保留，合计 1137.41；旧旅行行只从未发送尾部移出。完整退出重启后，同 Session 在首个模型请求前追加 `reflex-memory`，零工具调用回答四项原始事实；旧 44 条事件及输入哈希不变。
 - SDK Host16：TS context v3 / semantic verification-target refresh 与独立 replay 两场景均过；Python 两场景各 record 与独立 replay 通过。日志 `/private/tmp/reflex-final-sdk-ts-{refresh,replay}.log`、`/private/tmp/reflex-final-python-{context,semantic}-{record,replay}.log`。普通监督、Goal 和原生恢复另有已通过的录制/重放；不为无行为变化重复跑。
 - Goal：`evidence/browser-goal-json-independent.json`、`browser-goal-json-tests.log`、`reflex-goal-json-completed.png`；10 tests、金额与文件 hash 独立核对通过。
+- Repeated failure：`evidence/supervision-real-repeated-failure.json`；真实 gpt-6 relay 在 300 秒预算内完成三次失败、Reflex 诊断与监督消息消费、修复、相关验证和 `improved`，受保护文件 hash 未变。
 - Native recovery：`evidence/native-recovery-real-v4.json` / `.log`；127.41 秒内同 thread 续 turn，正常 completed、产物与验证脚本 hash 通过。
 - C-06：`evidence/cache-c06-real.json`；四个独立条件均通过答案、输入保护、Session JSONL 追加前缀、请求前缀、部署路由、稳定工具哈希、无运行时错误和启用条件的真实 `reflex/context-projection/remove`。
 - F-01：`evidence/reflex-settings-real.json`；规范模型连接判断通过、无效模型预期失败、low 保存后跨 server 进程重载并被真实请求消费，最后恢复 high 并删除用户覆盖项。
@@ -66,13 +67,14 @@ GitHub 操作须显式 `--repo cryptoSUN2049/APUS-Reflex-Harness` 或 Frontend�
 - [ ] 根据诊断决定下一次真实 semantic 验收。必须实际偏航→Reflex realign→provider 消费→相关 verification-target→improved，不能以普通完成或 SDK 模拟代替。
 - [x] 旧 doc-sync 九项失败分别补齐有效 PASS；只读文档编译 88 blocks、网站构建与 5862 片段引用通过。后续仅对新增验收清单及最终修改补相关检查。
 - [ ] 完成最后 review，并核对统一清单的手动选型优先级、服务地址/模型配置真实链路等新明确的证据缺口。
-- [ ] Harness Conventional Commit，取得 clean SHA；Frontend release workflow 固定该 SHA，完成真实发布包及 runtime 验收。
+- [x] Harness Conventional Commit，取得并推送 clean SHA；Frontend release workflow 已固定该 SHA。
+- [ ] Frontend Conventional Commit / push；完成真实发布包及 runtime 验收。
 - [ ] Electron 隔离环境正常启动与 safe mode 实测；最终 Frontend clean commit。现有 Frontend 61 tests、配置保存/隔离 9 tests、typecheck/build 不替代打包与 Electron。
 - [ ] 按授权 push / PR / 最终合 main；push 前遵循 pre-push skill，Ruff check . 与 format --check . 必须有覆盖最终变更的通过记录。不得覆盖主目录用户 WIP。
 
 ## 分支/部署状态
 
-Harness worktree：`/Users/gumpm5/Documents/Code/APUS-Reflex-Harness/.Codex/worktrees/feat-reflex-control`，分支 `feat-reflex-control`。Frontend 位于 `/Users/gumpm5/Documents/Code/APUS-Reflex-Frontend/.Codex/worktrees/feat-reflex-control`，同名分支。两者本轮均未 commit；各自 HEAD 与基线用 `git rev-parse HEAD origin/main` 核对。Frontend `.github/workflows/release.yml` 的 `SYSTEM3_HARNESS_REVISION` 仍是旧 pin，最终提交后须更新；本地 manifest `sourceDirty=true` 不算正式包。
+Harness worktree：`/Users/gumpm5/Documents/Code/APUS-Reflex-Harness/.Codex/worktrees/feat-reflex-control`，分支 `feat-reflex-control`，HEAD 为已推送的 `d0836eff395ad54a032b3f1665741985ff7130f7`。Frontend 位于 `/Users/gumpm5/Documents/Code/APUS-Reflex-Frontend/.Codex/worktrees/feat-reflex-control`，同名分支，仍有未提交改动；其 `.github/workflows/release.yml` 已更新为该 Harness SHA，但需随 Frontend 提交一起推送。Frontend 本地 manifest 在未提交前的 `sourceDirty=true` 不算正式包。
 
 Host16 完整通过并完成本轮 SDK/浏览器验收。Host17 已由 root 收集 exit0，session 22268，日志 `/private/tmp/reflex-control-host17.log`。Client11 / Web11 通过。C-06 real7 已完成且无活动模型进程；literal 诊断失败记录已落盘。所有 Web server7–16 已停止；以后新启动使用新编号并保留独立日志。
 

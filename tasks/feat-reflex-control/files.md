@@ -18,7 +18,7 @@ Current changed and untracked files relative to HEAD; line counts describe each 
 | `docs/event-producer-consumer.md` | 113 | 30245 |
 | `docs/event-producer-consumer.zh.md` | 115 | 30478 |
 | `docs/feat-reflex-control/acceptance-checklist.i18n.yaml` | 49 | 2096 |
-| `docs/feat-reflex-control/acceptance-checklist.md` | 136 | 19312 |
+| `docs/feat-reflex-control/acceptance-checklist.md` | 158 | 25551 |
 | `docs/feat-reflex-control/acceptance-checklist.zh.md` | 136 | 16881 |
 | `docs/feat-reflex-control/context-cache-design.i18n.yaml` | 22 | 986 |
 | `docs/feat-reflex-control/context-cache-design.md` | 45 | 9884 |
@@ -295,8 +295,15 @@ Current changed and untracked files relative to HEAD; line counts describe each 
 | `snapshots/sdk/reflex-supervision/system-prompt.expected.md` | 27 | 2478 |
 | `snapshots/sdk/reflex-supervision/tool-schemas.expected.json` | 618 | 25138 |
 | `snapshots/sdk/sdk.snapshot.ts` | 1236 | 62494 |
-| `tasks/feat-reflex-control/files.md` | 302 | 22637 |
-| `tasks/feat-reflex-control/handoff.md` | 83 | 13625 |
+| `tasks/feat-reflex-control/files.md` | 309 | 23035 |
+| `tasks/feat-reflex-control/handoff.md` | 98 | 16049 |
 | `tasks/lessons.md` | 165 | 18341 |
-| `tasks/todo.md` | 423 | 38530 |
+| `tasks/todo.md` | 443 | 41056 |
 | `tsconfig.base.json` | 562 | 49086 |
+
+## 收尾追加（2026-10-10）
+
+| `docs/feat-reflex-control/evidence/supervision-real-repeated-failure.i18n.yaml` | 7 | 479 |
+| `docs/feat-reflex-control/evidence/supervision-real-repeated-failure.json` | 209 | 5079 |
+| `docs/feat-reflex-control/evidence/supervision-real-repeated-failure.md` | 7 | 1031 |
+| `docs/feat-reflex-control/evidence/supervision-real-repeated-failure.zh.md` | 7 | 908 |
