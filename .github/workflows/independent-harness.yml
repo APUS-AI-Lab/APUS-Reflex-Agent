@@ -37,8 +37,8 @@ jobs:
           python-version: '3.12'
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - name: Install Ruff
-        run: python -m pip install ruff==0.13.3
+      - name: Install Python tooling
+        run: python -m pip install ruff==0.13.3 uv==0.11.23
       - name: Python lint and format
         run: |
           ruff check .
@@ -61,4 +61,4 @@ jobs:
       - name: Replay System3 and AG-UI persona sessions
         run: pnpm run test:snapshot snapshots/sdk/sdk.snapshot.ts -t 'system3-shadow|system3-entry-route|system3-completion-review|agui-persona'
       - name: Python SDK completion review
-        run: PYTHONPATH=python/sdk/src python scripts/smoke-python-runtime.py --scenario sdk-system3-completion-review --exe apps/cli/lib/bin.js
+        run: uv run --project python/sdk python scripts/smoke-python-runtime.py --scenario sdk-system3-completion-review --exe apps/cli/lib/bin.js

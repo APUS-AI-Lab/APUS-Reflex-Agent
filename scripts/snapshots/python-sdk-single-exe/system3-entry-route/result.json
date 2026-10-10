@@ -599,6 +599,9 @@
           "provider": "deepseek-official",
           "model": "smoke-model"
         },
+        "candidate": {
+          "id": "current"
+        },
         "elapsedMs": 0
       }
     },
@@ -1346,6 +1349,9 @@
             "selected": {
               "provider": "deepseek-official",
               "model": "smoke-model"
+            },
+            "candidate": {
+              "id": "current"
             },
             "elapsedMs": 0
           }

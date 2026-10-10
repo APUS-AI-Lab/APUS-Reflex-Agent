@@ -382,4 +382,4 @@ PPT v2为4页主讲+2页备查，实际Keynote打开、六页备注回读和PDF�
 - [x] Conventional Commits 与工作树 handoff。
 
 - [x] MIT 原版权、许可分发和上游致谢；GitHub 品牌描述、topics、反馈链接。
-- [ ] 按用户追加授权合并两仓 main，推送并核对 CI。
+- [x] 按用户追加授权合并两仓 main，推送并核对 CI；Python SDK CI 依赖与品牌期望补修后复验。
