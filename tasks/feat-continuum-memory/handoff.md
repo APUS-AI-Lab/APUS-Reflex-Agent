@@ -49,7 +49,7 @@ Harness 持有事实、权限、预算、版本和执行权。模型提炼先成
 
 工作树：.Codex/worktrees/feat-continuum-memory。分支：feat-continuum-memory。从 main 当前基线创建；创建前已检查 status、diff、stash、branch、HEAD 和 worktree list，stash 为空。主目录已有 README 设计和未跟踪 undefined 文件，未带入或改动这些用户工作。运行源码、配置与服务器未变，分支未推送，CI 未触发。
 
-最终版 HTML 浏览器检查通过：桌面/手机无页面横向溢出，13 维对比表、模块/验收章节完整，无 console 错误。P0 测试使用 scripted adapter 和内存 Session，不证明磁盘持久化、真实模型效果或精确 token 上限。P0 `continuum-admission.spec.ts` 通过 8/8；P1.1 `records.spec.ts` 通过 15/15；focused Oxlint、两个局部 TypeScript 构建、README Model Experience 和相对链接门禁通过。完整 `pnpm run test:docs` 正在最后一次重跑；真实模型因缺 JEV_API_KEY/DEEPSEEK_API_KEY 未运行。
+最终版 HTML 浏览器检查通过：桌面/手机无页面横向溢出，13 维对比表、模块/验收章节完整，无 console 错误。P0 测试使用 scripted adapter 和内存 Session，不证明磁盘持久化、真实模型效果或精确 token 上限。P0 `continuum-admission.spec.ts` 通过 8/8；P1.1 `records.spec.ts` 通过 15/15；focused Oxlint、两个局部 TypeScript 构建、README Model Experience 和相对链接门禁通过。完整 `pnpm run test:docs` 通过 20/20；真实模型因缺 JEV_API_KEY/DEEPSEEK_API_KEY 未运行。
 
 ## 冷启动 checklist
 
