@@ -3,5 +3,5 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/feat-reflex-control/evidence/supervision-real-repeated-failure.md
 /real-repeated-failure-supervision:
-  en: c9ec3209108f6314
-  zh: 9a2f8779c512a6c7
+  en: fdc8ec154f9c4db6
+  zh: 4037206e0916b602

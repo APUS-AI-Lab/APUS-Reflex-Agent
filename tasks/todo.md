@@ -431,6 +431,17 @@ PPT v2为4页主讲+2页备查，实际Keynote打开、六页备注回读和PDF�
 - [x] 修复真实 UI/UX 问题并复测；独立审查与最终 Electron 正常、重启、Safe Mode 及配置恢复验收已完成。
 - [ ] 完成 200% 原生缩放验收、Frontend 提交与推送，并按既有授权完成两仓提交和合并。
 
+### 2026-10-11 进度校正
+
+- [x] Harness 与 Frontend `feat-reflex-control` 修订已提交并推送；Frontend 已固定 Harness runtime，unsigned macOS arm64 目录包的 Electron 正常启动、Reflex 设置保存/重启、Safe Mode 与恢复已实测通过。
+- [x] 重复失败受控场景补齐脱敏 native `item/started` / `item/completed` 事件；S-01/S-05 在该 `semantic=false` 场景可审计通过，S-06 仍因缺少纠偏流程的结构化 `verification-target` 保持未完成。
+- [x] 语义监督真实试验已形成独立审计：[英文](../docs/feat-reflex-control/evidence/supervision-audit-20261011.md)、[中文](../docs/feat-reflex-control/evidence/supervision-audit-20261011.zh.md)、[JSON](../docs/feat-reflex-control/evidence/supervision-audit-20261011.json)。两次试验观察到 accepted realign 与 native 输入接收，但没有 target 或 `improved`，且不能证明纠偏消息导致后续财务工作；临时解析器/测试配置改动已撤回。
+- [ ] 真实发布默认配置的语义偏航闭环、健康长任务误干预对照、中途追加要求、原生 200% 缩放、签名/公证包、两仓 PR/main 合并仍未完成；不能据此宣布三项核心能力全部验收。
+
+#### Review
+
+本轮只收拢真实证据和交接状态，没有把失败试验改写成成功，也没有扩大严格 verification-target 解析器。文档会在提交前运行双语配对、`test:docs`、`git diff --check`，push 前运行 Ruff 双检查。
+
 ## feat-reflex-control 收尾 Review（2026-10-10）
 
 - [x] C-06 真实跨进程配对：四条件、12 轮、三个独立 CLI 进程；答案、按行 `remove`、恢复、输入/持久化前缀、请求前缀、路由和工具稳定性通过；脱敏报告写入 `docs/feat-reflex-control/evidence/cache-c06-real.json`。

@@ -307,3 +307,21 @@ Current changed and untracked files relative to HEAD; line counts describe each 
 | `docs/feat-reflex-control/evidence/supervision-real-repeated-failure.json` | 209 | 5079 |
 | `docs/feat-reflex-control/evidence/supervision-real-repeated-failure.md` | 7 | 1031 |
 | `docs/feat-reflex-control/evidence/supervision-real-repeated-failure.zh.md` | 7 | 908 |
+
+## 收尾追加（2026-10-11）
+
+| Path | Lines | Bytes |
+| --- | ---: | ---: |
+| `docs/feat-reflex-control/acceptance-checklist.i18n.yaml` | 52 | 2219 |
+| `docs/feat-reflex-control/acceptance-checklist.md` | 158 | 26998 |
+| `docs/feat-reflex-control/acceptance-checklist.zh.md` | 158 | 23562 |
+| `docs/feat-reflex-control/evidence/supervision-real-repeated-failure.i18n.yaml` | 7 | 479 |
+| `docs/feat-reflex-control/evidence/supervision-real-repeated-failure.json` | 228 | 5502 |
+| `docs/feat-reflex-control/evidence/supervision-real-repeated-failure.md` | 11 | 1892 |
+| `docs/feat-reflex-control/evidence/supervision-real-repeated-failure.zh.md` | 11 | 1646 |
+| `docs/feat-reflex-control/evidence/supervision-audit-20261011.i18n.yaml` | 7 | 471 |
+| `docs/feat-reflex-control/evidence/supervision-audit-20261011.json` | 319 | 9982 |
+| `docs/feat-reflex-control/evidence/supervision-audit-20261011.md` | 9 | 1666 |
+| `docs/feat-reflex-control/evidence/supervision-audit-20261011.zh.md` | 9 | 1380 |
+| `tasks/feat-reflex-control/handoff.md` | 99 | 17124 |
+| `tasks/todo.md` | 454 | 42550 |

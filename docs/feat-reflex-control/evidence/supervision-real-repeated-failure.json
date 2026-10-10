@@ -205,5 +205,24 @@
     }
   ],
   "providerTelemetryCount": 91,
-  "capturedAt": 1791644522090
+  "capturedAt": 1791644522090,
+  "actualScenarioConfig": {
+    "semantic": false,
+    "observationIntervalMs": 500,
+    "stallThresholdMs": 30000,
+    "yesProbability": 0.7
+  },
+  "nativeInputEvents": [
+    {
+      "at": 1791644402605,
+      "method": "item/started",
+      "supervisionInput": true
+    },
+    {
+      "at": 1791644402605,
+      "method": "item/completed",
+      "supervisionInput": true
+    }
+  ],
+  "semanticVerificationTarget": false
 }
