@@ -2,17 +2,19 @@
 
 ## TL;DR
 
-- 当前为方案评审阶段，已创建 feat-continuum-memory 工作树，没有实现产品功能。
+- 当前已进入分模块工程预览，使用 feat-continuum-memory 工作树；没有交付完整产品功能。
 - 推荐名称 APUS Continuum（连续记忆）；HTML 是本轮设计入口，候选名未做重名核验。
 - 无限记忆为 Reflex 专属开关；关闭或未接入时兼容原版，不提供无 Reflex 的同等产品模式。
-- 下一步须取得用户对具体 HTML 设计的明确确认，再推进 M1 开发和验证。
+- 用户已授权在同名 worktree 分支逐步拆分验证和实现；下一步完成 P0 基线，再进入 P1。
 
 ## 本轮交付物
 
-- docs/feat-continuum-memory/continuum-memory-proposal.html：209 行；目标、组件图、专属开关、记忆与接口、UniiChat 13 维横向表、文件范围和验收分期。
-- tasks/todo.md：405 行；追加 Continuum 设计、开发与验证 checklist 和结果；保留原有任务。
+- docs/feat-continuum-memory/continuum-memory-proposal.html：249 行；模块 D/I/R/J/C/O、P0–P5、摘要树/cache 取舍和三层真实验收门禁。
+- packages/core/agent-loop/tests/continuum-admission.spec.ts：312 行；8 项覆盖当步召回、完整 envelope 计量、最终路由、末端拒绝、重建、off、卸载和取消。
+- packages/core/agent-loop/package.json / pnpm-lock.yaml：测试所需 token-meter workspace devDependency。
+- tasks/todo.md：426 行；追加分模块 P0–P5 checklist 和结果；保留原有任务。
 - tasks/lessons.md：149 行；记录用户纠正的专属开关与原版兼容含义，避免误推无 Jev 产品模式。
-- tasks/feat-continuum-memory/handoff.md：56 行；本交接，包含范围、约束与冷启动路径。
+- tasks/feat-continuum-memory/handoff.md：本交接，包含范围、约束与冷启动路径。
 
 ## 设计约束
 
@@ -35,7 +37,7 @@ Harness 持有事实、权限、预算、版本和执行权。模型提炼先成
 
 ## 下一里程碑任务清单
 
-- [ ] 用户确认设计后，先读根 AGENTS.md、docs/architecture.md、docs/defensive-patterns.md、packages/AGENTS.md 和相关子树规则。
+- [x] 用户已确认分模块实施，已读根 AGENTS.md、docs/architecture.md、docs/defensive-patterns.md、packages/AGENTS.md 和相关子树规则。
 - [ ] 验证新注入、实际路由、token-meter、compaction 的预算组合，再冻结 M1 接口和事件类型。
 - [ ] 实现 Continuum 的持久记忆事件、任务工作集、索引、原文回读、纠正/停用、权限和确定性兜底。
 - [ ] 接入 Reflex adapter 与专属开关；无 Reflex 兼容原版；用内部 Baseline 消融，先 shadow 再 active。
@@ -44,13 +46,13 @@ Harness 持有事实、权限、预算、版本和执行权。模型提炼先成
 
 ## 分支、部署和验证状态
 
-工作树：.Codex/worktrees/feat-continuum-memory。分支：worktree-feat-continuum-memory。从 main 的 bcbc2cc7e4 创建；创建前已检查 status、diff、stash、branch、HEAD 和 worktree list，stash 为空。主目录已有 README 设计和未跟踪 undefined 文件，未带入或改动这些用户工作。产品代码、运行配置与服务器均未变，未运行产品测试；新分支未推送，CI 未触发。
+工作树：.Codex/worktrees/feat-continuum-memory。分支：feat-continuum-memory。从 main 当前基线创建；创建前已检查 status、diff、stash、branch、HEAD 和 worktree list，stash 为空。主目录已有 README 设计和未跟踪 undefined 文件，未带入或改动这些用户工作。运行源码、配置与服务器未变，分支未推送，CI 未触发。
 
-最终版 22 个链接、13 个 ID、SVG XML、尾换行及 git diff --check 通过；真实 1440px/390px 页面无横向溢出，13 维 5 列表完整，手机表内横向滚动且可聚焦，无 console 错误。独立审阅未发现对方能力失实、目标冒充当前或无 Reflex 产品模式残留。对比仅据作者设计与本地源码，未执行 UniiChat 原程序或新记忆模型评测。未安装依赖、未运行产品测试或全仓文档门禁；仅本地提交设计文档，不推送。
+最终版 HTML 浏览器检查通过：桌面/手机无页面横向溢出，13 维对比表、模块/验收章节完整，无 console 错误。P0 测试使用 scripted adapter 和内存 Session，不证明磁盘持久化、真实模型效果或精确 token 上限。`node node_modules/vitest/vitest.mjs run packages/core/agent-loop/tests/continuum-admission.spec.ts` 通过 8/8；focused Oxlint 通过；agent-loop 局部 TypeScript 构建在授权写入后通过。`pnpm run test:docs` 19/20 通过，repository references 因本交接文件历史短 commit hash 报错，待替换后重跑；真实模型因缺 JEV_API_KEY/DEEPSEEK_API_KEY 未运行。
 
 ## 冷启动 checklist
 
 1. 先读 docs/feat-continuum-memory/continuum-memory-proposal.html，再读本文件和 tasks/todo.md 的 Continuum 部分。
-2. 确认用户是否明确批准具体设计；仅要求输出 HTML 和准备工作树不等于跳过 Human Gate。
+2. 阅读 `tasks/todo.md` 的 P0–P5 清单；用户已授权同名 worktree 分模块实施，不重复请求同范围批准。
 3. 查看本工作树 status、branch 和 HEAD，勿把 main 上其他文档工作带入。
-4. 优先验证预算与同一步注入，再开始 M1；所有产品代码与测试在本工作树推进。
+4. 优先完成 P0.4 真实 A0/A1 基线；再实现 P1 记录/回读，所有产品代码与测试在本工作树推进。
