@@ -27,6 +27,8 @@ The Settings panel uses a shared 760 × 500 layout, bounded by the viewport. Lon
 <a id="use-this-package"></a>
 ## Use this package
 
+General Settings provides downloads of the complete MIT license and original copyright at `/LICENSE.txt` and dependency-specific notices at `/THIRD_PARTY_NOTICES.txt`. The Web distribution supplies these files; dependencies keep their own license terms.
+
 Users reach the shell through the sidebar's bottom Settings control; feature plugins contribute their pages and onboarding steps through the slot ledgers this shell projects. In both the expanded sidebar and collapsed rail, the control exposes the localized Settings label as its accessible name. A pale-yellow **Disconnected** action beside Settings indicates browser offline suspension; its permanent retry glyph marks the retry action, which the Chinese outage copy also names (连接异常，刷新重试). Every recovery attempt shows the shared ongoing loader beside **Reconnecting** with one to three dots advancing every 500ms, and an attempt stays visible for at least 800ms so brief retries do not flicker. Selecting either yellow state starts an immediate retry; press feedback stays within the warning palette. Recovery changes the region to pale-green **Connected** for two seconds from the moment the green pill becomes visible. The pill fades in on appearance, fades out over 150ms on removal, and sizes to its current label. Initial startup and uninterrupted healthy operation remain silent. The shell renders the modal panel, the navigation built from `settings.section` entries, and exactly one mounted onboarding step at a time.
 
 When the section navigation exceeds the panel's available height, the list scrolls independently of the settings content and keeps the Settings title fixed.

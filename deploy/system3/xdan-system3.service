@@ -1,5 +1,5 @@
 [Unit]
-Description=xDAN System3 authenticated Harness web service
+Description=APUS Reflex Harness authenticated Harness web service
 After=network-online.target
 Wants=network-online.target
 

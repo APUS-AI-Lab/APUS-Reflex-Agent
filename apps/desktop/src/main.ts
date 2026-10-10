@@ -366,7 +366,7 @@ async function main(): Promise<void> {
   // chrome and its content never mix languages.
   const showAbout = async (): Promise<void> => {
     await ordinaryMessageBox({ type: 'info', title: locale.messages.aboutMenu, message: locale.messages.aboutProduct,
-      detail: formatDesktopMessage(locale.messages.aboutVersion, { version: app.getVersion() }),
+      detail: `${formatDesktopMessage(locale.messages.aboutVersion, { version: app.getVersion() })}\n\n${locale.messages.welcomeDescription}\n\nCopyright (c) 2026 DeepSeek\n${locale.messages.upstreamThanks}`,
       buttons: [locale.messages.updateAcknowledge], cancelId: 0 })
   }
   const appPreload = fileURLToPath(new URL('./preload-app.cjs', import.meta.url))
@@ -874,11 +874,12 @@ async function main(): Promise<void> {
   const applicationIconPath = development ? join(app.getAppPath(), 'resources', 'icon-windows.png')
     : join(process.resourcesPath, 'icon.png')
   app.setAboutPanelOptions({
-    applicationName: 'DeepSeek Harness',
+    applicationName: 'APUS Reflex Harness',
     applicationVersion: app.getVersion(),
     // The release has no separate build number; omit Electron's bundle version.
     version: '',
-    copyright: '',
+    copyright: 'Copyright (c) 2026 DeepSeek',
+    credits: `${currentDesktopLocale().messages.welcomeDescription}\n${currentDesktopLocale().messages.upstreamThanks}`,
     iconPath: applicationIconPath,
   })
   // A custom application menu replaces Electron's default menu, so macOS needs
@@ -901,6 +902,11 @@ async function main(): Promise<void> {
         click: () => { void showAbout().catch((error: unknown) => { console.error(error) }) } }
       : { label: currentDesktopLocale().messages.aboutMenu, role: 'about' },
     { type: 'separator' },
+    { label: currentDesktopLocale().messages.licensesMenu, click: () => {
+      const directory = development ? fileURLToPath(new URL('../../../', import.meta.url)) : join(process.resourcesPath, 'licenses')
+      void shell.openPath(directory).then((error) => { if (error) console.error(error) })
+        .catch((error: unknown) => { console.error(error) })
+    } },
     { label: currentDesktopLocale().messages.checkUpdatesMenu, click: () => { void openUpdatePrompt(true) } },
     ...development ? [
       { type: 'separator' as const },

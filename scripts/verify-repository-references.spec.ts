@@ -79,6 +79,9 @@ describe('maintained repository reference policy', () => {
     fixture.write('tasks/feat-system3-g1/review-regression.json', JSON.stringify({ revision: fixture.commit.toUpperCase() }))
     fixture.write('docs/feat-jev-decision-kernel/completion-browser-result.json', JSON.stringify({ uiVersion: `0.1.7-rc.2-${fixture.commit}-dirty` }))
 
+    fixture.write('tasks/chore-apus-fork/import-verification.json', JSON.stringify({ importedMainAtVerification: fixture.commit }))
+    fixture.write('tasks/chore-apus-fork/branch-cleanup-verification.json', JSON.stringify({ retainedBranches: { main: fixture.commit } }))
+
     expect(scanRepositoryReferences(fixture.root)).toEqual([])
   })
 
@@ -93,6 +96,10 @@ describe('maintained repository reference policy', () => {
       'tasks/feat-system3-g1/review-regression.md',
       'docs/feat-jev-decision-kernel/completion-browser-result.json.bak',
       'docs/feat-jev-decision-kernel/feature-acceptance.json',
+      'tasks/chore-apus-fork/handoff.md',
+      'tasks/chore-apus-fork/import-verification.json.bak',
+      'tasks/chore-apus-fork/subdir/branch-cleanup-verification.json',
+      'tasks/chore-apus-fork/other.json',
     ]
     for (const file of ordinaryPaths) fixture.write(file, JSON.stringify({ revision: fixture.commit }))
 
@@ -108,6 +115,8 @@ describe('maintained repository reference policy', () => {
       'docs/feat-system3-g1/desktop-acceptance.json',
       'docs/feat-system3-g1/deployment-final.json',
       'tasks/feat-system3-g1/review-regression.json',
+      'tasks/chore-apus-fork/import-verification.json',
+      'tasks/chore-apus-fork/branch-cleanup-verification.json',
     ]
     for (const file of evidencePaths) {
       fixture.write(file, `${JSON.stringify({ sourceRevision: fixture.commit, repository: organizationUrl })}\n`

@@ -1,4 +1,4 @@
-You are an AI agent powered by DeepSeek Harness.
+You are an AI agent powered by APUS Reflex Harness.
 
 You are a coding assistant powered by the deepseek-v4-flash model. Your working directory is {{cwd}}.
 
@@ -446,6 +446,7 @@ interface ToolOutputMap {
     kind: "foreground";
     runId: string;
     output: JsonValue[];
+    steers?: string[];
   };
   subagent_fork: {
     kind: "background";
@@ -457,6 +458,7 @@ interface ToolOutputMap {
     kind: "foreground";
     runId: string;
     output: JsonValue[];
+    steers?: string[];
   };
   todo_write: {
     todos: ({

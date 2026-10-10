@@ -1,6 +1,6 @@
 - region "How much detail would you like to see?":
   - heading "How much detail would you like to see?" [level=1]
-  - paragraph: This only changes how progress is shown, not what DeepSeek Harness can do.
+  - paragraph: This only changes how progress is shown, not what APUS Reflex Harness can do.
   - radiogroup "How much detail would you like to see?":
     - radio "Results only See just the results in a clean, simple interface"
     - radio "Key details Focus on results, with only the most important steps and actions shown"

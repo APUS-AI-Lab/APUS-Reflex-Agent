@@ -1,8 +1,10 @@
-# xDAN System3 Harness
+# APUS Reflex Harness
 
 English | [中文](README.zh.md)
 
-> **Jev Native + DSH Native.** System3 combines System1 (Jev-like bounded semantic decisions) with System2 (high-performance reasoning and generation), coordinated by DSH’s native state and execution mechanisms. This repository provides typed Jev decisions, replayable receipts, opt-in entry model routing through the native Web/API controller, and bounded native Skill selection. Start with the [integration guide](docs/feat-independent-harness/README.md).
+> **瞬策 · 瞬时执行，深度思考。** APUS Reflex Harness pursues Model as Harness: coordinated decision and reasoning models manage tools, skills, memory, context, and subagents; the DSH runtime executes actions, enforces permissions, and records facts. Integration and verification limits are documented below.
+
+See the [brand definition and assembly guide](docs/feat-apus-brand/branding.md) for shared assets, compatibility identifiers, and service ownership.
 
 ## Architecture
 
@@ -18,7 +20,7 @@ DeepSeek Harness (`dsh`) is an open-source agent harness developed by [DeepSeek 
 
 It is built on an **everything-is-a-plugin** architecture and powered by [Cordis](https://github.com/cordiverse/cordis), whose design is described in [_A Programming Paradigm for Spatiotemporal Composability_](https://arxiv.org/abs/2608.25512).
 
-Documentation: [https://deepseek-harness.github.io/deepseek-harness/](https://deepseek-harness.github.io/deepseek-harness/)
+Upstream DeepSeek Harness documentation (not the APUS build guide): [https://deepseek-harness.github.io/deepseek-harness/](https://deepseek-harness.github.io/deepseek-harness/)
 
 ## Developer preview
 
@@ -30,7 +32,7 @@ Review the [safety notice](SAFETY.md) before running the project.
 
 ### Run the upstream distribution from `npm`
 
-The npm package below is the upstream distribution; it does not install this fork’s Jev additions. Install `Node.js`, then run:
+The npm package below is the upstream distribution; it does not install APUS Reflex Harness or this fork’s Jev additions. Install `Node.js`, then run:
 
 ```sh
 npx @deepseek-ai/dsh web
@@ -44,8 +46,8 @@ The command starts the Web UI at `http://127.0.0.1:3080` by default and opens it
 To run from a repository checkout:
 
 ```sh
-git clone https://github.com/cryptoSUN2049/xDAN-System3-Harness.git
-cd xDAN-System3-Harness
+git clone https://github.com/cryptoSUN2049/APUS-Reflex-Harness.git
+cd APUS-Reflex-Harness
 pnpm install
 pnpm run build
 pnpm dsh web
@@ -55,7 +57,7 @@ pnpm dsh web
 
 ## Community and support
 
-- Submit feedback or bug reports through [GitHub Discussions](https://github.com/deepseek-ai/deepseek-harness/discussions).
+- Submit feedback or bug reports through [GitHub Issues](https://github.com/cryptoSUN2049/APUS-Reflex-Harness/issues).
 - Add the [`dsh-plugin`](https://github.com/topics/dsh-plugin) topic to your plugin repository for discoverability.
 - Join <a href="https://discord.gg/Ycq5dCaS4">DeepSeek Harness Discord community</a>.
 
@@ -85,6 +87,8 @@ For agents, follow [AGENTS.md](AGENTS.md).
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE). The original DeepSeek copyright and permission notice are retained in full.
+
+We thank DeepSeek and the DeepSeek Harness contributors for the upstream agent runtime, Shigma and the Cordis contributors for the plugin framework, and all third-party maintainers whose work supports APUS Reflex Harness. APUS branding does not replace their authorship or imply their endorsement.
 
 Third-party dependencies and their licenses are disclosed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

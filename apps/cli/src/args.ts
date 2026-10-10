@@ -152,7 +152,7 @@ export function parseDshArgs(argv: readonly string[], version: string): DshInvoc
     .name('dsh')
     .version(version, '-V, --version', 'output the version number')
     .usage('[--profile] <name> [options] [app-args...]\n       dsh plugin --profile <name> <pnpm-args...>')
-    .description('dsh: boot a DeepSeek Harness profile — an ordered stack of plugin-bundle patch layers under your own overrides.')
+    .description('dsh: boot an APUS Reflex Harness profile — an ordered stack of plugin-bundle patch layers under your own overrides.')
     .addHelpText('after', HELP_EXAMPLES)
     .exitOverride()
     // The launcher's flags come first and end at the first token it does not

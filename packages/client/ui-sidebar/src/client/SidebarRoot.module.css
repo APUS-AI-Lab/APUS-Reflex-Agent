@@ -30,7 +30,7 @@
 
 /* Rail geometry (figma rail spec): 36x36 control boxes centered in the 56px
    rail (10px side padding), 12px vertical rhythm, 18px from the rail top to
-   the whale's box (24px to the 24-wide whale glyph itself). */
+   the letter mark's box (24px to the 24-wide letter mark glyph itself). */
 .root.collapsed {
   padding: 18px 10px 6px;
 }
@@ -287,13 +287,13 @@
   min-width: 0;
   height: 24px;
   font-size: 18px;
-  font-weight: 600;
+  font-weight: 500;
   line-height: 24px;
   letter-spacing: 0.04em;
 }
 
 .fallbackBrandName {
-  font-size: 17px;
+  font-size: 12px;
   letter-spacing: 0px;
   white-space: nowrap;
 }
@@ -349,7 +349,7 @@
   border-radius: var(--dsw-radius-md);
 }
 
-/* Rail logo swap: collapsed, the toggle rests as the whale mark (brand ink,
+/* Rail logo swap: collapsed, the toggle rests as the letter mark mark (brand ink,
    no hover circle) and hovering reveals the panel icon — the expand
    affordance (figma sidebar-hover flow). Expanded it is a plain panel icon. */
 .collapsed .toggle .panelIcon {

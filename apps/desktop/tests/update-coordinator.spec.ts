@@ -1,4 +1,7 @@
 import { EventEmitter } from 'node:events'
+import { mkdtempSync, writeFileSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { AppUpdater } from 'electron-updater'
 import { DESKTOP_HOST_PROTOCOL_VERSION } from '../src/host-protocol.ts'
@@ -72,6 +75,28 @@ function fixture() {
 }
 
 describe('desktop update coordinator', () => {
+  it('does not query an upstream feed with the default APUS update policy', async () => {
+    const f = fixture()
+    const { app } = await import('electron')
+    const previousPackaged = app.isPackaged
+    const previousResources = Object.getOwnPropertyDescriptor(process, 'resourcesPath')
+    const resources = mkdtempSync(join(tmpdir(), 'apus-update-disabled-'))
+    writeFileSync(join(resources, 'app-update.yml'), 'provider: generic\nurl: https://download.deepseek.com/\n')
+    Object.defineProperty(app, 'isPackaged', { configurable: true, value: true })
+    Object.defineProperty(process, 'resourcesPath', { configurable: true, value: resources })
+    try {
+      const coordinator = new DesktopUpdateCoordinator(state => state, async () => true, f.updater)
+      coordinators.push(coordinator)
+      expect(await coordinator.check(true)).toMatchObject({ phase: 'error', failedOperation: 'check' })
+      expect(f.checkForUpdates).not.toHaveBeenCalled()
+    } finally {
+      Object.defineProperty(app, 'isPackaged', { configurable: true, value: previousPackaged })
+      if (previousResources === undefined) Reflect.deleteProperty(process, 'resourcesPath')
+      else Object.defineProperty(process, 'resourcesPath', previousResources)
+      rmSync(resources, { recursive: true, force: true })
+    }
+  })
+
   it('keeps safe preparation diagnostics separate and clears them on an explicit retry', async () => {
     const f = fixture()
     await f.coordinator.check()

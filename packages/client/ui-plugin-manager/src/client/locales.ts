@@ -63,7 +63,7 @@ export const zh = {
   installGuideExampleLabel: '示例：',
   installGuideFill: '填入示例',
   installGuideFillAria: '填入示例 {example}',
-  installGuideSafety: '请确认插件来源可信。插件在本机以你的权限运行，来源不明的插件可能损坏 DeepSeek Harness，或读取和泄露你的数据。',
+  installGuideSafety: '请确认插件来源可信。插件在本机以你的权限运行，来源不明的插件可能损坏 APUS Reflex Harness，或读取和泄露你的数据。',
   registryToggle: '安装源',
   registryLegend: '从哪个 npm 源下载插件',
   registryDefault: '默认安装源',
@@ -185,8 +185,8 @@ export const zh = {
   reasonStopProfile: '这个 profile 没有启用 HMR，正在使用的包要停止后用 dsh plugin 卸载',
   reasonBundleInUse: '其他配置仍在使用这个组合包的组件，请先停用它们',
   reasonStaleApproval: '待允许的安装脚本列表已变化，请重新安装以刷新',
-  reasonIncompatibleVersion: '{plugin} 与 DSH {runtime} 不兼容（要求 {peers}），运行它可能导致崩溃或数据丢失。请安装与当前 DSH 兼容的插件版本。',
-  reasonIncompatibleVersionUnnamed: '这个插件与当前 DSH 版本不兼容，运行它可能导致崩溃或数据丢失',
+  reasonIncompatibleVersion: '{plugin} 与 APUS Reflex Harness {runtime} 不兼容（要求 {peers}），运行它可能导致崩溃或数据丢失。请安装与当前 APUS Reflex Harness 兼容的插件版本。',
+  reasonIncompatibleVersionUnnamed: '这个插件与当前 APUS Reflex Harness 版本不兼容，运行它可能导致崩溃或数据丢失',
   reasonOperationError: 'Host 报告了一个错误',
 } satisfies Record<string, string>
 
@@ -256,7 +256,7 @@ export const en = {
   installGuideExampleLabel: 'Example: ',
   installGuideFill: 'Use example',
   installGuideFillAria: 'Use the example {example}',
-  installGuideSafety: 'Install only plugins you trust: they run with your permissions and can damage DeepSeek Harness or leak your data.',
+  installGuideSafety: 'Install only plugins you trust: they run with your permissions and can damage APUS Reflex Harness or leak your data.',
   registryToggle: 'Registry',
   registryLegend: 'The npm registry the plugin is downloaded from',
   registryDefault: 'Default registry',
@@ -378,7 +378,7 @@ export const en = {
   reasonStopProfile: 'This profile runs without HMR; stop it and uninstall the package with dsh plugin.',
   reasonBundleInUse: 'Other configuration still uses this bundle\'s components; switch them off first.',
   reasonStaleApproval: 'The pending script approvals changed; install again to refresh them.',
-  reasonIncompatibleVersion: '{plugin} is incompatible with DSH {runtime} (requires {peers}); running it may cause crashes or data loss. Install a plugin version compatible with this DSH.',
-  reasonIncompatibleVersionUnnamed: 'This plugin is incompatible with the running DSH version; running it may cause crashes or data loss.',
+  reasonIncompatibleVersion: '{plugin} is incompatible with APUS Reflex Harness {runtime} (requires {peers}); running it may cause crashes or data loss. Install a plugin version compatible with this APUS Reflex Harness.',
+  reasonIncompatibleVersionUnnamed: 'This plugin is incompatible with the running APUS Reflex Harness version; running it may cause crashes or data loss.',
   reasonOperationError: 'The Host reported an error.',
 } satisfies Record<PluginManagerLocaleKey, string>

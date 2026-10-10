@@ -109,7 +109,8 @@ body {
   font-weight: 300;
   line-height: 40px;
   text-align: center;
-  white-space: nowrap;
+  width: 100%;
+  min-width: 0;
 }
 
 .tagline h1,

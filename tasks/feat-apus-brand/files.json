@@ -1,0 +1,1727 @@
+[
+  {
+    "path": "CONTRIBUTING.i18n.yaml",
+    "lines": 7,
+    "bytes": 382
+  },
+  {
+    "path": "CONTRIBUTING.md",
+    "lines": 23,
+    "bytes": 1650
+  },
+  {
+    "path": "CONTRIBUTING.zh.md",
+    "lines": 23,
+    "bytes": 1508
+  },
+  {
+    "path": "README.i18n.yaml",
+    "lines": 37,
+    "bytes": 1219
+  },
+  {
+    "path": "README.md",
+    "lines": 94,
+    "bytes": 5427
+  },
+  {
+    "path": "README.zh.md",
+    "lines": 115,
+    "bytes": 5999
+  },
+  {
+    "path": "apps/cli/src/args.ts",
+    "lines": 211,
+    "bytes": 10029
+  },
+  {
+    "path": "apps/desktop/README.i18n.yaml",
+    "lines": 70,
+    "bytes": 2575
+  },
+  {
+    "path": "apps/desktop/README.md",
+    "lines": 461,
+    "bytes": 107841
+  },
+  {
+    "path": "apps/desktop/README.zh.md",
+    "lines": 463,
+    "bytes": 95781
+  },
+  {
+    "path": "apps/desktop/electron-builder.config.d.mts",
+    "lines": 80,
+    "bytes": 3285
+  },
+  {
+    "path": "apps/desktop/installer/assets/brand-2x.png",
+    "lines": null,
+    "bytes": 13960
+  },
+  {
+    "path": "apps/desktop/installer/assets/brand-dark-2x.png",
+    "lines": null,
+    "bytes": 11721
+  },
+  {
+    "path": "apps/desktop/installer/assets/brand-dark.png",
+    "lines": null,
+    "bytes": 5000
+  },
+  {
+    "path": "apps/desktop/installer/assets/brand.png",
+    "lines": null,
+    "bytes": 5955
+  },
+  {
+    "path": "apps/desktop/installer/assets/uninstaller-sidebar.png",
+    "lines": null,
+    "bytes": 4127
+  },
+  {
+    "path": "apps/desktop/installer/extract-report.h",
+    "lines": 327,
+    "bytes": 14917
+  },
+  {
+    "path": "apps/desktop/installer/strings.nsh",
+    "lines": 57,
+    "bytes": 5966
+  },
+  {
+    "path": "apps/desktop/renderer/assets/welcome-brand.svg",
+    "lines": 1,
+    "bytes": 216
+  },
+  {
+    "path": "apps/desktop/renderer/welcome.css",
+    "lines": 344,
+    "bytes": 7433
+  },
+  {
+    "path": "apps/desktop/resources/icon-macos.png",
+    "lines": null,
+    "bytes": 44290
+  },
+  {
+    "path": "apps/desktop/resources/icon-macos.svg",
+    "lines": 1,
+    "bytes": 289
+  },
+  {
+    "path": "apps/desktop/resources/icon-windows.png",
+    "lines": null,
+    "bytes": 44290
+  },
+  {
+    "path": "apps/desktop/resources/icon-windows.svg",
+    "lines": 1,
+    "bytes": 289
+  },
+  {
+    "path": "apps/desktop/resources/icon.png",
+    "lines": null,
+    "bytes": 44290
+  },
+  {
+    "path": "apps/desktop/resources/icon.svg",
+    "lines": 1,
+    "bytes": 289
+  },
+  {
+    "path": "apps/desktop/resources/tray-windows.ico",
+    "lines": null,
+    "bytes": 5504
+  },
+  {
+    "path": "apps/desktop/scripts/desktop-build-version-discovery.ts",
+    "lines": 156,
+    "bytes": 7934
+  },
+  {
+    "path": "apps/desktop/scripts/desktop-policy-environment.d.mts",
+    "lines": 15,
+    "bytes": 643
+  },
+  {
+    "path": "apps/desktop/scripts/desktop-policy-environment.mjs",
+    "lines": 45,
+    "bytes": 2926
+  },
+  {
+    "path": "apps/desktop/scripts/desktop-upload-plan.ts",
+    "lines": 287,
+    "bytes": 11573
+  },
+  {
+    "path": "apps/desktop/scripts/development-app.ts",
+    "lines": 84,
+    "bytes": 3858
+  },
+  {
+    "path": "apps/desktop/scripts/electron-builder-config.mjs",
+    "lines": 251,
+    "bytes": 13499
+  },
+  {
+    "path": "apps/desktop/scripts/generate-brand-assets.ts",
+    "lines": 69,
+    "bytes": 3948
+  },
+  {
+    "path": "apps/desktop/scripts/installed-update-distribution.ts",
+    "lines": 74,
+    "bytes": 4320
+  },
+  {
+    "path": "apps/desktop/scripts/package-macos.ts",
+    "lines": 135,
+    "bytes": 6372
+  },
+  {
+    "path": "apps/desktop/scripts/package-target.ts",
+    "lines": 503,
+    "bytes": 24752
+  },
+  {
+    "path": "apps/desktop/scripts/render-tray-icon.ts",
+    "lines": 118,
+    "bytes": 5295
+  },
+  {
+    "path": "apps/desktop/scripts/smoke-packaged-runtime.ts",
+    "lines": 23,
+    "bytes": 1668
+  },
+  {
+    "path": "apps/desktop/src/locale.ts",
+    "lines": 345,
+    "bytes": 18881
+  },
+  {
+    "path": "apps/desktop/src/main.ts",
+    "lines": 1299,
+    "bytes": 65175
+  },
+  {
+    "path": "apps/desktop/src/update-coordinator.ts",
+    "lines": 190,
+    "bytes": 9033
+  },
+  {
+    "path": "apps/desktop/tests/background-notice.spec.ts",
+    "lines": 95,
+    "bytes": 4249
+  },
+  {
+    "path": "apps/desktop/tests/crash-report.spec.ts",
+    "lines": 117,
+    "bytes": 5967
+  },
+  {
+    "path": "apps/desktop/tests/desktop-build-version-discovery.spec.ts",
+    "lines": 82,
+    "bytes": 3781
+  },
+  {
+    "path": "apps/desktop/tests/desktop-policy-environment.spec.ts",
+    "lines": 59,
+    "bytes": 4183
+  },
+  {
+    "path": "apps/desktop/tests/desktop-upload-plan.spec.ts",
+    "lines": 252,
+    "bytes": 10927
+  },
+  {
+    "path": "apps/desktop/tests/expected/about-panel.json",
+    "lines": 76,
+    "bytes": 2107
+  },
+  {
+    "path": "apps/desktop/tests/expected/application-menu-en-US.json",
+    "lines": 18,
+    "bytes": 258
+  },
+  {
+    "path": "apps/desktop/tests/expected/application-menu-zh-CN.json",
+    "lines": 18,
+    "bytes": 267
+  },
+  {
+    "path": "apps/desktop/tests/expected/fatal-address-in-use-en.txt",
+    "lines": 5,
+    "bytes": 262
+  },
+  {
+    "path": "apps/desktop/tests/expected/fatal-address-in-use-zh-CN.txt",
+    "lines": 5,
+    "bytes": 222
+  },
+  {
+    "path": "apps/desktop/tests/expected/fatal-dialog-en.txt",
+    "lines": 9,
+    "bytes": 338
+  },
+  {
+    "path": "apps/desktop/tests/expected/fatal-dialog-with-report-en.txt",
+    "lines": 10,
+    "bytes": 455
+  },
+  {
+    "path": "apps/desktop/tests/expected/fatal-dialog-with-report-zh-CN.txt",
+    "lines": 10,
+    "bytes": 411
+  },
+  {
+    "path": "apps/desktop/tests/expected/fatal-dialog-zh-CN.txt",
+    "lines": 9,
+    "bytes": 298
+  },
+  {
+    "path": "apps/desktop/tests/expected/test-release-upload-mac-arm64.json",
+    "lines": 19,
+    "bytes": 1491
+  },
+  {
+    "path": "apps/desktop/tests/expected/test-release-upload-mac-x64.json",
+    "lines": 19,
+    "bytes": 1459
+  },
+  {
+    "path": "apps/desktop/tests/expected/test-release-upload-win-x64.json",
+    "lines": 16,
+    "bytes": 1337
+  },
+  {
+    "path": "apps/desktop/tests/expected/update-restart-darwin-en-US.json",
+    "lines": 7,
+    "bytes": 230
+  },
+  {
+    "path": "apps/desktop/tests/expected/update-restart-darwin-zh-CN.json",
+    "lines": 7,
+    "bytes": 214
+  },
+  {
+    "path": "apps/desktop/tests/expected/welcome/en-api-key.expected.txt",
+    "lines": 8,
+    "bytes": 223
+  },
+  {
+    "path": "apps/desktop/tests/expected/welcome/en-timeout.expected.txt",
+    "lines": 6,
+    "bytes": 110
+  },
+  {
+    "path": "apps/desktop/tests/expected/welcome/en-waiting.expected.txt",
+    "lines": 7,
+    "bytes": 197
+  },
+  {
+    "path": "apps/desktop/tests/expected/welcome/en.expected.txt",
+    "lines": 6,
+    "bytes": 122
+  },
+  {
+    "path": "apps/desktop/tests/expected/welcome/zh-CN-api-key.expected.txt",
+    "lines": 8,
+    "bytes": 206
+  },
+  {
+    "path": "apps/desktop/tests/expected/welcome/zh-CN-timeout.expected.txt",
+    "lines": 6,
+    "bytes": 115
+  },
+  {
+    "path": "apps/desktop/tests/expected/welcome/zh-CN-waiting.expected.txt",
+    "lines": 7,
+    "bytes": 188
+  },
+  {
+    "path": "apps/desktop/tests/expected/welcome/zh-CN.expected.txt",
+    "lines": 6,
+    "bytes": 133
+  },
+  {
+    "path": "apps/desktop/tests/fatal-recovery.spec.ts",
+    "lines": 241,
+    "bytes": 12652
+  },
+  {
+    "path": "apps/desktop/tests/fixtures/installed-update-packaging.mjs",
+    "lines": 19,
+    "bytes": 1037
+  },
+  {
+    "path": "apps/desktop/tests/installed-update-distribution.spec.ts",
+    "lines": 64,
+    "bytes": 3780
+  },
+  {
+    "path": "apps/desktop/tests/installed-update-package-content.spec.ts",
+    "lines": 270,
+    "bytes": 16018
+  },
+  {
+    "path": "apps/desktop/tests/installed-update-publication.spec.ts",
+    "lines": 179,
+    "bytes": 11417
+  },
+  {
+    "path": "apps/desktop/tests/installer-packaging.spec.ts",
+    "lines": 99,
+    "bytes": 5726
+  },
+  {
+    "path": "apps/desktop/tests/macos-app-update-config.spec.ts",
+    "lines": 66,
+    "bytes": 3091
+  },
+  {
+    "path": "apps/desktop/tests/macos-notarized-application.spec.ts",
+    "lines": 45,
+    "bytes": 2031
+  },
+  {
+    "path": "apps/desktop/tests/macos-signature.spec.ts",
+    "lines": 229,
+    "bytes": 11049
+  },
+  {
+    "path": "apps/desktop/tests/main-startup.spec.ts",
+    "lines": 2170,
+    "bytes": 115738
+  },
+  {
+    "path": "apps/desktop/tests/package-macos.spec.ts",
+    "lines": 209,
+    "bytes": 9595
+  },
+  {
+    "path": "apps/desktop/tests/quit-confirmation.spec.ts",
+    "lines": 113,
+    "bytes": 5680
+  },
+  {
+    "path": "apps/desktop/tests/tray-icon.spec.ts",
+    "lines": 48,
+    "bytes": 2468
+  },
+  {
+    "path": "apps/desktop/tests/tray.spec.ts",
+    "lines": 72,
+    "bytes": 2983
+  },
+  {
+    "path": "apps/desktop/tests/update-coordinator.spec.ts",
+    "lines": 249,
+    "bytes": 11995
+  },
+  {
+    "path": "apps/desktop/tests/windows-sign.spec.ts",
+    "lines": 395,
+    "bytes": 18354
+  },
+  {
+    "path": "apps/desktop/tests/windows-update-publisher.spec.ts",
+    "lines": 99,
+    "bytes": 4769
+  },
+  {
+    "path": "apps/web/index.html",
+    "lines": 15,
+    "bytes": 570
+  },
+  {
+    "path": "apps/web/public/brand-icon.icns",
+    "lines": null,
+    "bytes": 117941
+  },
+  {
+    "path": "apps/web/public/brand-icon.ico",
+    "lines": null,
+    "bytes": 13190
+  },
+  {
+    "path": "apps/web/public/brand-icon.png",
+    "lines": null,
+    "bytes": 44290
+  },
+  {
+    "path": "apps/web/public/brand-mark.svg",
+    "lines": 1,
+    "bytes": 217
+  },
+  {
+    "path": "apps/web/public/brand.json",
+    "lines": 9,
+    "bytes": 234
+  },
+  {
+    "path": "apps/web/public/favicon-dark.svg",
+    "lines": 1,
+    "bytes": 209
+  },
+  {
+    "path": "apps/web/public/favicon.svg",
+    "lines": 1,
+    "bytes": 209
+  },
+  {
+    "path": "apps/web/public/manifest.webmanifest",
+    "lines": 15,
+    "bytes": 266
+  },
+  {
+    "path": "apps/web/tests/bonus-notice.e2e.ts",
+    "lines": 577,
+    "bytes": 34573
+  },
+  {
+    "path": "apps/web/tests/built-boot.expected.e2e.ts",
+    "lines": 185,
+    "bytes": 9957
+  },
+  {
+    "path": "apps/web/tests/desktop-onboarding.e2e.ts",
+    "lines": 431,
+    "bytes": 27343
+  },
+  {
+    "path": "apps/web/tests/document-preview.e2e.ts",
+    "lines": 1761,
+    "bytes": 111898
+  },
+  {
+    "path": "apps/web/tests/expected/desktop-onboarding/credit-en-dark.expected.md",
+    "lines": 7,
+    "bytes": 372
+  },
+  {
+    "path": "apps/web/tests/expected/desktop-onboarding/credit-funded-en-dark.expected.md",
+    "lines": 7,
+    "bytes": 376
+  },
+  {
+    "path": "apps/web/tests/expected/desktop-onboarding/credit.expected.md",
+    "lines": 7,
+    "bytes": 402
+  },
+  {
+    "path": "apps/web/tests/expected/desktop-onboarding/process-en-dark.expected.md",
+    "lines": 9,
+    "bytes": 563
+  },
+  {
+    "path": "apps/web/tests/expected/desktop-onboarding/process.expected.md",
+    "lines": 10,
+    "bytes": 584
+  },
+  {
+    "path": "apps/web/tests/expected/desktop-onboarding/purpose-en-dark.expected.md",
+    "lines": 12,
+    "bytes": 624
+  },
+  {
+    "path": "apps/web/tests/expected/desktop-onboarding/purpose.expected.md",
+    "lines": 12,
+    "bytes": 600
+  },
+  {
+    "path": "apps/web/tests/expected/desktop-onboarding/welcome-en-dark.expected.md",
+    "lines": 6,
+    "bytes": 491
+  },
+  {
+    "path": "apps/web/tests/expected/desktop-onboarding/welcome.expected.md",
+    "lines": 6,
+    "bytes": 489
+  },
+  {
+    "path": "apps/web/tests/expected/plugin-install-github/another-way.expected.md",
+    "lines": 22,
+    "bytes": 1298
+  },
+  {
+    "path": "apps/web/tests/pwa-manifest.e2e.ts",
+    "lines": 41,
+    "bytes": 1835
+  },
+  {
+    "path": "apps/web/tests/replay-round-trip.e2e.ts",
+    "lines": 338,
+    "bytes": 18506
+  },
+  {
+    "path": "apps/web/vite.config.ts",
+    "lines": 263,
+    "bytes": 11924
+  },
+  {
+    "path": "deploy/system3/Dockerfile",
+    "lines": 11,
+    "bytes": 627
+  },
+  {
+    "path": "deploy/system3/nginx/system3.xdan.work.conf",
+    "lines": 47,
+    "bytes": 1878
+  },
+  {
+    "path": "deploy/system3/xdan-system3.service",
+    "lines": 43,
+    "bytes": 1423
+  },
+  {
+    "path": "docs/config-catalog.md",
+    "lines": 4841,
+    "bytes": 228561
+  },
+  {
+    "path": "docs/config-catalog.zh.md",
+    "lines": 4843,
+    "bytes": 228579
+  },
+  {
+    "path": "docs/feat-apus-brand/branding.i18n.yaml",
+    "lines": 13,
+    "bytes": 655
+  },
+  {
+    "path": "docs/feat-apus-brand/branding.md",
+    "lines": 19,
+    "bytes": 2347
+  },
+  {
+    "path": "docs/feat-apus-brand/branding.zh.md",
+    "lines": 19,
+    "bytes": 1869
+  },
+  {
+    "path": "docs/feat-apus-brand/design.i18n.yaml",
+    "lines": 25,
+    "bytes": 1113
+  },
+  {
+    "path": "docs/feat-apus-brand/design.md",
+    "lines": 78,
+    "bytes": 7487
+  },
+  {
+    "path": "docs/feat-apus-brand/design.zh.md",
+    "lines": 78,
+    "bytes": 6459
+  },
+  {
+    "path": "docs/feat-apus-brand/evidence/web-main-dark-zh.png",
+    "lines": null,
+    "bytes": 46962
+  },
+  {
+    "path": "docs/feat-apus-brand/evidence/web-main-light.png",
+    "lines": null,
+    "bytes": 46990
+  },
+  {
+    "path": "docs/feat-apus-brand/evidence/web-mobile-dark-zh.png",
+    "lines": null,
+    "bytes": 30501
+  },
+  {
+    "path": "docs/feat-apus-brand/evidence/web-verification.json",
+    "lines": 26,
+    "bytes": 693
+  },
+  {
+    "path": "docs/feat-apus-brand/evidence/web-welcome-light.png",
+    "lines": null,
+    "bytes": 75736
+  },
+  {
+    "path": "docs/user/index.i18n.yaml",
+    "lines": 10,
+    "bytes": 434
+  },
+  {
+    "path": "docs/user/index.md",
+    "lines": 11,
+    "bytes": 162
+  },
+  {
+    "path": "docs/user/index.zh.md",
+    "lines": 11,
+    "bytes": 159
+  },
+  {
+    "path": "packages/boot/app-boot/README.i18n.yaml",
+    "lines": 73,
+    "bytes": 2776
+  },
+  {
+    "path": "packages/boot/app-boot/README.md",
+    "lines": 222,
+    "bytes": 33271
+  },
+  {
+    "path": "packages/boot/app-boot/README.zh.md",
+    "lines": 222,
+    "bytes": 31113
+  },
+  {
+    "path": "packages/boot/app-boot/src/index.ts",
+    "lines": 1066,
+    "bytes": 50860
+  },
+  {
+    "path": "packages/boot/app-boot/tests/app-boot.spec.ts",
+    "lines": 1325,
+    "bytes": 56969
+  },
+  {
+    "path": "packages/bundle/web-app/README.i18n.yaml",
+    "lines": 76,
+    "bytes": 2918
+  },
+  {
+    "path": "packages/bundle/web-app/README.md",
+    "lines": 166,
+    "bytes": 12341
+  },
+  {
+    "path": "packages/bundle/web-app/README.zh.md",
+    "lines": 166,
+    "bytes": 11532
+  },
+  {
+    "path": "packages/bundle/web-app/src/index.ts",
+    "lines": 301,
+    "bytes": 13928
+  },
+  {
+    "path": "packages/bundle/web-app/src/startup.ts",
+    "lines": 88,
+    "bytes": 3536
+  },
+  {
+    "path": "packages/bundle/web-app/tests/web-app.spec.ts",
+    "lines": 453,
+    "bytes": 20684
+  },
+  {
+    "path": "packages/client/locale/src/locales/en.ts",
+    "lines": 46,
+    "bytes": 1401
+  },
+  {
+    "path": "packages/client/locale/src/locales/zh.ts",
+    "lines": 47,
+    "bytes": 1498
+  },
+  {
+    "path": "packages/client/ui-agent-preset/src/client/guide-locales.ts",
+    "lines": 152,
+    "bytes": 13272
+  },
+  {
+    "path": "packages/client/ui-agent-preset/src/client/locales.ts",
+    "lines": 115,
+    "bytes": 4721
+  },
+  {
+    "path": "packages/client/ui-brand-official/README.i18n.yaml",
+    "lines": 43,
+    "bytes": 1759
+  },
+  {
+    "path": "packages/client/ui-brand-official/README.md",
+    "lines": 92,
+    "bytes": 4426
+  },
+  {
+    "path": "packages/client/ui-brand-official/README.zh.md",
+    "lines": 92,
+    "bytes": 4008
+  },
+  {
+    "path": "packages/client/ui-brand-official/package.json",
+    "lines": 60,
+    "bytes": 1564
+  },
+  {
+    "path": "packages/client/ui-brand-official/src/client/Brand.tsx",
+    "lines": 19,
+    "bytes": 678
+  },
+  {
+    "path": "packages/client/ui-brand-official/src/client/index.ts",
+    "lines": 23,
+    "bytes": 1085
+  },
+  {
+    "path": "packages/client/ui-brand-official/tests/browser-plugin.client.spec.tsx",
+    "lines": 93,
+    "bytes": 3705
+  },
+  {
+    "path": "packages/client/ui-chat/src/client/locale.ts",
+    "lines": 387,
+    "bytes": 20219
+  },
+  {
+    "path": "packages/client/ui-chat/tests/chat-view.client.spec.tsx",
+    "lines": 4092,
+    "bytes": 190035
+  },
+  {
+    "path": "packages/client/ui-conversation/src/client/locales.ts",
+    "lines": 747,
+    "bytes": 34647
+  },
+  {
+    "path": "packages/client/ui-conversation/src/client/skeleton/EmptyHero.tsx",
+    "lines": 101,
+    "bytes": 3759
+  },
+  {
+    "path": "packages/client/ui-conversation/src/client/skeleton/HeroShell.module.css",
+    "lines": 201,
+    "bytes": 5203
+  },
+  {
+    "path": "packages/client/ui-conversation/tests/skeleton.client.spec.tsx",
+    "lines": 843,
+    "bytes": 41327
+  },
+  {
+    "path": "packages/client/ui-layout/tests/document-title.client.spec.tsx",
+    "lines": 85,
+    "bytes": 4106
+  },
+  {
+    "path": "packages/client/ui-model-selection/src/client/locales.ts",
+    "lines": 70,
+    "bytes": 3828
+  },
+  {
+    "path": "packages/client/ui-plugin-manager/src/client/locales.ts",
+    "lines": 384,
+    "bytes": 22466
+  },
+  {
+    "path": "packages/client/ui-primitives/README.i18n.yaml",
+    "lines": 61,
+    "bytes": 2473
+  },
+  {
+    "path": "packages/client/ui-primitives/README.md",
+    "lines": 207,
+    "bytes": 35424
+  },
+  {
+    "path": "packages/client/ui-primitives/README.zh.md",
+    "lines": 207,
+    "bytes": 32990
+  },
+  {
+    "path": "packages/client/ui-primitives/src/BrandWordmark.tsx",
+    "lines": 28,
+    "bytes": 1305
+  },
+  {
+    "path": "packages/client/ui-primitives/src/FishLogo.tsx",
+    "lines": 21,
+    "bytes": 924
+  },
+  {
+    "path": "packages/client/ui-primitives/src/brand.ts",
+    "lines": 5,
+    "bytes": 213
+  },
+  {
+    "path": "packages/client/ui-settings-account/src/client/locales.ts",
+    "lines": 73,
+    "bytes": 5542
+  },
+  {
+    "path": "packages/client/ui-settings-account/src/client/locales/onboarding.ts",
+    "lines": 85,
+    "bytes": 5685
+  },
+  {
+    "path": "packages/client/ui-settings-account/tests/expected/account-signed-out-en.txt",
+    "lines": 1,
+    "bytes": 103
+  },
+  {
+    "path": "packages/client/ui-settings-account/tests/expected/account-signed-out-zh.txt",
+    "lines": 1,
+    "bytes": 80
+  },
+  {
+    "path": "packages/client/ui-settings-account/tests/expected/onboarding-credit-en.txt",
+    "lines": 1,
+    "bytes": 252
+  },
+  {
+    "path": "packages/client/ui-settings-account/tests/expected/onboarding-credit.txt",
+    "lines": 1,
+    "bytes": 275
+  },
+  {
+    "path": "packages/client/ui-settings-account/tests/expected/onboarding-process-en.txt",
+    "lines": 1,
+    "bytes": 339
+  },
+  {
+    "path": "packages/client/ui-settings-account/tests/expected/onboarding-process.txt",
+    "lines": 1,
+    "bytes": 328
+  },
+  {
+    "path": "packages/client/ui-settings-account/tests/expected/onboarding-purpose-en.txt",
+    "lines": 1,
+    "bytes": 297
+  },
+  {
+    "path": "packages/client/ui-settings-account/tests/expected/onboarding-purpose.txt",
+    "lines": 1,
+    "bytes": 295
+  },
+  {
+    "path": "packages/client/ui-settings-account/tests/expected/onboarding-welcome-en.txt",
+    "lines": 1,
+    "bytes": 334
+  },
+  {
+    "path": "packages/client/ui-settings-account/tests/expected/onboarding-welcome.txt",
+    "lines": 1,
+    "bytes": 328
+  },
+  {
+    "path": "packages/client/ui-settings-account/tests/expected/platform-error-en.txt",
+    "lines": 1,
+    "bytes": 77
+  },
+  {
+    "path": "packages/client/ui-settings-account/tests/expected/platform-error-zh.txt",
+    "lines": 1,
+    "bytes": 60
+  },
+  {
+    "path": "packages/client/ui-settings-account/tests/expected/platform-header-en.txt",
+    "lines": 1,
+    "bytes": 28
+  },
+  {
+    "path": "packages/client/ui-settings-account/tests/expected/platform-header-zh.txt",
+    "lines": 1,
+    "bytes": 27
+  },
+  {
+    "path": "packages/client/ui-settings-general/README.i18n.yaml",
+    "lines": 58,
+    "bytes": 2475
+  },
+  {
+    "path": "packages/client/ui-settings-general/README.md",
+    "lines": 130,
+    "bytes": 12307
+  },
+  {
+    "path": "packages/client/ui-settings-general/README.zh.md",
+    "lines": 130,
+    "bytes": 10897
+  },
+  {
+    "path": "packages/client/ui-settings-general/src/client/GeneralSection.module.css",
+    "lines": 20,
+    "bytes": 407
+  },
+  {
+    "path": "packages/client/ui-settings-general/src/client/GeneralSection.tsx",
+    "lines": 24,
+    "bytes": 1001
+  },
+  {
+    "path": "packages/client/ui-settings-general/src/client/locales.ts",
+    "lines": 84,
+    "bytes": 5173
+  },
+  {
+    "path": "packages/client/ui-settings-general/tests/components.client.spec.tsx",
+    "lines": 250,
+    "bytes": 12276
+  },
+  {
+    "path": "packages/client/ui-settings-models/src/client/locales.ts",
+    "lines": 238,
+    "bytes": 12790
+  },
+  {
+    "path": "packages/client/ui-settings-models/tests/welcome-notice.client.spec.tsx",
+    "lines": 169,
+    "bytes": 7436
+  },
+  {
+    "path": "packages/client/ui-sidebar-browser/src/client/locales.ts",
+    "lines": 69,
+    "bytes": 3192
+  },
+  {
+    "path": "packages/client/ui-sidebar-documentpreview/src/client/office/locales.ts",
+    "lines": 40,
+    "bytes": 2380
+  },
+  {
+    "path": "packages/client/ui-sidebar/src/client/SidebarRoot.module.css",
+    "lines": 614,
+    "bytes": 16414
+  },
+  {
+    "path": "packages/client/ui-sidebar/src/client/SidebarRoot.tsx",
+    "lines": 317,
+    "bytes": 13734
+  },
+  {
+    "path": "packages/client/ui-sidebar/tests/__snapshots__/sidebar-snapshot.client.spec.tsx.snap",
+    "lines": 630,
+    "bytes": 13834
+  },
+  {
+    "path": "packages/client/ui-sidebar/tests/sidebar-root.client.spec.tsx",
+    "lines": 315,
+    "bytes": 16003
+  },
+  {
+    "path": "packages/core/agent-loop/tests/loop.spec.ts",
+    "lines": 1834,
+    "bytes": 79216
+  },
+  {
+    "path": "packages/core/system-prompt/README.i18n.yaml",
+    "lines": 88,
+    "bytes": 3482
+  },
+  {
+    "path": "packages/core/system-prompt/README.md",
+    "lines": 187,
+    "bytes": 12707
+  },
+  {
+    "path": "packages/core/system-prompt/README.zh.md",
+    "lines": 187,
+    "bytes": 12019
+  },
+  {
+    "path": "packages/core/system-prompt/src/index.ts",
+    "lines": 639,
+    "bytes": 26565
+  },
+  {
+    "path": "packages/core/system-prompt/tests/system-prompt.spec.ts",
+    "lines": 695,
+    "bytes": 32263
+  },
+  {
+    "path": "packages/experimental/agui/tests/agui.spec.ts",
+    "lines": 276,
+    "bytes": 15656
+  },
+  {
+    "path": "packages/experimental/client-ui-system3/README.i18n.yaml",
+    "lines": 34,
+    "bytes": 1433
+  },
+  {
+    "path": "packages/experimental/client-ui-system3/README.md",
+    "lines": 46,
+    "bytes": 3448
+  },
+  {
+    "path": "packages/experimental/client-ui-system3/README.zh.md",
+    "lines": 51,
+    "bytes": 3477
+  },
+  {
+    "path": "packages/experimental/client-ui-system3/src/client/locales.ts",
+    "lines": 66,
+    "bytes": 7355
+  },
+  {
+    "path": "packages/fs/tool-fs-search/tests/tools.spec.ts",
+    "lines": 1269,
+    "bytes": 62160
+  },
+  {
+    "path": "packages/fs/tool-fs/tests/tools.spec.ts",
+    "lines": 1096,
+    "bytes": 51215
+  },
+  {
+    "path": "packages/preset/agent-preset/skills/cordis-composition-reference/references/packages.md",
+    "lines": 508,
+    "bytes": 38956
+  },
+  {
+    "path": "packages/preset/persona/tests/persona.spec.ts",
+    "lines": 179,
+    "bytes": 8199
+  },
+  {
+    "path": "packages/web/tool-web/tests/tool-web.spec.ts",
+    "lines": 987,
+    "bytes": 46370
+  },
+  {
+    "path": "scripts/client-build-environment.client.spec.ts",
+    "lines": 294,
+    "bytes": 12073
+  },
+  {
+    "path": "scripts/client-build-environment.ts",
+    "lines": 395,
+    "bytes": 16580
+  },
+  {
+    "path": "scripts/dev-web.spec.ts",
+    "lines": 215,
+    "bytes": 9111
+  },
+  {
+    "path": "scripts/project-doc-site.spec.ts",
+    "lines": 855,
+    "bytes": 36553
+  },
+  {
+    "path": "scripts/verify-repository-references.spec.ts",
+    "lines": 237,
+    "bytes": 11538
+  },
+  {
+    "path": "scripts/verify-repository-references.ts",
+    "lines": 127,
+    "bytes": 5953
+  },
+  {
+    "path": "snapshots/sdk/bash-tool/session.v4.jsonl",
+    "lines": 22,
+    "bytes": 7214
+  },
+  {
+    "path": "snapshots/sdk/bash-tool/system-prompt.expected.md",
+    "lines": 27,
+    "bytes": 2478
+  },
+  {
+    "path": "snapshots/sdk/subagent-activation-limit/session.1.v4.jsonl",
+    "lines": 18,
+    "bytes": 5296
+  },
+  {
+    "path": "snapshots/sdk/subagent-activation-limit/session.v4.jsonl",
+    "lines": 36,
+    "bytes": 9990
+  },
+  {
+    "path": "snapshots/sdk/subagent-activation-limit/system-prompt.1.expected.md",
+    "lines": 30,
+    "bytes": 2797
+  },
+  {
+    "path": "snapshots/sdk/subagent-continuable-inheritance/session.1.v4.jsonl",
+    "lines": 17,
+    "bytes": 5583
+  },
+  {
+    "path": "snapshots/sdk/subagent-continuable-inheritance/session.v4.jsonl",
+    "lines": 32,
+    "bytes": 8235
+  },
+  {
+    "path": "snapshots/sdk/subagent-continuable-inheritance/system-prompt.1.expected.md",
+    "lines": 30,
+    "bytes": 2797
+  },
+  {
+    "path": "snapshots/sdk/subagent-continuable/session.1.v4.jsonl",
+    "lines": 28,
+    "bytes": 8571
+  },
+  {
+    "path": "snapshots/sdk/subagent-continuable/session.v4.jsonl",
+    "lines": 46,
+    "bytes": 14536
+  },
+  {
+    "path": "snapshots/sdk/subagent-continuable/system-prompt.1.expected.md",
+    "lines": 30,
+    "bytes": 2797
+  },
+  {
+    "path": "snapshots/sdk/subagent-dsh-sdk-diagnostic/notifications.expected.jsonl",
+    "lines": 34,
+    "bytes": 13300
+  },
+  {
+    "path": "snapshots/sdk/subagent-dsh-sdk-diagnostic/session.v4.jsonl",
+    "lines": 36,
+    "bytes": 10728
+  },
+  {
+    "path": "snapshots/sdk/subagent-dsh-sdk-diagnostic/system-prompt.expected.md",
+    "lines": 29,
+    "bytes": 2593
+  },
+  {
+    "path": "snapshots/sdk/subagent-dsh-sdk-dynamic-route/session.1.v4.jsonl",
+    "lines": 17,
+    "bytes": 3593
+  },
+  {
+    "path": "snapshots/sdk/subagent-dsh-sdk-dynamic-route/session.v4.jsonl",
+    "lines": 23,
+    "bytes": 5885
+  },
+  {
+    "path": "snapshots/sdk/subagent-dsh-sdk-dynamic-route/system-prompt.1.expected.md",
+    "lines": 27,
+    "bytes": 2514
+  },
+  {
+    "path": "snapshots/sdk/subagent-dsh-sdk-dynamic-route/system-prompt.expected.md",
+    "lines": 27,
+    "bytes": 2474
+  },
+  {
+    "path": "snapshots/sdk/subagent-list-agents/system-prompt.1.expected.md",
+    "lines": 30,
+    "bytes": 2797
+  },
+  {
+    "path": "snapshots/sdk/subagent-send-message/session.1.v4.jsonl",
+    "lines": 23,
+    "bytes": 7189
+  },
+  {
+    "path": "snapshots/sdk/subagent-send-message/session.v4.jsonl",
+    "lines": 42,
+    "bytes": 10751
+  },
+  {
+    "path": "snapshots/sdk/subagent-send-message/system-prompt.1.expected.md",
+    "lines": 30,
+    "bytes": 2797
+  },
+  {
+    "path": "snapshots/sdk/system3-completion-review/system-prompt.expected.md",
+    "lines": 27,
+    "bytes": 2478
+  },
+  {
+    "path": "snapshots/sdk/text-turn/notifications.expected.jsonl",
+    "lines": 23,
+    "bytes": 7028
+  },
+  {
+    "path": "snapshots/sdk/text-turn/session.v4.jsonl",
+    "lines": 25,
+    "bytes": 5335
+  },
+  {
+    "path": "snapshots/sdk/text-turn/system-prompt.expected.md",
+    "lines": 27,
+    "bytes": 2478
+  },
+  {
+    "path": "snapshots/session/agent-instructions/session.v4.jsonl",
+    "lines": 39,
+    "bytes": 13785
+  },
+  {
+    "path": "snapshots/session/agent-instructions/system-prompt.expected.md",
+    "lines": 30,
+    "bytes": 2677
+  },
+  {
+    "path": "snapshots/session/background-confinement-failure/session.v4.jsonl",
+    "lines": 30,
+    "bytes": 9915
+  },
+  {
+    "path": "snapshots/session/background-confinement-failure/system-prompt.expected.md",
+    "lines": 30,
+    "bytes": 2797
+  },
+  {
+    "path": "snapshots/session/both-mode-turn/session.v4.jsonl",
+    "lines": 24,
+    "bytes": 8840
+  },
+  {
+    "path": "snapshots/session/both-mode-turn/system-prompt.expected.md",
+    "lines": 541,
+    "bytes": 25864
+  },
+  {
+    "path": "snapshots/session/browser-use-chrome-devtools-mcp/session.v4.jsonl",
+    "lines": 22,
+    "bytes": 5054
+  },
+  {
+    "path": "snapshots/session/browser-use-chrome-devtools-mcp/system-prompt.expected.md",
+    "lines": 34,
+    "bytes": 2981
+  },
+  {
+    "path": "snapshots/session/browser-use-playwright-mcp/session.v4.jsonl",
+    "lines": 22,
+    "bytes": 5078
+  },
+  {
+    "path": "snapshots/session/browser-use-playwright-mcp/system-prompt.expected.md",
+    "lines": 34,
+    "bytes": 2976
+  },
+  {
+    "path": "snapshots/session/browser-use-stagehand-native/session.v4.jsonl",
+    "lines": 27,
+    "bytes": 6523
+  },
+  {
+    "path": "snapshots/session/browser-use-stagehand-native/system-prompt.expected.md",
+    "lines": 34,
+    "bytes": 3722
+  },
+  {
+    "path": "snapshots/session/compaction-recovery/session.v4.jsonl",
+    "lines": 28,
+    "bytes": 8976
+  },
+  {
+    "path": "snapshots/session/compaction-recovery/system-prompt.expected.md",
+    "lines": 30,
+    "bytes": 2797
+  },
+  {
+    "path": "snapshots/session/computer-use-cua-driver-mcp/session.v4.jsonl",
+    "lines": 22,
+    "bytes": 5102
+  },
+  {
+    "path": "snapshots/session/computer-use-cua-driver-mcp/system-prompt.expected.md",
+    "lines": 34,
+    "bytes": 2976
+  },
+  {
+    "path": "snapshots/session/computer-use-cua-driver-native/session.v4.jsonl",
+    "lines": 22,
+    "bytes": 5124
+  },
+  {
+    "path": "snapshots/session/computer-use-cua-driver-native/system-prompt.expected.md",
+    "lines": 36,
+    "bytes": 3640
+  },
+  {
+    "path": "snapshots/session/cordis-inspect-jsdoc/system-prompt.expected.md",
+    "lines": 556,
+    "bytes": 27429
+  },
+  {
+    "path": "snapshots/session/deepseek-messages-system-prompt/session.v4.jsonl",
+    "lines": 23,
+    "bytes": 5602
+  },
+  {
+    "path": "snapshots/session/deepseek-messages-system-prompt/system-prompt.expected.md",
+    "lines": 65,
+    "bytes": 5709
+  },
+  {
+    "path": "snapshots/session/deepseek-protocol-system-prompt/session.v4.jsonl",
+    "lines": 23,
+    "bytes": 5602
+  },
+  {
+    "path": "snapshots/session/deepseek-protocol-system-prompt/system-prompt.expected.md",
+    "lines": 65,
+    "bytes": 5709
+  },
+  {
+    "path": "snapshots/session/dynamic-tool-prompt-updates/system-prompt.expected.md",
+    "lines": 65,
+    "bytes": 5716
+  },
+  {
+    "path": "snapshots/session/dynamic-tool-updates/system-prompt.expected.md",
+    "lines": 30,
+    "bytes": 2797
+  },
+  {
+    "path": "snapshots/session/foreground-confinement-timeout/session.v4.jsonl",
+    "lines": 22,
+    "bytes": 5595
+  },
+  {
+    "path": "snapshots/session/foreground-confinement-timeout/system-prompt.expected.md",
+    "lines": 30,
+    "bytes": 2797
+  },
+  {
+    "path": "snapshots/session/fs-glob-sampling/session.v4.jsonl",
+    "lines": 22,
+    "bytes": 7838
+  },
+  {
+    "path": "snapshots/session/fs-glob-sampling/system-prompt.expected.md",
+    "lines": 23,
+    "bytes": 1631
+  },
+  {
+    "path": "snapshots/session/lsp-definition/session.v4.jsonl",
+    "lines": 22,
+    "bytes": 5351
+  },
+  {
+    "path": "snapshots/session/lsp-definition/system-prompt.expected.md",
+    "lines": 32,
+    "bytes": 3122
+  },
+  {
+    "path": "snapshots/session/mcp-resources-ptc/session.v4.jsonl",
+    "lines": 32,
+    "bytes": 23270
+  },
+  {
+    "path": "snapshots/session/mcp-resources-ptc/system-prompt.expected.md",
+    "lines": 575,
+    "bytes": 27326
+  },
+  {
+    "path": "snapshots/session/mcp-resources/session.v4.jsonl",
+    "lines": 36,
+    "bytes": 21990
+  },
+  {
+    "path": "snapshots/session/mcp-resources/system-prompt.expected.md",
+    "lines": 38,
+    "bytes": 3075
+  },
+  {
+    "path": "snapshots/session/model-switch-notice/session.v4.jsonl",
+    "lines": 27,
+    "bytes": 8847
+  },
+  {
+    "path": "snapshots/session/model-switch-notice/system-prompt.expected.md",
+    "lines": 63,
+    "bytes": 5627
+  },
+  {
+    "path": "snapshots/session/multimodal-spill-ends/system-prompt.expected.md",
+    "lines": 30,
+    "bytes": 2808
+  },
+  {
+    "path": "snapshots/session/office-skills/system-prompt.expected.md",
+    "lines": 28,
+    "bytes": 2703
+  },
+  {
+    "path": "snapshots/session/persistent-pwsh-tool-turn/session.v4.jsonl",
+    "lines": 22,
+    "bytes": 6967
+  },
+  {
+    "path": "snapshots/session/persistent-pwsh-tool-turn/system-prompt.expected.md",
+    "lines": 21,
+    "bytes": 1537
+  },
+  {
+    "path": "snapshots/session/plugin-manager-mcp/system-prompt.expected.md",
+    "lines": 67,
+    "bytes": 5787
+  },
+  {
+    "path": "snapshots/session/plugin-manager/system-prompt.expected.md",
+    "lines": 30,
+    "bytes": 2797
+  },
+  {
+    "path": "snapshots/session/product-subagent-codex/session.v4.jsonl",
+    "lines": 17,
+    "bytes": 4160
+  },
+  {
+    "path": "snapshots/session/product-subagent-codex/system-prompt.expected.md",
+    "lines": 30,
+    "bytes": 2795
+  },
+  {
+    "path": "snapshots/session/provider-cwd/session.v4.jsonl",
+    "lines": 17,
+    "bytes": 4414
+  },
+  {
+    "path": "snapshots/session/provider-cwd/system-prompt.expected.md",
+    "lines": 30,
+    "bytes": 2797
+  },
+  {
+    "path": "snapshots/session/ptc-node-read-only/session.v4.jsonl",
+    "lines": 24,
+    "bytes": 8105
+  },
+  {
+    "path": "snapshots/session/ptc-node-read-only/system-prompt.expected.md",
+    "lines": 548,
+    "bytes": 26213
+  },
+  {
+    "path": "snapshots/session/ptc-node-workspace/session.v4.jsonl",
+    "lines": 24,
+    "bytes": 8034
+  },
+  {
+    "path": "snapshots/session/ptc-node-workspace/system-prompt.expected.md",
+    "lines": 548,
+    "bytes": 26213
+  },
+  {
+    "path": "snapshots/session/ptc-python-turn/session.v4.jsonl",
+    "lines": 26,
+    "bytes": 11776
+  },
+  {
+    "path": "snapshots/session/ptc-python-turn/system-prompt.expected.md",
+    "lines": 564,
+    "bytes": 26549
+  },
+  {
+    "path": "snapshots/session/ptc-read-image/session.v4.jsonl",
+    "lines": 29,
+    "bytes": 9870
+  },
+  {
+    "path": "snapshots/session/ptc-read-image/system-prompt.expected.md",
+    "lines": 543,
+    "bytes": 26036
+  },
+  {
+    "path": "snapshots/session/ptc-turn/session.v4.jsonl",
+    "lines": 26,
+    "bytes": 11666
+  },
+  {
+    "path": "snapshots/session/ptc-turn/system-prompt.expected.md",
+    "lines": 548,
+    "bytes": 26213
+  },
+  {
+    "path": "snapshots/session/pty-tools-sandbox-backend/session.v4.jsonl",
+    "lines": 42,
+    "bytes": 11372
+  },
+  {
+    "path": "snapshots/session/pty-tools-sandbox-backend/system-prompt.expected.md",
+    "lines": 32,
+    "bytes": 3105
+  },
+  {
+    "path": "snapshots/session/pwsh-tool-turn/session.v4.jsonl",
+    "lines": 22,
+    "bytes": 7228
+  },
+  {
+    "path": "snapshots/session/pwsh-tool-turn/system-prompt.expected.md",
+    "lines": 25,
+    "bytes": 2184
+  },
+  {
+    "path": "snapshots/session/ralph-loop/session.1.v4.jsonl",
+    "lines": 20,
+    "bytes": 7518
+  },
+  {
+    "path": "snapshots/session/ralph-loop/session.2.v4.jsonl",
+    "lines": 20,
+    "bytes": 7844
+  },
+  {
+    "path": "snapshots/session/ralph-loop/session.v4.jsonl",
+    "lines": 24,
+    "bytes": 5837
+  },
+  {
+    "path": "snapshots/session/ralph-loop/system-prompt.1.expected.md",
+    "lines": 34,
+    "bytes": 3462
+  },
+  {
+    "path": "snapshots/session/ralph-loop/system-prompt.2.expected.md",
+    "lines": 34,
+    "bytes": 3462
+  },
+  {
+    "path": "snapshots/session/ralph-loop/system-prompt.expected.md",
+    "lines": 32,
+    "bytes": 3233
+  },
+  {
+    "path": "snapshots/session/read-image/session.v4.jsonl",
+    "lines": 22,
+    "bytes": 5192
+  },
+  {
+    "path": "snapshots/session/read-image/system-prompt.expected.md",
+    "lines": 30,
+    "bytes": 2808
+  },
+  {
+    "path": "snapshots/session/session-query-spill/system-prompt.expected.md",
+    "lines": 32,
+    "bytes": 3114
+  },
+  {
+    "path": "snapshots/session/subagent-tool-filter/session.1.v4.jsonl",
+    "lines": 23,
+    "bytes": 6738
+  },
+  {
+    "path": "snapshots/session/subagent-tool-filter/session.v4.jsonl",
+    "lines": 23,
+    "bytes": 8707
+  },
+  {
+    "path": "snapshots/session/subagent-tool-filter/system-prompt.1.expected.md",
+    "lines": 18,
+    "bytes": 1940
+  },
+  {
+    "path": "snapshots/session/system-prompt-in-history/session.v4.jsonl",
+    "lines": 23,
+    "bytes": 5366
+  },
+  {
+    "path": "snapshots/session/system-prompt-in-history/system-prompt.expected.md",
+    "lines": 65,
+    "bytes": 5703
+  },
+  {
+    "path": "snapshots/session/team-targets/session.v4.jsonl",
+    "lines": 27,
+    "bytes": 6560
+  },
+  {
+    "path": "snapshots/session/team-targets/system-prompt.expected.md",
+    "lines": 36,
+    "bytes": 4679
+  },
+  {
+    "path": "snapshots/session/text-turn/system-prompt.expected.md",
+    "lines": 30,
+    "bytes": 2797
+  },
+  {
+    "path": "snapshots/session/text-turn/writer.expected.jsonl",
+    "lines": 17,
+    "bytes": 4166
+  },
+  {
+    "path": "snapshots/session/web-fetch/session.v4.jsonl",
+    "lines": 22,
+    "bytes": 7976
+  },
+  {
+    "path": "snapshots/session/web-fetch/system-prompt.expected.md",
+    "lines": 28,
+    "bytes": 2578
+  },
+  {
+    "path": "snapshots/session/workflow-confinement/session.v4.jsonl",
+    "lines": 24,
+    "bytes": 7793
+  },
+  {
+    "path": "snapshots/session/workflow-confinement/system-prompt.expected.md",
+    "lines": 30,
+    "bytes": 2797
+  },
+  {
+    "path": "snapshots/session/workspace-dependencies/session.v4.jsonl",
+    "lines": 22,
+    "bytes": 5124
+  },
+  {
+    "path": "snapshots/session/workspace-dependencies/system-prompt.expected.md",
+    "lines": 28,
+    "bytes": 2703
+  },
+  {
+    "path": "snapshots/web/fresh-round-trip/blank-reload.expected.md",
+    "lines": 10,
+    "bytes": 437
+  },
+  {
+    "path": "snapshots/web/fresh-round-trip/system-prompt.expected.md",
+    "lines": 39,
+    "bytes": 5736
+  },
+  {
+    "path": "snapshots/web/fresh-round-trip/web-context.expected.md",
+    "lines": 5,
+    "bytes": 1341
+  },
+  {
+    "path": "snapshots/web/ptc-round/system-prompt.expected.md",
+    "lines": 558,
+    "bytes": 27503
+  },
+  {
+    "path": "tasks/chore-apus-fork/handoff.md",
+    "lines": 41,
+    "bytes": 2948
+  },
+  {
+    "path": "tasks/feat-apus-brand/approved-preflight.md",
+    "lines": 76,
+    "bytes": 6402
+  },
+  {
+    "path": "tasks/feat-apus-brand/handoff.md",
+    "lines": 69,
+    "bytes": 5231
+  },
+  {
+    "path": "tasks/lessons.md",
+    "lines": 137,
+    "bytes": 15653
+  },
+  {
+    "path": "tasks/todo.md",
+    "lines": 385,
+    "bytes": 33416
+  },
+  {
+    "path": "website/.vitepress/config.ts",
+    "lines": 386,
+    "bytes": 15047
+  },
+  {
+    "path": "website/docs.ts",
+    "lines": 575,
+    "bytes": 22975
+  },
+  {
+    "path": "website/public/favicon.svg",
+    "lines": 1,
+    "bytes": 209
+  },
+  {
+    "path": "website/public/wordmark.svg",
+    "lines": 1,
+    "bytes": 216
+  }
+]

@@ -1,7 +1,7 @@
-- region "What would you like DeepSeek Harness to help with?":
-  - heading "What would you like DeepSeek Harness to help with?" [level=1]:
+- region "What would you like APUS Reflex Harness to help with?":
+  - heading "What would you like APUS Reflex Harness to help with?" [level=1]:
     - text: What would you like
-    - emphasis: DeepSeek Harness
+    - emphasis: APUS Reflex Harness
     - text: to help with?
   - paragraph: We’ll tailor the interface and tools to fit the way you work.
   - checkbox "Office & creative work"

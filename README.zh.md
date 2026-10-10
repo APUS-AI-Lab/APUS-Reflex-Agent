@@ -1,8 +1,10 @@
-# xDAN System3 Harness
+# APUS Reflex Harness
 
 [English](README.md) | 中文
 
-> **Jev Native + DSH Native。** System3 将 System1（Jev-like 有界语义决策）与 System2（高性能推理与生成）结合，由 DSH 原生状态和执行机制统一协调。当前仓库提供类型化 Jev 决策、可回放记录、通过原生 Web/API controller 显式启用的入口选模，以及有界原生 Skill 选择。从[集成指南](docs/feat-independent-harness/README.zh.md)开始。
+> **瞬策 · 瞬时执行，深度思考。** APUS Reflex Harness 以 Model as Harness 为目标，由大小脑混合模型管理工具、技能、记忆、上下文与子 Agent；DSH 运行时负责执行、权限与事实记录。各项能力的接入和验证范围见下文。
+
+共享资产、兼容标识与服务归属见[品牌定义与装配说明](docs/feat-apus-brand/branding.zh.md)。
 
 ## 架构
 
@@ -18,7 +20,7 @@ DeepSeek Harness（`dsh`）是由 [DeepSeek AI](https://deepseek.com) 开发的�
 
 它构建于**一切皆插件**的架构之上，由 [Cordis](https://github.com/cordiverse/cordis) 驱动，其设计参见论文 [_A Programming Paradigm for Spatiotemporal Composability_](https://arxiv.org/abs/2608.25512)。
 
-文档：[https://deepseek-harness.github.io/deepseek-harness/](https://deepseek-harness.github.io/deepseek-harness/)
+上游 DeepSeek Harness 文档（不是 APUS 构建指南）：[https://deepseek-harness.github.io/deepseek-harness/](https://deepseek-harness.github.io/deepseek-harness/)
 
 ## 开发者预览
 
@@ -32,7 +34,7 @@ DeepSeek Harness 处于 _开发者预览_ 阶段，正在快速迭代。**未来
 
 ### 通过 `npm` 运行上游发行版
 
-下面的 npm 包是上游发行版，不包含本 fork 的 Jev 扩展。安装 `Node.js`，然后运行：
+下面的 npm 包是上游发行版，不会安装 APUS Reflex Harness，也不包含本 fork 的 Jev 扩展。安装 `Node.js`，然后运行：
 
 ```sh
 npx @deepseek-ai/dsh web
@@ -48,8 +50,8 @@ npx @deepseek-ai/dsh web
 如需从仓库源码运行：
 
 ```sh
-git clone https://github.com/cryptoSUN2049/xDAN-System3-Harness.git
-cd xDAN-System3-Harness
+git clone https://github.com/cryptoSUN2049/APUS-Reflex-Harness.git
+cd APUS-Reflex-Harness
 pnpm install
 pnpm run build
 pnpm dsh web
@@ -59,7 +61,7 @@ pnpm dsh web
 
 ## 社区与支持
 
-- 通过 [GitHub Discussions](https://github.com/deepseek-ai/deepseek-harness/discussions) 提交反馈或 bug 报告。
+- 通过 [GitHub Issues](https://github.com/cryptoSUN2049/APUS-Reflex-Harness/issues) 提交反馈或 bug 报告。
 - 为你的插件仓库添加 [`dsh-plugin`](https://github.com/topics/dsh-plugin) 话题，便于被发现。
 - 欢迎加入 DeepSeek Harness 企微群：扫码添加企微小助手并填写入群问卷，完成后小助手会邀请你入群。
 
@@ -106,6 +108,8 @@ pnpm dsh web
 
 ## 许可证
 
-[MIT](LICENSE)
+[MIT](LICENSE)。完整保留 DeepSeek 原始版权声明与许可文本。
+
+感谢 DeepSeek 及 DeepSeek Harness 贡献者提供上游 Agent 运行时，感谢 Shigma 与 Cordis 贡献者提供插件框架，也感谢为 APUS Reflex Harness 提供基础组件的第三方维护者。APUS 品牌不替代原作者署名，也不代表获得其背书。
 
 第三方依赖及其许可证见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。

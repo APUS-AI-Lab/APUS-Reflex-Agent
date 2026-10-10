@@ -6,6 +6,6 @@ head:
       content: 0; url=./guide/quickstart
 ---
 
-# DeepSeek Harness
+# APUS Reflex Harness
 
 [English](index.md) | 中文

@@ -1,0 +1,26 @@
+{
+  "product": "APUS Reflex Harness",
+  "locale": "zh-CN",
+  "wide": {
+    "viewportWidth": 1280,
+    "scrollWidth": 1280,
+    "lightTextColor": "rgb(15, 17, 21)",
+    "darkTextColor": "rgb(249, 250, 251)"
+  },
+  "narrow": {
+    "viewportWidth": 390,
+    "scrollWidth": 390
+  },
+  "title": "APUS Reflex Harness",
+  "slogan": "瞬时执行，深度思考",
+  "consoleErrors": 0,
+  "runtime": "pnpm dsh web --patch apps/web/tests/pin-browse-picker.overlay.yml --no-open --port 0",
+  "profile": "isolated .artifacts/apus-brand/profile",
+  "modelRequests": 0,
+  "screenshots": [
+    "web-welcome-light.png",
+    "web-main-light.png",
+    "web-main-dark-zh.png",
+    "web-mobile-dark-zh.png"
+  ]
+}

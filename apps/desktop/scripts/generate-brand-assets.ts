@@ -1,0 +1,69 @@
+/** Generate Web and desktop brand assets from the shared APUS vector mark. */
+import { execFileSync } from 'node:child_process'
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import sharp from 'sharp'
+import { packIco, renderTrayIconEntries } from './render-tray-icon.ts'
+
+const web = new URL('../../web/public/', import.meta.url)
+const resources = new URL('../resources/', import.meta.url)
+const mark = await readFile(new URL('brand-mark.svg', web), 'utf8')
+const whiteMark = mark.replace('currentColor', '#fff')
+const appIcon = whiteMark.replace('viewBox="0 0 64 64"', 'width="1024" height="1024" viewBox="0 0 64 64"')
+  .replace('<path', '<rect width="64" height="64" rx="14" fill="#183c66"/><path')
+
+for (const [name, color] of [['favicon.svg', '#000'], ['favicon-dark.svg', '#fff']] as const) {
+  await writeFile(new URL(name, web), mark.replace('currentColor', color))
+}
+await sharp(Buffer.from(appIcon)).png().toFile(fileURLToPath(new URL('brand-icon.png', web)))
+for (const name of ['icon', 'icon-macos', 'icon-windows']) {
+  await writeFile(new URL(`${name}.svg`, resources), appIcon)
+  await sharp(Buffer.from(appIcon)).png().toFile(fileURLToPath(new URL(`${name}.png`, resources)))
+}
+const entries = await Promise.all([16, 24, 32, 48, 64, 128, 256].map(async size => ({
+  size, png: await sharp(Buffer.from(appIcon)).resize(size, size).png().toBuffer(),
+})))
+await writeFile(new URL('brand-icon.ico', web), packIco(entries))
+const tray = await renderTrayIconEntries(Buffer.from(appIcon))
+await writeFile(new URL('tray-windows.ico', resources), packIco(tray))
+
+const wordmark = '<svg xmlns="http://www.w3.org/2000/svg" width="330" height="44" viewBox="0 0 330 44">'
+  + '<text x="0" y="33" font-family="Arial, sans-serif" font-size="32" font-weight="500" fill="currentColor">APUS / REFLEX</text></svg>\n'
+await writeFile(new URL('../renderer/assets/welcome-brand.svg', import.meta.url), wordmark)
+for (const [name, color] of [['brand', '#183c66'], ['brand-dark', '#ffffff']] as const) {
+  for (const scale of [1, 2]) {
+    const target = new URL(`../installer/assets/${name}${scale === 2 ? '-2x' : ''}.png`, import.meta.url)
+    const dimensions = await sharp(await readFile(target)).metadata()
+    await sharp(Buffer.from(wordmark.replace('currentColor', color)))
+      .resize(dimensions.width, dimensions.height, { fit: 'contain', background: '#00000000' }).png().toFile(fileURLToPath(target))
+  }
+}
+
+const sidebar = '<svg xmlns="http://www.w3.org/2000/svg" width="164" height="314" viewBox="0 0 164 314">'
+  + '<rect width="164" height="314" fill="#183c66"/>'
+  + whiteMark.replace('<svg ', '<svg x="50" y="64" width="64" height="64" ')
+  + '<text x="82" y="164" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#fff">APUS</text>'
+  + '<text x="82" y="190" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#fff">REFLEX</text></svg>'
+await sharp(Buffer.from(sidebar)).png()
+  .toFile(fileURLToPath(new URL('../installer/assets/uninstaller-sidebar.png', import.meta.url)))
+
+// iconutil is macOS-only. Other hosts preserve the checked-in ICNS produced here.
+if (process.platform === 'darwin') {
+  const directory = await mkdtemp(join(tmpdir(), 'apus-brand-'))
+  try {
+    const { mkdir } = await import('node:fs/promises')
+    const iconset = join(directory, 'brand.iconset')
+    await mkdir(iconset)
+    for (const size of [16, 32, 128, 256, 512]) {
+      for (const scale of [1, 2]) {
+        await sharp(Buffer.from(appIcon)).resize(size * scale, size * scale).png()
+          .toFile(join(iconset, `icon_${size}x${size}${scale === 2 ? '@2x' : ''}.png`))
+      }
+    }
+    execFileSync('iconutil', ['-c', 'icns', iconset, '-o', fileURLToPath(new URL('brand-icon.icns', web))])
+  } finally {
+    await rm(directory, { recursive: true, force: true })
+  }
+}

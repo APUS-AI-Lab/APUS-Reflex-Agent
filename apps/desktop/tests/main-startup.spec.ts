@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url'
 import type { AccountView } from '@deepseek-ai/dsh-deepseek-account/types'
 import { WINDOWS_TITLEBAR_HEIGHT } from '../src/windows-layout.ts'
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest'
@@ -263,7 +264,7 @@ vi.mock('electron', () => ({
   app: harness.app,
   BrowserWindow: harness.FakeWindow,
   dialog: harness.dialog,
-  shell: { openExternal: harness.openExternal },
+  shell: { openExternal: harness.openExternal, openPath: vi.fn(async () => '') },
   nativeTheme: harness.nativeTheme,
   net: { fetch: vi.fn() },
   ipcMain: {
@@ -491,6 +492,14 @@ describe('desktop main startup', () => {
       .toEqual(expected[`${platform}:${locale}`])
     expect(options.iconPath).toBe(packaged ? join('desktop-test-resources', 'icon.png')
       : join('desktop-test-app', 'resources', 'icon-windows.png'))
+    const licenses = submenu.find(item => item.label === (locale === 'zh-CN' ? '开源许可证' : 'Open-source licenses'))
+    if (licenses === undefined) throw new Error('license menu entry missing')
+    const { shell } = await import('electron')
+    const openPath = vi.spyOn(shell, 'openPath')
+    ;(licenses.click as () => void)()
+    await vi.advanceTimersByTimeAsync(0)
+    expect(openPath).toHaveBeenLastCalledWith(packaged ? join('desktop-test-resources', 'licenses')
+      : fileURLToPath(new URL('../../../', import.meta.url)))
     if (platform !== 'win32') { expect(about!.click).toBeUndefined(); return }
     // Windows reuses the dimmed update dialog because Electron's fallback is a bare message box.
     harness.dialog.showMessageBox.mockResolvedValueOnce({ response: 0 })
@@ -498,8 +507,8 @@ describe('desktop main startup', () => {
     await vi.advanceTimersByTimeAsync(0)
     const zh = locale === 'zh-CN'
     expect(harness.dialog.showMessageBox).toHaveBeenLastCalledWith(expect.objectContaining({
-      type: 'info', title: zh ? '关于 DeepSeek Harness' : 'About DeepSeek Harness', message: 'DeepSeek Harness',
-      detail: zh ? '版本 V1.0.0' : 'Version V1.0.0', buttons: [zh ? '确定' : 'OK'], cancelId: 0,
+      type: 'info', title: zh ? '关于 APUS Reflex Harness' : 'About APUS Reflex Harness', message: 'APUS Reflex Harness',
+      detail: zh ? '版本 V1.0.0\n\n瞬策 · 瞬时执行，深度思考\n\nCopyright (c) 2026 DeepSeek\n基于 DeepSeek Harness 与 Cordis，感谢上游贡献者及所有第三方维护者。' : 'Version V1.0.0\n\nInstant action. Deep thinking.\n\nCopyright (c) 2026 DeepSeek\nBuilt on DeepSeek Harness and Cordis. Thank you to their contributors and all third-party maintainers.', buttons: [zh ? '确定' : 'OK'], cancelId: 0,
     }))
     // A dialog that cannot open is logged, not surfaced as an unhandled rejection.
     harness.dialog.showMessageBox.mockRejectedValueOnce(new Error('overlay unavailable'))
@@ -820,7 +829,7 @@ describe('desktop main startup', () => {
     expect(() => handler(event, 'application', NaN, 34)).toThrow('invalid popup request')
     const application = handler(event, 'application', 48, 34)
     expect(harness.menu.buildFromTemplate.mock.lastCall![0].map(item => item.label ?? item.type)).toEqual([
-      '关于 DeepSeek Harness', 'separator', '检查更新…', 'separator', '退出',
+      '关于 APUS Reflex Harness', 'separator', '开源许可证', '检查更新…', 'separator', '退出',
     ])
     expect(harness.popup.mock.lastCall![0]).toMatchObject({ window, x: 48, y: 34 })
     expect(harness.popup.mock.lastCall![0].callback).toBeTypeOf('function')
@@ -857,8 +866,8 @@ describe('desktop main startup', () => {
       : ['Application', 'editMenu'])
     const application = template[0]!.submenu as MenuItemConstructorOptions[]
     expect(application.filter(item => item.visible !== false).map(describeItem)).toEqual(platform === 'darwin'
-      ? ['about', 'separator', en.checkUpdatesMenu, 'separator', 'hide', 'hideOthers', 'unhide', 'separator', 'quit']
-      : ['about', 'separator', en.checkUpdatesMenu, 'separator', 'quit'])
+      ? ['about', 'separator', en.licensesMenu, en.checkUpdatesMenu, 'separator', 'hide', 'hideOthers', 'unhide', 'separator', 'quit']
+      : ['about', 'separator', en.licensesMenu, en.checkUpdatesMenu, 'separator', 'quit'])
     expect(harness.menu.setApplicationMenu).toHaveBeenCalledOnce()
   })
 

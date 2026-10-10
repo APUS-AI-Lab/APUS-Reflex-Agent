@@ -157,7 +157,7 @@ describe('AG-UI bridge', () => {
     await harness.run('thread-persona', 'who are you', 'p1', { persona: { name: 'Nova', tone: 'concise', hidden: ['terminal'] } })
     expect(systemOf(0)).toContain('You are Nova, an AI agent.')
     expect(systemOf(0)).toContain('Be brief and direct')
-    expect(systemOf(0)).not.toContain('powered by DeepSeek Harness')
+    expect(systemOf(0)).not.toContain('powered by APUS Reflex Harness')
     expect(systemOf(0)).not.toContain('Use present')
     expect(systemOf(0)).toContain('- 阅读并总结网页')
     expect(systemOf(0)).not.toMatch(/Google|Calendar page|Duse|羊驼/)

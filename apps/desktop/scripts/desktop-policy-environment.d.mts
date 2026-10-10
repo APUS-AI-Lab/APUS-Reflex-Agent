@@ -1,4 +1,4 @@
-/** Required deployment-selected metadata for mandatory-update policy requests. */
+/** Optional deployment-selected metadata for mandatory-update policy requests. */
 export interface DesktopPolicyEnvironment {
   origin: string
   allowedPageOrigins: string[]
@@ -10,6 +10,6 @@ export interface DesktopPolicyEnvironment {
 /**
  * Resolve policy settings before artifact preparation or signing.
  * @param environment File-owned release settings; only the selected origin is required.
- * @returns Policy metadata with deployment-selected origin and authentication.
+ * @returns Policy metadata, or undefined when no policy service is configured.
  */
-export function resolveDesktopPolicyEnvironment(environment: NodeJS.ProcessEnv): DesktopPolicyEnvironment
+export function resolveDesktopPolicyEnvironment(environment: NodeJS.ProcessEnv): DesktopPolicyEnvironment | undefined

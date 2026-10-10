@@ -121,6 +121,8 @@ Loader 结算后，app-boot 在仅 optional 条目未激活时输出警告。如
 <a id="understand-the-implementation"></a>
 ## 理解实现
 
+模型可见的源码检出目录段落标识 APUS Reflex Harness；启动器与配置标识保持不变。
+
 <details>
 <summary>实现细节——点击展开</summary>
 

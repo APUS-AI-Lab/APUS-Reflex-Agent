@@ -1,4 +1,4 @@
-/** Resolve the required policy service from the same deployment as updater publication. */
+/** Resolve the optional policy service from the same deployment as updater publication. */
 import { resolveDesktopAutoUpdateEnvironment } from './desktop-auto-update-environment.mjs'
 
 function origin(value, name) {
@@ -13,11 +13,12 @@ function origin(value, name) {
 /**
  * Resolve mandatory policy metadata before preparing artifacts or accessing signing hardware.
  * @param {NodeJS.ProcessEnv} environment File-owned release settings; the unselected origin is not required.
- * @returns {{ origin: string, allowedPageOrigins: string[], authentication: 'anonymous' | 'feishu-test', [key: string]: unknown }} Selected policy.
+ * @returns {{ origin: string, allowedPageOrigins: string[], authentication: 'anonymous' | 'feishu-test', [key: string]: unknown } | undefined} Selected policy, or undefined when unconfigured.
  */
 export function resolveDesktopPolicyEnvironment(environment) {
   const deployment = resolveDesktopAutoUpdateEnvironment(environment)
   const name = deployment === 'test' ? 'DSH_DESKTOP_MANDATORY_UPDATE_TEST_ORIGIN' : 'DSH_DESKTOP_MANDATORY_UPDATE_PROD_ORIGIN'
+  if (environment[name] === undefined && environment.DSH_DESKTOP_MANDATORY_UPDATE_CONFIG === undefined) return undefined
   const selected = origin(environment[name], name)
   let settings = {}
   if (environment.DSH_DESKTOP_MANDATORY_UPDATE_CONFIG !== undefined) {

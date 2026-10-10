@@ -1,6 +1,6 @@
 {
-  "name": "DeepSeek Harness",
-  "short_name": "DSH",
+  "name": "APUS Reflex Harness",
+  "short_name": "APUS Reflex",
   "start_url": "./",
   "scope": "./",
   "display": "fullscreen",

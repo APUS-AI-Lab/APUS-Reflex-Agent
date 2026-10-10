@@ -27,6 +27,8 @@ kind: "package-reference"
 <a id="behavior"></a>
 ## 行为
 
+产品标题为 APUS Reflex Harness；`system3` 插件与 locale 标识保持不变。
+
 更早的轮次依据投影的 `history` 保留各自的路由说明。运行中的轮次把任务交给子 agent 时，输入框 `conversation.input.right` 位置的条目在模型选择器旁写明委派对象，模型选择器仍显示负责协调的模型。区块订阅原生 Session 和投影。本地提交在路由结束前显示。执行状态独立于历史入口建议，跟随实时 Session；历史回放后仍可查看决策详情。轮次结束不代表交付物已通过验证。固定模型操作调用原生重置 API，并等待持久模式改变；调用失败保留当前显示模式。被寻址的子智能体不能修改根会话模型选择。委派运行接受运行中输入时，区块提供补充说明表单，通过原生 `subagents.steerByParent` Remote 发送用户文本；发送被拒绝时保留文本并显示提示，Host 记录后已接受的文本显示在运行下方。
 
 <a id="model-experience"></a>

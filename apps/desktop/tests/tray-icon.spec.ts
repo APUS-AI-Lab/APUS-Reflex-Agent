@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { packIco, TRAY_ICON_PATHS, TRAY_ICON_SIZES, unpackIco, type IcoEntry } from '../scripts/render-tray-icon.ts'
+import { packIco, renderTrayIconEntries, TRAY_ICON_PATHS, TRAY_ICON_SIZES, unpackIco, type IcoEntry } from '../scripts/render-tray-icon.ts'
 
 /** Smallest valid-looking PNG stream: signature plus an IHDR chunk declaring the given edge. */
 function pngStub(width: number, height = width): Buffer {
@@ -33,6 +33,11 @@ describe('tray icon packaging', () => {
     const forged = packIco([{ size: 16, png: pngStub(16) }])
     forged.writeUInt8(20, 6)
     expect(() => unpackIco(forged)).toThrow('declares 20 but holds 16x16')
+  })
+
+  it('renders the shipped APUS vector without requiring a legacy whale group', async () => {
+    const entries = await renderTrayIconEntries(readFileSync(TRAY_ICON_PATHS.source), [16, 32])
+    expect(unpackIco(packIco(entries)).map(entry => entry.size)).toEqual([16, 32])
   })
 
   it('ships one crisp bitmap per supported display scale in the committed tray icon', () => {

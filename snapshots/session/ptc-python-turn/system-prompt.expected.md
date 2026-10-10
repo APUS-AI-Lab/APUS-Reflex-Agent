@@ -1,4 +1,4 @@
-You are an AI agent powered by DeepSeek Harness.
+You are an AI agent powered by APUS Reflex Harness.
 
 You are a coding assistant powered by the deepseek-v4-flash model. Your working directory is {{cwd}}.
 
@@ -378,6 +378,7 @@ class SubagentOutput3(TypedDict):
     kind: Literal["foreground"]
     runId: str
     output: list[Any]
+    steers: NotRequired[list[str]]
 
 class SubagentForkArgs(TypedDict):
     # A short (3-5 word) description of the delegated task, for display.
@@ -398,6 +399,7 @@ class SubagentForkOutput3(TypedDict):
     kind: Literal["foreground"]
     runId: str
     output: list[Any]
+    steers: NotRequired[list[str]]
 
 class TodoWriteArgsTodos(TypedDict):
     # What the task is — a short imperative line.

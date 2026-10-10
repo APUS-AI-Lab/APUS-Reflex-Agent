@@ -7,5 +7,5 @@ COPY . .
 RUN pnpm install --frozen-lockfile
 ARG DSH_CLIENT_COMMIT_HASH
 LABEL org.opencontainers.image.revision=$DSH_CLIENT_COMMIT_HASH
-ENV DSH_CLIENT_COMMIT_HASH=$DSH_CLIENT_COMMIT_HASH DSH_CLIENT_TITLE="xDAN System3"
+ENV DSH_CLIENT_COMMIT_HASH=$DSH_CLIENT_COMMIT_HASH DSH_CLIENT_TITLE="APUS Reflex Harness"
 RUN pnpm exec tsx native/system/scripts/build.ts && pnpm run build

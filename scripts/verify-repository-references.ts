@@ -22,6 +22,8 @@ const machineReleaseEvidenceFiles = new Set([
   'docs/feat-system3-g1/desktop-acceptance.json',
   'docs/feat-system3-g1/deployment-final.json',
   'tasks/feat-system3-g1/review-regression.json',
+  'tasks/chore-apus-fork/import-verification.json',
+  'tasks/chore-apus-fork/branch-cleanup-verification.json',
 ])
 const gitOutputLimit = 64 * 1024 * 1024
 

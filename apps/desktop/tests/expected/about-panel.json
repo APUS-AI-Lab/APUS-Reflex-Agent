@@ -1,54 +1,76 @@
 {
   "darwin:en-US": {
     "menu": [
-      { "label": "About DeepSeek Harness", "role": "about" },
-      { "type": "separator" }
+      {
+        "label": "About APUS Reflex Harness",
+        "role": "about"
+      },
+      {
+        "type": "separator"
+      }
     ],
     "options": {
-      "applicationName": "DeepSeek Harness",
+      "applicationName": "APUS Reflex Harness",
       "applicationVersion": "1.0.0",
       "version": "",
-      "copyright": "",
-      "iconPath": "<app icon>"
+      "copyright": "Copyright (c) 2026 DeepSeek",
+      "iconPath": "<app icon>",
+      "credits": "Instant action. Deep thinking.\nBuilt on DeepSeek Harness and Cordis. Thank you to their contributors and all third-party maintainers."
     }
   },
   "darwin:zh-CN": {
     "menu": [
-      { "label": "关于 DeepSeek Harness", "role": "about" },
-      { "type": "separator" }
+      {
+        "label": "关于 APUS Reflex Harness",
+        "role": "about"
+      },
+      {
+        "type": "separator"
+      }
     ],
     "options": {
-      "applicationName": "DeepSeek Harness",
+      "applicationName": "APUS Reflex Harness",
       "applicationVersion": "1.0.0",
       "version": "",
-      "copyright": "",
-      "iconPath": "<app icon>"
+      "copyright": "Copyright (c) 2026 DeepSeek",
+      "iconPath": "<app icon>",
+      "credits": "瞬策 · 瞬时执行，深度思考\n基于 DeepSeek Harness 与 Cordis，感谢上游贡献者及所有第三方维护者。"
     }
   },
   "win32:zh-CN": {
     "menu": [
-      { "label": "关于 DeepSeek Harness" },
-      { "type": "separator" }
+      {
+        "label": "关于 APUS Reflex Harness"
+      },
+      {
+        "type": "separator"
+      }
     ],
     "options": {
-      "applicationName": "DeepSeek Harness",
+      "applicationName": "APUS Reflex Harness",
       "applicationVersion": "1.0.0",
       "version": "",
-      "copyright": "",
-      "iconPath": "<app icon>"
+      "copyright": "Copyright (c) 2026 DeepSeek",
+      "iconPath": "<app icon>",
+      "credits": "瞬策 · 瞬时执行，深度思考\n基于 DeepSeek Harness 与 Cordis，感谢上游贡献者及所有第三方维护者。"
     }
   },
   "win32:en-US": {
     "menu": [
-      { "label": "About DeepSeek Harness" },
-      { "type": "separator" }
+      {
+        "label": "About APUS Reflex Harness"
+      },
+      {
+        "type": "separator"
+      }
     ],
     "options": {
-      "applicationName": "DeepSeek Harness",
+      "applicationName": "APUS Reflex Harness",
       "applicationVersion": "1.0.0",
       "version": "",
-      "copyright": "",
-      "iconPath": "<app icon>"
+      "copyright": "Copyright (c) 2026 DeepSeek",
+      "iconPath": "<app icon>",
+      "credits": "Instant action. Deep thinking.\nBuilt on DeepSeek Harness and Cordis. Thank you to their contributors and all third-party maintainers."
     }
   }
 }

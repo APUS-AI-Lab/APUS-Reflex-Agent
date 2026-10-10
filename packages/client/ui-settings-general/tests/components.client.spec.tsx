@@ -117,7 +117,7 @@ describe('GeneralSection', () => {
     const renderSlot = vi.fn(
       ((key: string) => <div data-testid={`slot-${key}`} />) as GeneralSectionComponentProps['renderSlot'],
     )
-    const props: GeneralSectionComponentProps = { ...kit, renderSlot, close: vi.fn() }
+    const props: GeneralSectionComponentProps = { ...kit, renderSlot, t, close: vi.fn() }
     const view = render(<GeneralSection {...props} />)
     return { view, renderSlot }
   }
@@ -126,6 +126,8 @@ describe('GeneralSection', () => {
     const { renderSlot } = mount()
     expect(renderSlot).toHaveBeenCalledWith('settings.general.item', {})
     expect(screen.getByTestId('slot-settings.general.item')).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'MIT license and original copyright' }).getAttribute('href')).toBe('/LICENSE.txt')
+    expect(screen.getByRole('link', { name: 'Third-party licenses and acknowledgements' }).getAttribute('href')).toBe('/THIRD_PARTY_NOTICES.txt')
   })
 })
 
