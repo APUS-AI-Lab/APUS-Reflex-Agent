@@ -53,8 +53,8 @@ Stagehand source 模式在本机 Node22/tsx 加载时失败；错误刷新产物
 - [x] 实际构建、Web 回放及浏览器证据。
 - [x] 完成 Harness MIT/上游致谢及分发核对。
 - [x] README 格式复验与文档 42 项检查。
-- [ ] Frontend 原生包与独立 Profile 验收。
-- [ ] 提交 Harness，Frontend 固定该 revision 后提交；保留两工作树。
+- [x] Frontend 独立 Profile、正常/安全模式、重启和明暗/窄屏验收；固定版本包另见前端交接。
+- [x] Harness 产品提交合并并推送 main；Frontend 固定对应 revision，保留两工作树。
 
 ## 分支/部署状态
 
@@ -67,3 +67,11 @@ Stagehand source 模式在本机 Node22/tsx 加载时失败；错误刷新产物
 3. 阅读 docs/feat-apus-brand/evidence/ 和 Frontend 原生验收结果。
 4. Harness 构建稳定后才执行 Frontend runtime prepare；核对固定 revision。
 5. 区分真实产品验收、静态检查与已有文档基线问题。
+
+## 合并与发布记录
+
+Harness 产品品牌提交已快进合并并推送到 GitHub main，正常 pre-push typecheck 通过。Frontend 的 Harness pin 指向此产品提交；随后本仓仅补项目指令中的产品名称与交接文档，不改变 Runtime。精确 revision 以 git log 和 Frontend runtime manifest 为准。
+
+GitHub 两仓描述、topics、Issues 链接与 MIT 标识已核对。Harness 上游自动化明确关闭，独立只读 CI 已恢复；Frontend 新增常规只读 CI，发行/归档/外部通知统一由默认关闭的 APUS_RELEASE_AUTOMATION 控制。未制作签名发行、未发布 Release、未替换用户安装版。
+
+最终装配曾遇到 Harness pre-push 重建 lib 与 Frontend 复制并发；在 hook 完成后重试，检查临时副本 bin.js 存在。后续遵守冻结产物而不只是冻结源码的要求。

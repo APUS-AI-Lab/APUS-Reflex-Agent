@@ -1,6 +1,6 @@
 # AGENTS.md
 
-xDAN System3 Harness embeds [Jev decisions](docs/feat-independent-harness/README.md) into DSH. Read [docs/architecture.md](docs/architecture.md) before changing `packages/`; follow [docs/AGENTS.md](docs/AGENTS.md) for documentation.
+APUS Reflex Harness embeds [Jev decisions](docs/feat-independent-harness/README.md) into DSH. Read [docs/architecture.md](docs/architecture.md) before changing `packages/`; follow [docs/AGENTS.md](docs/AGENTS.md) for documentation.
 
 ## Pre-stable APIs and released Session data
 

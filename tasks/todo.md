@@ -378,8 +378,8 @@ PPT v2为4页主讲+2页备查，实际Keynote打开、六页备注回读和PDF�
 - [x] 用户批准两仓设计，创建 feat-apus-brand 隔离工作树。
 - [x] Harness 共享 UI、Web/PWA、CLI 与桌面品牌。
 - [x] Frontend 菜单、恢复、手机、图标和运行策略。
-- [ ] 两仓构建、针对性测试、产物联动与真实界面验证。
-- [ ] Conventional Commits 与工作树 handoff。
+- [x] 两仓构建、针对性测试、产物联动与真实界面验证。
+- [x] Conventional Commits 与工作树 handoff。
 
 - [x] MIT 原版权、许可分发和上游致谢；GitHub 品牌描述、topics、反馈链接。
 - [ ] 按用户追加授权合并两仓 main，推送并核对 CI。
