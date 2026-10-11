@@ -104,7 +104,6 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
   private controllerWithConfig(agent: Agent, switchConfig: ContinuumMemorySwitch): ContinuumMemoryController {
     const existing = this.controllers.get(agent)
     if (existing !== undefined) return existing
-    // oxlint-disable-next-line typescript/no-deprecated -- Session projection migration is not available for this new record event yet.
     const store = foldMemoryRecordEvents(agent.session.snapshotEvents(), new MemoryRecordStore())
     const controller = new ContinuumMemoryController(store, switchConfig)
     this.controllers.set(agent, controller)
