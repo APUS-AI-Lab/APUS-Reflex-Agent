@@ -6,15 +6,16 @@
   "command": "pnpm exec vitest --config vitest.e2e.config.ts run packages/llm/llm-deepseek/tests/adapter.e2e.ts packages/llm/llm-deepseek/tests/runtime.e2e.ts",
   "environment": {
     "DEEPSEEK_IN_HISTORY_MODEL": "deepseek-v4-pro",
-    "DEEPSEEK_FLASH_E2E": "unset"
+    "DEEPSEEK_FLASH_E2E": "1",
+    "DEEPSEEK_VISION_E2E": "1"
   },
-  "startedAt": "2026-10-11T03:01:06Z",
-  "finishedAt": "2026-10-11T03:01:54Z",
+  "startedAt": "2026-10-11T03:58:00Z",
+  "finishedAt": "2026-10-11T04:01:08Z",
   "exitCode": 0,
   "testFiles": 2,
-  "passed": 19,
-  "skipped": 2,
+  "passed": 21,
+  "skipped": 0,
   "failed": 0,
-  "durationSeconds": 46.58,
-  "notes": "The two skipped cases are optional image checks gated by DEEPSEEK_FLASH_E2E/DEEPSEEK_VISION_E2E. Required adapter/runtime checks, including in-history system updates, passed. The API key is not stored in this repository or evidence file."
+  "durationSeconds": 197.0,
+  "notes": "Adapter E2E 13/13 and runtime E2E 8/8 passed with both optional image flags enabled. The runtime vision smoke required removing a duplicate E2eAttachmentStore registration in the test setup; no production adapter behavior was changed. The API key is not stored in this repository or evidence file."
 }

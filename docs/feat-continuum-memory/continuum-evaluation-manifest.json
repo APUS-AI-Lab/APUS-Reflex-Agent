@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "status": "jev-real-pass-deepseek-partial-continuum-evaluator-pass",
+  "status": "jev-real-pass-deepseek-pass-continuum-evaluator-pass",
   "source": "feat-continuum-memory worktree",
   "variants": [
     {
@@ -86,14 +86,14 @@
       "model": "APUS-OpenJev-v1-9B-5949"
     },
     "deepseek": {
-      "status": "partial",
+      "status": "pass",
       "evidence": "continuum-deepseek-e2e.json",
       "endpoint": "https://api.deepseek.com/anthropic",
       "testFiles": 2,
-      "passed": 19,
-      "skipped": 2,
+      "passed": 21,
+      "skipped": 0,
       "failed": 0,
-      "detail": "Protected local runtime credential accepted by official endpoint; required adapter/runtime checks including in-history updates passed. Two optional image checks were skipped because DEEPSEEK_FLASH_E2E/DEEPSEEK_VISION_E2E was unset.",
+      "detail": "Protected official endpoint run passed adapter 13/13 and runtime 8/8 with both optional image flags enabled; in-history updates and image upload/reference/delete checks passed.",
       "model": "deepseek-v4-pro"
     },
     "evaluator": {

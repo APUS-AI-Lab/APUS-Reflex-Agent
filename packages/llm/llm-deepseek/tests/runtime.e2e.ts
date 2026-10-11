@@ -184,7 +184,6 @@ describe.skipIf(!process.env.DEEPSEEK_API_KEY)('llm-deepseek e2e (real API)', ()
     if (key === undefined) throw new Error('e2e ran without DEEPSEEK_API_KEY')
     const baseURL = Protocol.PUBLIC_BASE_URL
     const ctx = await harness(VISION, { baseURL })
-    await ctx.plugin(E2eAttachmentStore)
     const attachments = ctx.attachments as E2eAttachmentStore
     let uploadedFile: Protocol.DeepSeekFileIdType | undefined
     const nativeFetch = globalThis.fetch

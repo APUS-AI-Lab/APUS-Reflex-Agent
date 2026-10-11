@@ -57,7 +57,7 @@ Harness 持有事实、权限、预算、版本和执行权。模型提炼先成
 
 工作树：.Codex/worktrees/feat-continuum-memory。分支：feat-continuum-memory。从 main 当前基线创建；创建前已检查 status、diff、stash、branch、HEAD 和 worktree list，stash 为空。主目录已有 README 设计和未跟踪 undefined 文件，未带入或改动这些用户工作。运行源码、配置与服务器未变，分支未推送，CI 未触发。
 
-最终版 HTML 浏览器检查通过：桌面/手机无页面横向溢出，13 维对比表、模块/验收章节完整，无 console 错误。P0 `continuum-admission.spec.ts` 通过 8/8；Continuum/adapter/agent-loop/evaluator 11 个测试文件 54/54；P1.3 Jev adapter 与 Session 回执已包含在内；focused Oxlint、两包 TypeScript 构建、native flock 构建、README Model Experience、persistence acknowledgement 和相对链接门禁通过。刷新 3 个历史 persistence format facts 后，`pnpm run test:docs` 最终 20/20 通过。实时 RunPod Jev adapter E2E 当前通过；DeepSeek v4-pro adapter/runtime 实跑 19 passed、2 optional image skipped、0 failed，跳过项仍 pending。严格 A0/A1/B/C/U 评估器 20/20 请求完成、11/11 applicable assertions 通过。全仓 `pnpm run build` 已通过。
+最终版 HTML 浏览器检查通过：桌面/手机无页面横向溢出，13 维对比表、模块/验收章节完整，无 console 错误。P0 `continuum-admission.spec.ts` 通过 8/8；Continuum/adapter/agent-loop/evaluator 11 个测试文件 54/54；P1.3 Jev adapter 与 Session 回执已包含在内；focused Oxlint、两包 TypeScript 构建、native flock 构建、README Model Experience、persistence acknowledgement 和相对链接门禁通过。刷新 3 个历史 persistence format facts 后，`pnpm run test:docs` 最终 20/20 通过。实时 RunPod Jev adapter E2E 当前通过；DeepSeek v4-pro adapter/runtime 实跑 21 passed、0 skipped、0 failed。严格 A0/A1/B/C/U 评估器 20/20 请求完成、11/11 applicable assertions 通过。全仓 `pnpm run build` 已通过。
 
 ## P1.2 Review
 
