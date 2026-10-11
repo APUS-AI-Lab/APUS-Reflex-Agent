@@ -3,5 +3,5 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/feat-reflex-control/evidence/electron-package-license-audit.md
 /electron-package-brand-and-license-audit:
-  en: 3bce9bf6301f0b08
-  zh: 8ba1fd750ae25baf
+  en: a605ea98f4bdcca1
+  zh: 350d67876cef5d2f

@@ -87,7 +87,7 @@ P0 是本轮功能完整交付的必需项；P1 是性能或推广范围的验�
 | --- | --- | --- |
 | F-01 / P0 | 用户打开专用“Reflex 模型配置”页，编辑服务、模型与 effort，测试连接并保存；刷新和完整重启后仍保留，真实判断使用保存值。 | 真实通过；[F-01 脱敏报告](evidence/reflex-settings-real.zh.md)证实规范模型连接判断、无效模型预期失败、low 保存、跨进程重启后仍为 low、真实请求采用 low，随后恢复部署默认 high。 |
 | F-02 / P0 | 错误 key 或无效配置显式报错，不覆盖已保存的有效配置；UI 和证据不回显秘密。 | [真实错误凭据截图](evidence/reflex-ux-settings-rejected-key.png)及配置回归通过；不把“测试连接成功”当任务执行成功。 |
-| F-03 / P0 | 最终 Electron 包在独立用户目录保存配置，退出后重启；safe mode 可启动，正常模式恢复原设置，用户已有配置不丢失。 | Frontend `feat-reflex-control` 的未签名 macOS arm64 目录包通过正常启动、Reflex 配置保存/重启、Safe Mode、正常模式恢复、服务/模型保留和不显示密钥；恢复界面 200% 系统缩放 40 变体通过；[包审计](evidence/electron-package-license-audit.zh.md)确认品牌与 MIT/NOTICE 保留；当前 runtime 修订一致性、签名/公证和页面级 200% 缩放仍待测。 |
+| F-03 / P0 | 最终 Electron 包在独立用户目录保存配置，退出后重启；safe mode 可启动，正常模式恢复原设置，用户已有配置不丢失。 | Frontend `feat-reflex-control` 的重新构建未签名 macOS arm64 目录包通过当前 runtime manifest 一致性、真实 Safe Mode CDP 启动/清理、品牌与 MIT/NOTICE 保留；恢复界面 200% 系统缩放 40 变体通过。正常模式设置/重启证据另行保留；签名/公证和页面级 200% 缩放仍待测。 |
 
 ### 品牌、许可与交付
 
@@ -95,7 +95,7 @@ P0 是本轮功能完整交付的必需项；P1 是性能或推广范围的验�
 | --- | --- | --- |
 | D-01 / P0 | 用户可见品牌为 APUS Reflex Harness，配置页称 Reflex；MIT 原版权、许可和上游致谢随产物保留。 | 上一批品牌已合 main；本批 324 个 Harness 包 MIT 与第三方通知检查通过。未签名 Electron 目录包已直接通过品牌与四个 MIT/NOTICE 文件逐字节比对，见[包审计](evidence/electron-package-license-audit.zh.md)；当前 runtime 一致性和签名/公证产物仍归入 F-03。 |
 | D-02 / P0 | 模型可见输入、自动纠偏、上下文投影和恢复均可从日志重建；TypeScript/Python 消费同一事件，历史格式不被覆盖。 | 定向回归、持久化检查及 Goal、监督、恢复、上下文的双 SDK 录制/独立回放通过；外部模型夹具不算真实模型 E2E。 |
-| D-03 / P0 | 后端提交形成干净版本，前端固定该版本；生成真实运行包，manifest 无 dirty 标记，实际启动与配置链路通过。 | Harness 与 Frontend `feat-reflex-control` 修订均已提交并推送；发布 workflow 固定该 Harness 修订，部署 manifest 报告匹配的干净源码且 `sourceDirty=false`，未签名目录包的启动/配置流程通过。 |
+| D-03 / P0 | 后端提交形成干净版本，前端固定该版本；生成真实运行包，manifest 无 dirty 标记，实际启动与配置链路通过。 | Harness 与 Frontend `feat-reflex-control` 修订均已提交并推送；release workflow 固定当前 Harness 修订，重新构建的部署 manifest 报告匹配的 clean source 且 `sourceDirty=false`，真实 Electron Safe Mode/CDP 启动通过。 |
 | D-04 / P0 | 必需检查通过、独立审查无未解决阻断、PR 按授权合并两仓 main；回读远端与 CI，并保留交接。 | 进行中；相关构建、lint、Ruff、文档和包检查已有通过记录，真实闭环与正式包仍阻断完整交付。CI 未运行或仍排队都不算通过。 |
 
 ### UI/UX 用户体验

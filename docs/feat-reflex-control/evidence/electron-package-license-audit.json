@@ -20,14 +20,22 @@
     "arch": "arm64",
     "mode": "deployed",
     "sourceDirty": false,
-    "sourceRevision": "older than current Harness branch",
+    "sourceRevision": "current feat-reflex-control Harness branch revision",
     "currentHarnessHead": "current feat-reflex-control branch",
-    "revisionMatchesCurrentHarness": false
+    "revisionMatchesCurrentHarness": true,
+    "sourceDirty": false
+  },
+  "startup": {
+    "safeMode": true,
+    "remoteDebuggingPort": 19223,
+    "cdpReady": true,
+    "processCleanup": true,
+    "status": "passed"
   },
   "signing": {
     "validDeveloperIdIdentity": false,
     "stapledNotarizationTicket": false,
     "status": "pending-external-credentials"
   },
-  "conclusion": "Brand and MIT/NOTICE retention pass for the unsigned directory artifact; current-runtime parity and signed/notarized release remain pending."
+  "conclusion": "Current-runtime parity, brand, MIT/NOTICE retention, and Safe Mode CDP startup pass for the unsigned directory artifact; signed/notarized release and page-level 200% zoom remain pending."
 }
