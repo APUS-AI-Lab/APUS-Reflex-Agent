@@ -441,9 +441,9 @@ P1.4/P1.5 追加验收：Continuum 6 个测试文件 26/26、TypeScript build �
 
 实时验收：RunPod Jev endpoint 当前可达，`continuum-live-e2e.ts` 使用部署配置中的 JEV key 实跑成功，结果保存在 `docs/feat-continuum-memory/continuum-live-e2e.json`。官方 DeepSeek v4-pro adapter/runtime 通过受保护 runtime.env 实跑 21/21、0 skip、0 failed；TypeScript/Python SDK receipt 回放也已通过。
 
-P1.6 验收：profile service 测试 3/3、Continuum 全测试 28/28、service TypeScript build 与 Oxlint 通过；`verify-cordis-config` 215/215、`test:docs` 20/20、persistence acknowledgement 80 roots/28 history records 通过。runtime patch 默认关闭，仅由受保护部署环境的 `CONTINUUM_MEMORY_*` 配置显式开启。Service 当前提供记录 create/supersede/deactivate、Session 日志恢复和 controller 消费者；Jev active 选择仍由独立 adapter 负责，尚未宣称全链路自动采用。
+P1.6 验收：profile service 测试 3/3、Continuum 全测试 28/28、service TypeScript build 与 Oxlint 通过；`verify-cordis-config` 215/215、`test:docs` 20/20、persistence acknowledgement 80 roots/28 history records 通过。runtime patch 默认关闭，仅由受保护部署环境的 `CONTINUUM_MEMORY_*` 配置显式开启。Service 当前提供记录 create/supersede/deactivate、Session 日志恢复、controller 派生索引和同一步消费者；Jev active 选择由独立 adapter 负责并已写入 receipt。
 
-P1.7 验收：Continuum/adapter/agent-loop 9 个测试文件 48/48，Continuum 与 Jev TypeScript build、focused Oxlint、全仓 `pnpm run build` 通过。profile selector 的 active、shadow、回执和关闭后的迟到结果均有测试。官方 DeepSeek v4-pro adapter/runtime 实跑 19 passed、2 optional image skipped、0 failed；跳过项仍按政策 pending。新增 `scripts/continuum-evaluation.ts` 是严格 A0/A1/B/C/U 执行器，但本轮严格评估器已用受保护凭据完成 20/20 请求，结果见 `docs/feat-continuum-memory/continuum-evaluation-results.json`；applicable 11/11 matched；B/C 8/8、A1 3/3 通过，A0/U 为 not-applicable；scope candidate 已在 Jev 前按授权过滤。
+P1.7 验收：Continuum/adapter/agent-loop 9 个测试文件 48/48，Continuum 与 Jev TypeScript build、focused Oxlint、全仓 `pnpm run build` 通过。profile selector 的 active、shadow、回执和关闭后的迟到结果均有测试；后续补充了 timeout、fallback 和有界顺序多选。严格 evaluator 20/20 请求、11/11 applicable assertions 通过；DeepSeek adapter/runtime 当前 21/21、0 skip、0 failed。
 
 摘要树已改为确定性 scope/kind 树与稳定前缀 bytes/hash 仪表；P2 新增可重建倒排索引和有界积压；Jev active 新增显式 timeout 与 baseline fallback；Python SDK 已加入无 Jev 回放投影，并在安装项目环境中 2/2 通过。DeepSeek adapter/runtime 真实测试 21/21 通过、0 skipped；keyless snapshot 180 passed、0 failed、2 个 Windows-only pwsh 场景在 macOS 上跳过；最终 host build、docs 20/20、59/59 定向测试、Cordis 215/215 和 persistence 80/28 检查通过。
 
@@ -453,7 +453,7 @@ P1.7 验收：Continuum/adapter/agent-loop 9 个测试文件 48/48，Continuum �
 
 ### P1.2 Review
 
-`appendMemoryRecordEvent` 写入完整变更后记录，`foldMemoryRecordEvents` 在恢复时按顺序重建记录。测试使用真实 JSONL backend 和 native flock：写入 create/supersede/deactivate，显式 flush，销毁 writer，重新挂载 reader，读取并比较完整快照。未知事件在 catalog 更新前被 reader fail-closed；运行生成器和 persistence acknowledgement 后 catalog、schema、双语记录均已更新。尚未完成产品 profile、Reflex adapter、检索、同一步采用或 flush 故障注入。
+`appendMemoryRecordEvent` 写入完整变更后记录，`foldMemoryRecordEvents` 从 Session 日志恢复；真实 JSONL backend、native flock、1,000 条长历史、重启和尾部检索均已验证。flush 失败传播/重试由 Session persistence contract 覆盖；Continuum 专属故障注入仍是待补证据。
 
 ### P1.3 Review
 
