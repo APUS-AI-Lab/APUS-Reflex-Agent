@@ -139,8 +139,7 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
       existing.setSwitch(switchConfig)
       return existing
     }
-    // Session seed restoration requires the complete historical list until a projection seam is available.
-    // oxlint-disable-next-line typescript/no-deprecated
+    // oxlint-disable-next-line typescript/no-deprecated -- deferred until Session exposes a memory projection.
     const store = foldMemoryRecordEvents(agent.session.snapshotEvents(), new MemoryRecordStore())
     const controller = new ContinuumMemoryController(store, switchConfig)
     this.controllers.set(agent, controller)
