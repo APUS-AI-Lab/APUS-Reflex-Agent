@@ -77,12 +77,14 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
     const store = this.storeFor(agent)
     const created = store.create(record)
     appendMemoryRecordEvent(agent.session, 'create', created)
+    this.controller(agent).observe(created)
     return created
   }
 
   supersede(agent: Agent, id: MemoryId, expectedRevision: number, replacement: NewMemoryRecord): MemoryRecord {
     const next = this.storeFor(agent).supersede(id, expectedRevision, replacement)
     appendMemoryRecordEvent(agent.session, 'supersede', next)
+    this.controller(agent).observe(next)
     return next
   }
 

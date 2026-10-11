@@ -1,6 +1,7 @@
 import type { MemoryRetrievalConfig, MemoryWorkingSet } from './retrieval.ts'
 import { retrieveMemoryWorkingSet } from './retrieval.ts'
 import { MemoryRecordStore, type MemoryId, type MemoryRecord } from './records.ts'
+import { MemoryRecordIndex } from './memory-index.ts'
 
 /** Product state for the Reflex-only Continuum switch. */
 export interface ContinuumMemorySwitch {
@@ -42,12 +43,14 @@ export interface ContinuumMemoryReadTicket {
  */
 export class ContinuumMemoryController {
   private generation = 0
+  private readonly index = new MemoryRecordIndex()
   private switchConfig: ContinuumMemorySwitch
 
   constructor(
     private readonly store: MemoryRecordStore,
     config: ContinuumMemorySwitch,
   ) {
+    this.index.rebuild(store.snapshot())
     this.switchConfig = { ...config }
   }
 
@@ -78,7 +81,7 @@ export class ContinuumMemoryController {
       if (record.status !== 'active' || !authorized.has(record.scope)) continue
       copyRecord(visible, record)
     }
-    return retrieveMemoryWorkingSet(visible, config, query)
+    return retrieveMemoryWorkingSet(visible, { ...config, index: this.index }, query)
   }
 
   /** Whether a result may still be committed after an async read or Jev decision. */
@@ -86,9 +89,16 @@ export class ContinuumMemoryController {
     return ticket.generation === this.generation && this.state().enabled
   }
 
+  /** Record a committed snapshot in the disposable derived index. */
+  observe(record: MemoryRecord): void {
+    this.index.enqueue(record)
+    this.index.rebuildPending(1)
+  }
+
   /** Deactivate a record and invalidate all in-flight projections. */
   deactivate(id: MemoryId, expectedRevision: number): MemoryRecord {
     const record = this.store.deactivate(id, expectedRevision)
+    this.observe(record)
     this.generation += 1
     return record
   }
