@@ -2,6 +2,8 @@ import type { MemoryRetrievalConfig, MemoryWorkingSet } from './retrieval.ts'
 import { retrieveMemoryWorkingSet } from './retrieval.ts'
 import { MemoryRecordStore, type MemoryId, type MemoryRecord } from './records.ts'
 import { MemoryRecordIndex } from './memory-index.ts'
+import { buildContinuumSummaryView, zoomContinuumSummaryView, type ContinuumSummarySource } from './summary-view.ts'
+import type { ContinuumSummaryTreeConfig, ContinuumSummaryTreeNode } from './summary-tree.ts'
 
 /** Product state for the Reflex-only Continuum switch. */
 export interface ContinuumMemorySwitch {
@@ -84,6 +86,22 @@ export class ContinuumMemoryController {
     return retrieveMemoryWorkingSet(visible, { ...config, index: this.index }, query)
   }
 
+  /** Build a current authorized summary navigation view without model calls. */
+  summary(ticket: ContinuumMemoryReadTicket, config: ContinuumSummaryTreeConfig = {}): ContinuumSummaryTreeNode | undefined {
+    const view = this.summaryView(ticket, config)
+    return view?.tree
+  }
+
+  /** Resolve a current tree node to exact Session source references. */
+  zoom(
+    ticket: ContinuumMemoryReadTicket,
+    path: string,
+    config: ContinuumSummaryTreeConfig = {},
+  ): readonly ContinuumSummarySource[] | undefined {
+    const view = this.summaryView(ticket, config)
+    return view === undefined ? undefined : zoomContinuumSummaryView(view, path)
+  }
+
   /** Whether a result may still be committed after an async read or Jev decision. */
   isCurrent(ticket: ContinuumMemoryReadTicket): boolean {
     return ticket.generation === this.generation && this.state().enabled
@@ -93,6 +111,12 @@ export class ContinuumMemoryController {
   observe(record: MemoryRecord): void {
     this.index.enqueue(record)
     this.index.rebuildPending(1)
+  }
+
+  private summaryView(ticket: ContinuumMemoryReadTicket, config: ContinuumSummaryTreeConfig) {
+    if (!this.isCurrent(ticket)) return undefined
+    const authorized = new Set(ticket.principal.scopes)
+    return buildContinuumSummaryView(this.store.snapshot().filter(record => authorized.has(record.scope)), config)
   }
 
   /** Deactivate a record and invalidate all in-flight projections. */

@@ -31,4 +31,13 @@ describe('Continuum deterministic summary tree', () => {
     expect(first[2]?.reusedPrefixBytes).toBeGreaterThan(0)
     expect(first[1]?.totalBytes).toBeGreaterThan(first[0]?.totalBytes ?? 0)
   })
+
+  it('applies summary limits in UTF-8 bytes', () => {
+    const tree = buildContinuumSummaryTree([
+      { id: 'unicode', scope: 'workspace', kind: 'fact', content: '界界' },
+    ], { maxSummaryBytes: 3 })
+    expect(tree.summary).toBe('界')
+    expect(tree.children[0]?.summary).toBe('界')
+    expect(() => buildContinuumSummaryTree([], { maxSummaryBytes: 0 })).toThrow(TypeError)
+  })
 })

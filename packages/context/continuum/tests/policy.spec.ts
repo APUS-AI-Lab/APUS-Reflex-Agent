@@ -23,6 +23,34 @@ describe('Continuum switch, permission, and stop lifecycle', () => {
     expect(working?.candidates.map(candidate => candidate.id)).toEqual([MemoryId('workspace-fact')])
   })
 
+  it('builds an authorized summary view and resolves source references on zoom', () => {
+    const controller = new ContinuumMemoryController(store(), { enabled: true, mode: 'active', reflexMounted: true })
+    const ticket = controller.beginRead({ scopes: ['workspace'] })!
+    const tree = controller.summary(ticket, { maxItemsPerLeaf: 1, maxSummaryBytes: 64 })
+    expect(tree?.children.map(child => child.path)).toEqual(['workspace/fact'])
+    expect(controller.zoom(ticket, 'workspace/fact')).toEqual([{
+      recordId: MemoryId('workspace-fact'),
+      sourceRefs: [{ sessionId: SessionId('s'), eventSeq: SessionSeq(0) }],
+    }])
+    expect(controller.zoom(ticket, 'private/fact')).toEqual([])
+  })
+
+  it('omits superseded and deactivated records and rejects stale view tickets', () => {
+    const records = store()
+    const controller = new ContinuumMemoryController(records, { enabled: true, mode: 'active', reflexMounted: true })
+    const ticket = controller.beginRead({ scopes: ['workspace'] })!
+    const replacement = records.supersede(MemoryId('workspace-fact'), 1, {
+      id: MemoryId('workspace-fact-v2'), kind: 'fact', scope: 'workspace', content: 'The migration moved.',
+      sourceRefs: [{ sessionId: SessionId('s'), eventSeq: SessionSeq(2) }],
+    })
+    controller.observe(replacement)
+    expect(controller.summary(ticket)).toBeDefined()
+    const fresh = controller.beginRead({ scopes: ['workspace'] })!
+    expect(controller.zoom(fresh, 'workspace/fact')?.map(source => source.recordId)).toEqual([MemoryId('workspace-fact-v2')])
+    controller.setSwitch({ enabled: false, mode: 'off', reflexMounted: true })
+    expect(controller.summary(fresh)).toBeUndefined()
+  })
+
   it('invalidates an in-flight read after disable and deactivation', () => {
     const records = store()
     const controller = new ContinuumMemoryController(records, { enabled: true, mode: 'active', reflexMounted: true })

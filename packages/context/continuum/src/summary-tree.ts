@@ -21,6 +21,8 @@ export interface ContinuumSummaryTreeNode {
 /** Options for deterministic tree construction. */
 export interface ContinuumSummaryTreeConfig {
   readonly maxItemsPerLeaf?: number
+  /** Maximum UTF-8 bytes per node summary; omitted for unbounded local instrumentation. */
+  readonly maxSummaryBytes?: number
 }
 
 /** Build a two-level scope/kind tree without silently dropping source items. */
@@ -30,6 +32,9 @@ export function buildContinuumSummaryTree(
 ): ContinuumSummaryTreeNode {
   const maxItemsPerLeaf = config.maxItemsPerLeaf ?? 32
   if (!Number.isSafeInteger(maxItemsPerLeaf) || maxItemsPerLeaf < 1) throw new TypeError('maxItemsPerLeaf must be a positive safe integer')
+  if (config.maxSummaryBytes !== undefined && (!Number.isSafeInteger(config.maxSummaryBytes) || config.maxSummaryBytes < 1)) {
+    throw new TypeError('maxSummaryBytes must be a positive safe integer')
+  }
   const ordered = [...items].sort(compareItems)
   const groups = new Map<string, ContinuumSummaryTreeItem[]>()
   for (const item of ordered) {
@@ -47,13 +52,13 @@ export function buildContinuumSummaryTree(
       children.push(Object.freeze({
         path: `${escapePath(scope)}/${escapePath(kind)}${suffix}`,
         label: `${scope}/${kind}${suffix}`,
-        summary: summarize(chunk),
+        summary: summarize(chunk, config.maxSummaryBytes),
         itemIds: Object.freeze(chunk.map(item => item.id)),
         children: Object.freeze([]),
       }))
     }
   }
-  return Object.freeze({ path: '', label: 'root', summary: summarize(ordered), itemIds: Object.freeze([]), children: Object.freeze(children) })
+  return Object.freeze({ path: '', label: 'root', summary: summarize(ordered, config.maxSummaryBytes), itemIds: Object.freeze([]), children: Object.freeze(children) })
 }
 
 /** Find source item IDs whose content or deterministic summary contains every term. */
@@ -109,12 +114,22 @@ function compareItems(left: ContinuumSummaryTreeItem, right: ContinuumSummaryTre
   return left.scope.localeCompare(right.scope) || left.kind.localeCompare(right.kind) || left.id.localeCompare(right.id)
 }
 
-function summarize(items: readonly ContinuumSummaryTreeItem[]): string {
-  return items.map(item => item.summary ?? item.content).join(' | ')
+function summarize(items: readonly ContinuumSummaryTreeItem[], maxBytes?: number): string {
+  let result = ''
+  let bytes = 0
+  for (const [index, item] of items.entries()) {
+    const text = `${index === 0 ? '' : ' | '}${item.summary ?? item.content}`
+    for (const character of text) {
+      bytes += utf8Bytes(character)
+      if (maxBytes !== undefined && bytes > maxBytes) return result
+      result += character
+    }
+  }
+  return result
 }
 
 function escapePath(value: string): string {
-  return value.replaceAll('/', '%2F').replaceAll('\u0000', '%00')
+  return value.replaceAll('%', '%25').replaceAll('/', '%2F').replaceAll('\u0000', '%00')
 }
 
 function commonPrefix(left: string, right: string): string {

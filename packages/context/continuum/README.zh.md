@@ -51,7 +51,7 @@ Session 事件复用现有 persistence backend；调用方完成 `ctx.sessions.f
 <a id="lifecycle-and-evaluation"></a>
 ## 生命周期与评测
 
-`ContinuumMemoryController` 负责 Reflex 专属开关、精确作用域授权和在途读取的 generation token。关闭开关会保留持久记录，但使待提交的投影失效；停用记录也会使在途投影失效。未接入 Reflex 时，`resolveContinuumMemorySwitch` 回到原版路径。挂载配套 selector 后，active 模式通过 Jev 过滤有界工作集并写入 `continuum/memory-decision`；shadow 模式调用 Jev 但保留 baseline。`buildContinuumSummaryTree` 提供确定性的 scope/kind 导航，`measureContinuumStableCacheLayouts` 报告本地稳定前缀复用。本地摘要树/缓存实验生成在 `docs/feat-continuum-memory/continuum-ablation.json`，分别测量检索覆盖率与布局复用，不声称 provider 账单或服务端缓存命中。
+`ContinuumMemoryController` 负责 Reflex 专属开关、精确作用域授权和在途读取的 generation token。关闭开关会保留持久记录，但使待提交的投影失效；停用记录也会使在途投影失效。未接入 Reflex 时，`resolveContinuumMemorySwitch` 回到原版路径。挂载配套 selector 后，active 模式通过 Jev 过滤有界工作集并写入 `continuum/memory-decision`；shadow 模式调用 Jev 但保留 baseline。`summary` 从当前由 Session 支持的记录投影构建可丢弃的授权导航视图，`zoom` 返回节点的精确来源引用；两者都不创建第二套事实日志。`buildContinuumSummaryTree` 提供确定性的 scope/kind 导航，`measureContinuumStableCacheLayouts` 报告本地稳定前缀复用。本地摘要树/缓存实验生成在 `docs/feat-continuum-memory/continuum-ablation.json`，分别测量检索覆盖率与布局复用，不声称 provider 账单或服务端缓存命中。
 
 <a id="model-experience"></a>
 ## Model Experience
@@ -73,7 +73,7 @@ recall 消息消耗配置的字节预算并进入同一个模型请求；不会�
 ## Known Limitations and Deferred Work
 
 - 当前记录投影是进程内的；重启恢复必须读取并折叠 Session 事件日志。`MemoryRecordIndex` 是 controller 维护的可丢弃派生状态；仍可从投影重建，或用有界积压预算逐步处理排队快照。
-- service 不包含完整全文索引，也不会自动把摘要树接入生命周期检索。摘要树和缓存 helper 是确定性的本地计量，不报告 provider 缓存账单；记录准入由调用方负责并必须带来源。
+- service 不包含完整全文索引，也不会自动把摘要树接入生命周期检索。重启后摘要导航从 Session 事件重建，不是持久化的模型摘要快照。摘要树和缓存 helper 是确定性的本地计量，不报告 provider 缓存账单；记录准入由调用方负责并必须带来源。
 
 <a id="dev-note"></a>
 ### 开发备注

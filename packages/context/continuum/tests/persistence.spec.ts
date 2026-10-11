@@ -13,6 +13,8 @@ import {
   readMemorySourceEvents,
   MemoryRecordIndex,
   retrieveMemoryWorkingSet,
+  buildContinuumSummaryView,
+  zoomContinuumSummaryView,
 } from '../src/index.ts'
 
 const roots: string[] = []
@@ -186,6 +188,9 @@ describe('Continuum record events', () => {
     expect(index.rebuild(rebuilt.snapshot())).toEqual({ indexedRecords: 1_000, pendingRecords: 0 })
     const workingSet = retrieveMemoryWorkingSet(rebuilt, { maxCandidates: 2, maxExcerptBytes: 200, maxTotalBytes: 400, index }, 'marker-999')
     expect(workingSet.candidates.map(candidate => candidate.id)).toEqual([MemoryId('history-999')])
+    const view = buildContinuumSummaryView(rebuilt.snapshot(), { maxItemsPerLeaf: 1, maxSummaryBytes: 128 })
+    const sources = zoomContinuumSummaryView(view, 'workspace/fact-1000')
+    expect(sources).toEqual([{ recordId: MemoryId('history-999'), sourceRefs: [{ sessionId: id, eventSeq: SessionSeq(999) }] }])
     await readHandle.close()
     await reader.fiber.dispose()
   })

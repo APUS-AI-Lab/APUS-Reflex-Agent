@@ -49,7 +49,7 @@ Read the [Continuum proposal](../../../docs/feat-continuum-memory/continuum-memo
 <a id="lifecycle-and-evaluation"></a>
 ## Lifecycle and evaluation
 
-`ContinuumMemoryController` owns the Reflex-only switch, exact scope authorization, and a generation token for in-flight reads. Disabling the switch preserves durable records but invalidates a pending projection; deactivation does the same. When Reflex is absent, `resolveContinuumMemorySwitch` resolves to the original path. If the companion selector is mounted, active mode filters the bounded working set through Jev and persists `continuum/memory-decision`; shadow mode calls Jev but retains the baseline. `buildContinuumSummaryTree` provides deterministic scope/kind navigation and `measureContinuumStableCacheLayouts` reports local stable-prefix reuse. The local tree/cache experiment is generated at `docs/feat-continuum-memory/continuum-ablation.json`; it measures retrieval coverage separately from layout reuse and does not claim provider billing or cache hits.
+`ContinuumMemoryController` owns the Reflex-only switch, exact scope authorization, and a generation token for in-flight reads. Disabling the switch preserves durable records but invalidates a pending projection; deactivation does the same. When Reflex is absent, `resolveContinuumMemorySwitch` resolves to the original path. If the companion selector is mounted, active mode filters the bounded working set through Jev and persists `continuum/memory-decision`; shadow mode calls Jev but retains the baseline. `summary` builds a disposable authorized navigation view from the current Session-backed record projection, and `zoom` returns exact source references for one node; neither adds a second fact log. `buildContinuumSummaryTree` provides deterministic scope/kind navigation and `measureContinuumStableCacheLayouts` reports local stable-prefix reuse. The local tree/cache experiment is generated at `docs/feat-continuum-memory/continuum-ablation.json`; it measures retrieval coverage separately from layout reuse and does not claim provider billing or cache hits.
 
 <a id="model-experience"></a>
 ## Model Experience
@@ -73,7 +73,7 @@ The consumer appends a bounded recall message, so the existing request prefix re
 <a id="known-limitations-and-deferred-work"></a>
 
 - The record projection is process-local; restart recovery requires reading and folding the Session event log. `MemoryRecordIndex` is disposable derived state maintained by the controller; it can still be rebuilt from the projection or drained with a bounded backlog budget.
-- The service has no full text index and does not automatically attach the summary tree to lifecycle retrieval. The tree and cache helpers are deterministic, local instrumentation; they do not report provider cache accounting. Record admission is caller-owned and source-backed.
+- The service has no full text index and does not automatically attach the summary tree to lifecycle retrieval. Summary navigation is rebuilt from Session events after restart; it is not a persisted model-summary snapshot. The tree and cache helpers are deterministic, local instrumentation; they do not report provider cache accounting. Record admission is caller-owned and source-backed.
 
 <a id="dev-note"></a>
 ### Dev Note
