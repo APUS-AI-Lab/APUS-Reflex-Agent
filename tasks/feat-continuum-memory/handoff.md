@@ -111,3 +111,10 @@ Harness 持有事实、权限、预算、版本和执行权。模型提炼先成
 
 - Protected DeepSeek adapter/runtime E2E rerun with `DEEPSEEK_FLASH_E2E=1` and `DEEPSEEK_VISION_E2E=1`: 2 files, 21/21 passed, 0 skipped, 0 failed. Vision uses `maxTokens: 4096`; the prior 100-token cap caused provider `max-tokens` and is now corrected in the E2E fixture.
 - The two settings baseline golden mismatches caused by newly shipped license links were updated; the targeted English/no-browser settings cases now pass 2/2. Full Web remains broader than this targeted repair and is still not accepted as green.
+
+## 2026-10-11 architecture diagram and PR audit
+
+- Added `docs/feat-continuum-memory/diagram/apus-continuum-architecture.svg` and its 2× PNG export. The diagram separates the Runtime/User, Continuum Memory, Decision/Model, and Execution/Replay planes; Session is the fact source and Reflex/Jev is a bounded decision layer.
+- Embedded the diagram and download links in `docs/feat-continuum-memory/continuum-growth-open-source-playbook.html`. `diagram-design` self-check passed; headed Chromium rendered the page at desktop/tablet/mobile sizes without visible overflow.
+- `pnpm run test:docs` passed 20/20 after the HTML addition. This worktree is still unpushed. PR readiness is conditional: Continuum-specific, model, SDK, Python, docs, build, and focused browser evidence are green; full `pnpm run test:web:built` remains a documented baseline failure and is not being represented as green.
+- Do not push, create, or merge a PR until the user explicitly authorizes that external Git operation. Before push, run the repository-required Ruff checks in addition to the project pre-push gates.

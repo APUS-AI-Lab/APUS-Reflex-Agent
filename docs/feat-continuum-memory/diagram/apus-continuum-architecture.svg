@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 820" role="img" aria-labelledby="apus-continuum-architecture-title apus-continuum-architecture-desc">
+<title id="apus-continuum-architecture-title">APUS Continuum 技术架构</title>
+<desc id="apus-continuum-architecture-desc">展示用户输入如何经 Agent Loop 写入 Session 事实源，由 Continuum 生成可重建投影，经过权限预算与 Reflex Jev 决策后，在同一步装配上下文并交给主模型，结果和回执再次写回 Session，SDK 可从日志回放。</desc>
+<style>
+  .bg{fill:#f5f5f5}.zone{fill:rgba(45,49,66,.025);stroke:rgba(45,49,66,.14);stroke-width:1}.zoneLabel{font:600 12px 'Geist Mono','Noto Sans SC',sans-serif;letter-spacing:.12em;fill:#7a8399}.node{fill:#fff;stroke:#2d3142;stroke-width:1.25}.store{fill:rgba(45,49,66,.05);stroke:#4f5d75;stroke-width:1.25}.focal{fill:rgba(235,108,54,.09);stroke:#eb6c36;stroke-width:1.7}.decision{fill:rgba(235,108,54,.07);stroke:#eb6c36;stroke-width:1.5}.external{fill:rgba(45,49,66,.025);stroke:rgba(45,49,66,.4);stroke-width:1;stroke-dasharray:5 4}.name{font:600 17px 'Geist','Noto Sans SC',sans-serif;fill:#2d3142}.sub{font:400 12px 'Geist','Noto Sans SC',sans-serif;fill:#4f5d75}.tech{font:400 10px 'Geist Mono',monospace;fill:#7a8399}.arrow{fill:none;stroke:#4f5d75;stroke-width:1.5;marker-end:url(#arrow)}.accentArrow{fill:none;stroke:#eb6c36;stroke-width:1.7;marker-end:url(#arrowAccent)}.return{fill:none;stroke:#4f5d75;stroke-width:1.1;stroke-dasharray:5 4;marker-end:url(#arrow)}.arrowLabel{font:400 11px 'Geist Mono','Noto Sans SC',sans-serif;fill:#4f5d75}.title{font:400 30px 'Instrument Serif','Noto Serif SC',serif;fill:#2d3142}.caption{font:400 13px 'Geist','Noto Sans SC',sans-serif;fill:#4f5d75}.legend{font:500 11px 'Geist','Noto Sans SC',sans-serif;fill:#4f5d75}
+</style>
+<defs>
+ <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#4f5d75"/></marker>
+ <marker id="arrowAccent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#eb6c36"/></marker>
+</defs>
+<rect width="1440" height="820" class="bg"/>
+<text x="56" y="54" class="title">APUS Continuum · 技术架构</text>
+<text x="56" y="82" class="caption">Session 是唯一事实源；Reflex/Jev 只做有界决策，Harness 持有权限、预算与执行权。</text>
+
+<!-- zones -->
+<rect x="40" y="118" width="1360" height="190" rx="10" class="zone"/>
+<rect x="40" y="118" width="360" height="190" rx="10" class="zone"/>
+<rect x="426" y="118" width="570" height="190" rx="10" class="zone"/>
+<rect x="1022" y="118" width="378" height="190" rx="10" class="zone"/>
+<text x="62" y="143" class="zoneLabel">RUNTIME / USER PLANE</text>
+<text x="448" y="143" class="zoneLabel">CONTINUUM MEMORY PLANE</text>
+<text x="1044" y="143" class="zoneLabel">DECISION / MODEL PLANE</text>
+
+<!-- arrows top flow (draw before boxes) -->
+<path d="M190 220 H238" class="arrow"/>
+<path d="M380 220 H448" class="accentArrow"/>
+<path d="M590 220 H640" class="accentArrow"/>
+<path d="M790 220 H842" class="arrow"/>
+<path d="M992 220 H1044" class="arrow"/>
+<path d="M1190 220 H1230" class="accentArrow"/>
+<path d="M1295 268 V344 H720 V408" class="return"/>
+<path d="M720 503 V558" class="return"/>
+
+<!-- top nodes -->
+<rect x="58" y="178" width="132" height="84" rx="7" class="node"/>
+<text x="124" y="211" text-anchor="middle" class="name">用户 / Agent</text><text x="124" y="234" text-anchor="middle" class="sub">输入与工具结果</text><text x="124" y="252" text-anchor="middle" class="tech">messages / tools</text>
+<rect x="238" y="178" width="142" height="84" rx="7" class="node"/>
+<text x="309" y="211" text-anchor="middle" class="name">Agent Loop</text><text x="309" y="234" text-anchor="middle" class="sub">生命周期编排</text><text x="309" y="252" text-anchor="middle" class="tech">agent/pre-step</text>
+<rect x="448" y="178" width="142" height="84" rx="7" class="focal"/>
+<text x="519" y="211" text-anchor="middle" class="name">Session 事实源</text><text x="519" y="234" text-anchor="middle" class="sub">事件、来源、版本</text><text x="519" y="252" text-anchor="middle" class="tech">JSONL / SQLite</text>
+<rect x="640" y="178" width="150" height="84" rx="7" class="focal"/>
+<text x="715" y="211" text-anchor="middle" class="name">Continuum Service</text><text x="715" y="234" text-anchor="middle" class="sub">记录与生命周期</text><text x="715" y="252" text-anchor="middle" class="tech">record / revision</text>
+<rect x="842" y="178" width="150" height="84" rx="7" class="node"/>
+<text x="917" y="211" text-anchor="middle" class="name">检索 / 工作集</text><text x="917" y="234" text-anchor="middle" class="sub">索引、摘要、回读</text><text x="917" y="252" text-anchor="middle" class="tech">scope / bytes</text>
+<rect x="1044" y="178" width="146" height="84" rx="7" class="decision"/>
+<text x="1117" y="211" text-anchor="middle" class="name">Reflex / Jev</text><text x="1117" y="234" text-anchor="middle" class="sub">选择 / 弃权 / 展开</text><text x="1117" y="252" text-anchor="middle" class="tech">off / shadow / active</text>
+<rect x="1230" y="178" width="140" height="84" rx="7" class="node"/>
+<text x="1300" y="211" text-anchor="middle" class="name">权限与预算</text><text x="1300" y="234" text-anchor="middle" class="sub">最终采用校验</text><text x="1300" y="252" text-anchor="middle" class="tech">principal / limit</text>
+
+<!-- arrow labels -->
+<rect x="194" y="197" width="40" height="18" rx="3" fill="#f5f5f5"/><text x="214" y="210" text-anchor="middle" class="arrowLabel">输入</text>
+<rect x="392" y="197" width="52" height="18" rx="3" fill="#f5f5f5"/><text x="418" y="210" text-anchor="middle" class="arrowLabel">append</text>
+<rect x="596" y="197" width="40" height="18" rx="3" fill="#f5f5f5"/><text x="616" y="210" text-anchor="middle" class="arrowLabel">fold</text>
+<rect x="794" y="197" width="44" height="18" rx="3" fill="#f5f5f5"/><text x="816" y="210" text-anchor="middle" class="arrowLabel">query</text>
+<rect x="996" y="197" width="44" height="18" rx="3" fill="#f5f5f5"/><text x="1018" y="210" text-anchor="middle" class="arrowLabel">候选</text>
+<rect x="1194" y="197" width="34" height="18" rx="3" fill="#f5f5f5"/><text x="1211" y="210" text-anchor="middle" class="arrowLabel">gate</text>
+
+<!-- lower zones -->
+<rect x="40" y="344" width="1360" height="240" rx="10" class="zone"/>
+<text x="62" y="369" class="zoneLabel">EXECUTION / REPLAY PLANE</text>
+<!-- lower arrows -->
+<path d="M130 430 H250" class="arrow"/>
+<path d="M440 430 H560" class="accentArrow"/>
+<path d="M750 430 H870" class="arrow"/>
+<path d="M1020 430 H1140" class="arrow"/>
+<path d="M560 503 H440 V548" class="return"/>
+<path d="M870 503 V548 H440" class="return"/>
+<!-- lower nodes -->
+<rect x="58" y="388" width="132" height="84" rx="7" class="external"/>
+<text x="124" y="421" text-anchor="middle" class="name">当前请求</text><text x="124" y="444" text-anchor="middle" class="sub">用户问题 + 历史</text><text x="124" y="462" text-anchor="middle" class="tech">turn / step</text>
+<rect x="250" y="388" width="190" height="84" rx="7" class="node"/>
+<text x="345" y="421" text-anchor="middle" class="name">同一步 Context Admission</text><text x="345" y="444" text-anchor="middle" class="sub">合法记忆注入模型请求</text><text x="345" y="462" text-anchor="middle" class="tech">source: continuum-memory</text>
+<rect x="560" y="388" width="190" height="84" rx="7" class="node"/>
+<text x="655" y="421" text-anchor="middle" class="name">主模型 / Tools</text><text x="655" y="444" text-anchor="middle" class="sub">理解、生成、执行</text><text x="655" y="462" text-anchor="middle" class="tech">LLM / tool calls</text>
+<rect x="870" y="388" width="150" height="84" rx="7" class="node"/>
+<text x="945" y="421" text-anchor="middle" class="name">结果与回执</text><text x="945" y="444" text-anchor="middle" class="sub">response / decision</text><text x="945" y="462" text-anchor="middle" class="tech">logged events</text>
+<rect x="1140" y="388" width="190" height="84" rx="7" class="store"/>
+<text x="1235" y="421" text-anchor="middle" class="name">Session Replay / SDK</text><text x="1235" y="444" text-anchor="middle" class="sub">冷启动、重放、审计</text><text x="1235" y="462" text-anchor="middle" class="tech">TS + Python</text>
+<rect x="360" y="548" width="160" height="36" rx="6" class="store"/>
+<text x="440" y="571" text-anchor="middle" class="sub">memory/migration receipts</text>
+<rect x="650" y="548" width="180" height="36" rx="6" class="store"/>
+<text x="740" y="571" text-anchor="middle" class="sub">sourceRefs / revisions</text>
+<text x="204" y="421" class="arrowLabel">assemble</text><text x="462" y="421" class="arrowLabel">admit</text><text x="772" y="421" class="arrowLabel">execute</text><text x="1035" y="421" class="arrowLabel">record</text>
+
+<!-- control boundary and legend -->
+<rect x="40" y="620" width="1360" height="126" rx="10" fill="rgba(235,108,54,.035)" stroke="rgba(235,108,54,.45)" stroke-width="1" stroke-dasharray="5 4"/>
+<rect x="58" y="608" width="208" height="24" rx="4" fill="#f5f5f5"/><text x="70" y="625" class="zoneLabel">NON-NEGOTIABLE INVARIANTS</text>
+<text x="70" y="667" class="legend">01  Session 是唯一事实源，索引 / 摘要 / cache 都可丢弃并重建</text>
+<text x="70" y="696" class="legend">02  Reflex/Jev 不能写事实、授予权限或突破预算，只能在候选闭集内决策</text>
+<text x="70" y="725" class="legend">03  关闭或无 Reflex 时不注入 Continuum 记忆，原版 Harness 路径保持可用</text>
+<text x="780" y="667" class="legend">04  模型可见输入必须能从 Session event 重建</text>
+<text x="780" y="696" class="legend">05  supersede / deactivate 会使迟到结果失效</text>
+<text x="780" y="725" class="legend">06  每条记忆保留 sourceRefs、scope、revision 和生命周期状态</text>
+</svg>
