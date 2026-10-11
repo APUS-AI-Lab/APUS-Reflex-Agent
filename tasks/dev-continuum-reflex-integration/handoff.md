@@ -26,10 +26,12 @@
 - [x] 在本分支执行 `git merge --no-ff feat-continuum-memory`。
 - [x] 解决 runtime 配置、Session event types、persistence catalog、快照和文档门禁冲突。
 - [x] `pnpm run build` 全量通过；`pnpm run verify-cordis-config` 通过 226 个配置文件。
-- [x] 双边定向回归通过：103 个文件、1955 个测试通过。
+- [x] 双边定向回归通过：103 个文件、1957 个测试通过。
 - [x] Continuum 浏览器验收通过：2 个测试通过；覆盖设置显示、开关持久化和原版配置兼容。
 - [x] 文档、persistence changes、persistence formats 门禁通过。
 - [x] Python Continuum replay 通过：2 个测试通过。
+- [x] `pnpm run typecheck`、`pnpm run lint`、TypeScript aliases、Cordis catalog 全部通过。
+- [x] RunPod Jev endpoint health 返回 ready；未提供有效 `JEV_API_KEY` 时 `/v1/models` 正确返回 401，说明真实 Jev E2E 不能伪造为通过。
 - [x] 修复运行时开关开启后仍解析为 `off` 的配置重叠问题；profile 默认使用确定性 `shadow`，Jev provider 仍保持 `off`。
 
 ## 未完成的正式验收
@@ -38,6 +40,7 @@
 - [ ] 补齐真实链路：用户输入 → memory-record → Session flush → 重启恢复 → recall 注入 → 模型请求。
 - [ ] 在具备真实凭据的环境重跑 System3 real-API E2E；本地 8 个控制面 E2E 因缺少凭据全部 skip，不能计为通过。
 - [ ] 重新设计并执行完整 Web built suite；当前只证明 Continuum 定向浏览器测试通过。
+- [ ] 全量 `pnpm run test` 尚未全绿：本次运行 19 个失败、2 个未处理错误；失败集中在合并前未修改的桌面/UI/workflow 基础设施测试，需单独归档或修复后才能宣称仓库级全绿。
 
 ## 分支/部署状态
 
