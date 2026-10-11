@@ -160,6 +160,12 @@ Host16 完整通过并完成本轮 SDK/浏览器验收。Host17 已由 root 收�
 
 ## 2026-10-11 文档收口与远端状态
 
-- [x] `8b35810552` 已推送到 Harness `feat-reflex-control`；提交前的类型检查、构建、Ruff 双检查、双语配对和 `test:docs` 均通过，worktree clean。
+- [x] 轻量监督文档提交已推送到 Harness `feat-reflex-control`；提交前的类型检查、构建、Ruff 双检查、双语配对和 `test:docs` 均通过，worktree clean。
 - [x] Frontend `feat-reflex-control` 当前为 `7a2c419`，worktree clean；其本地构建、typecheck、目录包、Safe Mode/CDP 和许可证审计证据仍有效。
 - [ ] Harness run `38137261041` 的 Jev/System3 job 与 Frontend run `38135768022` / `38135768109` 均在 runner 分配前失败（`runner_id=0`、0 steps）；两个 Draft PR 仍是 `MERGEABLE` 但 `UNSTABLE`，恢复远端执行后再合并 main。
+
+## 2026-10-11 真实 Web 插话验收
+
+- [x] 真实浏览器从 Goal 入口选择 Codex，用户在 Codex 委派运行中追加中文字段与兼容性要求；Session 记录 `subagent/steer` 和 `system3/interjection` `delivered=true`，监控在 120 秒报告 startup alert，并允许用户停止。
+- [x] 该次 Codex relay 没有产生 native 执行步骤，229.338 秒后用户停止；原始发票、历史 CSV 和 `test_aging.py` 哈希保持不变，不能把该次结果算作最终产物通过。脱敏证据见 `docs/feat-reflex-control/evidence/ui-interjection-20261011.*`。
+- [x] Client `System3Dock.tsx` 严格覆盖率已补齐到 Statements/Branches/Functions/Lines 100%，5 个测试文件、69 项通过；新增测试只覆盖真实用户可见的 Reflex 时间线、未知状态、恢复原因和上下文提示。
