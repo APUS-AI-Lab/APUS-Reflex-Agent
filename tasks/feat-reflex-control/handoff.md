@@ -106,3 +106,10 @@ Host16 完整通过并完成本轮 SDK/浏览器验收。Host17 已由 root 收�
 - [x] 修复 Node 22 同步 loader 对 browser-use fixture 的兼容问题：外部 TS fixture 转为 data URL，保留 `zod` 的包内 file URL 和相对 fixture 导入；对应 browser snapshot 与 loader 回归通过，未留下生成目录。
 - [ ] 默认并发 snapshot 曾出现 `subagent-list-agents` 120 秒资源争用超时；串行重跑通过，尚未把并发 lane 标为稳定通过。
 - [ ] 以上均为确定性/回放层证据；真实 Codex 语义偏航闭环、最终签名/公证 Electron 包及两仓 PR/main 状态仍按前述清单保持未完成。
+## 2026-10-11 开源发布与品牌收口
+
+- [x] 专家 HTML 新增开源 P0/P1 门禁：许可证/归属、安全边界、可复现 CI、公开能力声明、新用户上手、贡献者维护、传播材料可信度。
+- [x] Harness 新增 `SECURITY.md` 并在中英文 README 提供私密漏洞报告入口；保留 MIT/NOTICE 和 DSH 技术归属。
+- [x] Frontend 新增 `SECURITY.md`、`CONTRIBUTING.md` 和 PR 证据模板；用户可见主品牌仍为 APUS Reflex Harness。
+- [x] 明确 DSH 发行版本归属只出现在技术/法律/关于页位置，不进入产品主标题、用户入口或任务状态文案。
+- [ ] Harness Jev/System3 与 Frontend 测试 CI 完成后回读；真实语义监督闭环、正式包许可随附、签名/公证、原生 200% 与 main 合并仍未完成。
