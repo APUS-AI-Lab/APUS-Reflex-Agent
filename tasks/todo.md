@@ -427,7 +427,7 @@ PPT v2为4页主讲+2页备查，实际Keynote打开、六页备注回读和PDF�
 - [x] P1.7 Reflex selector profile 消费：`continuum-jev` 提供 Cordis selector service，active/shadow 在同一步过滤工作集并写入决策回执；关闭/停用会丢弃迟到结果，48 项相关测试通过。
 - [x] P2：任务工作集、supersedes、词法倒排索引、权限与尾部覆盖；索引完整重建、积压有界重建和带/不带索引等价已通过；新 Session 续做与真实超模型窗口质量仍需产品链路验收；当前已补真实 JSONL 1,000 条记录重启、索引重建和尾部检索 smoke。
 - [ ] P3：Reflex active 完整任务质量/动作对照仍待完成；已补齐弃权、显式超时、baseline fallback、有界顺序多选、严格评测失败门禁，以及真实 provider usage/P50/P95 报告。
-- [ ] P4：停用/关闭后的活动投影移除、在途失效、最终模型预算、两个 SDK 和离线回放；原版回归。专属 General 设置开关已实现并通过 UI 单元、类型、bundle 与 Web production build，浏览器持久化验收仍待完成。
+- [ ] P4：停用/关闭后的活动投影移除、在途失效、最终模型预算、两个 SDK 和离线回放；原版回归。专属 General 设置开关已实现；Continuum 专项 Chromium 开关显示/切换/reload 持久化 1/1 通过，完整 Web 基线和关闭后投影移除仍待完成。
 - [ ] P5：批合并、后台恢复、真实服务端 cache 用量和完整成本仍待完成；已交付 Session-backed summary view/zoom、重启来源回读、UTF-8 摘要预算和本地树 × cache 消融。
 - [ ] Release：确定性正确性、真实产品链路、预注册效果门槛三者全过；必测 skip 或凭据缺失不算通过。
 
@@ -443,7 +443,7 @@ P1.4/P1.5 追加验收：Continuum 6 个测试文件 26/26、TypeScript build �
 
 P1.6 验收：profile service 测试 3/3、Continuum 全测试 28/28、service TypeScript build 与 Oxlint 通过；`verify-cordis-config` 215/215、`test:docs` 20/20、persistence acknowledgement 80 roots/28 history records 通过。runtime patch 默认关闭，仅由受保护部署环境的 `CONTINUUM_MEMORY_*` 配置显式开启。Service 当前提供记录 create/supersede/deactivate、Session 日志恢复、controller 派生索引和同一步消费者；Jev active 选择由独立 adapter 负责并已写入 receipt。
 
-P1.7 验收：Continuum/adapter/agent-loop 9 个测试文件 48/48，Continuum 与 Jev TypeScript build、focused Oxlint、全仓 `pnpm run build` 通过。profile selector 的 active、shadow、回执和关闭后的迟到结果均有测试；后续补充了 timeout、fallback 和有界顺序多选。严格 evaluator 20/20 请求、11/11 applicable assertions 通过；DeepSeek adapter/runtime 当前 21/21、0 skip、0 failed。
+P1.7 验收：Continuum/adapter/agent-loop 9 个测试文件 48/48，Continuum 与 Jev TypeScript build、focused Oxlint、全仓 `pnpm run build` 通过。profile selector 的 active、shadow、回执和关闭后的迟到结果均有测试；后续补充了 timeout、fallback 和有界顺序多选。严格 evaluator 20/20 请求、11/11 applicable assertions 通过；DeepSeek 旧摘要曾记录 21/21；最新受保护运行仅核心 7/7，vision lane 未形成稳定通过证据，不能按 21/21 计入当前验收。
 
 摘要树已改为确定性 scope/kind 树与稳定前缀 bytes/hash 仪表；P2 新增可重建倒排索引和有界积压；Jev active 新增显式 timeout 与 baseline fallback；Python SDK 已加入无 Jev 回放投影，并在安装项目环境中 2/2 通过。DeepSeek adapter/runtime 真实测试 21/21 通过、0 skipped；keyless snapshot 180 passed、0 failed、2 个 Windows-only pwsh 场景在 macOS 上跳过；最终 host build、docs 20/20、59/59 定向测试、Cordis 215/215 和 persistence 80/28 检查通过。
 
