@@ -31,7 +31,7 @@
 <tr><td>取消、超时、低置信、fallback、权限拒绝</td><td class="status pass">PASS</td><td>Jev adapter/controller tests 覆盖 cancel/timeout/abstain/fallback 与 scope deny。</td><td>真实远程服务的每类故障仍需定期演练。</td></tr>
 <tr><td>摘要树 + stable cache 消融</td><td class="status pass">PASS</td><td><a href="continuum-ablation.json">continuum-ablation.json</a>：summaryTree+cache 命中率和 cache read ratio 有对照。</td><td>确定性 corpus；不是线上成本结论。</td></tr>
 <tr><td>重启、Session replay、SDK 投影</td><td class="status pass">PASS</td><td>session-backed summary/restart tests、TS/Python SDK snapshot/replay gates。</td><td>需在每次 Session 格式变更时重新跑。</td></tr>
-<tr><td>浏览器全套产品回归</td><td class="status partial">PARTIAL</td><td>Continuum 专项浏览器用例 2/2 通过；settings 定向测试通过。</td><td>完整 <code>test:web:built</code> 仍有既有 document-preview/lifecycle/smoke-real 基线失败，不能宣称全 Web 通过。</td></tr>
+<tr><td>浏览器全套产品回归</td><td class="status partial">PARTIAL</td><td>Continuum 专项浏览器用例 2/2 通过；settings 定向测试通过。</td><td>完整 <code>test:web:built</code> 仍有既有基线失败，详见 <a href="continuum-web-regression-results.json">回归记录</a>；不能宣称全 Web 通过。</td></tr>
 <tr><td>性能、成本、长历史规模</td><td class="status partial">PARTIAL</td><td><a href="continuum-performance-report.json">continuum-performance-report.json</a> 仅报告 provider usage；P3 设计与报告已落盘。</td><td>Jev/local/cache 成本与大规模延迟未知。</td></tr>
 <tr><td>生产级批处理 / 服务端缓存</td><td class="status todo">BLOCKED</td><td>当前只有本地稳定 cache 消融和接口设计。</td><td>尚无真实服务压测、失效策略、租户隔离和恢复证据。</td></tr>
 <tr><td>视觉模型真实 E2E</td><td class="status todo">BLOCKED</td><td>最近真实 DeepSeek 运行的 vision lane 未形成稳定通过证据。</td><td>不能引用旧的或相互矛盾的 summary JSON 作为当前通过。</td></tr>
