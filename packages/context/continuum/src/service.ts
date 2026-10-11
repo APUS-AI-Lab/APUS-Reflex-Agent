@@ -37,15 +37,40 @@ export const ContinuumConfig = z.object({
 
 /** Public service seam used by profile consumers and tests. */
 export interface ContinuumMemoryService {
-  /** Return the current switch decision for this profile. */
+  /**
+   * Return the current switch decision for this profile.
+   * @returns The effective feature switch decision.
+   */
   state(): ReturnType<ContinuumMemoryController['state']>
-  /** Get the controller associated with one Agent, restoring it from Session events once. */
+  /**
+   * Get the controller associated with one Agent, restoring it from Session events once.
+   * @param agent - Agent whose Session owns the memory projection.
+   * @returns The controller for the Agent's memory projection.
+   */
   controller(agent: Agent): ContinuumMemoryController
-  /** Admit and persist one source-backed record in the Agent's Session. */
+  /**
+   * Admit and persist one source-backed record in the Agent's Session.
+   * @param agent - Agent whose Session receives the record event.
+   * @param record - Source-backed record to admit.
+   * @returns The created immutable record.
+   */
   create(agent: Agent, record: NewMemoryRecord): MemoryRecord
-  /** Supersede and persist one record correction. */
+  /**
+   * Supersede and persist one record correction.
+   * @param agent - Agent whose Session receives the correction event.
+   * @param id - Existing record identifier.
+   * @param expectedRevision - Revision observed by the caller.
+   * @param replacement - Source-backed successor record.
+   * @returns The created successor record.
+   */
   supersede(agent: Agent, id: MemoryId, expectedRevision: number, replacement: NewMemoryRecord): MemoryRecord
-  /** Deactivate and persist one record. */
+  /**
+   * Deactivate and persist one record.
+   * @param agent - Agent whose Session receives the deactivation event.
+   * @param id - Existing record identifier.
+   * @param expectedRevision - Revision observed by the caller.
+   * @returns The deactivated immutable record.
+   */
   deactivate(agent: Agent, id: MemoryId, expectedRevision: number): MemoryRecord
 }
 
