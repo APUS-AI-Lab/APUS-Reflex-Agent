@@ -53,7 +53,7 @@ Harness 持有事实、权限、预算、版本和执行权。模型提炼先成
 - [x] P2 工程切片：可重建倒排索引、enqueue、bounded backlog rebuild；profile controller 在提交变更后保持派生索引；真实 JSONL 1,000 条重启/尾部检索 smoke 通过。
 - [x] P3 安全切片：显式 provider timeout、取消传播、弃权、baseline fallback 和有界顺序多选；每次请求仍使用 Jev 单选闭集。
 - [x] P3 性能证据：固定 20-cell 真实评测生成 provider usage、候选一致性和 P50/P95；[ ] 完整任务质量/总成本对照仍待完成。
-- [ ] P4：运行中开关投影移除、最终预算与完整产品浏览器验收；Continuum 专项 Chromium 开关显示/切换/reload 持久化已 1/1 通过，完整 Web 基线仍待收敛。
+- [ ] P4：运行中开关投影移除、最终预算与完整产品浏览器验收；Continuum 专项 Chromium 开关显示/切换/reload 持久化与默认原版 profile 兼容共 2/2 通过，完整 Web 基线仍待收敛。
 - [x] P5 摘要 view/zoom：Session 重建、重启来源回读、UTF-8 上限已通过；[ ] 后台批合并、真实超模型窗口历史、服务端 cache 用量和完整成本/延迟实验。
 - [x] flush failure semantics：Continuum 专属一次失败/重试、重复 flush 和冷启动恢复已通过。
 - [ ] 用户明确授权前不推送、建 PR 或部署；推送前执行 dsh-pre-push-checks 与 Ruff 双检查。
@@ -96,6 +96,6 @@ Harness 持有事实、权限、预算、版本和执行权。模型提炼先成
 - `continuum-performance-report.json` records P50/P95, provider input/output usage, baseline agreement and unknown Jev/local/cache costs. The local summary-tree/cache ablation remains explicitly a local measurement, not provider cache billing.
 - Focused Continuum tests: 43/43 after summary/restart slice; current local script/performance tests also pass. After this handoff update, `pnpm run test:docs` passed 20/20.
 - DeepSeek runtime truth remains: core 7/7 passed with vision disabled; optional vision smoke returned `max-tokens` once and timed out on retries, so it is not counted as passed.
-- Continuum browser acceptance: `apps/web/tests/continuum-memory.e2e.ts` 1/1 passed; targeted settings dialog test 1/1 passed. The overlay mounts Jev and Continuum while keeping the Reflex memory switch off before the user action.
+- Continuum browser acceptance: `apps/web/tests/continuum-memory.e2e.ts` 2/2 passed; targeted settings dialog test 1/1 passed. The second case boots the default profile without Continuum/Reflex and verifies the original General settings surface has no Continuum row. The overlay mounts Jev and Continuum while keeping the Reflex memory switch off before the user action.
 - `pnpm run test:docs` rerun after the acceptance report passed 20/20. Focused Continuum/Jev tests passed 54/54; context TypeScript and focused Oxlint passed. `apps/web/tsconfig.json` direct check remains invalid because the repository intentionally resolves shared test-support sources outside that app root; use the Vitest/build gates instead.
-- `pnpm run test:web:built` remains partial: document-preview, lifecycle-chrome, smoke-real and the broader settings lane have existing failures; do not call the full Web suite green.
+- `pnpm run test:web:built` remains partial: the observed baseline failures are archived in `docs/feat-continuum-memory/continuum-web-regression-results.json`; do not call the full Web suite green.
