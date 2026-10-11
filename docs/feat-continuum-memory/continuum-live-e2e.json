@@ -1,0 +1,12 @@
+{
+  "outcome": "jev",
+  "selectedIds": [
+    "migration"
+  ],
+  "confidence": 0.7991433976178299,
+  "model": "APUS-OpenJev-v1-9B-5949",
+  "latencyMs": 1475,
+  "endpoint": "RunPod protected endpoint (value omitted)",
+  "credentialSource": "protected local runtime environment (value omitted)",
+  "generatedAt": "2026-10-11T07:55:00Z"
+}

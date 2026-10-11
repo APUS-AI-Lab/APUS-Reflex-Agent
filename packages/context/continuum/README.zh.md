@@ -1,0 +1,81 @@
+---
+description: "APUS Continuum 的版本化、带来源记忆记录语义。"
+kind: package-reference
+---
+
+# @deepseek-ai/dsh-continuum
+
+[English](README.md) | 中文
+
+## 概述
+
+本包提供 APUS Continuum 的持久记录与 profile service：带 Session 事件来源的不可变记忆记录、revision 校验、明确更正、停用、可从日志重建投影的仅日志 Session 事件、精确来源回读、确定性的有界检索、可重建的派生检索索引、可选的 Jev selector、生命周期感知的同一步消费者和显式产品开关。服务不会静默创建记录，也不会在没有 Reflex 时提供无限记忆模式。
+
+Session 事件复用现有 persistence backend；调用方完成 `ctx.sessions.flush(session)` 后才具备持久化保证。记录准入仍由调用方显式执行；挂载配套 `continuum-jev` profile service 后，shadow/active 选择及其回执会进入同一步消费者。
+
+## 目录
+
+- [使用本包](#use-this-package)
+- [理解实现](#understand-the-implementation)
+- [进一步阅读](#further-exploration)
+- [Model Experience](#model-experience)
+- [生命周期与评测](#lifecycle-and-evaluation)
+- [已知限制与后续工作](#known-limitations-and-deferred-work)
+- [开发备注](#dev-note)
+
+-----
+
+-----
+
+<a id="use-this-package"></a>
+## 使用本包
+
+使用 `MemoryRecordStore` 保存确定性的 revision 语义；用 `appendMemoryRecordEvent` 把变更追加到现有 Session 日志，用 `foldMemoryRecordEvents` 从日志重建，用 `readMemorySourceEvents` 精确回读来源，用 `retrieveMemoryWorkingSet` 生成有界候选。只有 `ctx.sessions.flush(session)` 成功后，调用方才能报告已经持久化。
+
+-----
+
+<a id="understand-the-implementation"></a>
+## 理解实现
+
+`MemoryRecordStore` 要求调用方提供已观察到的 revision，并返回不可变快照。`ContinuumMemory` 为每个 Agent 从 Agent Session 恢复投影，并把显式的 create/supersede/deactivate 调用持久化为 `continuum/memory-record`；controller 会在提交变更后维护可丢弃的派生索引；折叠事件不会调用模型，也不会创建第二套持久化事实源。
+
+-----
+
+<a id="further-exploration"></a>
+## 进一步阅读
+
+参阅[Continuum 提案](../../../docs/feat-continuum-memory/continuum-memory-proposal.html)了解分阶段产品设计。
+
+-----
+
+<a id="lifecycle-and-evaluation"></a>
+## 生命周期与评测
+
+`ContinuumMemoryController` 负责 Reflex 专属开关、精确作用域授权和在途读取的 generation token。关闭开关会保留持久记录，但使待提交的投影失效；停用记录也会使在途投影失效。未接入 Reflex 时，`resolveContinuumMemorySwitch` 回到原版路径。挂载配套 selector 后，active 模式通过 Jev 过滤有界工作集并写入 `continuum/memory-decision`；shadow 模式调用 Jev 但保留 baseline。`summary` 从当前由 Session 支持的记录投影构建可丢弃的授权导航视图，`zoom` 返回节点的精确来源引用；两者都不创建第二套事实日志。`buildContinuumSummaryTree` 提供确定性的 scope/kind 导航，`measureContinuumStableCacheLayouts` 报告本地稳定前缀复用。本地摘要树/缓存实验生成在 `docs/feat-continuum-memory/continuum-ablation.json`，分别测量检索覆盖率与布局复用，不声称 provider 账单或服务端缓存命中。
+
+<a id="model-experience"></a>
+## Model Experience
+
+### 记录语义
+
+#### 模型看到的内容
+
+挂载 `installContinuumMemoryContext` 后，模型看到由 active 记录和当前用户文本生成的有界 `continuum-memory` recall 消息。
+
+#### Token effect
+
+recall 消息消耗配置的字节预算并进入同一个模型请求；不会额外调用模型。
+
+#### KV Cache effect
+
+消费者追加有界 recall 消息；在工作集不变时，已有请求前缀保持稳定。
+
+## Known Limitations and Deferred Work
+
+- 当前记录投影是进程内的；重启恢复必须读取并折叠 Session 事件日志。`MemoryRecordIndex` 是 controller 维护的可丢弃派生状态；仍可从投影重建，或用有界积压预算逐步处理排队快照。
+- service 不包含完整全文索引，也不会自动把摘要树接入生命周期检索。重启后摘要导航从 Session 事件重建，不是持久化的模型摘要快照。摘要树和缓存 helper 是确定性的本地计量，不报告 provider 缓存账单；记录准入由调用方负责并必须带来源。
+
+<a id="dev-note"></a>
+### 开发备注
+
+Session 事件已经复用 `Session.append` 和 `ctx.sessions.flush(session)`。system3 runtime patch 默认关闭地加载本服务和配套 Jev selector；是否启用仍是受保护部署环境的显式选择。

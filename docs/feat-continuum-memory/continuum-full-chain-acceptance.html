@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>APUS Continuum 全链路验收报告</title>
+<style>:root{--ink:#173f36;--muted:#5c6c63;--line:#d6ded6;--paper:#f7f6f0;--pass:#176b45;--part:#94630e;--todo:#7d4030}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.7 system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}main{max-width:1180px;margin:auto;padding:32px 24px 64px}h1{font-size:36px;line-height:1.2;margin:8px 0}h2{margin-top:34px;border-bottom:1px solid var(--line);padding-bottom:7px}h3{margin-bottom:4px}.lead{font-size:19px}.meta,.note{color:var(--muted);font-size:13px}.banner{border-left:5px solid var(--todo);background:#fff4ed;padding:14px 18px;margin:18px 0}.flow{background:#fff;border:1px solid var(--line);border-radius:10px;padding:18px;overflow:auto}svg{display:block;min-width:900px;width:100%}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.card{background:#fff;border:1px solid var(--line);border-radius:9px;padding:14px}.card h3{margin-top:0}.table-wrap{overflow:auto}table{border-collapse:collapse;width:100%;background:#fff;font-size:13px}th,td{border-bottom:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:top}th{background:#eaf0e9}.status{font-weight:700;white-space:nowrap}.pass{color:var(--pass)}.partial{color:var(--part)}.todo{color:var(--todo)}code{font:12px ui-monospace,Consolas,monospace;overflow-wrap:anywhere}pre{background:#eaf0e9;padding:13px;border-radius:8px;white-space:pre-wrap;overflow-wrap:anywhere}.footer{margin-top:36px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}@media(max-width:760px){main{padding:22px 14px}h1{font-size:29px}.grid{grid-template-columns:1fr}}
+</style></head><body><main>
+<div class="meta">APUS REFLEX HARNESS · FEAT/CONTINUUM-MEMORY · 2026-10-11</div>
+<h1>APUS Continuum：无限记忆全链路验收</h1>
+<p class="lead">这份报告定义“打通”和“验收通过”的可复核证据：从 Reflex 专属开关，到 Session 权威记录、冷启动恢复、索引/摘要/缓存、同回合注入、Jev 决策、主模型响应、回放和故障降级。</p>
+<div class="banner"><strong>当前结论：工程链路已有可重复通过的关键证据，但本报告当前不能宣称整项产品最终验收通过。</strong> 必须补齐性能/成本实测、全 Web 基线失败项、视觉真实模型 E2E，以及生产级批处理/服务端缓存证据后，状态才可改为“全项通过”。</div>
+<h2>1. 验收定义</h2><p>“无限”只表示存储和检索不被模型单次窗口硬截断；不表示无限磁盘、零延迟、零成本或每次都能正确召回。完整链路必须满足：事实有来源、记录可持久化、重启可重建、读取受 scope/预算约束、实际发给模型的内容可从 Session 重放、关闭 Reflex 后原版行为仍可用。</p>
+<div class="grid"><div class="card"><h3>PASS</h3><p>有自动化测试或真实服务证据，命令和产物可重跑，断言覆盖目标行为。</p></div><div class="card"><h3>PARTIAL</h3><p>核心行为已证实，但仍有规模、成本、环境或覆盖范围限制，不能外推到生产。</p></div><div class="card"><h3>BLOCKED</h3><p>存在失败、缺少必需证据或仅有静态设计；不允许写成通过。</p></div></div>
+<h2>2. 全链路图（证据对应点）</h2><div class="flow"><svg viewBox="0 0 1160 420" role="img" aria-label="Continuum 全链路"><defs><marker id="a" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0 0L8 3L0 6Z" fill="#527263"/></marker><style>.b{fill:#fffdf9;stroke:#8ca394}.f{fill:#fff0e8;stroke:#a94c2e}.t{font:16px system-ui;fill:#173f36}.s{font:13px system-ui;fill:#5c6c63}.w{fill:none;stroke:#527263;stroke-width:2;marker-end:url(#a)}</style></defs>
+<rect x="20" y="30" width="200" height="90" rx="9" class="b"/><text x="38" y="62" class="t">开关 / 配置</text><text x="38" y="88" class="s">enabled + Reflex mounted</text>
+<rect x="260" y="30" width="220" height="90" rx="9" class="f"/><text x="278" y="62" class="t">Session 权威事件</text><text x="278" y="88" class="s">create / supersede / deactivate</text>
+<rect x="520" y="30" width="220" height="90" rx="9" class="f"/><text x="538" y="62" class="t">投影与检索</text><text x="538" y="88" class="s">index / summary / source read</text>
+<rect x="780" y="30" width="190" height="90" rx="9" class="f"/><text x="798" y="62" class="t">Reflex / Jev</text><text x="798" y="88" class="s">select / abstain / expand</text>
+<rect x="1010" y="30" width="130" height="90" rx="9" class="b"/><text x="1025" y="62" class="t">预算校验</text><text x="1025" y="88" class="s">scope + bytes</text>
+<path d="M220 75h40M480 75h40M740 75h40M970 75h40" class="w"/>
+<rect x="260" y="210" width="220" height="90" rx="9" class="b"/><text x="278" y="242" class="t">同回合上下文</text><text x="278" y="268" class="s">admission before model call</text>
+<rect x="520" y="210" width="220" height="90" rx="9" class="b"/><text x="538" y="242" class="t">主模型 / 工具</text><text x="538" y="268" class="s">response + tool effects</text>
+<rect x="780" y="210" width="190" height="90" rx="9" class="b"/><text x="798" y="242" class="t">回写 Session</text><text x="798" y="268" class="s">receipt / next revision</text>
+<rect x="1010" y="210" width="130" height="90" rx="9" class="b"/><text x="1025" y="242" class="t">冷启动</text><text x="1025" y="268" class="s">fold / replay</text>
+<path d="M1075 120v90M870 120v90M630 120v90M370 120v90" class="w"/><path d="M370 300v70h705v-70" class="w"/><text x="540" y="395" class="s">每个模型可见输入必须能由 Session 事件重建；关闭或无 Reflex 时走原版分支</text></svg></div>
+<h2>3. 逐项验收矩阵</h2><div class="table-wrap"><table><thead><tr><th>链路 / 断言</th><th>状态</th><th>证据与复核方式</th><th>限制</th></tr></thead><tbody>
+<tr><td>Reflex-only 开关显示与持久化</td><td class="status pass">PASS</td><td><code>apps/web/tests/continuum-memory.e2e.ts</code>：真实 Chromium 打开设置、切换、reload 后仍为 true；overlay 挂载 Jev/Continuum。</td><td>证明 UI/Host 配置链，不证明真实模型调用。</td></tr>
+<tr><td>无 Reflex 原版兼容</td><td class="status pass">PASS</td><td>同一浏览器专项的默认 profile 不挂载 Continuum/Reflex，General 设置保持可用且不出现 Continuum 行；核心 service 也将 active+无 Jev 解析为 <code>reflex-required</code>。</td><td>原版 profile 不提供 Continuum 开关，这是兼容约束。</td></tr>
+<tr><td>记录 create / supersede / deactivate 写入 Session</td><td class="status pass">PASS</td><td><code>packages/context/continuum/tests</code> persistence/service tests；冷启动 fold 恢复同一记录 ID/revision。</td><td>单 Host 顺序写入；多 Host 并发不在首版。</td></tr>
+<tr><td>索引、来源回读、scope 与字节预算</td><td class="status pass">PASS</td><td>Continuum unit/integration tests；候选和 sourceRefs 可从 Session 重建。</td><td>规模性能尚未作为生产 SLO 验收。</td></tr>
+<tr><td>同回合 admission</td><td class="status pass">PASS</td><td>agent-loop/context integration tests 断言本回合模型请求已包含合法记忆。</td><td>必须结合 Session snapshot replay 复核。</td></tr>
+<tr><td>Jev 真实服务决策</td><td class="status pass">PASS</td><td><a href="continuum-live-e2e.json">continuum-live-e2e.json</a>：RunPod Jev endpoint 返回 migration 选择，confidence 约 0.799，端到端 latency 1475 ms；证据不含密钥。</td><td>单场景实测，不代表质量基准完成。</td></tr>
+<tr><td>严格 DeepSeek 记忆效果评测</td><td class="status pass">PASS</td><td><a href="continuum-evaluation-results.json">continuum-evaluation-results.json</a>：20 requests，11 applicable assertions，11 matched，0 failed。</td><td>模型效果不是系统正确性的唯一证明。</td></tr>
+<tr><td>取消、超时、低置信、fallback、权限拒绝</td><td class="status pass">PASS</td><td>Jev adapter/controller tests 覆盖 cancel/timeout/abstain/fallback 与 scope deny。</td><td>真实远程服务的每类故障仍需定期演练。</td></tr>
+<tr><td>摘要树 + stable cache 消融</td><td class="status pass">PASS</td><td><a href="continuum-ablation.json">continuum-ablation.json</a>：summaryTree+cache 命中率和 cache read ratio 有对照。</td><td>确定性 corpus；不是线上成本结论。</td></tr>
+<tr><td>重启、Session replay、SDK 投影</td><td class="status pass">PASS</td><td>session-backed summary/restart tests、TS/Python SDK snapshot/replay gates。</td><td>需在每次 Session 格式变更时重新跑。</td></tr>
+<tr><td>浏览器全套产品回归</td><td class="status partial">PARTIAL</td><td>Continuum 专项浏览器用例 2/2 通过；settings 定向测试通过。</td><td>完整 <code>test:web:built</code> 仍有既有基线失败，详见 <a href="continuum-web-regression-results.json">回归记录</a>；不能宣称全 Web 通过。</td></tr>
+<tr><td>性能、成本、长历史规模</td><td class="status partial">PARTIAL</td><td><a href="continuum-performance-report.json">continuum-performance-report.json</a> 仅报告 provider usage；P3 设计与报告已落盘。</td><td>Jev/local/cache 成本与大规模延迟未知。</td></tr>
+<tr><td>生产级批处理 / 服务端缓存</td><td class="status todo">BLOCKED</td><td>当前只有本地稳定 cache 消融和接口设计。</td><td>尚无真实服务压测、失效策略、租户隔离和恢复证据。</td></tr>
+<tr><td>视觉模型真实 E2E</td><td class="status pass">PASS</td><td><a href="continuum-deepseek-e2e.json">continuum-deepseek-e2e.json</a>：最新受保护运行 adapter 13/13、runtime 8/8，包含 vision，0 skipped、0 failed。</td><td>依赖受保护 DeepSeek 凭据和上游视觉服务可用性。</td></tr>
+</tbody></table></div>
+<h2>4. 可复核命令</h2><pre># 在 worktree：类型与核心单测
+pnpm exec vitest run packages/context/continuum/tests packages/client/ui-settings-continuum/tests scripts/continuum-evaluation.spec.ts scripts/continuum-performance-report.spec.ts
+pnpm exec tsc -p packages/context/continuum/tsconfig.json --noEmit
+# 浏览器专项
+pnpm exec vitest --config vitest.web.config.ts run apps/web/tests/continuum-memory.e2e.ts --reporter=verbose
+# 文档门禁
+pnpm run test:docs
+# 真实 Jev（凭据只从受保护环境读取）
+CONTINUUM_JEV_ENDPOINT=... CONTINUUM_JEV_API_KEY=... pnpm exec tsx scripts/continuum-live-e2e.ts
+# 严格 DeepSeek（需受保护 DEEPSEEK_API_KEY）
+DEEPSEEK_BASE_URL=https://api.deepseek.com/anthropic pnpm exec tsx scripts/continuum-evaluation.ts</pre>
+<h2>5. 通过门槛与下一步</h2><ol><li>重新运行矩阵中所有必需命令，保存带时间戳的 JSON 和原始日志。</li><li>修复或隔离完整 Web 基线失败；失败项必须有根因和 owner，不能用 skip 替代。</li><li>补齐真实视觉 E2E，以及 Jev/local/cache 的延迟、token、缓存命中、失败恢复和租户隔离指标。</li><li>完成批处理/服务端缓存后，再由评审逐行把 PARTIAL/BLOCKED 改为 PASS；否则最终结论保持未验收。</li></ol>
+<p class="footer">报告只引用当前 worktree 中的代码、测试和证据文件。API keys、运行时 secret 和服务端响应原文不进入仓库。</p>
+</main></body></html>

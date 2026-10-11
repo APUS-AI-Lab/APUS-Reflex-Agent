@@ -1,0 +1,218 @@
+{
+  "formatVersion": 2,
+  "roots": [
+    {
+      "key": "event:continuum/memory-record",
+      "kind": "event",
+      "event": "continuum/memory-record",
+      "surface": false,
+      "digest": "229669c953c776861d1f8dd4e6f2e99eb572237979a2fd4ffc8a5c0fab7b2569",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "data",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "ignorable",
+                "type": 19,
+                "optional": true
+              },
+              {
+                "name": "seq",
+                "type": 12,
+                "optional": false
+              },
+              {
+                "name": "time",
+                "type": 12,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 20,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "operation",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "record",
+                "type": 6,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "union",
+            "types": [
+              3,
+              4,
+              5
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "create"
+          },
+          {
+            "kind": "literal",
+            "value": "deactivate"
+          },
+          {
+            "kind": "literal",
+            "value": "supersede"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "content",
+                "type": 7,
+                "optional": false
+              },
+              {
+                "name": "id",
+                "type": 7,
+                "optional": false
+              },
+              {
+                "name": "kind",
+                "type": 8,
+                "optional": false
+              },
+              {
+                "name": "revision",
+                "type": 12,
+                "optional": false
+              },
+              {
+                "name": "scope",
+                "type": 7,
+                "optional": false
+              },
+              {
+                "name": "sourceRefs",
+                "type": 13,
+                "optional": false
+              },
+              {
+                "name": "status",
+                "type": 15,
+                "optional": false
+              },
+              {
+                "name": "supersedes",
+                "type": 7,
+                "optional": true
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "union",
+            "types": [
+              9,
+              10,
+              11
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "decision"
+          },
+          {
+            "kind": "literal",
+            "value": "fact"
+          },
+          {
+            "kind": "literal",
+            "value": "task"
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "tuple",
+            "elements": [
+              {
+                "type": 14,
+                "optional": false,
+                "rest": false
+              },
+              {
+                "type": 14,
+                "optional": false,
+                "rest": true
+              }
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "eventSeq",
+                "type": 12,
+                "optional": false
+              },
+              {
+                "name": "sessionId",
+                "type": 7,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "union",
+            "types": [
+              16,
+              17,
+              18
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "active"
+          },
+          {
+            "kind": "literal",
+            "value": "deactivated"
+          },
+          {
+            "kind": "literal",
+            "value": "superseded"
+          },
+          {
+            "kind": "literal",
+            "value": true
+          },
+          {
+            "kind": "literal",
+            "value": "continuum/memory-record"
+          }
+        ]
+      }
+    }
+  ],
+  "types": []
+}

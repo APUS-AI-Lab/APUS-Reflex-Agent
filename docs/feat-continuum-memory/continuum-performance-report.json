@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "generatedAt": "2026-10-11T05:32:35.748Z",
+  "source": "continuum-evaluation-results.json",
+  "semantics": "provider usage only; Jev/local/cache costs unknown",
+  "variants": [
+    {
+      "variant": "A0",
+      "requests": 4,
+      "p50LatencyMs": 2226,
+      "p95LatencyMs": 3508,
+      "inputTokens": 83,
+      "outputTokens": 507,
+      "selectedCandidateCount": 0,
+      "baselineCandidateCount": 3,
+      "candidateAgreement": 0.25,
+      "matched": 0
+    },
+    {
+      "variant": "A1",
+      "requests": 4,
+      "p50LatencyMs": 3109,
+      "p95LatencyMs": 4108,
+      "inputTokens": 355,
+      "outputTokens": 867,
+      "selectedCandidateCount": 3,
+      "baselineCandidateCount": 3,
+      "candidateAgreement": 1,
+      "matched": 3
+    },
+    {
+      "variant": "B",
+      "requests": 4,
+      "p50LatencyMs": 1909,
+      "p95LatencyMs": 3056,
+      "inputTokens": 123,
+      "outputTokens": 492,
+      "selectedCandidateCount": 3,
+      "baselineCandidateCount": 3,
+      "candidateAgreement": 1,
+      "matched": 4
+    },
+    {
+      "variant": "C",
+      "requests": 4,
+      "p50LatencyMs": 2984,
+      "p95LatencyMs": 6113,
+      "inputTokens": 123,
+      "outputTokens": 885,
+      "selectedCandidateCount": 3,
+      "baselineCandidateCount": 3,
+      "candidateAgreement": 1,
+      "matched": 4
+    },
+    {
+      "variant": "U",
+      "requests": 4,
+      "p50LatencyMs": 1702,
+      "p95LatencyMs": 2800,
+      "inputTokens": 195,
+      "outputTokens": 434,
+      "selectedCandidateCount": 3,
+      "baselineCandidateCount": 3,
+      "candidateAgreement": 1,
+      "matched": 0
+    }
+  ]
+}

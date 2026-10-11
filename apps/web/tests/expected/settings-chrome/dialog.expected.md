@@ -30,3 +30,7 @@
   - text: 繁忙时的发送行为 智能体运行时 Enter 键和发送按钮的行为；Cmd/Ctrl+Enter 使用另一行为
   - button "排队发送"
   - text: 当前版本：{{version}}
+  - link "MIT 许可证与原作者版权":
+    - /url: /LICENSE.txt
+  - link "第三方许可证与致谢":
+    - /url: /THIRD_PARTY_NOTICES.txt

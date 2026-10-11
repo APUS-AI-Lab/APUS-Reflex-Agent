@@ -3,7 +3,7 @@
 ## TL;DR
 
 - 当前分支：`dev/continuum-reflex-integration`
-- 基线：`feat-reflex-control`，HEAD `8b35810552`
+- 基线：`feat-reflex-control` 当前提交。
 - 目标：在控制面主力分支上集成 `feat-continuum-memory`，完成冲突解释和场景化验收。
 - 当前状态：集成分支已创建，尚未合并 Continuum。
 

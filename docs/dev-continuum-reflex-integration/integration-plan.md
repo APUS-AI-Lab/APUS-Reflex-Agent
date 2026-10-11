@@ -1,5 +1,7 @@
 # Continuum × Reflex Control 集成计划
 
+English | [中文](integration-plan.zh.md)
+
 ## 目标
 
 将 `feat-continuum-memory` 的 Session-backed 连续记忆与 `feat-reflex-control` 的控制面、目标路由、上下文投影和监督能力组合到一个可回归的 dev 分支。

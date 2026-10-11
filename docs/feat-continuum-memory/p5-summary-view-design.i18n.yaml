@@ -1,0 +1,16 @@
+# Bilingual-pair consistency record for p5-summary-view-design.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-continuum-memory/p5-summary-view-design.md
+/session-backed-summary-navigation:
+  en: b1b782b905f8f5fb
+  zh: c570209bd82ab6cb
+/session-backed-summary-navigation/goal-and-authority:
+  en: aefe9db3b259feda
+  zh: a6c2611f3a02afc1
+/session-backed-summary-navigation/api-and-files:
+  en: d563c98a9486ad18
+  zh: 7385ae9650857c19
+/session-backed-summary-navigation/validation-and-limits:
+  en: 30e4a3a5e6e8308b
+  zh: 9c231f5324b93bbf
