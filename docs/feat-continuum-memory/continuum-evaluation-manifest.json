@@ -104,6 +104,14 @@
       "failedAssertions": 0,
       "detail": "All 20 variant/task model requests completed with protected credentials. All 11 applicable assertions passed: A1 existing-history 3/3, B deterministic 4/4, C Reflex 4/4. A0/U are not-applicable controls. Scope filtering excludes private records before Jev.",
       "applicable": 11
+    },
+    "keylessSnapshot": {
+      "status": "partial-unrelated-failure",
+      "command": "pnpm run test:snapshot",
+      "passed": 179,
+      "failed": 1,
+      "skipped": 2,
+      "detail": "Keyless replay suite reached 179 passed and 2 skipped; one pre-existing browser-use-stagehand-native fixture failed while installing its Node registerHooks load hook (ERR_INVALID_RETURN_PROPERTY_VALUE). Continuum-specific SDK replay passed separately: TypeScript 44/44 and Python 2/2."
     }
   },
   "policy": "Missing credentials, unreachable endpoints, or skipped required variants remain pending and are not treated as success.",
