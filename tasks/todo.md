@@ -452,3 +452,15 @@ PPT v2为4页主讲+2页备查，实际Keynote打开、六页备注回读和PDF�
 - [ ] Codex 真实语义偏航后的 realign→消费→相关 verification-target→improved 闭环仍未通过；不得以回归或受控 native recovery 代替。
 - [x] Frontend 已固定 Harness SHA、完成最终构建与 Electron 正常/Safe Mode 用户验收；200% 原生缩放尚未执行。
 - [ ] 最终门禁复核、Frontend commit/push、两仓 PR/main 合并并回读远端；Harness 已完成其 commit/push 与 Ruff 双检查。
+
+## 2026-10-11 Snapshot 回归复核
+
+- [x] 97 个变更相关测试文件、1876 项确定性回归全部通过。
+- [x] TypeScript/Python `system3-entry-route` 与 `system3-shadow` snapshot replay 全部通过。
+- [x] 完整 keyless snapshot 串行回放 185/187 通过，2 项按现有策略跳过；完整 headless 文件 132/134 通过，2 项跳过。
+- [x] Node 22 browser-use native fixture loader 修复后，browser snapshot 与 loader 回归通过。
+- [ ] 并发 snapshot lane 的单次 `subagent-list-agents` 超时仍保留为资源争用观察，不作为功能通过或发布门禁通过。
+
+#### Review
+
+本轮只修复测试 fixture 的 Node 22 loader 兼容性并同步有意变更的 snapshot 期望，没有修改真实模型验收标准；真实 Codex 语义偏航闭环、签名/公证包和最终合并仍未完成。

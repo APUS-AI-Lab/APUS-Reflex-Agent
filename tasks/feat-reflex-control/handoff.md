@@ -97,3 +97,12 @@ Host16 完整通过并完成本轮 SDK/浏览器验收。Host17 已由 root 收�
 - [x] 监控 UI 加入 observing 状态与有界执行时间线，新人工消息清除陈旧的 recovery/supervision/context 状态；焦点组件与 projection 测试通过。
 - [ ] 真实 Codex 语义偏航 → Reflex realign → 消费 → verification-target → improved 闭环仍未通过，保留 Host19 失败证据，不降低阈值。
 - [ ] 完成 Harness / Frontend 最终构建、Electron 正常和 safe mode、版本 pin、Ruff 双检查、提交、push、PR/main 合并和远端回读。
+
+## 2026-10-11 Snapshot 回归复核
+
+- [x] System3、Codex evidence/verification、Reflex 设置页及相关 Jev、Session、计量、上下文回归共 97 个测试文件、1876 项通过。
+- [x] TypeScript SDK 的 `system3-entry-route` 与 `system3-shadow`、Python SDK 同名 replay 均通过；期望记录已与动态 effort 和新选路提示同步。
+- [x] 完整 keyless snapshot 串行回放通过：4 个测试文件、185 项通过、2 项跳过；完整 headless 文件串行回放通过：1 个文件、132 项通过、2 项跳过。
+- [x] 修复 Node 22 同步 loader 对 browser-use fixture 的兼容问题：外部 TS fixture 转为 data URL，保留 `zod` 的包内 file URL 和相对 fixture 导入；对应 browser snapshot 与 loader 回归通过，未留下生成目录。
+- [ ] 默认并发 snapshot 曾出现 `subagent-list-agents` 120 秒资源争用超时；串行重跑通过，尚未把并发 lane 标为稳定通过。
+- [ ] 以上均为确定性/回放层证据；真实 Codex 语义偏航闭环、最终签名/公证 Electron 包及两仓 PR/main 状态仍按前述清单保持未完成。
