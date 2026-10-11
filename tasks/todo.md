@@ -445,6 +445,8 @@ P1.6 验收：profile service 测试 3/3、Continuum 全测试 28/28、service T
 
 P1.7 验收：Continuum/adapter/agent-loop 9 个测试文件 48/48，Continuum 与 Jev TypeScript build、focused Oxlint、全仓 `pnpm run build` 通过。profile selector 的 active、shadow、回执和关闭后的迟到结果均有测试。官方 DeepSeek v4-pro adapter/runtime 实跑 19 passed、2 optional image skipped、0 failed；跳过项仍按政策 pending。新增 `scripts/continuum-evaluation.ts` 是严格 A0/A1/B/C/U 执行器，但本轮严格评估器已用受保护凭据完成 20/20 请求，结果见 `docs/feat-continuum-memory/continuum-evaluation-results.json`；applicable 9/11 matched；B/C 8/8 通过，A1 有 2 个模型响应断言失败，A0/U 为 not-applicable；scope candidate 已在 Jev 前按授权过滤。
 
+摘要树已改为确定性 scope/kind 树与稳定前缀 bytes/hash 仪表；Python SDK 已加入无 Jev 回放投影。最终 host build、docs 20/20、54/54 定向测试、Cordis 215/215 和 persistence 80/28 检查通过。
+
 ### P1.1 Review
 
 新增 `packages/context/continuum`，先完成纯记录语义，再通过 `continuum/memory-record` 接入现有 Session log。`MemoryRecordStore` 的旧记录、新记录、来源引用、revision、superseded/deactivated 状态均为 immutable snapshot；冲突和重复 ID 不产生部分提交。P1.1/P1.2 相关测试 16/16 通过；包级 Oxlint、TypeScript 构建、native flock、README Model Experience、persistence acknowledgement、双语配对与文档门禁通过。下一批仍不得新增第二事实源。
