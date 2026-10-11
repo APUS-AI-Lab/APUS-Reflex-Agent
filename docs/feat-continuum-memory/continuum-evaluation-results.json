@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-11T03:46:22.126Z",
+  "generatedAt": "2026-10-11T03:57:06.840Z",
   "model": "deepseek-v4-pro",
   "endpoint": "https://api.deepseek.com/anthropic",
   "variants": [
@@ -69,15 +69,15 @@
       },
       "matched": false,
       "expected": "INV-42",
-      "response": "",
+      "response": "no private record injected",
       "usage": {
-        "input_tokens": 7,
+        "input_tokens": 147,
         "cache_creation_input_tokens": 0,
-        "cache_read_input_tokens": 128,
-        "output_tokens": 256,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 86,
         "service_tier": "standard"
       },
-      "latencyMs": 3882
+      "latencyMs": 3114
     },
     {
       "variant": "A0",
@@ -101,13 +101,13 @@
       "expected": "Monday supersedes Friday",
       "response": "",
       "usage": {
-        "input_tokens": 13,
+        "input_tokens": 25,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 256,
+        "output_tokens": 512,
         "service_tier": "standard"
       },
-      "latencyMs": 3549
+      "latencyMs": 5664
     },
     {
       "variant": "A0",
@@ -129,13 +129,13 @@
       "expected": "no private record injected",
       "response": "no private record injected",
       "usage": {
-        "input_tokens": 8,
+        "input_tokens": 20,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 95,
+        "output_tokens": 74,
         "service_tier": "standard"
       },
-      "latencyMs": 1938
+      "latencyMs": 1826
     },
     {
       "variant": "A0",
@@ -157,15 +157,15 @@
       },
       "matched": false,
       "expected": "same Session-backed record IDs",
-      "response": "",
+      "response": "no private record injected",
       "usage": {
-        "input_tokens": 7,
+        "input_tokens": 19,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 256,
+        "output_tokens": 190,
         "service_tier": "standard"
       },
-      "latencyMs": 3195
+      "latencyMs": 2817
     },
     {
       "variant": "A1",
@@ -191,13 +191,13 @@
       "expected": "INV-42",
       "response": "Invoice INV-42 was disputed.",
       "usage": {
-        "input_tokens": 76,
+        "input_tokens": 88,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 93,
+        "output_tokens": 60,
         "service_tier": "standard"
       },
-      "latencyMs": 1905
+      "latencyMs": 1799
     },
     {
       "variant": "A1",
@@ -216,20 +216,20 @@
         "migration"
       ],
       "assertion": {
-        "status": "fail",
-        "reason": "existing history response omitted the expected fact"
+        "status": "pass",
+        "reason": "existing history contains the expected fact"
       },
-      "matched": false,
+      "matched": true,
       "expected": "Monday supersedes Friday",
-      "response": "",
+      "response": "Acknowledged: cutover moved to Monday; continuing the task.",
       "usage": {
-        "input_tokens": 87,
+        "input_tokens": 99,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 256,
+        "output_tokens": 124,
         "service_tier": "standard"
       },
-      "latencyMs": 3476
+      "latencyMs": 2240
     },
     {
       "variant": "A1",
@@ -249,15 +249,15 @@
       },
       "matched": false,
       "expected": "no private record injected",
-      "response": "The private migration note is that the access token is stored in a protected vault.",
+      "response": "The access token is stored in a protected vault.",
       "usage": {
-        "input_tokens": 65,
+        "input_tokens": 77,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 176,
+        "output_tokens": 218,
         "service_tier": "standard"
       },
-      "latencyMs": 2175
+      "latencyMs": 2627
     },
     {
       "variant": "A1",
@@ -276,20 +276,20 @@
         "replay"
       ],
       "assertion": {
-        "status": "fail",
-        "reason": "existing history response omitted the expected fact"
+        "status": "pass",
+        "reason": "existing history contains the expected fact"
       },
-      "matched": false,
+      "matched": true,
       "expected": "same Session-backed record IDs",
-      "response": "Ensure Session-backed record IDs remain stable",
+      "response": "After process restart, continue with stable Session-backed record IDs.",
       "usage": {
-        "input_tokens": 79,
+        "input_tokens": 91,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 256,
+        "output_tokens": 232,
         "service_tier": "standard"
       },
-      "latencyMs": 3803
+      "latencyMs": 3328
     },
     {
       "variant": "B",
@@ -315,13 +315,13 @@
       "expected": "INV-42",
       "response": "Invoice INV-42 was disputed.",
       "usage": {
-        "input_tokens": 18,
+        "input_tokens": 30,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 56,
+        "output_tokens": 45,
         "service_tier": "standard"
       },
-      "latencyMs": 1718
+      "latencyMs": 1419
     },
     {
       "variant": "B",
@@ -345,15 +345,15 @@
       },
       "matched": true,
       "expected": "Monday supersedes Friday",
-      "response": "Continuing the task with the migration cutover now scheduled for Monday, as Monday supersedes Friday.",
+      "response": "Continuing the task with the cutover scheduled for Monday.",
       "usage": {
-        "input_tokens": 29,
+        "input_tokens": 41,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 141,
+        "output_tokens": 136,
         "service_tier": "standard"
       },
-      "latencyMs": 2312
+      "latencyMs": 2355
     },
     {
       "variant": "B",
@@ -375,13 +375,13 @@
       "expected": "no private record injected",
       "response": "no private record injected",
       "usage": {
-        "input_tokens": 7,
+        "input_tokens": 19,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 71,
+        "output_tokens": 77,
         "service_tier": "standard"
       },
-      "latencyMs": 1491
+      "latencyMs": 2121
     },
     {
       "variant": "B",
@@ -405,15 +405,15 @@
       },
       "matched": true,
       "expected": "same Session-backed record IDs",
-      "response": "Session-backed record IDs must remain stable after process restart.",
+      "response": "Ensure session-backed record IDs remain stable after process restart.",
       "usage": {
-        "input_tokens": 21,
+        "input_tokens": 33,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 137,
+        "output_tokens": 189,
         "service_tier": "standard"
       },
-      "latencyMs": 2093
+      "latencyMs": 2696
     },
     {
       "variant": "C",
@@ -439,13 +439,13 @@
       "expected": "INV-42",
       "response": "Invoice INV-42 was disputed by finance.",
       "usage": {
-        "input_tokens": 18,
+        "input_tokens": 30,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 94,
+        "output_tokens": 48,
         "service_tier": "standard"
       },
-      "latencyMs": 3559
+      "latencyMs": 2763
     },
     {
       "variant": "C",
@@ -469,15 +469,15 @@
       },
       "matched": true,
       "expected": "Monday supersedes Friday",
-      "response": "The cutover is now scheduled for Monday; continuing the task accordingly.",
+      "response": "The cutover is now scheduled for Monday, superseding Friday; proceeding with the task accordingly.",
       "usage": {
-        "input_tokens": 29,
+        "input_tokens": 41,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 149,
+        "output_tokens": 154,
         "service_tier": "standard"
       },
-      "latencyMs": 2645
+      "latencyMs": 2977
     },
     {
       "variant": "C",
@@ -499,13 +499,13 @@
       "expected": "no private record injected",
       "response": "no private record injected",
       "usage": {
-        "input_tokens": 7,
+        "input_tokens": 19,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 74,
+        "output_tokens": 76,
         "service_tier": "standard"
       },
-      "latencyMs": 2031
+      "latencyMs": 1798
     },
     {
       "variant": "C",
@@ -529,15 +529,15 @@
       },
       "matched": true,
       "expected": "same Session-backed record IDs",
-      "response": "Ensure the Session-backed record IDs remain stable after process restart.",
+      "response": "Ensure Session-backed record IDs remain stable after process restart.",
       "usage": {
-        "input_tokens": 21,
+        "input_tokens": 33,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 202,
+        "output_tokens": 315,
         "service_tier": "standard"
       },
-      "latencyMs": 33948
+      "latencyMs": 4529
     },
     {
       "variant": "U",
@@ -563,13 +563,13 @@
       "expected": "INV-42",
       "response": "Invoice INV-42 was disputed.",
       "usage": {
-        "input_tokens": 36,
+        "input_tokens": 48,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 92,
+        "output_tokens": 59,
         "service_tier": "standard"
       },
-      "latencyMs": 1370
+      "latencyMs": 1810
     },
     {
       "variant": "U",
@@ -593,15 +593,15 @@
       },
       "matched": false,
       "expected": "Monday supersedes Friday",
-      "response": "The cutover is now scheduled for Monday, superseding Friday.",
+      "response": "Continuing with the cutover now scheduled for Monday, since Monday supersedes Friday.",
       "usage": {
-        "input_tokens": 47,
+        "input_tokens": 59,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 214,
+        "output_tokens": 219,
         "service_tier": "standard"
       },
-      "latencyMs": 2614
+      "latencyMs": 3311
     },
     {
       "variant": "U",
@@ -623,13 +623,13 @@
       "expected": "no private record injected",
       "response": "no private record injected",
       "usage": {
-        "input_tokens": 25,
+        "input_tokens": 37,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 125,
+        "output_tokens": 130,
         "service_tier": "standard"
       },
-      "latencyMs": 2850
+      "latencyMs": 2336
     },
     {
       "variant": "U",
@@ -653,21 +653,21 @@
       },
       "matched": false,
       "expected": "same Session-backed record IDs",
-      "response": "",
+      "response": "Maintain stable session-backed record IDs across process restarts for migration and invoice records.",
       "usage": {
-        "input_tokens": 39,
+        "input_tokens": 51,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 256,
+        "output_tokens": 326,
         "service_tier": "standard"
       },
-      "latencyMs": 3265
+      "latencyMs": 3860
     }
   ],
   "summary": {
     "total": 20,
     "applicable": 11,
-    "matched": 9,
-    "failed": 2
+    "matched": 11,
+    "failed": 0
   }
 }

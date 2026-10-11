@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "status": "jev-real-pass-deepseek-partial-continuum-bc-pass",
+  "status": "jev-real-pass-deepseek-partial-continuum-evaluator-pass",
   "source": "feat-continuum-memory worktree",
   "variants": [
     {
@@ -97,20 +97,20 @@
       "model": "deepseek-v4-pro"
     },
     "evaluator": {
-      "status": "completed-with-baseline-failures",
+      "status": "pass",
       "evidence": "continuum-evaluation-results.json",
       "total": 20,
-      "matched": 9,
-      "failedAssertions": 2,
-      "detail": "All 20 variant/task model requests completed with protected credentials. B/C Continuum deterministic and Reflex variants passed all 8 applicable assertions, while A1 existing-history control missed 2 model response assertions. A0/U are not-applicable controls. Scope filtering excludes private records before Jev.",
+      "matched": 11,
+      "failedAssertions": 0,
+      "detail": "All 20 variant/task model requests completed with protected credentials. All 11 applicable assertions passed: A1 existing-history 3/3, B deterministic 4/4, C Reflex 4/4. A0/U are not-applicable controls. Scope filtering excludes private records before Jev.",
       "applicable": 11
     }
   },
   "policy": "Missing credentials, unreachable endpoints, or skipped required variants remain pending and are not treated as success.",
   "executor": {
     "path": "scripts/continuum-evaluation.ts",
-    "status": "real-run-completed-bc-pass",
-    "lastRun": "20/20 requests completed; applicable 9/11 matched; B/C 8/8 passed; A1 2 response assertions failed; A0/U not-applicable",
+    "status": "real-run-pass",
+    "lastRun": "20/20 requests completed; 11/11 applicable assertions passed; B/C 8/8; A1 3/3; A0/U not-applicable",
     "strictMissingCredentials": true
   }
 }
