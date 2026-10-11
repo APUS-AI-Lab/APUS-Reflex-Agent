@@ -7,6 +7,7 @@
 export * from './records.ts'
 export * from './persistence.ts'
 export * from './retrieval.ts'
+export * from './memory-index.ts'
 export * from './context.ts'
 export * from './policy.ts'
 export * from './ablation.ts'

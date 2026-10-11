@@ -72,7 +72,7 @@ The consumer appends a bounded recall message, so the existing request prefix re
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- The record projection is process-local; restart recovery requires reading and folding the Session event log.
+- The record projection is process-local; restart recovery requires reading and folding the Session event log. `MemoryRecordIndex` is disposable derived state: rebuild it from the projection or drain queued snapshots with a bounded backlog budget before using it as an optional retrieval accelerator.
 - The service has no full text index and does not automatically attach the summary tree to lifecycle retrieval. The tree and cache helpers are deterministic, local instrumentation; they do not report provider cache accounting. Record admission is caller-owned and source-backed.
 
 <a id="dev-note"></a>

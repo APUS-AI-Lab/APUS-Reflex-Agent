@@ -1,11 +1,14 @@
 import type { MemoryId, MemoryRecord } from './records.ts'
 import { MemoryRecordStore } from './records.ts'
+import { memorySearchTerms, type MemoryRecordIndex } from './memory-index.ts'
 
 /** Limits applied before any candidate can reach Jev or the main model. */
 export interface MemoryRetrievalConfig {
   readonly maxCandidates: number
   readonly maxExcerptBytes: number
   readonly maxTotalBytes: number
+  /** Optional disposable inverted index; the record store remains authoritative. */
+  readonly index?: MemoryRecordIndex
 }
 
 /** One deterministic candidate produced from an active record. */
@@ -37,9 +40,11 @@ export function retrieveMemoryWorkingSet(
   query: string,
 ): MemoryWorkingSet {
   assertConfig(config)
-  const terms = tokenize(query)
+  const terms = memorySearchTerms(query)
+  const indexedIds = config.index === undefined ? undefined : new Set(config.index.idsForTerms(terms))
   const ranked = store.snapshot()
     .filter(record => record.status === 'active')
+    .filter(record => indexedIds === undefined || indexedIds.has(record.id))
     .map(record => ({ record, score: scoreRecord(record, terms) }))
     .filter(item => item.score > 0)
     .sort((a, b) => b.score - a.score || String(a.record.id).localeCompare(String(b.record.id)))
@@ -63,9 +68,7 @@ function scoreRecord(record: MemoryRecord, terms: readonly string[]): number {
   return terms.reduce((score, term) => score + (haystack.includes(term) ? 1 : 0), 0)
 }
 
-function tokenize(value: string): readonly string[] {
-  return [...new Set(value.toLocaleLowerCase().split(/[^\p{L}\p{N}_-]+/u).filter(term => term.length > 1))]
-}
+
 
 function truncateUtf8(value: string, maxBytes: number): string {
   if (utf8Bytes(value) <= maxBytes) return value
@@ -83,6 +86,7 @@ function utf8Bytes(value: string): number {
 
 function assertConfig(config: MemoryRetrievalConfig): void {
   for (const [name, value] of Object.entries(config)) {
+    if (name === 'index') continue
     if (!Number.isSafeInteger(value) || value < 1) throw new TypeError(`${name} must be a positive safe integer`)
   }
 }

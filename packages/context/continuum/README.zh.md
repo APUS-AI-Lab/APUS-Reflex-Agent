@@ -72,7 +72,7 @@ recall 消息消耗配置的字节预算并进入同一个模型请求；不会�
 
 ## Known Limitations and Deferred Work
 
-- 当前记录投影是进程内的；重启恢复必须读取并折叠 Session 事件日志。
+- 当前记录投影是进程内的；重启恢复必须读取并折叠 Session 事件日志。`MemoryRecordIndex` 是可丢弃的派生状态：使用它作为可选检索加速器前，应从投影重建，或用有界积压预算逐步处理排队快照。
 - service 不包含完整全文索引，也不会自动把摘要树接入生命周期检索。摘要树和缓存 helper 是确定性的本地计量，不报告 provider 缓存账单；记录准入由调用方负责并必须带来源。
 
 <a id="dev-note"></a>
