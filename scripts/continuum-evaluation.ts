@@ -131,7 +131,11 @@ async function askDeepSeek(baseURL: string, key: string, model: string, prompt: 
     error?: { message?: string }
   }
   if (!response.ok) throw new Error(`DeepSeek evaluation request failed with HTTP ${response.status}: ${body.error?.message ?? 'unknown error'}`)
-  return { text: body.content?.filter(block => block.type === 'text').map(block => block.text ?? '').join('') ?? '', model: body.model ?? model, usage: body.usage }
+  return {
+    text: body.content?.filter(block => block.type === 'text').map(block => block.text ?? '').join('') ?? '',
+    model: body.model ?? model,
+    ...(body.usage === undefined ? {} : { usage: body.usage }),
+  }
 }
 
 await main()

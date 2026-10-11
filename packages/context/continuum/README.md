@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-This package owns the durable Continuum record and profile service: immutable memory records with source references, revision checks, superseding, deactivation, a log-only Session event that can rebuild the projection, exact source-event reads, deterministic bounded retrieval, an optional mounted Jev selector, a lifecycle-aware same-step consumer, and an explicit profile switch. The service does not silently invent records or provide an unlimited-memory mode without Reflex.
+This package owns the durable Continuum record/profile service: immutable memory records with source references, revision checks, superseding, deactivation, a log-only Session event that can rebuild the projection, exact source-event reads, deterministic bounded retrieval, an optional mounted Jev selector, a lifecycle-aware same-step consumer, and an explicit profile switch. The service does not silently invent records or provide an unlimited-memory mode without Reflex.
 
 The Session event uses the existing persistence backend and becomes durable after the caller completes `ctx.sessions.flush(session)`. Record admission remains explicit; when the companion `continuum-jev` profile service is mounted, shadow/active selection and its receipt are part of the same-step consumer.
 
