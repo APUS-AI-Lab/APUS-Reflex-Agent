@@ -157,3 +157,9 @@ Host16 完整通过并完成本轮 SDK/浏览器验收。Host17 已由 root 收�
 - [x] 用户可见面只保留运行耗时、最近进展、停滞/超时提示、继续等待/补充说明/停止，以及 Reflex 的接收、改善、未知和过期状态。
 - [x] 明确不增加全轨迹分析、逐 token 监控、操作系统 profiler、复杂评分平台或新的监控子系统；不修改 Codex 私有上下文和 cache 前缀。
 - [x] 设计与验收说明见 `docs/feat-reflex-control/supervision-minimal-scope.{md,zh.md}`；该范围不改变现有 supervision API，只约束产品承诺和用户界面复杂度。
+
+## 2026-10-11 文档收口与远端状态
+
+- [x] `8b35810552` 已推送到 Harness `feat-reflex-control`；提交前的类型检查、构建、Ruff 双检查、双语配对和 `test:docs` 均通过，worktree clean。
+- [x] Frontend `feat-reflex-control` 当前为 `7a2c419`，worktree clean；其本地构建、typecheck、目录包、Safe Mode/CDP 和许可证审计证据仍有效。
+- [ ] Harness run `38137261041` 的 Jev/System3 job 与 Frontend run `38135768022` / `38135768109` 均在 runner 分配前失败（`runner_id=0`、0 steps）；两个 Draft PR 仍是 `MERGEABLE` 但 `UNSTABLE`，恢复远端执行后再合并 main。
