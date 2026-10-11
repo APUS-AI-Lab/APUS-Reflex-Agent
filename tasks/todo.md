@@ -400,7 +400,7 @@ PPT v2为4页主讲+2页备查，实际Keynote打开、六页备注回读和PDF�
 
 ### Continuum Review
 
-当前只有设计产物，未修改产品代码、配置或部署。产品开关开启要求 Reflex 管理，关闭或未接入保持原版；底层模块化不意味着提供无 Reflex 的无限记忆产品模式。原文、有效约束、权限、预算和持久记录不交给模型决定；Reflex 管理有限候选和允许动作。新输入和记忆采用必须可回放。UniiChat 的 cache/tree 更具体，本项目完整记忆控制尚待实现，不能宣称已领先。未安装依赖，产品测试与真实对照留待对应阶段。
+当前已完成 P1.1–P1.7 的模块实现与验证；P0.4/P2–P5 仍未完成，不能宣称完整产品验收。产品开关开启要求 Reflex 管理，关闭或未接入保持原版；底层模块化不意味着提供无 Reflex 的无限记忆产品模式。原文、有效约束、权限、预算和持久记录不交给模型决定；Reflex 管理有限候选和允许动作。新输入和记忆采用必须可回放。UniiChat 的 cache/tree 更具体，本项目完整记忆控制尚待实现，不能宣称已领先。未安装依赖，产品测试与真实对照留待对应阶段。
 
 最终 HTML 检查：22 个链接、13 个 ID、SVG XML 和尾换行有效，无外部资源；真实 1440px/390px 页面无横向溢出，13 维 5 列比较表完整，手机表内可横向滚动与聚焦，无 console 错误。独立审阅通过，git diff --check 通过。初版架构图与折叠交互已验；未运行需要 node_modules 的全仓文档门禁或产品对照测试。
 
@@ -433,17 +433,17 @@ PPT v2为4页主讲+2页备查，实际Keynote打开、六页备注回读和PDF�
 
 ### 本批验证记录
 
-已在本 worktree 安装锁定依赖。真实模型凭据前置检查：当前进程无 JEV_API_KEY/DEEPSEEK_API_KEY，worktree 与主目录均无 .env；已请求现有测试配置路径，不请求密钥明文。接入测试的 adapter 为受控替身，Session 为内存日志，不证明磁盘持久化、真实模型效果或完整产品。
+已在本 worktree 安装锁定依赖。真实模型凭据只从受保护的本地 runtime.env 注入，未写入 worktree；密钥值不进入日志或文档。接入测试的 adapter 为受控替身，Session 为内存日志，不证明磁盘持久化、真实模型效果或完整产品。
 
-本轮严格定向验收：Continuum 4 个测试文件 21/21、continuum-jev 1 个测试文件 6/6；两包 TypeScript build、Oxlint、`verify-persistence-changes`（80 roots、28 history records）通过。首次 `test:docs` 因生成的历史 persistence format facts 过期失败，运行 `pnpm run verify-persistence-formats --write` 刷新 3 个引用文件后最终 `test:docs` 20/20 通过。真实 Jev/DeepSeek 端点仍因 TLS 超时未计为通过。
+本轮严格定向验收：Continuum 4 个测试文件 21/21、continuum-jev 1 个测试文件 6/6；两包 TypeScript build、Oxlint、`verify-persistence-changes`（80 roots、28 history records）通过。首次 `test:docs` 因生成的历史 persistence format facts 过期失败，运行 `pnpm run verify-persistence-formats --write` 刷新 3 个引用文件后最终 `test:docs` 20/20 通过。真实 Jev/DeepSeek 端点已分别取得 Jev pass 与 DeepSeek partial evidence；严格 A0/A1/B/C/U 评估器已完成 20/20 请求，但 7 matched、13 strict assertion failures，不能计为通过。
 
 P1.4/P1.5 追加验收：Continuum 6 个测试文件 26/26、TypeScript build 和 Oxlint 通过；active 模式未挂载 Reflex 会显式拒绝，关闭/停用会使在途读取失效，未授权 scope 不进入工作集。固定消融显示摘要树使样本命中率从 2/3 到 3/3；稳定布局的估算复用分别为 79/118 与 165/204，未当作服务端 cache hit。
 
-实时重试验收：RunPod Jev endpoint 当前可达，`continuum-live-e2e.ts` 使用部署配置中的 JEV key 实跑成功，结果保存在 `docs/feat-continuum-memory/continuum-live-e2e.json`（APUS-OpenJev-v1-9B-5949，confidence 0.9487993897）。官方 DeepSeek endpoint 当前可达但对用户提供的 key 返回 HTTP 401；llm-deepseek adapter/runtime 真实测试 16 项因此全部失败于 AUTH，未计为主模型通过。TypeScript SDK fake-runtime 回放 `continuum/memory-decision` 1/1 通过；真实生成模型仍待有效 key。
+实时重试验收：RunPod Jev endpoint 当前可达，`continuum-live-e2e.ts` 使用部署配置中的 JEV key 实跑成功，结果保存在 `docs/feat-continuum-memory/continuum-live-e2e.json`（APUS-OpenJev-v1-9B-5949，confidence 0.9487993897）。官方 DeepSeek v4-pro 通过受保护 runtime.env 实跑：adapter/runtime 19 passed、2 optional image skipped、0 failed；image 两项因环境开关未设置仍 pending。TypeScript SDK fake-runtime 回放 `continuum/memory-decision` 1/1 通过；真实生成模型仍待有效 key。
 
 P1.6 验收：profile service 测试 3/3、Continuum 全测试 28/28、service TypeScript build 与 Oxlint 通过；`verify-cordis-config` 215/215、`test:docs` 20/20、persistence acknowledgement 80 roots/28 history records 通过。runtime patch 默认关闭，仅由受保护部署环境的 `CONTINUUM_MEMORY_*` 配置显式开启。Service 当前提供记录 create/supersede/deactivate、Session 日志恢复和 controller 消费者；Jev active 选择仍由独立 adapter 负责，尚未宣称全链路自动采用。
 
-P1.7 验收：Continuum/adapter/agent-loop 9 个测试文件 48/48，Continuum 与 Jev TypeScript build、focused Oxlint、全仓 `pnpm run build` 通过。profile selector 的 active、shadow、回执和关闭后的迟到结果均有测试。官方 DeepSeek v4-pro adapter/runtime 实跑 19 passed、2 optional image skipped、0 failed；跳过项仍按政策 pending。新增 `scripts/continuum-evaluation.ts` 是严格 A0/A1/B/C/U 执行器，但本轮 20 请求实跑因官方 endpoint body timeout 未生成结果文件，不能计为评测完成。
+P1.7 验收：Continuum/adapter/agent-loop 9 个测试文件 48/48，Continuum 与 Jev TypeScript build、focused Oxlint、全仓 `pnpm run build` 通过。profile selector 的 active、shadow、回执和关闭后的迟到结果均有测试。官方 DeepSeek v4-pro adapter/runtime 实跑 19 passed、2 optional image skipped、0 failed；跳过项仍按政策 pending。新增 `scripts/continuum-evaluation.ts` 是严格 A0/A1/B/C/U 执行器，但本轮严格评估器已用受保护凭据完成 20/20 请求，结果见 `docs/feat-continuum-memory/continuum-evaluation-results.json`；7 matched、13 strict assertion failures，直接暴露 baseline 任务预期与 scope candidate fixture 的缺口，不能计为通过。
 
 ### P1.1 Review
 
