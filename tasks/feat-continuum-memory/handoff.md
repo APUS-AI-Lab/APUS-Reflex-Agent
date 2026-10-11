@@ -57,7 +57,7 @@ Harness 持有事实、权限、预算、版本和执行权。模型提炼先成
 
 工作树：.Codex/worktrees/feat-continuum-memory。分支：feat-continuum-memory。从 main 当前基线创建；创建前已检查 status、diff、stash、branch、HEAD 和 worktree list，stash 为空。主目录已有 README 设计和未跟踪 undefined 文件，未带入或改动这些用户工作。运行源码、配置与服务器未变，分支未推送，CI 未触发。
 
-最终版 HTML 浏览器检查通过：桌面/手机无页面横向溢出，13 维对比表、模块/验收章节完整，无 console 错误。P0 `continuum-admission.spec.ts` 通过 8/8；Continuum/adapter/agent-loop 9 个测试文件 48/48；P1.3 Jev adapter 与 Session 回执已包含在内；focused Oxlint、两包 TypeScript 构建、native flock 构建、README Model Experience、persistence acknowledgement 和相对链接门禁通过。刷新 3 个历史 persistence format facts 后，`pnpm run test:docs` 最终 20/20 通过。实时 RunPod Jev adapter E2E 当前通过；DeepSeek v4-pro adapter/runtime 实跑 19 passed、2 optional image skipped、0 failed，跳过项仍 pending。全仓 `pnpm run build` 已通过。
+最终版 HTML 浏览器检查通过：桌面/手机无页面横向溢出，13 维对比表、模块/验收章节完整，无 console 错误。P0 `continuum-admission.spec.ts` 通过 8/8；Continuum/adapter/agent-loop/evaluator 11 个测试文件 54/54；P1.3 Jev adapter 与 Session 回执已包含在内；focused Oxlint、两包 TypeScript 构建、native flock 构建、README Model Experience、persistence acknowledgement 和相对链接门禁通过。刷新 3 个历史 persistence format facts 后，`pnpm run test:docs` 最终 20/20 通过。实时 RunPod Jev adapter E2E 当前通过；DeepSeek v4-pro adapter/runtime 实跑 19 passed、2 optional image skipped、0 failed，跳过项仍 pending。严格 A0/A1/B/C/U 评估器 20/20 请求完成、11/11 applicable assertions 通过。全仓 `pnpm run build` 已通过。
 
 ## P1.2 Review
 
@@ -65,7 +65,7 @@ Harness 持有事实、权限、预算、版本和执行权。模型提炼先成
 
 ## P1.3 Review
 
-`continuum-jev` 是实验性、非默认加载的 Reflex/Jev selection adapter。OFF 保持 deterministic baseline；SHADOW 不改变采用结果；ACTIVE 只接受 supplied candidate 且要求置信度阈值。Session 决策回执使用 `continuum/memory-decision`，可在不调用 Jev 的情况下回放最新选择。fake-provider 与回放 6/6 通过。实时 RunPod gateway 当前通过，证据为 `docs/feat-continuum-memory/continuum-live-e2e.json`；DeepSeek 主模型端点返回 HTTP 401，不能把主模型链路当作通过。 严格 live harness 复跑仍返回 jev/migration/confidence 0.948799389710666。
+`continuum-jev` 是实验性、非默认加载的 Reflex/Jev selection adapter。OFF 保持 deterministic baseline；SHADOW 不改变采用结果；ACTIVE 只接受 supplied candidate 且要求置信度阈值。Session 决策回执使用 `continuum/memory-decision`，可在不调用 Jev 的情况下回放最新选择。fake-provider 与回放 6/6 通过。实时 RunPod gateway 当前通过，证据为 `docs/feat-continuum-memory/continuum-live-e2e.json`；DeepSeek v4-pro adapter/runtime 证据为 19 passed、2 optional image skipped、0 failed。严格 live harness 复跑仍返回 jev/migration/confidence 0.948799389710666。
 严格 live harness 为 `scripts/continuum-live-e2e.ts`；缺少 `CONTINUUM_JEV_ENDPOINT`、`CONTINUUM_JEV_API_KEY` 或 `CONTINUUM_JEV_MODEL` 会硬失败。当前已验证缺配置失败路径，并在有部署配置时完成一次真实 Jev 选择。
 
 `readMemorySourceEvents` 复用现有 Session persistence 按 `sessionId + eventSeq` 精确读取；`retrieveMemoryWorkingSet` 只选 active 记录并执行候选/UTF-8 预算；`installContinuumMemoryContext` 在 `agent/pre-step` 追加带来源类型的 recall 消息。Session-backed profile service 负责恢复 projection 并暴露显式生命周期 API；Jev active 选择已由 companion selector 在同一步消费并记录 receipt；相关记录、重启、检索、选择和竞态测试 48/48 通过。持久化检查当前为 80 roots、28 history records，确认无未登记变化。
