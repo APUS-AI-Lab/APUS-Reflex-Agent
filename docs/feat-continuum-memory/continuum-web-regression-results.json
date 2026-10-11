@@ -3,16 +3,52 @@
   "generatedAt": "2026-10-11T07:00:00Z",
   "command": "pnpm run test:web:built",
   "status": "failed-baseline",
-  "continuumTests": { "files": 1, "passed": 2, "failed": 0 },
+  "continuumTests": {
+    "files": 1,
+    "passed": 2,
+    "failed": 0
+  },
   "failuresObserved": [
-    { "file": "apps/web/tests/document-preview.e2e.ts", "failed": 1 },
-    { "file": "apps/web/tests/settings-chrome.e2e.ts", "failed": 2 },
-    { "file": "apps/web/tests/smoke-real.e2e.ts", "failed": 1 },
-    { "file": "apps/web/tests/lifecycle-chrome.e2e.ts", "failed": 6 },
-    { "file": "apps/web/tests/details-session-lifecycle.e2e.ts", "failed": 1 },
-    { "file": "apps/web/tests/queue-actions.e2e.ts", "failed": 2 },
-    { "file": "apps/web/tests/agent-preset-selection.e2e.ts", "failed": 4 },
-    { "file": "apps/web/tests/onboarding-deepseek-config.e2e.ts", "failed": 3 }
+    {
+      "file": "apps/web/tests/document-preview.e2e.ts",
+      "failed": 1
+    },
+    {
+      "file": "apps/web/tests/settings-chrome.e2e.ts",
+      "failed": 2
+    },
+    {
+      "file": "apps/web/tests/smoke-real.e2e.ts",
+      "failed": 1
+    },
+    {
+      "file": "apps/web/tests/lifecycle-chrome.e2e.ts",
+      "failed": 6
+    },
+    {
+      "file": "apps/web/tests/details-session-lifecycle.e2e.ts",
+      "failed": 1
+    },
+    {
+      "file": "apps/web/tests/queue-actions.e2e.ts",
+      "failed": 2
+    },
+    {
+      "file": "apps/web/tests/agent-preset-selection.e2e.ts",
+      "failed": 4
+    },
+    {
+      "file": "apps/web/tests/onboarding-deepseek-config.e2e.ts",
+      "failed": 3
+    }
   ],
-  "interpretation": "The run was stopped after unrelated Web baseline failures; no Continuum test failed in this run. This is not evidence that the full Web suite passes."
+  "interpretation": "The archived full run stopped after unrelated Web baseline failures; no Continuum test failed. The two settings golden failures caused by newly shipped license links were corrected and their targeted rerun passed 2/2. This still is not evidence that the full Web suite passes.",
+  "remediation": [
+    {
+      "file": "apps/web/tests/settings-chrome.e2e.ts",
+      "targetedCommand": "pnpm exec vitest --config vitest.web.config.ts run apps/web/tests/settings-chrome.e2e.ts -t 'opens a browser asking for no shipped language in English|hides link-opening settings when the built-in browser is disabled'",
+      "status": "passed",
+      "tests": 2
+    }
+  ]
 }
