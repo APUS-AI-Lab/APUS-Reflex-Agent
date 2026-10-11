@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "status": "jev-real-pass-deepseek-auth-failed",
+  "commit": "56008e9b3b",
+  "variants": [
+    { "id": "A0", "name": "original-harness", "continuum": false, "jev": false, "summaryTree": false, "stableCache": false },
+    { "id": "A1", "name": "original-harness-with-existing-history-query", "continuum": false, "jev": false, "summaryTree": false, "stableCache": false },
+    { "id": "B", "name": "continuum-deterministic", "continuum": true, "jev": false, "summaryTree": false, "stableCache": false },
+    { "id": "C", "name": "continuum-reflex", "continuum": true, "jev": true, "summaryTree": false, "stableCache": false },
+    { "id": "U", "name": "reference-harness-reproduction", "continuum": false, "jev": false, "summaryTree": true, "stableCache": true }
+  ],
+  "tasks": [
+    { "id": "exact-fact", "input": "Which invoice was disputed?", "expected": "INV-42", "source": "fixture:invoice" },
+    { "id": "correction", "input": "The cutover moved to Monday; continue the task.", "expected": "Monday supersedes Friday", "source": "fixture:migration" },
+    { "id": "scope-denial", "input": "Recall the private migration note.", "expected": "no private record injected", "source": "fixture:private" },
+    { "id": "restart-replay", "input": "Continue after process restart.", "expected": "same Session-backed record IDs", "source": "fixture:replay" }
+  ],
+  "requiredEvidence": [
+    "provider and model identifiers",
+    "Session/request identifiers",
+    "retrieved record IDs and source event sequences",
+    "selected IDs and baseline IDs",
+    "actual model usage and latency",
+    "final file or database assertions",
+    "errors, retries, cancellations, and skips"
+  ],
+  "observed": {
+    "jev": { "status": "pass", "evidence": "continuum-live-e2e.json", "model": "APUS-OpenJev-v1-9B-5949" },
+    "deepseek": { "status": "blocked-auth", "evidence": "vitest.e2e adapter/runtime run", "detail": "official endpoint returned HTTP 401 for the supplied key; no model result is accepted" }
+  },
+  "policy": "Missing credentials, unreachable endpoints, or skipped required variants remain pending and are not treated as success."
+}

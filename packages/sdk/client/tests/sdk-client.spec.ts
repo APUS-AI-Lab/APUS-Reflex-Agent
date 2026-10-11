@@ -63,6 +63,15 @@ async function tempDir(prefix: string): Promise<string> {
 }
 
 describe('DeepSeekHarness', () => {
+  it('replays a Continuum memory decision receipt through the TypeScript SDK wire', async () => {
+    const harness = harnessWith({ FAKE_CONTINUUM_RECEIPT: '1' })
+    const result = await new HarnessSession(harness, 'owned').run('replay memory')
+    const receipt = result.events.find(event => event.type === 'continuum/memory-decision')
+    expect(receipt?.data).toEqual({
+      version: 1, mode: 'active', selectedIds: ['migration'], baselineIds: ['migration'], outcome: 'jev', confidence: 0.95,
+    })
+  })
+
   it('ignores notifications that precede the submitted message receipt', async () => {
     const notifications = [
       { method: 'session.status', params: { sessionId: 'owned', status: 'running' } },

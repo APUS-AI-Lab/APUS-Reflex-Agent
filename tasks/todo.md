@@ -437,6 +437,8 @@ PPT v2为4页主讲+2页备查，实际Keynote打开、六页备注回读和PDF�
 
 P1.4/P1.5 追加验收：Continuum 6 个测试文件 26/26、TypeScript build 和 Oxlint 通过；active 模式未挂载 Reflex 会显式拒绝，关闭/停用会使在途读取失效，未授权 scope 不进入工作集。固定消融显示摘要树使样本命中率从 2/3 到 3/3；稳定布局的估算复用分别为 79/118 与 165/204，未当作服务端 cache hit。
 
+实时重试验收：RunPod Jev endpoint 当前可达，`continuum-live-e2e.ts` 使用部署配置中的 JEV key 实跑成功，结果保存在 `docs/feat-continuum-memory/continuum-live-e2e.json`（APUS-OpenJev-v1-9B-5949，confidence 0.9487993897）。官方 DeepSeek endpoint 当前可达但对用户提供的 key 返回 HTTP 401；llm-deepseek adapter/runtime 真实测试 16 项因此全部失败于 AUTH，未计为主模型通过。TypeScript SDK fake-runtime 回放 `continuum/memory-decision` 1/1 通过；真实生成模型仍待有效 key。
+
 ### P1.1 Review
 
 新增 `packages/context/continuum`，先完成纯记录语义，再通过 `continuum/memory-record` 接入现有 Session log。`MemoryRecordStore` 的旧记录、新记录、来源引用、revision、superseded/deactivated 状态均为 immutable snapshot；冲突和重复 ID 不产生部分提交。P1.1/P1.2 相关测试 16/16 通过；包级 Oxlint、TypeScript 构建、native flock、README Model Experience、persistence acknowledgement、双语配对与文档门禁通过。下一批仍不得新增第二事实源。

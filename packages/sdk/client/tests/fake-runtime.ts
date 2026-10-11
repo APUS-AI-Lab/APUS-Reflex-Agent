@@ -120,6 +120,11 @@ function runTurn(sessionId: string): void {
     return
   }
   event(sessionId, 'turn/start', { turn: 0 })
+  if (env.FAKE_CONTINUUM_RECEIPT !== undefined) {
+    event(sessionId, 'continuum/memory-decision', {
+      version: 1, mode: 'active', selectedIds: ['migration'], baselineIds: ['migration'], outcome: 'jev', confidence: 0.95,
+    })
+  }
   if (env.FAKE_MALFORMED_MESSAGE !== undefined) {
     event(sessionId, 'assistant/attempt', {
       turn: 0,
