@@ -1,5 +1,16 @@
 # 独立 Jev + DeepSeek Harness 工作计划
 
+## 当前激活执行目标（2026-10-11）
+
+目标：完成 APUS Reflex Harness 的最终可发布闭环，以真实用户 E2E 证明入口路由、Reflex 模型配置、Codex 长时 Goal 监督与纠偏、动态上下文恢复和 UIUX；保护 cache 区与原始 Session，完成 MIT/NOTICE/安全/贡献者开源门禁、双仓 CI 和 PR/main 合并。
+
+- [ ] P0：完成真实语义监督闭环：偏航 → Reflex realign → Codex 消费 → verification-target → improved → 独立产物验证。
+- [ ] P0：冻结并实测 1 秒 admission/status、路由 p50/p95、远端首字节/总耗时三段指标。
+- [ ] P0：完成 Electron 原生 200%、启动失败恢复、会话恢复、签名/公证和包内 MIT/NOTICE 核对。
+- [ ] P0：完成 Harness Jev/System3 CI、秘密扫描、脱敏回归，并将两个 Draft PR 转 Ready。
+- [ ] P1：统一 README quickstart、贡献者 API 文档、CODEOWNERS、Release notes、演示和 benchmark。
+- [ ] P1：独立 review 通过后合并两个仓库 main，回读 SHA、运行包和发布清单。
+
 - [x] 用户批准新建独立仓库，核心方向为 Jev 理念与模型能力嵌入 DSH。
 - [x] 创建私有仓库 xDAN-System3-Harness，保留来源历史与上游许可证。
 - [x] 创建 feat-independent-harness 隔离 worktree；原项目保留。
