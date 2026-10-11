@@ -27,7 +27,7 @@
   },
   "startup": {
     "safeMode": true,
-    "remoteDebuggingPort": 19223,
+    "remoteDebuggingPort": 19224,
     "cdpReady": true,
     "processCleanup": true,
     "status": "passed"
