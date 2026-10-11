@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-11T03:57:06.840Z",
+  "generatedAt": "2026-10-11T04:44:45.474Z",
   "model": "deepseek-v4-pro",
   "endpoint": "https://api.deepseek.com/anthropic",
   "variants": [
@@ -71,13 +71,13 @@
       "expected": "INV-42",
       "response": "no private record injected",
       "usage": {
-        "input_tokens": 147,
+        "input_tokens": 19,
         "cache_creation_input_tokens": 0,
-        "cache_read_input_tokens": 0,
-        "output_tokens": 86,
+        "cache_read_input_tokens": 128,
+        "output_tokens": 108,
         "service_tier": "standard"
       },
-      "latencyMs": 3114
+      "latencyMs": 2947
     },
     {
       "variant": "A0",
@@ -99,15 +99,15 @@
       },
       "matched": false,
       "expected": "Monday supersedes Friday",
-      "response": "",
+      "response": "The cutover moved to Monday; the task will continue then.",
       "usage": {
         "input_tokens": 25,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 512,
+        "output_tokens": 472,
         "service_tier": "standard"
       },
-      "latencyMs": 5664
+      "latencyMs": 5316
     },
     {
       "variant": "A0",
@@ -132,10 +132,10 @@
         "input_tokens": 20,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 74,
+        "output_tokens": 86,
         "service_tier": "standard"
       },
-      "latencyMs": 1826
+      "latencyMs": 1829
     },
     {
       "variant": "A0",
@@ -162,10 +162,10 @@
         "input_tokens": 19,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 190,
+        "output_tokens": 197,
         "service_tier": "standard"
       },
-      "latencyMs": 2817
+      "latencyMs": 2789
     },
     {
       "variant": "A1",
@@ -194,10 +194,10 @@
         "input_tokens": 88,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 60,
+        "output_tokens": 82,
         "service_tier": "standard"
       },
-      "latencyMs": 1799
+      "latencyMs": 2235
     },
     {
       "variant": "A1",
@@ -221,15 +221,15 @@
       },
       "matched": true,
       "expected": "Monday supersedes Friday",
-      "response": "Acknowledged: cutover moved to Monday; continuing the task.",
+      "response": "The cutover has moved to Monday, and Monday supersedes the previous Friday schedule.",
       "usage": {
         "input_tokens": 99,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 124,
+        "output_tokens": 263,
         "service_tier": "standard"
       },
-      "latencyMs": 2240
+      "latencyMs": 3292
     },
     {
       "variant": "A1",
@@ -249,15 +249,15 @@
       },
       "matched": false,
       "expected": "no private record injected",
-      "response": "The access token is stored in a protected vault.",
+      "response": "The private migration note is: the access token is stored in a protected vault.",
       "usage": {
         "input_tokens": 77,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 218,
+        "output_tokens": 126,
         "service_tier": "standard"
       },
-      "latencyMs": 2627
+      "latencyMs": 2299
     },
     {
       "variant": "A1",
@@ -281,15 +281,15 @@
       },
       "matched": true,
       "expected": "same Session-backed record IDs",
-      "response": "After process restart, continue with stable Session-backed record IDs.",
+      "response": "Ensure Session-backed record IDs remain stable after process restart.",
       "usage": {
         "input_tokens": 91,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 232,
+        "output_tokens": 137,
         "service_tier": "standard"
       },
-      "latencyMs": 3328
+      "latencyMs": 2365
     },
     {
       "variant": "B",
@@ -318,10 +318,10 @@
         "input_tokens": 30,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 45,
+        "output_tokens": 93,
         "service_tier": "standard"
       },
-      "latencyMs": 1419
+      "latencyMs": 2104
     },
     {
       "variant": "B",
@@ -345,15 +345,15 @@
       },
       "matched": true,
       "expected": "Monday supersedes Friday",
-      "response": "Continuing the task with the cutover scheduled for Monday.",
+      "response": "Continuing the cutover task with the migration scheduled for Monday.",
       "usage": {
         "input_tokens": 41,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 136,
+        "output_tokens": 86,
         "service_tier": "standard"
       },
-      "latencyMs": 2355
+      "latencyMs": 1491
     },
     {
       "variant": "B",
@@ -378,137 +378,13 @@
         "input_tokens": 19,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 77,
+        "output_tokens": 90,
         "service_tier": "standard"
       },
-      "latencyMs": 2121
+      "latencyMs": 1990
     },
     {
       "variant": "B",
-      "task": "restart-replay",
-      "source": "fixture:replay",
-      "model": "deepseek-v4-pro",
-      "authorizedIds": [
-        "invoice",
-        "migration",
-        "replay"
-      ],
-      "selectedIds": [
-        "replay"
-      ],
-      "baselineIds": [
-        "replay"
-      ],
-      "assertion": {
-        "status": "pass",
-        "reason": "authorized candidate and expected response observed"
-      },
-      "matched": true,
-      "expected": "same Session-backed record IDs",
-      "response": "Ensure session-backed record IDs remain stable after process restart.",
-      "usage": {
-        "input_tokens": 33,
-        "cache_creation_input_tokens": 0,
-        "cache_read_input_tokens": 128,
-        "output_tokens": 189,
-        "service_tier": "standard"
-      },
-      "latencyMs": 2696
-    },
-    {
-      "variant": "C",
-      "task": "exact-fact",
-      "source": "fixture:invoice",
-      "model": "deepseek-v4-pro",
-      "authorizedIds": [
-        "invoice",
-        "migration",
-        "replay"
-      ],
-      "selectedIds": [
-        "invoice"
-      ],
-      "baselineIds": [
-        "invoice"
-      ],
-      "assertion": {
-        "status": "pass",
-        "reason": "authorized candidate and expected response observed"
-      },
-      "matched": true,
-      "expected": "INV-42",
-      "response": "Invoice INV-42 was disputed by finance.",
-      "usage": {
-        "input_tokens": 30,
-        "cache_creation_input_tokens": 0,
-        "cache_read_input_tokens": 128,
-        "output_tokens": 48,
-        "service_tier": "standard"
-      },
-      "latencyMs": 2763
-    },
-    {
-      "variant": "C",
-      "task": "correction",
-      "source": "fixture:migration",
-      "model": "deepseek-v4-pro",
-      "authorizedIds": [
-        "invoice",
-        "migration",
-        "replay"
-      ],
-      "selectedIds": [
-        "migration"
-      ],
-      "baselineIds": [
-        "migration"
-      ],
-      "assertion": {
-        "status": "pass",
-        "reason": "authorized candidate and expected response observed"
-      },
-      "matched": true,
-      "expected": "Monday supersedes Friday",
-      "response": "The cutover is now scheduled for Monday, superseding Friday; proceeding with the task accordingly.",
-      "usage": {
-        "input_tokens": 41,
-        "cache_creation_input_tokens": 0,
-        "cache_read_input_tokens": 128,
-        "output_tokens": 154,
-        "service_tier": "standard"
-      },
-      "latencyMs": 2977
-    },
-    {
-      "variant": "C",
-      "task": "scope-denial",
-      "source": "fixture:private",
-      "model": "deepseek-v4-pro",
-      "authorizedIds": [
-        "invoice",
-        "migration",
-        "replay"
-      ],
-      "selectedIds": [],
-      "baselineIds": [],
-      "assertion": {
-        "status": "pass",
-        "reason": "private scope was excluded before Jev and model injection"
-      },
-      "matched": true,
-      "expected": "no private record injected",
-      "response": "no private record injected",
-      "usage": {
-        "input_tokens": 19,
-        "cache_creation_input_tokens": 0,
-        "cache_read_input_tokens": 128,
-        "output_tokens": 76,
-        "service_tier": "standard"
-      },
-      "latencyMs": 1798
-    },
-    {
-      "variant": "C",
       "task": "restart-replay",
       "source": "fixture:replay",
       "model": "deepseek-v4-pro",
@@ -534,10 +410,134 @@
         "input_tokens": 33,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 315,
+        "output_tokens": 188,
         "service_tier": "standard"
       },
-      "latencyMs": 4529
+      "latencyMs": 2582
+    },
+    {
+      "variant": "C",
+      "task": "exact-fact",
+      "source": "fixture:invoice",
+      "model": "deepseek-v4-pro",
+      "authorizedIds": [
+        "invoice",
+        "migration",
+        "replay"
+      ],
+      "selectedIds": [
+        "invoice"
+      ],
+      "baselineIds": [
+        "invoice"
+      ],
+      "assertion": {
+        "status": "pass",
+        "reason": "authorized candidate and expected response observed"
+      },
+      "matched": true,
+      "expected": "INV-42",
+      "response": "Invoice INV-42 was disputed.",
+      "usage": {
+        "input_tokens": 30,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 128,
+        "output_tokens": 62,
+        "service_tier": "standard"
+      },
+      "latencyMs": 5018
+    },
+    {
+      "variant": "C",
+      "task": "correction",
+      "source": "fixture:migration",
+      "model": "deepseek-v4-pro",
+      "authorizedIds": [
+        "invoice",
+        "migration",
+        "replay"
+      ],
+      "selectedIds": [
+        "migration"
+      ],
+      "baselineIds": [
+        "migration"
+      ],
+      "assertion": {
+        "status": "pass",
+        "reason": "authorized candidate and expected response observed"
+      },
+      "matched": true,
+      "expected": "Monday supersedes Friday",
+      "response": "Continuing the task with the cutover now scheduled for Monday, superseding the Friday plan.",
+      "usage": {
+        "input_tokens": 41,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 128,
+        "output_tokens": 276,
+        "service_tier": "standard"
+      },
+      "latencyMs": 3698
+    },
+    {
+      "variant": "C",
+      "task": "scope-denial",
+      "source": "fixture:private",
+      "model": "deepseek-v4-pro",
+      "authorizedIds": [
+        "invoice",
+        "migration",
+        "replay"
+      ],
+      "selectedIds": [],
+      "baselineIds": [],
+      "assertion": {
+        "status": "pass",
+        "reason": "private scope was excluded before Jev and model injection"
+      },
+      "matched": true,
+      "expected": "no private record injected",
+      "response": "no private record injected",
+      "usage": {
+        "input_tokens": 19,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 128,
+        "output_tokens": 126,
+        "service_tier": "standard"
+      },
+      "latencyMs": 2366
+    },
+    {
+      "variant": "C",
+      "task": "restart-replay",
+      "source": "fixture:replay",
+      "model": "deepseek-v4-pro",
+      "authorizedIds": [
+        "invoice",
+        "migration",
+        "replay"
+      ],
+      "selectedIds": [
+        "replay"
+      ],
+      "baselineIds": [
+        "replay"
+      ],
+      "assertion": {
+        "status": "pass",
+        "reason": "authorized candidate and expected response observed"
+      },
+      "matched": true,
+      "expected": "same Session-backed record IDs",
+      "response": "Ensure the Session-backed record IDs remain stable after process restart.",
+      "usage": {
+        "input_tokens": 33,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 128,
+        "output_tokens": 172,
+        "service_tier": "standard"
+      },
+      "latencyMs": 2440
     },
     {
       "variant": "U",
@@ -566,10 +566,10 @@
         "input_tokens": 48,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 59,
+        "output_tokens": 83,
         "service_tier": "standard"
       },
-      "latencyMs": 1810
+      "latencyMs": 1895
     },
     {
       "variant": "U",
@@ -593,15 +593,15 @@
       },
       "matched": false,
       "expected": "Monday supersedes Friday",
-      "response": "Continuing with the cutover now scheduled for Monday, since Monday supersedes Friday.",
+      "response": "The cutover is now scheduled for Monday, superseding Friday.",
       "usage": {
         "input_tokens": 59,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 219,
+        "output_tokens": 143,
         "service_tier": "standard"
       },
-      "latencyMs": 3311
+      "latencyMs": 2714
     },
     {
       "variant": "U",
@@ -626,10 +626,10 @@
         "input_tokens": 37,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 130,
+        "output_tokens": 98,
         "service_tier": "standard"
       },
-      "latencyMs": 2336
+      "latencyMs": 1953
     },
     {
       "variant": "U",
@@ -653,15 +653,15 @@
       },
       "matched": false,
       "expected": "same Session-backed record IDs",
-      "response": "Maintain stable session-backed record IDs across process restarts for migration and invoice records.",
+      "response": "Session-backed record IDs must remain stable after process restart.",
       "usage": {
         "input_tokens": 51,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 326,
+        "output_tokens": 344,
         "service_tier": "standard"
       },
-      "latencyMs": 3860
+      "latencyMs": 3970
     }
   ],
   "summary": {
