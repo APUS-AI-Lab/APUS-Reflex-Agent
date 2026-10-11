@@ -210,7 +210,10 @@ describe.skipIf(!process.env.DEEPSEEK_API_KEY)('llm-deepseek e2e (real API)', ()
           ],
           source: { kind: 'user' },
         })],
-        maxTokens: 100,
+        // Vision reasoning can consume more than the old 100-token cap before
+        // emitting its short description; keep the real-model request above
+        // the repository's reasoning minimum so a provider stop is observable.
+        maxTokens: 4096,
       })
       expect(
         result.finish.kind,
