@@ -21,8 +21,11 @@
   en: caa709deaa69c6f1
   zh: 3525b0777e0913e7
 /continuum-record-semantics/further-exploration:
-  en: dfb9e1d34df19b3f
-  zh: ed0bf49fdfe52536
+  en: 5d00b6b5d9f998e8
+  zh: f84bfa3832fe1adc
+/continuum-record-semantics/lifecycle-and-evaluation:
+  en: 5b517468b931d351
+  zh: f2603f78567ad95f
 /continuum-record-semantics/model-experience:
   en: 215e7ba838619b7b
   zh: 215e7ba838619b7b
@@ -36,11 +39,8 @@
   en: 82c7856dc73a253a
   zh: 98b22ddb64f4860e
 /continuum-record-semantics/model-experience/record-semantics/kv-cache-effect:
-  en: 34e323500bdd14ff
-  zh: 58960c9b22a14d3c
-/continuum-record-semantics/lifecycle-and-evaluation:
-  en: 6a3acc1762ff79f3
-  zh: 22a414653db43758
+  en: 08042c0614744592
+  zh: f4f36a9f01f89a0c
 /continuum-record-semantics/known-limitations-and-deferred-work:
   en: 0697d5473ef38909
   zh: b13483c445506d64

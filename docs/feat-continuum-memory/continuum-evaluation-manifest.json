@@ -1,7 +1,7 @@
 {
   "version": 1,
   "status": "jev-real-pass-deepseek-auth-failed",
-  "commit": "56008e9b3b",
+  "source": "feat-continuum-memory worktree",
   "variants": [
     { "id": "A0", "name": "original-harness", "continuum": false, "jev": false, "summaryTree": false, "stableCache": false },
     { "id": "A1", "name": "original-harness-with-existing-history-query", "continuum": false, "jev": false, "summaryTree": false, "stableCache": false },
