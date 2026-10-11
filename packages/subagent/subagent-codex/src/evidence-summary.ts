@@ -32,7 +32,10 @@ export function summarizeNativeEvidence(item: Record<string, unknown>, workspace
   let truncated = false
   for (const entry of entries) {
     const value = object(entry)
-    const type = item.type === 'fileChange' ? object(value?.kind)?.type : value?.type
+    const rawKind = value?.kind
+    const type = item.type === 'fileChange'
+      ? typeof rawKind === 'string' ? rawKind : object(rawKind)?.type
+      : value?.type
     const kind: Action['kind'] | undefined = item.type === 'fileChange'
       ? type === 'add' ? 'file-add' : type === 'update' ? 'file-update' : type === 'delete' ? 'file-delete' : undefined
       : type === 'verification-target' && verification?.paths.length ? 'verification-target' : type === 'read' ? 'read' : type === 'listFiles' ? 'list-files' : type === 'search' ? 'search' : undefined

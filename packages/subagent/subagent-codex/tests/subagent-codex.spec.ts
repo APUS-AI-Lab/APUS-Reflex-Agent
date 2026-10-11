@@ -2612,10 +2612,14 @@ describe('bounded native recovery', () => {
     expect(run.recoveryState!()).toMatchObject({ waiting: true, retryCount: 0 })
     expect(run.recoveryState!()!.lastActivityAt).toBeGreaterThanOrEqual(turn.lastActivityAt)
     child.peer.send({ method: 'thread/status/changed', params: { threadId: 'thread-1', status: { type: 'active', activeFlags: [] } } },
-      { method: 'item/started', params: { threadId: 'thread-1', turnId: 'turn-1', item: { type: 'commandExecution', id: 'command-1' } } })
+      { method: 'item/started', params: { threadId: 'thread-1', turnId: 'turn-1', item: { type: 'commandExecution', id: 'command-1' } } },
+      { method: 'item/started', params: { threadId: 'thread-1', turnId: 'turn-1', item: { type: 'collabAgentToolCall', id: 'collab-1' } } })
     await nextTask()
-    expect(run.recoveryState!()).toMatchObject({ waiting: false, activeSideEffects: 1 })
-    child.peer.send({ method: 'item/completed', params: { threadId: 'thread-1', turnId: 'turn-1', item: { type: 'commandExecution', id: 'command-1', exitCode: 0 } } })
+    expect(run.recoveryState!()).toMatchObject({ waiting: false, activeSideEffects: 2 })
+    child.peer.send(
+      { method: 'item/completed', params: { threadId: 'thread-1', turnId: 'turn-1', item: { type: 'commandExecution', id: 'command-1', exitCode: 0 } } },
+      { method: 'item/completed', params: { threadId: 'thread-1', turnId: 'turn-1', item: { type: 'collabAgentToolCall', id: 'collab-1' } } },
+    )
     await nextTask()
     expect(run.recoveryState!()).toMatchObject({ activeSideEffects: 0 })
     await run.dispose()

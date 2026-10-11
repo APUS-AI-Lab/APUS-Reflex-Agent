@@ -27,11 +27,21 @@ describe('native operation summaries', () => {
       { kind: 'file-add', path: 'new.txt' }, { kind: 'file-update', path: 'old.txt' }, { kind: 'file-delete', path: 'gone.txt' }] })
   })
 
+  it('accepts the Codex app-server v2 string file-change kind', () => {
+    expect(summarizeNativeEvidence({ type: 'fileChange', changes: [
+      { kind: 'update', path: 'marketing/landing.txt', diff: 'PRIVATE DIFF' },
+      { kind: 'delete', path: 'marketing/old.txt', diff: 'PRIVATE DIFF' },
+    ] }, workspace, limits)).toEqual({ version: 1, truncated: false, actions: [
+      { kind: 'file-update', path: 'marketing/landing.txt' },
+      { kind: 'file-delete', path: 'marketing/old.txt' },
+    ] })
+  })
+
   it('omits unknown or malformed actions instead of interpreting command text', () => {
     for (const commandActions of [undefined, null, {}, [], [null, [], 1, { type: 'unknown', command: 'cat private' }]]) {
       expect(summarizeNativeEvidence({ type: 'commandExecution', commandActions }, workspace, limits)).toBeUndefined()
     }
-    expect(summarizeNativeEvidence({ type: 'fileChange', changes: [{ kind: 'add' }] }, workspace, limits)).toBeUndefined()
+    expect(summarizeNativeEvidence({ type: 'fileChange', changes: [{ kind: 'unknown' }] }, workspace, limits)).toBeUndefined()
     expect(summarizeNativeEvidence({ type: 'commandExecution', commandActions: [null, { type: 'read' }] }, workspace, limits))
       .toEqual({ version: 1, actions: [{ kind: 'read' }], truncated: true })
   })

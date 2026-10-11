@@ -95,7 +95,7 @@ const ACTIONS = {
   diagnose: 'Stop repeating a failed operation and investigate its root cause before another attempt.',
   verify: 'Run a minimal relevant verification before attempting more changes.',
   narrow: 'Choose a smaller diagnostic or implementation step while preserving the original goal.',
-  realign: 'Check the current goal and constraints before continuing.',
+  realign: 'Stop the unrelated work now. Re-read the original Goal and resume its next incomplete step; do not continue editing unrelated files.',
 } as const
 
 /** Classifies execution evidence; untrusted observations never grant instructions or permissions. */

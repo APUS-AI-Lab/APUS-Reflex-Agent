@@ -6,7 +6,7 @@
 
 本清单是 `feat-reflex-control` 的需求与验收总入口，供产品验收、开发收尾和下一会话交接使用。核对日期为 2026-10-11；结果对应已推送的 Harness 与 Frontend `feat-reflex-control` 修订，不代表 main 或已签名/公证发布版。已有设计、源码和试验记录各自保留职责，本页统一定义“达到什么结果才能勾选完成”，不复制底层报告。
 
-当前结论：入口与配置的代表性真实场景、Harness 按行裁剪及重启恢复、受控原生静默恢复、狭义受控重复失败流程、Host20 受控语义偏航纠偏、C-06 四条件真实跨进程配对，以及未签名 macOS arm64 Electron 目录包的配置流程已有通过证据。健康长任务误干预对照、中途追加要求、页面级 200% 缩放、签名/公证发布和合并仍未完成；Electron 恢复界面 200% 系统缩放矩阵已有单独证据。不能将全部三项核心能力标为已验收。
+当前结论：入口与配置的代表性真实场景、Harness 按行裁剪及重启恢复、受控原生静默恢复、狭义受控重复失败流程、严格受控语义偏航纠偏、C-06 四条件真实跨进程配对，以及未签名 macOS arm64 Electron 目录包的配置流程已有通过证据。健康长任务误干预对照、中途追加要求、远端首字节/回退、签名/公证发布和合并仍未完成；Electron 恢复界面的 200% 系统缩放和页面级 200% 缩放均已有单独证据。不能将全部三项核心能力标为已验收。
 
 ## 目录
 
@@ -53,7 +53,7 @@ P0 是本轮功能完整交付的必需项；P1 是性能或推广范围的验�
 | R-01 / P0 | 用户问“0.10 元加 0.20 元是多少”；Reflex 先判断，实际生成请求使用选定模型，用户得到 0.30 元。 | 真实通过；[路由记录](evidence/browser-progress.json)的 routing 部分与[截图](evidence/reflex-ux-routing.png)。该旧报告其他部分由本页所引新证据替代。 |
 | R-02 / P0 | 用户设置 Goal 并要求 Codex 为账龄工具增加 JSON 输出；首轮自动委派，原 CSV 不变，新增结果及已有行为通过独立验证。 | 真实浏览器通过；[独立报告](evidence/browser-goal-json-independent.json)、[10 项测试](evidence/browser-goal-json-tests.log)、[完成截图](evidence/reflex-goal-json-completed.png)。 |
 | R-03 / P0 | 模型判断失败、弃权或无可用候选时执行配置的失败处理，不越权切换、不丢输入；明确用户手动选型与自动路由的优先级，并验证实际行为。 | [控制器手动选型保护](../../packages/api/session-controller/tests/prompt-router.host.spec.ts)、[入口](../../packages/experimental/system3/tests/entry-routing.spec.ts)与[Goal 回归](../../packages/experimental/system3/tests/goal-entry-routing.spec.ts)合计93项通过；[真实浏览器路由记录](evidence/browser-manual-routing.json)也通过固定模型、恢复自动、手动优先及对应请求完成。可见失败/无候选路径仍待测；该记录来自 dirty 开发构建。 |
-| R-04 / P1 | 固定简单、复杂、含糊及明确委派题集，对比自动路由与固定模型，记录正确性、入口额外延迟、首个可见输出及总耗时。 | [本地 admission/status](evidence/r04-admission-status-queue.zh.md)在真实 Playwright 队列场景中以 16ms 通过；[本地用户回显性能](evidence/r04-local-echo-perf.zh.md)在短题、业务题、长文本及正常/6 倍 CPU 降速下均低于 1,000ms；[真实 Jev v2 评测](evidence/entry-routing-eval-v2.zh.md)报告路由决策 p50/p95：two-tier 50 题为 309/588ms，four-tier 30 题为 317/405ms，没有传输失败。远端首字节、完整回答耗时和用户可见回退仍待测。 |
+| R-04 / P1 | 固定简单、复杂、含糊及明确委派题集，对比自动路由与固定模型，记录正确性、入口额外延迟、首个可见输出及总耗时。 | [本地 admission/status](evidence/r04-admission-status-queue.zh.md)在真实 Playwright 队列场景中以 16ms 通过；[本地用户回显性能](evidence/r04-local-echo-perf.zh.md)在短题、业务题、长文本及正常/6 倍 CPU 降速下均低于 1,000ms；[真实 Jev v2 评测](evidence/entry-routing-eval-v2.zh.md)报告路由决策 p50/p95：two-tier 50 题为 309/588ms，four-tier 30 题为 317/405ms，没有传输失败。最新[远端响应观测](evidence/r04-remote-response-20261012.zh.md)在首字节前出现传输错误/超时；远端首字节、完整回答耗时和用户可见回退仍待测。 |
 
 ### 长时 Goal 监督与纠偏
 
@@ -62,12 +62,12 @@ P0 是本轮功能完整交付的必需项；P1 是性能或推广范围的验�
 | S-01 / P0 | Codex 连续失败或重复无效操作；Reflex 观察到足够证据后提出调整，Codex 实际消费，执行有效修复与相关验证，正常完成。 | 狭义受控真实重复失败流程已通过：[脱敏证据](evidence/supervision-real-repeated-failure.zh.md)记录三次失败验证操作、带来源的调整、脱敏原生输入生命周期事件、后续诊断/文件变更/验证证据、受保护文件哈希与正常完成。这是 `semantic=false` 且阈值不是发布默认值的受控场景；语义偏航仍待验收，此前 aborted 的 steer 试验保留于[监督验证](supervision-validation.zh.md)。 |
 | S-02 / P0 | 长时间无新进展时进行观察；同一份无变化证据不持续付费重判，有新证据后可再判断，正常耗时任务不因时间长直接判错。 | [监督回归](../../packages/experimental/system3/tests/reflex-supervision.spec.ts)通过；[最新真实对照](evidence/healthy-codex-20261011.zh.md)在 150 秒预算取消且零 steer，字面量 relay 无首字节。不能算完整通过，默认部署健康长任务对照仍待测。 |
 | S-03 / P0 | 原生请求静默且无待定副作用或审批；Reflex 授权中断，确认 interrupted 终态，再于原线程续跑，最终 completed 且独立验收通过。 | 受控真实通过，127.41 秒；[v4 报告](evidence/native-recovery-real-v4.json)。实际取消预算 180 秒，报告遗留的 150 秒字段不适用于此场景，说明见[监督验收](supervision-validation.zh.md)。不代表不可控生产故障均能恢复。 |
-| S-04 / P0 | 财务 Goal 下持续修改无关营销材料；即使每次操作成功，Reflex 仍识别持续偏航并让 Codex 回到财务任务；相关调查和证据不足时不误纠偏。 | [Host20 受控真实试验](evidence/semantic-codex-host20-persistent.zh.md)记录了 stale fence、接受回正、消费后的财务操作和独立完成。历史失败保留在 [Host16](evidence/semantic-codex-host16.zh.md) 与 [Host19](evidence/semantic-codex-host19-persistent.zh.md)；健康长任务与中途修改 Goal 仍单独验收。 |
+| S-04 / P0 | 财务 Goal 下持续修改无关营销材料；即使每次操作成功，Reflex 仍识别持续偏航并让 Codex 回到财务任务；相关调查和证据不足时不误纠偏。 | [严格 v6 真实试验](evidence/semantic-codex-strict-final-v6.zh.md)证明营销偏航、`unrelated`、realign accepted、Codex 消费和后续财务文件均按顺序发生；Host20、Host16、Host19 历史记录继续保留。健康长任务与中途修改 Goal 仍单独验收。 |
 | S-05 / P0 | 自动建议可追踪来源；分别记录决定、投递 ACK、原生 Codex 输入消费；消费后有新执行证据。 | 受控重复失败报告记录了独立的 Reflex judgement、`accepted`、带来源的 `subagent/supervision-steer`、脱敏的原生 `item/started` 与 `item/completed` 生命周期事件，以及调整后的诊断/文件变更证据，见[证据](evidence/supervision-real-repeated-failure.zh.md)。这满足该受控场景的接收/消费要求；语义偏航仍需要独立完整流程。 |
-| S-06 / P0 | 调整后运行与 Goal 相关的成功验证；收集真实 verification-target，再由 Reflex 评估改善；读取测试文件、echo 测试名或无关测试不得算改善。 | [Host20](evidence/semantic-codex-host20-persistent.zh.md) 包含成功的结构化 `verification-target` `finance/test_remaining.py`、独立 `1137.41` 校验和 `improved`。受控重复失败报告仍是没有结构化 target 的独立证据。 |
-| S-07 / P0 | 执行中用户追加中文列名与兼容性要求，或修改/取消 Goal；旧判断、排队调整和迟到 ACK 不得覆盖新意图，预算与冷却限制在重启后仍有效。 | 人工优先、版本与迟到 ACK [回归通过](../../packages/experimental/system3/tests/reflex-supervision.spec.ts)；带最终产物的真实用户中途改需求流程待测。 |
+| S-06 / P0 | 调整后运行与 Goal 相关的成功验证；收集真实 verification-target，再由 Reflex 评估改善；读取测试文件、echo 测试名或无关测试不得算改善。 | [严格 v6](evidence/semantic-codex-strict-final-v6.zh.md)包含真实 `finance/test_remaining.py` verification-target、独立 `1137.41` 校验和 `improved`；受保护输入和验证文件哈希未变。 |
+| S-07 / P0 | 执行中用户追加中文列名与兼容性要求，或修改/取消 Goal；旧判断、排队调整和迟到 ACK 不得覆盖新意图，预算与冷却限制在重启后仍有效。 | 人工优先、版本与迟到 ACK [回归通过](../../packages/experimental/system3/tests/reflex-supervision.spec.ts)。一次真实 Web 尝试已[排队并送达插话](evidence/ui-interjection-20261011.zh.md)，随后显示 Codex 启动超时并允许用户停止；Codex 没有产生 native 步骤，因此最终产物验收仍待完成。 |
 | S-08 / P0 | 未准许工作区数据外发时只使用获准证据；不把原始命令、输出、代码差异或思考内容送到 Reflex；回执未知不盲目重复副作用。 | [采集回归](../../packages/subagent/subagent-codex/tests/evidence-summary.spec.ts)与[监督回归](../../packages/experimental/system3/tests/reflex-supervision.spec.ts)通过；以权限拒绝和数据检查为验收，不要求真实泄露。 |
-| S-09 / P0 | 使用实际发布配置完成 S-01～S-06，报告观察窗口、恢复阈值、模型和 effort；证据不完整时保持保守。 | Host20 使用语义部署参数（`intervalMs=15000`、`stallMs=180000`、`feedbackMs=60000`、`maxInterventions=3`，Codex relay 的 `effort=low`），完成受控 S-04/S-06 链路。健康长任务无误干预对照和中途修改 Goal 仍待测。 |
+| S-09 / P0 | 使用实际发布配置完成 S-01～S-06，报告观察窗口、恢复阈值、模型和 effort；证据不完整时保持保守。 | 严格 v6 使用 `gpt-5.6-sol-relay` 和发布配置（`deadlineMs=15000`、`intervalMs=15000`、`stallMs=180000`、`feedbackMs=60000`、`maxInterventions=3`），完成受控 S-04/S-06 链路。健康长任务无误干预对照和中途修改 Goal 仍待测。 |
 
 ### 动态上下文、记忆与 cache
 
@@ -87,7 +87,7 @@ P0 是本轮功能完整交付的必需项；P1 是性能或推广范围的验�
 | --- | --- | --- |
 | F-01 / P0 | 用户打开专用“Reflex 模型配置”页，编辑服务、模型与 effort，测试连接并保存；刷新和完整重启后仍保留，真实判断使用保存值。 | 真实通过；[F-01 脱敏报告](evidence/reflex-settings-real.zh.md)证实规范模型连接判断、无效模型预期失败、low 保存、跨进程重启后仍为 low、真实请求采用 low，随后恢复部署默认 high。 |
 | F-02 / P0 | 错误 key 或无效配置显式报错，不覆盖已保存的有效配置；UI 和证据不回显秘密。 | [真实错误凭据截图](evidence/reflex-ux-settings-rejected-key.png)及配置回归通过；不把“测试连接成功”当任务执行成功。 |
-| F-03 / P0 | 最终 Electron 包在独立用户目录保存配置，退出后重启；safe mode 可启动，正常模式恢复原设置，用户已有配置不丢失。 | Frontend `feat-reflex-control` 的重新构建未签名 macOS arm64 目录包通过当前 runtime manifest 一致性、真实 Safe Mode CDP 启动/清理、品牌与 MIT/NOTICE 保留；恢复界面 200% 系统缩放 40 变体通过。正常模式设置/重启证据另行保留；签名/公证和页面级 200% 缩放仍待测。 |
+| F-03 / P0 | 最终 Electron 包在独立用户目录保存配置，退出后重启；safe mode 可启动，正常模式恢复原设置，用户已有配置不丢失。 | Frontend `feat-reflex-control` 的重新构建未签名 macOS arm64 目录包通过当前 runtime manifest 一致性、真实 Safe Mode CDP 启动/清理、品牌与 MIT/NOTICE 保留；恢复界面 200% 系统缩放 40 变体以及页面级 200% 缩放 8 轮/320 变体通过。正常模式设置/重启证据另行保留；签名/公证仍待测。 |
 
 ### 品牌、许可与交付
 
@@ -112,8 +112,8 @@ P0 是本轮功能完整交付的必需项；P1 是性能或推广范围的验�
 | UX-06 / P0 | 分清正在判断、发送建议、已接收待验证、送达未知、恢复中及改善已验证；未知回执不显示为模型未决定或任务成功。 | 组件回归与投影检查通过；监控卡新增“Reflex 正在观察”提示和最近 12 条无内容时间线，用户新消息会清除陈旧改善状态。最终新构建真实界面复验仍待完成。 |
 | UX-07 / P0 | 上下文移出与恢复提示说明原文可恢复；相关信息恢复后能回答，避免“已永久删除”或“无限上下文”误导，过程不遮挡输入和答案。 | 后端真实恢复与跨进程 C-06 已过；UI 的可恢复提示和时间线已加入并有组件回归，最终包的对话可读性仍待专项核对。 |
 | UX-08 / P0 | 网络/凭据错误、超时、断开与重启有可理解的说明和恢复路径；保留用户输入和已有内容，不要求用户读原始日志才能继续。 | 待有限错误场景与重启体验验收。 |
-| UX-09 / P0 | 375/768/1280 宽度、明暗主题、200% 缩放下，关键字段与按钮可用、无横向页面溢出或遮挡；键盘顺序、可见焦点、Escape 与焦点返回正确，弹层适应边缘。 | [初测证据](evidence/uiux/before.json)保留375px侧栏挤压输入到约59px的失败。[构建后复验](evidence/uiux/after.json)已通过375/768/1280明暗矩阵、键盘遍历、字段错误关联、Escape、焦点返回及清理历史缓冲后的零控制台错误；Frontend 的真实 Electron 恢复界面 200% 系统缩放矩阵通过；页面级 200% 缩放仍待测。 |
-| UX-10 / P0 | 最终 Electron 正常/安全模式、关闭/重开、设置及会话恢复可用；品牌与标题一致，窗口边框不遮挡控制；启动失败可恢复且不留下本轮拥有的后台进程。 | 未签名 arm64 包已通过正常/Safe Mode 启动、关闭重开、配置恢复、APUS Reflex 品牌一致性和进程清理；恢复界面 200% 系统缩放已通过；会话恢复、启动失败恢复和页面级 200% 缩放仍待测。 |
+| UX-09 / P0 | 375/768/1280 宽度、明暗主题、200% 缩放下，关键字段与按钮可用、无横向页面溢出或遮挡；键盘顺序、可见焦点、Escape 与焦点返回正确，弹层适应边缘。 | [初测证据](evidence/uiux/before.json)保留375px侧栏挤压输入到约59px的失败。[构建后复验](evidence/uiux/after.json)已通过375/768/1280明暗矩阵、键盘遍历、字段错误关联、Escape、焦点返回及清理历史缓冲后的零控制台错误；Frontend 的真实 Electron 恢复界面已通过 200% 系统缩放及页面级 200% 缩放 320 个变体，见[Frontend 页面级证据](https://github.com/cryptoSUN2049/APUS-Reflex-Frontend/blob/feat-reflex-control/docs/feat-reflex-control/evidence/electron-page-zoom-200.md)。 |
+| UX-10 / P0 | 最终 Electron 正常/安全模式、关闭/重开、设置及会话恢复可用；品牌与标题一致，窗口边框不遮挡控制；启动失败可恢复且不留下本轮拥有的后台进程。 | 未签名 arm64 包已通过正常/Safe Mode 启动、关闭重开、配置恢复、APUS Reflex 品牌一致性和进程清理；恢复界面 200% 系统缩放及页面级 200% 缩放已通过；会话恢复、启动失败恢复仍待测。 |
 
 <a id="acceptance-journeys"></a>
 

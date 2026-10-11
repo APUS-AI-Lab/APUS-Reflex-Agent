@@ -2,13 +2,33 @@
 
 ## TL;DR
 
-- Harness 本轮实现已提交并推送到 `feat-reflex-control`；Frontend `feat-reflex-control` 也已提交并推送；尚未创建 PR 或合并 main。上一批品牌、MIT 与 GitHub 工作已合 main，用户授权完成前后端并最终合 main，授权持续有效。
+- Harness 本轮实现已提交并推送到 `feat-reflex-control`；Frontend `feat-reflex-control` 也已提交并推送；两仓 Draft PR #1 已存在但尚未合并 main。上一批品牌、MIT 与 GitHub 工作已合 main，用户授权完成前后端并最终合 main，授权持续有效。
 - 统一验收入口为 [测试验收目标清单](../../docs/feat-reflex-control/acceptance-checklist.zh.md)：37 项目标、12 条完整用户流程，分别标明真实证据、回归与缺口；收尾先核对此页。
 - Context v3 的 Host16 真实浏览器财务→完整 Host 重启→自动恢复，以及 TS/Python 录制与独立重放全部通过；旧误删、自动恢复失败与多余检索证据仍保留。
-- Goal 首轮 Codex 真实浏览器增量 JSON 任务通过；受控 native stall 恢复 v4 真实 API / Codex / 正常终态 / 产物通过。狭义受控重复失败和 Host20 语义偏航均有真实纠偏、原生输入消费、结构化 verification-target、独立产物与 `improved`；健康长任务误干预、用户中途改 Goal 和正式 Electron 仍待验收。
+- Goal 首轮 Codex 真实浏览器增量 JSON 任务通过；受控 native stall 恢复 v4 真实 API / Codex / 正常终态 / 产物通过。最新严格因果 v6 已用真实 `gpt-5.6-sol-relay` 完成营销偏航→Reflex `unrelated`→realign accepted→Codex native consumed→财务文件→目标验证→`improved`，脱敏证据见 `evidence/semantic-codex-strict-final-v6.*`。健康长任务误干预、用户中途改 Goal 和正式 Electron 仍待验收。
 - Host17 字面量首次试验失败保留；透明传输观察的真实 literal unittest 已61.77秒通过。监督连续证据后缀、独立语义触发与同证据去重已107 tests/严格100%；Host20 真实语义试验已取得 correction-loop target 与 `improved`，旧 Host16/Host19/v5/v6/v7 失败记录继续保留。
 - C-06 真实跨进程缓存配对已通过：四条件、12 轮、三个独立 CLI 进程、按行 remove、恢复、cache/session 前缀保护和路由/工具稳定性均有脱敏证据 `docs/feat-reflex-control/evidence/cache-c06-real.{md,zh.md,json}`；不宣称供应商冷缓存或成本收益。
-- F-01 Web 配置真实保存、重启恢复和真实请求 low 已通过，随后恢复部署默认 high；证据 `docs/feat-reflex-control/evidence/reflex-settings-real.{md,zh.md,json}`。Frontend `feat-reflex-control` 已固定 Harness revision，unsigned macOS arm64 目录包的 Electron 正常启动、配置保存/重启、Safe Mode 和恢复已通过；原生 200% 缩放、签名/公证及 PR/main 合并仍未完成；所有 Web server7–13 已停止。
+- F-01 Web 配置真实保存、重启恢复和真实请求 low 已通过，随后恢复部署默认 high；证据 `docs/feat-reflex-control/evidence/reflex-settings-real.{md,zh.md,json}`。Frontend `feat-reflex-control` 已固定 Harness revision，unsigned macOS arm64 目录包的 Electron 正常启动、配置保存/重启、Safe Mode 和恢复已通过；恢复页系统 200% 与页面级 200% 缩放矩阵均已通过，签名/公证及 PR/main 合并仍未完成；所有 Web server7–13 已停止。
+
+### 2026-10-11 最新收口状态
+
+- [x] Harness 最新推送修复 Codex v2 字符串 `FileUpdateChange.kind` 解析，并识别真实 `collabAgentToolCall`；相关 Codex/System3/监督回归 3 个文件、200 项通过，Ruff 双检查和 Harness pre-push 构建门禁通过。
+- [x] Frontend release workflow 已固定该 Harness revision；本地 runtime manifest 为同一 SHA、`sourceDirty=false`，RunAsNode 探针 HTTP 200，APUS Reflex Harness 品牌、MIT/NOTICE 逐字节比对通过；Frontend 最新提交已推送。
+- [x] 严格真实语义闭环已通过受控 v6：父线程的根文件变更触发 `unrelated` 判断，realign 被 Codex 消费，后续目标文件与 `verification-target` 出现，反馈为 `improved`；健康任务对照、中途改 Goal 和 Codex 子线程自动聚合仍未完成。
+- [ ] 两仓 PR #1 仍为 Draft/UNSTABLE；最新官方 annotation 为 Actions budget 阻止 job 启动，尚无远端代码测试结果。签名、公证、用户中途改 Goal、健康长任务无误干预和远端首字节仍待验收。
+
+### 2026-10-12 真实严格闭环与远端响应探测
+
+- [x] 真实 v6 受控场景已用 `gpt-5.6-sol-relay` 完成：营销偏航、`unrelated`、realign accepted、Codex native consumed、财务产物、精确 `verification-target`、独立 `1137.41` 和 `improved`；脱敏证据为 `docs/feat-reflex-control/evidence/semantic-codex-strict-final-v6.*`。
+- [x] 发布监督决策 deadline 从 5 秒调为 15 秒，避免后置 feedback 在真实远程模型路径上提前超时；上下文判断仍保持独立配置。Harness 分支已推送，Frontend 已重新固定并打包该 revision。
+- [ ] 远端 R-04 探测的 Fidoo relay 三次均在首字节前出现 `URLError`，内部 proxy 一次 60 秒超时；这证明当前传输不可用，不构成性能通过。脱敏证据为 `docs/feat-reflex-control/evidence/r04-remote-response-20261012.*`。
+- [ ] Actions budget 仍阻止两仓 runner 启动；本机签名/公证身份仍不可用；健康长任务和用户中途修改 Goal 的真实远程对照仍待外部 relay 恢复后执行。
+
+### 2026-10-12 开源文档收口
+
+- [x] README/README.zh 已更新当前 APUS Reflex 能力、验收边界、API/配置参考、演示证据和 cache benchmark 入口；贡献指南、SECURITY、MIT/NOTICE 保持一致。
+- [x] 新增 `.github/CODEOWNERS` 和双语 `docs/feat-reflex-control/release-notes.*`；旧 Reflex 设置提案页已标注当前实现状态并链接现行验收报告。
+- [x] 本轮文档 pairing、20 项 `test:docs`、Ruff 双检查和 pre-push 构建门禁通过。
 
 ## 本轮交付物
 
@@ -70,12 +90,12 @@ GitHub 操作须显式 `--repo cryptoSUN2049/APUS-Reflex-Harness` 或 Frontend�
 - [ ] 完成最后 review，并核对统一清单的手动选型优先级、服务地址/模型配置真实链路等新明确的证据缺口。
 - [x] Harness Conventional Commit，取得并推送 clean SHA；Frontend release workflow 已固定该 SHA。
 - [x] Frontend Conventional Commit / push；完成真实 unsigned 目录包及 runtime 验收。
-- [x] Electron 隔离环境正常启动与 Safe Mode 实测；原生 200% 缩放和签名/公证发布仍未完成。Frontend 完整 `npm test` 为 179 files / 1577 tests，通过的 typecheck/build/package 不能替代尚未完成的发布签名验收。
+- [x] Electron 隔离环境正常启动与 Safe Mode 实测；恢复页系统 200% 与页面级 200% 缩放矩阵通过。Frontend 完整 `npm test` 为 179 files / 1577 tests，通过的 typecheck/build/package 不能替代尚未完成的发布签名/公证验收。
 - [ ] 按授权 push / PR / 最终合 main；push 前遵循 pre-push skill，Ruff check . 与 format --check . 必须有覆盖最终变更的通过记录。不得覆盖主目录用户 WIP。
 
 ## 分支/部署状态
 
-Harness worktree：`/Users/gumpm5/Documents/Code/APUS-Reflex-Harness/.Codex/worktrees/feat-reflex-control`，分支 `feat-reflex-control`，已推送且当前有 acceptance/evidence/handoff 文档改动待提交。Frontend 位于 `/Users/gumpm5/Documents/Code/APUS-Reflex-Frontend/.Codex/worktrees/feat-reflex-control`，同名分支已推送，当前只有证据截图和 handoff 文档改动待提交；其 `.github/workflows/release.yml` 已固定该 Harness revision。Frontend 本地 manifest 为 `sourceDirty=false` 的已部署包才算正式 runtime 证据。
+Harness worktree：`/Users/gumpm5/Documents/Code/APUS-Reflex-Harness/.Codex/worktrees/feat-reflex-control`，分支 `feat-reflex-control`，当前有验收、HTML、scanner 和 handoff 文档改动待提交。Frontend 位于 `/Users/gumpm5/Documents/Code/APUS-Reflex-Frontend/.Codex/worktrees/feat-reflex-control`，页面级 200% 缩放改动已提交；其 `.github/workflows/release.yml` 已固定待最终复核的 Harness revision。Frontend 本地 manifest 为 `sourceDirty=false` 的已部署包才算正式 runtime 证据。
 
 Host16 完整通过并完成本轮 SDK/浏览器验收。Host17 已由 root 收集 exit0，session 22268，日志 `/private/tmp/reflex-control-host17.log`。Client11 / Web11 通过。C-06 real7 已完成且无活动模型进程；literal 诊断失败记录已落盘。所有 Web server7–16 已停止；以后新启动使用新编号并保留独立日志。
 
@@ -112,7 +132,7 @@ Host16 完整通过并完成本轮 SDK/浏览器验收。Host17 已由 root 收�
 - [x] Harness 新增 `SECURITY.md` 并在中英文 README 提供私密漏洞报告入口；保留 MIT/NOTICE 和 DSH 技术归属。
 - [x] Frontend 新增 `SECURITY.md`、`CONTRIBUTING.md` 和 PR 证据模板；用户可见主品牌仍为 APUS Reflex Harness。
 - [x] 明确 DSH 发行版本归属只出现在技术/法律/关于页位置，不进入产品主标题、用户入口或任务状态文案。
-- [ ] Harness Jev/System3 与 Frontend 测试 CI 完成后回读；真实语义监督闭环、正式包许可随附、签名/公证、原生 200% 与 main 合并仍未完成。
+- [ ] Harness Jev/System3 与 Frontend 测试 CI 完成后回读；真实语义监督闭环、正式包许可随附、签名/公证与 main 合并仍未完成。恢复页系统/页面级 200% 已通过。
 ## 2026-10-11 Host20 真实语义闭环
 
 - [x] 真实 E2E 单次运行通过：`pnpm exec vitest run --config vitest.e2e.config.ts packages/experimental/system3/tests/reflex-supervision.e2e.ts -t 'realigns a persistent delegated marketing detour'`。
@@ -157,3 +177,15 @@ Host16 完整通过并完成本轮 SDK/浏览器验收。Host17 已由 root 收�
 - [x] 用户可见面只保留运行耗时、最近进展、停滞/超时提示、继续等待/补充说明/停止，以及 Reflex 的接收、改善、未知和过期状态。
 - [x] 明确不增加全轨迹分析、逐 token 监控、操作系统 profiler、复杂评分平台或新的监控子系统；不修改 Codex 私有上下文和 cache 前缀。
 - [x] 设计与验收说明见 `docs/feat-reflex-control/supervision-minimal-scope.{md,zh.md}`；该范围不改变现有 supervision API，只约束产品承诺和用户界面复杂度。
+
+## 2026-10-11 文档收口与远端状态
+
+- [x] 轻量监督文档提交已推送到 Harness `feat-reflex-control`；提交前的类型检查、构建、Ruff 双检查、双语配对和 `test:docs` 均通过，worktree clean。
+- [x] Frontend `feat-reflex-control` 当前为 `7a2c419`，worktree clean；其本地构建、typecheck、目录包、Safe Mode/CDP 和许可证审计证据仍有效。
+- [ ] Harness run `38137261041` 的 Jev/System3 job 与 Frontend run `38135768022` / `38135768109` 均在 runner 分配前失败（`runner_id=0`、0 steps）；两个 Draft PR 仍是 `MERGEABLE` 但 `UNSTABLE`，恢复远端执行后再合并 main。
+
+## 2026-10-11 真实 Web 插话验收
+
+- [x] 真实浏览器从 Goal 入口选择 Codex，用户在 Codex 委派运行中追加中文字段与兼容性要求；Session 记录 `subagent/steer` 和 `system3/interjection` `delivered=true`，监控在 120 秒报告 startup alert，并允许用户停止。
+- [x] 该次 Codex relay 没有产生 native 执行步骤，229.338 秒后用户停止；原始发票、历史 CSV 和 `test_aging.py` 哈希保持不变，不能把该次结果算作最终产物通过。脱敏证据见 `docs/feat-reflex-control/evidence/ui-interjection-20261011.*`。
+- [x] Client `System3Dock.tsx` 严格覆盖率已补齐到 Statements/Branches/Functions/Lines 100%，5 个测试文件、69 项通过；新增测试只覆盖真实用户可见的 Reflex 时间线、未知状态、恢复原因和上下文提示。

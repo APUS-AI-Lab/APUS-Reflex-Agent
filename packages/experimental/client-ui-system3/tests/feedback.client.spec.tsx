@@ -372,3 +372,33 @@ it('reports an unconfirmed supervision delivery without claiming no decision or 
   expect(screen.getByText('Reflex 监督 · 建议送达尚未确认，未重复发送')).toBeTruthy()
   expect(screen.queryByText(/本次无法判断|已观察到执行改善/)).toBeNull()
 })
+
+it('explains every durable Reflex timeline kind, recovery reason, and unknown status', () => {
+  render(<System3Feedback {...inputs({ facts: { subagentRun: null, ...EMPTY, history: [], entry: null, skill: null,
+    reflex: {
+      observing: true,
+      recovery: { state: 'future-recovery', reason: 'retry-budget', runId: 'run-1' },
+      supervision: { state: 'future-supervision', action: 'future-action', evidenceCount: 4, runId: 'run-1' },
+      context: { revision: 3, action: 'restore', targetsCount: 1 },
+      timeline: [
+        { kind: 'supervision', at: 1, state: null, action: null, count: 1 },
+        { kind: 'recovery', at: 2, state: 'future-recovery', action: null, count: null },
+        { kind: 'recovery', at: 3, state: null, action: null, count: null },
+        { kind: 'context', at: 4, state: null, action: 'remove', count: 2 },
+        { kind: 'context', at: 5, state: null, action: 'restore', count: null },
+        { kind: 'evidence', at: 6, state: null, action: null, count: null },
+      ],
+    },
+  } })} />)
+  expect(screen.getByText('Reflex 正在观察 Codex 执行；只有收到执行证据后才会更新判断')).toBeTruthy()
+  expect(screen.getByText('Reflex 执行恢复 · 状态已更新')).toBeTruthy()
+  expect(screen.getByText('达到连续重试上限')).toBeTruthy()
+  expect(screen.getByText('Reflex 监督 · 状态已更新')).toBeTruthy()
+  expect(screen.getByText('Reflex 已恢复 1 个上下文片段')).toBeTruthy()
+  expect(screen.getByText('Reflex 执行时间线 · 6 条')).toBeTruthy()
+  expect(screen.getByText('监督：状态已更新 · 状态已更新')).toBeTruthy()
+  expect(screen.getAllByText('恢复：未能确认恢复，未重复启动')).toHaveLength(2)
+  expect(screen.getByText('上下文：移出 2 段')).toBeTruthy()
+  expect(screen.getByText('上下文：恢复 0 段')).toBeTruthy()
+  expect(screen.getByText('收到执行证据')).toBeTruthy()
+})

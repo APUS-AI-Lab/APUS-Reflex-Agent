@@ -4,15 +4,17 @@
 
 目标：完成 APUS Reflex Harness 的最终可发布闭环，以真实用户 E2E 证明入口路由、Reflex 模型配置、Codex 长时 Goal 监督与纠偏、动态上下文恢复和 UIUX；保护 cache 区与原始 Session，完成 MIT/NOTICE/安全/贡献者开源门禁、双仓 CI 和 PR/main 合并。
 
-- [x] P0：完成一条真实受控语义监督闭环：偏航 → Reflex realign → Codex 消费 → verification-target → improved → 独立产物验证（Host20）。
-- [ ] P0：冻结并实测 1 秒 admission/status、远端首字节/总耗时三段指标；本地队列 admission/status 已实测 14ms，R-04 路由决策 p50/p95 已实测 two-tier 309/588ms、four-tier 317/405ms，远端与可见回退仍待测。
+- [x] P0：完成严格真实受控语义监督闭环：真实 `gpt-5.6-sol-relay` 已证明偏航 → Reflex realign → Codex 消费 → 回到原始 Goal 下一步 → `verification-target` → `improved` → 独立 `1137.41` 产物验证；脱敏证据见 `docs/feat-reflex-control/evidence/semantic-codex-strict-final-v6.{json,md,zh.md}`。健康长任务和中途改 Goal 仍单独验收。
+- [ ] P0：冻结并实测 1 秒 admission/status、远端首字节/总耗时三段指标；本地队列 admission/status 已实测 16ms，R-04 路由决策 p50/p95 已实测 two-tier 309/588ms、four-tier 317/405ms；2026-10-12 远端探测在首字节前出现传输错误/超时，远端与可见回退仍待测，见 `docs/feat-reflex-control/evidence/r04-remote-response-20261012.*`。
 - [ ] P0：完成健康长任务无误干预和用户中途改 Goal 的真实 UI/E2E 对照。
-- [ ] P0：完成 Electron 页面级 200%、启动失败恢复、会话恢复、签名/公证和包内 MIT/NOTICE 核对；恢复界面 200% 系统缩放 40 变体已通过。
-- [ ] P0：完成 Harness Jev/System3 CI、秘密扫描、脱敏回归，并将两个 Draft PR 转 Ready；Host20 真实闭环已通过。
-- [ ] P1：统一 README quickstart、贡献者 API 文档、CODEOWNERS、Release notes、演示和 benchmark。
+- [ ] P0：完成 Electron 启动失败恢复、会话恢复、签名/公证和包内 MIT/NOTICE 核对；恢复界面已通过 200% 系统缩放 40 变体及页面级 200% 缩放 8 轮/320 变体。
+- [ ] P0：完成 Harness Jev/System3 CI、秘密扫描、脱敏回归，并将两个 Draft PR 转 Ready；当前两仓 job 因 Actions budget 未启动，不能视为通过。
+- [x] P1：统一 README quickstart 与能力边界，补齐贡献者入口、System3 API/配置参考链接、CODEOWNERS、双语 Release notes、严格 v6 演示证据和 cache benchmark 入口；远端 CI、签名发布和 main 合并仍是独立门禁。
 - [ ] P1：独立 review 通过后合并两个仓库 main，回读 SHA、运行包和发布清单。
 
 本轮监督收口保持轻量：复用有界证据与 Goal，异常才判断、调整后观察验证、健康任务不误干预。2026-10-11 的自然 CSV 与字面量 unittest 对照均在 150 秒预算取消且零 steer；字面量 relay 无首字节，不能标为健康任务完整通过。证据见 `docs/feat-reflex-control/evidence/healthy-codex-20261011.zh.md`。
+
+本轮真实 Web 插话已通过路由、Goal 创建/激活、要求排队、`subagent/steer` 送达、120 秒启动提示和用户停止；Codex 没有 native 步骤，最终产物验收保持未完成，见 `docs/feat-reflex-control/evidence/ui-interjection-20261011.zh.md`。客户端 69 项回归与 System3Dock 四项严格 100% 覆盖率通过。GitHub 官方 annotation 确认两仓 CI 因账户 Actions budget 未启动，不是源码测试失败；账号预算需恢复后才能完成远端门禁。
 
 - [x] 用户批准新建独立仓库，核心方向为 Jev 理念与模型能力嵌入 DSH。
 - [x] 创建私有仓库 xDAN-System3-Harness，保留来源历史与上游许可证。
