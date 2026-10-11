@@ -5,9 +5,28 @@ from deepseek_harness import latest_continuum_memory_decision
 
 def test_latest_continuum_decision_is_replayed_without_jev() -> None:
     events = [
-        {"type": "continuum/memory-decision", "data": {"version": 1, "mode": "shadow", "selectedIds": [], "baselineIds": ["invoice"], "outcome": "jev"}},
+        {
+            "type": "continuum/memory-decision",
+            "data": {
+                "version": 1,
+                "mode": "shadow",
+                "selectedIds": [],
+                "baselineIds": ["invoice"],
+                "outcome": "jev",
+            },
+        },
         {"type": "turn/end", "data": {"reason": "completed"}},
-        {"type": "continuum/memory-decision", "data": {"version": 1, "mode": "active", "selectedIds": ["migration"], "baselineIds": ["invoice"], "outcome": "jev", "confidence": 0.95}},
+        {
+            "type": "continuum/memory-decision",
+            "data": {
+                "version": 1,
+                "mode": "active",
+                "selectedIds": ["migration"],
+                "baselineIds": ["invoice"],
+                "outcome": "jev",
+                "confidence": 0.95,
+            },
+        },
     ]
 
     assert latest_continuum_memory_decision(events) == {

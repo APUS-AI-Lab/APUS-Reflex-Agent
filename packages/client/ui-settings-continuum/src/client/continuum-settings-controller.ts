@@ -32,10 +32,17 @@ export class ContinuumSettingsController {
     this.unsubscribe = scope.subscribe(() => { this.publish() })
   }
 
+  /** Expose the settings store and mutation operation to the UI shell.
+   * @returns The registered settings face.
+   */
   inject(): ContinuumSettingsFace {
     return { hooks: { continuumSettings: this.store }, setEnabled: (enabled) => { return this.setEnabled(enabled) } }
   }
 
+  /** Persist the requested switch value when the deployment accepts writes.
+   * @param enabled - Requested Continuum state.
+   * @returns A promise that settles after the mutation attempt.
+   */
   async setEnabled(enabled: boolean): Promise<void> {
     const current = this.scope.getSnapshot()
     if (this.busy || !current.writable || current.status !== 'ready') return
@@ -53,6 +60,7 @@ export class ContinuumSettingsController {
     }
   }
 
+  /** Release the settings subscription. */
   dispose(): void {
     this.unsubscribe()
   }

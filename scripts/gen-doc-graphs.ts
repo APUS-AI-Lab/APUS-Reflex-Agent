@@ -124,6 +124,14 @@ const SERVICE_ROLES: ServiceRole[] = [
     note: 'Composes routing, evidence and supervision policies; opt-in API input routing records Jev recommendations separately from adopted model selections.',
   },
   {
+    key: 'continuumMemory',
+    pkg: 'continuum',
+    title: 'Source-backed Continuum memory',
+    mode: 'service',
+    consumers: ['agent-loop', 'experimental-continuum-jev'],
+    note: 'Owns revisioned memory records, bounded recall, and the opt-in user-message admission path; the Reflex plugin supplies Jev selection while the original profile keeps the service disabled.',
+  },
+  {
     key: 'hmr',
     pkg: 'hmr',
     title: 'Serialized module and configuration reloads',

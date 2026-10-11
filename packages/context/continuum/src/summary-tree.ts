@@ -25,7 +25,11 @@ export interface ContinuumSummaryTreeConfig {
   readonly maxSummaryBytes?: number
 }
 
-/** Build a two-level scope/kind tree without silently dropping source items. */
+/** Build a two-level scope/kind tree without silently dropping source items.
+ * @param items - Source items to group.
+ * @param config - Tree bounds.
+ * @returns A deterministic summary tree.
+ */
 export function buildContinuumSummaryTree(
   items: readonly ContinuumSummaryTreeItem[],
   config: ContinuumSummaryTreeConfig = {},
@@ -61,7 +65,12 @@ export function buildContinuumSummaryTree(
   return Object.freeze({ path: '', label: 'root', summary: summarize(ordered, config.maxSummaryBytes), itemIds: Object.freeze([]), children: Object.freeze(children) })
 }
 
-/** Find source item IDs whose content or deterministic summary contains every term. */
+/** Find source item IDs whose content or deterministic summary contains every term.
+ * @param tree - Tree containing item membership.
+ * @param items - Source items indexed by the tree.
+ * @param terms - Terms that every result must contain.
+ * @returns Matching source IDs.
+ */
 export function findContinuumSummaryTreeItems(
   tree: ContinuumSummaryTreeNode,
   items: readonly ContinuumSummaryTreeItem[],
@@ -93,6 +102,8 @@ export interface ContinuumStableCacheMeasurement {
 /**
  * Measure stable-prefix reuse across rendered layouts. This is instrumentation
  * for local layout reuse only; it is never a provider cache-hit or billing claim.
+ * @param layouts - Rendered prompt layouts in order.
+ * @returns One measurement per layout.
  */
 export function measureContinuumStableCacheLayouts(layouts: readonly string[]): readonly ContinuumStableCacheMeasurement[] {
   let previous = ''

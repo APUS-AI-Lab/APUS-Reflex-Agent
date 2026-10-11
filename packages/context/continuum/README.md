@@ -11,7 +11,7 @@ English | [中文](README.zh.md)
 
 This package owns Continuum’s durable record/profile service: immutable source-backed records with revision checks, superseding, deactivation, replayable Session events, exact source reads, bounded retrieval, a rebuildable derived index, optional Jev selection, same-step lifecycle consumption, and an explicit switch. It never invents records or enables unlimited memory without Reflex.
 
-The Session event uses the existing persistence backend and becomes durable after the caller completes `ctx.sessions.flush(session)`. Record admission remains explicit; when the companion `continuum-jev` profile service is mounted, shadow/active selection and its receipt are part of the same-step consumer.
+Session events use the existing persistence backend and become durable after `ctx.sessions.flush(session)`. Admission is explicit by default; opt-in `admission: 'user-message'` records committed human messages with exact Session references when the Reflex-only switch is enabled. The companion `continuum-jev` service adds shadow/active selection and receipts.
 
 ## Table of Contents
 
@@ -35,7 +35,7 @@ Import `MemoryRecordStore` for deterministic revision semantics. Use `appendMemo
 <a id="understand-the-implementation"></a>
 ## Understand the implementation
 
-`MemoryRecordStore` keeps immutable snapshots and requires the caller's observed revision for superseding or deactivation. `ContinuumMemory` restores one projection per Agent from the Agent Session and persists explicit create/supersede/deactivate calls as `continuum/memory-record`. Its controller keeps a disposable index current after committed transitions; folding applies events without model calls or a second durable source.
+`MemoryRecordStore` keeps immutable snapshots and requires the caller's observed revision for superseding or deactivation. `ContinuumMemory` restores one projection per Agent from the Agent Session and persists explicit create/supersede/deactivate calls as `continuum/memory-record`. In `user-message` admission mode, a committed human `user/message` is converted after the Session append completes; generated recall messages and non-user sources are ignored. Its controller keeps a disposable index current after committed transitions; folding applies events without model calls or a second durable source.
 
 -----
 
@@ -73,7 +73,8 @@ The consumer appends a bounded recall message, so the existing request prefix re
 <a id="known-limitations-and-deferred-work"></a>
 
 - The record projection is process-local; restart recovery requires reading and folding the Session event log. `MemoryRecordIndex` is disposable derived state maintained by the controller; it can still be rebuilt from the projection or drained with a bounded backlog budget.
-- The service has no full text index and does not automatically attach the summary tree to lifecycle retrieval. Summary navigation is rebuilt from Session events after restart; it is not a persisted model-summary snapshot. The tree and cache helpers are deterministic, local instrumentation; they do not report provider cache accounting. Record admission is caller-owned and source-backed.
+- The service has no full text index and does not automatically attach the summary tree to lifecycle retrieval. Summary navigation is rebuilt from Session events after restart; it is not a persisted model-summary snapshot. The tree and cache helpers are deterministic, local instrumentation; they do not report provider cache accounting. Records remain source-backed; admission is caller-owned by default and can be enabled for human messages explicitly.
+- Automatic user-message admission is deliberately opt-in, uses the first configured scope, and stores message text as a source-backed fact. Deployments handling private or sensitive conversations should keep `admission: explicit` and provide a domain-specific admission caller.
 
 <a id="dev-note"></a>
 ### Dev Note

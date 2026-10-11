@@ -1,0 +1,19 @@
+# Bilingual-pair consistency record for release-readiness.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/dev-continuum-reflex-integration/release-readiness.md
+/apus-continuum-reflex-release-readiness:
+  en: 4f640422d56ca213
+  zh: 188451f9aa2c37be
+/apus-continuum-reflex-release-readiness/decision:
+  en: d6e488a9c05c28ba
+  zh: 84ba639305d3112e
+/apus-continuum-reflex-release-readiness/ready:
+  en: 6a6a503cdc8e3ff9
+  zh: 0f33e8463a261a5c
+/apus-continuum-reflex-release-readiness/blocking-before-public-release:
+  en: 96361bd21ffbf842
+  zh: c3db662a2f1391f4
+/apus-continuum-reflex-release-readiness/recommended-release-sequence:
+  en: 09d558e89064d275
+  zh: 19206ed16be60211

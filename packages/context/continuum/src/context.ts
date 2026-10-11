@@ -102,6 +102,7 @@ export function installContinuumMemoryContext(
  * @param controllerOf - per-agent Continuum controller resolver.
  * @param principalOf - exact scope resolver for the current agent.
  * @param config - retrieval and byte limits.
+ * @param selectorOf - Reads the optional Jev selector at request time.
  * @returns disposer for the listener.
  */
 export function installContinuumMemoryControllerContext(

@@ -74,7 +74,9 @@ export type ContinuumJev = Pick<Jev, 'resolve' | 'decide'>
 
 /** Profile configuration for the optional automatic Continuum selector. */
 export interface ContinuumJevProfileConfig {
+  /** Selector mode; off leaves the deterministic baseline in place. */
   readonly mode: ContinuumJevMode
+  /** Minimum Jev confidence required to accept a selected candidate. */
   readonly minConfidence: number
   /** Maximum provider wait in milliseconds; omitted means no adapter timeout. */
   readonly timeoutMs?: number
@@ -233,6 +235,7 @@ function baselineSelection(
     .map(candidate => candidate.id)
 }
 
+/** Error reported when the bounded Jev selector exceeds its deadline. */
 export class ContinuumJevTimeoutError extends Error {
   constructor() {
     super('Continuum memory Jev decision timed out')

@@ -5,12 +5,15 @@
 - 当前分支：`dev/continuum-reflex-integration`
 - 基线：`feat-reflex-control` 当前提交。
 - 目标：在控制面主力分支上集成 `feat-continuum-memory`，完成冲突解释和场景化验收。
-- 当前状态：已完成本地合并、冲突修复、构建、定向回归和真实 Jev/DeepSeek 评估；产品级自动记忆录入链路仍未接入，不能宣称完整产品 E2E 已通过。
+- 当前状态：已完成本地合并、冲突修复、构建、定向回归、真实 Jev/DeepSeek 评估，以及 opt-in 用户消息准入与重启 recall 的 agent-loop 聚焦链路；产品级 shipped-profile 黑盒 E2E、System3 和全仓基线仍阻塞公开发布。
 
 ## 本轮交付物
 
 - `tasks/dev-continuum-reflex-integration/handoff.md`：集成交接入口。
 - `docs/dev-continuum-reflex-integration/integration-plan.md`：合并顺序、冲突边界和验收矩阵。
+- `docs/dev-continuum-reflex-integration/memory-admission-design.md` / `.zh.md`：自动准入设计与事件来源约束。
+- `docs/dev-continuum-reflex-integration/release-readiness.md` / `.zh.md`：开源发布就绪审计和阻断项。
+- `packages/context/continuum/tests/admission.spec.ts`：自动准入、持久化回放、seed 重启 recall 和 explicit 负向控制。
 - 合并与修复提交已保留在本分支历史中。
 
 ## 设计约束
@@ -31,6 +34,9 @@
 - [x] 文档、persistence changes、persistence formats 门禁通过。
 - [x] Python Continuum replay 通过：2 个测试通过。
 - [x] `pnpm run typecheck`、`pnpm run lint`、TypeScript aliases、Cordis catalog 全部通过。
+- [x] `pnpm exec vitest run packages/context/continuum/tests packages/core/agent-loop/tests/continuum-admission.spec.ts`：11 个文件、55 个测试通过。
+- [x] `pnpm run doc-sync`：42 个文档/目录门禁全部通过。
+- [x] `pnpm run verify-cordis-config`：226 个配置文件通过；persistence changes、tsconfig paths、targeted oxlint 通过。
 - [x] RunPod Jev endpoint health 返回 ready；未提供有效 `JEV_API_KEY` 时 `/v1/models` 正确返回 401，说明真实 Jev E2E 不能伪造为通过。
 - [x] 修复运行时开关开启后仍解析为 `off` 的配置重叠问题；profile 默认使用确定性 `shadow`，Jev provider 仍保持 `off`。
 - [x] 只读检查 RunPod `Jev-Serving` pod：`/root/.config/openjev/gateway.key` 存在且权限为 `600`，真实 key 访问 `/v1/models` 返回 200；key 未写入仓库。
@@ -39,11 +45,12 @@
 
 ## 未完成的正式验收
 
-- [ ] 接入生产级 memory admission caller；当前 `ContinuumMemoryService.create()` 仍是显式 API，只有测试 consumer 使用它。
-- [ ] 补齐真实链路：用户输入 → memory-record → Session flush → 重启恢复 → recall 注入 → 模型请求。
+- [x] 接入 opt-in 生产级 user-message admission caller；默认仍为 `admission: explicit`，需要 scope 和 Continuum 开关。
+- [ ] 用 shipped profile 补齐真实链路：用户输入 → memory-record → Session flush → 重启恢复 → recall 注入 → 模型请求；当前已由 agent-loop focused harness 覆盖事件、重启和 bounded recall，但尚未替代产品级黑盒验收。
 - [ ] 补齐并重跑 System3 real-API E2E：本轮已提供 Jev/DeepSeek 凭据，但 8 个控制面用例中只有 1 个通过，其他用例暴露部署 patch 的静态 endpoint/阈值声明缺失或实际模型响应不满足断言；不能计为通过。
 - [ ] 重新设计并执行完整 Web built suite；当前只证明 Continuum 定向浏览器测试通过。
 - [ ] 全量 `pnpm run test` 尚未全绿：本次运行 19 个失败、2 个未处理错误；失败集中在合并前未修改的桌面/UI/workflow 基础设施测试，需单独归档或修复后才能宣称仓库级全绿。
+- [ ] 公开发布前复核包 tarball、CI secrets lane、版本/tag 和干净 release commit；不得把本地 API key 写入配置、fixture、HTML、日志或提交。
 
 ## 分支/部署状态
 
@@ -58,4 +65,4 @@
 3. 查看两个源分支最新提交后再开始 merge。
 4. 先解决功能配置和事件类型，再处理生成文档、锁文件和快照。
 5. 按“已完成验收/未完成正式验收”分界阅读，不得将 skip 或 test-only consumer 当作产品链路通过。
-6. 若继续开发，先明确 memory admission 的隐私策略和触发入口，再实现生产 caller 与真实 Session E2E。
+6. 若继续开发，先运行 `docs/dev-continuum-reflex-integration/release-readiness.md` 的 staging 黑盒序列，再处理 System3 和全仓基线失败。

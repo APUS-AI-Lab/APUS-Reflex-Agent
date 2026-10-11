@@ -1,9 +1,11 @@
 import { Context, Service, type Volatile } from '@deepseek-ai/cordis'
 import type { Agent } from '@deepseek-ai/dsh-agent'
+import type { ContentBlock } from '@deepseek-ai/dsh-llm'
+import type { Session, SessionEvent, SessionId } from '@deepseek-ai/dsh-session'
 import z from '@deepseek-ai/schemastery'
 import { ContinuumMemoryController, resolveContinuumMemorySwitch, type ContinuumMemorySwitch } from './policy.ts'
 import { appendMemoryRecordEvent, foldMemoryRecordEvents } from './persistence.ts'
-import { MemoryRecordStore, type MemoryId, type MemoryRecord, type NewMemoryRecord } from './records.ts'
+import { MemoryId as createMemoryId, MemoryRecordStore, type MemoryId, type MemoryRecord, type NewMemoryRecord } from './records.ts'
 import { installContinuumMemoryControllerContext, type ContinuumMemoryContextConfig } from './context.ts'
 
 declare module '@deepseek-ai/cordis' {
@@ -18,6 +20,7 @@ export interface ContinuumConfig extends ContinuumMemoryContextConfig {
   readonly enabled: boolean
   readonly mode: 'off' | 'shadow' | 'active'
   readonly scopes: string[]
+  readonly admission?: 'explicit' | 'user-message'
 }
 
 type ContinuumResolvedConfig = Omit<ContinuumConfig, 'enabled' | 'mode'> & {
@@ -30,6 +33,7 @@ export const ContinuumConfig = z.object({
   enabled: z.boolean().default(false).volatile(),
   mode: z.union([z.const('off'), z.const('shadow'), z.const('active')]).default('off').volatile(),
   scopes: z.array(z.string()).default([]),
+  admission: z.union([z.const('explicit'), z.const('user-message')]).default('explicit'),
   maxCandidates: z.number().step(1).min(1).default(8),
   maxExcerptBytes: z.number().step(1).min(1).default(2048),
   maxTotalBytes: z.number().step(1).min(1).default(8192),
@@ -84,6 +88,7 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
 
   private readonly config: ContinuumConfig | ContinuumResolvedConfig
   private readonly controllers = new WeakMap<Agent, ContinuumMemoryController>()
+  private readonly agentsBySession = new Map<SessionId, Agent>()
 
   constructor(ctx: Context, config: ContinuumConfig | ContinuumResolvedConfig) {
     super(ctx, 'continuumMemory')
@@ -91,9 +96,26 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
     ctx.inject(['agents'], (ctx) => {
       const reflexMounted = ctx.get('jev') !== undefined
       const principal = { scopes: [...config.scopes] }
+      const retrievalConfig = {
+        maxCandidates: config.maxCandidates, maxExcerptBytes: config.maxExcerptBytes, maxTotalBytes: config.maxTotalBytes,
+      }
       installContinuumMemoryControllerContext(ctx, agent => this.controllerWithConfig(agent, {
         enabled: readSetting(config.enabled), mode: readSetting(config.mode), reflexMounted,
-      }), () => principal, config, () => ctx.get('continuumMemorySelector'))
+      }), () => principal, retrievalConfig, () => ctx.get('continuumMemorySelector'))
+    })
+    ctx.on('agent/created', ({ agent }) => { this.agentsBySession.set(agent.session.id, agent) })
+    ctx.on('agent/disposed', ({ agent }) => { this.agentsBySession.delete(agent.session.id) })
+    ctx.on('session/event', (session, event) => {
+      if (event.type !== 'user/message') return
+      // Session rejects re-entrant append calls while publishing this event;
+      // defer admission until the source append has completed.
+      queueMicrotask(() => {
+        try {
+          this.admitUserMessage(session, event)
+        } catch (error: unknown) {
+          this.ctx.logger.warn(`continuum memory admission failed: ${String(error)}`)
+        }
+      })
     })
   }
 
@@ -139,12 +161,35 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
       existing.setSwitch(switchConfig)
       return existing
     }
-    // oxlint-disable-next-line typescript/no-deprecated -- deferred until Session exposes a memory projection.
+    // oxlint-disable-next-line typescript/no-deprecated -- Existing Session history read; migration deferred.
     const store = foldMemoryRecordEvents(agent.session.snapshotEvents(), new MemoryRecordStore())
     const controller = new ContinuumMemoryController(store, switchConfig)
     this.controllers.set(agent, controller)
     controllerStores.set(controller, store)
     return controller
+  }
+
+  /** Admit one committed human message when the protected automatic mode is enabled. */
+  private admitUserMessage(session: Session, event: SessionEvent): void {
+    if ((this.config.admission ?? 'explicit') !== 'user-message' || !this.state().enabled || event.type !== 'user/message') return
+    if (event.data.source.kind !== 'user') return
+    const content = event.data.content
+      .filter((block): block is ContentBlock & { type: 'text' } => block.type === 'text')
+      .map(block => block.text).join('\n').trim()
+    const scope = this.config.scopes[0]
+    if (content.length === 0 || scope === undefined) return
+    const agent = this.agentsBySession.get(session.id) ?? this.ctx.agents.currentInitiator()
+    if (agent === undefined) return
+    const id = createMemoryId(`${String(session.id)}:${String(event.seq)}`)
+    const store = this.storeFor(agent)
+    if (store.get(id) !== undefined) return
+    this.create(agent, {
+      id,
+      kind: 'fact',
+      scope,
+      content,
+      sourceRefs: [{ sessionId: session.id, eventSeq: event.seq }],
+    })
   }
 }
 

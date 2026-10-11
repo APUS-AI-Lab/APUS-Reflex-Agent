@@ -64,12 +64,16 @@ export class MemoryRecordIndex {
     return this.result()
   }
 
-  /** Number of snapshots waiting for a bounded rebuild. */
+  /** Number of snapshots waiting for a bounded rebuild.
+   * @returns Pending snapshot count.
+   */
   pendingCount(): number {
     return this.pending.size
   }
 
-  /** Number of snapshots represented by the current derived index. */
+  /** Number of snapshots represented by the current derived index.
+   * @returns Indexed snapshot count.
+   */
   indexedCount(): number {
     return this.indexed.size
   }
@@ -103,7 +107,10 @@ export class MemoryRecordIndex {
   }
 }
 
-/** Normalize the fields that participate in deterministic lexical search. */
+/** Normalize the fields that participate in deterministic lexical search.
+ * @param value - Text to tokenize.
+ * @returns Unique normalized search terms.
+ */
 export function memorySearchTerms(value: string): readonly string[] {
   return [...new Set(value.toLocaleLowerCase().split(/[^\p{L}\p{N}_-]+/u).filter(term => term.length > 1))]
 }

@@ -23,7 +23,10 @@ export interface ContinuumAblationResult {
   readonly cacheReadRatio: number
 }
 
-/** Run the same frozen corpus through all four strategies. */
+/** Run the same frozen corpus through all four strategies.
+ * @param cases - Frozen corpus to evaluate.
+ * @returns Local measurements for each tree/cache combination.
+ */
 export function runContinuumAblation(cases: readonly ContinuumAblationCase[]): readonly ContinuumAblationResult[] {
   if (cases.length === 0) throw new TypeError('ablation corpus must not be empty')
   const tree = buildContinuumSummaryTree(cases.map(item => ({ ...item, scope: 'ablation', kind: 'case' })))

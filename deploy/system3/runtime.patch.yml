@@ -92,6 +92,7 @@
         # The profile keeps the feature off unless the protected deployment environment opts in.
         enabled: !!js 'process.env.CONTINUUM_MEMORY_ENABLED === "true"'
         mode: !!js 'process.env.CONTINUUM_MEMORY_MODE || "shadow"'
+        admission: !!js 'process.env.CONTINUUM_MEMORY_ADMISSION || "explicit"'
         scopes: !!js 'JSON.parse(process.env.CONTINUUM_MEMORY_SCOPES || "[\"workspace\"]")'
         maxCandidates: 8
         maxExcerptBytes: 2048

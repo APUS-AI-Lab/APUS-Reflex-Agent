@@ -11,7 +11,7 @@ kind: package-reference
 
 本包提供 APUS Continuum 的持久记录与 profile service：带 Session 事件来源的不可变记忆记录、revision 校验、明确更正、停用、可从日志重建投影的仅日志 Session 事件、精确来源回读、确定性的有界检索、可重建的派生检索索引、可选的 Jev selector、生命周期感知的同一步消费者和显式产品开关。服务不会静默创建记录，也不会在没有 Reflex 时提供无限记忆模式。
 
-Session 事件复用现有 persistence backend；调用方完成 `ctx.sessions.flush(session)` 后才具备持久化保证。记录准入仍由调用方显式执行；挂载配套 `continuum-jev` profile service 后，shadow/active 选择及其回执会进入同一步消费者。
+Session 事件使用现有 persistence backend；完成 `ctx.sessions.flush(session)` 后才具备持久化保证。准入默认显式执行；opt-in 的 `admission: 'user-message'` 在 Reflex 专属开关生效时记录带精确 Session 引用的人类消息。配套 `continuum-jev` service 提供 shadow/active 选择和回执。
 
 ## 目录
 
@@ -37,7 +37,7 @@ Session 事件复用现有 persistence backend；调用方完成 `ctx.sessions.f
 <a id="understand-the-implementation"></a>
 ## 理解实现
 
-`MemoryRecordStore` 要求调用方提供已观察到的 revision，并返回不可变快照。`ContinuumMemory` 为每个 Agent 从 Agent Session 恢复投影，并把显式的 create/supersede/deactivate 调用持久化为 `continuum/memory-record`；controller 会在提交变更后维护可丢弃的派生索引；折叠事件不会调用模型，也不会创建第二套持久化事实源。
+`MemoryRecordStore` 要求调用方提供已观察到的 revision，并返回不可变快照。`ContinuumMemory` 为每个 Agent 从 Agent Session 恢复投影，并把显式的 create/supersede/deactivate 调用持久化为 `continuum/memory-record`。在 `user-message` 准入模式下，已提交的人类 `user/message` 会在 Session append 完成后转换为记录；生成的 recall 消息和其他来源会被忽略。controller 会在提交变更后维护可丢弃的派生索引；折叠事件不会调用模型，也不会创建第二套持久化事实源。
 
 -----
 
@@ -73,7 +73,8 @@ recall 消息消耗配置的字节预算并进入同一个模型请求；不会�
 ## Known Limitations and Deferred Work
 
 - 当前记录投影是进程内的；重启恢复必须读取并折叠 Session 事件日志。`MemoryRecordIndex` 是 controller 维护的可丢弃派生状态；仍可从投影重建，或用有界积压预算逐步处理排队快照。
-- service 不包含完整全文索引，也不会自动把摘要树接入生命周期检索。重启后摘要导航从 Session 事件重建，不是持久化的模型摘要快照。摘要树和缓存 helper 是确定性的本地计量，不报告 provider 缓存账单；记录准入由调用方负责并必须带来源。
+- service 不包含完整全文索引，也不会自动把摘要树接入生命周期检索。重启后摘要导航从 Session 事件重建，不是持久化的模型摘要快照。摘要树和缓存 helper 是确定性的本地计量，不报告 provider 缓存账单；记录必须带来源，准入默认由调用方负责，也可以显式开启人类消息准入。
+- 自动用户消息准入必须显式 opt-in，使用第一个配置作用域，并将消息文本保存为带来源的 fact。处理私密或敏感对话的部署应保持 `admission: explicit`，改用领域专属的准入调用方。
 
 <a id="dev-note"></a>
 ### 开发备注
