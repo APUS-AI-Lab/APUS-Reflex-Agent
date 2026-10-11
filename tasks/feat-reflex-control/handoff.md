@@ -125,3 +125,8 @@ Host16 完整通过并完成本轮 SDK/浏览器验收。Host17 已由 root 收�
 - [x] 真实 Jev 评测器改为优先读取 `JEV_ENDPOINT`、`JEV_MODEL`、`SYSTEM3_ENTRY_MIN_CONFIDENCE`，兼容 profile YAML 回退；修复当前部署 overlay 不在旧 regex 中导致的假失败。
 - [x] two-tier 50 题 route decision p50/p95=309/588ms；four-tier 30 题 p50/p95=317/405ms；无传输失败。证据见 `docs/feat-reflex-control/evidence/entry-routing-eval-v2.{json,md,zh.md}`。
 - [ ] 本地 admission/status、远端首字节、完整回答耗时和用户可见失败回退仍待 R-04 完整验收。
+## 2026-10-11 CI 回读
+
+- Harness PR #1 head `99c507d522` 的 Jev/System3 job 与两次 rerun 均在 runner 分配前失败（`runner_id=0`、0 steps、约 3 秒），未执行代码测试；不能归因源码。
+- Frontend PR #1 的 `test` 已通过；最新 release workflow 旧 run 的 Validate dispatch job 同样在 runner 分配前失败，Windows/macOS job 未启动。
+- 两个 PR 仍为 Draft，GitHub 状态 `MERGEABLE` 但 `UNSTABLE`；不得在 required checks 未恢复前合并 main。
