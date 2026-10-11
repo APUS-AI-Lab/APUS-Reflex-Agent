@@ -92,5 +92,5 @@ Harness 持有事实、权限、预算、版本和执行权。模型提炼先成
 - The Continuum-specific persistence test added JSONL flush fault injection: one persist failure propagates, retry succeeds, duplicate flush does not duplicate events, and cold restart folds the same records.
 - Strict evaluator gate now rejects failed assertions, missing/duplicate cells, empty responses and non-`end_turn` finishes. Protected rerun with max_tokens=4096: 20/20 requests, 11/11 applicable assertions, 0 failed.
 - `continuum-performance-report.json` records P50/P95, provider input/output usage, baseline agreement and unknown Jev/local/cache costs. The local summary-tree/cache ablation remains explicitly a local measurement, not provider cache billing.
-- Focused Continuum tests: 43/43 after summary/restart slice; current local script/performance tests also pass. Full docs gate must be rerun after this handoff update.
+- Focused Continuum tests: 43/43 after summary/restart slice; current local script/performance tests also pass. After this handoff update, `pnpm run test:docs` passed 20/20.
 - DeepSeek runtime truth remains: core 7/7 passed with vision disabled; optional vision smoke returned `max-tokens` once and timed out on retries, so it is not counted as passed.
