@@ -461,3 +461,9 @@ P3/P5 增量验收：严格 evaluator 现在对 20 个唯一 variant/task cell �
 
 新增实验性 `packages/experimental/continuum-jev`。`selectContinuumMemory` 只接收有限候选；OFF 返回 baseline，SHADOW 保留 baseline，ACTIVE 支持候选闭集、弃权、超时、取消、fallback 和有界顺序多选。fake provider、真实 RunPod Jev、Session receipt、严格 evaluator、包级构建和 Oxlint 均已通过。
 严格 live harness 已加入 `scripts/continuum-live-e2e.ts`；缺少 `CONTINUUM_JEV_ENDPOINT`、`CONTINUUM_JEV_API_KEY` 或 `CONTINUUM_JEV_MODEL` 时硬失败，不会 skip。当前缺失配置的失败已实跑记录。
+
+### Architecture / PR audit Review
+
+技术架构图已落盘到 `docs/feat-continuum-memory/diagram/`，SVG 通过 `diagram-design` self-check，PNG 由 SVG 生成并在 headed Chromium 的 desktop/tablet/mobile 页面中渲染；playbook 文档门禁 `pnpm run test:docs` 20/20 通过。当前分支工作树干净，提交 `edbcc15126` 已包含图和 playbook 嵌入。
+
+验收结论保持审慎：Continuum 专项链路、RunPod Jev、DeepSeek 21/21、严格 evaluator、SDK/Python replay、build、docs、默认原版 profile 与 Continuum browser 2/2 均有通过证据；完整 `pnpm run test:web:built` 仍有已归档的基线失败，P3 完整质量/成本对照、P4 关闭后投影移除和 P5 服务端 cache/完整成本仍未完成。因此当前可准备 PR 说明，但不能标记为“全仓完整验收通过”，也不能在用户明确授权前 push/merge。
