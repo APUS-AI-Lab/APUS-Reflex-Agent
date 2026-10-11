@@ -26,7 +26,7 @@ DeepSeek Harness（`dsh`）是由 [DeepSeek AI](https://deepseek.com) 开发的�
 
 DeepSeek Harness 处于 _开发者预览_ 阶段，正在快速迭代。**未来将出现破坏兼容性的变更。**
 
-运行本项目前，请阅读[安全说明](SAFETY.zh.md)。
+运行本项目前，请阅读[安全说明](SAFETY.zh.md)。发现漏洞请按[安全政策](SECURITY.md)私下报告，不要在公开 Issue 中披露。
 
 <a id="run"></a>
 

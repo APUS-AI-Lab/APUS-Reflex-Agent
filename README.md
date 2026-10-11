@@ -26,7 +26,7 @@ Upstream DeepSeek Harness documentation (not the APUS build guide): [https://dee
 
 DeepSeek Harness is in _developer preview_ and iterating rapidly. **THERE WILL BE COMPATIBILITY-BREAKING CHANGES.**
 
-Review the [safety notice](SAFETY.md) before running the project.
+Review the [safety notice](SAFETY.md) before running the project. Report vulnerabilities through the [security policy](SECURITY.md), never in a public issue.
 
 ## Run
 
