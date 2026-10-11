@@ -106,12 +106,12 @@
       "applicable": 11
     },
     "keylessSnapshot": {
-      "status": "partial-unrelated-failure",
+      "status": "pass-with-platform-skips",
       "command": "pnpm run test:snapshot",
-      "passed": 179,
-      "failed": 1,
+      "passed": 180,
+      "failed": 0,
       "skipped": 2,
-      "detail": "Keyless replay suite reached 179 passed and 2 skipped; one pre-existing browser-use-stagehand-native fixture failed while installing its Node registerHooks load hook (ERR_INVALID_RETURN_PROPERTY_VALUE). Continuum-specific SDK replay passed separately: TypeScript 44/44 and Python 2/2."
+      "detail": "Keyless replay suite completed with 180 passed, 0 failed, and 2 expected Windows-only pwsh scenarios skipped on macOS. Browser-use-stagehand-native now passes after moving fixture transpilation into resolve-time data modules; no Continuum snapshot failed."
     }
   },
   "policy": "Missing credentials, unreachable endpoints, or skipped required variants remain pending and are not treated as success.",
