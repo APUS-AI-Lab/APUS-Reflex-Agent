@@ -30,9 +30,9 @@ export const ContinuumConfig = z.object({
   enabled: z.boolean().default(false).volatile(),
   mode: z.union([z.const('off'), z.const('shadow'), z.const('active')]).default('off').volatile(),
   scopes: z.array(z.string()).default([]),
-  maxCandidates: z.number().step(1).min(1).required(),
-  maxExcerptBytes: z.number().step(1).min(1).required(),
-  maxTotalBytes: z.number().step(1).min(1).required(),
+  maxCandidates: z.number().step(1).min(1).default(8),
+  maxExcerptBytes: z.number().step(1).min(1).default(2048),
+  maxTotalBytes: z.number().step(1).min(1).default(8192),
 })
 
 /** Public service seam used by profile consumers and tests. */
