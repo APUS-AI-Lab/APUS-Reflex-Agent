@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-This package owns the durable Continuum record/profile service: immutable memory records with source references, revision checks, superseding, deactivation, a log-only Session event that can rebuild the projection, exact source-event reads, deterministic bounded retrieval, an optional mounted Jev selector, a lifecycle-aware same-step consumer, and an explicit profile switch. The service does not silently invent records or provide an unlimited-memory mode without Reflex.
+This package owns Continuum’s durable record/profile service: immutable source-backed records with revision checks, superseding, deactivation, replayable Session events, exact source reads, bounded retrieval, a rebuildable derived index, optional Jev selection, same-step lifecycle consumption, and an explicit switch. It never invents records or enables unlimited memory without Reflex.
 
 The Session event uses the existing persistence backend and becomes durable after the caller completes `ctx.sessions.flush(session)`. Record admission remains explicit; when the companion `continuum-jev` profile service is mounted, shadow/active selection and its receipt are part of the same-step consumer.
 
@@ -35,7 +35,7 @@ Import `MemoryRecordStore` for deterministic revision semantics. Use `appendMemo
 <a id="understand-the-implementation"></a>
 ## Understand the implementation
 
-`MemoryRecordStore` keeps immutable snapshots and requires the caller's observed revision for superseding or deactivation. `ContinuumMemory` restores one projection per Agent from the Agent Session and persists explicit create/supersede/deactivate calls as `continuum/memory-record`. Folding applies events without model calls or a second durable source.
+`MemoryRecordStore` keeps immutable snapshots and requires the caller's observed revision for superseding or deactivation. `ContinuumMemory` restores one projection per Agent from the Agent Session and persists explicit create/supersede/deactivate calls as `continuum/memory-record`. Its controller keeps a disposable index current after committed transitions; folding applies events without model calls or a second durable source.
 
 -----
 
@@ -72,7 +72,7 @@ The consumer appends a bounded recall message, so the existing request prefix re
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- The record projection is process-local; restart recovery requires reading and folding the Session event log. `MemoryRecordIndex` is disposable derived state: rebuild it from the projection or drain queued snapshots with a bounded backlog budget before using it as an optional retrieval accelerator.
+- The record projection is process-local; restart recovery requires reading and folding the Session event log. `MemoryRecordIndex` is disposable derived state maintained by the controller; it can still be rebuilt from the projection or drained with a bounded backlog budget.
 - The service has no full text index and does not automatically attach the summary tree to lifecycle retrieval. The tree and cache helpers are deterministic, local instrumentation; they do not report provider cache accounting. Record admission is caller-owned and source-backed.
 
 <a id="dev-note"></a>

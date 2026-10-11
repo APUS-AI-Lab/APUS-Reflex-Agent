@@ -9,7 +9,7 @@ kind: package-reference
 
 ## 概述
 
-本包提供 APUS Continuum 的持久记录与 profile service：带 Session 事件来源的不可变记忆记录、revision 校验、明确更正、停用、可从日志重建投影的仅日志 Session 事件、精确来源回读、确定性的有界检索、可选的 Jev selector、生命周期感知的同一步消费者和显式产品开关。服务不会静默创建记录，也不会在没有 Reflex 时提供无限记忆模式。
+本包提供 APUS Continuum 的持久记录与 profile service：带 Session 事件来源的不可变记忆记录、revision 校验、明确更正、停用、可从日志重建投影的仅日志 Session 事件、精确来源回读、确定性的有界检索、可重建的派生检索索引、可选的 Jev selector、生命周期感知的同一步消费者和显式产品开关。服务不会静默创建记录，也不会在没有 Reflex 时提供无限记忆模式。
 
 Session 事件复用现有 persistence backend；调用方完成 `ctx.sessions.flush(session)` 后才具备持久化保证。记录准入仍由调用方显式执行；挂载配套 `continuum-jev` profile service 后，shadow/active 选择及其回执会进入同一步消费者。
 
@@ -37,7 +37,7 @@ Session 事件复用现有 persistence backend；调用方完成 `ctx.sessions.f
 <a id="understand-the-implementation"></a>
 ## 理解实现
 
-`MemoryRecordStore` 要求调用方提供已观察到的 revision，并返回不可变快照。`ContinuumMemory` 为每个 Agent 从 Agent Session 恢复投影，并把显式的 create/supersede/deactivate 调用持久化为 `continuum/memory-record`；折叠事件不会调用模型，也不会创建第二套持久化事实源。
+`MemoryRecordStore` 要求调用方提供已观察到的 revision，并返回不可变快照。`ContinuumMemory` 为每个 Agent 从 Agent Session 恢复投影，并把显式的 create/supersede/deactivate 调用持久化为 `continuum/memory-record`；controller 会在提交变更后维护可丢弃的派生索引；折叠事件不会调用模型，也不会创建第二套持久化事实源。
 
 -----
 
@@ -72,7 +72,7 @@ recall 消息消耗配置的字节预算并进入同一个模型请求；不会�
 
 ## Known Limitations and Deferred Work
 
-- 当前记录投影是进程内的；重启恢复必须读取并折叠 Session 事件日志。`MemoryRecordIndex` 是可丢弃的派生状态：使用它作为可选检索加速器前，应从投影重建，或用有界积压预算逐步处理排队快照。
+- 当前记录投影是进程内的；重启恢复必须读取并折叠 Session 事件日志。`MemoryRecordIndex` 是 controller 维护的可丢弃派生状态；仍可从投影重建，或用有界积压预算逐步处理排队快照。
 - service 不包含完整全文索引，也不会自动把摘要树接入生命周期检索。摘要树和缓存 helper 是确定性的本地计量，不报告 provider 缓存账单；记录准入由调用方负责并必须带来源。
 
 <a id="dev-note"></a>
