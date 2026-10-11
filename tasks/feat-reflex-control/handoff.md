@@ -17,6 +17,13 @@
 - [x] 严格真实语义闭环已通过受控 v6：父线程的根文件变更触发 `unrelated` 判断，realign 被 Codex 消费，后续目标文件与 `verification-target` 出现，反馈为 `improved`；健康任务对照、中途改 Goal 和 Codex 子线程自动聚合仍未完成。
 - [ ] 两仓 PR #1 仍为 Draft/UNSTABLE；最新官方 annotation 为 Actions budget 阻止 job 启动，尚无远端代码测试结果。签名、公证、用户中途改 Goal、健康长任务无误干预和远端首字节仍待验收。
 
+### 2026-10-12 真实严格闭环与远端响应探测
+
+- [x] 真实 v6 受控场景已用 `gpt-5.6-sol-relay` 完成：营销偏航、`unrelated`、realign accepted、Codex native consumed、财务产物、精确 `verification-target`、独立 `1137.41` 和 `improved`；脱敏证据为 `docs/feat-reflex-control/evidence/semantic-codex-strict-final-v6.*`。
+- [x] 发布监督决策 deadline 从 5 秒调为 15 秒，避免后置 feedback 在真实远程模型路径上提前超时；上下文判断仍保持独立配置。Harness 分支已推送，Frontend 已重新固定并打包该 revision。
+- [ ] 远端 R-04 探测的 Fidoo relay 三次均在首字节前出现 `URLError`，内部 proxy 一次 60 秒超时；这证明当前传输不可用，不构成性能通过。脱敏证据为 `docs/feat-reflex-control/evidence/r04-remote-response-20261012.*`。
+- [ ] Actions budget 仍阻止两仓 runner 启动；本机签名/公证身份仍不可用；健康长任务和用户中途修改 Goal 的真实远程对照仍待外部 relay 恢复后执行。
+
 ## 本轮交付物
 
 完整当前 changed + untracked 路径、文件总行数与字节数见 [files.md](files.md)，不是 diff 增量行数。主要改动包括 System3 Goal 路由、Reflex 上下文投影/可恢复记忆、普通监督/原生恢复、人工输入优先；Subagent 控制队列与 Codex evidence / verification-target 采集；专用 Reflex 设置页；计量、持久化与 SDK 投影。
