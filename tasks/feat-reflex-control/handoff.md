@@ -2,13 +2,20 @@
 
 ## TL;DR
 
-- Harness 本轮实现已提交并推送到 `feat-reflex-control`；Frontend `feat-reflex-control` 也已提交并推送；尚未创建 PR 或合并 main。上一批品牌、MIT 与 GitHub 工作已合 main，用户授权完成前后端并最终合 main，授权持续有效。
+- Harness 本轮实现已提交并推送到 `feat-reflex-control`；Frontend `feat-reflex-control` 也已提交并推送；两仓 Draft PR #1 已存在但尚未合并 main。上一批品牌、MIT 与 GitHub 工作已合 main，用户授权完成前后端并最终合 main，授权持续有效。
 - 统一验收入口为 [测试验收目标清单](../../docs/feat-reflex-control/acceptance-checklist.zh.md)：37 项目标、12 条完整用户流程，分别标明真实证据、回归与缺口；收尾先核对此页。
 - Context v3 的 Host16 真实浏览器财务→完整 Host 重启→自动恢复，以及 TS/Python 录制与独立重放全部通过；旧误删、自动恢复失败与多余检索证据仍保留。
-- Goal 首轮 Codex 真实浏览器增量 JSON 任务通过；受控 native stall 恢复 v4 真实 API / Codex / 正常终态 / 产物通过。狭义受控重复失败和 Host20 语义偏航均有真实纠偏、原生输入消费、结构化 verification-target、独立产物与 `improved`；健康长任务误干预、用户中途改 Goal 和正式 Electron 仍待验收。
+- Goal 首轮 Codex 真实浏览器增量 JSON 任务通过；受控 native stall 恢复 v4 真实 API / Codex / 正常终态 / 产物通过。狭义受控重复失败和 Host20 语义试验均记录真实纠偏信号、原生输入消费、结构化 verification-target 与 `improved`，但 Host20 原始提示本身包含后续财务路径；最新严格因果试验 v3/v6 虽已确认真实文件变更→Reflex `unrelated`→realign accepted→Codex native consumed，仍未产出纠偏后的财务文件，因此严格语义闭环仍未通过。健康长任务误干预、用户中途改 Goal 和正式 Electron 仍待验收。
 - Host17 字面量首次试验失败保留；透明传输观察的真实 literal unittest 已61.77秒通过。监督连续证据后缀、独立语义触发与同证据去重已107 tests/严格100%；Host20 真实语义试验已取得 correction-loop target 与 `improved`，旧 Host16/Host19/v5/v6/v7 失败记录继续保留。
 - C-06 真实跨进程缓存配对已通过：四条件、12 轮、三个独立 CLI 进程、按行 remove、恢复、cache/session 前缀保护和路由/工具稳定性均有脱敏证据 `docs/feat-reflex-control/evidence/cache-c06-real.{md,zh.md,json}`；不宣称供应商冷缓存或成本收益。
 - F-01 Web 配置真实保存、重启恢复和真实请求 low 已通过，随后恢复部署默认 high；证据 `docs/feat-reflex-control/evidence/reflex-settings-real.{md,zh.md,json}`。Frontend `feat-reflex-control` 已固定 Harness revision，unsigned macOS arm64 目录包的 Electron 正常启动、配置保存/重启、Safe Mode 和恢复已通过；恢复页系统 200% 与页面级 200% 缩放矩阵均已通过，签名/公证及 PR/main 合并仍未完成；所有 Web server7–13 已停止。
+
+### 2026-10-11 最新收口状态
+
+- [x] Harness 最新推送修复 Codex v2 字符串 `FileUpdateChange.kind` 解析，并识别真实 `collabAgentToolCall`；相关 Codex/System3/监督回归 3 个文件、200 项通过，Ruff 双检查和 Harness pre-push 构建门禁通过。
+- [x] Frontend release workflow 已固定该 Harness revision；本地 runtime manifest 为同一 SHA、`sourceDirty=false`，RunAsNode 探针 HTTP 200，APUS Reflex Harness 品牌、MIT/NOTICE 逐字节比对通过；Frontend 最新提交已推送。
+- [ ] 严格真实语义闭环仍未通过：Codex 父线程的根文件变更可被观察并触发调整，但调整被消费后没有稳定恢复到原始 Goal 的下一步；Codex app-server 子线程目前也没有自动聚合进父监督连接。该限制必须在发布说明中保留，不能标记为完成。
+- [ ] 两仓 PR #1 仍为 Draft/UNSTABLE；最新官方 annotation 为 Actions budget 阻止 job 启动，尚无远端代码测试结果。签名、公证、用户中途改 Goal、健康长任务无误干预和远端首字节仍待验收。
 
 ## 本轮交付物
 
