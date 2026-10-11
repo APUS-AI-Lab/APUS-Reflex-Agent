@@ -37,7 +37,7 @@
       "cases": 3,
       "retrievalHits": 2,
       "retrievalHitRate": 0.6666666666666666,
-      "promptBytes": 118,
+      "promptBytes": 120,
       "estimatedCacheReadBytes": 0,
       "cacheReadRatio": 0
     },
@@ -47,9 +47,9 @@
       "cases": 3,
       "retrievalHits": 2,
       "retrievalHitRate": 0.6666666666666666,
-      "promptBytes": 118,
+      "promptBytes": 120,
       "estimatedCacheReadBytes": 79,
-      "cacheReadRatio": 0.6694915254237288
+      "cacheReadRatio": 0.6583333333333333
     },
     {
       "summaryTree": true,
@@ -57,7 +57,7 @@
       "cases": 3,
       "retrievalHits": 3,
       "retrievalHitRate": 1,
-      "promptBytes": 204,
+      "promptBytes": 206,
       "estimatedCacheReadBytes": 0,
       "cacheReadRatio": 0
     },
@@ -67,10 +67,10 @@
       "cases": 3,
       "retrievalHits": 3,
       "retrievalHitRate": 1,
-      "promptBytes": 204,
-      "estimatedCacheReadBytes": 165,
-      "cacheReadRatio": 0.8088235294117647
+      "promptBytes": 206,
+      "estimatedCacheReadBytes": 133,
+      "cacheReadRatio": 0.6456310679611651
     }
   ],
-  "interpretation": "Deterministic local ablation only; estimated cache bytes are layout reuse, not provider billing or a cache-hit claim."
+  "interpretation": "Deterministic local 2x2 ablation using the Continuum summary tree and stable-prefix layout instrument; reused bytes are a local prefix measurement, not provider cache hits, billing, or latency."
 }

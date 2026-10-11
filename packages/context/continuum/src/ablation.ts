@@ -1,5 +1,7 @@
 /** Deterministic 2x2 experiment for deciding whether tree navigation and stable cache layout help. */
 
+import { buildContinuumSummaryTree, findContinuumSummaryTreeItems, measureContinuumStableCacheLayouts } from './summary-tree.ts'
+
 /** One frozen long-history query used by the local ablation. */
 export interface ContinuumAblationCase {
   readonly id: string
@@ -24,13 +26,19 @@ export interface ContinuumAblationResult {
 /** Run the same frozen corpus through all four strategies. */
 export function runContinuumAblation(cases: readonly ContinuumAblationCase[]): readonly ContinuumAblationResult[] {
   if (cases.length === 0) throw new TypeError('ablation corpus must not be empty')
+  const tree = buildContinuumSummaryTree(cases.map(item => ({ ...item, scope: 'ablation', kind: 'case' })))
   return [false, true].flatMap(summaryTree => [false, true].map((stableCache) => {
-    const promptBytes = cases.reduce((total, item) => total + utf8(`${item.content}\n${summaryTree ? item.summary : ''}`), 0)
+    const layouts = cases.map((_, index) => cases.slice(0, index + 1).map(entry => `${entry.content}\n${summaryTree ? entry.summary : ''}`).join('\n'))
+    const promptBytes = utf8(layouts.at(-1) ?? '')
     const retrievalHits = cases.filter((item) => {
-      const searchable = `${item.content} ${summaryTree ? item.summary : ''}`.toLocaleLowerCase()
-      return item.expectedTerms.every(term => searchable.includes(term.toLocaleLowerCase()))
+      if (!summaryTree) {
+        const searchable = item.content.toLocaleLowerCase()
+        return item.expectedTerms.every(term => searchable.includes(term.toLocaleLowerCase()))
+      }
+      return findContinuumSummaryTreeItems(tree, cases.map(entry => ({ ...entry, scope: 'ablation', kind: 'case' })), item.expectedTerms).includes(item.id)
     }).length
-    const estimatedCacheReadBytes = stableCache ? Math.max(0, promptBytes - utf8(cases.at(-1)?.content ?? '')) : 0
+    const measurements = measureContinuumStableCacheLayouts(layouts)
+    const estimatedCacheReadBytes = stableCache ? measurements.at(-1)?.reusedPrefixBytes ?? 0 : 0
     return Object.freeze({
       summaryTree, stableCache, cases: cases.length, retrievalHits,
       retrievalHitRate: retrievalHits / cases.length, promptBytes,
