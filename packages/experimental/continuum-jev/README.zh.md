@@ -9,7 +9,7 @@ kind: package-reference
 
 ## 概述
 
-本包是 APUS Continuum 的 Reflex 专属决策适配器。它保留确定性本地 baseline，支持 `off`、`shadow`、`active`，把 Jev 输入限制在已检索候选内，拒绝模型臆造 ID，并在 provider 失败或置信度不足时回退。本包可以把决策回执追加到 Session 日志并支持回放；自身不负责检索，也不单独宣称无限上下文。
+本包是 APUS Continuum 的 Reflex 专属决策适配器。它保留确定性本地 baseline，支持 `off`、`shadow`、`active`，把 Jev 输入限制在已检索候选内，拒绝模型臆造 ID，并在 provider 失败、超时或置信度不足时回退。本包可以把决策回执追加到 Session 日志并支持回放；自身不负责检索，也不单独宣称无限上下文。
 
 ## 目录
 
@@ -22,7 +22,7 @@ kind: package-reference
 <a id="use-this-package"></a>
 ## 使用本包
 
-在有限本地检索之后调用 `selectContinuumMemory`，或加载默认的 `ContinuumJevPlugin` profile service，让 `ContinuumMemory` 在同一步消费者中调用 selector。`off` 保持 baseline；`shadow` 只比较 Jev 建议并返回 baseline；`active` 只接受候选集中且达到 `minConfidence` 的选择。
+在有限本地检索之后调用 `selectContinuumMemory`，或加载默认的 `ContinuumJevPlugin` profile service，让 `ContinuumMemory` 在同一步消费者中调用 selector。`off` 保持 baseline；`shadow` 只比较 Jev 建议并返回 baseline；`active` 只接受候选集中且达到 `minConfidence` 的选择；显式 `timeoutMs` 限制 provider 等待，超时回到确定性 baseline。
 
 <a id="understand-the-implementation"></a>
 ## 理解实现
@@ -52,7 +52,7 @@ Jev sidecar 使用独立请求；后续消费者显式注入记录前，主模�
 
 - 适配器不负责检索或记录准入。profile service 只在 Continuum 提供的有限候选中选择，不会臆造事实。
 - 真实 Jev 质量和延迟必须在 gateway 可达且配置完整时测试；fake provider 不能证明模型效果。
-- 多选、摘要树、缓存测量和权限过滤留待后续 Continuum 阶段。
+- 当前 Jev 单选协议限制了多选；摘要树、缓存测量和权限过滤留待后续 Continuum 阶段。
 
 <a id="dev-note"></a>
 ### 开发备注

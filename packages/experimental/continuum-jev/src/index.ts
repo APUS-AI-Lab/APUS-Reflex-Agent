@@ -26,6 +26,8 @@ export interface MemorySelectionRequest {
 export interface ContinuumJevConfig {
   readonly mode: ContinuumJevMode
   readonly minConfidence: number
+  /** Maximum provider wait in milliseconds; omitted means no adapter timeout. */
+  readonly timeoutMs?: number
 }
 
 /** Configuration error when the Reflex-only active switch has no Jev provider. */
@@ -72,12 +74,15 @@ export type ContinuumJev = Pick<Jev, 'resolve' | 'decide'>
 export interface ContinuumJevProfileConfig {
   readonly mode: ContinuumJevMode
   readonly minConfidence: number
+  /** Maximum provider wait in milliseconds; omitted means no adapter timeout. */
+  readonly timeoutMs?: number
 }
 
 /** Schemastery configuration for the profile selector service. */
 export const ContinuumJevProfileConfig: z<ContinuumJevProfileConfig> = z.object({
   mode: z.union([z.const('off'), z.const('shadow'), z.const('active')]).default('off'),
   minConfidence: z.number().min(0).max(1).default(0.8),
+  timeoutMs: z.number().step(1).min(1).default(2_000),
 })
 
 /** Cordis service that mounts the Jev selector consumed by ContinuumMemory. */
@@ -139,9 +144,12 @@ export async function selectContinuumMemory(
   const resolvedRequest = { ...request, model: spec.model }
   let outcome: JevOutcome
   try {
-    outcome = await jev.decide(resolvedRequest, signal)
+    outcome = await decideWithTimeout(jev, resolvedRequest, signal, config.timeoutMs)
   } catch (error) {
     if (signal?.aborted) throw error
+    if (error instanceof ContinuumJevTimeoutError) {
+      return { mode: config.mode, selectedIds: baseline, baselineIds: baseline, outcome: 'unknown', failure: 'timeout', request: resolvedRequest }
+    }
     return { mode: config.mode, selectedIds: baseline, baselineIds: baseline, outcome: 'unknown', failure: 'provider-error', request: resolvedRequest }
   }
   if (outcome.kind !== 'ok') {
@@ -199,6 +207,41 @@ function baselineSelection(candidates: readonly MemorySelectionCandidate[]): rea
   return best === undefined ? [] : [best.id]
 }
 
+export class ContinuumJevTimeoutError extends Error {
+  constructor() {
+    super('Continuum memory Jev decision timed out')
+    this.name = 'ContinuumJevTimeoutError'
+  }
+}
+
+async function decideWithTimeout(
+  jev: ContinuumJev,
+  request: JevRequest,
+  signal: AbortSignal | undefined,
+  timeoutMs: number | undefined,
+): Promise<JevOutcome> {
+  if (timeoutMs === undefined) return await jev.decide(request, signal)
+  const controller = new AbortController()
+  const forwardAbort = () => { controller.abort(signal?.reason) }
+  if (signal?.aborted) forwardAbort()
+  else signal?.addEventListener('abort', forwardAbort, { once: true })
+  let timer: ReturnType<typeof setTimeout> | undefined
+  try {
+    const timeout = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => {
+        controller.abort(new ContinuumJevTimeoutError())
+        reject(new ContinuumJevTimeoutError())
+      }, timeoutMs)
+    })
+    return await Promise.race([jev.decide(request, controller.signal), timeout])
+  } finally {
+    if (timer !== undefined) clearTimeout(timer)
+    signal?.removeEventListener('abort', forwardAbort)
+  }
+}
+
 function assertConfig(config: ContinuumJevConfig): void {
   if (!Number.isFinite(config.minConfidence) || config.minConfidence < 0 || config.minConfidence > 1) throw new TypeError('minConfidence must be in [0, 1]')
+  if (config.timeoutMs !== undefined && (!Number.isFinite(config.timeoutMs) || config.timeoutMs <= 0)) throw new TypeError('timeoutMs must be a positive integer')
+  if (config.timeoutMs !== undefined && !Number.isInteger(config.timeoutMs)) throw new TypeError('timeoutMs must be a positive integer')
 }

@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-This package is the Reflex-only decision adapter for APUS Continuum. It keeps a deterministic local baseline, supports `off`, `shadow`, and `active` modes, bounds Jev input to retrieved candidates, rejects invented IDs, and falls back on provider failure or low confidence. It can append a replayable decision receipt to the Session log. It does not retrieve records or claim unlimited context by itself.
+This package is the Reflex-only decision adapter for APUS Continuum. It keeps a deterministic local baseline, supports `off`, `shadow`, and `active` modes, bounds Jev input to retrieved candidates, rejects invented IDs, and falls back on provider failure, timeout, or low confidence. It can append a replayable decision receipt to the Session log. It does not retrieve records or claim unlimited context by itself.
 
 ## Table of Contents
 
@@ -22,7 +22,7 @@ This package is the Reflex-only decision adapter for APUS Continuum. It keeps a 
 <a id="use-this-package"></a>
 ## Use this package
 
-Call `selectContinuumMemory` after a bounded local retrieval step, or load the default `ContinuumJevPlugin` profile service so `ContinuumMemory` can call the selector during the same-step consumer. `off` preserves the baseline path. `shadow` records Jev advice for comparison while returning the baseline. `active` accepts only a supplied candidate above `minConfidence`.
+Call `selectContinuumMemory` after a bounded local retrieval step, or load the default `ContinuumJevPlugin` profile service so `ContinuumMemory` can call the selector during the same-step consumer. `off` preserves the baseline path. `shadow` records Jev advice for comparison while returning the baseline. `active` accepts only a supplied candidate above `minConfidence`; an explicit `timeoutMs` bounds provider waiting and returns the deterministic baseline on timeout.
 
 <a id="understand-the-implementation"></a>
 ## Understand the implementation
@@ -52,7 +52,7 @@ No direct main-route cache effect.
 
 - The adapter does not implement retrieval or record admission. The profile service only selects among the bounded candidates supplied by Continuum; it does not invent facts.
 - Real Jev quality and latency require a reachable configured gateway; fake-provider tests do not establish model effectiveness.
-- Multi-selection, summary-tree navigation, cache measurement, and permission filtering remain later Continuum stages.
+- Multi-selection remains limited by the current Jev single-choice protocol; summary-tree navigation, cache measurement, and permission filtering belong to later Continuum stages.
 
 <a id="dev-note"></a>
 ### Dev Note

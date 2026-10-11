@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { MemoryId } from '@deepseek-ai/dsh-continuum'
 import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
-import ContinuumJevPlugin, { ContinuumJevUnavailableError, selectContinuumMemory, recordContinuumMemoryDecision, latestContinuumMemoryDecision, type ContinuumJev } from '../src/index.ts'
+import ContinuumJevPlugin, { ContinuumJevTimeoutError, ContinuumJevUnavailableError, selectContinuumMemory, recordContinuumMemoryDecision, latestContinuumMemoryDecision, type ContinuumJev } from '../src/index.ts'
 import { Context } from '@deepseek-ai/cordis'
 import type { Agent } from '@deepseek-ai/dsh-agent'
 
@@ -34,11 +34,28 @@ describe('Continuum Jev controller', () => {
     expect(result).toMatchObject({ outcome: 'jev', selectedIds: [second.id], baselineIds: [first.id] })
   })
 
+  it('treats an explicit abstain as an empty active selection', async () => {
+    const abstain = await selectContinuumMemory(fake('none'), { mode: 'active', minConfidence: 0.8 }, input)
+    expect(abstain).toMatchObject({ outcome: 'jev', selectedIds: [], baselineIds: [first.id] })
+  })
+
   it('falls back on low confidence and invalid choices', async () => {
     const low = await selectContinuumMemory(fake(String(second.id), 0.2), { mode: 'active', minConfidence: 0.8 }, input)
     const invalid = await selectContinuumMemory(fake('invented'), { mode: 'active', minConfidence: 0.8 }, input)
     expect(low).toMatchObject({ outcome: 'unknown', failure: 'low-confidence', selectedIds: [first.id] })
     expect(invalid).toMatchObject({ outcome: 'unknown', failure: 'invalid-choice', selectedIds: [first.id] })
+  })
+
+  it('falls back to baseline when the configured Jev deadline expires', async () => {
+    const provider: ContinuumJev = {
+      resolve: fake(String(second.id)).resolve,
+      decide: async (_request, signal) => {
+        await new Promise<void>((resolve) => { signal?.addEventListener('abort', () => { resolve() }, { once: true }) })
+        throw new ContinuumJevTimeoutError()
+      },
+    }
+    const result = await selectContinuumMemory(provider, { mode: 'active', minConfidence: 0.8, timeoutMs: 5 }, input)
+    expect(result).toMatchObject({ outcome: 'unknown', failure: 'timeout', selectedIds: [first.id] })
   })
 
   it('propagates cancellation before a Jev request', async () => {
