@@ -124,7 +124,7 @@ Host16 完整通过并完成本轮 SDK/浏览器验收。Host17 已由 root 收�
 
 - [x] 真实 Jev 评测器改为优先读取 `JEV_ENDPOINT`、`JEV_MODEL`、`SYSTEM3_ENTRY_MIN_CONFIDENCE`，兼容 profile YAML 回退；修复当前部署 overlay 不在旧 regex 中导致的假失败。
 - [x] two-tier 50 题 route decision p50/p95=309/588ms；four-tier 30 题 p50/p95=317/405ms；无传输失败。证据见 `docs/feat-reflex-control/evidence/entry-routing-eval-v2.{json,md,zh.md}`。
-- [ ] 本地 admission/status、远端首字节、完整回答耗时和用户可见失败回退仍待 R-04 完整验收。
+- [x] 本地 admission/status 与首个用户回显已测量；队列状态 16ms，正常/6× CPU 回显矩阵 p95 为 82.275/523.978ms。远端首字节、完整回答耗时和用户可见失败回退仍待 R-04 完整验收。
 ## 2026-10-11 CI 回读
 
 - Harness PR #1 当前分支的 Jev/System3 job 与两次 rerun 均在 runner 分配前失败（`runner_id=0`、0 steps、约 3 秒），未执行代码测试；不能归因源码。
@@ -137,3 +137,16 @@ Host16 完整通过并完成本轮 SDK/浏览器验收。Host17 已由 root 收�
 - 两次健康 Codex 对照在 150 秒取消预算处 `aborted`，零自动 steer；字面量 relay 记录上游请求零首字节。该事实不构成健康长任务完整通过，脱敏记录见 `docs/feat-reflex-control/evidence/healthy-codex-20261011.*`。
 - Frontend `feat-reflex-control` 已推送，加入真实 Electron 恢复界面 200% 系统缩放门禁。四 scale 共 160 变体通过（scale 2 为 40 变体），typecheck 与完整 179 files / 1577 tests 通过。
 - 系统界面 scale 2 不等于应用内页面 zoom factor 2；页面级 200%、正式签名/公证、会话/启动失败恢复仍待验收，不能将此 smoke 写成最终包完整通过。
+
+## 2026-10-11 R-04 本地首反馈
+
+- [x] 真实 Playwright 队列场景在挂起第一轮时提交第二条输入；本地 `Sending…` admission/status 实测 16ms，低于 1000ms，输入框清空且保持可编辑。证据见 `docs/feat-reflex-control/evidence/r04-admission-status-queue.*`。
+- [x] 修正 writer-held Web 快照里的旧 DSH 产品文案，保持真实上游归属不变。
+- [ ] R-04 的远端首字节、完整回答时延和用户可见失败回退仍未测量；16ms 不能外推为模型响应时间。
+- [x] 新增本地回显性能矩阵：真实 Playwright、短/业务/长中文输入，正常 CPU p50/p95/max 为 57.779/82.275/82.275ms，6× CPU throttle 为 373.555/523.978/523.978ms，均低于 1,000ms。证据见 `docs/feat-reflex-control/evidence/r04-local-echo-perf.*`。
+
+## 2026-10-11 Electron 包审计
+
+- [x] 直接产物审计确认 `APUS Reflex Harness` 品牌、Info.plist 标题，以及四个 MIT/NOTICE 文件逐字节保留；可关闭未签名目录包的许可证/品牌保留项。
+- [ ] 该目录包 runtime manifest 仍固定旧 Harness revision，未包含当前监督修复；需要用当前 clean revision 重建再验收。
+- [ ] 本机没有有效 Developer ID 身份或公证票据；签名、公证、staple 必须在具备 Apple CI secrets/runner 的环境完成。

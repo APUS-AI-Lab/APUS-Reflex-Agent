@@ -53,7 +53,7 @@ P0 是本轮功能完整交付的必需项；P1 是性能或推广范围的验�
 | R-01 / P0 | 用户问“0.10 元加 0.20 元是多少”；Reflex 先判断，实际生成请求使用选定模型，用户得到 0.30 元。 | 真实通过；[路由记录](evidence/browser-progress.json)的 routing 部分与[截图](evidence/reflex-ux-routing.png)。该旧报告其他部分由本页所引新证据替代。 |
 | R-02 / P0 | 用户设置 Goal 并要求 Codex 为账龄工具增加 JSON 输出；首轮自动委派，原 CSV 不变，新增结果及已有行为通过独立验证。 | 真实浏览器通过；[独立报告](evidence/browser-goal-json-independent.json)、[10 项测试](evidence/browser-goal-json-tests.log)、[完成截图](evidence/reflex-goal-json-completed.png)。 |
 | R-03 / P0 | 模型判断失败、弃权或无可用候选时执行配置的失败处理，不越权切换、不丢输入；明确用户手动选型与自动路由的优先级，并验证实际行为。 | [控制器手动选型保护](../../packages/api/session-controller/tests/prompt-router.host.spec.ts)、[入口](../../packages/experimental/system3/tests/entry-routing.spec.ts)与[Goal 回归](../../packages/experimental/system3/tests/goal-entry-routing.spec.ts)合计93项通过；[真实浏览器路由记录](evidence/browser-manual-routing.json)也通过固定模型、恢复自动、手动优先及对应请求完成。可见失败/无候选路径仍待测；该记录来自 dirty 开发构建。 |
-| R-04 / P1 | 固定简单、复杂、含糊及明确委派题集，对比自动路由与固定模型，记录正确性、入口额外延迟、首个可见输出及总耗时。 | [真实 Jev v2 评测](evidence/entry-routing-eval-v2.zh.md)报告路由决策 p50/p95：two-tier 50 题为 309/588ms，four-tier 30 题为 317/405ms，没有传输失败。本地 admission/status、远端首字节、完整回答耗时和用户可见回退仍待测。 |
+| R-04 / P1 | 固定简单、复杂、含糊及明确委派题集，对比自动路由与固定模型，记录正确性、入口额外延迟、首个可见输出及总耗时。 | [本地 admission/status](evidence/r04-admission-status-queue.zh.md)在真实 Playwright 队列场景中以 16ms 通过；[本地用户回显性能](evidence/r04-local-echo-perf.zh.md)在短题、业务题、长文本及正常/6 倍 CPU 降速下均低于 1,000ms；[真实 Jev v2 评测](evidence/entry-routing-eval-v2.zh.md)报告路由决策 p50/p95：two-tier 50 题为 309/588ms，four-tier 30 题为 317/405ms，没有传输失败。远端首字节、完整回答耗时和用户可见回退仍待测。 |
 
 ### 长时 Goal 监督与纠偏
 
@@ -87,13 +87,13 @@ P0 是本轮功能完整交付的必需项；P1 是性能或推广范围的验�
 | --- | --- | --- |
 | F-01 / P0 | 用户打开专用“Reflex 模型配置”页，编辑服务、模型与 effort，测试连接并保存；刷新和完整重启后仍保留，真实判断使用保存值。 | 真实通过；[F-01 脱敏报告](evidence/reflex-settings-real.zh.md)证实规范模型连接判断、无效模型预期失败、low 保存、跨进程重启后仍为 low、真实请求采用 low，随后恢复部署默认 high。 |
 | F-02 / P0 | 错误 key 或无效配置显式报错，不覆盖已保存的有效配置；UI 和证据不回显秘密。 | [真实错误凭据截图](evidence/reflex-ux-settings-rejected-key.png)及配置回归通过；不把“测试连接成功”当任务执行成功。 |
-| F-03 / P0 | 最终 Electron 包在独立用户目录保存配置，退出后重启；safe mode 可启动，正常模式恢复原设置，用户已有配置不丢失。 | Frontend `feat-reflex-control` 的未签名 macOS arm64 目录包通过正常启动、Reflex 配置保存/重启、Safe Mode、正常模式恢复、服务/模型保留和不显示密钥；恢复界面 200% 系统缩放 40 变体通过；签名/公证和页面级 200% 缩放仍待测。 |
+| F-03 / P0 | 最终 Electron 包在独立用户目录保存配置，退出后重启；safe mode 可启动，正常模式恢复原设置，用户已有配置不丢失。 | Frontend `feat-reflex-control` 的未签名 macOS arm64 目录包通过正常启动、Reflex 配置保存/重启、Safe Mode、正常模式恢复、服务/模型保留和不显示密钥；恢复界面 200% 系统缩放 40 变体通过；[包审计](evidence/electron-package-license-audit.zh.md)确认品牌与 MIT/NOTICE 保留；当前 runtime 修订一致性、签名/公证和页面级 200% 缩放仍待测。 |
 
 ### 品牌、许可与交付
 
 | ID / 级别 | 场景与通过标准 | 当前证据与缺口 |
 | --- | --- | --- |
-| D-01 / P0 | 用户可见品牌为 APUS Reflex Harness，配置页称 Reflex；MIT 原版权、许可和上游致谢随产物保留。 | 上一批品牌已合 main；本批 324 个 Harness 包 MIT 与第三方通知检查通过。最终安装包中的品牌与许可仍随 F-03 核对。 |
+| D-01 / P0 | 用户可见品牌为 APUS Reflex Harness，配置页称 Reflex；MIT 原版权、许可和上游致谢随产物保留。 | 上一批品牌已合 main；本批 324 个 Harness 包 MIT 与第三方通知检查通过。未签名 Electron 目录包已直接通过品牌与四个 MIT/NOTICE 文件逐字节比对，见[包审计](evidence/electron-package-license-audit.zh.md)；当前 runtime 一致性和签名/公证产物仍归入 F-03。 |
 | D-02 / P0 | 模型可见输入、自动纠偏、上下文投影和恢复均可从日志重建；TypeScript/Python 消费同一事件，历史格式不被覆盖。 | 定向回归、持久化检查及 Goal、监督、恢复、上下文的双 SDK 录制/独立回放通过；外部模型夹具不算真实模型 E2E。 |
 | D-03 / P0 | 后端提交形成干净版本，前端固定该版本；生成真实运行包，manifest 无 dirty 标记，实际启动与配置链路通过。 | Harness 与 Frontend `feat-reflex-control` 修订均已提交并推送；发布 workflow 固定该 Harness 修订，部署 manifest 报告匹配的干净源码且 `sourceDirty=false`，未签名目录包的启动/配置流程通过。 |
 | D-04 / P0 | 必需检查通过、独立审查无未解决阻断、PR 按授权合并两仓 main；回读远端与 CI，并保留交接。 | 进行中；相关构建、lint、Ruff、文档和包检查已有通过记录，真实闭环与正式包仍阻断完整交付。CI 未运行或仍排队都不算通过。 |

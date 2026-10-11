@@ -5,7 +5,7 @@
 目标：完成 APUS Reflex Harness 的最终可发布闭环，以真实用户 E2E 证明入口路由、Reflex 模型配置、Codex 长时 Goal 监督与纠偏、动态上下文恢复和 UIUX；保护 cache 区与原始 Session，完成 MIT/NOTICE/安全/贡献者开源门禁、双仓 CI 和 PR/main 合并。
 
 - [x] P0：完成一条真实受控语义监督闭环：偏航 → Reflex realign → Codex 消费 → verification-target → improved → 独立产物验证（Host20）。
-- [ ] P0：冻结并实测 1 秒 admission/status、远端首字节/总耗时三段指标；R-04 路由决策 p50/p95 已实测 two-tier 309/588ms、four-tier 317/405ms。
+- [ ] P0：冻结并实测 1 秒 admission/status、远端首字节/总耗时三段指标；本地队列 admission/status 已实测 14ms，R-04 路由决策 p50/p95 已实测 two-tier 309/588ms、four-tier 317/405ms，远端与可见回退仍待测。
 - [ ] P0：完成健康长任务无误干预和用户中途改 Goal 的真实 UI/E2E 对照。
 - [ ] P0：完成 Electron 页面级 200%、启动失败恢复、会话恢复、签名/公证和包内 MIT/NOTICE 核对；恢复界面 200% 系统缩放 40 变体已通过。
 - [ ] P0：完成 Harness Jev/System3 CI、秘密扫描、脱敏回归，并将两个 Draft PR 转 Ready；Host20 真实闭环已通过。

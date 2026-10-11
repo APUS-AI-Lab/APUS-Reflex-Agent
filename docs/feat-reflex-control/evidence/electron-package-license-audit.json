@@ -1,0 +1,33 @@
+{
+  "scenario": "electron-directory-package-license-brand-audit",
+  "artifact": "APUS Reflex Harness Dev.app",
+  "platform": "darwin/arm64",
+  "brand": {
+    "infoPlist": "APUS Reflex Harness Dev",
+    "brandJsonFullName": "APUS Reflex Harness",
+    "brandJsonShortName": "APUS / REFLEX",
+    "status": "passed"
+  },
+  "licenses": {
+    "LICENSE.txt": "byte-equal to Frontend LICENSE",
+    "HARNESS-LICENSE.txt": "byte-equal to Harness LICENSE",
+    "THIRD_PARTY_NOTICES.txt": "byte-equal to Frontend THIRD_PARTY_NOTICES.md",
+    "HARNESS-THIRD_PARTY_NOTICES.txt": "byte-equal to Harness THIRD_PARTY_NOTICES.md",
+    "status": "passed"
+  },
+  "runtimeManifest": {
+    "platform": "darwin",
+    "arch": "arm64",
+    "mode": "deployed",
+    "sourceDirty": false,
+    "sourceRevision": "older than current Harness branch",
+    "currentHarnessHead": "current feat-reflex-control branch",
+    "revisionMatchesCurrentHarness": false
+  },
+  "signing": {
+    "validDeveloperIdIdentity": false,
+    "stapledNotarizationTicket": false,
+    "status": "pending-external-credentials"
+  },
+  "conclusion": "Brand and MIT/NOTICE retention pass for the unsigned directory artifact; current-runtime parity and signed/notarized release remain pending."
+}

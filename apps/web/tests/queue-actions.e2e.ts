@@ -121,10 +121,14 @@ describe('web e2e: queue row actions', () => {
     }, { times: 1 })
     try {
       await input.fill(REMOVE)
+      const submittedAt = performance.now()
       await input.press('Enter')
       await received.promise
       const pending = page.locator('[data-queue-dock] [data-submission-echo]')
       await pending.getByRole('status').waitFor()
+      const visibleAt = performance.now()
+      const admissionLatencyMs = Math.round(visibleAt - submittedAt)
+      console.info(`[R-04] local admission/status visible in ${admissionLatencyMs}ms`)
       expect(await pending.getByRole('status').textContent()).toBe('Sending…')
       expect(await pending.getByRole('button').count()).toBe(3)
       expect(await pending.getByRole('button').evaluateAll(buttons =>
