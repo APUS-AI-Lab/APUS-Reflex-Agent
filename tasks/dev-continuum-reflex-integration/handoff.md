@@ -5,7 +5,7 @@
 - 当前分支：`dev/continuum-reflex-integration`
 - 基线：`feat-reflex-control` 当前提交。
 - 目标：在控制面主力分支上集成 `feat-continuum-memory`，完成冲突解释和场景化验收。
-- 当前状态：已完成本地合并、冲突修复、构建和定向回归；产品级自动记忆录入链路仍未接入，不能宣称完整 E2E 已通过。
+- 当前状态：已完成本地合并、冲突修复、构建、定向回归和真实 Jev/DeepSeek 评估；产品级自动记忆录入链路仍未接入，不能宣称完整产品 E2E 已通过。
 
 ## 本轮交付物
 
@@ -33,12 +33,15 @@
 - [x] `pnpm run typecheck`、`pnpm run lint`、TypeScript aliases、Cordis catalog 全部通过。
 - [x] RunPod Jev endpoint health 返回 ready；未提供有效 `JEV_API_KEY` 时 `/v1/models` 正确返回 401，说明真实 Jev E2E 不能伪造为通过。
 - [x] 修复运行时开关开启后仍解析为 `off` 的配置重叠问题；profile 默认使用确定性 `shadow`，Jev provider 仍保持 `off`。
+- [x] 只读检查 RunPod `Jev-Serving` pod：`/root/.config/openjev/gateway.key` 存在且权限为 `600`，真实 key 访问 `/v1/models` 返回 200；key 未写入仓库。
+- [x] `scripts/continuum-live-e2e.ts` 使用真实 Jev 完成：选择 `migration`，置信度约 `0.7991`，延迟约 `1.9s`。
+- [x] `scripts/continuum-evaluation.ts` 使用真实 Jev + DeepSeek gateway 完成 20 个变体/任务单元；11 个适用断言全部通过，结果写入 `docs/feat-continuum-memory/continuum-evaluation-results.json`。
 
 ## 未完成的正式验收
 
 - [ ] 接入生产级 memory admission caller；当前 `ContinuumMemoryService.create()` 仍是显式 API，只有测试 consumer 使用它。
 - [ ] 补齐真实链路：用户输入 → memory-record → Session flush → 重启恢复 → recall 注入 → 模型请求。
-- [ ] 在具备真实凭据的环境重跑 System3 real-API E2E；本地 8 个控制面 E2E 因缺少凭据全部 skip，不能计为通过。
+- [ ] 补齐并重跑 System3 real-API E2E：本轮已提供 Jev/DeepSeek 凭据，但 8 个控制面用例中只有 1 个通过，其他用例暴露部署 patch 的静态 endpoint/阈值声明缺失或实际模型响应不满足断言；不能计为通过。
 - [ ] 重新设计并执行完整 Web built suite；当前只证明 Continuum 定向浏览器测试通过。
 - [ ] 全量 `pnpm run test` 尚未全绿：本次运行 19 个失败、2 个未处理错误；失败集中在合并前未修改的桌面/UI/workflow 基础设施测试，需单独归档或修复后才能宣称仓库级全绿。
 
