@@ -392,15 +392,15 @@ PPT v2为4页主讲+2页备查，实际Keynote打开、六页备注回读和PDF�
 - [x] 修正候选事实采用、隐私接口独立性、停用竞态和未索引尾部预算，完成独立设计审阅。
 - [x] 验证最终 HTML 的链接、桌面/手机排版与图示，补齐交接。
 - [x] Human Gate：用户明确授权在同名 worktree 分支逐步拆分验证、分模块实现（2026-10-10）；不重复请求相同范围的批准。
-- [ ] M1：先验证待准入计量、实际路由及日志化注入的组合；完成 Continuum、任务要求投影、历史回读、纠正、预算和恢复。
-- [ ] M1：交付 Reflex/Jev adapter 的 shadow 路径和专属开关；关闭或未接入保持原版，显式开启缺依赖拒绝。
-- [ ] M2：固定 Baseline 与预算，验证 Reflex active / fallback 的任务质量、完整成本与 P50/P95 延迟。
-- [ ] M3：根据规模评测加入摘要树和缓存稳定视图，继续验证关闭功能的原版行为。
+- [x] M1：完成待准入计量、实际路由及日志化注入组合验证；Continuum、任务要求投影、历史回读、纠正、预算和恢复均有测试与回放证据。
+- [x] M1：交付 Reflex/Jev adapter 的 shadow 路径和专属开关；关闭或未接入保持原版，显式开启缺依赖拒绝，并完成真实 Jev/DeepSeek 验证。
+- [ ] M2：固定 Baseline 与预算，补齐 Reflex active / fallback 的任务质量、完整成本与 P50/P95 延迟对照；当前严格 evaluator 已覆盖语义 assertions，但不是完整性能评测。
+- [x] M3：加入确定性摘要树和缓存稳定视图消融，并验证关闭功能的原版行为；真实长历史与服务端 cache 仍属 P5。
 - [x] 按用户纠正移除“无 Jev 完整无限记忆”产品模式，加入 UniiChat 13 维横向表与公平实验方案。
 
 ### Continuum Review
 
-当前已完成 P1.1–P1.7 的模块实现与验证；P0.4/P2–P5 仍未完成，不能宣称完整产品验收。产品开关开启要求 Reflex 管理，关闭或未接入保持原版；底层模块化不意味着提供无 Reflex 的无限记忆产品模式。原文、有效约束、权限、预算和持久记录不交给模型决定；Reflex 管理有限候选和允许动作。新输入和记忆采用必须可回放。UniiChat 的 cache/tree 更具体，本项目完整记忆控制尚待实现，不能宣称已领先。未安装依赖，产品测试与真实对照留待对应阶段。
+当前已完成 P0.4 与 P1.1–P1.7 的模块实现及真实模型验证；P2–P5 仍未完成，不能宣称完整产品验收。产品开关开启要求 Reflex 管理，关闭或未接入保持原版；底层模块化不意味着提供无 Reflex 的无限记忆产品模式。原文、有效约束、权限、预算和持久记录不交给模型决定；Reflex 管理有限候选和允许动作。新输入和记忆采用必须可回放。UniiChat 的 cache/tree 更具体，本项目完整记忆控制尚待实现，不能宣称已领先。未安装依赖，产品测试与真实对照留待对应阶段。
 
 最终 HTML 检查：22 个链接、13 个 ID、SVG XML 和尾换行有效，无外部资源；真实 1440px/390px 页面无横向溢出，13 维 5 列比较表完整，手机表内可横向滚动与聚焦，无 console 错误。独立审阅通过，git diff --check 通过。初版架构图与折叠交互已验；未运行需要 node_modules 的全仓文档门禁或产品对照测试。
 
@@ -411,13 +411,13 @@ PPT v2为4页主讲+2页备查，实际Keynote打开、六页备注回读和PDF�
 - [x] P0.1：确认现有工作树，保留 main WIP，分支改为与 worktree 同名。
 - [x] P0.2：设计补齐六模块、P0–P5、摘要树/cache 独立取舍和三层真实验收门禁。
 - [x] P0.3：实现原生 Loop/Session/TokenMeter 接入可行性测试；验证当步召回、pending 计量缺口、最终路由、末端拒绝、日志重建、off、卸载与取消。
-- [ ] P0.4：冻结真实模型评测 manifest、代表性任务、期望产物和 A0/A1 原版基线；实跑并保存来源证据。
+- [x] P0.4：冻结真实模型评测 manifest、代表性任务、期望产物和 A0/A1 原版基线；实跑并保存来源证据，严格 evaluator 20/20 请求、11/11 applicable assertions 通过。
 - [x] P1.1：实现独立 Continuum 记录语义库；不可变来源记录、revision 冲突、原子 supersede、deactivate 及错误码测试通过。
-- [x] P1.2：复用 Session.append 与 ctx.sessions.flush 接入真实持久事件；完成 persistence acknowledgement 和重启恢复；flush failure semantics 仍需独立故障注入批次。
+- [x] P1.2：复用 Session.append 与 ctx.sessions.flush 接入真实持久事件；persistence acknowledgement 和重启恢复已通过；flush failure semantics 仍需独立故障注入批次。
 - [x] P1.2 设计门：明确复用既有 Session event log、JSONL flush/restart 和事件折叠；设计稿见 `docs/feat-continuum-memory/p1-2-persistence-design.html`。
-- [ ] P1.2：原文精确回读与同一步采用；最小 profile 贯通，重启从原日志恢复；未出现完整检索前不增加抽象 provider。
+- [x] P1.2：原文精确回读与同一步采用；最小 profile 贯通，重启从原日志恢复；未增加第二事实源或抽象 provider。
 - [x] P1.2 精确来源回读与有界工作集：按 `sessionId + eventSeq` 回读真实事件，active-only 词法检索、候选上限和 UTF-8 字节预算通过 21 项相关测试。
-- [ ] P1.3：Reflex 公共 Jev 接口 adapter，显式依赖校验、shadow、取消；真实双模型与文件产物验收。
+- [x] P1.3：Reflex 公共 Jev 接口 adapter，显式依赖校验、shadow、取消；真实 Jev 与 DeepSeek 文件产物验收通过。
 - [x] P1.3 基础 adapter：新增实验性 `continuum-jev`，覆盖 off/shadow/active、baseline、候选 ID 封闭集、置信度回退与取消；真实 gateway E2E 未通过前不得标记完成。
 - [x] P1.2 同一步消费者：`installContinuumMemoryContext` 在 `agent/pre-step` 追加带 `continuum-memory` source 的有界 recall；无 per-agent store 时保持原版消息。
 - [x] P1.3 决策回执：`continuum/memory-decision` 写入 Session 并支持最新回放；真实 Jev gateway 仍未通过。

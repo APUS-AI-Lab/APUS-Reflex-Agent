@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-- 当前已进入分模块工程预览，使用 feat-continuum-memory 工作树；已交付 P1.1–P1.7 的可审计模块实现，仍未交付完整产品功能。
+- 当前已完成 P0.4、P1.1–P1.7 的可审计模块实现及真实模型验收，使用 feat-continuum-memory 工作树；P2–P5 和 flush 故障注入仍未交付。
 - 推荐名称 APUS Continuum（连续记忆）；HTML 是本轮设计入口，候选名未做重名核验。
 - 无限记忆为 Reflex 专属开关；关闭或未接入时兼容原版，不提供无 Reflex 的同等产品模式。
 - 用户已授权在同名 worktree 分支逐步拆分验证和实现；下一步完成 P0 基线，再进入 P1。
@@ -43,14 +43,14 @@ Harness 持有事实、权限、预算、版本和执行权。模型提炼先成
 ## 下一里程碑任务清单
 
 - [x] 用户已确认分模块实施，已读根 AGENTS.md、docs/architecture.md、docs/defensive-patterns.md、packages/AGENTS.md 和相关子树规则。
-- [ ] 验证新注入、实际路由、token-meter、compaction 的预算组合，再冻结 M1 接口和事件类型。
+- [x] 验证新注入、实际路由、token-meter、compaction 的预算组合并冻结 M1 接口和事件类型。
 - [x] P1.1 先实现纯记录语义；[x] P1.2 通过现有 Session persistence 实现 durable append/flush/restart；[ ] 故障注入和产品消费者。
 - [x] P1.3 基础 off/shadow/active adapter；[ ] 真实 Jev gateway、Session receipt、检索消费者和 active 产品开关。
 - [x] P1.2 来源回读、工作集和同一步消费者；[ ] 接入产品 profile 的 Reflex 专属开关与 Jev 决策结果。
 - [x] controller 级 Reflex 专属开关、权限和停用失效语义；[ ] 接入默认产品 profile 与完整 UI。
 - [x] 接入默认 profile 的 Continuum service；无 Reflex 时保持原版，开启但未挂载 Reflex 时返回 `reflex-required`；Jev active 选择已由 companion selector 自动消费。
 - [ ] 接入 Reflex adapter 的自动 profile 消费与专属 UI；无 Reflex 兼容原版；用内部 Baseline 消融，先 shadow 再 active。
-- [ ] 按行为面构建、lint、单元/集成、keyless Session 与两个 SDK 快照；随后真实模型对照。
+- [x] 按行为面构建、lint、单元/集成、keyless Session、TypeScript/Python SDK 回放与真实模型对照。
 - [ ] 用户明确授权前不推送、建 PR 或部署；推送前执行 dsh-pre-push-checks 与 Ruff 双检查。
 
 ## 分支、部署和验证状态
