@@ -1,0 +1,7 @@
+# Bilingual-pair consistency record for entry-routing-eval-v2.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-reflex-control/evidence/entry-routing-eval-v2.md
+/entry-routing-evaluation-v2:
+  en: 785dfbcafc3c51ef
+  zh: 532b606b8d140276

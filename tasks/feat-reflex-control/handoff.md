@@ -5,8 +5,8 @@
 - Harness 本轮实现已提交并推送到 `feat-reflex-control`；Frontend `feat-reflex-control` 也已提交并推送；尚未创建 PR 或合并 main。上一批品牌、MIT 与 GitHub 工作已合 main，用户授权完成前后端并最终合 main，授权持续有效。
 - 统一验收入口为 [测试验收目标清单](../../docs/feat-reflex-control/acceptance-checklist.zh.md)：37 项目标、12 条完整用户流程，分别标明真实证据、回归与缺口；收尾先核对此页。
 - Context v3 的 Host16 真实浏览器财务→完整 Host 重启→自动恢复，以及 TS/Python 录制与独立重放全部通过；旧误删、自动恢复失败与多余检索证据仍保留。
-- Goal 首轮 Codex 真实浏览器增量 JSON 任务通过；受控 native stall 恢复 v4 真实 API / Codex / 正常终态 / 产物通过。狭义受控重复失败已观察到真实纠偏、原生输入生命周期和 `improved`，但语义偏航闭环仍未通过，不能以 SDK fixture 通过替代。
-- Host17 字面量首次试验失败保留；新增透明传输观察的真实 literal unittest 已61.77秒通过，含 verification-target、completed 和独立验证。监督连续证据后缀、独立语义触发与同证据去重已107 tests/严格100%；semantic v5/v6/v7 审计仍未取得 correction-loop target 或 `improved`，下一次真实试验前需先处理清理超时与 target 语法可观测性。
+- Goal 首轮 Codex 真实浏览器增量 JSON 任务通过；受控 native stall 恢复 v4 真实 API / Codex / 正常终态 / 产物通过。狭义受控重复失败和 Host20 语义偏航均有真实纠偏、原生输入消费、结构化 verification-target、独立产物与 `improved`；健康长任务误干预、用户中途改 Goal 和正式 Electron 仍待验收。
+- Host17 字面量首次试验失败保留；透明传输观察的真实 literal unittest 已61.77秒通过。监督连续证据后缀、独立语义触发与同证据去重已107 tests/严格100%；Host20 真实语义试验已取得 correction-loop target 与 `improved`，旧 Host16/Host19/v5/v6/v7 失败记录继续保留。
 - C-06 真实跨进程缓存配对已通过：四条件、12 轮、三个独立 CLI 进程、按行 remove、恢复、cache/session 前缀保护和路由/工具稳定性均有脱敏证据 `docs/feat-reflex-control/evidence/cache-c06-real.{md,zh.md,json}`；不宣称供应商冷缓存或成本收益。
 - F-01 Web 配置真实保存、重启恢复和真实请求 low 已通过，随后恢复部署默认 high；证据 `docs/feat-reflex-control/evidence/reflex-settings-real.{md,zh.md,json}`。Frontend `feat-reflex-control` 已固定 Harness revision，unsigned macOS arm64 目录包的 Electron 正常启动、配置保存/重启、Safe Mode 和恢复已通过；原生 200% 缩放、签名/公证及 PR/main 合并仍未完成；所有 Web server7–13 已停止。
 
@@ -22,7 +22,7 @@
 - SDK Host16：TS context v3 / semantic verification-target refresh 与独立 replay 两场景均过；Python 两场景各 record 与独立 replay 通过。日志 `/private/tmp/reflex-final-sdk-ts-{refresh,replay}.log`、`/private/tmp/reflex-final-python-{context,semantic}-{record,replay}.log`。普通监督、Goal 和原生恢复另有已通过的录制/重放；不为无行为变化重复跑。
 - Goal：`evidence/browser-goal-json-independent.json`、`browser-goal-json-tests.log`、`reflex-goal-json-completed.png`；10 tests、金额与文件 hash 独立核对通过。
 - Repeated failure：`evidence/supervision-real-repeated-failure.json`；真实 gpt-6 relay 在 300 秒预算内完成三次失败、Reflex 诊断、脱敏 native `item/started`/`item/completed`、修复、相关验证和 `improved`，受保护文件 hash 未变。该证据使用 `semantic=false`、500ms 观察和 30s 停滞阈值，不等于发布默认配置。
-- Semantic audit：`evidence/supervision-audit-20261011.{json,md,zh.md}`；两次试验观察到营销偏航后的 accepted realign 和 native 输入接收，营销文件随后仍发生修改，财务独立验证通过，但均无结构化 `verification-target` 或 `improved`，且未证明纠偏消息导致后续财务工作；v7 清理还超时。所有临时解析器/测试配置改动已撤回。
+- Semantic Host20：`evidence/semantic-codex-host20-persistent.{json,md,zh.md}`；134.18 秒受控真实试验记录 stale fence、fresh accepted realign、原生消费、四项营销偏航操作、四项纠偏后财务操作、结构化 `verification-target`、`1137.41` 独立校验和 `improved`；受保护输入与 verifier 未变。历史语义失败证据仍保留，所有临时解析器/测试配置改动已撤回。
 - Native recovery：`evidence/native-recovery-real-v4.json` / `.log`；127.41 秒内同 thread 续 turn，正常 completed、产物与验证脚本 hash 通过。
 - C-06：`evidence/cache-c06-real.json`；四个独立条件均通过答案、输入保护、Session JSONL 追加前缀、请求前缀、部署路由、稳定工具哈希、无运行时错误和启用条件的真实 `reflex/context-projection/remove`。
 - F-01：`evidence/reflex-settings-real.json`；规范模型连接判断通过、无效模型预期失败、low 保存后跨 server 进程重载并被真实请求消费，最后恢复 high 并删除用户覆盖项。
@@ -113,3 +113,15 @@ Host16 完整通过并完成本轮 SDK/浏览器验收。Host17 已由 root 收�
 - [x] Frontend 新增 `SECURITY.md`、`CONTRIBUTING.md` 和 PR 证据模板；用户可见主品牌仍为 APUS Reflex Harness。
 - [x] 明确 DSH 发行版本归属只出现在技术/法律/关于页位置，不进入产品主标题、用户入口或任务状态文案。
 - [ ] Harness Jev/System3 与 Frontend 测试 CI 完成后回读；真实语义监督闭环、正式包许可随附、签名/公证、原生 200% 与 main 合并仍未完成。
+## 2026-10-11 Host20 真实语义闭环
+
+- [x] 真实 E2E 单次运行通过：`pnpm exec vitest run --config vitest.e2e.config.ts packages/experimental/system3/tests/reflex-supervision.e2e.ts -t 'realigns a persistent delegated marketing detour'`。
+- [x] Host20 证据记录一次 stale fence 后重新判断、`realign accepted`、Codex 原生消费、纠偏后财务动作、`finance/test_remaining.py` structured verification-target、独立 `1137.41` 校验和 `improved`。
+- [x] 修复 E2E relay 正常请求误 abort 与默认自动重试；真实测试现在请求/响应清理可达 quiescence，`retry: 0`。
+- [x] 反馈判断保留未改善调整，只有新证据才复核；117 项监督回归和 TS/Python 语义 snapshot 通过。
+- [ ] 健康长任务无误干预、用户中途改 Goal、R-04 1 秒 p50/p95、Electron 原生 200%/签名/公证与两仓 main 合并仍未完成。
+## 2026-10-11 R-04 路由延迟评测
+
+- [x] 真实 Jev 评测器改为优先读取 `JEV_ENDPOINT`、`JEV_MODEL`、`SYSTEM3_ENTRY_MIN_CONFIDENCE`，兼容 profile YAML 回退；修复当前部署 overlay 不在旧 regex 中导致的假失败。
+- [x] two-tier 50 题 route decision p50/p95=309/588ms；four-tier 30 题 p50/p95=317/405ms；无传输失败。证据见 `docs/feat-reflex-control/evidence/entry-routing-eval-v2.{json,md,zh.md}`。
+- [ ] 本地 admission/status、远端首字节、完整回答耗时和用户可见失败回退仍待 R-04 完整验收。

@@ -314,7 +314,7 @@ it('keeps a low-confidence Reflex answer observational', async () => {
   expect(h.agent.session.snapshotEvents().some(event => event.type === 'system3/judgement' && event.data.reason === 'unsure')).toBe(true)
 })
 
-it('records ineffective advice independently and stops at the Goal intervention budget', async () => {
+it('keeps observing ineffective advice without sending another adjustment', async () => {
   const h = await setup({ config: { maxInterventions: 1 }, decide: async request => request.questions.improved === undefined
     ? choice('diagnose') : { model: 'reflex-test', answers: { improved: { type: 'noul', noul: 0.01 } } } })
   await h.start(); h.failures()
@@ -324,7 +324,7 @@ it('records ineffective advice independently and stops at the Goal intervention 
   expect(h.events().map(event => event.state)).toEqual(['intent', 'accepted', 'unchanged'])
   h.failures()
   await vi.advanceTimersByTimeAsync(10)
-  expect(h.events().map(event => event.state)).toEqual(['intent', 'accepted', 'unchanged', 'limit'])
+  expect(h.events().map(event => event.state)).toEqual(['intent', 'accepted', 'unchanged', 'unchanged'])
   expect(h.steer).toHaveBeenCalledOnce()
   expect(h.ctx.goals.get(h.agent)?.phase).toBe('active')
 })
@@ -629,6 +629,34 @@ it('retains inconclusive feedback without repolling unchanged evidence and later
   expect(h.decide).toHaveBeenCalledTimes(reviews)
   h.report({ ...EVIDENCE, outcome: 'succeeded', resultDigest: 'verified-repair' })
   await vi.advanceTimersByTimeAsync(10)
+  expect(h.events().at(-1)?.state).toBe('improved')
+  expect(h.steer).toHaveBeenCalledOnce()
+})
+
+it.each(['poll', 'termination'] as const)('keeps an unverified adjustment under observation until later Goal-related verification: %s', async (review) => {
+  const h = await setup({ config: { semantic: { minObservations: 2 } }, decide: async (request) => {
+    if (request.questions.improved === undefined) return semanticChoice('unrelated')
+    const after = request.state.after
+    const verified = Array.isArray(after) && after.some(item => typeof item === 'object' && item !== null
+      && 'operation' in item && item.operation === 'verification')
+    return { model: 'reflex-test', answers: {
+      improved: { type: 'noul', noul: verified ? 0.99 : 0.01 },
+      relevantVerification: { type: 'noul', noul: verified ? 0.99 : 0.01 },
+    } }
+  } })
+  const run = await h.start()
+  h.report(semanticEvidence('marketing/banner.svg', 'one'))
+  h.report(semanticEvidence('marketing/campaign.txt', 'two'))
+  await vi.advanceTimersByTimeAsync(10)
+  h.report(semanticEvidence('finance/invoices.csv', 'repair-started'))
+  await vi.advanceTimersByTimeAsync(CONFIG.feedbackMs)
+  expect(h.events().at(-1)?.state).toBe('unchanged')
+  const reviews = h.decide.mock.calls.length
+  await vi.advanceTimersByTimeAsync(100)
+  expect(h.decide).toHaveBeenCalledTimes(reviews)
+  h.report(semanticEvidence('finance/test_remaining.py', 'verified-repair', 'verification'))
+  if (review === 'termination') { h.end(); await run.result; await vi.advanceTimersByTimeAsync(0) }
+  else await vi.advanceTimersByTimeAsync(CONFIG.intervalMs)
   expect(h.events().at(-1)?.state).toBe('improved')
   expect(h.steer).toHaveBeenCalledOnce()
 })

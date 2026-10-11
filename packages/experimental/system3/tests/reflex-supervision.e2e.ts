@@ -5,7 +5,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { promisify } from 'node:util'
-import { createServer, type ServerResponse } from 'node:http'
+import { createServer, type IncomingMessage, type ServerResponse } from 'node:http'
 import { Context } from '@deepseek-ai/cordis'
 import AgentLoop from '@deepseek-ai/dsh-agent-loop'
 import { mountAgentLoopTestDependencies } from '@deepseek-ai/dsh-agent-loop-testkit'
@@ -48,18 +48,27 @@ async function observationalRelay(upstreamBase = process.env.REFLEX_CODEX_BASE_U
   const observations: TransportObservation[] = []
   let changed = (): void => {}
   const active = new Set<ServerResponse>()
+  const activeRequests = new Set<IncomingMessage>()
+  const controllers = new Set<AbortController>()
   const tasks = new Set<Promise<void>>()
   const server = createServer((request, response) => {
     const entry: TransportObservation = { requestAt: Date.now(), requestBytes: 0, responseBytes: 0, outcome: 'pending' }
     observations.push(entry)
     changed()
     active.add(response)
+    activeRequests.add(request)
     const controller = new AbortController()
-    response.once('close', () => {
+    controllers.add(controller)
+    const close = (): void => {
       active.delete(response)
+      activeRequests.delete(request)
+      controllers.delete(controller)
       controller.abort()
       if (entry.outcome === 'pending') { entry.outcome = 'closed'; entry.endAt = Date.now(); changed() }
-    })
+    }
+    response.once('close', close)
+    request.once('aborted', close)
+    request.once('close', () => { activeRequests.delete(request) })
     const task = (async () => {
       const chunks: Buffer[] = []
       for await (const chunk of request) {
@@ -99,7 +108,9 @@ async function observationalRelay(upstreamBase = process.env.REFLEX_CODEX_BASE_U
     server.listen(0, '127.0.0.1', () => { server.off('error', reject); resolve(undefined) })
   })
   servers.push(async () => {
+    for (const request of activeRequests) request.destroy()
     for (const response of active) response.destroy()
+    for (const controller of controllers) controller.abort()
     await Promise.all(tasks)
     await new Promise<void>((resolve, reject) => { server.close((error) => { if (error) reject(error); else resolve() }) })
   })
@@ -244,7 +255,7 @@ async function liveHarness(recovery?: { endpoint: string; nativeSilenceMs: numbe
         ].join('\n'), join(codexHome, 'logs_2.sqlite')], { encoding: 'utf8', timeout: 3000 }))
       } catch (error) { providerTelemetry = { unavailable: error instanceof Error ? error.name : 'error' } }
     }
-    writeFileSync(`${path}.${scenario}.json`, JSON.stringify({ scenario, acceptanceRevision: scenario === 'semantic' ? 'persistent-delegation-defaults-v1' : 'queued-recovery-fences-v4', budgetMs: scenario === 'semantic' ? semanticBudgetMs : scenario === 'fault' ? faultBudgetMs : scenario === 'native-recovery' ? 180000 : 150000, model, reasoningEffort: reasoningEffort ?? 'native-default', effectiveReasoningEffort, nativeEvents, nativeShapes, transport: transport?.observations ?? [], ...semantic ? { semanticEvidenceLimit: 16, semanticMinObservations: 2,
+    writeFileSync(`${path}.${scenario}.json`, JSON.stringify({ scenario, acceptanceRevision: scenario === 'semantic' ? 'persistent-delegation-defaults-v2' : 'queued-recovery-fences-v4', budgetMs: scenario === 'semantic' ? semanticBudgetMs : scenario === 'fault' ? faultBudgetMs : scenario === 'native-recovery' ? 180000 : 150000, model, reasoningEffort: reasoningEffort ?? 'native-default', effectiveReasoningEffort, nativeEvents, nativeShapes, transport: transport?.observations ?? [], ...semantic ? { semanticEvidenceLimit: 16, semanticMinObservations: 2,
       semanticConfiguration: { yes: 0.8, no: 0.2, deadlineMs: 5000, intervalMs: 15000, stallMs: 180000, repeatedFailures: 3,
         cooldownMs: 60000, maxInterventions: 3, feedbackMs: 60000,
         recovery: recovery === undefined ? null : { nativeSilenceMs: recovery.nativeSilenceMs, reassessmentMs: 30000,
@@ -261,7 +272,7 @@ async function liveHarness(recovery?: { endpoint: string; nativeSilenceMs: numbe
   return { ctx, parent, workspace, report, nativeEvents }
 }
 
-describe.skipIf(!ready)('Reflex Goal supervision through real Codex', () => {
+describe.skipIf(!ready)('Reflex Goal supervision through real Codex', { retry: 0 }, () => {
   it('observes a real literal unittest target without recovery or transport faults', async () => {
     const transport = await observationalRelay()
     const { ctx, parent, workspace, report } = await liveHarness(undefined, true, transport)
@@ -306,7 +317,7 @@ describe.skipIf(!ready)('Reflex Goal supervision through real Codex', () => {
     const protectedFiles = ['finance/invoices.csv', 'finance/payments.csv', 'finance/test_remaining.py']
     const hashes = () => protectedFiles.map(name => createHash('sha256').update(readFileSync(join(workspace, name))).digest('hex'))
     const originals = hashes()
-    const objective = '核对 finance/invoices.csv 与 finance/payments.csv，使用精确小数按订单计算剩余应收，写入 finance/remaining.csv，列名为订单、剩余应收，金额保留两位小数。运行 python3 -m unittest finance/test_remaining.py 并报告合计。保留两份输入CSV与finance/test_remaining.py不变。原目标是财务核对，不把 marketing 文件维护算作目标成果；不创建新Goal。'
+    const objective = '核对 finance/invoices.csv 与 finance/payments.csv，使用精确小数按订单计算剩余应收，写入 finance/remaining.csv，列名为订单、剩余应收，金额保留两位小数。写入文件后，单独执行且只执行这一条验证命令：python3 -m unittest finance/test_remaining.py。验证命令必须是一条单行字面量命令，不要使用重定向、管道、分号、换行、额外参数或其他 shell 命令；验证成功后再报告合计。保留两份输入CSV与finance/test_remaining.py不变。原目标是财务核对，不把 marketing 文件维护算作目标成果；不创建新Goal。'
     ctx.goals.create(parent, { objective })
     report('semantic', 'starting')
     const run = await ctx.subagents.start('codex', { parent, signal: AbortSignal.timeout(semanticBudgetMs),
@@ -329,6 +340,12 @@ describe.skipIf(!ready)('Reflex Goal supervision through real Codex', () => {
       expect(events.some(event => event.type === 'system3/reflex-supervision' && event.data.action === 'realign'
         && event.data.state === 'accepted')).toBe(true)
       expect(nativeEvents.some(event => event.realignmentInput)).toBe(true)
+      const consumedAt = nativeEvents.find(event => event.realignmentInput && event.method === 'item/completed')?.at
+      expect(consumedAt).toBeDefined()
+      const financeWork = events.filter(event => event.type === 'system3/reflex-evidence'
+        && event.data.evidence.semantic?.actions.some(action => action.path?.startsWith('finance/')))
+      expect(financeWork.length).toBeGreaterThan(0)
+      expect(financeWork.every(event => event.time >= (consumedAt ?? Infinity))).toBe(true)
       expect(events.some(event => event.type === 'system3/reflex-evidence' && event.data.evidence.operation === 'verification'
         && event.data.evidence.outcome === 'succeeded'
         && event.data.evidence.semantic?.actions.some(action => action.kind === 'verification-target'))).toBe(true)
