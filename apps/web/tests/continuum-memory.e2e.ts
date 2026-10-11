@@ -54,3 +54,29 @@ describe('web e2e: Continuum Reflex-only switch', () => {
       .getByRole('switch', { name: 'Continuum 无限记忆' }).getAttribute('aria-checked')).toBe('true')
   })
 })
+
+describe('web e2e: original profile without Continuum/Reflex', () => {
+  let scaffold: WebScaffold
+  let browser: Browser
+  let page: Page
+
+  beforeAll(async () => {
+    scaffold = await launchWebScaffold({ developerTools: false })
+    browser = await chromium.launch()
+    page = await browser.newPage({ viewport: { width: 1680, height: 1000 }, locale: ZH_BROWSER_LOCALE })
+    await page.goto(scaffold.authenticatedUrl, { waitUntil: 'load' })
+    await page.waitForSelector('[class*="frame"]', { timeout: 30_000 })
+  }, 120_000)
+
+  afterAll(async () => {
+    await browser?.close()
+    await scaffold?.close()
+  })
+
+  it('keeps the original General settings surface without the Continuum row', async () => {
+    await openSettings(page, 'zh')
+    const dialog = page.getByRole('dialog', { name: '设置' })
+    await expect.poll(() => dialog.getByText('Continuum 无限记忆', { exact: true }).count()).toBe(0)
+    await expect.poll(() => dialog.getByRole('button', { name: '通用设置', exact: true }).count()).toBe(1)
+  })
+})
