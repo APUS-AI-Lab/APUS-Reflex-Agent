@@ -84,6 +84,6 @@ P1.4/P1.5 追加：`ContinuumMemoryController` 通过 generation token 使关闭
 ## 2026-10-11 latest validation
 
 - Deterministic summary tree and stable-prefix layout instrumentation are implemented in `packages/context/continuum/src/summary-tree.ts`; the ablation measures 2/3 → 3/3 retrieval coverage and 79/120 plus 133/206 local reused-prefix bytes. These are local layout measurements, not provider cache hits or billing.
-- Python SDK exposes `latest_continuum_memory_decision()` and replays the latest Session receipt without calling Jev; focused source-SDK tests pass 2/2 with `PYTHONPATH=python/sdk/src`.
+- Python SDK exposes `latest_continuum_memory_decision()` and replays the latest Session receipt without calling Jev; installed project-environment tests pass 2/2 with `uv sync --offline --group test && uv run --offline python -m pytest -q tests/test_continuum_replay.py`.
 - The strict evaluator completed 20/20 protected real requests. B/C passed 8/8 applicable assertions and A1 passed 3/3; A0/U are not-applicable controls. Scope filtering removes the private candidate before Jev.
-- Latest gates: Continuum/Jev/agent-loop/evaluator 54/54 tests, host build passed, docs 20/20, Cordis config 215/215, persistence 80 roots/28 history records. Worktree is clean and not pushed.
+- Latest gates: Continuum/Jev/agent-loop/evaluator 54/54 tests, host build passed, docs 20/20, Cordis config 215/215, persistence 80 roots/28 history records; DeepSeek adapter/runtime 21/21 passed with zero skips. Worktree is clean and not pushed.
