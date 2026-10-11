@@ -1,0 +1,9 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": { "rootDir": "src", "outDir": "lib/types" },
+  "include": ["src"],
+  "references": [
+    { "path": "../../context/continuum/tsconfig.json" },
+    { "path": "../apus-dsh-jev-plugin" }
+  ]
+}

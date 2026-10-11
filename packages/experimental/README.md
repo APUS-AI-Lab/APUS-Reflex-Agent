@@ -49,6 +49,7 @@ The experimental group contains prototype capabilities whose contracts can chang
 | [`system3-supervisor`](system3-supervisor/README.md) | Completion gate, shadow comparison, and usage ledger primitives | library — no ctx key |
 | [`system3`](system3/README.md) | Cordis service composing System3 policy, evidence, and supervision | `ctx.system3` |
 | [`apus-dsh-jev-plugin`](apus-dsh-jev-plugin/README.md) | Provider-neutral typed Jev decisions through a System One HTTP provider | `ctx.jev` |
+| [`continuum-jev`](continuum-jev/README.md) | Reflex-only bounded Continuum memory selection with off/shadow/active modes | — |
 | [`agui`](agui/README.md) | AG-UI over HTTP: turns, threads, approvals and questions for an external client such as Muse | — (routes on `ctx.webServer`) |
 
 -----

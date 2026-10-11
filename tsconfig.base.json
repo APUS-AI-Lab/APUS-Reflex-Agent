@@ -322,6 +322,7 @@
       "@deepseek-ai/dsh-experimental-system3-supervisor": ["./packages/experimental/system3-supervisor/src"],
       "@deepseek-ai/dsh-experimental-system3": ["./packages/experimental/system3/src"],
       "@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin": ["./packages/experimental/apus-dsh-jev-plugin/src"],
+      "@deepseek-ai/dsh-continuum": ["./packages/context/continuum/src"],
       "@deepseek-ai/dsh-experimental-agui": ["./packages/experimental/agui/src"],
       "@deepseek-ai/dsh-experimental-inspector": ["./packages/experimental/inspector/src"],
       "@deepseek-ai/dsh-experimental-inspector/client": ["./packages/experimental/inspector/src/client/index.ts"],

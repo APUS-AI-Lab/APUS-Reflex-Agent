@@ -417,6 +417,7 @@ PPT v2为4页主讲+2页备查，实际Keynote打开、六页备注回读和PDF�
 - [x] P1.2 设计门：明确复用既有 Session event log、JSONL flush/restart 和事件折叠；设计稿见 `docs/feat-continuum-memory/p1-2-persistence-design.html`。
 - [ ] P1.2：原文精确回读与同一步采用；最小 profile 贯通，重启从原日志恢复；未出现完整检索前不增加抽象 provider。
 - [ ] P1.3：Reflex 公共 Jev 接口 adapter，显式依赖校验、shadow、取消；真实双模型与文件产物验收。
+- [x] P1.3 基础 adapter：新增实验性 `continuum-jev`，覆盖 off/shadow/active、baseline、候选 ID 封闭集、置信度回退与取消；真实 gateway E2E 未通过前不得标记完成。
 - [ ] P2：任务工作集、supersedes、FTS、权限与尾部覆盖；新 Session 续做、旧版本拒绝、索引重建与积压。
 - [ ] P3：Reflex active 多候选/动作、弃权、超时与有限兜底；固定候选和端到端两种对照。
 - [ ] P4：专属开关 UI、停用/关闭后的活动投影移除、在途失效、最终模型预算、两个 SDK 和离线回放；原版回归。
@@ -434,3 +435,7 @@ PPT v2为4页主讲+2页备查，实际Keynote打开、六页备注回读和PDF�
 ### P1.2 Review
 
 `appendMemoryRecordEvent` 写入完整变更后记录，`foldMemoryRecordEvents` 在恢复时按顺序重建记录。测试使用真实 JSONL backend 和 native flock：写入 create/supersede/deactivate，显式 flush，销毁 writer，重新挂载 reader，读取并比较完整快照。未知事件在 catalog 更新前被 reader fail-closed；运行生成器和 persistence acknowledgement 后 catalog、schema、双语记录均已更新。尚未完成产品 profile、Reflex adapter、检索、同一步采用或 flush 故障注入。
+
+### P1.3 Review
+
+新增实验性 `packages/experimental/continuum-jev`。`selectContinuumMemory` 只接收有限候选，OFF 返回确定性 baseline，SHADOW 保留 baseline 并暴露 Jev 建议，ACTIVE 只接受候选集内且达到阈值的选择；provider unknown、非法 ID、低置信度和取消均有明确行为。fake provider 测试 5/5、包级构建和 Oxlint、README Model Experience 门禁通过。真实 Jev gateway 当前 TLS 握手超时，SSH 主机变量也未配置，因此真实 E2E 未通过。

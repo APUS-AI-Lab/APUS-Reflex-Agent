@@ -1,0 +1,43 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/experimental/continuum-jev/README.md
+/:
+  en: b20da2656117b2ba
+  zh: 034a9f8379ebc46c
+/deepseek-ai-dsh-experimental-continuum-jev:
+  en: 5b603eb6cfc91865
+  zh: 06dbc176c2b1bfbd
+/deepseek-ai-dsh-experimental-continuum-jev/summary:
+  en: 6f6d25b08d1e093b
+  zh: dfb3188b9636ae22
+/deepseek-ai-dsh-experimental-continuum-jev/table-of-contents:
+  en: 122f0d41696980b1
+  zh: f3d226c50f80fae7
+/deepseek-ai-dsh-experimental-continuum-jev/use-this-package:
+  en: def8c04d37ce413c
+  zh: 1107db8cf4124042
+/deepseek-ai-dsh-experimental-continuum-jev/understand-the-implementation:
+  en: 310c0a164f9c8892
+  zh: 90a9003bcf3f3861
+/deepseek-ai-dsh-experimental-continuum-jev/model-experience:
+  en: 215e7ba838619b7b
+  zh: 215e7ba838619b7b
+/deepseek-ai-dsh-experimental-continuum-jev/model-experience/bounded-memory-choice:
+  en: 8e2cf12a0277d08e
+  zh: c112a1f2fddcb408
+/deepseek-ai-dsh-experimental-continuum-jev/model-experience/bounded-memory-choice/what-the-model-sees:
+  en: b5d9c86349c6c45b
+  zh: 09a648f3dbe2a4c1
+/deepseek-ai-dsh-experimental-continuum-jev/model-experience/bounded-memory-choice/token-effect:
+  en: 5c9ca1d6428699e3
+  zh: 02627c55d9119b59
+/deepseek-ai-dsh-experimental-continuum-jev/model-experience/bounded-memory-choice/kv-cache-effect:
+  en: a829a5962e3bccd1
+  zh: 6611125ac6bd4622
+/deepseek-ai-dsh-experimental-continuum-jev/known-limitations-and-deferred-work:
+  en: c74acdfdb747cc22
+  zh: 61bfd08bc5140b31
+/deepseek-ai-dsh-experimental-continuum-jev/known-limitations-and-deferred-work/dev-note:
+  en: a13f9e282c390a5d
+  zh: 68c8de2807177f25
