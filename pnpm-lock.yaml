@@ -1131,6 +1131,9 @@ importers:
       '@deepseek-ai/dsh-client-ui-settings':
         specifier: workspace:*
         version: link:../../../packages/client/ui-settings
+      '@deepseek-ai/dsh-client-ui-settings-continuum':
+        specifier: workspace:*
+        version: link:../../../packages/client/ui-settings-continuum
       '@deepseek-ai/dsh-client-ui-settings-general':
         specifier: workspace:*
         version: link:../../../packages/client/ui-settings-general
@@ -3262,6 +3265,9 @@ importers:
       '@deepseek-ai/dsh-client-ui-settings-agent-loop':
         specifier: workspace:*
         version: link:../../client/ui-settings-agent-loop
+      '@deepseek-ai/dsh-client-ui-settings-continuum':
+        specifier: workspace:*
+        version: link:../../client/ui-settings-continuum
       '@deepseek-ai/dsh-client-ui-settings-general':
         specifier: workspace:*
         version: link:../../client/ui-settings-general
@@ -5497,6 +5503,36 @@ importers:
       '@deepseek-ai/dsh-client-ui-plugin-manager':
         specifier: workspace:*
         version: link:../ui-plugin-manager
+      '@deepseek-ai/dsh-client-ui-primitives':
+        specifier: workspace:*
+        version: link:../ui-primitives
+      '@deepseek-ai/dsh-client-ui-renderer':
+        specifier: workspace:*
+        version: link:../ui-renderer
+      '@deepseek-ai/dsh-client-ui-settings':
+        specifier: workspace:*
+        version: link:../ui-settings
+      '@deepseek-ai/dsh-client-ui-slots':
+        specifier: workspace:*
+        version: link:../ui-slots
+      '@types/react':
+        specifier: ~18.3.1
+        version: 18.3.31
+      react:
+        specifier: ^18.2.0
+        version: 18.3.1
+
+  packages/client/ui-settings-continuum:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:~
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-client-locale':
+        specifier: workspace:*
+        version: link:../locale
+      '@deepseek-ai/dsh-client-store':
+        specifier: workspace:*
+        version: link:../store
       '@deepseek-ai/dsh-client-ui-primitives':
         specifier: workspace:*
         version: link:../ui-primitives
@@ -17045,10 +17081,12 @@ packages:
 
   '@modelcontextprotocol/server-everything@2026.7.4':
     resolution: {integrity: sha512-ydMW/M6rk9tK23b+U38trsNLHhd5eF+ntiv2Vr+RPMDhbiKY/IKrZU25ukvSXVPUBvy7TxTPWpeV4KcYcXg72w==}
+    deprecated: 'Date-based versions are no longer published. This package has resumed semantic versioning at 1.0.0: install the latest version.'
     hasBin: true
 
   '@modelcontextprotocol/server-filesystem@2026.7.10':
     resolution: {integrity: sha512-Mmjg4anFBD5OzbPnGJOA0jPPN8645ERhQk38HQLpSenx1ox9bfdPkmAzUnNjeQtqQGFLtKe13J20RtLBmUKMZA==}
+    deprecated: 'Date-based versions are no longer published. This package has resumed semantic versioning at 1.0.0: install the latest version.'
     hasBin: true
 
   '@modelcontextprotocol/server@2.0.0':

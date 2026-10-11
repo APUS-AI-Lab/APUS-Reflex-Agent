@@ -259,6 +259,7 @@
     "@deepseek-ai/dsh-util-workspace-path": "workspace:*",
     "@deepseek-ai/dsh-win32-process": "workspace:*",
     "@deepseek-ai/dsh-workspace": "workspace:*",
-    "@deepseek-ai/dsh-experimental-client-ui-system3": "workspace:*"
+    "@deepseek-ai/dsh-experimental-client-ui-system3": "workspace:*",
+    "@deepseek-ai/dsh-client-ui-settings-continuum": "workspace:*"
   }
 }

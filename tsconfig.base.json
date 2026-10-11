@@ -279,6 +279,7 @@
       "@deepseek-ai/dsh-client-ui-settings-plugins": ["./packages/client/ui-settings-plugins/src"],
       "@deepseek-ai/dsh-client-ui-settings-shell": ["./packages/client/ui-settings-shell/src"],
       "@deepseek-ai/dsh-client-ui-settings-agent-loop": ["./packages/client/ui-settings-agent-loop/src"],
+      "@deepseek-ai/dsh-client-ui-settings-continuum": ["./packages/client/ui-settings-continuum/src"],
       "@deepseek-ai/dsh-client-ui-settings-subagent": ["./packages/client/ui-settings-subagent/src"],
       "@deepseek-ai/dsh-client-ui-settings-web-search": ["./packages/client/ui-settings-web-search/src"],
       "@deepseek-ai/dsh-client-ui-jobs": ["./packages/client/ui-jobs/src"],

@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-- 当前已完成 P0.4、P1.1–P1.7、P2 索引、P3 安全/严格评测门禁和 P5 Session-backed summary view；P3 完整质量/成本对照、P4 UI、P5 批合并/服务端 cache 仍未交付。Continuum 专属 flush 故障注入已通过。
+- 当前已完成 P0.4、P1.1–P1.7、P2 索引、P3 安全/严格评测门禁和 P5 Session-backed summary view；P3 完整质量/成本对照、P4 浏览器验收、P5 批合并/服务端 cache 仍未交付。Continuum 专属 flush 故障注入已通过；P4 最小 General 设置开关已实现并完成单元、类型和 bundle 验证。
 - 推荐名称 APUS Continuum（连续记忆）；HTML 是本轮设计入口，候选名未做重名核验。
 - 无限记忆为 Reflex 专属开关；关闭或未接入时兼容原版，不提供无 Reflex 的同等产品模式。
 - 用户已授权在同名 worktree 分支逐步拆分验证和实现；下一步是 P3 完整质量/成本、P4 UI/预算和 P5 批合并/真实服务端 cache。
@@ -52,7 +52,7 @@ Harness 持有事实、权限、预算、版本和执行权。模型提炼先成
 - [x] P2 工程切片：可重建倒排索引、enqueue、bounded backlog rebuild；profile controller 在提交变更后保持派生索引；真实 JSONL 1,000 条重启/尾部检索 smoke 通过。
 - [x] P3 安全切片：显式 provider timeout、取消传播、弃权、baseline fallback 和有界顺序多选；每次请求仍使用 Jev 单选闭集。
 - [x] P3 性能证据：固定 20-cell 真实评测生成 provider usage、候选一致性和 P50/P95；[ ] 完整任务质量/总成本对照仍待完成。
-- [ ] P4：专属 UI、运行中开关投影移除、最终预算与完整产品浏览器验收。
+- [ ] P4：运行中开关投影移除、最终预算与完整产品浏览器验收；专属 General 设置开关已实现，尚需浏览器持久化与关闭后投影移除验收。
 - [x] P5 摘要 view/zoom：Session 重建、重启来源回读、UTF-8 上限已通过；[ ] 后台批合并、真实超模型窗口历史、服务端 cache 用量和完整成本/延迟实验。
 - [x] flush failure semantics：Continuum 专属一次失败/重试、重复 flush 和冷启动恢复已通过。
 - [ ] 用户明确授权前不推送、建 PR 或部署；推送前执行 dsh-pre-push-checks 与 Ruff 双检查。
@@ -83,7 +83,7 @@ Harness 持有事实、权限、预算、版本和执行权。模型提炼先成
 - Deterministic summary tree, stable-prefix layout instrumentation, rebuildable Continuum memory index, and a 1,000-record JSONL restart/retrieval smoke are implemented in `packages/context/continuum/src/summary-tree.ts`; the ablation measures 2/3 → 3/3 retrieval coverage and 79/120 plus 133/206 local reused-prefix bytes. These are local layout measurements, not provider cache hits or billing.
 - Python SDK exposes `latest_continuum_memory_decision()` and replays the latest Session receipt without calling Jev; installed project-environment tests pass 2/2 with `uv sync --offline --group test && uv run --offline python -m pytest -q tests/test_continuum_replay.py`.
 - Jev active now has an explicit provider timeout, deterministic baseline fallback, and bounded sequential multi-selection; the strict evaluator completed 20/20 protected real requests. B/C passed 8/8 applicable assertions and A1 passed 3/3; A0/U are not-applicable controls. Scope filtering removes the private candidate before Jev.
-- Latest gates: Continuum/Jev/agent-loop 11 files / 59 tests, SDK client replay 44/44, Python replay 2/2, host build passed, docs 20/20, Cordis config 215/215, persistence 80 roots/28 history records; DeepSeek adapter/runtime 21/21 passed with zero skips. Full keyless snapshot replay now reaches 180 passed, 0 failed, and 2 expected Windows-only pwsh skips on macOS; browser-use-stagehand-native is fixed. The platform skips remain explicitly recorded and are not counted as passes. Worktree is not pushed; current handoff update may leave generated evidence/docs staged for the next commit.
+- Latest gates: Continuum/Jev/agent-loop 11 files / 59 tests, SDK client replay 44/44, Python replay 2/2, host build passed, docs 20/20 before the latest anchor correction, Cordis config 215/215, persistence 80 roots/28 history records; DeepSeek adapter/runtime 7 passed and 1 vision test failed in the latest real run, so vision is not accepted. Full keyless snapshot replay reaches 180 passed, 0 failed, and 2 expected Windows-only pwsh skips on macOS; browser-use-stagehand-native is fixed. UI package tests 2/2, typecheck, oxlint, package bundle, and Web production build passed. The platform skips remain explicitly recorded and are not counted as passes. Worktree is not pushed; current handoff update may leave generated evidence/docs staged for the next commit.
 
 
 ## 2026-10-11 continuation validation

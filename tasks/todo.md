@@ -427,7 +427,7 @@ PPT v2为4页主讲+2页备查，实际Keynote打开、六页备注回读和PDF�
 - [x] P1.7 Reflex selector profile 消费：`continuum-jev` 提供 Cordis selector service，active/shadow 在同一步过滤工作集并写入决策回执；关闭/停用会丢弃迟到结果，48 项相关测试通过。
 - [x] P2：任务工作集、supersedes、词法倒排索引、权限与尾部覆盖；索引完整重建、积压有界重建和带/不带索引等价已通过；新 Session 续做与真实超模型窗口质量仍需产品链路验收；当前已补真实 JSONL 1,000 条记录重启、索引重建和尾部检索 smoke。
 - [ ] P3：Reflex active 完整任务质量/动作对照仍待完成；已补齐弃权、显式超时、baseline fallback、有界顺序多选、严格评测失败门禁，以及真实 provider usage/P50/P95 报告。
-- [ ] P4：专属开关 UI、停用/关闭后的活动投影移除、在途失效、最终模型预算、两个 SDK 和离线回放；原版回归。
+- [ ] P4：停用/关闭后的活动投影移除、在途失效、最终模型预算、两个 SDK 和离线回放；原版回归。专属 General 设置开关已实现并通过 UI 单元、类型、bundle 与 Web production build，浏览器持久化验收仍待完成。
 - [ ] P5：批合并、后台恢复、真实服务端 cache 用量和完整成本仍待完成；已交付 Session-backed summary view/zoom、重启来源回读、UTF-8 摘要预算和本地树 × cache 消融。
 - [ ] Release：确定性正确性、真实产品链路、预注册效果门槛三者全过；必测 skip 或凭据缺失不算通过。
 

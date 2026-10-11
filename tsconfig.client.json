@@ -115,6 +115,7 @@
     { "path": "./packages/client/ui-settings-plugins" },
     { "path": "./packages/client/ui-settings-shell" },
     { "path": "./packages/client/ui-settings-agent-loop" },
+    { "path": "./packages/client/ui-settings-continuum" },
     { "path": "./packages/client/ui-settings-subagent" },
     { "path": "./packages/client/ui-settings-web-search" },
     { "path": "./packages/client/ui-user-questions" },

@@ -1,4 +1,4 @@
-import { Context, Service } from '@deepseek-ai/cordis'
+import { Context, Service, type Volatile } from '@deepseek-ai/cordis'
 import type { Agent } from '@deepseek-ai/dsh-agent'
 import z from '@deepseek-ai/schemastery'
 import { ContinuumMemoryController, resolveContinuumMemorySwitch, type ContinuumMemorySwitch } from './policy.ts'
@@ -13,16 +13,22 @@ declare module '@deepseek-ai/cordis' {
   }
 }
 
-/** Configures the profile-owned Continuum consumer. */
-export interface ContinuumConfig extends ContinuumMemoryContextConfig, Pick<ContinuumMemorySwitch, 'enabled' | 'mode'> {
-  /** Exact scopes visible to agents created by this profile. */
+/** Profile settings accepted by direct service consumers before Loader normalization. */
+export interface ContinuumConfig extends ContinuumMemoryContextConfig {
+  readonly enabled: boolean
+  readonly mode: 'off' | 'shadow' | 'active'
   readonly scopes: string[]
 }
 
+type ContinuumResolvedConfig = Omit<ContinuumConfig, 'enabled' | 'mode'> & {
+  readonly enabled: Volatile<boolean>
+  readonly mode: Volatile<'off' | 'shadow' | 'active'>
+}
+
 /** Schemastery validation for {@link ContinuumConfig}. */
-export const ContinuumConfig: z<ContinuumConfig> = z.object({
-  enabled: z.boolean().default(false),
-  mode: z.union([z.const('off'), z.const('shadow'), z.const('active')]).default('off'),
+export const ContinuumConfig = z.object({
+  enabled: z.boolean().default(false).volatile(),
+  mode: z.union([z.const('off'), z.const('shadow'), z.const('active')]).default('off').volatile(),
   scopes: z.array(z.string()).default([]),
   maxCandidates: z.number().step(1).min(1).required(),
   maxExcerptBytes: z.number().step(1).min(1).required(),
@@ -51,26 +57,26 @@ export interface ContinuumMemoryService {
 export default class ContinuumMemory extends Service implements ContinuumMemoryService {
   static Config = ContinuumConfig
 
-  private readonly config: ContinuumConfig
+  private readonly config: ContinuumConfig | ContinuumResolvedConfig
   private readonly controllers = new WeakMap<Agent, ContinuumMemoryController>()
 
-  constructor(ctx: Context, config: ContinuumConfig) {
+  constructor(ctx: Context, config: ContinuumConfig | ContinuumResolvedConfig) {
     super(ctx, 'continuumMemory')
     this.config = config
     ctx.inject(['agents'], (ctx) => {
       const reflexMounted = ctx.get('jev') !== undefined
-      const switchConfig: ContinuumMemorySwitch = { enabled: config.enabled, mode: config.mode, reflexMounted }
+      const switchConfig: ContinuumMemorySwitch = { enabled: readSetting(config.enabled), mode: readSetting(config.mode), reflexMounted }
       const principal = { scopes: [...config.scopes] }
       installContinuumMemoryControllerContext(ctx, agent => this.controllerWithConfig(agent, switchConfig), () => principal, config, () => ctx.get('continuumMemorySelector'))
     })
   }
 
   state(): ReturnType<ContinuumMemoryController['state']> {
-    return resolveContinuumMemorySwitch({ enabled: this.config.enabled, mode: this.config.mode, reflexMounted: this.ctx.get('jev') !== undefined })
+    return resolveContinuumMemorySwitch({ enabled: readSetting(this.config.enabled), mode: readSetting(this.config.mode), reflexMounted: this.ctx.get('jev') !== undefined })
   }
 
   controller(agent: Agent): ContinuumMemoryController {
-    return this.controllerWithConfig(agent, { enabled: this.config.enabled, mode: this.config.mode, reflexMounted: this.ctx.get('jev') !== undefined })
+    return this.controllerWithConfig(agent, { enabled: readSetting(this.config.enabled), mode: readSetting(this.config.mode), reflexMounted: this.ctx.get('jev') !== undefined })
   }
 
   create(agent: Agent, record: NewMemoryRecord): MemoryRecord {
@@ -113,3 +119,8 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
 }
 
 const controllerStores = new WeakMap<ContinuumMemoryController, MemoryRecordStore>()
+
+function readSetting<T extends boolean | 'off' | 'shadow' | 'active'>(value: T | Volatile<T>): T {
+  if (typeof value === 'object' && value !== null && 'get' in value) return value.get() as T
+  return value
+}
