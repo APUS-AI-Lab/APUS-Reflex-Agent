@@ -34,7 +34,7 @@
 <tr><td>浏览器全套产品回归</td><td class="status partial">PARTIAL</td><td>Continuum 专项浏览器用例 2/2 通过；settings 定向测试通过。</td><td>完整 <code>test:web:built</code> 仍有既有基线失败，详见 <a href="continuum-web-regression-results.json">回归记录</a>；不能宣称全 Web 通过。</td></tr>
 <tr><td>性能、成本、长历史规模</td><td class="status partial">PARTIAL</td><td><a href="continuum-performance-report.json">continuum-performance-report.json</a> 仅报告 provider usage；P3 设计与报告已落盘。</td><td>Jev/local/cache 成本与大规模延迟未知。</td></tr>
 <tr><td>生产级批处理 / 服务端缓存</td><td class="status todo">BLOCKED</td><td>当前只有本地稳定 cache 消融和接口设计。</td><td>尚无真实服务压测、失效策略、租户隔离和恢复证据。</td></tr>
-<tr><td>视觉模型真实 E2E</td><td class="status todo">BLOCKED</td><td>最近真实 DeepSeek 运行的 vision lane 未形成稳定通过证据。</td><td>不能引用旧的或相互矛盾的 summary JSON 作为当前通过。</td></tr>
+<tr><td>视觉模型真实 E2E</td><td class="status pass">PASS</td><td><a href="continuum-deepseek-e2e.json">continuum-deepseek-e2e.json</a>：最新受保护运行 adapter 13/13、runtime 8/8，包含 vision，0 skipped、0 failed。</td><td>依赖受保护 DeepSeek 凭据和上游视觉服务可用性。</td></tr>
 </tbody></table></div>
 <h2>4. 可复核命令</h2><pre># 在 worktree：类型与核心单测
 pnpm exec vitest run packages/context/continuum/tests packages/client/ui-settings-continuum/tests scripts/continuum-evaluation.spec.ts scripts/continuum-performance-report.spec.ts
