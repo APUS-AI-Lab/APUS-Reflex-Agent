@@ -9,9 +9,9 @@ kind: package-reference
 
 ## 概述
 
-本包提供 APUS Continuum 的持久记录与 profile service：带 Session 事件来源的不可变记忆记录、revision 校验、明确更正、停用、可从日志重建投影的仅日志 Session 事件、精确来源回读、确定性的有界检索、生命周期感知的同一步消费者和显式产品开关。服务不会静默创建记录，也不会在没有 Reflex 时提供无限记忆模式。
+本包提供 APUS Continuum 的持久记录与 profile service：带 Session 事件来源的不可变记忆记录、revision 校验、明确更正、停用、可从日志重建投影的仅日志 Session 事件、精确来源回读、确定性的有界检索、可选的 Jev selector、生命周期感知的同一步消费者和显式产品开关。服务不会静默创建记录，也不会在没有 Reflex 时提供无限记忆模式。
 
-Session 事件复用现有 persistence backend；调用方完成 `ctx.sessions.flush(session)` 后才具备持久化保证。Reflex 准入、检索和模型注入属于后续批次。
+Session 事件复用现有 persistence backend；调用方完成 `ctx.sessions.flush(session)` 后才具备持久化保证。记录准入仍由调用方显式执行；挂载配套 `continuum-jev` profile service 后，shadow/active 选择及其回执会进入同一步消费者。
 
 ## 目录
 
@@ -51,7 +51,7 @@ Session 事件复用现有 persistence backend；调用方完成 `ctx.sessions.f
 <a id="lifecycle-and-evaluation"></a>
 ## 生命周期与评测
 
-`ContinuumMemoryController` 负责 Reflex 专属开关、精确作用域授权和在途读取的 generation token。关闭开关会保留持久记录，但使待提交的投影失效；停用记录也会使在途投影失效。未接入 Reflex 时，`resolveContinuumMemorySwitch` 回到原版路径。本地摘要树/缓存实验生成在 `docs/feat-continuum-memory/continuum-ablation.json`，分别测量检索覆盖率与稳定前缀复用估计，不声称 provider 账单或服务端缓存命中。
+`ContinuumMemoryController` 负责 Reflex 专属开关、精确作用域授权和在途读取的 generation token。关闭开关会保留持久记录，但使待提交的投影失效；停用记录也会使在途投影失效。未接入 Reflex 时，`resolveContinuumMemorySwitch` 回到原版路径。挂载配套 selector 后，active 模式通过 Jev 过滤有界工作集并写入 `continuum/memory-decision`；shadow 模式调用 Jev 但保留 baseline。本地摘要树/缓存实验生成在 `docs/feat-continuum-memory/continuum-ablation.json`，分别测量检索覆盖率与稳定前缀复用估计，不声称 provider 账单或服务端缓存命中。
 
 <a id="model-experience"></a>
 ## Model Experience
@@ -73,9 +73,9 @@ recall 消息消耗配置的字节预算并进入同一个模型请求；不会�
 ## Known Limitations and Deferred Work
 
 - 当前记录投影是进程内的；重启恢复必须读取并折叠 Session 事件日志。
-- service 已提供 profile seam 和确定性检索，但 Jev 候选选择仍由独立 adapter 调用，当前不包含完整全文索引。
+- service 不包含完整全文索引、摘要树或 provider 缓存计量；这些仍属于独立评测工作。记录准入由调用方负责并必须带来源。
 
 <a id="dev-note"></a>
 ### 开发备注
 
-Session 事件已经复用 `Session.append` 和 `ctx.sessions.flush(session)`，但本包仍未接入产品 profile 或 Reflex。
+Session 事件已经复用 `Session.append` 和 `ctx.sessions.flush(session)`。system3 runtime patch 默认关闭地加载本服务和配套 Jev selector；是否启用仍是受保护部署环境的显式选择。

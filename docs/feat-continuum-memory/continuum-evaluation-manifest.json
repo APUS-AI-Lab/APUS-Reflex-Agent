@@ -1,19 +1,74 @@
 {
   "version": 1,
-  "status": "jev-real-pass-deepseek-auth-failed",
+  "status": "jev-real-pass-deepseek-partial",
   "source": "feat-continuum-memory worktree",
   "variants": [
-    { "id": "A0", "name": "original-harness", "continuum": false, "jev": false, "summaryTree": false, "stableCache": false },
-    { "id": "A1", "name": "original-harness-with-existing-history-query", "continuum": false, "jev": false, "summaryTree": false, "stableCache": false },
-    { "id": "B", "name": "continuum-deterministic", "continuum": true, "jev": false, "summaryTree": false, "stableCache": false },
-    { "id": "C", "name": "continuum-reflex", "continuum": true, "jev": true, "summaryTree": false, "stableCache": false },
-    { "id": "U", "name": "reference-harness-reproduction", "continuum": false, "jev": false, "summaryTree": true, "stableCache": true }
+    {
+      "id": "A0",
+      "name": "original-harness",
+      "continuum": false,
+      "jev": false,
+      "summaryTree": false,
+      "stableCache": false
+    },
+    {
+      "id": "A1",
+      "name": "original-harness-with-existing-history-query",
+      "continuum": false,
+      "jev": false,
+      "summaryTree": false,
+      "stableCache": false
+    },
+    {
+      "id": "B",
+      "name": "continuum-deterministic",
+      "continuum": true,
+      "jev": false,
+      "summaryTree": false,
+      "stableCache": false
+    },
+    {
+      "id": "C",
+      "name": "continuum-reflex",
+      "continuum": true,
+      "jev": true,
+      "summaryTree": false,
+      "stableCache": false
+    },
+    {
+      "id": "U",
+      "name": "reference-harness-reproduction",
+      "continuum": false,
+      "jev": false,
+      "summaryTree": true,
+      "stableCache": true
+    }
   ],
   "tasks": [
-    { "id": "exact-fact", "input": "Which invoice was disputed?", "expected": "INV-42", "source": "fixture:invoice" },
-    { "id": "correction", "input": "The cutover moved to Monday; continue the task.", "expected": "Monday supersedes Friday", "source": "fixture:migration" },
-    { "id": "scope-denial", "input": "Recall the private migration note.", "expected": "no private record injected", "source": "fixture:private" },
-    { "id": "restart-replay", "input": "Continue after process restart.", "expected": "same Session-backed record IDs", "source": "fixture:replay" }
+    {
+      "id": "exact-fact",
+      "input": "Which invoice was disputed?",
+      "expected": "INV-42",
+      "source": "fixture:invoice"
+    },
+    {
+      "id": "correction",
+      "input": "The cutover moved to Monday; continue the task.",
+      "expected": "Monday supersedes Friday",
+      "source": "fixture:migration"
+    },
+    {
+      "id": "scope-denial",
+      "input": "Recall the private migration note.",
+      "expected": "no private record injected",
+      "source": "fixture:private"
+    },
+    {
+      "id": "restart-replay",
+      "input": "Continue after process restart.",
+      "expected": "same Session-backed record IDs",
+      "source": "fixture:replay"
+    }
   ],
   "requiredEvidence": [
     "provider and model identifiers",
@@ -25,8 +80,28 @@
     "errors, retries, cancellations, and skips"
   ],
   "observed": {
-    "jev": { "status": "pass", "evidence": "continuum-live-e2e.json", "model": "APUS-OpenJev-v1-9B-5949" },
-    "deepseek": { "status": "blocked-auth", "evidence": "vitest.e2e adapter/runtime run", "detail": "official endpoint returned HTTP 401 for the supplied key; no model result is accepted" }
+    "jev": {
+      "status": "pass",
+      "evidence": "continuum-live-e2e.json",
+      "model": "APUS-OpenJev-v1-9B-5949"
+    },
+    "deepseek": {
+      "status": "partial",
+      "evidence": "continuum-deepseek-e2e.json",
+      "endpoint": "https://api.deepseek.com/anthropic",
+      "testFiles": 2,
+      "passed": 19,
+      "skipped": 2,
+      "failed": 0,
+      "detail": "Protected local runtime credential accepted by official endpoint; required adapter/runtime checks including in-history updates passed. Two optional image checks were skipped because DEEPSEEK_FLASH_E2E/DEEPSEEK_VISION_E2E was unset.",
+      "model": "deepseek-v4-pro"
+    }
   },
-  "policy": "Missing credentials, unreachable endpoints, or skipped required variants remain pending and are not treated as success."
+  "policy": "Missing credentials, unreachable endpoints, or skipped required variants remain pending and are not treated as success.",
+  "executor": {
+    "path": "scripts/continuum-evaluation.ts",
+    "status": "implemented-not-passed",
+    "lastRun": "20 variant/task requests started; official endpoint body timeout before completion",
+    "strictMissingCredentials": true
+  }
 }

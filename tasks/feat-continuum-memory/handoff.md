@@ -16,7 +16,7 @@
 - packages/context/continuum/：补充精确来源事件读取、active-only 有界检索、UTF-8 预算和 `agent/pre-step` 同一步 recall 消费；相关测试总计 21 项。
 - packages/context/continuum/：补充 Reflex 专属 switch/controller、精确 scope 授权、停用/关闭 generation invalidation、controller 消费者、2×2 tree/cache 消融实现与 fixture，以及 Session-backed Cordis profile service。
 - deploy/system3/runtime.patch.yml / deploy/system3/runtime/package.json：显式加载 Continuum service，默认 off；由 `CONTINUUM_MEMORY_*` 环境变量选择性开启。
-- packages/experimental/continuum-jev/：P1.3 Reflex/Jev selection adapter、Session 决策回执、双语 README 和 6 项 fake-provider/回放控制测试。
+- packages/experimental/continuum-jev/：P1.3 Reflex/Jev selection adapter、Session 决策回执、Cordis profile selector、双语 README 和 8 项 fake-provider/回放控制测试。
 - tasks/todo.md：426 行；追加分模块 P0–P5 checklist 和结果；保留原有任务。
 - tasks/lessons.md：149 行；记录用户纠正的专属开关与原版兼容含义，避免误推无 Jev 产品模式。
 - tasks/feat-continuum-memory/handoff.md：本交接，包含范围、约束与冷启动路径。
@@ -48,7 +48,7 @@ Harness 持有事实、权限、预算、版本和执行权。模型提炼先成
 - [x] P1.3 基础 off/shadow/active adapter；[ ] 真实 Jev gateway、Session receipt、检索消费者和 active 产品开关。
 - [x] P1.2 来源回读、工作集和同一步消费者；[ ] 接入产品 profile 的 Reflex 专属开关与 Jev 决策结果。
 - [x] controller 级 Reflex 专属开关、权限和停用失效语义；[ ] 接入默认产品 profile 与完整 UI。
-- [x] 接入默认 profile 的 Continuum service；无 Reflex 时保持原版，开启但未挂载 Reflex 时返回 `reflex-required`；Jev active 选择仍由独立 adapter 负责。
+- [x] 接入默认 profile 的 Continuum service；无 Reflex 时保持原版，开启但未挂载 Reflex 时返回 `reflex-required`；Jev active 选择已由 companion selector 自动消费。
 - [ ] 接入 Reflex adapter 的自动 profile 消费与专属 UI；无 Reflex 兼容原版；用内部 Baseline 消融，先 shadow 再 active。
 - [ ] 按行为面构建、lint、单元/集成、keyless Session 与两个 SDK 快照；随后真实模型对照。
 - [ ] 用户明确授权前不推送、建 PR 或部署；推送前执行 dsh-pre-push-checks 与 Ruff 双检查。
@@ -57,7 +57,7 @@ Harness 持有事实、权限、预算、版本和执行权。模型提炼先成
 
 工作树：.Codex/worktrees/feat-continuum-memory。分支：feat-continuum-memory。从 main 当前基线创建；创建前已检查 status、diff、stash、branch、HEAD 和 worktree list，stash 为空。主目录已有 README 设计和未跟踪 undefined 文件，未带入或改动这些用户工作。运行源码、配置与服务器未变，分支未推送，CI 未触发。
 
-最终版 HTML 浏览器检查通过：桌面/手机无页面横向溢出，13 维对比表、模块/验收章节完整，无 console 错误。P0 `continuum-admission.spec.ts` 通过 8/8；Continuum 7 个测试文件 28/28；P1.3 Jev adapter 与 Session 回执 6/6；focused Oxlint、两包 TypeScript 构建、native flock 构建、README Model Experience、persistence acknowledgement 和相对链接门禁通过。刷新 3 个历史 persistence format facts 后，`pnpm run test:docs` 最终 20/20 通过。实时 RunPod Jev adapter E2E 当前通过，DeepSeek 主模型 E2E 因 HTTP 401 key invalid 未通过。 全仓 pnpm run build 在既有测试类型错误处停止（continuum context 的 waterfall payload、agent-loop RequestMessage、continuum-jev fake response）；Continuum 包自身 tsc build 已通过。
+最终版 HTML 浏览器检查通过：桌面/手机无页面横向溢出，13 维对比表、模块/验收章节完整，无 console 错误。P0 `continuum-admission.spec.ts` 通过 8/8；Continuum/adapter/agent-loop 9 个测试文件 48/48；P1.3 Jev adapter 与 Session 回执已包含在内；focused Oxlint、两包 TypeScript 构建、native flock 构建、README Model Experience、persistence acknowledgement 和相对链接门禁通过。刷新 3 个历史 persistence format facts 后，`pnpm run test:docs` 最终 20/20 通过。实时 RunPod Jev adapter E2E 当前通过；DeepSeek v4-pro adapter/runtime 实跑 19 passed、2 optional image skipped、0 failed，跳过项仍 pending。全仓 `pnpm run build` 已通过。
 
 ## P1.2 Review
 
@@ -68,7 +68,9 @@ Harness 持有事实、权限、预算、版本和执行权。模型提炼先成
 `continuum-jev` 是实验性、非默认加载的 Reflex/Jev selection adapter。OFF 保持 deterministic baseline；SHADOW 不改变采用结果；ACTIVE 只接受 supplied candidate 且要求置信度阈值。Session 决策回执使用 `continuum/memory-decision`，可在不调用 Jev 的情况下回放最新选择。fake-provider 与回放 6/6 通过。实时 RunPod gateway 当前通过，证据为 `docs/feat-continuum-memory/continuum-live-e2e.json`；DeepSeek 主模型端点返回 HTTP 401，不能把主模型链路当作通过。 严格 live harness 复跑仍返回 jev/migration/confidence 0.948799389710666。
 严格 live harness 为 `scripts/continuum-live-e2e.ts`；缺少 `CONTINUUM_JEV_ENDPOINT`、`CONTINUUM_JEV_API_KEY` 或 `CONTINUUM_JEV_MODEL` 会硬失败。当前已验证缺配置失败路径，并在有部署配置时完成一次真实 Jev 选择。
 
-`readMemorySourceEvents` 复用现有 Session persistence 按 `sessionId + eventSeq` 精确读取；`retrieveMemoryWorkingSet` 只选 active 记录并执行候选/UTF-8 预算；`installContinuumMemoryContext` 在 `agent/pre-step` 追加带来源类型的 recall 消息。Session-backed profile service 负责恢复 projection 并暴露显式生命周期 API；Jev active 选择仍由独立 adapter 负责。相关记录、重启、检索和同一步测试 28/28 通过。持久化检查当前为 80 roots、28 history records，确认无未登记变化。
+`readMemorySourceEvents` 复用现有 Session persistence 按 `sessionId + eventSeq` 精确读取；`retrieveMemoryWorkingSet` 只选 active 记录并执行候选/UTF-8 预算；`installContinuumMemoryContext` 在 `agent/pre-step` 追加带来源类型的 recall 消息。Session-backed profile service 负责恢复 projection 并暴露显式生命周期 API；Jev active 选择已由 companion selector 在同一步消费并记录 receipt；相关记录、重启、检索、选择和竞态测试 48/48 通过。持久化检查当前为 80 roots、28 history records，确认无未登记变化。
+
+P1.7 追加：profile selector 的 active/shadow 过滤和 Session receipt 已接通；关闭后的迟到选择不会注入。
 
 P1.4/P1.5 追加：`ContinuumMemoryController` 通过 generation token 使关闭和停用后的在途读取失效，并按 exact scope 过滤 active 记录；active Jev 缺失时抛出明确配置错误，off/无 Reflex 仍解析为原版。新增 controller/ablation 测试后 Continuum 26/26 通过。`continuum-ablation.json` 是固定 3 样本的本地 2×2 结果，摘要树把命中率从 2/3 提升到 3/3；cache 指标只是字节复用估计。
 

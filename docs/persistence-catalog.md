@@ -497,7 +497,7 @@ Source: [`packages/compaction/compaction/src/types.ts:34`](../packages/compactio
 'continuum/memory-decision': ContinuumMemoryDecisionReceipt
 ```
 
-Source: [`packages/experimental/continuum-jev/src/index.ts:62`](../packages/experimental/continuum-jev/src/index.ts)
+Source: [`packages/experimental/continuum-jev/src/index.ts:64`](../packages/experimental/continuum-jev/src/index.ts)
 
 <a id="continuummemory-record--log-only"></a>
 
@@ -4219,7 +4219,7 @@ Sources: [`packages/subagent/subagent/src/descriptor.ts:72`](../packages/subagen
 
 SHA-256: `8e864843108a0d21cd2301ab5d0f30774ce699b393eab6ce4574bf9bd2675acb`
 
-Sources: [`packages/experimental/continuum-jev/src/index.ts:7`](../packages/experimental/continuum-jev/src/index.ts) · [`packages/experimental/system3/src/decision-kernel.ts:11`](../packages/experimental/system3/src/decision-kernel.ts)
+Sources: [`packages/experimental/continuum-jev/src/index.ts:9`](../packages/experimental/continuum-jev/src/index.ts) · [`packages/experimental/system3/src/decision-kernel.ts:11`](../packages/experimental/system3/src/decision-kernel.ts)
 
 One of:
 
@@ -4237,7 +4237,7 @@ One of:
 
 SHA-256: `80157eef4bba1666081abb485a3844b9306bde736516b2a5020ecd10a5c9be9a`
 
-Sources: [`packages/experimental/continuum-jev/src/index.ts:49`](../packages/experimental/continuum-jev/src/index.ts)
+Sources: [`packages/experimental/continuum-jev/src/index.ts:51`](../packages/experimental/continuum-jev/src/index.ts)
 
 | Property | Presence | Type |
 |---|---|---|

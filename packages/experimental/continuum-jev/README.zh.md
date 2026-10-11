@@ -22,7 +22,7 @@ kind: package-reference
 <a id="use-this-package"></a>
 ## 使用本包
 
-在有限本地检索之后调用 `selectContinuumMemory`。`off` 保持 baseline；`shadow` 只比较 Jev 建议并返回 baseline；`active` 只接受候选集中且达到 `minConfidence` 的选择。
+在有限本地检索之后调用 `selectContinuumMemory`，或加载默认的 `ContinuumJevPlugin` profile service，让 `ContinuumMemory` 在同一步消费者中调用 selector。`off` 保持 baseline；`shadow` 只比较 Jev 建议并返回 baseline；`active` 只接受候选集中且达到 `minConfidence` 的选择。
 
 <a id="understand-the-implementation"></a>
 ## 理解实现
@@ -50,11 +50,11 @@ Jev sidecar 使用独立请求；后续消费者显式注入记录前，主模�
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- 尚未实现检索、同一步注入和产品开关；回执 API 只记录决策，不会自动让决策进入模型上下文。
+- 适配器不负责检索或记录准入。profile service 只在 Continuum 提供的有限候选中选择，不会臆造事实。
 - 真实 Jev 质量和延迟必须在 gateway 可达且配置完整时测试；fake provider 不能证明模型效果。
 - 多选、摘要树、缓存测量和权限过滤留待后续 Continuum 阶段。
 
 <a id="dev-note"></a>
 ### 开发备注
 
-本包保持实验性，不由默认 profile 加载。
+本包保持实验性。system3 runtime patch 以 `off` 模式声明它；是否启用 Continuum 仍是受保护部署环境的显式选择。

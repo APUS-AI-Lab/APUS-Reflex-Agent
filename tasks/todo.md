@@ -424,6 +424,7 @@ PPT v2为4页主讲+2页备查，实际Keynote打开、六页备注回读和PDF�
 - [x] P1.4 生命周期安全切片：Reflex 专属 switch/controller、精确 scope 授权、停用/关闭 generation invalidation，以及 controller 到同一步消费者的集成测试。
 - [x] P1.5 摘要树/cache 评测切片：固定 3 条样本完成 2×2 本地消融，结果写入 `docs/feat-continuum-memory/continuum-ablation.json`；缓存数字明确标为布局复用估计。
 - [x] P1.6 默认 profile 接缝：新增 Session-backed `ContinuumMemory` Cordis service，显式加载、原版默认 off、未挂载 Reflex 时 `reflex-required`，并纳入 system3 runtime patch（不自动开启）。
+- [x] P1.7 Reflex selector profile 消费：`continuum-jev` 提供 Cordis selector service，active/shadow 在同一步过滤工作集并写入决策回执；关闭/停用会丢弃迟到结果，48 项相关测试通过。
 - [ ] P2：任务工作集、supersedes、FTS、权限与尾部覆盖；新 Session 续做、旧版本拒绝、索引重建与积压。
 - [ ] P3：Reflex active 多候选/动作、弃权、超时与有限兜底；固定候选和端到端两种对照。
 - [ ] P4：专属开关 UI、停用/关闭后的活动投影移除、在途失效、最终模型预算、两个 SDK 和离线回放；原版回归。
@@ -441,6 +442,8 @@ P1.4/P1.5 追加验收：Continuum 6 个测试文件 26/26、TypeScript build �
 实时重试验收：RunPod Jev endpoint 当前可达，`continuum-live-e2e.ts` 使用部署配置中的 JEV key 实跑成功，结果保存在 `docs/feat-continuum-memory/continuum-live-e2e.json`（APUS-OpenJev-v1-9B-5949，confidence 0.9487993897）。官方 DeepSeek endpoint 当前可达但对用户提供的 key 返回 HTTP 401；llm-deepseek adapter/runtime 真实测试 16 项因此全部失败于 AUTH，未计为主模型通过。TypeScript SDK fake-runtime 回放 `continuum/memory-decision` 1/1 通过；真实生成模型仍待有效 key。
 
 P1.6 验收：profile service 测试 3/3、Continuum 全测试 28/28、service TypeScript build 与 Oxlint 通过；`verify-cordis-config` 215/215、`test:docs` 20/20、persistence acknowledgement 80 roots/28 history records 通过。runtime patch 默认关闭，仅由受保护部署环境的 `CONTINUUM_MEMORY_*` 配置显式开启。Service 当前提供记录 create/supersede/deactivate、Session 日志恢复和 controller 消费者；Jev active 选择仍由独立 adapter 负责，尚未宣称全链路自动采用。
+
+P1.7 验收：Continuum/adapter/agent-loop 9 个测试文件 48/48，Continuum 与 Jev TypeScript build、focused Oxlint、全仓 `pnpm run build` 通过。profile selector 的 active、shadow、回执和关闭后的迟到结果均有测试。官方 DeepSeek v4-pro adapter/runtime 实跑 19 passed、2 optional image skipped、0 failed；跳过项仍按政策 pending。新增 `scripts/continuum-evaluation.ts` 是严格 A0/A1/B/C/U 执行器，但本轮 20 请求实跑因官方 endpoint body timeout 未生成结果文件，不能计为评测完成。
 
 ### P1.1 Review
 

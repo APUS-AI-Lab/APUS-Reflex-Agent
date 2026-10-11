@@ -499,7 +499,7 @@ export type SessionEvent<T extends SessionEventType = SessionEventType> = {
 'continuum/memory-decision': ContinuumMemoryDecisionReceipt
 ```
 
-来源：[`packages/experimental/continuum-jev/src/index.ts:62`](../packages/experimental/continuum-jev/src/index.ts)
+来源：[`packages/experimental/continuum-jev/src/index.ts:64`](../packages/experimental/continuum-jev/src/index.ts)
 
 <a id="continuummemory-record--log-only"></a>
 
@@ -4221,7 +4221,7 @@ SHA-256: `6487b10ba7542f3c447b1e41a1c6a590b7bfafe0b9b66b49f34028da85bb970f`
 
 SHA-256: `8e864843108a0d21cd2301ab5d0f30774ce699b393eab6ce4574bf9bd2675acb`
 
-来源：[`packages/experimental/continuum-jev/src/index.ts:7`](../packages/experimental/continuum-jev/src/index.ts) · [`packages/experimental/system3/src/decision-kernel.ts:11`](../packages/experimental/system3/src/decision-kernel.ts)
+来源：[`packages/experimental/continuum-jev/src/index.ts:9`](../packages/experimental/continuum-jev/src/index.ts) · [`packages/experimental/system3/src/decision-kernel.ts:11`](../packages/experimental/system3/src/decision-kernel.ts)
 
 以下类型之一：
 
@@ -4239,7 +4239,7 @@ SHA-256: `8e864843108a0d21cd2301ab5d0f30774ce699b393eab6ce4574bf9bd2675acb`
 
 SHA-256: `80157eef4bba1666081abb485a3844b9306bde736516b2a5020ecd10a5c9be9a`
 
-来源：[`packages/experimental/continuum-jev/src/index.ts:49`](../packages/experimental/continuum-jev/src/index.ts)
+来源：[`packages/experimental/continuum-jev/src/index.ts:51`](../packages/experimental/continuum-jev/src/index.ts)
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|

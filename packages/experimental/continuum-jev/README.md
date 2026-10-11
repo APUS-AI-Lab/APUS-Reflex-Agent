@@ -22,7 +22,7 @@ This package is the Reflex-only decision adapter for APUS Continuum. It keeps a 
 <a id="use-this-package"></a>
 ## Use this package
 
-Call `selectContinuumMemory` after a bounded local retrieval step. `off` preserves the baseline path. `shadow` records Jev advice for comparison while returning the baseline. `active` accepts only a supplied candidate above `minConfidence`.
+Call `selectContinuumMemory` after a bounded local retrieval step, or load the default `ContinuumJevPlugin` profile service so `ContinuumMemory` can call the selector during the same-step consumer. `off` preserves the baseline path. `shadow` records Jev advice for comparison while returning the baseline. `active` accepts only a supplied candidate above `minConfidence`.
 
 <a id="understand-the-implementation"></a>
 ## Understand the implementation
@@ -50,11 +50,11 @@ No direct main-route cache effect.
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- The adapter does not implement retrieval, same-step injection, or the product switch; the receipt API only records the decision and does not make it model-visible.
+- The adapter does not implement retrieval or record admission. The profile service only selects among the bounded candidates supplied by Continuum; it does not invent facts.
 - Real Jev quality and latency require a reachable configured gateway; fake-provider tests do not establish model effectiveness.
 - Multi-selection, summary-tree navigation, cache measurement, and permission filtering remain later Continuum stages.
 
 <a id="dev-note"></a>
 ### Dev Note
 
-This package remains experimental and is not loaded by default profiles.
+This package remains experimental. The system3 runtime patch declares it with mode `off`; enabling Continuum remains an explicit protected deployment choice.

@@ -9,9 +9,9 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-This package owns the durable Continuum record and profile service: immutable memory records with source references, revision checks, superseding, deactivation, a log-only Session event that can rebuild the projection, exact source-event reads, deterministic bounded retrieval, a lifecycle-aware same-step consumer, and an explicit profile switch. The service does not silently invent records or provide an unlimited-memory mode without Reflex.
+This package owns the durable Continuum record and profile service: immutable memory records with source references, revision checks, superseding, deactivation, a log-only Session event that can rebuild the projection, exact source-event reads, deterministic bounded retrieval, an optional mounted Jev selector, a lifecycle-aware same-step consumer, and an explicit profile switch. The service does not silently invent records or provide an unlimited-memory mode without Reflex.
 
-The Session event uses the existing persistence backend and becomes durable after the caller completes `ctx.sessions.flush(session)`. Reflex admission, retrieval, and model injection remain later slices.
+The Session event uses the existing persistence backend and becomes durable after the caller completes `ctx.sessions.flush(session)`. Record admission remains explicit; when the companion `continuum-jev` profile service is mounted, shadow/active selection and its receipt are part of the same-step consumer.
 
 ## Table of Contents
 
@@ -49,7 +49,7 @@ Read the [Continuum proposal](../../../docs/feat-continuum-memory/continuum-memo
 <a id="lifecycle-and-evaluation"></a>
 ## Lifecycle and evaluation
 
-`ContinuumMemoryController` owns the Reflex-only switch, exact scope authorization, and a generation token for in-flight reads. Disabling the switch preserves durable records but invalidates a pending projection; deactivation does the same. When Reflex is absent, `resolveContinuumMemorySwitch` resolves to the original path. The local tree/cache experiment is generated at `docs/feat-continuum-memory/continuum-ablation.json`; it measures retrieval coverage separately from estimated stable-prefix reuse and does not claim provider billing or cache hits.
+`ContinuumMemoryController` owns the Reflex-only switch, exact scope authorization, and a generation token for in-flight reads. Disabling the switch preserves durable records but invalidates a pending projection; deactivation does the same. When Reflex is absent, `resolveContinuumMemorySwitch` resolves to the original path. If the companion selector is mounted, active mode filters the bounded working set through Jev and persists `continuum/memory-decision`; shadow mode calls Jev but retains the baseline. The local tree/cache experiment is generated at `docs/feat-continuum-memory/continuum-ablation.json`; it measures retrieval coverage separately from estimated stable-prefix reuse and does not claim provider billing or cache hits.
 
 <a id="model-experience"></a>
 ## Model Experience
@@ -73,7 +73,7 @@ The consumer appends a bounded recall message, so the existing request prefix re
 <a id="known-limitations-and-deferred-work"></a>
 
 - The record projection is process-local; restart recovery requires reading and folding the Session event log.
-- The service provides the profile seam and deterministic retrieval, but Jev candidate selection is still a separate adapter call and no full text index is included.
+- The service has no full text index, summary tree, or provider cache accounting; those remain explicit evaluation work. Record admission is caller-owned and source-backed.
 
 <a id="dev-note"></a>
 ### Dev Note
@@ -81,6 +81,6 @@ The consumer appends a bounded recall message, so the existing request prefix re
 <details>
 <summary>Working context for maintainers</summary>
 
-The Session event is durable, but this package still has no product profile or Reflex integration.
+The Session event is durable. The system3 runtime patch loads this service and the companion Jev selector with the feature off by default; enabling it remains an explicit protected deployment choice.
 
 </details>
