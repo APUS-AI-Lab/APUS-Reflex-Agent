@@ -1,6 +1,7 @@
 import type Jev from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
 import type { JevOutcome, JevRequest } from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
 import type { MemoryId } from '@deepseek-ai/dsh-continuum'
+import type { Session, SessionEvent } from '@deepseek-ai/dsh-session'
 
 /** Controller mode; only active mode lets Jev replace the deterministic choice. */
 export type ContinuumJevMode = 'off' | 'shadow' | 'active'
@@ -34,6 +35,24 @@ export interface MemorySelectionResult {
   readonly confidence?: number
   readonly failure?: string
   readonly request?: JevRequest
+}
+
+/** Model-free, replayable record of one Continuum Jev selection. */
+export interface ContinuumMemoryDecisionReceipt {
+  readonly version: 1
+  readonly mode: ContinuumJevMode
+  readonly selectedIds: readonly MemoryId[]
+  readonly baselineIds: readonly MemoryId[]
+  readonly outcome: MemorySelectionResult['outcome']
+  readonly confidence?: number
+  readonly failure?: string
+}
+
+declare module '@deepseek-ai/dsh-session/types' {
+  interface SessionEventMap {
+    /** Replayable Continuum selection receipt; never re-calls Jev during replay. */
+    'continuum/memory-decision': ContinuumMemoryDecisionReceipt
+  }
 }
 
 /** Narrow Jev capability consumed by the adapter, usable with `ctx.jev`. */
@@ -90,6 +109,39 @@ export async function selectContinuumMemory(
     return { mode: config.mode, selectedIds: baseline, baselineIds: baseline, outcome: 'unknown', confidence: answer.confidence, failure: candidate === undefined ? 'invalid-choice' : 'low-confidence', request: resolvedRequest }
   }
   return { mode: config.mode, selectedIds: config.mode === 'active' ? [candidate.id] : baseline, baselineIds: baseline, outcome: 'jev', confidence: answer.confidence, request: resolvedRequest }
+}
+
+/**
+ * Persist one selection receipt in the owning Session log.
+ * @param session - Session that owns the decision history.
+ * @param result - selection result returned by the controller.
+ * @returns appended receipt event.
+ */
+export function recordContinuumMemoryDecision(
+  session: Session,
+  result: MemorySelectionResult,
+): SessionEvent<'continuum/memory-decision'> {
+  const receipt: ContinuumMemoryDecisionReceipt = {
+    version: 1, mode: result.mode, selectedIds: [...result.selectedIds], baselineIds: [...result.baselineIds], outcome: result.outcome,
+    ...(result.confidence === undefined ? {} : { confidence: result.confidence }),
+    ...(result.failure === undefined ? {} : { failure: result.failure }),
+  }
+  return session.append('continuum/memory-decision', receipt)
+}
+
+/**
+ * Find the latest decision receipt without invoking Jev.
+ * @param events - Session log events in sequence order.
+ * @returns latest receipt, or undefined before the first decision.
+ */
+export function latestContinuumMemoryDecision(
+  events: readonly SessionEvent[],
+): ContinuumMemoryDecisionReceipt | undefined {
+  for (let index = events.length - 1; index >= 0; index -= 1) {
+    const event = events[index]
+    if (event?.type === 'continuum/memory-decision') return event.data
+  }
+  return undefined
 }
 
 function baselineSelection(candidates: readonly MemorySelectionCandidate[]): readonly MemoryId[] {

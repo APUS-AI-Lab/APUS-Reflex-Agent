@@ -9,7 +9,7 @@ kind: package-reference
 
 ## 概述
 
-本包是 APUS Continuum 的 Reflex 专属决策适配器。它保留确定性本地 baseline，支持 `off`、`shadow`、`active`，把 Jev 输入限制在已检索候选内，拒绝模型臆造 ID，并在 provider 失败或置信度不足时回退。本包自身不负责检索、持久化回执，也不单独宣称无限上下文。
+本包是 APUS Continuum 的 Reflex 专属决策适配器。它保留确定性本地 baseline，支持 `off`、`shadow`、`active`，把 Jev 输入限制在已检索候选内，拒绝模型臆造 ID，并在 provider 失败或置信度不足时回退。本包可以把决策回执追加到 Session 日志并支持回放；自身不负责检索，也不单独宣称无限上下文。
 
 ## 目录
 
@@ -27,7 +27,7 @@ kind: package-reference
 <a id="understand-the-implementation"></a>
 ## 理解实现
 
-适配器通过 provider-neutral 的 `ctx.jev` 接收查询、候选 ID、标签、摘录和分数。Choice 集合严格由候选 ID 加 `none` 构成；未知选择、provider 不可用、取消或低置信度不能把记忆加入 active 结果。
+适配器通过 provider-neutral 的 `ctx.jev` 接收查询、候选 ID、标签、摘录和分数。Choice 集合严格由候选 ID 加 `none` 构成；未知选择、provider 不可用、取消或低置信度不能把记忆加入 active 结果。`recordContinuumMemoryDecision` 将 mode、baseline 与 selected ID、outcome、confidence 和 failure reason 写入 `continuum/memory-decision`；`latestContinuumMemoryDecision` 不调用 Jev 即可回放最新回执。
 
 <a id="model-experience"></a>
 ## Model Experience
@@ -50,7 +50,7 @@ Jev sidecar 使用独立请求；后续消费者显式注入记录前，主模�
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- 尚未实现检索、Session 回执持久化、同一步注入和产品开关。
+- 尚未实现检索、同一步注入和产品开关；回执 API 只记录决策，不会自动让决策进入模型上下文。
 - 真实 Jev 质量和延迟必须在 gateway 可达且配置完整时测试；fake provider 不能证明模型效果。
 - 多选、摘要树、缓存测量和权限过滤留待后续 Continuum 阶段。
 

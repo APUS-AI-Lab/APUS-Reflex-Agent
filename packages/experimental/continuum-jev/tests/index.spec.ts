@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { MemoryId } from '@deepseek-ai/dsh-continuum'
-import { selectContinuumMemory, type ContinuumJev } from '../src/index.ts'
+import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
+import { selectContinuumMemory, recordContinuumMemoryDecision, latestContinuumMemoryDecision, type ContinuumJev } from '../src/index.ts'
+import { Context } from '@deepseek-ai/cordis'
 
 const first = { id: MemoryId('a'), label: 'A', excerpt: 'alpha', score: 0.8 } as const
 const second = { id: MemoryId('b'), label: 'B', excerpt: 'beta', score: 0.4 } as const
@@ -41,5 +43,16 @@ describe('Continuum Jev controller', () => {
     const controller = new AbortController()
     controller.abort(new Error('cancelled'))
     await expect(selectContinuumMemory(fake(String(first.id)), { mode: 'active', minConfidence: 0.8 }, input, controller.signal)).rejects.toThrow('cancelled')
+  })
+
+  it('persists and replays a decision receipt without Jev', async () => {
+    const ctx = new Context()
+    await ctx.plugin(SessionStore)
+    const session = ctx.sessions.create(SessionId('continuum-decision'))
+    const result = await selectContinuumMemory(fake(String(second.id)), { mode: 'active', minConfidence: 0.8 }, input)
+    const event = recordContinuumMemoryDecision(session, result)
+    expect(event.type).toBe('continuum/memory-decision')
+    expect(latestContinuumMemoryDecision(session.snapshotEvents())).toEqual(event.data)
+    await ctx.fiber.dispose()
   })
 })

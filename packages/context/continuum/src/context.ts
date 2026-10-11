@@ -13,9 +13,11 @@ export interface ContinuumMemorySource {
   readonly recordIds: readonly string[]
 }
 
-declare module '@deepseek-ai/dsh-llm/message' {
+declare module '@deepseek-ai/dsh-llm' {
   interface MessageSourceMap {
-    /** Source-backed, bounded Continuum memory context. */
+    /** Source-backed, bounded Continuum memory context.
+     * @persistenceAttribution
+     */
     'continuum-memory': ContinuumMemorySource
   }
 }

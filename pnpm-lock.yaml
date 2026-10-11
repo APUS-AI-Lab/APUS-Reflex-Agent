@@ -8677,6 +8677,9 @@ importers:
       '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin':
         specifier: workspace:*
         version: link:../apus-dsh-jev-plugin
+      '@deepseek-ai/dsh-session':
+        specifier: workspace:*
+        version: link:../../core/session
 
   packages/experimental/inspector:
     dependencies:

@@ -14,7 +14,7 @@
 - packages/core/agent-loop/package.json / pnpm-lock.yaml：测试所需 token-meter workspace devDependency。
 - packages/context/continuum/：P1.1 记录语义库加 P1.2 Session 事件/JSONL 重启回放、README 双语、包配置和 16 项相关测试。
 - packages/context/continuum/：补充精确来源事件读取、active-only 有界检索、UTF-8 预算和 `agent/pre-step` 同一步 recall 消费；相关测试总计 21 项。
-- packages/experimental/continuum-jev/：P1.3 基础 Reflex/Jev selection adapter、双语 README 和 5 项 fake-provider 控制测试。
+- packages/experimental/continuum-jev/：P1.3 Reflex/Jev selection adapter、Session 决策回执、双语 README 和 6 项 fake-provider/回放控制测试。
 - tasks/todo.md：426 行；追加分模块 P0–P5 checklist 和结果；保留原有任务。
 - tasks/lessons.md：149 行；记录用户纠正的专属开关与原版兼容含义，避免误推无 Jev 产品模式。
 - tasks/feat-continuum-memory/handoff.md：本交接，包含范围、约束与冷启动路径。
@@ -53,7 +53,7 @@ Harness 持有事实、权限、预算、版本和执行权。模型提炼先成
 
 工作树：.Codex/worktrees/feat-continuum-memory。分支：feat-continuum-memory。从 main 当前基线创建；创建前已检查 status、diff、stash、branch、HEAD 和 worktree list，stash 为空。主目录已有 README 设计和未跟踪 undefined 文件，未带入或改动这些用户工作。运行源码、配置与服务器未变，分支未推送，CI 未触发。
 
-最终版 HTML 浏览器检查通过：桌面/手机无页面横向溢出，13 维对比表、模块/验收章节完整，无 console 错误。P0 `continuum-admission.spec.ts` 通过 8/8；P1.1/P1.2 记录和 JSONL 重启回放通过 16/16；P1.3 fake-provider adapter 通过 5/5；focused Oxlint、局部 TypeScript 构建、native flock 构建、README Model Experience、persistence acknowledgement 和相对链接门禁通过。`pnpm run test:docs` 本批曾因新 README 锚点机械问题失败，修正后需最终重跑；真实 DeepSeek 主模型与 Jev gateway 均因 TLS/网络不可达未运行。
+最终版 HTML 浏览器检查通过：桌面/手机无页面横向溢出，13 维对比表、模块/验收章节完整，无 console 错误。P0 `continuum-admission.spec.ts` 通过 8/8；Continuum 4 个测试文件 21/21；P1.3 Jev adapter 与 Session 回执 6/6；focused Oxlint、两包 TypeScript 构建、native flock 构建、README Model Experience、persistence acknowledgement 和相对链接门禁通过。刷新 3 个历史 persistence format facts 后，`pnpm run test:docs` 最终 20/20 通过；真实 DeepSeek 主模型与 Jev gateway 均因 TLS/网络不可达未运行。
 
 ## P1.2 Review
 
@@ -61,10 +61,10 @@ Harness 持有事实、权限、预算、版本和执行权。模型提炼先成
 
 ## P1.3 Review
 
-`continuum-jev` 是实验性、非默认加载的 Reflex/Jev selection adapter。OFF 保持 deterministic baseline；SHADOW 不改变采用结果；ACTIVE 只接受 supplied candidate 且要求置信度阈值。fake-provider 5/5 通过。真实 gateway endpoint 的 TLS 握手超时，本机没有 `SYSTEM3_JEV_HOST`/`APUS_JEV_API_KEY` 配置；不得把本批当作真实模型验收。
+`continuum-jev` 是实验性、非默认加载的 Reflex/Jev selection adapter。OFF 保持 deterministic baseline；SHADOW 不改变采用结果；ACTIVE 只接受 supplied candidate 且要求置信度阈值。Session 决策回执使用 `continuum/memory-decision`，可在不调用 Jev 的情况下回放最新选择。fake-provider 与回放 6/6 通过。真实 gateway endpoint 的 TLS 握手超时，本机没有 `SYSTEM3_JEV_HOST`/`APUS_JEV_API_KEY` 配置；不得把本批当作真实模型验收。
 严格 live harness 为 `scripts/continuum-live-e2e.ts`；缺少 `CONTINUUM_JEV_ENDPOINT`、`CONTINUUM_JEV_API_KEY` 或 `CONTINUUM_JEV_MODEL` 会硬失败。当前已验证其缺配置失败路径，真实 gateway 仍未通过。
 
-`readMemorySourceEvents` 复用现有 Session persistence 按 `sessionId + eventSeq` 精确读取；`retrieveMemoryWorkingSet` 只选 active 记录并执行候选/UTF-8 预算；`installContinuumMemoryContext` 在 `agent/pre-step` 追加带来源类型的 recall 消息。相关记录、重启、检索和同一步测试 21/21 通过；这仍是显式消费者，尚未接入默认 profile 或 Jev active 选择。
+`readMemorySourceEvents` 复用现有 Session persistence 按 `sessionId + eventSeq` 精确读取；`retrieveMemoryWorkingSet` 只选 active 记录并执行候选/UTF-8 预算；`installContinuumMemoryContext` 在 `agent/pre-step` 追加带来源类型的 recall 消息。相关记录、重启、检索和同一步测试 21/21 通过；这仍是显式消费者，尚未接入默认 profile 或 Jev active 选择。持久化检查当前为 80 roots、28 history records，确认无未登记变化。
 
 ## 冷启动 checklist
 

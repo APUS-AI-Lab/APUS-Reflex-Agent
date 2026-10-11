@@ -12,11 +12,13 @@
   "license": "MIT",
   "dependencies": {
     "@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin": "workspace:*",
-    "@deepseek-ai/dsh-continuum": "workspace:*"
+    "@deepseek-ai/dsh-continuum": "workspace:*",
+    "@deepseek-ai/dsh-session": "workspace:*"
   },
   "peerDependencies": {},
   "devDependencies": {
     "@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin": "workspace:*",
-    "@deepseek-ai/dsh-continuum": "workspace:*"
+    "@deepseek-ai/dsh-continuum": "workspace:*",
+    "@deepseek-ai/dsh-session": "workspace:*"
   }
 }

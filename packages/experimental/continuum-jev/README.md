@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-This package is the Reflex-only decision adapter for APUS Continuum. It keeps a deterministic local baseline, supports `off`, `shadow`, and `active` modes, bounds Jev input to retrieved candidates, rejects invented IDs, and falls back on provider failure or low confidence. It does not retrieve records, persist receipts, or claim unlimited context by itself.
+This package is the Reflex-only decision adapter for APUS Continuum. It keeps a deterministic local baseline, supports `off`, `shadow`, and `active` modes, bounds Jev input to retrieved candidates, rejects invented IDs, and falls back on provider failure or low confidence. It can append a replayable decision receipt to the Session log. It does not retrieve records or claim unlimited context by itself.
 
 ## Table of Contents
 
@@ -27,7 +27,7 @@ Call `selectContinuumMemory` after a bounded local retrieval step. `off` preserv
 <a id="understand-the-implementation"></a>
 ## Understand the implementation
 
-The adapter sends candidate IDs, labels, excerpts, scores, and the query to the provider-neutral `ctx.jev` capability. The choice set is closed over the supplied IDs plus `none`; an unknown choice, unavailable provider, cancellation, or low confidence cannot introduce memory into the active result.
+The adapter sends candidate IDs, labels, excerpts, scores, and the query to the provider-neutral `ctx.jev` capability. The choice set is closed over the supplied IDs plus `none`; an unknown choice, unavailable provider, cancellation, or low confidence cannot introduce memory into the active result. `recordContinuumMemoryDecision` stores the mode, baseline and selected IDs, outcome, confidence, and failure reason as `continuum/memory-decision`; `latestContinuumMemoryDecision` replays the newest receipt without calling Jev.
 
 <a id="model-experience"></a>
 ## Model Experience
@@ -50,7 +50,7 @@ No direct main-route cache effect.
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- The adapter does not implement retrieval, Session receipt persistence, same-step injection, or the product switch.
+- The adapter does not implement retrieval, same-step injection, or the product switch; the receipt API only records the decision and does not make it model-visible.
 - Real Jev quality and latency require a reachable configured gateway; fake-provider tests do not establish model effectiveness.
 - Multi-selection, summary-tree navigation, cache measurement, and permission filtering remain later Continuum stages.
 
