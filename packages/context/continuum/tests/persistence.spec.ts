@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -72,6 +72,84 @@ describe('Continuum record events', () => {
     expect(sources.map(source => [source.sessionId, source.event.type])).toEqual([[id, 'turn/start']])
     await readHandle.close()
     await reader.fiber.dispose()
+  })
+
+  it('retains memory events across a failed flush and replays the retry exactly once', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'dsh-continuum-flush-retry-'))
+    roots.push(root)
+    const id = SessionId('continuum-flush-retry')
+    const writer = new Context()
+    try {
+      await writer.plugin(SessionStore)
+      await writer.plugin(JsonlSessionPersistence, { root, compression: 'none' })
+      const session = writer.sessions.create(id)
+      const handle = await writer.sessionPersistence.create(session.header)
+      const persistence = writer.sessionPersistence
+      if (!(persistence instanceof JsonlSessionPersistence)) throw new Error('Expected JSONL persistence')
+      // Materialize first so the injected failure targets the live event batch.
+      await handle.flush()
+      const failure = new Error('Continuum batch storage unavailable')
+      const persist = vi.spyOn(persistence, 'persistBatch').mockRejectedValueOnce(failure)
+      try {
+        const store = new MemoryRecordStore()
+        session.append('turn/start', { turn: 1 })
+        const created = store.create({
+          id: MemoryId('delivery'),
+          kind: 'fact',
+          scope: 'workspace',
+          content: 'Delivery is scheduled for Thursday.',
+          sourceRefs: [{ sessionId: id, eventSeq: SessionSeq(0) }],
+        })
+        appendMemoryRecordEvent(session, 'create', created)
+        await expect(writer.sessions.flush(session)).rejects.toBe(failure)
+        expect(persist).toHaveBeenCalledTimes(1)
+        const beforeRetry = await persistence.open(id, 'read')
+        try {
+          expect((await beforeRetry.read()).events).toEqual([])
+        } finally {
+          await beforeRetry.close()
+        }
+        const corrected = store.supersede(created.id, created.revision, {
+          id: MemoryId('delivery-corrected'),
+          kind: 'fact',
+          scope: 'workspace',
+          content: 'Delivery is scheduled for Friday.',
+          sourceRefs: created.sourceRefs,
+        })
+        appendMemoryRecordEvent(session, 'supersede', corrected)
+        await expect(writer.sessions.flush(session)).resolves.toBe(true)
+        await expect(writer.sessions.flush(session)).resolves.toBe(true)
+        expect(persist).toHaveBeenCalledTimes(2)
+        await handle.close()
+        await writer.fiber.dispose()
+
+        const reader = new Context()
+        try {
+          await reader.plugin(SessionStore)
+          await reader.plugin(JsonlSessionPersistence, { root, compression: 'none' })
+          const readHandle = await reader.sessionPersistence.open(id, 'read')
+          try {
+            const { events } = await readHandle.read()
+            expect(events.map(event => [event.type, event.seq])).toEqual([
+              ['turn/start', 0],
+              ['continuum/memory-record', 1],
+              ['continuum/memory-record', 2],
+            ])
+            expect(foldMemoryRecordEvents(events, new MemoryRecordStore()).snapshot()).toEqual(store.snapshot())
+            const sources = await readMemorySourceEvents(reader.sessionPersistence, corrected.sourceRefs)
+            expect(sources.map(source => source.event.type)).toEqual(['turn/start'])
+          } finally {
+            await readHandle.close()
+          }
+        } finally {
+          await reader.fiber.dispose()
+        }
+      } finally {
+        persist.mockRestore()
+      }
+    } finally {
+      await writer.fiber.dispose()
+    }
   })
 
   it('rebuilds and searches a long JSONL history after restart', async () => {
