@@ -34,6 +34,22 @@ describe('Continuum Jev controller', () => {
     expect(result).toMatchObject({ outcome: 'jev', selectedIds: [second.id], baselineIds: [first.id] })
   })
 
+  it('allows bounded sequential active selections without widening the candidate set', async () => {
+    let calls = 0
+    const base = fake(String(first.id))
+    const provider: ContinuumJev = {
+      resolve: base.resolve,
+      decide: async (request) => {
+        const choices = [String(first.id), String(second.id), 'none']
+        const choice = choices[calls++] ?? 'none'
+        return { kind: 'ok', spec: { ...request, providerId: 'fake', model: 'fake' }, response: { model: 'fake', answers: { memory: { type: 'choice', choice, confidence: 0.95, probabilities: { [choice]: 1 } } } } }
+      },
+    }
+    const result = await selectContinuumMemory(provider, { mode: 'active', minConfidence: 0.8, maxSelections: 2 }, input)
+    expect(result).toMatchObject({ outcome: 'jev', selectedIds: [first.id, second.id], baselineIds: [first.id, second.id] })
+    expect(calls).toBe(2)
+  })
+
   it('treats an explicit abstain as an empty active selection', async () => {
     const abstain = await selectContinuumMemory(fake('none'), { mode: 'active', minConfidence: 0.8 }, input)
     expect(abstain).toMatchObject({ outcome: 'jev', selectedIds: [], baselineIds: [first.id] })

@@ -22,7 +22,7 @@ This package is the Reflex-only decision adapter for APUS Continuum. It keeps a 
 <a id="use-this-package"></a>
 ## Use this package
 
-Call `selectContinuumMemory` after a bounded local retrieval step, or load the default `ContinuumJevPlugin` profile service so `ContinuumMemory` can call the selector during the same-step consumer. `off` preserves the baseline path. `shadow` records Jev advice for comparison while returning the baseline. `active` accepts only a supplied candidate above `minConfidence`; an explicit `timeoutMs` bounds provider waiting and returns the deterministic baseline on timeout.
+Call `selectContinuumMemory` after a bounded local retrieval step, or load the default `ContinuumJevPlugin` profile service so `ContinuumMemory` can call the selector during the same-step consumer. `off` preserves the baseline path. `shadow` records Jev advice for comparison while returning the baseline. `active` accepts only supplied candidates above `minConfidence`; `maxSelections` performs a bounded sequence of single-choice Jev decisions, and `timeoutMs` bounds each provider wait before returning the deterministic baseline.
 
 <a id="understand-the-implementation"></a>
 ## Understand the implementation
@@ -52,7 +52,7 @@ No direct main-route cache effect.
 
 - The adapter does not implement retrieval or record admission. The profile service only selects among the bounded candidates supplied by Continuum; it does not invent facts.
 - Real Jev quality and latency require a reachable configured gateway; fake-provider tests do not establish model effectiveness.
-- Multi-selection remains limited by the current Jev single-choice protocol; summary-tree navigation, cache measurement, and permission filtering belong to later Continuum stages.
+- Multi-selection is implemented as bounded sequential single-choice requests; summary-tree navigation, cache measurement, and permission filtering belong to later Continuum stages.
 
 <a id="dev-note"></a>
 ### Dev Note
