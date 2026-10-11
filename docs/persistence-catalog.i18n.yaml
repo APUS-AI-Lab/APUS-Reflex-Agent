@@ -78,8 +78,8 @@
   en: b28e57939a223746
   zh: b28e57939a223746
 /session-persistence-event-catalog/events/continuum/continuum-memory-decision-log-only:
-  en: b4904c77b551a6e7
-  zh: 078d1fcfb6906a5b
+  en: 8deabe98c662cc7d
+  zh: b34d23b2856dfc72
 /session-persistence-event-catalog/events/continuum/continuum-memory-record-log-only:
   en: 68beff1d1b37e4eb
   zh: 4cc235f56dc18750
@@ -1308,11 +1308,11 @@
   en: 8ade6fcb262a2596
   zh: fdac29730ac9f6e0
 /session-persistence-event-catalog/resolved-persistence-types/continuummemorydecisionreceipt:
-  en: 9413289079fc799e
-  zh: 7ac3f662e28a60d0
+  en: 068d0a4339bdaf15
+  zh: 505d734c0070b748
 /session-persistence-event-catalog/resolved-persistence-types/continuummemorysource:
-  en: 823992022249d1bc
-  zh: bdf9c0dd76d9ca6c
+  en: 2d1df44ce6eaa36f
+  zh: 514758829f140f56
 /session-persistence-event-catalog/resolved-persistence-types/deepseeksearchllmrequest:
   en: 290e9c5c1ae58ff3
   zh: 9e097c78cbb1effb
