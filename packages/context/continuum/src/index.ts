@@ -6,3 +6,5 @@
 
 export * from './records.ts'
 export * from './persistence.ts'
+export * from './retrieval.ts'
+export * from './context.ts'

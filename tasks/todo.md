@@ -416,8 +416,10 @@ PPT v2为4页主讲+2页备查，实际Keynote打开、六页备注回读和PDF�
 - [x] P1.2：复用 Session.append 与 ctx.sessions.flush 接入真实持久事件；完成 persistence acknowledgement 和重启恢复；flush failure semantics 仍需独立故障注入批次。
 - [x] P1.2 设计门：明确复用既有 Session event log、JSONL flush/restart 和事件折叠；设计稿见 `docs/feat-continuum-memory/p1-2-persistence-design.html`。
 - [ ] P1.2：原文精确回读与同一步采用；最小 profile 贯通，重启从原日志恢复；未出现完整检索前不增加抽象 provider。
+- [x] P1.2 精确来源回读与有界工作集：按 `sessionId + eventSeq` 回读真实事件，active-only 词法检索、候选上限和 UTF-8 字节预算通过 21 项相关测试。
 - [ ] P1.3：Reflex 公共 Jev 接口 adapter，显式依赖校验、shadow、取消；真实双模型与文件产物验收。
 - [x] P1.3 基础 adapter：新增实验性 `continuum-jev`，覆盖 off/shadow/active、baseline、候选 ID 封闭集、置信度回退与取消；真实 gateway E2E 未通过前不得标记完成。
+- [x] P1.2 同一步消费者：`installContinuumMemoryContext` 在 `agent/pre-step` 追加带 `continuum-memory` source 的有界 recall；无 per-agent store 时保持原版消息。
 - [ ] P2：任务工作集、supersedes、FTS、权限与尾部覆盖；新 Session 续做、旧版本拒绝、索引重建与积压。
 - [ ] P3：Reflex active 多候选/动作、弃权、超时与有限兜底；固定候选和端到端两种对照。
 - [ ] P4：专属开关 UI、停用/关闭后的活动投影移除、在途失效、最终模型预算、两个 SDK 和离线回放；原版回归。

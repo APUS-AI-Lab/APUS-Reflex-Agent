@@ -10,6 +10,7 @@ import {
   MemoryRecordStore,
   appendMemoryRecordEvent,
   foldMemoryRecordEvents,
+  readMemorySourceEvents,
 } from '../src/index.ts'
 
 const roots: string[] = []
@@ -28,6 +29,7 @@ describe('Continuum record events', () => {
     await writer.plugin(JsonlSessionPersistence, { root, compression: 'none' })
     const currentSession = writer.sessions.create(id)
     const handle = await writer.sessionPersistence.create(currentSession.header)
+    currentSession.append('turn/start', { turn: 1 })
     const store = new MemoryRecordStore()
     const created = store.create({
       id: MemoryId('project-status'),
@@ -57,12 +59,15 @@ describe('Continuum record events', () => {
     const readHandle = await reader.sessionPersistence.open(id, 'read')
     const { events } = await readHandle.read()
     expect(events.map(event => event.type)).toEqual([
+      'turn/start',
       'continuum/memory-record',
       'continuum/memory-record',
       'continuum/memory-record',
     ])
     const rebuilt = foldMemoryRecordEvents(events, new MemoryRecordStore())
     expect(rebuilt.snapshot()).toEqual(store.snapshot())
+    const sources = await readMemorySourceEvents(reader.sessionPersistence, created.sourceRefs)
+    expect(sources.map(source => [source.sessionId, source.event.type])).toEqual([[id, 'turn/start']])
     await readHandle.close()
     await reader.fiber.dispose()
   })

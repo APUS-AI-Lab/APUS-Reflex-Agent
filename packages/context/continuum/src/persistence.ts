@@ -1,5 +1,6 @@
-import type { Session, SessionEvent } from '@deepseek-ai/dsh-session'
-import type { MemoryRecord, MemoryRecordStore, NewMemoryRecord } from './records.ts'
+import type { Session, SessionEvent, SessionId } from '@deepseek-ai/dsh-session'
+import type { SessionPersistence } from '@deepseek-ai/dsh-session-persistence'
+import type { MemoryRecord, MemoryRecordStore, MemorySourceRef, NewMemoryRecord } from './records.ts'
 
 /** Durable operation written to the existing Session event log. */
 export type MemoryRecordOperation = 'create' | 'supersede' | 'deactivate'
@@ -10,6 +11,12 @@ export interface MemoryRecordEventData {
   readonly operation: MemoryRecordOperation
   /** Complete post-transition record snapshot. */
   readonly record: MemoryRecord
+}
+
+/** One exact event resolved from a source reference. */
+export interface MemorySourceEvent {
+  readonly sessionId: SessionId
+  readonly event: SessionEvent
 }
 
 declare module '@deepseek-ai/dsh-session/types' {
@@ -32,6 +39,43 @@ export function appendMemoryRecordEvent(
   record: MemoryRecord,
 ): SessionEvent<'continuum/memory-record'> {
   return session.append('continuum/memory-record', { operation, record })
+}
+
+/**
+ * Read exact source events from the existing durable Session backend.
+ * @param persistence - mounted Session persistence service.
+ * @param refs - source references declared by admitted records.
+ * @param signal - cancellation propagated to backend reads.
+ * @returns events in the same order as the supplied references.
+ * @throws when a referenced Session or event sequence is absent.
+ */
+export async function readMemorySourceEvents(
+  persistence: SessionPersistence,
+  refs: readonly MemorySourceRef[],
+  signal?: AbortSignal,
+): Promise<readonly MemorySourceEvent[]> {
+  const bySession = new Map<SessionId, readonly typeof refs[number][]>()
+  for (const ref of refs) bySession.set(ref.sessionId, [...bySession.get(ref.sessionId) ?? [], ref])
+  const resolved = new Map<string, MemorySourceEvent>()
+  for (const [sessionId, sessionRefs] of bySession) {
+    signal?.throwIfAborted()
+    const handle = await persistence.open(sessionId, 'read', signal === undefined ? undefined : { signal })
+    try {
+      const { events } = await handle.read(undefined, undefined, signal === undefined ? undefined : { signal })
+      for (const ref of sessionRefs) {
+        const event = events.find(candidate => candidate.seq === ref.eventSeq)
+        if (event === undefined) throw new Error(`memory source event ${sessionId}:${ref.eventSeq} was not found`)
+        resolved.set(`${sessionId}:${ref.eventSeq}`, { sessionId, event })
+      }
+    } finally {
+      await handle.close()
+    }
+  }
+  return Object.freeze(refs.map((ref) => {
+    const event = resolved.get(`${ref.sessionId}:${ref.eventSeq}`)
+    if (event === undefined) throw new Error(`memory source event ${ref.sessionId}:${ref.eventSeq} was not resolved`)
+    return event
+  }))
 }
 
 /**

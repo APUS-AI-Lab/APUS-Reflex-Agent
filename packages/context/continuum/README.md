@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-This package owns the smallest durable part of APUS Continuum: immutable memory records with source references, revision checks, superseding, deactivation, and a log-only Session event that can rebuild the projection. It does not register a product plugin, build an index, call Reflex, or provide an unlimited-memory product mode.
+This package owns the smallest durable part of APUS Continuum: immutable memory records with source references, revision checks, superseding, deactivation, a log-only Session event that can rebuild the projection, exact source-event reads, deterministic bounded retrieval, and an optional same-step context consumer. It does not register a product profile, call Reflex, or provide an unlimited-memory product mode.
 
 The Session event uses the existing persistence backend and becomes durable after the caller completes `ctx.sessions.flush(session)`. Reflex admission, retrieval, and model injection remain later slices.
 
@@ -27,7 +27,7 @@ The Session event uses the existing persistence backend and becomes durable afte
 <a id="use-this-package"></a>
 ## Use this package
 
-Import `MemoryRecordStore` for deterministic revision semantics. Use `appendMemoryRecordEvent` after a store transition and `foldMemoryRecordEvents` when rebuilding from a Session log. A successful append is not a durability promise until the caller completes `ctx.sessions.flush(session)`.
+Import `MemoryRecordStore` for deterministic revision semantics. Use `appendMemoryRecordEvent` after a store transition, `foldMemoryRecordEvents` when rebuilding from a Session log, `readMemorySourceEvents` for exact source readback, and `retrieveMemoryWorkingSet` for bounded candidates. A successful append is not a durability promise until the caller completes `ctx.sessions.flush(session)`.
 
 -----
 
@@ -52,22 +52,22 @@ Read the [Continuum proposal](../../../docs/feat-continuum-memory/continuum-memo
 
 #### What the model sees
 
-Nothing directly. `MemoryRecordStore` only creates source-backed records; a later Continuum consumer owns any injected evidence.
+When `installContinuumMemoryContext` is mounted, the model sees a bounded `continuum-memory` recall message built from active records and the current user text.
 
 #### Token effect
 
-Zero direct tokens; this package does not construct a model request.
+The recall message consumes the configured byte budget in the same model request; no separate model call is made.
 
 #### KV Cache effect
 
-This package sends no model request and has no cache effect.
+The consumer appends a bounded recall message, so the existing request prefix remains stable until the selected working set changes.
 
 ## Known Limitations and Deferred Work
 
 <a id="known-limitations-and-deferred-work"></a>
 
 - The record projection is process-local; restart recovery requires reading and folding the Session event log.
-- It does not query, index, summarize, call Reflex, or inject context.
+- It does not call Reflex or provide a full text index; retrieval is deterministic lexical selection over the current projection.
 
 <a id="dev-note"></a>
 ### Dev Note

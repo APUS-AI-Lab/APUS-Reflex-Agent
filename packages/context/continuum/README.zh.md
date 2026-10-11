@@ -9,7 +9,7 @@ kind: package-reference
 
 ## 概述
 
-本包提供 APUS Continuum 最小的持久记录语义：带 Session 事件来源的不可变记忆记录、revision 校验、明确更正、停用，以及可以从日志重建投影的仅日志 Session 事件。本包不注册产品插件，不构建索引，不调用 Reflex，也不提供无 Reflex 的无限记忆模式。
+本包提供 APUS Continuum 最小的持久记录语义：带 Session 事件来源的不可变记忆记录、revision 校验、明确更正、停用、可从日志重建投影的仅日志 Session 事件、精确来源回读、确定性的有界检索和可选同一步上下文消费者。本包不注册产品 profile，不调用 Reflex，也不提供无 Reflex 的无限记忆模式。
 
 Session 事件复用现有 persistence backend；调用方完成 `ctx.sessions.flush(session)` 后才具备持久化保证。Reflex 准入、检索和模型注入属于后续批次。
 
@@ -29,7 +29,7 @@ Session 事件复用现有 persistence backend；调用方完成 `ctx.sessions.f
 <a id="use-this-package"></a>
 ## 使用本包
 
-使用 `MemoryRecordStore` 保存确定性的 revision 语义；用 `appendMemoryRecordEvent` 把变更追加到现有 Session 日志，用 `foldMemoryRecordEvents` 从日志重建。只有 `ctx.sessions.flush(session)` 成功后，调用方才能报告已经持久化。
+使用 `MemoryRecordStore` 保存确定性的 revision 语义；用 `appendMemoryRecordEvent` 把变更追加到现有 Session 日志，用 `foldMemoryRecordEvents` 从日志重建，用 `readMemorySourceEvents` 精确回读来源，用 `retrieveMemoryWorkingSet` 生成有界候选。只有 `ctx.sessions.flush(session)` 成功后，调用方才能报告已经持久化。
 
 -----
 
@@ -54,20 +54,20 @@ Session 事件复用现有 persistence backend；调用方完成 `ctx.sessions.f
 
 #### 模型看到的内容
 
-`MemoryRecordStore` 不会直接向模型提供内容；后续 Continuum 消费者负责注入证据。
+挂载 `installContinuumMemoryContext` 后，模型看到由 active 记录和当前用户文本生成的有界 `continuum-memory` recall 消息。
 
 #### Token effect
 
-本包不构造模型请求，直接 token 影响为零。
+recall 消息消耗配置的字节预算并进入同一个模型请求；不会额外调用模型。
 
 #### KV Cache effect
 
-本包不发送模型请求，也没有缓存影响。
+消费者追加有界 recall 消息；在工作集不变时，已有请求前缀保持稳定。
 
 ## Known Limitations and Deferred Work
 
 - 当前记录投影是进程内的；重启恢复必须读取并折叠 Session 事件日志。
-- 当前没有索引、召回、Reflex adapter、摘要树或缓存策略。
+- 当前没有 Reflex 决策接入、全文索引、摘要树或缓存策略；检索只是当前投影上的确定性词法选择。
 
 <a id="dev-note"></a>
 ### 开发备注

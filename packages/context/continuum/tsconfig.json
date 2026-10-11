@@ -6,6 +6,9 @@
     { "path": "../../../vendor/cosmokit" },
     { "path": "../../../vendor/cordis" },
     { "path": "../../util/brand" },
-    { "path": "../../core/session" }
+    { "path": "../../core/session" },
+    { "path": "../../session/session-persistence" },
+    { "path": "../../core/agent" },
+    { "path": "../../llm/llm" }
   ]
 }

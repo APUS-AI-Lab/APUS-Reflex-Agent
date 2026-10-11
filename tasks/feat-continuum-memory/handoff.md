@@ -13,6 +13,7 @@
 - packages/core/agent-loop/tests/continuum-admission.spec.ts：312 行；8 项覆盖当步召回、完整 envelope 计量、最终路由、末端拒绝、重建、off、卸载和取消。
 - packages/core/agent-loop/package.json / pnpm-lock.yaml：测试所需 token-meter workspace devDependency。
 - packages/context/continuum/：P1.1 记录语义库加 P1.2 Session 事件/JSONL 重启回放、README 双语、包配置和 16 项相关测试。
+- packages/context/continuum/：补充精确来源事件读取、active-only 有界检索、UTF-8 预算和 `agent/pre-step` 同一步 recall 消费；相关测试总计 21 项。
 - packages/experimental/continuum-jev/：P1.3 基础 Reflex/Jev selection adapter、双语 README 和 5 项 fake-provider 控制测试。
 - tasks/todo.md：426 行；追加分模块 P0–P5 checklist 和结果；保留原有任务。
 - tasks/lessons.md：149 行；记录用户纠正的专属开关与原版兼容含义，避免误推无 Jev 产品模式。
@@ -43,6 +44,7 @@ Harness 持有事实、权限、预算、版本和执行权。模型提炼先成
 - [ ] 验证新注入、实际路由、token-meter、compaction 的预算组合，再冻结 M1 接口和事件类型。
 - [x] P1.1 先实现纯记录语义；[x] P1.2 通过现有 Session persistence 实现 durable append/flush/restart；[ ] 故障注入和产品消费者。
 - [x] P1.3 基础 off/shadow/active adapter；[ ] 真实 Jev gateway、Session receipt、检索消费者和 active 产品开关。
+- [x] P1.2 来源回读、工作集和同一步消费者；[ ] 接入产品 profile 的 Reflex 专属开关与 Jev 决策结果。
 - [ ] 接入 Reflex adapter 与专属开关；无 Reflex 兼容原版；用内部 Baseline 消融，先 shadow 再 active。
 - [ ] 按行为面构建、lint、单元/集成、keyless Session 与两个 SDK 快照；随后真实模型对照。
 - [ ] 用户明确授权前不推送、建 PR 或部署；推送前执行 dsh-pre-push-checks 与 Ruff 双检查。
@@ -61,6 +63,8 @@ Harness 持有事实、权限、预算、版本和执行权。模型提炼先成
 
 `continuum-jev` 是实验性、非默认加载的 Reflex/Jev selection adapter。OFF 保持 deterministic baseline；SHADOW 不改变采用结果；ACTIVE 只接受 supplied candidate 且要求置信度阈值。fake-provider 5/5 通过。真实 gateway endpoint 的 TLS 握手超时，本机没有 `SYSTEM3_JEV_HOST`/`APUS_JEV_API_KEY` 配置；不得把本批当作真实模型验收。
 严格 live harness 为 `scripts/continuum-live-e2e.ts`；缺少 `CONTINUUM_JEV_ENDPOINT`、`CONTINUUM_JEV_API_KEY` 或 `CONTINUUM_JEV_MODEL` 会硬失败。当前已验证其缺配置失败路径，真实 gateway 仍未通过。
+
+`readMemorySourceEvents` 复用现有 Session persistence 按 `sessionId + eventSeq` 精确读取；`retrieveMemoryWorkingSet` 只选 active 记录并执行候选/UTF-8 预算；`installContinuumMemoryContext` 在 `agent/pre-step` 追加带来源类型的 recall 消息。相关记录、重启、检索和同一步测试 21/21 通过；这仍是显式消费者，尚未接入默认 profile 或 Jev active 选择。
 
 ## 冷启动 checklist
 
