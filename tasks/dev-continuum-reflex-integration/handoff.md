@@ -5,12 +5,13 @@
 - 当前分支：`dev/continuum-reflex-integration`
 - 基线：`feat-reflex-control` 当前提交。
 - 目标：在控制面主力分支上集成 `feat-continuum-memory`，完成冲突解释和场景化验收。
-- 当前状态：集成分支已创建，尚未合并 Continuum。
+- 当前状态：已完成本地合并、冲突修复、构建和定向回归；产品级自动记忆录入链路仍未接入，不能宣称完整 E2E 已通过。
 
 ## 本轮交付物
 
 - `tasks/dev-continuum-reflex-integration/handoff.md`：集成交接入口。
 - `docs/dev-continuum-reflex-integration/integration-plan.md`：合并顺序、冲突边界和验收矩阵。
+- 合并与修复提交已保留在本分支历史中。
 
 ## 设计约束
 
@@ -20,13 +21,23 @@
 - 所有模型可见记忆必须可以从 Session 日志重放。
 - 保留 `feat-continuum-memory` 和 `feat-reflex-control` 原始分支，不在其上强制改写历史。
 
-## 下一里程碑任务
+## 已完成验收
 
-- [ ] 在本分支执行 `git merge --no-ff feat-continuum-memory`。
-- [ ] 解决 `runtime.patch.yml`、Session event types、persistence catalog、lockfile 等重叠文件。
-- [ ] 运行控制面回归和 Continuum 定向测试。
-- [ ] 增加跨重启、纠正、停用竞态、scope、预算、Jev 故障和长历史场景验收。
-- [ ] 记录完整集成验收结果；未完成项不得标记为通过。
+- [x] 在本分支执行 `git merge --no-ff feat-continuum-memory`。
+- [x] 解决 runtime 配置、Session event types、persistence catalog、快照和文档门禁冲突。
+- [x] `pnpm run build` 全量通过；`pnpm run verify-cordis-config` 通过 226 个配置文件。
+- [x] 双边定向回归通过：103 个文件、1955 个测试通过。
+- [x] Continuum 浏览器验收通过：2 个测试通过；覆盖设置显示、开关持久化和原版配置兼容。
+- [x] 文档、persistence changes、persistence formats 门禁通过。
+- [x] Python Continuum replay 通过：2 个测试通过。
+- [x] 修复运行时开关开启后仍解析为 `off` 的配置重叠问题；profile 默认使用确定性 `shadow`，Jev provider 仍保持 `off`。
+
+## 未完成的正式验收
+
+- [ ] 接入生产级 memory admission caller；当前 `ContinuumMemoryService.create()` 仍是显式 API，只有测试 consumer 使用它。
+- [ ] 补齐真实链路：用户输入 → memory-record → Session flush → 重启恢复 → recall 注入 → 模型请求。
+- [ ] 在具备真实凭据的环境重跑 System3 real-API E2E；本地 8 个控制面 E2E 因缺少凭据全部 skip，不能计为通过。
+- [ ] 重新设计并执行完整 Web built suite；当前只证明 Continuum 定向浏览器测试通过。
 
 ## 分支/部署状态
 
@@ -40,4 +51,5 @@
 2. 检查 `git status`、当前 HEAD 和所有 worktree。
 3. 查看两个源分支最新提交后再开始 merge。
 4. 先解决功能配置和事件类型，再处理生成文档、锁文件和快照。
-5. 合并后按验收矩阵逐项运行测试并记录证据。
+5. 按“已完成验收/未完成正式验收”分界阅读，不得将 skip 或 test-only consumer 当作产品链路通过。
+6. 若继续开发，先明确 memory admission 的隐私策略和触发入口，再实现生产 caller 与真实 Session E2E。
