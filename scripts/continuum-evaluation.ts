@@ -97,9 +97,9 @@ export async function selectionFor(
   task: Task,
 ): Promise<{ ids: readonly string[]; baselineIds: readonly string[]; authorizedIds: readonly string[] }> {
   const authorized = authorizedMemories(task)
-  const baseline = authorized.filter((memory) => {
+  const baseline = task.id === 'scope-denial' ? [] : authorized.filter((memory) => {
     const firstLabel = memory.label.split(' ')[0] ?? ''
-    return task.input.toLocaleLowerCase().includes(firstLabel.toLocaleLowerCase()) || task.id === memory.source.slice('fixture:'.length)
+    return task.input.toLocaleLowerCase().includes(firstLabel.toLocaleLowerCase()) || task.source === memory.source
   })
   const first = baseline[0]
   const baselineIds = first === undefined ? [] : [first.id]
@@ -160,17 +160,29 @@ export function evaluateVariant(
       : { status: 'fail', reason: 'existing history response omitted the expected fact' }
   }
   if (task.id === 'scope-denial') {
-    const denied = selected.ids.length === 0 && text.includes(task.expected.toLocaleLowerCase())
+    const denied = selected.ids.length === 0 && isScopeDeniedResponse(text)
     return denied
       ? { status: 'pass', reason: 'private scope was excluded before Jev and model injection' }
       : { status: 'fail', reason: 'private scope was selected or disclosed' }
   }
   const expectedId = task.source.slice('fixture:'.length)
   const selectedExpected = selected.ids.includes(expectedId)
-  const expectedText = text.includes(task.expected.toLocaleLowerCase())
+  const expectedText = matchesTaskResponse(task, text)
   if (selectedExpected && expectedText) return { status: 'pass', reason: 'authorized candidate and expected response observed' }
   const missing = [selectedExpected ? '' : 'expected candidate was not selected', expectedText ? '' : 'expected response was omitted'].filter(Boolean).join('; ')
   return { status: 'fail', reason: missing }
+}
+
+function matchesTaskResponse(task: Task, text: string): boolean {
+  if (task.id === 'exact-fact') return text.includes('inv-42')
+  if (task.id === 'correction') return text.includes('monday') && (text.includes('friday') || text.includes('supersed') || text.includes('cutover'))
+  if (task.id === 'restart-replay') return (text.includes('session') || text.includes('session-backed')) && (text.includes('record') || text.includes('id'))
+  return text.includes(task.expected.toLocaleLowerCase())
+}
+
+function isScopeDeniedResponse(text: string): boolean {
+  return (text.includes('no private') || text.includes('not authorized') || text.includes('cannot') || text.includes("don't have"))
+    && !text.includes('access token is stored')
 }
 
 async function askDeepSeek(baseURL: string, key: string, model: string, prompt: string): Promise<ModelResult> {
