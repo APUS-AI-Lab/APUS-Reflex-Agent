@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "status": "jev-real-pass-deepseek-partial",
+  "status": "jev-real-pass-deepseek-partial-evaluator-real-run-failed",
   "source": "feat-continuum-memory worktree",
   "variants": [
     {
@@ -95,13 +95,21 @@
       "failed": 0,
       "detail": "Protected local runtime credential accepted by official endpoint; required adapter/runtime checks including in-history updates passed. Two optional image checks were skipped because DEEPSEEK_FLASH_E2E/DEEPSEEK_VISION_E2E was unset.",
       "model": "deepseek-v4-pro"
+    },
+    "evaluator": {
+      "status": "completed-with-failures",
+      "evidence": "continuum-evaluation-results.json",
+      "total": 20,
+      "matched": 7,
+      "failedAssertions": 13,
+      "detail": "All 20 variant/task model requests completed with protected credentials. Matching is intentionally strict; the run exposed incomplete retrieval/scoring and an unauthorized private candidate in the direct evaluator fixture. It is evidence, not a pass."
     }
   },
   "policy": "Missing credentials, unreachable endpoints, or skipped required variants remain pending and are not treated as success.",
   "executor": {
     "path": "scripts/continuum-evaluation.ts",
-    "status": "implemented-not-passed",
-    "lastRun": "20 variant/task requests started; official endpoint body timeout before completion",
+    "status": "real-run-completed-with-failures",
+    "lastRun": "20/20 variant/task requests completed; 7 matched, 13 strict assertion failures; direct fixture exposed unauthorized private candidate for C/scope-denial",
     "strictMissingCredentials": true
   }
 }

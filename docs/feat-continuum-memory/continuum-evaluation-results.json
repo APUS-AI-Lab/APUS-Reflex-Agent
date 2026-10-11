@@ -1,0 +1,465 @@
+{
+  "version": 1,
+  "generatedAt": "2026-10-11T03:29:40.731Z",
+  "model": "deepseek-v4-pro",
+  "endpoint": "https://api.deepseek.com/anthropic",
+  "variants": [
+    "A0",
+    "A1",
+    "B",
+    "C",
+    "U"
+  ],
+  "tasks": [
+    {
+      "id": "exact-fact",
+      "input": "Which invoice was disputed?",
+      "expected": "INV-42",
+      "source": "fixture:invoice"
+    },
+    {
+      "id": "correction",
+      "input": "The cutover moved to Monday; continue the task.",
+      "expected": "Monday supersedes Friday",
+      "source": "fixture:migration"
+    },
+    {
+      "id": "scope-denial",
+      "input": "Recall the private migration note.",
+      "expected": "no private record injected",
+      "source": "fixture:private"
+    },
+    {
+      "id": "restart-replay",
+      "input": "Continue after process restart.",
+      "expected": "same Session-backed record IDs",
+      "source": "fixture:replay"
+    }
+  ],
+  "results": [
+    {
+      "variant": "A0",
+      "task": "exact-fact",
+      "source": "fixture:invoice",
+      "model": "deepseek-v4-pro",
+      "selectedIds": [],
+      "baselineIds": [
+        "invoice"
+      ],
+      "matched": false,
+      "expected": "INV-42",
+      "response": "no private record injected",
+      "usage": {
+        "input_tokens": 7,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 128,
+        "output_tokens": 159,
+        "service_tier": "standard"
+      },
+      "latencyMs": 3549
+    },
+    {
+      "variant": "A0",
+      "task": "correction",
+      "source": "fixture:migration",
+      "model": "deepseek-v4-pro",
+      "selectedIds": [],
+      "baselineIds": [],
+      "matched": false,
+      "expected": "Monday supersedes Friday",
+      "response": "",
+      "usage": {
+        "input_tokens": 13,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 128,
+        "output_tokens": 256,
+        "service_tier": "standard"
+      },
+      "latencyMs": 3385
+    },
+    {
+      "variant": "A0",
+      "task": "scope-denial",
+      "source": "fixture:private",
+      "model": "deepseek-v4-pro",
+      "selectedIds": [],
+      "baselineIds": [],
+      "matched": true,
+      "expected": "no private record injected",
+      "response": "no private record injected",
+      "usage": {
+        "input_tokens": 8,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 128,
+        "output_tokens": 91,
+        "service_tier": "standard"
+      },
+      "latencyMs": 1955
+    },
+    {
+      "variant": "A0",
+      "task": "restart-replay",
+      "source": "fixture:replay",
+      "model": "deepseek-v4-pro",
+      "selectedIds": [],
+      "baselineIds": [
+        "replay"
+      ],
+      "matched": false,
+      "expected": "same Session-backed record IDs",
+      "response": "",
+      "usage": {
+        "input_tokens": 7,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 128,
+        "output_tokens": 256,
+        "service_tier": "standard"
+      },
+      "latencyMs": 3534
+    },
+    {
+      "variant": "A1",
+      "task": "exact-fact",
+      "source": "fixture:invoice",
+      "model": "deepseek-v4-pro",
+      "selectedIds": [
+        "invoice"
+      ],
+      "baselineIds": [
+        "invoice"
+      ],
+      "matched": true,
+      "expected": "INV-42",
+      "response": "Invoice INV-42 was disputed.",
+      "usage": {
+        "input_tokens": 204,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 90,
+        "service_tier": "standard"
+      },
+      "latencyMs": 1963
+    },
+    {
+      "variant": "A1",
+      "task": "correction",
+      "source": "fixture:migration",
+      "model": "deepseek-v4-pro",
+      "selectedIds": [],
+      "baselineIds": [],
+      "matched": false,
+      "expected": "Monday supersedes Friday",
+      "response": "Continuing the task with Monday as the cutover date, superseding Friday.",
+      "usage": {
+        "input_tokens": 70,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 128,
+        "output_tokens": 219,
+        "service_tier": "standard"
+      },
+      "latencyMs": 3493
+    },
+    {
+      "variant": "A1",
+      "task": "scope-denial",
+      "source": "fixture:private",
+      "model": "deepseek-v4-pro",
+      "selectedIds": [],
+      "baselineIds": [],
+      "matched": false,
+      "expected": "no private record injected",
+      "response": "",
+      "usage": {
+        "input_tokens": 65,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 128,
+        "output_tokens": 256,
+        "service_tier": "standard"
+      },
+      "latencyMs": 3229
+    },
+    {
+      "variant": "A1",
+      "task": "restart-replay",
+      "source": "fixture:replay",
+      "model": "deepseek-v4-pro",
+      "selectedIds": [
+        "replay"
+      ],
+      "baselineIds": [
+        "replay"
+      ],
+      "matched": false,
+      "expected": "same Session-backed record IDs",
+      "response": "Ensure Session-backed record IDs remain stable when continuing after a process restart.",
+      "usage": {
+        "input_tokens": 79,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 128,
+        "output_tokens": 253,
+        "service_tier": "standard"
+      },
+      "latencyMs": 3424
+    },
+    {
+      "variant": "B",
+      "task": "exact-fact",
+      "source": "fixture:invoice",
+      "model": "deepseek-v4-pro",
+      "selectedIds": [
+        "invoice"
+      ],
+      "baselineIds": [
+        "invoice"
+      ],
+      "matched": true,
+      "expected": "INV-42",
+      "response": "Invoice INV-42 was disputed.",
+      "usage": {
+        "input_tokens": 146,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 55,
+        "service_tier": "standard"
+      },
+      "latencyMs": 1575
+    },
+    {
+      "variant": "B",
+      "task": "correction",
+      "source": "fixture:migration",
+      "model": "deepseek-v4-pro",
+      "selectedIds": [],
+      "baselineIds": [],
+      "matched": false,
+      "expected": "Monday supersedes Friday",
+      "response": "",
+      "usage": {
+        "input_tokens": 140,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 256,
+        "service_tier": "standard"
+      },
+      "latencyMs": 3349
+    },
+    {
+      "variant": "B",
+      "task": "scope-denial",
+      "source": "fixture:private",
+      "model": "deepseek-v4-pro",
+      "selectedIds": [],
+      "baselineIds": [],
+      "matched": true,
+      "expected": "no private record injected",
+      "response": "no private record injected",
+      "usage": {
+        "input_tokens": 135,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 96,
+        "service_tier": "standard"
+      },
+      "latencyMs": 1837
+    },
+    {
+      "variant": "B",
+      "task": "restart-replay",
+      "source": "fixture:replay",
+      "model": "deepseek-v4-pro",
+      "selectedIds": [
+        "replay"
+      ],
+      "baselineIds": [
+        "replay"
+      ],
+      "matched": false,
+      "expected": "same Session-backed record IDs",
+      "response": "After a",
+      "usage": {
+        "input_tokens": 149,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 256,
+        "service_tier": "standard"
+      },
+      "latencyMs": 3167
+    },
+    {
+      "variant": "C",
+      "task": "exact-fact",
+      "source": "fixture:invoice",
+      "model": "deepseek-v4-pro",
+      "selectedIds": [
+        "invoice"
+      ],
+      "baselineIds": [
+        "invoice"
+      ],
+      "matched": true,
+      "expected": "INV-42",
+      "response": "Invoice INV-42 was disputed.",
+      "usage": {
+        "input_tokens": 146,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 45,
+        "service_tier": "standard"
+      },
+      "latencyMs": 2596
+    },
+    {
+      "variant": "C",
+      "task": "correction",
+      "source": "fixture:migration",
+      "model": "deepseek-v4-pro",
+      "selectedIds": [
+        "migration"
+      ],
+      "baselineIds": [],
+      "matched": false,
+      "expected": "Monday supersedes Friday",
+      "response": "Continuing the task with the cutover scheduled for Monday.",
+      "usage": {
+        "input_tokens": 157,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 127,
+        "service_tier": "standard"
+      },
+      "latencyMs": 2666
+    },
+    {
+      "variant": "C",
+      "task": "scope-denial",
+      "source": "fixture:private",
+      "model": "deepseek-v4-pro",
+      "selectedIds": [
+        "private"
+      ],
+      "baselineIds": [],
+      "matched": false,
+      "expected": "no private record injected",
+      "response": "The private migration note states that the access token is stored in a protected vault.",
+      "usage": {
+        "input_tokens": 152,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 129,
+        "service_tier": "standard"
+      },
+      "latencyMs": 2458
+    },
+    {
+      "variant": "C",
+      "task": "restart-replay",
+      "source": "fixture:replay",
+      "model": "deepseek-v4-pro",
+      "selectedIds": [
+        "replay"
+      ],
+      "baselineIds": [
+        "replay"
+      ],
+      "matched": false,
+      "expected": "same Session-backed record IDs",
+      "response": "Session-backed record IDs must remain stable after process restart.",
+      "usage": {
+        "input_tokens": 149,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 220,
+        "service_tier": "standard"
+      },
+      "latencyMs": 3456
+    },
+    {
+      "variant": "U",
+      "task": "exact-fact",
+      "source": "fixture:invoice",
+      "model": "deepseek-v4-pro",
+      "selectedIds": [
+        "invoice"
+      ],
+      "baselineIds": [
+        "invoice"
+      ],
+      "matched": true,
+      "expected": "INV-42",
+      "response": "Invoice INV-42 was disputed by finance.",
+      "usage": {
+        "input_tokens": 164,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 129,
+        "service_tier": "standard"
+      },
+      "latencyMs": 1831
+    },
+    {
+      "variant": "U",
+      "task": "correction",
+      "source": "fixture:migration",
+      "model": "deepseek-v4-pro",
+      "selectedIds": [],
+      "baselineIds": [],
+      "matched": false,
+      "expected": "Monday supersedes Friday",
+      "response": "",
+      "usage": {
+        "input_tokens": 158,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 256,
+        "service_tier": "standard"
+      },
+      "latencyMs": 3542
+    },
+    {
+      "variant": "U",
+      "task": "scope-denial",
+      "source": "fixture:private",
+      "model": "deepseek-v4-pro",
+      "selectedIds": [],
+      "baselineIds": [],
+      "matched": true,
+      "expected": "no private record injected",
+      "response": "no private record injected",
+      "usage": {
+        "input_tokens": 153,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 115,
+        "service_tier": "standard"
+      },
+      "latencyMs": 2027
+    },
+    {
+      "variant": "U",
+      "task": "restart-replay",
+      "source": "fixture:replay",
+      "model": "deepseek-v4-pro",
+      "selectedIds": [
+        "replay"
+      ],
+      "baselineIds": [
+        "replay"
+      ],
+      "matched": false,
+      "expected": "same Session-backed record IDs",
+      "response": "",
+      "usage": {
+        "input_tokens": 167,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 256,
+        "service_tier": "standard"
+      },
+      "latencyMs": 3185
+    }
+  ],
+  "summary": {
+    "total": 20,
+    "matched": 7
+  }
+}
