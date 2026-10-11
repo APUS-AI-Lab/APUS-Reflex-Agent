@@ -93,6 +93,16 @@
         http2: true
         # Two decisions without a response on the shared HTTP/2 connection reopen it.
         resetAfterFailures: 2
+    - id: continuum-memory
+      name: ../../packages/context/continuum/lib/index.js
+      config:
+        # The profile keeps the feature off unless the protected deployment environment opts in.
+        enabled: !!js 'process.env.CONTINUUM_MEMORY_ENABLED === "true"'
+        mode: !!js 'process.env.CONTINUUM_MEMORY_MODE || "off"'
+        scopes: !!js 'JSON.parse(process.env.CONTINUUM_MEMORY_SCOPES || "[\\"workspace\\"]")'
+        maxCandidates: 8
+        maxExcerptBytes: 2048
+        maxTotalBytes: 8192
     - id: system3
       name: ../../packages/experimental/system3/lib/index.js
       config:

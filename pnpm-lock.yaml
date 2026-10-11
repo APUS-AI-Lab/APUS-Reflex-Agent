@@ -1203,6 +1203,9 @@ importers:
       '@deepseek-ai/dsh-config-editor':
         specifier: workspace:*
         version: link:../../../packages/boot/config-editor
+      '@deepseek-ai/dsh-continuum':
+        specifier: workspace:*
+        version: link:../../../packages/context/continuum
       '@deepseek-ai/dsh-cordis-client-runner':
         specifier: workspace:*
         version: link:../../../packages/extensions/cordis-client-runner

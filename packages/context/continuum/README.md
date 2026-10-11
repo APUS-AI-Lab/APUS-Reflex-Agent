@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-This package owns the smallest durable part of APUS Continuum: immutable memory records with source references, revision checks, superseding, deactivation, a log-only Session event that can rebuild the projection, exact source-event reads, deterministic bounded retrieval, and an optional same-step context consumer. It does not register a product profile, call Reflex, or provide an unlimited-memory product mode.
+This package owns the durable Continuum record and profile service: immutable memory records with source references, revision checks, superseding, deactivation, a log-only Session event that can rebuild the projection, exact source-event reads, deterministic bounded retrieval, a lifecycle-aware same-step consumer, and an explicit profile switch. The service does not silently invent records or provide an unlimited-memory mode without Reflex.
 
 The Session event uses the existing persistence backend and becomes durable after the caller completes `ctx.sessions.flush(session)`. Reflex admission, retrieval, and model injection remain later slices.
 
@@ -35,7 +35,7 @@ Import `MemoryRecordStore` for deterministic revision semantics. Use `appendMemo
 <a id="understand-the-implementation"></a>
 ## Understand the implementation
 
-`MemoryRecordStore` keeps immutable snapshots and requires the caller's observed revision for superseding or deactivation. `continuum/memory-record` stores the complete post-transition record in the existing append-only Session log. Folding applies events without model calls or a second durable source.
+`MemoryRecordStore` keeps immutable snapshots and requires the caller's observed revision for superseding or deactivation. `ContinuumMemory` restores one projection per Agent from the Agent Session and persists explicit create/supersede/deactivate calls as `continuum/memory-record`. Folding applies events without model calls or a second durable source.
 
 -----
 
@@ -73,7 +73,7 @@ The consumer appends a bounded recall message, so the existing request prefix re
 <a id="known-limitations-and-deferred-work"></a>
 
 - The record projection is process-local; restart recovery requires reading and folding the Session event log.
-- It does not call Reflex or provide a full text index; retrieval is deterministic lexical selection over the current projection.
+- The service provides the profile seam and deterministic retrieval, but Jev candidate selection is still a separate adapter call and no full text index is included.
 
 <a id="dev-note"></a>
 ### Dev Note
