@@ -435,7 +435,7 @@ PPT v2为4页主讲+2页备查，实际Keynote打开、六页备注回读和PDF�
 
 已在本 worktree 安装锁定依赖。真实模型凭据只从受保护的本地 runtime.env 注入，未写入 worktree；密钥值不进入日志或文档。接入测试的 adapter 为受控替身，Session 为内存日志，不证明磁盘持久化、真实模型效果或完整产品。
 
-本轮严格定向验收：Continuum 4 个测试文件 21/21、continuum-jev 1 个测试文件 6/6；两包 TypeScript build、Oxlint、`verify-persistence-changes`（80 roots、28 history records）通过。首次 `test:docs` 因生成的历史 persistence format facts 过期失败，运行 `pnpm run verify-persistence-formats --write` 刷新 3 个引用文件后最终 `test:docs` 20/20 通过。真实 Jev/DeepSeek 端点已分别取得 Jev pass 与 DeepSeek partial evidence；严格 A0/A1/B/C/U 评估器已完成 20/20 请求，但 7 matched、13 strict assertion failures，不能计为通过。
+本轮严格定向验收：Continuum 4 个测试文件 21/21、continuum-jev 1 个测试文件 6/6；两包 TypeScript build、Oxlint、`verify-persistence-changes`（80 roots、28 history records）通过。首次 `test:docs` 因生成的历史 persistence format facts 过期失败，运行 `pnpm run verify-persistence-formats --write` 刷新 3 个引用文件后最终 `test:docs` 20/20 通过。真实 Jev/DeepSeek 端点已分别取得 Jev pass 与 DeepSeek partial evidence；严格 A0/A1/B/C/U 评估器已完成 20/20 请求；B/C Continuum 变体 8/8 applicable assertions 通过，A1 existing-history control 有 2 个模型响应断言失败，A0/U 为 not-applicable 控制项。
 
 P1.4/P1.5 追加验收：Continuum 6 个测试文件 26/26、TypeScript build 和 Oxlint 通过；active 模式未挂载 Reflex 会显式拒绝，关闭/停用会使在途读取失效，未授权 scope 不进入工作集。固定消融显示摘要树使样本命中率从 2/3 到 3/3；稳定布局的估算复用分别为 79/118 与 165/204，未当作服务端 cache hit。
 
@@ -443,7 +443,7 @@ P1.4/P1.5 追加验收：Continuum 6 个测试文件 26/26、TypeScript build �
 
 P1.6 验收：profile service 测试 3/3、Continuum 全测试 28/28、service TypeScript build 与 Oxlint 通过；`verify-cordis-config` 215/215、`test:docs` 20/20、persistence acknowledgement 80 roots/28 history records 通过。runtime patch 默认关闭，仅由受保护部署环境的 `CONTINUUM_MEMORY_*` 配置显式开启。Service 当前提供记录 create/supersede/deactivate、Session 日志恢复和 controller 消费者；Jev active 选择仍由独立 adapter 负责，尚未宣称全链路自动采用。
 
-P1.7 验收：Continuum/adapter/agent-loop 9 个测试文件 48/48，Continuum 与 Jev TypeScript build、focused Oxlint、全仓 `pnpm run build` 通过。profile selector 的 active、shadow、回执和关闭后的迟到结果均有测试。官方 DeepSeek v4-pro adapter/runtime 实跑 19 passed、2 optional image skipped、0 failed；跳过项仍按政策 pending。新增 `scripts/continuum-evaluation.ts` 是严格 A0/A1/B/C/U 执行器，但本轮严格评估器已用受保护凭据完成 20/20 请求，结果见 `docs/feat-continuum-memory/continuum-evaluation-results.json`；7 matched、13 strict assertion failures，直接暴露 baseline 任务预期与 scope candidate fixture 的缺口，不能计为通过。
+P1.7 验收：Continuum/adapter/agent-loop 9 个测试文件 48/48，Continuum 与 Jev TypeScript build、focused Oxlint、全仓 `pnpm run build` 通过。profile selector 的 active、shadow、回执和关闭后的迟到结果均有测试。官方 DeepSeek v4-pro adapter/runtime 实跑 19 passed、2 optional image skipped、0 failed；跳过项仍按政策 pending。新增 `scripts/continuum-evaluation.ts` 是严格 A0/A1/B/C/U 执行器，但本轮严格评估器已用受保护凭据完成 20/20 请求，结果见 `docs/feat-continuum-memory/continuum-evaluation-results.json`；applicable 9/11 matched；B/C 8/8 通过，A1 有 2 个模型响应断言失败，A0/U 为 not-applicable；scope candidate 已在 Jev 前按授权过滤。
 
 ### P1.1 Review
 
