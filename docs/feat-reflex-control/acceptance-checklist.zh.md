@@ -95,7 +95,7 @@ P0 是本轮功能完整交付的必需项；P1 是性能或推广范围的验�
 | --- | --- | --- |
 | D-01 / P0 | 用户可见品牌为 APUS Reflex Harness，配置页称 Reflex；MIT 原版权、许可和上游致谢随产物保留。 | 上一批品牌已合 main；本批 324 个 Harness 包 MIT 与第三方通知检查通过。未签名 Electron 目录包已直接通过品牌与四个 MIT/NOTICE 文件逐字节比对，见[包审计](evidence/electron-package-license-audit.zh.md)；当前 runtime 一致性和签名/公证产物仍归入 F-03。 |
 | D-02 / P0 | 模型可见输入、自动纠偏、上下文投影和恢复均可从日志重建；TypeScript/Python 消费同一事件，历史格式不被覆盖。 | 定向回归、持久化检查及 Goal、监督、恢复、上下文的双 SDK 录制/独立回放通过；外部模型夹具不算真实模型 E2E。 |
-| D-03 / P0 | 后端提交形成干净版本，前端固定该版本；生成真实运行包，manifest 无 dirty 标记，实际启动与配置链路通过。 | Harness 与 Frontend `feat-reflex-control` 修订均已提交并推送；release workflow 固定当前 Harness 修订，重新构建的部署 manifest 报告匹配的 clean source 且 `sourceDirty=false`，真实 Electron Safe Mode/CDP 启动通过。 |
+| D-03 / P0 | 后端提交形成干净版本，前端固定该版本；生成真实运行包，manifest 无 dirty 标记，实际启动与配置链路通过。 | Harness 与 Frontend `feat-reflex-control` 修订均已提交并推送；release workflow 固定审查过的 Harness revision，重新构建的部署 manifest 与该 clean release pin 一致且 `sourceDirty=false`，真实 Electron Safe Mode/CDP 启动通过。 |
 | D-04 / P0 | 必需检查通过、独立审查无未解决阻断、PR 按授权合并两仓 main；回读远端与 CI，并保留交接。 | 进行中；相关构建、lint、Ruff、文档和包检查已有通过记录，真实闭环与正式包仍阻断完整交付。CI 未运行或仍排队都不算通过。 |
 
 ### UI/UX 用户体验

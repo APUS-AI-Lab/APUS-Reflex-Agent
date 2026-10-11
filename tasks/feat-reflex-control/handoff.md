@@ -148,5 +148,5 @@ Host16 完整通过并完成本轮 SDK/浏览器验收。Host17 已由 root 收�
 ## 2026-10-11 Electron 包审计
 
 - [x] 直接产物审计确认 `APUS Reflex Harness` 品牌、Info.plist 标题，以及四个 MIT/NOTICE 文件逐字节保留；可关闭未签名目录包的许可证/品牌保留项。
-- [x] 目录包已用当前 clean Harness revision 重建；manifest sourceDirty=false 且与当前 revision 一致，真实 Safe Mode/CDP 启动并完成自有进程清理。
+- [x] 目录包已用 release workflow 固定的 clean Harness revision 重建；manifest sourceDirty=false 且与 release pin 一致，真实 Safe Mode/CDP 启动并完成自有进程清理。
 - [ ] 本机没有有效 Developer ID 身份或公证票据；签名、公证、staple 必须在具备 Apple CI secrets/runner 的环境完成。

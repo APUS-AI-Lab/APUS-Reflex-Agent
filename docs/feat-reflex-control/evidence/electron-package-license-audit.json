@@ -20,8 +20,8 @@
     "arch": "arm64",
     "mode": "deployed",
     "sourceDirty": false,
-    "sourceRevision": "current feat-reflex-control Harness branch revision",
-    "currentHarnessHead": "current feat-reflex-control branch",
+    "sourceRevision": "release workflow Harness pin",
+    "currentHarnessHead": "release workflow pin",
     "revisionMatchesCurrentHarness": true,
     "sourceDirty": false
   },
