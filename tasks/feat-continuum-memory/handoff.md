@@ -5,7 +5,7 @@
 - 当前已完成 P0.4、P1.1–P1.7 与 P2 索引模块的可审计实现及真实模型验收，使用 feat-continuum-memory 工作树；P3 多候选效果、P4–P5 和 flush 故障注入仍未交付。
 - 推荐名称 APUS Continuum（连续记忆）；HTML 是本轮设计入口，候选名未做重名核验。
 - 无限记忆为 Reflex 专属开关；关闭或未接入时兼容原版，不提供无 Reflex 的同等产品模式。
-- 用户已授权在同名 worktree 分支逐步拆分验证和实现；下一步完成 P0 基线，再进入 P1。
+- 用户已授权在同名 worktree 分支逐步拆分验证和实现；下一步是 P3 效果对照、P4 UI/预算和 P5 持久视图。
 
 ## 本轮交付物
 
@@ -43,43 +43,36 @@ Harness 持有事实、权限、预算、版本和执行权。模型提炼先成
 ## 下一里程碑任务清单
 
 - [x] 用户已确认分模块实施，已读根 AGENTS.md、docs/architecture.md、docs/defensive-patterns.md、packages/AGENTS.md 和相关子树规则。
-- [x] 验证新注入、实际路由、token-meter、compaction 的预算组合并冻结 M1 接口和事件类型。
-- [x] P1.1 先实现纯记录语义；[x] P1.2 通过现有 Session persistence 实现 durable append/flush/restart；[ ] 故障注入和产品消费者。
-- [x] P1.3 基础 off/shadow/active adapter；[ ] 真实 Jev gateway、Session receipt、检索消费者和 active 产品开关。
-- [x] P1.2 来源回读、工作集和同一步消费者；[ ] 接入产品 profile 的 Reflex 专属开关与 Jev 决策结果。
-- [x] controller 级 Reflex 专属开关、权限和停用失效语义；[ ] 接入默认产品 profile 与完整 UI。
-- [x] 接入默认 profile 的 Continuum service；无 Reflex 时保持原版，开启但未挂载 Reflex 时返回 `reflex-required`；Jev active 选择已由 companion selector 自动消费。
-- [ ] 接入 Reflex adapter 的专属 UI 与多候选 active 选择；无 Reflex 兼容原版；当前 timeout/弃权/fallback 已有确定性测试，完整效果对照仍待 P3/P4。
-- [x] 按行为面构建、lint、单元/集成、keyless Session、TypeScript/Python SDK 回放与真实模型对照。
+- [x] P0.4 基线与真实评测 manifest 冻结；严格 evaluator 20/20 请求、11/11 applicable assertions 通过。
+- [x] P1.1–P1.7：记录语义、Session 持久化/回放、来源读取、预算与同一步消费者、Reflex switch、Jev off/shadow/active、取消/权限/停用和 TypeScript/Python 回放。
+- [x] P2 工程切片：可重建倒排索引、enqueue、bounded backlog rebuild；profile controller 在提交变更后保持派生索引；真实 JSONL 1,000 条重启/尾部检索 smoke 通过。
+- [x] P3 安全切片：显式 provider timeout、取消传播、弃权、baseline fallback 和有界顺序多选；每次请求仍使用 Jev 单选闭集。
+- [ ] P3 效果与性能对照：固定候选多候选任务、总成本和 P50/P95 延迟。
+- [ ] P4：专属 UI、运行中开关投影移除、最终预算与完整产品浏览器验收。
+- [ ] P5：持久摘要 view/zoom、后台批合并、真实超模型窗口历史、服务端 cache 用量和完整 2×2 成本/延迟实验。
+- [ ] flush failure semantics：现有 Session/core persistence contract 已覆盖失败重试；Continuum 专属故障注入证据仍需补齐。
 - [ ] 用户明确授权前不推送、建 PR 或部署；推送前执行 dsh-pre-push-checks 与 Ruff 双检查。
 
 ## 分支、部署和验证状态
 
 工作树：.Codex/worktrees/feat-continuum-memory。分支：feat-continuum-memory。从 main 当前基线创建；创建前已检查 status、diff、stash、branch、HEAD 和 worktree list，stash 为空。主目录已有 README 设计和未跟踪 undefined 文件，未带入或改动这些用户工作。运行源码、配置与服务器未变，分支未推送，CI 未触发。
 
-最终版 HTML 浏览器检查通过：桌面/手机无页面横向溢出，13 维对比表、模块/验收章节完整，无 console 错误。P0 `continuum-admission.spec.ts` 通过 8/8；Continuum/adapter/agent-loop/evaluator 11 个测试文件 54/54；P1.3 Jev adapter 与 Session 回执已包含在内；focused Oxlint、两包 TypeScript 构建、native flock 构建、README Model Experience、persistence acknowledgement 和相对链接门禁通过。刷新 3 个历史 persistence format facts 后，`pnpm run test:docs` 最终 20/20 通过。实时 RunPod Jev adapter E2E 当前通过；DeepSeek v4-pro adapter/runtime 实跑 21 passed、0 skipped、0 failed。严格 A0/A1/B/C/U 评估器 20/20 请求完成、11/11 applicable assertions 通过。全仓 `pnpm run build` 已通过。
+最终版 HTML 浏览器检查通过：桌面/手机无页面横向溢出，13 维对比表、模块/验收章节完整，无 console 错误。P0 `continuum-admission.spec.ts` 通过 8/8；Continuum/Jev/agent-loop 11 个测试文件 59/59；SDK client 44/44；P1.3 Jev adapter 与 Session 回执已包含在内；focused Oxlint、两包 TypeScript 构建、native flock 构建、README Model Experience、persistence acknowledgement 和相对链接门禁通过。刷新 3 个历史 persistence format facts 后，`pnpm run test:docs` 最终 20/20 通过。实时 RunPod Jev adapter E2E 当前通过；DeepSeek v4-pro adapter/runtime 实跑 21 passed、0 skipped、0 failed。严格 A0/A1/B/C/U 评估器 20/20 请求完成、11/11 applicable assertions 通过。全仓 `pnpm run build` 已通过。
 
-## P1.2 Review
+## 当前实现 Review
 
-`appendMemoryRecordEvent` 写入完整变更后记录，`foldMemoryRecordEvents` 在恢复时按顺序重建记录。测试使用真实 JSONL backend 和 native flock：写入 create/supersede/deactivate，显式 flush，销毁 writer，重新挂载 reader，读取并比较完整快照。未知事件在 catalog 更新前被 reader fail-closed；运行生成器和 persistence acknowledgement 后 catalog、schema、双语记录均已更新。尚未完成产品 profile、Reflex adapter、检索、同一步采用或 flush 故障注入。
+`appendMemoryRecordEvent` 写入完整变更记录，`foldMemoryRecordEvents` 从 Session 日志按顺序恢复；真实 JSONL flush/restart 测试覆盖 create/supersede/deactivate。来源通过 `sessionId + eventSeq` 精确回读。Session/core persistence contract 已证明 flush 失败会显式传播并允许恢复重试；Continuum 专属故障注入仍列为待补证据。
 
-## P1.3 Review
+`ContinuumMemoryController` 负责 Reflex 专属开关、exact scope 授权、generation invalidation 和当前派生索引；关闭、停用或迟到 Jev 结果不会注入。`continuum-jev` 的 off/shadow/active、候选闭集、弃权、超时、取消、fallback、有界顺序多选和 `continuum/memory-decision` 回放均有测试；真实 RunPod Jev 与 DeepSeek 严格 evaluator 已通过。
 
-`continuum-jev` 是实验性、非默认加载的 Reflex/Jev selection adapter。OFF 保持 deterministic baseline；SHADOW 不改变采用结果；ACTIVE 只接受 supplied candidate 且要求置信度阈值。Session 决策回执使用 `continuum/memory-decision`，可在不调用 Jev 的情况下回放最新选择。fake-provider 与回放 6/6 通过。实时 RunPod gateway 当前通过，证据为 `docs/feat-continuum-memory/continuum-live-e2e.json`；DeepSeek v4-pro adapter/runtime 证据为 19 passed、2 optional image skipped、0 failed。严格 live harness 复跑仍返回 jev/migration/confidence 0.948799389710666。
-严格 live harness 为 `scripts/continuum-live-e2e.ts`；缺少 `CONTINUUM_JEV_ENDPOINT`、`CONTINUUM_JEV_API_KEY` 或 `CONTINUUM_JEV_MODEL` 会硬失败。当前已验证缺配置失败路径，并在有部署配置时完成一次真实 Jev 选择。
-
-`readMemorySourceEvents` 复用现有 Session persistence 按 `sessionId + eventSeq` 精确读取；`retrieveMemoryWorkingSet` 只选 active 记录并执行候选/UTF-8 预算；`installContinuumMemoryContext` 在 `agent/pre-step` 追加带来源类型的 recall 消息。Session-backed profile service 负责恢复 projection 并暴露显式生命周期 API；Jev active 选择已由 companion selector 在同一步消费并记录 receipt；相关记录、重启、检索、选择和竞态测试 48/48 通过。持久化检查当前为 80 roots、28 history records，确认无未登记变化。
-
-P1.7 追加：profile selector 的 active/shadow 过滤和 Session receipt 已接通；关闭后的迟到选择不会注入。
-
-P1.4/P1.5 追加：`ContinuumMemoryController` 通过 generation token 使关闭和停用后的在途读取失效，并按 exact scope 过滤 active 记录；active Jev 缺失时抛出明确配置错误，off/无 Reflex 仍解析为原版。新增 controller/ablation 测试后 Continuum 26/26 通过。`continuum-ablation.json` 是固定 3 样本的本地 2×2 结果，摘要树把命中率从 2/3 提升到 3/3；cache 指标只是字节复用估计。
+摘要树和稳定前缀是确定性本地导航/计量；2×2 消融报告检索覆盖与布局复用，未冒充 provider cache hit。P2 索引是可丢弃派生状态，Session 仍是唯一事实源；没有自动后台 FTS 或服务端 cache 账单。
 
 ## 冷启动 checklist
 
 1. 先读 docs/feat-continuum-memory/continuum-memory-proposal.html，再读本文件和 tasks/todo.md 的 Continuum 部分。
 2. 阅读 `tasks/todo.md` 的 P0–P5 清单；用户已授权同名 worktree 分模块实施，不重复请求同范围批准。
 3. 查看本工作树 status、branch 和 HEAD，勿把 main 上其他文档工作带入。
-4. 优先完成 P0.4 真实 A0/A1 基线；再实现 P1 记录/回读，所有产品代码与测试在本工作树推进。
+4. 先读最新验证区和 P0–P5 清单；继续推进 P3 效果对照、P4 UI/预算或 P5 持久 view，所有产品代码与测试仍在本工作树推进。
 
 ## 2026-10-11 latest validation
 
