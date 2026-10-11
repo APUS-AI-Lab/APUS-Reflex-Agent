@@ -99,3 +99,10 @@ Harness 持有事实、权限、预算、版本和执行权。模型提炼先成
 - Continuum browser acceptance: `apps/web/tests/continuum-memory.e2e.ts` 2/2 passed; targeted settings dialog test 1/1 passed. The second case boots the default profile without Continuum/Reflex and verifies the original General settings surface has no Continuum row. The overlay mounts Jev and Continuum while keeping the Reflex memory switch off before the user action.
 - `pnpm run test:docs` rerun after the acceptance report passed 20/20. Focused Continuum/Jev tests passed 54/54; context TypeScript and focused Oxlint passed. `apps/web/tsconfig.json` direct check remains invalid because the repository intentionally resolves shared test-support sources outside that app root; use the Vitest/build gates instead.
 - `pnpm run test:web:built` remains partial: the observed baseline failures are archived in `docs/feat-continuum-memory/continuum-web-regression-results.json`; do not call the full Web suite green.
+
+## 2026-10-11 live acceptance continuation
+
+- `apps/web/tests/continuum-memory.e2e.ts`: 2/2 passed. The first case verifies the Reflex/Continuum switch display, write, and reload persistence; the second boots the default profile without Continuum/Reflex and verifies the original General settings surface has no Continuum row.
+- Focused Continuum/Jev/agent-loop regression: 11 files, 63/63 tests passed. Focused Oxlint for the live script and browser test passed.
+- Protected RunPod Jev rerun passed with model `APUS-OpenJev-v1-9B-5949`, selection `migration`, confidence about 0.799, and 1475 ms end-to-end latency. Evidence is `docs/feat-continuum-memory/continuum-live-e2e.json`; credentials remain outside the repository.
+- Full `pnpm run test:web:built` remains failed-baseline and is archived in `docs/feat-continuum-memory/continuum-web-regression-results.json`; this does not reduce the 2/2 Continuum result to a full Web acceptance.
