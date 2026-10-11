@@ -191,6 +191,8 @@ describe('Continuum record events', () => {
     const view = buildContinuumSummaryView(rebuilt.snapshot(), { maxItemsPerLeaf: 1, maxSummaryBytes: 128 })
     const sources = zoomContinuumSummaryView(view, 'workspace/fact-1000')
     expect(sources).toEqual([{ recordId: MemoryId('history-999'), sourceRefs: [{ sessionId: id, eventSeq: SessionSeq(999) }] }])
+    const sourceEvents = await readMemorySourceEvents(reader.sessionPersistence, sources[0]?.sourceRefs ?? [])
+    expect(sourceEvents.map(source => [source.sessionId, source.event.type])).toEqual([[id, 'continuum/memory-record']])
     await readHandle.close()
     await reader.fiber.dispose()
   })
