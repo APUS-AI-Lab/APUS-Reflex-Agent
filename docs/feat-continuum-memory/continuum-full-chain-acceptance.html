@@ -22,6 +22,7 @@
 <path d="M1075 120v90M870 120v90M630 120v90M370 120v90" class="w"/><path d="M370 300v70h705v-70" class="w"/><text x="540" y="395" class="s">每个模型可见输入必须能由 Session 事件重建；关闭或无 Reflex 时走原版分支</text></svg></div>
 <h2>3. 逐项验收矩阵</h2><div class="table-wrap"><table><thead><tr><th>链路 / 断言</th><th>状态</th><th>证据与复核方式</th><th>限制</th></tr></thead><tbody>
 <tr><td>Reflex-only 开关显示与持久化</td><td class="status pass">PASS</td><td><code>apps/web/tests/continuum-memory.e2e.ts</code>：真实 Chromium 打开设置、切换、reload 后仍为 true；overlay 挂载 Jev/Continuum。</td><td>证明 UI/Host 配置链，不证明真实模型调用。</td></tr>
+<tr><td>无 Reflex 原版兼容</td><td class="status pass">PASS</td><td>同一浏览器专项的默认 profile 不挂载 Continuum/Reflex，General 设置保持可用且不出现 Continuum 行；核心 service 也将 active+无 Jev 解析为 <code>reflex-required</code>。</td><td>原版 profile 不提供 Continuum 开关，这是兼容约束。</td></tr>
 <tr><td>记录 create / supersede / deactivate 写入 Session</td><td class="status pass">PASS</td><td><code>packages/context/continuum/tests</code> persistence/service tests；冷启动 fold 恢复同一记录 ID/revision。</td><td>单 Host 顺序写入；多 Host 并发不在首版。</td></tr>
 <tr><td>索引、来源回读、scope 与字节预算</td><td class="status pass">PASS</td><td>Continuum unit/integration tests；候选和 sourceRefs 可从 Session 重建。</td><td>规模性能尚未作为生产 SLO 验收。</td></tr>
 <tr><td>同回合 admission</td><td class="status pass">PASS</td><td>agent-loop/context integration tests 断言本回合模型请求已包含合法记忆。</td><td>必须结合 Session snapshot replay 复核。</td></tr>
