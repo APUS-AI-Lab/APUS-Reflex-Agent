@@ -12,7 +12,7 @@
 - docs/feat-continuum-memory/continuum-memory-proposal.html：249 行；模块 D/I/R/J/C/O、P0–P5、摘要树/cache 取舍和三层真实验收门禁。
 - packages/core/agent-loop/tests/continuum-admission.spec.ts：312 行；8 项覆盖当步召回、完整 envelope 计量、最终路由、末端拒绝、重建、off、卸载和取消。
 - packages/core/agent-loop/package.json / pnpm-lock.yaml：测试所需 token-meter workspace devDependency。
-- packages/context/continuum/：P1.1 纯内存记录语义库、README 双语、包配置和 15 项单元测试；尚未写 Session 或磁盘。
+- packages/context/continuum/：P1.1 记录语义库加 P1.2 Session 事件/JSONL 重启回放、README 双语、包配置和 16 项相关测试。
 - tasks/todo.md：426 行；追加分模块 P0–P5 checklist 和结果；保留原有任务。
 - tasks/lessons.md：149 行；记录用户纠正的专属开关与原版兼容含义，避免误推无 Jev 产品模式。
 - tasks/feat-continuum-memory/handoff.md：本交接，包含范围、约束与冷启动路径。
@@ -40,7 +40,7 @@ Harness 持有事实、权限、预算、版本和执行权。模型提炼先成
 
 - [x] 用户已确认分模块实施，已读根 AGENTS.md、docs/architecture.md、docs/defensive-patterns.md、packages/AGENTS.md 和相关子树规则。
 - [ ] 验证新注入、实际路由、token-meter、compaction 的预算组合，再冻结 M1 接口和事件类型。
-- [x] P1.1 先实现纯记录语义；[ ] P1.2 通过现有 Session persistence 实现 durable append/flush/restart。
+- [x] P1.1 先实现纯记录语义；[x] P1.2 通过现有 Session persistence 实现 durable append/flush/restart；[ ] 故障注入和产品消费者。
 - [ ] 接入 Reflex adapter 与专属开关；无 Reflex 兼容原版；用内部 Baseline 消融，先 shadow 再 active。
 - [ ] 按行为面构建、lint、单元/集成、keyless Session 与两个 SDK 快照；随后真实模型对照。
 - [ ] 用户明确授权前不推送、建 PR 或部署；推送前执行 dsh-pre-push-checks 与 Ruff 双检查。
@@ -49,7 +49,11 @@ Harness 持有事实、权限、预算、版本和执行权。模型提炼先成
 
 工作树：.Codex/worktrees/feat-continuum-memory。分支：feat-continuum-memory。从 main 当前基线创建；创建前已检查 status、diff、stash、branch、HEAD 和 worktree list，stash 为空。主目录已有 README 设计和未跟踪 undefined 文件，未带入或改动这些用户工作。运行源码、配置与服务器未变，分支未推送，CI 未触发。
 
-最终版 HTML 浏览器检查通过：桌面/手机无页面横向溢出，13 维对比表、模块/验收章节完整，无 console 错误。P0 测试使用 scripted adapter 和内存 Session，不证明磁盘持久化、真实模型效果或精确 token 上限。P0 `continuum-admission.spec.ts` 通过 8/8；P1.1 `records.spec.ts` 通过 15/15；focused Oxlint、两个局部 TypeScript 构建、README Model Experience 和相对链接门禁通过。完整 `pnpm run test:docs` 通过 20/20；真实模型因缺 JEV_API_KEY/DEEPSEEK_API_KEY 未运行。
+最终版 HTML 浏览器检查通过：桌面/手机无页面横向溢出，13 维对比表、模块/验收章节完整，无 console 错误。P0 测试使用 scripted adapter 和内存 Session，不证明磁盘持久化、真实模型效果或精确 token 上限。P0 `continuum-admission.spec.ts` 通过 8/8；P1.1/P1.2 记录和 JSONL 重启回放通过 16/16；focused Oxlint、局部 TypeScript 构建、native flock 构建、README Model Experience、persistence acknowledgement 和相对链接门禁通过。完整 `pnpm run test:docs` 需在本批最终提交后重跑；真实模型因缺 JEV_API_KEY/DEEPSEEK_API_KEY 未运行。
+
+## P1.2 Review
+
+`appendMemoryRecordEvent` 写入完整变更后记录，`foldMemoryRecordEvents` 在恢复时按顺序重建记录。测试使用真实 JSONL backend 和 native flock：写入 create/supersede/deactivate，显式 flush，销毁 writer，重新挂载 reader，读取并比较完整快照。未知事件在 catalog 更新前被 reader fail-closed；运行生成器和 persistence acknowledgement 后 catalog、schema、双语记录均已更新。尚未完成产品 profile、Reflex adapter、检索、同一步采用或 flush 故障注入。
 
 ## 冷启动 checklist
 

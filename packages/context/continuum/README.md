@@ -9,9 +9,9 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-This package currently owns the smallest testable part of APUS Continuum: immutable memory records with source references, revision checks, superseding, and deactivation. The store is an in-memory semantic projection. It does not register a product plugin, write Session events, build an index, call Reflex, or provide an unlimited-memory product mode.
+This package owns the smallest durable part of APUS Continuum: immutable memory records with source references, revision checks, superseding, deactivation, and a log-only Session event that can rebuild the projection. It does not register a product plugin, build an index, call Reflex, or provide an unlimited-memory product mode.
 
-The next slice will add a Session-backed provider that makes these operations durable and replayable. Until that provider exists, process restart loses the projection by design.
+The Session event uses the existing persistence backend and becomes durable after the caller completes `ctx.sessions.flush(session)`. Reflex admission, retrieval, and model injection remain later slices.
 
 ## Table of Contents
 
@@ -27,14 +27,14 @@ The next slice will add a Session-backed provider that makes these operations du
 <a id="use-this-package"></a>
 ## Use this package
 
-Import `MemoryRecordStore` when a test or a future provider needs deterministic revision semantics. A successful in-memory operation is not a durability promise; callers must add the Session-backed provider before exposing a “saved” state.
+Import `MemoryRecordStore` for deterministic revision semantics. Use `appendMemoryRecordEvent` after a store transition and `foldMemoryRecordEvents` when rebuilding from a Session log. A successful append is not a durability promise until the caller completes `ctx.sessions.flush(session)`.
 
 -----
 
 <a id="understand-the-implementation"></a>
 ## Understand the implementation
 
-`MemoryRecordStore` keeps immutable snapshots and requires the caller's observed revision for superseding or deactivation. Source references retain a Session ID and event sequence so a later provider can reopen the original evidence. The store is deliberately not a second durable source.
+`MemoryRecordStore` keeps immutable snapshots and requires the caller's observed revision for superseding or deactivation. `continuum/memory-record` stores the complete post-transition record in the existing append-only Session log. Folding applies events without model calls or a second durable source.
 
 -----
 
@@ -66,7 +66,7 @@ This package sends no model request and has no cache effect.
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- The current store is process-local and does not survive restart.
+- The record projection is process-local; restart recovery requires reading and folding the Session event log.
 - It does not query, index, summarize, call Reflex, or inject context.
 
 <a id="dev-note"></a>
@@ -75,6 +75,6 @@ This package sends no model request and has no cache effect.
 <details>
 <summary>Working context for maintainers</summary>
 
-The Session-backed provider is the next implementation slice.
+The Session event is durable, but this package still has no product profile or Reflex integration.
 
 </details>

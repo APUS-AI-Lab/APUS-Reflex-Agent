@@ -9,7 +9,9 @@ kind: package-reference
 
 ## 概述
 
-本包目前提供 APUS Continuum 最小的记录语义：带 Session 事件来源的不可变记忆记录、revision 校验、明确更正和停用。当前实现是内存投影，不注册产品插件，不写 Session 事件，不调用 Reflex，也不提供无 Reflex 的无限记忆模式。
+本包提供 APUS Continuum 最小的持久记录语义：带 Session 事件来源的不可变记忆记录、revision 校验、明确更正、停用，以及可以从日志重建投影的仅日志 Session 事件。本包不注册产品插件，不构建索引，不调用 Reflex，也不提供无 Reflex 的无限记忆模式。
+
+Session 事件复用现有 persistence backend；调用方完成 `ctx.sessions.flush(session)` 后才具备持久化保证。Reflex 准入、检索和模型注入属于后续批次。
 
 ## 目录
 
@@ -27,14 +29,14 @@ kind: package-reference
 <a id="use-this-package"></a>
 ## 使用本包
 
-后续 Session-backed provider 会把相同操作写入现有 Session 日志，并在 flush 成功后才报告可恢复。本批故意不把内存投影当作重启后的持久记忆。
+使用 `MemoryRecordStore` 保存确定性的 revision 语义；用 `appendMemoryRecordEvent` 把变更追加到现有 Session 日志，用 `foldMemoryRecordEvents` 从日志重建。只有 `ctx.sessions.flush(session)` 成功后，调用方才能报告已经持久化。
 
 -----
 
 <a id="understand-the-implementation"></a>
 ## 理解实现
 
-`MemoryRecordStore` 要求调用方提供已观察到的 revision，并返回不可变快照。来源包含 Session ID 与事件序号，后续 provider 可据此重新打开证据。
+`MemoryRecordStore` 要求调用方提供已观察到的 revision，并返回不可变快照。`continuum/memory-record` 保存完整的变更后记录；折叠事件不会调用模型，也不会创建第二套持久化事实源。
 
 -----
 
@@ -64,10 +66,10 @@ kind: package-reference
 
 ## Known Limitations and Deferred Work
 
-- 当前没有磁盘 provider、索引、召回、Reflex adapter、摘要树或缓存策略。
-- 当前实现不跨进程保存记录。
+- 当前记录投影是进程内的；重启恢复必须读取并折叠 Session 事件日志。
+- 当前没有索引、召回、Reflex adapter、摘要树或缓存策略。
 
 <a id="dev-note"></a>
 ### 开发备注
 
-本包随 P1.1 小批次推进；下一批复用 `Session.append` 和 `ctx.sessions.flush(session)`，不增加第二套持久化事实源。
+Session 事件已经复用 `Session.append` 和 `ctx.sessions.flush(session)`，但本包仍未接入产品 profile 或 Reflex。

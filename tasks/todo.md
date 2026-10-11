@@ -413,8 +413,8 @@ PPT v2为4页主讲+2页备查，实际Keynote打开、六页备注回读和PDF�
 - [x] P0.3：实现原生 Loop/Session/TokenMeter 接入可行性测试；验证当步召回、pending 计量缺口、最终路由、末端拒绝、日志重建、off、卸载与取消。
 - [ ] P0.4：冻结真实模型评测 manifest、代表性任务、期望产物和 A0/A1 原版基线；实跑并保存来源证据。
 - [x] P1.1：实现独立 Continuum 记录语义库；不可变来源记录、revision 冲突、原子 supersede、deactivate 及错误码测试通过。
-- [ ] P1.2：复用 Session.append 与 ctx.sessions.flush 接入真实持久事件；完成 persistence acknowledgement、重启恢复和 failure semantics。
-- [x] P1.2 设计门：明确复用既有 Session event log、JSONL flush/restart 和事件折叠；设计稿见 `docs/feat-continuum-memory/p1-2-persistence-design.html`，等待用户确认后实现。
+- [x] P1.2：复用 Session.append 与 ctx.sessions.flush 接入真实持久事件；完成 persistence acknowledgement 和重启恢复；flush failure semantics 仍需独立故障注入批次。
+- [x] P1.2 设计门：明确复用既有 Session event log、JSONL flush/restart 和事件折叠；设计稿见 `docs/feat-continuum-memory/p1-2-persistence-design.html`。
 - [ ] P1.2：原文精确回读与同一步采用；最小 profile 贯通，重启从原日志恢复；未出现完整检索前不增加抽象 provider。
 - [ ] P1.3：Reflex 公共 Jev 接口 adapter，显式依赖校验、shadow、取消；真实双模型与文件产物验收。
 - [ ] P2：任务工作集、supersedes、FTS、权限与尾部覆盖；新 Session 续做、旧版本拒绝、索引重建与积压。
@@ -429,4 +429,8 @@ PPT v2为4页主讲+2页备查，实际Keynote打开、六页备注回读和PDF�
 
 ### P1.1 Review
 
-新增 `packages/context/continuum`，当前是纯内存语义库，不接入产品 profile。`MemoryRecordStore` 的旧记录、新记录、来源引用、revision、superseded/deactivated 状态均为 immutable snapshot；冲突和重复 ID 不产生部分提交。`records.spec.ts` 15/15 通过，包级 Oxlint、TypeScript 构建、README Model Experience、双语配对与文档门禁通过。下一批必须复用现有 Session persistence，不得新增第二事实源。
+新增 `packages/context/continuum`，先完成纯记录语义，再通过 `continuum/memory-record` 接入现有 Session log。`MemoryRecordStore` 的旧记录、新记录、来源引用、revision、superseded/deactivated 状态均为 immutable snapshot；冲突和重复 ID 不产生部分提交。P1.1/P1.2 相关测试 16/16 通过；包级 Oxlint、TypeScript 构建、native flock、README Model Experience、persistence acknowledgement、双语配对与文档门禁通过。下一批仍不得新增第二事实源。
+
+### P1.2 Review
+
+`appendMemoryRecordEvent` 写入完整变更后记录，`foldMemoryRecordEvents` 在恢复时按顺序重建记录。测试使用真实 JSONL backend 和 native flock：写入 create/supersede/deactivate，显式 flush，销毁 writer，重新挂载 reader，读取并比较完整快照。未知事件在 catalog 更新前被 reader fail-closed；运行生成器和 persistence acknowledgement 后 catalog、schema、双语记录均已更新。尚未完成产品 profile、Reflex adapter、检索、同一步采用或 flush 故障注入。

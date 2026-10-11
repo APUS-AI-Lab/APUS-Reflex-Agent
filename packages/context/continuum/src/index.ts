@@ -5,3 +5,4 @@
  */
 
 export * from './records.ts'
+export * from './persistence.ts'
