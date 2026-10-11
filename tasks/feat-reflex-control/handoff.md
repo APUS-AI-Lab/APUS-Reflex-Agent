@@ -24,6 +24,12 @@
 - [ ] 远端 R-04 探测的 Fidoo relay 三次均在首字节前出现 `URLError`，内部 proxy 一次 60 秒超时；这证明当前传输不可用，不构成性能通过。脱敏证据为 `docs/feat-reflex-control/evidence/r04-remote-response-20261012.*`。
 - [ ] Actions budget 仍阻止两仓 runner 启动；本机签名/公证身份仍不可用；健康长任务和用户中途修改 Goal 的真实远程对照仍待外部 relay 恢复后执行。
 
+### 2026-10-12 开源文档收口
+
+- [x] README/README.zh 已更新当前 APUS Reflex 能力、验收边界、API/配置参考、演示证据和 cache benchmark 入口；贡献指南、SECURITY、MIT/NOTICE 保持一致。
+- [x] 新增 `.github/CODEOWNERS` 和双语 `docs/feat-reflex-control/release-notes.*`；旧 Reflex 设置提案页已标注当前实现状态并链接现行验收报告。
+- [x] 本轮文档 pairing、20 项 `test:docs`、Ruff 双检查和 pre-push 构建门禁通过。
+
 ## 本轮交付物
 
 完整当前 changed + untracked 路径、文件总行数与字节数见 [files.md](files.md)，不是 diff 增量行数。主要改动包括 System3 Goal 路由、Reflex 上下文投影/可恢复记忆、普通监督/原生恢复、人工输入优先；Subagent 控制队列与 Codex evidence / verification-target 采集；专用 Reflex 设置页；计量、持久化与 SDK 投影。
