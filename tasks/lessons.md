@@ -174,3 +174,7 @@ Frontend runtime prepare 复制 Harness 构建树时，Harness pre-push 的 type
 ## 2026-10-11：Codex 过程监控保持轻量
 
 用户明确过程监控不用复杂化。优先复用有界活动摘要、最后进展时间与已有 Goal；只在重复失败、持续无进展或明确偏航后判断并发送有界调整，再观察相关验证是否改善。没有新证据不重复判断，不添加全轨迹分析、复杂评分或新的监控平台。验收重点是异常能纠偏、健康任务不误干预、用户新要求优先。
+
+## 2026-10-11：Codex v2 文件变更与子线程必须按协议边界验收
+
+Codex app-server v2 的 `FileUpdateChange.kind` 是字符串；解析器若只接受旧的 `{ type }` 对象，会把真实文件变更从 semantic evidence 中丢掉。`collabAgentToolCall` 也是实际协议名称，必须计入活跃副作用。Collab 子线程使用独立 thread subscription，父 wire 不会自动收到子线程的 command/file-change；未实现聚合前，不能把父线程证据外推为子线程已观察。

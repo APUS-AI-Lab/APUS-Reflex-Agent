@@ -26,6 +26,7 @@ const ITEM_ACTIVITY_KINDS: Readonly<Record<string, SubagentActivityKind>> = {
   fileChange: 'file-change',
   mcpToolCall: 'tool',
   dynamicToolCall: 'tool',
+  collabAgentToolCall: 'tool',
   collabToolCall: 'tool',
   webSearch: 'web-search',
 }
@@ -769,7 +770,7 @@ export class CodexAppServerWire {
    */
   private reportItem(item: JsonObject, phase: SubagentActivity['phase']): void {
     this.lastActivityAt = Date.now()
-    if (['commandExecution', 'fileChange', 'mcpToolCall', 'dynamicToolCall', 'collabToolCall'].includes(String(item.type))) {
+    if (['commandExecution', 'fileChange', 'mcpToolCall', 'dynamicToolCall', 'collabAgentToolCall', 'collabToolCall'].includes(String(item.type))) {
       if (typeof item.id === 'string') {
         if (phase === 'started') this.sideEffects.add(item.id)
         else this.sideEffects.delete(item.id)
