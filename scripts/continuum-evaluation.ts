@@ -155,7 +155,7 @@ export function evaluateVariant(
   }
   if (variant === 'A1') {
     if (task.id === 'scope-denial') return { status: 'not-applicable', reason: 'unsandboxed existing-history control' }
-    return text.includes(task.expected.toLocaleLowerCase())
+    return matchesTaskResponse(task, text)
       ? { status: 'pass', reason: 'existing history contains the expected fact' }
       : { status: 'fail', reason: 'existing history response omitted the expected fact' }
   }
