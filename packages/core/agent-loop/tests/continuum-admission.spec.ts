@@ -10,7 +10,7 @@ import { Context } from '@deepseek-ai/cordis'
 import AgentRegistry, { type Agent } from '@deepseek-ai/dsh-agent'
 import AgentLoop from '@deepseek-ai/dsh-agent-loop'
 import LlmRuntime, { createUserMessage, isAgentLoopRequest, LlmError } from '@deepseek-ai/dsh-llm'
-import type { ContextFormed, GenerateOptions, LlmResolvedModelInfo, Message, UserMessage } from '@deepseek-ai/dsh-llm'
+import type { ContextFormed, GenerateOptions, LlmResolvedModelInfo, RequestMessage, UserMessage } from '@deepseek-ai/dsh-llm'
 import SessionStore, { Session, SessionId } from '@deepseek-ai/dsh-session'
 import type { RequestContext, SessionEvent } from '@deepseek-ai/dsh-session'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
@@ -116,7 +116,7 @@ function observeRequests(h: Harness, rejectOverBudget = false): ObservedRequest[
   return observations
 }
 
-function textOf(messages: readonly Message[]): string[] {
+function textOf(messages: readonly RequestMessage[]): string[] {
   return messages.flatMap(message => message.content.flatMap(block => block.type === 'text' ? [block.text] : []))
 }
 

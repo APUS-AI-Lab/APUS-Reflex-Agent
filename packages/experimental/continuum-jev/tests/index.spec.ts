@@ -1,19 +1,21 @@
 import { describe, expect, it } from 'vitest'
 import { MemoryId } from '@deepseek-ai/dsh-continuum'
 import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
-import { ContinuumJevUnavailableError, selectContinuumMemory, recordContinuumMemoryDecision, latestContinuumMemoryDecision, type ContinuumJev } from '../src/index.ts'
+import ContinuumJevPlugin, { ContinuumJevUnavailableError, selectContinuumMemory, recordContinuumMemoryDecision, latestContinuumMemoryDecision, type ContinuumJev } from '../src/index.ts'
 import { Context } from '@deepseek-ai/cordis'
+import type { Agent } from '@deepseek-ai/dsh-agent'
 
 const first = { id: MemoryId('a'), label: 'A', excerpt: 'alpha', score: 0.8 } as const
 const second = { id: MemoryId('b'), label: 'B', excerpt: 'beta', score: 0.4 } as const
 const input = { query: 'which memory?', candidates: [first, second] } as const
 
 function fake(choice: string, confidence = 0.95): ContinuumJev {
-  const request = { model: 'fake', state: {}, questions: {} } as never
-  return {
+  const request = { state: {}, questions: {} }
+  const provider: ContinuumJev = {
     resolve: () => ({ ...request, providerId: 'fake', model: 'fake' }),
     decide: async () => ({ kind: 'ok', spec: { ...request, providerId: 'fake', model: 'fake' }, response: { model: 'fake', answers: { memory: { type: 'choice', choice, confidence, probabilities: { [choice]: 1 } } } } }),
-  } as ContinuumJev
+  }
+  return provider
 }
 
 describe('Continuum Jev controller', () => {
@@ -58,5 +60,39 @@ describe('Continuum Jev controller', () => {
 
   it('rejects the Reflex-only active switch when Jev is not mounted', async () => {
     await expect(selectContinuumMemory(undefined, { mode: 'active', minConfidence: 0.8 }, input)).rejects.toBeInstanceOf(ContinuumJevUnavailableError)
+  })
+
+  it('mounts the profile selector and records its receipt in the Agent Session', async () => {
+    const ctx = new Context()
+    await ctx.plugin(SessionStore)
+    ctx.provide('jev', fake(String(second.id)) as never)
+    await ctx.plugin(ContinuumJevPlugin, { mode: 'active', minConfidence: 0.8 })
+    const session = ctx.sessions.create(SessionId('continuum-selector'))
+    const result = await ctx.continuumMemorySelector!.select({ session } as Agent, {
+      query: input.query,
+      candidates: input.candidates.map(candidate => ({
+        id: String(candidate.id), label: candidate.label, excerpt: candidate.excerpt, score: candidate.score,
+      })),
+    }, new AbortController().signal)
+    expect(result.selectedIds).toEqual([second.id])
+    expect(session.snapshotEvents().some(event => event.type === 'continuum/memory-decision')).toBe(true)
+    await ctx.fiber.dispose()
+  })
+
+  it('keeps the baseline when the mounted selector runs in shadow mode', async () => {
+    const ctx = new Context()
+    await ctx.plugin(SessionStore)
+    ctx.provide('jev', fake(String(second.id)) as never)
+    await ctx.plugin(ContinuumJevPlugin, { mode: 'shadow', minConfidence: 0.8 })
+    const session = ctx.sessions.create(SessionId('continuum-shadow-selector'))
+    const result = await ctx.continuumMemorySelector!.select({ session } as Agent, {
+      query: input.query,
+      candidates: input.candidates.map(candidate => ({
+        id: String(candidate.id), label: candidate.label, excerpt: candidate.excerpt, score: candidate.score,
+      })),
+    }, new AbortController().signal)
+    expect(result.selectedIds).toEqual([first.id])
+    expect(result.baselineIds).toEqual([first.id])
+    await ctx.fiber.dispose()
   })
 })

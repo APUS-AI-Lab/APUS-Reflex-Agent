@@ -93,6 +93,11 @@
         http2: true
         # Two decisions without a response on the shared HTTP/2 connection reopen it.
         resetAfterFailures: 2
+    - id: continuum-jev
+      name: ../../packages/experimental/continuum-jev/lib/index.js
+      config:
+        mode: !!js 'process.env.CONTINUUM_MEMORY_MODE || "off"'
+        minConfidence: 0.8
     - id: continuum-memory
       name: ../../packages/context/continuum/lib/index.js
       config:

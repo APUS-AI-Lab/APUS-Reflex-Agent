@@ -1239,6 +1239,9 @@ importers:
       '@deepseek-ai/dsh-experimental-client-ui-system3':
         specifier: workspace:*
         version: link:../../../packages/experimental/client-ui-system3
+      '@deepseek-ai/dsh-experimental-continuum-jev':
+        specifier: workspace:*
+        version: link:../../../packages/experimental/continuum-jev
       '@deepseek-ai/dsh-experimental-system3':
         specifier: workspace:*
         version: link:../../../packages/experimental/system3

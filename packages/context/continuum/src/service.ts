@@ -61,7 +61,7 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
       const reflexMounted = ctx.get('jev') !== undefined
       const switchConfig: ContinuumMemorySwitch = { enabled: config.enabled, mode: config.mode, reflexMounted }
       const principal = { scopes: [...config.scopes] }
-      installContinuumMemoryControllerContext(ctx, agent => this.controllerWithConfig(agent, switchConfig), () => principal, config)
+      installContinuumMemoryControllerContext(ctx, agent => this.controllerWithConfig(agent, switchConfig), () => principal, config, () => ctx.get('continuumMemorySelector'))
     })
   }
 

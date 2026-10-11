@@ -1,7 +1,9 @@
 import type Jev from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
 import type { JevOutcome, JevRequest } from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
-import type { MemoryId } from '@deepseek-ai/dsh-continuum'
+import { MemoryId, type ContinuumMemorySelection, type ContinuumMemorySelector } from '@deepseek-ai/dsh-continuum'
 import type { Session, SessionEvent } from '@deepseek-ai/dsh-session'
+import { Context, Service } from '@deepseek-ai/cordis'
+import z from '@deepseek-ai/schemastery'
 
 /** Controller mode; only active mode lets Jev replace the deterministic choice. */
 export type ContinuumJevMode = 'off' | 'shadow' | 'active'
@@ -65,6 +67,45 @@ declare module '@deepseek-ai/dsh-session/types' {
 
 /** Narrow Jev capability consumed by the adapter, usable with `ctx.jev`. */
 export type ContinuumJev = Pick<Jev, 'resolve' | 'decide'>
+
+/** Profile configuration for the optional automatic Continuum selector. */
+export interface ContinuumJevProfileConfig {
+  readonly mode: ContinuumJevMode
+  readonly minConfidence: number
+}
+
+/** Schemastery configuration for the profile selector service. */
+export const ContinuumJevProfileConfig: z<ContinuumJevProfileConfig> = z.object({
+  mode: z.union([z.const('off'), z.const('shadow'), z.const('active')]).default('off'),
+  minConfidence: z.number().min(0).max(1).default(0.8),
+})
+
+/** Cordis service that mounts the Jev selector consumed by ContinuumMemory. */
+class ContinuumJevPlugin extends Service {
+  static Config = ContinuumJevProfileConfig
+
+  constructor(ctx: Context, config: ContinuumJevProfileConfig) {
+    super(ctx, 'continuumJev')
+    const selector: ContinuumMemorySelector = {
+      select: async (agent, input, signal): Promise<ContinuumMemorySelection> => {
+        const result = await selectContinuumMemory(ctx.get('jev'), config, {
+          query: input.query,
+          candidates: input.candidates.map(candidate => ({
+            id: MemoryId(candidate.id),
+            label: candidate.label,
+            excerpt: candidate.excerpt,
+            score: candidate.score,
+          })),
+        }, signal)
+        recordContinuumMemoryDecision(agent.session, result)
+        return result
+      },
+    }
+    ctx.provide('continuumMemorySelector', selector)
+  }
+}
+
+export default ContinuumJevPlugin
 
 /**
  * Select one bounded memory candidate with a deterministic baseline and optional Jev control.

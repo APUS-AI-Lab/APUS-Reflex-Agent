@@ -26,6 +26,40 @@ declare module '@deepseek-ai/dsh-llm' {
 /** Configuration for the deterministic memory context consumer. */
 export interface ContinuumMemoryContextConfig extends MemoryRetrievalConfig {}
 
+/** Candidate passed to the optional mounted Reflex selector. */
+export interface ContinuumMemorySelectionCandidate {
+  readonly id: string
+  readonly label: string
+  readonly excerpt: string
+  readonly score: number
+}
+
+/** Minimal replayable outcome returned by a mounted Reflex selector. */
+export interface ContinuumMemorySelection {
+  readonly mode: 'off' | 'shadow' | 'active'
+  readonly selectedIds: readonly string[]
+  readonly baselineIds: readonly string[]
+  readonly outcome: 'off' | 'baseline' | 'jev' | 'unknown'
+  readonly confidence?: number
+  readonly failure?: string
+}
+
+/** Optional Jev-backed selector installed by the profile's Reflex plugin. */
+export interface ContinuumMemorySelector {
+  select(
+    agent: Agent,
+    input: { readonly query: string; readonly candidates: readonly ContinuumMemorySelectionCandidate[] },
+    signal: AbortSignal,
+  ): Promise<ContinuumMemorySelection>
+}
+
+declare module '@deepseek-ai/cordis' {
+  interface Context {
+    /** Optional Reflex selector; absent keeps deterministic original behavior. */
+    continuumMemorySelector?: ContinuumMemorySelector
+  }
+}
+
 /** Store lookup owned by the product profile; no global memory store is implied. */
 export type ContinuumMemoryStoreOf = (agent: Agent) => MemoryRecordStore | undefined
 
@@ -75,6 +109,7 @@ export function installContinuumMemoryControllerContext(
   controllerOf: (agent: Agent) => ContinuumMemoryController | undefined,
   principalOf: ContinuumMemoryPrincipalOf,
   config: ContinuumMemoryContextConfig,
+  selectorOf: () => ContinuumMemorySelector | undefined = () => undefined,
 ): () => void {
   return ctx.on('agent/pre-step', async ({ agent, messages, signal }, next): Promise<PreStepDecision> => {
     const decision = await next()
@@ -88,7 +123,29 @@ export function installContinuumMemoryControllerContext(
     if (ticket === undefined) return decision
     const workingSet = controller.read(ticket, config, query)
     if (workingSet === undefined || !controller.isCurrent(ticket) || workingSet.candidates.length === 0) return decision
-    return { ...decision, messages: [...decision.messages, recallMessage(workingSet)] }
+    const selector = selectorOf()
+    if (selector === undefined) return { ...decision, messages: [...decision.messages, recallMessage(workingSet)] }
+    const selection = await selector.select(agent, {
+      query,
+      candidates: workingSet.candidates.map(candidate => ({
+        id: String(candidate.id),
+        label: candidate.record.kind,
+        excerpt: candidate.excerpt,
+        score: candidate.score,
+      })),
+    }, signal)
+    if (!controller.isCurrent(ticket)) return decision
+    const selected = new Set(selection.selectedIds)
+    const candidates = workingSet.candidates.filter(candidate => selected.has(String(candidate.id)))
+    const text = candidates.map(candidate => `[memory:${candidate.id}] ${candidate.excerpt}`).join('\n')
+    const filtered = {
+      ...workingSet,
+      candidates,
+      text,
+      bytes: new TextEncoder().encode(text).byteLength,
+    }
+    if (filtered.candidates.length === 0) return decision
+    return { ...decision, messages: [...decision.messages, recallMessage(filtered)] }
   })
 }
 
