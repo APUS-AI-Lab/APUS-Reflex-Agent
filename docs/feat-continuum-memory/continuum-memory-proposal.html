@@ -12,7 +12,7 @@
 <div class="eyebrow">APUS REFLEX HARNESS / DESIGN PROPOSAL / 2026-10-10</div>
 <h1>APUS Continuum · 连续记忆</h1>
 <p class="lead">Reflex 专属的“无限记忆”开关：由即时决策模型管理长期记忆，让每次推理只携带当前所需的信息。关闭开关或不接 Reflex 时，保持原版 Harness 行为。</p>
-<p class="status"><strong>状态：已授权在同名 worktree 分模块实施；完整产品尚未实现或验收。</strong> 当前 main 已有自动摘要压缩、原始 Session 日志和可选历史查询；默认全文检索关闭。按“整体 → 模块 → 可独立验收切片”推进，工程检查、真实模型链路与效果验收分别记账。命名为候选，尚未做重名核验。</p>
+<p class="status"><strong>状态：已授权在同名 worktree 分模块实施；完整产品仍未实现或验收。</strong> 当前 worktree 已完成 P0.4、P1.1–P1.7 与 P2，以及 P3 的超时、弃权、fallback 和有界顺序多选切片；P3 效果对照、P4/P5 仍未完成。main 已有自动摘要压缩、原始 Session 日志和可选历史查询；默认全文检索关闭。工程检查、真实模型链路与效果验收分别记账。命名为候选，尚未做重名核验。</p>
 <nav aria-label="提案目录"><a href="#goal">目标与命名</a><a href="#architecture">架构</a><a href="#comparison">UniiChat 横向对比</a><a href="#compatibility">专属开关与兼容</a><a href="#memory">记忆组织</a><a href="#control">运行与决策</a><a href="#engineering">原生接入</a><a href="#decomposition">模块与小批次</a><a href="#adoption">摘要树与缓存取舍</a><a href="#acceptance">真实验收门禁</a><a href="#challenge">取舍</a></nav>
 
 <section id="goal"><h2>1. 目标与命名</h2>
@@ -219,7 +219,7 @@
 <tr><td>权限与停用</td><td>单聊天单写者；正文未完整定义跨工作区授权、版本停用及在途失效。</td><td>已有 cwd 范围历史访问与隐私策略；不是完整记忆治理。</td><td>读入前授权、revision 复核、停用传播到摘要和请求；物理擦除另设计。</td><td>工程范围更广，但文档缺失不能作为对方不安全的证据。</td></tr>
 <tr><td>故障与回放</td><td>追加/flush/锁、持久 view、摘要失败重试有明确要求。</td><td>原生 Session 日志与回放，决策回执、取消和执行机制已存在。</td><td>索引覆盖声明、确切注入记录、Reflex 临时降级与旧结果拒绝。</td><td>双方均关注恢复；我们多一个控制器，也多一个故障源。</td></tr>
 <tr><td>部署与成本</td><td>主模型、压缩模型、日志树和视图；每回合可等待压缩。</td><td>已有 Harness 与可配置的 Jev 供给。</td><td>新增记忆索引、版本与预算流程，叠加 Reflex 调用；模型可按隐私策略部署。</td><td>我们的实现、运维与延迟成本可能更高，必须计入全链路。</td></tr>
-<tr><td>成熟度与证据</td><td>作者描述自用方案并给出较细算法和缓存模拟；这份 gist 未提供完整程序或长期任务质量对照。</td><td>底座已有实现；“无限记忆”开关和 Continuum 仍未实现。</td><td>分期实现后，用公开定义的任务与消融验证。</td><td>当前无法判定整体谁更强，更不能写成我们已超过对方。</td></tr>
+<tr><td>成熟度与证据</td><td>作者描述自用方案并给出较细算法和缓存模拟；这份 gist 未提供完整程序或长期任务质量对照。</td><td>底座已有实现；Continuum 的持久记忆切片已在 worktree 验证，完整“无限记忆”产品开关和 UI 仍未完成。</td><td>分期实现后，用公开定义的任务与消融验证。</td><td>当前无法判定整体谁更强，更不能写成我们已超过对方。</td></tr>
 </tbody></table></div>
 <h3>我们应借鉴什么，可能做出什么差异</h3>
 <div class="grid"><div class="card"><h3>直接借鉴</h3><p>不可变来源引用、多分辨率概览、需要时读原文、持久视图和批量压缩。先复现缓存曲线，再判断是否值得移植。</p></div><div class="card"><h3>拟议差异</h3><p>任务要求独立维护、带时间和版本的记忆、权限内多入口检索、Reflex 有界决策与实际采用记录。这是待验证的系统组合，不是已证明的独创算法。</p></div><div class="card"><h3>必须付出的代价</h3><p>更多状态与异常、更复杂测试、一次额外模型往返，可能反而更慢更贵。不能只展示省下的主模型 Token。</p></div></div>
@@ -246,6 +246,6 @@
 <li><a href="https://gist.github.com/VictorTaelin/91837951a5ce5b38f341ec1ba1df6449">UniiChat 设计</a>：分层摘要、按需展开和缓存批量合并的参考，不作为本项目已实现或无损保证的证据。</li>
 </ul>
 </section>
-<p class="footer">工作树 <code>.Codex/worktrees/feat-continuum-memory</code> 与分支 <code>feat-continuum-memory</code> 同名。用户已授权逐步拆分验证、分模块实现；当前开始 P0 原生接入验证，后续批次无需重复询问已授权范围。具体进度与命令结果以 <a href="../../tasks/feat-continuum-memory/handoff.md">交接记录</a> 为准。主目录既有未提交改动保持原样；尚无完整记忆产品或模型效果验收结论。</p>
+<p class="footer">工作树 <code>.Codex/worktrees/feat-continuum-memory</code> 与分支 <code>feat-continuum-memory</code> 同名。用户已授权逐步拆分验证、分模块实现；当前已完成 P0.4、P1.1–P1.7 与 P2，后续批次为 P3–P5。具体进度与命令结果以 <a href="../../tasks/feat-continuum-memory/handoff.md">交接记录</a> 为准。主目录既有未提交改动保持原样；尚无完整记忆产品或模型效果验收结论。</p>
 </main></body>
 </html>
