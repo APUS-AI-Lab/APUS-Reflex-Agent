@@ -24,7 +24,7 @@ describe('MemoryRecordStore', () => {
     const second = store.supersede(first.id, 1, record('invoice-v2'))
     expect(second).toMatchObject({ revision: 1, status: 'active', supersedes: first.id })
     expect(store.get(first.id)).toMatchObject({ revision: 2, status: 'superseded' })
-    expect(() => store.supersede(first.id, 1, record('stale'))).toThrowError(
+    expect(() => store.supersede(first.id, 1, record('stale'))).toThrow(
       expect.objectContaining({ code: 'MEMORY_REVISION_CONFLICT' }),
     )
   })
@@ -35,7 +35,7 @@ describe('MemoryRecordStore', () => {
     const disabled = store.deactivate(first.id, 1)
     expect(disabled).toMatchObject({ revision: 2, status: 'deactivated' })
     expect(store.get(first.id)?.sourceRefs).toEqual([source])
-    expect(() => store.deactivate(first.id, 2)).toThrowError(
+    expect(() => store.deactivate(first.id, 2)).toThrow(
       expect.objectContaining({ code: 'MEMORY_INACTIVE' }),
     )
   })
@@ -43,13 +43,13 @@ describe('MemoryRecordStore', () => {
   it('rejects duplicate, missing and invalid revisions with stable errors', () => {
     const store = new MemoryRecordStore()
     const first = store.create(record('invoice'))
-    expect(() => store.create(record('invoice'))).toThrowError(
+    expect(() => store.create(record('invoice'))).toThrow(
       expect.objectContaining({ code: 'MEMORY_REVISION_CONFLICT' }),
     )
-    expect(() => store.deactivate(MemoryId('missing'), 1)).toThrowError(
+    expect(() => store.deactivate(MemoryId('missing'), 1)).toThrow(
       expect.objectContaining({ code: 'MEMORY_NOT_FOUND' }),
     )
-    expect(() => store.deactivate(first.id, 0)).toThrowError(MemoryRecordError)
+    expect(() => store.deactivate(first.id, 0)).toThrow(MemoryRecordError)
   })
 
   it('detaches and freezes source objects without freezing caller inputs', () => {
@@ -92,7 +92,7 @@ describe('MemoryRecordStore', () => {
     const replacement = kind === 'same ID'
       ? record('previous')
       : kind === 'existing ID' ? record('existing') : { ...record('new'), scope: '/another-project' }
-    expect(() => store.supersede(previous.id, 1, replacement)).toThrowError(
+    expect(() => store.supersede(previous.id, 1, replacement)).toThrow(
       expect.objectContaining({ code: kind === 'different scope' ? 'MEMORY_SCOPE_MISMATCH' : 'MEMORY_REVISION_CONFLICT' }),
     )
     expect(store.snapshot()).toEqual(before)
@@ -105,10 +105,10 @@ describe('MemoryRecordStore', () => {
     if (status === 'superseded') store.supersede(first.id, 1, record('successor'))
     else store.deactivate(first.id, 1)
     const before = store.snapshot()
-    expect(() => store.supersede(first.id, 2, record('unwanted'))).toThrowError(
+    expect(() => store.supersede(first.id, 2, record('unwanted'))).toThrow(
       expect.objectContaining({ code: 'MEMORY_INACTIVE' }),
     )
-    expect(() => store.deactivate(first.id, 2)).toThrowError(
+    expect(() => store.deactivate(first.id, 2)).toThrow(
       expect.objectContaining({ code: 'MEMORY_INACTIVE' }),
     )
     expect(store.snapshot()).toEqual(before)
@@ -122,14 +122,14 @@ describe('MemoryRecordStore', () => {
     expect(c.supersedes).toBe(b.id)
     expect(store.get(b.id)?.supersedes).toBe(a.id)
     const before = store.snapshot()
-    expect(() => store.supersede(c.id, 1, record('a'))).toThrowError(MemoryRecordError)
-    expect(() => store.create(record('a'))).toThrowError(MemoryRecordError)
+    expect(() => store.supersede(c.id, 1, record('a'))).toThrow(MemoryRecordError)
+    expect(() => store.create(record('a'))).toThrow(MemoryRecordError)
     expect(store.snapshot()).toEqual(before)
   })
 
   it('rejects a missing predecessor without creating its replacement', () => {
     const store = new MemoryRecordStore()
-    expect(() => store.supersede(MemoryId('missing'), 1, record('new'))).toThrowError(
+    expect(() => store.supersede(MemoryId('missing'), 1, record('new'))).toThrow(
       expect.objectContaining({ code: 'MEMORY_NOT_FOUND' }),
     )
     expect(store.snapshot()).toEqual([])
@@ -140,7 +140,7 @@ describe('MemoryRecordStore', () => {
     const first = store.create(record('a'))
     store.supersede(first.id, 1, record('b'))
     const before = store.snapshot()
-    expect(() => store.deactivate(first.id, 1)).toThrowError(
+    expect(() => store.deactivate(first.id, 1)).toThrow(
       expect.objectContaining({ code: 'MEMORY_REVISION_CONFLICT' }),
     )
     expect(store.snapshot()).toEqual(before)
