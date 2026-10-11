@@ -1,5 +1,7 @@
 # P2 index and backlog design
 
+English | [中文](p2-index-design.zh.md)
+
 ## Goal
 
 Provide an optional deterministic inverted index for Continuum retrieval that can be rebuilt from the current `MemoryRecordStore` projection and can expose queued records while a bounded rebuild is in progress. The existing linear retrieval path remains the default, so profiles without an index preserve current behavior.

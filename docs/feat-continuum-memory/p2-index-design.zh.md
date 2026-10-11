@@ -1,5 +1,7 @@
 # P2 索引与积压设计
 
+[English](p2-index-design.md) | 中文
+
 ## 目标
 
 为 Continuum 检索提供可选的确定性倒排索引。索引可以从当前 `MemoryRecordStore` 投影完整重建，也可以在增量重建期间暴露待处理记录。现有线性扫描仍是默认路径，因此没有索引或没有 Reflex 的 profile 保持原有行为。
