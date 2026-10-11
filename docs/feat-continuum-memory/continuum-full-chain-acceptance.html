@@ -26,7 +26,7 @@
 <tr><td>记录 create / supersede / deactivate 写入 Session</td><td class="status pass">PASS</td><td><code>packages/context/continuum/tests</code> persistence/service tests；冷启动 fold 恢复同一记录 ID/revision。</td><td>单 Host 顺序写入；多 Host 并发不在首版。</td></tr>
 <tr><td>索引、来源回读、scope 与字节预算</td><td class="status pass">PASS</td><td>Continuum unit/integration tests；候选和 sourceRefs 可从 Session 重建。</td><td>规模性能尚未作为生产 SLO 验收。</td></tr>
 <tr><td>同回合 admission</td><td class="status pass">PASS</td><td>agent-loop/context integration tests 断言本回合模型请求已包含合法记忆。</td><td>必须结合 Session snapshot replay 复核。</td></tr>
-<tr><td>Jev 真实服务决策</td><td class="status pass">PASS</td><td><a href="continuum-live-e2e.json">continuum-live-e2e.json</a>：RunPod Jev endpoint 返回 migration 选择，confidence 约 0.799。</td><td>单场景实测，不代表质量基准完成。</td></tr>
+<tr><td>Jev 真实服务决策</td><td class="status pass">PASS</td><td><a href="continuum-live-e2e.json">continuum-live-e2e.json</a>：RunPod Jev endpoint 返回 migration 选择，confidence 约 0.799，端到端 latency 1475 ms；证据不含密钥。</td><td>单场景实测，不代表质量基准完成。</td></tr>
 <tr><td>严格 DeepSeek 记忆效果评测</td><td class="status pass">PASS</td><td><a href="continuum-evaluation-results.json">continuum-evaluation-results.json</a>：20 requests，11 applicable assertions，11 matched，0 failed。</td><td>模型效果不是系统正确性的唯一证明。</td></tr>
 <tr><td>取消、超时、低置信、fallback、权限拒绝</td><td class="status pass">PASS</td><td>Jev adapter/controller tests 覆盖 cancel/timeout/abstain/fallback 与 scope deny。</td><td>真实远程服务的每类故障仍需定期演练。</td></tr>
 <tr><td>摘要树 + stable cache 消融</td><td class="status pass">PASS</td><td><a href="continuum-ablation.json">continuum-ablation.json</a>：summaryTree+cache 命中率和 cache read ratio 有对照。</td><td>确定性 corpus；不是线上成本结论。</td></tr>
