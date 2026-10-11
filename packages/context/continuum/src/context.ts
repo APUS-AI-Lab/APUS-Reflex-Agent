@@ -4,6 +4,7 @@ import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import type { ContentBlock, UserMessage } from '@deepseek-ai/dsh-llm'
 import type { MemoryRecordStore } from './records.ts'
 import { retrieveMemoryWorkingSet, type MemoryRetrievalConfig } from './retrieval.ts'
+import type { ContinuumMemoryController, ContinuumMemoryPrincipal } from './policy.ts'
 
 /** Model-visible source for one bounded Continuum memory snapshot. */
 export interface ContinuumMemorySource {
@@ -27,6 +28,9 @@ export interface ContinuumMemoryContextConfig extends MemoryRetrievalConfig {}
 
 /** Store lookup owned by the product profile; no global memory store is implied. */
 export type ContinuumMemoryStoreOf = (agent: Agent) => MemoryRecordStore | undefined
+
+/** Resolves the exact scopes visible to one agent request. */
+export type ContinuumMemoryPrincipalOf = (agent: Agent) => ContinuumMemoryPrincipal
 
 /**
  * Install same-step bounded memory context on the existing pre-step waterfall.
@@ -54,6 +58,44 @@ export function installContinuumMemoryContext(
       content: [{ type: 'text', text: `## Continuum memory\n${workingSet.text}` }],
     })
     return { ...decision, messages: [...decision.messages, message] }
+  })
+}
+
+/**
+ * Install the lifecycle-aware consumer. The controller owns switch state,
+ * authorization, and invalidation; an absent controller leaves messages intact.
+ * @param ctx - Cordis context that owns AgentLoop events.
+ * @param controllerOf - per-agent Continuum controller resolver.
+ * @param principalOf - exact scope resolver for the current agent.
+ * @param config - retrieval and byte limits.
+ * @returns disposer for the listener.
+ */
+export function installContinuumMemoryControllerContext(
+  ctx: Context,
+  controllerOf: (agent: Agent) => ContinuumMemoryController | undefined,
+  principalOf: ContinuumMemoryPrincipalOf,
+  config: ContinuumMemoryContextConfig,
+): () => void {
+  return ctx.on('agent/pre-step', async ({ agent, messages, signal }, next): Promise<PreStepDecision> => {
+    const decision = await next()
+    if (decision.kind === 'reject') return decision
+    const controller = controllerOf(agent)
+    if (controller === undefined) return decision
+    const query = latestUserText(messages)
+    if (query === undefined) return decision
+    signal.throwIfAborted()
+    const ticket = controller.beginRead(principalOf(agent))
+    if (ticket === undefined) return decision
+    const workingSet = controller.read(ticket, config, query)
+    if (workingSet === undefined || !controller.isCurrent(ticket) || workingSet.candidates.length === 0) return decision
+    return { ...decision, messages: [...decision.messages, recallMessage(workingSet)] }
+  })
+}
+
+function recallMessage(workingSet: ReturnType<typeof retrieveMemoryWorkingSet>): UserMessage {
+  return createUserMessage({
+    source: { kind: 'continuum-memory', form: 'recall', version: 1, recordIds: workingSet.candidates.map(candidate => String(candidate.id)) },
+    content: [{ type: 'text', text: `## Continuum memory\n${workingSet.text}` }],
   })
 }
 

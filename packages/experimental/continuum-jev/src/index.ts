@@ -26,6 +26,14 @@ export interface ContinuumJevConfig {
   readonly minConfidence: number
 }
 
+/** Configuration error when the Reflex-only active switch has no Jev provider. */
+export class ContinuumJevUnavailableError extends Error {
+  constructor() {
+    super('active Continuum memory requires a mounted Reflex/Jev provider')
+    this.name = 'ContinuumJevUnavailableError'
+  }
+}
+
 /** Result of one deterministic or Jev-assisted selection. */
 export interface MemorySelectionResult {
   readonly mode: ContinuumJevMode
@@ -76,6 +84,7 @@ export async function selectContinuumMemory(
   assertConfig(config)
   signal?.throwIfAborted()
   const baseline = baselineSelection(input.candidates)
+  if (config.mode === 'active' && jev === undefined) throw new ContinuumJevUnavailableError()
   if (config.mode === 'off' || jev === undefined) {
     return { mode: config.mode, selectedIds: baseline, baselineIds: baseline, outcome: config.mode === 'off' ? 'off' : 'baseline' }
   }

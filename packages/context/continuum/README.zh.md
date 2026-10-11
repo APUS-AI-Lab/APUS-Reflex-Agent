@@ -19,6 +19,7 @@ Session 事件复用现有 persistence backend；调用方完成 `ctx.sessions.f
 - [理解实现](#understand-the-implementation)
 - [进一步阅读](#further-exploration)
 - [Model Experience](#model-experience)
+- [生命周期与评测](#lifecycle-and-evaluation)
 - [已知限制与后续工作](#known-limitations-and-deferred-work)
 - [开发备注](#dev-note)
 
@@ -63,6 +64,11 @@ recall 消息消耗配置的字节预算并进入同一个模型请求；不会�
 #### KV Cache effect
 
 消费者追加有界 recall 消息；在工作集不变时，已有请求前缀保持稳定。
+
+<a id="lifecycle-and-evaluation"></a>
+## 生命周期与评测
+
+`ContinuumMemoryController` 负责 Reflex 专属开关、精确作用域授权和在途读取的 generation token。关闭开关会保留持久记录，但使待提交的投影失效；停用记录也会使在途投影失效。未接入 Reflex 时，`resolveContinuumMemorySwitch` 回到原版路径。本地摘要树/缓存实验生成在 `docs/feat-continuum-memory/continuum-ablation.json`，分别测量检索覆盖率与稳定前缀复用估计，不声称 provider 账单或服务端缓存命中。
 
 ## Known Limitations and Deferred Work
 

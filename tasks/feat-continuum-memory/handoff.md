@@ -14,6 +14,7 @@
 - packages/core/agent-loop/package.json / pnpm-lock.yaml：测试所需 token-meter workspace devDependency。
 - packages/context/continuum/：P1.1 记录语义库加 P1.2 Session 事件/JSONL 重启回放、README 双语、包配置和 16 项相关测试。
 - packages/context/continuum/：补充精确来源事件读取、active-only 有界检索、UTF-8 预算和 `agent/pre-step` 同一步 recall 消费；相关测试总计 21 项。
+- packages/context/continuum/：补充 Reflex 专属 switch/controller、精确 scope 授权、停用/关闭 generation invalidation、controller 消费者，以及 2×2 tree/cache 消融实现与 fixture。
 - packages/experimental/continuum-jev/：P1.3 Reflex/Jev selection adapter、Session 决策回执、双语 README 和 6 项 fake-provider/回放控制测试。
 - tasks/todo.md：426 行；追加分模块 P0–P5 checklist 和结果；保留原有任务。
 - tasks/lessons.md：149 行；记录用户纠正的专属开关与原版兼容含义，避免误推无 Jev 产品模式。
@@ -45,6 +46,7 @@ Harness 持有事实、权限、预算、版本和执行权。模型提炼先成
 - [x] P1.1 先实现纯记录语义；[x] P1.2 通过现有 Session persistence 实现 durable append/flush/restart；[ ] 故障注入和产品消费者。
 - [x] P1.3 基础 off/shadow/active adapter；[ ] 真实 Jev gateway、Session receipt、检索消费者和 active 产品开关。
 - [x] P1.2 来源回读、工作集和同一步消费者；[ ] 接入产品 profile 的 Reflex 专属开关与 Jev 决策结果。
+- [x] controller 级 Reflex 专属开关、权限和停用失效语义；[ ] 接入默认产品 profile 与完整 UI。
 - [ ] 接入 Reflex adapter 与专属开关；无 Reflex 兼容原版；用内部 Baseline 消融，先 shadow 再 active。
 - [ ] 按行为面构建、lint、单元/集成、keyless Session 与两个 SDK 快照；随后真实模型对照。
 - [ ] 用户明确授权前不推送、建 PR 或部署；推送前执行 dsh-pre-push-checks 与 Ruff 双检查。
@@ -65,6 +67,8 @@ Harness 持有事实、权限、预算、版本和执行权。模型提炼先成
 严格 live harness 为 `scripts/continuum-live-e2e.ts`；缺少 `CONTINUUM_JEV_ENDPOINT`、`CONTINUUM_JEV_API_KEY` 或 `CONTINUUM_JEV_MODEL` 会硬失败。当前已验证其缺配置失败路径，真实 gateway 仍未通过。
 
 `readMemorySourceEvents` 复用现有 Session persistence 按 `sessionId + eventSeq` 精确读取；`retrieveMemoryWorkingSet` 只选 active 记录并执行候选/UTF-8 预算；`installContinuumMemoryContext` 在 `agent/pre-step` 追加带来源类型的 recall 消息。相关记录、重启、检索和同一步测试 21/21 通过；这仍是显式消费者，尚未接入默认 profile 或 Jev active 选择。持久化检查当前为 80 roots、28 history records，确认无未登记变化。
+
+P1.4/P1.5 追加：`ContinuumMemoryController` 通过 generation token 使关闭和停用后的在途读取失效，并按 exact scope 过滤 active 记录；active Jev 缺失时抛出明确配置错误，off/无 Reflex 仍解析为原版。新增 controller/ablation 测试后 Continuum 26/26 通过。`continuum-ablation.json` 是固定 3 样本的本地 2×2 结果，摘要树把命中率从 2/3 提升到 3/3；cache 指标只是字节复用估计。
 
 ## 冷启动 checklist
 

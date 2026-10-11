@@ -2,7 +2,7 @@ import { Context } from '@deepseek-ai/cordis'
 import { agentEvents } from '@deepseek-ai/dsh-agent'
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import { describe, expect, it } from 'vitest'
-import { MemoryId, MemoryRecordStore, installContinuumMemoryContext } from '../src/index.ts'
+import { ContinuumMemoryController, MemoryId, MemoryRecordStore, installContinuumMemoryContext, installContinuumMemoryControllerContext } from '../src/index.ts'
 import { SessionId, SessionSeq } from '@deepseek-ai/dsh-session'
 import type { Agent } from '@deepseek-ai/dsh-agent'
 
@@ -37,6 +37,23 @@ describe('Continuum same-step context consumer', () => {
       agent: {} as Agent, messages: [user], turn: 1, step: 1, signal: new AbortController().signal,
     }, () => Promise.resolve({ kind: 'enter' as const, messages: [user] }))
     expect(result.kind === 'enter' ? result.messages : []).toHaveLength(1)
+    await ctx.fiber.dispose()
+  })
+
+  it('keeps permission and switch checks on the same-step consumer', async () => {
+    const ctx = new Context()
+    const controller = new ContinuumMemoryController(records(), { enabled: true, mode: 'shadow', reflexMounted: true })
+    installContinuumMemoryControllerContext(ctx, () => controller, () => ({ scopes: ['workspace'] }), { maxCandidates: 2, maxExcerptBytes: 100, maxTotalBytes: 200 })
+    const user = createUserMessage({ source: { kind: 'user' }, content: [{ type: 'text', text: 'When is the migration scheduled?' }] })
+    const result = await agentEvents(ctx, {} as Agent).waterfall('agent/pre-step', {
+      agent: {} as Agent, messages: [user], turn: 1, step: 1, signal: new AbortController().signal,
+    }, () => Promise.resolve({ kind: 'enter' as const, messages: [user] }))
+    expect(result.kind === 'enter' ? result.messages : []).toHaveLength(2)
+    controller.setSwitch({ enabled: false, mode: 'off', reflexMounted: true })
+    const disabled = await agentEvents(ctx, {} as Agent).waterfall('agent/pre-step', {
+      agent: {} as Agent, messages: [user], turn: 2, step: 1, signal: new AbortController().signal,
+    }, () => Promise.resolve({ kind: 'enter' as const, messages: [user] }))
+    expect(disabled.kind === 'enter' ? disabled.messages : []).toHaveLength(1)
     await ctx.fiber.dispose()
   })
 })

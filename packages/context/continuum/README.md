@@ -19,6 +19,7 @@ The Session event uses the existing persistence backend and becomes durable afte
 - [Understand the implementation](#understand-the-implementation)
 - [Further Exploration](#further-exploration)
 - [Model Experience](#model-experience)
+- [Lifecycle and evaluation](#lifecycle-and-evaluation)
 - [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
 - [Dev Note](#dev-note)
 
@@ -61,6 +62,11 @@ The recall message consumes the configured byte budget in the same model request
 #### KV Cache effect
 
 The consumer appends a bounded recall message, so the existing request prefix remains stable until the selected working set changes.
+
+<a id="lifecycle-and-evaluation"></a>
+## Lifecycle and evaluation
+
+`ContinuumMemoryController` owns the Reflex-only switch, exact scope authorization, and a generation token for in-flight reads. Disabling the switch preserves durable records but invalidates a pending projection; deactivation does the same. When Reflex is absent, `resolveContinuumMemorySwitch` resolves to the original path. The local tree/cache experiment is generated at `docs/feat-continuum-memory/continuum-ablation.json`; it measures retrieval coverage separately from estimated stable-prefix reuse and does not claim provider billing or cache hits.
 
 ## Known Limitations and Deferred Work
 

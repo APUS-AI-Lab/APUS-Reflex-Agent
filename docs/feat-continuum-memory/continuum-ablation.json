@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "generatedAt": "2026-10-11",
+  "corpus": [
+    {
+      "id": "migration",
+      "query": "when is the cutover",
+      "content": "The migration is scheduled Friday.",
+      "summary": "The cutover is Friday.",
+      "expectedTerms": [
+        "cutover"
+      ]
+    },
+    {
+      "id": "owner",
+      "query": "who owns the rollback",
+      "content": "Rollback is assigned to the platform team.",
+      "summary": "The platform team owns rollback.",
+      "expectedTerms": [
+        "platform"
+      ]
+    },
+    {
+      "id": "invoice",
+      "query": "which invoice was disputed",
+      "content": "Invoice INV-42 was disputed by finance.",
+      "summary": "Finance disputed invoice INV-42.",
+      "expectedTerms": [
+        "inv-42"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "summaryTree": false,
+      "stableCache": false,
+      "cases": 3,
+      "retrievalHits": 2,
+      "retrievalHitRate": 0.6666666666666666,
+      "promptBytes": 118,
+      "estimatedCacheReadBytes": 0,
+      "cacheReadRatio": 0
+    },
+    {
+      "summaryTree": false,
+      "stableCache": true,
+      "cases": 3,
+      "retrievalHits": 2,
+      "retrievalHitRate": 0.6666666666666666,
+      "promptBytes": 118,
+      "estimatedCacheReadBytes": 79,
+      "cacheReadRatio": 0.6694915254237288
+    },
+    {
+      "summaryTree": true,
+      "stableCache": false,
+      "cases": 3,
+      "retrievalHits": 3,
+      "retrievalHitRate": 1,
+      "promptBytes": 204,
+      "estimatedCacheReadBytes": 0,
+      "cacheReadRatio": 0
+    },
+    {
+      "summaryTree": true,
+      "stableCache": true,
+      "cases": 3,
+      "retrievalHits": 3,
+      "retrievalHitRate": 1,
+      "promptBytes": 204,
+      "estimatedCacheReadBytes": 165,
+      "cacheReadRatio": 0.8088235294117647
+    }
+  ],
+  "interpretation": "Deterministic local ablation only; estimated cache bytes are layout reuse, not provider billing or a cache-hit claim."
+}

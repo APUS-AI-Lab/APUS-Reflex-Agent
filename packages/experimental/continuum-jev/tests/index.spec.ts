@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { MemoryId } from '@deepseek-ai/dsh-continuum'
 import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
-import { selectContinuumMemory, recordContinuumMemoryDecision, latestContinuumMemoryDecision, type ContinuumJev } from '../src/index.ts'
+import { ContinuumJevUnavailableError, selectContinuumMemory, recordContinuumMemoryDecision, latestContinuumMemoryDecision, type ContinuumJev } from '../src/index.ts'
 import { Context } from '@deepseek-ai/cordis'
 
 const first = { id: MemoryId('a'), label: 'A', excerpt: 'alpha', score: 0.8 } as const
@@ -54,5 +54,9 @@ describe('Continuum Jev controller', () => {
     expect(event.type).toBe('continuum/memory-decision')
     expect(latestContinuumMemoryDecision(session.snapshotEvents())).toEqual(event.data)
     await ctx.fiber.dispose()
+  })
+
+  it('rejects the Reflex-only active switch when Jev is not mounted', async () => {
+    await expect(selectContinuumMemory(undefined, { mode: 'active', minConfidence: 0.8 }, input)).rejects.toBeInstanceOf(ContinuumJevUnavailableError)
   })
 })

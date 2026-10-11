@@ -421,6 +421,8 @@ PPT v2为4页主讲+2页备查，实际Keynote打开、六页备注回读和PDF�
 - [x] P1.3 基础 adapter：新增实验性 `continuum-jev`，覆盖 off/shadow/active、baseline、候选 ID 封闭集、置信度回退与取消；真实 gateway E2E 未通过前不得标记完成。
 - [x] P1.2 同一步消费者：`installContinuumMemoryContext` 在 `agent/pre-step` 追加带 `continuum-memory` source 的有界 recall；无 per-agent store 时保持原版消息。
 - [x] P1.3 决策回执：`continuum/memory-decision` 写入 Session 并支持最新回放；真实 Jev gateway 仍未通过。
+- [x] P1.4 生命周期安全切片：Reflex 专属 switch/controller、精确 scope 授权、停用/关闭 generation invalidation，以及 controller 到同一步消费者的集成测试。
+- [x] P1.5 摘要树/cache 评测切片：固定 3 条样本完成 2×2 本地消融，结果写入 `docs/feat-continuum-memory/continuum-ablation.json`；缓存数字明确标为布局复用估计。
 - [ ] P2：任务工作集、supersedes、FTS、权限与尾部覆盖；新 Session 续做、旧版本拒绝、索引重建与积压。
 - [ ] P3：Reflex active 多候选/动作、弃权、超时与有限兜底；固定候选和端到端两种对照。
 - [ ] P4：专属开关 UI、停用/关闭后的活动投影移除、在途失效、最终模型预算、两个 SDK 和离线回放；原版回归。
@@ -432,6 +434,8 @@ PPT v2为4页主讲+2页备查，实际Keynote打开、六页备注回读和PDF�
 已在本 worktree 安装锁定依赖。真实模型凭据前置检查：当前进程无 JEV_API_KEY/DEEPSEEK_API_KEY，worktree 与主目录均无 .env；已请求现有测试配置路径，不请求密钥明文。接入测试的 adapter 为受控替身，Session 为内存日志，不证明磁盘持久化、真实模型效果或完整产品。
 
 本轮严格定向验收：Continuum 4 个测试文件 21/21、continuum-jev 1 个测试文件 6/6；两包 TypeScript build、Oxlint、`verify-persistence-changes`（80 roots、28 history records）通过。首次 `test:docs` 因生成的历史 persistence format facts 过期失败，运行 `pnpm run verify-persistence-formats --write` 刷新 3 个引用文件后最终 `test:docs` 20/20 通过。真实 Jev/DeepSeek 端点仍因 TLS 超时未计为通过。
+
+P1.4/P1.5 追加验收：Continuum 6 个测试文件 26/26、TypeScript build 和 Oxlint 通过；active 模式未挂载 Reflex 会显式拒绝，关闭/停用会使在途读取失效，未授权 scope 不进入工作集。固定消融显示摘要树使样本命中率从 2/3 到 3/3；稳定布局的估算复用分别为 79/118 与 165/204，未当作服务端 cache hit。
 
 ### P1.1 Review
 
