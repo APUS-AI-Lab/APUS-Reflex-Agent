@@ -174,7 +174,7 @@
 <tr><td>每轮重建会话、仅允许 zoom、入库前截断工具原文</td><td>不采用为系统约束</td><td>保留原生 Session 与多入口检索；完整产物或缺失声明可回读，不能让摘要遗漏变成永久丢失</td></tr>
 </tbody></table></div>
 <p>摘要树与缓存优化不是“拥有记忆”的必要条件；来源、持久化、纠正、授权和有限上下文才是前置条件。树提供检索导航价值，cache 提供成本价值，Reflex 提供策略价值，三者要分别消融。若 P5 实测没有净收益，记录结果并明确调整范围，不以“尚未必要”冒充已经实现。</p>
-<p><strong>当前可复现实验：</strong>本 worktree 已生成 <a href="continuum-ablation.json">continuum-ablation.json</a>。固定 3 条样本的本地 2×2 结果为：无树检索命中率 2/3，有树 3/3；稳定前缀仪表报告可复用字节为 79/120 与 133/206。这里的缓存数字是本地布局前缀测量，不是 provider 返回的命中、延迟或计费数据；真实长历史与服务端用量仍待可达模型端点后验收。</p>
+<p><strong>当前可复现实验：</strong>本 worktree 已生成 <a href="continuum-ablation.json">continuum-ablation.json</a>。固定 3 条样本的本地 2×2 结果为：无树检索命中率 2/3，有树 3/3；稳定前缀仪表报告可复用字节为 79/120 与 133/206。这里的缓存数字是本地布局前缀测量，不是 provider 返回的命中、延迟或计费数据；真实长历史与服务端用量仍待 P5 验收。P2 倒排索引另有完整 rebuild、bounded backlog 和带/不带索引等价测试。</p>
 <h3 id="acceptance">完整真实验收：三层门禁，任何必测项缺失均未完成</h3>
 <ol>
 <li><strong>确定性正确性：</strong>真实持久文件/SQLite、真实进程退出与重启、索引破坏后重建；权限、旧 revision、停用、取消、预算拒绝和回放一致性。竞态通过 barrier 控制确实重叠，不靠 sleep；故障替身用于精确造错，不能替代实际存储/进程证据。</li>
@@ -203,7 +203,7 @@
 </section>
 
 <section id="comparison"><h2>8. UniiChat 横向对比：已有证据与目标能力分开</h2>
-<p class="status"><strong>客观结论：</strong>UniiChat 的层级摘要、zoom 和缓存策略更具体，适合作为必须认真复现的参照。APUS 已有原生运行、日志与决策接入基础，但 Continuum 尚未实现。我们的差异是拟议的任务状态、版本与权限管理，以及 Reflex 对记忆动作的有界决策；不能据此宣称召回更准、成本更低或技术新颖性已成立。</p>
+<p class="status"><strong>客观结论：</strong>UniiChat 的层级摘要、zoom 和缓存策略更具体，适合作为必须认真复现的参照。当前 APUS 已实现并测试 Continuum 的持久记录、来源回读、工作集、权限、可重建倒排索引、Jev shadow/active、超时/弃权/fallback 和 Session/SDK 回放；P3 多候选效果、P4 产品 UI、P5 长历史与真实 cache 成本仍未完成。不能据此宣称召回更准、成本更低或技术新颖性已成立。</p>
 <p>对比依据为本轮读取的 <a href="https://gist.github.com/VictorTaelin/91837951a5ce5b38f341ec1ba1df6449">UniiChat 设计正文</a>（当时 updated_at 为 2026-10-10 06:02:59 UTC）与本地 main 源码。UniiChat 列只描述作者公开说明，未审计其完整运行程序；文档未说明不等于对方不具备。本方案列全部属于拟议能力。</p>
 <p class="muted">手机可横向滚动表格。对比没有总分：实现范围、检索质量与成本需要不同证据。</p>
 <div class="table-wrap" tabindex="0" role="region" aria-label="UniiChat 与 APUS 横向对比，可横向滚动"><table style="min-width:1080px"><thead><tr><th>维度</th><th>UniiChat：作者设计</th><th>APUS：当前已核实</th><th>Continuum + Reflex：拟议</th><th>客观判断</th></tr></thead><tbody>

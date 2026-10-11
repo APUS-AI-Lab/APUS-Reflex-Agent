@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-- 当前已完成 P0.4、P1.1–P1.7 的可审计模块实现及真实模型验收，使用 feat-continuum-memory 工作树；P2–P5 和 flush 故障注入仍未交付。
+- 当前已完成 P0.4、P1.1–P1.7 与 P2 索引模块的可审计实现及真实模型验收，使用 feat-continuum-memory 工作树；P3 多候选效果、P4–P5 和 flush 故障注入仍未交付。
 - 推荐名称 APUS Continuum（连续记忆）；HTML 是本轮设计入口，候选名未做重名核验。
 - 无限记忆为 Reflex 专属开关；关闭或未接入时兼容原版，不提供无 Reflex 的同等产品模式。
 - 用户已授权在同名 worktree 分支逐步拆分验证和实现；下一步完成 P0 基线，再进入 P1。
@@ -49,7 +49,7 @@ Harness 持有事实、权限、预算、版本和执行权。模型提炼先成
 - [x] P1.2 来源回读、工作集和同一步消费者；[ ] 接入产品 profile 的 Reflex 专属开关与 Jev 决策结果。
 - [x] controller 级 Reflex 专属开关、权限和停用失效语义；[ ] 接入默认产品 profile 与完整 UI。
 - [x] 接入默认 profile 的 Continuum service；无 Reflex 时保持原版，开启但未挂载 Reflex 时返回 `reflex-required`；Jev active 选择已由 companion selector 自动消费。
-- [ ] 接入 Reflex adapter 的自动 profile 消费与专属 UI；无 Reflex 兼容原版；用内部 Baseline 消融，先 shadow 再 active。
+- [ ] 接入 Reflex adapter 的专属 UI 与多候选 active 选择；无 Reflex 兼容原版；当前 timeout/弃权/fallback 已有确定性测试，完整效果对照仍待 P3/P4。
 - [x] 按行为面构建、lint、单元/集成、keyless Session、TypeScript/Python SDK 回放与真实模型对照。
 - [ ] 用户明确授权前不推送、建 PR 或部署；推送前执行 dsh-pre-push-checks 与 Ruff 双检查。
 
@@ -83,7 +83,7 @@ P1.4/P1.5 追加：`ContinuumMemoryController` 通过 generation token 使关闭
 
 ## 2026-10-11 latest validation
 
-- Deterministic summary tree and stable-prefix layout instrumentation are implemented in `packages/context/continuum/src/summary-tree.ts`; the ablation measures 2/3 → 3/3 retrieval coverage and 79/120 plus 133/206 local reused-prefix bytes. These are local layout measurements, not provider cache hits or billing.
+- Deterministic summary tree, stable-prefix layout instrumentation, and the rebuildable Continuum memory index are implemented in `packages/context/continuum/src/summary-tree.ts`; the ablation measures 2/3 → 3/3 retrieval coverage and 79/120 plus 133/206 local reused-prefix bytes. These are local layout measurements, not provider cache hits or billing.
 - Python SDK exposes `latest_continuum_memory_decision()` and replays the latest Session receipt without calling Jev; installed project-environment tests pass 2/2 with `uv sync --offline --group test && uv run --offline python -m pytest -q tests/test_continuum_replay.py`.
-- The strict evaluator completed 20/20 protected real requests. B/C passed 8/8 applicable assertions and A1 passed 3/3; A0/U are not-applicable controls. Scope filtering removes the private candidate before Jev.
+- Jev active now has an explicit provider timeout and deterministic baseline fallback; the strict evaluator completed 20/20 protected real requests. B/C passed 8/8 applicable assertions and A1 passed 3/3; A0/U are not-applicable controls. Scope filtering removes the private candidate before Jev.
 - Latest gates: Continuum/Jev/agent-loop/evaluator 54/54 tests, SDK client replay 44/44, Python replay 2/2, host build passed, docs 20/20, Cordis config 215/215, persistence 80 roots/28 history records; DeepSeek adapter/runtime 21/21 passed with zero skips. Full keyless snapshot replay now reaches 180 passed, 0 failed, and 2 expected Windows-only pwsh skips on macOS; browser-use-stagehand-native is fixed. The platform skips remain explicitly recorded and are not counted as passes. Worktree is clean and not pushed.

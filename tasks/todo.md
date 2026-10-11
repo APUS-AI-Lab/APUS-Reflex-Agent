@@ -400,7 +400,7 @@ PPT v2为4页主讲+2页备查，实际Keynote打开、六页备注回读和PDF�
 
 ### Continuum Review
 
-当前已完成 P0.4 与 P1.1–P1.7 的模块实现及真实模型验证；P2–P5 仍未完成，不能宣称完整产品验收。产品开关开启要求 Reflex 管理，关闭或未接入保持原版；底层模块化不意味着提供无 Reflex 的无限记忆产品模式。原文、有效约束、权限、预算和持久记录不交给模型决定；Reflex 管理有限候选和允许动作。新输入和记忆采用必须可回放。UniiChat 的 cache/tree 更具体，本项目完整记忆控制尚待实现，不能宣称已领先。未安装依赖，产品测试与真实对照留待对应阶段。
+当前已完成 P0.4、P1.1–P1.7 与 P2 索引模块，并完成真实模型验证；P3 多候选效果、P4–P5 仍未完成，不能宣称完整产品验收。产品开关开启要求 Reflex 管理，关闭或未接入保持原版；底层模块化不意味着提供无 Reflex 的无限记忆产品模式。原文、有效约束、权限、预算和持久记录不交给模型决定；Reflex 管理有限候选和允许动作。新输入和记忆采用必须可回放。UniiChat 的 cache/tree 更具体，本项目完整记忆控制尚待实现，不能宣称已领先。未安装依赖，产品测试与真实对照留待对应阶段。
 
 最终 HTML 检查：22 个链接、13 个 ID、SVG XML 和尾换行有效，无外部资源；真实 1440px/390px 页面无横向溢出，13 维 5 列比较表完整，手机表内可横向滚动与聚焦，无 console 错误。独立审阅通过，git diff --check 通过。初版架构图与折叠交互已验；未运行需要 node_modules 的全仓文档门禁或产品对照测试。
 
@@ -425,8 +425,8 @@ PPT v2为4页主讲+2页备查，实际Keynote打开、六页备注回读和PDF�
 - [x] P1.5 摘要树/cache 评测切片：固定 3 条样本完成 2×2 本地消融，结果写入 `docs/feat-continuum-memory/continuum-ablation.json`；缓存数字明确标为布局复用估计。
 - [x] P1.6 默认 profile 接缝：新增 Session-backed `ContinuumMemory` Cordis service，显式加载、原版默认 off、未挂载 Reflex 时 `reflex-required`，并纳入 system3 runtime patch（不自动开启）。
 - [x] P1.7 Reflex selector profile 消费：`continuum-jev` 提供 Cordis selector service，active/shadow 在同一步过滤工作集并写入决策回执；关闭/停用会丢弃迟到结果，48 项相关测试通过。
-- [ ] P2：任务工作集、supersedes、FTS、权限与尾部覆盖；新 Session 续做、旧版本拒绝、索引重建与积压。
-- [ ] P3：Reflex active 多候选/动作、弃权、超时与有限兜底；固定候选和端到端两种对照。
+- [x] P2：任务工作集、supersedes、词法倒排索引、权限与尾部覆盖；索引完整重建、积压有界重建和带/不带索引等价已通过；新 Session 续做与真实长历史仍需产品链路验收。
+- [ ] P3：Reflex active 多候选/动作、弃权、超时与有限兜底；当前已补齐弃权、显式超时和 baseline fallback，多候选仍受 Jev 单选协议限制，固定候选和端到端效果对照未完成。
 - [ ] P4：专属开关 UI、停用/关闭后的活动投影移除、在途失效、最终模型预算、两个 SDK 和离线回放；原版回归。
 - [ ] P5：摘要树/zoom、持久视图与批合并；真实长历史、树 × cache 消融、完整成本与延迟；无收益须记录，不静默宣称完成。
 - [ ] Release：确定性正确性、真实产品链路、预注册效果门槛三者全过；必测 skip 或凭据缺失不算通过。
@@ -445,7 +445,7 @@ P1.6 验收：profile service 测试 3/3、Continuum 全测试 28/28、service T
 
 P1.7 验收：Continuum/adapter/agent-loop 9 个测试文件 48/48，Continuum 与 Jev TypeScript build、focused Oxlint、全仓 `pnpm run build` 通过。profile selector 的 active、shadow、回执和关闭后的迟到结果均有测试。官方 DeepSeek v4-pro adapter/runtime 实跑 19 passed、2 optional image skipped、0 failed；跳过项仍按政策 pending。新增 `scripts/continuum-evaluation.ts` 是严格 A0/A1/B/C/U 执行器，但本轮严格评估器已用受保护凭据完成 20/20 请求，结果见 `docs/feat-continuum-memory/continuum-evaluation-results.json`；applicable 11/11 matched；B/C 8/8、A1 3/3 通过，A0/U 为 not-applicable；scope candidate 已在 Jev 前按授权过滤。
 
-摘要树已改为确定性 scope/kind 树与稳定前缀 bytes/hash 仪表；Python SDK 已加入无 Jev 回放投影，并在安装项目环境中 2/2 通过。DeepSeek adapter/runtime 真实测试 21/21 通过、0 skipped；keyless snapshot 180 passed、0 failed、2 个 Windows-only pwsh 场景在 macOS 上跳过；最终 host build、docs 20/20、54/54 定向测试、Cordis 215/215 和 persistence 80/28 检查通过。
+摘要树已改为确定性 scope/kind 树与稳定前缀 bytes/hash 仪表；P2 新增可重建倒排索引和有界积压；Jev active 新增显式 timeout 与 baseline fallback；Python SDK 已加入无 Jev 回放投影，并在安装项目环境中 2/2 通过。DeepSeek adapter/runtime 真实测试 21/21 通过、0 skipped；keyless snapshot 180 passed、0 failed、2 个 Windows-only pwsh 场景在 macOS 上跳过；最终 host build、docs 20/20、54/54 定向测试、Cordis 215/215 和 persistence 80/28 检查通过。
 
 ### P1.1 Review
 
