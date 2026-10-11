@@ -20,6 +20,7 @@ async function main(): Promise<void> {
       timeoutMs: 30_000,
       apiKeyEnv: 'CONTINUUM_JEV_API_KEY',
     })
+    const startedAt = performance.now()
     const result = await selectContinuumMemory(context.jev, { mode: 'active', minConfidence: 0.5 }, {
       query: 'Choose the migration schedule memory.',
       candidates: [
@@ -33,6 +34,7 @@ async function main(): Promise<void> {
     if (result.request?.model !== model) throw new Error(`live Jev model was not pinned: ${result.request?.model ?? 'missing'}`)
     console.log(JSON.stringify({
       outcome: result.outcome, selectedIds: result.selectedIds, confidence: result.confidence, model: result.request.model,
+      latencyMs: Math.round(performance.now() - startedAt),
     }))
   } finally {
     await context.fiber.dispose()
