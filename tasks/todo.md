@@ -394,7 +394,7 @@ PPT v2为4页主讲+2页备查，实际Keynote打开、六页备注回读和PDF�
 - [x] Human Gate：用户明确授权在同名 worktree 分支逐步拆分验证、分模块实现（2026-10-10）；不重复请求相同范围的批准。
 - [x] M1：完成待准入计量、实际路由及日志化注入组合验证；Continuum、任务要求投影、历史回读、纠正、预算和恢复均有测试与回放证据。
 - [x] M1：交付 Reflex/Jev adapter 的 shadow 路径和专属开关；关闭或未接入保持原版，显式开启缺依赖拒绝，并完成真实 Jev/DeepSeek 验证。
-- [ ] M2：固定 Baseline 与预算，补齐 Reflex active / fallback 的任务质量、完整成本与 P50/P95 延迟对照；当前严格 evaluator 已覆盖语义 assertions，但不是完整性能评测。
+- [ ] M2：固定 Baseline 与预算，补齐 Reflex active / fallback 的任务质量与完整成本对照；P3 性能报告已记录真实 provider usage、候选一致性和 P50/P95，但 Jev/local/cache 成本仍为 unknown。
 - [x] M3：加入确定性摘要树和缓存稳定视图消融，并验证关闭功能的原版行为；真实长历史与服务端 cache 仍属 P5。
 - [x] 按用户纠正移除“无 Jev 完整无限记忆”产品模式，加入 UniiChat 13 维横向表与公平实验方案。
 
@@ -413,7 +413,7 @@ PPT v2为4页主讲+2页备查，实际Keynote打开、六页备注回读和PDF�
 - [x] P0.3：实现原生 Loop/Session/TokenMeter 接入可行性测试；验证当步召回、pending 计量缺口、最终路由、末端拒绝、日志重建、off、卸载与取消。
 - [x] P0.4：冻结真实模型评测 manifest、代表性任务、期望产物和 A0/A1 原版基线；实跑并保存来源证据，严格 evaluator 20/20 请求、11/11 applicable assertions 通过。
 - [x] P1.1：实现独立 Continuum 记录语义库；不可变来源记录、revision 冲突、原子 supersede、deactivate 及错误码测试通过。
-- [x] P1.2：复用 Session.append 与 ctx.sessions.flush 接入真实持久事件；persistence acknowledgement 和重启恢复已通过；flush failure semantics 仍需独立故障注入批次。
+- [x] P1.2：复用 Session.append 与 ctx.sessions.flush 接入真实持久事件；persistence acknowledgement、重启恢复和 Continuum 专属一次失败/重试故障注入均已通过。
 - [x] P1.2 设计门：明确复用既有 Session event log、JSONL flush/restart 和事件折叠；设计稿见 `docs/feat-continuum-memory/p1-2-persistence-design.html`。
 - [x] P1.2：原文精确回读与同一步采用；最小 profile 贯通，重启从原日志恢复；未增加第二事实源或抽象 provider。
 - [x] P1.2 精确来源回读与有界工作集：按 `sessionId + eventSeq` 回读真实事件，active-only 词法检索、候选上限和 UTF-8 字节预算通过 21 项相关测试。
@@ -426,9 +426,9 @@ PPT v2为4页主讲+2页备查，实际Keynote打开、六页备注回读和PDF�
 - [x] P1.6 默认 profile 接缝：新增 Session-backed `ContinuumMemory` Cordis service，显式加载、原版默认 off、未挂载 Reflex 时 `reflex-required`，并纳入 system3 runtime patch（不自动开启）。
 - [x] P1.7 Reflex selector profile 消费：`continuum-jev` 提供 Cordis selector service，active/shadow 在同一步过滤工作集并写入决策回执；关闭/停用会丢弃迟到结果，48 项相关测试通过。
 - [x] P2：任务工作集、supersedes、词法倒排索引、权限与尾部覆盖；索引完整重建、积压有界重建和带/不带索引等价已通过；新 Session 续做与真实超模型窗口质量仍需产品链路验收；当前已补真实 JSONL 1,000 条记录重启、索引重建和尾部检索 smoke。
-- [ ] P3：Reflex active 多候选/动作、弃权、超时与有限兜底；当前已补齐弃权、显式超时、baseline fallback 和有界顺序多选（每次仍是闭集单选），固定候选和端到端效果对照未完成。
+- [ ] P3：Reflex active 完整任务质量/动作对照仍待完成；已补齐弃权、显式超时、baseline fallback、有界顺序多选、严格评测失败门禁，以及真实 provider usage/P50/P95 报告。
 - [ ] P4：专属开关 UI、停用/关闭后的活动投影移除、在途失效、最终模型预算、两个 SDK 和离线回放；原版回归。
-- [ ] P5：摘要树/zoom、持久视图与批合并；真实长历史、树 × cache 消融、完整成本与延迟；无收益须记录，不静默宣称完成。
+- [ ] P5：批合并、后台恢复、真实服务端 cache 用量和完整成本仍待完成；已交付 Session-backed summary view/zoom、重启来源回读、UTF-8 摘要预算和本地树 × cache 消融。
 - [ ] Release：确定性正确性、真实产品链路、预注册效果门槛三者全过；必测 skip 或凭据缺失不算通过。
 
 ### 本批验证记录
@@ -446,6 +446,8 @@ P1.6 验收：profile service 测试 3/3、Continuum 全测试 28/28、service T
 P1.7 验收：Continuum/adapter/agent-loop 9 个测试文件 48/48，Continuum 与 Jev TypeScript build、focused Oxlint、全仓 `pnpm run build` 通过。profile selector 的 active、shadow、回执和关闭后的迟到结果均有测试；后续补充了 timeout、fallback 和有界顺序多选。严格 evaluator 20/20 请求、11/11 applicable assertions 通过；DeepSeek adapter/runtime 当前 21/21、0 skip、0 failed。
 
 摘要树已改为确定性 scope/kind 树与稳定前缀 bytes/hash 仪表；P2 新增可重建倒排索引和有界积压；Jev active 新增显式 timeout 与 baseline fallback；Python SDK 已加入无 Jev 回放投影，并在安装项目环境中 2/2 通过。DeepSeek adapter/runtime 真实测试 21/21 通过、0 skipped；keyless snapshot 180 passed、0 failed、2 个 Windows-only pwsh 场景在 macOS 上跳过；最终 host build、docs 20/20、59/59 定向测试、Cordis 215/215 和 persistence 80/28 检查通过。
+
+P3/P5 增量验收：严格 evaluator 现在对 20 个唯一 variant/task cell 强制检查 11 个 applicable pass、0 failed、非空 `end_turn` 响应；真实重跑使用 4096 max tokens，20/20 请求、11/11 applicable assertions 通过。`continuum-performance-report.json` 由纯函数从同一证据生成 provider usage、候选一致性和 P50/P95，Jev/local/cache 成本保持 unknown。`ContinuumMemoryController.summary/zoom` 从 Session 折叠的 active 记录生成可丢弃导航视图，支持精确 scope、generation、UTF-8 summary 上限和 sourceRefs；真实 JSONL flush/reopen/fold/zoom/source 回读通过。Continuum 专属 flush 故障注入覆盖一次 persistBatch 失败、后续重试、重复 flush 不重复写入和冷启动恢复。
 
 ### P1.1 Review
 
