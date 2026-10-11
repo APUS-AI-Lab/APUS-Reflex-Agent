@@ -34,6 +34,7 @@ interface ModelResult {
   readonly text: string
   readonly usage?: Readonly<Record<string, number>>
   readonly model: string
+  readonly stopReason: string | undefined
 }
 
 async function main(): Promise<void> {
@@ -49,7 +50,7 @@ async function main(): Promise<void> {
   const jevContext = new Context()
   await jevContext.plugin(Jev, { endpoint: jevEndpoint, model: jevModel, effort: 'low', timeoutMs: 30_000, apiKeyEnv: 'JEV_API_KEY' })
   activeJevContext = jevContext
-  const results: Array<Record<string, unknown>> = []
+  const results: EvaluationResult[] = []
   try {
     for (const variant of ['A0', 'A1', 'B', 'C', 'U'] as const) {
       for (const task of tasks) {
@@ -63,7 +64,7 @@ async function main(): Promise<void> {
           variant, task: task.id, source: task.source, model: response.model,
           authorizedIds: selected.authorizedIds, selectedIds: selected.ids, baselineIds: selected.baselineIds,
           assertion, matched: assertion.status === 'pass',
-          expected: task.expected, response: text, usage: response.usage,
+          expected: task.expected, response: text, usage: response.usage, stopReason: response.stopReason,
           latencyMs: Math.round(performance.now() - started),
         })
         console.log(JSON.stringify({
@@ -80,16 +81,44 @@ async function main(): Promise<void> {
     variants: ['A0', 'A1', 'B', 'C', 'U'], tasks, results,
     summary: {
       total: results.length,
-      applicable: results.filter(result => result.assertion !== undefined && typeof result.assertion === 'object' && (result.assertion as { status?: unknown }).status !== 'not-applicable').length,
+      applicable: results.filter(result => result.assertion.status !== 'not-applicable').length,
       matched: results.filter(result => result.matched === true).length,
-      failed: results.filter(result => result.assertion !== undefined && typeof result.assertion === 'object' && (result.assertion as { status?: unknown }).status === 'fail').length,
+      failed: results.filter(result => result.assertion.status === 'fail').length,
     },
   }
   const path = resolve('docs/feat-continuum-memory/continuum-evaluation-results.json')
   await mkdir(resolve('docs/feat-continuum-memory'), { recursive: true })
   await writeFile(path, `${JSON.stringify(output, null, 2)}\n`)
-  if (results.length !== 20) throw new Error(`expected 20 variant/task results, got ${results.length}`)
+  assertEvaluationPassed(results)
   console.log(`continuum-evaluation: wrote ${path}`)
+}
+
+/** Evidence required for each frozen variant/task cell. */
+export interface EvaluationResult {
+  readonly variant: Variant
+  readonly task: string
+  readonly assertion: Assertion
+  readonly response: string
+  readonly stopReason: string | undefined
+  readonly [field: string]: unknown
+}
+
+/** Reject missing cells, failed assertions, empty output, or truncated generation after saving evidence. */
+export function assertEvaluationPassed(results: readonly EvaluationResult[]): void {
+  const variants: readonly Variant[] = ['A0', 'A1', 'B', 'C', 'U']
+  const expected = new Set(variants.flatMap(variant => tasks.map(task => `${variant}/${task.id}`)))
+  const seen = new Set<string>()
+  const failures: string[] = []
+  for (const result of results) {
+    const cell = `${result.variant}/${result.task}`
+    if (!expected.has(cell) || seen.has(cell)) failures.push(`${cell}: unexpected or duplicate cell`)
+    seen.add(cell)
+    if (result.assertion.status === 'fail') failures.push(`${cell}: ${result.assertion.reason}`)
+    if (result.response.trim().length === 0 || result.stopReason !== 'end_turn') failures.push(`${cell}: incomplete generation (${result.stopReason ?? 'missing stop reason'})`)
+  }
+  for (const cell of expected) if (!seen.has(cell)) failures.push(`${cell}: missing cell`)
+  if (results.filter(result => result.assertion.status === 'pass').length !== 11) failures.push('expected 11 applicable passing assertions')
+  if (failures.length > 0) throw new Error(`Continuum evaluation failed:\n${failures.join('\n')}`)
 }
 
 export async function selectionFor(
@@ -189,12 +218,13 @@ async function askDeepSeek(baseURL: string, key: string, model: string, prompt: 
   const response = await fetch(`${baseURL}/v1/messages`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model, max_tokens: 512, system: 'You are a strict evaluation model. Return only one short answer sentence; do not emit analysis.', messages: [{ role: 'user', content: prompt }] }),
+    body: JSON.stringify({ model, max_tokens: 4096, system: 'You are a strict evaluation model. Return only one short answer sentence; do not emit analysis.', messages: [{ role: 'user', content: prompt }] }),
     signal: AbortSignal.timeout(120_000),
   })
   const body = await response.json() as {
     content?: readonly { type: string; text?: string }[]
     model?: string
+    stop_reason?: string
     usage?: Record<string, number>
     error?: { message?: string }
   }
@@ -202,6 +232,7 @@ async function askDeepSeek(baseURL: string, key: string, model: string, prompt: 
   return {
     text: body.content?.filter(block => block.type === 'text').map(block => block.text ?? '').join('') ?? '',
     model: body.model ?? model,
+    stopReason: body.stop_reason,
     ...(body.usage === undefined ? {} : { usage: body.usage }),
   }
 }

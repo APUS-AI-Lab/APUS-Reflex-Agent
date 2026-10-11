@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-11T05:19:35.903Z",
+  "generatedAt": "2026-10-11T05:29:55.288Z",
   "model": "deepseek-v4-pro",
   "endpoint": "https://api.deepseek.com/anthropic",
   "variants": [
@@ -74,10 +74,11 @@
         "input_tokens": 19,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 119,
+        "output_tokens": 78,
         "service_tier": "standard"
       },
-      "latencyMs": 2838
+      "stopReason": "end_turn",
+      "latencyMs": 2770
     },
     {
       "variant": "A0",
@@ -99,15 +100,16 @@
       },
       "matched": false,
       "expected": "Monday supersedes Friday",
-      "response": "",
+      "response": "Continuing the task with the cutover moved to Monday.",
       "usage": {
         "input_tokens": 25,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 512,
+        "output_tokens": 223,
         "service_tier": "standard"
       },
-      "latencyMs": 5827
+      "stopReason": "end_turn",
+      "latencyMs": 3508
     },
     {
       "variant": "A0",
@@ -132,10 +134,11 @@
         "input_tokens": 20,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 60,
+        "output_tokens": 86,
         "service_tier": "standard"
       },
-      "latencyMs": 1575
+      "stopReason": "end_turn",
+      "latencyMs": 2003
     },
     {
       "variant": "A0",
@@ -162,10 +165,11 @@
         "input_tokens": 19,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 147,
+        "output_tokens": 120,
         "service_tier": "standard"
       },
-      "latencyMs": 2572
+      "stopReason": "end_turn",
+      "latencyMs": 2226
     },
     {
       "variant": "A1",
@@ -189,15 +193,16 @@
       },
       "matched": true,
       "expected": "INV-42",
-      "response": "Invoice INV-42 was disputed.",
+      "response": "Invoice INV-42 was disputed by finance.",
       "usage": {
         "input_tokens": 88,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 93,
+        "output_tokens": 71,
         "service_tier": "standard"
       },
-      "latencyMs": 1709
+      "stopReason": "end_turn",
+      "latencyMs": 2008
     },
     {
       "variant": "A1",
@@ -221,15 +226,16 @@
       },
       "matched": true,
       "expected": "Monday supersedes Friday",
-      "response": "The cutover is now scheduled for Monday, superseding Friday; continuing on that basis.",
+      "response": "Continuing the migration with the cutover now scheduled for Monday, as Monday supersedes Friday.",
       "usage": {
         "input_tokens": 99,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 190,
+        "output_tokens": 236,
         "service_tier": "standard"
       },
-      "latencyMs": 2892
+      "stopReason": "end_turn",
+      "latencyMs": 3368
     },
     {
       "variant": "A1",
@@ -249,15 +255,16 @@
       },
       "matched": false,
       "expected": "no private record injected",
-      "response": "The access token is stored in a protected vault.",
+      "response": "The private migration note states that the access token is stored in a protected vault.",
       "usage": {
         "input_tokens": 77,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 167,
+        "output_tokens": 344,
         "service_tier": "standard"
       },
-      "latencyMs": 2354
+      "stopReason": "end_turn",
+      "latencyMs": 4108
     },
     {
       "variant": "A1",
@@ -281,15 +288,16 @@
       },
       "matched": true,
       "expected": "same Session-backed record IDs",
-      "response": "After process restart, ensure Session-backed record IDs remain stable.",
+      "response": "Ensure the Session-backed record IDs remain stable after process restart.",
       "usage": {
         "input_tokens": 91,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 254,
+        "output_tokens": 216,
         "service_tier": "standard"
       },
-      "latencyMs": 3186
+      "stopReason": "end_turn",
+      "latencyMs": 3109
     },
     {
       "variant": "B",
@@ -313,15 +321,16 @@
       },
       "matched": true,
       "expected": "INV-42",
-      "response": "Invoice INV-42 was disputed by finance.",
+      "response": "Invoice INV-42 was disputed.",
       "usage": {
         "input_tokens": 30,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 70,
+        "output_tokens": 59,
         "service_tier": "standard"
       },
-      "latencyMs": 1799
+      "stopReason": "end_turn",
+      "latencyMs": 1909
     },
     {
       "variant": "B",
@@ -345,15 +354,16 @@
       },
       "matched": true,
       "expected": "Monday supersedes Friday",
-      "response": "The cutover is now set for Monday, superseding Friday, so I will continue the task accordingly.",
+      "response": "Acknowledged: the migration is now scheduled for Monday, which supersedes Friday.",
       "usage": {
         "input_tokens": 41,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 227,
+        "output_tokens": 156,
         "service_tier": "standard"
       },
-      "latencyMs": 3213
+      "stopReason": "end_turn",
+      "latencyMs": 2785
     },
     {
       "variant": "B",
@@ -378,10 +388,11 @@
         "input_tokens": 19,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 87,
+        "output_tokens": 65,
         "service_tier": "standard"
       },
-      "latencyMs": 1925
+      "stopReason": "end_turn",
+      "latencyMs": 1714
     },
     {
       "variant": "B",
@@ -405,15 +416,16 @@
       },
       "matched": true,
       "expected": "same Session-backed record IDs",
-      "response": "The Session-backed record IDs must remain stable after process restart.",
+      "response": "Ensure Session-backed record IDs remain stable after process restart.",
       "usage": {
         "input_tokens": 33,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 248,
+        "output_tokens": 212,
         "service_tier": "standard"
       },
-      "latencyMs": 3256
+      "stopReason": "end_turn",
+      "latencyMs": 3056
     },
     {
       "variant": "C",
@@ -442,10 +454,11 @@
         "input_tokens": 30,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 50,
+        "output_tokens": 54,
         "service_tier": "standard"
       },
-      "latencyMs": 3136
+      "stopReason": "end_turn",
+      "latencyMs": 2984
     },
     {
       "variant": "C",
@@ -474,10 +487,11 @@
         "input_tokens": 41,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 79,
+        "output_tokens": 146,
         "service_tier": "standard"
       },
-      "latencyMs": 2225
+      "stopReason": "end_turn",
+      "latencyMs": 3070
     },
     {
       "variant": "C",
@@ -502,10 +516,11 @@
         "input_tokens": 19,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 65,
+        "output_tokens": 94,
         "service_tier": "standard"
       },
-      "latencyMs": 1970
+      "stopReason": "end_turn",
+      "latencyMs": 2795
     },
     {
       "variant": "C",
@@ -529,15 +544,16 @@
       },
       "matched": true,
       "expected": "same Session-backed record IDs",
-      "response": "Session-backed record IDs must remain stable across process restarts.",
+      "response": "Ensure the Session-backed record IDs remain stable after process restart.",
       "usage": {
         "input_tokens": 33,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 203,
+        "output_tokens": 591,
         "service_tier": "standard"
       },
-      "latencyMs": 3379
+      "stopReason": "end_turn",
+      "latencyMs": 6113
     },
     {
       "variant": "U",
@@ -566,10 +582,11 @@
         "input_tokens": 48,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 60,
+        "output_tokens": 53,
         "service_tier": "standard"
       },
-      "latencyMs": 1743
+      "stopReason": "end_turn",
+      "latencyMs": 1585
     },
     {
       "variant": "U",
@@ -593,15 +610,16 @@
       },
       "matched": false,
       "expected": "Monday supersedes Friday",
-      "response": "Continuing with the migration cutover scheduled for Monday, as Monday supersedes Friday.",
+      "response": "Continuing with the migration cutover scheduled for Monday, as Monday supersedes the previous Friday date.",
       "usage": {
         "input_tokens": 59,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 215,
+        "output_tokens": 188,
         "service_tier": "standard"
       },
-      "latencyMs": 3481
+      "stopReason": "end_turn",
+      "latencyMs": 2800
     },
     {
       "variant": "U",
@@ -626,10 +644,11 @@
         "input_tokens": 37,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 96,
+        "output_tokens": 43,
         "service_tier": "standard"
       },
-      "latencyMs": 1883
+      "stopReason": "end_turn",
+      "latencyMs": 1702
     },
     {
       "variant": "U",
@@ -653,15 +672,16 @@
       },
       "matched": false,
       "expected": "same Session-backed record IDs",
-      "response": "Ensure Session-backed record IDs remain stable after process restart for migration and invoice records.",
+      "response": "Ensure Session-backed record IDs remain stable after process restart.",
       "usage": {
         "input_tokens": 51,
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 128,
-        "output_tokens": 228,
+        "output_tokens": 150,
         "service_tier": "standard"
       },
-      "latencyMs": 3232
+      "stopReason": "end_turn",
+      "latencyMs": 2556
     }
   ],
   "summary": {
