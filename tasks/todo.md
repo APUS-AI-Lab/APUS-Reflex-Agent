@@ -425,7 +425,7 @@ PPT v2为4页主讲+2页备查，实际Keynote打开、六页备注回读和PDF�
 - [x] P1.5 摘要树/cache 评测切片：固定 3 条样本完成 2×2 本地消融，结果写入 `docs/feat-continuum-memory/continuum-ablation.json`；缓存数字明确标为布局复用估计。
 - [x] P1.6 默认 profile 接缝：新增 Session-backed `ContinuumMemory` Cordis service，显式加载、原版默认 off、未挂载 Reflex 时 `reflex-required`，并纳入 system3 runtime patch（不自动开启）。
 - [x] P1.7 Reflex selector profile 消费：`continuum-jev` 提供 Cordis selector service，active/shadow 在同一步过滤工作集并写入决策回执；关闭/停用会丢弃迟到结果，48 项相关测试通过。
-- [x] P2：任务工作集、supersedes、词法倒排索引、权限与尾部覆盖；索引完整重建、积压有界重建和带/不带索引等价已通过；新 Session 续做与真实长历史仍需产品链路验收。
+- [x] P2：任务工作集、supersedes、词法倒排索引、权限与尾部覆盖；索引完整重建、积压有界重建和带/不带索引等价已通过；新 Session 续做与真实超模型窗口质量仍需产品链路验收；当前已补真实 JSONL 1,000 条记录重启、索引重建和尾部检索 smoke。
 - [ ] P3：Reflex active 多候选/动作、弃权、超时与有限兜底；当前已补齐弃权、显式超时、baseline fallback 和有界顺序多选（每次仍是闭集单选），固定候选和端到端效果对照未完成。
 - [ ] P4：专属开关 UI、停用/关闭后的活动投影移除、在途失效、最终模型预算、两个 SDK 和离线回放；原版回归。
 - [ ] P5：摘要树/zoom、持久视图与批合并；真实长历史、树 × cache 消融、完整成本与延迟；无收益须记录，不静默宣称完成。
