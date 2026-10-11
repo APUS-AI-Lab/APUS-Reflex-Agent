@@ -106,3 +106,8 @@ Harness 持有事实、权限、预算、版本和执行权。模型提炼先成
 - Focused Continuum/Jev/agent-loop regression: 11 files, 63/63 tests passed. Focused Oxlint for the live script and browser test passed.
 - Protected RunPod Jev rerun passed with model `APUS-OpenJev-v1-9B-5949`, selection `migration`, confidence about 0.799, and 1475 ms end-to-end latency. Evidence is `docs/feat-continuum-memory/continuum-live-e2e.json`; credentials remain outside the repository.
 - Full `pnpm run test:web:built` remains failed-baseline and is archived in `docs/feat-continuum-memory/continuum-web-regression-results.json`; this does not reduce the 2/2 Continuum result to a full Web acceptance.
+
+## 2026-10-11 latest model and Web baseline validation
+
+- Protected DeepSeek adapter/runtime E2E rerun with `DEEPSEEK_FLASH_E2E=1` and `DEEPSEEK_VISION_E2E=1`: 2 files, 21/21 passed, 0 skipped, 0 failed. Vision uses `maxTokens: 4096`; the prior 100-token cap caused provider `max-tokens` and is now corrected in the E2E fixture.
+- The two settings baseline golden mismatches caused by newly shipped license links were updated; the targeted English/no-browser settings cases now pass 2/2. Full Web remains broader than this targeted repair and is still not accepted as green.
