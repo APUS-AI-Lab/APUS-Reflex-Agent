@@ -439,3 +439,4 @@ PPT v2为4页主讲+2页备查，实际Keynote打开、六页备注回读和PDF�
 ### P1.3 Review
 
 新增实验性 `packages/experimental/continuum-jev`。`selectContinuumMemory` 只接收有限候选，OFF 返回确定性 baseline，SHADOW 保留 baseline 并暴露 Jev 建议，ACTIVE 只接受候选集内且达到阈值的选择；provider unknown、非法 ID、低置信度和取消均有明确行为。fake provider 测试 5/5、包级构建和 Oxlint、README Model Experience 门禁通过。真实 Jev gateway 当前 TLS 握手超时，SSH 主机变量也未配置，因此真实 E2E 未通过。
+严格 live harness 已加入 `scripts/continuum-live-e2e.ts`；缺少 `CONTINUUM_JEV_ENDPOINT`、`CONTINUUM_JEV_API_KEY` 或 `CONTINUUM_JEV_MODEL` 时硬失败，不会 skip。当前缺失配置的失败已实跑记录。

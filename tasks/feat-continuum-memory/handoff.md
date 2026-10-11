@@ -60,6 +60,7 @@ Harness 持有事实、权限、预算、版本和执行权。模型提炼先成
 ## P1.3 Review
 
 `continuum-jev` 是实验性、非默认加载的 Reflex/Jev selection adapter。OFF 保持 deterministic baseline；SHADOW 不改变采用结果；ACTIVE 只接受 supplied candidate 且要求置信度阈值。fake-provider 5/5 通过。真实 gateway endpoint 的 TLS 握手超时，本机没有 `SYSTEM3_JEV_HOST`/`APUS_JEV_API_KEY` 配置；不得把本批当作真实模型验收。
+严格 live harness 为 `scripts/continuum-live-e2e.ts`；缺少 `CONTINUUM_JEV_ENDPOINT`、`CONTINUUM_JEV_API_KEY` 或 `CONTINUUM_JEV_MODEL` 会硬失败。当前已验证其缺配置失败路径，真实 gateway 仍未通过。
 
 ## 冷启动 checklist
 
