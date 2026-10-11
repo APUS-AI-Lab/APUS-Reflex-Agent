@@ -11,6 +11,8 @@ import {
   appendMemoryRecordEvent,
   foldMemoryRecordEvents,
   readMemorySourceEvents,
+  MemoryRecordIndex,
+  retrieveMemoryWorkingSet,
 } from '../src/index.ts'
 
 const roots: string[] = []
@@ -68,6 +70,44 @@ describe('Continuum record events', () => {
     expect(rebuilt.snapshot()).toEqual(store.snapshot())
     const sources = await readMemorySourceEvents(reader.sessionPersistence, created.sourceRefs)
     expect(sources.map(source => [source.sessionId, source.event.type])).toEqual([[id, 'turn/start']])
+    await readHandle.close()
+    await reader.fiber.dispose()
+  })
+
+  it('rebuilds and searches a long JSONL history after restart', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'dsh-continuum-long-jsonl-'))
+    roots.push(root)
+    const id = SessionId('continuum-long-jsonl')
+    const writer = new Context()
+    await writer.plugin(SessionStore)
+    await writer.plugin(JsonlSessionPersistence, { root, compression: 'none' })
+    const session = writer.sessions.create(id)
+    const handle = await writer.sessionPersistence.create(session.header)
+    const store = new MemoryRecordStore()
+    for (let index = 0; index < 1_000; index += 1) {
+      const record = store.create({
+        id: MemoryId(`history-${index}`),
+        kind: 'fact',
+        scope: 'workspace',
+        content: `Long history marker-${index}.`,
+        sourceRefs: [{ sessionId: id, eventSeq: SessionSeq(index) }],
+      })
+      appendMemoryRecordEvent(session, 'create', record)
+    }
+    await writer.sessions.flush(session)
+    await handle.close()
+    await writer.fiber.dispose()
+
+    const reader = new Context()
+    await reader.plugin(SessionStore)
+    await reader.plugin(JsonlSessionPersistence, { root, compression: 'none' })
+    const readHandle = await reader.sessionPersistence.open(id, 'read')
+    const { events } = await readHandle.read()
+    const rebuilt = foldMemoryRecordEvents(events, new MemoryRecordStore())
+    const index = new MemoryRecordIndex()
+    expect(index.rebuild(rebuilt.snapshot())).toEqual({ indexedRecords: 1_000, pendingRecords: 0 })
+    const workingSet = retrieveMemoryWorkingSet(rebuilt, { maxCandidates: 2, maxExcerptBytes: 200, maxTotalBytes: 400, index }, 'marker-999')
+    expect(workingSet.candidates.map(candidate => candidate.id)).toEqual([MemoryId('history-999')])
     await readHandle.close()
     await reader.fiber.dispose()
   })
