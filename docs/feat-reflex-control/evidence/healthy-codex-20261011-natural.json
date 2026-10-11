@@ -1,0 +1,232 @@
+{
+  "scenario": "natural",
+  "acceptanceRevision": "queued-recovery-fences-v4",
+  "budgetMs": 150000,
+  "model": "gpt-6-sol-relay",
+  "reasoningEffort": "low",
+  "effectiveReasoningEffort": "low",
+  "nativeEvents": [
+    {
+      "at": 1791714177416,
+      "method": "item/started",
+      "supervisionInput": false,
+      "realignmentInput": false
+    },
+    {
+      "at": 1791714177417,
+      "method": "item/completed",
+      "supervisionInput": false,
+      "realignmentInput": false
+    },
+    {
+      "at": 1791714327053,
+      "method": "turn/completed",
+      "supervisionInput": false,
+      "realignmentInput": false
+    }
+  ],
+  "nativeShapes": [
+    {
+      "at": 1791714177417,
+      "itemType": "userMessage",
+      "commandActions": [],
+      "rejection": "missing-command",
+      "nativeCwd": false,
+      "commandOverBudget": false,
+      "envelope": "unsupported",
+      "verificationCommand": false
+    }
+  ],
+  "transport": [],
+  "writtenAt": 1791714327161,
+  "stopReason": "aborted",
+  "activity": [
+    {
+      "at": 1791714177376,
+      "event": "start"
+    },
+    {
+      "at": 1791714327048,
+      "event": "end",
+      "outcome": "aborted"
+    }
+  ],
+  "events": [
+    {
+      "type": "system3/judgement",
+      "at": 1791714209045,
+      "data": {
+        "decision": "reflex.supervision",
+        "reason": "judged",
+        "outcome": "realign",
+        "applied": true,
+        "elapsedMs": 1536,
+        "response": {
+          "model": "APUS-OpenJev-v1-9B-5949",
+          "answers": {
+            "action": {
+              "type": "choice",
+              "choice": "realign",
+              "probabilities": {
+                "observe": 0.09176456245553466,
+                "diagnose": 0.002771049677051073,
+                "verify": 0.008535433904441584,
+                "narrow": 0.026290987325287184,
+                "realign": 0.8706379666376854
+              },
+              "confidence": 0.694037476270333
+            }
+          },
+          "usage": {
+            "input_tokens": 361,
+            "output_tokens": 1,
+            "billing_units": 1
+          }
+        }
+      }
+    },
+    {
+      "type": "system3/reflex-supervision",
+      "at": 1791714209051,
+      "data": {
+        "version": 1,
+        "id": "c74d372a-c529-4669-8264-24636e6c3e3f",
+        "goalId": "goal-45a16836-39c9-4198-a0e8-b3225667f486",
+        "goalRevision": 1,
+        "runId": "c9d01c07-e484-46a6-b13c-98e931351326",
+        "state": "inconclusive",
+        "action": "observe",
+        "evidenceCount": 0
+      }
+    }
+  ],
+  "initialFiles": [
+    {
+      "name": "expected.txt",
+      "unavailable": "Error"
+    },
+    {
+      "name": "result.txt",
+      "unavailable": "Error"
+    },
+    {
+      "name": "verify.py",
+      "bytes": 378,
+      "sha256": "0a314db78b340661ac15af03d379aefe9b8ad34b0141be8913ae814a55f4408c"
+    },
+    {
+      "name": "ledger.py",
+      "bytes": 234,
+      "sha256": "ba6461fef2f03172cbf6523bc71f2a5f01a695b66e08e79f1197a887977d790b"
+    },
+    {
+      "name": "finance/invoices.csv",
+      "unavailable": "Error"
+    },
+    {
+      "name": "finance/payments.csv",
+      "unavailable": "Error"
+    },
+    {
+      "name": "finance/remaining.csv",
+      "unavailable": "Error"
+    },
+    {
+      "name": "finance/test_remaining.py",
+      "unavailable": "Error"
+    },
+    {
+      "name": "marketing/landing.txt",
+      "unavailable": "Error"
+    },
+    {
+      "name": "marketing/campaign.txt",
+      "unavailable": "Error"
+    }
+  ],
+  "files": [
+    {
+      "name": "expected.txt",
+      "unavailable": "Error"
+    },
+    {
+      "name": "result.txt",
+      "unavailable": "Error"
+    },
+    {
+      "name": "verify.py",
+      "bytes": 378,
+      "sha256": "0a314db78b340661ac15af03d379aefe9b8ad34b0141be8913ae814a55f4408c"
+    },
+    {
+      "name": "ledger.py",
+      "bytes": 234,
+      "sha256": "ba6461fef2f03172cbf6523bc71f2a5f01a695b66e08e79f1197a887977d790b"
+    },
+    {
+      "name": "finance/invoices.csv",
+      "unavailable": "Error"
+    },
+    {
+      "name": "finance/payments.csv",
+      "unavailable": "Error"
+    },
+    {
+      "name": "finance/remaining.csv",
+      "unavailable": "Error"
+    },
+    {
+      "name": "finance/test_remaining.py",
+      "unavailable": "Error"
+    },
+    {
+      "name": "marketing/landing.txt",
+      "unavailable": "Error"
+    },
+    {
+      "name": "marketing/campaign.txt",
+      "unavailable": "Error"
+    }
+  ],
+  "providerTelemetry": [
+    {
+      "at": 1791714244000,
+      "level": "INFO",
+      "target": "feedback_tags",
+      "status": null,
+      "kind": "request-start",
+      "categories": [
+        "connection",
+        "retry",
+        "stream",
+        "auth"
+      ]
+    },
+    {
+      "at": 1791714244000,
+      "level": "DEBUG",
+      "target": "codex_http_client::client",
+      "status": null,
+      "kind": "request-start",
+      "categories": [
+        "stream"
+      ]
+    },
+    {
+      "at": 1791714190000,
+      "level": "WARN",
+      "target": "codex_core_plugins::manifest",
+      "status": null,
+      "kind": "diagnostic",
+      "categories": []
+    },
+    {
+      "at": 1791714190000,
+      "level": "WARN",
+      "target": "codex_core_plugins::manifest",
+      "status": null,
+      "kind": "diagnostic",
+      "categories": []
+    }
+  ]
+}

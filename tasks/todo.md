@@ -7,10 +7,12 @@
 - [x] P0：完成一条真实受控语义监督闭环：偏航 → Reflex realign → Codex 消费 → verification-target → improved → 独立产物验证（Host20）。
 - [ ] P0：冻结并实测 1 秒 admission/status、远端首字节/总耗时三段指标；R-04 路由决策 p50/p95 已实测 two-tier 309/588ms、four-tier 317/405ms。
 - [ ] P0：完成健康长任务无误干预和用户中途改 Goal 的真实 UI/E2E 对照。
-- [ ] P0：完成 Electron 原生 200%、启动失败恢复、会话恢复、签名/公证和包内 MIT/NOTICE 核对。
+- [ ] P0：完成 Electron 页面级 200%、启动失败恢复、会话恢复、签名/公证和包内 MIT/NOTICE 核对；恢复界面 200% 系统缩放 40 变体已通过。
 - [ ] P0：完成 Harness Jev/System3 CI、秘密扫描、脱敏回归，并将两个 Draft PR 转 Ready；Host20 真实闭环已通过。
 - [ ] P1：统一 README quickstart、贡献者 API 文档、CODEOWNERS、Release notes、演示和 benchmark。
 - [ ] P1：独立 review 通过后合并两个仓库 main，回读 SHA、运行包和发布清单。
+
+本轮监督收口保持轻量：复用有界证据与 Goal，异常才判断、调整后观察验证、健康任务不误干预。2026-10-11 的自然 CSV 与字面量 unittest 对照均在 150 秒预算取消且零 steer；字面量 relay 无首字节，不能标为健康任务完整通过。证据见 `docs/feat-reflex-control/evidence/healthy-codex-20261011.zh.md`。
 
 - [x] 用户批准新建独立仓库，核心方向为 Jev 理念与模型能力嵌入 DSH。
 - [x] 创建私有仓库 xDAN-System3-Harness，保留来源历史与上游许可证。

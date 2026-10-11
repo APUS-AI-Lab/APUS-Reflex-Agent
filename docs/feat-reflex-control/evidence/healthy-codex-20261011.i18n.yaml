@@ -1,0 +1,7 @@
+# Bilingual-pair consistency record for healthy-codex-20261011.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-reflex-control/evidence/healthy-codex-20261011.md
+/healthy-codex-control-attempts:
+  en: f3682c0f96448763
+  zh: d6f58d82912d6eb3

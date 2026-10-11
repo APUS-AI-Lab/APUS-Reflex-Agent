@@ -170,3 +170,7 @@ Frontend runtime prepare 复制 Harness 构建树时，Harness pre-push 的 type
 ## 2026-10-11：DSH 发行归属与 APUS 产品品牌分层
 
 用户明确产品定位为 DSH 发行版本的 APUS Reflex Harness。用户可见标题、入口、安装包和任务状态统一突出 APUS Reflex Harness；DSH/DeepSeek 只在 README 技术关系、About、MIT/NOTICE 和兼容标识中保留低干扰归属。MIT 原版权、许可全文和第三方通知不能因品牌替换删除，也不能用上游名称替代产品品牌。
+
+## 2026-10-11：Codex 过程监控保持轻量
+
+用户明确过程监控不用复杂化。优先复用有界活动摘要、最后进展时间与已有 Goal；只在重复失败、持续无进展或明确偏航后判断并发送有界调整，再观察相关验证是否改善。没有新证据不重复判断，不添加全轨迹分析、复杂评分或新的监控平台。验收重点是异常能纠偏、健康任务不误干预、用户新要求优先。

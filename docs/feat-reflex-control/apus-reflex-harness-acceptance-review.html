@@ -100,7 +100,7 @@
     <div class="panel">
       <div class="kicker">Executive decision</div>
       <h2>当前结论：工程回归接近收口，产品闭环尚未达到 main 合并门槛</h2>
-      <p>入口路由、Reflex 配置、按行/片段上下文投影与恢复、cache 区保护、受控重复失败恢复、原生静默恢复和品牌/MIT 检查已有证据。语义偏航纠偏的因果链、真实用户中途改需求、默认部署监督参数、Electron 原生 200% 与正式发布仍缺证据。</p>
+      <p>入口路由、Reflex 配置、按行/片段上下文投影与恢复、cache 区保护、受控重复失败恢复、原生静默恢复和品牌/MIT 检查已有证据。Host20 受控语义纠偏和 Electron 200% 系统缩放矩阵已有证据；真实用户中途改需求、默认部署健康任务对照、页面级 200% 缩放、签名公证与正式发布仍缺证据。</p>
       <div class="callout"><strong>合并判断：</strong>保留 Draft PR。先清理并审查 Harness 工作树当前未提交的 snapshot fixture 变更，关闭 P0 闭环缺口并完成最终包验收，再合并两仓 main。</div>
     </div>
     <div class="panel">
@@ -146,7 +146,7 @@
     <div class="panel">
       <div class="kicker">P0 UI/UX quality bar</div>
       <h2>交互良好不是“看起来漂亮”</h2>
-      <ul class="checklist"><li><span class="check">✓</span><span>输入后立即有状态回显；没有空白等待和假成功。</span></li><li><span class="check">✓</span><span>用户能区分正在判断、执行中、等待审批、无进展、调整已发送、改善已验证和失败恢复。</span></li><li><span class="check">✓</span><span>追加要求、停止、取消、重试和恢复路径可见，旧状态不覆盖新意图。</span></li><li><span class="check">✓</span><span>窄屏、主题、键盘、错误字段、弹层、原生 200% 和窗口重启均有实测证据。</span></li><li><span class="x">!</span><span>当前原生 Electron 200%、启动失败恢复和真实中途改需求仍未闭环。</span></li></ul>
+      <ul class="checklist"><li><span class="check">✓</span><span>输入后立即有状态回显；没有空白等待和假成功。</span></li><li><span class="check">✓</span><span>用户能区分正在判断、执行中、等待审批、无进展、调整已发送、改善已验证和失败恢复。</span></li><li><span class="check">✓</span><span>追加要求、停止、取消、重试和恢复路径可见，旧状态不覆盖新意图。</span></li><li><span class="check">✓</span><span>窄屏、主题、键盘、错误字段、弹层和 200% 系统缩放均有实测证据。</span></li><li><span class="x">!</span><span>页面级 200% 缩放、启动失败恢复和真实中途改需求仍未闭环。</span></li></ul>
     </div>
   </section>
 
@@ -194,7 +194,7 @@
 
       <tr data-status="pass"><td class="id">F-01</td><td>专用“Reflex 模型配置”页保存服务、模型、effort，重启后真实判断使用保存值。</td><td>Settings form → credentials → persisted config → decision provider。</td><td class="evidence"><a href="evidence/reflex-settings-real.zh.md">F-01 真实报告</a>：low 保存、重启、实际消费通过。</td><td class="state"><span class="status pass">通过</span></td></tr>
       <tr data-status="pass"><td class="id">F-02</td><td>错误 key/模型显式失败，不覆盖有效配置，不回显秘密。</td><td>Field errors、connection test、secret redaction。</td><td class="evidence"><a href="evidence/reflex-ux-settings-rejected-key.png">错误截图</a>及配置回归通过。</td><td class="state"><span class="status pass">通过</span></td></tr>
-      <tr data-status="partial"><td class="id">F-03</td><td>最终 Electron 包独立用户目录保存配置，正常/Safe Mode 重启恢复。</td><td>Unsigned macOS arm64 directory package has normal/restart/safe-mode evidence.</td><td class="evidence"><a href="../../../APUS-Reflex-Frontend/.Codex/worktrees/feat-reflex-control/docs/feat-reflex-control/evidence/electron-final-real.zh.md">Electron 报告</a>。签名、公证、原生 200% 待测。</td><td class="state"><span class="status partial">部分</span></td></tr>
+      <tr data-status="partial"><td class="id">F-03</td><td>最终 Electron 包独立用户目录保存配置，正常/Safe Mode 重启恢复。</td><td>Unsigned macOS arm64 directory package has normal/restart/safe-mode evidence.</td><td class="evidence"><a href="../../../APUS-Reflex-Frontend/.Codex/worktrees/feat-reflex-control/docs/feat-reflex-control/evidence/electron-final-real.zh.md">Electron 报告</a>；<a href="../../../APUS-Reflex-Frontend/.Codex/worktrees/feat-reflex-control/docs/feat-reflex-control/evidence/electron-ui-scale-200.zh.md">200% 系统缩放</a>矩阵通过。签名、公证、页面级 200% 缩放仍待测。</td><td class="state"><span class="status partial">部分</span></td></tr>
 
       <tr data-status="partial"><td class="id">D-01</td><td>全产品统一 APUS Reflex Harness；MIT 原版权、全文和第三方致谢随产物保留。</td><td>Brand assets、package metadata、license/NOTICE gates。</td><td class="evidence"><a href="../../BRAND_GUIDELINES.zh.md">品牌规则</a>、Harness 324 包 MIT/NOTICE 检查通过；最终签名包仍待核对。</td><td class="state"><span class="status partial">部分</span></td></tr>
       <tr data-status="pass"><td class="id">D-02</td><td>模型可见输入、纠偏、上下文投影和恢复可从日志重建，TS/Python 同步。</td><td>Session events、record/replay、persistence type checks。</td><td class="evidence"><a href="acceptance-checklist.zh.md#acceptance-cases">双 SDK 与持久化回归</a>通过。</td><td class="state"><span class="status pass">通过</span></td></tr>
@@ -209,14 +209,14 @@
       <tr data-status="partial"><td class="id">UX-06</td><td>清楚区分判断、发送、已接收、未知、恢复和改善已验证。</td><td>Recent bounded timeline、new-message stale-state clearing。</td><td class="evidence">投影/组件回归通过；最终构建 UI 复验待完成。</td><td class="state"><span class="status partial">部分</span></td></tr>
       <tr data-status="partial"><td class="id">UX-07</td><td>上下文移出可恢复，恢复后能回答；不宣称永久删除或无限上下文。</td><td>Context restore event + user-facing notice。</td><td class="evidence"><a href="evidence/browser-context-v3.json">后端真实恢复</a>通过；最终包可读性待核对。</td><td class="state"><span class="status partial">部分</span></td></tr>
       <tr data-status="pending"><td class="id">UX-08</td><td>凭据、网络、超时、断开、重启都有理解和恢复路径，保留输入。</td><td>Error handling components exist；有限真实错误场景尚未验收。</td><td class="evidence">待最终包错误/重启体验证据。</td><td class="state"><span class="status pending">待测</span></td></tr>
-      <tr data-status="partial"><td class="id">UX-09</td><td>375/768/1280、明暗主题、200% 缩放、键盘和弹层均可用。</td><td>Web matrix after.json 通过；native Electron 200% 未通过验证。</td><td class="evidence"><a href="evidence/uiux/after.json">Web UI 矩阵</a>通过；原生窗口证据缺失。</td><td class="state"><span class="status partial">部分</span></td></tr>
-      <tr data-status="partial"><td class="id">UX-10</td><td>Electron 正常/Safe Mode、关闭重开、会话恢复、启动失败恢复和进程清理可用。</td><td>Unsigned arm64 normal/safe/config persistence/process cleanup passed。</td><td class="evidence"><a href="../../../APUS-Reflex-Frontend/.Codex/worktrees/feat-reflex-control/docs/feat-reflex-control/evidence/electron-final-real.json">Electron 证据</a>；会话恢复、启动失败和 native 200% 待测。</td><td class="state"><span class="status partial">部分</span></td></tr>
+      <tr data-status="partial"><td class="id">UX-09</td><td>375/768/1280、明暗主题、200% 缩放、键盘和弹层均可用。</td><td>Web matrix after.json 与 Electron scale-2 recovery smoke 通过；页面级 200% 缩放仍未验证。</td><td class="evidence"><a href="evidence/uiux/after.json">Web UI 矩阵</a>；<a href="../../../APUS-Reflex-Frontend/.Codex/worktrees/feat-reflex-control/docs/feat-reflex-control/evidence/electron-ui-scale-200.zh.md">Electron 200% 系统缩放</a>。</td><td class="state"><span class="status partial">部分</span></td></tr>
+      <tr data-status="partial"><td class="id">UX-10</td><td>Electron 正常/Safe Mode、关闭重开、会话恢复、启动失败恢复和进程清理可用。</td><td>Unsigned arm64 normal/safe/config persistence/process cleanup and scale-2 UI smoke passed.</td><td class="evidence"><a href="../../../APUS-Reflex-Frontend/.Codex/worktrees/feat-reflex-control/docs/feat-reflex-control/evidence/electron-final-real.json">Electron 证据</a>；<a href="../../../APUS-Reflex-Frontend/.Codex/worktrees/feat-reflex-control/docs/feat-reflex-control/evidence/electron-ui-scale-200.json">200% 系统缩放</a>；会话恢复、启动失败和页面级 200% 待测。</td><td class="state"><span class="status partial">部分</span></td></tr>
     </tbody></table>
   </section>
 
   <section id="ux" class="two-col">
-    <div class="panel"><div class="kicker">User experience acceptance</div><h2>用户真正看到的闭环</h2><ol><li>首次启动找到工作区和“Reflex 模型配置”。</li><li>输入问题后能看懂自动路由、实际模型和响应状态。</li><li>长 Goal 中能看见“正在观察”、有效进展、调整已发送和改善已验证。</li><li>用户追加要求或停止后，旧监督状态立即失效，最终产物服从新要求。</li><li>上下文移出提示可恢复，恢复时不遮挡输入，也不修改 cache 区。</li><li>网络、凭据、超时、重启错误给出下一步，而不是要求用户阅读原始日志。</li></ol><p class="callout"><strong>当前 UX 判断：</strong>Web 交互矩阵和 Electron 基本配置流程已有证据；最终 Electron 原生缩放、启动失败恢复、真实中途改需求和错误恢复仍是 P0。</p></div>
-    <div class="panel"><div class="kicker">Evidence inventory</div><h2>核心证据入口</h2><ul class="checklist"><li><span class="check">✓</span><a href="acceptance-checklist.zh.md">总验收清单</a></li><li><span class="check">✓</span><a href="evidence/cache-c06-real.zh.md">C-06 cache/session 保护</a></li><li><span class="check">✓</span><a href="evidence/browser-context-v3.json">Context v3 跨进程恢复</a></li><li><span class="check">✓</span><a href="evidence/supervision-real-repeated-failure.zh.md">受控重复失败纠偏</a></li><li><span class="x">!</span><a href="evidence/semantic-codex-host16.zh.md">语义偏航失败记录</a></li><li><span class="x">!</span><a href="../../../APUS-Reflex-Frontend/.Codex/worktrees/feat-reflex-control/docs/feat-reflex-control/evidence/electron-final-real.zh.md">Electron 限制</a></li></ul></div>
+    <div class="panel"><div class="kicker">User experience acceptance</div><h2>用户真正看到的闭环</h2><ol><li>首次启动找到工作区和“Reflex 模型配置”。</li><li>输入问题后能看懂自动路由、实际模型和响应状态。</li><li>长 Goal 中能看见“正在观察”、有效进展、调整已发送和改善已验证。</li><li>用户追加要求或停止后，旧监督状态立即失效，最终产物服从新要求。</li><li>上下文移出提示可恢复，恢复时不遮挡输入，也不修改 cache 区。</li><li>网络、凭据、超时、重启错误给出下一步，而不是要求用户阅读原始日志。</li></ol><p class="callout"><strong>当前 UX 判断：</strong>Web 交互矩阵、Electron 配置流程和 200% 系统缩放已有证据；页面级 200% 缩放、启动失败恢复、真实中途改需求和错误恢复仍是 P0。</p></div>
+    <div class="panel"><div class="kicker">Evidence inventory</div><h2>核心证据入口</h2><ul class="checklist"><li><span class="check">✓</span><a href="acceptance-checklist.zh.md">总验收清单</a></li><li><span class="check">✓</span><a href="evidence/cache-c06-real.zh.md">C-06 cache/session 保护</a></li><li><span class="check">✓</span><a href="evidence/browser-context-v3.json">Context v3 跨进程恢复</a></li><li><span class="check">✓</span><a href="evidence/supervision-real-repeated-failure.zh.md">受控重复失败纠偏</a></li><li><span class="x">!</span><a href="evidence/semantic-codex-host16.zh.md">语义偏航失败记录</a></li><li><span class="check">✓</span><a href="../../../APUS-Reflex-Frontend/.Codex/worktrees/feat-reflex-control/docs/feat-reflex-control/evidence/electron-ui-scale-200.zh.md">Electron 200% 系统缩放</a></li><li><span class="x">!</span><a href="../../../APUS-Reflex-Frontend/.Codex/worktrees/feat-reflex-control/docs/feat-reflex-control/evidence/electron-final-real.zh.md">Electron 剩余限制</a></li></ul></div>
   </section>
 
   <section id="release" class="panel">
@@ -227,7 +227,7 @@
       <tr><td>行为回归与 CI</td><td><span class="status partial">需回读</span></td><td>Harness 远程必需检查曾通过；Frontend Windows release job 需要取得最终结论；最终差异重新跑 Ruff 双检查和相关测试。</td></tr>
       <tr><td>产品监督闭环</td><td><span class="status partial">部分</span></td><td>Host20 受控真实链路已通过；继续完成健康长任务无误干预、用户中途改 Goal 和最终 Electron 路径，再重跑发布门禁。</td></tr>
       <tr><td>用户中途改需求</td><td><span class="status pending">待测</span></td><td>从真实 UI 注入中文列名/兼容性要求，确认旧判断与迟到 ACK 不覆盖新 Goal，最终产物通过独立检查。</td></tr>
-      <tr><td>最终 Electron 与品牌/MIT</td><td><span class="status partial">部分</span></td><td>完成原生 200%、启动失败恢复、会话恢复，核对 APUS Reflex Harness、MIT 全文和第三方 NOTICE 随安装包分发。</td></tr>
+      <tr><td>最终 Electron 与品牌/MIT</td><td><span class="status partial">部分</span></td><td>200% 系统缩放矩阵已通过；仍需页面级 200%、启动失败恢复、会话恢复，以及核对 APUS Reflex Harness、MIT 全文和第三方 NOTICE 随安装包分发。</td></tr>
       <tr><td>PR 与 main</td><td><span class="status blocked">阻断</span></td><td>独立 review 无 P0 阻断，两个 Draft PR 转 ready，合并后回读两仓 main、运行包和版本 pin。</td></tr>
     </tbody></table>
   </section>

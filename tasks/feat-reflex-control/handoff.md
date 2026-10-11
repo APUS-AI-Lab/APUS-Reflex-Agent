@@ -127,6 +127,13 @@ Host16 完整通过并完成本轮 SDK/浏览器验收。Host17 已由 root 收�
 - [ ] 本地 admission/status、远端首字节、完整回答耗时和用户可见失败回退仍待 R-04 完整验收。
 ## 2026-10-11 CI 回读
 
-- Harness PR #1 head `99c507d522` 的 Jev/System3 job 与两次 rerun 均在 runner 分配前失败（`runner_id=0`、0 steps、约 3 秒），未执行代码测试；不能归因源码。
+- Harness PR #1 当前分支的 Jev/System3 job 与两次 rerun 均在 runner 分配前失败（`runner_id=0`、0 steps、约 3 秒），未执行代码测试；不能归因源码。
 - Frontend PR #1 的 `test` 已通过；最新 release workflow 旧 run 的 Validate dispatch job 同样在 runner 分配前失败，Windows/macOS job 未启动。
 - 两个 PR 仍为 Draft，GitHub 状态 `MERGEABLE` 但 `UNSTABLE`；不得在 required checks 未恢复前合并 main。
+
+## 2026-10-11 轻量监督与 Electron 系统缩放
+
+- 用户明确 Codex 过程监控不要复杂化；后续只沿有界证据、异常判断、有界调整和结果复核收口，不增加全轨迹分析或评分平台。经验已写入 `tasks/lessons.md`。
+- 两次健康 Codex 对照在 150 秒取消预算处 `aborted`，零自动 steer；字面量 relay 记录上游请求零首字节。该事实不构成健康长任务完整通过，脱敏记录见 `docs/feat-reflex-control/evidence/healthy-codex-20261011.*`。
+- Frontend `feat-reflex-control` 已推送，加入真实 Electron 恢复界面 200% 系统缩放门禁。四 scale 共 160 变体通过（scale 2 为 40 变体），typecheck 与完整 179 files / 1577 tests 通过。
+- 系统界面 scale 2 不等于应用内页面 zoom factor 2；页面级 200%、正式签名/公证、会话/启动失败恢复仍待验收，不能将此 smoke 写成最终包完整通过。
