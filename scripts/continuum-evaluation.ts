@@ -1,26 +1,33 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { Context } from '@deepseek-ai/cordis'
 import Jev from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
 import { MemoryId } from '@deepseek-ai/dsh-continuum'
 import { selectContinuumMemory } from '../packages/experimental/continuum-jev/src/index.ts'
 
 type Variant = 'A0' | 'A1' | 'B' | 'C' | 'U'
-type Task = { id: string; input: string; expected: string; source: string }
-type Memory = { id: string; label: string; content: string; source: string }
+type Scope = 'workspace' | 'private'
+export type Task = { id: string; input: string; expected: string; source: string; authorizedScopes: readonly Scope[] }
+export type Memory = { id: string; label: string; content: string; source: string; scope: Scope }
+
+export type Assertion = {
+  readonly status: 'pass' | 'fail' | 'not-applicable'
+  readonly reason: string
+}
 
 const tasks: readonly Task[] = [
-  { id: 'exact-fact', input: 'Which invoice was disputed?', expected: 'INV-42', source: 'fixture:invoice' },
-  { id: 'correction', input: 'The cutover moved to Monday; continue the task.', expected: 'Monday supersedes Friday', source: 'fixture:migration' },
-  { id: 'scope-denial', input: 'Recall the private migration note.', expected: 'no private record injected', source: 'fixture:private' },
-  { id: 'restart-replay', input: 'Continue after process restart.', expected: 'same Session-backed record IDs', source: 'fixture:replay' },
+  { id: 'exact-fact', input: 'Which invoice was disputed?', expected: 'INV-42', source: 'fixture:invoice', authorizedScopes: ['workspace'] },
+  { id: 'correction', input: 'The cutover moved to Monday; continue the task.', expected: 'Monday supersedes Friday', source: 'fixture:migration', authorizedScopes: ['workspace'] },
+  { id: 'scope-denial', input: 'Recall the private migration note.', expected: 'no private record injected', source: 'fixture:private', authorizedScopes: ['workspace'] },
+  { id: 'restart-replay', input: 'Continue after process restart.', expected: 'same Session-backed record IDs', source: 'fixture:replay', authorizedScopes: ['workspace'] },
 ]
 
 const memories: readonly Memory[] = [
-  { id: 'invoice', label: 'Invoice dispute', content: 'Invoice INV-42 was disputed by finance.', source: 'fixture:invoice' },
-  { id: 'migration', label: 'Migration correction', content: 'The migration was moved from Friday to Monday; Monday supersedes Friday.', source: 'fixture:migration' },
-  { id: 'private', label: 'Private migration note', content: 'Private migration note: the access token is stored in a protected vault.', source: 'fixture:private' },
-  { id: 'replay', label: 'Restart record', content: 'The Session-backed record IDs must remain stable after process restart.', source: 'fixture:replay' },
+  { id: 'invoice', label: 'Invoice dispute', content: 'Invoice INV-42 was disputed by finance.', source: 'fixture:invoice', scope: 'workspace' },
+  { id: 'migration', label: 'Migration correction', content: 'The migration was moved from Friday to Monday; Monday supersedes Friday.', source: 'fixture:migration', scope: 'workspace' },
+  { id: 'private', label: 'Private migration note', content: 'Private migration note: the access token is stored in a protected vault.', source: 'fixture:private', scope: 'private' },
+  { id: 'replay', label: 'Restart record', content: 'The Session-backed record IDs must remain stable after process restart.', source: 'fixture:replay', scope: 'workspace' },
 ]
 
 interface ModelResult {
@@ -51,15 +58,16 @@ async function main(): Promise<void> {
         const prompt = promptFor(variant, task, selected)
         const response = await askDeepSeek(baseURL, deepseekKey, model, prompt)
         const text = response.text.trim()
-        const matched = text.toLocaleLowerCase().includes(task.expected.toLocaleLowerCase())
+        const assertion = evaluateVariant(variant, task, selected, text)
         results.push({
           variant, task: task.id, source: task.source, model: response.model,
-          selectedIds: selected.ids, baselineIds: selected.baselineIds, matched,
+          authorizedIds: selected.authorizedIds, selectedIds: selected.ids, baselineIds: selected.baselineIds,
+          assertion, matched: assertion.status === 'pass',
           expected: task.expected, response: text, usage: response.usage,
           latencyMs: Math.round(performance.now() - started),
         })
         console.log(JSON.stringify({
-          variant, task: task.id, matched, selectedIds: selected.ids,
+          variant, task: task.id, assertion: assertion.status, selectedIds: selected.ids,
           latencyMs: Math.round(performance.now() - started),
         }))
       }
@@ -70,7 +78,12 @@ async function main(): Promise<void> {
   const output = {
     version: 1, generatedAt: new Date().toISOString(), model, endpoint: baseURL,
     variants: ['A0', 'A1', 'B', 'C', 'U'], tasks, results,
-    summary: { total: results.length, matched: results.filter(result => result.matched === true).length },
+    summary: {
+      total: results.length,
+      applicable: results.filter(result => result.assertion !== undefined && typeof result.assertion === 'object' && (result.assertion as { status?: unknown }).status !== 'not-applicable').length,
+      matched: results.filter(result => result.matched === true).length,
+      failed: results.filter(result => result.assertion !== undefined && typeof result.assertion === 'object' && (result.assertion as { status?: unknown }).status === 'fail').length,
+    },
   }
   const path = resolve('docs/feat-continuum-memory/continuum-evaluation-results.json')
   await mkdir(resolve('docs/feat-continuum-memory'), { recursive: true })
@@ -79,25 +92,37 @@ async function main(): Promise<void> {
   console.log(`continuum-evaluation: wrote ${path}`)
 }
 
-async function selectionFor(variant: Variant, task: Task): Promise<{ ids: readonly string[]; baselineIds: readonly string[] }> {
-  const baseline = task.id === 'scope-denial'
-    ? []
-    : memories.filter((memory) => {
-      const firstLabel = memory.label.split(' ')[0] ?? ''
-      return task.input.toLocaleLowerCase().includes(firstLabel.toLocaleLowerCase()) || task.id === memory.source.slice('fixture:'.length)
-    })
+export async function selectionFor(
+  variant: Variant,
+  task: Task,
+): Promise<{ ids: readonly string[]; baselineIds: readonly string[]; authorizedIds: readonly string[] }> {
+  const authorized = authorizedMemories(task)
+  const baseline = authorized.filter((memory) => {
+    const firstLabel = memory.label.split(' ')[0] ?? ''
+    return task.input.toLocaleLowerCase().includes(firstLabel.toLocaleLowerCase()) || task.id === memory.source.slice('fixture:'.length)
+  })
   const first = baseline[0]
   const baselineIds = first === undefined ? [] : [first.id]
-  if (variant !== 'C') return { ids: variant === 'A0' ? [] : baselineIds, baselineIds }
+  if (variant !== 'C') return { ids: variant === 'A0' ? [] : baselineIds, baselineIds, authorizedIds: authorized.map(memory => memory.id) }
   const context = activeJevContext
   const result = await selectContinuumMemory(context.jev, { mode: 'active', minConfidence: 0.5 }, {
     query: task.input,
-    candidates: memories.map(memory => ({
+    candidates: authorized.map(memory => ({
       id: MemoryId(memory.id), label: memory.label, excerpt: memory.content,
       score: baseline.some(item => item.id === memory.id) ? 0.9 : 0.1,
     })),
   })
-  return { ids: result.selectedIds.map(String), baselineIds }
+  return { ids: result.selectedIds.map(String), baselineIds, authorizedIds: authorized.map(memory => memory.id) }
+}
+
+/** Apply the task principal's exact scope set before retrieval or Jev. */
+export function authorizedMemoryIds(task: Pick<Task, 'authorizedScopes'>): readonly string[] {
+  return memories.filter(memory => task.authorizedScopes.includes(memory.scope)).map(memory => memory.id)
+}
+
+function authorizedMemories(task: Pick<Task, 'authorizedScopes'>): readonly Memory[] {
+  const ids = new Set(authorizedMemoryIds(task))
+  return memories.filter(memory => ids.has(memory.id))
 }
 
 let activeJevContext: Context
@@ -115,6 +140,37 @@ function promptFor(variant: Variant, task: Task, selected: { ids: readonly strin
     ...summary,
     ...injected.map(value => `Selected memory: ${value}`),
   ].join('\n')
+}
+
+/** Evaluate behavior that the selected variant actually claims to provide. */
+export function evaluateVariant(
+  variant: Variant,
+  task: Task,
+  selected: { readonly ids: readonly string[]; readonly baselineIds: readonly string[] },
+  response: string,
+): Assertion {
+  const text = response.toLocaleLowerCase()
+  if (variant === 'A0' || variant === 'U') {
+    return { status: 'not-applicable', reason: variant === 'A0' ? 'no-context control' : 'summary-tree/cache control' }
+  }
+  if (variant === 'A1') {
+    if (task.id === 'scope-denial') return { status: 'not-applicable', reason: 'unsandboxed existing-history control' }
+    return text.includes(task.expected.toLocaleLowerCase())
+      ? { status: 'pass', reason: 'existing history contains the expected fact' }
+      : { status: 'fail', reason: 'existing history response omitted the expected fact' }
+  }
+  if (task.id === 'scope-denial') {
+    const denied = selected.ids.length === 0 && text.includes(task.expected.toLocaleLowerCase())
+    return denied
+      ? { status: 'pass', reason: 'private scope was excluded before Jev and model injection' }
+      : { status: 'fail', reason: 'private scope was selected or disclosed' }
+  }
+  const expectedId = task.source.slice('fixture:'.length)
+  const selectedExpected = selected.ids.includes(expectedId)
+  const expectedText = text.includes(task.expected.toLocaleLowerCase())
+  if (selectedExpected && expectedText) return { status: 'pass', reason: 'authorized candidate and expected response observed' }
+  const missing = [selectedExpected ? '' : 'expected candidate was not selected', expectedText ? '' : 'expected response was omitted'].filter(Boolean).join('; ')
+  return { status: 'fail', reason: missing }
 }
 
 async function askDeepSeek(baseURL: string, key: string, model: string, prompt: string): Promise<ModelResult> {
@@ -138,4 +194,4 @@ async function askDeepSeek(baseURL: string, key: string, model: string, prompt: 
   }
 }
 
-await main()
+if (process.argv[1] !== undefined && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))) await main()
