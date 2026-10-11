@@ -189,7 +189,7 @@ async function askDeepSeek(baseURL: string, key: string, model: string, prompt: 
   const response = await fetch(`${baseURL}/v1/messages`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model, max_tokens: 256, system: 'You are a strict evaluation model.', messages: [{ role: 'user', content: prompt }] }),
+    body: JSON.stringify({ model, max_tokens: 512, system: 'You are a strict evaluation model.', messages: [{ role: 'user', content: prompt }] }),
     signal: AbortSignal.timeout(120_000),
   })
   const body = await response.json() as {
