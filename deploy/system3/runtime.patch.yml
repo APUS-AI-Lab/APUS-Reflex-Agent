@@ -112,7 +112,10 @@
           mode: active
           yes: 0.8
           no: 0.2
-          deadlineMs: 5000
+          # Supervision decisions include a bounded post-intervention review;
+          # keep the context admission budget at 5s but allow Reflex feedback
+          # to finish on the same remote model path as the initial decision.
+          deadlineMs: 15000
           sessionDataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'
           intervalMs: 15000
           stallMs: 180000

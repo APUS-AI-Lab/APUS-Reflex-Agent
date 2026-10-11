@@ -6,7 +6,7 @@
 
 本清单是 `feat-reflex-control` 的需求与验收总入口，供产品验收、开发收尾和下一会话交接使用。核对日期为 2026-10-11；结果对应已推送的 Harness 与 Frontend `feat-reflex-control` 修订，不代表 main 或已签名/公证发布版。已有设计、源码和试验记录各自保留职责，本页统一定义“达到什么结果才能勾选完成”，不复制底层报告。
 
-当前结论：入口与配置的代表性真实场景、Harness 按行裁剪及重启恢复、受控原生静默恢复、狭义受控重复失败流程、Host20 受控语义偏航纠偏、C-06 四条件真实跨进程配对，以及未签名 macOS arm64 Electron 目录包的配置流程已有通过证据。健康长任务误干预对照、中途追加要求、签名/公证发布和合并仍未完成；Electron 恢复界面的 200% 系统缩放和页面级 200% 缩放均已有单独证据。不能将全部三项核心能力标为已验收。
+当前结论：入口与配置的代表性真实场景、Harness 按行裁剪及重启恢复、受控原生静默恢复、狭义受控重复失败流程、严格受控语义偏航纠偏、C-06 四条件真实跨进程配对，以及未签名 macOS arm64 Electron 目录包的配置流程已有通过证据。健康长任务误干预对照、中途追加要求、远端首字节/回退、签名/公证发布和合并仍未完成；Electron 恢复界面的 200% 系统缩放和页面级 200% 缩放均已有单独证据。不能将全部三项核心能力标为已验收。
 
 ## 目录
 
@@ -62,12 +62,12 @@ P0 是本轮功能完整交付的必需项；P1 是性能或推广范围的验�
 | S-01 / P0 | Codex 连续失败或重复无效操作；Reflex 观察到足够证据后提出调整，Codex 实际消费，执行有效修复与相关验证，正常完成。 | 狭义受控真实重复失败流程已通过：[脱敏证据](evidence/supervision-real-repeated-failure.zh.md)记录三次失败验证操作、带来源的调整、脱敏原生输入生命周期事件、后续诊断/文件变更/验证证据、受保护文件哈希与正常完成。这是 `semantic=false` 且阈值不是发布默认值的受控场景；语义偏航仍待验收，此前 aborted 的 steer 试验保留于[监督验证](supervision-validation.zh.md)。 |
 | S-02 / P0 | 长时间无新进展时进行观察；同一份无变化证据不持续付费重判，有新证据后可再判断，正常耗时任务不因时间长直接判错。 | [监督回归](../../packages/experimental/system3/tests/reflex-supervision.spec.ts)通过；[最新真实对照](evidence/healthy-codex-20261011.zh.md)在 150 秒预算取消且零 steer，字面量 relay 无首字节。不能算完整通过，默认部署健康长任务对照仍待测。 |
 | S-03 / P0 | 原生请求静默且无待定副作用或审批；Reflex 授权中断，确认 interrupted 终态，再于原线程续跑，最终 completed 且独立验收通过。 | 受控真实通过，127.41 秒；[v4 报告](evidence/native-recovery-real-v4.json)。实际取消预算 180 秒，报告遗留的 150 秒字段不适用于此场景，说明见[监督验收](supervision-validation.zh.md)。不代表不可控生产故障均能恢复。 |
-| S-04 / P0 | 财务 Goal 下持续修改无关营销材料；即使每次操作成功，Reflex 仍识别持续偏航并让 Codex 回到财务任务；相关调查和证据不足时不误纠偏。 | [Host20 受控真实试验](evidence/semantic-codex-host20-persistent.zh.md)记录了 stale fence、接受回正、消费后的财务操作和独立完成。历史失败保留在 [Host16](evidence/semantic-codex-host16.zh.md) 与 [Host19](evidence/semantic-codex-host19-persistent.zh.md)；健康长任务与中途修改 Goal 仍单独验收。 |
+| S-04 / P0 | 财务 Goal 下持续修改无关营销材料；即使每次操作成功，Reflex 仍识别持续偏航并让 Codex 回到财务任务；相关调查和证据不足时不误纠偏。 | [严格 v6 真实试验](evidence/semantic-codex-strict-final-v6.zh.md)证明营销偏航、`unrelated`、realign accepted、Codex 消费和后续财务文件均按顺序发生；Host20、Host16、Host19 历史记录继续保留。健康长任务与中途修改 Goal 仍单独验收。 |
 | S-05 / P0 | 自动建议可追踪来源；分别记录决定、投递 ACK、原生 Codex 输入消费；消费后有新执行证据。 | 受控重复失败报告记录了独立的 Reflex judgement、`accepted`、带来源的 `subagent/supervision-steer`、脱敏的原生 `item/started` 与 `item/completed` 生命周期事件，以及调整后的诊断/文件变更证据，见[证据](evidence/supervision-real-repeated-failure.zh.md)。这满足该受控场景的接收/消费要求；语义偏航仍需要独立完整流程。 |
-| S-06 / P0 | 调整后运行与 Goal 相关的成功验证；收集真实 verification-target，再由 Reflex 评估改善；读取测试文件、echo 测试名或无关测试不得算改善。 | [Host20](evidence/semantic-codex-host20-persistent.zh.md) 包含成功的结构化 `verification-target` `finance/test_remaining.py`、独立 `1137.41` 校验和 `improved`。受控重复失败报告仍是没有结构化 target 的独立证据。 |
+| S-06 / P0 | 调整后运行与 Goal 相关的成功验证；收集真实 verification-target，再由 Reflex 评估改善；读取测试文件、echo 测试名或无关测试不得算改善。 | [严格 v6](evidence/semantic-codex-strict-final-v6.zh.md)包含真实 `finance/test_remaining.py` verification-target、独立 `1137.41` 校验和 `improved`；受保护输入和验证文件哈希未变。 |
 | S-07 / P0 | 执行中用户追加中文列名与兼容性要求，或修改/取消 Goal；旧判断、排队调整和迟到 ACK 不得覆盖新意图，预算与冷却限制在重启后仍有效。 | 人工优先、版本与迟到 ACK [回归通过](../../packages/experimental/system3/tests/reflex-supervision.spec.ts)。一次真实 Web 尝试已[排队并送达插话](evidence/ui-interjection-20261011.zh.md)，随后显示 Codex 启动超时并允许用户停止；Codex 没有产生 native 步骤，因此最终产物验收仍待完成。 |
 | S-08 / P0 | 未准许工作区数据外发时只使用获准证据；不把原始命令、输出、代码差异或思考内容送到 Reflex；回执未知不盲目重复副作用。 | [采集回归](../../packages/subagent/subagent-codex/tests/evidence-summary.spec.ts)与[监督回归](../../packages/experimental/system3/tests/reflex-supervision.spec.ts)通过；以权限拒绝和数据检查为验收，不要求真实泄露。 |
-| S-09 / P0 | 使用实际发布配置完成 S-01～S-06，报告观察窗口、恢复阈值、模型和 effort；证据不完整时保持保守。 | Host20 使用语义部署参数（`intervalMs=15000`、`stallMs=180000`、`feedbackMs=60000`、`maxInterventions=3`，Codex relay 的 `effort=low`），完成受控 S-04/S-06 链路。健康长任务无误干预对照和中途修改 Goal 仍待测。 |
+| S-09 / P0 | 使用实际发布配置完成 S-01～S-06，报告观察窗口、恢复阈值、模型和 effort；证据不完整时保持保守。 | 严格 v6 使用 `gpt-5.6-sol-relay` 和发布配置（`deadlineMs=15000`、`intervalMs=15000`、`stallMs=180000`、`feedbackMs=60000`、`maxInterventions=3`），完成受控 S-04/S-06 链路。健康长任务无误干预对照和中途修改 Goal 仍待测。 |
 
 ### 动态上下文、记忆与 cache
 
