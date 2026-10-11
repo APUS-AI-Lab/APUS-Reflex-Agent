@@ -93,7 +93,7 @@
   </div>
 </header>
 <nav aria-label="报告导航"><div class="shell">
-  <a href="#decision">结论</a><a href="#architecture">闭环架构</a><a href="#capabilities">三项能力</a><a href="#matrix">逐项验收</a><a href="#ux">用户体验</a><a href="#release">合并发布</a><a href="#roadmap">P0–P3 计划</a><a href="#limits">范围边界</a>
+  <a href="#decision">结论</a><a href="#architecture">闭环架构</a><a href="#capabilities">三项能力</a><a href="#matrix">逐项验收</a><a href="#ux">用户体验</a><a href="#release">合并发布</a><a href="#opensource">开源 P0/P1</a><a href="#roadmap">P0–P3 计划</a><a href="#limits">范围边界</a>
 </div></nav>
 <main class="shell">
   <section id="decision" class="hero-grid">
@@ -232,6 +232,21 @@
     </tbody></table>
   </section>
 
+  <section id="opensource" class="panel">
+    <div class="kicker">Open-source release review</div>
+    <h2>开源 P0/P1 门禁：先让别人敢用，再让别人能贡献</h2>
+    <p class="muted">下面的优先级按公开仓库的最小信任闭环排序。P0 任一项未通过，都不应把 Draft PR 合并到 main 或对外宣称“可直接使用”；P1 用于降低首次采用和外部贡献成本。</p>
+    <table><thead><tr><th>优先级</th><th>开源风险</th><th>必须完成的修复</th><th>可验证完成门</th><th>当前判断</th></tr></thead><tbody>
+      <tr><td><span class="status blocked">P0</span></td><td><b>许可证与归属</b><br>用户无法确认能否分发，第三方依赖归属可能遗漏。</td><td>两仓根目录与最终安装包提供 MIT 全文；保留原版权、上游归属和第三方 NOTICE；安装包、npm tarball、Electron 产物逐一核对。</td><td>机器检查通过；包内文件可直接打开；README、release notes 与安装包指向同一许可说明。</td><td><span class="status partial">部分</span><br>代码树已有 MIT/NOTICE 检查，最终包随附证据仍待补齐。</td></tr>
+      <tr><td><span class="status blocked">P0</span></td><td><b>安全与数据边界</b><br>公开证据可能泄露凭据、原始思考或把上下文删除误解为 cache 删除。</td><td>补齐 SECURITY.md、漏洞报告入口、脱敏规则和信任边界；明确 Harness 只投影后续请求、原始 Session 保留、不得编辑 Codex 私有历史、不得宣称 provider cache 成本收益。</td><td>秘密扫描和脱敏回归通过；安全说明能从仓库首屏找到；C-06/上下文边界证据可回链。</td><td><span class="status pending">待收拢</span><br>技术边界已有证据，公开安全入口与统一说明尚未成为发布门禁。</td></tr>
+      <tr><td><span class="status blocked">P0</span></td><td><b>可复现构建与 CI</b><br>外部用户无法重建同一版本，CI 绿色也可能只是跳过关键检查。</td><td>锁定 Harness/Frontend 分支与版本 pin；清理未提交变更；要求 lint、typecheck、单元/快照、关键 E2E、包 smoke 和文档门禁；区分产品检查与可选 artifact 上传。</td><td>干净工作树从 README 命令构建成功；PR required checks 全部通过；远端 main 回读 SHA 与本地发布清单一致。</td><td><span class="status pending">进行中</span><br>本地检查通过，Harness Jev/System3 与 Frontend Windows CI 仍在运行。</td></tr>
+      <tr><td><span class="status blocked">P0</span></td><td><b>公开能力声明</b><br>“1 秒响应”、监督纠偏和动态上下文若没有口径，会变成不可复核的营销承诺。</td><td>公开 R-04 的三段指标：本地 admission/status ≤1s、简单题集路由 p50/p95、远端模型首字节/总时延分开统计；明确监督语义闭环、健康长任务无误干预和 cache 限制。</td><td>冻结题集、阈值、环境和负向场景；每个 README/截图/报告数字能回链证据；未完成项明确标为 pending/blocked。</td><td><span class="status partial">部分</span><br>HTML 已拆分响应口径，真实 p50/p95 与语义监督闭环仍是产品 P0。</td></tr>
+      <tr><td><span class="status pending">P1</span></td><td><b>新用户上手</b><br>首次安装、配置 Reflex 模型和跑通真实任务的路径过长。</td><td>README 首屏 quickstart、运行时版本、最小模型配置、无密钥 keyless 测试与真实 E2E 分流；提供入口路由、Goal→Codex、监督、上下文恢复的单条演示脚本。</td><td>干净环境新用户在 5 分钟内启动并完成一条任务；失败时看到下一步，不要求阅读原始日志。</td><td><span class="status pending">待做</span><br>专家 HTML 已有脚本和证据索引，两个仓库首屏尚未统一收拢。</td></tr>
+      <tr><td><span class="status pending">P1</span></td><td><b>贡献者可维护性</b><br>外部贡献者不知道如何测试、如何提交证据、哪些 API 仍不稳定。</td><td>CONTRIBUTING、开发环境、测试矩阵、故障注入、PR/Issue 模板、CODEOWNERS 和 Session/API 版本策略；为 Reflex settings、监督事件、context projection/restore 提供最小 API 参考。</td><td>外部贡献者能运行定向测试并提交带证据的 PR；pre-stable API 与持久化版本规则在文档中可查。</td><td><span class="status pending">待做</span><br>仓库已有工程规范，产品级 Reflex 贡献入口还未单独落地。</td></tr>
+      <tr><td><span class="status pending">P1</span></td><td><b>传播材料可信</b><br>截图和演示容易把单例观察包装成普遍性能或成功率。</td><td>发布 notes、短 GIF/截图、架构图、已知限制和 benchmark report；演示标注环境、模型、版本、是否真实 provider，并保留失败路径。</td><td>传播材料每个数字可回链到验收记录；不宣称无限上下文、cache 命中或自动纠偏已普遍成立。</td><td><span class="status pending">待做</span><br>HTML 报告已可作为底稿，正式 README/网站投影尚未完成。</td></tr>
+    </tbody></table>
+  </section>
+
   <section id="roadmap">
     <div class="kicker">Next development order</div>
     <h2>P0–P3：按体验、传播、开源价值排序的推进计划</h2>
@@ -239,8 +254,8 @@
     <table><thead><tr><th>优先级</th><th>价值排序</th><th>开发工作包</th><th>完成门槛</th><th>交付物</th></tr></thead><tbody>
       <tr><td><span class="status blocked">P0</span></td><td><b>用户体验与产品可信度</b><br>先让用户感到“马上有回应”，再看到任务被正确观察、纠偏、恢复。</td><td><b>P0-A 即时响应：</b>输入 admission、Session 持久化和状态卡在健康运行时 1 秒内可见；简单题集测量 Reflex route p50/p95；复杂任务显示明确的异步判断状态。<br><b>P0-B 监督闭环：</b>修正 semantic fixture，使初始工作真实偏离财务 Goal；补齐控制字符/AST 类别诊断；真实 UI 触发用户中途追加要求；完成 realign→Codex consume→verification-target→improved→独立产物验证；用默认观察窗口/停滞阈值重跑。<br><b>P0-C 最终包：</b>Electron 空状态、错误恢复、会话恢复、原生 200% 关键路径；保留输入、停止和 Safe Mode 行为。<br><b>P0-D 发布纪律：</b>审查当前未提交 snapshot fixture 变更，重新得到 clean Harness SHA，Frontend 固定同一 SHA，完成 Windows/macOS 发布 job、Ruff、双 SDK、MIT/NOTICE。</td><td>R-04、S-04～S-09、UX-01～UX-10 的 P0 缺口关闭；最终包可从入口完成路由、Goal、监督、上下文恢复；验收清单所有 P0 勾选；独立 review 无阻断。</td><td>1 秒 admission/状态计时、真实语义闭环证据、用户中途改需求证据、Electron UX 证据、clean manifest、双 PR ready、两仓 main 回读。</td></tr>
       <tr><td><span class="status pending">P1</span></td><td><b>传播与采用</b><br>把已证能力讲清楚，让用户能在 5 分钟内理解并复现。</td><td><b>P1-A 可演示路径：</b>入口即时路由、Goal→Codex、监督纠偏、上下文恢复、Reflex 配置各做一条真实用户脚本，录制短 GIF/截图。<br><b>P1-B 对外叙事：</b>README 首屏、架构图、限制说明、quickstart、版本说明和 FAQ 统一 APUS Reflex Harness；明确“删除后续请求投影”与“原始日志保留”，不宣称无限上下文或 provider cache 成本收益。<br><b>P1-C 可测基准：</b>冻结 R-04 题集与路由 p50/p95、首个输出和总耗时指标；C-06 明确 provider 未提供冷 cache 隔离的限制。</td><td>新用户按 README 完成一次真实任务；传播材料中的每个数字/截图都能回链到证据；没有把单例观察写成普遍性能承诺。</td><td>README/网站投影、演示 HTML/GIF、架构 SVG、release notes、benchmark report。</td></tr>
-      <tr><td><span class="status scope">P2</span></td><td><b>开源与贡献者体验</b><br>让外部开发者能安全安装、理解边界并提交有效改动。</td><td><b>P2-A 贡献入口：</b>CONTRIBUTING、开发环境、测试矩阵、故障注入说明、PR 模板、Issue 模板。<br><b>P2-B 安全与许可：</b>SECURITY、MIT 全文、第三方 NOTICE、凭据处理、脱敏证据规范、供应商/本地模型边界。<br><b>P2-C API 稳定性：</b>对 Reflex 配置、监督事件、上下文 projection/restore 写最小公开 API 参考；声明 Session 数据版本策略，禁止外部依赖未声明事件。</td><td>新贡献者可在干净环境跑定向测试；许可证与 NOTICE 随包可见；错误报告不要求上传秘密或原始思考内容；公共 API 与事件可从日志回放。</td><td>贡献者文档、SECURITY、NOTICE 索引、API reference、可复现测试命令、首个外部 PR 模板。</td></tr>
-      <tr><td><span class="status scope">P3</span></td><td><b>规模化与效率</b><br>在核心体验稳定后扩大模型、平台和性能范围。</td><td><b>P3-A 性能：</b>多模型/多 provider 对照，路由误选率、p50/p95、额外 Reflex 调用和真实成本；供应商支持后再测冷/暖 cache。<br><b>P3-B 监督：</b>扩展结构化 target parser、健康长任务长期对照、更多异常类别和跨平台 native package。<br><b>P3-C 记忆：</b>跨会话记忆、复杂代码/表格依赖组、恢复权限策略；仍以原始日志可追溯和 cache fencing 为前提。</td><td>每项都有预先冻结的指标、负向场景和成本预算；没有以删除率或单次成功推导普遍收益；新平台均有最终包验收。</td><td>性能基线、跨平台签名安装包、扩展 parser/记忆设计、模型与 provider 对照报告。</td></tr>
+      <tr><td><span class="status scope">P2</span></td><td><b>规模化与效率</b><br>在核心体验和开源门禁稳定后扩大模型、平台和性能范围。</td><td><b>P2-A 性能：</b>多模型/多 provider 对照，路由误选率、p50/p95、额外 Reflex 调用和真实成本；供应商支持后再测冷/暖 cache。<br><b>P2-B 监督：</b>扩展结构化 target parser、健康长任务长期对照、更多异常类别和跨平台 native package。<br><b>P2-C 记忆：</b>跨会话记忆、复杂代码/表格依赖组、恢复权限策略；仍以原始日志可追溯和 cache fencing 为前提。</td><td>每项都有预先冻结的指标、负向场景和成本预算；没有以删除率或单次成功推导普遍收益；新平台均有最终包验收。</td><td>性能基线、跨平台签名安装包、扩展 parser/记忆设计、模型与 provider 对照报告。</td></tr>
+      <tr><td><span class="status scope">P3</span></td><td><b>生态扩展</b><br>把稳定能力扩展到更多模型、平台和复杂记忆场景。</td><td><b>P3-A provider：</b>新增模型/供应商适配与兼容矩阵。<br><b>P3-B native：</b>更多签名平台和升级回滚路径。<br><b>P3-C memory：</b>跨会话记忆、复杂代码/表格依赖组、恢复权限策略；继续以原始日志可追溯和 cache fencing 为前提。</td><td>每项都有预先冻结的指标、负向场景和成本预算；新平台均有最终包验收。</td><td>provider 兼容矩阵、跨平台签名安装包、扩展记忆设计与对照报告。</td></tr>
     </tbody></table>
     <div class="two-col" style="margin-top:16px">
       <div class="panel" style="box-shadow:none"><h3>建议的执行顺序</h3><ol><li>先处理 P0-A 真实监督因果链；期间不重写已有成功证据。</li><li>再处理 P0-B 最终 Electron 用户路径和 P0-C clean SHA/发布门禁。</li><li>两个 PR 通过 review 与 CI 后合并 main，并回读运行包和版本 pin。</li><li>main 稳定后做 P1 演示与传播；P2 开源文档可并行准备但不改变 P0 判定。</li><li>P3 只有在 P1/P2 的边界和指标固定后进入开发。</li></ol></div>
