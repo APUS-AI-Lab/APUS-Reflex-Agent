@@ -69,4 +69,6 @@ The shipped `sdk-minimal` profile is a standalone explicit tree rather than an o
 
 The selected home stores profiles, plugins, and every profile-owned durable resource. The full `sdk` profile uses its credentials, settings, and session stores; `sdk-minimal` uses only its JSONL session store. Use a fresh home when those resources must be isolated, and a fresh session id for independent work. Reusing both a harness and session id continues the durable conversation and session-owned resources.
 
+For APUS Continuum replay, call `latest_continuum_memory_decision(result.events)` to read the newest recorded `continuum/memory-decision` receipt. The projection is local and replay-only: it never calls Jev or performs a new retrieval, and returns `None` when the log has no decision.
+
 See the [Python tutorial](../../docs/user/guide/python-sdk.md), [runnable example](examples/README.md), and [runtime wheel reference](../sdk-runtime/README.md).
