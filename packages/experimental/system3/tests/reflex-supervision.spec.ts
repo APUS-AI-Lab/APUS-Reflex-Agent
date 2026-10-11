@@ -636,8 +636,10 @@ it('retains inconclusive feedback without repolling unchanged evidence and later
 it.each(['poll', 'termination'] as const)('keeps an unverified adjustment under observation until later Goal-related verification: %s', async (review) => {
   const h = await setup({ config: { semantic: { minObservations: 2 } }, decide: async (request) => {
     if (request.questions.improved === undefined) return semanticChoice('unrelated')
-    const after = request.state.after
-    const verified = Array.isArray(after) && after.some(item => typeof item === 'object' && item !== null
+    const state = request.state
+    const after = typeof state === 'object' && state !== null && !Array.isArray(state) && 'after' in state && Array.isArray(state.after)
+      ? state.after : []
+    const verified = after.some(item => typeof item === 'object' && item !== null
       && 'operation' in item && item.operation === 'verification')
     return { model: 'reflex-test', answers: {
       improved: { type: 'noul', noul: verified ? 0.99 : 0.01 },
