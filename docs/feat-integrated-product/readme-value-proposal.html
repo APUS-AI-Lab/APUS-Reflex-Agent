@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>APUS Reflex Harness · README 核心价值提案</title>
+<style>
+:root{color-scheme:light;--ink:#153f36;--muted:#52655f;--paper:#f7f5ef;--line:#d4ded6;--accent:#b14b27}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:#243d34;font:16px/1.75 system-ui,-apple-system,"PingFang SC",sans-serif}main{max-width:1120px;margin:auto;padding:48px 28px 80px}h1,h2,h3{color:var(--ink);line-height:1.3}h1{font-size:clamp(30px,5vw,52px);max-width:900px;letter-spacing:-.03em}h2{font-size:27px;margin-top:0}h3{font-size:19px}p{margin:12px 0}a{color:#126850;text-underline-offset:4px;overflow-wrap:anywhere}a:focus-visible,summary:focus-visible{outline:3px solid var(--accent);outline-offset:5px}.eyebrow{color:var(--accent);font-size:13px;font-weight:750;letter-spacing:.1em}.lead{font-size:20px;max-width:880px}.muted,small{color:var(--muted)}nav{display:flex;gap:10px 24px;flex-wrap:wrap;margin:26px 0}section{margin-top:36px;padding:30px;border:1px solid var(--line);border-radius:14px;background:#fffdf9}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}.card{padding:18px;background:#edf3ed;border-radius:9px}.card h3{margin-top:0}.draft{border-left:5px solid #287157}.draft h2{font-size:32px}.draft blockquote{margin:18px 0;border-left:3px solid var(--accent);padding-left:18px;font-size:20px}.tag{display:inline-block;font-size:12px;font-weight:700;background:#eaf2ec;border:1px solid #bdcec2;border-radius:20px;padding:2px 10px}.tag.pending{background:#fff0df;border-color:#e9cba7}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;vertical-align:top;padding:13px;border-bottom:1px solid var(--line)}th{background:#eff4ef}td:first-child{min-width:130px;font-weight:650}code{font: .92em ui-monospace,SFMono-Regular,monospace;overflow-wrap:anywhere}pre{white-space:pre-wrap;overflow-wrap:anywhere;padding:20px;background:#f1f3ee;border-radius:8px;font-size:14px;line-height:1.65}.diagram{overflow-x:auto}.diagram svg{display:block;width:100%;min-width:640px;height:auto}.warning{border-left:3px solid var(--accent);padding-left:16px}.decision{background:#153f36;color:white}.decision h2,.decision h3{color:white}.decision a{color:#bde8cb}summary{cursor:pointer;font-weight:700;color:var(--ink)}li+li{margin-top:8px}footer{margin-top:28px;font-size:13px;color:var(--muted)}@media(max-width:720px){main{padding:28px 16px 50px}section{padding:22px 16px}.grid{grid-template-columns:1fr}.lead{font-size:18px}h2{font-size:24px}}@media print{body{background:white;font-size:11px}main{padding:0;max-width:none}nav{display:none}section{break-inside:avoid;margin-top:20px;padding:18px}.diagram svg{min-width:0}h1{font-size:32px}h2{font-size:22px}.decision{background:white;color:var(--ink)}.decision h2,.decision h3{color:var(--ink)}}
+</style>
+</head>
+<body>
+<main>
+<header>
+<div class="eyebrow">APUS / REFLEX · README EDITORIAL PROPOSAL · 2026.10.10</div>
+<h1>让模型管理 Agent 的工作过程</h1>
+<p class="lead">建议更新 README：保留 Model-as-a-Harness 战略，用当前代码支持的任务分工、运行中调整与执行记录，说明为什么值得采用。</p>
+<p class="muted">审阅稿，待确认后在隔离工作树实施。读者暂定技术决策者与开发者。本轮核查源码和既有证据，未重新运行模型评测或验证线上部署。</p>
+<nav aria-label="提案导航"><a href="#draft">首屏草案</a><a href="#architecture">架构表达</a><a href="#evidence">代码证据</a><a href="#structure">全文安排</a><a href="#review">审慎挑战</a><a href="#implementation">实施与验证</a></nav>
+</header>
+<section id="diagnosis">
+<h2>需要更新的是正文的价值组织</h2>
+<p>当前 README 的 Model-as-a-Harness 开头已符合战略，但随后的正文主要停留在入口选模和 Skill 选择，没有介绍 main 中的任务卡、运行中追加要求、委派管理和可选完成核验。品牌装配说明占据首屏，而 APUS 用户的运行入口排在上游 npm 发行版之后。</p>
+<p>两份报告可提供战略和任务故事，不能直接作为当前状态表：完整报告部分章节还写“完成核验开发中”，末尾和 CEO 页已记录本地真实闭环。当前代码有 active 实现，但仓库部署模板仍配置 shadow。</p>
+<p><a href="../../README.zh.md">当前中文 README</a> · <a href="../feat-jev-decision-kernel/report-ceo-onepage.html">CEO 一页报告</a> · <a href="../feat-jev-decision-kernel/report.html">完整报告</a> · <a href="../../deploy/system3/runtime.patch.yml">部署模板</a></p>
+</section>
+<section id="draft" class="draft">
+<div class="eyebrow">可直接采用的 README 首屏草案</div>
+<h2>APUS Reflex Harness</h2>
+<blockquote><strong>瞬策 · 瞬时执行，深度思考。</strong></blockquote>
+<p><strong>让大小脑模型协同管理 Agent 的工作过程。</strong> APUS Reflex Harness 基于 DeepSeek Harness 构建：Jev 负责有界的即时判断，推理模型负责复杂规划、生成和工具调用，DSH 运行时执行动作、落实权限并记录事实。</p>
+<p>我们的目标是 <strong>Model-as-a-Harness</strong>：让模型逐步管理工具、技能、记忆、上下文和子 Agent。当前已接入入口选路、Skill 选择、任务要求与运行中补充、工程委派管理，并提供可配置的完成证据核验；各项能力需要显式配置。</p>
+<div class="grid">
+<article class="card"><h3>按任务分工</h3><p>为符合条件的任务建议模型或工程委派，在执行步骤前选择相关 Skill。允许的候选、隐私策略和实际采纳由运行时检查。</p></article>
+<article class="card"><h3>执行中接收变化</h3><p>把识别出的目标与追加要求保留原文，作为任务上下文；支持把当前任务的补充送入运行中的回合，并转给支持接收输入的子 Agent。</p></article>
+<article class="card"><h3>过程有据可查</h3><p>区分模型建议、实际采纳、模型响应与委派进度。会话保存决策和执行事实，用户可以查看任务交给了谁、补充是否送达及后续活动。</p></article>
+</div>
+<h3>一个已经验证过的协作场景</h3>
+<p>工程任务交给 Codex 后，用户补充“测试文件改名为 check_ledger.py”。历史验收记录显示，补充送达运行中的 Codex，并体现在后续交付中。这个场景展示运行期间仍能调整任务；它不承诺每句话都能被正确识别，也不承诺固定响应时间。</p>
+<p><a href="../feat-jev-decision-kernel/report-ceo-onepage.html">历史场景与验证范围</a> · <a href="../../deploy/system3/acceptance/README.zh.md">浏览器验收说明</a> · <a href="../../packages/experimental/system3/README.zh.md">配置与能力限制</a></p>
+<p class="warning"><strong>开发者预览。</strong> System3 功能属于实验能力，挂载服务不会默认开启上述功能。完成核验已有本地真实验证，仓库部署模板仍为 shadow；长期记忆与 Jev 驱动的上下文管理等能力仍需接入和验证。</p>
+<details><summary>对应的英文定位草案</summary><p><strong>Reflex decisions. Deep reasoning.</strong> APUS Reflex Harness brings bounded Jev decisions and reasoning models into one agent runtime. Jev handles focused judgments; reasoning models plan, generate, and invoke tools; DeepSeek Harness executes actions, enforces permissions, and records what happened.</p><p>Our goal is Model-as-a-Harness: models progressively manage tools, skills, memory, context, and subagents. Current integrations cover intake routing, Skill selection, task requirements, input during execution, engineering delegation, and configurable completion review. These experimental capabilities require explicit configuration.</p><p class="muted">品牌 Slogan 仍按原文“瞬时执行，深度思考”保留；英文首句用于解释分工。正式落盘时，中英文标题、列表、链接与配对记录同步。</p></details>
+</section>
+<section id="architecture">
+<h2>技术架构：原生扩展点、模型调用与执行记录</h2>
+<p>通过 Session API、System3、AgentLoop、模型供给和原生执行能力的实际关系解释大小脑协作。五类管理事务保留为演进范围，不把已有 DSH 基础能力等同于已经由 Jev 接管。</p>
+<div class="diagram">
+<a href="readme-architecture.html"><img src="readme-architecture.svg" alt="APUS Reflex Harness 技术架构：Session API 与 AgentLoop 原生扩展点接入 System3 和 Jev，推理模型通过原生能力执行，Session 日志与投影展示实际状态。" style="display:block;width:100%;min-width:800px;height:auto"></a>
+</div>
+<p><a href="readme-architecture.html">打开技术架构图与适用范围</a> · <a href="readme-architecture.svg">README 可嵌入 SVG</a></p>
+<p class="muted">当前接入范围见下表。结果反馈支持继续执行和后续评测，不等于已经建立自动训练、在线学习或跨 Harness 迁移能力。</p>
+</section>
+<section id="evidence">
+<h2>把价值落实到 main 中的证据</h2>
+<p>“代码有实现”“模板启用”“线上已验收”是三个不同事实。下列行号对应本次审阅时源码；测试链接表示已有案例，本轮未重跑。</p>
+<div class="table-wrap"><table><thead><tr><th>可对外表达</th><th>源码与既有测试</th><th>必须保留的条件</th></tr></thead><tbody>
+<tr><td>按任务建议处理路径</td><td><a href="../../packages/experimental/system3/src/entry-routing.ts">entry-routing.ts</a> :272–327；<a href="../../packages/api/session-controller/src/prompt-router.ts">prompt-router.ts</a> :112；<a href="../../packages/experimental/system3/tests/entry-routing.spec.ts">路由测试</a></td><td>需配置。仅符合条件的空闲 Session API 文本输入；不覆盖所有 SDK、headless、附件或排队入口。阈值不是任务成功概率。</td></tr>
+<tr><td>选择相关 Skill</td><td><a href="../../packages/experimental/system3/src/skill-selection.ts">skill-selection.ts</a> :78–133；<a href="../../packages/experimental/system3/tests/skill-selection.spec.ts">Skill 测试</a></td><td>从有界目录中至多选择一个；超限不自动搜索，也不授予额外工具权限。</td></tr>
+<tr><td>让要求跟随任务，支持中途补充</td><td><a href="../../packages/experimental/system3/src/task-frame.ts">task-frame.ts</a> :230–341；<a href="../../packages/experimental/system3/tests/task-frame.spec.ts">任务卡测试</a></td><td>模板 active。纯文本、条数与字数受限，判断异步；不保证当前已发出的模型请求立即收到。任务卡不等于长期记忆。</td></tr>
+<tr><td>带着要求委派，并查看进度</td><td><a href="../../packages/experimental/system3/src/delegation.ts">delegation.ts</a> :37；<a href="../../packages/experimental/system3/src/handoff-pack.ts">handoff-pack.ts</a> :95；<a href="../../packages/experimental/system3/src/delegation-progress.ts">delegation-progress.ts</a> :117–137；<a href="../../packages/experimental/system3/tests/delegation.spec.ts">委派测试</a></td><td>模板配置 Codex。先向主模型注入委派建议，主模型可不采纳；进度和运行中输入取决于 provider 支持。</td></tr>
+<tr><td>基于执行证据辅助完成核验</td><td><a href="../../packages/experimental/system3/src/completion-review.ts">completion-review.ts</a> :128–238；<a href="../../packages/experimental/system3/tests/completion-review.spec.ts">核验测试</a>；<a href="../feat-jev-decision-kernel/report-ceo-onepage.html">本地真实验证记录</a></td><td><span class="tag pending">模板仅 shadow</span> active 实现可有限次数拒绝 Goal 完成；有界摘要、失败放行、次数上限。不保证任务正确或已完整完成。</td></tr>
+<tr><td>决策、采纳和执行分别可查</td><td><a href="../../packages/experimental/system3/src/runtime-projection.ts">runtime-projection.ts</a> :121–186；<a href="../../packages/experimental/system3/src/decision-kernel.ts">decision-kernel.ts</a> :129–164；<a href="../../packages/experimental/system3/tests/runtime-projection.spec.ts">投影测试</a></td><td>回放不重新请求 Jev。记录能说明发生了什么，不能证明判断正确；记录可能包含用户输入正文。</td></tr>
+<tr><td>减少重复日志，提示执行异常</td><td><a href="../../packages/experimental/system3/src/output-folding.ts">output-folding.ts</a> :185；<a href="../../packages/experimental/system3/src/process-supervision.ts">process-supervision.ts</a> :174–226；<a href="../../packages/experimental/system3/tests/output-folding.spec.ts">折叠测试</a></td><td>确定性规则。模板分别为 active / advise；不是 Jev 语义压缩或自动修复，不能外推整体 Token 与成本下降。</td></tr>
+</tbody></table></div>
+<p><a href="../../packages/experimental/system3/src/index.ts">服务默认值</a> :193–286 将这些可选能力默认关闭；<a href="../../deploy/system3/runtime.patch.yml">部署模板</a> :106–231 显式配置各项功能。当前模板配置不代表本轮已读取或验证线上运行状态。</p>
+</section>
+<section id="structure">
+<h2>README 全文建议顺序</h2>
+<ol>
+<li><strong>身份与价值：</strong>固定 Slogan、一句话定位、三个任务价值。</li>
+<li><strong>具体场景：</strong>工程委派过程中追加改名要求，链接已有场景证据。</li>
+<li><strong>协作架构：</strong>大小脑分工、五类事务目标、DSH 动作归属与结果反馈。</li>
+<li><strong>当前可用范围：</strong>精简能力表，单独说明可选配置与完成核验 shadow。</li>
+<li><strong>运行 APUS：</strong>优先放本仓源码路径和 System3 配置说明，明确仅启动 Web 不等于启用全部能力；Frontend 安装入口仅指向实际可获取且验证过的发行物。</li>
+<li><strong>配置与贡献：</strong>System3、部署、开发、架构、实验限制等文档入口。</li>
+<li><strong>后续方向：</strong>工具约束、长期记忆、上下文管理、恢复与持续目标控制。目标段落不混进当前能力表。</li>
+<li><strong>上游与许可：</strong>清楚说明 DSH 与 Cordis 贡献、上游 npm 区别、MIT 和第三方通知。APUS Issues 与上游社区分别标明归属。</li>
+</ol>
+<p>保留上游引用及完整致谢，移到读者已经理解 APUS 贡献之后。品牌装配说明进入开发文档导航。中文 README 的重复 <code>run-from-source</code> 锚点在改写时清理。</p>
+</section>
+<section id="review">
+<h2>审慎挑战：让读者看见能力，也能核对它</h2>
+<div class="grid">
+<article class="card"><h3>战略不能缩成路由器</h3><p>入口选模只是已经接入的一段。完整方向仍是模型管理五类 Harness 事务；首页用工作过程组织价值，不以 provider 或模块清单组织价值。</p></article>
+<article class="card"><h3>收益需要任务对照</h3><p>快速判断也会增加一次调用和等待。价值评估应比较完整任务的成功率、人工介入、成功交付时间和成本，并与关闭 System3 的原生路径对照。</p></article>
+<article class="card"><h3>可回放是评测基础</h3><p>会话事实有助于追查策略是否被采用以及后续结果。持续学习仍需数据授权、标注、独立评测和模型更新流程，不能从已有日志推出训练闭环已成立。</p></article>
+</div>
+<h3>报告中应保留在证据页的数字</h3>
+<p>0.3–1 秒决策、约 1 秒插话、126 条标注与精确率 1.0、重复日志缩减 57–65%、5/5 历史公网场景，以及 2 个真实模型任务加 1 个本地浏览器闭环，都只代表各自样本和时间点。首页不将它们写成响应 SLA、总体准确率、整体成本下降或全面生产就绪。</p>
+<p>建议避开“自动选对模型”“记住每一条要求”“永远不挡主流程”“保证完成”“换任何 Harness 都能接”等绝对表述。采用具体动作和适用条件，更容易让使用者验证。</p>
+<p>本次通过 GitHub API 确认仓库当前为 private，README 与本地一致；两份用户指定报告也与仓库副本字节一致。因此本稿不假定公开用户已有下载权限，不增加尚未发布的安装命令或发行标识。</p>
+</section>
+<section id="implementation" class="decision">
+<h2>待确认的具体实施范围</h2>
+<p>采用上述主张和顺序，在 <code>docs-readme-value</code> 隔离工作树实施。此次提案仅写文档草稿和流程记录，没有改 README、运行源码或部署。</p>
+<h3>文件与接口</h3>
+<ul>
+<li><code>README.md</code>、<code>README.zh.md</code>、<code>README.i18n.yaml</code>：同步价值结构、真实能力与上手入口，确认双语配对。</li>
+<li><code>docs/docs-readme-value/architecture.svg</code>：保存 README 的简化架构图，清楚标出完整目标范围。</li>
+<li><code>packages/experimental/system3/README.md</code>、<code>README.zh.md</code> 及配对记录：仅修正与当前建议委派、可选完成核验冲突的旧限制句，避免新首页链接到过时说明。</li>
+<li><code>tasks/todo.md</code>、<code>tasks/docs-readme-value/handoff.md</code>：记录范围、检查结果和交接；提案迁入同名文档目录。</li>
+</ul>
+<p>不新增或修改 API、事件类型、Session 格式、插件默认值或部署模式。</p>
+<h3>验证计划</h3>
+<ol>
+<li>逐项追溯 main 源码、默认值和模板配置；保留历史实测范围，不将现有测试文件当成本轮通过记录。</li>
+<li>正式 README 中保留的启动命令须在隔离配置中实际执行；需要的密钥或外部模型路径未验证时明确说明。</li>
+<li>更新双语配对；运行 <code>pnpm run test:docs</code>、<code>pnpm run doc-sync</code>、文档适用 lint 与 <code>git diff --check</code>。不为纯文案改动默认重跑全产品测试。</li>
+<li>检查中英文链接、锚点、SVG、桌面与窄屏呈现。若后续请求推送，先满足 <code>ruff check .</code>、<code>ruff format --check .</code> 及仓库 pre-push 要求。</li>
+</ol>
+</section>
+<footer>范围：当前 main、用户指定两报告、相关源码与配置。按本轮 AGENTS.md 的 Human Gate，具体改写待用户确认后实施。本稿不是新的性能评测、线上验收或发布声明。</footer>
+</main>
+</body>
+</html>

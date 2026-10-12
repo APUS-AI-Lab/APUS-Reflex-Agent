@@ -2,93 +2,54 @@
 
 English | [中文](README.zh.md)
 
-> **瞬策 · 瞬时执行，深度思考。** APUS Reflex Harness pursues Model as Harness: coordinated decision and reasoning models manage tools, skills, memory, context, and subagents; the DSH runtime executes actions, enforces permissions, and records facts. Integration and verification limits are documented below.
+**瞬策 · 瞬时执行，深度思考。** Model-as-a-Harness: coordinate decision and reasoning models to manage an agent's work, with a local runtime that executes actions, enforces permissions, and records results.
 
-See the [brand definition and assembly guide](docs/feat-apus-brand/branding.md) for shared assets, compatibility identifiers, and service ownership.
+APUS combines a desktop client, Web UI, and Harness runtime in one repository. Use it to research information, create documents, write code, and work with files in a selected workspace.
 
-## Architecture
+## Download the desktop app
 
-The first objective is **Jev-guided intake strategy and dispatch**: after user input, select an allowed processing path and let DSH route it to a suitable model or specialist. The second is **smarter, smoother execution** through evidence, memory, recovery, escalation and goal decisions. Both share native task state, decision records and action ownership; rules handle determined cases and System2 handles open reasoning and generation. Entry routing requires an explicit candidate and privacy configuration; mounting the decision provider alone leaves it disabled.
+Visit [Releases](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/releases) for published installers and supported platforms. The integrated preview is being prepared; no installer is promised until it appears there with validation results. GitHub's “Source code” archives are source files, not applications.
 
-![Jev Native + DSH Native: priority one is intake strategy and dispatch; priority two is intelligent execution, sharing native decisions and outcome feedback. Chinese architecture diagram.](docs/feat-independent-harness/architecture@2x.png)
+The desktop distribution bundles its runtime. Users do not need Git, Node.js, or a separate backend. Follow [installation](docs/feat-integrated-product/installation.md) and [model configuration](docs/feat-integrated-product/configuration.md); model access requires your own provider credentials. Preview builds can break compatibility. Read [SAFETY.md](SAFETY.md) before granting access to your files.
 
-[SVG source](docs/feat-independent-harness/architecture.svg) · [Jev Native + DSH Native plan (Chinese)](docs/feat-independent-harness/jev-native-dsh-native-plan.html)
-
-The implementation handles idle Web/API text requests with Fidoo LiteLLM generation routes, bounded Skill selection before native model steps, and a Conversation view that distinguishes advice, adoption, model response and Skill injection. See the [implementation and acceptance scope](docs/feat-system3-g1/implementation.md), [deployment guide](docs/feat-system3-g1/deployment.md), and [System3 configuration and limits](packages/experimental/system3/README.md). Specialist handoff, queued-entry routing, Jev-driven memory and sustained Goal decisions, and local 9B/27B Lead Agents require further integration and verification. Pilot remains an experimental reference.
-
-DeepSeek Harness (`dsh`) is an open-source agent harness developed by [DeepSeek AI](https://deepseek.com).
-
-It is built on an **everything-is-a-plugin** architecture and powered by [Cordis](https://github.com/cordiverse/cordis), whose design is described in [_A Programming Paradigm for Spatiotemporal Composability_](https://arxiv.org/abs/2608.25512).
-
-Upstream DeepSeek Harness documentation (not the APUS build guide): [https://deepseek-harness.github.io/deepseek-harness/](https://deepseek-harness.github.io/deepseek-harness/)
-
-## Developer preview
-
-DeepSeek Harness is in _developer preview_ and iterating rapidly. **THERE WILL BE COMPATIBILITY-BREAKING CHANGES.**
-
-Review the [safety notice](SAFETY.md) before running the project.
-
-## Run
-
-### Run the upstream distribution from `npm`
-
-The npm package below is the upstream distribution; it does not install APUS Reflex Harness or this fork’s Jev additions. Install `Node.js`, then run:
-
-```sh
-npx @deepseek-ai/dsh web
-```
-
-The command starts the Web UI at `http://127.0.0.1:3080` by default and opens it in the default browser for a local launch. An SSH launch only prints the host URL because the SSH client or editor owns the local forwarded address. Pass `--no-open` to run the server without opening a browser. See [Web UI guide](docs/user/guide/index.md).
+<a id="run"></a>
 
 <a id="run-from-source"></a>
-### Run from source
 
-To run from a repository checkout:
+## Run from source
+
+Install Git, Node.js 24, and pnpm 11.7.0. From a terminal:
 
 ```sh
-git clone https://github.com/cryptoSUN2049/APUS-Reflex-Harness.git
+git clone https://github.com/APUS-AI-Lab/APUS-Reflex-Harness.git
 cd APUS-Reflex-Harness
-pnpm install
-pnpm run build
-pnpm dsh web
+pnpm run setup
+pnpm run start:desktop
 ```
 
-`pnpm run build` prepares the repository artifacts. `pnpm dsh web` uses those built artifacts without rebuilding.
+Setup installs both dependency sets, builds the Harness, and prepares the desktop runtime from this checkout. The initial download and build require network access and time. For Web development, run `pnpm run dev:web`. See [source development](docs/feat-integrated-product/development.md) for prerequisites and troubleshooting.
 
-## Community and support
+## Model-as-a-Harness
 
-- Submit feedback or bug reports through [GitHub Issues](https://github.com/cryptoSUN2049/APUS-Reflex-Harness/issues).
-- Add the [`dsh-plugin`](https://github.com/topics/dsh-plugin) topic to your plugin repository for discoverability.
-- Join <a href="https://discord.gg/Ycq5dCaS4">DeepSeek Harness Discord community</a>.
+Jev provides bounded decisions; reasoning models handle planning, generation, and tool calls. DSH executes approved actions and preserves session facts. With explicit System3 configuration, APUS can suggest routing and skills, retain task requirements and additions, manage engineering delegation, and check configured completion evidence.
 
-## Contributing
+- **Divide work by task:** select from allowed model and skill candidates, subject to runtime policy.
+- **Accept changing requirements:** keep task additions available to the active workflow and supported delegates.
+- **Inspect the process:** distinguish recommendations, adopted decisions, model responses, and delegation progress.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+![APUS architecture: native session and agent-loop extension points connect decision models, reasoning models, execution, and recorded results.](docs/feat-integrated-product/readme-architecture.svg)
 
-## Development
+Managing tools, skills, memory, context, and subagents through models is the product direction. Individual capabilities have different configuration and verification requirements; see [System3 capabilities and limits](packages/experimental/system3/README.md). A local application does not mean offline inference.
 
-Start with the [development guide](docs/development.md) and [architecture documentation](docs/architecture.md).
+## Documentation and development
 
-`pnpm run dev:web` builds, serves, and rebuilds client bundles on source edits in one terminal, and `make help` lists the matching Make targets for Web and Desktop; the guide's application commands section owns the full table.
+- [Install and update](docs/feat-integrated-product/installation.md) · [Configure models](docs/feat-integrated-product/configuration.md)
+- [Develop from source](docs/feat-integrated-product/development.md) · [Release procedure](docs/feat-integrated-product/releases.md)
+- [Architecture](docs/architecture.md) · [Contributing](CONTRIBUTING.md)
+- [Report an issue](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/issues)
 
-For agents, follow [AGENTS.md](AGENTS.md).
+`frontend/` owns the Electron desktop host; `apps/web/` owns the Web entry; `packages/` owns the runtime and shared UI. Both product entry points use this repository's Harness.
 
-## Citation
+## License and acknowledgments
 
-```bibtex
-@misc{deepseek-harness2026,
-  title={DeepSeek Harness: Everything is a Plugin},
-  author={DeepSeek-AI},
-  year={2026},
-  publisher={GitHub},
-  howpublished={\url{https://github.com/deepseek-ai/deepseek-harness}},
-}
-```
-
-## License
-
-[MIT](LICENSE). The original DeepSeek copyright and permission notice are retained in full.
-
-We thank DeepSeek and the DeepSeek Harness contributors for the upstream agent runtime, Shigma and the Cordis contributors for the plugin framework, and all third-party maintainers whose work supports APUS Reflex Harness. APUS branding does not replace their authorship or imply their endorsement.
-
-Third-party dependencies and their licenses are disclosed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+APUS builds on DeepSeek Harness, DataElement's DSH Desktop, Cordis, and their contributors. The original MIT notices remain in [LICENSE](LICENSE) and [frontend/LICENSE](frontend/LICENSE); dependency terms remain in the [Harness notices](THIRD_PARTY_NOTICES.md) and [desktop notices](frontend/THIRD_PARTY_NOTICES.md). APUS branding does not imply upstream endorsement.

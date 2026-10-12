@@ -2,114 +2,54 @@
 
 [English](README.md) | 中文
 
-> **瞬策 · 瞬时执行，深度思考。** APUS Reflex Harness 以 Model as Harness 为目标，由大小脑混合模型管理工具、技能、记忆、上下文与子 Agent；DSH 运行时负责执行、权限与事实记录。各项能力的接入和验证范围见下文。
+**瞬策 · 瞬时执行，深度思考。** Model-as-a-Harness：让决策模型与推理模型协同管理 agent（智能体）的工作过程，由本地运行时执行动作、落实权限并记录结果。
 
-共享资产、兼容标识与服务归属见[品牌定义与装配说明](docs/feat-apus-brand/branding.zh.md)。
+APUS 在一个仓库中提供桌面客户端、Web UI 和 Harness 运行时，用于检索整理资料、制作文档、编写代码，以及处理所选工作区中的文件。
 
-## 架构
+## 下载桌面客户端
 
-第一目标是 **Jev 入口策略决策与调度**：用户输入后选择允许的处理路径，由 DSH 交给适合的模型或专业 Agent。第二目标是**执行环节更智能、更顺畅**，逐步增强证据、记忆、恢复、升级与目标判断。两者共享原生任务状态、决策记录和动作归属；规则处理确定情况，System2 承担开放推理与生成。入口选模需要显式配置候选与隐私策略；仅挂载决策 provider 不会启用它。
+前往 [Releases](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/releases) 查看已发布安装包及支持平台。一体化预览版正在准备中；只有在该页面列出安装包及验收结果后，才表示可以下载使用。GitHub 的“Source code”压缩包是源码，不是客户端。
 
-![Jev Native + DSH Native：第一目标为入口策略与调度，第二目标为过程智能，共享原生决策与结果反馈。](docs/feat-independent-harness/architecture@2x.png)
-
-[SVG 源文件](docs/feat-independent-harness/architecture.svg) · [Jev Native + DSH Native 专项方案](docs/feat-independent-harness/jev-native-dsh-native-plan.html)
-
-当前实现支持空闲 Web/API 文本入口的 Fidoo LiteLLM 选模、原生模型步骤前的有界 Skill 选择，以及区分建议、采用、模型响应和 Skill 注入的 Conversation 界面。参见[实施与验收范围](docs/feat-system3-g1/implementation.zh.md)、[部署指南](docs/feat-system3-g1/deployment.zh.md)与 [System3 配置及限制](packages/experimental/system3/README.zh.md)。专业交接、排队入口路由、Jev 驱动的记忆与持续 Goal 判断、本地 9B／27B Lead Agent 仍需进一步接入和验证。Pilot 保留为实验参考。
-
-DeepSeek Harness（`dsh`）是由 [DeepSeek AI](https://deepseek.com) 开发的开源 agent harness（智能体框架）。
-
-它构建于**一切皆插件**的架构之上，由 [Cordis](https://github.com/cordiverse/cordis) 驱动，其设计参见论文 [_A Programming Paradigm for Spatiotemporal Composability_](https://arxiv.org/abs/2608.25512)。
-
-上游 DeepSeek Harness 文档（不是 APUS 构建指南）：[https://deepseek-harness.github.io/deepseek-harness/](https://deepseek-harness.github.io/deepseek-harness/)
-
-## 开发者预览
-
-DeepSeek Harness 处于 _开发者预览_ 阶段，正在快速迭代。**未来将出现破坏兼容性的变更。**
-
-运行本项目前，请阅读[安全说明](SAFETY.zh.md)。
+桌面发行版自带运行时，无需安装 Git、Node.js 或单独启动后端。请按[安装教程](docs/feat-integrated-product/installation.zh.md)与[模型配置教程](docs/feat-integrated-product/configuration.zh.md)操作；模型服务需要你提供自己的凭证。预览版可能出现兼容性变化，授权访问文件前请阅读[安全说明](SAFETY.zh.md)。
 
 <a id="run"></a>
 
-## 运行
-
-### 通过 `npm` 运行上游发行版
-
-下面的 npm 包是上游发行版，不会安装 APUS Reflex Harness，也不包含本 fork 的 Jev 扩展。安装 `Node.js`，然后运行：
-
-```sh
-npx @deepseek-ai/dsh web
-```
-
-该命令默认会在 `http://127.0.0.1:3080` 启动 Web UI，本机启动时还会用默认浏览器打开页面。通过 SSH 启动时只打印宿主机 URL，因为本地转发地址由 SSH 客户端或编辑器持有。传入 `--no-open` 可仅运行服务器而不打开浏览器。详见 [Web UI 指南](docs/user/guide/index.zh.md)。
-
 <a id="run-from-source"></a>
 
-<a id="run-from-source"></a>
-### 从源码运行
+## 从源码运行
 
-如需从仓库源码运行：
+先安装 Git、Node.js 24 和 pnpm 11.7.0，然后在终端执行：
 
 ```sh
-git clone https://github.com/cryptoSUN2049/APUS-Reflex-Harness.git
+git clone https://github.com/APUS-AI-Lab/APUS-Reflex-Harness.git
 cd APUS-Reflex-Harness
-pnpm install
-pnpm run build
-pnpm dsh web
+pnpm run setup
+pnpm run start:desktop
 ```
 
-`pnpm run build` 会准备仓库产物。`pnpm dsh web` 会直接使用这些已构建产物，不会重新构建。
+准备命令会安装两套依赖、构建 Harness，并使用当前仓库准备桌面运行时。首次下载和构建需要网络及一定时间。开发 Web 版可运行 `pnpm run dev:web`。前提条件与排障方法见[源码开发教程](docs/feat-integrated-product/development.zh.md)。
 
-## 社区与支持
+## Model-as-a-Harness
 
-- 通过 [GitHub Issues](https://github.com/cryptoSUN2049/APUS-Reflex-Harness/issues) 提交反馈或 bug 报告。
-- 为你的插件仓库添加 [`dsh-plugin`](https://github.com/topics/dsh-plugin) 话题，便于被发现。
-- 欢迎加入 DeepSeek Harness 企微群：扫码添加企微小助手并填写入群问卷，完成后小助手会邀请你入群。
+Jev 提供有界决策，推理模型负责规划、生成和工具调用，DSH 执行允许的动作并保存会话事实。显式配置 System3 后，APUS 可以建议选路与 skill（技能）、保留任务要求及补充、管理工程委派，并核验已配置的完成证据。
 
-<table>
-  <thead>
-    <tr>
-      <th align="center">企微小助手</th>
-      <th align="center">入群问卷</th>
-      <th align="center">微信公众号</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td align="center"><img src="https://cdn.deepseek.com/harness/readme/community-wecom-assistant.png" alt="DeepSeek Harness 企微小助手二维码" width="180" height="180"></td>
-      <td align="center"><a href="https://trtgsjkv6r.feishu.cn/share/base/form/shrcnIt5twSVdLGD52KJBckGCgg"><img src="https://cdn.deepseek.com/harness/readme/community-wecom-survey.png" alt="DeepSeek Harness 入群问卷二维码" width="180" height="180"></a></td>
-      <td align="center"><img src="https://cdn.deepseek.com/harness/readme/community-wechat-official-account.png" alt="DeepSeek Harness 团队微信公众号二维码" width="180" height="180"></td>
-    </tr>
-  </tbody>
-</table>
+- **按任务分工：**在允许的模型和 skill 候选中选择，受运行时策略约束。
+- **接收变化的要求：**让任务补充进入当前工作过程，并送达支持接收输入的委派对象。
+- **查看执行过程：**区分建议、实际采纳、模型响应与委派进度。
 
-## 参与贡献
+![APUS 架构：原生 Session 与 agent loop 扩展点连接决策模型、推理模型、执行能力及结果记录。](docs/feat-integrated-product/readme-architecture.svg)
 
-参见 [CONTRIBUTING.md](CONTRIBUTING.zh.md)。
+通过模型管理工具、skill、记忆、上下文和子 agent 是产品方向，各项能力的配置及验证要求不同，详见 [System3 能力与限制](packages/experimental/system3/README.zh.md)。本地应用不代表离线推理。
 
-## 开发
+## 文档与开发
 
-请先阅读[开发指南](docs/development.zh.md)与[架构文档](docs/architecture.zh.md)。
+- [安装与更新](docs/feat-integrated-product/installation.zh.md) · [配置模型](docs/feat-integrated-product/configuration.zh.md)
+- [源码开发](docs/feat-integrated-product/development.zh.md) · [发行流程](docs/feat-integrated-product/releases.zh.md)
+- [架构](docs/architecture.zh.md) · [参与贡献](CONTRIBUTING.zh.md)
+- [报告问题](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/issues)
 
-`pnpm run dev:web` 会在一个终端里完成构建、启动，并在源码修改时重建 client bundle；`make help` 列出 Web 与 Desktop 对应的 Make target。完整表格见开发指南的「应用命令」一节。
+`frontend/` 负责 Electron 桌面宿主，`apps/web/` 负责 Web 入口，`packages/` 负责运行时与共享 UI。两个产品入口使用本仓库的 Harness。
 
-面向 agent：请遵循 [AGENTS.md](AGENTS.md)。
+## 许可与致谢
 
-## 引用
-
-```bibtex
-@misc{deepseek-harness2026,
-  title={DeepSeek Harness: Everything is a Plugin},
-  author={DeepSeek-AI},
-  year={2026},
-  publisher={GitHub},
-  howpublished={\url{https://github.com/deepseek-ai/deepseek-harness}},
-}
-```
-
-## 许可证
-
-[MIT](LICENSE)。完整保留 DeepSeek 原始版权声明与许可文本。
-
-感谢 DeepSeek 及 DeepSeek Harness 贡献者提供上游 Agent 运行时，感谢 Shigma 与 Cordis 贡献者提供插件框架，也感谢为 APUS Reflex Harness 提供基础组件的第三方维护者。APUS 品牌不替代原作者署名，也不代表获得其背书。
-
-第三方依赖及其许可证见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+APUS 基于 DeepSeek Harness、DataElement 的 DSH Desktop、Cordis 及其贡献者的工作构建。原始 MIT 声明完整保留在 [LICENSE](LICENSE) 和 [frontend/LICENSE](frontend/LICENSE) 中；依赖条款见 [Harness 第三方通知](THIRD_PARTY_NOTICES.md)与[桌面第三方通知](frontend/THIRD_PARTY_NOTICES.md)。APUS 品牌不代表获得上游背书。

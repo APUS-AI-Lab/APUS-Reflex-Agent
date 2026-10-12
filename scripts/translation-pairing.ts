@@ -103,7 +103,7 @@ export function spliceGeneratedRegion(content: string, region: string): string {
 
 /** Validated fields of `scripts/translation-pairing.manifest.json`. */
 export interface TranslationPairingManifest {
-  /** Source documents exempt from pairing because they are generated, instructional, or bilingual by construction. */
+  /** Exact generated, instructional, bilingual, or retained imported documents exempt from pairing. */
   excluded: string[]
 }
 

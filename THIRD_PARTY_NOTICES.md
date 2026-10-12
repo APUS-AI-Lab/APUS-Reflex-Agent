@@ -9,6 +9,10 @@ This file lists **direct** dependencies declared by the workspace, the explicitl
 
 The complete npm transitive closure, including the Landlock launcher workspace, is recorded with exact pinned versions in [`pnpm-lock.yaml`](pnpm-lock.yaml) — inspect it with `pnpm licenses list`. The Python SDK closure is recorded separately in [`python/sdk/uv.lock`](python/sdk/uv.lock).
 
+## APUS desktop application
+
+The integrated desktop shell preserves the original DataElement [MIT license](frontend/LICENSE) and its [third-party notices](frontend/THIRD_PARTY_NOTICES.md). Its separately installed dependency closure is pinned in [`frontend/package-lock.json`](frontend/package-lock.json). Desktop installers include the shell and Harness license texts, Electron and Chromium notices, and the original notices accompanying bundled dependencies; the application About menu opens the local license directory.
+
 ## Vendored source (`vendor/`)
 
 The Cordis framework and its foundation libraries are source-vendored into this repository rather than consumed from npm, and republished under the `@deepseek-ai` scope. All are MIT-licensed; each directory preserves its upstream `LICENSE` file. Exact upstream commits and local modifications are recorded in [`vendor/README.md`](vendor/README.md).

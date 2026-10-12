@@ -1,0 +1,19 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write frontend/README.md
+/apus-reflex-harness-desktop:
+  en: 7de1ce1c29d69279
+  zh: d6f85b6481318f53
+/apus-reflex-harness-desktop/download-and-configure:
+  en: 1500f867c4d5842e
+  zh: 1bb7770f7b7bdf97
+/apus-reflex-harness-desktop/develop:
+  en: 5aef5e034d8ff01d
+  zh: 1db5834c4f14e18d
+/apus-reflex-harness-desktop/license:
+  en: a455a770ff82e36e
+  zh: 284a0eb6c3d285f6
+/apus-reflex-harness-desktop/other-languages:
+  en: a034e8038c343bf7
+  zh: d8720ed00d537a4a

@@ -1,0 +1,6 @@
+# Dependency patches preserve the upstream bundle's mixed indentation so that
+# patch-package can match and replay it exactly.
+patches/*.patch text eol=lf whitespace=-space-before-tab,-blank-at-eol
+
+# Preserve pinned third-party inputs byte-for-byte, including upstream whitespace.
+packages/ppt-runtime/upstream/** -whitespace

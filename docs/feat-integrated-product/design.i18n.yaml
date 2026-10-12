@@ -1,0 +1,28 @@
+# Bilingual-pair consistency record for design.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-integrated-product/design.md
+/integrated-apus-repository-and-release-design:
+  en: 7da999f78f3d2bde
+  zh: 61eb096b9e17ad38
+/integrated-apus-repository-and-release-design/goal:
+  en: 589c50aa5edb7f4d
+  zh: ecbeab9f5ddb1517
+/integrated-apus-repository-and-release-design/architecture:
+  en: e08e0a0c334c0e6e
+  zh: 43fe495314885a84
+/integrated-apus-repository-and-release-design/user-paths:
+  en: 4cbafed7d0eb6284
+  zh: 61f3358ad9ae8bc6
+/integrated-apus-repository-and-release-design/apis-and-compatibility:
+  en: 298b277aaddf272d
+  zh: a2e375b7154b243b
+/integrated-apus-repository-and-release-design/version-and-distribution:
+  en: 494dda49bf042996
+  zh: 67f46508d1d7bdf7
+/integrated-apus-repository-and-release-design/readme-and-licenses:
+  en: 5ac181eccfba83d5
+  zh: d697c78b98c1054b
+/integrated-apus-repository-and-release-design/acceptance-plan:
+  en: f2801108fd5f1a47
+  zh: 4bf1a3ae642de0d8

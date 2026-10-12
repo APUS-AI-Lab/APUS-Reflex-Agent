@@ -1,0 +1,25 @@
+# Bilingual-pair consistency record for publication-audit.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-integrated-product/publication-audit.md
+/integrated-repository-publication-audit:
+  en: d65c7449c0dd7e01
+  zh: 264870e1a08f2b65
+/integrated-repository-publication-audit/scan-scope-and-results:
+  en: 1afdd083c19e504b
+  zh: 8c31b37def9b7678
+/integrated-repository-publication-audit/finding-classification:
+  en: 23720eb452963899
+  zh: a0b9c593a3249e67
+/integrated-repository-publication-audit/product-default-publication-requirements:
+  en: 4ce76e69930b7737
+  zh: cd62540a64152027
+/integrated-repository-publication-audit/documentation-and-internal-material:
+  en: 5de98b0fc53ee14e
+  zh: fbcec2d8dd399820
+/integrated-repository-publication-audit/publication-verification:
+  en: 84c6394eaf932e47
+  zh: 9bc4853bda7eec25
+/integrated-repository-publication-audit/dev-note:
+  en: 4d3bf8da17186dd8
+  zh: 2b822dafd1050091

@@ -1,0 +1,16 @@
+# Bilingual-pair consistency record for system3-settings-plan.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-integrated-product/system3-settings-plan.md
+/desktop-system3-settings:
+  en: f3bac7109e3aec2a
+  zh: cc840254b645ee28
+/desktop-system3-settings/goal-and-structure:
+  en: e7744eb6ae58d0be
+  zh: c886d9773951f915
+/desktop-system3-settings/configuration-and-lifecycle:
+  en: 7d32760fc7bb997e
+  zh: 3f43357fa4c6e481
+/desktop-system3-settings/files-and-tests:
+  en: 18b07026d579bfff
+  zh: aa2d8c6b57b3366e

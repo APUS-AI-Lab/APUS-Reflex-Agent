@@ -1,0 +1,80 @@
+name: APUS preview installers
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing product tag matching release/manifest.json
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: apus-preview-${{ inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 90
+    env:
+      DSH_TELEMETRY_DISABLED: '1'
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: refs/tags/${{ inputs.tag }}
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: pnpm
+      - name: Validate selected tag
+        env:
+          PRODUCT_TAG: ${{ inputs.tag }}
+        run: node --input-type=module -e 'import { checkRelease } from "./scripts/product-release.mjs"; checkRelease(process.cwd(), process.env.PRODUCT_TAG)'
+      - name: Prepare integrated product
+        run: pnpm run setup
+      - name: Validate desktop behavior
+        working-directory: frontend
+        run: |
+          npm run typecheck
+          npm test
+      - name: Build unsigned preview installers and checksums
+        run: pnpm run package:product --unsigned
+      - name: Upload reviewable installers
+        uses: actions/upload-artifact@v4
+        with:
+          name: apus-preview-mac-arm64
+          path: .artifacts/product-release/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 14
+
+  draft:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: refs/tags/${{ inputs.tag }}
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: apus-preview-mac-arm64
+          path: release-inputs
+      - name: Create a draft for installation review
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          version=$(node -p 'JSON.parse(require("node:fs").readFileSync("release/manifest.json", "utf8")).version')
+          directory="release-inputs/$version/darwin-arm64"
+          (cd "$directory" && sha256sum -c SHA256SUMS)
+          gh release create "$RELEASE_TAG" "$directory"/* --verify-tag --draft --prerelease --title "APUS Reflex Harness $version" --notes-file release/notes.md

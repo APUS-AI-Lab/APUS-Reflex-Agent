@@ -1,0 +1,14 @@
+{
+  "verifiedAt": "2026-10-09T09:52:56.655542+00:00",
+  "reason": "User requested no historical branches in the new repositories",
+  "repository": "cryptoSUN2049/APUS-Reflex-Frontend",
+  "retainedBranches": {
+    "refs/heads/feat-reflex-experience": "b13e35c44af06191fe69fd3d12af009784423a60",
+    "refs/heads/main": "e5d406e7247a9e90c70de664de4f1e38186cccfa"
+  },
+  "deletedBranchCount": 7,
+  "allRemoteBranchesMatchPolicy": true,
+  "originalRepositoriesModified": false,
+  "commitHistoryRewritten": false,
+  "versionTagsDeleted": false
+}

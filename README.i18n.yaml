@@ -3,35 +3,20 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write README.md
 /apus-reflex-harness:
-  en: c4985374650d363a
-  zh: 78e93bf52671f1d2
-/apus-reflex-harness/architecture:
-  en: 6f6cf1f67d65393e
-  zh: 5c8ef997d6c50b45
-/apus-reflex-harness/developer-preview:
-  en: 4ef4d8a71ac143f0
-  zh: 1bfc3149ba8e5543
-/apus-reflex-harness/run:
-  en: 4e0248e4c6474fc6
-  zh: eb2fb8d78c7d6bc0
-/apus-reflex-harness/run/run-the-upstream-distribution-from-npm:
-  en: 27324faf44b3a4ce
-  zh: 8c54157bcf5fd270
-/apus-reflex-harness/run/run-from-source:
-  en: 819e3f7c144d0d64
-  zh: de815f040975dba7
-/apus-reflex-harness/community-and-support:
-  en: a4cd72bb08542644
-  zh: ad5dc94e3c0b721a
-/apus-reflex-harness/contributing:
-  en: cabc2d3e9f8898bd
-  zh: 83b6d238bae29ce3
-/apus-reflex-harness/development:
-  en: 803ca2b11b497bed
-  zh: 8b4071eb0e7783ef
-/apus-reflex-harness/citation:
-  en: 6704e9e5a8d49a91
-  zh: 85c9cdd8d56f8e9d
-/apus-reflex-harness/license:
-  en: 70369c3d22ce7583
-  zh: d5a226cf5cc48926
+  en: 5566ef4e38ada140
+  zh: cd03de604f1567a7
+/apus-reflex-harness/download-the-desktop-app:
+  en: 98ce49d82a231d7b
+  zh: bb4298086e341cf5
+/apus-reflex-harness/run-from-source:
+  en: 936fcda8635cc248
+  zh: 33508e10335c45c1
+/apus-reflex-harness/model-as-a-harness:
+  en: 54924544f8d2a6a1
+  zh: 1ce1c63f30eceaf6
+/apus-reflex-harness/documentation-and-development:
+  en: 77320fbc5d5c038a
+  zh: 876be83fbaf46e7c
+/apus-reflex-harness/license-and-acknowledgments:
+  en: 3dee925d3c9b6890
+  zh: 1452704b752eaa9f

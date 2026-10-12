@@ -157,16 +157,18 @@ pnpm run demo:ptc -- "summarize this workspace"
 
 ### Application commands
 
-Web and Desktop share one command pair. `start:*` launches the artifacts of a prior `pnpm run build`; `dev:*` runs that build first and then launches. Web additionally keeps client bundles rebuilt on source edits, because its Host runs from source while the browser loads built bundles:
+Web startup uses the artifacts from `pnpm run build`; Web development builds first and then watches client bundles. APUS desktop startup requires `pnpm run setup`, which also prepares `frontend/`. Desktop development rebuilds the host; rerun setup after editing Harness source to refresh its deployed runtime. See [integrated development](feat-integrated-product/development.md).
 
 ```sh
-pnpm run start:web       # serve built Web artifacts through the source launcher (the same launch as pnpm dsh web)
-pnpm run dev:web         # build, serve, and rebuild Web client bundles on source edits
-pnpm run start:desktop   # launch built Desktop artifacts
-pnpm run dev:desktop     # build, then launch Desktop
+pnpm run start:web             # serve built Web artifacts through the source launcher
+pnpm run dev:web               # build, serve, and rebuild Web client bundles
+pnpm run start:desktop         # launch the APUS host after pnpm run setup
+pnpm run dev:desktop           # develop the APUS desktop host using its prepared runtime
+pnpm run start:harness-desktop # launch the original Harness desktop host
+pnpm run dev:harness-desktop   # build and develop the original Harness desktop host
 ```
 
-Arguments after a Web command reach `dsh web`, for example `pnpm run dev:web --no-open --port 3081`; `dev:web` also accepts `--skip-build` to reuse the existing artifact tree and `--no-serve` to run only the rebuild watchers beside a server started elsewhere. Both Web commands use the normal Harness home, while the Desktop commands use the isolated development home described in the [Desktop README](../apps/desktop/README.md). The root `Makefile` names the same commands as `make web`, `make dev-web`, `make desktop`, `make dev-desktop`, and `make build`; `ARGS='--no-open'` forwards options.
+Arguments after a Web command reach `dsh web`, for example `pnpm run dev:web --no-open --port 3081`; `dev:web` also accepts `--skip-build` and `--no-serve`. Web uses the normal Harness home. APUS and original Harness desktop hosts have their own development-data rules; see the [APUS guide](feat-integrated-product/development.md) and [Harness Desktop README](../apps/desktop/README.md). The Make targets `web`, `dev-web`, `desktop`, `dev-desktop`, and `build` forward to the corresponding root commands; `ARGS='--no-open'` forwards Web options.
 
 ### TODO markers
 

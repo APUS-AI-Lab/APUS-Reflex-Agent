@@ -1,0 +1,19 @@
+# Bilingual-pair consistency record for installation.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-integrated-product/installation.md
+/install-apus-reflex-harness:
+  en: fd7e24897af34660
+  zh: 92dadcf43540290d
+/install-apus-reflex-harness/download:
+  en: 768f302ec61cb894
+  zh: 4ac806fc56630a8e
+/install-apus-reflex-harness/install-and-open:
+  en: bce635a2fc6781b5
+  zh: 64299628c3e96d0d
+/install-apus-reflex-harness/update:
+  en: cab103bbb6f8da8c
+  zh: c8ec1ea820788e76
+/install-apus-reflex-harness/troubleshooting:
+  en: 1f464af0da7c63b9
+  zh: 3426930d73b4ed03

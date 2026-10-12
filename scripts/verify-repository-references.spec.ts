@@ -131,6 +131,40 @@ describe('maintained repository reference policy', () => {
     )
   })
 
+  it('preserves exact imported desktop revisions while checking URLs and maintained product files', (test) => {
+    const fixture = repository(test)
+    const historicalPaths = [
+      'frontend/.upstream-workflows/workflows/release.yml',
+      'frontend/docs/feat-system3-integration/packaging-preflight.json',
+      'frontend/docs/harness-0.1.2-alpha.3-upgrade.md',
+      'frontend/docs/harness-0.1.2-rc.1-upgrade.md',
+      'frontend/docs/superpowers/plans/2026-08-31-harness-0.1.2-alpha.3-upgrade.md',
+      'frontend/docs/superpowers/plans/2026-09-01-harness-0.1.2-alpha.4-upgrade.md',
+      'frontend/docs/superpowers/specs/2026-09-01-harness-0.1.2-alpha.4-upgrade-design.md',
+      'frontend/tasks/chore-apus-fork/handoff.md',
+      'frontend/tasks/chore-apus-fork/import-verification.json',
+      'frontend/tasks/feat-apus-brand/handoff.md',
+    ]
+    for (const file of historicalPaths) fixture.write(file, `${fixture.commit}\n${organizationUrl}`)
+    const maintainedPaths = [
+      'README.md',
+      'frontend/README.md',
+      'frontend/src/main/index.ts',
+      'frontend/docs/current-guide.md',
+      'frontend/docs/harness-0.1.2-alpha.3-upgrade.md.bak',
+      'frontend/tasks/feat-integrated-product/handoff.md',
+      'frontend/.upstream-workflows/new-workflow.yml',
+      'docs/feat-integrated-product/release.md',
+    ]
+    for (const file of maintainedPaths) fixture.write(file, fixture.commit)
+
+    expect(scanRepositoryReferences(fixture.root)).toEqual(expect.arrayContaining([
+      ...historicalPaths.map(file => ({ file, line: 2, kind: 'organization-url' })),
+      ...maintainedPaths.map(file => ({ file, line: 1, kind: 'commit-hash' })),
+    ]))
+    expect(scanRepositoryReferences(fixture.root)).toHaveLength(historicalPaths.length + maintainedPaths.length)
+  })
+
   it('checks available unreachable commits without requiring a branch or network', (test) => {
     const fixture = repository(test)
     const unreachable = fixture.git(['commit-tree', fixture.tree, '-m', 'unreachable fixture'])
