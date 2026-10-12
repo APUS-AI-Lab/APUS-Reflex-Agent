@@ -59,6 +59,24 @@ interface Review {
   candidates: Candidate[]
 }
 interface PendingRecovery { id: MessageId; signal: AbortSignal; generation: number }
+
+/**
+ * Keep explicit precision, safety, and file-integrity constraints visible.
+ * A latest request that explicitly supersedes an earlier constraint reopens
+ * the fragment for normal Jev selection.
+ * @param text - Original user-authored fragment.
+ * @param currentRequests - User requests claimed for the current step.
+ * @returns Whether the fragment has a protected constraint that remains active.
+ */
+function isProtectedConstraint(text: string, currentRequests: readonly string[]): boolean {
+  const explicitlySuperseded = currentRequests.some(request =>
+    /\b(?:ignore|disregard|no longer|stop using|replace|supersede)\b/iu.test(request)
+    || /(?:忽略|不再|取消|撤销|改为|不用|无需).{0,12}(?:此前|之前|这个|该|它|上述)/iu.test(request))
+  const hasMarker = /\b(?:must|never|required|immutable|decimal|precision|floating[ -]?point)\b/iu.test(text)
+    || /\b(?:original (?:file|input)|do not modify)\b/iu.test(text)
+    || /(?:必须|不得|禁止|不能|不可|不应|原始.{0,12}(?:不可|不能|不得)|精度|权限|安全|隐私)/iu.test(text)
+  return !explicitlySuperseded && hasMarker
+}
 const review: System3DecisionSpec<Review, string> = {
   id: 'reflex.context', version: 3, fallback: '[]',
   state: input => ({ task: input.task, fragments: input.candidates.map((item, index) => ({ id: index,
@@ -252,6 +270,7 @@ export function installReflexContext(ctx: Context, config: ReflexContextConfig, 
         const candidate = candidates[index]
         if (candidate === undefined || candidate.restore !== (action === 'restore')) continue
         const { target, range, restore } = candidate
+        if (!restore && isProtectedConstraint(target.original, task.currentUserRequests)) continue
         if (restore && restoredTexts.has(candidate.text)) continue
         if (restore && (restored += candidate.text.length) > config.maxRestoredChars) continue
         if (restore) restoredTexts.add(candidate.text)

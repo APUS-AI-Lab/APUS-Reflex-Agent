@@ -492,4 +492,5 @@ PPT v2为4页主讲+2页备查，实际Keynote打开、六页备注回读和PDF�
 - [x] Record release blockers and publish-readiness decision in the worktree handoff and release-readiness document.
 - [x] Run production plugin-composition durable E2E with flush/restart/recall/attribution and explicit negative control; shipped-profile subprocess evidence remains separate.
 - [ ] Run shipped-profile staging black-box E2E before public tag.
-- [ ] Resolve or owner-assign the remaining `reflex-context` semantic E2E failure and pre-existing full-suite failures before public tag.
+- [x] Resolve the `reflex-context` semantic E2E failure with deterministic preservation of explicit precision/file-integrity constraints; selected real Jev matrix now passes 6/6.
+- [ ] Fix or owner-assign pre-existing full-suite failures before public tag.

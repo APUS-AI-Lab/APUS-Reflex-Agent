@@ -5,7 +5,7 @@
 - 当前分支：`dev/continuum-reflex-integration`
 - 基线：`feat-reflex-control` 当前提交。
 - 目标：在控制面主力分支上集成 `feat-continuum-memory`，完成冲突解释和场景化验收。
-- 当前状态：已合入最新 `feat-reflex-control` 控制面提交，完成 opt-in 用户消息准入、JSONL 磁盘 flush/resume/recall/attribution 聚焦链路，以及 5 个真实 Jev System3 E2E 文件；`reflex-context` 语义 E2E 和全仓基线仍阻塞公开发布。
+- 当前状态：已合入最新 `feat-reflex-control` 控制面提交，完成 opt-in 用户消息准入、JSONL 磁盘 flush/resume/recall/attribution 聚焦链路，以及 6 个真实 Jev System3 E2E 文件；公开发布仍受 shipped profile 黑盒、全仓基线和 CI/打包门禁约束。
 
 ## 本轮交付物
 
@@ -38,7 +38,7 @@
 - [x] `pnpm run doc-sync`：42 个文档/目录门禁全部通过。
 - [x] `pnpm run verify-cordis-config`：226 个配置文件通过；persistence changes、tsconfig paths、targeted oxlint 通过。
 - [x] JSONL durable profile E2E：2/2 通过；真实 AgentLoop resume 从磁盘恢复，不使用 seed 替代，并验证 explicit 负向控制。
-- [x] 真实 Jev System3：6 个选定 E2E 文件中 5 个通过；`reflex-context` 保留 1 个严格语义失败。
+- [x] 真实 Jev System3：6 个选定 E2E 文件全部通过；`reflex-context` 的严格约束保留断言由确定性安全层保护，Jev 判定仍完整记录。
 - [x] RunPod Jev endpoint health 返回 ready；未提供有效 `JEV_API_KEY` 时 `/v1/models` 正确返回 401，说明真实 Jev E2E 不能伪造为通过。
 - [x] 修复运行时开关开启后仍解析为 `off` 的配置重叠问题；profile 默认使用确定性 `shadow`，Jev provider 仍保持 `off`。
 - [x] 只读检查 RunPod `Jev-Serving` pod：`/root/.config/openjev/gateway.key` 存在且权限为 `600`，真实 key 访问 `/v1/models` 返回 200；key 未写入仓库。
@@ -49,7 +49,8 @@
 
 - [x] 接入 opt-in 生产级 user-message admission caller；默认仍为 `admission: explicit`，需要 scope 和 Continuum 开关。
 - [x] 生产插件组合链路：用户输入 → memory-record → Session flush → 上下文销毁 → `AgentLoop.resume()` 磁盘恢复 → recall 注入 → 模型请求归因；仍需 shipped `dsh --profile` 子进程黑盒作为公开发布补充证据。
-- [ ] 修复或解释 `reflex-context` 真实语义失败，并重跑 System3 完整 real-API 矩阵；不能用重试或弱化断言替代。
+- [x] 修复 `reflex-context` 真实语义失败：显式精度/文件完整性约束不可由 Jev 删除，补充 40 条本地回归和真实 Jev 严格 E2E。
+- [ ] 重跑更大 System3 real-API 矩阵；选定 6 文件已通过，扩展矩阵仍属发布前补充证据。
 - [ ] 重新设计并执行完整 Web built suite；当前只证明 Continuum 定向浏览器测试通过。
 - [ ] 全量 `pnpm run test` 尚未全绿：本次运行 19 个失败、2 个未处理错误；失败集中在合并前未修改的桌面/UI/workflow 基础设施测试，需单独归档或修复后才能宣称仓库级全绿。
 - [ ] 公开发布前复核包 tarball、CI secrets lane、版本/tag 和干净 release commit；不得把本地 API key 写入配置、fixture、HTML、日志或提交。
