@@ -61,7 +61,8 @@
 ## 分支/部署状态
 
 - 本地 worktree：`.Codex/worktrees/dev-continuum-reflex-integration`
-- 分支已推送到 `origin/dev/continuum-reflex-integration`，未创建 PR，未部署；精确 `dev` 分支无法与现有 `dev/continuum-reflex-integration` refs 同时创建，Git 远端拒绝了该 ref。
+- 分支已推送到 `origin/dev/continuum-reflex-integration`；已在 `cryptoSUN2049/APUS-Reflex-Harness` 创建 PR #4（`https://github.com/cryptoSUN2049/APUS-Reflex-Harness/pull/4`），尚未合并或部署。PR 的 Jev/System3 与 Gitleaks 检查因 GitHub Actions budget 未启动，不能视为远端通过；本地定向验收证据已写入 PR。
+- 精确 `dev` 分支无法与现有 `dev/continuum-reflex-integration` refs 同时创建，Git 远端拒绝了该 ref。
 - 源分支 worktree 均保持不变。
 
 ## 冷启动 checklist
