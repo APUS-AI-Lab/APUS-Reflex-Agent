@@ -105,6 +105,7 @@ APUS 基于 DeepSeek Harness，将模型推理与执行、权限及持久 Sessio
 需要 Node.js `^22.19 || >=24`，以及 `packageManager` 声明的 pnpm 版本。
 
 <a id="run"></a>
+
 <a id="run-from-source"></a>
 
 ```sh

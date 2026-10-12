@@ -105,6 +105,7 @@ The [acceptance review](docs/feat-reflex-control/apus-reflex-harness-acceptance-
 Requires Node.js `^22.19 || >=24` and the pnpm version declared by `packageManager`.
 
 <a id="run"></a>
+
 <a id="run-from-source"></a>
 
 ```sh
