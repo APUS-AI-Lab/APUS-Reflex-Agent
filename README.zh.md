@@ -8,13 +8,45 @@
 
 ## 架构
 
-第一目标是 **Jev 入口策略决策与调度**：用户输入后选择允许的处理路径，由 DSH 交给适合的模型或专业 Agent。第二目标是**执行环节更智能、更顺畅**，逐步增强证据、记忆、恢复、升级与目标判断。两者共享原生任务状态、决策记录和动作归属；规则处理确定情况，System2 承担开放推理与生成。入口选模需要显式配置候选与隐私策略；仅挂载决策 provider 不会启用它。
+这个架构把即时决策模型和持久执行 Harness 融合在一起。**Reflex/Jev 是小脑：**负责入口、路由、记忆准入、恢复和监督等有界且低延迟的判断。**DSH 是大脑的工作 Harness：**通过模型完成开放式推理和生成，再负责工具、技能、子 Agent、权限、生命周期和事实记录。两者共享原生任务状态、决策记录和动作归属。入口选模需要显式配置候选与隐私策略；仅挂载决策 provider 不会启用它。
 
 ![Jev Native + DSH Native：第一目标为入口策略与调度，第二目标为过程智能，共享原生决策与结果反馈。](docs/feat-independent-harness/architecture@2x.png)
 
-[SVG 源文件](docs/feat-independent-harness/architecture.svg) · [Jev Native + DSH Native 专项方案](docs/feat-independent-harness/jev-native-dsh-native-plan.html)
+[Loop Working 架构（小脑 + Harness + 无限记忆）](docs/dev-continuum-reflex-integration/apus-reflex-loop-working-architecture.html) · [SVG 源文件](docs/feat-independent-harness/architecture.svg) · [Jev Native + DSH Native 专项方案](docs/feat-independent-harness/jev-native-dsh-native-plan.html)
 
 当前实现支持空闲 Web/API 文本入口的 Fidoo LiteLLM 选模、原生模型步骤前的有界 Skill 选择，以及区分建议、采用、模型响应和 Skill 注入的 Conversation 界面。APUS Reflex 层还提供专用 Reflex 模型配置页、可逆上下文投影与恢复、cache/Session 前缀保护，以及有界 Codex Goal 监督。参见[实施与验收范围](docs/feat-system3-g1/implementation.zh.md)、[部署指南](docs/feat-system3-g1/deployment.zh.md)、[System3 配置及限制](packages/experimental/system3/README.zh.md)和[专家级验收报告](docs/feat-reflex-control/apus-reflex-harness-acceptance-review.html)。严格受控监督链路和代表性上下文恢复已有验证；健康长任务对照、中途修改 Goal、远端首字节/回退和签名发布包仍待完成。Pilot 保留为实验参考。
+
+## 从 Personal Agent 到 Loop Working
+
+多数 Agent 只回答一次请求，并丢失让答案持续有用的工作状态。APUS Reflex Harness 面向能够持续推进工作的 **Personal Agent**：理解意图，选择路径，通过工具和技能执行，记录发生的事实，恢复相关状态，再从尚未完成的下一步继续工作。我们把这个循环称为 **Loop Working**。
+
+Loop Working 成立的关键，是把持久记忆和模型单次请求的有限窗口分开：
+
+- **无限记忆：** 持久 Session 记录、索引引用、摘要和检索策略让工作事实跨轮次、跨进程和跨重启可用。
+- **无损输入：** 用户原始消息和准入事实会在投影、路由或摘要改变模型可见内容之前记录下来。
+- **无损记忆：** 原始 Session 和 cache 安全的已提交前缀保持不变；之后的上下文投影可以追加可恢复引用，而不改写历史。
+
+因此，“无限上下文”指的是近似无界且可恢复的工作历史，以及每一步有界的模型投影；它不表示任何模型在一次请求中可以接收无限 token。Harness 为当前步骤选择相关证据，同时保留源事实供后续恢复和审计。
+
+## 两条决策模型路径
+
+同一个 Personal Agent 支持两种部署选择：
+
+1. **Reflex 路径：** 挂载并显式启用 Jev/Reflex provider 后，由低延迟专用决策模型处理入口路由、记忆准入、上下文恢复和监督等有界选择。系统可以先记录 shadow 决策再激活采用，最终决策及其来源会写入 Session。
+2. **通用模型路径：** 没有 Jev 或关闭 Reflex 开关时，原版 DSH 行为仍可使用。通用模型、显式规则和已配置路由仍能执行任务；运行时不要求 Reflex endpoint 才能开始工作。
+
+这种分离让决策延迟和生成质量彼此独立。Reflex 在狭窄且可审计的约束内做判断；通用模型负责开放式推理和生成；DSH 负责工具、权限、子进程、技能、子 Agent 和持久执行。
+
+## 架构如何支撑循环工程
+
+1. **输入与准入：** 把用户请求作为 Session 事实保存，并判断该消息是否可以成为持久记忆。
+2. **Reflex 或配置路由：** 选择允许的模型、Codex 路径或恢复动作，并记录决策的作用域和来源。
+3. **Harness 执行：** 在 DSH 权限下运行工具、技能和子 Agent，负责生命周期、取消和动作结果，而不是让模型模拟这些能力。
+4. **Continuum 记忆：** 写入持久记录，维护索引摘要并检索相关引用；原始 Session 始终是事实源。
+5. **上下文投影：** 根据引用生成有界请求，只编辑尚未提交且未冻结的尾部，并保留可被 provider cache 复用的已提交前缀。
+6. **结果反馈：** 记录模型可见输入、动作和结果，让下一轮能够恢复、验证改善，或安全地等待新的用户指令。
+
+这样得到的 Personal Agent 可以持续工作，但不会把记忆、模型窗口或单次决策假设成永久不变。[Continuum 记忆 E2E](apps/cli/tests/profiles/headless/tests/continuum-memory.e2e.ts)、[System3 Reflex 上下文测试](packages/experimental/system3/tests/reflex-context.spec.ts)和[经典案例集](docs/dev-continuum-reflex-integration/classic-cases.html)记录了当前证据与已知限制。
 
 ## APUS Reflex 能力指南
 

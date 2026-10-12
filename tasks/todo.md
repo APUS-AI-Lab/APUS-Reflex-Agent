@@ -4,13 +4,20 @@
 
 目标：完成 APUS Reflex Harness 的最终可发布闭环，以真实用户 E2E 证明入口路由、Reflex 模型配置、Codex 长时 Goal 监督与纠偏、动态上下文恢复和 UIUX；保护 cache 区与原始 Session，完成 MIT/NOTICE/安全/贡献者开源门禁、双仓 CI 和 PR/main 合并。
 
+### README Loop Working 叙事（2026-10-12）
+
+- [x] 将 Personal Agent、Loop Working、无限记忆、无损输入和无损记忆写入英中 README，并区分 Reflex 专用模型与通用模型路径。
+- [x] 用真实架构和现有验收证据解释“无限上下文”的工程含义，避免承诺无限 token 窗口。
+- [ ] 完成 README pairing、README gate、doc tests、doc-sync 和 diff check；本轮 doc-quick 仍暴露既有 concrete-terms 与 repository-reference 卡点，已修复其中的文档引用，需重跑确认。
+- [x] 生成与 README 叙事一致的 Loop Working 技术架构图，并列出给新人的 P0/P1/P2 架构跟进任务。
+
 - [x] P0：完成严格真实受控语义监督闭环：真实 `gpt-5.6-sol-relay` 已证明偏航 → Reflex realign → Codex 消费 → 回到原始 Goal 下一步 → `verification-target` → `improved` → 独立 `1137.41` 产物验证；脱敏证据见 `docs/feat-reflex-control/evidence/semantic-codex-strict-final-v6.{json,md,zh.md}`。健康长任务和中途改 Goal 仍单独验收。
 - [ ] P0：冻结并实测 1 秒 admission/status、远端首字节/总耗时三段指标；本地队列 admission/status 已实测 16ms，R-04 路由决策 p50/p95 已实测 two-tier 309/588ms、four-tier 317/405ms；2026-10-12 远端探测在首字节前出现传输错误/超时，远端与可见回退仍待测，见 `docs/feat-reflex-control/evidence/r04-remote-response-20261012.*`。
 - [ ] P0：完成健康长任务无误干预和用户中途改 Goal 的真实 UI/E2E 对照。
 - [ ] P0：完成 Electron 启动失败恢复、会话恢复、签名/公证和包内 MIT/NOTICE 核对；恢复界面已通过 200% 系统缩放 40 变体及页面级 200% 缩放 8 轮/320 变体。
 - [ ] P0：完成 Harness Jev/System3 CI、秘密扫描、脱敏回归；两仓 PR 已转 Ready 并合并，但当前 job 因 Actions budget 未启动，不能视为远端通过。
 - [x] P1：统一 README quickstart 与能力边界，补齐贡献者入口、System3 API/配置参考链接、CODEOWNERS、双语 Release notes、严格 v6 演示证据和 cache benchmark 入口；远端 CI、签名发布和 main 合并仍是独立门禁。
-- [x] P1：独立 review 后合并两个仓库 main；Harness `main=8a24e969c7`、Frontend `main=5a77376b87` 已回读。运行包签名/公证与 Actions 远端门禁仍单独待完成。
+- [x] P1：独立 review 后合并两个仓库 main；已回读 [Harness main](https://github.com/cryptoSUN2049/APUS-Reflex-Harness/tree/main) 与 [Frontend main](https://github.com/cryptoSUN2049/APUS-Reflex-Frontend/tree/main)。运行包签名/公证与 Actions 远端门禁仍单独待完成。
 
 本轮监督收口保持轻量：复用有界证据与 Goal，异常才判断、调整后观察验证、健康任务不误干预。2026-10-11 的自然 CSV 与字面量 unittest 对照均在 150 秒预算取消且零 steer；字面量 relay 无首字节，不能标为健康任务完整通过。证据见 `docs/feat-reflex-control/evidence/healthy-codex-20261011.zh.md`。
 
@@ -18,7 +25,7 @@
 
 ### 2026-10-12 合并后状态
 
-- [x] 两仓 PR #1 已按本地等价检查与独立 review 合并：Harness merge `8a24e969c7fe6a11b7fd524629e7c085d17e1ffc`，Frontend merge `5a77376b8797e4d28fa54fdaadd9d385944b88d7`。
+- [x] 两仓 PR 已按本地等价检查与独立 review 合并；当前状态以 [Harness main](https://github.com/cryptoSUN2049/APUS-Reflex-Harness/tree/main) 和 [Frontend main](https://github.com/cryptoSUN2049/APUS-Reflex-Frontend/tree/main) 为准。
 - [x] 后端架构收口：入口路由、Goal 监督与 Codex 原生证据、context 投影/恢复、Session/cache 前缀保护和 Goal revision fence 已由代码回归与真实证据覆盖。
 - [ ] 远端 Actions budget、远端 relay 首字节/回退、健康长任务无误干预、中途改 Goal、正式签名/公证与当前 pin 的最终安装包仍未完成；合并不把这些状态改写为通过。
 

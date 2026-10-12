@@ -1,0 +1,22 @@
+# Bilingual-pair consistency record for architecture-followups.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/dev-continuum-reflex-integration/architecture-followups.md
+/architecture-follow-up-tasks-for-a-new-contributor:
+  en: 046a8fc4b551ac47
+  zh: 0b52fb13c89ed197
+/architecture-follow-up-tasks-for-a-new-contributor/p0-release-and-user-trust:
+  en: 758e14d7b1f82082
+  zh: 21a5d3386b7a2894
+/architecture-follow-up-tasks-for-a-new-contributor/p1-architecture-hardening:
+  en: 01ab9cf721d38867
+  zh: 4d2458de99bb9e64
+/architecture-follow-up-tasks-for-a-new-contributor/p2-newcomer-sized-improvements:
+  en: cd9763b0e703eef5
+  zh: 08ea99bec413b195
+/architecture-follow-up-tasks-for-a-new-contributor/do-not-assign-as-a-first-independent-task:
+  en: 04af86bbded73d55
+  zh: 4e8915bc08792e84
+/architecture-follow-up-tasks-for-a-new-contributor/suggested-onboarding-order:
+  en: 71b7d87ef9937561
+  zh: 04a1dcdbb2d0e154

@@ -1,0 +1,19 @@
+# Bilingual-pair consistency record for open-source-docs-audit.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/dev-continuum-reflex-integration/open-source-docs-audit.md
+/open-source-documentation-audit:
+  en: e4b308158bc6d7a8
+  zh: 92be1e2f0eef059e
+/open-source-documentation-audit/block-before-making-the-repository-public:
+  en: 78e07fb3eb41c454
+  zh: 14c4565bd1ec1b39
+/open-source-documentation-audit/keep-after-review-and-redaction:
+  en: 8d0ca49fe246ef0d
+  zh: 616752d955b63867
+/open-source-documentation-audit/do-not-publish-as-product-proof:
+  en: 8779dbae7d39455e
+  zh: 93fae29a59de4c97
+/open-source-documentation-audit/required-release-checks:
+  en: d9f1f8eecfddd8f7
+  zh: 2a00072836b3f5d4

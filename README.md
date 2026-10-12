@@ -8,13 +8,45 @@ See the [brand definition and assembly guide](docs/feat-apus-brand/branding.md) 
 
 ## Architecture
 
-The first objective is **Jev-guided intake strategy and dispatch**: after user input, select an allowed processing path and let DSH route it to a suitable model or specialist. The second is **smarter, smoother execution** through evidence, memory, recovery, escalation and goal decisions. Both share native task state, decision records and action ownership; rules handle determined cases and System2 handles open reasoning and generation. Entry routing requires an explicit candidate and privacy configuration; mounting the decision provider alone leaves it disabled.
+The architecture combines a fast decision brain with a durable execution harness. **Reflex/Jev is the small brain:** it makes bounded, low-latency choices about intake, routing, memory admission, recovery and supervision. **DSH is the large brain's working harness:** it performs open-ended reasoning and generation through models, then owns tools, skills, subagents, permissions, lifecycle and facts. Both share native task state, decision records and action ownership. Entry routing requires an explicit candidate and privacy configuration; mounting the decision provider alone leaves it disabled.
 
 ![Jev Native + DSH Native: priority one is intake strategy and dispatch; priority two is intelligent execution, sharing native decisions and outcome feedback. Chinese architecture diagram.](docs/feat-independent-harness/architecture@2x.png)
 
-[SVG source](docs/feat-independent-harness/architecture.svg) · [Jev Native + DSH Native plan (Chinese)](docs/feat-independent-harness/jev-native-dsh-native-plan.html)
+[Loop Working architecture (small brain + Harness + infinite memory)](docs/dev-continuum-reflex-integration/apus-reflex-loop-working-architecture.html) · [SVG source](docs/feat-independent-harness/architecture.svg) · [Jev Native + DSH Native plan (Chinese)](docs/feat-independent-harness/jev-native-dsh-native-plan.html)
 
 The implementation handles idle Web/API text requests with Fidoo LiteLLM generation routes, bounded Skill selection before native model steps, and a Conversation view that distinguishes advice, adoption, model response and Skill injection. The APUS Reflex layer adds the dedicated Reflex model settings page, reversible context projection and recovery, cache/session-prefix protection, and bounded Codex Goal supervision. See the [implementation and acceptance scope](docs/feat-system3-g1/implementation.md), [deployment guide](docs/feat-system3-g1/deployment.md), [System3 configuration and limits](packages/experimental/system3/README.md), and the [expert acceptance report](docs/feat-reflex-control/apus-reflex-harness-acceptance-review.html). The strict controlled supervision path and representative context recovery are verified; healthy long-task controls, mid-run Goal changes, remote first-byte/fallback, and signed release packaging remain pending. Pilot remains an experimental reference.
+
+## From Personal Agent to Loop Working
+
+Most agents answer one request and lose the working state that made the answer useful. APUS Reflex Harness is designed for a **Personal Agent** that can keep a job moving: understand an intention, choose a route, act through tools and skills, record what happened, recover the relevant state, and continue from the next unfinished step. We call this cycle **Loop Working**.
+
+Loop Working is possible because the system separates durable memory from the model's bounded request window:
+
+- **Infinite memory:** durable Session records, indexed references, summaries and retrieval policies keep working facts available across turns, processes and restarts.
+- **Lossless input:** the original user message and admission facts remain recorded before projection, routing or summarization changes what a model sees.
+- **Lossless memory:** the original Session and cache-safe committed prefix remain intact; a later context projection can add a recoverable reference without rewriting history.
+
+“Infinite context” therefore means an effectively unbounded, recoverable work history with bounded model projections. It does not mean that any model receives unlimited tokens in one request. The harness selects the relevant evidence for each step while keeping the source facts available for later recovery and audit.
+
+## Two decision-model paths
+
+The same Personal Agent works with two deployment choices:
+
+1. **Reflex path:** when a Jev/Reflex provider is mounted and explicitly enabled, a dedicated low-latency decision model handles bounded choices such as intake routing, memory admission, context recovery and supervision. Shadow decisions can be recorded before active adoption, and the selected decision remains attributable in the Session.
+2. **General-model path:** when Jev is absent or the Reflex switch is disabled, the original DSH behavior remains available. General models, explicit rules and configured routes can still execute the task; the runtime does not require a Reflex endpoint to start working.
+
+This separation keeps decision latency and generation quality independent. Reflex decides within a narrow, auditable contract; the general model performs open-ended reasoning and generation; DSH owns tools, permissions, subprocesses, skills, subagents and durable execution.
+
+## How the architecture sustains a work loop
+
+1. **Input and admission** preserve the user's request as a Session fact and decide whether a message may become durable memory.
+2. **Reflex or configured routing** selects an allowed model, Codex path or recovery action. The decision is recorded with its scope and source.
+3. **Harness execution** runs tools, skills and subagents under DSH permissions. It owns lifecycle, cancellation and action results instead of asking a model to simulate them.
+4. **Continuum memory** writes durable records, maintains indexed summaries and retrieves relevant references. The source Session stays authoritative.
+5. **Context projection** builds a bounded request from those references. It edits only an unsubmitted, unfrozen tail and preserves committed prefixes that may be reused by a provider cache.
+6. **Outcome feedback** records model-visible inputs, actions and results so the next loop can resume, verify an improvement, or safely ask for a new instruction.
+
+The result is a Personal Agent that can work over time without pretending that memory, model context, or a single decision is permanent. The [Continuum memory E2E](apps/cli/tests/profiles/headless/tests/continuum-memory.e2e.ts), [System3 Reflex context tests](packages/experimental/system3/tests/reflex-context.spec.ts), and [acceptance casebook](docs/dev-continuum-reflex-integration/classic-cases.html) show the current evidence and known limits.
 
 ## APUS Reflex capability guide
 

@@ -119,7 +119,7 @@
         <article class="case"><span class="tag">PASS · safety</span><h3>财务 CSV：精度不能被压缩掉</h3><p>用户要求金额必须使用 Decimal，原始 CSV 不可修改。上下文整理可以移除无关旅行内容，但 precision 和 file-integrity constraint 仍保留；真实 Jev 测试还验证新 Host 能恢复旅行事实。</p></article>
         <article class="case"><span class="tag">PASS · compatibility</span><h3>没有 Jev：系统照旧工作</h3><p>未接入 Jev 时，Continuum 的 Reflex 专属开关不生效。任务继续走原 provider 路径，不写 memory record，也不注入 recall。</p></article>
         <article class="case"><span class="tag">PASS · control</span><h3>开关关闭：记忆不会偷偷工作</h3><p>即使插件配置存在，disabled 场景也不产生记忆召回。这个负向测试证明“无限记忆”是显式能力，而不是隐式改变原版行为。</p></article>
-        <article class="case"><span class="tag">PASS · provenance</span><h3>历史内容回来，但没有执行权限</h3><p>Reflex 恢复内容通过 <code>reflex-memory</code> 标记为历史数据，带 event/block 引用。它可以提供事实，不能变成新的操作指令。</p></article>
+        <article class="case"><span class="tag">PASS · source</span><h3>历史内容回来，但没有执行权限</h3><p>Reflex 恢复内容通过 <code>reflex-memory</code> 标记为历史数据，带 event/block 引用。它可以提供事实，不能变成新的操作指令。</p></article>
         <article class="case"><span class="tag">MATRIX · decision</span><h3>Shadow 与 Active：同一候选，两种职责</h3><p>Shadow 让 Jev 观察并记录 decision receipt，但保留 baseline；Active 才应用 selected ids。路由失败或隐私拒绝时回退到确定性 baseline。</p></article>
         <article class="case fail"><span class="tag">必须诚实记录</span><h3>全仓绿，不等于核心链路通过</h3><p>组件测试不能代替真实进程；无密钥回放不能代替真实 Jev；跳过和未执行都不能计为通过。发布页必须同时展示证据和剩余基线问题。</p></article>
       </div>
