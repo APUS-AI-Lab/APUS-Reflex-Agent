@@ -57,7 +57,7 @@ function preflight() {
 }
 
 /** Ordered stages keep runtime copies separate from writes to Harness artifacts. */
-export function productStages(action) {
+export function productStages(action, platform = process.platform) {
   const stages = {
     setup: ['preflight', 'install-harness', 'install-desktop', 'build-harness', 'prepare-runtime', 'build-desktop'],
     dev: ['require-build', 'dev-desktop'],
@@ -66,7 +66,17 @@ export function productStages(action) {
     check: ['preflight'],
   }
   if (!Object.hasOwn(stages, action)) throw new Error('Usage: pnpm run setup | dev:desktop | start:desktop | package:product [--unsigned]')
-  return stages[action]
+  const selected = stages[action]
+  if (platform === 'linux' && selected.includes('build-harness')) selected.splice(selected.indexOf('build-harness') + 1, 0, 'build-native-linux')
+  return selected
+}
+
+/** Select the builder platform without treating an unknown host as macOS. */
+export function desktopBuilderFlag(platform) {
+  if (platform === 'darwin') return '--mac'
+  if (platform === 'win32') return '--win'
+  if (platform === 'linux') return '--linux'
+  throw new Error(`Unsupported desktop platform ${platform}.`)
 }
 
 /** Execute an explicit product action; packaging never publishes a release. */
@@ -80,6 +90,10 @@ export async function main(args = process.argv.slice(2)) {
       case 'install-harness': pnpm(['install', '--frozen-lockfile']); break
       case 'install-desktop': npm(['ci']); break
       case 'build-harness': pnpm(['run', 'build']); break
+      case 'build-native-linux':
+        pnpm(['--dir', 'native/system', 'run', 'build:native'])
+        node('native/system/scripts/verify-launcher-binary.mjs', [`packages/linux-${process.arch}`])
+        break
       case 'prepare-runtime': node('scripts/prepare-system3-runtime.mjs', ['--deploy', '--allow-dirty'], frontend); break
       case 'deploy-runtime': node('scripts/prepare-system3-runtime.mjs', ['--deploy'], frontend); break
       case 'build-desktop': npm(['run', 'build']); break
@@ -104,7 +118,7 @@ export async function main(args = process.argv.slice(2)) {
         const builds = join(root, '.artifacts/product-build')
         mkdirSync(builds, { recursive: true })
         const directory = mkdtempSync(join(builds, `${manifest.version}-`))
-        node(builder, [process.platform === 'win32' ? '--win' : '--mac', `--${process.arch}`, '--publish', 'never', `--config.directories.output=${directory}`], frontend, environment)
+        node(builder, [desktopBuilderFlag(process.platform), `--${process.arch}`, '--publish', 'never', `--config.directories.output=${directory}`], frontend, environment)
         const { recordBuild } = await import('./product-release.mjs')
         recordBuild(directory)
         node('scripts/product-release.mjs', ['collect', ...(options.includes('--unsigned') ? ['--unsigned'] : [])])

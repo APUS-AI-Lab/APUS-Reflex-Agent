@@ -17,6 +17,7 @@ on:
           - windows
           - mac
           - mac-intel
+          - linux
           - all
 
 permissions:
@@ -31,7 +32,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJSON(inputs.target == 'all' && '[{"runner":"windows-latest","target":"win32-x64"},{"runner":"macos-15","target":"darwin-arm64"},{"runner":"macos-15-intel","target":"darwin-x64"}]' || inputs.target == 'mac-intel' && '[{"runner":"macos-15-intel","target":"darwin-x64"}]' || inputs.target == 'mac' && '[{"runner":"macos-15","target":"darwin-arm64"}]' || '[{"runner":"windows-latest","target":"win32-x64"}]') }}
+        include: ${{ fromJSON(inputs.target == 'all' && '[{"runner":"windows-latest","target":"win32-x64"},{"runner":"macos-15","target":"darwin-arm64"},{"runner":"macos-15-intel","target":"darwin-x64"},{"runner":"ubuntu-24.04","target":"linux-x64"}]' || inputs.target == 'linux' && '[{"runner":"ubuntu-24.04","target":"linux-x64"}]' || inputs.target == 'mac-intel' && '[{"runner":"macos-15-intel","target":"darwin-x64"}]' || inputs.target == 'mac' && '[{"runner":"macos-15","target":"darwin-arm64"}]' || '[{"runner":"windows-latest","target":"win32-x64"}]') }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 120
     env:
@@ -66,6 +67,13 @@ jobs:
           PRODUCT_TAG: ${{ inputs.tag }}
           PRODUCT_TARGET: ${{ matrix.target }}
         run: node --input-type=module -e "import { checkRelease } from './scripts/product-release.mjs'; import { execFileSync } from 'node:child_process'; checkRelease(process.cwd(), process.env.PRODUCT_TAG); if (execFileSync('git', ['rev-parse', 'HEAD'], { encoding:'utf8' }).trim() !== process.env.GITHUB_SHA) throw new Error('Checkout differs from workflow commit'); if (process.platform + '-' + process.arch !== process.env.PRODUCT_TARGET) throw new Error('Runner does not match native target')"
+      - name: Prepare native Linux build and desktop acceptance
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential musl-tools python3 patch xvfb xauth dbus-x11 apparmor apparmor-utils desktop-file-utils xdg-utils libgtk-3-0t64 libnss3 libasound2t64 libgbm1
+          sudo aa-status --enabled
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=1
       - name: Install locked Harness dependencies
         run: pnpm install --frozen-lockfile
       - name: Install locked desktop dependencies
@@ -105,6 +113,14 @@ jobs:
           version=$(node -p "JSON.parse(require('fs').readFileSync('release/manifest.json')).version")
           arch="${PRODUCT_TARGET#darwin-}"
           node scripts/product-macos-smoke.mjs --installer "$PWD/.artifacts/product-release/$version/$PRODUCT_TARGET/apus-reflex-harness-mac-$arch.dmg" --report-dir "$PWD/.artifacts/product-macos-smoke"
+      - name: Validate Linux smoke checks
+        if: runner.os == 'Linux'
+        run: node --test scripts/product-linux-smoke.test.mjs
+      - name: Install and verify the Linux product with Chromium sandbox enabled
+        if: runner.os == 'Linux'
+        run: |
+          version=$(node -p "JSON.parse(require('fs').readFileSync('release/manifest.json')).version")
+          xvfb-run -a dbus-run-session -- node scripts/product-linux-smoke.mjs --installer "$PWD/.artifacts/product-release/$version/linux-x64/apus-reflex-harness-linux-x64.deb" --report-dir "$PWD/.artifacts/product-linux-smoke"
       - name: Upload installers for manual review
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
@@ -122,6 +138,7 @@ jobs:
           path: |
             .artifacts/product-windows-smoke/
             .artifacts/product-macos-smoke/
+            .artifacts/product-linux-smoke/
             .artifacts/product-build-receipt.json
           include-hidden-files: true
           if-no-files-found: warn

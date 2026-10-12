@@ -16,7 +16,7 @@ export function validateRelease(manifest, desktop, lock) {
   const channels = manifest.version.includes('-beta.') ? ['beta'] : manifest.version.includes('-rc.') ? ['rc'] : ['stable', 'preview']
   if (!channels.includes(manifest.channel)) throw new Error('Product version and release channel differ.')
   if (desktop.version !== manifest.version || lock.version !== manifest.version || lock.packages['']?.version !== manifest.version) throw new Error('Update frontend/package.json and its lockfile to the release manifest version.')
-  if (!Array.isArray(manifest.targets) || !manifest.targets.length || manifest.targets.some(target => !['darwin-arm64', 'darwin-x64', 'win32-x64'].includes(target))) throw new Error('Release targets must name qualified desktop platforms.')
+  if (!Array.isArray(manifest.targets) || !manifest.targets.length || manifest.targets.some(target => !['darwin-arm64', 'darwin-x64', 'win32-x64', 'linux-x64'].includes(target))) throw new Error('Release targets must name qualified desktop platforms.')
   if (manifest.repository !== 'APUS-AI-Lab/APUS-Reflex-Harness') throw new Error('Release repository must be the APUS product repository.')
   return manifest
 }
@@ -32,6 +32,7 @@ export function checkRelease(base = root, tag = process.env.GITHUB_REF_TYPE === 
 export function releaseAssetNames(platform, arch) {
   if (platform === 'darwin' && ['arm64', 'x64'].includes(arch)) return [`apus-reflex-harness-mac-${arch}.dmg`, `apus-reflex-harness-mac-${arch}.zip`]
   if (platform === 'win32' && arch === 'x64') return ['apus-reflex-harness-windows-x64-setup.exe']
+  if (platform === 'linux' && arch === 'x64') return ['apus-reflex-harness-linux-x64.deb']
   throw new Error(`Unsupported installer target ${platform}-${arch}.`)
 }
 

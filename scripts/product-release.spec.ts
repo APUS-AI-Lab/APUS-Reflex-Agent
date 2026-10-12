@@ -9,7 +9,7 @@ import { releaseAssetNames, writeReleaseSupportAssets } from './product-release.
 
 const digest = (bytes: string | Buffer) => createHash('sha256').update(bytes).digest('hex')
 
-it('combines both macOS architectures and Windows support files without replacing either target or losing checksum references', async () => {
+it('combines macOS, Windows and Linux support files without replacing either target or losing checksum references', async () => {
   const base = mkdtempSync(join(tmpdir(), 'product-release-support-'))
   onTestFinished(() => { rmSync(base, { recursive: true, force: true }) })
   const output = join(base, 'combined-release')
@@ -20,9 +20,9 @@ it('combines both macOS architectures and Windows support files without replacin
   writeFileSync(join(base, 'frontend/package-lock.json'), 'desktop locked fixture')
   writeFileSync(join(licenseRoot, 'LICENSE.txt'), 'original fixture license')
   writeFileSync(join(licenseRoot, 'THIRD_PARTY_NOTICES.txt'), 'original fixture credit')
-  const manifest = { product: 'APUS Reflex Harness', version: '0.1.0', channel: 'preview', repository: 'APUS-AI-Lab/APUS-Reflex-Harness', targets: ['darwin-arm64', 'darwin-x64', 'win32-x64'] }
+  const manifest = { product: 'APUS Reflex Harness', version: '0.1.0', channel: 'preview', repository: 'APUS-AI-Lab/APUS-Reflex-Harness', targets: ['darwin-arm64', 'darwin-x64', 'win32-x64', 'linux-x64'] }
   const retained = new Map<string, Buffer>()
-  for (const [platform, arch] of [['darwin', 'arm64'], ['darwin', 'x64'], ['win32', 'x64']] as const) {
+  for (const [platform, arch] of [['darwin', 'arm64'], ['darwin', 'x64'], ['win32', 'x64'], ['linux', 'x64']] as const) {
     const target = `${platform}-${arch}`
     const inventoryBytes = JSON.stringify({ target, packages: [] })
     writeFileSync(join(runtimeRoot, 'runtime-dependencies.json'), inventoryBytes)
@@ -50,7 +50,7 @@ it('combines both macOS architectures and Windows support files without replacin
     for (const [name, bytes] of retained) expect(readFileSync(join(output, name))).toEqual(bytes)
     for (const name of readdirSync(output)) retained.set(name, readFileSync(join(output, name)))
   }
-  expect(readdirSync(output)).toHaveLength(17)
+  expect(readdirSync(output)).toHaveLength(22)
 })
 
 it('rejects unsupported support-file targets before writing output', async () => {
@@ -73,5 +73,7 @@ it('checks out the dispatch commit and retains review evidence without release-w
   expect(steps.some(step => step.run?.includes('product-windows-smoke.mjs --installer'))).toBe(true)
   expect(steps.some(step => step.run?.includes('product-macos-smoke.mjs --installer'))).toBe(true)
   expect(JSON.stringify(workflow)).toContain('macos-15-intel')
+  expect(steps.some(step => step.run?.includes('product-linux-smoke.mjs --installer'))).toBe(true)
+  expect(JSON.stringify(workflow)).toContain('ubuntu-24.04')
   expect(JSON.stringify(workflow)).not.toContain('gh release')
 })
