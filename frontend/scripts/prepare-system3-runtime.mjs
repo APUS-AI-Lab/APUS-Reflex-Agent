@@ -7,6 +7,7 @@ import { prepareBrand } from './prepare-brand.mjs'
 import { patchSystem3Runtime } from './patch-system3-runtime.mjs'
 import { generateSystem3Patch } from './generate-system3-patch.mjs'
 import dependencyInventory from './runtime-dependency-inventory.cjs'
+import packageMetadata from './package-metadata-policy.cjs'
 import { existsSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 
@@ -126,6 +127,8 @@ try {
       }
     }
     await materialize(join(root, 'node_modules'))
+    packageMetadata.removeExcludedMetadata(root)
+    packageMetadata.verifyExcludedMetadata(root)
     await patchSystem3Runtime(root, appRoot)
     execFileSync(process.execPath, [join(appRoot, 'scripts/install-brand-assets.mjs'), root], { cwd: appRoot, stdio: 'pipe' })
     const deployedCli = JSON.parse(await readFile(join(root, 'node_modules/@deepseek-ai/dsh/package.json'), 'utf8'))

@@ -1,10 +1,12 @@
-import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync, symlinkSync } from 'node:fs'
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync, symlinkSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { afterEach, describe, expect, it } from 'vitest'
 import inventory from '../scripts/runtime-dependency-inventory.cjs'
 import beforePack from '../scripts/verify-system3-runtime.cjs'
 import afterPack from '../scripts/package-system3-runtime.cjs'
+import metadata from '../scripts/package-metadata-policy.cjs'
+import asar from '@electron/asar'
 
 const roots = []
 const licenses = ['LICENSE.txt', 'THIRD_PARTY_NOTICES.txt', 'HARNESS-LICENSE.txt', 'HARNESS-THIRD_PARTY_NOTICES.txt', 'ELECTRON-LICENSE.txt', 'CHROMIUM-LICENSES.html']
@@ -90,4 +92,55 @@ describe('deployed runtime dependency inventory', () => {
       await expect(hook(context)).rejects.toThrow(mutation === 'missing inventory' ? 'ENOENT' : /dependency inventory/)
     })
   }
+})
+
+
+describe('upstream CI metadata exclusion', () => {
+  it.each(metadata.excludedMetadata)('removes only %s and rejects its return in the deployed runtime', async file => {
+    const { root, manifest, context } = fixture()
+    const directory = join(root, file, '..')
+    mkdirSync(directory, { recursive: true })
+    writeFileSync(join(root, file), 'repo_token: fixture-only-not-a-credential\n')
+    writeFileSync(join(directory, 'LICENSE'), 'retained license')
+    writeFileSync(join(directory, 'index.js'), 'retained code')
+    expect(() => inventory.verifyDependencyInventory(root, manifest)).toThrow('excluded CI metadata')
+    await expect(beforePack(context)).rejects.toThrow('excluded CI metadata')
+    await expect(afterPack(context)).rejects.toThrow('excluded CI metadata')
+    metadata.removeExcludedMetadata(root)
+    expect(() => metadata.verifyExcludedMetadata(root)).not.toThrow()
+    expect(existsSync(join(root, file))).toBe(false)
+    expect(readFileSync(join(directory, 'LICENSE'), 'utf8')).toBe('retained license')
+    expect(readFileSync(join(directory, 'index.js'), 'utf8')).toBe('retained code')
+    metadata.removeExcludedMetadata(root)
+  })
+
+  it.each(metadata.excludedMetadata)('rejects %s in an actual ASAR and unpacked resources', async file => {
+    const { project, context } = fixture()
+    const input = join(project, 'asar-input')
+    const resources = join(context.appOutDir, 'APUS.app/Contents/Resources')
+    mkdirSync(join(input, file, '..'), { recursive: true })
+    writeFileSync(join(input, file), 'repo_token: fixture-only-not-a-credential\n')
+    await asar.createPackage(input, join(resources, 'app.asar'))
+    expect(() => metadata.verifyPackagedMetadata(resources)).toThrow('ASAR contains excluded CI metadata')
+    await expect(afterPack(context)).rejects.toThrow('ASAR contains excluded CI metadata')
+    metadata.removeExcludedMetadata(input)
+    writeFileSync(join(input, 'LICENSE'), 'retained license')
+    await asar.createPackage(input, join(resources, 'app.asar'))
+    asar.uncache(join(resources, 'app.asar'))
+    expect(() => metadata.verifyPackagedMetadata(resources)).not.toThrow()
+    expect(asar.extractFile(join(resources, 'app.asar'), 'LICENSE').toString()).toBe('retained license')
+    const unpacked = join(resources, 'app.asar.unpacked')
+    mkdirSync(join(unpacked, file, '..'), { recursive: true })
+    writeFileSync(join(unpacked, file), 'repo_token: fixture-only-not-a-credential\n')
+    expect(() => metadata.verifyPackagedMetadata(resources)).toThrow('excluded CI metadata')
+  })
+
+  it('wires preparation cleanup, electron-builder exclusions, and the final resource check', () => {
+    const prepare = readFileSync(new URL('../scripts/prepare-system3-runtime.mjs', import.meta.url), 'utf8')
+    expect(prepare).toContain('packageMetadata.removeExcludedMetadata(root)')
+    expect(prepare).toContain('packageMetadata.verifyExcludedMetadata(root)')
+    const config = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).build
+    for (const file of metadata.excludedMetadata) expect(config.files).toContain('!' + file)
+    expect(config.afterPack).toBe('scripts/package-system3-runtime.cjs')
+  })
 })

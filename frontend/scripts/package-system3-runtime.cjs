@@ -2,6 +2,7 @@
 const fs = require('node:fs/promises')
 const path = require('node:path')
 const { verifyDependencyInventory } = require('./runtime-dependency-inventory.cjs')
+const { verifyPackagedMetadata } = require('./package-metadata-policy.cjs')
 const { pathToFileURL } = require('node:url')
 const { createHash } = require('node:crypto')
 const { execFile } = require('node:child_process')
@@ -24,6 +25,7 @@ module.exports = async function packageSystem3Runtime(context) {
   const manifest = JSON.parse(await fs.readFile(path.join(target, 'runtime-manifest.json'), 'utf8'))
   if (manifest.mode !== 'deployed' || manifest.packages.length !== 7) throw new Error('Packaged System3 runtime is incomplete')
   verifyDependencyInventory(target, manifest)
+  verifyPackagedMetadata(resources)
   const physicalRoot = await fs.realpath(target)
   async function requireContained(relative) {
     const file = await fs.realpath(path.join(target, relative))

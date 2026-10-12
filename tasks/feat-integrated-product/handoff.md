@@ -5,7 +5,8 @@
 - 用户批准以现有 APUS Reflex Harness 为主仓整合前端，审查后公开仓库与 Release；产品首版 `0.1.0`，标签 `v0.1.0`，按未签名预发布验收。
 - 工作树 `feat-integrated-product`；已创建集成 checkpoint，并以 `merge: sync current Harness product and runtime changes` 提交合并当时的 Harness main；尚未 push，精确 HEAD 用 `git rev-parse HEAD` 查询。
 - 前端完整串行测试 180 文件、1592 测试通过；发布相关 50、原生 Reflex UI 44、真实首配 pipeline 2、provider 最终 17 项通过。
-- 最终 setup session `58636` 已退出失败：完整 Harness 构建通过，运行时部署触发 pnpm legacy 嵌套工作区 bin 路径错误。已用离线最小样例复现并修复临时部署根项目；旧日志 `/private/tmp/apus-logo-final-setup.log`。新 setup session `11497` 已退出：后端完整构建通过，根目录部署修复通过（606 包安装），进入兼容补丁阶段因 chat 补丁 2/23 hunks 冲突失败；日志 `/private/tmp/apus-root-deploy-setup.log`。正在审查全部 27 个兼容补丁；桌面前端独立 build session `99442` 已通过，日志 `/private/tmp/apus-final-desktop-build.log`。27 补丁小树核查已全部通过，20 项兼容补丁回归通过。runtime prepare session `91931` 已通过，日志 `/private/tmp/apus-runtime-final-prepare.log`；Electron RunAsNode probe 返回 HTTP 200。实际桌面选择“从空白开始”后已进入主界面；设置、模型和 Reflex 空配置页均可打开。截图 `/private/tmp/apus-desktop-accept-5PyCmq/`，日志 `/private/tmp/apus-desktop-settings.log`。设置页产品版本修复已完成，19 项定向测试、类型检查与 owner lint 通过，待重建后实测；首次预选 DeepSeek 真实模型的处理偏好已向用户询问。
+- 后端完整构建、桌面生产构建、运行时装配、27 个兼容补丁、Electron 后端 HTTP 200 探针通过。实际空白桌面已进入主页和模型/Reflex 设置页，截图 `/private/tmp/apus-desktop-accept-5PyCmq/`。产品版本显示修复通过 19 项测试，已提交待最终安装包实测。
+- 首轮干净提交打包 session `11513` 因实际依赖扫描发现上游 CI 元数据夹带令牌而主动停止（exit 143，未发布）。依赖 `.coveralls.yml` 精确清理与 runtime/ASAR 拒绝回流已实现，17 项定向测试通过；不是本项目凭证，未探测令牌有效性。首次预选真实 DeepSeek 模型的处理偏好已向用户询问，尚待答复。
 - 当前没有 Release，远端 0 个 tag；源码仍 private，当前账号只有 WRITE/admin=false，无可用签名身份。实际安装、首个真实任务和匿名下载仍待验收。
 
 ## 本轮交付物
@@ -46,7 +47,7 @@ Runtime 部署会动态合成依赖集合；双锁摘要标识源码输入，实
 
 旧前端工作流归档于 `frontend/.upstream-workflows/workflows`，Python 工具仍在 `frontend/.github/scripts`。根桌面命令启动 APUS 宿主，原 Harness 桌面使用独立维护命令。后端源码变化后需重新 setup 准备运行时。
 
-公开审计已经覆盖前期源码树与历史；合并后的最终增量、依赖生产闭包及安装包仍需复核。原始日志在 `/private/tmp/apus-*`，不得将含敏感内容的日志直接提交。凭证扫描结果不替代依赖安全或包内许可检查。
+公开审计覆盖前期源码树与历史及 210 文件最终增量；实际运行时 706 个依赖身份、完整依赖闭包、sharp 0.35.5 与原始许可已验证。实际运行时扫描发现第三方 CI 元数据夹带令牌，清理与拒绝回流已实现；最终安装包仍需完整复核。原始日志在 `/private/tmp/apus-*`，不得将含敏感内容的日志直接提交。凭证扫描结果不替代依赖安全或包内许可检查。
 
 28 个旧远端 tag 已备份至 `.artifacts/legacy-tag-backup-20261012`，bundle 校验通过后已删除；远端当前为 0 个 tag。不要执行 `git push --tags`，避免重新发布本地旧标签；首版只在确认后推送目标 `v0.1.0`。
 
@@ -68,7 +69,7 @@ Runtime 部署会动态合成依赖集合；双锁摘要标识源码输入，实
 
 ## 分支/部署状态
 
-工作树路径为 `.Codex/worktrees/feat-integrated-product`，分支 `feat-integrated-product`。已有本地集成 checkpoint 与合并主线提交，最终品牌、首配和部署修复正在提交。用 `git log -2 --oneline` 和 `git rev-parse HEAD` 查询当前提交。尚未 push，没有 Release，未覆盖用户已安装版本。主目录及其他工作树的用户改动保持不动。
+工作树路径为 `.Codex/worktrees/feat-integrated-product`，分支 `feat-integrated-product`。已有本地集成 checkpoint 与合并主线提交，最终品牌、首配和部署修复已提交，依赖元数据清理正在补充。用 `git log -2 --oneline` 和 `git rev-parse HEAD` 查询当前提交。尚未 push，没有 Release，未覆盖用户已安装版本。主目录及其他工作树的用户改动保持不动。
 
 远端为 `APUS-AI-Lab/APUS-Reflex-Harness`；当前账号 `cryptoSUN2049` 权限 WRITE，admin=false，不能自行改为 public。公开与发布已获用户授权，仍须完成审查、管理员操作和发行验收。当前无可用代码签名身份，不宣称签名或公证。
 

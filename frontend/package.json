@@ -316,6 +316,8 @@
     "asar": true,
     "asarUnpack": [
       "node_modules/**/*",
+      "!node_modules/debug/.coveralls.yml",
+      "!node_modules/compression/node_modules/debug/.coveralls.yml",
       ".build/ppt-runtime/packages/**/*"
     ],
     "npmRebuild": false,
@@ -334,6 +336,8 @@
     "files": [
       "out/**/*",
       "node_modules/**/*",
+      "!node_modules/debug/.coveralls.yml",
+      "!node_modules/compression/node_modules/debug/.coveralls.yml",
       "!node_modules/dsh-ppt-composer{,/**}",
       "!node_modules/dsh-ppt{,/**}",
       {

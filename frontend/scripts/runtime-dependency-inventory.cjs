@@ -2,6 +2,7 @@
 const { createHash } = require('node:crypto')
 const fs = require('node:fs')
 const path = require('node:path')
+const { verifyExcludedMetadata } = require('./package-metadata-policy.cjs')
 
 const inventoryFileName = 'runtime-dependencies.json'
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex')
@@ -62,6 +63,7 @@ function writeDependencyInventory(root) {
 
 /** Reject inventory drift or a deployed package added, removed, or replaced after preparation. */
 function verifyDependencyInventory(root, manifest) {
+  verifyExcludedMetadata(root)
   const descriptor = manifest.dependencyInventory
   if (manifest.mode !== 'deployed' || descriptor?.path !== inventoryFileName || !/^[a-f0-9]{64}$/.test(descriptor.sha256)) {
     throw new Error('A deployed runtime dependency inventory is required; prepare the runtime again.')
