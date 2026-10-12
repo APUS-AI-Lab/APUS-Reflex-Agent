@@ -39,7 +39,7 @@ Settings visibility and section selection live in the shell owner store. The she
 
 ### The General section
 
-The current release version appears at the bottom of General Settings in the active language. Desktop supplies its product version through the read-only `dshDesktop.productVersion` carrier field; Web uses the build’s `DSH_CLIENT_VERSION` metadata. The row is omitted when neither supplies a version.
+The current release version appears at the bottom of General Settings in the active language. The read-only Desktop carrier field `dshDesktop.productVersion` takes precedence, followed by the build’s `DSH_CLIENT_PRODUCT_VERSION` and then `DSH_CLIENT_VERSION`. Complete product builds read the product value from `release/manifest.json`; the Harness package version remains separate. The row is omitted when no version is available.
 
 The Coding Tools switch controls the shared `ui-settings.enabled` preference described by [ui-settings](../ui-settings/README.md#use-this-package). It is available in both Web and desktop, follows accepted changes immediately, and disables duplicate input while a write settles. A failed write displays localized retry guidance.
 

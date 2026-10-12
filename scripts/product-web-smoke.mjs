@@ -187,8 +187,12 @@ export async function qualify(archive, reports) {
       return page.getByRole('dialog', { name: 'Settings', exact: true })
     }
     let page = await start()
+    await page.getByText(`${build.version}-${build.sourceRevision.slice(0, 7)}`, { exact: true }).waitFor()
     await page.screenshot({ path: join(reports, 'home.png') })
     let dialog = await settings(page)
+    await dialog.getByText(`Current version: ${build.version}`, { exact: true }).waitFor()
+    await page.screenshot({ path: join(reports, 'version.png') })
+    report.stages.push('product-version-in-home-and-general-settings')
     await dialog.getByRole('button', { name: 'Models', exact: true }).click()
     await dialog.getByRole('button', { name: 'Add model provider', exact: true }).waitFor()
     await page.screenshot({ path: join(reports, 'models.png') })

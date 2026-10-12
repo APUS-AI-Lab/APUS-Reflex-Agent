@@ -28,6 +28,9 @@ const CLIENT_COMMIT_HASH_VARIABLE = 'DSH_CLIENT_COMMIT_HASH'
 /** Public variable carrying the repository package version embedded in client artifacts. */
 const CLIENT_VERSION_VARIABLE = 'DSH_CLIENT_VERSION'
 
+/** Public product version, distinct from the Harness package version. */
+const CLIENT_PRODUCT_VERSION_VARIABLE = 'DSH_CLIENT_PRODUCT_VERSION'
+
 /** Repository-relative path of the complete client build record. */
 export const CLIENT_BUILD_RECORD_PATH = '.dsh-build/client-build-environment.json'
 
@@ -84,6 +87,28 @@ export function repositoryVersion(root: string): string {
 }
 
 /**
+ * Read the optional product release version without accepting an ambient override.
+ * @param root - repository root containing release/manifest.json when building a product.
+ * @returns the product version, or undefined for a checkout without a product manifest.
+ */
+export function repositoryProductVersion(root: string): string | undefined {
+  const path = resolve(root, 'release/manifest.json')
+  let source: string
+  try {
+    source = readFileSync(path, 'utf8')
+  } catch (error) {
+    if (isObject(error) && error.code === 'ENOENT') return undefined
+    throw error
+  }
+  const manifest: unknown = JSON.parse(source)
+  if (!isObject(manifest) || typeof manifest.version !== 'string'
+    || !/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(manifest.version)) {
+    throw new Error('release/manifest.json has an invalid product version')
+  }
+  return manifest.version
+}
+
+/**
  * Read whether Git reports any staged, unstaged, untracked, or submodule change.
  * @param root - repository root whose worktree is inspected.
  * @returns true or false inside a Git worktree; undefined without Git metadata.
@@ -123,9 +148,12 @@ export function repositoryClientBuildEnvironment(
   delete inherited.DSH_CLIENT_COMMIT_HASH
   delete inherited.DSH_CLIENT_GIT_DIRTY
   delete inherited.DSH_CLIENT_VERSION
+  delete inherited.DSH_CLIENT_PRODUCT_VERSION
+  const productVersion = repositoryProductVersion(root)
   const dirty = repositoryGitDirty(root)
   return {
     ...inherited,
+    ...(productVersion === undefined ? {} : { DSH_CLIENT_PRODUCT_VERSION: productVersion }),
     DSH_CLIENT_COMMIT_HASH: repositoryCommitHash(root, environment),
     ...(dirty === true ? { DSH_CLIENT_GIT_DIRTY: 'true' } : {}),
     DSH_CLIENT_VERSION: repositoryVersion(root),
@@ -142,7 +170,9 @@ export function officialClientBuildEnvironment(
   root: string,
   environment: NodeJS.ProcessEnv = process.env,
 ): Readonly<Record<`DSH_CLIENT_${string}`, string>> {
+  const productVersion = repositoryProductVersion(root)
   return {
+    ...(productVersion === undefined ? {} : { DSH_CLIENT_PRODUCT_VERSION: productVersion }),
     DSH_CLIENT_COMMIT_HASH: repositoryCommitHash(root, environment),
     DSH_CLIENT_VERSION: repositoryVersion(root),
     ...OFFICIAL_CLIENT_BUILD_ENVIRONMENT,
@@ -198,7 +228,12 @@ export function resolveClientBuildEnvironment(
     if (version === undefined) {
       throw new Error(`${CLIENT_VERSION_VARIABLE} is required for the official client build profile`)
     }
+    const productVersion = environment[CLIENT_PRODUCT_VERSION_VARIABLE]
+    if (productVersion !== undefined && !/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(productVersion)) {
+      throw new Error(`${CLIENT_PRODUCT_VERSION_VARIABLE} must be a product version from repository metadata`)
+    }
     return {
+      ...(productVersion === undefined ? {} : { DSH_CLIENT_PRODUCT_VERSION: productVersion }),
       DSH_CLIENT_COMMIT_HASH: commitHash,
       DSH_CLIENT_VERSION: version,
       ...OFFICIAL_CLIENT_BUILD_ENVIRONMENT,

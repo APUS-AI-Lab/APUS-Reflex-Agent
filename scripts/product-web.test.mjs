@@ -7,7 +7,7 @@ import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSyn
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { digest, inventoryName, linuxNativePackage, payloadFiles, verifyWebRuntime } from './product-web-package.mjs'
+import { digest, inventoryName, linuxNativePackage, payloadFiles, verifyWebRuntime, verifyProductClientBuild } from './product-web-package.mjs'
 import { launchOptions } from './product-web-launch.mjs'
 import { readinessUrl, redact, smokeEnvironment, verifyPayload, verifyPublishedInventory, verifyHttpAuthentication, verifySandboxExecution } from './product-web-smoke.mjs'
 
@@ -160,4 +160,28 @@ test('published inventory references the named release file and the extracted ru
   assert.throws(() => verifyPublishedInventory(directory, build, { ...runtime, dependencyInventory: { ...runtime.dependencyInventory, sha256: 'changed' } }), /metadata differs/)
   writeFileSync(file, 'changed inventory')
   assert.throws(() => verifyPublishedInventory(directory, build, runtime), /file differs/)
+})
+
+test('collector verifies product version and clean commit against the complete client artifact record', t => {
+  const directory = fixture(t)
+  mkdirSync(join(directory, 'apps/web/dist'), { recursive: true })
+  writeFileSync(join(directory, 'apps/web/dist/index.html'), '<main>fixture</main>')
+  const version = '0.1.0'
+  const revision = '0123456789abcdef0123456789abcdef01234567'
+  const module = new URL('./client-build-environment.ts', import.meta.url).href
+  const writeRecord = environment => execFileSync(process.execPath,
+    ['--import', fileURLToPath(import.meta.resolve('tsx/esm')), '--input-type=module', '-e',
+      `import { writeClientBuildRecord } from ${JSON.stringify(module)}; writeClientBuildRecord(process.argv[1], JSON.parse(process.argv[2]));`,
+      directory, JSON.stringify(environment)], { cwd: directory, stdio: 'pipe', timeout: 60_000 })
+  const environment = { DSH_CLIENT_VERSION: '1.2.3', DSH_CLIENT_PRODUCT_VERSION: version, DSH_CLIENT_COMMIT_HASH: revision.slice(0, 7) }
+  writeRecord(environment)
+  verifyProductClientBuild(directory, version, revision)
+  for (const change of [{ DSH_CLIENT_PRODUCT_VERSION: undefined }, { DSH_CLIENT_PRODUCT_VERSION: '9.9.9' },
+    { DSH_CLIENT_COMMIT_HASH: 'fffffff' }, { DSH_CLIENT_GIT_DIRTY: 'true' }]) {
+    writeRecord({ ...environment, ...change })
+    assert.throws(() => verifyProductClientBuild(directory, version, revision), /must match the clean product/)
+  }
+  writeRecord(environment)
+  writeFileSync(join(directory, 'apps/web/dist/index.html'), '<main>stale</main>')
+  assert.throws(() => verifyProductClientBuild(directory, version, revision), /artifacts differ/)
 })

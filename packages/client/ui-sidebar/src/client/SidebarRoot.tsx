@@ -40,7 +40,8 @@ const SCROLLBAR_LINGER_MS = 2000
 
 /** Format complete-build metadata for the local brand badge. */
 function localBuildVersion(): string | undefined {
-  const version = process.env.DSH_CLIENT_VERSION
+  const carrier = (globalThis as typeof globalThis & { dshDesktop?: { readonly productVersion?: string } }).dshDesktop
+  const version = carrier?.productVersion ?? process.env.DSH_CLIENT_PRODUCT_VERSION ?? process.env.DSH_CLIENT_VERSION
   if (version === undefined) return undefined
   const commit = process.env.DSH_CLIENT_COMMIT_HASH
   return version

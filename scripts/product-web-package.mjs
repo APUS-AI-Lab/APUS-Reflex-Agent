@@ -40,6 +40,20 @@ export function verifyWebRuntime(runtime, revision) {
   }
 }
 
+/** Reject stale client bytes, a missing product version, or metadata from another commit. */
+export function verifyProductClientBuild(base, version, revision) {
+  const module = new URL('./client-build-environment.ts', import.meta.url).href
+  const script = `import { readClientBuildRecord } from ${JSON.stringify(module)};
+const environment = readClientBuildRecord(process.argv[1]).environment;
+if (environment.DSH_CLIENT_PRODUCT_VERSION !== process.argv[2]
+  || environment.DSH_CLIENT_COMMIT_HASH !== process.argv[3].slice(0, 7)
+  || environment.DSH_CLIENT_GIT_DIRTY !== undefined) {
+  throw new Error('Web client build must match the clean product version and source commit');
+}`
+  execFileSync(process.execPath, ['--import', fileURLToPath(import.meta.resolve('tsx/esm')), '--input-type=module', '-e',
+    script, base, version, revision], { cwd: base, stdio: ['ignore', 'pipe', 'pipe'], timeout: 60_000 })
+}
+
 /** Create the tarball and independent Web release metadata; never publish it. */
 export function packageWeb(base = root) {
   if (process.platform !== 'linux' || process.arch !== 'x64') throw new Error('Build Web archives on a native Linux x64 runner.')
@@ -47,6 +61,7 @@ export function packageWeb(base = root) {
   const git = args => execFileSync('git', args, { cwd: base, encoding: 'utf8' }).trim()
   if (git(['status', '--porcelain'])) throw new Error('Web packaging requires a clean source checkout.')
   const revision = git(['rev-parse', 'HEAD'])
+  verifyProductClientBuild(base, manifest.version, revision)
   const prepared = join(base, 'frontend/.build/system3-runtime')
   const runtime = json(join(prepared, 'runtime-manifest.json'))
   verifyWebRuntime(runtime, revision)

@@ -25,6 +25,7 @@ afterEach(() => {
   cleanup()
   delete document.documentElement.dataset.platform
   vi.unstubAllEnvs()
+  vi.unstubAllGlobals()
   vi.useRealTimers()
 })
 
@@ -154,9 +155,13 @@ describe('SidebarRoot shell', () => {
   })
 
   it.each([
-    [{ DSH_CLIENT_VERSION: '1.2.3' }, '1.2.3'],
-    [{ DSH_CLIENT_COMMIT_HASH: 'abcdef0', DSH_CLIENT_VERSION: '1.2.3' }, '1.2.3-abcdef0'],
-  ])('omits unavailable build-version suffixes from %j', (environment, expected) => {
+    [{ DSH_CLIENT_VERSION: '1.2.3' }, '1.2.3', undefined],
+    [{ DSH_CLIENT_COMMIT_HASH: 'abcdef0', DSH_CLIENT_VERSION: '1.2.3' }, '1.2.3-abcdef0', undefined],
+    [{ DSH_CLIENT_PRODUCT_VERSION: '0.1.0', DSH_CLIENT_VERSION: '1.2.3' }, '0.1.0', undefined],
+    [{ DSH_CLIENT_PRODUCT_VERSION: '0.1.0', DSH_CLIENT_COMMIT_HASH: 'abcdef0', DSH_CLIENT_VERSION: '1.2.3' }, '0.1.0-abcdef0', undefined],
+    [{ DSH_CLIENT_PRODUCT_VERSION: '0.0.9', DSH_CLIENT_VERSION: '1.2.3' }, '0.1.0', { productVersion: '0.1.0' }],
+  ])('renders the preferred product version and available suffixes from %j', (environment, expected, carrier) => {
+    vi.stubGlobal('dshDesktop', carrier)
     for (const [name, value] of Object.entries(environment)) vi.stubEnv(name, value)
     render(<SidebarRoot
       collapsed={false} width={300}

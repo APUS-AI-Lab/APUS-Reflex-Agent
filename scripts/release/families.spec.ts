@@ -30,6 +30,9 @@ function buildFixture(environment: Record<string, string>): string {
   const root = mkdtempSync(join(tmpdir(), 'dsh-release-build-'))
   roots.push(root)
   write(join(root, 'package.json'), `${JSON.stringify({ version: environment.DSH_CLIENT_VERSION ?? '0.0.1' })}\n`)
+  if (environment.DSH_CLIENT_PRODUCT_VERSION !== undefined) {
+    write(join(root, 'release/manifest.json'), `${JSON.stringify({ version: environment.DSH_CLIENT_PRODUCT_VERSION })}\n`)
+  }
   write(join(root, 'apps/web/dist/index.html'), '<main></main>')
   write(join(root, 'packages/client/example/lib/client.js'), 'module.exports = {}\n')
   writeClientBuildRecord(root, environment)

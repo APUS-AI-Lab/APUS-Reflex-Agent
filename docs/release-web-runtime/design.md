@@ -36,6 +36,10 @@ The launcher selects bundled Node by an absolute package-relative path, keeps da
 
 The collector fails on dirty source, mismatched revision or target, missing server/browser/native assets, dependency inventory drift, an unexpected Node version, or a link that escapes the package. Build metadata records source revision, source archive hash, lockfile hashes, bundled Node hash, and the final archive hash. Licenses remain with packages; root notices and the full Node license also ship in `licenses/`.
 
+## Product version
+
+Complete builds read the optional `release/manifest.json` product version into `DSH_CLIENT_PRODUCT_VERSION`, replacing any inherited value. An absent manifest preserves generic Harness builds; an existing invalid manifest fails. `DSH_CLIENT_VERSION` remains the Harness package version. Default and official builds carry both values. Settings and the sidebar prefer the Desktop carrier’s product version, then the product build value, then the Harness version. Collection verifies the product value, commit and clean state through the existing artifact-bound client build record. Native qualification checks the General Settings version and home badge against the release receipt.
+
 ## Verification
 
 Unit tests run without generated Harness artifacts. Native qualification executes the shipped launcher with a fresh profile from an extracted archive outside the checkout. Its process environment contains no inherited API keys and its PATH contains no Node, Git, or pnpm. Readiness comes from the CLI's authenticated loopback URL, not a fixed sleep. The extracted bundled Node must match the version and target recorded in the build receipt. The bundled Landlock launcher must report enforcement, run a shell and Node with writes allowed in a private directory, and deny a write outside that directory. Browser checks exercise the actual Models and Reflex pages. A persistent profile survives restart. Screenshots and a redacted report accompany each candidate; authenticated URLs and tokens never enter those reports. Qualification does not claim a successful external model task without provider credentials.
