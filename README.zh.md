@@ -10,11 +10,13 @@ APUS 将连续的模型调用组织成围绕目标持续推进的工作：理解
 
 APUS 将模型推理与执行、权限及持久 Session 历史分开管理。项目处于 **开发者预览阶段**。[发布准备评审](docs/dev-continuum-reflex-integration/release-readiness.zh.md) 记录了已验证行为和仍需完成的验收。
 
-本次以前后端合并的一体化仓库交付：保留原 Harness 为主仓，桌面客户端纳入 `frontend/`，统一管理配置、构建与打包。下载安装包后无需另外安装或启动后端；一体化 Release 仍在准备中。
+本次以前后端合并的一体化仓库交付：保留原 Harness 为主仓，桌面客户端纳入 `frontend/`，统一管理配置、构建与打包。下载安装包后无需另外安装或启动后端；Windows 预览安装包仍在准备中。
 
 ## 下载桌面客户端
 
-前往 [Releases](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/releases) 查看已发布安装包、支持平台与验收情况。一体化 `0.1.0`（`v0.1.0`）未签名预览版正在准备中，正式签名尚未配置；安装包以实际发布的附件为准。GitHub 的“Source code”压缩包是源码，不是可安装应用。
+仓库当前为私有，Release 下载需要仓库访问权限；管理员公开后才能匿名下载。
+
+前往 [Releases](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/releases) 查看已发布安装包、支持平台与验收情况。`0.1.0`（`v0.1.0`）保留现有 macOS Apple Silicon 附件，新增 Windows x64 未签名 NSIS 安装包正在准备中，须通过 Windows 原生安装与启动验收后发布。真实模型首个任务尚未验证；请按教程自行配置模型。安装包以实际发布的附件为准。GitHub 的“Source code”压缩包是源码，不是可安装应用；Web 通过源码启动，不提供独立 Web 安装包。
 
 桌面安装包内置运行时，使用者无需另装 Git、Node.js 或后端。按[安装教程](docs/feat-integrated-product/installation.zh.md)安装，再按[模型配置教程](docs/feat-integrated-product/configuration.zh.md)接入自己的服务商。预览版可能存在兼容性变化，授予文件访问权限前请阅读 [SAFETY.zh.md](SAFETY.zh.md)。
 

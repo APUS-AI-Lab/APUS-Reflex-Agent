@@ -10,11 +10,13 @@ APUS turns a sequence of model calls into work that can continue around a goal: 
 
 APUS separates model reasoning from execution, permissions and durable Session history. It is a **developer preview**. The [release readiness review](docs/dev-continuum-reflex-integration/release-readiness.md) records what has been tested and what still needs acceptance.
 
-This integration merges frontend and backend delivery into the existing Harness repository: the desktop client lives in `frontend/`, with configuration, builds and packaging managed together. Desktop installers bundle the backend, so users do not start or install a separate service. The integrated release is still being prepared.
+This integration merges frontend and backend delivery into the existing Harness repository: the desktop client lives in `frontend/`, with configuration, builds and packaging managed together. Desktop installers bundle the backend, so users do not start or install a separate service. The Windows preview installer is still being prepared.
 
 ## Download the desktop app
 
-Visit [Releases](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/releases) for published installers, supported platforms and validation results. The integrated `0.1.0` (`v0.1.0`) unsigned preview is being prepared; production signing is not configured. Installers are available only when listed as release assets. GitHub’s “Source code” archives contain source files, not installable applications.
+The repository is currently private: Release downloads require repository access until an administrator makes it public.
+
+Visit [Releases](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/releases) for published installers, supported platforms and validation results. `0.1.0` (`v0.1.0`) retains the existing macOS Apple Silicon assets. A Windows x64 unsigned NSIS installer is being prepared and will be published only after native Windows installation and launch validation. The first task with a real model has not been validated; configure your own model using the guide. Installers are available only when listed as release assets. GitHub’s “Source code” archives contain source files, not installable applications. Web runs from source; it has no standalone installer.
 
 The desktop distribution bundles its runtime: users do not need Git, Node.js or a separate backend. Follow [installation](docs/feat-integrated-product/installation.md) and [model configuration](docs/feat-integrated-product/configuration.md) using your own provider credentials. Preview builds can break compatibility. Read [SAFETY.md](SAFETY.md) before granting file access.
 

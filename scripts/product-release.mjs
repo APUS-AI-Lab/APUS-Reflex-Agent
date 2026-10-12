@@ -65,6 +65,23 @@ export function verifyReceipt(receipt, manifest, revision, target, hashFile, bas
   return directory
 }
 
+/** Write supporting release files after the collector has verified the runtime and installers. */
+export async function writeReleaseSupportAssets({ base, output, manifest, runtime, revision, target, assets }) {
+  const [platform, arch] = target.split('-')
+  releaseAssetNames(platform, arch)
+  const suffix = platform === 'win32' ? `-${target}` : ''
+  const names = { info: `build-info${suffix}.json`, licenses: `LICENSES${suffix}.zip`, inventory: `runtime-dependencies${suffix}.json`, checksums: `SHA256SUMS${suffix}` }
+  const inventory = { ...runtime.dependencyInventory, path: names.inventory }
+  copyFileSync(join(base, 'frontend/.build/system3-runtime', runtime.dependencyInventory.path), join(output, names.inventory))
+  const licenseRoot = join(base, 'frontend/.build/licenses')
+  const { zipSync } = await import('fflate')
+  writeFileSync(join(output, names.licenses), zipSync(Object.fromEntries(readdirSync(licenseRoot).map(name => [name, readFileSync(join(licenseRoot, name))]))))
+  writeFileSync(join(output, names.info), `${JSON.stringify({ ...manifest, sourceRevision: revision, target, harnessVersion: runtime.version, runtimeDependencyInventory: inventory, signing: 'unsigned-preview', lockfiles: { pnpm: digest(join(base, 'pnpm-lock.yaml')), npm: digest(join(base, 'frontend/package-lock.json')) }, assets: assets.map(name => ({ name, sha256: digest(join(output, name)) })) }, null, 2)}\n`)
+  const files = [...assets, names.info, names.licenses, names.inventory]
+  writeFileSync(join(output, names.checksums), `${files.map(name => `${digest(join(output, name))}  ${name}`).join('\n')}\n`)
+  return names
+}
+
 /** Collect only clean, same-commit runtime artifacts; never upload from this script. */
 export async function collectRelease(unsigned, base = root) {
   const manifest = checkRelease(base)
@@ -77,7 +94,7 @@ export async function collectRelease(unsigned, base = root) {
   const runtime = json(join(base, 'frontend/.build/system3-runtime/runtime-manifest.json'))
   if (runtime.sourceRevision !== revision || runtime.sourceDirty || runtime.mode !== 'deployed' || runtime.platform !== process.platform || runtime.arch !== process.arch) throw new Error('Rebuild the deployed runtime from this clean commit and platform before collecting.')
   const runtimeRoot = join(base, 'frontend/.build/system3-runtime')
-  const inventory = dependencyInventory.verifyDependencyInventory(runtimeRoot, runtime)
+  dependencyInventory.verifyDependencyInventory(runtimeRoot, runtime)
   const receipt = json(join(base, '.artifacts/product-build-receipt.json'))
   const directory = verifyReceipt(receipt, manifest, revision, target, digest, base)
   const output = join(base, '.artifacts/product-release', manifest.version, target)
@@ -90,13 +107,7 @@ export async function collectRelease(unsigned, base = root) {
   }
   mkdirSync(output, { recursive: true })
   for (const name of assets) copyFileSync(join(directory, name), join(output, name))
-  copyFileSync(join(runtimeRoot, inventory.path), join(output, inventory.path))
-  const licenseRoot = join(base, 'frontend/.build/licenses')
-  const { zipSync } = await import('fflate')
-  writeFileSync(join(output, 'LICENSES.zip'), zipSync(Object.fromEntries(readdirSync(licenseRoot).map(name => [name, readFileSync(join(licenseRoot, name))]))))
-  writeFileSync(join(output, 'build-info.json'), `${JSON.stringify({ ...manifest, sourceRevision: revision, target, harnessVersion: runtime.version, runtimeDependencyInventory: inventory, signing: 'unsigned-preview', lockfiles: { pnpm: digest(join(base, 'pnpm-lock.yaml')), npm: digest(join(base, 'frontend/package-lock.json')) }, assets: assets.map(name => ({ name, sha256: digest(join(output, name)) })) }, null, 2)}\n`)
-  const names = [...assets, 'build-info.json', 'LICENSES.zip', inventory.path]
-  writeFileSync(join(output, 'SHA256SUMS'), `${names.map(name => `${digest(join(output, name))}  ${name}`).join('\n')}\n`)
+  await writeReleaseSupportAssets({ base, output, manifest, runtime, revision, target, assets })
   console.log(`Release inputs collected: ${output}. Install and verify before publishing.`)
 }
 

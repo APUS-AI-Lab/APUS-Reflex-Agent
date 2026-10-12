@@ -4,77 +4,109 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Existing product tag matching release/manifest.json
+        description: Product version label matching the manifest (no existing tag required)
         required: true
+        default: v0.1.0
         type: string
+      target:
+        description: Native installer targets to build and review
+        required: true
+        default: windows
+        type: choice
+        options:
+          - windows
+          - mac
+          - all
 
 permissions:
   contents: read
 
 concurrency:
-  group: apus-preview-${{ inputs.tag }}
+  group: apus-preview-${{ github.ref }}-${{ inputs.target }}
   cancel-in-progress: false
 
 jobs:
   build:
-    runs-on: macos-15
-    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(inputs.target == 'all' && '[{"runner":"windows-latest","target":"win32-x64"},{"runner":"macos-15","target":"darwin-arm64"}]' || inputs.target == 'mac' && '[{"runner":"macos-15","target":"darwin-arm64"}]' || '[{"runner":"windows-latest","target":"win32-x64"}]') }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 120
     env:
       DSH_TELEMETRY_DISABLED: '1'
       CSC_IDENTITY_AUTO_DISCOVERY: 'false'
     steps:
+      - name: Prepare native Windows checkout and patch utility
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          git config --global core.longpaths true
+          if ($LASTEXITCODE -ne 0) { throw "Could not enable Git long paths" }
+          git config --global core.autocrlf false
+          if ($LASTEXITCODE -ne 0) { throw "Could not disable Git newline conversion" }
+          $gitRoot = Split-Path (Split-Path (Get-Command git).Source -Parent) -Parent
+          $patch = Join-Path $gitRoot 'usr/bin/patch.exe'
+          if (!(Test-Path -LiteralPath $patch)) { throw "GNU patch is missing from the Git installation" }
+          & $patch --version
+          if ($LASTEXITCODE -ne 0) { throw "GNU patch failed to start" }
+          "SYSTEM3_PATCH_COMMAND=$patch" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
       - uses: actions/checkout@v6
         with:
-          ref: refs/tags/${{ inputs.tag }}
+          ref: ${{ github.sha }}
           persist-credentials: false
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
           cache: pnpm
-      - name: Validate selected tag
+      - name: Validate source commit, version label, and native target
         env:
           PRODUCT_TAG: ${{ inputs.tag }}
-        run: node --input-type=module -e 'import { checkRelease } from "./scripts/product-release.mjs"; checkRelease(process.cwd(), process.env.PRODUCT_TAG)'
-      - name: Prepare integrated product
-        run: pnpm run setup
-      - name: Validate desktop behavior
+          PRODUCT_TARGET: ${{ matrix.target }}
+        run: node --input-type=module -e "import { checkRelease } from './scripts/product-release.mjs'; import { execFileSync } from 'node:child_process'; checkRelease(process.cwd(), process.env.PRODUCT_TAG); if (execFileSync('git', ['rev-parse', 'HEAD'], { encoding:'utf8' }).trim() !== process.env.GITHUB_SHA) throw new Error('Checkout differs from workflow commit'); if (process.platform + '-' + process.arch !== process.env.PRODUCT_TARGET) throw new Error('Runner does not match native target')"
+      - name: Install locked Harness dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Install locked desktop dependencies
         working-directory: frontend
-        run: |
-          npm run typecheck
-          npm test -- --no-file-parallelism
+        run: npm ci
       - name: Build unsigned preview installers and checksums
         run: pnpm run package:product --unsigned
-      - name: Upload reviewable installers
+      - name: Typecheck desktop behavior
+        working-directory: frontend
+        run: npm run typecheck
+      - name: Test desktop behavior
+        working-directory: frontend
+        run: npm test -- --no-file-parallelism
+      - name: Validate Windows smoke checks
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: node --test scripts/product-windows-smoke.test.mjs
+      - name: Install and verify the Windows product
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $version = (Get-Content -Raw release/manifest.json | ConvertFrom-Json).version
+          $installer = Join-Path $PWD ".artifacts/product-release/$version/win32-x64/apus-reflex-harness-windows-x64-setup.exe"
+          $reports = Join-Path $PWD '.artifacts/product-windows-smoke'
+          node scripts/product-windows-smoke.mjs --installer $installer --report-dir $reports
+      - name: Upload installers for manual review
+        if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: apus-preview-mac-arm64
+          name: apus-preview-${{ matrix.target }}-${{ github.run_id }}
           path: .artifacts/product-release/
           include-hidden-files: true
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 14
-
-  draft:
-    needs: build
-    runs-on: ubuntu-24.04
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v6
+      - name: Upload installation reports and build receipt
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
         with:
-          ref: refs/tags/${{ inputs.tag }}
-          persist-credentials: false
-      - uses: actions/download-artifact@v4
-        with:
-          name: apus-preview-mac-arm64
-          path: release-inputs
-      - name: Create a draft for installation review
-        env:
-          GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ inputs.tag }}
-          GH_REPO: ${{ github.repository }}
-        run: |
-          version=$(node -p 'JSON.parse(require("node:fs").readFileSync("release/manifest.json", "utf8")).version')
-          directory="release-inputs/$version/darwin-arm64"
-          (cd "$directory" && sha256sum -c SHA256SUMS)
-          gh release create "$RELEASE_TAG" "$directory"/* --verify-tag --draft --prerelease --title "APUS Reflex Harness $version" --notes-file release/notes.md
+          name: apus-review-${{ matrix.target }}-${{ github.run_id }}
+          path: |
+            .artifacts/product-windows-smoke/
+            .artifacts/product-build-receipt.json
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 14
