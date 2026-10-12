@@ -3,11 +3,11 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/feat-integrated-product/configuration.md
 /configure-models-and-run-a-first-task:
-  en: 6e9f6e52d8867e61
-  zh: b646f6c3461f0a05
+  en: ce4701ad8153a184
+  zh: 4ed91c03e9b57068
 /configure-models-and-run-a-first-task/configure-a-provider:
-  en: 51cd97115a427868
-  zh: 43f4e3e77f62676d
+  en: c4d924e2db4c455f
+  zh: b14f1a047b4eecaa
 /configure-models-and-run-a-first-task/verify-a-task:
   en: e6ee84aea08b7632
   zh: 3fbde41da4c531c6
@@ -15,8 +15,8 @@
   en: fb91fd809a0dee5a
   zh: 25bca4b494ddf764
 /configure-models-and-run-a-first-task/optional-reflex-decision-service:
-  en: dab379171522e7b6
-  zh: 0a32b10427caa47c
+  en: b463ea6b074b528d
+  zh: fb994d72a1f53ab4
 /configure-models-and-run-a-first-task/check-which-capabilities-are-enabled:
   en: 5e72e6c799e337c4
   zh: fcf96345acf88e8f

@@ -34,7 +34,7 @@ Earlier Turns keep their own route line from the projection's `history`. While t
 
 This experimental client mounts its own typed Reflex Remote; the shared API Remotes package does not depend on the experimental provider. Disposal withdraws the UI before the Remote.
 
-The shared Web/Electron client registers **Settings → Reflex model configuration** as a dedicated top-level section. It stages the endpoint, model, effort, deadline and credential reference, saves through ConfigForms/Credentials, and tests an unsaved candidate through the authenticated `reflex` Remote namespace. Credential literals are never read back or written to browser storage. Deployment-owned environment credentials remain read-only; a separate managed reference can hold a replacement.
+The shared Web/Electron client registers **Settings → Reflex model configuration** as a dedicated top-level section. It stages the endpoint, model, OpenJev/Typesafe protocol, effort, deadline and credential reference, saves through ConfigForms/Credentials, and tests an unsaved candidate with its selected protocol through the authenticated `reflex` Remote namespace. The protocol persists as `openjev` or `typesafe`; changing it invalidates old probe results. Typesafe neither sends the effort extension nor requires `/health`. Credential literals are never read back or written to browser storage. Deployment-owned environment credentials remain read-only; a separate managed reference can hold a replacement.
 
 Before saving a new API key, the page checks its credential reference. An already configured reference is rejected without changing configuration or credentials; key rotation requires a new dedicated reference.
 

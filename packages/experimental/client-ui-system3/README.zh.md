@@ -37,7 +37,7 @@ kind: "package-reference"
 
 本实验性客户端自行挂载 Reflex 的类型化 Remote；通用 API Remotes 不依赖该实验模块。客户端卸载时先撤销界面，再撤销 Remote。
 
-Web/Electron 共享客户端将“设置 → Reflex 模型配置”注册为独立顶级页面。页面暂存服务地址、模型、决策强度、超时和凭据引用，通过 ConfigForms/Credentials 保存，通过鉴权后的 `reflex` Remote 命名空间测试未保存的配置。凭据原文不会回读或写入浏览器存储。部署环境提供的密钥保持只读；用户可通过独立的受管理引用保存替代密钥。
+Web/Electron 共享客户端将“设置 → Reflex 模型配置”注册为独立顶级页面。页面暂存服务地址、模型、OpenJev/Typesafe 协议、决策强度、超时和凭据引用，通过 ConfigForms/Credentials 保存，通过鉴权后的 `reflex` Remote 命名空间按草稿所选协议测试未保存的配置。协议以 `openjev` 或 `typesafe` 保存，修改协议使旧探测结果失效；Typesafe 不发送 effort 扩展或要求 `/health`。凭据原文不会回读或写入浏览器存储。部署环境提供的密钥保持只读；用户可通过独立的受管理引用保存替代密钥。
 
 保存新 API Key 前，页面先检查凭据引用；若引用已配置，则拒绝覆盖，配置与密钥均不修改。轮换密钥必须使用新的专用引用名。
 

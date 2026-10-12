@@ -52,6 +52,7 @@ export interface ReflexCardState extends SettingsFormShell {
   endpoint: SettingsFieldState
   model: SettingsFieldState
   effort: SettingsFieldState
+  protocol: SettingsFieldState
   timeoutMs: SettingsFieldState
   apiKeyEnv: SettingsFieldState
   /** Last unsaved connection probe. */
@@ -135,6 +136,8 @@ export class ReflexCardController {
       },
       [validatedText('endpoint', validEndpoint), validatedText('model', text => text.length > 0 && text.length <= 256),
         validatedText('effort', text => text === 'low' || text === 'high'),
+        { ...validatedText('protocol', text => text === 'openjev' || text === 'typesafe'),
+          format: value => typeof value === 'string' ? value : 'openjev' },
         { ...settingsNumberField('timeoutMs'), parse: (text) => {
           const value = Number(text)
           return Number.isInteger(value) && value > 0 && value <= 2147483647 ? { kind: 'set', value } : undefined
@@ -156,7 +159,7 @@ export class ReflexCardController {
       saving: this.checkingCredential || this.form.shell().saving,
       failed: this.credentialSaveError !== undefined || this.form.shell().failed,
       endpoint: this.form.field('endpoint'), model: this.form.field('model'), effort: this.form.field('effort'),
-      timeoutMs: this.form.field('timeoutMs'), apiKeyEnv: this.form.field('apiKeyEnv'),
+      protocol: this.form.field('protocol'), timeoutMs: this.form.field('timeoutMs'), apiKeyEnv: this.form.field('apiKeyEnv'),
       probe: this.probe, runtime: this.runtime, credentialFailed: this.credentialFailed,
       credentialSaveError: this.credentialSaveError, partialSave: this.partialSave,
       apiKey: this.form.field(API_KEY_FIELD),
@@ -335,7 +338,7 @@ export class ReflexCardController {
       const response = await this.ctx.remote.reflex.testConnection({
         endpoint: this.form.field('endpoint').text.trim(), model: this.form.field('model').text.trim(),
         effort: this.form.field('effort').text.trim() as 'high' | 'low',
-        protocol: this.scope.getSnapshot().value?.protocol ?? 'openjev',
+        protocol: this.form.field('protocol').text.trim() as 'openjev' | 'typesafe',
         timeoutMs: Number(this.form.field('timeoutMs').text),
         ...apiKeyEnv ? { apiKeyEnv } : {}, ...apiKey ? { apiKey } : {},
       }, controller.signal)
