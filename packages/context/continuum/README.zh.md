@@ -37,7 +37,7 @@ Session 事件使用现有 persistence backend；完成 `ctx.sessions.flush(sess
 <a id="understand-the-implementation"></a>
 ## 理解实现
 
-`MemoryRecordStore` 要求调用方提供已观察到的 revision，并返回不可变快照。`ContinuumMemory` 为每个 Agent 从 Agent Session 恢复投影，并把显式的 create/supersede/deactivate 调用持久化为 `continuum/memory-record`。在 `user-message` 准入模式下，已提交的人类 `user/message` 会在 Session append 完成后转换为记录；生成的 recall 消息和其他来源会被忽略。controller 会在提交变更后维护可丢弃的派生索引，索引候选保留与直接检索相同的词法子串匹配；折叠事件不会调用模型，也不会创建第二套持久化事实源。
+`MemoryRecordStore` 要求调用方提供已观察到的 revision，并返回不可变快照。`ContinuumMemory` 在每个 Agent 的同一所属投影中保存 controller 和记录 store，从 Agent Session 恢复该投影，并把显式的 create/supersede/deactivate 调用持久化为 `continuum/memory-record`。在 `user-message` 准入模式下，已提交的人类 `user/message` 会在 Session append 完成后转换为记录；生成的 recall 消息和其他来源会被忽略。服务在 Agent 创建后挂载时，仅使用属于同一 Session 的当前发起操作的 Agent；没有所属 Agent 的输入及其他 Session 的输入不会被准入。controller 会在提交变更后维护可丢弃的派生索引，索引候选保留与直接检索相同的词法子串匹配；折叠事件不会调用模型，也不会创建第二套持久化事实源。
 
 -----
 

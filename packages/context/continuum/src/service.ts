@@ -29,6 +29,11 @@ type ContinuumResolvedConfig = Omit<ContinuumConfig, 'enabled' | 'mode'> & {
   readonly mode: Volatile<'off' | 'shadow' | 'active'>
 }
 
+interface MemoryProjection {
+  readonly controller: ContinuumMemoryController
+  readonly store: MemoryRecordStore
+}
+
 /** Schemastery validation for {@link ContinuumConfig}. */
 export const ContinuumConfig = z.object({
   enabled: z.boolean().default(false).volatile(),
@@ -90,7 +95,7 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
   static Config = ContinuumConfig
 
   private readonly config: ContinuumConfig | ContinuumResolvedConfig
-  private readonly controllers = new Map<Agent, ContinuumMemoryController>()
+  private readonly projections = new Map<Agent, MemoryProjection>()
   private readonly agentsBySession = new Map<SessionId, Agent>()
 
   constructor(ctx: Context, config: ContinuumConfig | ContinuumResolvedConfig) {
@@ -101,8 +106,8 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
       if (name === 'jev') this.synchronizeControllers()
     })
     ctx.effect(() => () => {
-      for (const controller of this.controllers.values()) controller.setSwitch({ enabled: false, mode: 'off', reflexMounted: false })
-      this.controllers.clear()
+      for (const { controller } of this.projections.values()) controller.setSwitch({ enabled: false, mode: 'off', reflexMounted: false })
+      this.projections.clear()
       this.agentsBySession.clear()
     })
     ctx.inject(['agents'], (ctx) => {
@@ -110,14 +115,14 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
       const retrievalConfig = {
         maxCandidates: config.maxCandidates, maxExcerptBytes: config.maxExcerptBytes, maxTotalBytes: config.maxTotalBytes,
       }
-      installContinuumMemoryControllerContext(ctx, agent => this.controllerWithConfig(agent, {
+      installContinuumMemoryControllerContext(ctx, agent => this.projectionFor(agent, {
         enabled: readSetting(config.enabled), mode: readSetting(config.mode), reflexMounted: ctx.get('jev') !== undefined,
-      }), () => principal, retrievalConfig, () => ctx.get('continuumMemorySelector'))
+      }).controller, () => principal, retrievalConfig, () => ctx.get('continuumMemorySelector'))
     })
     ctx.on('agent/created', ({ agent }) => { this.agentsBySession.set(agent.session.id, agent) })
     ctx.on('agent/disposed', ({ agent }) => {
-      this.controllers.get(agent)?.setSwitch({ enabled: false, mode: 'off', reflexMounted: false })
-      this.controllers.delete(agent)
+      this.projections.get(agent)?.controller.setSwitch({ enabled: false, mode: 'off', reflexMounted: false })
+      this.projections.delete(agent)
       this.agentsBySession.delete(agent.session.id)
     })
     ctx.on('session/event', (session, event) => {
@@ -139,7 +144,7 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
   }
 
   controller(agent: Agent): ContinuumMemoryController {
-    return this.controllerWithConfig(agent, this.switchConfig())
+    return this.projectionFor(agent, this.switchConfig()).controller
   }
 
   create(agent: Agent, record: NewMemoryRecord): MemoryRecord {
@@ -165,7 +170,7 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
 
   private synchronizeControllers(): void {
     const switchConfig = this.switchConfig()
-    for (const controller of this.controllers.values()) controller.setSwitch(switchConfig)
+    for (const { controller } of this.projections.values()) controller.setSwitch(switchConfig)
   }
 
   private switchConfig(): ContinuumMemorySwitch {
@@ -173,24 +178,21 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
   }
 
   private storeFor(agent: Agent): MemoryRecordStore {
-    const controller = this.controller(agent)
-    const store = controllerStores.get(controller)
-    if (store === undefined) throw new Error('Continuum controller store is unavailable')
-    return store
+    return this.projectionFor(agent, this.switchConfig()).store
   }
 
-  private controllerWithConfig(agent: Agent, switchConfig: ContinuumMemorySwitch): ContinuumMemoryController {
-    const existing = this.controllers.get(agent)
+  private projectionFor(agent: Agent, switchConfig: ContinuumMemorySwitch): MemoryProjection {
+    const existing = this.projections.get(agent)
     if (existing !== undefined) {
-      existing.setSwitch(switchConfig)
+      existing.controller.setSwitch(switchConfig)
       return existing
     }
     // oxlint-disable-next-line typescript/no-deprecated -- Existing Session history read; migration deferred.
     const store = foldMemoryRecordEvents(agent.session.snapshotEvents(), new MemoryRecordStore())
     const controller = new ContinuumMemoryController(store, switchConfig)
-    this.controllers.set(agent, controller)
-    controllerStores.set(controller, store)
-    return controller
+    const projection = { controller, store }
+    this.projections.set(agent, projection)
+    return projection
   }
 
   /** Admit one committed human message when the protected automatic mode is enabled. */
@@ -202,8 +204,8 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
       .map(block => block.text).join('\n').trim()
     const scope = this.config.scopes[0]
     if (content.length === 0 || scope === undefined) return
-    const agent = this.agentsBySession.get(session.id) ?? this.ctx.agents.currentInitiator()
-    if (agent === undefined) return
+    const agent = this.agentsBySession.get(session.id) ?? this.ctx.get('agents')?.currentInitiator()
+    if (agent === undefined || agent.session.id !== session.id) return
     const id = createMemoryId(`${String(session.id)}:${String(event.seq)}`)
     const store = this.storeFor(agent)
     if (store.get(id) !== undefined) return
@@ -216,8 +218,6 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
     })
   }
 }
-
-const controllerStores = new WeakMap<ContinuumMemoryController, MemoryRecordStore>()
 
 function readSetting<T extends boolean | 'off' | 'shadow' | 'active'>(value: T | Volatile<T>): T {
   if (typeof value === 'object') return value.get() as T

@@ -190,9 +190,12 @@ it.each(['unload', 'unload-remount', 'isolated-unload'] as const)('handles pendi
   const nextRecall = adapter.requests[2]!.messages.filter(message => message.source?.kind === 'continuum-memory')
   if (change === 'unload') expect(nextRecall).toEqual([])
   else {
-    expect(nextRecall.some(message => message.source?.kind === 'continuum-memory'
-      && selectedIds.every(id => message.source.kind === 'continuum-memory' && message.source.recordIds.includes(id))
-      && message.content.some(block => block.type === 'text' && block.text.includes('The release code is MERIDIAN-731.')))).toBe(true)
+    expect(nextRecall.some((message) => {
+      const source = message.source
+      return source?.kind === 'continuum-memory'
+        && selectedIds.every(id => source.recordIds.includes(id))
+        && message.content.some(block => block.type === 'text' && block.text.includes('The release code is MERIDIAN-731.'))
+    })).toBe(true)
   }
   expect(agent.session.snapshotEvents().some(event => event.type === 'continuum/memory-record'
     && selectedIds.includes(String(event.data.record.id)))).toBe(true)
