@@ -123,15 +123,16 @@ describe('product icon set', () => {
 })
 
 describe('FishLogo', () => {
-  it('renders the fish path in currentColor at the native ratio', () => {
+  it('renders the original bird pixels without depending on a network image', () => {
     const { container } = render(<primitives.FishLogo />)
     const svg = container.querySelector('svg')!
     expect(svg.getAttribute('width')).toBe('24')
-    expect(Number(svg.getAttribute('height'))).toBeCloseTo(17.66, 1)
-    expect(svg.getAttribute('viewBox')).toBe('0 0 23.16 17.04')
-    expect(container.querySelectorAll('path')).toHaveLength(1)
-    expect(container.innerHTML).toContain('currentColor')
-    expect(container.innerHTML).not.toContain('M0 0L23.16')
+    expect(svg.getAttribute('height')).toBe('24')
+    expect(svg.getAttribute('viewBox')).toBe('0 0 64 64')
+    expect(container.querySelectorAll('path')).toHaveLength(0)
+    expect(container.querySelector('image')?.getAttribute('href')).toBe(primitives.BRAND_LOGO_DATA_URI)
+    expect(primitives.BRAND_LOGO_DATA_URI).toMatch(/^data:image\/png;base64,/)
+    expect(svg.getAttribute('aria-hidden')).toBe('true')
   })
 })
 
@@ -142,7 +143,10 @@ describe('BrandWordmark', () => {
     expect(svg.getAttribute('width')).toBe('182')
     expect(svg.getAttribute('viewBox')).toBe('0 0 182 24')
 
+    expect(svg.querySelector('image')?.getAttribute('href')).toBe(primitives.BRAND_LOGO_DATA_URI)
+    expect(svg.getAttribute('aria-label')).toBe('APUS Reflex Harness')
     view.rerender(<primitives.BrandWordmark includeMark={false} />)
+    expect(svg.querySelector('image')).toBeNull()
     expect(svg.getAttribute('width')).toBe('156')
     expect(svg.getAttribute('viewBox')).toBe('26 0 156 24')
   })

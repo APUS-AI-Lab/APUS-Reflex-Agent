@@ -1,4 +1,4 @@
-/** Generate Web and desktop brand assets from the shared APUS vector mark. */
+/** Generate Web and desktop brand assets from the original transparent APUS bird artwork. */
 import { execFileSync } from 'node:child_process'
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -9,13 +9,20 @@ import { packIco, renderTrayIconEntries } from './render-tray-icon.ts'
 
 const web = new URL('../../web/public/', import.meta.url)
 const resources = new URL('../resources/', import.meta.url)
-const mark = await readFile(new URL('brand-mark.svg', web), 'utf8')
-const whiteMark = mark.replace('currentColor', '#fff')
-const appIcon = whiteMark.replace('viewBox="0 0 64 64"', 'width="1024" height="1024" viewBox="0 0 64 64"')
-  .replace('<path', '<rect width="64" height="64" rx="14" fill="#183c66"/><path')
-
-for (const [name, color] of [['favicon.svg', '#000'], ['favicon-dark.svg', '#fff']] as const) {
-  await writeFile(new URL(name, web), mark.replace('currentColor', color))
+const source = await readFile(new URL('brand-logo.webp', web))
+// PNG embedding preserves the supplied decoded pixels and works in native SVG renderers.
+const png = await sharp(source).png().toBuffer()
+const imageUri = `data:image/png;base64,${png.toString('base64')}`
+const mark = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="APUS Reflex Harness"><image width="64" height="64" href="${imageUri}"/></svg>\n`
+const appIcon = mark.replace('viewBox="0 0 64 64"', 'width="1024" height="1024" viewBox="0 0 64 64"')
+await writeFile(new URL('brand-mark.svg', web), mark)
+await writeFile(new URL('../../../website/public/favicon.svg', import.meta.url), mark)
+await writeFile(new URL('../../../packages/client/ui-primitives/src/brand-artwork.ts', import.meta.url),
+  '/** Generated from apps/web/public/brand-logo.webp by generate-brand-assets.ts. */\n'
+  + '/** Original APUS bird pixels, embedded for offline and nested SVG consumers. */\n'
+  + `export const BRAND_LOGO_DATA_URI = '${imageUri}'\n`)
+for (const name of ['favicon.svg', 'favicon-dark.svg']) {
+  await writeFile(new URL(name, web), mark)
 }
 await sharp(Buffer.from(appIcon)).png().toFile(fileURLToPath(new URL('brand-icon.png', web)))
 for (const name of ['icon', 'icon-macos', 'icon-windows']) {
@@ -30,9 +37,10 @@ const tray = await renderTrayIconEntries(Buffer.from(appIcon))
 await writeFile(new URL('tray-windows.ico', resources), packIco(tray))
 
 const wordmark = '<svg xmlns="http://www.w3.org/2000/svg" width="330" height="44" viewBox="0 0 330 44">'
-  + '<text x="0" y="33" font-family="Arial, sans-serif" font-size="32" font-weight="500" fill="currentColor">APUS / REFLEX</text></svg>\n'
+  + `<image width="44" height="44" href="${imageUri}"/>`
+  + '<text x="54" y="32" font-family="Arial, sans-serif" font-size="28" font-weight="500" fill="currentColor">APUS / REFLEX</text></svg>\n'
 await writeFile(new URL('../renderer/assets/welcome-brand.svg', import.meta.url), wordmark)
-for (const [name, color] of [['brand', '#183c66'], ['brand-dark', '#ffffff']] as const) {
+for (const [name, color] of [['brand', '#4058c8'], ['brand-dark', '#ffffff']] as const) {
   for (const scale of [1, 2]) {
     const target = new URL(`../installer/assets/${name}${scale === 2 ? '-2x' : ''}.png`, import.meta.url)
     const dimensions = await sharp(await readFile(target)).metadata()
@@ -42,8 +50,8 @@ for (const [name, color] of [['brand', '#183c66'], ['brand-dark', '#ffffff']] as
 }
 
 const sidebar = '<svg xmlns="http://www.w3.org/2000/svg" width="164" height="314" viewBox="0 0 164 314">'
-  + '<rect width="164" height="314" fill="#183c66"/>'
-  + whiteMark.replace('<svg ', '<svg x="50" y="64" width="64" height="64" ')
+  + '<rect width="164" height="314" fill="#151721"/>'
+  + mark.replace('<svg ', '<svg x="50" y="64" width="64" height="64" ')
   + '<text x="82" y="164" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#fff">APUS</text>'
   + '<text x="82" y="190" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#fff">REFLEX</text></svg>'
 await sharp(Buffer.from(sidebar)).png()

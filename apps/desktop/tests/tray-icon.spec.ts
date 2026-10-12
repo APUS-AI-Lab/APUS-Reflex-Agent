@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs'
+import sharp from 'sharp'
 import { describe, expect, it } from 'vitest'
 import { packIco, renderTrayIconEntries, TRAY_ICON_PATHS, TRAY_ICON_SIZES, unpackIco, type IcoEntry } from '../scripts/render-tray-icon.ts'
 
@@ -35,7 +36,7 @@ describe('tray icon packaging', () => {
     expect(() => unpackIco(forged)).toThrow('declares 20 but holds 16x16')
   })
 
-  it('renders the shipped APUS vector without requiring a legacy whale group', async () => {
+  it('renders the shipped APUS bird without requiring a legacy whale group', async () => {
     const entries = await renderTrayIconEntries(readFileSync(TRAY_ICON_PATHS.source), [16, 32])
     expect(unpackIco(packIco(entries)).map(entry => entry.size)).toEqual([16, 32])
   })
@@ -45,4 +46,20 @@ describe('tray icon packaging', () => {
     expect(entries.map(entry => entry.size)).toEqual([...TRAY_ICON_SIZES])
     for (const entry of entries) expect(entry.png.length).toBeGreaterThan(100)
   })
+})
+
+// Decode both formats before comparing: the asset conversion must not redraw the logo.
+it('preserves the supplied transparent bird pixels in the shared SVG', async () => {
+  const source = readFileSync(new URL('../../web/public/brand-logo.webp', import.meta.url))
+  const mark = readFileSync(new URL('../../web/public/brand-mark.svg', import.meta.url), 'utf8')
+  const embedded = /href="data:image\/png;base64,([^"]+)"/.exec(mark)?.[1]
+  expect(embedded).toBeDefined()
+  if (embedded === undefined) throw new Error('brand mark has no embedded image')
+  const original = await sharp(source).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
+  const converted = await sharp(Buffer.from(embedded, 'base64')).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
+  expect(converted.info).toEqual(original.info)
+  expect(converted.data).toEqual(original.data)
+  expect(original.info.width).toBe(140)
+  expect(original.info.height).toBe(140)
+  expect(await sharp(source).metadata()).toMatchObject({ hasAlpha: true })
 })

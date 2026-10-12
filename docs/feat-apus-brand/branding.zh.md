@@ -6,9 +6,9 @@ APUS Reflex Harness 的中文名为“瞬策”，Slogan 为“瞬时执行，�
 
 ## 权威输入
 
-Web 静态品牌定义位于 `apps/web/public/brand.json`，主矢量位于同目录的 `brand-mark.svg`。共享 UI 的字标与标记由 `packages/client/ui-primitives` 提供；旧导出名 `BrandWordmark` 和 `FishLogo` 为调用兼容保留，显示 APUS 字标和字母标记。
+Web 静态品牌定义位于 `apps/web/public/brand.json`，原始透明飞鸟图像位于同目录的 `brand-logo.webp`。共享 UI 的字标与标记由 `packages/client/ui-primitives` 提供；旧导出名 `BrandWordmark` 和 `FishLogo` 为调用兼容保留，显示 APUS 字标和飞鸟标记。
 
-在仓库依赖已安装后，运行 `pnpm exec tsx apps/desktop/scripts/generate-brand-assets.ts`，从主矢量生成 Web favicon、应用 PNG/ICO、原生桌面资源和安装器字标。macOS 同时用系统 iconutil 生成 ICNS；其他平台使用已提交的 ICNS。该脚本使用现有 sharp 依赖。
+在仓库依赖已安装后，运行 `pnpm exec tsx apps/desktop/scripts/generate-brand-assets.ts`，从原始图像生成 Web favicon、应用 PNG/ICO、原生桌面资源和安装器字标。macOS 同时用系统 iconutil 生成 ICNS；其他平台使用已提交的 ICNS。该脚本使用现有 sharp 依赖，同时生成嵌入 PNG 的 `brand-artwork.ts` 和 SVG 包装；提供的 140 × 140 原图是唯一图像输入，离线组合 SVG 消费者也使用同一份图像。
 
 APUS-Reflex-Frontend 在 prepare 阶段验证并复制这些品牌输入到 `.build/brand`，安装包与原生页面消费这组资源。更改 Harness 后必须更新 Frontend 固定的 Harness 提交，再准备 Runtime 和打包；修改仓库名称不会改变已安装应用。
 

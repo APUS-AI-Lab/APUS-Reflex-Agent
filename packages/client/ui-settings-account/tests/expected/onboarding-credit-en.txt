@@ -1,1 +1,1 @@
-Add creditsAPUS Reflex Harness charges credits based on the tokens used by models and tools. Add credits in advance to keep your tasks running without interruption. Your balance is only used while the agent is working on a task.Add creditsNextBackSkip
+Add creditsThis page shows credits for your connected DeepSeek account. Model providers manage usage and billing. For another provider or your own API Key, check usage and billing with that provider.Add creditsNextBackSkip

@@ -4,7 +4,7 @@ import type { SidebarBrandMarkOwnerProps } from '@deepseek-ai/dsh-client-ui-side
 /**
  * Render the official mark with the presentation requested by its host surface.
  * @param props - Host-supplied mark presentation.
- * @returns the official APUS letter mark.
+ * @returns the official APUS bird mark.
  */
 export function OfficialBrandMark({ size }: SidebarBrandMarkOwnerProps) {
   return <FishLogo size={size} />

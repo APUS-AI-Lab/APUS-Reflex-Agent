@@ -6,9 +6,9 @@ APUS Reflex Harness uses the Chinese name “瞬策”, the slogan “瞬时执�
 
 ## Authoritative inputs
 
-The static Web brand definition lives in `apps/web/public/brand.json`, beside the canonical vector `brand-mark.svg`. Shared UI wordmarks and marks come from `packages/client/ui-primitives`; the existing `BrandWordmark` and `FishLogo` exports remain compatible with callers while displaying the APUS wordmark and letter mark.
+The static Web brand definition lives in `apps/web/public/brand.json`, beside the original transparent `brand-logo.webp`. Shared UI wordmarks and marks come from `packages/client/ui-primitives`; the existing `BrandWordmark` and `FishLogo` exports remain compatible with callers while displaying the APUS wordmark and bird mark.
 
-After installing repository dependencies, run `pnpm exec tsx apps/desktop/scripts/generate-brand-assets.ts` to generate Web favicons, application PNG/ICO files, native desktop resources, and installer wordmarks from the canonical vector. On macOS, the script also generates ICNS using the system iconutil; other platforms use the committed ICNS. The script uses the existing sharp dependency.
+After installing repository dependencies, run `pnpm exec tsx apps/desktop/scripts/generate-brand-assets.ts` to generate Web favicons, application PNG/ICO files, native desktop resources, and installer wordmarks from the original pixels. On macOS, the script also generates ICNS using the system iconutil; other platforms use the committed ICNS. The script uses the existing sharp dependency. It also writes the embedded PNG module `brand-artwork.ts` and SVG wrappers; the supplied 140 × 140 pixels remain the sole artwork input, including for offline composed SVG consumers.
 
 APUS-Reflex-Frontend validates and copies these brand inputs into `.build/brand` during preparation; installers and native pages consume those resources. After changing Harness, update the pinned Harness commit in Frontend before preparing the Runtime and packaging. Renaming a repository does not change installed applications.
 

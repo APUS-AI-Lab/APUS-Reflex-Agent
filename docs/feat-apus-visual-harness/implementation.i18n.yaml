@@ -1,0 +1,19 @@
+# Bilingual-pair consistency record for implementation.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-apus-visual-harness/implementation.md
+/apus-brand-implementation-reference:
+  en: f1d53edbfac19ffe
+  zh: 1052757338ceeb6e
+/apus-brand-implementation-reference/artwork:
+  en: 2d49ebe8303ba1c2
+  zh: c9e532318f144fa9
+/apus-brand-implementation-reference/theme:
+  en: 0d7acf2b55616b18
+  zh: bac2b8b980846ea7
+/apus-brand-implementation-reference/product-copy:
+  en: f6176f6ca38e31d9
+  zh: b723a2ef530f5119
+/apus-brand-implementation-reference/verification-records:
+  en: 1529b699fcc52d26
+  zh: e014073eb70869d5

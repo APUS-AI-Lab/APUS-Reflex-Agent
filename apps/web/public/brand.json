@@ -4,6 +4,11 @@
   "zhName": "瞬策",
   "tagline": "瞬时执行，深度思考",
   "modelAsHarness": "Model as Harness",
+  "source": "brand-logo.webp",
+  "accentLight": "#4058c8",
+  "accentDark": "#9daeff",
+  "cyan": "#42cae3",
+  "purple": "#8b68ec",
   "mark": "brand-mark.svg",
   "icon": "brand-icon.png"
 }
