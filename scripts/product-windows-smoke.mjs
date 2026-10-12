@@ -1,12 +1,12 @@
 /** Qualify the installed Windows preview with a fresh profile and no external Node on PATH. */
 import { execFile } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { access, mkdir, mkdtemp, readFile, readdir, writeFile } from 'node:fs/promises'
+import { access, lstat, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve, win32 } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { promisify } from 'node:util'
+import { parseArgs, promisify } from 'node:util'
 
 const execute = promisify(execFile)
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -66,7 +66,104 @@ export function redactDiagnostic(message) {
     .slice(0, 2000)
 }
 
-async function run(installer, reportDirectory) {
+/** Validate the source run and select its uniquely named Windows product artifact. */
+export function validateRequalification(run, artifacts, repository, runId, source) {
+  if (!/^[0-9a-f]{40}$/.test(source) || !/^[1-9][0-9]*$/.test(String(runId))) throw new Error('Expected a build run ID and full lowercase source SHA')
+  if (String(run.id) !== String(runId) || run.repository?.full_name !== repository
+    || run.head_repository?.full_name !== repository || run.head_sha !== source
+    || run.path !== '.github/workflows/product-release.yml' || run.status !== 'completed') {
+    throw new Error('Qualification source run must be this repository’s completed product-release build at the expected SHA')
+  }
+  const matches = artifacts.filter(item => item.name === `apus-preview-win32-x64-${runId}` && !item.expired)
+  if (matches.length !== 1 || !Number.isSafeInteger(matches[0].id) || matches[0].id < 1
+    || matches[0].workflow_run?.id !== run.id || matches[0].workflow_run?.head_sha !== source) {
+    throw new Error('Expected exactly one unexpired Windows artifact from the selected build run and source')
+  }
+  return matches[0].id
+}
+
+/** Preserve command termination evidence without exposing credential-bearing diagnostics. */
+export function failureDiagnostic(error) {
+  return { type: error.name, message: redactDiagnostic(error.message),
+    code: typeof error.code === 'string' || typeof error.code === 'number' ? error.code : undefined,
+    killed: typeof error.killed === 'boolean' ? error.killed : undefined,
+    signal: typeof error.signal === 'string' || error.signal === null ? error.signal : undefined,
+    ...(error.stdout ? { stdout: redactDiagnostic(String(error.stdout)) } : {}),
+    ...(error.stderr ? { stderr: redactDiagnostic(String(error.stderr)) } : {}),
+    ...(error.observationFailure ? { observationFailure: error.observationFailure } : {}) }
+}
+
+/** Wait for an acquired process while sampling its owned descendants; always await its exit. */
+export async function runTrackedProcess(command, args, options, acquired, sample) {
+  const pending = execute(command, args, options)
+  let settled = false
+  let failure
+  let result
+  const completed = pending.then(value => { result = value }, error => { failure = error }).finally(() => { settled = true })
+  try {
+    acquired(pending.child.pid)
+    while (!settled) {
+      await sample()
+      if (!settled) await Promise.race([completed, pause(500)])
+    }
+  } catch (error) {
+    const commandFailure = settled && failure
+    if (commandFailure) {
+      commandFailure.observationFailure = failureDiagnostic(error)
+      throw commandFailure
+    }
+    if (!settled) pending.child.kill('SIGKILL')
+    throw error
+  } finally { await completed }
+  if (failure) throw failure
+  return result
+}
+
+/** Kill only currently owned roots, then require an empty live process observation. */
+export async function terminateOwnedProcesses(observe, terminate, roots) {
+  const errors = []
+  let known = roots
+  let alive
+  try { alive = ownedProcessIds(await observe(), known) }
+  catch (error) { errors.push({ stage: 'observe-before-cleanup', ...failureDiagnostic(error) }); alive = known }
+  for (const pid of alive) {
+    try { await terminate(pid) }
+    catch (error) { if (error.code !== 128) errors.push({ stage: 'terminate-process', ...failureDiagnostic(error) }) }
+  }
+  const deadline = Date.now() + 20_000
+  try {
+    do {
+      known = ownedProcessIds(await observe(), known)
+      if (!known.length) return errors
+      await pause(300)
+    } while (Date.now() < deadline)
+    throw new Error('Owned Windows processes remain after termination')
+  } catch (error) { errors.push({ stage: 'wait-process-exit', ...failureDiagnostic(error) }) }
+  return errors
+}
+
+/** Inspect a bounded number of installation entries; reports contain counts rather than paths. */
+async function installationSummary(temporary, installation) {
+  const names = await readdir(temporary)
+  const roots = names.filter(name => name === 'application' || name.startsWith('application.new-') || name.startsWith('application.old-'))
+  const summary = { directoryExists: roots.includes('application'), stagingDirectories: roots.filter(name => name.startsWith('application.new-')).length,
+    files: 0, bytes: 0, entriesInspected: 0, truncated: false, executableExists: false }
+  const queue = roots.map(name => join(temporary, name))
+  while (queue.length && summary.entriesInspected < 2000) {
+    const file = queue.pop()
+    let stat
+    try { stat = await lstat(file) } catch (error) { if (error.code === 'ENOENT') continue; throw error }
+    summary.entriesInspected++
+    if (stat.isFile()) { summary.files++; summary.bytes += stat.size }
+    else if (stat.isDirectory()) queue.push(...(await readdir(file)).map(name => join(file, name)))
+  }
+  summary.truncated = queue.length > 0
+  try { await access(join(installation, 'APUS Reflex Harness.exe')); summary.executableExists = true }
+  catch (error) { if (error.code !== 'ENOENT') throw error }
+  return summary
+}
+
+async function run(installer, reportDirectory, expectedSource = process.env.GITHUB_SHA, buildRunId) {
   if (process.platform !== 'win32' || process.arch !== 'x64') throw new Error('Run installed qualification on native Windows x64')
   await mkdir(reportDirectory, { recursive: true })
   const temporary = await mkdtemp(join(tmpdir(), 'apus-installed-'))
@@ -74,15 +171,28 @@ async function run(installer, reportDirectory) {
   const profile = join(temporary, 'profile')
   const env = smokeEnvironment(process.env, profile)
   const powershell = join(env.SystemRoot ?? env.SYSTEMROOT ?? process.env.SystemRoot, 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe')
-  const report = { passed: false, stages: [], limitations: ['Unsigned preview; Authenticode and SmartScreen trust are not qualified.', 'No provider credentials or real model API task is exercised.'] }
+  const report = { passed: false, stages: [], helperSourceRevision: process.env.GITHUB_SHA, buildRunId, cleanupErrors: [], limitations: ['Unsigned preview; Authenticode and SmartScreen trust are not qualified.', 'No provider credentials or real model API task is exercised.'] }
   let app
   let known = []
   const psQuote = value => "'" + value.replaceAll("'", "''") + "'"
   const observe = async () => {
-    const script = `$ErrorActionPreference='Stop'; $install=${psQuote(installation + win32.sep)}; $profile=${psQuote(profile)}; @(Get-CimInstance Win32_Process | ForEach-Object { [PSCustomObject]@{pid=[int]$_.ProcessId;parent=[int]$_.ParentProcessId;owned=(($_.ExecutablePath -and $_.ExecutablePath.StartsWith($install,[System.StringComparison]::OrdinalIgnoreCase)) -or ($_.CommandLine -and $_.CommandLine.Contains($profile))) -and $_.ProcessId -ne $PID} }) | ConvertTo-Json -Compress`
+    const script = `$ErrorActionPreference='Stop'; $ownedInstall=${psQuote(installation + win32.sep)}; $ownedRoot=${psQuote(temporary)}; $ownedInstaller=${psQuote(installer)}; @(Get-CimInstance Win32_Process | ForEach-Object { [PSCustomObject]@{pid=[int]$_.ProcessId;parent=[int]$_.ParentProcessId;owned=(($_.ExecutablePath -and ($_.ExecutablePath.StartsWith($ownedInstall,[System.StringComparison]::OrdinalIgnoreCase) -or $_.ExecutablePath.Equals($ownedInstaller,[System.StringComparison]::OrdinalIgnoreCase))) -or ($_.CommandLine -and $_.CommandLine.Contains($ownedRoot))) -and $_.ProcessId -ne $PID} }) | ConvertTo-Json -Compress`
     const { stdout } = await execute(powershell, ['-NoProfile', '-NonInteractive', '-Command', script], { timeout: 30_000, windowsHide: true })
-    return JSON.parse(stdout || '[]')
+    const value = JSON.parse(stdout.trim() || '[]')
+    return Array.isArray(value) ? value : [value]
   }
+  const sample = async () => {
+    known = ownedProcessIds(await observe(), known)
+  }
+  const tracked = (command, args, options) => runTrackedProcess(command, args, options, pid => {
+    if (pid) known = [...new Set([...known, pid])]
+    if (command === installer && report.installation) report.installation.rootPid = pid
+  }, async () => {
+    await sample()
+    if (command === installer && report.installation) {
+      report.installation.observedPids = [...new Set([...(report.installation.observedPids ?? []), ...known])]
+    }
+  })
   const quiescent = async () => {
     const deadline = Date.now() + 20_000
     do {
@@ -95,7 +205,7 @@ async function run(installer, reportDirectory) {
   }
   const close = async () => {
     if (!app) return
-    known = ownedProcessIds(await observe(), [app.process().pid])
+    known = ownedProcessIds(await observe(), [...known, app.process().pid])
     const closing = app
     app = undefined
     await closing.close()
@@ -106,12 +216,28 @@ async function run(installer, reportDirectory) {
     const asset = build.assets.find(asset => asset.name === 'apus-reflex-harness-windows-x64-setup.exe')
     const digest = createHash('sha256').update(await readFile(installer)).digest('hex')
     if (!asset || digest !== asset.sha256) throw new Error('Installer differs from collected build receipt')
+    if (!expectedSource || !/^[0-9a-f]{40}$/.test(expectedSource) || build.sourceRevision !== expectedSource) {
+      throw new Error('Installer source differs from the explicitly selected build SHA')
+    }
     report.sourceRevision = build.sourceRevision
     report.installerSha256 = digest
     report.version = build.version
     report.stages.push('installer-receipt-verified')
     // NSIS consumes the unquoted remainder after /D= as the destination, including spaces.
-    await execute(installer, ['/S', `/D=${installation}`], { timeout: 180_000, windowsVerbatimArguments: true, windowsHide: true, env })
+    const installationStarted = Date.now()
+    report.installation = { timeoutMs: 600_000 }
+    try {
+      await tracked(installer, ['/S', `/D=${installation}`], { timeout: 600_000, windowsVerbatimArguments: true, windowsHide: true, env })
+      report.installation.exitCode = 0
+    } catch (error) {
+      report.installation.failure = failureDiagnostic(error)
+      report.installation.exitCode = typeof error.code === 'number' ? error.code : null
+      throw error
+    } finally {
+      report.installation.durationMs = Date.now() - installationStarted
+      try { report.installation.summary = await installationSummary(temporary, installation) }
+      catch (error) { report.installation.summaryFailure = failureDiagnostic(error) }
+    }
     const executable = join(installation, 'APUS Reflex Harness.exe')
     await access(executable)
     const runtime = JSON.parse(await readFile(join(installation, 'resources', 'system3-runtime', 'runtime-manifest.json'), 'utf8'))
@@ -126,7 +252,7 @@ async function run(installer, reportDirectory) {
     const { _electron } = createRequire(join(root, 'apps/web/package.json'))('playwright')
     const launch = async () => {
       app = await _electron.launch({ executablePath: executable, args: [], cwd: temporary, env, timeout: 60_000 })
-      known = [app.process().pid]
+      known = [...new Set([...known, app.process().pid])]
       const deadline = Date.now() + 90_000
       do {
         for (const page of app.windows()) {
@@ -158,7 +284,7 @@ async function run(installer, reportDirectory) {
     report.stages.push('restart-home-and-exit-quiescent')
     const uninstaller = (await readdir(installation)).find(name => /^Uninstall .*\.exe$/i.test(name))
     if (!uninstaller) throw new Error('Installed uninstaller is missing')
-    await execute(join(installation, uninstaller), ['/S'], { timeout: 120_000, windowsHide: true, env })
+    await tracked(join(installation, uninstaller), ['/S'], { timeout: 120_000, windowsHide: true, env })
     const removalDeadline = Date.now() + 30_000
     let removed = false
     do {
@@ -175,29 +301,45 @@ async function run(installer, reportDirectory) {
     report.passed = true
   } catch (error) {
     // Playwright diagnostics can contain local authorization URLs.
-    report.failure = { stage: report.stages.at(-1) ?? 'before-install', type: error.name, message: redactDiagnostic(error.message), code: typeof error.code === 'string' ? error.code : undefined }
+    report.failure = { stage: report.stages.at(-1) ?? 'before-install', ...failureDiagnostic(error) }
     throw new Error(`Windows installed qualification failed after ${report.failure.stage}; see report.json`)
   } finally {
-    try { await close() } catch (error) { report.cleanupFailed = true }
-    let alive = known
-    try { alive = ownedProcessIds(await observe(), known) } catch (error) { report.cleanupFailed = true }
-    for (const pid of alive) {
-      try { await execute('taskkill.exe', ['/PID', String(pid), '/T', '/F'], { windowsHide: true, timeout: 15_000 }) }
-      catch (error) { if (error.code !== 128) report.cleanupFailed = true }
+    try { await close() }
+    catch (error) { report.cleanupErrors.push({ stage: 'close-application', ...failureDiagnostic(error) }) }
+    const termination = await terminateOwnedProcesses(observe,
+      pid => execute(join(env.SystemRoot ?? env.SYSTEMROOT ?? process.env.SystemRoot, 'System32', 'taskkill.exe'),
+        ['/PID', String(pid), '/T', '/F'], { windowsHide: true, timeout: 15_000 }), known)
+    report.cleanupErrors.push(...termination)
+    if (!termination.length && report.failure) {
+      try {
+        const entries = await readdir(installation).catch(error => { if (error.code === 'ENOENT') return []; throw error })
+        const uninstaller = entries.find(name => /^Uninstall .*\.exe$/i.test(name))
+        if (uninstaller) {
+          await tracked(join(installation, uninstaller), ['/S'], { timeout: 120_000, windowsHide: true, env })
+          await quiescent()
+        }
+      } catch (error) {
+        report.cleanupErrors.push({ stage: 'uninstall-after-failure', ...failureDiagnostic(error) })
+        report.cleanupErrors.push(...await terminateOwnedProcesses(observe,
+          pid => execute(join(env.SystemRoot ?? env.SYSTEMROOT ?? process.env.SystemRoot, 'System32', 'taskkill.exe'),
+            ['/PID', String(pid), '/T', '/F'], { windowsHide: true, timeout: 15_000 }), known))
+      }
     }
-    try { await quiescent() } catch (error) { report.cleanupFailed = true }
-    if (report.cleanupFailed) report.passed = false
+    if (!report.cleanupErrors.length) {
+      try { await rm(temporary, { recursive: true, force: true, maxRetries: 3, retryDelay: 300 }) }
+      catch (error) { report.cleanupErrors.push({ stage: 'remove-private-directory', ...failureDiagnostic(error) }) }
+    }
+    if (report.cleanupErrors.length) report.passed = false
     await writeFile(join(reportDirectory, 'report.json'), JSON.stringify(report, null, 2) + '\n')
-    if (report.cleanupFailed) throw new Error('Windows qualification cleanup failed; see report.json')
+    if (report.cleanupErrors.length && !report.failure) throw new Error('Windows qualification cleanup failed; see report.json')
   }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
-  const args = process.argv.slice(2)
-  if (args.length !== 4 || args[0] !== '--installer' || args[2] !== '--report-dir') {
-    console.error('Usage: node scripts/product-windows-smoke.mjs --installer <setup.exe> --report-dir <directory>')
-    process.exitCode = 1
-  } else {
-    await run(resolve(args[1]), resolve(args[3])).catch(error => { console.error(error.message); process.exitCode = 1 })
-  }
+  try {
+    const { values } = parseArgs({ options: { installer: { type: 'string' }, 'report-dir': { type: 'string' },
+      'expected-source': { type: 'string' }, 'build-run-id': { type: 'string' } }, allowPositionals: false })
+    if (!values.installer || !values['report-dir']) throw new Error('Usage: --installer <setup.exe> --report-dir <directory> [--expected-source <sha> --build-run-id <id>]')
+    await run(resolve(values.installer), resolve(values['report-dir']), values['expected-source'], values['build-run-id'])
+  } catch (error) { console.error(error.message); process.exitCode = 1 }
 }

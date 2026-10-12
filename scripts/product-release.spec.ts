@@ -62,10 +62,22 @@ it('rejects unsupported support-file targets before writing output', async () =>
 it('checks out the dispatch commit and retains review evidence without release-write permission', () => {
   const workflow = load(readFileSync(new URL('../.github/workflows/product-release.yml', import.meta.url), 'utf8')) as {
     permissions: Record<string, string>
-    jobs: Record<string, { steps: { name?: string; uses?: string; if?: string; with?: Record<string, string>; run?: string }[] }>
+    jobs: Record<string, {
+      if?: string
+      steps: { name?: string; uses?: string; if?: string; with?: Record<string, string>; run?: string }[]
+    }>
   }
-  expect(workflow.permissions).toEqual({ contents: 'read' })
-  expect(Object.keys(workflow.jobs)).toEqual(['build'])
+  expect(workflow.permissions).toEqual({ contents: 'read', actions: 'read' })
+  expect(Object.keys(workflow.jobs)).toEqual(['build', 'windows_requalification'])
+  expect(workflow.jobs['build']!.if).toBe("${{ inputs.qualification_run_id == '' && inputs.qualification_source == '' }}")
+  expect(workflow.jobs['windows_requalification']!.if).toBe("${{ inputs.qualification_run_id != '' || inputs.qualification_source != '' }}")
+  const qualification = workflow.jobs['windows_requalification']!.steps
+  const download = qualification.find(step => step.uses?.startsWith('actions/download-artifact@'))
+  expect(download?.with?.['run-id']).toBe('${{ inputs.qualification_run_id }}')
+  expect(download?.with?.['artifact-ids']).toBe('${{ steps.source.outputs.artifact_id }}')
+  expect(qualification.some(step => step.with?.['script']?.includes('validateRequalification'))).toBe(true)
+  expect(qualification.some(step => step.run?.includes('--expected-source $env:QUALIFICATION_SOURCE'))).toBe(true)
+  expect(qualification.some(step => step.run?.includes('package:product') || step.run?.includes('npm ci'))).toBe(false)
   const steps = workflow.jobs['build']!.steps
   expect(steps.find(step => step.uses?.startsWith('actions/checkout@'))?.with?.['ref']).toBe('${{ github.sha }}')
   expect(steps.filter(step => step.uses?.startsWith('actions/upload-artifact@')).every(step => step.if === '${{ always() }}')).toBe(true)

@@ -1,0 +1,16 @@
+# Bilingual-pair consistency record for requalification.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/release-windows-product/requalification.md
+/windows-installed-package-requalification:
+  en: 78b2e10269bf65e0
+  zh: b76d60b061c4129d
+/windows-installed-package-requalification/scope:
+  en: d66c1511b595a815
+  zh: dbdc59a4a2de7f13
+/windows-installed-package-requalification/process-and-diagnostics:
+  en: 862b04f52ca4febc
+  zh: 6f0149e09598cc4c
+/windows-installed-package-requalification/verification:
+  en: 68a8ad6542ff0419
+  zh: 234d80b9b2dfa197

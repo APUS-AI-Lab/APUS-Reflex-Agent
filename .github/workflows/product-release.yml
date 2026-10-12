@@ -20,8 +20,18 @@ on:
           - linux
           - all
 
+      qualification_run_id:
+        description: Existing product build run to requalify without rebuilding (Windows only; leave empty to build)
+        required: false
+        type: string
+      qualification_source:
+        description: Full 40-character product source SHA required with qualification_run_id
+        required: false
+        type: string
+
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: apus-preview-${{ github.ref }}-${{ inputs.target }}
@@ -29,6 +39,7 @@ concurrency:
 
 jobs:
   build:
+    if: ${{ inputs.qualification_run_id == '' && inputs.qualification_source == '' }}
     strategy:
       fail-fast: false
       matrix:
@@ -141,6 +152,76 @@ jobs:
             .artifacts/product-macos-smoke/
             .artifacts/product-linux-smoke/
             .artifacts/product-build-receipt.json
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 14
+
+  windows_requalification:
+    if: ${{ inputs.qualification_run_id != '' || inputs.qualification_source != '' }}
+    runs-on: windows-latest
+    timeout-minutes: 35
+    env:
+      DSH_TELEMETRY_DISABLED: '1'
+      QUALIFICATION_RUN_ID: ${{ inputs.qualification_run_id }}
+      QUALIFICATION_SOURCE: ${{ inputs.qualification_source }}
+      QUALIFICATION_TARGET: ${{ inputs.target }}
+    steps:
+      - name: Prepare Windows checkout
+        shell: pwsh
+        run: |
+          git config --global core.longpaths true
+          if ($LASTEXITCODE -ne 0) { throw "Could not enable Git long paths" }
+          git config --global core.autocrlf false
+          if ($LASTEXITCODE -ne 0) { throw "Could not disable Git newline conversion" }
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Validate source run and select the exact Windows artifact
+        id: source
+        uses: actions/github-script@v7
+        with:
+          script: |
+            if (process.env.QUALIFICATION_TARGET !== 'windows') throw new Error('Requalification requires target=windows');
+            const runId = process.env.QUALIFICATION_RUN_ID;
+            const source = process.env.QUALIFICATION_SOURCE;
+            if (!/^[1-9][0-9]*$/.test(runId) || !/^[0-9a-f]{40}$/.test(source)) throw new Error('Provide a build run ID and full source SHA');
+            const { pathToFileURL } = await import('node:url');
+            const { validateRequalification } = await import(pathToFileURL(`${process.env.GITHUB_WORKSPACE}/scripts/product-windows-smoke.mjs`).href);
+            const { data: run } = await github.rest.actions.getWorkflowRun({ ...context.repo, run_id: Number(runId) });
+            const artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts, { ...context.repo, run_id: Number(runId), per_page: 100 });
+            const id = validateRequalification(run, artifacts, `${context.repo.owner}/${context.repo.repo}`, runId, source);
+            core.setOutput('artifact_id', String(id));
+      - name: Download the selected immutable installer and support files
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ steps.source.outputs.artifact_id }}
+          run-id: ${{ inputs.qualification_run_id }}
+          github-token: ${{ github.token }}
+          path: .artifacts/requalification-source
+          merge-multiple: true
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: pnpm
+      - name: Install locked qualification dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Validate Windows qualification helpers
+        run: node --test scripts/product-windows-smoke.test.mjs
+      - name: Requalify the original installed Windows product
+        shell: pwsh
+        run: |
+          $installers = @(Get-ChildItem -Path .artifacts/requalification-source -Recurse -File -Filter 'apus-reflex-harness-windows-x64-setup.exe')
+          if ($installers.Count -ne 1) { throw "Expected exactly one downloaded Windows installer" }
+          node scripts/product-windows-smoke.mjs --installer $installers[0].FullName --report-dir "$PWD/.artifacts/product-windows-requalification" --expected-source $env:QUALIFICATION_SOURCE --build-run-id $env:QUALIFICATION_RUN_ID
+          if ($LASTEXITCODE -ne 0) { throw "Installed Windows requalification failed" }
+      - name: Upload requalification report and screenshots
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: apus-windows-requalification-${{ inputs.qualification_run_id }}-${{ github.run_id }}
+          path: .artifacts/product-windows-requalification/
           include-hidden-files: true
           if-no-files-found: warn
           retention-days: 14
