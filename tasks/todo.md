@@ -8,13 +8,19 @@
 - [ ] P0：冻结并实测 1 秒 admission/status、远端首字节/总耗时三段指标；本地队列 admission/status 已实测 16ms，R-04 路由决策 p50/p95 已实测 two-tier 309/588ms、four-tier 317/405ms；2026-10-12 远端探测在首字节前出现传输错误/超时，远端与可见回退仍待测，见 `docs/feat-reflex-control/evidence/r04-remote-response-20261012.*`。
 - [ ] P0：完成健康长任务无误干预和用户中途改 Goal 的真实 UI/E2E 对照。
 - [ ] P0：完成 Electron 启动失败恢复、会话恢复、签名/公证和包内 MIT/NOTICE 核对；恢复界面已通过 200% 系统缩放 40 变体及页面级 200% 缩放 8 轮/320 变体。
-- [ ] P0：完成 Harness Jev/System3 CI、秘密扫描、脱敏回归，并将两个 Draft PR 转 Ready；当前两仓 job 因 Actions budget 未启动，不能视为通过。
+- [ ] P0：完成 Harness Jev/System3 CI、秘密扫描、脱敏回归；两仓 PR 已转 Ready 并合并，但当前 job 因 Actions budget 未启动，不能视为远端通过。
 - [x] P1：统一 README quickstart 与能力边界，补齐贡献者入口、System3 API/配置参考链接、CODEOWNERS、双语 Release notes、严格 v6 演示证据和 cache benchmark 入口；远端 CI、签名发布和 main 合并仍是独立门禁。
-- [ ] P1：独立 review 通过后合并两个仓库 main，回读 SHA、运行包和发布清单。
+- [x] P1：独立 review 后合并两个仓库 main；Harness `main=8a24e969c7`、Frontend `main=5a77376b87` 已回读。运行包签名/公证与 Actions 远端门禁仍单独待完成。
 
 本轮监督收口保持轻量：复用有界证据与 Goal，异常才判断、调整后观察验证、健康任务不误干预。2026-10-11 的自然 CSV 与字面量 unittest 对照均在 150 秒预算取消且零 steer；字面量 relay 无首字节，不能标为健康任务完整通过。证据见 `docs/feat-reflex-control/evidence/healthy-codex-20261011.zh.md`。
 
 本轮真实 Web 插话已通过路由、Goal 创建/激活、要求排队、`subagent/steer` 送达、120 秒启动提示和用户停止；Codex 没有 native 步骤，最终产物验收保持未完成，见 `docs/feat-reflex-control/evidence/ui-interjection-20261011.zh.md`。客户端 69 项回归与 System3Dock 四项严格 100% 覆盖率通过。GitHub 官方 annotation 确认两仓 CI 因账户 Actions budget 未启动，不是源码测试失败；账号预算需恢复后才能完成远端门禁。
+
+### 2026-10-12 合并后状态
+
+- [x] 两仓 PR #1 已按本地等价检查与独立 review 合并：Harness merge `8a24e969c7fe6a11b7fd524629e7c085d17e1ffc`，Frontend merge `5a77376b8797e4d28fa54fdaadd9d385944b88d7`。
+- [x] 后端架构收口：入口路由、Goal 监督与 Codex 原生证据、context 投影/恢复、Session/cache 前缀保护和 Goal revision fence 已由代码回归与真实证据覆盖。
+- [ ] 远端 Actions budget、远端 relay 首字节/回退、健康长任务无误干预、中途改 Goal、正式签名/公证与当前 pin 的最终安装包仍未完成；合并不把这些状态改写为通过。
 
 - [x] 用户批准新建独立仓库，核心方向为 Jev 理念与模型能力嵌入 DSH。
 - [x] 创建私有仓库 xDAN-System3-Harness，保留来源历史与上游许可证。
