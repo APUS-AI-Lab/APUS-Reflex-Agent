@@ -72,6 +72,19 @@ describe('Continuum memory index', () => {
     expect(retrieveMemoryWorkingSet(store, { ...config, index }, 'decision approved').candidates.map(candidate => candidate.id)).toEqual([MemoryId('decision')])
   })
 
+  it('leaves excess records queued and drains a final batch smaller than its budget', () => {
+    const index = new MemoryRecordIndex()
+    const pending = partialRecords().snapshot().slice(0, 3)
+    for (const record of pending) index.enqueue(record)
+    expect(index.indexedCount()).toBe(0)
+    expect(index.rebuildPending(2)).toEqual({ indexedRecords: 2, pendingRecords: 1 })
+    expect(index.indexedCount()).toBe(2)
+    expect(index.rebuildPending(2)).toEqual({ indexedRecords: 3, pendingRecords: 0 })
+    expect(index.indexedCount()).toBe(3)
+    expect(index.pendingCount()).toBe(0)
+    expect(index.idsForTerms(['迁移', 'migrat'])).toHaveLength(3)
+  })
+
   it('removes old postings when a queued snapshot replaces a record', () => {
     const store = records()
     const index = new MemoryRecordIndex()

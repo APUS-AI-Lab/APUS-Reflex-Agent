@@ -1,4 +1,5 @@
 import { Context, Service, type Volatile } from '@deepseek-ai/cordis'
+import type {} from '@deepseek-ai/cordis-plugin-loader'
 import type { Agent } from '@deepseek-ai/dsh-agent'
 import type { ContentBlock } from '@deepseek-ai/dsh-llm'
 import type { Session, SessionEvent, SessionId } from '@deepseek-ai/dsh-session'
@@ -82,17 +83,28 @@ export interface ContinuumMemoryService {
  * Session-backed Continuum profile service. It owns one projection per Agent,
  * restores that projection from the Agent Session, and installs the explicit
  * same-step consumer when the profile switch resolves to a usable state.
+ * Committed live config changes invalidate pending reads; Agent and service
+ * disposal invalidate and release their controllers.
  */
 export default class ContinuumMemory extends Service implements ContinuumMemoryService {
   static Config = ContinuumConfig
 
   private readonly config: ContinuumConfig | ContinuumResolvedConfig
-  private readonly controllers = new WeakMap<Agent, ContinuumMemoryController>()
+  private readonly controllers = new Map<Agent, ContinuumMemoryController>()
   private readonly agentsBySession = new Map<SessionId, Agent>()
 
   constructor(ctx: Context, config: ContinuumConfig | ContinuumResolvedConfig) {
     super(ctx, 'continuumMemory')
     this.config = config
+    ctx.on('loader/volatile-update', () => {
+      const switchConfig = this.switchConfig()
+      for (const controller of this.controllers.values()) controller.setSwitch(switchConfig)
+    })
+    ctx.effect(() => () => {
+      for (const controller of this.controllers.values()) controller.setSwitch({ enabled: false, mode: 'off', reflexMounted: false })
+      this.controllers.clear()
+      this.agentsBySession.clear()
+    })
     ctx.inject(['agents'], (ctx) => {
       const principal = { scopes: [...config.scopes] }
       const retrievalConfig = {
@@ -103,7 +115,11 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
       }), () => principal, retrievalConfig, () => ctx.get('continuumMemorySelector'))
     })
     ctx.on('agent/created', ({ agent }) => { this.agentsBySession.set(agent.session.id, agent) })
-    ctx.on('agent/disposed', ({ agent }) => { this.agentsBySession.delete(agent.session.id) })
+    ctx.on('agent/disposed', ({ agent }) => {
+      this.controllers.get(agent)?.setSwitch({ enabled: false, mode: 'off', reflexMounted: false })
+      this.controllers.delete(agent)
+      this.agentsBySession.delete(agent.session.id)
+    })
     ctx.on('session/event', (session, event) => {
       if (event.type !== 'user/message') return
       // Session rejects re-entrant append calls while publishing this event;
@@ -119,11 +135,11 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
   }
 
   state(): ReturnType<ContinuumMemoryController['state']> {
-    return resolveContinuumMemorySwitch({ enabled: readSetting(this.config.enabled), mode: readSetting(this.config.mode), reflexMounted: this.ctx.get('jev') !== undefined })
+    return resolveContinuumMemorySwitch(this.switchConfig())
   }
 
   controller(agent: Agent): ContinuumMemoryController {
-    return this.controllerWithConfig(agent, { enabled: readSetting(this.config.enabled), mode: readSetting(this.config.mode), reflexMounted: this.ctx.get('jev') !== undefined })
+    return this.controllerWithConfig(agent, this.switchConfig())
   }
 
   create(agent: Agent, record: NewMemoryRecord): MemoryRecord {
@@ -145,6 +161,10 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
     const next = this.controller(agent).deactivate(id, expectedRevision)
     appendMemoryRecordEvent(agent.session, 'deactivate', next)
     return next
+  }
+
+  private switchConfig(): ContinuumMemorySwitch {
+    return { enabled: readSetting(this.config.enabled), mode: readSetting(this.config.mode), reflexMounted: this.ctx.get('jev') !== undefined }
   }
 
   private storeFor(agent: Agent): MemoryRecordStore {
