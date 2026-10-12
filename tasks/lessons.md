@@ -178,3 +178,7 @@ Frontend runtime prepare 复制 Harness 构建树时，Harness pre-push 的 type
 ## 2026-10-11：Codex v2 文件变更与子线程必须按协议边界验收
 
 Codex app-server v2 的 `FileUpdateChange.kind` 是字符串；解析器若只接受旧的 `{ type }` 对象，会把真实文件变更从 semantic evidence 中丢掉。`collabAgentToolCall` 也是实际协议名称，必须计入活跃副作用。Collab 子线程使用独立 thread subscription，父 wire 不会自动收到子线程的 command/file-change；未实现聚合前，不能把父线程证据外推为子线程已观察。
+
+## 2026-10-12：后端架构优先于表面发布修补
+
+用户明确后端整体架构是本轮重点。验收和 review 先核对入口路由、Goal 监督、Codex 原生证据、上下文投影/恢复、Session 与 cache 不变性，再处理 Frontend 发布工作流；前端改动只修复会阻塞干净构建或正式包的必要链路，不以 UI 或 CI 状态掩盖后端边界。
