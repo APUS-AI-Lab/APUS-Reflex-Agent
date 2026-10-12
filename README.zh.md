@@ -32,7 +32,7 @@ APUS 基于 DeepSeek Harness，将模型推理与执行、权限及持久 Sessio
 
 ## 模型负责判断，Harness 负责执行
 
-![APUS 架构：输入事实、可选 Reflex 决策、Harness 执行、持久记忆、有界上下文投影与结果反馈。](docs/dev-continuum-reflex-integration/apus-reflex-loop-working-architecture.svg)
+![APUS 产品与技术架构：用户入口、Harness 执行、可选 Reflex 决策、自选模型、Session 历史与 Continuum 记忆。](docs/dev-continuum-reflex-integration/apus-reflex-loop-working-architecture.svg)
 
 [架构说明](docs/dev-continuum-reflex-integration/apus-reflex-loop-working-architecture.html) · [运行时架构](docs/architecture.zh.md)
 

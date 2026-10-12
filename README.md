@@ -32,7 +32,7 @@ Memory supports this cycle; it does not replace goal management, verification or
 
 ## The models decide; the Harness executes
 
-![APUS architecture: input facts, optional Reflex decisions, Harness execution, persistent memory, bounded context projection and outcome feedback.](docs/dev-continuum-reflex-integration/apus-reflex-loop-working-architecture.svg)
+![APUS product and technical architecture: user entry, Harness execution, optional Reflex decisions, configurable models, Session history and Continuum memory.](docs/dev-continuum-reflex-integration/apus-reflex-loop-working-architecture.svg)
 
 [Architecture overview](docs/dev-continuum-reflex-integration/apus-reflex-loop-working-architecture.html) · [Runtime architecture](docs/architecture.md)
 
