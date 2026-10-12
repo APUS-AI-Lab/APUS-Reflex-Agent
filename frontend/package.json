@@ -503,6 +503,7 @@
       "maintainer": "APUS-AI-Lab"
     },
     "deb": {
+      "artifactName": "apus-reflex-harness-linux-x64.deb",
       "packageName": "apus-reflex-harness",
       "priority": "optional",
       "depends": [

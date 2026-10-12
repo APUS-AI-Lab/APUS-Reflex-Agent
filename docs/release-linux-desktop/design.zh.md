@@ -16,7 +16,7 @@ flowchart LR
 
 ## 打包
 
-原生工作流使用 `ubuntu-24.04`，构建锁定的运行时和桌面，并收集 `apus-reflex-harness-linux-x64.deb`。软件包及可执行文件名为 `apus-reflex-harness`，产品展示名称仍为 APUS Reflex Harness。Linux 元数据使用 `-linux-x64` 后缀。现有 macOS 和 Windows 产物名称保持不变。安装包携带 Node 和全部必要运行时依赖；用户启动应用无需安装 Git 或 Node。
+原生工作流使用 `ubuntu-24.04`，构建锁定的运行时和桌面，并收集 `apus-reflex-harness-linux-x64.deb`。Debian 目标显式固定该文件名，因为构建器会将架构宏展开为 `amd64`。软件包及可执行文件名为 `apus-reflex-harness`，产品展示名称仍为 APUS Reflex Harness。Linux 元数据使用 `-linux-x64` 后缀。现有 macOS 和 Windows 产物名称保持不变。安装包携带 Node 和全部必要运行时依赖；用户启动应用无需安装 Git 或 Node。
 
 锁定的 electron-builder Debian 安装器负责应用专属 AppArmor 配置、用户命名空间许可和 setuid 辅助程序安装，保留其默认安装和卸载脚本。产品启动器不会关闭 Chromium sandbox。配置参考[上游 Linux 文档](https://github.com/electron-userland/electron-builder/blob/master/website/docs/linux.md)，实现遵循锁定版本而非更新版本的启动器行为。
 

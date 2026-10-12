@@ -77,3 +77,11 @@ it('checks out the dispatch commit and retains review evidence without release-w
   expect(JSON.stringify(workflow)).toContain('ubuntu-24.04')
   expect(JSON.stringify(workflow)).not.toContain('gh release')
 })
+
+it('pins the Debian artifact name to the release collector without architecture macro translation', () => {
+  const desktop = JSON.parse(readFileSync(new URL('../frontend/package.json', import.meta.url), 'utf8')) as {
+    build: { linux: { target: { target: string; arch: string[] }[] }; deb: { artifactName?: string } }
+  }
+  expect(desktop.build.linux.target).toEqual([{ target: 'deb', arch: ['x64'] }])
+  expect([desktop.build.deb.artifactName]).toEqual(releaseAssetNames('linux', 'x64'))
+})

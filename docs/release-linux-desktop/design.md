@@ -16,7 +16,7 @@ flowchart LR
 
 ## Packaging
 
-The native workflow uses `ubuntu-24.04`, builds the locked runtime and desktop, and collects `apus-reflex-harness-linux-x64.deb`. The package and executable name are `apus-reflex-harness`; the visible product name remains APUS Reflex Harness. Linux metadata uses the `-linux-x64` suffix. Existing macOS and Windows artifact names remain unchanged. The installer includes Node and all required runtime packages; users need neither Git nor Node to start the application.
+The native workflow uses `ubuntu-24.04`, builds the locked runtime and desktop, and collects `apus-reflex-harness-linux-x64.deb`. The Debian target pins that filename explicitly because the builder expands its architecture macro to `amd64`. The package and executable name are `apus-reflex-harness`; the visible product name remains APUS Reflex Harness. Linux metadata uses the `-linux-x64` suffix. Existing macOS and Windows artifact names remain unchanged. The installer includes Node and all required runtime packages; users need neither Git nor Node to start the application.
 
 The pinned electron-builder Debian installer owns the application-specific AppArmor profile, user-namespace allowance and setuid helper installation. Its default installation and removal scripts remain intact. No product launcher disables Chromium sandboxing. See the [upstream Linux configuration](https://github.com/electron-userland/electron-builder/blob/master/website/docs/linux.md); implementation follows the pinned version rather than newer launcher behavior.
 
