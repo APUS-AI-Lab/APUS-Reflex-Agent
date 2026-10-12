@@ -19,10 +19,13 @@
  * owned by `cordis.patch.yml`. Profile edits land as minimal `settings.mutate`
  * path ops against the stored section — the card names only the fields it can
  * see instead of rebuilding the whole subtree from a partial descriptor.
+ * A changed endpoint or protocol with a new key saves a dedicated credential
+ * before switching the connection and reference in one settings mutation.
  */
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
+import { randomUUID } from '@deepseek-ai/dsh-util-crypto'
 import type {
   CredentialInfo, SettingsNamespaceView, SettingsPathOpView,
 } from '@deepseek-ai/dsh-api-remotes/client'
@@ -165,6 +168,7 @@ export function ProviderEditor(props: ProviderEditorProps): ReactNode {
   const { namespace, schema, settingsPath, operations, t } = props
   const [draft, setDraft] = useState<Record<string, unknown>>(() => draftAt(schema, namespace, settingsPath))
   const [keyDraft, setKeyDraft] = useState('')
+  const replacementCredential = useRef<{ value: string; ref: string } | undefined>(undefined)
   const [keyState, setKeyState] = useState<CredentialInfo | undefined>(undefined)
   const [busy, setBusy] = useState(false)
   const [listBusy, setListBusy] = useState(false)
@@ -258,12 +262,25 @@ export function ProviderEditor(props: ProviderEditorProps): ReactNode {
    */
   const applyOnce = async (): Promise<string | undefined> => {
     const ns = namespace.ns
+    if (keyValue.length > 0 && keyState?.writable === false) return t('keyEnvLocked')
     // A pi-ai profile names the conventional reference only when this page is
     // about to store a key. Otherwise the provider keeps its native auth path.
-    const next = layout === 'pi-ai' && stringAt(draft, 'apiKeyEnv') === undefined
+    let next = layout === 'pi-ai' && stringAt(draft, 'apiKeyEnv') === undefined
       && stringAt(fallback, 'apiKeyEnv') === undefined && keyValue.length > 0
       ? schema.setPath(draft, ['apiKeyEnv'], keyRef)
       : draft
+    const baseProfile = schema.getPath(namespace.base, settingsPath)
+    const changesConnection = ['baseURL', 'api'].some(field =>
+      (stringAt(next, field) ?? stringAt(baseProfile, field)) !== stringAt(fallback, field))
+    const switchesCredential = props.credentialOnly !== true && keyValue.length > 0 && changesConnection
+    let writeKeyRef = keyRef
+    if (switchesCredential) {
+      if (replacementCredential.current?.value !== keyValue) {
+        replacementCredential.current = { value: keyValue, ref: `MODEL_API_KEY_${randomUUID().replaceAll('-', '_')}` }
+      }
+      writeKeyRef = replacementCredential.current.ref
+      next = schema.setPath(next, ['apiKeyEnv'], writeKeyRef)
+    }
     if (props.credentialOnly !== true) {
       // The same checker gates the submit button, so a card cannot reach this
       // with a bad row; it stays because the schema check below would refuse
@@ -289,6 +306,11 @@ export function ProviderEditor(props: ProviderEditorProps): ReactNode {
       : materializesNativeProfile
         ? [{ op: 'set', path: [...settingsPath], value: {} }]
         : pathOps(settingsPath, committedOriginal, next)
+    if (switchesCredential) {
+      // The live configuration keeps its old reference until the replacement key exists.
+      const stored = await operations.storeCredential(writeKeyRef, keyValue)
+      if (stored !== undefined) return stored
+    }
     if (ops.length > 0) {
       const written = await operations.writeSettings(ns, ops, expectedRevision)
       if (written.kind !== 'written') return written.kind === 'conflict' ? t('conflict') : written.message
@@ -296,7 +318,7 @@ export function ProviderEditor(props: ProviderEditorProps): ReactNode {
       setExpectedRevision(written.view.revision)
       setDraft(next)
     }
-    if (keyValue.length > 0) {
+    if (keyValue.length > 0 && !switchesCredential) {
       const stored = await operations.storeCredential(keyRef, keyValue)
       if (stored !== undefined) return stored
     }
@@ -314,6 +336,9 @@ export function ProviderEditor(props: ProviderEditorProps): ReactNode {
         return
       }
       props.onClose(true)
+    } catch (_error) {
+      // An unconfirmed settings write may already reference the staged credential.
+      setFailure(t('saveUnconfirmed'))
     } finally {
       setBusy(false)
     }

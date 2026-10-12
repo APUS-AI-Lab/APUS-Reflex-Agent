@@ -8,6 +8,7 @@
     "src"
   ],
   "references": [
+    { "path": "../../util/crypto" },
     { "path": "../../host/webserver" },
     { "path": "../../../vendor/schemastery" },
     {
