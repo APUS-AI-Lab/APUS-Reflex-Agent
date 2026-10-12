@@ -200,3 +200,59 @@ it.each(['unload', 'unload-remount', 'isolated-unload'] as const)('handles pendi
   expect(agent.session.snapshotEvents().some(event => event.type === 'continuum/memory-record'
     && selectedIds.includes(String(event.data.record.id)))).toBe(true)
 })
+
+it.each(['unload', 'scope-remount'] as const)('drops old-scope recall after %s while a downstream pre-step waits', async (change) => {
+  const { ctx, agent, adapter, user, released } = await start()
+  const oldController = ctx.continuumMemory.controller(agent)
+  const originalIds = agent.session.snapshotEvents()
+    .filter(event => event.type === 'continuum/memory-record')
+    .map(event => String(event.data.record.id))
+  released.resolve({ mode: 'active', selectedIds: originalIds, baselineIds: originalIds, outcome: 'jev' })
+  const entered = Promise.withResolvers<undefined>()
+  const releaseNext = Promise.withResolvers<undefined>()
+  const stop = ctx.on('agent/pre-step', async (_input, next) => {
+    entered.resolve(undefined)
+    await releaseNext.promise
+    return next()
+  })
+  try {
+    agent.followup(user('What is the release code?'))
+    await entered.promise
+    const entry = ctx.configEditor.entries().find(row => row.options.id === 'continuum-memory')!
+    if (change === 'unload') {
+      await entry.fiber!.dispose()
+      expect(ctx.get('continuumMemory')).toBeUndefined()
+    } else {
+      await ctx.configEditor.edit(entry, raw => ({ ...raw, scopes: ['another-workspace'] }))
+    }
+    expect(oldController.state().enabled).toBe(false)
+    releaseNext.resolve(undefined)
+    await agent.whenIdle()
+    stop()
+    expect(adapter.requests).toHaveLength(2)
+    expect(adapter.requests[1]!.messages.filter(message => message.source?.kind === 'continuum-memory')).toEqual([])
+    if (change === 'scope-remount') {
+      await ctx.agents.withInitiator(agent, async () => {
+        agent.session.append('user/message', user('The replacement release code is HORIZON-932.'), { surfaceOp: 'append' })
+        await Promise.resolve(undefined)
+      })
+      const selector = ctx.get('continuumMemorySelector')!
+      selector.select = async (_agent, input) => ({
+        mode: 'active', outcome: 'jev',
+        selectedIds: input.candidates.map(candidate => candidate.id),
+        baselineIds: input.candidates.map(candidate => candidate.id),
+      })
+      agent.followup(user('What is the replacement release code?'))
+      await agent.whenIdle()
+      expect(adapter.requests).toHaveLength(3)
+      const recall = adapter.requests[2]!.messages.filter(message => message.source?.kind === 'continuum-memory')
+      expect(recall).toHaveLength(1)
+      expect(recall[0]!.content.some(block => block.type === 'text' && block.text.includes('HORIZON-932'))).toBe(true)
+      expect(recall[0]!.content.some(block => block.type === 'text' && block.text.includes('MERIDIAN-731'))).toBe(false)
+    }
+  } finally {
+    releaseNext.resolve(undefined)
+    stop()
+    await agent.whenIdle()
+  }
+})
