@@ -19,7 +19,7 @@ import ContinuumMemory from '../src/service.ts'
 import type { ContinuumMemorySelection } from '../src/context.ts'
 import { expect, it, onTestFinished } from 'vitest'
 
-async function start() {
+async function start(isolatedJev = false) {
   const home = realpathSync(mkdtempSync(join(tmpdir(), 'continuum-disable-race-')))
   const resource: { context?: Context } = {}
   const entered = Promise.withResolvers<readonly string[]>()
@@ -42,6 +42,7 @@ async function start() {
     { id: 'tools', name: 'cordis:tools' }, { id: 'agents', name: 'cordis:agents' },
     { id: 'agent-loop', name: 'cordis:loop', config: { agents: [] } },
     { id: 'jev', name: 'cordis:jev', config: { endpoint: 'http://127.0.0.1:1', model: 'fixture' } },
+    ...isolatedJev ? [{ id: 'isolated-jev', name: 'cordis:jev', isolate: { jev: true }, config: { endpoint: 'http://127.0.0.1:1', model: 'isolated-fixture' } }] : [],
     { id: 'continuum-memory', name: 'cordis:memory', config: { enabled: true, mode: 'active', admission: 'user-message', scopes: ['workspace'], maxCandidates: 8, maxExcerptBytes: 2048, maxTotalBytes: 8192 } },
   ] }]))
   writeFileSync(join(dir, 'cordis.yml'), '[]\n')
@@ -134,4 +135,65 @@ it.each(['agent', 'service'] as const)('invalidates controllers when their %s is
   }
   expect(controller.isCurrent(ticket)).toBe(false)
   expect(controller.state().enabled).toBe(false)
+})
+
+it.each(['unload', 'unload-remount', 'isolated-unload'] as const)('handles pending recall across Jev %s', async (change) => {
+  const isolated = change === 'isolated-unload'
+  const { ctx, entered, released, adapter, agent, user } = await start(isolated)
+  const memoryEntry = ctx.configEditor.entries().find(row => row.options.id === 'continuum-memory')!
+  const memoryUid = memoryEntry.fiber!.uid
+  const observedAvailability: boolean[] = []
+  memoryEntry.fiber!.ctx.on('internal/service', (name) => {
+    if (name === 'jev') observedAvailability.push(memoryEntry.fiber!.ctx.get('jev') !== undefined)
+  })
+  const controller = ctx.continuumMemory.controller(agent)
+  const ticket = controller.beginRead({ scopes: ['workspace'] })
+  if (ticket === undefined) throw new Error('enabled controller did not issue a read ticket')
+  agent.followup(user('What is the release code?'))
+  const selectedIds = await entered.promise
+  expect(selectedIds.length).toBeGreaterThan(0)
+  const entry = ctx.configEditor.entries().find(row => row.options.id === (isolated ? 'isolated-jev' : 'jev'))!
+  const previous = entry.fiber!
+  await entry.update({ disabled: true })
+  await previous.dispose()
+  expect(entry.ctx.get('jev')).toBeUndefined()
+  if (isolated) {
+    expect(ctx.get('jev')).toBeDefined()
+    expect(observedAvailability).toEqual([])
+    expect(ctx.continuumMemory.state().enabled).toBe(true)
+  } else {
+    expect(ctx.get('jev')).toBeUndefined()
+    expect(observedAvailability).toContain(false)
+    expect(ctx.continuumMemory.state()).toEqual({ enabled: false, mode: 'off', reason: 'reflex-required' })
+  }
+  if (change === 'unload-remount') {
+    await entry.update({ disabled: false })
+    await entry.fiber!.await()
+    expect(ctx.get('jev')).toBeDefined()
+    expect(ctx.continuumMemory.state().enabled).toBe(true)
+  }
+  expect(memoryEntry.fiber!.uid).toBe(memoryUid)
+  released.resolve({ mode: 'active', selectedIds, baselineIds: selectedIds, outcome: 'jev' })
+  await agent.whenIdle()
+  expect(adapter.requests).toHaveLength(2)
+  const recall = adapter.requests[1]!.messages.filter(message => message.source?.kind === 'continuum-memory')
+  if (isolated) {
+    expect(recall).toHaveLength(1)
+    expect(controller.isCurrent(ticket)).toBe(true)
+  } else {
+    expect(recall).toEqual([])
+    expect(controller.isCurrent(ticket)).toBe(false)
+  }
+  agent.followup(user('Recall the release code once more.'))
+  await agent.whenIdle()
+  expect(adapter.requests).toHaveLength(3)
+  const nextRecall = adapter.requests[2]!.messages.filter(message => message.source?.kind === 'continuum-memory')
+  if (change === 'unload') expect(nextRecall).toEqual([])
+  else {
+    expect(nextRecall.some(message => message.source?.kind === 'continuum-memory'
+      && selectedIds.every(id => message.source.kind === 'continuum-memory' && message.source.recordIds.includes(id))
+      && message.content.some(block => block.type === 'text' && block.text.includes('The release code is MERIDIAN-731.')))).toBe(true)
+  }
+  expect(agent.session.snapshotEvents().some(event => event.type === 'continuum/memory-record'
+    && selectedIds.includes(String(event.data.record.id)))).toBe(true)
 })

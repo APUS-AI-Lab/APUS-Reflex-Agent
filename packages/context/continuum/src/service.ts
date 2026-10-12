@@ -83,8 +83,8 @@ export interface ContinuumMemoryService {
  * Session-backed Continuum profile service. It owns one projection per Agent,
  * restores that projection from the Agent Session, and installs the explicit
  * same-step consumer when the profile switch resolves to a usable state.
- * Committed live config changes invalidate pending reads; Agent and service
- * disposal invalidate and release their controllers.
+ * Committed live config changes and Jev removal invalidate pending reads;
+ * Agent and service disposal invalidate and release their controllers.
  */
 export default class ContinuumMemory extends Service implements ContinuumMemoryService {
   static Config = ContinuumConfig
@@ -96,9 +96,9 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
   constructor(ctx: Context, config: ContinuumConfig | ContinuumResolvedConfig) {
     super(ctx, 'continuumMemory')
     this.config = config
-    ctx.on('loader/volatile-update', () => {
-      const switchConfig = this.switchConfig()
-      for (const controller of this.controllers.values()) controller.setSwitch(switchConfig)
+    ctx.on('loader/volatile-update', () => { this.synchronizeControllers() })
+    ctx.on('internal/service', (name) => {
+      if (name === 'jev') this.synchronizeControllers()
     })
     ctx.effect(() => () => {
       for (const controller of this.controllers.values()) controller.setSwitch({ enabled: false, mode: 'off', reflexMounted: false })
@@ -161,6 +161,11 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
     const next = this.controller(agent).deactivate(id, expectedRevision)
     appendMemoryRecordEvent(agent.session, 'deactivate', next)
     return next
+  }
+
+  private synchronizeControllers(): void {
+    const switchConfig = this.switchConfig()
+    for (const controller of this.controllers.values()) controller.setSwitch(switchConfig)
   }
 
   private switchConfig(): ContinuumMemorySwitch {
