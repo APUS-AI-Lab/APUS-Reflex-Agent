@@ -32,9 +32,9 @@ APUS 基于 DeepSeek Harness，将模型推理与执行、权限及持久 Sessio
 
 ## 模型负责判断，Harness 负责执行
 
-![APUS 产品与技术架构：用户入口、Harness 执行、可选 Reflex 决策、自选模型、Session 历史与 Continuum 记忆。](docs/dev-continuum-reflex-integration/apus-reflex-loop-working-architecture.svg)
+<img src="docs/dev-continuum-reflex-integration/apus-reflex-loop-working-architecture.svg" alt="APUS 产品与技术架构：用户入口、Harness 执行、可选 Reflex 决策、自选模型、Session 历史与 Continuum 记忆。" />
 
-[架构说明](docs/dev-continuum-reflex-integration/apus-reflex-loop-working-architecture.html) · [运行时架构](docs/architecture.zh.md)
+[英文架构](docs/dev-continuum-reflex-integration/apus-reflex-loop-working-architecture.en.html) · [中文架构](docs/dev-continuum-reflex-integration/apus-reflex-loop-working-architecture.html) · [运行时架构](docs/architecture.zh.md)
 
 “大脑”是你配置的通用模型：负责推理、规划、内容生成和工具调用请求。“小脑”是可选的 Reflex/Jev 服务：在给定候选和约束内回答选择、评分或命题判断问题。Harness 管理执行并记录已采纳的结果；它本身不是一个模型。
 
@@ -51,9 +51,9 @@ APUS 基于 DeepSeek Harness，将模型推理与执行、权限及持久 Sessio
 
 ## 持久记忆，有限上下文
 
-![Continuum 记忆流程：已准入的 Session 事实、持久存储、scope 检索、可选 Reflex 选择与有界模型上下文。](docs/dev-continuum-reflex-integration/apus-continuum-memory-flow.svg)
+<img src="docs/dev-continuum-reflex-integration/apus-continuum-memory-flow.svg" alt="Continuum 记忆流程：已准入的 Session 事实、持久存储、scope 检索、可选 Reflex 选择与有界模型上下文。" />
 
-[记忆流程说明](docs/dev-continuum-reflex-integration/apus-reflex-loop-working-architecture.html#memory) · [Continuum 语义](packages/context/continuum/README.zh.md) · [可选 Jev 选择器](packages/experimental/continuum-jev/README.zh.md)
+[英文记忆流程](docs/dev-continuum-reflex-integration/apus-reflex-loop-working-architecture.en.html#memory) · [中文记忆流程](docs/dev-continuum-reflex-integration/apus-reflex-loop-working-architecture.html#memory) · [Continuum 语义](packages/context/continuum/README.zh.md) · [可选 Jev 选择器](packages/experimental/continuum-jev/README.zh.md)
 
 **Continuum** 将任务历史与单次推理请求的有限上下文分开。一个事实即使不在当前 prompt 中，仍可保留在持久历史里。检索和可选的 Reflex 选择将有界的工作信息重新带入下一次请求。
 

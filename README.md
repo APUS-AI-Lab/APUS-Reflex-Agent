@@ -32,9 +32,9 @@ Memory supports this cycle; it does not replace goal management, verification or
 
 ## The models decide; the Harness executes
 
-![APUS product and technical architecture: user entry, Harness execution, optional Reflex decisions, configurable models, Session history and Continuum memory.](docs/dev-continuum-reflex-integration/apus-reflex-loop-working-architecture.svg)
+<img src="docs/dev-continuum-reflex-integration/apus-reflex-loop-working-architecture.en.svg" alt="APUS product and technical architecture: user entry, Harness execution, optional Reflex decisions, configurable models, Session history and Continuum memory." />
 
-[Architecture overview](docs/dev-continuum-reflex-integration/apus-reflex-loop-working-architecture.html) · [Runtime architecture](docs/architecture.md)
+[English overview](docs/dev-continuum-reflex-integration/apus-reflex-loop-working-architecture.en.html) · [中文架构](docs/dev-continuum-reflex-integration/apus-reflex-loop-working-architecture.html) · [Runtime architecture](docs/architecture.md)
 
 The “large brain” is your configured general model: it reasons, plans, generates content and proposes tool calls. The “small brain” is an optional Reflex/Jev service: it answers structured choice, score or proposition questions within supplied candidates and constraints. The Harness owns execution and records the adopted results; it is not itself a model.
 
@@ -51,9 +51,9 @@ The decision service is configurable. A replacement must implement the supported
 
 ## Persistent memory, finite context
 
-![Continuum memory flow: admitted Session facts, durable storage, scoped retrieval, optional Reflex selection and bounded model context.](docs/dev-continuum-reflex-integration/apus-continuum-memory-flow.svg)
+<img src="docs/dev-continuum-reflex-integration/apus-continuum-memory-flow.en.svg" alt="Continuum memory flow: admitted Session facts, durable storage, scoped retrieval, optional Reflex selection and bounded model context." />
 
-[Memory flow overview](docs/dev-continuum-reflex-integration/apus-reflex-loop-working-architecture.html#memory) · [Continuum semantics](packages/context/continuum/README.md) · [Optional Jev selector](packages/experimental/continuum-jev/README.md)
+[English memory flow](docs/dev-continuum-reflex-integration/apus-reflex-loop-working-architecture.en.html#memory) · [中文记忆流程](docs/dev-continuum-reflex-integration/apus-reflex-loop-working-architecture.html#memory) · [Continuum semantics](packages/context/continuum/README.md) · [Optional Jev selector](packages/experimental/continuum-jev/README.md)
 
 **Continuum** separates task history from the limited context of a single inference request. A fact can remain in persisted history even when it is absent from the current prompt. Retrieval and optional Reflex selection bring a bounded working set back into the next request.
 
