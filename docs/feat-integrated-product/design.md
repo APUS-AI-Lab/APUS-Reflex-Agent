@@ -16,7 +16,7 @@ Keep the existing repository, history, CI, and Issues. Import the desktop host u
 flowchart LR
   Source[One reviewed commit and dependency locks] --> Build[Harness and Web build]
   Build --> Desktop[Electron host and bundled runtime]
-  Build --> Web[dsh Web profile]
+  Build --> Web[APUS Web profile]
   Desktop --> Local[Local authenticated API and session storage]
   Web --> Local
   Local --> Models[User-configured model providers]
@@ -45,7 +45,7 @@ Keep the existing pnpm lock and frontend npm lock for the initial integration. R
 
 The default desktop profile supports ordinary model tasks with user-configured providers. It must not silently connect to private Jev, Fidoo, or other deployment endpoints. New users configure a provider, API protocol and address, credentials, and a model, then select a workspace and run a small task. Saved settings and a reachable HTTP endpoint do not demonstrate successful inference.
 
-System3 collaboration is an explicit opt-in. Its UI must distinguish disabled, incomplete, failed, and enabled configuration. Enabling it requires the decision and reasoning providers, allowed candidates, and a clear account of remote data transfer. Required missing configuration fails visibly. Reuse the existing credential service; do not save secrets in source, examples, release artifacts, or logs.
+The Reflex decision service uses the shared client’s existing Settings → Reflex model configuration page; do not add a separate desktop System3 settings plugin. The page reports connection tests and capability status independently. Saving an endpoint does not enable routing, supervision or Continuum. Candidates, data classification, remote authorization and memory admission remain owned by the relevant profile configuration; missing required settings fail visibly. Reuse the existing credential service; do not save secrets in source, examples, release artifacts or logs.
 
 The root setup command checks Node and platform build prerequisites, installs both locked dependency sets, builds the Harness, and prepares the desktop runtime and brand resources from this checkout. Report the failing stage and allow a corrected rerun. Keep the full product build out of implicit installation hooks. Verify the clean-clone path before describing it as accepted; source ZIP support requires separate verification because build metadata can depend on Git.
 
@@ -59,7 +59,7 @@ Runtime preparation resolves the same repository automatically and never falls b
 
 ## Version and distribution
 
-The candidate product version is `0.1.8-beta.1`, above the existing `0.1.7-rc.2` baseline. Product versioning is distinct from Harness package versions and session-format versions; do not bulk-rename workspace package versions. Release tags, desktop metadata, and the product manifest must agree.
+The user-defined first APUS product version is `0.1.0`, with release tag `v0.1.0`; it does not inherit the upstream product version sequence. GitHub prerelease status is independent of the version string, and this first release remains an unsigned preview subject to acceptance. Product versioning is distinct from Harness package versions and session-format versions; do not bulk-rename workspace package versions. Release tags, desktop metadata, and the product manifest must agree.
 
 Build metadata records product and Harness versions, the complete source revision, platform, architecture, and dependency-lock digests. Release sources must be clean; a locally dirty development build cannot establish a reproducible release. Generate metadata after source selection rather than embedding a commit's own hash into that commit.
 

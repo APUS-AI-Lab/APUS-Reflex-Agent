@@ -5,7 +5,7 @@
     "sourceCollection": "curated",
     "slug": "swiss-signal-grid",
     "name": "Swiss Signal Grid",
-    "variantLabel": "DSH",
+    "variantLabel": "APUS",
     "description": "原创瑞士信号网格模板，适合管理层数据汇报、市场洞察、风险集中度、经营模式比较与进入决策。",
     "previewTitle": "Swiss Signal Grid",
     "previewSubtitle": "Consulting · WorkBuddy Original",
@@ -1080,6 +1080,6 @@
   "provenance": {
     "kind": "retained-native",
     "commit": "de281a1ceccadb00b92df53adb106a2e87ec0b4b",
-    "evidence": "PPTD page sources, vectors, source provenance statements and PR #320"
+    "evidence": "PPTD page sources, vectors, source attribution statements and PR #320"
   }
 }

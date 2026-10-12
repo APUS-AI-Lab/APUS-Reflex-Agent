@@ -210,7 +210,7 @@ describe('APUS Reflex Harness onboarding wizard', () => {
     expect(source).toContain('openSection(MODELS_SECTION_ID)')
     expect(source).not.toContain('OnboardingSurface')
     expect(source).not.toContain('ModelsSection')
-    expect(source).toContain('https://github.com/cryptoSUN2049/APUS-Reflex-Harness/issues\'')
+    expect(source).toContain('https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/issues\'')
     expect(source).not.toContain('dsh-desktop/issues')
     expect(source).toContain('GITHUB_MARK_PATH')
     expect(source).toContain('IconGlobeOutline14')

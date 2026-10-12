@@ -318,7 +318,7 @@ export function apply(ctx) {
       if (contentType !== PRESET_ARCHIVE_MIME
         && contentType !== 'application/zip'
         && contentType !== 'application/octet-stream') {
-        return presetArchiveFailure('Content type must be a DSH preset package.', 415)
+        return presetArchiveFailure('Content type must be a Harness preset package.', 415)
       }
       const contentLength = Number(request.headers.get('content-length'))
       if (Number.isFinite(contentLength) && contentLength > PRESET_ARCHIVE_MAX_COMPRESSED) {

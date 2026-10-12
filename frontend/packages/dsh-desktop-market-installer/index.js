@@ -830,7 +830,7 @@ export function createDesktopPnpmService(options) {
 export function resolveDshEntry(argv = process.argv) {
   const entry = argv[1]
   if (!entry || !/[/\\]bin\.js$/u.test(entry)) {
-    throw new Error('The running DSH entry could not be identified.')
+    throw new Error('The running Harness entry could not be identified.')
   }
   return resolve(entry)
 }

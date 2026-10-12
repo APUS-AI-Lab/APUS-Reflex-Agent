@@ -27,7 +27,7 @@ import { CurrentVersionRow } from '../src/client/CurrentVersionRow.tsx'
 import { DesktopUpdateBadge } from '../src/client/DesktopUpdateIndicator.tsx'
 import type { DesktopUpdateView } from '../src/types.ts'
 
-afterEach(() => { cleanup(); vi.unstubAllEnvs() })
+afterEach(() => { cleanup(); vi.unstubAllEnvs(); vi.unstubAllGlobals() })
 
 // The seat's key domain is settings ∪ common; the stub answers from the
 // package dictionary and falls back to the key like the real chain.
@@ -228,9 +228,12 @@ it('reports a failed developer-tool write and allows retry', async () => {
 
 describe('current version', () => {
   it.each([
-    ['Current version: 1.2.3-rc.4', en],
-    ['当前版本：1.2.3-rc.4', zh],
-  ])('renders the localized release label %s', (expected, dictionary) => {
+    ['Current version: 1.2.3-rc.4', en, undefined],
+    ['当前版本：1.2.3-rc.4', zh, undefined],
+    ['Current version: 0.1.0', en, { productVersion: '0.1.0' }],
+    ['当前版本：0.1.0', zh, { productVersion: '0.1.0' }],
+  ])('renders the localized product or Web release label %s', (expected, dictionary, carrier) => {
+    vi.stubGlobal('dshDesktop', carrier)
     vi.stubEnv('DSH_CLIENT_VERSION', '1.2.3-rc.4')
     const translate: TriggerContentProps['t'] = (key, params) => {
       let text = (dictionary as Record<string, string>)[key] ?? key
@@ -243,6 +246,7 @@ describe('current version', () => {
   })
 
   it('omits the row when a partial build has no version metadata', () => {
+    vi.stubGlobal('dshDesktop', undefined)
     vi.stubEnv('DSH_CLIENT_VERSION', undefined)
     const view = render(<CurrentVersionRow {...kit} t={t} />)
     expect(view.container.textContent).toBe('')

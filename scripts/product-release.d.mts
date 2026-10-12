@@ -12,6 +12,7 @@ export interface BuildReceipt {
   sourceRevision: string
   target: string
   signing: string
+  runtimeDependencyInventorySha256?: string | undefined
   directory: string
   assets: { name: string; sha256: string }[]
 }

@@ -1,12 +1,19 @@
-# DeepSeek Harness 品牌素材使用规范
+# APUS Reflex Harness 品牌指引
 
 [English](BRAND_GUIDELINES.md) | 中文
 
-为了维护 DeepSeek Harness 生态的长期健康发展，避免用户混淆，方便用户对相关资源进行检索和识别，我们特别制定本规范，希望大家共同遵守：
+本指引用于统一本仓库的产品展示，不新增许可条款，也不宣称注册商标状态。
 
-- 在项目的描述性文字中，您可以使用“DeepSeek Harness”真实、准确地说明您的项目与 DeepSeek Harness 的关系，例如“基于 DeepSeek Harness 构建”或“兼容 DeepSeek Harness”等。这类说明符合许可证的要求，也有助于用户理解项目的定位。
-- 如果您希望项目名称能体现与 DeepSeek Harness 生态的关联，我们建议使用缩写的 **“DSH”** 标识来命名，这样既清晰又便于社区内的交流。
-- 在项目命名时，请避免直接使用完整的 **“DeepSeek Harness”** 商标。**“DeepSeek Harness”** 是深度求索公司的注册商标，未经授权用于项目名，容易引发用户的误解和混淆，从而影响整个生态的清晰度。同时，也可能涉及商标侵权行为。
-- 此外，请您避免在宣传或展示时，以容易引起误解的方式使用官方品牌素材，以免让用户产生官方背书、合作或授权等不实印象。
+## 名称与文案
 
-我们相信，一个清晰、有序的社区环境，能让每一位开发者的努力都更容易被看见和认可。对于少数不符合上述规范的情况，我们可能会联系相关方进行适当的调整，以维护生态整体的秩序。感谢大家的理解与支持，让我们一起构建一个更友好、更可持续发展的开源社区。
+应用标题、安装包、关于页、文档与产品链接统一使用 **APUS Reflex Harness**。使用 **Model-as-a-Harness**，保留冠词“a”。中文口号为**瞬时执行，深度思考**，英文表述为 **Instant action. Deep thinking.**
+
+产品界面使用 APUS 品牌。上游名称仅用于准确的许可致谢，不作为产品标题、Logo 或副标题。改名会破坏兼容性的必要技术标识继续保留。
+
+## 渐变飞鸟 Logo
+
+以用户提供的[渐变飞鸟 Logo](apps/web/public/brand-source.webp)为唯一原始来源。这是一张 140 × 140、带透明背景的位图，保留原有颜色、渐变、比例与透明度。生成的 [SVG 包装文件](apps/web/public/brand-mark.svg)嵌入该图像的无损 PNG 表示，并非矢量重绘或更高分辨率的重建。发行使用生成的应用图标和各平台图标。[品牌元数据](apps/web/public/brand.json)统一管理应用名称、口号与资源文件名。
+
+## 许可与归属
+
+品牌调整不删除版权或许可声明。保留 [LICENSE](LICENSE)、[桌面 LICENSE](frontend/LICENSE)、[第三方通知](THIRD_PARTY_NOTICES.md)与[桌面通知](frontend/THIRD_PARTY_NOTICES.md)。产品名称或 Logo 不表示获得上游背书。

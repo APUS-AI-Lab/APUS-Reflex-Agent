@@ -26,11 +26,11 @@ declare module '@deepseek-ai/cordis' {
 
 /** Plugin configuration for the built-in System One provider. */
 export interface Config {
-  /** System One gateway URL; credentials must use apiKeyEnv rather than URL user information. */
+  /** System One gateway URL; empty with model leaves the provider unconfigured. Credentials use apiKeyEnv. */
   readonly endpoint: Volatile<string>
   /** Wire protocol; the official API does not receive the OpenJev effort extension. @default 'openjev' */
   readonly protocol: Volatile<'openjev' | 'typesafe'>
-  /** Model identifier used when a decision request omits its model. */
+  /** Model identifier used when a decision request omits its model; empty with endpoint permits first-run settings. */
   readonly model: Volatile<string>
   /** Decision effort used when a request omits it. @default 'low' */
   readonly effort: Volatile<'low' | 'high'>
@@ -54,12 +54,21 @@ export interface Config {
 const DEFAULT_TIMEOUT_MS = 30_000
 const DEFAULT_PROVIDER_ID = 'system-one'
 
+/** Validate complete provider settings while allowing an empty first-run configuration. */
+function providerIdentity(config: Config): { endpoint: string; model: string } | undefined {
+  const endpoint = config.endpoint.get().trim()
+  const model = config.model.get().trim()
+  if (!endpoint && !model) return undefined
+  if (!endpoint || !model) throw new Error('Jev requires both an endpoint and a model')
+  return { endpoint: normalizeJevEndpoint(endpoint), model }
+}
+
 /** Cordis service that resolves one pinned Jev provider per request. */
 export default class Jev extends TypertRemoteService {
   static Config = z.object({
-    endpoint: z.string().min(1).required().volatile(),
+    endpoint: z.string().default('').volatile(),
     protocol: z.union([z.const('openjev'), z.const('typesafe')]).default('openjev').volatile(),
-    model: z.string().min(1).max(256).required().volatile(),
+    model: z.string().max(256).default('').volatile(),
     effort: z.union([z.const('low'), z.const('high')]).default('low').volatile(),
     timeoutMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).default(DEFAULT_TIMEOUT_MS).volatile(),
     apiKeyEnv: z.string().role('credential-ref').volatile(),
@@ -72,7 +81,7 @@ export default class Jev extends TypertRemoteService {
   private readonly providers = new Map<string, JevProvider>()
   private readonly defaultProviderId: string
   private readonly defaultEffort: () => 'low' | 'high'
-  private readonly configuredProvider: () => SystemOneProvider
+  private readonly configuredProvider: () => SystemOneProvider | undefined
   private readonly capabilityReaders = new Map<ReflexCapabilityId, () => ReflexCapabilityState>()
 
   constructor(ctx: Context, config: Config) {
@@ -85,11 +94,13 @@ export default class Jev extends TypertRemoteService {
     const fetcher = config.keepAliveMs === undefined ? undefined
       : createPooledFetch(ctx, config.keepAliveMs, config.http2 ?? false, config.resetAfterFailures)
     this.configuredProvider = () => {
+      const identity = providerIdentity(config)
+      if (identity === undefined) return undefined
       const apiKeyEnv = config.apiKeyEnv.get()
       return new SystemOneProvider({
         id: providerId,
         ...fetcher === undefined ? {} : { fetcher },
-        endpoint: config.endpoint.get(), protocol: config.protocol.get(), model: config.model.get(),
+        ...identity, protocol: config.protocol.get(),
         effort: config.effort.get(), timeoutMs: config.timeoutMs.get(),
         ...apiKeyEnv === undefined ? {} : { apiKeyEnv, resolveApiKey: () => resolveJevApiKey(ctx, apiKeyEnv) },
       })
@@ -97,19 +108,12 @@ export default class Jev extends TypertRemoteService {
     // Validate the initial deployment before making the service available.
     this.configuredProvider()
     ctx.on('internal/config', function (this: import('@deepseek-ai/cordis').Fiber, _input, next) {
-      const raw: unknown = next()
-      if (this !== ctx.fiber) return raw
-      const candidate = Jev.Config(raw as Parameters<typeof Jev.Config>[0])
-      normalizeJevEndpoint(candidate.endpoint.get())
-      return raw
-    })
-    const currentProvider = this.configuredProvider
-    const provider: JevProvider = {
-      get info() { return currentProvider().info },
-      decide: (request, signal) => currentProvider().decide(request, signal),
-      warm: signal => currentProvider().warm(signal),
-    }
-    ctx.effect(() => this.register(provider))
+      const resolved: unknown = next()
+      if (this !== ctx.fiber) return resolved
+      const candidate = Jev.Config(resolved as Parameters<typeof Jev.Config>[0])
+      providerIdentity(candidate)
+      return resolved
+    }, { prepend: true }) // Validate after the loader evaluates inherited !!js expressions.
   }
 
   /** Register the runtime owner of one capability's observed status.
@@ -130,7 +134,7 @@ export default class Jev extends TypertRemoteService {
   readStatus(): ReflexStatus {
     const ids: ReflexCapabilityId[] = ['entryRouting', 'codexSupervision', 'contextMemory']
     return {
-      provider: { ...this.configuredProvider().info },
+      provider: this.configuredProvider()?.info ?? null,
       capabilities: ids.map(id => ({ id, ...(this.capabilityReaders.get(id)?.() ?? { implemented: false, enabled: false }) })),
     }
   }
@@ -152,7 +156,7 @@ export default class Jev extends TypertRemoteService {
    * @returns A disposer that removes only this registration.
    */
   register(provider: JevProvider): () => void {
-    if (this.providers.has(provider.info.id)) throw new Error(`jev provider "${provider.info.id}" is already registered`)
+    if (provider.info.id === this.defaultProviderId || this.providers.has(provider.info.id)) throw new Error(`jev provider "${provider.info.id}" is already registered`)
     this.providers.set(provider.info.id, provider)
     return () => {
       if (this.providers.get(provider.info.id) === provider) this.providers.delete(provider.info.id)
@@ -164,19 +168,29 @@ export default class Jev extends TypertRemoteService {
    * @returns Detached registered provider metadata.
    */
   listProviders(): readonly JevProviderInfo[] {
-    return [...this.providers.values()].map(provider => ({ ...provider.info }))
+    const configured = this.configuredProvider()
+    return [...configured ? [configured] : [], ...this.providers.values()].map(provider => ({ ...provider.info }))
+  }
+
+  private provider(id: string): JevProvider {
+    const provider = id === this.defaultProviderId ? this.configuredProvider() : this.providers.get(id)
+    if (provider === undefined) {
+      if (id === this.defaultProviderId) throw new Error('Jev is not configured; set an endpoint and model in Reflex settings')
+      throw new Error(`jev provider "${id}" is not registered`)
+    }
+    return provider
   }
 
   /**
    * Resolve a request to a provider and effective model without performing I/O.
    * @param request - Host request and optional provider selection.
    * @returns Validated request with provider and model pinned.
+   * @throws When the selected provider is unconfigured or not registered.
    */
   resolve(request: JevRequest): JevSpec {
     const normalized = validateJevRequest(request)
     const providerId = normalized.providerId ?? this.defaultProviderId
-    const provider = this.providers.get(providerId)
-    if (provider === undefined) throw new Error(`jev provider "${providerId}" is not registered`)
+    const provider = this.provider(providerId)
     return { ...normalized, providerId, model: normalized.model ?? provider.info.model,
       ...normalized.effort === undefined && providerId === this.defaultProviderId ? { effort: this.defaultEffort() } : {},
     }
@@ -189,7 +203,8 @@ export default class Jev extends TypertRemoteService {
    * @returns Whether the provider answered; false when it has no transport to warm or the request failed.
    */
   async warm(providerId?: string, signal?: AbortSignal): Promise<boolean> {
-    const provider = this.providers.get(providerId ?? this.defaultProviderId)
+    const id = providerId ?? this.defaultProviderId
+    const provider = id === this.defaultProviderId ? this.configuredProvider() : this.providers.get(id)
     if (provider?.warm === undefined) return false
     try {
       await provider.warm(signal)
@@ -205,12 +220,12 @@ export default class Jev extends TypertRemoteService {
    * @param request - Host state and typed questions.
    * @param signal - Cancellation propagated to the caller.
    * @returns Validated result or a safe failure description.
+   * @throws When the selected provider is unconfigured or not registered, or the caller cancels.
    */
   async decide(request: JevRequest, signal?: AbortSignal): Promise<JevOutcome> {
     signal?.throwIfAborted()
     const spec = this.resolve(request)
-    // oxlint-disable-next-line typescript/no-non-null-assertion -- resolve synchronously rejects unregistered providers.
-    const provider = this.providers.get(spec.providerId)!
+    const provider = this.provider(spec.providerId)
     try {
       const response = await provider.decide(spec, signal)
       return { kind: 'ok', spec, response }

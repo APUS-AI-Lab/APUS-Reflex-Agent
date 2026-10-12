@@ -80,7 +80,7 @@ Alternate paper analytical pages with one or two black transition or decision pa
 - Rasterized text, charts, tables, or decision structures that PPTD can represent natively.
 - External template pages, font files, images, logos, or brand assets copied into the pack.
 
-## Reference provenance
+## Reference sources
 
 The design specification, PPTD source, page objects, charts, and rendered previews are original WorkBuddy artifacts. A public Swiss-style presentation case informed only the abstract grid discipline, typographic scale, controlled color ratio, and chart-led composition. The pack contains no downloaded template file, photograph, logo, font file, or proprietary brand asset.
 

@@ -20,14 +20,14 @@ describe('integrated product preparation', () => {
 })
 
 describe('product release identity', () => {
-  const manifest = { product: 'APUS Reflex Harness', version: '0.1.8-beta.1', channel: 'beta', repository: 'APUS-AI-Lab/APUS-Reflex-Harness', targets: ['darwin-arm64'] }
+  const manifest = { product: 'APUS Reflex Harness', version: '0.1.0', channel: 'preview', repository: 'APUS-AI-Lab/APUS-Reflex-Harness', targets: ['darwin-arm64'] }
   const desktop = { version: manifest.version }
   const lock = { version: manifest.version, packages: { '': { version: manifest.version } } }
 
   it('keeps product versions aligned without rewriting the Harness version', () => {
     expect(validateRelease(manifest, desktop, lock)).toBe(manifest)
     expect(() => validateRelease(manifest, { version: '0.1.7-rc.2' }, lock)).toThrow('lockfile')
-    expect(() => validateRelease({ ...manifest, channel: 'stable' }, desktop, lock)).toThrow('channel')
+    expect(() => validateRelease({ ...manifest, channel: 'beta' }, desktop, lock)).toThrow('channel')
     expect(() => validateRelease({ ...manifest, targets: ['linux-x64'] }, desktop, lock)).toThrow('qualified')
     expect(() => validateRelease({ ...manifest, repository: 'dataelement/dsh-desktop' }, desktop, lock)).toThrow('repository')
   })

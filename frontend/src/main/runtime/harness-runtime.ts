@@ -786,7 +786,7 @@ export function extractFailureCause(logLines: readonly string[]): string | undef
     stderrLines.push(text)
 
     if (dshEntryError === undefined) {
-      const m = text.match(/DSH entry failed:\s*(.+)/)
+      const m = text.match(/(?:DSH|Harness) entry failed:\s*(.+)/)
       if (m && m[1]) dshEntryError = m[1].trim()
     }
 
@@ -825,7 +825,7 @@ export function extractDshEntryFailureCause(
 ): string | undefined {
   for (const line of latestHarnessAttemptLogs(logLines)) {
     if (!line.startsWith('[stderr] ')) continue
-    const match = line.slice(8).match(/DSH entry failed:\s*(.+)/)
+    const match = line.slice(8).match(/(?:DSH|Harness) entry failed:\s*(.+)/)
     if (match?.[1]) return match[1].trim()
   }
   return undefined

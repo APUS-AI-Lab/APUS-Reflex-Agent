@@ -1,0 +1,7 @@
+# Bilingual-pair consistency record for reflex-first-run-plan.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-integrated-product/reflex-first-run-plan.md
+/reflex-first-run-configuration:
+  en: 7282886ca4645e34
+  zh: 48d1e6a2ecceecb7

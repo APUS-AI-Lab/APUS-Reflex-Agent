@@ -58,6 +58,8 @@ export interface ReflexCardState extends SettingsFormShell {
   probe: { pending: boolean; result?: ReflexConnectionResult; failed: boolean }
   runtime: ReflexStatus | undefined
   credentialFailed: boolean
+  /** Save preflight refused an existing reference or could not confirm its availability. */
+  credentialSaveError: 'configured' | 'unavailable' | undefined
   /** Settings compensation was refused after the credential write failed. */
   partialSave: boolean
   /** The staged credential, which starts blank on every load. */
@@ -91,6 +93,8 @@ export class ReflexCardController {
   private savedSettings: { inverse: SettingsFormPathOp[]; revision: number | undefined; originalRevision: number | undefined } | undefined
   private recoveredRevision: { from: number | undefined; to: number } | undefined
   private credentialFailed = false
+  private checkingCredential = false
+  private credentialSaveError: ReflexCardState['credentialSaveError']
   private disposed = false
   private epoch = 0
   private probeAbort: AbortController | undefined
@@ -149,9 +153,12 @@ export class ReflexCardController {
   private projection(): ReflexCardState {
     return {
       ...this.form.shell(),
+      saving: this.checkingCredential || this.form.shell().saving,
+      failed: this.credentialSaveError !== undefined || this.form.shell().failed,
       endpoint: this.form.field('endpoint'), model: this.form.field('model'), effort: this.form.field('effort'),
       timeoutMs: this.form.field('timeoutMs'), apiKeyEnv: this.form.field('apiKeyEnv'),
-      probe: this.probe, runtime: this.runtime, credentialFailed: this.credentialFailed, partialSave: this.partialSave,
+      probe: this.probe, runtime: this.runtime, credentialFailed: this.credentialFailed,
+      credentialSaveError: this.credentialSaveError, partialSave: this.partialSave,
       apiKey: this.form.field(API_KEY_FIELD),
       apiKeyConfigured: this.credential.configured,
       apiKeyWritable: this.credential.writable,
@@ -210,27 +217,64 @@ export class ReflexCardController {
   inject(): ReflexCardFace {
     const actions = this.form.actions()
     return { hooks: { reflexCard: this.store }, ...actions,
-      save: () => {
-        if (this.form.shell().saving) return
-        this.savedSettings = undefined
-        this.saveKeyRef = this.form.field('apiKeyEnv').text.trim() || DEFAULT_API_KEY_REF
-        this.partialSave = false
-        actions.save()
-      },
+      save: () => { void this.save() },
       edit: (field, text) => {
+        if (this.checkingCredential) return
+        this.credentialSaveError = undefined
         this.invalidateProbe()
         if (field === API_KEY_FIELD && !this.form.field('apiKeyEnv').text.trim()) actions.edit('apiKeyEnv', DEFAULT_API_KEY_REF)
         actions.edit(field, text)
         if (field === 'apiKeyEnv') void this.readCredential()
       },
       resetField: (field) => {
+        if (this.checkingCredential) return
+        this.credentialSaveError = undefined
         this.invalidateProbe(); actions.resetField(field); void this.readCredential()
       },
       discard: () => {
+        if (this.checkingCredential) return
+        this.credentialSaveError = undefined
         this.invalidateProbe(); this.partialSave = false; this.recoveredRevision = undefined
         actions.discard(); void this.readCredential()
       },
       testConnection: () => this.testConnection(), clearCredential: () => this.clearCredential(), refresh: () => this.refresh(),
+    }
+  }
+
+  /** Read lifecycle state afresh after asynchronous work can dispose this controller. */
+  private isDisposed(): boolean { return this.disposed }
+
+  /** Refuse overwriting a live reference before either configuration or credentials can change. */
+  private async save(): Promise<void> {
+    const shell = this.form.shell()
+    if (this.isDisposed() || this.checkingCredential || shell.saving || !shell.writable || shell.invalid || !shell.dirty) return
+    this.savedSettings = undefined
+    this.saveKeyRef = this.form.field('apiKeyEnv').text.trim() || DEFAULT_API_KEY_REF
+    this.partialSave = false
+    this.credentialSaveError = undefined
+    if (this.form.field(API_KEY_FIELD).text.trim()) {
+      this.checkingCredential = true
+      this.store.set(this.projection())
+      try {
+        const response = await this.ctx.remote.credentials.describe([this.saveKeyRef])
+        if (this.isDisposed()) return
+        if (!response.ok) this.credentialSaveError = 'unavailable'
+        else if (response.value[this.saveKeyRef]?.configured) this.credentialSaveError = 'configured'
+      } catch (_error) {
+        this.credentialSaveError = 'unavailable'
+      } finally {
+        this.checkingCredential = false
+        if (!this.isDisposed()) this.store.set(this.projection())
+      }
+      if (this.isDisposed() || this.credentialSaveError !== undefined) return
+    }
+    await this.form.save()
+    if (this.isDisposed() || this.form.shell().failed) return
+    try { await this.refresh() }
+    catch (_error) { // Status lookup failure does not undo an acknowledged configuration save.
+      if (this.isDisposed()) return
+      this.runtime = undefined
+      this.store.set(this.projection())
     }
   }
 

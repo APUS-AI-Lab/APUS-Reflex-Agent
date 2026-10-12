@@ -1,7 +1,9 @@
 {
   "product": "APUS Reflex Harness",
-  "version": "0.1.8-beta.1",
-  "channel": "beta",
+  "version": "0.1.0",
+  "channel": "preview",
   "repository": "APUS-AI-Lab/APUS-Reflex-Harness",
-  "targets": ["darwin-arm64"]
+  "targets": [
+    "darwin-arm64"
+  ]
 }

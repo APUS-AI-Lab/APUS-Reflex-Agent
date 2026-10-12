@@ -78,7 +78,7 @@ Alternate wide evidence structures with compact module pages. Avoid repeating th
 - Rounded rectangles used as the default container.
 - Rasterized text, tables, charts, arrows, or process blocks that PPTD can represent natively.
 
-## Reference provenance
+## Reference sources
 
 The design specification, PPTD source, page objects, and rendered previews are original WorkBuddy artifacts. Public design sites were used only to understand broad presentation categories. The pack contains no external template file, photograph, logo, font file, or proprietary brand asset.
 

@@ -2,6 +2,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { PROFILE_TEMPLATES } from '@deepseek-ai/dsh-app-boot'
+import { ensureSafeModeProfile } from '../src/main/state/safe-mode-profile'
 import { afterEach, describe, expect, it } from 'vitest'
 import {
   isProjectedGenerationPlugin,
@@ -61,15 +62,29 @@ describe('the launch-process half of the generation model', () => {
     const profileDir = join(home, 'profiles', 'web')
     const manifest = JSON.parse(await readFile(join(profileDir, 'package.json'), 'utf8'))
     const template = PROFILE_TEMPLATES.web
-    expect(template).toBeDefined()
-    expect(manifest.dsh.profile.bundles).toEqual(template?.bundles)
+    if (template === undefined) throw new Error('Missing web profile template')
+    expect(manifest.dsh.profile.bundles).toEqual([...template.bundles, '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'])
     expect(await readFile(join(profileDir, 'cordis.patch.yml'), 'utf8')).toContain('[]')
     expect(await readFile(join(profileDir, 'pnpm-workspace.yaml'), 'utf8')).toContain(
       'nodeLinker: hoisted'
     )
   })
 
-  it('is a no-op on a profile that has never used a generation', async () => {
+  it('preserves saved Reflex edits across startup while safe mode keeps its independent bundle list', async () => {
+    const home = await freshHome()
+    await prepareGenerationsForLaunch(home, silent)
+    const patchPath = join(home, 'profiles/web/cordis.patch.yml')
+    const savedPatch = '- id: jev\n  config:\n    effort: low\n'
+    await writeFile(patchPath, savedPatch)
+    const safe = await ensureSafeModeProfile(home)
+    await prepareGenerationsForLaunch(home, silent)
+    expect(await readFile(patchPath, 'utf8')).toBe(savedPatch)
+    const safeManifest = JSON.parse(await readFile(join(safe, 'package.json'), 'utf8'))
+    expect(safeManifest.dsh.profile.bundles).toEqual(['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app'])
+    expect(await readFile(join(safe, 'cordis.patch.yml'), 'utf8')).not.toContain('jev')
+  })
+
+  it('prepares Reflex without inventing desired generations', async () => {
     const home = await freshHome()
     await expect(prepareGenerationsForLaunch(home, silent)).resolves.toBeUndefined()
     expect(await readDesired(home)).toEqual([])
@@ -92,6 +107,10 @@ describe('the launch-process half of the generation model', () => {
     expect(existsSync(join(home, 'profiles', 'web', 'node_modules', 'keeper'))).toBe(true)
     const manifest = JSON.parse(await readFile(join(home, 'profiles', 'web', 'package.json'), 'utf8'))
     expect(manifest.dsh.profile.bundles).toContain('keeper')
+    expect(manifest.dsh.profile.bundles).toContain('@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin')
+    await prepareGenerationsForLaunch(home, silent)
+    const restarted = JSON.parse(await readFile(join(home, 'profiles', 'web', 'package.json'), 'utf8'))
+    expect(restarted.dsh.profile.bundles.filter((name: string) => name === '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin')).toHaveLength(1)
   })
 
   it('knows a generation install from a plain manifest one', async () => {

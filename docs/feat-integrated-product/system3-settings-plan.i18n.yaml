@@ -2,15 +2,15 @@
 # section, a hash of its English and Chinese blocks outside code blocks and generated regions.
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/feat-integrated-product/system3-settings-plan.md
-/desktop-system3-settings:
-  en: f3bac7109e3aec2a
-  zh: cc840254b645ee28
-/desktop-system3-settings/goal-and-structure:
-  en: e7744eb6ae58d0be
-  zh: c886d9773951f915
-/desktop-system3-settings/configuration-and-lifecycle:
-  en: 7d32760fc7bb997e
-  zh: 3f43357fa4c6e481
-/desktop-system3-settings/files-and-tests:
-  en: 18b07026d579bfff
-  zh: aa2d8c6b57b3366e
+/native-reflex-settings-integration:
+  en: 3f917a68fbb02418
+  zh: 16a9fae6709fe0c9
+/native-reflex-settings-integration/goal-and-structure:
+  en: 5d6bcd9028b31243
+  zh: ffc09d4dd64de72d
+/native-reflex-settings-integration/configuration-and-lifecycle:
+  en: 326f326fbcf2e077
+  zh: 4aa9544d373c0c81
+/native-reflex-settings-integration/files-and-tests:
+  en: 2522a04e203016b8
+  zh: a806b0429ead311d

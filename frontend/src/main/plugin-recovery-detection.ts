@@ -42,7 +42,7 @@ export async function detectPluginRecovery(
   options: DetectPluginRecoveryOptions
 ): Promise<PluginRecoveryDetection> {
   if (options.startupFailures?.length) {
-    // Explicit load-site provenance is authoritative. Never mix in log-derived
+    // Explicit load-site ownership is authoritative. Never mix in log-derived
     // suspects when the loader reported an unknown or protected owner.
     const owners = options.startupFailures.flatMap((failure) =>
       failure.owner ? [failure.owner.packageName] : []

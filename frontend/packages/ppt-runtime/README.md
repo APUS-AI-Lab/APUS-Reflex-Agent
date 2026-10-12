@@ -2,7 +2,7 @@
 
 Product packages: **`dsh-ppt`** (authoring/export) and **`dsh-ppt-composer`** (PPT button/template chooser). The repository keeps their maintained runtime seeds and generator inputs, while every dev, test, build and package run assembles complete distributions under the ignored `.build/ppt-runtime/packages/` staging root.
 
-This directory maintains the distributed JavaScript extracted at Desktop base `9d4502f`; the complete original TypeScript source was not present. Original copyright notices and factual Kimi Slides research attribution remain in `THIRD_PARTY_NOTICES.md`. Renaming does not change provenance or establish legal clearance.
+This directory maintains the distributed JavaScript extracted at Desktop base `9d4502f`; the complete original TypeScript source was not present. Original copyright notices and factual Kimi Slides research attribution remain in `THIRD_PARTY_NOTICES.md`. Renaming does not change the original source or establish legal clearance.
 
 ## 参考来源
 
@@ -50,7 +50,7 @@ Generated templates, previews, package directories and build diagnostics live un
 
 The content layouts now include evidence panels, reconciled contributions, direct chart annotations, exception rows and accountable roadmaps. Shared authoring guidance lives in `scripts/ppt/refinement-guidance.mjs` and the bundled `references/composition.md`. English and Chinese pages retain separate line wrapping and font fallbacks.
 
-Historical withdrawn Kimi-associated reference images were inspected locally to identify general information-design principles. This iteration does not restore those images, their guides, or source files to the distributed packs. The new compositions and wording are authored in the maintained generators; current palette/font provenance remains unchanged.
+Historical withdrawn Kimi-associated reference images were inspected locally to identify general information-design principles. This iteration does not restore those images, their guides, or source files to the distributed packs. The new compositions and wording are authored in the maintained generators; current palette/font sources remains unchanged.
 
 ### Shared preview assets
 

@@ -218,7 +218,7 @@ describe('one-time profile migration to generations', () => {
     expect(existsSync(join(home, 'profiles', 'web', 'node_modules', 'dsh-vision-router'))).toBe(true)
   })
 
-  it('copies non-registry sources exactly and retains their original provenance', async () => {
+  it('copies non-registry sources exactly and retains their original source records', async () => {
     const home = await preUpgradeProfile(
       { 'source-plugin': '1.0.0' },
       { 'source-plugin': 'github:example/source-plugin#main' }

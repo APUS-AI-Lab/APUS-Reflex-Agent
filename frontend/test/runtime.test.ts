@@ -310,7 +310,7 @@ describe('Harness launch contract', () => {
         },
         execArgv: ['--expose-internals'],
         stdio: 'pipe',
-        serviceName: 'DSH Harness',
+        serviceName: 'APUS Reflex Harness',
         disclaim: true
       }
     })

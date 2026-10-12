@@ -13,8 +13,8 @@ const digest = file => createHash('sha256').update(readFileSync(file)).digest('h
 /** Reject version drift without coupling product versions to Harness packages. */
 export function validateRelease(manifest, desktop, lock) {
   if (manifest.product !== 'APUS Reflex Harness' || !/^\d+\.\d+\.\d+(?:-(?:beta|rc)\.\d+)?$/.test(manifest.version)) throw new Error('Invalid APUS product release version.')
-  const channel = manifest.version.includes('-beta.') ? 'beta' : manifest.version.includes('-rc.') ? 'rc' : 'stable'
-  if (manifest.channel !== channel) throw new Error('Product version and release channel differ.')
+  const channels = manifest.version.includes('-beta.') ? ['beta'] : manifest.version.includes('-rc.') ? ['rc'] : ['stable', 'preview']
+  if (!channels.includes(manifest.channel)) throw new Error('Product version and release channel differ.')
   if (desktop.version !== manifest.version || lock.version !== manifest.version || lock.packages['']?.version !== manifest.version) throw new Error('Update frontend/package.json and its lockfile to the release manifest version.')
   if (!Array.isArray(manifest.targets) || !manifest.targets.length || manifest.targets.some(target => !['darwin-arm64', 'darwin-x64', 'win32-x64'].includes(target))) throw new Error('Release targets must name qualified desktop platforms.')
   if (manifest.repository !== 'APUS-AI-Lab/APUS-Reflex-Harness') throw new Error('Release repository must be the APUS product repository.')
@@ -70,7 +70,7 @@ export async function collectRelease(unsigned, base = root) {
   const manifest = checkRelease(base)
   const target = `${process.platform}-${process.arch}`
   if (!manifest.targets.includes(target)) throw new Error(`${target} is not qualified for this release.`)
-  if (manifest.channel === 'stable' || !unsigned) throw new Error('This release path only supports explicitly unsigned beta/rc previews. Signed releases require platform signature verification.')
+  if (manifest.channel === 'stable' || !unsigned) throw new Error('This release path only supports explicitly unsigned preview releases. Signed releases require platform signature verification.')
   const git = args => execFileSync('git', args, { cwd: base, encoding: 'utf8' }).trim()
   if (git(['status', '--porcelain'])) throw new Error('Release collection requires a clean source checkout.')
   const revision = git(['rev-parse', 'HEAD'])

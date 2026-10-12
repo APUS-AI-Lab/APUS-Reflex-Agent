@@ -349,7 +349,7 @@ export async function forgetMarketDisable(dshHome: string, pluginName: string): 
 
 /**
  * Package switches are authoritative. A row-only override has no package
- * provenance and may belong to another active plugin.
+ * recorded plugin ownership and may belong to another active plugin.
  */
 export async function listDisabledProfilePlugins(
   dshHome: string,

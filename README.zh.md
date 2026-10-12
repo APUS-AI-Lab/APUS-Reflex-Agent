@@ -1,12 +1,16 @@
 # APUS Reflex Harness
 
+![APUS Reflex Harness](apps/web/public/brand-source.webp)
+
 [English](README.md) | 中文
 
 > **瞬策 · 瞬时执行，深度思考 · Model-as-a-Harness。** 用自己的模型、持久任务历史与 **Loop Working（循环工程）**，构建 Personal Agent。
 
 APUS 将连续的模型调用组织成围绕目标持续推进的工作：理解需求、选择行动、执行、检查证据、恢复相关上下文，再继续。你选择通用模型负责规划与生成，也可以接入自己的 Reflex/Jev 决策服务，在关键节点进行结构化判断。
 
-APUS 基于 DeepSeek Harness，将模型推理与执行、权限及持久 Session 历史分开管理。项目处于 **开发者预览阶段**。[发布准备评审](docs/dev-continuum-reflex-integration/release-readiness.zh.md) 记录了已验证行为和仍需完成的验收。
+APUS 将模型推理与执行、权限及持久 Session 历史分开管理。项目处于 **开发者预览阶段**。[发布准备评审](docs/dev-continuum-reflex-integration/release-readiness.zh.md) 记录了已验证行为和仍需完成的验收。
+
+本次以前后端合并的一体化仓库交付：保留原 Harness 为主仓，桌面客户端纳入 `frontend/`，统一管理配置、构建与打包。下载安装包后无需另外安装或启动后端；一体化 Release 仍在准备中。
 
 ## 下载桌面客户端
 

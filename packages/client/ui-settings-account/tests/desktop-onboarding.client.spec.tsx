@@ -46,12 +46,14 @@ function mount(step: DesktopOnboardingState['progress']['step'] = 'welcome', bal
 
 it('keeps welcome mandatory and enters credit only through Start', async () => {
   const operations = mount()
+  expect(document.querySelector('[data-desktop-onboarding] img')).toBeNull()
   expect(screen.queryByRole('button', { name: zh.onboardingSkip })).toBeNull()
   expect(screen.queryByRole('button', { name: zh.onboardingBack })).toBeNull()
   fireEvent.keyDown(document, { key: 'Escape' })
   expect(operations.complete).not.toHaveBeenCalled()
   await act(async () => { fireEvent.click(screen.getByRole('button', { name: zh.onboardingStart })) })
   expect(screen.getByRole('heading', { name: zh.onboardingCredit })).toBeTruthy()
+  expect(document.querySelector('[data-desktop-onboarding] img')).toBeNull()
   expect(operations.update).toHaveBeenCalledWith({ step: 'credit' })
 })
 

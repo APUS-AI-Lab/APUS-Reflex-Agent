@@ -60,7 +60,7 @@ export function isHealthySessionLog(lines: string[]): boolean {
     /render-process-gone:\s*reason=crashed/i.test(line) ||
     /GPU process gone:\s*reason=crashed/i.test(line) ||
     /Harness entry failed/i.test(line) ||
-    /DSH entry failed/i.test(line) ||
+    /(?:DSH|Harness) entry failed/i.test(line) ||
     /uncaught exception/i.test(line) ||
     /unhandled rejection/i.test(line) ||
     /\bfatal\b/i.test(line) ||

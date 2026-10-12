@@ -508,7 +508,7 @@ describe('desktop main startup', () => {
     const zh = locale === 'zh-CN'
     expect(harness.dialog.showMessageBox).toHaveBeenLastCalledWith(expect.objectContaining({
       type: 'info', title: zh ? '关于 APUS Reflex Harness' : 'About APUS Reflex Harness', message: 'APUS Reflex Harness',
-      detail: zh ? '版本 V1.0.0\n\n瞬策 · 瞬时执行，深度思考\n\nCopyright (c) 2026 DeepSeek\n基于 DeepSeek Harness 与 Cordis，感谢上游贡献者及所有第三方维护者。' : 'Version V1.0.0\n\nInstant action. Deep thinking.\n\nCopyright (c) 2026 DeepSeek\nBuilt on DeepSeek Harness and Cordis. Thank you to their contributors and all third-party maintainers.', buttons: [zh ? '确定' : 'OK'], cancelId: 0,
+      detail: zh ? '版本 V1.0.0\n\n瞬策 · 瞬时执行，深度思考\n\n感谢开源贡献者。原版权声明可在“开源许可证”中查看。' : 'Version V1.0.0\n\nInstant action. Deep thinking.\n\nThanks to the open-source contributors. Original notices are available under Open-source licenses.', buttons: [zh ? '确定' : 'OK'], cancelId: 0,
     }))
     // A dialog that cannot open is logged, not surfaced as an unhandled rejection.
     harness.dialog.showMessageBox.mockRejectedValueOnce(new Error('overlay unavailable'))

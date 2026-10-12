@@ -92,9 +92,14 @@ try {
     await writeFile(cliPath, JSON.stringify(cli))
     const sourcePackagePath = join(buildSource, 'package.json')
     const sourcePackage = JSON.parse(await readFile(sourcePackagePath, 'utf8'))
-    delete sourcePackage.scripts.postinstall // Git hooks belong to the development checkout, not the deploy copy.
+    // Legacy deploy resolves bin paths against the selected project; select the temporary workspace root.
+    sourcePackage.name = 'apus-desktop-temporary-deploy-root'
+    sourcePackage.dependencies = closure.dependencies
+    sourcePackage.files = ['package.json']
+    delete sourcePackage.devDependencies
+    delete sourcePackage.scripts
     await writeFile(sourcePackagePath, JSON.stringify(sourcePackage))
-    execFileSync(process.execPath, [join(appRoot, 'node_modules/pnpm/bin/pnpm.cjs'), '--filter', 'dsh-system3-desktop-runtime-closure', 'deploy', '--legacy', '--prod', '--config.allow-unused-patches=true', '--config.node-linker=hoisted', '--config.auto-install-peers=false', '--config.link-workspace-packages=true', stage], { cwd: buildSource, stdio: 'inherit' })
+    execFileSync(process.execPath, [join(appRoot, 'node_modules/pnpm/bin/pnpm.cjs'), '--filter', sourcePackage.name, 'deploy', '--legacy', '--prod', '--config.allow-unused-patches=true', '--config.node-linker=hoisted', '--config.auto-install-peers=false', '--config.link-workspace-packages=true', stage], { cwd: buildSource, stdio: 'inherit' })
     root = await realpath(stage)
     // Match the upstream Python carrier: legacy hoists need restoring, then materialize links.
     async function copyPackage(source, destination) {
@@ -106,7 +111,7 @@ try {
     const deployedPackage = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'))
     for (const name of Object.keys(deployedPackage.dependencies ?? {})) {
       const destination = join(root, 'node_modules', name)
-      if (!existsSync(destination)) await copyPackage(join(buildSource, 'deploy/system3/runtime/node_modules', name), destination)
+      if (!existsSync(destination)) await copyPackage(join(buildSource, 'node_modules', name), destination)
     }
     async function materialize(directory) {
       for (const item of await readdir(directory)) {

@@ -894,11 +894,11 @@ export interface Config {
 ```ts config-catalog
 /** Plugin configuration for the built-in System One provider. */
 export interface Config {
-  /** System One gateway URL; credentials must use apiKeyEnv rather than URL user information. */
+  /** System One gateway URL; empty with model leaves the provider unconfigured. Credentials use apiKeyEnv. */
   readonly endpoint: Volatile<string>
   /** Wire protocol; the official API does not receive the OpenJev effort extension. @default 'openjev' */
   readonly protocol: Volatile<'openjev' | 'typesafe'>
-  /** Model identifier used when a decision request omits its model. */
+  /** Model identifier used when a decision request omits its model; empty with endpoint permits first-run settings. */
   readonly model: Volatile<string>
   /** Decision effort used when a request omits it. @default 'low' */
   readonly effort: Volatile<'low' | 'high'>

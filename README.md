@@ -1,12 +1,16 @@
 # APUS Reflex Harness
 
+![APUS Reflex Harness](apps/web/public/brand-source.webp)
+
 English | [中文](README.zh.md)
 
 > **瞬策 · Instant action. Deep thinking. · Model-as-a-Harness.** Build a Personal Agent with your models, persistent task history and **Loop Working**.
 
 APUS turns a sequence of model calls into work that can continue around a goal: understand the request, choose an action, execute, inspect the evidence, recover relevant context and continue. You choose the general model for planning and generation; optionally connect your own Reflex/Jev decision service for structured decisions along the way.
 
-Built on DeepSeek Harness, APUS separates model reasoning from execution, permissions and durable Session history. It is a **developer preview**. The [release readiness review](docs/dev-continuum-reflex-integration/release-readiness.md) records what has been tested and what still needs acceptance.
+APUS separates model reasoning from execution, permissions and durable Session history. It is a **developer preview**. The [release readiness review](docs/dev-continuum-reflex-integration/release-readiness.md) records what has been tested and what still needs acceptance.
+
+This integration merges frontend and backend delivery into the existing Harness repository: the desktop client lives in `frontend/`, with configuration, builds and packaging managed together. Desktop installers bundle the backend, so users do not start or install a separate service. The integrated release is still being prepared.
 
 ## Download the desktop app
 

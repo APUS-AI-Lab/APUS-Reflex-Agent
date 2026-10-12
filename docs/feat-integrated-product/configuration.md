@@ -31,7 +31,7 @@ Keep the original error for diagnosis, but redact keys before sharing it. Creden
 
 ## Optional Reflex decision service
 
-Open **Settings → Reflex model configuration** to connect your own Reflex/Jev decision service. Ordinary model tasks do not require this service; generation models remain configured under **Settings → Models**.
+Open **Settings → Reflex model configuration** to connect your own Reflex/Jev decision service. Ordinary model tasks do not require this service; generation models remain configured under **Settings → Models**. On first use, the page may report an unconfigured decision service; endpoint and model fields remain editable, and testing the draft does not save it.
 
 | Field | What to enter |
 | --- | --- |

@@ -6,7 +6,7 @@ This reference defines the evidence required to publish a desktop release from t
 
 ## Version and source
 
-Use one product version for the desktop and its release tag. The integrated preview candidate is `0.1.8-beta.1`, which follows the existing `0.1.7-rc.2` baseline. Keep the bundled Harness version separately visible in About and build metadata. Publish beta and rc builds as GitHub prereleases.
+The first APUS desktop product version is `0.1.0`, with release tag `v0.1.0`. This product version does not inherit the upstream runtime sequence; keep the bundled Harness version separately visible in About and build metadata. GitHub’s prerelease flag is independent of the version string: mark this first release as a prerelease and an unsigned preview. The absence of a beta/rc suffix does not establish stability.
 
 Build each platform from the same reviewed commit and committed dependency locks. A release records the source revision, product and Harness versions, platform, architecture, and lockfile digests. Do not fetch a different frontend repository or substitute the upstream npm runtime.
 
@@ -23,7 +23,7 @@ Build on the target operating system and architecture. First prepare the Harness
 | Windows x64 | Native Windows build, installer validation, and packaged runtime checks |
 | Other targets | Explicit build support and native installation validation before advertising availability |
 
-The first preview targets macOS Apple Silicon; only explicitly unsigned beta/rc collection is enabled while signing remains unconfigured. An unsigned preview must explicitly state that signing and notarization are absent. A signed release requires the corresponding platform identity and verification; do not imply those assurances from a build passing.
+The first preview targets macOS Apple Silicon; signing remains unconfigured, and the first `v0.1.0` release must still be explicitly marked as an unsigned prerelease. An unsigned preview must explicitly state that signing and notarization are absent. A signed release requires the corresponding platform identity and verification; do not imply those assurances from a build passing.
 
 ## Acceptance checklist
 

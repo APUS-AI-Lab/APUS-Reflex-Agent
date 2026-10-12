@@ -55,3 +55,44 @@ describe('APUS model settings patch context', () => {
     expect(adaptBrandContext(original, 'other/lib/client.js', '')).toBe(original)
   })
 })
+
+
+describe('APUS neutral provider patch context', () => {
+  const chat = 'node_modules/@deepseek-ai/dsh-client-ui-chat/lib/client.js'
+  const models = 'node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.js'
+  const configured = 'if (configured.welcomeNotice && !("dshDesktop" in globalThis)) ctx.slots.inject("settings.onboarding"'
+
+  it.each([
+    ['任务已因退出 DeepSeek 登录而停止。', '任务已因退出模型服务账号登录而停止。'],
+    ['请先登录 DeepSeek，并确认请求地址支持账号认证。', '请先登录模型服务账号，并确认请求地址支持账号认证。'],
+    ['Stopped because you signed out of DeepSeek.', 'Stopped because you signed out of your model provider account.'],
+    ['Sign in to DeepSeek and ensure the request destination supports account authentication.',
+      'Sign in to your model provider and ensure the request destination supports account authentication.']
+  ])('rebases reviewed chat locale copy: %s', (before, after) => {
+    const context = ` "message.failure.accountSignedOut": "${before}",`
+    expect(adaptBrandContext(context, chat, '')).toBe(context.replace(before, after))
+    // Keep additions, removals and other fields exact: this adapter owns only existing account copy.
+    const businessChange = `-"message.failure.accountSignedOut": "${before}",\n+doSomethingElse();`
+    expect(adaptBrandContext(businessChange, chat, '')).toBe(businessChange)
+  })
+
+  it('retains neutral welcome and provider copy without changing the new onboarding flow', () => {
+    const patch = [
+      ' welcomeBody: "DeepSeek Harness DSH plugin ecosystem / DSH 插件生态",',
+      '-onboardingDescription: "Configure the official DeepSeek provider to start building.",',
+      '-onboardingDescription: "配置 DeepSeek 官方模型，即可开始使用。",',
+      '+onboardingDescription: "Choose a provider. DSH will enable its models."'
+    ].join('\n')
+    expect(adaptBrandContext(patch, models, configured)).toBe([
+      ' welcomeBody: "APUS Reflex Harness APUS Reflex Harness plugin ecosystem / APUS Reflex Harness 插件生态",',
+      '-onboardingDescription: "Configure this model provider to get started.",',
+      '-onboardingDescription: "配置模型服务，即可开始使用。",',
+      '+onboardingDescription: "Choose a provider. APUS Reflex Harness will enable its models."'
+    ].join('\n'))
+  })
+
+  it('does not infer replacements for unreviewed locale or business changes', () => {
+    const changed = ' "message.failure.accountSignedOut": "A different account failure",\n existingBusinessRule();'
+    expect(adaptBrandContext(changed, chat, '')).toBe(changed)
+  })
+})

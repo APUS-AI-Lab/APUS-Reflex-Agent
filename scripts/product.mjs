@@ -92,7 +92,7 @@ export async function main(args = process.argv.slice(2)) {
         break
       case 'check-release':
         node('scripts/product-release.mjs', ['check'])
-        if (!options.includes('--unsigned') || JSON.parse(readFileSync(join(root, 'release/manifest.json'), 'utf8')).channel === 'stable') throw new Error('Use --unsigned for a beta/rc preview. Signed release verification is not configured.')
+        if (!options.includes('--unsigned') || JSON.parse(readFileSync(join(root, 'release/manifest.json'), 'utf8')).channel === 'stable') throw new Error('Use --unsigned for a preview release. Signed release verification is not configured.')
         break
       case 'package-desktop': {
         const manifest = JSON.parse(readFileSync(join(root, 'release/manifest.json'), 'utf8'))

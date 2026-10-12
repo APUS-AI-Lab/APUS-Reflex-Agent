@@ -41,7 +41,7 @@ async function fixture(sources: string[], peerRange?: string) {
     }))
     await writeFile(join(dir, 'index.js'), source)
     // The leaf is a file URL, not a package name. Legacy package-name matching
-    // cannot establish this owner; provenance must survive nested groups.
+    // cannot establish this owner; ownership must survive nested groups.
     await writeFile(join(dir, 'cordis.patch.yml'), JSON.stringify([{ insert: [{
       id: `group-${index}`, name: 'cordis:group', group: true,
       config: [{ id: `leaf-${index}`, name: pathToFileURL(join(dir, 'index.js')).href }]
@@ -75,7 +75,7 @@ function run(entry: string) {
   expect(line, result.stderr).toBeDefined()
   const failures = parsePluginStartupFailures(line!)!
   expect(failures).toBeDefined()
-  expect(result.stderr.indexOf(PLUGIN_FAILURE_PREFIX)).toBeLessThan(result.stderr.indexOf('[harness-node] DSH entry failed:'))
+  expect(result.stderr.indexOf(PLUGIN_FAILURE_PREFIX)).toBeLessThan(result.stderr.indexOf('[harness-node] Harness entry failed:'))
   return { failures, stderr: result.stderr }
 }
 
@@ -149,7 +149,7 @@ describe('structured startup failures through the real bundled loader', () => {
     })
   })
 
-  it('reports the same provenance through the production DSH CLI entry', async () => {
+  it('reports the same plugin ownership through the production DSH CLI entry', async () => {
     const { home, names } = await fixture(['export default function() { throw new TypeError("startup API mismatch"); }'])
     const result = spawnSync(process.execPath, [
       resolve('build/harness-node-entry.mjs'), resolve('node_modules/@deepseek-ai/dsh/lib/bin.js'),

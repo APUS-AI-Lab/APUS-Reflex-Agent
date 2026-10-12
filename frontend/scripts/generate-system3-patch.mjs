@@ -7,7 +7,8 @@ const appRoot = join(dirname(fileURLToPath(import.meta.url)), '..')
 
 /**
  * Write the default Desktop profile. Models and credentials are configured in
- * Settings; System3 is enabled only through the opt-in desktop settings page.
+ * Settings; advanced System3 routing requires explicit profile configuration.
+ * Editable Jev defaults come from the profile bundle, never this CLI overlay.
  * The historical function name is retained for the runtime assembly script.
  * @param {string} stage Directory receiving desktop.patch.yml.
  */

@@ -2,6 +2,15 @@
 # section, a hash of its English and Chinese blocks outside code blocks and generated regions.
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write BRAND_GUIDELINES.md
-/deepseek-harness-brand-asset-usage-guidelines:
-  en: 23933888033edf18
-  zh: eaa5afb9e2cb4d25
+/apus-reflex-harness-brand-guide:
+  en: b760797611426339
+  zh: 9e6d348638e4da30
+/apus-reflex-harness-brand-guide/name-and-message:
+  en: 3660e1a8eebd4b10
+  zh: 1aa073afd0781b07
+/apus-reflex-harness-brand-guide/gradient-bird-logo:
+  en: 6af3991eee30d13d
+  zh: 2e8c78122e08c0fb
+/apus-reflex-harness-brand-guide/licenses-and-attribution:
+  en: fb9f1cca16a73807
+  zh: 151caa7bf3dd3cdf

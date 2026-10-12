@@ -36,6 +36,10 @@ This experimental client mounts its own typed Reflex Remote; the shared API Remo
 
 The shared Web/Electron client registers **Settings → Reflex model configuration** as a dedicated top-level section. It stages the endpoint, model, effort, deadline and credential reference, saves through ConfigForms/Credentials, and tests an unsaved candidate through the authenticated `reflex` Remote namespace. Credential literals are never read back or written to browser storage. Deployment-owned environment credentials remain read-only; a separate managed reference can hold a replacement.
 
+Before saving a new API key, the page checks its credential reference. An already configured reference is rejected without changing configuration or credentials; key rotation requires a new dedicated reference.
+
+On first use, endpoint and model fields remain editable while the decision service is unconfigured. A passing draft test does not change saved configuration status; a successful save refreshes it. A failed runtime-status query is reported separately and does not turn a successful save into a save failure.
+
 Connection results and capability states are independent. Changing a draft invalidates its old probe result; an in-flight result for a previous draft is ignored. A failed credential write remains a failed save even when an older key exists. Capability labels report runtime module/activation state and do not infer verification from connectivity.
 
 Goal-relevance supervision has an independent `semanticSupervision.enabled` status. It is enabled only when the supervision module is installed, active, explicitly configured for semantic evidence and admitted by the current workspace-data policy. Fingerprint supervision may remain enabled when this sub-capability is disabled; neither state claims a verified outcome.

@@ -2,6 +2,8 @@ import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import {
   initProfile,
+  readProfileManifest,
+  writeProfileBundles,
   PROFILE_TEMPLATES,
   resolveProfileDir
 } from '@deepseek-ai/dsh-app-boot'
@@ -18,8 +20,8 @@ import { projectGenerations } from 'dsh-desktop-market-installer/generations/pro
  * generations and moves `desired` from inside Harness; this decides which set
  * actually boots and records it.
  *
- * Everything here is a no-op on a profile that has never used a generation —
- * empty pointers, nothing linked, nothing to sweep.
+ * Normal startup also declares the shipped Reflex defaults as a profile bundle.
+ * User patches remain above those defaults; Safe Mode uses a separate profile.
  */
 
 type Note = (line: string) => void
@@ -50,6 +52,12 @@ export async function prepareGenerationsForLaunch(dshHome: string, note: Note): 
     const template = PROFILE_TEMPLATES.web
     if (template === undefined) throw new Error('Harness does not define the web profile template')
     initProfile(profileDir, template.bundles)
+  }
+  const manifest = readProfileManifest('APUS Reflex Harness', profileDir)
+  const bundles = manifest.dsh?.profile?.bundles ?? []
+  const reflexBundle = '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
+  if (!bundles.includes(reflexBundle)) {
+    writeProfileBundles(profileDir, manifest, [...bundles, reflexBundle])
   }
   try {
     const projection = await projectGenerations(dshHome)

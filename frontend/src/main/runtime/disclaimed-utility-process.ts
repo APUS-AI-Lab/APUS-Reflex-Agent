@@ -37,7 +37,7 @@ export function buildDisclaimedUtilityProcessSpec(
       env: definedEnvironment(spawnOptions.env),
       execArgv: [internalLoaderFlag],
       stdio: 'pipe',
-      serviceName: 'DSH Harness',
+      serviceName: 'APUS Reflex Harness',
       // Harness loads user-installed plugins and can launch third-party tools.
       // Keep their TCC requests out of APUS Reflex Harness's responsibility chain in production.
       disclaim: utilityProcessOptions?.disclaim ?? true
@@ -78,7 +78,7 @@ class UtilityProcessAdapter extends EventEmitter implements HarnessChildProcess 
     super()
     if (!child.stdout || !child.stderr) {
       child.kill()
-      throw new Error('The DSH Harness utility process did not expose piped output.')
+      throw new Error('The APUS Reflex Harness utility process did not expose piped output.')
     }
     this.stdout = child.stdout
     this.stderr = child.stderr

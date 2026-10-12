@@ -320,7 +320,7 @@ export function clearManifestCache(): void {
 }
 
 /**
- * Inspect whether a remote manifest is compatible with current DSH runtime.
+ * Inspect whether a remote manifest is compatible with current Harness runtime.
  */
 export function inferPluginRuntimeCompatibility(
   manifest: NpmPackageManifest,
@@ -346,7 +346,7 @@ export function inferPluginRuntimeCompatibility(
     if (constraint && !satisfiesRange(currentRuntimeVersion, constraint)) {
       return {
         isCompatible: false,
-        reason: `Requires DSH (${constraint}), incompatible with runtime ${currentRuntimeVersion}`
+        reason: `Requires Harness (${constraint}), incompatible with runtime ${currentRuntimeVersion}`
       }
     }
   }
@@ -453,8 +453,8 @@ export async function evaluatePluginMarketCompatibility(options: {
       upgradeReady: true,
       upgradeVersion: candidate.version,
       detail: isZh
-        ? `在当前版本至 latest（v${latestVersion}）之间，v${candidate.version} 是未发现 DSH ${currentRuntimeVersion} 声明冲突的最高可选版本；升级后仍需验证启动。`
-        : `v${candidate.version} is the highest eligible update up to latest (v${latestVersion}) with no declared conflict with DSH ${currentRuntimeVersion}; startup must still be verified.`
+        ? `在当前版本至 latest（v${latestVersion}）之间，v${candidate.version} 是未发现 Harness ${currentRuntimeVersion} 声明冲突的最高可选版本；升级后仍需验证启动。`
+        : `v${candidate.version} is the highest eligible update up to latest (v${latestVersion}) with no declared conflict with Harness ${currentRuntimeVersion}; startup must still be verified.`
     }
   }
   // A broken plugin still gets a user-initiated latest attempt when no
@@ -470,8 +470,8 @@ export async function evaluatePluginMarketCompatibility(options: {
       upgradeReady: true,
       upgradeVersion: latestVersion,
       detail: (isZh
-        ? `未找到匹配当前 DSH 的更新版本，可尝试升级至 latest v${latestVersion}；不保证兼容，升级后仍需验证启动。`
-        : `No update matches the current DSH; you can try latest v${latestVersion}. Compatibility is not guaranteed; verify startup after upgrading.`) +
+        ? `未找到匹配当前 Harness 的更新版本，可尝试升级至 latest v${latestVersion}；不保证兼容，升级后仍需验证启动。`
+        : `No update matches the current Harness; you can try latest v${latestVersion}. Compatibility is not guaranteed; verify startup after upgrading.`) +
         (compatibility.reason ? ` ${compatibility.reason}` : '')
     }
   }
@@ -491,7 +491,7 @@ export async function evaluatePluginMarketCompatibility(options: {
     ? (isZh ? '已是最新版' : 'Up to date')
     : versionComparison > 0
       ? (isZh ? '当前版本高于市场最新版' : 'Installed version is newer than market latest')
-      : (isZh ? '暂无适用于当前 DSH 的更新' : 'No update available for the current DSH')
+      : (isZh ? '暂无适用于当前 Harness 的更新' : 'No update available for the current Harness')
   return {
     packageName, installedVersion, latestVersion,
     healthStatus: 'up-to-date',
@@ -502,8 +502,8 @@ export async function evaluatePluginMarketCompatibility(options: {
           ? `当前插件 v${installedVersion}，市场最新版（latest）为 v${latestVersion}，无需更新。更新检查不代表插件加载或兼容性验证。`
           : `Installed: v${installedVersion}; market latest: v${latestVersion}. No update needed. This update check does not verify loading or compatibility.`)
       : (isZh
-          ? `市场最新版为 v${latestVersion}，但没有符合当前 DSH 和发布版本筛选条件的更新；这不表示已安装版本不兼容。`
-          : `Market latest is v${latestVersion}, but no update satisfies the current DSH and release filters. This does not mean the installed version is incompatible.`)
+          ? `市场最新版为 v${latestVersion}，但没有符合当前 Harness 和发布版本筛选条件的更新；这不表示已安装版本不兼容。`
+          : `Market latest is v${latestVersion}, but no update satisfies the current Harness and release filters. This does not mean the installed version is incompatible.`)
   }
 }
 

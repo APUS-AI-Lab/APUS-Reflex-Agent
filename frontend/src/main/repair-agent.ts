@@ -120,9 +120,9 @@ export function extractRelevantCrashLogs(logs: readonly string[] = []): string[]
  *
  * Plugin attribution is ordered by evidence strength and shares its sources
  * with plugin recovery, so the agent never names a different culprit than the
- * recovery page: the loader's own provenance report first, then the plugins
+ * recovery page: the loader's own ownership report first, then the plugins
  * recovery already resolved against the profile, and only then the loader
- * error text (Harness builds that predate the provenance report). Desktop-owned
+ * error text (Harness builds that predate the ownership report). Desktop-owned
  * failures such as the startup watchdog come from the runtime snapshot.
  */
 export function analyzeCrashContext(
@@ -138,7 +138,7 @@ export function analyzeCrashContext(
   const culprits = evidence.plugins?.length
     ? [...evidence.plugins]
     : reported.length
-      // Explicit provenance is authoritative: an unknown or protected owner
+      // Explicit ownership is authoritative: an unknown or protected owner
       // must not be replaced by a log-derived suspect.
       ? [...new Set(reported.flatMap((failure) => failure.owner ? [failure.owner.packageName] : []))]
       : extractOffendingPlugins(logs)
@@ -325,12 +325,12 @@ function repairPlaybooks(): RepairPlaybook[] {
         en: '`EPERM: operation not permitted, symlink` under `profiles\\node_modules\\`, with `ensureSymlink` / `healProfilesModuleFallbackLocked` in the stack.'
       },
       cause: {
-        zh: '升级后重建回退链接，旧链接被其他 DSH 进程或杀软占用。与安装盘、开发者模式无关。',
-        en: 'An upgrade rebuilds the fallback links and an old one is held by another DSH process or antivirus. Unrelated to the install drive or Developer Mode.'
+        zh: '升级后重建回退链接，旧链接被其他 APUS Reflex Harness 进程或杀软占用。与安装盘、开发者模式无关。',
+        en: 'An upgrade rebuilds the fallback links and an old one is held by another APUS Reflex Harness process or antivirus. Unrelated to the install drive or Developer Mode.'
       },
       fix: {
-        zh: '先自愈：安全模式不用 `profiles\\node_modules`，删掉报错指到的那一项（junction 用 `Remove-Item -Recurse -Force`），下次启动重建。删除同样 EPERM 说明占用还在，请用户退干净所有 DSH 进程（任务管理器确认）、必要时临时放行杀软，再重启。',
-        en: 'Self-heal first: Safe Mode does not use `profiles\\node_modules`, so delete the entry the error names (`Remove-Item -Recurse -Force` for a junction) and the next launch rebuilds it. If that delete is EPERM too, the holder is still alive: have the user quit every DSH process (Task Manager), exempt the folder from antivirus if needed, and restart.'
+        zh: '先自愈：安全模式不用 `profiles\\node_modules`，删掉报错指到的那一项（junction 用 `Remove-Item -Recurse -Force`），下次启动重建。删除同样 EPERM 说明占用还在，请用户退干净所有 APUS Reflex Harness 进程（任务管理器确认）、必要时临时放行杀软，再重启。',
+        en: 'Self-heal first: Safe Mode does not use `profiles\\node_modules`, so delete the entry the error names (`Remove-Item -Recurse -Force` for a junction) and the next launch rebuilds it. If that delete is EPERM too, the holder is still alive: have the user quit every APUS Reflex Harness process (Task Manager), exempt the folder from antivirus if needed, and restart.'
       },
       avoid: {
         zh: '不要建议开发者模式或重装到 C 盘，不要删整个 `profiles\\node_modules`。',
@@ -527,7 +527,7 @@ ${playbooks}
 ${context}
 
 ## Known failures and fixes
-0. If the offline diagnosis names a plugin, that name comes from loader provenance or startup recovery; treat it as authoritative instead of re-deriving it from stack traces.
+0. If the offline diagnosis names a plugin, that name comes from the loader ownership report or startup recovery; treat it as authoritative instead of re-deriving it from stack traces.
 ${playbooks}
 
 **When none of these match**: reason from the log instead of forcing a match. Desktop's behaviour can be read at the source: https://github.com/dataelement/dsh-desktop (\`src/main/\` is the main process; \`build/*.html\` are the Startup Recovery and Safe Mode pages). Say so and carry on from the log if you cannot reach it.

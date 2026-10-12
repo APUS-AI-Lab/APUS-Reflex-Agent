@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron'
+import { version as productVersion } from '../../package.json'
 import type { AvailableRelease, UpdateStatus } from '../shared/contracts'
 import { setupDesktopStoragePersistence } from './desktop-storage'
 import {
@@ -562,6 +563,7 @@ window.addEventListener('pagehide', () => {
 contextBridge.exposeInMainWorld(
   'dshDesktop',
   Object.freeze({
+    productVersion,
     restartHarness: (): Promise<{ ok: boolean }> => ipcRenderer.invoke('harness:restart'),
     getBuiltInImageGenerationStatus: (): Promise<{ enabled: boolean; marketActive: boolean }> =>
       ipcRenderer.invoke('desktop-host-plugin:status'),
@@ -911,8 +913,8 @@ function renderAbout(): void {
   body.appendChild(hint)
   const credits = element('p', 'about-hint')
   credits.textContent = zh
-    ? '感谢 DataElement 的 DSH Desktop、DeepSeek 的 DeepSeek Harness 及开源贡献者。原 MIT 版权与第三方各自许可随应用保留。'
-    : 'Thanks to DataElement’s DSH Desktop, DeepSeek’s DeepSeek Harness and open-source contributors. Original MIT notices and third-party licenses are included.'
+    ? '感谢开源贡献者。原 MIT 版权与第三方各自许可随应用保留。'
+    : 'Thanks to the open-source contributors. Original MIT notices and third-party licenses are included.'
   body.appendChild(credits)
   card.appendChild(body)
 

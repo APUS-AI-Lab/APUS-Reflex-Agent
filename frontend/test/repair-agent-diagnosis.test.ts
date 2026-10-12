@@ -64,7 +64,7 @@ describe('analyzeCrashContext', () => {
     expect(finding?.culprit).toBe('dsh-resolved')
   })
 
-  it('does not substitute a log suspect when loader provenance has no removable owner', () => {
+  it('does not substitute a log suspect when loader ownership has no removable owner', () => {
     const logs = [
       '[desktop] starting Harness',
       `[stderr] [harness-node] DSH entry failed: Error: failed to apply loader entry x (dsh-from-logs): boom`

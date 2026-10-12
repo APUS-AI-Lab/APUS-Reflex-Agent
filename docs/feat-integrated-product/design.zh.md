@@ -16,7 +16,7 @@
 flowchart LR
   Source[One reviewed commit and dependency locks] --> Build[Harness and Web build]
   Build --> Desktop[Electron host and bundled runtime]
-  Build --> Web[dsh Web profile]
+  Build --> Web[APUS Web profile]
   Desktop --> Local[Local authenticated API and session storage]
   Web --> Local
   Local --> Models[User-configured model providers]
@@ -45,7 +45,7 @@ Desktop 和 Web 分别启动自己的运行时；图中不承诺共享进程。�
 
 默认桌面 Profile 支持用户自行配置服务商的普通模型任务，不得静默连接私有 Jev、Fidoo 或其他部署端点。新用户配置服务商、API 协议及地址、凭证与模型，再选择工作区完成小任务。保存设置或 HTTP 端点可访问，不能证明推理成功。
 
-System3 协同需要显式启用。界面必须区分未启用、配置不完整、失败和已启用状态。启用需要决策及推理服务商、允许的候选和明确的远程数据传输说明；缺少必要配置时须明确报错。复用现有凭证服务，不将密钥写入源码、示例、发行产物或日志。
+Reflex 决策服务使用共享客户端已有的“设置 → Reflex 模型配置”页面，不另建桌面 System3 设置插件。页面分别显示连接测试与能力状态；保存服务地址不会自动启用路由、监督或 Continuum。候选、数据分类、远程授权与记忆准入仍由对应 profile 管理，缺少必要配置时明确报错。复用现有凭证服务，不将密钥写入源码、示例、发行产物或日志。
 
 根准备命令检查 Node 与平台构建前提，按两套锁文件安装依赖、构建 Harness，并从当前工作树准备桌面运行时和品牌资源。失败时报告阶段，修正后可重新执行。不在隐式安装钩子中执行完整产品构建。干净 clone 验证通过后才能宣称该路径已验收；源码 ZIP 需要单独验证，因为构建信息可能依赖 Git。
 
@@ -59,7 +59,7 @@ System3 协同需要显式启用。界面必须区分未启用、配置不完整
 
 ## 版本与分发
 
-候选产品版本为 `0.1.8-beta.1`，高于现有 `0.1.7-rc.2` 基线。产品版本独立于 Harness 包版本和会话格式版本，不批量修改工作区包版本。Release tag、桌面元数据与产品 manifest 必须一致。
+用户指定首个 APUS 产品版本为 `0.1.0`，Release tag 为 `v0.1.0`；不继承上游产品的版本序列。GitHub 预发布状态独立于版本字符串，首版仍按未签名预览版验收和标注。产品版本独立于 Harness 包版本和会话格式版本，不批量修改工作区包版本。Release tag、桌面元数据与产品 manifest 必须一致。
 
 构建信息记录产品及 Harness 版本、完整源码版本、平台、架构和依赖锁摘要。发行源码必须干净，本地带未提交修改的开发构建不能证明发行可重现。源码确定后再生成元数据，不将提交自身的 hash 写入该提交。
 

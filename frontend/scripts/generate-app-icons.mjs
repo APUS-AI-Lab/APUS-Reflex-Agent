@@ -5,11 +5,11 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
-const buildDirectory = path.join(projectRoot, 'build')
-const source = path.join(buildDirectory, 'app-icon.png')
+const buildDirectory = path.join(projectRoot, '.build', 'brand')
+const source = path.join(buildDirectory, 'brand-icon.png')
 const iconsetDirectory = path.join(buildDirectory, 'app-icon.iconset')
-const icnsDestination = path.join(buildDirectory, 'icon.icns')
-const icoDestination = path.join(buildDirectory, 'icon.ico')
+const icnsDestination = path.join(buildDirectory, 'brand-icon.icns')
+const icoDestination = path.join(buildDirectory, 'brand-icon.ico')
 
 await rm(iconsetDirectory, { recursive: true, force: true })
 await mkdir(iconsetDirectory, { recursive: true })

@@ -69,10 +69,29 @@ function adaptApiContext(chunk, target) {
     })
 }
 
-/** Preserve reviewed APUS copy and the configurable welcome notice while replaying published Desktop patches. */
+/** Rebase only reviewed locale copy and welcome configuration; executable hunks still require exact context. */
 export function adaptBrandContext(chunk, target, own) {
+  if (target.endsWith('/dsh-client-ui-chat/lib/client.js')) {
+    const accountCopy = [
+      ['任务已因退出 DeepSeek 登录而停止。', '任务已因退出模型服务账号登录而停止。'],
+      ['请先登录 DeepSeek，并确认请求地址支持账号认证。', '请先登录模型服务账号，并确认请求地址支持账号认证。'],
+      ['Stopped because you signed out of DeepSeek.', 'Stopped because you signed out of your model provider account.'],
+      ['Sign in to DeepSeek and ensure the request destination supports account authentication.',
+        'Sign in to your model provider and ensure the request destination supports account authentication.']
+    ]
+    return chunk.replace(/^ (.*"message\.failure\.account(?:SignedOut|SignInRequired)":.*)$/gm, (_, line) => {
+      for (const [before, after] of accountCopy) line = line.replace(before, after)
+      return ` ${line}`
+    })
+  }
   if (!target.endsWith('/dsh-client-ui-settings-models/lib/client.js')) return chunk
-  chunk = chunk.replace(/^ (.*welcomeBody:.*)$/gm, (_, line) => ` ${line.replaceAll('DeepSeek Harness', 'APUS Reflex Harness')}`)
+  chunk = chunk.replace(/^ (.*welcomeBody:.*)$/gm, (_, line) => ` ${line
+    .replaceAll('DeepSeek Harness', 'APUS Reflex Harness')
+    .replaceAll('DSH plugin ecosystem', 'APUS Reflex Harness plugin ecosystem')
+    .replaceAll('DSH 插件生态', 'APUS Reflex Harness 插件生态')}`)
+  chunk = chunk.replace(/^-(.*onboardingDescription:.*)$/gm, (_, line) => `-${line
+    .replace('Configure the official DeepSeek provider to start building.', 'Configure this model provider to get started.')
+    .replace('配置 DeepSeek 官方模型，即可开始使用。', '配置模型服务，即可开始使用。')}`)
   const published = 'if (!("dshDesktop" in globalThis)) ctx.slots.inject("settings.onboarding"'
   const configured = 'if (configured.welcomeNotice && !("dshDesktop" in globalThis)) ctx.slots.inject("settings.onboarding"'
   if (!own.includes(configured)) throw new Error('Own model settings must expose the reviewed welcomeNotice option')

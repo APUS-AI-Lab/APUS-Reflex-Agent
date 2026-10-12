@@ -79,7 +79,7 @@ if (process.platform === 'win32') {
 }
 
 if (!dshEntryPath) {
-  report('startup error', 'missing DSH entry path')
+  report('startup error', 'missing Harness entry path')
   process.exitCode = 1
 } else {
   process.stdout.write(`[harness-node] loading=${dshEntryPath}\n`)
@@ -92,14 +92,14 @@ if (!dshEntryPath) {
     // let the process exit 0 with no diagnostics. Call the export when the
     // entry offers one; older builds still self-execute on import.
     const entry = await import(pathToFileURL(dshEntryPath).href)
-    process.stdout.write('[harness-node] DSH entry loaded\n')
+    process.stdout.write('[harness-node] Harness entry loaded\n')
     if (typeof entry.runCli === 'function') {
-      process.stdout.write('[harness-node] invoking DSH runCli()\n')
+      process.stdout.write('[harness-node] invoking Harness runCli()\n')
       await entry.runCli()
     }
   } catch (error) {
     reportPluginFailures(error)
-    report('DSH entry failed', error?.stack ?? error)
+    report('Harness entry failed', error?.stack ?? error)
     process.exitCode = 1
   }
 }

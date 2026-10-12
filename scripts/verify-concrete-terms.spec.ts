@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, symlinkSync } from 'node:fs'
+import { mkdtempSync, readFileSync, rmSync, symlinkSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -7,6 +7,39 @@ import { findConcreteTermViolations, readTrackedSource } from './verify-concrete
 const blockedTerm = 'prove' + 'nance'
 
 describe('concrete terminology policy', () => {
+  it.each([
+    `frontend/docs/ppt-implementation-${blockedTerm}-and-remediation-2026-09-06.md`,
+    'frontend/packages/ppt-runtime/adapter/THIRD_PARTY_NOTICES.md',
+    'frontend/packages/ppt-runtime/core/THIRD_PARTY_NOTICES.md',
+  ])('preserves only the byte-identical imported record %s', (file) => {
+    const source = readFileSync(new URL(`../${file}`, import.meta.url), 'utf8')
+    expect(findConcreteTermViolations(file, source)).toEqual([])
+    expect(findConcreteTermViolations(file, `${source}\nAdded ${blockedTerm}`)).not.toEqual([])
+    expect(findConcreteTermViolations(`${file}.copy`, source)).not.toEqual([])
+  })
+
+  it('permits one existing template field but rejects new prose, nested fields and duplicated keys', () => {
+    const file = 'frontend/scripts/ppt/base-templates/dsh-editorial-notebook/metadata.json'
+    const field = `  "${blockedTerm}": {`
+    expect(findConcreteTermViolations(file, field)).toEqual([])
+    expect(findConcreteTermViolations(file, `${field}\n${field}\n    "${blockedTerm}": {}\n  "note": "${blockedTerm}"`))
+      .toEqual([{ file, line: 2 }, { file, line: 3 }, { file, line: 4 }])
+    for (const other of ['frontend/scripts/ppt/base-templates/new-template/metadata.json', 'frontend/README.md', 'README.md', 'docs/feat-integrated-product/design.md']) {
+      expect(findConcreteTermViolations(other, field)).toEqual([{ file: other, line: 1 }])
+    }
+  })
+
+  it.each(['generate-ppt-templates', 'generate-zara-ppt-templates'])('preserves only the existing serialized-field statement in %s', (name) => {
+    const file = `frontend/scripts/${name}.mjs`
+    const source = readFileSync(new URL(`../${file}`, import.meta.url), 'utf8')
+    const line = source.split('\n').find(line => line.includes(blockedTerm))
+    if (line === undefined) throw new Error('Expected retained template serialization statement')
+    expect(findConcreteTermViolations(file, source)).toEqual([])
+    expect(findConcreteTermViolations(file, `${line}\n${line}`)).toEqual([{ file, line: 2 }])
+    expect(findConcreteTermViolations(file, `${line} // ${blockedTerm}`)).toEqual([{ file, line: 1 }])
+    expect(findConcreteTermViolations(file, `const ${blockedTerm} = {}`)).toEqual([{ file, line: 1 }])
+  })
+
   it('rejects case variants in paths, prose, and identifiers', () => {
     expect(findConcreteTermViolations(`docs/${blockedTerm}-notes.md`, [
       'origin metadata',

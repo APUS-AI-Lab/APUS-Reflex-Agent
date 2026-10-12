@@ -58,7 +58,7 @@ interface ProfileLockfile {
 
 export type ProfilePluginRemovalRunner = (pluginName: string) => Promise<boolean>
 
-/** Validate explicit loader provenance against enabled roots, without guessing ownership. */
+/** Validate explicit loader ownership against enabled roots, without guessing ownership. */
 export async function resolveStartupFailureOwners(
   dshHome: string,
   owners: readonly string[],

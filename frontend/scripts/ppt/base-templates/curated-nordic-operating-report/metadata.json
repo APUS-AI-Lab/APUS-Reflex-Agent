@@ -5,7 +5,7 @@
     "sourceCollection": "curated",
     "slug": "nordic-operating-report",
     "name": "Nordic Operating Report",
-    "variantLabel": "DSH",
+    "variantLabel": "APUS",
     "description": "原创北欧年度经营报告模板，适合管理层经营复盘、国际扩张、跨境履约、市场进入、能力建设与行动计划。",
     "previewTitle": "Nordic Operating Report",
     "previewSubtitle": "Work · WorkBuddy Original",
@@ -944,6 +944,6 @@
   "provenance": {
     "kind": "retained-native",
     "commit": "de281a1ceccadb00b92df53adb106a2e87ec0b4b",
-    "evidence": "PPTD page sources, vectors, source provenance statements and PR #320"
+    "evidence": "PPTD page sources, vectors, source attribution statements and PR #320"
   }
 }

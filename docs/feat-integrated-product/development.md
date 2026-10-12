@@ -35,6 +35,8 @@ Development and installed desktop builds use separate data directories. Multiple
 
 The desktop keeps its npm lock while the Harness keeps its pnpm lock. Root commands coordinate them. Do not replace either dependency lock to resolve an installation problem without identifying the cause.
 
+Runtime preparation deploys from a dependency-only manifest at the root of a disposable workspace copy. This avoids the nested-project bin-path error in pnpm 10 legacy hoisted deployment. Only `package.json` is included as the root package payload; development hooks and dependencies are excluded, and the original workspace manifest and lock remain unchanged.
+
 ## Verify and troubleshoot
 
 A successful build alone does not demonstrate a usable application. Confirm the UI opens, configure a model, complete a small task in a disposable workspace, then restart and check the saved configuration. Packaging needs the separate [release validation](releases.md).

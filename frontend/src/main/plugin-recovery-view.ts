@@ -131,11 +131,11 @@ export function describePluginFailure(
   if (/declares no dsh\.bundle/i.test(text)) {
     return locale === 'zh'
       ? {
-          title: '安装的包不是兼容的 DSH 插件',
-          detail: '这个包缺少 DSH 插件所需的入口声明，因此 Harness 无法加载。'
+          title: '安装的包不是兼容的 Harness 插件',
+          detail: '这个包缺少 Harness 插件所需的入口声明，因此 Harness 无法加载。'
         }
       : {
-          title: 'The package is not a compatible DSH plugin',
+          title: 'The package is not a compatible Harness plugin',
           detail: 'It does not declare the entry point required by Harness.'
         }
   }

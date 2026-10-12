@@ -466,7 +466,7 @@ describe('the market install boundary', () => {
     expect(await readDesired(home)).toEqual([])
   })
 
-  it('stages an exact copy of an installed external source and records its provenance', async () => {
+  it('stages an exact copy of an installed external source and records its original source', async () => {
     const home = await freshHome()
     const source = join(home, 'legacy-source-plugin')
     await mkdir(source, { recursive: true })

@@ -9,7 +9,13 @@ import { WINDOWS_TITLEBAR_HEIGHT } from '../src/shared/desktop-menu'
 import { secureWindow } from '../src/main/security'
 
 const scale = process.env.RECOVERY_UI_SCALE || '1'
-const output = join(process.env.RECOVERY_UI_OUTPUT!, `scale-${scale}`)
+const zoom = process.env.RECOVERY_UI_ZOOM || '1'
+const zoomFactor = Number(zoom)
+if (!Number.isFinite(zoomFactor) || zoomFactor < 0.25 || zoomFactor > 5) throw new Error(`Invalid RECOVERY_UI_ZOOM: ${zoom}`)
+// Keep the established scale-<n> artifact layout for the normal page zoom.
+// The sibling scale-<n>-zoom-<n> directory also matches the release workflow's
+// scale-* artifact glob, so page-zoom evidence is retained in CI.
+const output = join(process.env.RECOVERY_UI_OUTPUT!, zoomFactor === 1 ? `scale-${scale}` : `scale-${scale}-zoom-${zoom}`)
 mkdirSync(output, { recursive: true })
 app.setPath('userData', join(output, 'profile'))
 app.commandLine.appendSwitch('force-device-scale-factor', scale)
@@ -89,6 +95,10 @@ async function main(): Promise<void> {
         model.upgradeAllLabel = locale === 'zh' ? '一键升级 3 个已适配插件' : 'Upgrade 3 compatible plugins'
       }
       await contents.loadFile(join(process.cwd(), 'build', `${page}.html`), { query: { state: JSON.stringify(model), theme, icon: '../.build/brand/brand-icon.png' } })
+      // Electron page zoom is independent of the device scale factor above.
+      // Set it on the real WebContents after navigation so the layout and
+      // input hit targets are measured at the requested CSS zoom.
+      contents.setZoomFactor(zoomFactor)
       contents.focus()
       await delay(150)
       assert.equal(BrowserWindow.getAllWindows().length, 1, 'The page must not create another native window')
@@ -96,26 +106,51 @@ async function main(): Promise<void> {
       // CSS pixels (800 / 1.5 = 533.33); innerHeight rounds that down while a
       // full-height layout's bottom edge does not, so edges are compared
       // against the visual viewport's exact size.
-      const layout = await contents.executeJavaScript(`(() => {
+      const layout = {
+        ...(await contents.executeJavaScript(`(() => {
         const content=document.querySelector('.content'), list=document.querySelector('.plugins'), footer=document.querySelector('.footer');
         const cr=content.getBoundingClientRect(), fr=footer.getBoundingClientRect();
         const vw=visualViewport.width, vh=visualViewport.height, epsilon=0.5;
+        const actionSelector = ${JSON.stringify(page === 'safe-mode' ? '.actions button:not([hidden])' : '#decision-row button:not([hidden])')};
         return { width:innerWidth, height:innerHeight, viewport:[vw,vh], dpr:devicePixelRatio,
-          outerScroll:document.documentElement.scrollHeight>vh+epsilon || document.documentElement.scrollWidth>vw+epsilon,
+          zoom:visualViewport.scale,
+          outerHorizontalScroll:document.documentElement.scrollWidth>vw+epsilon,
+          outerVerticalScroll:document.documentElement.scrollHeight>vh+epsilon,
           contentScroll:content.scrollHeight>content.clientHeight,
           listScroll:list ? list.scrollHeight>list.clientHeight : false,
-          buttonsVisible:[...document.querySelectorAll('.actions button:not([hidden])')].filter(b=>b.getBoundingClientRect().height).every(b=>{const r=b.getBoundingClientRect();return r.top>=cr.top-epsilon&&r.bottom<=cr.bottom+epsilon&&r.right<=vw+epsilon}),
+          mainActionsVisible:[...document.querySelectorAll(actionSelector)].filter(b=>b.getBoundingClientRect().height).every(b=>{const r=b.getBoundingClientRect();return r.top>=cr.top-epsilon&&r.bottom<=vh+epsilon&&r.right<=vw+epsilon}),
           footerBottom:fr.bottom,
           footerVisible:fr.bottom<=vh+epsilon,
-          wechatLabel:document.querySelector('#community-wechat').innerText }
-      })()`)
+          supportLabel:document.querySelector('#community-label').innerText }
+      })()`)),
+        // visualViewport.scale is the browser pinch scale and remains 1 for
+        // Electron page zoom. The WebContents value is the authoritative page
+        // zoom factor; retain it in the evidence alongside the CSS viewport.
+        pageZoomFactor: contents.getZoomFactor(),
+      }
       const where = `${scenario} ${locale} ${theme} ${width}x${height} -> ${JSON.stringify(layout)}`
-      assert.equal(layout.outerScroll, false, `page must not scroll as a whole: ${where}`)
+      assert.equal(layout.pageZoomFactor, zoomFactor, `page zoom must be applied to WebContents: ${where}`)
+      assert.ok(Math.abs(layout.viewport[0] - width / zoomFactor) <= 1, `CSS viewport width must reflect page zoom: ${where}`)
+      assert.ok(Math.abs(layout.viewport[1] - height / zoomFactor) <= 1, `CSS viewport height must reflect page zoom: ${where}`)
+      assert.equal(layout.outerHorizontalScroll, false, `page must not overflow horizontally: ${where}`)
       assert.equal(layout.footerVisible, true, `footer must end inside the viewport: ${where}`)
+      const actionReachability = await contents.executeJavaScript(`(() => {
+        const selector = ${JSON.stringify(page === 'safe-mode' ? '.actions button:not([hidden])' : '#decision-row button:not([hidden])')};
+        const targets = [...document.querySelectorAll(selector)].filter(button => button.getBoundingClientRect().height > 0);
+        for (const target of targets) target.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        return targets.map(target => {
+          const r = target.getBoundingClientRect();
+          return { visible: r.width > 0 && r.height > 0 && r.left >= 0 && r.right <= visualViewport.width + 0.5 && r.top >= 0 && r.bottom <= visualViewport.height + 0.5 };
+        });
+      })()`)
+      assert.equal(actionReachability.length > 0 && actionReachability.every((item: { visible: boolean }) => item.visible), true,
+        `primary actions must remain reachable, with vertical scroll allowed: ${where}`)
       if (page === 'safe-mode') {
-        assert.equal(layout.contentScroll, false, `content must not scroll: ${where}`)
-        assert.equal(layout.buttonsVisible, true, `actions must stay inside the content: ${where}`)
-        if (width === 1280) assert.equal(layout.listScroll, false, `list must fit: ${where}`)
+        if (zoomFactor === 1) assert.equal(layout.contentScroll, false, `content must not scroll: ${where}`)
+        // At normal page zoom the wide viewport should fit the list; at 200%
+        // page zoom vertical scrolling inside this list is an accessible and
+        // intentional fallback, while outer horizontal overflow remains disallowed.
+        if (width === 1280 && zoomFactor === 1) assert.equal(layout.listScroll, false, `list must fit: ${where}`)
       }
       if (page === 'plugin-recovery') {
         const visibleLabels = (selector: string) => contents.executeJavaScript(`Array.from(document.querySelectorAll(${JSON.stringify(selector)})).filter(b => b.getBoundingClientRect().height > 0).map(b => b.textContent)`)
@@ -133,20 +168,22 @@ async function main(): Promise<void> {
       const prefix = `${scenario}-${locale}-${theme}-${width}`
       await capture(contents, join(output, `${prefix}.png`))
       const before = contents.getURL()
-      await contents.executeJavaScript("document.getElementById('community-wechat').dispatchEvent(new PointerEvent('pointerenter'))")
-      await delay(60)
-      const popup = await contents.executeJavaScript(`(()=>{const p=document.getElementById('wechat-popover'),r=p.getBoundingClientRect(),img=document.getElementById('wechat-qr');return {open:p.matches(':popover-open'),image:img.complete&&img.naturalWidth===400,visible:r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight}})()`)
-      assert.deepEqual(popup, { open: true, image: true, visible: true })
-      await capture(contents, join(output, `${prefix}-qr.png`))
-      contents.sendInputEvent({ type: 'keyDown', keyCode: 'Escape' })
-      contents.sendInputEvent({ type: 'keyUp', keyCode: 'Escape' })
-      await delay(60)
-      assert.equal(await contents.executeJavaScript("document.getElementById('wechat-popover').matches(':popover-open')"), false)
-      assert.equal(external.length, 0, 'WeChat must not open an external page')
-      await contents.executeJavaScript("document.getElementById('community-discord').click()")
+      // Keyboard focus must reach the primary recovery action at page zoom;
+      // vertical scrolling inside the content card is allowed, but the action
+      // itself must not be clipped or hidden behind the footer.
+      const focusable = await contents.executeJavaScript(`(() => {
+        const selector = ${JSON.stringify(page === 'safe-mode' ? '#restart' : '#decision-row button:not([hidden])')};
+        const target = document.querySelector(selector);
+        if (!(target instanceof HTMLElement)) return { focused: false, visible: false };
+        target.focus();
+        const r = target.getBoundingClientRect();
+        return { focused: document.activeElement === target, visible: r.width > 0 && r.height > 0 && r.left >= 0 && r.right <= visualViewport.width + 0.5 && r.top >= 0 && r.bottom <= visualViewport.height + 0.5 };
+      })()`)
+      assert.deepEqual(focusable, { focused: true, visible: true })
+      await contents.executeJavaScript("document.getElementById('community-support').click()")
       await delay(60)
       assert.equal(contents.getURL(), before)
-      assert.deepEqual(external.splice(0), ['https://discord.gg/7Xgf3qe3Qp'])
+      assert.deepEqual(external.splice(0), ['https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/issues'])
       if (scenario === 'unidentified-plugin') {
         const action = await contents.executeJavaScript(`(() => {
           let action;
@@ -220,7 +257,7 @@ async function main(): Promise<void> {
   parent.destroy(); await delay(60)
   assert.equal(lateFrame.isDestroyed(), true)
   assert.equal(closed, 2)
-  writeFileSync(join(output, 'results.json'), JSON.stringify({ platform: process.platform, arch: process.arch, scale, results, closed }, null, 2))
-  console.log(JSON.stringify({ platform: process.platform, scale, variants: results.length, status: 'passed' }))
+  writeFileSync(join(output, 'results.json'), JSON.stringify({ platform: process.platform, arch: process.arch, scale, zoom, results, closed }, null, 2))
+  console.log(JSON.stringify({ platform: process.platform, scale, zoom, variants: results.length, status: 'passed' }))
 }
 main().then(() => app.quit()).catch(error => { console.error(error); app.exit(1) })

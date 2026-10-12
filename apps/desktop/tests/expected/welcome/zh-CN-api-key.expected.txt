@@ -1,7 +1,7 @@
 APUS Reflex Harness
 APUS Reflex Harness
 添加一个 API Key 开始使用
-配置 DeepSeek 官方模型，即可开始使用
+配置模型 API Key，即可开始使用 APUS Reflex Harness
 输入 API 密钥 [password]
 保存并继续 [disabled]
 稍后配置

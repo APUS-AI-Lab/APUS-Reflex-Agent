@@ -366,7 +366,7 @@ async function main(): Promise<void> {
   // chrome and its content never mix languages.
   const showAbout = async (): Promise<void> => {
     await ordinaryMessageBox({ type: 'info', title: locale.messages.aboutMenu, message: locale.messages.aboutProduct,
-      detail: `${formatDesktopMessage(locale.messages.aboutVersion, { version: app.getVersion() })}\n\n${locale.messages.welcomeDescription}\n\nCopyright (c) 2026 DeepSeek\n${locale.messages.upstreamThanks}`,
+      detail: `${formatDesktopMessage(locale.messages.aboutVersion, { version: app.getVersion() })}\n\n${locale.messages.welcomeDescription}\n\n${locale.messages.upstreamThanks}`,
       buttons: [locale.messages.updateAcknowledge], cancelId: 0 })
   }
   const appPreload = fileURLToPath(new URL('./preload-app.cjs', import.meta.url))
@@ -878,7 +878,6 @@ async function main(): Promise<void> {
     applicationVersion: app.getVersion(),
     // The release has no separate build number; omit Electron's bundle version.
     version: '',
-    copyright: 'Copyright (c) 2026 DeepSeek',
     credits: `${currentDesktopLocale().messages.welcomeDescription}\n${currentDesktopLocale().messages.upstreamThanks}`,
     iconPath: applicationIconPath,
   })

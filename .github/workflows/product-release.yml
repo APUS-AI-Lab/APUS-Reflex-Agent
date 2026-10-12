@@ -42,7 +42,7 @@ jobs:
         working-directory: frontend
         run: |
           npm run typecheck
-          npm test
+          npm test -- --no-file-parallelism
       - name: Build unsigned preview installers and checksums
         run: pnpm run package:product --unsigned
       - name: Upload reviewable installers

@@ -72,7 +72,7 @@
       .brand { display: flex; align-items: center; gap: 11px; min-width: 0; }
       .brand img { width: 28px; height: 28px; border-radius: 8px; }
       .brand-name { font-size: 14px; font-weight: 650; letter-spacing: -0.01em; }
-      .content { flex: 1 1 auto; display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; padding: 30px 32px 22px; }
+      .content { flex: 1 1 auto; display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow-x: hidden; overflow-y: auto; padding: 30px 32px 22px; }
       /* The content column measures itself, so it stays centered in whatever
          width is left beside the details panel. */
       .column { display: flex; flex: 1 1 auto; flex-direction: column; width: min(100%, var(--page-max)); min-height: 0; margin-inline: auto; }
@@ -535,9 +535,6 @@
       .community a { padding-inline: 4px; border-color: transparent; border-radius: 4px; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--line); }
       .community a:hover { border-color: transparent; text-decoration-color: currentColor; }
       .community .external-icon { width: 12px; height: 12px; }
-      .wechat-popover { position: fixed; inset: auto; margin: 0; width: 226px; padding: 12px; border: 1px solid var(--line); border-radius: 14px; color: var(--ink); background: var(--surface); box-shadow: 0 8px 28px rgba(0,0,0,.16); font-size: 12px; text-align: center; }
-      .wechat-popover img { display: block; width: 200px; height: 200px; background: #fff; border-radius: 6px; }
-      .wechat-popover p { margin: 10px 0 0; line-height: 1.5; }
       .header > #quit { margin-left: auto; flex-shrink: 0; }
       @media (max-width: 620px) {
         .header, .shell.details-open .header { padding-inline: 20px; }
@@ -674,30 +671,10 @@
       <footer class="footer">
         <aside class="community" aria-labelledby="community-label">
           <span id="community-label"></span>
-          <span class="community-links">
-            <button id="community-wechat" type="button" aria-expanded="false" aria-controls="wechat-popover">
-              <svg class="brand-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.326.326 0 0 0 .167-.054l1.903-1.114a.864.864 0 0 1 .717-.098 10.16 10.16 0 0 0 2.837.403c.276 0 .543-.027.811-.05-.857-2.578.157-4.972 1.932-6.446 1.703-1.415 3.882-1.98 5.853-1.838-.576-3.583-4.196-6.348-8.596-6.348zM5.785 5.991c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178A1.17 1.17 0 0 1 4.623 7.17c0-.651.52-1.18 1.162-1.18zm5.813 0c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178 1.17 1.17 0 0 1-1.162-1.178c0-.651.52-1.18 1.162-1.18zm5.34 2.867c-1.797-.052-3.746.512-5.28 1.786-1.72 1.428-2.687 3.72-1.78 6.22.942 2.453 3.666 4.229 6.884 4.229.826 0 1.622-.12 2.361-.336a.722.722 0 0 1 .598.082l1.584.926a.272.272 0 0 0 .14.047c.134 0 .24-.111.24-.247 0-.06-.023-.12-.038-.177l-.327-1.233a.582.582 0 0 1-.023-.156.49.49 0 0 1 .201-.398C23.024 18.48 24 16.82 24 14.98c0-3.21-2.931-5.837-6.656-6.088V8.89c-.135-.01-.27-.027-.407-.03zm-2.53 3.274c.535 0 .969.44.969.982a.976.976 0 0 1-.969.983.976.976 0 0 1-.969-.983c0-.542.434-.982.97-.982zm4.844 0c.535 0 .969.44.969.982a.976.976 0 0 1-.969.983.976.976 0 0 1-.969-.983c0-.542.434-.982.969-.982z" />
-              </svg>
-              <span id="community-wechat-label"></span>
-            </button>
-            <a id="community-discord" href="https://discord.gg/7Xgf3qe3Qp" target="_blank" rel="noopener noreferrer">
-              <svg class="brand-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z" />
-              </svg>
-              <span>Discord</span>
-              <svg class="external-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M4 12 12 4M5 4h7v7" />
-              </svg>
-            </a>
-          </span>
+          <a id="community-support" href="https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/issues" target="_blank" rel="noopener noreferrer">GitHub</a>
         </aside>
       </footer>
     </main>
-    <div id="wechat-popover" class="wechat-popover" popover="auto" role="region" aria-labelledby="wechat-caption">
-      <img id="wechat-qr" src="community-wechat-qr.png" width="200" height="200" alt="" />
-      <p id="wechat-caption"></p>
-    </div>
 
     <script>
       const params = new URLSearchParams(location.search)
@@ -815,50 +792,10 @@
       setText('technical', model.rawError)
       setText('show-log', model.logLabel)
       setText('quit', model.quitLabel)
-      setText('community-label', model.locale === 'zh' ? 'DSH 上游社区' : 'DSH upstream community')
-      setText('community-wechat-label', model.locale === 'zh' ? '微信群' : 'WeChat')
-      setText('wechat-caption', model.locale === 'zh' ? '扫码加入 DSH 用户群' : 'Scan to join the DSH community')
-      const wechat = document.getElementById('community-wechat')
-      const wechatPopover = document.getElementById('wechat-popover')
-      document.getElementById('wechat-qr').alt = model.locale === 'zh' ? 'DSH 用户群二维码' : 'DSH community WeChat QR code'
-      let wechatCloseTimer
-      const positionWechat = () => {
-        const anchor = wechat.getBoundingClientRect()
-        const popup = wechatPopover.getBoundingClientRect()
-        const centered = anchor.left + anchor.width / 2 - popup.width / 2
-        const left = Math.max(12, Math.min(centered, innerWidth - popup.width - 12))
-        const top = Math.max(12, Math.min(anchor.top - popup.height - 8, innerHeight - popup.height - 12))
-        wechatPopover.style.left = `${left}px`
-        wechatPopover.style.top = `${top}px`
-      }
-      const openWechat = () => {
-        clearTimeout(wechatCloseTimer)
-        if (!wechatPopover.matches(':popover-open')) wechatPopover.showPopover()
-        positionWechat()
-      }
-      const closeWechat = () => {
-        clearTimeout(wechatCloseTimer)
-        if (wechatPopover.matches(':popover-open')) wechatPopover.hidePopover()
-      }
-      const scheduleWechatClose = () => {
-        clearTimeout(wechatCloseTimer)
-        wechatCloseTimer = setTimeout(() => {
-          if (!wechat.matches(':hover') && !wechatPopover.matches(':hover') && document.activeElement !== wechat) closeWechat()
-        }, 150)
-      }
-      wechat.addEventListener('pointerenter', openWechat)
-      wechat.addEventListener('pointerleave', scheduleWechatClose)
-      wechat.addEventListener('focus', openWechat)
-      wechat.addEventListener('blur', scheduleWechatClose)
-      wechat.addEventListener('click', openWechat)
-      wechatPopover.addEventListener('pointerenter', () => clearTimeout(wechatCloseTimer))
-      wechatPopover.addEventListener('pointerleave', scheduleWechatClose)
-      wechatPopover.addEventListener('toggle', () => wechat.setAttribute('aria-expanded', String(wechatPopover.matches(':popover-open'))))
-      window.addEventListener('resize', closeWechat)
-      document.addEventListener('scroll', closeWechat, true)
-      document.getElementById('community-discord').title = model.locale === 'zh'
-        ? '在浏览器中打开 DSH 上游 Discord 社区'
-        : 'Open the upstream DSH Discord community in your browser'
+      setText('community-label', model.locale === 'zh' ? '帮助与反馈' : 'Help and feedback')
+      document.getElementById('community-support').title = model.locale === 'zh'
+        ? '在浏览器中打开 APUS Reflex Harness 问题反馈'
+        : 'Open APUS Reflex Harness issues in your browser'
       // No plugin to repair: the primary action itself enters Safe Mode, so the
       // row collapses to that button and its note, centered together.
       const safeModeOnly = model.safeModeOnly ?? (!model.canUninstall && !model.upgradeCandidate && !model.marketPrimary)

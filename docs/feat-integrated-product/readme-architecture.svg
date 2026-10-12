@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="apus-readme-architecture-title apus-readme-architecture-desc">
 <title id="apus-readme-architecture-title">APUS Reflex Harness 技术架构</title>
-<desc id="apus-readme-architecture-desc">System3通过Session入口与AgentLoop原生扩展点请求Jev有界判断并按规则采纳，推理模型负责规划生成和工具调用，DSH执行工具与子Agent并持久化会话事实，界面从会话投影显示决策与进度。</desc>
+<desc id="apus-readme-architecture-desc">System3通过Session入口与AgentLoop原生扩展点请求Jev有界判断并按规则采纳，推理模型负责规划生成和工具调用，APUS 运行时执行工具与子Agent并持久化会话事实，界面从会话投影显示决策与进度。</desc>
 <defs>
 <style>
 text{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;fill:#153f36}.heading{font-family:Georgia,"Songti SC",serif;font-size:28px;font-weight:400}.name{font-size:16px;font-weight:600}.body{font-size:12px;fill:#52665d}.tech{font-family:"SFMono-Regular",Consolas,monospace;font-size:12px;fill:#52665d}.tag{font-family:"SFMono-Regular",Consolas,monospace;font-size:8px;letter-spacing:1.5px;fill:#52665d}.edge-label{font-size:12px;fill:#52665d}.node{fill:#fffdf9;stroke:#527263;stroke-width:1.2}.focal{fill:#fcf0e9;stroke:#ad502f;stroke-width:1.5}.external{fill:#eeeee7;stroke:#9aaa9d;stroke-width:1}.store{fill:#eaf0e9;stroke:#527263;stroke-width:1.2}.wire{fill:none;stroke:#5c7567;stroke-width:1.5;marker-end:url(#arrow)}.call{stroke:#326c88;marker-end:url(#arrow-link)}.return{stroke-dasharray:5 4}.mask{fill:#f7f5ef}.legend{font-size:12px;fill:#52665d}
@@ -14,11 +14,11 @@ text{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei
 <text x="48" y="40" class="tag">APUS / REFLEX · TECHNICAL ARCHITECTURE</text>
 <text x="48" y="84" class="heading">APUS Reflex Harness</text>
 <text x="1232" y="82" text-anchor="end" class="name">瞬时执行，深度思考</text>
-<text x="48" y="116" class="name">Model-as-a-Harness：Jev 有界判断与推理模型，经 DSH 原生机制协作</text>
+<text x="48" y="116" class="name">Model-as-a-Harness：Jev 有界判断与推理模型，经 APUS 原生机制协作</text>
 
 <rect x="48" y="144" width="800" height="480" rx="8" fill="#153f36" fill-opacity="0.02" stroke="#ccd7cc"/>
 <rect x="912" y="144" width="320" height="480" rx="8" fill="#153f36" fill-opacity="0.02" stroke="#ccd7cc"/>
-<text x="64" y="164" class="tag">DSH RUNTIME · NATIVE EXTENSION POINTS</text>
+<text x="64" y="164" class="tag">APUS RUNTIME · NATIVE EXTENSION POINTS</text>
 <text x="928" y="164" class="tag">MODEL / EXTERNAL AGENT PROVIDERS</text>
 
 <g id="connectors">

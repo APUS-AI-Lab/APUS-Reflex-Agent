@@ -39,7 +39,7 @@ jobs:
         working-directory: frontend
         run: |
           npm run typecheck
-          npm test
+          npm test -- --no-file-parallelism
       - name: Probe the packaged-runtime launcher
         working-directory: frontend
         run: node scripts/probe-electron-node-runtime.mjs --system3

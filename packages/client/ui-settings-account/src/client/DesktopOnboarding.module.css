@@ -64,20 +64,7 @@
   color: var(--dsw-alias-label-tertiary);
 }
 
-.welcome {
-  max-width: 2200px;
-  width: 100%;
-  height: 100%;
-}
-
-.welcome .copy {
-  position: absolute;
-  top: 50%;
-  left: clamp(64px, calc(41.667vw - 300px), 200px);
-  width: 520px;
-  transform: translateY(-50%);
-  z-index: 1;
-}
+.welcome { max-width: 520px; }
 
 .start {
   display: flex;
@@ -85,34 +72,7 @@
   margin: 60px 0 0;
 }
 
-.welcomeIllustration {
-  position: absolute;
-  left: min(calc(41.667vw + 112.5px), 712.5px);
-  top: clamp(32px, calc(31.608vh - 157.65px), 133.145px);
-  width: 1247px;
-  height: 822px;
-  pointer-events: none;
-}
-
-.welcomeArtwork { position: absolute; left: -67px; top: -40px; width: 1331px; height: auto; }
-
-.illustration img { display: block; width: 100%; height: auto; }
-.illustration .darkIllustration { display: none; }
-:global(body[data-ds-dark-theme]) .lightIllustration { display: none; }
-:global(body[data-ds-dark-theme]) .darkIllustration { display: block; }
-
-.credit {
-  display: grid;
-  grid-template-columns: minmax(0, 594px) minmax(0, 400px);
-  justify-content: center;
-  align-items: center;
-  gap: clamp(32px, calc((100vw - 994px) / 3), 164px);
-  max-width: 1196px;
-  transform: translate(-50%, calc(-50% - 5px));
-}
-
-.creditIllustration { width: 100%; height: auto; aspect-ratio: 594 / 509; object-fit: contain; }
-.credit .copy { max-width: 400px; }
+.credit { max-width: 400px; }
 .creditActions { display: flex; gap: 24px; margin-top: 60px; }
 .creditActions > button { flex: 1; max-width: 160px; }
 .creditActions .laterAction { background: var(--dsw-alias-onboarding-secondary-fill); }
@@ -258,14 +218,6 @@
   .processCards { min-height: 0; padding-block: 0; }
   .primaryAction { margin-top: 40px; }
   .creditActions { margin-top: 32px; }
-}
-
-@media (max-width: 1200px) {
-  .welcomeIllustration { left: calc(73.333vw - 267.5px); }
-}
-
-@media (min-height: 920px) {
-  .welcomeIllustration { top: calc(50% - 326.855px); }
 }
 
 @media (max-width: 1100px) {

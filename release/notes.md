@@ -1,10 +1,12 @@
-# APUS Reflex Harness 0.1.8-beta.1
+# APUS Reflex Harness 0.1.0
 
 Model-as-a-Harness · 瞬时执行，深度思考。
 
-This preview combines the desktop client and Harness in one repository and installer. Configure your own model in Settings → Models. Optional Settings → System3 configures Jev routing with explicit credentials and data approval; it is off by default.
+Tag / 标签：`v0.1.0`. GitHub prerelease / GitHub 预发布；unsigned preview pending acceptance / 待验收的未签名预览版。
 
-本预览版整合桌面客户端与 Harness。普通任务在“设置 → 模型”填写自己的模型服务；可选的“设置 → System3”配置 Jev 选路、凭证和数据授权，默认关闭。
+This integration brings the desktop client into `frontend/` of the existing Harness repository, merging frontend and backend configuration, builds and packaging. The installer bundles the backend; users do not install or start a separate service. This release draft remains pending acceptance and publication. Configure your own model in Settings → Models. Configure an optional decision service in Settings → Reflex model configuration. Connection tests do not automatically enable routing, supervision or memory.
+
+本次以前后端合并的一体化仓库交付：保留原 Harness 为主仓，客户端纳入 `frontend/`，统一配置、构建与打包。安装包内置后端，无需额外安装或启动服务。本 Release 草稿仍待验收与发布。普通任务在“设置 → 模型”填写自己的模型服务；可在“设置 → Reflex 模型配置”接入决策服务。连接测试不会自动启用路由、监督或记忆。
 
 - Target / 平台：macOS Apple Silicon (arm64).
 - Signing / 签名：unsigned preview, not notarized / 未签名、未公证预览版，macOS 可能阻止首次打开。

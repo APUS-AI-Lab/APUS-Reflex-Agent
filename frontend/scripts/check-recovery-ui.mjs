@@ -14,12 +14,14 @@ await build({
   format: 'cjs',
   external: ['electron']
 })
-for (const scale of ['1', '1.25', '1.5']) {
-  const result = spawnSync(electron, [join(output, 'smoke.cjs')], {
-    env: { ...process.env, RECOVERY_UI_SCALE: scale, RECOVERY_UI_OUTPUT: output },
-    stdio: 'inherit',
-    timeout: 120_000
-  })
-  if (result.error) throw result.error
-  if (result.status !== 0) process.exit(result.status ?? 1)
+for (const scale of ['1', '1.25', '1.5', '2']) {
+  for (const zoom of ['1', '2']) {
+    const result = spawnSync(electron, [join(output, 'smoke.cjs')], {
+      env: { ...process.env, RECOVERY_UI_SCALE: scale, RECOVERY_UI_ZOOM: zoom, RECOVERY_UI_OUTPUT: output },
+      stdio: 'inherit',
+      timeout: 120_000
+    })
+    if (result.error) throw result.error
+    if (result.status !== 0) process.exit(result.status ?? 1)
+  }
 }

@@ -39,7 +39,7 @@ kind: "package-reference"
 
 ### 「通用」分区
 
-Web 与桌面端的通用设置底部显示当前发布版本，使用构建注入的 `DSH_CLIENT_VERSION` 元数据和当前语言。缺少版本元数据的局部构建不显示该行。
+通用设置底部使用当前语言显示发布版本。桌面端通过只读的 `dshDesktop.productVersion` 宿主字段提供产品版本；Web 使用构建注入的 `DSH_CLIENT_VERSION` 元数据。两者都未提供版本时不显示该行。
 
 代码工作工具开关控制 [ui-settings](../ui-settings/README.zh.md#use-this-package) 定义的共享偏好 `ui-settings.enabled`。Web 和桌面端均提供此开关，立即跟随已接受的变更，并在写入完成前禁用重复输入。写入失败时显示本地化的重试提示。
 

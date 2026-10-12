@@ -5,7 +5,7 @@
     "sourceCollection": "curated",
     "slug": "modular-logistics-system",
     "name": "Modular Logistics System",
-    "variantLabel": "DSH",
+    "variantLabel": "APUS",
     "description": "原创模块化物流经营模板，适合跨境履约、供应链、市场进入、能力建设与管理层行动汇报。",
     "previewTitle": "Modular Logistics System",
     "previewSubtitle": "Work · WorkBuddy Original",
@@ -1099,6 +1099,6 @@
   "provenance": {
     "kind": "retained-native",
     "commit": "de281a1ceccadb00b92df53adb106a2e87ec0b4b",
-    "evidence": "PPTD page sources, vectors, source provenance statements and PR #320"
+    "evidence": "PPTD page sources, vectors, source attribution statements and PR #320"
   }
 }

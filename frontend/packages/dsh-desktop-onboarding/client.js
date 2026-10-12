@@ -65,9 +65,9 @@ window.__ModuleLoader__.load({
       step0Title: 'Start your first task',
       declarationBody: '1. Open Settings → Models and add your provider, API key and model. For a custom provider, enter its Base URL.\n\n2. Choose a workspace folder and select the configured model in a new conversation.\n\n3. Send a small task to check that the model responds.',
       desktopIntroTitle: 'Your model, your configuration',
-      desktopIntroBody: 'Requests go to the model provider you select. System3 collaboration is off by default and can be enabled in Settings → System3 after you configure your services.',
+      desktopIntroBody: 'Requests go to the model provider you select. Configure an optional decision service in Settings → Reflex model configuration. Advanced routing stays off until separately configured.',
       officialSite: 'Configuration guide',
-      officialSiteUrl: 'https://github.com/cryptoSUN2049/APUS-Reflex-Harness#readme',
+      officialSiteUrl: 'https://github.com/APUS-AI-Lab/APUS-Reflex-Harness#readme',
       desktopIntroFeedback: 'You can return to Settings → Models at any time. Report problems through GitHub Issues.',
       configureModel: 'Configure a model',
       later: 'Explore first'
@@ -79,9 +79,9 @@ window.__ModuleLoader__.load({
       step0Title: '开始第一个任务',
       declarationBody: '1. 打开设置 → 模型，添加服务商、API Key 和模型；自定义服务商还需填写 Base URL。\n\n2. 选择工作目录，在新对话中选用已配置的模型。\n\n3. 发送一个简单任务，确认模型能够正常回复。',
       desktopIntroTitle: '使用你自己的模型配置',
-      desktopIntroBody: '请求会发送到你选择的模型服务商。System3 协同默认关闭，可在设置 → System3 中配置自己的服务后启用。',
+      desktopIntroBody: '请求会发送到你选择的模型服务商。可在设置 → Reflex 模型配置中连接决策服务；高级路由仍需另行配置，默认关闭。',
       officialSite: '配置教程',
-      officialSiteUrl: 'https://github.com/cryptoSUN2049/APUS-Reflex-Harness#readme',
+      officialSiteUrl: 'https://github.com/APUS-AI-Lab/APUS-Reflex-Harness#readme',
       desktopIntroFeedback: '随时可回到设置 → 模型修改配置。遇到问题请通过 GitHub Issues 反馈。',
       configureModel: '去配置模型',
       later: '先看看'
@@ -116,7 +116,7 @@ window.__ModuleLoader__.load({
     function NoticeBody({ t }) {
       const paragraphs = t('declarationBody').split('\n\n')
       const links = [
-        { label: 'GitHub', href: 'https://github.com/cryptoSUN2049/APUS-Reflex-Harness/issues', icon: GitHubMark },
+        { label: 'GitHub', href: 'https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/issues', icon: GitHubMark },
         { label: t('officialSite'), href: t('officialSiteUrl'), icon: IconGlobeOutline14 }
       ]
       return React.createElement(

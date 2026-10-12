@@ -34,7 +34,7 @@ function failureFrom(match: ConversationMatch): TurnErrorState['failure'] | unde
   const failure = reason.kind === 'error' ? reason.error
     : reason.kind === 'aborted' && reason.reason.kind === 'hook'
       && reason.reason.reason === 'deepseek-account/signed-out'
-      ? { message: 'Stopped because you signed out of DeepSeek.', code: 'ACCOUNT_SIGNED_OUT' } : undefined
+      ? { message: 'Stopped because you signed out of your model provider account.', code: 'ACCOUNT_SIGNED_OUT' } : undefined
   if (failure === undefined) return undefined
   const display = displayFailure(failure)
   return {

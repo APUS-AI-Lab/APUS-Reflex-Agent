@@ -167,7 +167,7 @@ describe('plugin-market-check', () => {
     for (const [installedVersion, label] of [
       ['2.0.0', locale === 'zh' ? '已是最新版' : 'Up to date'],
       ['3.0.0', locale === 'zh' ? '当前版本高于市场最新版' : 'Installed version is newer than market latest'],
-      ['1.0.0', locale === 'zh' ? '暂无适用于当前 DSH 的更新' : 'No update available for the current DSH']
+      ['1.0.0', locale === 'zh' ? '暂无适用于当前 Harness 的更新' : 'No update available for the current Harness']
     ]) {
       const report = await check(fetchFn, { installedVersion, locale })
       expect(report).toMatchObject({ healthStatus: 'up-to-date', healthLabel: label, upgradeReady: false })

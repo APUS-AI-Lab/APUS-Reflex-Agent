@@ -1,6 +1,6 @@
 {
   "name": "xdan-system3-frontend",
-  "version": "0.1.8-beta.1",
+  "version": "0.1.0",
   "description": "APUS Reflex Harness — Model-as-a-Harness. 瞬策：瞬时执行，深度思考。",
   "private": true,
   "type": "module",
@@ -17,7 +17,6 @@
   },
   "homepage": "https://github.com/APUS-AI-Lab/APUS-Reflex-Harness#readme",
   "keywords": [
-    "deepseek",
     "harness",
     "electron",
     "desktop",
@@ -293,8 +292,7 @@
     "qrcode": "^1.5.4",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "ws": "^8.21.3",
-    "dsh-desktop-system3-settings": "file:packages/dsh-desktop-system3-settings"
+    "ws": "^8.21.3"
   },
   "devDependencies": {
     "@types/js-yaml": "4.0.9",
@@ -435,10 +433,6 @@
       {
         "from": "build/safe-mode.html",
         "to": "safe-mode.html"
-      },
-      {
-        "from": "build/community-wechat-qr.png",
-        "to": "community-wechat-qr.png"
       },
       {
         "from": ".build/licenses",

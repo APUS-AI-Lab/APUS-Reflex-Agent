@@ -12,7 +12,7 @@ export interface GenerationInstallOptions {
   pluginSpec: string
   /** Package name expected after installing a non-registry or aliased spec. */
   expectedPluginName?: string
-  /** Original dependency declaration retained as generation provenance. */
+  /** Original dependency declaration retained as the generation source record. */
   sourceSpec?: string
   /** Exact installed tree copied into staging for non-registry sources. */
   sourceDirectory?: string

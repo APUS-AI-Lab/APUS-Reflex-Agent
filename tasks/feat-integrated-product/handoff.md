@@ -2,46 +2,80 @@
 
 ## TL;DR
 
-- 用户批准以现有 Harness 为主仓整合前端，并在审查后公开仓库与 Release。
-- 工作树 feat-integrated-product；main 的未提交设计、经验和其他工作树保持不动。
-- 已批准方案在 docs/feat-integrated-product/design.md；术语必须为 Model-as-a-Harness。
-- 当前阶段：源码与发布流程实现已落盘，Harness 完整构建通过；正在运行时、回归和安装验收。尚未提交、推送或发布。
+- 用户批准以现有 APUS Reflex Harness 为主仓整合前端，审查后公开仓库与 Release；产品首版 `0.1.0`，标签 `v0.1.0`，按未签名预发布验收。
+- 工作树 `feat-integrated-product`；已创建集成 checkpoint，并以 `merge: sync current Harness product and runtime changes` 提交合并当时的 Harness main；尚未 push，精确 HEAD 用 `git rev-parse HEAD` 查询。
+- 前端完整串行测试 180 文件、1592 测试通过；发布相关 50、原生 Reflex UI 44、真实首配 pipeline 2、provider 最终 17 项通过。
+- 最终 setup session `58636` 已退出失败：完整 Harness 构建通过，运行时部署触发 pnpm legacy 嵌套工作区 bin 路径错误。已用离线最小样例复现并修复临时部署根项目；旧日志 `/private/tmp/apus-logo-final-setup.log`。新 setup session `11497` 已退出：后端完整构建通过，根目录部署修复通过（606 包安装），进入兼容补丁阶段因 chat 补丁 2/23 hunks 冲突失败；日志 `/private/tmp/apus-root-deploy-setup.log`。正在审查全部 27 个兼容补丁；桌面前端独立 build session `99442` 已通过，日志 `/private/tmp/apus-final-desktop-build.log`。27 补丁小树核查已全部通过，20 项兼容补丁回归通过。runtime prepare session `91931` 已通过，日志 `/private/tmp/apus-runtime-final-prepare.log`；Electron RunAsNode probe 返回 HTTP 200。实际桌面选择“从空白开始”后已进入主界面；设置、模型和 Reflex 空配置页均可打开。截图 `/private/tmp/apus-desktop-accept-5PyCmq/`，日志 `/private/tmp/apus-desktop-settings.log`。设置页产品版本修复已完成，19 项定向测试、类型检查与 owner lint 通过，待重建后实测；首次预选 DeepSeek 真实模型的处理偏好已向用户询问。
+- 当前没有 Release，远端 0 个 tag；源码仍 private，当前账号只有 WRITE/admin=false，无可用签名身份。实际安装、首个真实任务和匿名下载仍待验收。
 
 ## 本轮交付物
 
-进行中；最终文件行数与结果在里程碑完成时补齐。桌面源码位于 frontend/，产品编排在 scripts/product.mjs，版本与附件校验在 scripts/product-release.mjs，产品版本为 release/manifest.json 的 0.1.8-beta.1。双语安装、配置、开发、发布教程位于 docs/feat-integrated-product/。root README 与六语言 frontend README 收拢到这些入口。CI 创建草稿，不自动公开发行。
+关键文件行数为此次交接时的快照，不列全部导入文件：
 
-新插件 frontend/packages/dsh-desktop-system3-settings/ 提供显式启用、凭证引用与本地激活状态。默认不带生产端点，不启用 System3 决策，不远程导出会话。Model-as-a-Harness 已在活跃品牌与引导文案中修正。
+| 文件 | 行数 | 交付内容 |
+| --- | ---: | --- |
+| `README.md` / `README.zh.md` | 各 148 | APUS 产品入口，保留最新 Loop Working/Continuum 架构与限制，统一下载、配置、源码启动与许可链接 |
+| `frontend/README.md` | 27 | 桌面产品入口；另有中文、日文、俄文、西班牙文、葡萄牙文页面 |
+| `scripts/product.mjs` | 121 | 单仓 setup、桌面启动及打包编排 |
+| `scripts/product-release.mjs` | 111 | 同提交产物绑定、版本与附件校验、Release 元数据 |
+| `release/manifest.json` / `release/notes.md` | 9 / 25 | 产品 0.1.0、首版范围、未签名预发布说明 |
+| `.github/workflows/product.yml` / `product-release.yml` | 45 / 80 | 产品 CI 与 Release 草稿流程 |
+| `docs/feat-integrated-product/installation.md` | 31 | 安装、更新和平台限制；有中文配对 |
+| `docs/feat-integrated-product/configuration.md` | 55 | 普通模型首配、原生 Reflex 配置与能力边界；有中文配对 |
+| `docs/feat-integrated-product/development.md` | 42 | 单仓开发命令；有中文配对 |
+| `docs/feat-integrated-product/releases.md` | 43 | 打包、依赖追溯与发行验收；有中文配对 |
+| `frontend/scripts/runtime-dependency-inventory.cjs` | 78 | 实际 runtime 包 manifest 清单与校验 |
+| `frontend/scripts/prepare-system3-runtime.mjs` | 153 | 从当前仓库准备、实体化并验证桌面运行时 |
+| `frontend/build/dsh-desktop.patch.yml` | 70 | 桌面 profile 装配 |
+
+复用原生“设置 → Reflex 模型配置”和既有 credentials 服务；此前自建桌面 System3 设置插件已由原生方案替代。首次未配置时可编辑地址/模型；草稿测试不保存，保存后对新请求生效。新 API Key 需独立新引用，拒绝覆盖已配置引用。连接成功不自动启用路由、监督或 Continuum，候选、数据授权与记忆准入仍需显式配置。前端更新后的 generation/recovery 必要修复已纳入。两份依赖锁中的 sharp 已升级至 `0.35.5`。
+
+新增品牌：用户提供的透明渐变飞鸟原图保存在 `apps/web/public/brand-source.webp`（140×140）；Web、React、桌面和安装器均从该文件生成。原图不是矢量，SVG 为嵌入图像包装。品牌相关回归：根 UI 353、前端 177、备用桌面 142、新 Logo 209 项通过。合仓术语检查修复及相关测试 70 项通过；最终文档 quick 检查 20/20 通过；完整 doc-sync 42/42、全仓 lint:contracts-ready、ruff check 和 ruff format --check 全部通过。
 
 ## 设计约束
 
-frontend/ 是 Electron 宿主，Web UI 和 Runtime 继续由 Harness 提供。保留前端 npm 锁、根 pnpm 锁、许可证、appId 与用户数据目录；不得内置真实凭证或把生产服务作为新用户默认值。产品发行版本独立于 DSH 包版本。下载入口只列已验证产物。
+`frontend/` 是 Electron 宿主，Web UI 和 Runtime 继续由 Harness 提供；安装包从同一已审查提交组装。保留前端 npm 锁、根 pnpm 锁、原许可证、appId 与用户数据目录。不内置真实凭证，不把私有生产服务作为新用户默认值。产品术语严格使用 **Model-as-a-Harness**。
+
+产品版本与 DSH 包版本、Session 格式版本分别管理；`0.1.0` 不代表正式签名或稳定性已验收，GitHub prerelease 标志独立于版本后缀。源码压缩包不是安装包。下载入口只列通过验收的实际附件。
+
+Runtime 部署会动态合成依赖集合；双锁摘要标识源码输入，实际 `runtime-dependencies.json` 记录装配后的包名、版本、路径与包 manifest 摘要。它不保证下一次解析相同依赖，也不对包内所有文件求摘要。打包前后及 Release 构建记录必须绑定实际清单，不能以旧包冒充当前提交产物。
 
 ## 已踩坑/已发现的真实行为
 
-现有前端 release macOS 缺少 own runtime prepare，Windows build 先于品牌准备。根 dev:desktop 原本指向另一套宿主，需保留显式维护入口。测试、构建与 Runtime 复制会重建共享产物，必须顺序运行。源码构建需要原生编译器与 Node headers。
+构建、typecheck、测试和 Runtime 复制可能重建共享产物；本机并发曾引发严重内存压力，必须串行。首轮前端失败已被最新串行 1592 测试通过结果替代，但不能由此推断最终 setup 或安装包已通过。本轮完整 Harness 构建已通过，但部署及桌面 setup 后半段仍待完成。`doc-sync` 自带 Host 构建，必须与 setup 串行；一次重叠 doc-sync 已停止，不计通过。
 
-本机并发主构建与前端全套测试造成严重内存压力。首轮全套前端测试 1579 通过、33 失败，包含合仓后的旧路径/文案断言及运行时超时；正在修复及串行复验，不能记录为全通过。首轮 setup 在新增 mjs 类型声明缺失处中止；补声明后单独 pnpm run build 完整通过，setup 后半段仍待实际执行。旧工作流归档在 frontend/.upstream-workflows/workflows，Python 脚本保留 frontend/.github/scripts 路径。
+旧前端工作流归档于 `frontend/.upstream-workflows/workflows`，Python 工具仍在 `frontend/.github/scripts`。根桌面命令启动 APUS 宿主，原 Harness 桌面使用独立维护命令。后端源码变化后需重新 setup 准备运行时。
 
-GitHub 实际归属 APUS-AI-Lab/APUS-Reflex-Harness，当前账号 cryptoSUN2049 只有 WRITE，admin=false，仓库仍 private。必须管理员操作才可公开。当前机器没有有效代码签名身份；仅准备明确标注 unsigned 的 beta 预览，不能宣称签名/公证。真实安装和公开下载尚未验收。
+公开审计已经覆盖前期源码树与历史；合并后的最终增量、依赖生产闭包及安装包仍需复核。原始日志在 `/private/tmp/apus-*`，不得将含敏感内容的日志直接提交。凭证扫描结果不替代依赖安全或包内许可检查。
 
-公开审计当前树及历史已完成，确证凭证泄漏为零；最终增量和安装包仍需扫描。npm 生产依赖审计另有继承风险，需按实际装包闭包评估，不得把凭证审计等同依赖安全结论。原始扫描和构建日志保留 /private/tmp/apus-*，禁止提交凭证日志。
+28 个旧远端 tag 已备份至 `.artifacts/legacy-tag-backup-20261012`，bundle 校验通过后已删除；远端当前为 0 个 tag。不要执行 `git push --tags`，避免重新发布本地旧标签；首版只在确认后推送目标 `v0.1.0`。
 
 ## 下一里程碑任务清单
 
-- [ ] 导入前端并完成单仓 setup/start/package。
-- [ ] 默认普通模型配置可用，协同配置明确且无生产凭证依赖。
-- [ ] 统一 Model-as-a-Harness、README 和配置教程。
-- [ ] 公开审计覆盖当前树与历史；修复确证问题。
-- [ ] 构建、测试、实际安装包验收与许可检查。
-- [ ] 提交推送、审查后公开仓库并发布已验证 Release。
+- [x] 导入前端，落地单仓准备、启动与发行编排，保留上游许可。
+- [x] 合并最新 Harness 产品与运行时，保留 Loop Working/Continuum 架构及能力限制。
+- [x] 统一 Model-as-a-Harness、六语言前端入口、双语教程与产品首版 0.1.0。
+- [x] 完成最新前端全套串行测试及发布、原生 Reflex UI/pipeline、provider 定向回归。
+- [x] 完整 doc-sync 42/42 通过，最新 main 无待同步提交。
+- [x] 全仓 lint:contracts-ready 和 Ruff 双门禁通过。
+- [x] 修复临时部署根项目，3 项实际离线 pnpm 回归和真实依赖装配通过。
+- [x] 对齐全部 27 个桌面兼容补丁，运行时装配、桌面构建及 Electron 后端 HTTP 200 探针通过。
+- [ ] 验证桌面和 Web 启动、普通模型首配、真实响应、文件任务、重启和设置保留。
+- [ ] 从最终审查提交重新打包，核对依赖清单、许可、版本、哈希及未签名状态。
+- [ ] 安装即将发布的实际产物，在无开发依赖环境完成首次任务及支持的更新验收。
+- [ ] 复核最终公开增量与产物，完成所需文档及推送门禁；推送分支供审查。
+- [ ] 由具备管理员权限者公开仓库；仅发布通过验收的 v0.1.0 预发布附件并验证匿名下载。
 
 ## 分支/部署状态
 
-feat-integrated-product 基于 main。未发布、未改可见性、不覆盖用户安装版；公开与发布已获用户授权，仍须完成审查及验收。
+工作树路径为 `.Codex/worktrees/feat-integrated-product`，分支 `feat-integrated-product`。已有本地集成 checkpoint 与合并主线提交，最终品牌、首配和部署修复正在提交。用 `git log -2 --oneline` 和 `git rev-parse HEAD` 查询当前提交。尚未 push，没有 Release，未覆盖用户已安装版本。主目录及其他工作树的用户改动保持不动。
+
+远端为 `APUS-AI-Lab/APUS-Reflex-Harness`；当前账号 `cryptoSUN2049` 权限 WRITE，admin=false，不能自行改为 public。公开与发布已获用户授权，仍须完成审查、管理员操作和发行验收。当前无可用代码签名身份，不宣称签名或公证。
 
 ## 冷启动 checklist
 
-1. 读本交接与 design.md，检查 tasks/todo.md。
-2. 检查工作树状态及子任务消息，避免重复构建/复制。
-3. 核对公开审查结果与真实安装验收，不能将静态检查替代发行验证。
+1. 先读本交接、`docs/feat-integrated-product/design.md`、`configuration.md`、`releases.md` 与 `tasks/todo.md`。
+2. 核对分支、HEAD、工作树和当前 agent 消息；先确认当前运行中的命令与上述日志；旧 session 58636 已失败，不启动重复 setup/build/test。
+3. 根据临时部署路径修复和新 setup 的真实结果继续。保留已通过的定向与全套测试证据，仅因新变更、失败或未解决问题补测。
+4. 核对最新版本、runtime 清单和产物构建记录；旧安装包不能代表合并后源码。按下一里程碑清单完成实际桌面、安装与真实任务验收。
+5. 推送前执行仓库要求的相关检查及 ruff 双门禁；不要 push --tags。核对 tag 备份、远端标签、公开权限和签名状态后再执行发布步骤。
