@@ -7,7 +7,7 @@ import { layoutRichText, scaleTextRuns } from "./rich-text-layout.js";
 import { hasSourceLayout } from "./source-layout.js";
 import { access, link, lstat, mkdir, open, readFile, readdir, realpath, rename, rm, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 import { createHash, randomUUID } from "node:crypto";
 import { convertPptxToPptd } from "./pptx-converter.js";
 import yaml from "js-yaml";
@@ -3488,7 +3488,7 @@ async function main() {
 	process.exitCode = await runCli(process.argv.slice(2), process);
 }
 const invoked = process.argv[1];
-// npm installs .bin symlinks on POSIX; compare canonical paths so that entry runs too.
-if (invoked !== void 0 && pathToFileURL(await realpath(path.resolve(invoked)).catch(() => path.resolve(invoked))).href === import.meta.url) await main();
+// Resolve both paths: npm can use symlinks and Windows can expose an 8.3 module path.
+if (invoked !== void 0 && await realpath(path.resolve(invoked)).catch(() => path.resolve(invoked)) === await realpath(fileURLToPath(import.meta.url))) await main();
 //#endregion
 export { runCli };
