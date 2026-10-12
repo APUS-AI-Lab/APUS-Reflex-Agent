@@ -2,7 +2,7 @@
 
 English | [中文](cordis-primer.zh.md)
 
-Cordis is the vendored plugin framework underneath DeepSeek Harness. This primer teaches the Cordis ideas a harness plugin author needs before reading the generated service/event reference on the [subsystem pages](subsystems/core.md); the [Cordis tutorial](cordis-tutorial/index.md) walks the same ideas hands-on. The vendored source and sync procedure live in [vendor/README.md](../vendor/README.md).
+Cordis is the vendored plugin framework underneath APUS Reflex Harness. This primer teaches the Cordis ideas a harness plugin author needs before reading the generated service/event reference on the [subsystem pages](subsystems/core.md); the [Cordis tutorial](cordis-tutorial/index.md) walks the same ideas hands-on. The vendored source and sync procedure live in [vendor/README.md](../vendor/README.md).
 
 ## Cordis In Five Ideas
 
@@ -14,7 +14,7 @@ Cordis is the vendored plugin framework underneath DeepSeek Harness. This primer
 
 ## Dispatch Modes
 
-Every event can have one of the following dispatch mode and can only be dispatched by these methods accordingly.
+Each event has one dispatch mode and requires its corresponding method.
 
 | Mode | Awaited? | Dispatch Order | Has Return Value? |
 |---|---|---|---|

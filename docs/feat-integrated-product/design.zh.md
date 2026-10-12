@@ -37,7 +37,7 @@ Desktop 和 Web 分别启动自己的运行时；图中不承诺共享进程。�
 | `scripts/product*.mjs` | 准备、启动、打包与发行检查 |
 | `release/manifest.json` | 产品版本、渠道、仓库与通过验收的目标 |
 | `docs/feat-integrated-product/` | 产品安装、配置、开发与发行教程 |
-| `tasks/feat-integrated-product/` | 计划、历史评估、验证证据与交接 |
+| `tasks/feat-integrated-product/` | 仅本地保留的计划、评估、验证证据与交接；由 Git 忽略，不随仓库分发 |
 
 首次集成保留现有 pnpm 锁文件和前端 npm 锁文件，由根脚本协调安装；迁移锁文件不在本次范围内。保留应用 ID、用户数据路径和会话格式。
 

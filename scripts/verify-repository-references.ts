@@ -16,6 +16,8 @@ const organizationUrl = new RegExp(`\\bgithub\\.com/${organization}(?![a-z0-9-])
 // The independent kit repository owns the engine source and documentation.
 const kitRepositoryUrl = new RegExp(`\\bgithub\\.com/${organization}/libreoffice-kit(?:\\.git)?(?=/|[^a-zA-Z0-9_.-]|$)`, 'g')
 const commitCandidate = /(?<![a-z0-9])[\da-f]{7,40}(?![a-z0-9])/gi
+// UUID fields in recorded evidence are identifiers, even when a segment matches a commit prefix.
+const uuidIdentifier = /\b[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}\b/gi
 const excludedPrefixes = ['vendor/', '.agents/notes/archived/']
 const retainedRevisionFiles = new Set([
   'docs/feat-reflex-control/evidence/supervision-audit-20261011.json',
@@ -72,7 +74,7 @@ export function findRepositoryReferences(
       references.push({ file, line: index + 1, kind: 'organization-url' })
     }
     if (!retainedRevisionFiles.has(file)
-      && [...line.matchAll(commitCandidate)].some(match => commits.has(match[0].toLowerCase()))) {
+      && [...line.replace(uuidIdentifier, '').matchAll(commitCandidate)].some(match => commits.has(match[0].toLowerCase()))) {
       references.push({ file, line: index + 1, kind: 'commit-hash' })
     }
   }
@@ -97,7 +99,7 @@ function readMaintainedFiles(repoRoot: string): Map<string, string> {
 
 function repositoryCommits(repoRoot: string, sources: Iterable<string>): Set<string> {
   const candidates = [...new Set([...sources].flatMap(source =>
-    [...source.matchAll(commitCandidate)].map(match => match[0].toLowerCase())))]
+    [...source.replace(uuidIdentifier, '').matchAll(commitCandidate)].map(match => match[0].toLowerCase())))]
   if (candidates.length === 0) return new Set()
   const results = execFileSync('git', ['cat-file', '--batch-check=%(objectname) %(objecttype)'], {
     cwd: repoRoot,

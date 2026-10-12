@@ -209,6 +209,8 @@ export class PtcWorkflowRun implements WorkflowRun {
         },
       },
     })
+    // The guest requests results in a later IPC call; childResult retains the original rejection.
+    void run.result.catch(() => {})
     const record: ChildRecord = { callId, run }
     this.children.set(callId, record)
     // A provider can publish after the signal fired while startup was pending.

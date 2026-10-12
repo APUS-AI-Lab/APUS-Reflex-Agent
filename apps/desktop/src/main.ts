@@ -22,6 +22,7 @@ import {
   type MenuItemConstructorOptions,
 } from 'electron'
 import { resolveDesktopPaths } from './paths.ts'
+import { preserveDesktopUserData } from './user-data.ts'
 import { DesktopProjectManager } from './project-manager.ts'
 import { DesktopHostFatalError, DesktopHostProcess, DesktopHostUncleanExitError } from './host-process.ts'
 import { DesktopPlatformView, PLATFORM_IPC, platformBounds } from './platform-view.ts'
@@ -73,6 +74,8 @@ let windowsLanguage: string | undefined
 let backendReady = false
 /** Error-level console output of the primary window, attached to crash reports. */
 const rendererConsole = new RendererConsoleTail()
+
+preserveDesktopUserData(app)
 
 // Platform-conventional logs directory (macOS ~/Library/Logs/<name>, otherwise under userData);
 // set before ready so the first fatal report already resolves under it.
@@ -159,7 +162,7 @@ function runtimeResources(): RuntimeResources {
 function developmentPrimaryRuntime(): string {
   const directory = process.env.DSH_DESKTOP_PRIMARY_RUNTIME_DIR
   if (directory === undefined || directory === '') {
-    throw new Error('dsh desktop: DSH_DESKTOP_PRIMARY_RUNTIME_DIR is required for an unpackaged launch')
+    throw new Error('APUS Reflex Harness desktop: DSH_DESKTOP_PRIMARY_RUNTIME_DIR is required for an unpackaged launch')
   }
   return directory
 }
@@ -169,7 +172,7 @@ function developmentHostInspectPort(enabled: boolean): number | undefined {
   if (!enabled || configured === undefined || configured === '') return undefined
   const port = Number(configured)
   if (!Number.isSafeInteger(port) || port < 1 || port > 65_535) {
-    throw new Error('dsh desktop: DSH_DESKTOP_HOST_INSPECT_PORT must be an integer from 1 through 65535')
+    throw new Error('APUS Reflex Harness desktop: DSH_DESKTOP_HOST_INSPECT_PORT must be an integer from 1 through 65535')
   }
   return port
 }
@@ -366,7 +369,7 @@ async function main(): Promise<void> {
   // chrome and its content never mix languages.
   const showAbout = async (): Promise<void> => {
     await ordinaryMessageBox({ type: 'info', title: locale.messages.aboutMenu, message: locale.messages.aboutProduct,
-      detail: `${formatDesktopMessage(locale.messages.aboutVersion, { version: app.getVersion() })}\n\n${locale.messages.welcomeDescription}\n\n${locale.messages.upstreamThanks}`,
+      detail: `${formatDesktopMessage(locale.messages.aboutVersion, { version: app.getVersion() })}\n\n${locale.messages.welcomeDescription}\n\n${locale.messages.aboutLicenses}`,
       buttons: [locale.messages.updateAcknowledge], cancelId: 0 })
   }
   const appPreload = fileURLToPath(new URL('./preload-app.cjs', import.meta.url))
@@ -385,7 +388,7 @@ async function main(): Promise<void> {
     assertDesktopSender(event, ['app'])
     if (mainWindow === undefined || mainWindow.isDestroyed() || event.sender !== mainWindow.webContents
       || event.senderFrame === null || event.senderFrame !== mainWindow.webContents.mainFrame) {
-      throw new Error('dsh desktop: rejected IPC from an unowned renderer')
+      throw new Error('APUS Reflex Harness desktop: rejected IPC from an unowned renderer')
     }
   }
   let navigation: { window: BrowserWindow; url: string; promise: Promise<void> } | undefined
@@ -647,9 +650,9 @@ async function main(): Promise<void> {
   ipcMain.handle(DESKTOP_IPC.bootFailed, (event, message: unknown) => {
     assertDesktopSender(event, ['app'])
     if (event.sender !== mainWindow?.webContents || event.senderFrame !== event.sender.mainFrame) {
-      throw new Error('dsh desktop: rejected startup failure from a non-primary frame')
+      throw new Error('APUS Reflex Harness desktop: rejected startup failure from a non-primary frame')
     }
-    if (typeof message !== 'string') throw new Error('dsh desktop: startup failure must be text')
+    if (typeof message !== 'string') throw new Error('APUS Reflex Harness desktop: startup failure must be text')
     reportFatal(new Error(message), 'web-boot')
   })
 
@@ -878,12 +881,13 @@ async function main(): Promise<void> {
     applicationVersion: app.getVersion(),
     // The release has no separate build number; omit Electron's bundle version.
     version: '',
-    credits: `${currentDesktopLocale().messages.welcomeDescription}\n${currentDesktopLocale().messages.upstreamThanks}`,
+    copyright: '',
+    credits: `${currentDesktopLocale().messages.welcomeDescription}\n${currentDesktopLocale().messages.aboutLicenses}`,
     iconPath: applicationIconPath,
   })
   // A custom application menu replaces Electron's default menu, so macOS needs
   // its standard menus and application hide commands declared explicitly.
-  // Keep app.name stable: Electron derives its default userData directory from it.
+  // Browser data uses the stable path set before ready.
   const darwin = process.platform === 'darwin'
   const platformMenus = (): MenuItemConstructorOptions[] => darwin
     ? [shortcuts.fileMenu(currentDesktopLocale().messages), { role: 'editMenu' }, { role: 'windowMenu' }]

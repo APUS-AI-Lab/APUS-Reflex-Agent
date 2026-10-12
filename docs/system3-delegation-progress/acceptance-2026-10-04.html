@@ -1,4 +1,4 @@
-<title>System3 线上验收</title>
+<title>APUS Reflex Harness · System3 历史线上验收</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700&family=Noto+Sans+SC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 /* Layout: one reading column for verdicts and findings; screenshots run full width beneath each scenario. */
@@ -42,11 +42,11 @@ footer { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line)
 @media (max-width: 560px) { .shots { grid-template-columns: 1fr; } body { font-size: 15px; } }
 </style>
 
-<main>
+<main><p role="note">历史验收部署地址已脱敏；example.invalid 为不可用占位域名，不是公开服务入口。</p>
   <header style="display:grid;gap:10px">
-    <div class="eyebrow">线上验收 · prd · 2026-10-04</div>
-    <h1>System3 线上验收：真实实现了什么</h1>
-    <p class="muted">在生产服务器 <code>prd</code> 上用真实浏览器逐项操作，路由与委派场景运行在启用公网域名后的版本上，停止场景运行在把委派固定为前台的修复版本上。浏览器经 SSH 隧道访问同一服务；公网域名 <code>system3.xdan.work</code> 的 TLS、Basic Auth 与登录链路另用 curl 逐步验证。委派结果用 agent 看不到的隐藏测试独立验收。</p>
+    <div class="eyebrow">线上验收 · 历史部署环境 · 2026-10-04</div>
+    <h1>APUS Reflex Harness · System3 历史线上验收</h1>
+    <p class="muted">在生产服务器 <code>历史部署环境</code> 上用真实浏览器逐项操作，路由与委派场景运行在启用公网域名后的版本上，停止场景运行在把委派固定为前台的修复版本上。浏览器经 SSH 隧道访问同一服务；公网域名 <code>acceptance.example.invalid</code> 的 TLS、Basic Auth 与登录链路另用 curl 逐步验证。委派结果用 agent 看不到的隐藏测试独立验收。</p>
   </header>
 
   <section class="wide">
@@ -88,7 +88,7 @@ footer { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line)
     <div class="shots">
       <figure><img src="acceptance/s5-Routed_.jpg" alt="说交给 Codex 后直接路由到委派" loading="lazy"><figcaption><b>直接委派</b>：说“交给 Codex 做”，2 秒内显示“Routed: 工程任务 · 委派 Codex”。</figcaption></figure>
       <figure><img src="acceptance/s5-steered.jpg" alt="进度卡片显示 codex running 和已补充的要求" loading="lazy"><figcaption><b>运行中补充说明</b>：卡片显示步骤计数、Codex 最近说明和“Added at 24 s”。</figcaption></figure>
-      <figure><img src="acceptance/s7-reloaded.jpg" alt="刷新后进度卡片仍显示 codex finished 和补充记录" loading="lazy"><figcaption><b>刷新恢复</b>：刷新后仍显示“codex finished 4 min 38 s”和补充记录；这次是后台委派，主模型把 README 视为多余，促成了前台修复。</figcaption></figure>
+      <figure><p>原始截图含私有部署路径，已归档；以下仅为历史观察摘要，不是可独立复核的截图证据。当前能力见<a href="../feat-jev-decision-kernel/capabilities.zh.md">公开能力指南</a>。</p><figcaption><b>刷新恢复</b>：刷新后仍显示“codex finished 4 min 38 s”和补充记录；这次是后台委派，主模型把 README 视为多余，促成了前台修复。</figcaption></figure>
       <figure><img src="acceptance/s6b-stopped.jpg" alt="点击停止后卡片显示 codex stopped" loading="lazy"><figcaption><b>停止（修复后）</b>：点击停止 1 秒内卡片显示“codex stopped 1 min 15 s”，本轮结束。</figcaption></figure>
     </div>
   </section>
@@ -97,7 +97,7 @@ footer { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line)
     <div class="eyebrow">pilot 前三项（下午发布）</div>
     <h2>过程监督、线路健康、委派交接包</h2>
     <div class="shots">
-      <figure><img src="acceptance/p1-supervision.jpg" alt="同一错误重复两次后，dock 显示过程监督提示，模型停止重试并请用户确认" loading="lazy"><figcaption><b>同一错误重复</b>：让模型连续执行一个必然失败的命令。dock 显示“bash failed 2 times with the same error”和“3 actions failed this turn”，模型回复“我按你的指示停在这里，不再自行重试”，并列出三个选项请用户确认。</figcaption></figure>
+      <figure><p>原始截图含私有部署路径，已归档；以下仅为历史观察摘要，不是可独立复核的截图证据。当前能力见<a href="../feat-jev-decision-kernel/capabilities.zh.md">公开能力指南</a>。</p><figcaption><b>同一错误重复</b>：让模型连续执行一个必然失败的命令。dock 显示“bash failed 2 times with the same error”和“3 actions failed this turn”，模型回复“我按你的指示停在这里，不再自行重试”，并列出三个选项请用户确认。</figcaption></figure>
       <figure><img src="acceptance/ux-history.jpg" alt="同一会话两个轮次分别显示各自的路由说明" loading="lazy"><figcaption><b>历史轮次保留路由</b>：第二轮发出后，第一轮标题仍显示“Routed: 简单问答 · DeepSeek Flash”。</figcaption></figure>
       <figure><img src="acceptance/ux-delegating.jpg" alt="输入框模型选择器左侧显示 Handed to codex" loading="lazy"><figcaption><b>委派时的输入框</b>：模型选择器左侧显示“Handed to codex”，右侧仍是负责协调的 deepseek-v4-flash。</figcaption></figure>
       <figure><img src="acceptance/p2-missing-evidence.jpg" alt="写完文件后 dock 显示缺少验证的提示，模型随后自行验证" loading="lazy"><figcaption><b>修改后缺少验证</b>：只要求写一个文件。轮次结束前 System3 提示一次，模型随后运行 <code>py_compile</code> 和行内断言检查，清理缓存后才回复。</figcaption></figure>
@@ -105,7 +105,7 @@ footer { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line)
     <ul class="list">
       <li><b>委派交接包（端到端）</b>：先说“函数名一律用 snake_case；不要创建或修改任何 README 文件”，下一条说“交给 codex 写 temperature.py 并测试”。Jev 用 915 毫秒判定前一条是要求（概率 0.998），原文附进委派指令；主模型在给 Codex 的任务里写了“硬性约定（来自用户前面的话，验收时逐条检查）”。Codex 的产出：函数为 <code>celsius_to_fahrenheit</code> / <code>fahrenheit_to_celsius</code>，没有 README；装上 pytest 后 20 个测试全部通过。</li>
       <li><b>交接要求的识别率</b>：部署中的 Jev 在 6 段带标注的对话上，初版问法召回率只有 0.38（漏掉“不要改 README”“提交前必须通过 pytest”这类项目规矩）；改为在每个问题里引用原话、问“执行时仍然有效的工作要求”后，召回率和精确率都是 1.0，每次约 0.6 秒。阈值定为 0.3。</li>
-      <li><b>线路健康</b>：已上线，默认只避开明显故障的线路（首字超过 45 秒、低于每秒 10 个 token、或错误超过一半）。阈值来自 prd 会话日志：GPT-5.6 中转首字约 26 秒，各线路输出都在每秒 100 个 token 以上。本次没有线路达到降级条件，所以界面上没有出现“已避开较慢的线路”。</li>
+      <li><b>线路健康</b>：已上线，默认只避开明显故障的线路（首字超过 45 秒、低于每秒 10 个 token、或错误超过一半）。阈值来自 历史部署环境 会话日志：GPT-5.6 中转首字约 26 秒，各线路输出都在每秒 100 个 token 以上。本次没有线路达到降级条件，所以界面上没有出现“已避开较慢的线路”。</li>
       <li><b>验收中发现的缺陷</b>：主模型用 <code>pytest -v 2&gt;&amp;1 | tail</code> 核对 Codex 结果，pytest 没装，但管道让退出码变成 0，监督把它当成了通过的验证。已修复：带管道的命令不再算验证证据，发布后复测“修改后缺少验证”能正常触发。</li>
     </ul>
   </section>
@@ -114,14 +114,14 @@ footer { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line)
     <div class="eyebrow">公网访问（10-06，去掉 Basic Auth 后）</div>
     <h2>没有密码弹窗，登录一次后跨发布保持</h2>
     <div class="shots">
-      <figure><img src="acceptance/pub-anon.jpg" alt="全新浏览器访问显示 DSH 认证提示" loading="lazy"><figcaption><b>未登录</b>：全新浏览器打开 system3.xdan.work，不再弹出密码框，返回 401 和 DSH 的提示“authentication required”。</figcaption></figure>
+      <figure><img src="acceptance/pub-anon.jpg" alt="全新浏览器访问显示 DSH 认证提示" loading="lazy"><figcaption><b>未登录</b>：全新浏览器打开 acceptance.example.invalid，不再弹出密码框，返回 401 和 DSH 的提示“authentication required”。</figcaption></figure>
       <figure><img src="acceptance/pub-chat.jpg" alt="经公网域名提问并收到回答" loading="lazy"><figcaption><b>登录后使用</b>：打开一次登录链接后，地址栏里的 token 被去掉；提问后显示“Routed: 简单问答 · DeepSeek Flash”，8 秒完成。</figcaption></figure>
     </div>
     <ul class="list">
       <li>刷新页面、重启服务后再访问，都保持登录（会话列表正常显示）。</li>
       <li>全新浏览器第一次进入会看到 DSH 自带的“Internal Testing Notice”，点 Continue 后才能输入；英文、面向开发者，演示前可考虑替换或关闭。</li>
       <li>未登录页面只有一行英文“reopen the URL printed by dsh web”，对外部访客不友好。</li>
-      <li>模型回复提到 <code>web_search</code> 不可用（缺少 <code>DEEPSEEK_API_KEY</code>），联网搜索在 prd 上没有配置。</li>
+      <li>模型回复提到 <code>web_search</code> 不可用（缺少 <code>DEEPSEEK_API_KEY</code>），联网搜索在 历史部署环境 上没有配置。</li>
     </ul>
   </section>
 
@@ -131,7 +131,7 @@ footer { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line)
     <ul class="list">
       <li><b>停止不能叫停后台委派</b>：主模型以后台任务启动 Codex，停止只结束本轮，Codex 停止后仍在修改文件。已把委派固定为前台（<code>enableRunInBackground: false</code>），发布后复测 1 秒内停止、无残留进程。</li>
       <li><b>后台委派时补充说明不进主模型</b>：补充说明只随前台结果复述，后台任务结果没有。前台修复后不再出现；将来恢复后台委派时，后台结果也要复述补充说明，停止也要能结束后台任务。</li>
-      <li><b>空闲后首次路由慢</b>：复测未再出现，未改代码。重启服务后第一条输入 1.1 秒显示路由，新会话 1.5 秒；prd 日志里空闲 2 小时后的入口决策也只用 0.7 秒，到 Jev 的新连接只需约 0.3 秒。之前的 5 秒发生在 Jev 连接和预热尚未配置好的时候。</li>
+      <li><b>空闲后首次路由慢</b>：复测未再出现，未改代码。重启服务后第一条输入 1.1 秒显示路由，新会话 1.5 秒；历史部署环境 日志里空闲 2 小时后的入口决策也只用 0.7 秒，到 Jev 的新连接只需约 0.3 秒。之前的 5 秒发生在 Jev 连接和预热尚未配置好的时候。</li>
       <li><b>历史轮次不保留路由说明</b>：已修复。投影保留最近 100 次进入轮次的入口决策，每个轮次标题显示自己的路由；复测同一会话两轮分别显示“简单问答 · DeepSeek Flash”和“推理分析 · DeepSeek Pro”。</li>
       <li><b>委派时输入框只显示“Auto Flash”</b>：已修复。委派运行期间，模型选择器左侧显示“Handed to codex”（准备阶段显示“Handing off”），模型选择器仍显示负责协调的模型；轮次结束后标记消失。</li>
       <li><b>主模型委派前做了较多准备</b>：检查项目、建测试环境后才委派，Codex 47 秒后才启动。结果更可靠，但用户等待更久。</li>
@@ -151,5 +151,5 @@ footer { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line)
     </ul>
   </section>
 
-  <footer>数据来源：prd 上的会话日志与浏览器截图，隐藏测试来自 <code>packages/experimental/system3/tests/fixtures/delegation-calibration/</code>。</footer>
+  <footer>数据来源：历史部署环境 上的会话日志与浏览器截图，隐藏测试来自 <code>packages/experimental/system3/tests/fixtures/delegation-calibration/</code>。</footer>
 </main>

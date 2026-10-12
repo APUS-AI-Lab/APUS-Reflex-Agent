@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-storage",
-  "description": "Storage hub (ctx.storage): named backend registry plus mounted data-form facilities for the DeepSeek Harness",
+  "description": "Storage hub (ctx.storage): named backend registry plus mounted data-form facilities for the APUS Reflex Harness",
   "version": "0.1.7-rc.2",
   "publishConfig": {
     "access": "public"

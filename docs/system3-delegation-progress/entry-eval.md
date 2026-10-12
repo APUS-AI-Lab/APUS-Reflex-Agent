@@ -4,7 +4,7 @@ English | [中文](entry-eval.zh.md)
 
 Source: `packages/experimental/system3/tests/entry-routing-eval.e2e.ts` over two task sets: `tests/fixtures/entry-routing-eval.tasks.json` (two tiers) and `tests/fixtures/entry-routing-eval.tiers.json` (the four deployed tiers). Raw output: [entry-eval-report.json](entry-eval-report.json).
 
-Run: `set -a; source ~/.config/xdan-system3/runtime.env; set +a; SYSTEM3_ENTRY_EVAL_REPORT=<path> pnpm exec vitest run --config vitest.e2e.config.ts packages/experimental/system3/tests/entry-routing-eval.e2e.ts`
+Run: `SYSTEM3_ENTRY_EVAL_REPORT=<path> pnpm exec vitest run --config vitest.e2e.config.ts packages/experimental/system3/tests/entry-routing-eval.e2e.ts`
 
 ## Setup
 

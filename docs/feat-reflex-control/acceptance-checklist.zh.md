@@ -29,7 +29,7 @@
 | 观察 Codex 长任务并自动纠偏，确认调整有效 | [语义监督](supervision-semantic-design.zh.md)、[原生恢复](recovery-addendum.zh.md)、[验证目标识别](verification-target-design.zh.md) | S-01～S-09 |
 | 按行或片段移出无关上下文，按需恢复事实 | [上下文实现](reflex-context-implementation.zh.md)、[缓存保护设计](context-cache-design.zh.md) | C-01～C-07 |
 | 专用 Reflex 模型配置页，设置实际生效 | [配置页方案](reflex-settings-proposal.html) | F-01～F-03 |
-| APUS 品牌、MIT 与两仓最终交付 | [品牌规则](../../BRAND_GUIDELINES.zh.md)、[工作树交接](../../tasks/feat-reflex-control/handoff.md) | D-01～D-04 |
+| APUS 品牌、MIT 与两仓最终交付 | [品牌规则](../../BRAND_GUIDELINES.zh.md)、[发布就绪审计](../dev-continuum-reflex-integration/release-readiness.zh.md) | D-01～D-04 |
 | 用户能理解、操作并控制整个任务过程 | 本页 UI/UX 用户体验验收；共享设置与任务界面的真实操作证据 | UX-01～UX-10 |
 
 <a id="acceptance-rules"></a>
@@ -112,8 +112,8 @@ P0 是本轮功能完整交付的必需项；P1 是性能或推广范围的验�
 | UX-06 / P0 | 分清正在判断、发送建议、已接收待验证、送达未知、恢复中及改善已验证；未知回执不显示为模型未决定或任务成功。 | 组件回归与投影检查通过；监控卡新增“Reflex 正在观察”提示和最近 12 条无内容时间线，用户新消息会清除陈旧改善状态。最终新构建真实界面复验仍待完成。 |
 | UX-07 / P0 | 上下文移出与恢复提示说明原文可恢复；相关信息恢复后能回答，避免“已永久删除”或“无限上下文”误导，过程不遮挡输入和答案。 | 后端真实恢复与跨进程 C-06 已过；UI 的可恢复提示和时间线已加入并有组件回归，最终包的对话可读性仍待专项核对。 |
 | UX-08 / P0 | 网络/凭据错误、超时、断开与重启有可理解的说明和恢复路径；保留用户输入和已有内容，不要求用户读原始日志才能继续。 | 待有限错误场景与重启体验验收。 |
-| UX-09 / P0 | 375/768/1280 宽度、明暗主题、200% 缩放下，关键字段与按钮可用、无横向页面溢出或遮挡；键盘顺序、可见焦点、Escape 与焦点返回正确，弹层适应边缘。 | [初测证据](evidence/uiux/before.json)保留375px侧栏挤压输入到约59px的失败。[构建后复验](evidence/uiux/after.json)已通过375/768/1280明暗矩阵、键盘遍历、字段错误关联、Escape、焦点返回及清理历史缓冲后的零控制台错误；Frontend 的真实 Electron 恢复界面已通过 200% 系统缩放及页面级 200% 缩放 320 个变体，见[Frontend 页面级证据](https://github.com/cryptoSUN2049/APUS-Reflex-Frontend/blob/feat-reflex-control/docs/feat-reflex-control/evidence/electron-page-zoom-200.md)。 |
-| UX-10 / P0 | 最终 Electron 正常/安全模式、关闭/重开、设置及会话恢复可用；品牌与标题一致，窗口边框不遮挡控制；启动失败可恢复且不留下本轮拥有的后台进程。 | 未签名 arm64 包已通过正常/Safe Mode 启动、关闭重开、配置恢复、APUS Reflex 品牌一致性和进程清理；恢复界面 200% 系统缩放及页面级 200% 缩放已通过；会话恢复、启动失败恢复仍待测。 |
+| UX-09 / P0 | 375/768/1280 宽度、明暗主题、200% 缩放下，关键字段与按钮可用、无横向页面溢出或遮挡；键盘顺序、可见焦点、Escape 与焦点返回正确，弹层适应边缘。 | [初测证据](evidence/uiux/before.json)保留375px侧栏挤压输入到约59px的失败。[构建后复验](evidence/uiux/after.json)已通过375/768/1280明暗矩阵、键盘遍历、字段错误关联、Escape、焦点返回及清理历史缓冲后的零控制台错误；Frontend 的真实 Electron 恢复界面已通过 200% 系统缩放及页面级 200% 缩放 320 个变体，见[Frontend 页面级证据](https://github.com/APUS-AI-Lab/APUS-Reflex-Frontend/blob/feat-reflex-control/docs/feat-reflex-control/evidence/electron-page-zoom-200.md)。 |
+| UX-10 / P0 | 最终 Electron 正常/安全模式、关闭/重开、设置及会话恢复可用；品牌与标题一致，窗口边框不遮挡控制；启动失败可恢复且不留下本轮拥有的后台进程。 | 未签名 arm64 包已通过正常/Safe Mode 启动、关闭重开、配置恢复、APUS Reflex Harness 品牌一致性和进程清理；恢复界面 200% 系统缩放及页面级 200% 缩放已通过；会话恢复、启动失败恢复仍待测。 |
 
 <a id="acceptance-journeys"></a>
 

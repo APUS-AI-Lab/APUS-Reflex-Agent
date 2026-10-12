@@ -1,0 +1,8 @@
+version: 1
+scenario: continuum-partial-recall
+profile: sdk
+composition: sdk-continuum-partial-recall
+recording: authored
+header:
+  class: sdk-continuum-partial-recall
+  pin: true

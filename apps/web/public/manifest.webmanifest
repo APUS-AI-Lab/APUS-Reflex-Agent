@@ -1,6 +1,6 @@
 {
   "name": "APUS Reflex Harness",
-  "short_name": "APUS Reflex",
+  "short_name": "APUS Reflex Harness",
   "start_url": "./",
   "scope": "./",
   "display": "fullscreen",

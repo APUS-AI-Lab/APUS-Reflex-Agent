@@ -69,6 +69,19 @@ describe('maintained repository reference policy', () => {
     expect(scanRepositoryReferences(fixture.root)).toHaveLength(4)
   })
 
+  it('keeps UUID identifiers while rejecting a standalone matching commit on the same line', () => {
+    const prefix = 'abcdef12'
+    const identifier = `${prefix}-1234-4abc-8def-123456789abc`
+    const commits = new Set([prefix])
+    expect(findRepositoryReferences('evidence.json', identifier, commits)).toEqual([])
+    expect(findRepositoryReferences('evidence.json', `${identifier} ${prefix}`, commits)).toEqual([
+      { file: 'evidence.json', line: 1, kind: 'commit-hash' },
+    ])
+    expect(findRepositoryReferences('evidence.json', `${identifier} ${organizationUrl}`, commits)).toEqual([
+      { file: 'evidence.json', line: 1, kind: 'organization-url' },
+    ])
+  })
+
   it('retains raw commit pins in exact tracked, staged and new machine evidence files', (test) => {
     const fixture = repository(test)
     fixture.write('docs/feat-system3-g1/desktop-acceptance.json', JSON.stringify({ sourceRevision: fixture.commit }))

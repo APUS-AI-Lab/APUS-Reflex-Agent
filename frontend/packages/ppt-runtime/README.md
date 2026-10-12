@@ -18,11 +18,13 @@ This directory maintains the distributed JavaScript extracted at Desktop base `9
 
 Every metadata/design record contains English and Chinese title/body fonts and platform fallbacks. Font names do not distribute or embed fonts. The renderer selects the Latin face for English text and the platform Chinese face for Chinese text, including tables. Chinese serif headings use Songti SC / SimSun / Noto Serif CJK SC; sans uses PingFang SC / Microsoft YaHei / Noto Sans CJK SC. Actual font availability can still affect Office fallback. The preview renderer preserves English word boundaries.
 
+Exported PPTX documents identify APUS Reflex Harness in their author and company metadata. Package identifiers, layout names and original license attribution remain unchanged.
+
 ## Build and install
 
 `npm run ppt:build` starts from an empty `.build/ppt-runtime/` directory, regenerates the ten Zara packs, restores the six maintained baseline packs from `scripts/ppt/base-templates/`, applies reviewed English translations, and expands all sixteen packs to twelve layouts each. It validates and renders the 192 English previews, hydrates the runtime clients/catalog, assembles both package directories, then atomically projects those directories into `node_modules` for local execution. It never writes generated templates, previews, archives or hash manifests back into tracked source paths. Every pack retains explicit English/Chinese font pairs. The two original experiments live in `scripts/ppt/rich-layouts.mjs`; the other composition plans and editable geometry live in `scripts/ppt/composition-library.mjs`.
 
-`npm ci` bootstraps from the tracked local package seeds, so a clean checkout does not need a pre-existing archive. The `dev`, `build` and `test` lifecycles all invoke the same preparation step; every package script delegates to `build`. Electron Builder excludes the bootstrap links and copies the current staged packages explicitly. Tests verify the generated distributions, language coverage, fonts, activation and state migration. The 23 withdrawn designs and 345 excluded images remain absent; `excluded-assets.json` is a hash-only regression list.
+`npm ci` bootstraps from the tracked local package seeds, so a clean checkout does not need a pre-existing archive. The maintained `core/lib/` and `adapter/lib/` inputs are explicitly exempt from the integrated repository’s generated `lib/` ignore rule; only `.build/ppt-runtime/` holds generated distributions. The `dev`, `build` and `test` lifecycles all invoke the same preparation step; every package script delegates to `build`. Electron Builder excludes the bootstrap links and copies the current staged packages explicitly. Tests verify the generated distributions, language coverage, fonts, activation and state migration. The 23 withdrawn designs and 345 excluded images remain absent; `excluded-assets.json` is a hash-only regression list.
 
 ## Compatibility
 

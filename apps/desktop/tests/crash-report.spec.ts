@@ -78,7 +78,7 @@ it('returns undefined and logs when the report cannot be written', async () => {
   const blocked = join(root, 'not-a-directory')
   await writeFile(blocked, '')
   expect(await writeCrashReport(blocked, input())).toBeUndefined()
-  expect(error).toHaveBeenCalledWith('dsh desktop: crash report could not be written', expect.stringContaining('crash-'), expect.anything())
+  expect(error).toHaveBeenCalledWith('APUS Reflex Harness desktop: crash report could not be written', expect.stringContaining('crash-'), expect.anything())
 })
 
 it('prunes only the oldest crash reports and leaves other files alone', async () => {

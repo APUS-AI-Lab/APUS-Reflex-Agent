@@ -4,7 +4,7 @@
 
 来源：`packages/experimental/system3/tests/entry-routing-eval.e2e.ts`，两组任务集：`tests/fixtures/entry-routing-eval.tasks.json`（两档）和 `tests/fixtures/entry-routing-eval.tiers.json`（部署配置的四档）。原始输出：[entry-eval-report.json](entry-eval-report.json)。
 
-运行：`set -a; source ~/.config/xdan-system3/runtime.env; set +a; SYSTEM3_ENTRY_EVAL_REPORT=<path> pnpm exec vitest run --config vitest.e2e.config.ts packages/experimental/system3/tests/entry-routing-eval.e2e.ts`
+运行：`SYSTEM3_ENTRY_EVAL_REPORT=<path> pnpm exec vitest run --config vitest.e2e.config.ts packages/experimental/system3/tests/entry-routing-eval.e2e.ts`
 
 ## 设置
 

@@ -221,6 +221,8 @@ export function createElectronBuilderConfig(
       )
     },
     win: {
+      // Keep the executable and NSIS install-directory identity compatible with existing installations.
+      executableName: 'APUS Reflex Harness',
       icon: fileURLToPath(new URL('../resources/icon-windows.png', import.meta.url)),
       forceCodeSigning: !unsigned,
       signtoolOptions: {

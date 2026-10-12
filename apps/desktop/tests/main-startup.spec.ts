@@ -508,7 +508,7 @@ describe('desktop main startup', () => {
     const zh = locale === 'zh-CN'
     expect(harness.dialog.showMessageBox).toHaveBeenLastCalledWith(expect.objectContaining({
       type: 'info', title: zh ? '关于 APUS Reflex Harness' : 'About APUS Reflex Harness', message: 'APUS Reflex Harness',
-      detail: zh ? '版本 V1.0.0\n\n瞬策 · 瞬时执行，深度思考\n\n感谢开源贡献者。原版权声明可在“开源许可证”中查看。' : 'Version V1.0.0\n\nInstant action. Deep thinking.\n\nThanks to the open-source contributors. Original notices are available under Open-source licenses.', buttons: [zh ? '确定' : 'OK'], cancelId: 0,
+      detail: zh ? '版本 V1.0.0\n\n瞬策 · 瞬时执行，深度思考\n\n版权及第三方声明见应用菜单中的“开源许可证”。' : 'Version V1.0.0\n\nInstant action. Deep thinking.\n\nCopyright and third-party credits are available under Open-source licenses in the application menu.', buttons: [zh ? '确定' : 'OK'], cancelId: 0,
     }))
     // A dialog that cannot open is logged, not surfaced as an unhandled rejection.
     harness.dialog.showMessageBox.mockRejectedValueOnce(new Error('overlay unavailable'))
@@ -1975,7 +1975,7 @@ describe('desktop main startup', () => {
       level: 'error', message: 'client-modules: bundle script plugins/??a/client.js&rev=1 failed to load',
       sourceId: 'dsh-app://app/assets/entry.js', lineNumber: 12,
     })
-    host.onFailure!(new Error('dsh desktop host exited with 1: fatal uncaught exception: ENOENT'))
+    host.onFailure!(new Error('APUS Reflex Harness desktop host exited with 1: fatal uncaught exception: ENOENT'))
     await host.stopping.promise
     expect(writeCrashReport).toHaveBeenCalledOnce()
     const [directory, report] = vi.mocked(writeCrashReport).mock.calls[0]!

@@ -34,6 +34,10 @@ it.each([false, true])('saves through ConfigForms and BFF with a read-only key; 
   writeFileSync(join(providerBundle, 'package.json'), readFileSync(new URL('../../apus-dsh-jev-plugin/package.json', import.meta.url)))
   writeFileSync(join(providerBundle, 'cordis.patch.yml'), readFileSync(new URL('../../apus-dsh-jev-plugin/cordis.patch.yml', import.meta.url), 'utf8').replace('name: ./lib/index.js', 'name: cordis:jev'))
   writeFileSync(join(dir, 'cordis.yml'), '[]\n')
+  // The shipped provider stays disabled until the profile supplies a connection.
+  writeFileSync(join(dir, 'cordis.patch.yml'), JSON.stringify([{ id: 'jev', config: {
+    endpoint: 'https://reflex.test', model: 'fixture', effort: 'high', apiKeyEnv: 'JEV_API_KEY',
+  } }]))
   const profile: ProfileContext = { name: 'test', startedBundles: ['test-bundle'], dir, patchPath: join(dir, 'cordis.patch.yml'),
     installAnchor: join(home, 'package.json'), cwd: home, home, overlays: locked ? [{ id: 'jev', config: { endpoint: 'https://reflex.test', model: 'fixture', effort: 'high', apiKeyEnv: 'JEV_API_KEY' } }] : [], telemetryDisabledEnv: undefined }
   const start = async (): Promise<Context> => {

@@ -36,6 +36,8 @@ Windows 在整个运行期间常驻托盘图标。悬停提示为产品名，单
 
 APUS 图形的唯一原图为 `apps/web/public/brand-source.webp`，是一张 140×140、带透明背景的渐变飞鸟位图。在仓库根目录运行 `node --import tsx/esm apps/desktop/scripts/generate-brand-assets.ts`，可重新生成 Web、React 品牌数据、应用、托盘、欢迎页与安装器资源。SVG 包装嵌入原图的无损 PNG 表示，不是矢量重绘。桌面使用 `resources/icon.*`、`resources/icon-windows.*` 和 `resources/icon-macos.*`，PNG 图标导出为 1024×1024，保持原图比例与透明度；增大导出尺寸不会增加源图细节。生成器另输出多尺寸 ICO 和 Windows 托盘图标；macOS 上通过 iconutil 生成 ICNS，其他系统保留已提交的 ICNS。安装页面在两种主题下使用匹配图案；卸载程序欢迎和完成页共用 `installer/assets/uninstaller-sidebar.png`，准备阶段将其转换为 164×314 BMP。
 
+产品名称为 APUS Reflex Harness。Windows 保留 `APUS Reflex Harness.exe` 及安装目录标识，以保证已注册安装仍可更新；显示文案统一为 APUS Reflex Harness。Electron 就绪前，桌面壳将 `userData` 和默认 `sessionData` 保留在 `app.getPath('appData')` 下的既有 `APUS Reflex Harness` 目录，保证显示名称变化后仍能读取浏览器会话、快捷键和关闭到后台的确认记录。显式 `--user-data-dir` 和单独配置的路径保持不变。Windows 仅在实际卸载时删除该稳定目录，更新时保留；共享的 `DSH_HOME` 与其分离。
+
 快捷键覆盖保存在 `app.getPath('userData')/keybindings.json`，与 `DSH_HOME` 分离。主进程校验并串行保存修改后才发布已接受键位。读取失败保留上次接受的键位并阻止编辑，包括全部恢复；不可读和未来版本的文件保持不变。开发时可通过 `DSH_DESKTOP_USER_DATA_DIR` 隔离这些偏好，启动器会输出解析后的路径。格式和冲突语义见[快捷键服务](../../packages/client/shortcuts/README.zh.md)。
 
 macOS“文件”菜单显示已接受的单键绑定（包括方向键），并通过 Client 页面 owner 路由“关闭页面或窗口”。Windows 和 macOS 在主文档、内嵌 frame 和浏览器 guest 输入之前拦截所有已接受的完整绑定，包括编辑和终端输入。录制和输入法组合状态仍受保护。更新蒙层从创建到最后一个蒙层关闭期间阻挡父窗口及其浏览器 guest 的产品快捷键和编辑按键递送。每次打开或关闭蒙层都会作废待完成的组合键状态。主进程通过显式的创建能力和输入状态读取能力，让更新对话框与快捷键输入共享同一个蒙层管理实例。双键组合会将首键的初次按下事件交给页面，且不拦截其松开事件；完整组合及其重复事件会被消费。渲染进程将可配置绑定的分发交给原生适配器。双键组合不注册原生菜单快捷键。已接受的命令通过可信 preload 转发一次。Linux 通过 DOM 分发主文档快捷键，并将已接受的内嵌 frame 绑定转发给 Client 解析器。关闭最后一个窗口后 macOS 保留应用生命周期；Windows 退出桌面实例并停止其任务。[关窗决策](../../.agents/notes/implemented/architecture/2026-09-21-desktop-page-close-shortcuts.zh.md)记录了这一生命周期选择。
@@ -368,7 +370,7 @@ macOS 打包在组装 App 时、代码签名前写入 `Contents/Resources/app-up
 
 未压缩产物包含 Electron、物化后的 dsh 生产依赖树、pnpm，以及壳应用。安装包大小与文件系统占用不同；发布验收需要测量两者，以及 profile 插件存储和首次启动耗时。此布局用更多应用内文件换取消除用户机器上的核心包安装过程。
 
-应用菜单可打开本地许可证目录。分发资源包含完整的仓库 MIT 许可、DeepSeek 原版权与生成的第三方声明；各依赖仍遵循各自许可。关于页向开源贡献者致谢，并提示用户查看保留的许可声明。
+应用菜单可打开本地许可证目录。分发资源包含完整的仓库 MIT 许可、DeepSeek 原版权与生成的第三方声明；各依赖仍遵循各自许可。关于页指向该菜单入口，以查看版权与第三方声明。
 
 ## 更新
 

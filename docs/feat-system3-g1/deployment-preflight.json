@@ -1,7 +1,7 @@
 {
   "status": "preflight-passed-final-product-acceptance-pending",
   "recordedAt": "2026-09-30T18:38:47.685661+00:00",
-  "target": "root@litellm",
+  "target": "[private deployment host archived]",
   "service": "xdan-system3.service",
   "accessUrl": "http://127.0.0.1:18731/",
   "runtime": {
@@ -35,12 +35,12 @@
   "credentials": {
     "generation": "existing system3-dsh virtual key",
     "decision": "existing OpenJev gateway key",
-    "location": "/etc/xdan-system3/runtime.env",
+    "location": "[private deployment path archived]",
     "mode": "0600",
     "valuesRecorded": false
   },
   "fixture": {
-    "workspace": "/var/lib/xdan-system3/workspace",
+    "workspace": "[private deployment path archived]",
     "files": [
       "orders.csv",
       ".agents/skills/csv-reconciliation/SKILL.md"
@@ -61,7 +61,7 @@
   ],
   "firstPublicTask": {
     "sessionId": "session-10972d25-e809-4d30-b645-c71c44af9c63",
-    "logFile": "/var/lib/xdan-system3/home/.dsh/sessions/--var-lib-xdan-system3-workspace--/session-10972d25-e809-4d30-b645-c71c44af9c63/session.v4.jsonl.zstd",
+    "logFile": "[private deployment path archived]",
     "logEventCountThroughFirstTurn": 28,
     "entry": {
       "seq": 3,
@@ -152,5 +152,6 @@
     "turnEndReason": {
       "kind": "completed"
     }
-  }
+  },
+  "publicationNote": "Historical recorded outcomes are unchanged. Operator host, installation, credential and Session-log paths are redacted; originals are privately archived with SHA-256. Legacy service identifiers are compatibility metadata, not current product branding. This is not a new acceptance run."
 }

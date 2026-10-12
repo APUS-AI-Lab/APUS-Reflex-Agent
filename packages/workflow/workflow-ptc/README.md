@@ -91,7 +91,7 @@ One self-contained guest program runs the existing VM and workflow helpers insid
 
 The guest materializes outbound values as lossless JSON before PTC transport. Exotic prototypes, functions, symbols, cycles, sparse arrays, non-finite numbers and nested `undefined` are rejected. Child results cross back as JSON; same-process observer events retain their own cloning and callback-containment rules.
 
-The host tracks pending provider starts separately from published children. A shared abort signal closes both paths; a child that becomes ready after cancellation is disposed. Each published child's disposal is shared by all cleanup paths. In-flight host bindings remain the workflow adapter's responsibility after PTC stops the program.
+The host tracks pending provider starts separately from published children. It observes each published child's result immediately, retaining any rejection for the guest's later result request as an `AGENT_RESULT` error. A shared abort signal closes both paths; a child that becomes ready after cancellation is disposed. Each published child's disposal is shared by all cleanup paths. In-flight host bindings remain the workflow adapter's responsibility after PTC stops the program.
 
 ### Cancellation and outcomes
 

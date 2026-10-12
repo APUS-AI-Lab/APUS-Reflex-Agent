@@ -22,8 +22,7 @@
     "sourceDirty": false,
     "sourceRevision": "release workflow Harness pin",
     "currentHarnessHead": "release workflow pin",
-    "revisionMatchesCurrentHarness": true,
-    "sourceDirty": false
+    "revisionMatchesCurrentHarness": true
   },
   "startup": {
     "safeMode": true,
@@ -37,5 +36,6 @@
     "stapledNotarizationTicket": false,
     "status": "pending-external-credentials"
   },
-  "conclusion": "Current-runtime parity, brand, MIT/NOTICE retention, and Safe Mode CDP startup pass for the unsigned directory artifact; signed/notarized release and page-level 200% zoom remain pending."
+  "conclusion": "Current-runtime parity, brand, MIT/NOTICE retention, and Safe Mode CDP startup pass for the unsigned directory artifact; signed/notarized release and page-level 200% zoom remain pending.",
+  "publicationNote": "Historical artifact and UI strings remain unchanged to preserve the recorded test. They do not define current APUS Reflex Harness branding or certify a renamed build."
 }

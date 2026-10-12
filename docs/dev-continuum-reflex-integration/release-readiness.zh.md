@@ -1,32 +1,28 @@
-# APUS Continuum + Reflex 发布就绪审计
+# APUS Reflex Harness 发布就绪审计
 
 [English](release-readiness.md) | 中文
 
 ## 结论
 
-该分支已经是 Continuum/Reflex 集成功能的 release candidate，但还不应打公开发布标签。核心 opt-in 记忆链路已经实现并通过本地验证，剩余阻断项是发布证据和产品部署验收。
+记忆与 Reflex 控制层的集成已进入 `main`。最新本地构建、生命周期检查及真实记忆融合场景通过；最终发布验收仍需已发布版本的 CI、Frontend 对干净版本的 runtime pin 和安装包产品验证。本审计区分全仓测试结果与修复 fixture 后的定向检查。
 
-## 已就绪
+## 已验证证据
 
-- 原版 profile 仍是默认路径：Continuum 关闭，自动准入必须显式配置。
-- Reflex 专属开关同时控制准入和 recall；缺少 Jev service 时回到原版路径。
-- 已提交的人类消息可以带精确 Session 来源引用准入，从 `continuum/memory-record` 回放，并在 seed 重启后恢复 recall。
-- 定确定性的有界检索以及 Jev shadow/active 选择已有定向测试覆盖。
-- 包元数据、MIT 许可、双语 README、生成目录和凭据引用齐全；仓库扫描未发现提交的真实 API key。
-- RunPod Jev 鉴权和 DeepSeek 网关评估已用临时凭据执行，凭据未提交。
+- 最终 Harness 构建、全量 lint、Ruff lint 与 Ruff 格式检查通过。插件目录已重新生成，`verify-plugin-packages` 通过。随后文档同步通过 42 项中的 41 项，唯一失败来自本地任务记录。内部任务记录现已私有归档并移出版本控制；随后最终文档同步的 42 项检查全部通过，退出码为 0。
+- 最新后端全量运行记录：1,904 个文件通过、2 个失败、17 个跳过；39,400 项测试通过、2 项失败、1 项预期失败、204 项跳过。失败来自过时的欢迎文案与翻译提示 golden。仅修复这两个预期输出文件后，相关两个文件、六项测试在不更新快照的回放中通过。这不代表单次全仓运行全绿。
+- 12 个文件中的 95 项记忆生命周期测试全部通过。`context.ts` 的语句、分支、函数和行覆盖率均为 100%。覆盖索引部分词恢复、下游 hook 或选择期间的释放，以及配置变化、Jev 卸载重挂、作用域隔离和迟到结果拒绝。生命周期修复已完成。
+- 七个发布版 headless 记忆场景与一个 CLI smoke 全部通过。记忆场景包括源码及构建版进程重启后的英文与中文部分词恢复、无 Reflex、记忆关闭及新 Session 隔离。两个构建版 Web 记忆场景和两个 PWA 场景也全部通过。
+- 最终真实融合场景使用两个独立构建版 headless 进程、真实 Jev 选择及 DeepSeek 生成。持久记忆记录保留精确来源引用；恢复后的模型请求在 `continuum-memory` 来源中包含完整原始事实及该记录 ID。active Jev 回执以 0.853179 置信度选择该记录；召回已记入日志，provider 正常完成，最终答案包含随机验证标识。选择器保持 2 秒期限与 0.8 门槛，零重试。执行期间源码与产物哈希保持不变。这只证明一个同 Session 合成场景，不代表通用回答质量或 Reflex 控制层的隐私路由策略已验收。
+- 已录制 Session 回放通过 186 项，跳过 2 项。八个受影响的 Python SDK 场景在刷新身份文案后及随后回放中均通过。fixture 仅修改模型身份文案，历史 Session 代际未变。
+- Frontend 的 1,590 项测试、类型检查及构建全部通过。隔离环境首次启动显示 APUS Reflex Harness。这些检查没有替换既有安装，也没有更新其旧 runtime。
+- 此前真实 Jev 与完成恢复检查仍属于范围有限的历史证据。注入过早完成请求的场景保留真实工具拒绝、Jev 审核、真实生成和最终产物断言，但不代表模型自主选择了所注入的错误。此前的 [Independent harness CI](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/actions/runs/38243375340) 不证明最终发布版本已验收，其中跳过的真实 provider 通道不计为通过。
 
-## 公开发布前的阻断项
+## 剩余验收工作
 
-- 仍需针对发布 profile 运行产品级 E2E；新增的生产组合测试已经证明 JSONL flush、上下文销毁、`AgentLoop.resume()` 磁盘恢复、recall 注入和模型可见来源归因，并包含 explicit 模式负向控制。
-- System3 真实 Jev 验证中 task-frame、handoff-pack、delegation calibration、entry routing、completion-review 五个文件通过；`reflex-context` 仍有语义断言失败，因为本次返回了 `[Reflex omitted]`，没有注入预期的 Decimal 和不可修改 CSV 约束。断言保持严格。
-- 全仓测试在本分支仍未全绿，原因是合并前已存在的 desktop/UI/workflow 基础设施失败；在声称仓库级发布就绪前，必须修复或由负责人明确隔离。
-- CI 必须用仓库托管的 secrets 运行新的准入/重启测试和真实 provider lane；本地凭据绝不能进入配置、fixture、HTML、日志或 commit。
-- 在精确 release commit 上通过最终 build、typecheck、lint、文档、persistence、catalog、snapshot 和定向回归门禁后，从干净 release branch 发布功能。
+- 发布并验证最终 Harness 版本，再将 Frontend 固定到该干净版本并验证。保持生成器配置与 runtime pin 一致；隔离首启通过不能证明旧安装的升级已验收。
+- 单独验证签名安装包、所需原生平台行为、安装、恢复和公证。源码测试与构建成功不等于签名应用验收通过。
+- 验证最终发布版本的远端 CI。保留失败运行及对应的定向修复证据；凭据与原始私有运行记录留在仓库外。
 
-## 建议发布顺序
+## 能力范围
 
-1. 在 staging 部署 profile，配置 `CONTINUUM_MEMORY_ENABLED=true`, `CONTINUUM_MEMORY_MODE=active`, `CONTINUUM_MEMORY_ADMISSION=user-message`, and a non-empty explicit scope.
-2. 运行黑盒 session：发送事实、flush、从持久存储重启、提出相关问题，并断言 recall 消息引用原始事件序号。
-3. 用相同对话运行原版 profile，断言不产生 `continuum/memory-record` 或 `continuum-memory` 消息。
-4. 修复或记录剩余 System3 evaluator 配置和基线测试失败。
-5. 在精确 commit 上重跑发布门禁，检查 package tarball，然后打 tag 发布。
+Continuum 需要显式启用，默认关闭。已准入的 Session 事实可持久化并投影到有容量限制的模型请求；同 Session 恢复不代表跨 Session 召回、无限模型上下文窗口、完美检索或无限存储。未显式配置 Session 分类时，公开部署关闭 Reflex 控制层，保留通用模型路径。配置与限制见[记忆文档](../../packages/context/continuum/README.zh.md)和[公开 provider 配置](public-provider-configuration.zh.md)。

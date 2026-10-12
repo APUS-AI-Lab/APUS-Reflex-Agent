@@ -158,14 +158,14 @@ const sharedTheme: Pick<DefaultTheme.Config, 'search' | 'socialLinks' | 'editLin
     },
   },
   socialLinks: [
-    { icon: 'github', link: 'https://github.com/deepseek-ai/deepseek-harness' },
+    { icon: 'github', link: 'https://github.com/APUS-AI-Lab/APUS-Reflex-Harness' },
   ],
   editLink: {
     pattern: ({ frontmatter }: PageData) => {
       const data: unknown = frontmatter
       const editSource: unknown = typeof data === 'object' && data !== null ? Reflect.get(data, 'editSource') : undefined
       if (typeof editSource !== 'string') throw new Error('Projected documentation page has no editSource frontmatter.')
-      return `https://github.com/deepseek-ai/deepseek-harness/edit/master/${editSource}`
+      return `https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/edit/main/${editSource}`
     },
     text: '在 GitHub 上编辑此页',
   },
@@ -181,7 +181,7 @@ const siteIdentity = {
 }
 
 /**
- * The APUS Reflex wordmark, inlined so its `currentColor` fills follow the active
+ * The APUS Reflex Harness wordmark, inlined so its `currentColor` fills follow the active
  * theme. An `<img>` would freeze the mark at the colors the file declares.
  */
 const wordmark = readFileSync(resolve(import.meta.dirname, '../public/wordmark.svg'), 'utf8')
@@ -252,7 +252,7 @@ const scrollbarScript = `
 `
 
 /**
- * Navigation-bar title: the APUS Reflex wordmark and the release-stage tag.
+ * Navigation-bar title: the APUS Reflex Harness wordmark and the release-stage tag.
  * VitePress renders `siteTitle` as HTML.
  *
  * @param previewTag - Localized release-stage label.
@@ -328,7 +328,7 @@ export default withMermaid({
             const data: unknown = frontmatter
             const editSource: unknown = typeof data === 'object' && data !== null ? Reflect.get(data, 'editSource') : undefined
             if (typeof editSource !== 'string') throw new Error('Projected documentation page has no editSource frontmatter.')
-            return `https://github.com/deepseek-ai/deepseek-harness/edit/master/${editSource}`
+            return `https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/edit/main/${editSource}`
           },
           text: 'Edit this page on GitHub',
         },

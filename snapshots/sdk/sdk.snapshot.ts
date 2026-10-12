@@ -125,6 +125,7 @@ interface SdkAssertions {
 }
 
 const SDK_ASSERTIONS: Readonly<Record<string, SdkAssertions>> = {
+  'continuum-partial-recall': { expectedFinalResponse: '迁移安排在周五。' },
   'system3-shadow': { expectedFinalResponse: 'SDK snapshot OK' },
   'reflex-supervision': { expectedFinalResponse: 'SDK snapshot OK' },
   'reflex-semantic-supervision': { expectedFinalResponse: 'SDK snapshot OK' },
@@ -982,6 +983,32 @@ describe('TypeScript SDK snapshots over the jsonrpc runtime', () => {
         expect(notifications.flatMap(notification => {
           const event = notificationEvent(notification)
           return event !== undefined && typeof event.type === 'string' && types.has(event.type) ? [event] : []
+        })).toEqual(selected)
+      }
+      if (scenario.name === 'continuum-partial-recall') {
+        const events = results.flatMap(result => result.events)
+        const memoryRecords = events.filter(event => event.type === 'continuum/memory-record')
+        const recalled = events.filter(event => event.type === 'user/message'
+          && (event.data['source'] as { kind: string }).kind === 'continuum-memory')
+        expect(memoryRecords).toHaveLength(2)
+        const secondTurnRecall = results[1]?.events.filter(event => event.type === 'user/message'
+          && (event.data['source'] as { kind: string }).kind === 'continuum-memory') ?? []
+        expect(secondTurnRecall).toHaveLength(1)
+        const original = memoryRecords[0]?.data['record'] as { id: string; content: string }
+        expect(original.content).toBe('迁移安排在周五。')
+        const fact = events.find(event => event.type === 'user/message'
+          && (event.data['source'] as { kind: string }).kind === 'user')
+        expect(original).toMatchObject({ sourceRefs: [{ sessionId: results[0]?.sessionId, eventSeq: fact?.seq }] })
+        expect(secondTurnRecall[0]?.data).toMatchObject({
+          source: { kind: 'continuum-memory', recordIds: expect.arrayContaining([original.id]) },
+          content: [{ type: 'text', text: expect.stringContaining(`[memory:${original.id}] 迁移安排在周五。`) }],
+        })
+        const selected = [...memoryRecords, ...recalled].sort((a, b) => a.seq - b.seq)
+        const selectedSeqs = new Set(selected.map(event => event.seq))
+        expect(records(ordered[0]!.content).filter(event => selectedSeqs.has(event.seq as number))).toEqual(selected)
+        expect(notifications.flatMap(notification => {
+          const event = notificationEvent(notification)
+          return event !== undefined && selectedSeqs.has(event.seq as number) ? [event] : []
         })).toEqual(selected)
       }
       if (scenario.name === 'reflex-context') {

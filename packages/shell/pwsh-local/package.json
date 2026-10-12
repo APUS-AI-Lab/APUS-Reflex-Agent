@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-pwsh-local",
-  "description": "Local PowerShell implementation of the DeepSeek Harness bash executor seam",
+  "description": "Local PowerShell implementation of the APUS Reflex Harness bash executor seam",
   "version": "0.1.7-rc.2",
   "publishConfig": {
     "access": "public"

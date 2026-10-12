@@ -8,7 +8,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-This project develops Jev as a native decision model inside DeepSeek Harness. Intake strategy and dispatch are the first objective; smarter, smoother execution is the second. Jev evaluates bounded choices, DSH owns admission and execution, and System2 handles open reasoning and generation. The repository is an independent, general-purpose agent runtime. The implementation provides typed decisions, replayable receipts, opt-in model routing for idle Web/API text prompts, and bounded Skill selection before native model steps. It does not route every DSH entry point or verify arbitrary task completion.
+This project develops Jev as a native decision model inside APUS Reflex Harness. Intake strategy and dispatch are the first objective; smarter, smoother execution is the second. Jev evaluates bounded choices, the Harness owns admission and execution, and System2 handles open reasoning and generation. The repository is an independent, general-purpose agent runtime. The implementation provides typed decisions, replayable receipts, opt-in model routing for idle Web/API text prompts, and bounded Skill selection before native model steps. It does not route every APUS Reflex Harness entry point or verify arbitrary task completion.
 
 ## Table of Contents
 
@@ -22,7 +22,7 @@ This project develops Jev as a native decision model inside DeepSeek Harness. In
 <a id="run-independently"></a>
 ## Run independently
 
-Use the source build described in the [root README](../../README.md#run-from-source). For the System3 Desktop and server compositions, follow the [implementation scope](../feat-system3-g1/implementation.md) and [deployment guide](../feat-system3-g1/deployment.md). The standard Web, headless, and SDK profiles retain their own model configuration. The optional AG-UI bridge accepts compatible clients and client-supplied personas; its default identity and capability descriptions are product-neutral.
+Use the source build described in the [root README](../../README.md#run-from-source). For the APUS Reflex Harness desktop and server compositions, follow the [implementation scope](../feat-system3-g1/implementation.md) and [deployment guide](../feat-system3-g1/deployment.md). The standard Web, headless, and SDK profiles retain their own model configuration. The optional AG-UI bridge accepts compatible clients and client-supplied personas; its default persona is APUS Reflex Harness and clients can supply their own persona.
 
 <a id="mount-jev"></a>
 ## Mount Jev
@@ -67,7 +67,7 @@ The [native System3 plan](jev-native-dsh-native-plan.html) defines the architect
 |---|---|---|
 | Independent foundation | Product-neutral Harness, typed Jev provider, shadow receipt and replay | Keyless HTTP integration, session replay, independent runtime composition |
 | M1a: intake model dispatch | Shared decision service and a Web/API adapter for idle text requests using compatible model candidates | Input-bound route adoption, explicit user selection, cancellation, expiry and actual task outcomes |
-| M1b: intake strategy and entry coverage | Specialist handoff, planning/clarification paths, queued inputs and additional DSH entry adapters | Ownership, result return, modality/capacity checks and per-entry replay |
+| M1b: intake strategy and entry coverage | Specialist handoff, planning/clarification paths, queued inputs and additional APUS Reflex Harness entry adapters | Ownership, result return, modality/capacity checks and per-entry replay |
 | M2: intelligent execution | Bounded Skill selection is implemented; Jev-driven memory, recovery, escalation, goals and communication remain planned | Native instruction injection; broader outcome and quality evaluation remains required |
 | M3: local models and sustained work | Evaluate local 9B/27B Lead Agents; add durable task recovery and separately authorized notifications | Measured capabilities, resources, recovery, cancellation and delivery |
 
@@ -76,7 +76,7 @@ Choice probabilities are not calibrated success rates. A model's `candidate_done
 <a id="verify-independence"></a>
 ## Verify independence
 
-Focused unit and HTTP integration tests live under `packages/experimental/{agui,apus-dsh-jev-plugin,system3,system3-policy,system3-evidence,system3-supervisor}`. The keyless `system3-shadow` and `system3-entry-route` SDK scenarios replay durable decisions; SDK event replay does not mean SDK prompts use the Web/API router. The [handoff](../../tasks/feat-independent-harness/handoff.md) records commands actually run and their results; source inspection alone does not prove deployment readiness.
+Focused unit and HTTP integration tests live under `packages/experimental/{agui,apus-dsh-jev-plugin,system3,system3-policy,system3-evidence,system3-supervisor}`. The keyless `system3-shadow` and `system3-entry-route` SDK scenarios replay durable decisions; SDK event replay does not mean SDK prompts use the Web/API router. The [release-readiness review](../dev-continuum-reflex-integration/release-readiness.md) summarizes executed checks and remaining acceptance; internal handoffs are archived privately, and source inspection alone does not prove deployment readiness.
 
 <a id="dev-note"></a>
 ## Dev Note

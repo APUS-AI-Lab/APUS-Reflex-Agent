@@ -63,11 +63,11 @@ footer { margin-top: 48px; color: var(--muted); font-size: 13px; }
 }
 </style>
 </head>
-<body>
+<body><p role="note">历史验收部署地址已脱敏；example.invalid 为不可用占位域名，不是公开服务入口。</p>
 <main>
   <div class="eyebrow">对照分析 · 2026-10-07</div>
   <h1>mu 的判定点与 System3 的实现对照</h1>
-  <p class="sub">mu：开源 Coding Agent pi 的扩展，判定内核 kyrn-judge（仓库 qybaihe/mu，2026-10-06 版本）。System3：DSH 内的原生插件，部署在 system3.xdan.work。mu 一栏来自代码和仓库文档；System3 一栏来自本仓库代码、单元测试和 prd 线上会话日志。</p>
+  <p class="sub">mu：开源 Coding Agent pi 的扩展，判定内核 kyrn-judge（仓库 qybaihe/mu，2026-10-06 版本）。System3：DSH 内的原生插件，部署在 acceptance.example.invalid。mu 一栏来自代码和仓库文档；System3 一栏来自本仓库代码、单元测试和 历史部署环境 线上会话日志。</p>
 
   <section class="card tldr">
     <strong>结论</strong>
@@ -143,7 +143,7 @@ footer { margin-top: 48px; color: var(--muted); font-size: 13px; }
     <thead><tr><th style="width:22%">能力</th><th style="width:44%">做了什么</th><th>线上实证</th></tr></thead>
     <tbody>
       <tr><td>多供应商分档路由</td><td>同一会话内按输入切换 DeepSeek 官方 Flash / Pro、GPT-5.6 / GPT-6 中转；记录建议、采纳、实际回答三个事实</td><td>会话日志显示实际回答者与路由一致：Flash 3 秒、Pro 11 秒、GPT-5.6 169 秒</td></tr>
-      <tr><td>线路健康</td><td>测每条线路的首字延迟、输出速度、错误率，降级线路自动不参与选择，并写明原因</td><td>阈值来自 prd 日志；本周尚未触发降级</td></tr>
+      <tr><td>线路健康</td><td>测每条线路的首字延迟、输出速度、错误率，降级线路自动不参与选择，并写明原因</td><td>阈值来自 历史部署环境 日志；本周尚未触发降级</td></tr>
       <tr><td>外部代理委派全过程</td><td>委派 Codex 后有进度卡、启动/停滞/超时提醒、运行中补充说明、停止；补充说明在结果里复述给主模型；输入框标明“已交给 codex”</td><td>交接包 290 毫秒；Codex 56 秒；函数名遵守 snake_case、未建 README；8 个测试通过</td></tr>
       <tr><td>隐私准入</td><td>每次 Jev 请求和每条路由都按数据类别与执行位置准入</td><td>单元测试覆盖拒绝路径</td></tr>
       <tr><td>可回放与可审计</td><td>所有判定是会话事件：完整请求、响应、结果，刷新或回放不再调用模型；进入模型的内容都能从日志重建</td><td>每个新事件都有持久化类型变更记录</td></tr>
@@ -162,7 +162,7 @@ footer { margin-top: 48px; color: var(--muted); font-size: 13px; }
       <tr><td>判定后端</td><td>Jev / 本地 Laya / 普通 LLM 等级联，前一级不确定才交给下一级</td><td>只用 Jev，失败走确定性回退 <span class="pill part">单一</span></td></tr>
       <tr><td>阈值</td><td>是非题 ≥0.8 算是、≤0.2 算否；选择题 ≥0.6 且必须有逃生选项</td><td>入口路由置信度 ≥0.8 且有弃权项；交接包 ≥0.3（依据实测数据定）</td></tr>
       <tr><td>批量</td><td>工具输出 16 块合一次请求；超过 32 题自动拆分</td><td>交接包一次请求最多 16 题</td></tr>
-      <tr><td>连接与延迟</td><td>HTTP/2 保活，每 50 秒 ping；热连接单题 0.31 秒、16 块 0.44 秒（作者一次性实测，无可重跑脚本）</td><td>keepWarm 每 2 秒一次、轮后 5 分钟内；线上路由决策 0.34–0.97 秒，交接包 0.29–0.92 秒（prd 会话日志）</td></tr>
+      <tr><td>连接与延迟</td><td>HTTP/2 保活，每 50 秒 ping；热连接单题 0.31 秒、16 块 0.44 秒（作者一次性实测，无可重跑脚本）</td><td>keepWarm 每 2 秒一次、轮后 5 分钟内；线上路由决策 0.34–0.97 秒，交接包 0.29–0.92 秒（历史部署环境 会话日志）</td></tr>
       <tr><td>效果证据</td><td>测试日志折叠 51%；按目标裁剪 40%、必需行零丢失；作者回测承认 tool.admission 零裁剪、净收益未证明；无与 Claude Code / Codex 的端到端对比</td><td>入口路由三组对照与隐藏测试；交接包 6 段标注对话；委派门槛对照（委派准确率无提升、耗时 4–13 倍）；线上浏览器验收</td></tr>
     </tbody>
   </table>
@@ -190,7 +190,7 @@ footer { margin-top: 48px; color: var(--muted); font-size: 13px; }
   </div>
 
   <footer>
-    来源：mu 仓库 <code>packages/kyrn-judge/manifest.json</code>、<code>docs/reference/decision-points.md</code>、<code>kyrn/docs/04-injection-points.md</code>、<code>kyrn/docs/08-jev-retrospective.md</code>、<code>kyrn/docs/09-test-log-admission.md</code>；文章《把Jev整合进 Harness，开源项目拿下黑客松总冠军！》。System3：本仓库 <code>packages/experimental/system3</code>、<code>deploy/system3/runtime.patch.yml</code>、prd 会话日志（2026-10-04 至 10-07）。
+    来源：mu 仓库 <code>packages/kyrn-judge/manifest.json</code>、<code>docs/reference/decision-points.md</code>、<code>kyrn/docs/04-injection-points.md</code>、<code>kyrn/docs/08-jev-retrospective.md</code>、<code>kyrn/docs/09-test-log-admission.md</code>；文章《把Jev整合进 Harness，开源项目拿下黑客松总冠军！》。System3：本仓库 <code>packages/experimental/system3</code>、<code>deploy/system3/runtime.patch.yml</code>、历史部署环境 会话日志（2026-10-04 至 10-07）。
   </footer>
 </main>
 </body>

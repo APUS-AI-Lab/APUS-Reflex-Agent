@@ -359,7 +359,7 @@ describe('dsh-sdk-jsonrpc-server plugin apply', () => {
       const error = await harness.waitForFrame(frame => frame.id === 'probe-1', 'error response for unknown method')
       expect(error.error).toMatchObject({
         code: -32603,
-        message: 'unknown DeepSeek Harness SDK runtime method: nope/unknown',
+        message: 'unknown APUS Reflex Harness SDK runtime method: nope/unknown',
       })
 
       await harness.fiber.dispose()

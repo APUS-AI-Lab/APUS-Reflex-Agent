@@ -37,7 +37,7 @@ Desktop and Web each start their own runtime; the diagram does not promise a sha
 | `scripts/product*.mjs` | Setup, launch, packaging, and release checks |
 | `release/manifest.json` | Product version, channel, repository, and qualified targets |
 | `docs/feat-integrated-product/` | Product installation, configuration, development, and release guides |
-| `tasks/feat-integrated-product/` | Plan, historical assessment, validation evidence, and handoff |
+| `tasks/feat-integrated-product/` | Local-only plan, assessment, validation evidence and handoff; ignored by Git and not distributed |
 
 Keep the existing pnpm lock and frontend npm lock for the initial integration. Root scripts coordinate both installations; a lockfile migration is not part of this change. Preserve application IDs, user-data paths, and session formats.
 

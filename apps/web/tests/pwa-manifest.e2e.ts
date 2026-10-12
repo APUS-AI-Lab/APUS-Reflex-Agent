@@ -15,7 +15,7 @@ it('ships install metadata with the built web application', async () => {
   // each mount its own identity. `public-mount.e2e.ts` reads the resolved form.
   expect(manifest).toEqual({
     name: 'APUS Reflex Harness',
-    short_name: 'APUS Reflex',
+    short_name: 'APUS Reflex Harness',
     start_url: './',
     scope: './',
     display: 'fullscreen',

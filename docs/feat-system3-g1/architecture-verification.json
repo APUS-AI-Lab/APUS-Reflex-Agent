@@ -479,5 +479,6 @@
     "status": "Target product design; current accepted Jev consumers are entry routing and automatic Skill selection.",
     "runtimeChanged": false,
     "independentReview": "Separate Jev reviewer confirmed semantics, responsive presentation, folding, IDs, ARIA, colors, and PNG/SVG consistency; no repeated runtime tests."
-  }
+  },
+  "publicationNote": "Historical repository identity and verification results are preserved; current product and repository entry points are documented in the root README. This cleanup does not rerun the recorded checks."
 }

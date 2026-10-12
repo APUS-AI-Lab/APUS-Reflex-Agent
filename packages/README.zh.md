@@ -1,5 +1,5 @@
 ---
-description: "DeepSeek Harness 包工作区：packages/ 下的 npm 包如何分组、每个组负责什么，以及约束它们的约定。"
+description: "APUS Reflex Harness 包工作区：packages/ 下的 npm 包如何分组、每个组负责什么，以及约束它们的约定。"
 kind: "package-group"
 ---
 

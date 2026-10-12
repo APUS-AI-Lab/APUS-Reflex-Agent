@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-skill-filesystem",
-  "description": "Local filesystem skill provider for the DeepSeek Harness",
+  "description": "Local filesystem skill provider for the APUS Reflex Harness",
   "version": "0.1.7-rc.2",
   "publishConfig": {
     "access": "public"

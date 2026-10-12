@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-session",
-  "description": "Event-sourced session store for the DeepSeek Harness",
+  "description": "Event-sourced session store for the APUS Reflex Harness",
   "version": "0.1.7-rc.2",
   "publishConfig": {
     "access": "public"

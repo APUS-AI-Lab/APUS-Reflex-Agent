@@ -53,7 +53,7 @@ function messageText(message: RecordedMessage): string {
   return message.content?.map(block => block.text ?? '').join('\n') ?? ''
 }
 
-async function persistedSeed(cwd: string, sessionId: string): Promise<MemoryRecord> {
+async function persistedSeed(cwd: string, sessionId: string, expectedFact = fact): Promise<MemoryRecord> {
   const sessionsDir = join(cwd, '.dsh', 'sessions')
   const files = (await readdir(sessionsDir, { recursive: true }))
     .filter(file => file.split(sep).includes(sessionId) && file.endsWith('.jsonl.zstd'))
@@ -65,11 +65,11 @@ async function persistedSeed(cwd: string, sessionId: string): Promise<MemoryReco
     zstdDecompressSync(compressed.subarray(start, end)).toString().trim().split('\n'))
     .map(line => JSON.parse(line) as SessionEvent | { type: 'session' })
   const source = events.find(event => event.type === 'user/message' && event.data.source.kind === 'user'
-    && event.data.content.some(block => block.type === 'text' && block.text === fact))
+    && event.data.content.some(block => block.type === 'text' && block.text === expectedFact))
   expect(source).toBeDefined()
   if (source?.type !== 'user/message') throw new Error('seed Session has no persisted user fact')
   const memory = events.find(event => event.type === 'continuum/memory-record'
-    && event.data.operation === 'create' && event.data.record.content === fact)
+    && event.data.operation === 'create' && event.data.record.content === expectedFact)
   expect(memory).toBeDefined()
   if (memory?.type !== 'continuum/memory-record') throw new Error('seed Session has no persisted memory record')
   expect(memory.data.record.sourceRefs).toEqual([{ sessionId, eventSeq: source.seq }])
@@ -78,7 +78,12 @@ async function persistedSeed(cwd: string, sessionId: string): Promise<MemoryReco
 }
 
 describe('shipped headless Continuum profile', () => {
-  it.each(['src', 'lib'] as const)('admits, persists, resumes, and injects memory in %s mode', { timeout: 120_000, retry: 0 }, async (mode) => {
+  it.each([
+    { mode: 'src', language: 'English', seedFact: fact, query: recallQuery },
+    { mode: 'lib', language: 'English', seedFact: fact, query: recallQuery },
+    { mode: 'src', language: 'Chinese', seedFact: '迁移安排在周五。', query: '迁移' },
+    { mode: 'lib', language: 'Chinese', seedFact: '迁移安排在周五。', query: '迁移' },
+  ] as const)('admits, persists, resumes, and injects $language memory in $mode mode', { timeout: 120_000, retry: 0 }, async ({ mode, seedFact, query }) => {
     const cwd = await mkdtemp(join(tmpdir(), `continuum-headless-${mode}-`))
     try {
       const patchPath = join(cwd, 'continuum-memory.patch.yml')
@@ -87,22 +92,22 @@ describe('shipped headless Continuum profile', () => {
       const first = await runLoaderSmoke({
         processTimeoutMs: PROCESS_TIMEOUT_MS,
         label: `Continuum headless first ${mode} wake`, mode, ...(mode === 'src' ? { sourceImport: 'tsx/esm' as const } : {}), cwd, binScript, tsconfigPath,
-        configPath: patchPath, binArgs: ['--profile', 'headless', '--patch', patchPath, '--json', fact], env,
+        configPath: patchPath, binArgs: ['--profile', 'headless', '--patch', patchPath, '--json', seedFact], env,
       })
       const sessionId = sessionIdOf(first.stdout)
-      const admitted = await persistedSeed(cwd, sessionId)
+      const admitted = await persistedSeed(cwd, sessionId, seedFact)
       const resumed = await runLoaderSmoke({
         processTimeoutMs: PROCESS_TIMEOUT_MS,
         label: `Continuum headless resumed ${mode} wake`, mode, ...(mode === 'src' ? { sourceImport: 'tsx/esm' as const } : {}), cwd, binScript, tsconfigPath,
         configPath: patchPath,
-        binArgs: ['--profile', 'headless', '--patch', patchPath, '--json', '--session-id', sessionId, recallQuery],
+        binArgs: ['--profile', 'headless', '--patch', patchPath, '--json', '--session-id', sessionId, query],
         env: { ...env, CONTINUUM_REQUEST_LOG: join(cwd, 'resumed-requests.jsonl') },
       })
       const requests = await recordedRequests(join(cwd, 'resumed-requests.jsonl'))
       expect(requests.length).toBeGreaterThan(0)
       const recall = requests.flat().find(message => message.source?.kind === 'continuum-memory')
       expect(recall, `resumed process requests: ${JSON.stringify(requests)}; stderr: ${resumed.stderr}`).toBeDefined()
-      expect(recall === undefined ? '' : messageText(recall)).toContain(fact)
+      expect(recall === undefined ? '' : messageText(recall)).toContain(seedFact)
       expect(recall?.source?.recordIds).toEqual(expect.arrayContaining([admitted.id]))
     } finally {
       await rm(cwd, { recursive: true, force: true })

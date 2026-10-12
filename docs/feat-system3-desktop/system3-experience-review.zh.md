@@ -111,4 +111,4 @@ Jev 的 choice 负责在合法候选中选路；score 负责局部相关性或�
 
 ## Dev Note
 
-本页是尚未实施的交互提案。具体组件、接口字段、性能与体验测试标准在实现前细化；产品代码 Human Gate 仍未通过。验证记录见 [本轮交接](../../tasks/feat-system3-desktop/handoff.md)。
+本页是尚未实施的交互提案。具体组件、接口字段、性能与体验测试标准在实现前细化；产品代码 Human Gate 仍未通过。内部交接已私有归档；公开验收范围见[发布就绪审计](../dev-continuum-reflex-integration/release-readiness.zh.md)。

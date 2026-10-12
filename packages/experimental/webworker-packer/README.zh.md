@@ -58,7 +58,7 @@ VFS 镜像打包器：把一份合成 profile 变成浏览器 worker 挂载为�
 - **可达性只推断精确请求形式**——计算得到的 `import` 与 `require` 参数、保存下来的 `createRequire` 结果、经 CommonJS 获取的 `createRequire`，以及基准不是 `import.meta.url` 的调用只在运行时解析；若目标已被裁掉就会显式失败。只能通过这些形式触达的目标需要显式镜像入口种子。
 - **vendored 包源码（`src/*.ts`）被排除**——运行时无人解析它们；未来若有 worker 内源码巡检功能需要专门的 include 规则。
 - **打包器假定构建产物 `lib/` 是新鲜的**：它从不编译，工作区构建陈旧就会打包陈旧字节。先跑仓库构建。
-- **CLI 必须位于原有仓库位置**：`dsh-pack-vfs-image` 相对于自身安装文件定位检出目录，并从中读取源码 CLI、配置树和预览 fixture。npm 安装支持参数化的库 API；CLI 和仓库辅助函数需要完整且已构建的 DeepSeek Harness 检出目录。
+- **CLI 必须位于原有仓库位置**：`dsh-pack-vfs-image` 相对于自身安装文件定位检出目录，并从中读取源码 CLI、配置树和预览 fixture。npm 安装支持参数化的库 API；CLI 和仓库辅助函数需要完整且已构建的 APUS Reflex Harness 检出目录。
 - **Preview Session 输入使用原始 JSONL** — `packPreviewFixture` 拒绝压缩文件与不规范的 Session 代际文件名。通用 overlay 仍逐字节保留输入。
 
 

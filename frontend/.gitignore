@@ -35,3 +35,13 @@ docs/mobile-connection-latency.zh.md
 /.build/
 /packages/ppt-runtime/templates/
 /packages/ppt-bundles/
+
+# Maintained PPT JavaScript seeds are inputs, not Harness lib/ build outputs.
+!/packages/ppt-runtime/core/lib/
+!/packages/ppt-runtime/core/lib/**
+!/packages/ppt-runtime/adapter/lib/
+!/packages/ppt-runtime/adapter/lib/**
+
+# The image plugin imports these maintained modules directly.
+!/packages/dsh-image-generation/lib/
+!/packages/dsh-image-generation/lib/**

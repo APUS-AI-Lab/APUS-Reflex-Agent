@@ -13,8 +13,9 @@
       "applicationName": "APUS Reflex Harness",
       "applicationVersion": "1.0.0",
       "version": "",
+      "copyright": "",
       "iconPath": "<app icon>",
-      "credits": "Instant action. Deep thinking.\nThanks to the open-source contributors. Original notices are available under Open-source licenses."
+      "credits": "Instant action. Deep thinking.\nCopyright and third-party credits are available under Open-source licenses in the application menu."
     }
   },
   "darwin:zh-CN": {
@@ -31,8 +32,9 @@
       "applicationName": "APUS Reflex Harness",
       "applicationVersion": "1.0.0",
       "version": "",
+      "copyright": "",
       "iconPath": "<app icon>",
-      "credits": "瞬策 · 瞬时执行，深度思考\n感谢开源贡献者。原版权声明可在“开源许可证”中查看。"
+      "credits": "瞬策 · 瞬时执行，深度思考\n版权及第三方声明见应用菜单中的“开源许可证”。"
     }
   },
   "win32:zh-CN": {
@@ -48,8 +50,9 @@
       "applicationName": "APUS Reflex Harness",
       "applicationVersion": "1.0.0",
       "version": "",
+      "copyright": "",
       "iconPath": "<app icon>",
-      "credits": "瞬策 · 瞬时执行，深度思考\n感谢开源贡献者。原版权声明可在“开源许可证”中查看。"
+      "credits": "瞬策 · 瞬时执行，深度思考\n版权及第三方声明见应用菜单中的“开源许可证”。"
     }
   },
   "win32:en-US": {
@@ -65,8 +68,9 @@
       "applicationName": "APUS Reflex Harness",
       "applicationVersion": "1.0.0",
       "version": "",
+      "copyright": "",
       "iconPath": "<app icon>",
-      "credits": "Instant action. Deep thinking.\nThanks to the open-source contributors. Original notices are available under Open-source licenses."
+      "credits": "Instant action. Deep thinking.\nCopyright and third-party credits are available under Open-source licenses in the application menu."
     }
   }
 }

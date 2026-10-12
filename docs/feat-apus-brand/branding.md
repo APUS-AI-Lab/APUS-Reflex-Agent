@@ -6,9 +6,9 @@ APUS Reflex Harness uses the Chinese name “瞬策”, the slogan “瞬时执�
 
 ## Authoritative inputs
 
-The static Web brand definition lives in `apps/web/public/brand.json`, beside the canonical vector `brand-mark.svg`. Shared UI wordmarks and marks come from `packages/client/ui-primitives`; the existing `BrandWordmark` and `FishLogo` exports remain compatible with callers while displaying the APUS wordmark and letter mark.
+The static Web brand definition lives in `apps/web/public/brand.json`. The single original image is the adjacent `brand-source.webp`: the user-supplied 140×140 transparent gradient bird raster. `brand-mark.svg` embeds a lossless PNG representation, not a vector redraw. The shared UI keeps the `BrandWordmark` and `FishLogo` component APIs and displays the APUS bird and wordmark using PNG data generated from that image.
 
-After installing repository dependencies, run `pnpm exec tsx apps/desktop/scripts/generate-brand-assets.ts` to generate Web favicons, application PNG/ICO files, native desktop resources, and installer wordmarks from the canonical vector. On macOS, the script also generates ICNS using the system iconutil; other platforms use the committed ICNS. The script uses the existing sharp dependency.
+After installing repository dependencies, run `pnpm exec tsx apps/desktop/scripts/generate-brand-assets.ts` to generate Web favicons, shared React brand data, application PNG/ICO files, native desktop resources and installer wordmarks from that image, preserving its colors, proportions and transparency. On macOS, the script also generates ICNS using the system iconutil; other platforms use the committed ICNS. The script uses the existing sharp dependency.
 
 The `frontend/` desktop host validates and copies these brand inputs into `.build/brand` during preparation; installers and native pages consume those resources. Prepare the runtime from the same checkout after changing Harness. Renaming a repository does not change installed applications.
 

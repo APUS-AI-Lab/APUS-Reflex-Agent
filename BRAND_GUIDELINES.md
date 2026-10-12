@@ -8,7 +8,7 @@ This guide keeps this repository’s product presentation consistent. It does no
 
 Use **APUS Reflex Harness** for application titles, installers, About pages, documentation and product links. Use **Model-as-a-Harness** with the article “a”. The Chinese slogan is **瞬时执行，深度思考**; the English rendering is **Instant action. Deep thinking.**
 
-Product surfaces use APUS branding. Upstream names belong in accurate license acknowledgments, not product titles, logos or subtitles. Keep required technical identifiers unchanged when renaming would break compatibility.
+Product surfaces use APUS branding. Upstream names belong in accurate license acknowledgments, not product titles, logos or subtitles. Package names, provider names, persisted identifiers, application IDs and existing user-data paths retain their compatibility meaning; they are not product display names.
 
 ## Gradient bird logo
 

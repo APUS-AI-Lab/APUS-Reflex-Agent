@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-commands",
-  "description": "Plugin-owned human command registry for DeepSeek Harness UIs",
+  "description": "Plugin-owned human command registry for APUS Reflex Harness UIs",
   "version": "0.1.7-rc.2",
   "publishConfig": {
     "access": "public"

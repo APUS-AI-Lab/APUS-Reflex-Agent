@@ -15,7 +15,7 @@
   "configurationScope": "Repository base/web/production overlay read; current built shipped local Web verified with a dedicated active overlay and isolated workspace. Production current deployed files and live loader state not re-read; local active and repository shadow do not prove production settings.",
   "historicalBaseline": {
     "version": "apus-reflex-v0.1.0 (runtime 0.1.7-rc.2)",
-    "source": "/private/tmp/claude-501/-Users-gumpm5-Documents-Code-xDAN-System3-Harness/2fc262b9-ecd1-419a-9f1c-8aee03ecb971/scratchpad/seal-v01d/accept.log",
+    "source": "[privately archived original acceptance log]",
     "result": "5 passed, 0 failed",
     "scenarioSeconds": {
       "routing": 26,
@@ -244,7 +244,7 @@
       "configuration": "无routeIntegrity配置；普通routeHealth不能替代",
       "historicalLiveEvidence": "report声称4.4K额外token观察，不等于监控闭环",
       "currentLiveEvidence": "本轮未跑该能力真实 E2E",
-      "remaining": "未实现降智/偷换质量监控。主代理已取到AILink12/12、UUAPI15/15、OpenOx8/8完整key并保存在仓库外0600文件；三个中转站的模型调用权限仍待实测。key非空不等于请求获准；指纹不足认证模型身份。",
+      "remaining": "质量监控未实现；私有凭据清单不公开。中转服务的模型调用权限仍待实测；凭据非空不等于请求获准，指纹不足认证模型身份。",
       "nextAction": "先用最小请求验证三站模型调用权限，再准备有授权的正常/受控错配基线，保留样本/能力/usage/延迟；实现告警与路由排除后真实反例验收。"
     },
     {
@@ -486,5 +486,5 @@
     ],
     "limitation": "These configuration/lifecycle mechanisms are deterministic focused regressions; the three fresh real scenarios validate normal active execution, not fault injection of every lifecycle path."
   },
-  "publicationNote": "Browser findings describe the recorded historical run. Its raw Session, exact UI build, overlays and detailed execution evidence are privately archived; completion-browser-result.json and completion-browser-session.summary.json contain public metadata only and cannot independently verify event-sequence claims. This cleanup is not a new test run."
+  "publicationNote": "Browser and in-process findings describe recorded historical runs. Original Sessions, model inputs, exact UI build, overlays and detailed execution evidence are privately archived. Public result files contain summary metadata, not complete event bodies, and cannot independently verify event-sequence claims. This cleanup is not a new test run."
 }
