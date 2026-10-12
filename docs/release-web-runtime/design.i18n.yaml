@@ -1,0 +1,19 @@
+# Bilingual-pair consistency record for design.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/release-web-runtime/design.md
+/web-runtime-archive-design:
+  en: 98335a3d8cf0a525
+  zh: ad778f1d247eaf3f
+/web-runtime-archive-design/goal:
+  en: f48821d59ffc34bf
+  zh: f381d5b72bdfb432
+/web-runtime-archive-design/architecture:
+  en: 420cbba2d84aaf69
+  zh: 69bc45945297c1a5
+/web-runtime-archive-design/files-and-interfaces:
+  en: 0503c2ebdc6993ce
+  zh: 12f649ed1289ebaf
+/web-runtime-archive-design/verification:
+  en: 269e73c44f8dc872
+  zh: f6292fc4d685819e
