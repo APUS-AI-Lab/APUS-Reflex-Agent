@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Continuum + Reflex 经典案例</title>
+  <style>
+    :root { color-scheme: dark; --bg: #0b1020; --card: #151d33; --line: #2b3b60; --text: #e8edf8; --muted: #9caac7; --ok: #65d6a0; --accent: #8ba8ff; }
+    * { box-sizing: border-box; } body { margin: 0; background: radial-gradient(circle at 15% 0, #182653, var(--bg) 42%); color: var(--text); font: 16px/1.6 system-ui, sans-serif; }
+    main { max-width: 1100px; margin: auto; padding: 56px 24px 72px; } h1 { font-size: clamp(2rem, 5vw, 4rem); line-height: 1.05; margin: 0 0 16px; } h2 { margin-top: 42px; } p { color: var(--muted); } .lead { max-width: 760px; font-size: 1.12rem; }
+    .flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 32px 0; } .flow div { border: 1px solid var(--line); background: #111a2eaa; padding: 16px; border-radius: 12px; } .flow b { color: var(--accent); display: block; }
+    .cases { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; } article { border: 1px solid var(--line); background: linear-gradient(145deg, #18233c, var(--card)); border-radius: 16px; padding: 22px; } article h3 { margin: 0 0 8px; } .status { color: var(--ok); font-weight: 700; font-size: .88rem; letter-spacing: .04em; } code { color: #c4d1ff; } .evidence { border-left: 3px solid var(--accent); padding-left: 14px; }
+    @media (max-width: 720px) { .flow { grid-template-columns: 1fr 1fr; } }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="status">APUS CONTINUUM + REFLEX · 可复现验收案例</div>
+    <h1>把“无限记忆”变成可以验收的行为</h1>
+    <p class="lead">每个案例都从用户动作开始，穿过 Session 持久化、重启恢复、Jev 决策和模型请求，最后落到可检查的证据。通过条件是同一提交上的正向场景、负向控制和真实入口测试全部通过。</p>
+    <div class="flow" aria-label="验收链路"><div><b>01 用户输入</b>事实、约束或历史问题</div><div><b>02 durable Session</b>事件写盘并可恢复</div><div><b>03 Reflex / Jev</b>有界选择与策略保护</div><div><b>04 provider request</b>检查模型实际看到的消息</div></div>
+    <h2>经典案例</h2>
+    <section class="cases">
+      <article><div class="status">PASS · shipped src/lib</div><h3>重启后召回</h3><p>首进程写入事实并 flush JSONL；第二进程以同一 Session id 恢复，provider request 出现带 record id 的 <code>continuum-memory</code>。</p><p class="evidence"><code>apps/cli/tests/profiles/headless/tests/continuum-memory.e2e.ts</code></p></article>
+      <article><div class="status">PASS · negative controls</div><h3>原版兼容</h3><p>没有 Jev 或关闭开关时，任务仍走原 provider 路径，不写 memory record，也不注入 recall。</p><p class="evidence"><code>continuum-memory.e2e.ts</code> 的 no-reflex / disabled 场景</p></article>
+      <article><div class="status">PASS · real Jev</div><h3>约束保护</h3><p>Decimal 精度和原始 CSV 不可修改要求在上下文整理后仍可见；无关旅行内容可以被移除，新的 Host 能恢复历史事实。</p><p class="evidence"><code>packages/experimental/system3/tests/reflex-context.e2e.ts</code></p></article>
+      <article><div class="status">PASS · unit + durable</div><h3>自动准入</h3><p>用户消息在提交后成为带精确 Session 引用的不可变记录，恢复时折叠投影，不创建第二套事实源。</p><p class="evidence"><code>packages/context/continuum/tests/durable-admission.spec.ts</code></p></article>
+      <article><div class="status">MATRIX · provider-dependent</div><h3>Jev shadow / active</h3><p>Shadow 保留确定性 baseline，active 只应用有界候选。路由失败或隐私拒绝时回退并记录原因。</p><p class="evidence"><code>packages/experimental/continuum-jev/tests</code></p></article>
+      <article><div class="status">PASS · audit rule</div><h3>历史记忆恢复</h3><p>恢复内容标记为历史数据，带稳定 event/block 引用，不获得执行权限；恢复预算和 Session attribution 可检查。</p><p class="evidence"><code>packages/experimental/system3/tests/reflex-context.spec.ts</code></p></article>
+    </section>
+    <h2>验收口径</h2>
+    <p>“通过”只表示对应案例的证据已经在当前提交执行成功。无密钥回放不能替代真实 Jev；组件单测不能替代 shipped profile 子进程测试；跳过、未执行或失败都不会计入通过。</p>
+    <p><a href="classic-cases.md" style="color:var(--accent)">阅读 Markdown 参考</a> · <a href="classic-cases.zh.md" style="color:var(--accent)">中文说明</a></p>
+  </main>
+</body>
+</html>

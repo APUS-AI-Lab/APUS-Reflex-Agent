@@ -94,13 +94,12 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
     super(ctx, 'continuumMemory')
     this.config = config
     ctx.inject(['agents'], (ctx) => {
-      const reflexMounted = ctx.get('jev') !== undefined
       const principal = { scopes: [...config.scopes] }
       const retrievalConfig = {
         maxCandidates: config.maxCandidates, maxExcerptBytes: config.maxExcerptBytes, maxTotalBytes: config.maxTotalBytes,
       }
       installContinuumMemoryControllerContext(ctx, agent => this.controllerWithConfig(agent, {
-        enabled: readSetting(config.enabled), mode: readSetting(config.mode), reflexMounted,
+        enabled: readSetting(config.enabled), mode: readSetting(config.mode), reflexMounted: ctx.get('jev') !== undefined,
       }), () => principal, retrievalConfig, () => ctx.get('continuumMemorySelector'))
     })
     ctx.on('agent/created', ({ agent }) => { this.agentsBySession.set(agent.session.id, agent) })

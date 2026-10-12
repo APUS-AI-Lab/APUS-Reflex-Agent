@@ -60,22 +60,28 @@ interface Review {
 }
 interface PendingRecovery { id: MessageId; signal: AbortSignal; generation: number }
 
+const protectedConstraintMarkers = [
+  /\b(?:must|never|required|immutable|decimal|precision|floating[ -]?point)\b/iu,
+  /\b(?:original (?:file|input)|do not modify)\b/iu,
+  /(?:必须|不得|禁止|不能|不可|不应|原始.{0,12}(?:不可|不能|不得)|精度|权限|安全|隐私)/iu,
+] as const
+const supersedeMarkers = /\b(?:ignore|disregard|no longer|stop using|replace|supersede)\b/iu
+const supersedeMarkersZh = /(?:忽略|不再|取消|撤销|改为|不用|无需)/iu
+
 /**
- * Keep explicit precision, safety, and file-integrity constraints visible.
- * A latest request that explicitly supersedes an earlier constraint reopens
- * the fragment for normal Jev selection.
+ * Keep a marked precision, safety, or file-integrity fragment visible unless
+ * the same request also names that marker while explicitly superseding it.
  * @param text - Original user-authored fragment.
  * @param currentRequests - User requests claimed for the current step.
- * @returns Whether the fragment has a protected constraint that remains active.
+ * @returns Whether the fragment has a still-active protected marker.
  */
 function isProtectedConstraint(text: string, currentRequests: readonly string[]): boolean {
-  const explicitlySuperseded = currentRequests.some(request =>
-    /\b(?:ignore|disregard|no longer|stop using|replace|supersede)\b/iu.test(request)
-    || /(?:忽略|不再|取消|撤销|改为|不用|无需).{0,12}(?:此前|之前|这个|该|它|上述)/iu.test(request))
-  const hasMarker = /\b(?:must|never|required|immutable|decimal|precision|floating[ -]?point)\b/iu.test(text)
-    || /\b(?:original (?:file|input)|do not modify)\b/iu.test(text)
-    || /(?:必须|不得|禁止|不能|不可|不应|原始.{0,12}(?:不可|不能|不得)|精度|权限|安全|隐私)/iu.test(text)
-  return !explicitlySuperseded && hasMarker
+  const marker = protectedConstraintMarkers.find(pattern => pattern.test(text))
+  if (marker === undefined) return false
+  return !currentRequests.some((request) => {
+    const namesConstraint = marker.test(request)
+    return namesConstraint && (supersedeMarkers.test(request) || supersedeMarkersZh.test(request))
+  })
 }
 const review: System3DecisionSpec<Review, string> = {
   id: 'reflex.context', version: 3, fallback: '[]',

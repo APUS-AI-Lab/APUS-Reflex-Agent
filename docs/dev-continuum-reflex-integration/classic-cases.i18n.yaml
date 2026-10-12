@@ -1,0 +1,28 @@
+# Bilingual-pair consistency record for classic-cases.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/dev-continuum-reflex-integration/classic-cases.md
+/continuum-reflex-classic-cases:
+  en: 9e4ea41f8451451f
+  zh: 1059a2ba74c76f29
+/continuum-reflex-classic-cases/original-profile-compatibility:
+  en: c467f4471acb0ecd
+  zh: 6d29f8f5a9c4d666
+/continuum-reflex-classic-cases/opt-in-memory-admission:
+  en: 1facf3d35ec1deb4
+  zh: 2f01aca9624a73ab
+/continuum-reflex-classic-cases/restart-and-recall:
+  en: 82e41121fd0cc37c
+  zh: 05791feb63ea40e2
+/continuum-reflex-classic-cases/jev-shadow-and-active-selection:
+  en: 671d78a3efc37085
+  zh: 67f2b0a5960e1e66
+/continuum-reflex-classic-cases/constraint-protection-during-context-reduction:
+  en: 265e4b054387bdab
+  zh: fc44bc1497c8439f
+/continuum-reflex-classic-cases/recoverable-historical-memory:
+  en: 5d038a02693a4ffb
+  zh: 6a836ffd92c62e21
+/continuum-reflex-classic-cases/release-evidence-rule:
+  en: 350a1f61c8bf45cd
+  zh: b3bec3c8a89b7e49

@@ -5,7 +5,7 @@
 - 当前分支：`dev/continuum-reflex-integration`
 - 基线：`feat-reflex-control` 当前提交。
 - 目标：在控制面主力分支上集成 `feat-continuum-memory`，完成冲突解释和场景化验收。
-- 当前状态：已合入最新 `feat-reflex-control` 控制面提交，完成 opt-in 用户消息准入、JSONL 磁盘 flush/resume/recall/attribution 聚焦链路，以及 6 个真实 Jev System3 E2E 文件；公开发布仍受 shipped profile 黑盒、全仓基线和 CI/打包门禁约束。
+- 当前状态：已合入 `feat-reflex-control` 控制面提交，完成 opt-in 用户消息准入、JSONL 磁盘 flush/resume/recall/attribution 链路，以及真实 Jev System3 E2E；当前分支新增的 shipped profile 黑盒已在 source/lib、无 Jev、关闭开关四条场景通过。公开发布仍受全仓基线和 CI/打包门禁约束。
 
 ## 本轮交付物
 
@@ -14,6 +14,9 @@
 - `docs/dev-continuum-reflex-integration/memory-admission-design.md` / `.zh.md`：自动准入设计与事件来源约束。
 - `docs/dev-continuum-reflex-integration/release-readiness.md` / `.zh.md`：开源发布就绪审计和阻断项。
 - `packages/context/continuum/tests/admission.spec.ts`：自动准入、持久化回放、seed 重启 recall 和 explicit 负向控制。
+- `apps/cli/tests/profiles/headless/tests/continuum-memory.e2e.ts`：真实 `dsh --profile headless` source/lib 双进程链路，以及 no-reflex/disabled 负向控制。
+- `apps/cli/tests/profiles/headless/tests/fixtures/continuum-recording-llm.ts`：只记录模型可见请求的 keyless provider fixture。
+- `docs/dev-continuum-reflex-integration/classic-cases.md` / `.zh.md` / `.html`：可复现经典案例和发布证据口径。
 - 合并与修复提交已保留在本分支历史中。
 
 ## 设计约束
@@ -38,7 +41,7 @@
 - [x] `pnpm run doc-sync`：42 个文档/目录门禁全部通过。
 - [x] `pnpm run verify-cordis-config`：226 个配置文件通过；persistence changes、tsconfig paths、targeted oxlint 通过。
 - [x] JSONL durable profile E2E：2/2 通过；真实 AgentLoop resume 从磁盘恢复，不使用 seed 替代，并验证 explicit 负向控制。
-- [x] 真实 Jev System3：6 个选定 E2E 文件全部通过；`reflex-context` 的严格约束保留断言由确定性安全层保护，Jev 判定仍完整记录。
+- [x] 真实 Jev System3：选定 E2E 文件通过；`reflex-context` 严格场景的约束保留断言由确定性 marker 安全层保护，Jev 判定仍完整记录；新增“无关 replacement 不解除约束”回归。
 - [x] RunPod Jev endpoint health 返回 ready；未提供有效 `JEV_API_KEY` 时 `/v1/models` 正确返回 401，说明真实 Jev E2E 不能伪造为通过。
 - [x] 修复运行时开关开启后仍解析为 `off` 的配置重叠问题；profile 默认使用确定性 `shadow`，Jev provider 仍保持 `off`。
 - [x] 只读检查 RunPod `Jev-Serving` pod：`/root/.config/openjev/gateway.key` 存在且权限为 `600`，真实 key 访问 `/v1/models` 返回 200；key 未写入仓库。
@@ -48,8 +51,8 @@
 ## 未完成的正式验收
 
 - [x] 接入 opt-in 生产级 user-message admission caller；默认仍为 `admission: explicit`，需要 scope 和 Continuum 开关。
-- [x] 生产插件组合链路：用户输入 → memory-record → Session flush → 上下文销毁 → `AgentLoop.resume()` 磁盘恢复 → recall 注入 → 模型请求归因；仍需 shipped `dsh --profile` 子进程黑盒作为公开发布补充证据。
-- [x] 修复 `reflex-context` 真实语义失败：显式精度/文件完整性约束不可由 Jev 删除，补充 40 条本地回归和真实 Jev 严格 E2E。
+- [x] 生产插件组合链路：用户输入 → memory-record → Session flush → 上下文销毁 → `AgentLoop.resume()` 磁盘恢复 → recall 注入 → 模型请求归因；shipped `dsh --profile` source/lib 子进程黑盒 4/4 通过，并覆盖 no-reflex/disabled 负向控制。
+- [x] 修复 `reflex-context` 真实语义失败：显式精度/文件完整性约束不可由 Jev 删除，补充 41 条本地回归和真实 Jev 严格 E2E。
 - [ ] 重跑更大 System3 real-API 矩阵；选定 6 文件已通过，扩展矩阵仍属发布前补充证据。
 - [ ] 重新设计并执行完整 Web built suite；当前只证明 Continuum 定向浏览器测试通过。
 - [ ] 全量 `pnpm run test` 尚未全绿：本次运行 19 个失败、2 个未处理错误；失败集中在合并前未修改的桌面/UI/workflow 基础设施测试，需单独归档或修复后才能宣称仓库级全绿。
