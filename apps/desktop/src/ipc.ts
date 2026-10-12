@@ -90,9 +90,9 @@ export const SCHEME = 'dsh-app'
  */
 export function assertDesktopSender(event: IpcMainInvokeEvent, hostnames: readonly string[]): void {
   const senderFrame = event.senderFrame
-  if (senderFrame === null) throw new Error('dsh desktop: rejected IPC without a sender frame')
+  if (senderFrame === null) throw new Error('APUS Reflex Harness desktop: rejected IPC without a sender frame')
   const url = new URL(senderFrame.url)
   if (url.protocol !== `${SCHEME}:` || !hostnames.includes(url.hostname)) {
-    throw new Error('dsh desktop: rejected IPC from an unowned renderer')
+    throw new Error('APUS Reflex Harness desktop: rejected IPC from an unowned renderer')
   }
 }

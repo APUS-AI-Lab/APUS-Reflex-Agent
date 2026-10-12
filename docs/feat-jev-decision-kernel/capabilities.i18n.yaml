@@ -3,14 +3,14 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/feat-jev-decision-kernel/capabilities.md
 /system3-capabilities-compared-with-stock-dsh:
-  en: 31a6b9c9e12e309d
-  zh: 8ba9b45738ad1c8d
+  en: 6253fcc0e2915d3e
+  zh: ca7fe994a6647276
 /system3-capabilities-compared-with-stock-dsh/implemented:
-  en: 31ee11bfe171af58
-  zh: e899fec037f5e5db
+  en: af35606bd3146c38
+  zh: d258f8256f1c7976
 /system3-capabilities-compared-with-stock-dsh/planned:
   en: 799c2f1fab0e3b6e
   zh: d9a92076433b362b
 /system3-capabilities-compared-with-stock-dsh/limits:
-  en: 3f1190d27a2a6ba5
-  zh: 5484d6307b5d756a
+  en: f59eee57888c2728
+  zh: 58d84fee5a34cc8c

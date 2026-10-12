@@ -22,7 +22,7 @@ flowchart TD
 
 ## 归属与兼容
 
-`apps/web/public/brand-logo.webp` 是图像权威输入。`apps/desktop/scripts/generate-brand-assets.ts` 生成嵌入 PNG 的模块、SVG 包装、应用图标及安装器资产。`packages/client/ui-primitives` 负责共享品牌渲染，`packages/client/ui-theme` 负责深浅配色及首屏背景。账号和模型引导词典说明真实提供方与配置选择。
+`apps/web/public/brand-source.webp` 是图像权威输入。`apps/desktop/scripts/generate-brand-assets.ts` 生成嵌入 PNG 的模块、SVG 包装、应用图标及安装器资产。`packages/client/ui-primitives` 负责共享品牌渲染，`packages/client/ui-theme` 负责深浅配色及首屏背景。账号和模型引导词典说明真实提供方与配置选择。
 
 包标识、应用 ID、协议、数据目录、API 字段及 Session 持久化保持不变。保留许可证与真实提供方名称。Frontend 在打包前更新固定 Harness 版本并准备资源；单独修改源码不会更新已安装应用。
 

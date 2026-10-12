@@ -68,10 +68,10 @@
     "safeScreenshot": "/private/tmp/system3-3127-native-safe.png"
   },
   "installation": {
-    "app": "~/Applications/xDAN System3.app",
-    "launcher": "~/.local/bin/xdan-system3",
-    "clickLauncher": "~/Applications/启动 xDAN System3.command",
-    "credentialFile": "~/.config/xdan-system3/runtime.env",
+    "app": "[private deployment path archived]",
+    "launcher": "[private deployment path archived]",
+    "clickLauncher": "[private deployment path archived]",
+    "credentialFile": "[private deployment path archived]",
     "credentialFileMode": "0600",
     "credentialsEmbeddedInApp": false,
     "installedReadyMs": 1951,
@@ -80,5 +80,6 @@
     "sameSessionRestoredAfterRestart": true,
     "appAsarSha256": "c23a704f03e924dab221229cb8abfcc98e952c0e717d8a1f324aa224e1749743"
   },
-  "frontendImplementationRevision": "d37959f4d482bde76b4290c44e2a3223d51cbafc"
+  "frontendImplementationRevision": "d37959f4d482bde76b4290c44e2a3223d51cbafc",
+  "publicationNote": "Historical recorded outcomes are unchanged. Operator host, installation, credential and Session-log paths are redacted; originals are privately archived with SHA-256. Legacy service identifiers are compatibility metadata, not current product branding. This is not a new acceptance run."
 }

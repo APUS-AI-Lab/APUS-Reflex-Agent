@@ -60,5 +60,6 @@
     "desktop package not installed, launched or integration-tested",
     "detailed design page has dark theme only",
     "local general 9B/27B Lead unverified"
-  ]
+  ],
+  "publicationNote": "Historical repository identity and verification results are preserved; current product and repository entry points are documented in the root README. This cleanup does not rerun the recorded checks."
 }

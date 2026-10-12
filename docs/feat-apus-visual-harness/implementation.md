@@ -4,7 +4,7 @@ English | [中文](implementation.zh.md)
 
 ## Artwork
 
-The supplied `apps/web/public/brand-logo.webp` is the single artwork input. Run `pnpm exec tsx apps/desktop/scripts/generate-brand-assets.ts` after changing it. The generated `BRAND_LOGO_DATA_URI` supplies `FishLogo`, `BrandWordmark`, and composed SVG consumers without a network image request. SVG wrappers embed PNG pixels for native renderer compatibility. The original image remains 140 × 140; resizing does not add detail.
+The supplied `apps/web/public/brand-source.webp` is the single artwork input. Run `pnpm exec tsx apps/desktop/scripts/generate-brand-assets.ts` after changing it. The generated `BRAND_IMAGE_DATA_URL` supplies `FishLogo`, `BrandWordmark`, and composed SVG consumers without a network image request. SVG wrappers embed PNG pixels for native renderer compatibility. The original image remains 140 × 140; resizing does not add detail.
 
 ## Theme
 
@@ -16,4 +16,4 @@ Model as Harness remains the product positioning. Credit copy identifies the con
 
 ## Verification records
 
-[Contrast measurements](contrast.json) record sixteen foreground/background checks. Test commands, limitations, file inventory, and the current integration status live in the [worktree handoff](../../tasks/feat-apus-visual-harness/handoff.md). Package and browser checks do not establish that the user’s installed application has been replaced.
+[Contrast measurements](contrast.json) record sixteen foreground/background checks. Artwork tests compare decoded source pixels and generated wrappers; shared theme tests check semantic surface relationships. Package and browser checks do not establish that the user’s installed application has been replaced.

@@ -26,6 +26,7 @@ export async function createInstalledUpdateBuilderConfig(manifest: string, versi
     DSH_DESKTOP_TARGET_PLATFORM: 'win32', DSH_DESKTOP_TARGET_ARCH: 'x64', DSH_DESKTOP_UNSIGNED: '0' }, 'win32', 'x64', dsh, version)
   return { ...config,
     productName: run.productName,
+    win: { ...config.win, executableName: run.productName },
     directories: { ...config.directories, output: join(run.root, version, 'installer') },
     extraMetadata: { ...config.extraMetadata, name: `dsh-update-test-${run.id}`, version, main: 'qualification-bootstrap.mjs' },
     files: [

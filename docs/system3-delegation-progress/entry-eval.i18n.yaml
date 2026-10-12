@@ -3,8 +3,8 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/system3-delegation-progress/entry-eval.md
 /system3-entry-routing-evaluation-2026-10-02:
-  en: 0aa9dfb1db1139a7
-  zh: c19ef8f7e0384ab1
+  en: 335184a29bd2fb1e
+  zh: 5e6b758f8730b4b2
 /system3-entry-routing-evaluation-2026-10-02/setup:
   en: e9f5011fbfd5892d
   zh: 7acbae621da7ca8c

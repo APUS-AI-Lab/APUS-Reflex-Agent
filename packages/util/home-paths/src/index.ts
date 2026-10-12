@@ -1,5 +1,5 @@
 /**
- * Shared filesystem path helpers for DeepSeek Harness user data.
+ * Shared filesystem path helpers for APUS Reflex Harness user data.
  *
  * @module @deepseek-ai/dsh-home-paths
  */
@@ -8,13 +8,13 @@ import { opendir, realpath } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { basename, dirname, join, resolve } from 'node:path'
 
-/** Directory name for the default DeepSeek Harness home under the OS home. */
+/** Directory name for the default APUS Reflex Harness home under the OS home. */
 export const DSH_HOME_DIR_NAME = '.dsh'
 
-/** Stable user-facing display form for the default DeepSeek Harness home. */
+/** Stable user-facing display form for the default APUS Reflex Harness home. */
 export const DEFAULT_DSH_HOME_DISPLAY = `~/${DSH_HOME_DIR_NAME}`
 
-/** Environment variable that overrides the default DeepSeek Harness home. */
+/** Environment variable that overrides the default APUS Reflex Harness home. */
 export const DSH_HOME_ENV = 'DSH_HOME'
 
 /**
@@ -55,7 +55,7 @@ export async function canonicalizeWatchPath(path: string): Promise<string> {
 }
 
 /**
- * Resolve the default DeepSeek Harness home using Node's platform path rules.
+ * Resolve the default APUS Reflex Harness home using Node's platform path rules.
  * @returns the absolute default harness home path.
  */
 export function defaultDshHome(): string {
@@ -74,7 +74,7 @@ export function expandHomePath(path: string): string {
 }
 
 /**
- * Resolve the single-root DeepSeek Harness home.
+ * Resolve the single-root APUS Reflex Harness home.
  *
  * Precedence, highest first: an explicit configured path, `$DSH_HOME`, then
  * `~/.dsh`. The harness keeps all user data under one root. An empty or
@@ -91,7 +91,7 @@ export function resolveDshHome(configured?: string, env: Record<string, string |
 }
 
 /**
- * Join path segments onto the resolved DeepSeek Harness home.
+ * Join path segments onto the resolved APUS Reflex Harness home.
  * @param segments - path segments appended to the Harness home; an empty list returns the home itself.
  * @returns the normalized absolute joined path.
  */

@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="apus-readme-architecture-title apus-readme-architecture-desc">
+<title id="apus-readme-architecture-title">APUS Reflex Harness 技术架构</title>
+<desc id="apus-readme-architecture-desc">System3通过Session入口与AgentLoop原生扩展点请求Jev有界判断并按规则采纳，推理模型负责规划生成和工具调用，APUS 运行时执行工具与子Agent并持久化会话事实，界面从会话投影显示决策与进度。</desc>
+<defs>
+<style>
+text{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;fill:#153f36}.heading{font-family:Georgia,"Songti SC",serif;font-size:28px;font-weight:400}.name{font-size:16px;font-weight:600}.body{font-size:12px;fill:#52665d}.tech{font-family:"SFMono-Regular",Consolas,monospace;font-size:12px;fill:#52665d}.tag{font-family:"SFMono-Regular",Consolas,monospace;font-size:8px;letter-spacing:1.5px;fill:#52665d}.edge-label{font-size:12px;fill:#52665d}.node{fill:#fffdf9;stroke:#527263;stroke-width:1.2}.focal{fill:#fcf0e9;stroke:#ad502f;stroke-width:1.5}.external{fill:#eeeee7;stroke:#9aaa9d;stroke-width:1}.store{fill:#eaf0e9;stroke:#527263;stroke-width:1.2}.wire{fill:none;stroke:#5c7567;stroke-width:1.5;marker-end:url(#arrow)}.call{stroke:#326c88;marker-end:url(#arrow-link)}.return{stroke-dasharray:5 4}.mask{fill:#f7f5ef}.legend{font-size:12px;fill:#52665d}
+</style>
+<marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#5c7567"/></marker>
+<marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#ad502f"/></marker>
+<marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#326c88"/></marker>
+</defs>
+<rect width="1280" height="720" fill="#f7f5ef"/>
+<text x="48" y="40" class="tag">APUS / REFLEX · TECHNICAL ARCHITECTURE</text>
+<text x="48" y="84" class="heading">APUS Reflex Harness</text>
+<text x="1232" y="82" text-anchor="end" class="name">瞬时执行，深度思考</text>
+<text x="48" y="116" class="name">Model-as-a-Harness：Jev 有界判断与推理模型，经 APUS 原生机制协作</text>
+
+<rect x="48" y="144" width="800" height="480" rx="8" fill="#153f36" fill-opacity="0.02" stroke="#ccd7cc"/>
+<rect x="912" y="144" width="320" height="480" rx="8" fill="#153f36" fill-opacity="0.02" stroke="#ccd7cc"/>
+<text x="64" y="164" class="tag">APUS RUNTIME · NATIVE EXTENSION POINTS</text>
+<text x="928" y="164" class="tag">MODEL / EXTERNAL AGENT PROVIDERS</text>
+
+<g id="connectors">
+<path id="client-api" class="wire" d="M168 256 V336"/>
+<path id="api-loop" class="wire" d="M272 416 H352"/>
+<path id="api-strategy" class="wire" d="M272 360 H296 Q304 360 304 352 V264 Q304 256 312 256 H352"/>
+<path id="strategy-jev" class="wire call" d="M832 232 H928"/>
+<path id="jev-strategy" class="wire call return" d="M928 280 H832"/>
+<path id="loop-hooks" class="wire" d="M416 392 V320"/>
+<path id="strategy-adopt" class="wire" d="M736 320 V392"/>
+<path id="loop-model" class="wire call" d="M832 432 H928"/>
+<path id="loop-capabilities" class="wire" d="M592 472 V536"/>
+<path id="capabilities-agent" class="wire call" d="M832 572 H928"/>
+<path id="session-record" class="wire" d="M352 448 H328 Q320 448 320 456 V564 Q320 572 312 572 H272"/>
+<path id="restore-ui" class="wire return" d="M64 568 H48 Q40 568 40 560 V224 Q40 216 48 216 H64"/>
+</g>
+
+<g id="connector-labels">
+<rect class="mask" x="88" y="284" width="72" height="20" rx="2"/><text x="92" y="299" class="edge-label">输入 / 补充</text>
+<rect class="mask" x="276" y="384" width="64" height="20" rx="2"/><text x="308" y="399" class="edge-label" text-anchor="middle">原生准入</text>
+<rect class="mask" x="232" y="276" width="64" height="40" rx="2"/><text x="264" y="291" class="edge-label" text-anchor="middle">选路请求</text><text x="264" y="307" class="edge-label" text-anchor="middle">返回建议</text>
+<rect class="mask" x="844" y="204" width="72" height="20" rx="2"/><text x="880" y="219" class="edge-label" text-anchor="middle">决策请求</text>
+<rect class="mask" x="844" y="252" width="72" height="20" rx="2"/><text x="880" y="267" class="edge-label" text-anchor="middle">判断 / 弃权</text>
+<rect class="mask" x="424" y="344" width="120" height="20" rx="2"/><text x="428" y="359" class="edge-label">步骤 / 工具 / Goal</text>
+<rect class="mask" x="560" y="344" width="168" height="20" rx="2"/><text x="644" y="359" class="edge-label" text-anchor="middle">指令 / 上下文 / 工具决议</text>
+<rect class="mask" x="836" y="404" width="88" height="20" rx="2"/><text x="880" y="419" class="tech" text-anchor="middle">llm/stream</text>
+<rect class="mask" x="600" y="496" width="96" height="20" rx="2"/><text x="604" y="511" class="edge-label">调用 / 结果结算</text>
+<rect class="mask" x="844" y="544" width="72" height="20" rx="2"/><text x="880" y="559" class="edge-label" text-anchor="middle">执行 / steer</text>
+<rect class="mask" x="248" y="476" width="64" height="40" rx="2"/><text x="280" y="491" class="edge-label" text-anchor="middle">决策记录</text><text x="280" y="507" class="edge-label" text-anchor="middle">执行事实</text>
+</g>
+
+<g class="component" id="client">
+<rect x="64" y="184" width="208" height="72" rx="8" class="node"/>
+<text x="80" y="204" class="tag">CLIENT</text><text x="80" y="228" class="name">Web / Desktop</text><text x="80" y="246" class="body">对话、建议、采用与进度</text>
+</g>
+<g class="component" id="api">
+<rect x="64" y="336" width="208" height="104" rx="8" class="node"/>
+<text x="80" y="356" class="tag">SESSION CONTROLLER</text><text x="80" y="384" class="name">Session API</text><text x="80" y="408" class="body">入口准入 · 采纳模型建议</text><text x="80" y="428" class="body">队列与运行中输入</text>
+</g>
+<g class="component" id="system3">
+<rect x="352" y="184" width="480" height="136" rx="8" class="focal"/>
+<text x="368" y="204" class="tag">SYSTEM3 · NATIVE PLUGIN</text><text x="368" y="232" class="name">System3 决策与过程管理</text>
+<text x="368" y="256" class="body">入口选路 · Skill 选择 · 任务卡 / 插话 · 建议委派</text>
+<text x="368" y="280" class="body">规则监督 · 重复日志折叠 · 完成核验*</text>
+<text x="368" y="304" class="tech">privacy checks · bounded input · fallback · events</text>
+</g>
+<g class="component" id="agentloop">
+<rect x="352" y="392" width="480" height="80" rx="8" class="node"/>
+<text x="368" y="412" class="tag">EXECUTION OWNER</text><text x="368" y="436" class="name">AgentLoop × N</text><text x="368" y="456" class="body">原生步骤 · 工具结算 · 回合生命周期 · 取消</text>
+</g>
+<g class="component" id="capabilities">
+<rect x="352" y="536" width="480" height="72" rx="8" class="node"/>
+<text x="368" y="556" class="tag">NATIVE CAPABILITIES</text><text x="368" y="580" class="name">Tools · Skills · Subagents</text><text x="368" y="598" class="body">Shell / Files / MCP · Skill 注入 · 原生与外部委派</text>
+</g>
+<g class="component" id="session">
+<rect x="64" y="536" width="208" height="72" rx="8" class="store"/>
+<text x="80" y="556" class="tag">DURABLE STATE</text><text x="80" y="580" class="name">Session 日志与投影</text><text x="80" y="598" class="body">恢复 / 回放 · 展示实际状态</text>
+</g>
+<g class="component" id="jev">
+<rect x="928" y="184" width="288" height="136" rx="8" class="focal"/>
+<text x="944" y="204" class="tag">SYSTEM 1 · JEV PROVIDER</text><text x="944" y="232" class="name">Jev 即时决策模型</text><text x="944" y="256" class="tech">choice / score / noul</text><text x="944" y="280" class="body">有界判断与评分 · 允许弃权</text><text x="944" y="304" class="body">经配置的 Jev SDK 供给路径调用</text>
+</g>
+<g class="component" id="reasoning">
+<rect x="928" y="392" width="288" height="80" rx="8" class="external"/>
+<text x="944" y="412" class="tag">SYSTEM 2 · LLM PROVIDERS</text><text x="944" y="436" class="name">推理与生成模型</text><text x="944" y="456" class="body">规划 · 生成 · 提出工具调用</text>
+</g>
+<g class="component" id="external-agent">
+<rect x="928" y="536" width="288" height="72" rx="8" class="external"/>
+<text x="944" y="556" class="tag">SUBAGENT PROVIDER</text><text x="944" y="580" class="name">外部工程 Agent · Codex</text><text x="944" y="598" class="body">独立执行 · 活动上报 · 支持运行中输入</text>
+</g>
+
+<line x1="48" y1="644" x2="1232" y2="644" stroke="#cdd8cd"/>
+<rect x="48" y="660" width="16" height="12" rx="2" fill="#fcf0e9" stroke="#ad502f"/><text x="72" y="671" class="legend">APUS 决策能力</text>
+<path d="M220 666 H252" fill="none" stroke="#5c7567" stroke-width="1.5"/><text x="260" y="671" class="legend">调用 / 采纳</text>
+<path d="M380 666 H412" fill="none" stroke="#5c7567" stroke-width="1.5" stroke-dasharray="5 4"/><text x="420" y="671" class="legend">结果返回 / 恢复投影</text>
+<text x="660" y="671" class="legend">* 完成核验：模板为 shadow，active 为可选模式</text>
+<text x="48" y="699" class="legend">演进范围：Tools · Skills · Memory · Context · Subagents；Jev 驱动的长期记忆与语义压缩等仍待接入。</text>
+</svg>

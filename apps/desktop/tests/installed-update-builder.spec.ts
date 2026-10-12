@@ -90,6 +90,8 @@ describe('installed-update application inputs and builder configuration', () => 
         const dsh = join(manifest, '..', versions[index]!, 'dsh')
         expect(config.files[2]).toMatchObject({ from: dsh, to: 'dsh' })
         expect(config.files[3]).toMatchObject({ from: join(dsh, 'node_modules'), to: 'dsh/node_modules' })
+        expect(config.win.executableName).toBe(config.productName)
+        expect(config.win.executableName).not.toBe('APUS Reflex Harness')
         expect(config.win.forceCodeSigning).toBe(true)
         expect(config.win.signtoolOptions.publisherName).toBe('CN=Fixture,O=Fixture,C=CN')
         expect(typeof config.win.signtoolOptions.sign).toBe('function')

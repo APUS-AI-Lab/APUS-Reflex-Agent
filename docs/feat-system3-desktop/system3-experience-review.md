@@ -111,4 +111,4 @@ Jev's value comes from a few correct choices cumulatively reducing rework rather
 
 ## Dev Note
 
-This page is an unimplemented interaction proposal. Refine components, interface fields, performance, and experience-test criteria before implementation. Product-code Human Gate has not passed. See the [current handoff](../../tasks/feat-system3-desktop/handoff.md) for verification records.
+This page is an unimplemented interaction proposal. Refine components, interface fields, performance, and experience-test criteria before implementation. Product-code Human Gate has not passed. Internal handoffs are archived privately; see the [release-readiness review](../dev-continuum-reflex-integration/release-readiness.md) for public acceptance scope.

@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-ptc-runtime-node",
-  "description": "Sandboxed Node process implementation of the DeepSeek Harness PTC execution capability",
+  "description": "Sandboxed Node process implementation of the APUS Reflex Harness PTC execution capability",
   "version": "0.1.7-rc.2",
   "publishConfig": {
     "access": "public"

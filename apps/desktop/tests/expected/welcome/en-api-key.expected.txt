@@ -1,5 +1,5 @@
-APUS Reflex Harness
-APUS Reflex Harness
+APUS Reflex
+APUS Reflex
 Add an API key to get started
 Connect your DeepSeek API Key. You can configure other providers in Models after setup.
 Enter API key [password]

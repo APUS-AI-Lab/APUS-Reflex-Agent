@@ -34,6 +34,10 @@ it.each([false, true])('saves through ConfigForms and BFF with a read-only key; 
   writeFileSync(join(providerBundle, 'package.json'), readFileSync(new URL('../../apus-dsh-jev-plugin/package.json', import.meta.url)))
   writeFileSync(join(providerBundle, 'cordis.patch.yml'), readFileSync(new URL('../../apus-dsh-jev-plugin/cordis.patch.yml', import.meta.url), 'utf8').replace('name: ./lib/index.js', 'name: cordis:jev'))
   writeFileSync(join(dir, 'cordis.yml'), '[]\n')
+  // The shipped provider stays disabled until the profile supplies a connection.
+  writeFileSync(join(dir, 'cordis.patch.yml'), JSON.stringify([{ id: 'jev', config: {
+    endpoint: 'https://reflex.test', model: 'fixture', effort: 'high', apiKeyEnv: 'JEV_API_KEY',
+  } }]))
   const profile: ProfileContext = { name: 'test', startedBundles: ['test-bundle'], dir, patchPath: join(dir, 'cordis.patch.yml'),
     installAnchor: join(home, 'package.json'), cwd: home, home, overlays: locked ? [{ id: 'jev', config: { endpoint: 'https://reflex.test', model: 'fixture', effort: 'high', apiKeyEnv: 'JEV_API_KEY' } }] : [], telemetryDisabledEnv: undefined }
   const start = async (): Promise<Context> => {
@@ -60,6 +64,7 @@ it.each([false, true])('saves through ConfigForms and BFF with a read-only key; 
         catch (error) { failures.push(error instanceof Error ? error.message : String(error)); return { ok: false, error } }
       },
     },
+    reflex: { readStatus: async () => ({ ok: true, value: host.jev.readStatus() }) },
     credentials: { describe: async () => ({ ok: true, value: { JEV_API_KEY: { configured: true, writable: false } } }),
       set: credentialWrite },
   })
@@ -70,20 +75,40 @@ it.each([false, true])('saves through ConfigForms and BFF with a read-only key; 
   onTestFinished(async () => { card.dispose(); await scope.dispose() })
   await mirror.load()
   expect(scope.getSnapshot().status).toBe('ready')
+  if (!locked) {
+    await face.refresh()
+    expect(face.hooks.reflexCard.getSnapshot().runtime?.provider).toBeNull()
+    expect(face.hooks.reflexCard.getSnapshot().endpoint.text).toBe('')
+    expect(face.hooks.reflexCard.getSnapshot().model.text).toBe('')
+    face.edit('endpoint', 'https://reflex.test')
+    face.edit('model', 'fixture')
+  }
   face.edit('effort', 'low')
   face.save()
   await vi.waitFor(() => { expect(face.hooks.reflexCard.getSnapshot().saving).toBe(false) })
   expect(credentialWrite).not.toHaveBeenCalled()
-  expect(face.hooks.reflexCard.getSnapshot().failed).toBe(locked)
+  expect(face.hooks.reflexCard.getSnapshot().failed, JSON.stringify(failures)).toBe(locked)
   expect(host.jev.resolve({ state: null, questions: { q: { type: 'noul' } } }).effort).toBe(locked ? 'high' : 'low')
   if (locked) expect(failures).toEqual([expect.stringContaining('overridden by a home patch or command-line overlay')])
   else {
+    await vi.waitFor(() => { expect(face.hooks.reflexCard.getSnapshot().runtime?.provider?.model).toBe('fixture') })
     expect(readFileSync(profile.patchPath, 'utf8')).toContain('low')
     await mirror.load()
     expect(scope.getSnapshot().value?.effort).toBe('low')
     await scope.mutate([{ op: 'set', path: ['endpoint'], value: 'https://original.test' },
       { op: 'set', path: ['model'], value: 'original-model' }], scope.getSnapshot().revision)
     const original = scope.getSnapshot().value
+    const beforeReuse = readFileSync(profile.patchPath, 'utf8')
+    const originalWrites = credentialWrite.mock.calls.length
+    face.edit('endpoint', 'https://must-not-receive-old-key.test')
+    face.edit('apiKeyEnv', 'JEV_API_KEY')
+    face.edit('apiKey', 'replacement-secret')
+    face.save()
+    await vi.waitFor(() => { expect(face.hooks.reflexCard.getSnapshot().credentialSaveError).toBe('configured') })
+    expect(readFileSync(profile.patchPath, 'utf8')).toBe(beforeReuse)
+    expect(credentialWrite.mock.calls.length).toBe(originalWrites)
+    expect(host.jev.resolve({ state: null, questions: { q: { type: 'noul' } } }).model).toBe('original-model')
+    face.discard()
     for (const failure of ['refused', 'thrown'] as const) {
       if (failure === 'thrown') credentialWrite.mockRejectedValueOnce(new Error('credential store unavailable'))
       face.edit('endpoint', 'https://replacement.test')

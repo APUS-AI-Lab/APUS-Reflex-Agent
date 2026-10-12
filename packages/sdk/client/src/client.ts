@@ -1,5 +1,5 @@
 /**
- * Low-level JSON-RPC client for a DeepSeek Harness SDK runtime subprocess.
+ * Low-level JSON-RPC client for a APUS Reflex Harness SDK runtime subprocess.
  * {@link HarnessClient} owns the child process: it spawns the runtime, speaks
  * the `@deepseek-ai/dsh-sdk-protocol` wire over the child's stdio, fans
  * server notifications out to subscriptions, and tears the child down to
@@ -174,7 +174,7 @@ class NotificationSubscriptionImpl implements NotificationSubscription {
 }
 
 /**
- * JSON-RPC client for the DeepSeek Harness SDK runtime over subprocess stdio.
+ * JSON-RPC client for the APUS Reflex Harness SDK runtime over subprocess stdio.
  *
  * The subprocess starts lazily on {@link start} and is owned by this instance
  * until {@link close}, which requests protocol `shutdown` and then walks the
@@ -209,7 +209,7 @@ export class HarnessClient {
    * the process is live; rejects reuse after {@link close}.
    */
   start(): void {
-    if (this.closeTask !== undefined) throw new TransportClosedError('DeepSeek Harness runtime client is closed')
+    if (this.closeTask !== undefined) throw new TransportClosedError('APUS Reflex Harness runtime client is closed')
     if (this.child !== undefined) return
     const child = spawn(this.runtime.command, this.runtime.args, {
       cwd: this.runtime.cwd,
@@ -222,7 +222,7 @@ export class HarnessClient {
       // A spawn failure destroys the pipes without an input 'end' edge, so the
       // transport's pending requests must be failed here.
       this.transport?.close()
-      this.failSubscriptions(this.closedError('DeepSeek Harness runtime failed to start'))
+      this.failSubscriptions(this.closedError('APUS Reflex Harness runtime failed to start'))
     })
     // Writes racing the runtime's death EPIPE on stdin; the exit edge below is
     // the real signal, so the stream-level error only needs to be non-fatal.
@@ -254,7 +254,7 @@ export class HarnessClient {
       this.exitCode = code
       settled.exited = true
       maybeSettle()
-      this.failSubscriptions(this.closedError('DeepSeek Harness runtime exited'))
+      this.failSubscriptions(this.closedError('APUS Reflex Harness runtime exited'))
     })
     child.once('close', () => {
       // All stdio has settled: stdout 'end' already drained every tail frame,
@@ -312,11 +312,11 @@ export class HarnessClient {
     // writing into a destroyed pipe and hanging until the timeout.
     if (this.exitCode !== undefined || this.spawnError !== undefined) {
       await this.settleStreams()
-      throw this.closedError('DeepSeek Harness runtime is not running')
+      throw this.closedError('APUS Reflex Harness runtime is not running')
     }
     const transport = this.transport
     /* v8 ignore next -- start() either sets the transport or throws */
-    if (transport === undefined) throw new TransportClosedError('DeepSeek Harness runtime is not running')
+    if (transport === undefined) throw new TransportClosedError('APUS Reflex Harness runtime is not running')
     const timeout = timeoutMs ?? this.runtime.requestTimeoutMs
     try {
       if (timeout === undefined) return await transport.request(method, params ?? {})
@@ -353,7 +353,7 @@ export class HarnessClient {
     const state: SubscriptionState = { queue: [], waiters: [], filter, failure: undefined }
     const subscription = new NotificationSubscriptionImpl(state, () => { this.subscriptions.delete(id) })
     if (this.closeTask !== undefined || this.exitCode !== undefined || this.spawnError !== undefined) {
-      subscription.fail(this.closedError('DeepSeek Harness runtime closed'))
+      subscription.fail(this.closedError('APUS Reflex Harness runtime closed'))
       return subscription
     }
     this.subscriptions.set(id, subscription)
@@ -406,7 +406,7 @@ export class HarnessClient {
       disposeGraceMs: this.runtime.disposeGraceMs ?? 3_000,
     })
     this.transport?.close()
-    this.failSubscriptions(this.closedError('DeepSeek Harness runtime closed'))
+    this.failSubscriptions(this.closedError('APUS Reflex Harness runtime closed'))
   }
 
   private dispatchNotification(notification: HarnessNotification): void {

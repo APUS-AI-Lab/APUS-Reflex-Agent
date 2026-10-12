@@ -1,5 +1,5 @@
 ---
-description: "AG-UI over HTTP: stream DeepSeek Harness turns, threads, approvals and questions to an external client."
+description: "AG-UI over HTTP: stream APUS Reflex Harness turns, threads, approvals and questions to an external client."
 kind: "package-reference"
 ---
 
@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-`dsh-experimental-agui` lets a client that speaks [AG-UI](https://docs.ag-ui.com) — such as `HttpAgent` — drive DeepSeek Harness agents over HTTP. One `POST <basePath>/run` streams a turn as server-sent AG-UI events; a small thread API lists, creates, renames and archives persisted Sessions and replays their history; approval and question requests raised while a run is streaming become `CUSTOM` events the client answers through matching routes. A thread id is the Session id, so the durable Session log stays the only source of truth.
+`dsh-experimental-agui` lets a client that speaks [AG-UI](https://docs.ag-ui.com) — such as `HttpAgent` — drive APUS Reflex Harness agents over HTTP. One `POST <basePath>/run` streams a turn as server-sent AG-UI events; a small thread API lists, creates, renames and archives persisted Sessions and replays their history; approval and question requests raised while a run is streaming become `CUSTOM` events the client answers through matching routes. A thread id is the Session id, so the durable Session log stays the only source of truth.
 
 ## Table of Contents
 
@@ -61,7 +61,7 @@ Events emitted during a run: `RUN_STARTED`, `TEXT_MESSAGE_*`, `REASONING_MESSAGE
 | `refreshMcpServers` | MCP `serverName`s whose tools are re-listed before each run, for servers that cannot announce tool changes. Default `[]`. |
 | `mcpRefreshTimeoutMs` | Longest a run waits for that re-list; after it, or on a failure, the run starts with the cached tools. Default 3000. |
 
-A run may carry `forwardedProps.persona` `{ name, tone, hidden? }`; the default is System3 with the `concise` tone. The persona replaces the harness identity and Web-only prompt sections. At every step, `persona:capabilities` lists only mounted general-purpose tool groups (`web`, `search`, `files`, `terminal`, `experts`) not in `hidden`. Unclassified tools remain callable and are described by their tool schemas; the bridge neither infers business capabilities from MCP server names nor requires product-specific settings or pages.
+A run may carry `forwardedProps.persona` `{ name, tone, hidden? }`; the default is APUS Reflex Harness with the `concise` tone. The persona replaces the harness identity and Web-only prompt sections. At every step, `persona:capabilities` lists only mounted general-purpose tool groups (`web`, `search`, `files`, `terminal`, `experts`) not in `hidden`. Unclassified tools remain callable and are described by their tool schemas; the bridge neither infers business capabilities from MCP server names nor requires product-specific settings or pages.
 
 Custom profile plugins can reuse `installPersona(agent.ctx, { persona })` to install the same agent-scoped prompt sections.
 

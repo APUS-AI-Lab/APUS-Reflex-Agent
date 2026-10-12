@@ -173,7 +173,7 @@ describe('AG-UI bridge', () => {
     expect(systemOf(1)).toContain('- 上网搜索最新信息')
     // A thread without a persona uses the independent default identity.
     await harness.run('thread-default', 'hello', 'p3')
-    expect(systemOf(2)).toContain('You are System3')
+    expect(systemOf(2)).toContain('You are APUS Reflex Harness')
     expect(personaFrom({ name: ' ', tone: 'warm' })).toBeUndefined()
     expect(personaFrom({ name: 'X', tone: 'loud' })).toBeUndefined()
   })

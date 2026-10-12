@@ -207,5 +207,34 @@ it.each([undefined, false, true])('constructs the pooled service with HTTP/2 sel
   const ctx = new Context()
   new Jev(ctx, { endpoint: { get: () => 'http://localhost' }, model: { get: () => 'fixture' }, effort: { get: () => 'low' },
     protocol: { get: () => 'openjev' }, timeoutMs: { get: () => 1000 }, apiKeyEnv: { get: () => undefined }, keepAliveMs: 1000, ...http2 === undefined ? {} : { http2 } })
-  try { expect(ctx.jev.readStatus().provider.model).toBe('fixture') } finally { await ctx.fiber.dispose() }
+  try { expect(ctx.jev.readStatus().provider?.model).toBe('fixture') } finally { await ctx.fiber.dispose() }
+})
+
+it('allows an explicit unsaved probe before first configuration without enabling decisions', async () => {
+  const ctx = new Context()
+  const fetcher = vi.fn(async (url: string) => {
+    if (url.endsWith('/health')) return new Response('{}')
+    if (url.endsWith('/models')) return Response.json({ data: [{ id: 'candidate' }] })
+    return Response.json({ model: 'candidate', answers: { connection: { type: 'noul', noul: 1 } } })
+  })
+  vi.stubGlobal('fetch', fetcher)
+  try {
+    const plugin = await ctx.plugin(Jev, {})
+    expect(ctx.jev.readStatus().provider).toBeNull()
+    expect(ctx.jev.listProviders()).toEqual([])
+    await expect(ctx.jev.decide({ model: 'override', state: null, questions: { q: { type: 'noul' } } })).rejects.toThrow('Jev is not configured')
+    expect(await ctx.jev.warm()).toBe(false)
+    expect(fetcher).not.toHaveBeenCalled()
+    expect(await ctx.jev.testConnection({ endpoint: 'https://candidate.test', model: 'candidate',
+      protocol: 'openjev', effort: 'low', timeoutMs: 1000 }, new AbortController().signal)).toMatchObject({ kind: 'ok' })
+    expect(fetcher).toHaveBeenCalledTimes(3)
+    expect(ctx.jev.readStatus().provider).toBeNull()
+    const dispose = ctx.jev.register({ info: { id: 'alternate', model: 'fixture', endpoint: 'https://alternate.test' },
+      decide: async () => ({ model: 'fixture', answers: { q: { type: 'noul', noul: 1 } } }) })
+    expect((await ctx.jev.decide({ providerId: 'alternate', state: null, questions: { q: { type: 'noul' } } })).kind).toBe('ok')
+    dispose()
+    expect(ctx.jev.listProviders()).toEqual([])
+    await plugin.dispose()
+    expect(ctx.get('jev')).toBeUndefined()
+  } finally { await ctx.fiber.dispose(); vi.unstubAllGlobals() }
 })

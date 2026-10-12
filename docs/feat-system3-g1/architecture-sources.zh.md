@@ -31,7 +31,7 @@
 
 运行实现为 `system3-g1-reviewed-rc2`，冻结验收为 `system3-g1-acceptance-rc2`。[Desktop 验收](desktop-acceptance.json) 与 [服务器验收](deployment-final.json) 拥有精确源码、前端 pin、任务、注入 ID、产物及恢复事实。本次只读取源码和既有证据，不调用模型或重新部署。
 
-Frontend 的实际入口是自己的 Electron 壳与自有 Harness：首选回环端口 43129，占用时可选临时端口；服务器是另一个独立 Harness，回环端口 18731 经 SSH tunnel 访问。两者各自拥有 Session、工作区、凭据和执行状态，未验收自动同步。相关实现见私有 Frontend 的 [runtime](https://github.com/cryptoSUN2049/xDAN-System3-Frontend/blob/feat-system3-integration/src/main/runtime/harness-runtime.ts) 和 [打包指南](https://github.com/cryptoSUN2049/xDAN-System3-Frontend/blob/feat-system3-integration/docs/feat-system3-integration/desktop-packaging.md)。
+Frontend 的实际入口是自己的 Electron 壳与自有 Harness：首选回环端口 43129，占用时可选临时端口；服务器是另一个独立 Harness，回环端口 18731 经 SSH tunnel 访问。两者各自拥有 Session、工作区、凭据和执行状态，未验收自动同步。相关实现见私有 Frontend 的 [runtime](https://github.com/APUS-AI-Lab/APUS-Reflex-Frontend/blob/feat-system3-integration/src/main/runtime/harness-runtime.ts) 和 [打包指南](https://github.com/APUS-AI-Lab/APUS-Reflex-Frontend/blob/feat-system3-integration/docs/feat-system3-integration/desktop-packaging.md)。
 
 ## 覆盖旧状态，保留目标原则
 

@@ -3,7 +3,7 @@
   "runtimeVersion": "0.1.7-rc.2",
   "nodeVersion": "v24.21.0",
   "build": "git archive fixed commit; Linux frozen lockfile/native/Host/Client build passed; 345 client artifacts",
-  "current": "/opt/xdan-system3/releases/g1-stable-3127b62",
+  "current": "[private deployment path archived]",
   "previous": null,
   "sameRevisionPredecessor": true,
   "service": {
@@ -19,14 +19,14 @@
     "anonymousApi": 401,
     "foreignOrigin": 403,
     "foreignHost": 403,
-    "privateLaunchUrlPath": "~/.config/xdan-system3/launch-url",
+    "privateLaunchUrlPath": "[private deployment path archived]",
     "privateLaunchUrlMode": "0600"
   },
   "releaseFixtures": {
     "passed": 8,
     "log": "/private/tmp/system3-release-fixtures-final.log"
   },
-  "releaseLog": "/opt/xdan-system3/release-3127b62.log",
+  "releaseLog": "[private deployment path archived]",
   "diskAvailableAfterDualRelease": "7.7G",
   "obsolete571Activated": false,
   "obsolete571ControllerTerminated": true,
@@ -37,12 +37,12 @@
     "before": {
       "pid": "4122896",
       "artifactSha256": "cbe3d84eaa680f317bc8e4041197996bfde17cfd018829dd64ab31345efe1b8b",
-      "release": "/opt/xdan-system3/releases/g1-verify-3127b62"
+      "release": "[private deployment path archived]"
     },
     "after": {
       "pid": "4144625",
       "artifactSha256": "cbe3d84eaa680f317bc8e4041197996bfde17cfd018829dd64ab31345efe1b8b",
-      "release": "/opt/xdan-system3/releases/g1-verify-3127b62",
+      "release": "[private deployment path archived]",
       "anonymousApi": 401
     },
     "artifactUnchanged": true,
@@ -51,13 +51,13 @@
   },
   "rollback": {
     "before": {
-      "release": "/opt/xdan-system3/releases/g1-verify-3127b62",
-      "previous": "/opt/xdan-system3/releases/g1-stable-3127b62",
+      "release": "[private deployment path archived]",
+      "previous": "[private deployment path archived]",
       "pid": "4144625",
       "artifactSha256": "cbe3d84eaa680f317bc8e4041197996bfde17cfd018829dd64ab31345efe1b8b"
     },
     "after": {
-      "release": "/opt/xdan-system3/releases/g1-stable-3127b62",
+      "release": "[private deployment path archived]",
       "previousConsumed": true,
       "pid": "4148582",
       "artifactSha256": "cbe3d84eaa680f317bc8e4041197996bfde17cfd018829dd64ab31345efe1b8b",
@@ -76,7 +76,7 @@
   "previousConsumed": true,
   "task": {
     "sessionId": "session-489bf890-c6c6-484b-bc79-8694190e0978",
-    "sessionPath": "/var/lib/xdan-system3/home/.dsh/sessions/--var-lib-xdan-system3-workspace--/session-489bf890-c6c6-484b-bc79-8694190e0978/session.v4.jsonl.zstd",
+    "sessionPath": "[private deployment path archived]",
     "entry": {
       "requestId": "f341c406-83c7-4314-a045-e708a2250f6e",
       "effort": "high",
@@ -165,5 +165,6 @@
   },
   "status": "passed",
   "finalPassed": true,
-  "rollBackUI": true
+  "rollBackUI": true,
+  "publicationNote": "Historical recorded outcomes are unchanged. Operator host, installation, credential and Session-log paths are redacted; originals are privately archived with SHA-256. Legacy service identifiers are compatibility metadata, not current product branding. This is not a new acceptance run."
 }

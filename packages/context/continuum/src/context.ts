@@ -68,19 +68,22 @@ export type ContinuumMemoryPrincipalOf = (agent: Agent) => ContinuumMemoryPrinci
 
 /**
  * Install same-step bounded memory context on the existing pre-step waterfall.
+ * Disposing the listener or its context prevents pending reads from injecting recall.
  * @param ctx - Cordis context that owns AgentLoop events.
  * @param storeOf - per-agent store resolver; returning undefined disables this agent.
  * @param config - retrieval and byte limits.
- * @returns disposer for the listener.
+ * @returns idempotent synchronous disposer for the listener.
  */
 export function installContinuumMemoryContext(
   ctx: Context,
   storeOf: ContinuumMemoryStoreOf,
   config: ContinuumMemoryContextConfig,
 ): () => void {
-  return ctx.on('agent/pre-step', async ({ agent, messages, signal }, next): Promise<PreStepDecision> => {
+  let active = true
+  const isActive = (): boolean => active
+  const stop = ctx.on('agent/pre-step', async ({ agent, messages, signal }, next): Promise<PreStepDecision> => {
     const decision = await next()
-    if (decision.kind === 'reject') return decision
+    if (!isActive() || decision.kind === 'reject') return decision
     const store = storeOf(agent)
     const query = latestUserText(messages)
     if (store === undefined || query === undefined) return decision
@@ -93,17 +96,23 @@ export function installContinuumMemoryContext(
     })
     return { ...decision, messages: [...decision.messages, message] }
   })
+  const dispose = ctx.effect(() => () => {
+    active = false
+    stop()
+  })
+  return () => { void dispose() }
 }
 
 /**
  * Install the lifecycle-aware consumer. The controller owns switch state,
  * authorization, and invalidation; an absent controller leaves messages intact.
+ * Disposing the listener or its context prevents pending reads from injecting recall.
  * @param ctx - Cordis context that owns AgentLoop events.
  * @param controllerOf - per-agent Continuum controller resolver.
  * @param principalOf - exact scope resolver for the current agent.
  * @param config - retrieval and byte limits.
  * @param selectorOf - Reads the optional Jev selector at request time.
- * @returns disposer for the listener.
+ * @returns idempotent synchronous disposer for the listener.
  */
 export function installContinuumMemoryControllerContext(
   ctx: Context,
@@ -112,9 +121,11 @@ export function installContinuumMemoryControllerContext(
   config: ContinuumMemoryContextConfig,
   selectorOf: () => ContinuumMemorySelector | undefined = () => undefined,
 ): () => void {
-  return ctx.on('agent/pre-step', async ({ agent, messages, signal }, next): Promise<PreStepDecision> => {
+  let active = true
+  const isActive = (): boolean => active
+  const stop = ctx.on('agent/pre-step', async ({ agent, messages, signal }, next): Promise<PreStepDecision> => {
     const decision = await next()
-    if (decision.kind === 'reject') return decision
+    if (!isActive() || decision.kind === 'reject') return decision
     const controller = controllerOf(agent)
     if (controller === undefined) return decision
     const query = latestUserText(messages)
@@ -135,7 +146,7 @@ export function installContinuumMemoryControllerContext(
         score: candidate.score,
       })),
     }, signal)
-    if (!controller.isCurrent(ticket)) return decision
+    if (!isActive() || !controller.isCurrent(ticket)) return decision
     const selected = new Set(selection.selectedIds)
     const candidates = workingSet.candidates.filter(candidate => selected.has(String(candidate.id)))
     const text = candidates.map(candidate => `[memory:${candidate.id}] ${candidate.excerpt}`).join('\n')
@@ -148,6 +159,11 @@ export function installContinuumMemoryControllerContext(
     if (filtered.candidates.length === 0) return decision
     return { ...decision, messages: [...decision.messages, recallMessage(filtered)] }
   })
+  const dispose = ctx.effect(() => () => {
+    active = false
+    stop()
+  })
+  return () => { void dispose() }
 }
 
 function recallMessage(workingSet: ReturnType<typeof retrieveMemoryWorkingSet>): UserMessage {

@@ -2,7 +2,7 @@
   "darwin:en-US": {
     "menu": [
       {
-        "label": "About APUS Reflex Harness",
+        "label": "About APUS Reflex",
         "role": "about"
       },
       {
@@ -10,18 +10,18 @@
       }
     ],
     "options": {
-      "applicationName": "APUS Reflex Harness",
+      "applicationName": "APUS Reflex",
       "applicationVersion": "1.0.0",
       "version": "",
-      "copyright": "Copyright (c) 2026 DeepSeek",
+      "copyright": "",
       "iconPath": "<app icon>",
-      "credits": "Instant action. Deep thinking.\nBuilt on DeepSeek Harness and Cordis. Thank you to their contributors and all third-party maintainers."
+      "credits": "Instant action. Deep thinking.\nCopyright and third-party credits are available under Open-source licenses in the application menu."
     }
   },
   "darwin:zh-CN": {
     "menu": [
       {
-        "label": "关于 APUS Reflex Harness",
+        "label": "关于 APUS Reflex",
         "role": "about"
       },
       {
@@ -29,48 +29,48 @@
       }
     ],
     "options": {
-      "applicationName": "APUS Reflex Harness",
+      "applicationName": "APUS Reflex",
       "applicationVersion": "1.0.0",
       "version": "",
-      "copyright": "Copyright (c) 2026 DeepSeek",
+      "copyright": "",
       "iconPath": "<app icon>",
-      "credits": "瞬策 · 瞬时执行，深度思考\n基于 DeepSeek Harness 与 Cordis，感谢上游贡献者及所有第三方维护者。"
+      "credits": "瞬策 · 瞬时执行，深度思考\n版权及第三方声明见应用菜单中的“开源许可证”。"
     }
   },
   "win32:zh-CN": {
     "menu": [
       {
-        "label": "关于 APUS Reflex Harness"
+        "label": "关于 APUS Reflex"
       },
       {
         "type": "separator"
       }
     ],
     "options": {
-      "applicationName": "APUS Reflex Harness",
+      "applicationName": "APUS Reflex",
       "applicationVersion": "1.0.0",
       "version": "",
-      "copyright": "Copyright (c) 2026 DeepSeek",
+      "copyright": "",
       "iconPath": "<app icon>",
-      "credits": "瞬策 · 瞬时执行，深度思考\n基于 DeepSeek Harness 与 Cordis，感谢上游贡献者及所有第三方维护者。"
+      "credits": "瞬策 · 瞬时执行，深度思考\n版权及第三方声明见应用菜单中的“开源许可证”。"
     }
   },
   "win32:en-US": {
     "menu": [
       {
-        "label": "About APUS Reflex Harness"
+        "label": "About APUS Reflex"
       },
       {
         "type": "separator"
       }
     ],
     "options": {
-      "applicationName": "APUS Reflex Harness",
+      "applicationName": "APUS Reflex",
       "applicationVersion": "1.0.0",
       "version": "",
-      "copyright": "Copyright (c) 2026 DeepSeek",
+      "copyright": "",
       "iconPath": "<app icon>",
-      "credits": "Instant action. Deep thinking.\nBuilt on DeepSeek Harness and Cordis. Thank you to their contributors and all third-party maintainers."
+      "credits": "Instant action. Deep thinking.\nCopyright and third-party credits are available under Open-source licenses in the application menu."
     }
   }
 }

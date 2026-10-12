@@ -124,7 +124,7 @@ a { color: var(--accent); }
 }
 </style>
 </head>
-<body>
+<body><p role="note">历史验收部署地址已脱敏；example.invalid 为不可用占位域名，不是公开服务入口。</p>
 <main>
 
 <header class="hero">
@@ -144,11 +144,11 @@ a { color: var(--accent); }
 <section>
   <div class="eyebrow">定位</div>
   <h2>即时决策融合：反射层 + 推理层</h2>
-  <p class="thesis">人碰到烫的东西会先缩手、再思考。今天的 agent 却把“该不该换个模型”“这句是不是新要求”“现在能不能插话”这些本该条件反射的判断，全部交给大模型慢慢想，或者干脆不判断。APUS Reflex 瞬策把这些判断抽出来，交给专门做即时决策的 Jev，融合进 harness 的每个关键节点。</p>
+  <p class="thesis">人碰到烫的东西会先缩手、再思考。今天的 agent 却把“该不该换个模型”“这句是不是新要求”“现在能不能插话”这些本该条件反射的判断，全部交给大模型慢慢想，或者干脆不判断。APUS Reflex Harness 瞬策把这些判断抽出来，交给专门做即时决策的 Jev，融合进 harness 的每个关键节点。</p>
   <div class="arch-wrap">
   <svg class="arch" viewBox="0 0 1120 752" role="img" aria-labelledby="product-arch-title product-arch-desc">
-    <title id="product-arch-title">APUS Reflex 瞬策产品架构：小脑、大脑与 harness 底座</title>
-    <desc id="product-arch-desc">APUS Reflex 瞬策是一个完整的 agent harness：用户的每条消息先经过瞬策小脑（System 1，Jev 9B 亚秒级封闭判断），小脑给深度推理大脑（System 2）派活、插话并核验完成，经下游管理与编排选择和监控本地模型、云端模型和专业 agent；两者都建立在 harness 底座的原生能力之上。</desc>
+    <title id="product-arch-title">APUS Reflex Harness 瞬策产品架构：小脑、大脑与 harness 底座</title>
+    <desc id="product-arch-desc">APUS Reflex Harness 瞬策是一个完整的 agent harness：用户的每条消息先经过瞬策小脑（System 1，Jev 9B 亚秒级封闭判断），小脑给深度推理大脑（System 2）派活、插话并核验完成，经下游管理与编排选择和监控本地模型、云端模型和专业 agent；两者都建立在 harness 底座的原生能力之上。</desc>
     <defs>
       <marker id="parch-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon class="tip" points="0 0, 8 3, 0 6"/></marker>
       <marker id="parch-arrow-sig" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon class="tip sig" points="0 0, 8 3, 0 6"/></marker>
@@ -269,7 +269,7 @@ a { color: var(--accent); }
   <p>瞬策本身就是一个完整的 harness：底座沿用成熟 harness 的全部原生能力，瞬策反射插件挂在它的公开扩展点上。每个反射点把当下的问题交给判定内核，内核向 Jev 提封闭问题，再把带概率的判断交回插件，由插件直接执行动作；推理层模型只管干活。</p>
   <div class="arch-wrap">
   <svg class="arch" viewBox="0 0 1080 772" role="img" aria-labelledby="reflex-arch-title reflex-arch-desc">
-    <title id="reflex-arch-title">APUS Reflex 瞬策技术架构</title>
+    <title id="reflex-arch-title">APUS Reflex Harness 瞬策技术架构</title>
     <desc id="reflex-arch-desc">浏览器消息进入 harness 底座（agent loop、会话日志、工具、子 agent、目标、上下文、技能与 MCP、Web 客户端）；瞬策反射插件经公开扩展点接入，通过判定内核向 Jev 9B 提封闭问题，把判断直接变成换模型、插话、转发 Codex 等动作，每次判断写入会话日志，进展通过 dock 呈现给用户。</desc>
     <defs>
       <marker id="arch-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon class="tip" points="0 0, 8 3, 0 6"/></marker>
@@ -410,7 +410,7 @@ a { color: var(--accent); }
   <div class="eyebrow">架构创新</div>
   <h2>融合 Jev 之后，harness 多了什么</h2>
   <div class="points">
-    <div class="point"><span class="no">01</span><h3>亚秒级即时决策</h3><p>每个判断 0.3–1 秒，任务卡和插话在后台进行，不拖慢回答。一次请求可同时问多道题，判断成本远低于让大模型自查。</p><span class="proof">prd 实测：入口路由 0.3–1 s，插话约 1 s 生效</span></div>
+    <div class="point"><span class="no">01</span><h3>亚秒级即时决策</h3><p>每个判断 0.3–1 秒，任务卡和插话在后台进行，不拖慢回答。一次请求可同时问多道题，判断成本远低于让大模型自查。</p><span class="proof">历史部署环境 实测：入口路由 0.3–1 s，插话约 1 s 生效</span></div>
     <div class="point"><span class="no">02</span><h3>决策与生成分离</h3><p>小模型负责“判断”，大模型负责“干活”。判断结果不是塞给大模型的一段提示，而是 harness 直接执行的动作。</p><span class="proof">换模型、插入当前轮、转发 Codex 都是直接动作</span></div>
     <div class="point"><span class="no">03</span><h3>反射点覆盖完整生命周期</h3><p>从用户开口、每条新消息、运行中插话、工具输出，到宣布完成之前，每个关键时刻都有对应的反射判断。</p><span class="proof">5 个反射点已上线，完成前核验即将上线</span></div>
     <div class="point"><span class="no">04</span><h3>概率可控，拿不准就不动</h3><p>每个判断带概率和阈值，设有弃权选项。拿不准、超时或出错时回退到原有行为，永远不挡主流程。</p><span class="proof">只改问法、不调阈值；精确率优先</span></div>
@@ -481,7 +481,7 @@ a { color: var(--accent); }
     <tbody>
       <tr><td>真实 Jev 标注集</td><td>先写标签再运行；问法调整后必须换一组从未见过的留出集，只跑一次</td><td>126 条；最后两组留出集全对；只改问法，不调阈值</td></tr>
       <tr><td>单元与组合测试</td><td>新代码 100% 覆盖；用真实 agent loop 和目标服务组合测试</td><td>全部通过</td></tr>
-      <tr><td>公网浏览器验收</td><td>以用户身份在 system3.xdan.work 操作，断言用户看到的和日志记录的</td><td>入口路由、日志折叠、任务卡、目标加打断、转发 Codex，5/5 通过</td></tr>
+      <tr><td>公网浏览器验收</td><td>以用户身份在 acceptance.example.invalid 操作，断言用户看到的和日志记录的</td><td>入口路由、日志折叠、任务卡、目标加打断、转发 Codex，5/5 通过</td></tr>
       <tr><td>发现问题就修再测</td><td>验收中只要发现体验问题，修复后重新发布再测</td><td>修复了标记行号不可用、提示过期、单复数、打断识别遗漏等 6 处</td></tr>
     </tbody>
   </table></div>

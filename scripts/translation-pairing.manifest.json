@@ -8,6 +8,10 @@
     "docs/cordis-api/inherited.md",
     "docs/i18n/style-samples.md",
     "docs/i18n/terminology.md",
-    "docs/i18n/translation-prompt.md"
+    "docs/i18n/translation-prompt.md",
+    "frontend/packages/dsh-desktop-workbenches/README.md",
+    "frontend/packages/dsh-image-generation/README.md",
+    "frontend/packages/ppt-runtime/README.md",
+    "frontend/scripts/ppt/base-templates/README.md"
   ]
 }

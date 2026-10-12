@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-settings",
-  "description": "Abstract user-settings seam (ctx.settings) for the DeepSeek Harness",
+  "description": "Abstract user-settings seam (ctx.settings) for the APUS Reflex Harness",
   "version": "0.1.7-rc.2",
   "publishConfig": {
     "access": "public"

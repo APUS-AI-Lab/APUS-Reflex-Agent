@@ -31,7 +31,7 @@ The shipped System3 service runs [prepare-profile.mjs](../../../deploy/system3/p
 
 ### Configure the gateway
 
-Set `JEV_ENDPOINT` and `JEV_MODEL` to your serving endpoint and model. Values are trimmed; when both effective profile fields are absent or blank, the bundle is disabled and general-model operation continues without Jev. A partial configuration or invalid endpoint fails startup. The bundle uses `high` effort and a 15-second timeout. Existing config-only profile overrides remain enabled without environment variables; an explicit `disabled: true` takes precedence. A profile patch can explicitly enable the row and override these values as below.
+Set `JEV_ENDPOINT` and `JEV_MODEL` to your serving endpoint and model. Values are trimmed; when both effective profile fields are absent or blank, the service remains available for settings and explicit connection probes without a configured provider or automatic network requests. A partial configuration or invalid endpoint fails startup. The bundle uses `high` effort and a 15-second timeout. Existing config-only profile overrides remain enabled without environment variables; an explicit `disabled: true` takes precedence. A profile patch can explicitly enable the row and override these values as below.
 
 `JEV_API_KEY_ENV` explicitly names a credential reference; otherwise a nonempty `JEV_API_KEY` binds that reference. With neither, the endpoint is anonymous. A declared but missing credential fails the decision before HTTP dispatch; do not supply a fake key. Environment expressions are evaluated at startup.
 
@@ -48,8 +48,8 @@ Set `JEV_ENDPOINT` and `JEV_MODEL` to your serving endpoint and model. Values ar
 
 | Field | Default | Meaning |
 |---|---|---|
-| `endpoint` | required | HTTP gateway root or `/v1` URL |
-| `model` | required | Model id sent to the gateway |
+| `endpoint` | empty | HTTP gateway root or `/v1` URL; required with `model` before decisions |
+| `model` | empty | Model id sent to the gateway; required with `endpoint` before decisions |
 | `effort` | `low` | System One inference effort: `low` or `high` |
 | `timeoutMs` | `30000` | Request deadline in milliseconds |
 | `apiKeyEnv` | absent | Credential reference resolved for each request |
@@ -82,7 +82,7 @@ const outcome = await ctx.jev.decide({
 })
 ```
 
-`kind: 'unknown'` is fail-open for transport, timeout, HTTP, credential, and response validation failures. The caller keeps deterministic System3 policy as the authority and may record the returned failure without exposing request or response text.
+Resolving or executing a request with an unconfigured default provider throws a configuration error before credential resolution or HTTP; an explicit request model does not bypass this requirement. `warm` returns false in this state. `kind: 'unknown'` is fail-open for transport, timeout, HTTP, credential, and response validation failures. The caller keeps deterministic System3 policy as the authority and may record the returned failure without exposing request or response text.
 
 -----
 
@@ -132,7 +132,7 @@ The `jev` Loader entry exposes its endpoint, model, effort, deadline, protocol a
 
 The `reflex` Remote namespace exposes `readStatus` and `testConnection`. An OpenJev connection test checks `/health`, authenticates `/v1/models`, confirms the selected model, and submits a fixed non-user yes/no proposition to `/v1/systemone`. It accepts unsaved values and an optional transient key without storing them, returns only sanitized failure classes and elapsed time, and never marks task capabilities verified. Runtime owners register capability readers through `registerCapability` and own their disposers.
 
-`ReflexCapabilityId` names the three capability owners; `ReflexCapabilityState` carries installation, enablement, observed outcomes and read-only deployment limits. `ReflexStatus` combines those states with the configured provider. `ReflexConnectionInput` describes the unsaved candidate and optional transient key; `ReflexConnectionResult` reports the tested stage, sanitized status and duration.
+`ReflexCapabilityId` names the three capability owners; `ReflexCapabilityState` carries installation, enablement, observed outcomes and read-only deployment limits. `ReflexStatus` combines those states with the configured provider; its `provider` is `null` before configuration and after both fields are cleared. `ReflexConnectionInput` describes the unsaved candidate and optional transient key; `ReflexConnectionResult` reports the tested stage, sanitized status and duration.
 
 Goal-relevance supervision has an independent `semanticSupervision.enabled` status. It is enabled only when the supervision module is installed, active, explicitly configured for semantic evidence and admitted by the current workspace-data policy. Fingerprint supervision may remain enabled when this sub-capability is disabled; neither state claims a verified outcome.
 

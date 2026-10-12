@@ -1,12 +1,19 @@
-# DeepSeek Harness Brand Asset Usage Guidelines
+# APUS Reflex Harness brand guide
 
 English | [中文](BRAND_GUIDELINES.zh.md)
 
-To maintain the long\-term healthy development of the DeepSeek Harness ecosystem, avoid user confusion, and facilitate the retrieval and identification of related resources, we have established these specifications and hope that everyone will adhere to them:
+This guide keeps this repository’s product presentation consistent. It does not create new license terms or claim registered trademark status.
 
-- In your project's descriptive text, you may use "DeepSeek Harness" to truthfully and accurately describe your project's relationship with DeepSeek Harness, for example, "built on DeepSeek Harness" or "compatible with DeepSeek Harness\." Such descriptions comply with license requirements and help users understand your project's positioning\.
-- If you wish your project name to reflect its association with the DeepSeek Harness ecosystem, we recommend using the abbreviated "DSH" designation for naming, which is both clear and facilitates communication within the community\.
-- When naming your project, please avoid using the full "DeepSeek Harness" trademark directly\. "DeepSeek Harness" is a registered trademark of DeepSeek\. Unauthorized use in project names can easily lead to user misunderstanding and confusion, thereby affecting the clarity of the entire ecosystem\. It may also involve trademark infringement\.
-- Additionally, please avoid using official brand materials in your promotions or presentations in a way that could cause misunderstanding, so as not to give users the false impression of official endorsement, cooperation, or authorization\.
+## Name and message
 
-We believe that a clear and orderly community environment will make every developer's efforts more visible and more readily recognized\. For the few cases that do not comply with the above specifications, we may contact the relevant parties to make appropriate adjustments in order to maintain the overall order of the ecosystem\. Thank you for your understanding and support—let us work together to build a more friendly and sustainable open\-source community\.
+Use **APUS Reflex Harness** for application titles, installers, About pages, documentation and product links. Use **Model-as-a-Harness** with the article “a”. The Chinese slogan is **瞬时执行，深度思考**; the English rendering is **Instant action. Deep thinking.**
+
+Product surfaces use APUS branding. Upstream names belong in accurate license acknowledgments, not product titles, logos or subtitles. Package names, provider names, persisted identifiers, application IDs and existing user-data paths retain their compatibility meaning; they are not product display names.
+
+## Gradient bird logo
+
+Use the supplied [gradient bird logo](apps/web/public/brand-source.webp) as the single original source. It is a 140 × 140 raster image with transparency; preserve its colors, gradient, proportions and transparent background. The generated [SVG wrapper](apps/web/public/brand-mark.svg) embeds a lossless PNG representation of this image; it is not a vector redraw or a higher-resolution reconstruction. Use the generated application and platform icons for distribution. The [brand metadata](apps/web/public/brand.json) owns the application name, slogan and asset filenames.
+
+## Licenses and attribution
+
+Brand changes do not remove copyright or permission notices. Preserve [LICENSE](LICENSE), [desktop LICENSE](frontend/LICENSE), [third-party notices](THIRD_PARTY_NOTICES.md) and [desktop notices](frontend/THIRD_PARTY_NOTICES.md). A product name or logo does not imply upstream endorsement.

@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-compaction",
-  "description": "Abstract compaction service seam (ctx.compaction) for the DeepSeek Harness",
+  "description": "Abstract compaction service seam (ctx.compaction) for the APUS Reflex Harness",
   "version": "0.1.7-rc.2",
   "publishConfig": {
     "access": "public"

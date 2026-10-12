@@ -507,8 +507,8 @@ describe('desktop main startup', () => {
     await vi.advanceTimersByTimeAsync(0)
     const zh = locale === 'zh-CN'
     expect(harness.dialog.showMessageBox).toHaveBeenLastCalledWith(expect.objectContaining({
-      type: 'info', title: zh ? '关于 APUS Reflex Harness' : 'About APUS Reflex Harness', message: 'APUS Reflex Harness',
-      detail: zh ? '版本 V1.0.0\n\n瞬策 · 瞬时执行，深度思考\n\nCopyright (c) 2026 DeepSeek\n基于 DeepSeek Harness 与 Cordis，感谢上游贡献者及所有第三方维护者。' : 'Version V1.0.0\n\nInstant action. Deep thinking.\n\nCopyright (c) 2026 DeepSeek\nBuilt on DeepSeek Harness and Cordis. Thank you to their contributors and all third-party maintainers.', buttons: [zh ? '确定' : 'OK'], cancelId: 0,
+      type: 'info', title: zh ? '关于 APUS Reflex' : 'About APUS Reflex', message: 'APUS Reflex',
+      detail: zh ? '版本 V1.0.0\n\n瞬策 · 瞬时执行，深度思考\n\n版权及第三方声明见应用菜单中的“开源许可证”。' : 'Version V1.0.0\n\nInstant action. Deep thinking.\n\nCopyright and third-party credits are available under Open-source licenses in the application menu.', buttons: [zh ? '确定' : 'OK'], cancelId: 0,
     }))
     // A dialog that cannot open is logged, not surfaced as an unhandled rejection.
     harness.dialog.showMessageBox.mockRejectedValueOnce(new Error('overlay unavailable'))
@@ -829,7 +829,7 @@ describe('desktop main startup', () => {
     expect(() => handler(event, 'application', NaN, 34)).toThrow('invalid popup request')
     const application = handler(event, 'application', 48, 34)
     expect(harness.menu.buildFromTemplate.mock.lastCall![0].map(item => item.label ?? item.type)).toEqual([
-      '关于 APUS Reflex Harness', 'separator', '开源许可证', '检查更新…', 'separator', '退出',
+      '关于 APUS Reflex', 'separator', '开源许可证', '检查更新…', 'separator', '退出',
     ])
     expect(harness.popup.mock.lastCall![0]).toMatchObject({ window, x: 48, y: 34 })
     expect(harness.popup.mock.lastCall![0].callback).toBeTypeOf('function')
@@ -1975,7 +1975,7 @@ describe('desktop main startup', () => {
       level: 'error', message: 'client-modules: bundle script plugins/??a/client.js&rev=1 failed to load',
       sourceId: 'dsh-app://app/assets/entry.js', lineNumber: 12,
     })
-    host.onFailure!(new Error('dsh desktop host exited with 1: fatal uncaught exception: ENOENT'))
+    host.onFailure!(new Error('APUS Reflex Harness desktop host exited with 1: fatal uncaught exception: ENOENT'))
     await host.stopping.promise
     expect(writeCrashReport).toHaveBeenCalledOnce()
     const [directory, report] = vi.mocked(writeCrashReport).mock.calls[0]!

@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-attachment",
-  "description": "Durable immutable attachment storage seam for the DeepSeek Harness",
+  "description": "Durable immutable attachment storage seam for the APUS Reflex Harness",
   "version": "0.1.7-rc.2",
   "publishConfig": {
     "access": "public"

@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-webhook-github",
-  "description": "Signed GitHub HTTP webhook adapter for the DeepSeek Harness webhook runtime",
+  "description": "Signed GitHub HTTP webhook adapter for the APUS Reflex Harness webhook runtime",
   "version": "0.1.7-rc.2",
   "publishConfig": {
     "access": "public"

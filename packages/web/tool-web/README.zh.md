@@ -58,7 +58,7 @@ kind: "package-reference"
 用包含 1 至 `searchMaxQueries` 个非空字符串的 `queries` 数组调用 `web_search`。完全相同的查询只执行一次；多个查询并发执行，来源按轮询顺序合并后再应用组合后的 `searchMaxResults` 上限。结果是可选的提供方答案，后接 `Sources:`，每行一个来源——`- [<title-or-url>](<url>)`，可选附 snippet 与日期——以及一句固定的引用 URL 指引。
 
 ```text
-web_search({ queries: ['deepseek harness documentation'] })
+web_search({ queries: ['APUS Reflex Harness documentation'] })
 ```
 
 多查询调用中的任何查询失败时，`web_search` 会中止其余搜索，等待所有已启动搜索结算，丢弃成功结果，并针对首次失败返回 `Error: <message>`。

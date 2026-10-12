@@ -22,7 +22,7 @@ flowchart TD
 
 ## Ownership and compatibility
 
-`apps/web/public/brand-logo.webp` owns the artwork. `apps/desktop/scripts/generate-brand-assets.ts` writes the embedded PNG module, SVG wrappers, application icons, and installer assets. `packages/client/ui-primitives` owns shared brand rendering, and `packages/client/ui-theme` owns light/dark colours and the first-paint canvas. Account and model onboarding dictionaries describe the actual provider and configuration choices.
+`apps/web/public/brand-source.webp` owns the artwork. `apps/desktop/scripts/generate-brand-assets.ts` writes the embedded PNG module, SVG wrappers, application icons, and installer assets. `packages/client/ui-primitives` owns shared brand rendering, and `packages/client/ui-theme` owns light/dark colours and the first-paint canvas. Account and model onboarding dictionaries describe the actual provider and configuration choices.
 
 Keep package identifiers, application IDs, protocols, data directories, API fields, and Session persistence unchanged. Preserve licenses and actual provider names. Frontend updates its pinned Harness revision and prepares resources before packaging; changing source alone cannot update an installed application.
 

@@ -12,7 +12,7 @@ import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-a
 import Jev from '../../../experimental/apus-dsh-jev-plugin/src/index.ts'
 import ContinuumMemory from '../src/service.ts'
 import { foldMemoryRecordEvents, readMemorySourceEvents } from '../src/persistence.ts'
-import { MemoryRecordStore } from '../src/records.ts'
+import { MemoryId, MemoryRecordStore } from '../src/records.ts'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -80,6 +80,54 @@ describe('Continuum automatic admission durable profile path', () => {
     const refs = rebuilt.snapshot()[0]?.sourceRefs ?? []
     const sources = await readMemorySourceEvents(reader.ctx.sessionPersistence, refs)
     expect(sources.map(item => item.event.type)).toEqual(['user/message'])
+  })
+
+  it('persists service corrections and deactivation and restores their revisions after restart', { timeout: 30_000 }, async () => {
+    const root = await mkdtemp(join(tmpdir(), 'dsh-continuum-service-transitions-'))
+    roots.push(root)
+    const writer = await profile(root, 'explicit')
+    const agent = writer.agent!
+    agent.followup(user('The release train departs on Monday.'))
+    await agent.whenIdle()
+    const original = agent.session.snapshotEvents().find(event => event.type === 'user/message' && event.data.source.kind === 'user')!
+    const first = writer.ctx.continuumMemory.create(agent, {
+      id: MemoryId('release-v1'), kind: 'fact', scope: 'workspace', content: 'The release train departs on Monday.',
+      sourceRefs: [{ sessionId: agent.session.id, eventSeq: original.seq }],
+    })
+    const controller = writer.ctx.continuumMemory.controller(agent)
+    const beforeCorrection = controller.beginRead({ scopes: ['workspace'] })!
+    agent.followup(user('The release train now departs on Friday.'))
+    await agent.whenIdle()
+    const correction = agent.session.snapshotEvents().findLast(event => event.type === 'user/message' && event.data.source.kind === 'user')!
+    const second = writer.ctx.continuumMemory.supersede(agent, first.id, first.revision, {
+      id: MemoryId('release-v2'), kind: 'fact', scope: 'workspace', content: 'The release train now departs on Friday.',
+      sourceRefs: [{ sessionId: agent.session.id, eventSeq: correction.seq }],
+    })
+    expect(controller.isCurrent(beforeCorrection)).toBe(false)
+    const beforeDeactivation = controller.beginRead({ scopes: ['workspace'] })!
+    const deactivated = writer.ctx.continuumMemory.deactivate(agent, second.id, second.revision)
+    expect(controller.isCurrent(beforeDeactivation)).toBe(false)
+    expect(deactivated).toMatchObject({ id: second.id, status: 'deactivated', revision: 2, supersedes: first.id })
+    await writer.ctx.sessions.flush(agent.session)
+    const transitions = agent.session.snapshotEvents().filter(event => event.type === 'continuum/memory-record')
+    expect(transitions.map(event => event.data.operation)).toEqual(['create', 'supersede', 'deactivate'])
+    expect(transitions.map(event => event.data.record)).toEqual([first, second, deactivated])
+    await writer.ctx.fiber.dispose()
+    contexts.splice(contexts.indexOf(writer.ctx), 1)
+
+    const reader = await profile(root, 'explicit', true)
+    const restored = await reader.ctx.agentLoop.resume(reader.ctx, {
+      resumeSessionId: reader.sessionId, agentOptions: { provider: 'recording', model: 'recording' },
+    })
+    const replayed = restored.agent.session.snapshotEvents().filter(event => event.type === 'continuum/memory-record')
+    expect(replayed).toEqual(transitions)
+    const records = foldMemoryRecordEvents(restored.agent.session.snapshotEvents(), new MemoryRecordStore())
+    expect(records.snapshot()).toEqual([{ ...first, status: 'superseded', revision: 2 }, deactivated])
+    const restoredController = reader.ctx.continuumMemory.controller(restored.agent)
+    const ticket = restoredController.beginRead({ scopes: ['workspace'] })!
+    expect(restoredController.read(ticket, { maxCandidates: 8, maxExcerptBytes: 2048, maxTotalBytes: 8192 }, 'release')?.candidates).toEqual([])
+    const sources = await readMemorySourceEvents(reader.ctx.sessionPersistence, second.sourceRefs)
+    expect(sources.map(source => source.event)).toEqual([correction])
   })
 
   it('keeps the shipped explicit default from writing memory records', async () => {

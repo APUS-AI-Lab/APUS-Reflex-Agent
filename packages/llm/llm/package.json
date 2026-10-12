@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-llm",
-  "description": "Provider-neutral LLM service interface for the DeepSeek Harness",
+  "description": "Provider-neutral LLM service interface for the APUS Reflex Harness",
   "version": "0.1.7-rc.2",
   "publishConfig": {
     "access": "public"

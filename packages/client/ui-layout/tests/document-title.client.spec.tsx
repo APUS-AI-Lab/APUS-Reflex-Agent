@@ -33,12 +33,12 @@ describe('DocumentTitle', () => {
   it('projects a durable title and restores the product title', () => {
     const { sessionId, sessions, props } = titleSources()
     document.title = 'stale title'
-    const mounted = render(<DocumentTitle {...props} productTitle="APUS Reflex Harness" />)
-    expect(document.title).toBe('APUS Reflex Harness')
+    const mounted = render(<DocumentTitle {...props} productTitle="APUS Reflex" />)
+    expect(document.title).toBe('APUS Reflex')
     act(() => { sessions.update((state) => { state.byId[sessionId]!.title = 'First title' }) })
-    expect(document.title).toBe('First title — APUS Reflex Harness')
+    expect(document.title).toBe('First title — APUS Reflex')
     act(() => { sessions.update((state) => { state.byId[sessionId]!.title = 'Revised title' }) })
-    expect(document.title).toBe('Revised title — APUS Reflex Harness')
+    expect(document.title).toBe('Revised title — APUS Reflex')
     act(() => {
       const state = sessions.getSnapshot()
       sessions.set({
@@ -46,9 +46,9 @@ describe('DocumentTitle', () => {
         byId: { ...state.byId, [sessionId]: { ...state.byId[sessionId]!, retainedBy: {} } },
       })
     })
-    expect(document.title).toBe('APUS Reflex Harness')
+    expect(document.title).toBe('APUS Reflex')
     mounted.unmount()
-    expect(document.title).toBe('APUS Reflex Harness')
+    expect(document.title).toBe('APUS Reflex')
   })
 
   it('uses the localized product title supplied by the frame', () => {

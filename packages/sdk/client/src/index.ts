@@ -1,5 +1,5 @@
 /**
- * TypeScript client SDK for the DeepSeek Harness runtime: spawn the
+ * TypeScript client SDK for the APUS Reflex Harness runtime: spawn the
  * same-version `dsh --profile sdk` runtime as a subprocess and drive agent
  * turns over stdio JSON-RPC. `DeepSeekHarness` is the high-level run API;
  * `HarnessClient` is the lower-level protocol client. A pure library — it

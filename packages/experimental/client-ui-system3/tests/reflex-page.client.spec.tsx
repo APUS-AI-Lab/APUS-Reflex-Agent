@@ -15,7 +15,8 @@ const state: ReflexCardState = {
   available: true, writable: true, dirty: false, invalid: false, saving: false, failed: false,
   endpoint: field('https://reflex.test'), model: field('decision'), effort: field('high'),
   timeoutMs: field('1000'), apiKeyEnv: field('REFLEX_API_KEY'), apiKey: field(''),
-  apiKeyConfigured: true, apiKeyWritable: true, credentialFailed: false, partialSave: false, probe: { pending: false, failed: false },
+  apiKeyConfigured: true, apiKeyWritable: true, credentialFailed: false, credentialSaveError: undefined,
+  partialSave: false, probe: { pending: false, failed: false },
   runtime: { provider: { id: 'system-one', endpoint: 'https://reflex.test', model: 'decision' }, capabilities: [{ id: 'codexSupervision', implemented: false, enabled: false }] },
 }
 function props(snapshot = state): ReflexSettingsProps {
@@ -117,4 +118,28 @@ it('explains partial settings persistence after a conflicting credential compens
   render(<ReflexSettings {...props({ ...state, failed: true, dirty: true, partialSave: true })} />)
   expect(screen.getByText('密钥保存结果尚未确认，连接设置可能部分生效。请重新打开并检查。')).toBeTruthy()
   expect(screen.queryByText('未能保存全部设置，请检查输入并重试')).toBeNull()
+})
+
+
+it.each([
+  ['configured', '此引用已有密钥；请为新密钥填写新的专用引用名'],
+  ['unavailable', '无法确认密钥引用状态，配置未更改，请重试'],
+] as const)('explains refused credential preflight: %s', (credentialSaveError, message) => {
+  render(<ReflexSettings {...props({ ...state, failed: true, dirty: true, credentialSaveError })} />)
+  expect(screen.getByText(message)).toBeTruthy()
+})
+
+it('keeps first-run configuration editable and distinguishes a draft probe from saved configuration', () => {
+  const initial = { ...state, endpoint: field(''), model: field(''),
+    runtime: { provider: null, capabilities: state.runtime!.capabilities } }
+  const view = render(<ReflexSettings {...props(initial)} />)
+  expect(screen.getByText('尚未配置决策服务；填写服务地址和模型后保存')).toBeTruthy()
+  expect(screen.getByLabelText('服务地址').hasAttribute('disabled')).toBe(false)
+  expect(screen.getByLabelText('决策模型').hasAttribute('disabled')).toBe(false)
+  expect(screen.queryByText('无法读取运行状态')).toBeNull()
+  view.rerender(<ReflexSettings {...props({ ...initial, endpoint: field('https://reflex.test'), model: field('decision'),
+    probe: { pending: false, failed: false, result: { kind: 'ok', stage: 'decision', model: 'decision', effort: 'high', latencyMs: 10 } } })} />)
+  expect(screen.getByText('尚未配置决策服务；填写服务地址和模型后保存')).toBeTruthy()
+  expect(screen.getByText(/真实判断通过/)).toBeTruthy()
+  expect(screen.queryByText('已启用')).toBeNull()
 })

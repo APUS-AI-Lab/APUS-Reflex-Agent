@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>System3 · 任务目标与 UI/UX 接入完成度复核</title>
+<title>APUS Reflex Harness · 任务目标与 UI/UX 历史复核</title>
 <style>
 :root{color-scheme:dark;--bg:#10151d;--panel:#19222d;--line:#334354;--text:#e8edf2;--muted:#b3c0ce;--green:#6ce4b0;--blue:#7bb9ff;--amber:#ffd38c}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.8 system-ui,-apple-system,"PingFang SC",sans-serif}main{max-width:1160px;margin:auto;padding:36px 24px 64px}h1,h2,h3,strong,th{font-weight:500}h1{font-size:clamp(28px,4vw,40px);line-height:1.35}h2{font-size:24px;line-height:1.5}h3{font-size:19px}a{color:var(--blue);text-underline-offset:4px;overflow-wrap:anywhere}code{color:var(--green);font-size:.9em;overflow-wrap:anywhere}p{margin:12px 0}nav{display:flex;flex-wrap:wrap;gap:10px 24px;padding:16px 0;border-block:1px solid var(--line)}section{padding:24px 0;border-bottom:1px solid var(--line)}.lead{font-size:21px}.muted,footer{color:var(--muted)}.eyebrow{color:var(--green);font-size:13px}.note{padding:12px 18px;border-left:3px solid var(--amber);background:var(--panel);margin:20px 0}.table-scroll{overflow-x:auto;border:1px solid var(--line);margin:20px 0}table{border-collapse:collapse;width:100%;min-width:820px;font-size:14px;line-height:1.7}th,td{text-align:left;vertical-align:top;padding:12px 15px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}th{background:var(--panel)}td:last-child,th:last-child{border-right:0}tr:last-child td{border-bottom:0}li{margin:10px 0}a:focus-visible,.table-scroll:focus-visible{outline:3px solid var(--blue);outline-offset:3px}footer{padding-top:20px;font-size:13px}@media(max-width:600px){main{padding:24px 16px 40px}.lead{font-size:18px}h2{font-size:22px}}@media print{body{background:white;color:#182334}main{max-width:none;padding:0}.table-scroll{overflow:visible}table{min-width:0;font-size:11px}th,.note{background:#f3f5f7}a{color:#175b94}.muted,footer{color:#45566a}tr{break-inside:avoid}}
 </style>
@@ -15,7 +15,7 @@
 <p class="lead">交付同一任务的完整体验：接得住目标，执行中实际调整，成果可检查，用户可干预，中断后可继续。</p>
 <p class="muted">本页为当前设计工作区与前端初始化分支的只读审查结论及待办参考。运行时、生产 UI 与部署未在本轮修改。既有入口实网验证和新公网 Jev 服务各有独立证据，不等同于桌面三层体验交付。</p>
 <nav aria-label="审查目录"><a href="#objective">任务目标</a><a href="#status">完成度</a><a href="#ux">交互缺口</a><a href="#integration">前端对接</a><a href="#delivery">实施顺序</a><a href="#acceptance">验收</a><a href="#evidence">证据范围</a><a href="#speed">入口与体感速度</a></nav>
-<p><a href="system3-intelligence-design.html">三层机制与 API 草案</a> · <a href="system3-experience-v3.html">v3 离线工作台</a> · <a href="system3-native-v1.html">总架构</a> · <a href="../../tasks/feat-system3-desktop/plan.md">可勾选任务计划</a></p>
+<p><a href="system3-intelligence-design.html">三层机制与 API 草案</a> · <a href="system3-experience-v3.html">v3 离线工作台</a> · <a href="system3-native-v1.html">总架构</a> · <a href="../dev-continuum-reflex-integration/architecture-followups.zh.md">架构跟进清单</a></p>
 </header>
 <section id="objective">
 <h2>1. 本次记录的任务目标</h2>
@@ -56,7 +56,7 @@
 </section>
 <section id="integration">
 <h2>4. 前端对接不是给 HTML 加几个请求</h2>
-<p><strong>明确接入仓库：</strong><code>/path/to/projects/xDAN-System3-Frontend</code>。用户已再次确认该前端目标，三层智能的产品交互必须落到这个仓库及其复用的原生 Client Modules 中。</p>
+<p><strong>明确接入仓库：</strong><code>/path/to/projects/APUS-Reflex-Frontend</code>。用户已再次确认该前端目标，三层智能的产品交互必须落到这个仓库及其复用的原生 Client Modules 中。</p>
 <p>现有接入点已定位：<code>src/main/index.ts</code> 解析 <code>dshEntryPath</code>；<code>src/main/runtime/harness-runtime.ts</code> 启动原生 Web profile；<code>build/dsh-desktop.patch.yml</code> 装配模块；<code>packages/dsh-desktop-client-ui/</code> 已通过模块加载器扩展 Conversation/API 和原生 slots。当前加载的是官方 npm runtime，尚未装配自有 System3 产物。优先扩展这些已有位置，是否拆共享模块以代码复用和发布依赖为依据。</p>
 
 <p>v3 在浏览器内保存样例 sessions、phase 和成果，由“下一事件”推进；文件选择仅取文件名。这些代码用于设计回放。生产组件从 Harness 的原生身份、事件、投影与控制回执读取事实；本地只保留草稿、展开、焦点和阅读位置等 UI 状态。</p>
@@ -90,7 +90,7 @@
 <li>长内容与多任务不妨碍阅读、输入和控制；键盘、读屏、输入法、缩放和平台窗口适配通过真实产品检查。</li>
 <li>交互方案由目标用户任务验证；至少一个 Jev 过程节点真实采用，对照任务质量没有下降；效率收益只报告实际测量结果。</li>
 </ul>
-<p>上述行为清单在<a href="../../tasks/feat-system3-desktop/plan.md">工作区计划</a>持续勾选；所有项必须有明确证据，不能用原型截图或单独 API 成功替代。</p>
+<p>内部工作区计划已私有归档；公开跟进见<a href="../dev-continuum-reflex-integration/architecture-followups.zh.md">架构跟进清单</a>。所有项必须有明确证据，不能用原型截图或单独 API 成功替代。</p>
 </section>
 <section id="evidence">
 <h2>7. 本轮证据与限制</h2>

@@ -1,7 +1,7 @@
 <!doctype html>
-<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>System3 入口路由验收</title>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>APUS Reflex Harness · System3 入口路由历史验收</title>
 <style>body{font:17px/1.8 system-ui,sans-serif;background:#0b1220;color:#e2e8f0;max-width:1000px;padding:36px 24px;margin:auto}h1,h2,a{color:#7dd3fc}table{border-collapse:collapse;width:100%;font-size:15px}td,th{padding:12px;text-align:left;border:1px solid #334155}code{overflow-wrap:anywhere;color:#a7f3d0}.note{padding:16px;background:#172337;border-radius:12px}</style><main>
-<h1>原生入口路由 · 首期验收</h1><p>2026-09-29 · xDAN-System3-Harness · <a href="jev-native-dsh-native-plan.html">总体方案</a> · <a href="entry-routing-implementation.html">实施范围</a></p>
+<h1>原生入口路由 · 首期验收</h1><p>2026-09-29 · APUS-Reflex-Harness · <a href="jev-native-dsh-native-plan.html">总体方案</a> · <a href="entry-routing-implementation.html">实施范围</a></p>
 <p class="note">用户输入 → DSH 原生准入 → Jev 9B 有界判断 → 临时 ModelSelection → Fidoo LiteLLM → Session 记录。首期为显式启用的 Web/API 空闲文本入口；附件、忙碌输入、其他入口及过程智能仍按后续里程碑推进。</p>
 <h2>真实部署链路</h2><p>Jev 原生 gateway 的模型列表确认 <code>APUS-OpenJev-v1-9B-5949</code>。Fidoo 专用凭据的 <code>/v1/models</code> 确认 Flash / Pro 权限；两个模型分别通过官方 DSH headless 入口返回 READY。随后在隔离 DSH_HOME 与空工作目录运行真实 Web profile，通过原生 SessionController 提交公开文本，记录完整链路。</p>
 <table><thead><tr><th>公开测试输入</th><th>Jev 建议</th><th>实际 request/header</th><th>结果</th></tr></thead><tbody>

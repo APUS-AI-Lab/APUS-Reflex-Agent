@@ -50,7 +50,7 @@ describe('tray icon packaging', () => {
 
 // Decode both formats before comparing: the asset conversion must not redraw the logo.
 it('preserves the supplied transparent bird pixels in the shared SVG', async () => {
-  const source = readFileSync(new URL('../../web/public/brand-logo.webp', import.meta.url))
+  const source = readFileSync(new URL('../../web/public/brand-source.webp', import.meta.url))
   const mark = readFileSync(new URL('../../web/public/brand-mark.svg', import.meta.url), 'utf8')
   const embedded = /href="data:image\/png;base64,([^"]+)"/.exec(mark)?.[1]
   expect(embedded).toBeDefined()

@@ -161,16 +161,18 @@ pnpm run demo:ptc -- "summarize this workspace"
 
 ### 应用命令
 
-Web 与 Desktop 共用同一对命令。`start:*` 启动上一次 `pnpm run build` 的产物；`dev:*` 先执行该构建再启动。Web 还会在源码修改时持续重建 client bundle，因为它的 Host 从源码运行，而浏览器加载的是构建产物：
+Web 启动使用 `pnpm run build` 的产物；Web 开发先构建，再监听 client bundle。APUS 桌面启动需要先执行 `pnpm run setup`，该命令同时准备 `frontend/`。桌面开发会重建宿主；修改 Harness 源码后，重新执行 setup 以刷新已部署的运行时。详见[一体化开发教程](feat-integrated-product/development.zh.md)。
 
 ```sh
-pnpm run start:web       # serve built Web artifacts through the source launcher (the same launch as pnpm dsh web)
-pnpm run dev:web         # build, serve, and rebuild Web client bundles on source edits
-pnpm run start:desktop   # launch built Desktop artifacts
-pnpm run dev:desktop     # build, then launch Desktop
+pnpm run start:web             # serve built Web artifacts through the source launcher
+pnpm run dev:web               # build, serve, and rebuild Web client bundles
+pnpm run start:desktop         # launch the APUS host after pnpm run setup
+pnpm run dev:desktop           # develop the APUS desktop host using its prepared runtime
+pnpm run start:harness-desktop # launch the original Harness desktop host
+pnpm run dev:harness-desktop   # build and develop the original Harness desktop host
 ```
 
-Web 命令后面的参数会传给 `dsh web`，例如 `pnpm run dev:web --no-open --port 3081`；`dev:web` 还接受 `--skip-build` 复用现有产物树，以及 `--no-serve` 只运行重建 watcher、配合别处启动的服务器。两个 Web 命令使用正常的 Harness home，而 Desktop 命令使用 [Desktop README](../apps/desktop/README.zh.md) 描述的隔离开发 home。根目录 `Makefile` 以 `make web`、`make dev-web`、`make desktop`、`make dev-desktop` 和 `make build` 命名同一套命令；`ARGS='--no-open'` 用于转发参数。
+Web 命令后面的参数传给 `dsh web`，例如 `pnpm run dev:web --no-open --port 3081`；`dev:web` 还接受 `--skip-build` 和 `--no-serve`。Web 使用正常的 Harness home。APUS 与原 Harness 桌面宿主分别有自己的开发数据规则，详见 [APUS 教程](feat-integrated-product/development.zh.md)和 [Harness Desktop README](../apps/desktop/README.zh.md)。Make target `web`、`dev-web`、`desktop`、`dev-desktop` 与 `build` 转发到对应根命令；`ARGS='--no-open'` 转发 Web 参数。
 
 ### TODO 标记
 

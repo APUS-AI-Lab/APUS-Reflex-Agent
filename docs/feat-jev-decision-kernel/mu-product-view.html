@@ -35,11 +35,11 @@ ul li { margin:5px 0; }
 @media (max-width:760px) { main { padding:24px 16px 48px; } .grid, .stats { grid-template-columns:1fr 1fr; } h1 { font-size:23px; } }
 </style>
 </head>
-<body>
+<body><p role="note">历史验收部署地址已脱敏；example.invalid 为不可用占位域名，不是公开服务入口。</p>
 <main>
 <div class="eyebrow">产品视角 · 2026-10-07</div>
 <h1>mu 的判定点，用大白话对照我们的实际效果</h1>
-<p class="sub">每一行先说这个点“帮用户做了什么”，再说 System3 现在<b>实际做到什么程度</b>。我们一栏只写已上线、在 prd（system3.xdan.work）或测试中看到过的效果，没验证过的写明“未统计”。mu 一栏来自其代码与作者文档，数字多为作者一次性实测。文章说 35 个，代码里是 38 个。</p>
+<p class="sub">每一行先说这个点“帮用户做了什么”，再说 System3 现在<b>实际做到什么程度</b>。我们一栏只写已上线、在 历史部署环境（acceptance.example.invalid）或测试中看到过的效果，没验证过的写明“未统计”。mu 一栏来自其代码与作者文档，数字多为作者一次性实测。文章说 35 个，代码里是 38 个。</p>
 
 <div class="stats">
 <div class="stat"><b>3</b><span>我们更强</span></div>
@@ -59,7 +59,7 @@ ul li { margin:5px 0; }
 <tbody>
 
 <tr class="group"><td colspan="5">你开口时</td></tr>
-<tr><td>1</td><td>先看你这句话是闲聊、提问还是大活，要不要先问清楚、先列计划，再决定想多深<br><code>input.preflight</code></td><td>不只是提示，是<b>真的换模型</b>：简单的走 Flash（prd 约 3 秒答完），推理题走 Pro（约 11 秒），大活交 GPT 或 Codex；判断本身 0.3–1 秒。会核对实际回答的是不是选中的模型。<b>不会</b>提醒“先问清楚”或“先列计划”</td><td><span class="pill better">我们更强</span></td><td>已有；澄清提示并入 1</td></tr>
+<tr><td>1</td><td>先看你这句话是闲聊、提问还是大活，要不要先问清楚、先列计划，再决定想多深<br><code>input.preflight</code></td><td>不只是提示，是<b>真的换模型</b>：简单的走 Flash（历史部署环境 约 3 秒答完），推理题走 Pro（约 11 秒），大活交 GPT 或 Codex；判断本身 0.3–1 秒。会核对实际回答的是不是选中的模型。<b>不会</b>提醒“先问清楚”或“先列计划”</td><td><span class="pill better">我们更强</span></td><td>已有；澄清提示并入 1</td></tr>
 <tr><td>2</td><td>把“你要什么、不许什么、怎样算做完”记成一张任务卡，你补充或改口时随时更新<br><code>task.frame</code></td><td>没有任务卡。只在交给 Codex 时，把你早先说过的要求原话带过去（6 段标注对话全部识别正确）。在主对话里直接干活时，全靠模型自己记</td><td><span class="pill weak">弱</span></td><td>1</td></tr>
 <tr><td>3</td><td>它干活时你插话，自动分清是纠正、补充还是顺便一问，分别处理<br><code>input.interjection</code></td><td>交给 Codex 时，你在卡片上点“补充说明”，约 1 秒送达，Codex 的结果里会复述这句话。但要<b>你自己</b>选这个入口，普通输入框不会自动分</td><td><span class="pill weak">弱</span></td><td>5</td></tr>
 <tr><td>4</td><td>把和这次无关的技能说明藏起来，少占篇幅<br><code>skills.disclosure</code></td><td>方向相反：挑出最合适的一个技能，把全文直接给模型。无关技能的简介仍在。效果未统计</td><td><span class="pill even">打平</span></td><td>9</td></tr>
@@ -78,7 +78,7 @@ ul li { margin:5px 0; }
 <tr><td>20</td><td>网页里藏着“忽略之前的指令”这类话时扣下<br><code>tool.injection</code></td><td>只告诉模型“这是外部内容，不要当指令”，不检测</td><td><span class="pill weak">弱</span></td><td>6</td></tr>
 
 <tr class="group"><td colspan="5">它干活的过程中</td></tr>
-<tr><td>26</td><td>跑偏、绕路、原地打转时把它拉回来<br><code>turn.drift</code></td><td>规则版：同一错误连犯、失败过多、一直没进展就提醒，prd 上模型收到后会停下来问你。10-06 有两次误报（查资料被当成没进展、管道里的检查没算），10-07 一次漏报（<code>; echo $?</code> 掩盖了失败），都已修复并在 prd 复测。只看“卡没卡住”，<b>看不出“偏没偏离目标”</b></td><td><span class="pill weak">弱</span></td><td>3</td></tr>
+<tr><td>26</td><td>跑偏、绕路、原地打转时把它拉回来<br><code>turn.drift</code></td><td>规则版：同一错误连犯、失败过多、一直没进展就提醒，历史部署环境 上模型收到后会停下来问你。10-06 有两次误报（查资料被当成没进展、管道里的检查没算），10-07 一次漏报（<code>; echo $?</code> 掩盖了失败），都已修复并在 历史部署环境 复测。只看“卡没卡住”，<b>看不出“偏没偏离目标”</b></td><td><span class="pill weak">弱</span></td><td>3</td></tr>
 <tr><td>27</td><td>走进死胡同时，建议退回到之前的状态，由你确认<br><code>turn.rewind</code></td><td>没有</td><td><span class="pill none">没有</span></td><td>暂不做</td></tr>
 <tr><td>29</td><td>它说“我接下来去改”却停了，推它继续<br><code>turn.continue</code></td><td>只有在“目标模式”下，空闲时会自动续跑；识别不出“答应了却没做”</td><td><span class="pill weak">弱</span></td><td>2</td></tr>
 <tr><td>30</td><td>边写边检查，违反规则就打断重写<br><code>output.drift</code></td><td>没有。<span class="off">mu 默认关闭</span></td><td><span class="pill none">没有</span></td><td>暂不做</td></tr>
@@ -86,11 +86,11 @@ ul li { margin:5px 0; }
 <tr><td>33</td><td>外部消息是现在告诉你、等一下说还是不说<br><code>notify.routing</code></td><td>Codex 启动太慢、停滞、超时时会提醒你；其他外部事件没有处理</td><td><span class="pill weak">弱</span></td><td>3</td></tr>
 
 <tr class="group"><td colspan="5">它说“做完了”时</td></tr>
-<tr><td>28</td><td>改了代码没跑测试就说做完，先催它验证<br><code>turn.completion</code></td><td>有。prd 上模型收到提醒后会去跑测试再回答；“管道里跑的测试”和“<code>; echo $?</code> 掩盖失败”两种误判已修正</td><td><span class="pill even">打平</span></td><td>2</td></tr>
+<tr><td>28</td><td>改了代码没跑测试就说做完，先催它验证<br><code>turn.completion</code></td><td>有。历史部署环境 上模型收到提醒后会去跑测试再回答；“管道里跑的测试”和“<code>; echo $?</code> 掩盖失败”两种误判已修正</td><td><span class="pill even">打平</span></td><td>2</td></tr>
 <tr><td>31</td><td>设了目标后，判断目标是不是真的达成<br><code>goal.met</code></td><td>DSH 有目标功能（保存目标、自动续跑），但<b>做没做完全凭模型自己说</b></td><td><span class="pill weak">弱</span></td><td>2</td></tr>
 
 <tr class="group"><td colspan="5">交给别的助手时</td></tr>
-<tr><td>34</td><td>决定派哪个助手、派多强的<br><code>swarm.routing</code></td><td>可以交给外部 Codex：prd 上一个任务 56 秒完成、8 个测试通过；交接时自动带上你的要求，过程中能补充说明，1 秒内能叫停。不会选角色和强度</td><td><span class="pill better">我们更强</span></td><td>7</td></tr>
+<tr><td>34</td><td>决定派哪个助手、派多强的<br><code>swarm.routing</code></td><td>可以交给外部 Codex：历史部署环境 上一个任务 56 秒完成、8 个测试通过；交接时自动带上你的要求，过程中能补充说明，1 秒内能叫停。不会选角色和强度</td><td><span class="pill better">我们更强</span></td><td>7</td></tr>
 <tr><td>35</td><td>助手交回的改动有没有超出交代的范围<br><code>swarm.patch</code></td><td>没有</td><td><span class="pill none">没有</span></td><td>4</td></tr>
 <tr><td>36–38</td><td>多个助手之间互通发现、转交消息、互相更正<br><code>hive.publish</code> <code>hive.deliver</code> <code>hive.relate</code></td><td>没有</td><td><span class="pill none">没有</span></td><td>暂不做</td></tr>
 
@@ -138,7 +138,7 @@ ul li { margin:5px 0; }
 </ul>
 </div>
 </div>
-<p class="sub">来源：mu 仓库 packages/kyrn-judge/manifest.json 与 kyrn/docs；System3 代码、单元测试与 prd 会话记录（2026-10-04 至 10-07）。技术版对照见 <a href="../system3-delegation-progress/mu-comparison.html">mu-comparison.html</a>，挑选结果见 <a href="top10.html">top10.html</a>。</p>
+<p class="sub">来源：mu 仓库 packages/kyrn-judge/manifest.json 与 kyrn/docs；System3 代码、单元测试与 历史部署环境 会话记录（2026-10-04 至 10-07）。技术版对照见 <a href="../system3-delegation-progress/mu-comparison.html">mu-comparison.html</a>，挑选结果见 <a href="top10.html">top10.html</a>。</p>
 </main>
 </body>
 </html>

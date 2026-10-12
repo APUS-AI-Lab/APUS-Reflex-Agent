@@ -1,5 +1,5 @@
 /**
- * Fresh-process SDK subagent client. Drives one child DeepSeek Harness
+ * Fresh-process SDK subagent client. Drives one child APUS Reflex Harness
  * runtime over stdio JSON-RPC through `@deepseek-ai/dsh-sdk-client` and owns
  * cancellation and quiescent disposal. It publishes after the child
  * handshake, maps child failures to stop reasons, and tears down to

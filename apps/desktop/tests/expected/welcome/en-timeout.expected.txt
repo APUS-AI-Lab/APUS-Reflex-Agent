@@ -1,5 +1,5 @@
-APUS Reflex Harness
-APUS Reflex Harness
+APUS Reflex
+APUS Reflex
 Sign in timed out
 Sign in again
 Add API Key

@@ -1342,6 +1342,7 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         description: 'Resolve a request to a provider and effective model without performing I/O.',
         parameters: [{ name: 'request', description: 'Host request and optional provider selection.' }],
         returns: 'Validated request with provider and model pinned.',
+        throws: ['When the selected provider is unconfigured or not registered.'],
       },
       {
         signature: 'async warm(providerId?: string, signal?: AbortSignal): Promise<boolean>',
@@ -1354,6 +1355,7 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         description: 'Execute a typed decision, returning unknown when the provider is unavailable or invalid.',
         parameters: [{ name: 'request', description: 'Host state and typed questions.' }, { name: 'signal', description: 'Cancellation propagated to the caller.' }],
         returns: 'Validated result or a safe failure description.',
+        throws: ['When the selected provider is unconfigured or not registered, or the caller cancels.'],
       },
     ],
   },
@@ -6453,7 +6455,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'ReflexStatus',
-    declaration: 'export interface ReflexStatus {\n    readonly provider: JevProviderInfo;\n    readonly capabilities: readonly (ReflexCapabilityState & {\n        readonly id: ReflexCapabilityId;\n    })[];\n}',
+    declaration: 'export interface ReflexStatus {\n    readonly provider: JevProviderInfo | null;\n    readonly capabilities: readonly (ReflexCapabilityState & {\n        readonly id: ReflexCapabilityId;\n    })[];\n}',
   },
   {
     name: 'Registry',

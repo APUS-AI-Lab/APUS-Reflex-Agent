@@ -2,18 +2,18 @@
 # section, a hash of its English and Chinese blocks outside code blocks and generated regions.
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/dev-continuum-reflex-integration/release-readiness.md
-/apus-continuum-reflex-release-readiness:
-  en: 4f640422d56ca213
-  zh: 188451f9aa2c37be
-/apus-continuum-reflex-release-readiness/decision:
-  en: d6e488a9c05c28ba
-  zh: 84ba639305d3112e
-/apus-continuum-reflex-release-readiness/ready:
-  en: 6a6a503cdc8e3ff9
-  zh: 0f33e8463a261a5c
-/apus-continuum-reflex-release-readiness/blocking-before-public-release:
-  en: 14117a0037fd86a6
-  zh: 5279296b9ea16b1d
-/apus-continuum-reflex-release-readiness/recommended-release-sequence:
-  en: 0614961bd90e1d0e
-  zh: 19206ed16be60211
+/apus-reflex-harness-release-readiness:
+  en: 72a07917d1c71b85
+  zh: 27d8efdb02a8c416
+/apus-reflex-harness-release-readiness/decision:
+  en: f530788029eceae2
+  zh: 8b9dbb5c257886a1
+/apus-reflex-harness-release-readiness/verified-evidence:
+  en: f4bb33a2ec029151
+  zh: f5e301512ec0b69f
+/apus-reflex-harness-release-readiness/remaining-acceptance-work:
+  en: ce9065d032c7b419
+  zh: c77a4c5e7c2db907
+/apus-reflex-harness-release-readiness/scope:
+  en: 6a8ad36bf48342de
+  zh: 68dc216a918221a4

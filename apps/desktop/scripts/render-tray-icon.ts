@@ -1,11 +1,8 @@
 /**
- * Render the Windows tray icon with an enlarged brand mark from `resources/icon-windows.svg`.
- *
- * The tray shows the icon at 16 logical pixels, so Windows picks one of the
- * bundled bitmaps by display scale. Each size is rasterized from the vector
- * source separately instead of downscaling one large bitmap, which keeps edges
- * crisp at every scale. The committed `resources/tray-windows.ico` is the output;
- * rerun `pnpm run render:tray-icon` in `apps/desktop` after changing the vector source.
+ * Render Windows tray bitmaps from the generated APUS artwork in `resources/icon-windows.svg`.
+ * The SVG embeds the original-color source image. Each tray size preserves its
+ * aspect ratio and transparency; scaling does not add detail to the source.
+ * Rerun `pnpm run render:tray-icon` in `apps/desktop` after regenerating brand assets.
  */
 
 import { readFile, writeFile } from 'node:fs/promises'
@@ -22,7 +19,7 @@ export const TRAY_ICON_PATHS = {
   output: fileURLToPath(new URL('../resources/tray-windows.ico', import.meta.url)),
 } as const
 
-/** Coordinate space of the vector source; sharp's SVG density is scaled against it. */
+/** Coordinate space of the generated SVG; sharp's SVG density is scaled against it. */
 const SOURCE_EDGE = 1024
 const SOURCE_DENSITY = 72
 const PNG_SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
@@ -92,7 +89,7 @@ export function unpackIco(ico: Buffer): IcoEntry[] {
 }
 
 /**
- * Rasterize the vector source at each tray size.
+ * Rasterize the generated artwork at each tray size.
  * @param svg - SVG application icon with a 1024-pixel edge.
  * @param sizes - Bitmap edges to render.
  * @returns PNG entries in the given order.

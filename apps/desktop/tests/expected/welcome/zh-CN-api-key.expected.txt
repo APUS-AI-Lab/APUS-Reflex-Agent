@@ -1,5 +1,5 @@
-APUS Reflex Harness
-APUS Reflex Harness
+APUS Reflex
+APUS Reflex
 添加一个 API Key 开始使用
 连接 DeepSeek API Key；完成设置后可在模型设置中配置其他提供方。
 输入 API 密钥 [password]

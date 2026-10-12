@@ -35,7 +35,8 @@ export function ReflexSettings(props: ReflexSettingsProps) {
   const fields = ['endpoint', 'model', 'effort', 'timeoutMs', 'apiKeyEnv'] as const
   return <section className={css.section} aria-label={t('title')}>
     <p>{t('description')}</p>
-    <SettingsForm labels={{ ...formLabels(t), ...state.partialSave ? { saveFailed: t('partialSave') } : {} }} state={state} onSave={props.save} onDiscard={props.discard}>
+    {state.runtime?.provider === null ? <p role="status">{t('unconfigured')}</p> : null}
+    <SettingsForm labels={{ ...formLabels(t), ...state.credentialSaveError ? { saveFailed: t(state.credentialSaveError === 'configured' ? 'newCredentialReference' : 'credentialCheckFailed') } : state.partialSave ? { saveFailed: t('partialSave') } : {} }} state={state} onSave={props.save} onDiscard={props.discard}>
       {fields.map(field => <SettingsValueField key={field} id={`reflex-${field}`} label={t(field)} hint={t(`${field}Hint`)}
         overriddenLabel={t('overridden')} resetLabel={t('reset')} invalidLabel={t('invalidNumber')}
         disabled={!state.writable || state.saving} numeric={field === 'timeoutMs'} {...state[field]}

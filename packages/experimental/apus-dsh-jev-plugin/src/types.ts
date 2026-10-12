@@ -153,7 +153,8 @@ export interface ReflexCapabilityState {
 }
 /** Credential-free runtime status. */
 export interface ReflexStatus {
-  readonly provider: JevProviderInfo
+  /** Null until an endpoint and model are configured; settings and explicit probes remain available. */
+  readonly provider: JevProviderInfo | null
   readonly capabilities: readonly (ReflexCapabilityState & { readonly id: ReflexCapabilityId })[]
 }
 /** Unsaved connection candidate; apiKey is transient and never persisted by the probe. */

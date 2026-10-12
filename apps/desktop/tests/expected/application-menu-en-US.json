@@ -1,7 +1,7 @@
 [
   {
     "role": "hide",
-    "label": "Hide APUS Reflex Harness"
+    "label": "Hide APUS Reflex"
   },
   {
     "role": "hideOthers",
@@ -13,6 +13,6 @@
   },
   {
     "role": "quit",
-    "label": "Quit APUS Reflex Harness"
+    "label": "Quit APUS Reflex"
   }
 ]

@@ -1,0 +1,16 @@
+# Bilingual-pair consistency record for system3-settings-plan.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-integrated-product/system3-settings-plan.md
+/native-reflex-settings-integration:
+  en: 3f917a68fbb02418
+  zh: 16a9fae6709fe0c9
+/native-reflex-settings-integration/goal-and-structure:
+  en: 5d6bcd9028b31243
+  zh: ffc09d4dd64de72d
+/native-reflex-settings-integration/configuration-and-lifecycle:
+  en: 326f326fbcf2e077
+  zh: 4aa9544d373c0c81
+/native-reflex-settings-integration/files-and-tests:
+  en: 2522a04e203016b8
+  zh: a806b0429ead311d

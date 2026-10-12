@@ -44,9 +44,11 @@ describe('desktop macOS release signature', () => {
     expect(config.protocols).toEqual([{ name: 'APUS Reflex Harness', schemes: ['dsh'] }])
     expect(portablePath(config.directories.output)).toContain('/.desktop-build/targets/mac-arm64/artifacts')
     expect(config.mac.extendInfo.NSMicrophoneUsageDescription).toContain('microphone')
-    expect(config.extraResources).toHaveLength(2)
-    expect(config.extraResources[0]?.to).toBe('runtime')
-    expect(portablePath(config.extraResources[0]?.from ?? '')).toContain('/.desktop-build/targets/mac-arm64/runtime')
+    expect(config.extraResources.map(resource => resource.to)).toEqual([
+      'licenses/LICENSE.txt', 'licenses/THIRD_PARTY_NOTICES.txt', 'runtime', 'icon.png',
+    ])
+    const runtime = config.extraResources.find(resource => resource.to === 'runtime')
+    expect(portablePath(runtime?.from ?? '')).toContain('/.desktop-build/targets/mac-arm64/runtime')
     const [dshFiles, dshNodeModules] = config.files.slice(-2)
     if (!dshFiles || !dshNodeModules || typeof dshFiles === 'string' || typeof dshNodeModules === 'string') {
       throw new Error('desktop DSH resources must use electron-builder file mappings')
