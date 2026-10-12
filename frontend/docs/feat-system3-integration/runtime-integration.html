@@ -1,3 +1,15 @@
-<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>System3 Desktop真实接入</title><style>body{font:16px/1.7 system-ui;max-width:960px;margin:40px auto;padding:24px}pre{white-space:pre-wrap}</style><h1>System3 Desktop真实接入</h1><p>用户已批准完整设计与真实部署测试；本轮在隔离worktree实现自有0.1.7-rc.2 Harness和现有Desktop壳，保留唯一Session、原生执行、safe profile和权限控制。</p><h2>加载关系</h2><pre>Desktop main → 显式runtime-manifest → 自有rc.2 dsh入口 → 原生Host/Session → 原生UI slots
-开发：显式sourceRoot + 已构建入口；安装包：resources/system3-runtime封闭closure，拒绝源码路径
-真实system3Runtime投影 → 建议 / 采用 / 实际使用 / Skill注入；Goal / Subagent / Deliverables仍用原生投影</pre><h2>变更文件</h2><p>src/main/system3-runtime.ts、src/main/index.ts、scripts/prepare-system3-runtime.mjs、test/system3-runtime.test.ts、package.json负责runtime加载校验。Harness既有ui-model-selection负责模式及决策事实；Desktop既有client-ui负责品牌。</p><h2>API及测试</h2><p>消费system3Runtime的entry、skill，以及既有modelSelection.next/lastUsed。前端不发送提示正文到决策投影，不建立第二任务数据库。本机Lead仍待验证。focused tests覆盖缺失manifest、错误版本、越界路径、安装包拒绝源码；实际原生profile启动和UI浏览器验证随后进行。</p></html>
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<title>APUS Reflex 桌面运行时集成</title>
+<style>body{font:16px/1.7 system-ui;max-width:960px;margin:40px auto;padding:24px}pre{white-space:pre-wrap}</style>
+<h1>APUS Reflex 桌面运行时集成</h1>
+<p>桌面客户端由一体化仓库中的 frontend/ 管理，与 Harness 从同一份源码组装。客户端复用原生 Session、工具执行和权限机制。</p>
+<h2>加载关系</h2>
+<pre>Desktop main → runtime-manifest → dsh 入口 → Host / Session → Web UI
+安装包：resources/system3-runtime 包含已部署的运行时及依赖，拒绝使用源码目录。
+Reflex UI 展示已记录的决策；可选远端服务仍需明确配置与授权。</pre>
+<h2>配置与验证</h2>
+<p>连接 Reflex 服务不会自动开启路由、监督或 Continuum。安装包、模型请求与持久记忆分别验收；本页不代表这些验收已经完成。</p>
+<p>参阅<a href="desktop-packaging.md">运行时打包说明</a>、<a href="../../../docs/feat-integrated-product/configuration.zh.md">模型配置教程</a>和<a href="../../../docs/feat-integrated-product/releases.zh.md">发行流程</a>。</p>
+</html>

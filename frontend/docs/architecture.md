@@ -53,6 +53,8 @@ Electron logs/
 
 Production and development builds use separate user-data roots. Application upgrades do not replace profile, plugin, workspace, session, or model configuration data.
 
+Desktop settings writes remain bound to their original Profile. Asynchronous flushes wait for active writes; synchronous shutdown saves supersede older snapshots. A Profile switch that cannot save pending settings throws and retains the current Profile and its in-memory settings.
+
 ## Window and IPC security
 
 The main Harness window uses:

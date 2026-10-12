@@ -1,6 +1,6 @@
 # Patch 与 Plugin 规范
 
-适用于 DSH Desktop 对 Harness 的宿主定制，以及为这些定制维护的第三方补丁。本文是跨目录规则的唯一维护位置；包加载和补丁重放的具体要求分别见 `packages/AGENTS.md`、`patches/AGENTS.md`。preload 能否直接改页面 DOM 的判定见 `src/preload/AGENTS.md`，不在本文重复。
+适用于 APUS Reflex 对 Harness 的宿主定制，以及为这些定制维护的第三方补丁。本文是跨目录规则的唯一维护位置；包加载和补丁重放的具体要求分别见 `packages/AGENTS.md`、`patches/AGENTS.md`。preload 能否直接改页面 DOM 的判定见 `src/preload/AGENTS.md`，不在本文重复。
 
 ## 1. 按能力选扩展方式
 

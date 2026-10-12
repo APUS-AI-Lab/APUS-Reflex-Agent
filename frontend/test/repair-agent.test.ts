@@ -23,7 +23,7 @@ describe('RepairAgentService', () => {
     expect(finding?.culprit).toBe('plugin-a')
   })
 
-  it('builds the first prompt from the failed launch, not from Safe Mode logs', async () => {
+  it.each(['en', 'zh'] as const)('builds the %s prompt from the failed launch and the maintained source', async (locale) => {
     const prompts: string[] = []
     const workspacePaths: string[] = []
     vi.stubGlobal('fetch', vi.fn(async (url: URL | string, init?: RequestInit) => {
@@ -52,7 +52,7 @@ describe('RepairAgentService', () => {
       ensureHarnessReady: async () => {},
       workspaceDirectory: '/data/harness',
       harnessLogPath: '/logs/harness.log',
-      locale: () => 'en',
+      locale: () => locale,
       crashEvidence: () => ({ logs: ['[desktop] starting web'], plugins: ['broken-plugin'] })
     })
 
@@ -65,9 +65,15 @@ describe('RepairAgentService', () => {
     expect(await service.sendPrompt('s1', 'again')).toEqual({ ok: true })
     expect(prompts[0]).toContain('broken-plugin')
     expect(prompts[0]).not.toContain('safe mode ready')
-    expect(prompts[0]).toContain("Harness home (this session's workspace): `/data/harness`")
-    expect(prompts[0]).toContain('Full startup log: `/logs/harness.log`')
-    expect(prompts[0]).toMatch(/\[User Request\]\nhelp$/)
+    expect(prompts[0]).toContain(locale === 'en'
+      ? "Harness home (this session's workspace): `/data/harness`"
+      : 'Harness 数据目录（当前会话的工作区）：`/data/harness`')
+    expect(prompts[0]).toContain(locale === 'en'
+      ? 'Full startup log: `/logs/harness.log`'
+      : '完整启动日志：`/logs/harness.log`')
+    expect(prompts[0]).toContain('https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/tree/main/frontend')
+    expect(prompts[0]).not.toContain('https://github.com/dataelement/dsh-desktop')
+    expect(prompts[0]).toMatch(locale === 'en' ? /\[User Request\]\nhelp$/ : /\[用户输入\]\nhelp$/)
     expect(prompts[1]).toBe('again')
   })
 
