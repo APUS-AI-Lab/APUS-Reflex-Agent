@@ -1,0 +1,7 @@
+# Bilingual-pair consistency record for context-v3-priority-validation.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-reflex-control/evidence/context-v3-priority-validation.md
+/context-review-v3-priority-validation:
+  en: 59fa961dbb71d47b
+  zh: 1db2c3c31b380770

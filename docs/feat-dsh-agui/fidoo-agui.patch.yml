@@ -1,3 +1,5 @@
+# Historical optional relay example; set SYSTEM3_GENERATION_BASE_URL to your own API URL.
+# Legacy provider IDs are retained for existing profile compatibility. No maintainer service is supplied.
 # Route the Web profile and the AG-UI bridge through the Fidoo LiteLLM proxy.
 # Apply after the bridge overlay:
 #   export DSH_AGUI_TOKEN=<random secret shared with the Muse server>
@@ -17,7 +19,7 @@
         displayName: Fidoo DeepSeek
         apiKeyEnv: SYSTEM3_LITELLM_API_KEY
         api: openai-completions
-        baseURL: https://proxy.fidoo.ai/v1
+        baseURL: !!js 'process.env.SYSTEM3_GENERATION_BASE_URL?.trim() || ""'
         compat:
           thinkingFormat: deepseek
         models:

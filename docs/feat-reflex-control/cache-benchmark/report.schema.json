@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "C-06 fixed paired context cache evidence",
+  "type": "object",
+  "required": [
+    "version",
+    "model",
+    "effort",
+    "coldCacheGuaranteed",
+    "prices",
+    "records"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "model": {
+      "type": "string"
+    },
+    "effort": {
+      "type": "string"
+    },
+    "coldCacheGuaranteed": {
+      "const": false
+    },
+    "prices": {
+      "type": "null"
+    },
+    "records": {
+      "type": "array",
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "enabled",
+          "workspace",
+          "turns",
+          "inputUnchanged",
+          "inputHashes",
+          "reflexDecisions",
+          "requests",
+          "checks"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "workspace": {
+            "type": "string"
+          },
+          "turns": {
+            "type": "array",
+            "maxItems": 3
+          },
+          "inputUnchanged": {
+            "type": "boolean"
+          },
+          "inputHashes": {
+            "type": "object"
+          },
+          "reflexDecisions": {
+            "type": "array"
+          },
+          "requests": {
+            "type": "array"
+          },
+          "error": {
+            "type": "string"
+          },
+          "checks": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "boolean"
+            }
+          },
+          "persistedPrefix": {
+            "type": "array"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

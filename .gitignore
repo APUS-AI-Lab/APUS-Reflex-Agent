@@ -46,3 +46,6 @@ worktrees/
 .agents/worktrees/
 .typert-*/
 native/system/test/bin/
+
+# Generated VitePress build workspace.
+/website/.vitepress/.temp/

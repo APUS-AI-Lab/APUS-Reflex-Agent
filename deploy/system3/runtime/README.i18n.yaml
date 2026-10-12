@@ -3,5 +3,5 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write deploy/system3/runtime/README.md
 /system3-desktop-runtime-closure:
-  en: 5ca0b94cccf14a10
-  zh: 99861c6429cf57ef
+  en: e4cebf7b36634b63
+  zh: 724b54170b44e2a9

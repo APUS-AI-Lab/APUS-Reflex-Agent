@@ -1,0 +1,19 @@
+# Bilingual-pair consistency record for organization-migration.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/dev-continuum-reflex-integration/organization-migration.md
+/organization-migration-review:
+  en: 1f88ee5f27889cf7
+  zh: 2789d33e10ddb066
+/organization-migration-review/current-ownership-and-access:
+  en: 9556e882f29844b6
+  zh: 6cf87ffd581c5e8c
+/organization-migration-review/historical-material-before-public-release:
+  en: f831c993aa8407b7
+  zh: 12a82d22148ca507
+/organization-migration-review/compatibility-impact:
+  en: 71ca3c6ebcd7cdb8
+  zh: 2e6c759f0dd8fff8
+/organization-migration-review/completion-and-remaining-checks:
+  en: e85055f146b706fc
+  zh: dc8d4e8b6cf17374

@@ -142,7 +142,14 @@ Read these pages when the package-level contract is not enough. They move from t
 
 -----
 
+Host supervision uses `steerFromSupervisor(parent, runId, text, signal, isCurrent?)`, which verifies the exact parent Agent and writes `subagent/supervision-steer` with `source: reflex-supervision` after acceptance. It is not a Remote and never attributes automatic advice to a person. Providers may publish `reportEvidence` operation fingerprints through `subagent/evidence` while the run is live; this independent event leaves the content-free activity interface unchanged. Optional versioned `semantic` evidence carries deployment-approved structured action labels and bounded workspace-relative paths, with omitted details marked `truncated`. Consumers must apply project-data privacy admission before remote submission; the evidence grants no authority.
+
+Host supervisors may inspect `recoveryState` and use `recoverFromSupervisor` only for their exact live delegated run. Recovery and steering are serialized, and admitted human input invalidates an older recovery continuation. `subagent/supervision-recovery` records the attributed input and native receipt separately from human steering; a continuation receipt does not prove progress.
+
+Host supervisor advice carries an optional `isCurrent` callback checked at serialized dispatch, together with human-input revision and native thread/turn identity. Refused stale advice throws `SubagentSupervisorStaleError` before transport and is not recorded as accepted. Recovery forwards `expectedActivity` so native interruption rechecks the assessed activity timestamp and retry count; continuation after confirmed interruption uses only the current authority check.
+
 <a id="model-experience"></a>
+
 ## Model Experience
 
 ### Settlement notice
@@ -178,6 +185,8 @@ One fixed statement in each child's runtime-context snapshot; none in the parent
 #### KV Cache effect
 
 Prefix-stable within a child: the statement never changes during the child's lifetime, so it is written once into the first runtime-context snapshot. Parent-side, no direct invalidation; the named tool consumers own any request-prefix changes.
+
+
 
 ## Known Limitations and Deferred Work
 

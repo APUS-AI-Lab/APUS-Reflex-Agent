@@ -22,6 +22,11 @@ const SHIPPED_CONFIG_GLOBS = [
 /** Ordinary single-line configuration forms this source check rejects; not full YAML analysis. */
 const INLINE_DENY = /^\s*(apiKey|baseURL|apiKeyEnv|authToken|headers)\s*:\s*!!js\b/
 
+// Jev selects only a reference name here. Its resolveJevApiKey() still resolves
+// the value through ctx.credentials or the launch snapshot, including missing-key failures.
+const JEV_REFERENCE_CONFIG = 'packages/experimental/apus-dsh-jev-plugin/cordis.patch.yml'
+const JEV_REFERENCE_SELECTION = 'apiKeyEnv: !!js \'process.env.JEV_API_KEY_ENV?.trim() || (process.env.JEV_API_KEY ? "JEV_API_KEY" : undefined)\''
+
 /** Return every forbidden inline environment form in shipped configuration. */
 export function collectConfigSourceOwnershipViolations(root: string): string[] {
   const failures: string[] = []
@@ -30,6 +35,7 @@ export function collectConfigSourceOwnershipViolations(root: string): string[] {
       const rel = file.split(sep).join('/')
       readFileSync(resolve(root, rel), 'utf8').split('\n').forEach((line, index) => {
         if (!INLINE_DENY.test(line)) return
+        if (rel === JEV_REFERENCE_CONFIG && line.trim() === JEV_REFERENCE_SELECTION) return
         failures.push(
           `${rel}:${String(index + 1)}: inlines a credential or endpoint from the environment.`
           + ' The adapter resolves apiKeyEnv through ctx.credentials and the endpoint through the'

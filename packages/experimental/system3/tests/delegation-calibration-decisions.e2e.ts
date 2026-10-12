@@ -1,8 +1,8 @@
 /**
  * Real-Jev entry decisions over the delegation calibration tasks, with the deployed candidates including Codex delegation.
  *
- * Covers the runnable tasks and the decision-only repository-scale probes. Self-skips without JEV_API_KEY. The delegate
- * candidate is offered through stubbed provider and tool lookups, so only the decision is real; the arms themselves
+ * Covers runnable tasks and decision-only repository-scale probes; self-skips without explicit JEV_ENDPOINT and JEV_MODEL.
+ * The delegate candidate uses stubbed provider and tool lookups, so only the decision is real; the arms themselves
  * run outside this suite. Writes the report to SYSTEM3_CALIBRATION_DECISIONS when that path is set.
  */
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs'
@@ -30,8 +30,8 @@ const tasks = [
   ...readdirSync(probesDir).sort().map(file => JSON.parse(readFileSync(new URL(file, probesDir), 'utf8')) as TaskMeta),
 ]
 const deployment = readFileSync(new URL('../../../../deploy/system3/runtime.patch.yml', import.meta.url), 'utf8')
-const endpoint = /endpoint: (\S+)/.exec(deployment)?.[1]
-const jevModel = /model: (APUS-\S+)/.exec(deployment)?.[1]
+const endpoint = process.env.JEV_ENDPOINT?.trim() ?? ''
+const jevModel = process.env.JEV_MODEL?.trim() ?? ''
 const minConfidence = Number(/entryRouting:[\s\S]*?minConfidence: ([\d.]+)/.exec(deployment)?.[1])
 // A candidate wording under evaluation may replace the deployed one; the report records which was used.
 const codexDescription = process.env.SYSTEM3_CALIBRATION_CODEX_DESCRIPTION ?? /- id: codex\n\s+description: (.+)/.exec(deployment)?.[1]
@@ -39,12 +39,12 @@ const codexDescription = process.env.SYSTEM3_CALIBRATION_CODEX_DESCRIPTION ?? /-
 const contexts: Context[] = []
 afterAll(async () => { for (const ctx of contexts.splice(0)) await ctx.fiber.dispose() })
 
-describe.skipIf(!process.env.JEV_API_KEY)('System3 delegation calibration decisions against the deployed Jev', { retry: 0 }, () => {
+describe.skipIf(!endpoint || !jevModel)('System3 delegation calibration decisions against the deployed Jev', { retry: 0 }, () => {
   it('records the entry decision for every calibration task', async () => {
     if (endpoint === undefined || jevModel === undefined || !Number.isFinite(minConfidence) || codexDescription === undefined) {
-      throw new Error('deploy/system3/runtime.patch.yml no longer declares the Jev endpoint, model, entry confidence and codex candidate')
+      throw new Error('deploy/system3/runtime.patch.yml requires explicit Jev endpoint/model, entry confidence and codex candidate')
     }
-    for (const candidate of tiers.candidates) expect(deployment).toContain(`description: ${candidate.description}`)
+    // The four-tier fixture exercises optional user routes; only Codex wording follows the public deployment.
     const ctx = new Context()
     contexts.push(ctx)
     await mountAgentLoopTestDependencies(ctx)
@@ -55,7 +55,7 @@ describe.skipIf(!process.env.JEV_API_KEY)('System3 delegation calibration decisi
       reasoning: { efforts: ['low', 'medium', 'high'].map(id => ({ id: ReasoningEffortId(id), name: id })) },
     }))
     ctx.effect(() => ctx.llm.registerAdapter([...new Set(tiers.candidates.map(candidate => candidate.provider))], adapter))
-    await ctx.plugin(Jev, { endpoint, model: jevModel, apiKeyEnv: 'JEV_API_KEY', effort: 'high', timeoutMs: 15000 })
+    await ctx.plugin(Jev, { endpoint, model: jevModel, ...(process.env.JEV_API_KEY_ENV || process.env.JEV_API_KEY ? { apiKeyEnv: process.env.JEV_API_KEY_ENV || 'JEV_API_KEY' } : {}), effort: 'high', timeoutMs: 15000 })
     const get = (name: string): unknown => ctx.reflect.get(name)
     vi.spyOn(ctx, 'get').mockImplementation(((name: string) => {
       if (name === 'subagents') return { getProvider: (provider: string) => (provider === 'codex' ? {} : undefined) }

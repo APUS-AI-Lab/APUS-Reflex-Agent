@@ -26,6 +26,17 @@ export const zh = {
   noticeDelegateFailures: '{subject} 已有 {count} 条命令失败', noticeOther: '过程监督提示', noticeAdvised: '已提醒模型调整做法',
   taskFrame: '任务卡 · 已记下 {count} 条要求', taskGoal: '任务：{text}', taskItem: '· {text}',
   interjectionSteered: '已把你刚才补充的要求插入正在进行的这一轮',
+  reflexSupervision: 'Reflex 监督 · {state}', reflexEvidence: '观察证据：{count} 条',
+  reflexRecovery: 'Reflex 执行恢复 · {state}', recoveryIntent: '正在确认中断', recoveryContinued: '已开始继续执行，结果待验证', recoveryCompleted: '原任务已正常结束，无需重启', recoveryStale: '任务已变化，已停止恢复', recoveryUnknown: '未能确认恢复，未重复启动', recoveryRetryBudget: '达到连续重试上限', recoveryInactivityBudget: '达到原生执行无活动预算',
+  reflexIntent: '正在发送调整建议', reflexAccepted: 'Codex 已接收，尚待观察效果', reflexUnknown: '建议送达尚未确认，未重复发送',
+  reflexImproved: '已观察到执行改善', reflexUnchanged: '尚未观察到改善', reflexInconclusive: '证据不足，无法确认效果',
+  reflexLimit: '已达自动干预上限', reflexStale: '任务已变化，未发送过期建议', reflexOther: '状态已更新',
+  reflexObserve: '继续观察', reflexDiagnose: '检查重复失败的根因', reflexVerify: '先做最小验证', reflexNarrow: '缩小单步范围，保留原目标', reflexRealign: '重新核对目标约束',
+  reflexContextRemoved: 'Reflex 已移出 {count} 个上下文片段，可按需恢复', reflexContextRestored: 'Reflex 已恢复 {count} 个上下文片段',
+  reflexObserving: 'Reflex 正在观察 Codex 执行；只有收到执行证据后才会更新判断', reflexTimeline: 'Reflex 执行时间线 · {count} 条',
+  reflexTimelineSupervision: '监督：{state} · {action}', reflexTimelineRecovery: '恢复：{state}',
+  reflexTimelineContext: '上下文：{action} {count} 段', reflexRemoveAction: '移出', reflexRestoreAction: '恢复', reflexTimelineEvidence: '收到执行证据',
+
 } satisfies Record<string, string>
 /** Typed keys shared by both product locales. */
 export type System3Key = keyof typeof zh
@@ -56,6 +67,17 @@ export const en = {
   noticeDelegateFailures: '{subject} has {count} failed commands', noticeOther: 'Process notice', noticeAdvised: 'The model was asked to change course',
   taskFrame: 'Task card · requirements kept: {count}', taskGoal: 'Task: {text}', taskItem: '· {text}',
   interjectionSteered: 'Your latest requirement was added to the running turn',
+  reflexSupervision: 'Reflex supervision · {state}', reflexEvidence: 'Observed evidence: {count} items',
+  reflexRecovery: 'Reflex execution recovery · {state}', recoveryIntent: 'Confirming interruption', recoveryContinued: 'Execution continued; result not yet verified', recoveryCompleted: 'Original task finished; no restart needed', recoveryStale: 'Task changed; recovery stopped', recoveryUnknown: 'Recovery unconfirmed; no duplicate start', recoveryRetryBudget: 'Consecutive retry limit reached', recoveryInactivityBudget: 'Native inactivity budget reached',
+  reflexIntent: 'Sending adjustment guidance', reflexAccepted: 'Codex accepted guidance; effect not yet verified', reflexUnknown: 'Guidance delivery unconfirmed; not resent',
+  reflexImproved: 'Execution improvement observed', reflexUnchanged: 'No improvement observed yet', reflexInconclusive: 'Insufficient evidence to verify the effect',
+  reflexLimit: 'Automatic intervention limit reached', reflexStale: 'Task changed; stale guidance was not sent', reflexOther: 'Status updated',
+  reflexObserve: 'Continue observing', reflexDiagnose: 'Diagnose repeated failures', reflexVerify: 'Run a minimal verification', reflexNarrow: 'Reduce the next step while retaining the goal', reflexRealign: 'Review the original goal constraints',
+  reflexContextRemoved: 'Reflex moved {count} context segments out; they remain recoverable', reflexContextRestored: 'Reflex restored {count} context segments',
+  reflexObserving: 'Reflex is observing Codex; judgements change only after execution evidence arrives', reflexTimeline: 'Reflex execution timeline · {count} items',
+  reflexTimelineSupervision: 'Supervision: {state} · {action}', reflexTimelineRecovery: 'Recovery: {state}',
+  reflexTimelineContext: 'Context: {action}, {count} segments', reflexRemoveAction: 'removed', reflexRestoreAction: 'restored', reflexTimelineEvidence: 'Execution evidence received',
+
 } satisfies Record<System3Key, string>
 
 declare module '@deepseek-ai/dsh-client-ui-slots' {

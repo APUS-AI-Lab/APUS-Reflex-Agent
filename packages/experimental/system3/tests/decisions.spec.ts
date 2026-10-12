@@ -4,6 +4,7 @@ import { Session, SessionId, SessionLogOffset } from '@deepseek-ai/dsh-session'
 import { describe, expect, it, vi } from 'vitest'
 import Jev from '../../apus-dsh-jev-plugin/src/index.ts'
 import System3, { type System3DecisionRequest } from '../src/index.ts'
+import { system3DecisionProjection } from '../src/decision-projection.ts'
 
 /** Plugin input config: the schema's mutable input shape, not the readonly service `Config`. */
 type MountConfig = Parameters<typeof System3.Config>[0]
@@ -83,4 +84,42 @@ describe('System3 Jev shadow receipts', () => {
       expect(receipt.baseline.action).toBe('retry')
     } finally { await ctx.fiber.dispose() }
   })
+})
+
+it('records and restores the actual configured effort on each new decision', async () => {
+  const ctx = new Context()
+  await ctx.plugin(Projections)
+  let effort: 'low' | 'high' = 'high'
+  new Jev(ctx, { endpoint: { get: () => 'https://reflex.test' }, model: { get: () => 'reflex-test' },
+    effort: { get: () => effort }, protocol: { get: () => 'openjev' },
+    timeoutMs: { get: () => 1000 }, apiKeyEnv: { get: () => undefined } })
+  await ctx.plugin(System3, { jevExecutionDomain: 'local' })
+  const sent: unknown[] = []
+  const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (_url, init) => {
+    sent.push(JSON.parse(typeof init?.body === 'string' ? init.body : '{}'))
+    return new Response(JSON.stringify({ model: 'reflex-test', answers: { action: {
+      type: 'choice', choice: 'retry', probabilities: { retry: 1 }, confidence: 1,
+    } } }))
+  })
+  const session = Session.create(SessionId('configured-effort'))
+  try {
+    const first = await ctx.system3.shadowDecision(session, input)
+    effort = 'low'
+    const second = await ctx.system3.shadowDecision(session, input)
+    expect(first).toMatchObject({ effort: 'high', request: { effort: 'high' } })
+    expect(second).toMatchObject({ effort: 'low', request: { effort: 'low' } })
+    expect(sent).toMatchObject([{ effort: 'high' }, { effort: 'low' }])
+    expect(system3DecisionProjection.stateSchema.parse(first)).toEqual(first)
+    expect(system3DecisionProjection.stateSchema.parse(second)).toEqual(second)
+  } finally { transport.mockRestore(); await ctx.fiber.dispose() }
+})
+
+it('restores a denied decision without inventing an effective effort', async () => {
+  const { ctx } = await mount({ privacyMode: 'local-only', jevExecutionDomain: 'network' })
+  try {
+    const receipt = await ctx.system3.shadowDecision(Session.create(SessionId('denied-no-effort')), input)
+    expect(receipt.outcome).toEqual({ kind: 'unknown', code: 'privacy-denied' })
+    expect(receipt.effort).toBeUndefined()
+    expect(system3DecisionProjection.stateSchema.parse(receipt)).toEqual(receipt)
+  } finally { await ctx.fiber.dispose() }
 })

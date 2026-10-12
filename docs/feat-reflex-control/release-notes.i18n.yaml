@@ -1,0 +1,19 @@
+# Bilingual-pair consistency record for release-notes.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-reflex-control/release-notes.md
+/apus-reflex-harness-release-notes:
+  en: 04c1d283908496f7
+  zh: 885fd9002b72ba12
+/apus-reflex-harness-release-notes/0-1-7-rc-2-reflex-control-closeout:
+  en: 2b5ea9e17f06bfaf
+  zh: 356f5e3de15396d3
+/apus-reflex-harness-release-notes/0-1-7-rc-2-reflex-control-closeout/added-and-verified:
+  en: f40ff88ec4a8e2eb
+  zh: df6537c27b8dfcd3
+/apus-reflex-harness-release-notes/0-1-7-rc-2-reflex-control-closeout/known-limits-before-a-public-release:
+  en: 54a98b06d81d2f63
+  zh: 1f83266b9e5ddab2
+/apus-reflex-harness-release-notes/0-1-7-rc-2-reflex-control-closeout/attribution-and-license:
+  en: ff7bd47d4df6e068
+  zh: 37f766564da131da

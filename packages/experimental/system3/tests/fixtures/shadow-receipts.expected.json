@@ -2,7 +2,7 @@
   {
     "version": 1,
     "mode": "shadow",
-    "stateDigest": "fde2b173bf32e2ef9b666f72643a851151bb6ba2b37674f5c133410bde99a662",
+    "stateDigest": "ac0e6bf969568bcddf22b2c3c95e7e9f9a865a45fa702323fe6546968f3d4d11",
     "evidenceRefs": [],
     "goalRevision": "g1",
     "dataClasses": [
@@ -65,7 +65,6 @@
         "availableEvidenceRefs": [],
         "budgetRemaining": 1
       },
-      "effort": "low",
       "questions": {
         "action": {
           "type": "choice",
@@ -78,13 +77,14 @@
           }
         }
       },
-      "model": "APUS-OpenJev-fixture"
+      "model": "APUS-OpenJev-fixture",
+      "effort": "low"
     }
   },
   {
     "version": 1,
     "mode": "shadow",
-    "stateDigest": "fde2b173bf32e2ef9b666f72643a851151bb6ba2b37674f5c133410bde99a662",
+    "stateDigest": "ac0e6bf969568bcddf22b2c3c95e7e9f9a865a45fa702323fe6546968f3d4d11",
     "evidenceRefs": [],
     "goalRevision": "g1",
     "dataClasses": [
@@ -128,7 +128,6 @@
         "availableEvidenceRefs": [],
         "budgetRemaining": 1
       },
-      "effort": "low",
       "questions": {
         "action": {
           "type": "choice",
@@ -141,7 +140,8 @@
           }
         }
       },
-      "model": "APUS-OpenJev-fixture"
+      "model": "APUS-OpenJev-fixture",
+      "effort": "low"
     }
   }
 ]

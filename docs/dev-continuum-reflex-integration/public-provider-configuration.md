@@ -1,0 +1,21 @@
+# Public provider configuration
+
+English | [中文](public-provider-configuration.zh.md)
+
+The public System3 profile includes the official DeepSeek generation provider and `fast`, `reasoning`, and `codex` candidates. It includes no maintainer relay or Reflex endpoint. Configure `DEEPSEEK_API_KEY` in the credential store or protected launch environment. System3 automation requires explicit classification via `SYSTEM3_SESSION_DATA_CLASSES`. Unset, an empty string, or JSON `null` disables the entire System3 row, including local process supervision, while ordinary generation continues using the user-configured provider. This is not a global egress restriction: general-model requests still leave the process according to their provider settings. A nonempty JSON array such as `["workspace"]` enables the deployment’s controlled policy for that class. Invalid JSON, unknown classes, or an empty array fail startup when the entry router is enabled; the application cannot silently discard an enabled System3 plugin. Existing user profiles with their own classification or local-only config remain configurable, and explicit `disabled: true` takes precedence.
+
+## Optional Reflex
+
+Set both `JEV_ENDPOINT` and `JEV_MODEL`. With no user profile override, both absent or blank disables Reflex; supplying only one or an invalid URL fails startup. `JEV_API_KEY` is optional for anonymous serving. `JEV_API_KEY_ENV` explicitly names a credential-store or launch-environment reference; a missing named credential prevents the HTTP request. Existing config-only overrides remain enabled; explicit `disabled: true` wins. A profile can instead set `jev.disabled: false` and explicit `endpoint`, `model`, and optional `apiKeyEnv`; see the [bundle configuration](../../packages/experimental/apus-dsh-jev-plugin/README.md#configure-the-gateway).
+
+## Your own relay
+
+A YAML patch replaces the targeted row’s complete `config`; copy the existing row and preserve every setting you still need. Use a user profile patch to add your own `llm-pi-ai.config.providers` entry with its literal `baseURL`, credential reference, and supported models, retaining the provider entries needed by other candidates. Replace `system3.config.entryRouting.candidates` with the complete desired list, including retained default routes. Add each permitted candidate ID to `approvedRemoteIds`, declare its execution domain and data classes, and preserve the explicit session-data policy. Adding a provider alone does not make it a routing candidate. See the [generation adapter configuration](../../packages/llm/llm-pi-ai/README.md). A relay can also become the baseline through `agent-default-model` without Reflex.
+
+## Codex delegation
+
+The [Codex example](../../deploy/system3/codex/config.toml) uses the public OpenAI Responses API and `OPENAI_API_KEY`. The model is an editable example, not an access or availability guarantee. For a different provider, edit the literal `model`, provider section, `base_url`, and `env_key`, then make that credential available to the service subprocess. TOML strings do not expand environment variables. `SYSTEM3_CODEX_HOME` selects the service-owned configuration directory. The release script installs the example only when no configuration already exists, preserving an operator's configured provider across releases. The subprocess forwards both `OPENAI_API_KEY` and the legacy `SYSTEM3_LITELLM_API_KEY` reference; other credential references require an explicit profile `env` entry because parent secrets are scrubbed. A Codex candidate needs an installed, authenticated Codex runtime; it does not substitute for generation-model credentials.
+
+## Validation scope
+
+The public-bundle tests load the actual shipped expressions through the startup loader, exercise absent/partial/invalid configuration and profile overrides, and capture authenticated versus anonymous requests at a local HTTP server. A missing declared credential sends no request. System3 privacy and composition tests own policy enforcement and generation behavior. Real-provider suites require explicit endpoints and models; a skipped suite is not evidence of remote-provider acceptance. Historical four-tier routing fixtures exercise optional routes and do not describe public defaults.

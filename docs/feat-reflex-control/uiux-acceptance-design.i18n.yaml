@@ -1,0 +1,19 @@
+# Bilingual-pair consistency record for uiux-acceptance-design.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-reflex-control/uiux-acceptance-design.md
+/ui-ux-acceptance-design:
+  en: fe5a11ebb7f3fffa
+  zh: c58712933dcfc744
+/ui-ux-acceptance-design/goal-and-authorization:
+  en: 8af317d5917cdac2
+  zh: 4628dc422fc3e287
+/ui-ux-acceptance-design/layout-and-state:
+  en: ebdfaf3719dbfe1a
+  zh: 2c077b6d3dff3e93
+/ui-ux-acceptance-design/files:
+  en: f8fe888ceb55e18e
+  zh: 60dcbd997d06ab52
+/ui-ux-acceptance-design/acceptance:
+  en: ed1444bef724284f
+  zh: daf60edf83f93e5f

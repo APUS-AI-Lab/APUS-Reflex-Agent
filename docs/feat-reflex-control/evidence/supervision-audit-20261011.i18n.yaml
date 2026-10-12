@@ -1,0 +1,7 @@
+# Bilingual-pair consistency record for supervision-audit-20261011.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-reflex-control/evidence/supervision-audit-20261011.md
+/supervision-acceptance-audit-2026-10-11:
+  en: bd0551fe874bc7da
+  zh: df2875b4c1816cf6

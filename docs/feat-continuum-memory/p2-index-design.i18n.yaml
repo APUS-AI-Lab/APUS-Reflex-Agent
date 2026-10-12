@@ -1,0 +1,19 @@
+# Bilingual-pair consistency record for p2-index-design.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-continuum-memory/p2-index-design.md
+/p2-index-and-backlog-design:
+  en: 4c93ee5572f716d8
+  zh: 4c82a55c5742210a
+/p2-index-and-backlog-design/goal:
+  en: 4f5cab8d34d41ffa
+  zh: fafb07a49b150fd8
+/p2-index-and-backlog-design/api:
+  en: 57413a4eebe7b5bc
+  zh: 6509ed0f3a7b89d4
+/p2-index-and-backlog-design/invariants:
+  en: 7f092a4290d15d34
+  zh: 11747f3c7cee6910
+/p2-index-and-backlog-design/validation:
+  en: 2b0dffeac3e63435
+  zh: 3e2a46eb49bf4839

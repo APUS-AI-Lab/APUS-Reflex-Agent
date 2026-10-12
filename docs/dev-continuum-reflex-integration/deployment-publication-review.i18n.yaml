@@ -1,0 +1,19 @@
+# Bilingual-pair consistency record for deployment-publication-review.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/dev-continuum-reflex-integration/deployment-publication-review.md
+/deployment-configuration-publication-review:
+  en: 2c304f0f10fdaa6a
+  zh: 1ce005b5144f2125
+/deployment-configuration-publication-review/review-scope:
+  en: 4c38fcc6d72eaf17
+  zh: c2f94267627584ed
+/deployment-configuration-publication-review/remediation-record:
+  en: 69cf6291866159e6
+  zh: bda1f542586c97df
+/deployment-configuration-publication-review/implementation-and-api-scope:
+  en: 5a4081a68daba8cb
+  zh: bfbe1ee53ecdf4a9
+/deployment-configuration-publication-review/acceptance-plan:
+  en: 7c686c3e4a9c6847
+  zh: 1aee360758ab721c

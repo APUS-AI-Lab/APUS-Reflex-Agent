@@ -1,0 +1,7 @@
+# Bilingual-pair consistency record for supervision-real-repeated-failure.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-reflex-control/evidence/supervision-real-repeated-failure.md
+/real-repeated-failure-supervision:
+  en: fdc8ec154f9c4db6
+  zh: 4037206e0916b602

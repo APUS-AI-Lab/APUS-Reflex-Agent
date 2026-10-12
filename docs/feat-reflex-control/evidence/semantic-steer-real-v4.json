@@ -1,0 +1,149 @@
+{
+  "scenario": "fault",
+  "acceptanceRevision": "queued-recovery-fences-v4",
+  "budgetMs": 300000,
+  "model": "gpt-6-sol-relay",
+  "reasoningEffort": "low",
+  "effectiveReasoningEffort": "low",
+  "nativeEvents": [
+    {
+      "at": 1791616116983,
+      "method": "item/started",
+      "supervisionInput": false
+    },
+    {
+      "at": 1791616116984,
+      "method": "item/completed",
+      "supervisionInput": false
+    }
+  ],
+  "writtenAt": 1791616416107,
+  "stopReason": "aborted",
+  "activity": [
+    {
+      "at": 1791616116900,
+      "event": "start"
+    },
+    {
+      "at": 1791616415876,
+      "event": "end",
+      "outcome": "aborted"
+    }
+  ],
+  "events": [
+    {
+      "type": "system3/judgement",
+      "at": 1791616150042,
+      "data": {
+        "decision": "reflex.supervision",
+        "reason": "unsure",
+        "outcome": "observe",
+        "applied": false,
+        "elapsedMs": 2914,
+        "response": {
+          "model": "APUS-OpenJev-v1-9B-5949",
+          "answers": {
+            "action": {
+              "type": "choice",
+              "choice": "observe",
+              "probabilities": {
+                "observe": 0.6115579759684693,
+                "diagnose": 0.004120644369310036,
+                "verify": 0.008723404198284272,
+                "narrow": 0.004669301792722196,
+                "realign": 0.37092867367121424
+              },
+              "confidence": 0.5292453480648497
+            }
+          },
+          "usage": {
+            "input_tokens": 330,
+            "output_tokens": 1,
+            "billing_units": 1
+          }
+        }
+      }
+    },
+    {
+      "type": "system3/reflex-supervision",
+      "at": 1791616150046,
+      "data": {
+        "version": 1,
+        "id": "201b7614-c09a-43da-a53c-932aaafd8d10",
+        "goalId": "goal-d7bce577-7c68-4508-a412-6501a836157b",
+        "goalRevision": 1,
+        "runId": "2317a7fd-c919-4b9e-9d92-100774c9f69b",
+        "state": "inconclusive",
+        "action": "observe",
+        "evidenceCount": 0
+      }
+    }
+  ],
+  "initialFiles": [
+    {
+      "name": "expected.txt",
+      "bytes": 37,
+      "sha256": "0623babe5638e0890bb9ccb666cf1ff1a7b0c5b425f1f3920c9c0cc62995eec5"
+    },
+    {
+      "name": "result.txt",
+      "bytes": 10,
+      "sha256": "df1a225671a8e4a4ecf107bf110a35902c822fa775f37ee85d540aa3c09991ce"
+    },
+    {
+      "name": "verify.py",
+      "bytes": 226,
+      "sha256": "fe18dc7e754974d5ada0b85d8897299a9eabd459b66f3bcf0bd9e3c932840e33"
+    },
+    {
+      "name": "ledger.py",
+      "unavailable": "Error"
+    }
+  ],
+  "files": [
+    {
+      "name": "expected.txt",
+      "bytes": 37,
+      "sha256": "0623babe5638e0890bb9ccb666cf1ff1a7b0c5b425f1f3920c9c0cc62995eec5"
+    },
+    {
+      "name": "result.txt",
+      "bytes": 10,
+      "sha256": "df1a225671a8e4a4ecf107bf110a35902c822fa775f37ee85d540aa3c09991ce"
+    },
+    {
+      "name": "verify.py",
+      "bytes": 226,
+      "sha256": "fe18dc7e754974d5ada0b85d8897299a9eabd459b66f3bcf0bd9e3c932840e33"
+    },
+    {
+      "name": "ledger.py",
+      "unavailable": "Error"
+    }
+  ],
+  "providerTelemetry": [
+    {
+      "at": 1791616405000,
+      "level": "INFO",
+      "target": "feedback_tags",
+      "status": null,
+      "kind": "request-start",
+      "categories": [
+        "connection",
+        "retry",
+        "stream",
+        "auth"
+      ]
+    },
+    {
+      "at": 1791616405000,
+      "level": "DEBUG",
+      "target": "codex_http_client::client",
+      "status": null,
+      "kind": "request-start",
+      "categories": [
+        "stream"
+      ]
+    }
+  ]
+}

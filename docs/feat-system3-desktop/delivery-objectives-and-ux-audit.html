@@ -56,7 +56,7 @@
 </section>
 <section id="integration">
 <h2>4. 前端对接不是给 HTML 加几个请求</h2>
-<p><strong>明确接入仓库：</strong><code>/Users/gumpm5/Documents/Code/xDAN-System3-Frontend</code>。用户已再次确认该前端目标，三层智能的产品交互必须落到这个仓库及其复用的原生 Client Modules 中。</p>
+<p><strong>明确接入仓库：</strong><code>/path/to/projects/xDAN-System3-Frontend</code>。用户已再次确认该前端目标，三层智能的产品交互必须落到这个仓库及其复用的原生 Client Modules 中。</p>
 <p>现有接入点已定位：<code>src/main/index.ts</code> 解析 <code>dshEntryPath</code>；<code>src/main/runtime/harness-runtime.ts</code> 启动原生 Web profile；<code>build/dsh-desktop.patch.yml</code> 装配模块；<code>packages/dsh-desktop-client-ui/</code> 已通过模块加载器扩展 Conversation/API 和原生 slots。当前加载的是官方 npm runtime，尚未装配自有 System3 产物。优先扩展这些已有位置，是否拆共享模块以代码复用和发布依赖为依据。</p>
 
 <p>v3 在浏览器内保存样例 sessions、phase 和成果，由“下一事件”推进；文件选择仅取文件名。这些代码用于设计回放。生产组件从 Harness 的原生身份、事件、投影与控制回执读取事实；本地只保留草稿、展开、焦点和阅读位置等 UI 状态。</p>

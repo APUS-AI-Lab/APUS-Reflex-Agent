@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>APUS · Personal Agent and Loop Working architecture</title><style>
+:root{--paper:#f5f5f5;--ink:#2d3142;--muted:#4f5d75;--accent:#eb6c36;--line:#cbd0d8}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;line-height:1.75}main{max-width:1440px;margin:auto;padding:52px 36px 72px}header{max-width:1000px;margin-bottom:42px}.eyebrow{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}h1{font-size:clamp(32px,4.8vw,62px);line-height:1.16;letter-spacing:-.035em;font-weight:650;margin:16px 0 24px}h1 span{color:var(--accent)}.lead{font-size:21px;color:var(--muted);max-width:920px}h2{font-size:30px;line-height:1.3;margin:0 0 18px}h3{font-size:19px;margin:0 0 10px}p{margin:12px 0}a{color:#2e5aa8;text-underline-offset:4px}section{border-top:1px solid var(--line);padding-top:32px;margin-top:40px}.figure{overflow:auto;margin:24px -12px 12px}svg{display:block;width:100%;min-width:850px;height:auto}.caption{font-size:14px;color:var(--muted);max-width:1060px}.split{display:grid;grid-template-columns:1.3fr 1fr;gap:44px}.callout{border-left:3px solid var(--accent);padding-left:20px}table{width:100%;border-collapse:collapse;font-size:15px}th,td{text-align:left;vertical-align:top;padding:15px 12px;border-bottom:1px solid var(--line)}th{font-weight:600}code{font-family:ui-monospace,monospace;font-size:.88em;background:#e9ecf1;padding:2px 5px}.limits{background:#e9ecf1;padding:24px;border-radius:8px}.limits p:first-child{margin-top:0}.number{font-size:12px;letter-spacing:.15em;color:var(--muted)}footer{margin-top:42px;font-size:13px;color:var(--muted)}@media(max-width:780px){main{padding:28px 20px}.split{grid-template-columns:1fr;gap:20px}.lead{font-size:18px}h2{font-size:25px}table{min-width:700px}.table-scroll{overflow:auto}}@media print{main{padding:0}.figure{overflow:visible}svg{min-width:0}section{break-inside:avoid}a{color:inherit}}
+</style></head><body><main><nav aria-label="Language"><a href="apus-reflex-loop-working-architecture.html" lang="zh-CN">中文</a> · <a href="apus-reflex-loop-working-architecture.en.html" lang="en">English</a></nav>
+<header><div class="eyebrow">APUS AI Lab · Architecture / Developer preview</div><h1>Your models. Your Personal Agent.<br><span>Work that can keep moving.</span></h1><p class="lead">Loop Working connects planning, action, inspection and adjustment around a goal. Memory brings relevant facts back, decisions guide the next step, and the Harness executes actions while recording evidence.</p></header>
+<div class="split"><div><div class="number">THE USER VALUE</div><h2>Turn a single answer into an ongoing project.</h2><p>For example, build a personal portfolio over multiple work periods in one Session: retain design constraints, create content and pages, run checks, and revise using feedback. After an interruption, recover facts and state from the same Session, then explicitly resume. This explains the intended workflow; it does not claim every scenario has passed end-to-end acceptance.</p></div><div class="callout"><h3>Your models, with distinct responsibilities</h3><p>A general model plans, generates content and requests tools. Reflex / Jev handles bounded choices, scores and supervision advice. The Harness manages configuration, permissions and lifecycle. General models can run independently; an arbitrary chat endpoint cannot automatically replace every Jev decision protocol.</p></div></div>
+<section><div class="number">01 / PRODUCT &amp; TECHNICAL ARCHITECTURE</div><h2>One Personal Agent: decide, execute and remember.</h2><div class="figure"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1680 1440" role="img" aria-labelledby="apus-product-en-title apus-product-en-desc" style="font-family:-apple-system,BlinkMacSystemFont,Segoe UI,PingFang SC,Microsoft YaHei,sans-serif">
+<title id="apus-product-en-title">APUS · Product and technical architecture</title>
+<desc id="apus-product-en-desc">Users submit tasks to the Harness, which calls general models and can delegate to Codex. Optional Reflex decisions support routing, supervision, recovery and memory selection. Session history and Continuum memory project bounded context for controlled Loop Working.</desc>
+<defs><marker id="apus-product-en-muted" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0 0 L8 3 L0 6Z" fill="#5d697c"/></marker><marker id="apus-product-en-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0 0 L8 3 L0 6Z" fill="#c56a15"/></marker><marker id="apus-product-en-blue" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0 0 L8 3 L0 6Z" fill="#3456ac"/></marker></defs>
+<rect width="1680" height="1440" fill="#f5f6f8"/>
+<text x="48" y="49" font-size="34" fill="#242b38" font-weight="650">APUS · Your Personal Agent, built for ongoing work</text>
+<text x="48" y="84" font-size="21" fill="#5d697c" font-weight="400">Your models + controlled execution + persistent memory = Loop Working you can resume and verify</text>
+<path d="M760 262 V360" fill="none" stroke="#5d697c" stroke-width="2" marker-end="url(#apus-product-en-muted)"/>
+<path d="M1030 360 V262" fill="none" stroke="#5d697c" stroke-width="2" marker-end="url(#apus-product-en-muted)"/>
+<path d="M420 455 H332" fill="none" stroke="#5d697c" stroke-width="2" marker-end="url(#apus-product-en-muted)"/>
+<path d="M190 570 V790" fill="none" stroke="#5d697c" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#apus-product-en-muted)"/>
+<path d="M48 500 H32 Q24 500 24 508 V1314 Q24 1322 32 1322 H812 Q820 1322 820 1314 V1290" fill="none" stroke="#5d697c" stroke-width="2" marker-end="url(#apus-product-en-muted)"/>
+<path d="M700 635 V790" fill="none" stroke="#5d697c" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#apus-product-en-muted)"/>
+<path d="M1000 790 V635" fill="none" stroke="#c56a15" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#apus-product-en-accent)"/>
+<path d="M1230 420 H1330" fill="none" stroke="#3456ac" stroke-width="2" marker-end="url(#apus-product-en-blue)"/>
+<path d="M1330 490 H1230" fill="none" stroke="#3456ac" stroke-width="2" marker-end="url(#apus-product-en-blue)"/>
+<path d="M1230 598 H1330" fill="none" stroke="#3456ac" stroke-width="2" marker-end="url(#apus-product-en-blue)"/>
+<path d="M1330 685 H1128 Q1120 685 1120 677 V635" fill="none" stroke="#3456ac" stroke-width="2" marker-end="url(#apus-product-en-blue)"/>
+<path d="M1230 868 H1330" fill="none" stroke="#3456ac" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#apus-product-en-blue)"/>
+<path d="M1330 950 H1230" fill="none" stroke="#3456ac" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#apus-product-en-blue)"/>
+<path d="M190 1005 V1202 Q190 1210 198 1210 H420" fill="none" stroke="#5d697c" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#apus-product-en-muted)"/>
+<path d="M450 1130 V1088 Q450 1080 442 1080 H382 Q374 1080 374 1072 V688 Q374 680 382 680 H462 Q470 680 470 672 V635" fill="none" stroke="#5d697c" stroke-width="2" marker-end="url(#apus-product-en-muted)"/>
+<rect x="765" y="297" width="185" height="27" fill="#f5f6f8"/>
+<text x="770" y="316" font-size="16" fill="#5d697c" font-weight="400">Goals / new requirements</text>
+<rect x="1039" y="297" width="120" height="27" fill="#f5f6f8"/>
+<text x="1044" y="316" font-size="17" fill="#5d697c" font-weight="400">Progress / results</text>
+<rect x="335" y="411" width="82" height="27" fill="#f5f6f8"/>
+<text x="340" y="430" font-size="16" fill="#5d697c" font-weight="400">Log</text>
+<rect x="199" y="652" width="106" height="27" fill="#f5f6f8"/>
+<text x="204" y="671" font-size="17" fill="#5d697c" font-weight="400">Admission</text>
+<rect x="384" y="1035" width="114" height="27" fill="#f5f6f8"/>
+<text x="389" y="1054" font-size="17" fill="#5d697c" font-weight="400">Turn context</text>
+<rect x="705" y="699" width="120" height="27" fill="#f5f6f8"/>
+<text x="710" y="718" font-size="17" fill="#5d697c" font-weight="400">Extension events</text>
+<rect x="1009" y="725" width="135" height="27" fill="#f5f6f8"/>
+<text x="1014" y="744" font-size="17" fill="#c56a15" font-weight="400">Validated advice</text>
+<rect x="1232" y="384" width="98" height="27" fill="#f5f6f8"/>
+<text x="1237" y="403" font-size="16" fill="#5d697c" font-weight="400">Model call</text>
+<rect x="1231" y="460" width="99" height="27" fill="#f5f6f8"/>
+<text x="1236" y="479" font-size="15" fill="#5d697c" font-weight="400">Output</text>
+<rect x="1233" y="563" width="98" height="27" fill="#f5f6f8"/>
+<text x="1238" y="582" font-size="16" fill="#5d697c" font-weight="400">Delegate</text>
+<rect x="1155" y="655" width="167" height="27" fill="#f5f6f8"/>
+<text x="1160" y="674" font-size="17" fill="#3456ac" font-weight="400">Results / evidence</text>
+<rect x="1233" y="831" width="98" height="27" fill="#f5f6f8"/>
+<text x="1238" y="850" font-size="16" fill="#5d697c" font-weight="400">Question</text>
+<rect x="1233" y="916" width="99" height="27" fill="#f5f6f8"/>
+<text x="1238" y="935" font-size="15" fill="#5d697c" font-weight="400">Decision</text>
+<rect x="198" y="1174" width="113" height="27" fill="#f5f6f8"/>
+<text x="203" y="1193" font-size="17" fill="#5d697c" font-weight="400">Recall</text>
+<rect x="53" y="1330" width="860" height="27" fill="#f5f6f8"/>
+<text x="58" y="1349" font-size="17" fill="#5d697c" font-weight="400">Baseline: Session history and recovery work without Jev. Continuum is an opt-in enhancement.</text>
+<rect x="530" y="120" width="590" height="142" rx="8" fill="white" stroke="#5d697c" stroke-width="1.6"/>
+<text x="554" y="148" font-size="15" fill="#5d697c" font-weight="600">PERSONAL AGENT</text>
+<text x="554" y="186" font-size="26" fill="#242b38" font-weight="650">Your goal · Your Personal Agent</text>
+<text x="554" y="221" font-size="19" fill="#5d697c" font-weight="400">Web / desktop / SDK · Direct, review, pause, resume</text>
+<rect x="420" y="360" width="810" height="275" rx="8" fill="white" stroke="#242b38" stroke-width="1.6"/>
+<text x="446" y="390" font-size="15" fill="#5d697c" font-weight="600">HARNESS · EXECUTION &amp; CONTROL</text>
+<text x="446" y="428" font-size="26" fill="#242b38" font-weight="650">Harness · Execution and loop control</text>
+<rect x="446" y="450" width="248" height="42" rx="5" fill="white" stroke="#aeb7c5" stroke-width="1.6"/>
+<text x="570.0" y="478" font-size="19" fill="#242b38" font-weight="400" text-anchor="middle">Tools · Skills · MCP</text>
+<rect x="700" y="450" width="248" height="42" rx="5" fill="white" stroke="#aeb7c5" stroke-width="1.6"/>
+<text x="824.0" y="478" font-size="16" fill="#242b38" font-weight="400" text-anchor="middle">Access · Sandbox · Cancel</text>
+<rect x="954" y="450" width="248" height="42" rx="5" fill="white" stroke="#aeb7c5" stroke-width="1.6"/>
+<text x="1078.0" y="478" font-size="16" fill="#242b38" font-weight="400" text-anchor="middle">Subagents · Background jobs</text>
+<rect x="446" y="507" width="248" height="42" rx="5" fill="white" stroke="#aeb7c5" stroke-width="1.6"/>
+<text x="570.0" y="535" font-size="19" fill="#242b38" font-weight="400" text-anchor="middle">Goals · Plans · Todos</text>
+<rect x="700" y="507" width="248" height="42" rx="5" fill="white" stroke="#aeb7c5" stroke-width="1.6"/>
+<text x="824.0" y="535" font-size="16" fill="#242b38" font-weight="400" text-anchor="middle">Results · Verification evidence</text>
+<rect x="954" y="507" width="248" height="42" rx="5" fill="white" stroke="#aeb7c5" stroke-width="1.6"/>
+<text x="1078.0" y="535" font-size="19" fill="#242b38" font-weight="400" text-anchor="middle">Sessions · Lifecycle</text>
+<text x="446" y="589" font-size="21" fill="#242b38" font-weight="550">Loop Working: goal → act → inspect → continue / correct / stop</text>
+<text x="446" y="617" font-size="17" fill="#5d697c" font-weight="400">General models run independently; Reflex advises at configured extension points.</text>
+<rect x="48" y="360" width="284" height="210" rx="8" fill="#eaf0f6" stroke="#5d697c" stroke-width="1.6"/>
+<text x="69" y="391" font-size="15" fill="#5d697c" font-weight="600">SESSION · BASELINE</text>
+<text x="69" y="429" font-size="26" fill="#242b38" font-weight="650">Session history</text>
+<text x="69" y="474" font-size="17" fill="#5d697c" font-weight="400">Inputs, results, decisions</text>
+<text x="69" y="508" font-size="15" fill="#5d697c" font-weight="400">Recovery after successful flush</text>
+<text x="69" y="543" font-size="15" fill="#5d697c" font-weight="400">Source facts in the same Session</text>
+<rect x="48" y="790" width="284" height="215" rx="8" fill="#fcf1e3" stroke="#c56a15" stroke-width="1.6" stroke-dasharray="7 5"/>
+<text x="69" y="820" font-size="15" fill="#c56a15" font-weight="600">CONTINUUM · OPT-IN</text>
+<text x="69" y="858" font-size="26" fill="#242b38" font-weight="650">Long-term memory</text>
+<text x="69" y="900" font-size="16" fill="#5d697c" font-weight="400">Records · sourceRefs · index</text>
+<text x="69" y="937" font-size="16" fill="#5d697c" font-weight="400">Reflex-only · Enable + admission</text>
+<text x="69" y="974" font-size="16" fill="#5d697c" font-weight="400">Same Session · Rebuildable index</text>
+<rect x="420" y="790" width="810" height="215" rx="8" fill="#fcf1e3" stroke="#c56a15" stroke-width="1.6" stroke-dasharray="7 5"/>
+<text x="446" y="820" font-size="15" fill="#c56a15" font-weight="600">REFLEX · OPTIONAL DECISIONS</text>
+<text x="446" y="858" font-size="26" fill="#242b38" font-weight="650">Reflex · Instant decisions for the next step</text>
+<rect x="446" y="885" width="167" height="42" rx="5" fill="white" stroke="#aeb7c5" stroke-width="1.6"/>
+<text x="529.5" y="913" font-size="19" fill="#242b38" font-weight="400" text-anchor="middle">Model routing</text>
+<rect x="629" y="885" width="199" height="42" rx="5" fill="white" stroke="#aeb7c5" stroke-width="1.6"/>
+<text x="728.5" y="913" font-size="19" fill="#242b38" font-weight="400" text-anchor="middle">Codex supervision</text>
+<rect x="844" y="885" width="166" height="42" rx="5" fill="white" stroke="#aeb7c5" stroke-width="1.6"/>
+<text x="927.0" y="913" font-size="19" fill="#242b38" font-weight="400" text-anchor="middle">Context recovery</text>
+<rect x="1026" y="885" width="176" height="42" rx="5" fill="white" stroke="#aeb7c5" stroke-width="1.6"/>
+<text x="1114.0" y="913" font-size="19" fill="#242b38" font-weight="400" text-anchor="middle">Memory selection</text>
+<text x="446" y="962" font-size="17" fill="#5d697c" font-weight="400">Bounded choices · Confidence / abstention · Reject stale results · No new permissions</text>
+<text x="446" y="991" font-size="17" fill="#5d697c" font-weight="400">Enable each capability separately; Codex supervision uses evidence from runs under a Goal.</text>
+<rect x="420" y="1130" width="810" height="160" rx="8" fill="white" stroke="#5d697c" stroke-width="1.6"/>
+<text x="446" y="1160" font-size="15" fill="#5d697c" font-weight="600">CONTEXT · FOR THIS REQUEST</text>
+<text x="446" y="1198" font-size="26" fill="#242b38" font-weight="650">Bounded context · Bring history into the current task</text>
+<text x="446" y="1232" font-size="20" fill="#5d697c" font-weight="400">Relevant excerpts + current task → bounded model input with source references.</text>
+<text x="446" y="1266" font-size="16" fill="#5d697c" font-weight="400">Optional prefix protection and recovery; stored history can grow, while model windows stay finite.</text>
+<rect x="1330" y="360" width="302" height="165" rx="8" fill="#f5f6f8" stroke="#aeb7c5" stroke-width="1.6"/>
+<text x="1351" y="390" font-size="15" fill="#5d697c" font-weight="600">GENERAL MODEL</text>
+<text x="1351" y="428" font-size="26" fill="#242b38" font-weight="650">General model</text>
+<text x="1351" y="472" font-size="18" fill="#5d697c" font-weight="400">Plan, generate, request tools</text>
+<text x="1351" y="507" font-size="17" fill="#5d697c" font-weight="400">Your model and provider</text>
+<rect x="1330" y="558" width="302" height="162" rx="8" fill="#f5f6f8" stroke="#aeb7c5" stroke-width="1.6"/>
+<text x="1351" y="589" font-size="15" fill="#5d697c" font-weight="600">DELEGATED EXECUTOR</text>
+<text x="1351" y="627" font-size="26" fill="#242b38" font-weight="650">Codex executor</text>
+<text x="1351" y="669" font-size="15" fill="#5d697c" font-weight="400">Optional delegation · Own runtime</text>
+<text x="1351" y="701" font-size="15" fill="#5d697c" font-weight="400">Results and evidence to Harness</text>
+<rect x="1330" y="810" width="302" height="195" rx="8" fill="#f5f6f8" stroke="#aeb7c5" stroke-width="1.6"/>
+<text x="1351" y="840" font-size="15" fill="#5d697c" font-weight="600">DECISION MODEL</text>
+<text x="1351" y="878" font-size="26" fill="#242b38" font-weight="650">Your decision model</text>
+<text x="1351" y="923" font-size="19" fill="#5d697c" font-weight="400">Default: Reflex / Jev</text>
+<text x="1351" y="958" font-size="17" fill="#5d697c" font-weight="400">Jev protocol · Local or remote</text>
+<text x="1351" y="989" font-size="17" fill="#5d697c" font-weight="400">Advice does not grant permission</text>
+<path d="M48 1376 H1632" stroke="#aeb7c5"/>
+<path d="M48 1401 H86" fill="none" stroke="#5d697c" stroke-width="2" marker-end="url(#apus-product-en-muted)"/>
+<text x="100" y="1407" font-size="16" fill="#5d697c" font-weight="400">Baseline</text>
+<path d="M247 1401 H285" fill="none" stroke="#5d697c" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#apus-product-en-muted)"/>
+<text x="299" y="1407" font-size="16" fill="#5d697c" font-weight="400">Opt-in capability</text>
+<path d="M470 1401 H508" fill="none" stroke="#3456ac" stroke-width="2" marker-end="url(#apus-product-en-blue)"/>
+<text x="522" y="1407" font-size="16" fill="#5d697c" font-weight="400">Model / executor call</text>
+<text x="760" y="1407" font-size="17" fill="#5d697c" font-weight="400">Explicit resume after restart · Permissions, cancellation and round limits still apply</text>
+</svg></div><p class="caption">This diagram combines product capabilities and technical responsibilities. User requests enter the Harness; general models plan and generate, while Codex is an optional delegated executor. Reflex is an optional decision layer, with Goal supervision focused on Codex execution. Enable capabilities separately; validate advice before adoption. Basic Session recovery works without Jev. Continuum is an explicitly enabled memory enhancement.</p></section>
+<section id="memory"><div class="number">02 / MEMORY AND CONTEXT</div><h2>Finite windows. Work that can continue across them.</h2><p>A model sees a bounded input in each request. Persistent history retains the source evidence; retrieval and projection assemble relevant context for the next request. Continuity comes from recoverable state and evidence, rather than placing all history in a single prompt.</p><div class="figure"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1360 688" role="img" aria-labelledby="apus-memory-en-title apus-memory-en-desc" style="font-family:-apple-system,BlinkMacSystemFont,Segoe UI,PingFang SC,Microsoft YaHei,sans-serif">
+<title id="apus-memory-en-title">APUS Continuum · Durable facts, bounded context</title>
+<desc id="apus-memory-en-desc">Committed source events pass admission into persistent records with source references. A derived index retrieves candidates; optional Reflex selection supplies bounded model context. Recovery replays records within the same Session.</desc>
+<defs><marker id="apus-memory-en-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0 0 L8 3 L0 6Z" fill="#4f5d75"/></marker><marker id="apus-memory-en-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0 0 L8 3 L0 6Z" fill="#eb6c36"/></marker><marker id="apus-memory-en-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0 0 L8 3 L0 6Z" fill="#2e5aa8"/></marker></defs>
+<rect width="1360" height="688" fill="#f5f5f5"/>
+<text x="40" y="52" fill="#2d3142" font-size="31" font-weight="650">Continuum · Durable facts, bounded context</text>
+<text x="40" y="87" fill="#4f5d75" font-size="17" font-weight="400">Mount Reflex and enable Continuum; configure its selector separately. Durable recovery requires a successful flush.</text>
+<path d="M256 396 H308" fill="none" stroke="#4f5d75" stroke-width="2" marker-end="url(#apus-memory-en-arrow)"/>
+<path d="M524 396 H576" fill="none" stroke="#4f5d75" stroke-width="2" marker-end="url(#apus-memory-en-arrow)"/>
+<path d="M792 396 H844" fill="none" stroke="#4f5d75" stroke-width="2" marker-end="url(#apus-memory-en-arrow)"/>
+<path d="M1060 396 H1112" fill="none" stroke="#4f5d75" stroke-width="2" marker-end="url(#apus-memory-en-arrow)"/>
+<path d="M952 320 V248" fill="none" stroke="#eb6c36" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#apus-memory-en-accent)"/>
+<path d="M1060 188 H1212 Q1220 188 1220 196 V320" fill="none" stroke="#eb6c36" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#apus-memory-en-accent)"/>
+<rect x="976" y="266" width="116" height="22" fill="#f5f5f5"/><text x="980" y="282" fill="#4f5d75" font-size="13" font-weight="400">IDs and excerpts</text>
+<rect x="1116" y="153" width="188" height="22" fill="#f5f5f5"/><text x="1120" y="169" fill="#4f5d75" font-size="12" font-weight="400">Validate before adoption</text>
+<rect x="40" y="320" width="216" height="152" rx="8" fill="#e9ecf1" stroke="#cbd0d8" stroke-width="1.5"/><text x="60" y="354" fill="#2d3142" font-size="18" font-weight="650">Session events</text><text x="60" y="379" fill="#4f5d75" font-size="12" font-weight="500">SOURCE OF TRUTH</text><text x="60" y="409" fill="#4f5d75" font-size="14" font-weight="400">Committed Session events</text><text x="60" y="432" fill="#4f5d75" font-size="14" font-weight="400">Text, results, file references</text>
+<rect x="308" y="320" width="216" height="152" rx="8" fill="#ffffff" stroke="#cbd0d8" stroke-width="1.5"/><text x="328" y="354" fill="#2d3142" font-size="18" font-weight="650">Memory admission</text><text x="328" y="379" fill="#4f5d75" font-size="12" font-weight="500">ADMISSION</text><text x="328" y="409" fill="#4f5d75" font-size="14" font-weight="400">Default: explicit admission</text><text x="328" y="432" fill="#4f5d75" font-size="14" font-weight="400">Opt-in: user text admission</text>
+<rect x="576" y="320" width="216" height="152" rx="8" fill="#fff0e7" stroke="#eb6c36" stroke-width="1.5"/><text x="596" y="354" fill="#2d3142" font-size="18" font-weight="650">Persistent records</text><text x="596" y="379" fill="#4f5d75" font-size="12" font-weight="500">REPLAYABLE RECORDS</text><text x="596" y="409" fill="#4f5d75" font-size="14" font-weight="400">Content + sourceRefs</text><text x="596" y="432" fill="#4f5d75" font-size="14" font-weight="400">Replayable change events</text>
+<rect x="844" y="320" width="216" height="152" rx="8" fill="#ffffff" stroke="#cbd0d8" stroke-width="1.5"/><text x="864" y="354" fill="#2d3142" font-size="18" font-weight="650">Index and retrieval</text><text x="864" y="379" fill="#4f5d75" font-size="12" font-weight="500">RETRIEVAL</text><text x="864" y="409" fill="#4f5d75" font-size="14" font-weight="400">Scope + active + lexical</text><text x="864" y="432" fill="#4f5d75" font-size="14" font-weight="400">Candidate and byte limits</text>
+<rect x="1112" y="320" width="216" height="152" rx="8" fill="#ffffff" stroke="#cbd0d8" stroke-width="1.5"/><text x="1132" y="354" fill="#2d3142" font-size="18" font-weight="650">Request context</text><text x="1132" y="379" fill="#4f5d75" font-size="12" font-weight="500">PROJECTION</text><text x="1132" y="409" fill="#4f5d75" font-size="14" font-weight="400">Excerpts with source refs</text><text x="1132" y="432" fill="#4f5d75" font-size="14" font-weight="400">Traceable model input</text>
+<rect x="844" y="128" width="216" height="120" rx="8" fill="#fff0e7" stroke="#eb6c36" stroke-width="1.5"/><text x="864" y="162" fill="#2d3142" font-size="18" font-weight="650">Reflex / Jev selection</text><text x="864" y="187" fill="#4f5d75" font-size="12" font-weight="500">OPTIONAL SELECTOR</text><text x="864" y="217" fill="#4f5d75" font-size="14" font-weight="400">off / shadow / active</text>
+<path d="M40 516 H1328" stroke="#cbd0d8"/>
+<text x="40" y="552" fill="#2d3142" font-size="15" font-weight="650">Recovery</text>
+<text x="180" y="552" fill="#4f5d75" font-size="15" font-weight="400">Same Session → replay memory events → rebuild the index → retrieve again. New Sessions do not share these records by default.</text>
+<text x="40" y="588" fill="#2d3142" font-size="15" font-weight="650">Limits</text>
+<text x="180" y="588" fill="#4f5d75" font-size="15" font-weight="400">Automatic admission extracts text, not attachments. Summary trees / zoom are explicit helpers, outside default retrieval.</text>
+<path d="M40 634 H80" fill="none" stroke="#4f5d75" stroke-width="2" marker-end="url(#apus-memory-en-arrow)"/>
+<text x="92" y="639" fill="#4f5d75" font-size="13" font-weight="400">Baseline with Continuum enabled</text>
+<path d="M468 634 H508" fill="none" stroke="#eb6c36" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#apus-memory-en-accent)"/>
+<text x="520" y="639" fill="#4f5d75" font-size="13" font-weight="400">Optional advice; does not control admission</text>
+<text x="40" y="674" fill="#4f5d75" font-size="14" font-weight="400">Retained source records can be read again; bounded retrieval, summaries and projection do not guarantee complete recall.</text>
+</svg></div><div class="split"><div><h3>Define what “lossless” means</h3><p>Successfully committed and flushed source events remain the factual record; summaries do not replace them. Automatic memory admission applies <code>trim()</code> to text. Images may be normalized or resized, and attachments and tool output can use separate references. Source retention does not guarantee preservation of every uploaded byte, unflushed crash-time data, or complete recall in each request.</p></div><div><h3>Two distinct cache concerns</h3><p>Continuum can rebuild its retrieval index from Session records. System3 context projection protects submitted prefixes and can append recovered content. Derived retrieval data and request-content management do not imply unlimited KV cache, provider cache hits or lower costs.</p></div></div></section>
+<section><div class="number">03 / SIX RESPONSIBILITIES</div><h2>Six responsibilities support the loop; advice does not grant execution rights.</h2><div class="table-scroll"><table><thead><tr><th>Layer</th><th>Responsibility</th><th>Implementation</th></tr></thead><tbody>
+<tr><td>Input facts</td><td>Accept messages and execution events with traceable sources; durability requires a successful flush.</td><td><a href="../../packages/core/session/src/index.ts">Session</a></td></tr>
+<tr><td>Reflex decisions</td><td>Advise over bounded candidates; validate privacy, scope, revision, cancellation and confidence before adoption.</td><td><a href="../../packages/experimental/system3/src/decisions.ts">Decisions</a> / <a href="../../packages/experimental/system3/src/reflex-supervision.ts">Supervision</a></td></tr>
+<tr><td>Harness execution</td><td>Schedule tools, skills and subagents; manage permissions, approval, lifecycle and exit.</td><td><a href="../../packages/core/agent-loop/src/tool-calls.ts">Tool execution</a></td></tr>
+<tr><td>Persistent memory</td><td>Store memory content and sourceRefs as Session events; rebuild derived indexes.</td><td><a href="../../packages/context/continuum/src/service.ts">Continuum</a></td></tr>
+<tr><td>Context projection</td><td>Inject bounded, attributed excerpts; optionally protect frozen prefixes and recover content.</td><td><a href="../../packages/context/continuum/src/context.ts">Recall projection</a> / <a href="../../packages/experimental/system3/src/reflex-context.ts">Prefix protection</a></td></tr>
+<tr><td>Outcome feedback</td><td>Distinguish proposed, adopted and executed actions from their effects; supply evidence for the next round.</td><td><a href="../../packages/goal/goal-round-driver/src/index.ts">Round driver</a> / <a href="../../packages/experimental/system3/src/reflex-supervision.ts">Feedback evidence</a></td></tr>
+</tbody></table></div></section>
+<section><div class="number">04 / WHAT MAKES IT RELIABLE</div><h2>Control continuation, stopping and acceptance.</h2><div class="split"><div><h3>Goals and control</h3><p>Goal revisions and continuation limits constrain ongoing work. Cancellation, competing input and lifecycle checks reject late actions. State survives a restart; automatic continuation requires explicit resume. There is no unified hard dollar or token budget covering every execution path.</p><h3>Permissions and data policy</h3><p>Reflex grants no tool permissions; the Harness owns tool approval. System3 classification and routing, and Continuum scope filtering, govern their respective requests. They are not a global operating-system network firewall.</p></div><div><h3>Results and acceptance</h3><p>Proposing corrective advice, adopting it and improving a task are different facts. Completion requires actual deliverables and relevant checks, rather than a model claiming success. Supervision and recovery do not guarantee every task will succeed.</p><h3>Failure and fallback</h3><p>The general path remains available without explicit optional configuration. Enabled but invalid configuration fails clearly. If decisions are unavailable, use only permitted baseline behavior; do not silently choose a new external service.</p></div></div></section>
+<section class="limits"><h2>Evidence and current limits</h2><p>Five deterministic cases have run through the shipped headless profile: source and built cross-process recovery, no Reflex, disabled memory, and a new Session in the same workspace. Recovery checks persisted source records and sourceRefs; only the old fact in the second process’s separate request log can satisfy the assertion.</p><p>These cases establish storage, recovery and model-request injection. Live-model quality, large-scale retrieval, long-running goal outcomes, full regression and signed native packages require separate acceptance. This is a developer preview; an architecture diagram is not a release certificate.</p><p><a href="architecture-followups.md">Contributor tasks and acceptance follow-ups</a> · <a href="public-provider-configuration.md">Public provider configuration</a> · <a href="../../README.md">Project README</a> · <a href="../architecture.md">Runtime architecture</a></p></section>
+<footer>APUS AI Lab · Harness and Frontend are independent repositories. Desktop capabilities depend on the pinned Harness revision. Offline system fonts; no remote font, analytics script or private deployment parameters.</footer>
+</main></body></html>

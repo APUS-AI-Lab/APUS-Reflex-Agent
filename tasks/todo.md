@@ -1,5 +1,37 @@
 # 独立 Jev + DeepSeek Harness 工作计划
 
+## 当前激活执行目标（2026-10-11）
+
+目标：完成 APUS Reflex Harness 的最终可发布闭环，以真实用户 E2E 证明入口路由、Reflex 模型配置、Codex 长时 Goal 监督与纠偏、动态上下文恢复和 UIUX；保护 cache 区与原始 Session，完成 MIT/NOTICE/安全/贡献者开源门禁、双仓 CI 和 PR/main 合并。
+
+### README Loop Working 叙事（2026-10-12）
+
+- [x] 按最新实现重画八节点工作闭环和六节点记忆流，使用 diagram-design；两图嵌入离线 HTML，英中 README 统一为 Personal Agent → Loop Working → 职责分工 → 持久记忆与有限上下文。
+- [x] 架构交付完成 SVG 可访问性检查、渲染检查、HTML 唯一 ID / 两图数量 / 本地链接检查；发布与 main 合并仍独立验证。
+
+- [x] 将 Personal Agent、Loop Working、无限记忆、无损输入和无损记忆写入英中 README，并区分 Reflex 专用模型与通用模型路径。
+- [x] 用真实架构和现有验收证据解释“无限上下文”的工程含义，避免承诺无限 token 窗口。
+- [ ] 完成 README pairing、README gate、doc tests、doc-sync 和 diff check；本轮 doc-quick 仍暴露既有 concrete-terms 与 repository-reference 卡点，已修复其中的文档引用，需重跑确认。
+- [x] 生成与 README 叙事一致的 Loop Working 技术架构图，并列出给新人的 P0/P1/P2 架构跟进任务。
+
+- [x] P0：完成严格真实受控语义监督闭环：真实 `gpt-5.6-sol-relay` 已证明偏航 → Reflex realign → Codex 消费 → 回到原始 Goal 下一步 → `verification-target` → `improved` → 独立 `1137.41` 产物验证；脱敏证据见 `docs/feat-reflex-control/evidence/semantic-codex-strict-final-v6.{json,md,zh.md}`。健康长任务和中途改 Goal 仍单独验收。
+- [ ] P0：冻结并实测 1 秒 admission/status、远端首字节/总耗时三段指标；本地队列 admission/status 已实测 16ms，R-04 路由决策 p50/p95 已实测 two-tier 309/588ms、four-tier 317/405ms；2026-10-12 远端探测在首字节前出现传输错误/超时，远端与可见回退仍待测，见 `docs/feat-reflex-control/evidence/r04-remote-response-20261012.*`。
+- [ ] P0：完成健康长任务无误干预和用户中途改 Goal 的真实 UI/E2E 对照。
+- [ ] P0：完成 Electron 启动失败恢复、会话恢复、签名/公证和包内 MIT/NOTICE 核对；恢复界面已通过 200% 系统缩放 40 变体及页面级 200% 缩放 8 轮/320 变体。
+- [ ] P0：完成 Harness Jev/System3 CI、秘密扫描、脱敏回归；两仓 PR 已转 Ready 并合并，但当前 job 因 Actions budget 未启动，不能视为远端通过。
+- [x] P1：统一 README quickstart 与能力边界，补齐贡献者入口、System3 API/配置参考链接、CODEOWNERS、双语 Release notes、严格 v6 演示证据和 cache benchmark 入口；远端 CI、签名发布和 main 合并仍是独立门禁。
+- [x] P1：独立 review 后合并两个仓库 main；已回读 [Harness main](https://github.com/cryptoSUN2049/APUS-Reflex-Harness/tree/main) 与 [Frontend main](https://github.com/cryptoSUN2049/APUS-Reflex-Frontend/tree/main)。运行包签名/公证与 Actions 远端门禁仍单独待完成。
+
+本轮监督收口保持轻量：复用有界证据与 Goal，异常才判断、调整后观察验证、健康任务不误干预。2026-10-11 的自然 CSV 与字面量 unittest 对照均在 150 秒预算取消且零 steer；字面量 relay 无首字节，不能标为健康任务完整通过。证据见 `docs/feat-reflex-control/evidence/healthy-codex-20261011.zh.md`。
+
+本轮真实 Web 插话已通过路由、Goal 创建/激活、要求排队、`subagent/steer` 送达、120 秒启动提示和用户停止；Codex 没有 native 步骤，最终产物验收保持未完成，见 `docs/feat-reflex-control/evidence/ui-interjection-20261011.zh.md`。客户端 69 项回归与 System3Dock 四项严格 100% 覆盖率通过。GitHub 官方 annotation 确认两仓 CI 因账户 Actions budget 未启动，不是源码测试失败；账号预算需恢复后才能完成远端门禁。
+
+### 2026-10-12 合并后状态
+
+- [x] 两仓 PR 已按本地等价检查与独立 review 合并；当前状态以 [Harness main](https://github.com/cryptoSUN2049/APUS-Reflex-Harness/tree/main) 和 [Frontend main](https://github.com/cryptoSUN2049/APUS-Reflex-Frontend/tree/main) 为准。
+- [x] 后端架构收口：入口路由、Goal 监督与 Codex 原生证据、context 投影/恢复、Session/cache 前缀保护和 Goal revision fence 已由代码回归与真实证据覆盖。
+- [ ] 远端 Actions budget、远端 relay 首字节/回退、健康长任务无误干预、中途改 Goal、正式签名/公证与当前 pin 的最终安装包仍未完成；合并不把这些状态改写为通过。
+
 - [x] 用户批准新建独立仓库，核心方向为 Jev 理念与模型能力嵌入 DSH。
 - [x] 创建私有仓库 xDAN-System3-Harness，保留来源历史与上游许可证。
 - [x] 创建 feat-independent-harness 隔离 worktree；原项目保留。
@@ -11,7 +43,7 @@
 - [x] 隔离环境下验证 profile 配置、Web 启动及认证 HTTP 200。
 - [x] Ruff 双检查、提交与推送，回读新 main。
 - [x] 写入 tasks/feat-independent-harness/handoff.md。
-- [x] 迁移并核对正式本地目录 /Users/gumpm5/Documents/Code/xDAN-System3-Harness，修复并保留隔离 worktree。
+- [x] 迁移并核对正式本地目录 /path/to/projects/xDAN-System3-Harness，修复并保留隔离 worktree。
 
 ## Review
 
@@ -294,7 +326,7 @@
 
 ### 当前构建浏览器 Review
 
-[浏览器报告](../docs/feat-jev-decision-kernel/completion-browser-result.json)、[原始日志](../docs/feat-jev-decision-kernel/completion-browser-session.jsonl)和[截图](../docs/feat-jev-decision-kernel/completion-browser.png)绑定当前源码与 built Web：真实 DeepSeek + Jev，拒绝 → read/write/read → complete rev2；Jev 2914/1960ms；刷新没有新增事件。此为本地 shipped profile，未部署到 prd，专用核验依据 UI 和独立准确率评测未完成。初始用户额外限制会在 create_goal 重置任务卡时丢失，已加入 mu 设计 v2 的共同前提，不能称约束已受保护。OpenOx 8/8 完整 key 已私密保存；三站真实模型权限仍待验证。
+[浏览器报告](../docs/feat-jev-decision-kernel/completion-browser-result.json)、[Session 公开摘要（原始事件已私有归档）](../docs/feat-jev-decision-kernel/completion-browser-session.summary.json)和[截图](../docs/feat-jev-decision-kernel/completion-browser.png)绑定当前源码与 built Web：真实 DeepSeek + Jev，拒绝 → read/write/read → complete rev2；Jev 2914/1960ms；刷新没有新增事件。此为本地 shipped profile，未部署到 prd，专用核验依据 UI 和独立准确率评测未完成。初始用户额外限制会在 create_goal 重置任务卡时丢失，已加入 mu 设计 v2 的共同前提，不能称约束已受保护。OpenOx 8/8 完整 key 已私密保存；三站真实模型权限仍待验证。
 
 ## CEO 一页汇报（2026-10-09）
 
@@ -308,7 +340,7 @@
 
 本页为用户明确请求的汇报交付物，不新增运行功能。既有证据、待完善能力与建议试点分别标注；业务收益以试点测量，不从局部时延或通过用例数推算。
 
-交付：[一页 HTML](../docs/feat-jev-decision-kernel/report-ceo-onepage.html)、[A4 单页 PDF](../docs/feat-jev-decision-kernel/report-ceo-onepage.pdf)及[布局核对](../docs/feat-jev-decision-kernel/report-ceo-onepage-verification.json)。实际核对375/768/1440宽度、离线资源、SVG文字与PDF页内文本；独立内容审查后限定可见依据范围，去掉未由精确计时证据支撑的时延大字。
+历史一页 HTML、A4 PDF 及原始布局记录已私有归档；参见[公开资料说明](../docs/dev-continuum-reflex-integration/open-source-docs-audit.zh.md)。实际核对375/768/1440宽度、离线资源、SVG文字与PDF页内文本；独立内容审查后限定可见依据范围，去掉未由精确计时证据支撑的时延大字。
 
 文档检查：test:docs20/20、doc-sync42/42、lint:contracts-ready、相对链接、Ruff check/format及diff检查通过；本轮未重复运行产品模型测试，既有验证范围保持原样。
 
@@ -383,6 +415,134 @@ PPT v2为4页主讲+2页备查，实际Keynote打开、六页备注回读和PDF�
 
 - [x] MIT 原版权、许可分发和上游致谢；GitHub 品牌描述、topics、反馈链接。
 - [x] 按用户追加授权合并两仓 main，推送并核对 CI；Python SDK CI 依赖与品牌期望补修后复验。
+
+## Reflex 完整能力实现（用户已批准设计）
+
+- [x] 统一设计与测试验收目标清单：用户需求 → 场景 → 通过/失败标准 → 证据 → 当前状态。
+- [x] 用户“开始”批准；隔离工作树 feat-reflex-control，main保持不动。
+- [x] 专用配置页面与Host凭据/真实连接测试。
+- [ ] Codex监督证据、Reflex判定、自动steer和反馈。
+- [x] 按行上下文投影、检索与重启恢复（Harness 会话范围；不改 Codex 私有上下文）。
+- [ ] 前后端装配与单元/回归/快照/真实E2E。
+- [ ] Review、交接、提交与授权范围内合并。
+
+### 真实验收收尾与新增缓存约束
+
+- [x] Reflex配置页保存low、刷新及Host重启后保留low；真实task.frame/context请求effort=low。
+- [x] taskFrame/context组合真实Loader的TypeScript、Python SDK录制与重放。
+- [x] Goal首轮路由在主模型编辑前真实委派Codex，独立端到端验收。
+- [ ] 区分重复失败纠偏与模型请求挂起恢复；确认中断终态和恢复有效性。
+- [x] 强制冻结已提交请求前缀，只整理未提交尾部；恢复追加并去重，逐相邻请求验收（TS/Python SDK）。
+- [ ] 提供方缓存命中与成本基准单独记录；不能用token估算代替实测。
+- [x] 浏览器实际移除、完整 Host 重启、Reflex 自动追加恢复与正确回答；旧 44 条事件保持，记录逐请求用量但不冒称配对成本基准。
+
+### 最新真实验收 Review（2026-10-10）
+
+真实 native recovery v4 通过：127.41 秒，真实 Reflex 判断一次、Codex 确认中断并在原线程续跑、正常 completed、独立结果验证和输入/验证脚本哈希保持。该场景为受控挂起首次上游请求，不替代仍失败的 steer-only 重复失败场景。
+
+浏览器 Goal 账龄 JSON 增量任务正常完成，10 项测试及独立 Decimal 金额核对通过，原 CSV 哈希保持；Codex 终态先于父模型编辑。首轮真实上下文场景答案 1137.41 正确，但误删必要订单 A，严格相关性验收失败。v2 浏览器必要金额全部保留、旧旅行移出通过；完整 Host 重启后能经 4 次记忆检索找回旅行信息，但 Reflex 自动恢复因旧任务范围干扰失败。v3 已明确有序当前请求与旧约束区别，39 项回归、严格覆盖率与固定 5 次真实模型对照通过；Host16 浏览器 v3 完整流程已通过：财务仅 6 次读取，金额保留；完整重启后 Reflex 在主模型请求前自动追加旅行原文，无工具调用、正确回答；旧 44 条事件及输入哈希保持。v3 首次多余检索失败保留，工具说明改进后有限复验通过。
+
+结构化操作/工作区路径语义监督已实现，workspace 未批准时保留指纹监督；96 项消费者回归四模块四项覆盖率均 100%，79 项采集回归通过。真实语义对照保留初始低置信失败及最终成功响应；完整 Codex 语义回正 E2E 仍待验证。人工输入入队及已领取未准入期间会阻止旧监督干预。TypeScript 与 Python 的 Goal、native recovery、普通监督最终录制及独立重放均通过；普通及新增语义监督双 SDK 在 Host14 录制和独立重放通过；context v3 与新增 verification-target 的 TypeScript/Python 场景在 Host16 最终录制及独立重放均通过。
+
+最终 doc-sync 首轮33/42通过；9项失败涉及新API类型文档/分类、生成catalog陈旧、README bundle分类与排版，均已修正并分别取得有效通过证据。随后只读文档编译88 blocks、双语配对1192对、网站构建及5862个片段引用检查通过。品牌/MIT已在main，本批代码仍未提交或合并，不宣称完整交付。
+
+监督 Host16 真实语义场景未通过：原生任务正常结束、独立金额及哈希检查成功，但测试的 20 秒 native recovery 在首个工具前抢先中断故障注入，没有实际偏航/realign/improved。部署阈值为 180 秒；Host17 已补固定类别解析诊断，独立 literal unittest 试验在150秒内无命令返回，下一步先增加无内容修改的传输时序观测。不能用上述结果声称完整语义闭环通过。Full lint 修正后通过，Ruff check/format 105 文件通过。
+
+### 统一验收清单 Review
+
+新增[测试验收目标清单](../docs/feat-reflex-control/acceptance-checklist.zh.md)，以27项目标和8条完整用户流程关联设计、通过/失败条件、证据及缺口；英文版本与配对记录同步。独立复核纠正入口测试链接，并明确手动选型优先级未验收、配置effort通过不代表服务地址/模型修改全链路已通过。本次不新增产品通过结论，不重试真实模型任务。
+
+检查：`test:docs` 首轮18/20通过；中英文目录锚点已统一并通过两组相关配对复验，会话格式索引由生成器刷新当前v4类型数量并通过复验。历史v0–v3 schema未修改；新增文档的全部本地链接、六个稳定目录锚点及diff检查通过，不为提交重复通过项。
+
+### 完整测试与 UI/UX 验收（用户已授权）
+
+- [x] 补齐用户视角 UI/UX 标准：首次使用、配置反馈、进度与纠偏、取消及追加要求、上下文恢复、明暗/窄屏/键盘、桌面启动与重启。
+- [ ] 通过无内容修改的传输观测定位 Codex 等待位置，修复实际原因，完成语义偏航的真实闭环与部署默认配置验收；重复失败真实闭环已单独通过。
+- [ ] 核对入口手动选型优先级、失败处理，以及配置服务地址/模型/effort 的实际生效链路。
+- [ ] 完成有限配对的路由及上下文缓存基准，保留失败、实际用量与性能限制。
+- [x] 修复真实 UI/UX 问题并复测；独立审查与最终 Electron 正常、重启、Safe Mode 及配置恢复验收已完成。
+- [ ] 完成 200% 原生缩放验收、Frontend 提交与推送，并按既有授权完成两仓提交和合并。
+
+### 2026-10-11 进度校正
+
+- [x] Harness 与 Frontend `feat-reflex-control` 修订已提交并推送；Frontend 已固定 Harness runtime，unsigned macOS arm64 目录包的 Electron 正常启动、Reflex 设置保存/重启、Safe Mode 与恢复已实测通过。
+- [x] 重复失败受控场景补齐脱敏 native `item/started` / `item/completed` 事件；S-01/S-05 在该 `semantic=false` 场景可审计通过，S-06 仍因缺少纠偏流程的结构化 `verification-target` 保持未完成。
+- [x] 语义监督真实试验已形成独立审计：[英文](../docs/feat-reflex-control/evidence/supervision-audit-20261011.md)、[中文](../docs/feat-reflex-control/evidence/supervision-audit-20261011.zh.md)、[JSON](../docs/feat-reflex-control/evidence/supervision-audit-20261011.json)。两次试验观察到 accepted realign 与 native 输入接收，但没有 target 或 `improved`，且不能证明纠偏消息导致后续财务工作；临时解析器/测试配置改动已撤回。
+- [ ] 真实发布默认配置的语义偏航闭环、健康长任务误干预对照、中途追加要求、原生 200% 缩放、签名/公证包、两仓 PR/main 合并仍未完成；不能据此宣布三项核心能力全部验收。
+
+#### Review
+
+本轮只收拢真实证据和交接状态，没有把失败试验改写成成功，也没有扩大严格 verification-target 解析器。文档会在提交前运行双语配对、`test:docs`、`git diff --check`，push 前运行 Ruff 双检查。
+
+## feat-reflex-control 收尾 Review（2026-10-10）
+
+- [x] C-06 真实跨进程配对：四条件、12 轮、三个独立 CLI 进程；答案、按行 `remove`、恢复、输入/持久化前缀、请求前缀、路由和工具稳定性通过；脱敏报告写入 `docs/feat-reflex-control/evidence/cache-c06-real.json`。
+- [x] F-01 Web Reflex 模型配置：真实连接判断、无效模型预期失败、low 保存、跨 server 进程重启恢复、实际请求采用 low、恢复 high 并清除用户覆盖项；脱敏报告写入 `docs/feat-reflex-control/evidence/reflex-settings-real.json`。
+- [x] 监控 UI/UX：加入明确 observing 状态、最近 12 条无内容执行时间线，新人工消息清除陈旧判断；projection/client focused tests、typecheck 通过。
+- [x] C-06 设计文档、验收清单、中英文配对记录和 handoff 已同步。
+- [x] 重复失败真实闭环：gpt-6 relay 在 300 秒预算内完成三次失败观察、Reflex 诊断、监督消息消费、修复、相关验证和 `improved`；受保护文件哈希保持不变，脱敏证据写入 `docs/feat-reflex-control/evidence/supervision-real-repeated-failure.json`。
+- [ ] Codex 真实语义偏航后的 realign→消费→相关 verification-target→improved 闭环仍未通过；不得以回归或受控 native recovery 代替。
+- [x] Frontend 已固定 Harness SHA、完成最终构建与 Electron 正常/Safe Mode 用户验收；200% 原生缩放尚未执行。
+- [ ] 最终门禁复核、Frontend commit/push、两仓 PR/main 合并并回读远端；Harness 已完成其 commit/push 与 Ruff 双检查。
+
+## 2026-10-11 Snapshot 回归复核
+
+- [x] 97 个变更相关测试文件、1876 项确定性回归全部通过。
+- [x] TypeScript/Python `system3-entry-route` 与 `system3-shadow` snapshot replay 全部通过。
+- [x] 完整 keyless snapshot 串行回放 185/187 通过，2 项按现有策略跳过；完整 headless 文件 132/134 通过，2 项跳过。
+- [x] Node 22 browser-use native fixture loader 修复后，browser snapshot 与 loader 回归通过。
+- [ ] 并发 snapshot lane 的单次 `subagent-list-agents` 超时仍保留为资源争用观察，不作为功能通过或发布门禁通过。
+
+#### Review
+
+本轮只修复测试 fixture 的 Node 22 loader 兼容性并同步有意变更的 snapshot 期望，没有修改真实模型验收标准；真实 Codex 语义偏航闭环、签名/公证包和最终合并仍未完成。
+
+## Release candidate: Continuum + Reflex integration (2026-10-11)
+
+- [x] Add opt-in production user-message admission with exact Session source references.
+- [x] Add agent-loop focused full-chain test: input -> memory-record -> replay/restart -> recall -> model-visible request context.
+- [x] Keep original profile and no-Jev behavior unchanged; prove explicit negative control.
+- [x] Re-run build, typecheck, lint, config/catalog/persistence/doc gates and targeted bilateral regression.
+- [x] Re-run real Jev + DeepSeek evaluation with ephemeral credentials.
+- [x] Audit open-source release files, package metadata, docs, CI, secrets, and versioning.
+- [x] Record release blockers and publish-readiness decision in the worktree handoff and release-readiness document.
+- [x] Run production plugin-composition durable E2E with flush/restart/recall/attribution and explicit negative control; shipped-profile subprocess evidence remains separate.
+- [x] Run strict shipped-profile black-box E2E: five distinct cases passed across two filtered runs; real-provider quality and release packaging remain separate.
+- [x] Resolve the `reflex-context` semantic E2E failure with deterministic preservation of explicit precision/file-integrity constraints; selected real Jev matrix now passes 6/6.
+- [ ] Fix or owner-assign pre-existing full-suite failures before public tag.
+
+## README 与公开资料收口
+
+- [x] 核对前后端 README 与 runtime pin，更新架构 SVG / HTML。
+- [ ] 按受跟踪文件清单审阅文档、原始证据与私有配置，保留仓库外备份并脱敏。
+- [x] 更新新人任务清单，区分已有覆盖、增量测试与设计任务。
+- [ ] 完成文档检查、秘密扫描、独立 review 后合入远端 main。
+- [ ] 核实组织目标与迁移条件；迁移两仓后验证链接和权限。
+
+### 部署 URL 与参数公开性复核
+
+- [x] 逐项审阅两仓受跟踪的 Fidoo / LiteLLM / proxy / Jev URL 与启动参数。
+- [ ] 区分公共供应商地址、用户部署地址、占位符、环境变量名与凭据，修复文档及配置中的不适合公开项。
+- [ ] 若调整可执行配置，验证缺少配置时的错误路径和已配置时的启动路径；不将文字脱敏当作运行时验证。
+
+### 本轮执行确认
+
+用户已确认配置整改后将两个独立仓库迁入 APUS-AI-Lab，并要求优先确保远端 main 包含最新修改。按 deployment-publication-review 设计实施；不删通用配置能力，不公开凭据，不把迁移等同于公开发布。
+
+- [ ] 合并公共配置与文档清理并回读 Harness main SHA。
+- [ ] Frontend 固定已验收的新 Harness SHA，验证打包配置并合并 main。
+- [ ] 根据历史保留策略完成组织迁移并核实两仓 refs/可见性。
+
+## 无限记忆产品验收与任务派发（2026-10-12）
+
+- [x] 阅读 classic-cases、handoff，核对已有测试及新人任务来源。
+- [ ] 执行记忆定向测试、shipped 双进程和 Web 开关验收，保留失败与阻塞。
+- [ ] 将功能设计、验证、优化、修复整理为可派发任务与测试目标。
+- [ ] 校验 Markdown、证据链接及当前变更，更新交接。
+
+### Review
+
+仅验收与文档交付；不修改产品实现，不将历史结果或跳过用例记作本轮通过。目标工作树已有大量未提交改动，保留原状，不代为提交。
 
 ## 一体化产品实施（feat-integrated-product）
 

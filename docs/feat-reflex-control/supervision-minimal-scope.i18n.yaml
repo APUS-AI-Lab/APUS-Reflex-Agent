@@ -1,0 +1,22 @@
+# Bilingual-pair consistency record for supervision-minimal-scope.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-reflex-control/supervision-minimal-scope.md
+/minimal-codex-process-supervision:
+  en: 4d4d8ed2c8d22928
+  zh: 0313949120aa1788
+/minimal-codex-process-supervision/user-visible-flow:
+  en: 31a43391c42ac5f8
+  zh: f230a44deb9a77d2
+/minimal-codex-process-supervision/what-the-monitor-checks:
+  en: 61ba03da9b74b3f7
+  zh: 4a61f2c23098090c
+/minimal-codex-process-supervision/adjustment-contract:
+  en: c4a7ac3ccb3d1128
+  zh: 7e095a8f837320e7
+/minimal-codex-process-supervision/acceptance:
+  en: 291df93990298309
+  zh: 61798ff29dd7574e
+/minimal-codex-process-supervision/further-exploration:
+  en: a563682463be8782
+  zh: c820dba54963860a

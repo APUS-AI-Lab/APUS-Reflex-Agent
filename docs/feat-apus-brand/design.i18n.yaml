@@ -3,8 +3,8 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/feat-apus-brand/design.md
 /apus-reflex-harness-brand-unification-design:
-  en: cfb1b3c8b1398884
-  zh: eca07a1b677c12e9
+  en: d3fea10c611ede55
+  zh: bdeb4ec7e2c40bc5
 /apus-reflex-harness-brand-unification-design/brand-definition:
   en: 41e9e0e920e77a6a
   zh: 101f8f8434c3c26b

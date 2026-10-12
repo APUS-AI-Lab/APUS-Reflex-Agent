@@ -18,6 +18,7 @@ const kitRepositoryUrl = new RegExp(`\\bgithub\\.com/${organization}/libreoffice
 const commitCandidate = /(?<![a-z0-9])[\da-f]{7,40}(?![a-z0-9])/gi
 const excludedPrefixes = ['vendor/', '.agents/notes/archived/']
 const retainedRevisionFiles = new Set([
+  'docs/feat-reflex-control/evidence/supervision-audit-20261011.json',
   'docs/feat-jev-decision-kernel/completion-browser-result.json',
   'docs/feat-system3-g1/desktop-acceptance.json',
   'docs/feat-system3-g1/deployment-final.json',

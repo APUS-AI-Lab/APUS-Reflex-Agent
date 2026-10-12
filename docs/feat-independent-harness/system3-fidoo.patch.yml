@@ -1,3 +1,5 @@
+# Historical optional relay example; set SYSTEM3_GENERATION_BASE_URL to your own API URL.
+# Legacy provider IDs are retained for existing profile compatibility. No maintainer service is supplied.
 # Explicit generation route; credentials remain in the process environment.
 - id: llm-deepseek
   disabled: true
@@ -8,7 +10,7 @@
       fidoo:
         displayName: Fidoo LiteLLM
         api: openai-completions
-        baseURL: https://proxy.fidoo.ai/v1
+        baseURL: !!js 'process.env.SYSTEM3_GENERATION_BASE_URL?.trim() || ""'
         apiKeyEnv: SYSTEM3_LITELLM_API_KEY
         compat:
           thinkingFormat: deepseek

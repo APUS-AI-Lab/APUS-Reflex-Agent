@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>APUS Continuum P1.2 持久化设计</title>
+  <style>
+    :root { color-scheme: light; font: 16px/1.6 system-ui, sans-serif; --ink:#172033; --muted:#58657a; --card:#f4f7fb; --line:#d7dfeb; --accent:#1457d9; }
+    body { max-width: 1000px; margin: 0 auto; padding: 32px 20px 64px; color: var(--ink); }
+    h1 { margin-bottom: 4px; } h2 { margin-top: 32px; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
+    .muted { color: var(--muted); } .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+    code { background: #eef2f8; padding: 1px 4px; border-radius: 4px; } li { margin: 6px 0; }
+    .diagram { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+    svg { min-width: 720px; width: 100%; height: auto; }
+  </style>
+</head>
+<body>
+  <h1>APUS Continuum P1.2：Session 持久化与重启恢复</h1>
+  <p class="muted">实现前设计门；目标是让记忆事件进入既有 Session event log，并证明 flush、磁盘重启和失败语义。此批不接入 Jev，不实现检索、摘要树或 UI 开关。</p>
+
+  <h2>目标与边界</h2>
+  <div class="card"><ul>
+    <li>复用 <code>Session.append</code>、<code>ctx.sessions.flush</code> 和现有 JSONL persistence，禁止创建第二个事实源。</li>
+    <li>为 Continuum 记录声明一个可版本化的 Session 事件，事件可独立折叠回 <code>MemoryRecordStore</code>。</li>
+    <li>验证写入、flush、reader 重启回读、未知/损坏事件拒绝和 flush 失败传播。</li>
+    <li>本批不宣称产品级无限记忆；事件持久化完成后仍需 P1.2 精确回读与 P2 索引。</li>
+  </ul></div>
+
+  <h2>架构</h2>
+  <div class="diagram"><svg viewBox="0 0 900 300" role="img" aria-label="Continuum persistence architecture">
+    <defs><marker id="a" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#1457d9"/></marker></defs>
+    <g font-family="system-ui" font-size="16" text-anchor="middle">
+      <rect x="25" y="105" width="170" height="74" rx="12" fill="#e7efff" stroke="#1457d9"/><text x="110" y="137">Continuum</text><text x="110" y="162">record operation</text>
+      <rect x="265" y="105" width="180" height="74" rx="12" fill="#eef7ed" stroke="#338a43"/><text x="355" y="137">Session.append</text><text x="355" y="162">continuum/memory-record</text>
+      <rect x="515" y="105" width="160" height="74" rx="12" fill="#fff4df" stroke="#b56b00"/><text x="595" y="137">flush barrier</text><text x="595" y="162">ctx.sessions.flush</text>
+      <rect x="745" y="105" width="130" height="74" rx="12" fill="#f2eaff" stroke="#7040a8"/><text x="810" y="137">JSONL</text><text x="810" y="162">event log</text>
+      <path d="M195 142 H255" stroke="#1457d9" stroke-width="2" marker-end="url(#a)"/><path d="M445 142 H505" stroke="#1457d9" stroke-width="2" marker-end="url(#a)"/><path d="M675 142 H735" stroke="#1457d9" stroke-width="2" marker-end="url(#a)"/>
+      <path d="M810 195 V245 H355 V195" fill="none" stroke="#58657a" stroke-dasharray="6 5" marker-end="url(#a)"/><text x="580" y="270" fill="#58657a">reader remount → read events → fold records</text>
+    </g>
+  </svg></div>
+
+  <h2>事件与 API 草案</h2>
+  <div class="card"><p><code>continuum/memory-record</code> 的 payload 只包含 JSON 可序列化的完整记录和操作：</p>
+    <pre><code>{ operation: 'create' | 'supersede' | 'deactivate', record: MemoryRecord }</code></pre>
+    <ul>
+      <li><code>create</code> 要求 revision=1、status=active；<code>supersede</code> 同时携带旧记录引用和新 active 记录；<code>deactivate</code> 携带递增 revision。</li>
+      <li>写入前由 <code>MemoryRecordStore</code> 验证 revision、scope、ID 和来源引用；append 成功后才视为 Session log 已接收。</li>
+      <li>恢复只折叠日志，不调用模型、不重新检索、不重写原事件；坏事件由 Session 的持久化验证拒绝。</li>
+    </ul>
+  </div>
+
+  <h2>文件与测试计划</h2>
+  <ul>
+    <li><code>packages/context/continuum/src/index.ts</code>：声明 SessionEventMap 扩展和记录事件类型。</li>
+    <li><code>packages/context/continuum/src/persistence.ts</code>：追加和从事件日志折叠的最小消费者；不新增存储后端。</li>
+    <li><code>packages/context/continuum/tests/persistence.spec.ts</code>：临时目录 JSONL 写入、显式 flush、销毁 Context、重新挂载并回读；覆盖 supersede/deactivate 顺序。</li>
+    <li>失败测试：flush 拒绝向上冒泡；写入失败后内存 Session 与磁盘可观察状态的差异被明确记录；未知事件/损坏事件不能静默恢复。</li>
+    <li>运行 <code>gen-persistence-catalog</code>、persistence acknowledgement、双语文档门禁、包级 lint/build/test；若事件影响模型可见面，再补两个 SDK 与 snapshot。</li>
+  </ul>
+
+  <h2>验收条件</h2>
+  <ol>
+    <li>同一 Session 的事件 seq 连续，显式 flush 返回后 reader 能在新 Context 中完整回读。</li>
+    <li>回读折叠出的记录与写入前后的 revision/status/sourceRefs 完全一致，旧快照不被修改。</li>
+    <li>关闭或未接入 Reflex 时没有自动创建这些事件；本批不会改变原版 Harness 行为。</li>
+    <li>证据明确区分“日志可恢复”与“真实模型产生收益”；无模型凭据时不把 keyless 测试写成真实 Jev 验收。</li>
+  </ol>
+</body>
+</html>

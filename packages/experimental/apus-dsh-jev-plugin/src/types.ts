@@ -122,3 +122,57 @@ export interface JevFailure {
 export type JevOutcome =
   | { readonly kind: 'ok'; readonly spec: JevSpec; readonly response: JevResponse }
   | { readonly kind: 'unknown'; readonly spec: JevSpec; readonly failure: JevFailure }
+
+/** Product capabilities shown independently of service connectivity. */
+export type ReflexCapabilityId = 'entryRouting' | 'codexSupervision' | 'contextMemory'
+/** Runtime-owned state; only an observed operation supplies verification metadata. */
+export interface ReflexCapabilityState {
+  readonly implemented: boolean
+  readonly enabled: boolean
+  readonly verifiedAt?: number
+  readonly lastOutcome?: string
+  /** Effective Goal-relevance supervision after module, activation and workspace-data admission checks. */
+  readonly semanticSupervision?: { readonly enabled: boolean }
+  /** Effective deployment-owned limits, not editable through connection settings. */
+  readonly settings?: {
+    readonly stallMs?: number
+    readonly cooldownMs?: number
+    readonly maxInterventions?: number
+    readonly feedbackMs?: number
+    readonly nativeSilenceMs?: number
+    readonly recoveryReassessmentMs?: number
+    readonly retryLimit?: number
+    readonly interruptGraceMs?: number
+    readonly recoveryCooldownMs?: number
+    readonly maxRecoveries?: number
+    readonly maxCandidates?: number
+    readonly maxFragmentChars?: number
+    readonly maxRestoredChars?: number
+    readonly maxRequestChars?: number
+  }
+}
+/** Credential-free runtime status. */
+export interface ReflexStatus {
+  readonly provider: JevProviderInfo
+  readonly capabilities: readonly (ReflexCapabilityState & { readonly id: ReflexCapabilityId })[]
+}
+/** Unsaved connection candidate; apiKey is transient and never persisted by the probe. */
+export interface ReflexConnectionInput {
+  readonly endpoint: string
+  readonly model: string
+  readonly effort: 'low' | 'high'
+  readonly timeoutMs: number
+  readonly protocol: 'openjev' | 'typesafe'
+  readonly apiKeyEnv?: string
+  readonly apiKey?: string
+}
+/** Sanitized result of authenticated discovery followed by a semantic decision. */
+export interface ReflexConnectionResult {
+  readonly kind: 'ok' | 'failed'
+  readonly stage: 'health' | 'models' | 'decision'
+  readonly latencyMs: number
+  readonly model: string
+  readonly effort: 'low' | 'high'
+  readonly code?: JevFailure['code'] | 'model-missing' | 'decision-rejected'
+  readonly status?: number
+}

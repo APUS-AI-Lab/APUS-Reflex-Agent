@@ -34,6 +34,9 @@
     },
     {
       "path": "../../compaction/compaction-image-offload"
+    },
+    {
+      "path": "../../compaction/compaction"
     }
   ]
 }

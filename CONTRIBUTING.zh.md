@@ -8,7 +8,7 @@
 
 APUS Reflex Harness 仍处于早期阶段，并在积极开发中。很抱歉，我们目前无法接受外部 PR（Pull Request）。不过，贡献代码远非帮助本仓库建设的唯一途径。你还可以通过许多其他方式参与进来：
 
-- 在 [APUS Reflex Harness Issues](https://github.com/cryptoSUN2049/APUS-Reflex-Harness/issues) 中报告产品问题或 bug：
+- 在 [APUS Reflex Harness Issues](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/issues) 中报告产品问题或 bug：
   - 为你希望引起团队关注的问题投票。我们的团队规模很小，可能无法回复每个帖子，但我们会持续关注，并在分配资源时将这些问题纳入考虑。
 - 为生态系统作出贡献：
   - 创建令你感兴趣的插件，并分享给其他人：

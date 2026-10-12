@@ -1,0 +1,8 @@
+version: 1
+scenario: goal-entry-routing
+profile: sdk
+composition: sdk-goal-entry-routing
+recording: authored
+header:
+  class: sdk-goal-entry-routing
+  pin: true

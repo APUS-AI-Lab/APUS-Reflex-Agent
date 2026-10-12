@@ -1,0 +1,7 @@
+# Bilingual-pair consistency record for supervision-validation.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-reflex-control/supervision-validation.md
+/reflex-supervision-validation:
+  en: 0f3e2534c9724d0f
+  zh: e2a21625f14fd91e

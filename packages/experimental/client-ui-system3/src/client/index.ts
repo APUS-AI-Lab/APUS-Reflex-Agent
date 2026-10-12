@@ -1,47 +1,14 @@
-/** Opt-in System3 feedback in the native Conversation input dock. */
+/** Experimental System3 UI and Reflex Remote assembly. */
 import type { Context } from '@deepseek-ai/cordis'
-import type {} from '@deepseek-ai/dsh-api-remotes/client'
-import type {} from '@deepseek-ai/dsh-api-session-controller/client'
-import type {} from '@deepseek-ai/dsh-client-locale/client'
-import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
-import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
-import type {} from '@deepseek-ai/dsh-client-ui-session/client'
-import type {} from '@deepseek-ai/dsh-experimental-system3/types'
-import type { SubagentLiveRunId } from '@deepseek-ai/dsh-subagent/client'
-import { System3Dock, type System3Actions } from './System3Dock.tsx'
-import { System3TurnHead } from './TurnHead.tsx'
-import { System3ComposerDelegation } from './ComposerDelegation.tsx'
-import { en, zh } from './locales.ts'
+import reflexRemote from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin/remote'
+import { mountSystem3 } from './mount.ts'
 
-/** Native services required by this optional Client plugin. */
-export const inject = ['slots', 'sessions', 'remote', 'remote.session', 'remote.subagents', 'locale']
-/** Register localized feedback and the native automatic-mode mutation.
- * @param ctx - Client plugin context.
+export { inject } from './mount.ts'
+
+/** Activate the optional UI with its own typed Remote contribution.
+ * @param ctx - Client runtime.
+ * @returns Complete UI and Remote disposer.
  */
-export function apply(ctx: Context): void {
-  ctx.effect(() => ctx.locale.register('system3', { zh, en }), 'system3: dictionaries')
-  ctx.slots.inject('conversation.input.dock', () => ctx.slots.register({
-    name: 'conversation.input.dock', id: 'system3', order: 5, locale: 'system3',
-    inject: (sessionId): System3Actions => ({
-      available: ctx.sessions.subagentAddress(sessionId) === undefined,
-      onAutomatic: async () => {
-        const result = await ctx.remote.session.resetModelSelection({ sessionId })
-        if (!result.ok) throw result.error
-      },
-      onStop: async () => {
-        const result = await ctx.remote.session.cancel({ sessionId })
-        if (!result.ok) throw result.error
-      },
-      onSteer: async (runId, text) => {
-        const result = await ctx.remote.subagents.steerByParent({ runId: runId as SubagentLiveRunId, parentSessionId: sessionId, text })
-        if (!result.ok) throw result.error
-      },
-    }),
-  }, System3Dock))
-  ctx.slots.inject('conversation.input.right', () => ctx.slots.register({
-    name: 'conversation.input.right', id: 'system3-delegation', order: 5, locale: 'system3',
-  }, System3ComposerDelegation))
-  ctx.slots.inject('conversation.chat.turnHead', () => ctx.slots.register({
-    name: 'conversation.chat.turnHead', id: 'system3-route', order: 5, locale: 'system3',
-  }, System3TurnHead))
+export async function apply(ctx: Context): Promise<() => Promise<void>> {
+  return await mountSystem3(ctx, reflexRemote)
 }

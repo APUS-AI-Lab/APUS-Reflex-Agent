@@ -1,0 +1,25 @@
+# Reflex-only Continuum UI acceptance composition. Jev is mounted in off mode so
+# the browser can verify the host ConfigForms namespace and persisted switch
+# without issuing a model call; shadow mode still uses deterministic baseline selection.
+- insert:
+    - id: jev
+      name: '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
+      config:
+        endpoint: http://127.0.0.1:9
+        model: acceptance-no-call
+        effort: low
+        timeoutMs: 1000
+    - id: continuum-jev
+      name: '@deepseek-ai/dsh-experimental-continuum-jev'
+      config:
+        mode: off
+        minConfidence: 0.8
+    - id: continuum-memory
+      name: '@deepseek-ai/dsh-continuum'
+      config:
+        enabled: false
+        mode: shadow
+        scopes: [workspace]
+        maxCandidates: 8
+        maxExcerptBytes: 2048
+        maxTotalBytes: 8192

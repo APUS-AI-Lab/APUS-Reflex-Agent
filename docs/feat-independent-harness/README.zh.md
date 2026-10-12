@@ -38,13 +38,13 @@ pnpm dsh --patch docs/feat-independent-harness/system3-jev.patch.yml --profile h
 <a id="fidoo-entry"></a>
 ## Fidoo 与入口选模
 
-[Fidoo overlay](system3-fidoo.patch.yml)使用现有 `llm-pi-ai` adapter，通过 OpenAI 兼容的 `https://proxy.fidoo.ai/v1` 调用模型。凭据读取环境变量 `SYSTEM3_LITELLM_API_KEY`，声明 `deepseek-v4-flash` 与 `deepseek-v4-pro`。两者采用保守的 131,072-token 上下文配置与 8,192-token 输出上限；这是部署配置，不代表网关最大能力。此生成配置也可单独使用。
+[Fidoo overlay](system3-fidoo.patch.yml)使用现有 `llm-pi-ai` adapter，通过用户提供的 OpenAI 兼容 `SYSTEM3_GENERATION_BASE_URL` 调用模型。凭据读取环境变量 `SYSTEM3_LITELLM_API_KEY`，声明 `deepseek-v4-flash` 与 `deepseek-v4-pro`。两者采用保守的 131,072-token 上下文配置与 8,192-token 输出上限；这是部署配置，不代表网关最大能力。此生成配置也可单独使用。
 
 ```sh
 pnpm dsh --patch docs/feat-independent-harness/system3-fidoo.patch.yml --profile headless "Reply with exactly READY. Do not use tools."
 ```
 
-启用入口决策前，配置 `JEV_ENDPOINT`、`JEV_MODEL`、`JEV_API_KEY` 和 `SYSTEM3_LITELLM_API_KEY`，并用 JSON 数组形式的 `SYSTEM3_SESSION_DATA_CLASSES` 显式声明整个会话的数据分类。仅公开数据会话才能使用 `["public"]`。分类涵盖执行模型可能收到的历史；这是部署声明，不是自动敏感信息检测。[入口 overlay](system3-entry.patch.yml)据此批准 Jev 与指定生成候选处理这些分类。通过 loopback 隧道访问的远端 GPU 仍是网络执行。
+启用入口决策前，配置 `JEV_ENDPOINT`、`JEV_MODEL`、`JEV_API_KEY`、`SYSTEM3_GENERATION_BASE_URL` 和 `SYSTEM3_LITELLM_API_KEY`，并用 JSON 数组形式的 `SYSTEM3_SESSION_DATA_CLASSES` 显式声明整个会话的数据分类。仅公开数据会话才能使用 `["public"]`。分类涵盖执行模型可能收到的历史；这是部署声明，不是自动敏感信息检测。[入口 overlay](system3-entry.patch.yml)据此批准 Jev 与指定生成候选处理这些分类。通过 loopback 隧道访问的远端 GPU 仍是网络执行。
 
 ```sh
 pnpm dsh --patch docs/feat-independent-harness/system3-jev.patch.yml --patch docs/feat-independent-harness/system3-fidoo.patch.yml --patch docs/feat-independent-harness/system3-entry.patch.yml --profile web --no-open

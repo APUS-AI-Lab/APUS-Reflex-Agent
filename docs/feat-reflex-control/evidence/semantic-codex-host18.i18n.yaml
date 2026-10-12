@@ -1,0 +1,7 @@
+# Bilingual-pair consistency record for semantic-codex-host18.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-reflex-control/evidence/semantic-codex-host18.md
+/host18-deployment-parameter-semantic-trial:
+  en: c70dd40caea39385
+  zh: 28b8e276cc16ed41

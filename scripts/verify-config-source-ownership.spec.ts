@@ -11,6 +11,25 @@ afterEach(() => {
 })
 
 describe('configuration source ownership gate', () => {
+  const referenceSelection = 'apiKeyEnv: !!js \'process.env.JEV_API_KEY_ENV?.trim() || (process.env.JEV_API_KEY ? "JEV_API_KEY" : undefined)\''
+
+  it.each([
+    ['apus-dsh-jev-plugin', referenceSelection, false],
+    ['other-provider', referenceSelection, true],
+    ['apus-dsh-jev-plugin', 'apiKeyEnv: !!js process.env.JEV_API_KEY', true],
+    ['apus-dsh-jev-plugin', referenceSelection.replace('"JEV_API_KEY"', 'process.env.JEV_API_KEY'), true],
+    ['apus-dsh-jev-plugin', 'apiKey: !!js process.env.JEV_API_KEY', true],
+    ['apus-dsh-jev-plugin', 'baseURL: !!js process.env.JEV_ENDPOINT', true],
+  ] as const)('limits reference selection to its reviewed owner and expression: %s / %s', (owner, line, rejected) => {
+    const root = mkdtempSync(join(tmpdir(), 'dsh-config-source-ownership-'))
+    roots.push(root)
+    const directory = join(root, 'packages/experimental', owner)
+    mkdirSync(directory, { recursive: true })
+    writeFileSync(join(directory, 'cordis.patch.yml'), `config:\n  ${line}\n`)
+
+    expect(collectConfigSourceOwnershipViolations(root)).toHaveLength(rejected ? 1 : 0)
+  })
+
   it('rejects inline endpoints in shipped bundle patches', () => {
     const root = mkdtempSync(join(tmpdir(), 'dsh-config-source-ownership-'))
     roots.push(root)

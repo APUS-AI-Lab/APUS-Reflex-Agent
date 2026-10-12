@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "deployed": true,
-  "description": "Four-tier entry routing over the deployed System3 candidates. Tier labels are the set author's judgement; follow-ups refer to history the router does not receive and expect abstain.",
+  "deployed": false,
+  "description": "Optional four-tier routing fixture; these routes are not the public deployment defaults. Tier labels are the set author's judgement; follow-ups refer to history the router does not receive and expect abstain.",
   "baseline": {
     "provider": "fidoo",
     "model": "deepseek-v4-flash",

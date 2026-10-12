@@ -1,4 +1,4 @@
-/** Completion-review judgements against the deployed Jev on a labelled set; skipped without JEV_API_KEY. */
+/** Completion-review judgements against the deployed Jev on a labelled set; skipped without explicit JEV_ENDPOINT and JEV_MODEL. */
 import { readFileSync, writeFileSync } from 'node:fs'
 import { Context } from '@deepseek-ai/cordis'
 import AgentLoop from '@deepseek-ai/dsh-agent-loop'
@@ -10,8 +10,8 @@ import { runSystem3Decision } from '../src/decision-kernel.ts'
 import { system3CompletionReviewDecision } from '../src/completion-review.ts'
 
 const deployment = readFileSync(new URL('../../../../deploy/system3/runtime.patch.yml', import.meta.url), 'utf8')
-const endpoint = /endpoint: (\S+)/.exec(deployment)?.[1]
-const jevModel = /model: (APUS-\S+)/.exec(deployment)?.[1]
+const endpoint = process.env.JEV_ENDPOINT?.trim() ?? ''
+const jevModel = process.env.JEV_MODEL?.trim() ?? ''
 const yes = Number(/completionReview:[\s\S]*?yes: (\S+)/.exec(deployment)?.[1])
 const no = Number(/completionReview:[\s\S]*?\bno: (\S+)/.exec(deployment)?.[1])
 
@@ -129,16 +129,16 @@ const HELD_OUT_2: typeof CASES = [
 const contexts: Context[] = []
 afterAll(async () => { for (const ctx of contexts.splice(0)) await ctx.fiber.dispose() })
 
-describe.skipIf(!process.env.JEV_API_KEY)('System3 completion review against the deployed Jev', { retry: 0 }, () => {
+describe.skipIf(!endpoint || !jevModel)('System3 completion review against the deployed Jev', { retry: 0 }, () => {
   it('refuses completions with unmet goals or requirements and lets met ones through', { timeout: 600_000 }, async () => {
     if (endpoint === undefined || jevModel === undefined || !Number.isFinite(yes) || !Number.isFinite(no)) {
-      throw new Error('deploy/system3/runtime.patch.yml no longer declares the Jev endpoint, model and completionReview thresholds')
+      throw new Error('deploy/system3/runtime.patch.yml requires explicit Jev endpoint/model and deployment completionReview thresholds')
     }
     const ctx = new Context()
     contexts.push(ctx)
     await mountAgentLoopTestDependencies(ctx)
     await ctx.plugin(AgentLoop, { agents: [] })
-    await ctx.plugin(Jev, { endpoint, model: jevModel, apiKeyEnv: 'JEV_API_KEY', effort: 'high', timeoutMs: 20000 })
+    await ctx.plugin(Jev, { endpoint, model: jevModel, ...(process.env.JEV_API_KEY_ENV || process.env.JEV_API_KEY ? { apiKeyEnv: process.env.JEV_API_KEY_ENV || 'JEV_API_KEY' } : {}), effort: 'high', timeoutMs: 20000 })
     const agent = await ctx.agentLoop.create(SessionId('completion-review-e2e'), { provider: 'none', model: 'none' })
     const settings = { mode: 'active' as const, yes, no, deadlineMs: 20000 }
     const shared = { policy: { mode: 'controlled' as const, approvedRemoteIds: ['jev'], approvedRemoteDataClasses: ['workspace' as const] },

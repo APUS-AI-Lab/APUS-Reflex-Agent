@@ -16,7 +16,7 @@ System1 是 APUS/OpenJev 的高频候选判断与经专项验证的轻量工作�
 
 官方上游为 https://github.com/deepseek-ai/deepseek-harness ，源码审阅日期为 2026-09-24，审阅来源为当时的 upstream/master；原默认分支 master，许可证 MIT。
 
-已完整 clone 到 /Users/gumpm5/Documents/Code/xDAN-System3-PersonalAgent-Harness，保留 Git 历史；本地根分支改为 main，上游 remote 为 upstream，自有 origin 为 https://github.com/cryptoSUN2049/xDAN-System3-PersonalAgent-Harness.git。远端已创建并回读 private=true。工作树为 .Codex/worktrees/feat-system3-foundation，分支同名。
+已完整 clone 到 /path/to/projects/xDAN-System3-PersonalAgent-Harness，保留 Git 历史；本地根分支改为 main，上游 remote 为 upstream，自有 origin 为 https://github.com/cryptoSUN2049/xDAN-System3-PersonalAgent-Harness.git。远端已创建并回读 private=true。工作树为 .Codex/worktrees/feat-system3-foundation，分支同名。
 
 已完成原始上游的 Ruff 修复与格式化；main 保留官方基线，feat-system3-foundation 已推送到自有私有仓库。基础 System3 包、统一 Cordis 服务和真实 AgentLoop smoke 已交付；真实模型、训练与部署仍未启动。
 

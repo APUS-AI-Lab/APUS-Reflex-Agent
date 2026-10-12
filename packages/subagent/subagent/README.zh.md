@@ -142,7 +142,14 @@ kind: "package-reference"
 
 -----
 
+Host 监督通过 `steerFromSupervisor(parent, runId, text, signal, isCurrent?)` 校验父 Agent 实例，并在接受后写入来源为 `reflex-supervision` 的 `subagent/supervision-steer`。该方法不向远程客户端开放，自动建议不冒充用户输入。Provider 可通过 `reportEvidence` 在运行期间发布独立的 `subagent/evidence` 操作指纹事件，不改变原有活动摘要接口。可选的版本化 `semantic` 证据包含部署允许的结构化操作类别与限长工作区相对路径，省略信息以 `truncated` 标记。消费者外发前必须执行项目数据隐私准入，证据不授予任何权限。
+
+Host 监督只能对其确切拥有的运行检查 `recoveryState` 并调用 `recoverFromSupervisor`。恢复与插入消息串行，已接收的人工输入会使较早的恢复继续操作失效。`subagent/supervision-recovery` 将带来源的输入和原生回执单独记录，不冒充人工消息；继续回执不证明任务取得进展。
+
+Host 监督建议可携带 `isCurrent` 回调，在串行出队时连同人工输入修订、原生线程及轮次身份重新检查。失效建议在传输前抛出 `SubagentSupervisorStaleError`，不记录为已接收。恢复传递 `expectedActivity`，使原生中断重新核对评估时的活动时间及重试次数；确认中断后的继续操作仅检查当前权限。
+
 <a id="model-experience"></a>
+
 ## 模型体验
 
 ### 结算通知

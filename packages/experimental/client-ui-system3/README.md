@@ -14,6 +14,7 @@ This optional Client plugin adds a compact native Conversation dock. It displays
 ## Table of Contents
 
 - [Configuration](#configuration)
+- [Reflex model configuration](#reflex-model-configuration)
 - [Behavior](#behavior)
 - [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
 - [Model Experience](#model-experience)
@@ -27,7 +28,21 @@ Load this Host discovery entry alongside System3 and the native Conversation Cli
 
 The product title is APUS Reflex Harness; the `system3` plugin and locale identifiers remain stable.
 
-Earlier Turns keep their own route line from the projection's `history`. While the running Turn has handed its work to a subagent, an entry in the composer's `conversation.input.right` seat names the delegate beside the model selector, which keeps showing the coordinating model. The dock observes native Session and projection subscriptions. Local submission appears before routing completes. Execution state follows the live Session, independently of historical entry advice; detailed decisions remain available after history replay. Ending a turn does not claim artifact verification. The fixed-model action calls the native reset API and waits for the persisted mode to change; failed mutations preserve the displayed mode. Addressed subagents cannot mutate root model selection. While a delegated run accepts mid-run input, the dock offers a steer form that sends the person's text through the native `subagents.steerByParent` Remote; a refused send keeps the text and shows a notice, and accepted texts appear under the run once the Host records them.
+Earlier Turns keep their own route line from the projection's `history`. While the running Turn has handed its work to a subagent, an entry in the composer's `conversation.input.right` seat names the delegate beside the model selector, which keeps showing the coordinating model. The dock observes native Session and projection subscriptions. Local submission appears before routing completes. Execution state follows the live Session, independently of historical entry advice; detailed decisions remain available after history replay. Ending a turn does not claim artifact verification. Unconfirmed supervision delivery says the acknowledgement is missing and guidance was not resent; it does not claim Reflex made no decision. The fixed-model action calls the native reset API and waits for the persisted mode to change; failed mutations preserve the displayed mode. Addressed subagents cannot mutate root model selection. While a delegated run accepts mid-run input, the dock offers a steer form that sends the person's text through the native `subagents.steerByParent` Remote; a refused send keeps the text and shows a notice, and accepted texts appear under the run once the Host records them.
+
+## Reflex model configuration
+
+This experimental client mounts its own typed Reflex Remote; the shared API Remotes package does not depend on the experimental provider. Disposal withdraws the UI before the Remote.
+
+The shared Web/Electron client registers **Settings → Reflex model configuration** as a dedicated top-level section. It stages the endpoint, model, effort, deadline and credential reference, saves through ConfigForms/Credentials, and tests an unsaved candidate through the authenticated `reflex` Remote namespace. Credential literals are never read back or written to browser storage. Deployment-owned environment credentials remain read-only; a separate managed reference can hold a replacement.
+
+Connection results and capability states are independent. Changing a draft invalidates its old probe result; an in-flight result for a previous draft is ignored. A failed credential write remains a failed save even when an older key exists. Capability labels report runtime module/activation state and do not infer verification from connectivity.
+
+Goal-relevance supervision has an independent `semanticSupervision.enabled` status. It is enabled only when the supervision module is installed, active, explicitly configured for semantic evidence and admitted by the current workspace-data policy. Fingerprint supervision may remain enabled when this sub-capability is disabled; neither state claims a verified outcome.
+
+If a combined connection/key save cannot confirm the credential write, the page restores its configuration edits only at their acknowledged revision. Conflicting newer edits remain intact and a partial-save notice replaces the generic failure. Drafts remain available; reopening refreshes accepted settings. Configuration and credentials are separate services, so disconnects do not provide cross-service atomicity.
+
+<a id="model-experience"></a>
 
 ## Model Experience
 

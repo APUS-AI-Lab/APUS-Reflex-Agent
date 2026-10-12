@@ -10,12 +10,12 @@
 - **过程智能**：至少一个 Jev 过程节点真实改变任务行为，首选 Skill 有界选择与实际注入；随后完成有来源记忆、压缩保护与查回、失败取证、专业 Agent 委派、持续 Goal 的预算和独立验收。首条切片不替代完整 G1—G6。
 - **体感智能**：默认呈现当前动作、可用成果、缺项和用户可执行操作。反馈节奏跟随事实；暂停、停止、来源排除、续做与重连具有明确范围、回执和失败路径。技术记录渐进展开，不能要求用户阅读协议日志才能判断任务是否成功。
 - **前端接入**：xDAN-System3-Frontend 加载固定来源的自有 runtime 与共享 Client Module，开发模式和安装包分别验收；模式、材料、批准、控制与成果都来自原生接口，不迁入 v3 的内存演示状态机作为产品事实库。
-- **模型供给**：自有 Jev 9B 与官方 Jev 经统一 SDK/provider 机制分别验收；生成使用配置的 proxy.fidoo.ai 路由。既有入口实网结果、独立 SDK smoke、服务健康与桌面真实调用是四类不同证据。
+- **模型供给**：自有 Jev 9B 与官方 Jev 经统一 SDK/provider 机制分别验收；生成使用配置的 gateway.example.invalid 路由。既有入口实网结果、独立 SDK smoke、服务健康与桌面真实调用是四类不同证据。
 - **未来演进**：本机通用 9B/27B 用于常用任务、本地数据处理及提出专业 Agent 编排指令；与 Jev 9B 分工独立。先验证工具能力、资源和质量，再启用；不以本地模型未落地否定已有入口链路，也不提前承诺已支持。
 
 ## 明确的前端接入目标与文件范围
 
-用户已再次明确前端仓库为 `/Users/gumpm5/Documents/Code/xDAN-System3-Frontend`。该仓库承担 System3 产品前端，不停留在 HTML 演示；已存在的 `chore-bootstrap` 工作区保留初始化交付，实际产品修改另建 feature worktree。当前记录和设计复核不自动视作产品代码实施批准。
+用户已再次明确前端仓库为 `/path/to/projects/xDAN-System3-Frontend`。该仓库承担 System3 产品前端，不停留在 HTML 演示；已存在的 `chore-bootstrap` 工作区保留初始化交付，实际产品修改另建 feature worktree。当前记录和设计复核不自动视作产品代码实施批准。
 
 - Harness 仓库：原生 SessionController、System3/Jev provider、Client-safe 事件与投影、接口及双 SDK。
 - Frontend `src/main/index.ts`、`src/main/runtime/harness-runtime.ts`：自有 runtime 入口及启动/安全 profile 装配；保留唯一 dsh 启动路径。
@@ -23,7 +23,7 @@
 - Frontend `packages/dsh-desktop-client-ui/`：现有模块已依赖 Conversation/API 并使用原生 slots。优先评估在此扩展与共享模块拆分的必要性，复用 locale/theme，不先建第二套前端。
 - 接入顺序：自有 runtime → 显式 Jev/System3 配置 → Client-safe 实际采用投影 → Conversation/侧栏 → 真实控制接口 → 安全恢复与安装包验收。
 
-最新供给基线改为 `ops-jev9b-a100`：2026-10-01 A100，默认 high/32层，27项决策、15项原生回归和5个指南示例通过。决策根地址 `https://owb1q1vidflfhp-8086.proxy.runpod.net`，路径 `/v1/systemone`；标准 vLLM Base URL 为 `https://owb1q1vidflfhp-8002.proxy.runpod.net/v1`。两者模型名及协议不同；结构化决策不支持 stream，原生 SSE 不代表决策可提前采用。旧 Pod URL 不再作为当前接入目标；Fidoo 继续承担既定生成职责。本轮只读指南，未探活或修改运行配置。新A100样本需独立评测，不能沿用旧环境延迟；公网服务验收不替代前端端到端接入。
+最新供给基线改为 `ops-jev9b-a100`：2026-10-01 A100，默认 high/32层，27项决策、15项原生回归和5个指南示例通过。决策根地址 `https://jev.example.invalid`，路径 `/v1/systemone`；标准 vLLM Base URL 为 `https://jev.example.invalid/v1`。两者模型名及协议不同；结构化决策不支持 stream，原生 SSE 不代表决策可提前采用。旧 Pod URL 不再作为当前接入目标；Fidoo 继续承担既定生成职责。本轮只读指南，未探活或修改运行配置。新A100样本需独立评测，不能沿用旧环境延迟；公网服务验收不替代前端端到端接入。
 
 ## 完成定义与首条纵向交付
 

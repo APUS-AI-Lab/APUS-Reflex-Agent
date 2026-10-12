@@ -54,22 +54,28 @@ function pooled(resetAfterFailures?: number) {
   return { request, warn }
 }
 
+async function abortedRequest(h: ReturnType<typeof pooled>) {
+  const controller = new AbortController()
+  controller.abort()
+  return await h.request(controller.signal)
+}
+
 it('stays stuck on a stalled connection when no reset is configured', async () => {
   const h = pooled()
-  expect([await h.request(), await h.request(), await h.request()]).toEqual(['no response', 'no response', 'no response'])
+  expect([await abortedRequest(h), await abortedRequest(h), await abortedRequest(h)]).toEqual(['no response', 'no response', 'no response'])
   expect(fake.agents).toHaveLength(1)
 })
 
 it('reopens the pool after consecutive failures, so the next request reaches a fresh connection', async () => {
   const h = pooled(2)
-  expect([await h.request(), await h.request(), await h.request(), await h.request()]).toEqual(['no response', 'no response', 200, 200])
+  expect([await abortedRequest(h), await abortedRequest(h), await h.request(), await h.request()]).toEqual(['no response', 'no response', 200, 200])
   expect(fake.agents.map(agent => agent.destroyed)).toEqual([1, 0])
   expect(h.warn).toHaveBeenCalledWith('jev: 2 consecutive requests got no response; reopening the connection pool')
 })
 
 it('counts only consecutive failures and destroys a pool once even when concurrent requests fail on it', async () => {
   const single = pooled(1)
-  const [first, second] = await Promise.all([single.request(), single.request()])
+  const [first, second] = await Promise.all([abortedRequest(single), abortedRequest(single)])
   expect([first, second]).toEqual(['no response', 'no response'])
   expect(fake.agents[0]?.destroyed).toBe(1)
   expect(await single.request()).toBe(200)
@@ -78,7 +84,7 @@ it('counts only consecutive failures and destroys a pool once even when concurre
 it('logs a failed destroy without breaking the next request', async () => {
   fake.setDestroyFails(true)
   const h = pooled(1)
-  expect(await h.request()).toBe('no response')
+  expect(await abortedRequest(h)).toBe('no response')
   await vi.waitFor(() => { expect(h.warn).toHaveBeenCalledWith('jev: connection pool destroy failed: Error: socket busy') })
   expect(await h.request()).toBe(200)
 })

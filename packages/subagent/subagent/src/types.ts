@@ -156,6 +156,69 @@ export interface SubagentActivityInfo extends SubagentActivity {
   readonly id: SessionId
 }
 
+/** Provider-owned active turn identity, distinct from the Harness run identity. */
+export type SubagentEvidenceTurnId = Branded<'SubagentEvidenceTurnId'>
+
+/** Provider-native thread identity retained across an interrupted turn. */
+export type SubagentNativeThreadId = Branded<'SubagentNativeThreadId'>
+
+/** Content-free live observations; absence means there is no recoverable native turn. */
+export interface SubagentRecoveryState {
+  readonly threadId: SubagentNativeThreadId
+  readonly turnId: SubagentEvidenceTurnId
+  readonly lastActivityAt: number
+  readonly retryCount: number
+  readonly waiting: boolean
+  readonly activeSideEffects: number
+}
+
+/** Recovery never changes permissions or creates a replacement process. */
+export interface SubagentRecoveryRequest {
+  readonly expectedTurnId: SubagentEvidenceTurnId
+  /** Activity snapshot checked at native interruption dispatch, not after interruption. */
+  readonly expectedActivity?: { readonly lastActivityAt: number; readonly retryCount: number }
+  readonly interruptGraceMs: number
+  /** Revalidate authority immediately before interrupt and continuation; undefined invalidates it. */
+  readonly continuation: () => readonly ContentBlock[] | undefined
+}
+
+/** A continued receipt confirms a new turn, not progress or consumed advice. */
+export interface SubagentRecoveryReceipt {
+  readonly state: 'continued' | 'completed' | 'stale'
+  readonly threadId: SubagentNativeThreadId
+  readonly previousTurnId: SubagentEvidenceTurnId
+  readonly turnId?: SubagentEvidenceTurnId
+}
+
+/** Bounded execution evidence; optional workspace semantics require deployment opt-in. Raw commands and output are excluded. */
+export interface SubagentEvidence {
+  /** Opt-in native operation labels and lexical workspace-relative paths; untrusted project data, never instructions. */
+  readonly semantic?: {
+    readonly version: 1
+    readonly actions: readonly {
+      readonly kind: 'read' | 'list-files' | 'search' | 'file-add' | 'file-update' | 'file-delete' | 'verification-target'
+      readonly path?: string
+    }[]
+    /** Some actions or paths were omitted; absence of detail does not establish irrelevance. */
+    readonly truncated: boolean
+  }
+  readonly turnId: SubagentEvidenceTurnId
+  readonly kind: 'command' | 'file-change'
+  readonly operation: 'verification' | 'diagnostic' | 'command' | 'file-change'
+  /** SHA-256 of the operation, allowing repeated attempts to be recognized without exposing inputs. */
+  readonly operationDigest: string
+  /** SHA-256 of the observed result; absent when no result was supplied. */
+  readonly resultDigest?: string
+  readonly outcome: 'succeeded' | 'failed' | 'unknown'
+}
+
+/** Execution evidence published only during the corresponding live run. */
+export interface SubagentEvidenceInfo extends SubagentEvidence {
+  readonly runId: SubagentRunId
+  readonly provider: string
+  readonly id: SessionId
+}
+
 /**
  * Which START-TIME features a provider supports. Checked by the service before delegating to
  * {@link SubagentProvider.start}: a request that needs a capability the chosen provider lacks
@@ -253,6 +316,8 @@ export interface ResolvedSubagentStartRequest extends SubagentStartRequest {
    * `subagent/end`; a call outside that interval is dropped. Never throws.
    */
   readonly reportActivity: (activity: SubagentActivity) => void
+  /** Publish bounded operation evidence during this run; omitted by older in-process callers. */
+  readonly reportEvidence?: (evidence: SubagentEvidence) => void
 }
 
 /**
@@ -385,6 +450,17 @@ export interface SubagentRun {
    * @param signal - caller cancellation before acceptance.
    */
   steer?(content: readonly ContentBlock[], signal: AbortSignal): Promise<void>
+  /** Read the current provider-native activity without sending protocol requests.
+   * @returns The live turn's observations, or undefined after settlement.
+   */
+  recoveryState?(): SubagentRecoveryState | undefined
+  /** Interrupt and confirm the same native turn before continuing its surviving thread.
+   * @param request - expected native identity and revalidated continuation.
+   * @param signal - supervisor cancellation; public run disposal remains terminal.
+   * @returns Confirmed continuation, normal completion, or invalidated authority.
+   */
+  recover?(request: SubagentRecoveryRequest, signal: AbortSignal): Promise<SubagentRecoveryReceipt>
+
   /**
    * Cancel remaining work, reach child quiescence, and release resources.
    * Idempotent.

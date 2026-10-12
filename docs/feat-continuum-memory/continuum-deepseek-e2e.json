@@ -1,0 +1,21 @@
+{
+  "provider": "deepseek-official",
+  "endpoint": "https://api.deepseek.com/anthropic",
+  "credentialSource": "protected local runtime environment (value omitted)",
+  "model": "deepseek-v4-pro",
+  "command": "pnpm exec vitest --config vitest.e2e.config.ts run packages/llm/llm-deepseek/tests/adapter.e2e.ts packages/llm/llm-deepseek/tests/runtime.e2e.ts",
+  "environment": {
+    "DEEPSEEK_IN_HISTORY_MODEL": "deepseek-v4-pro",
+    "DEEPSEEK_FLASH_E2E": "1",
+    "DEEPSEEK_VISION_E2E": "1"
+  },
+  "startedAt": "2026-10-11T07:59:07Z",
+  "finishedAt": "2026-10-11T08:02:03Z",
+  "exitCode": 0,
+  "testFiles": 2,
+  "passed": 21,
+  "skipped": 0,
+  "failed": 0,
+  "durationSeconds": 175.69,
+  "notes": "Latest protected real run: adapter E2E 13/13 and runtime E2E 8/8 passed with DEEPSEEK_FLASH_E2E=1 and DEEPSEEK_VISION_E2E=1. The vision request uses maxTokens 4096 so provider reasoning is not truncated. The API key is not stored in this repository or evidence file."
+}

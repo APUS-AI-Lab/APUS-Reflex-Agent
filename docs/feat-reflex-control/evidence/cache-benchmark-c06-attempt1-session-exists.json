@@ -1,0 +1,6 @@
+{
+  "publicationNote": "Raw operational evidence is retained outside the source repository. Private deployment configuration, conversation payloads and local source paths are omitted. This summary does not certify a new test run.",
+  "rawEvidencePublished": false,
+  "status": "failed",
+  "recordCount": 4
+}

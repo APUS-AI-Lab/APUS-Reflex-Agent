@@ -1,0 +1,25 @@
+# Editable Reflex defaults; profile settings override this bundle.
+- insert:
+    - id: jev
+      name: ./lib/index.js
+      # Read the final profile fields so existing config-only overrides stay enabled.
+      disabled: !!js >-
+        (() => {
+          const entry = ctx[Symbol.for("cordis.entry")];
+          const read = field => {
+            const value = entry.options.config?.[field];
+            return value && typeof value === "object" && "__jsExpr" in value
+              ? entry.evaluate(value.__jsExpr) : value;
+          };
+          return !read("endpoint")?.trim() && !read("model")?.trim();
+        })()
+      config:
+        endpoint: !!js 'process.env.JEV_ENDPOINT?.trim()'
+        model: !!js 'process.env.JEV_MODEL?.trim()'
+        apiKeyEnv: !!js 'process.env.JEV_API_KEY_ENV?.trim() || (process.env.JEV_API_KEY ? "JEV_API_KEY" : undefined)'
+        effort: high
+        timeoutMs: 15000
+        keepAliveMs: 120000
+        http2: true
+        # Two decisions without a response on the shared HTTP/2 connection reopen it.
+        resetAfterFailures: 2

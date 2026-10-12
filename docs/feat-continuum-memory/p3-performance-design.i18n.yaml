@@ -1,0 +1,16 @@
+# Bilingual-pair consistency record for p3-performance-design.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-continuum-memory/p3-performance-design.md
+/p3-performance-and-quality-evidence-design:
+  en: 871f5c6a1009840f
+  zh: 8df99038525d3cb8
+/p3-performance-and-quality-evidence-design/goal:
+  en: 9dc901babfd5a2d8
+  zh: c0cfa86fac0b20ef
+/p3-performance-and-quality-evidence-design/measurement-rules:
+  en: 8275dbb54f5061f1
+  zh: b4fe6d8301ad2232
+/p3-performance-and-quality-evidence-design/acceptance-conditions:
+  en: 2b43b87062c1c454
+  zh: 136addad259f6e59

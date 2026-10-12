@@ -1,0 +1,7 @@
+# Default owners for APUS Reflex Harness changes.
+* @cryptoSUN2049
+
+# Runtime, release and security changes require repository-owner review.
+/deploy/ @cryptoSUN2049
+/.github/ @cryptoSUN2049
+/SECURITY.md @cryptoSUN2049

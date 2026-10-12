@@ -4,7 +4,7 @@
 
 **瞬策 · 瞬时执行，深度思考 · Model-as-a-Harness**
 
-APUS Reflex Harness は、ローカルプロジェクトでモデルと作業する Personal Agent デスクトップアプリです。作業ディレクトリとモデルを選び、保存される会話でタスクを実行します。任意の Reflex/Jev 連携は Settings → System3 で設定します。デスクトップと Harness ランタイムはこのリポジトリから一緒に配布されます。アーキテクチャと現在の制限は[製品 README](../README.md)を参照してください。
+APUS Reflex Harness は、ローカルプロジェクトでモデルと作業する Personal Agent デスクトップアプリです。作業ディレクトリとモデルを選び、保存される会話でタスクを実行します。任意の Reflex/Jev 判断サービスは Settings → Reflex model configuration で設定します。サービスに接続しても、ルーティング、監督、記憶は自動では有効になりません。デスクトップと Harness ランタイムはこのリポジトリから一緒に配布されます。アーキテクチャと現在の制限は[製品 README](../README.md)を参照してください。
 
 公開済みインストーラーと対応環境は Releases を参照してください。統合プレビューは準備中です。ソースコードのアーカイブはインストーラーではありません。 [Releases](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/releases).
 

@@ -1,6 +1,6 @@
 ---
-description: "实验性的、与 provider 无关的类型化 Jev 决策服务，以及 System One HTTP provider。"
-kind: "package-reference"
+description: "为配置方案加入可配置 Reflex 决策服务与类型化 System One 提供方的 bundle。"
+kind: "package-bundle"
 ---
 
 # @deepseek-ai/dsh-experimental-apus-dsh-jev-plugin
@@ -9,7 +9,7 @@ kind: "package-reference"
 
 ## 概述
 
-让 Jev 模型从给定候选项中选择、对有序标准评分，或估计命题成立的概率。显式 profile 可以把这些类型化问题发送到 System One HTTP gateway，取得经过校验的答案或不可用结果。调用方决定哪些数据离开宿主，以及哪个结果影响其策略。`apus` 只是名称；问题不要求特定部署或模型厂商。
+这个可选配置方案 bundle 加入 Reflex 决策服务。其 `jev` 行在用户 profile 补丁下方提供部署默认值，保存的模型设置因此对新请求生效。System3 部署在 web profile 中准备该 bundle，标准 profile 不包含它。消费者提交类型化问题，并保留数据共享和行动选择的最终权限。
 
 ## 目录
 
@@ -25,15 +25,22 @@ kind: "package-reference"
 <a id="use-this-package"></a>
 ## 使用方式
 
-宿主需要类型化 Jev 决策时挂载本插件；默认 profile 不包含本包。Jev key 放在 harness credential plane 或启动环境中，由 `apiKeyEnv` 引用。
+### 加入配置方案层
+
+正式 System3 服务在启动 web profile 前运行 [prepare-profile.mjs](../../../deploy/system3/prepare-profile.mjs)。准备步骤只加入一次此 bundle，并保留既有用户补丁。[cordis.patch.yml](cordis.patch.yml) 提供 `jev` 行；profile 编辑覆盖这些默认值，无需改动 bundle。密钥保存在 Harness 凭据存储或 `apiKeyEnv` 引用的启动环境中。
 
 传输使用 `@typesafe-ai/sdk` 0.6.0，禁用自动重试及 SDK 日志。`protocol: openjev` 发送配置的 effort，`protocol: typesafe` 不发送该扩展。端点可使用 API 根地址或 `/v1` 前缀。超时覆盖凭据解析与响应接收；取消后迟到的凭据不会触发网络调用。state 接受文本、对象、数组和 null。
 
+<a id="configure-the-gateway"></a>
 ### 配置 gateway
+
+设置 `JEV_ENDPOINT` 和 `JEV_MODEL` 为自己的服务地址和模型。值会去除首尾空白；profile 最终生效的两个字段均未设置或为空时禁用 bundle，通用模型继续独立运行。只配置一个字段或地址非法时启动失败。bundle 使用 `high` 强度和 15 秒超时。旧版仅覆盖 config 的用户 profile 无需环境变量仍会启用；显式 `disabled: true` 优先。也可以通过下方 profile 补丁显式启用并覆盖配置。
+
+`JEV_API_KEY_ENV` 显式指定凭据引用；否则非空的 `JEV_API_KEY` 自动绑定同名引用。两者均未设置时使用匿名端点。已声明但缺失的凭据会在 HTTP 发送前导致决策失败，不要填入假密钥。环境表达式在启动时求值。
 
 ```yaml
 - id: jev
-  name: '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
+  disabled: false
   config:
     endpoint: http://127.0.0.1:30135
     model: APUS-OpenJev-v1-9B-5949
@@ -112,9 +119,23 @@ const outcome = await ctx.jev.decide({
 
 - [System3](../system3/README.zh.md)——确定性策略与 Session 决策 receipt。
 - [LLM adapter](../../llm/llm-pi-ai/README.zh.md)——通过 OpenAI-compatible gateway 发送生成请求。
-- [Fidoo 与 RunPod profile](../../../docs/feat-system3-foundation/model-chain.zh.md)——显式的源码 checkout overlay 与凭据引用。
+- [模型服务 profile](../../../docs/feat-system3-foundation/model-chain.zh.md)——显式的源码 checkout overlay 与凭据引用。
 
 -----
+
+## Reflex 模型配置
+
+本包也提供标准 profile bundle，承载可编辑的 Reflex 默认值。APUS 部署将该 bundle 放在用户 profile 之下；命令行 overlay 不得重复声明 `jev` 条目，否则配置覆盖机制会按设计拒绝持久化编辑。
+
+表单 schema 只包含可序列化的数据；服务在初次加载和所属 `internal/config` 更新流程中校验地址。非法地址在 profile 写入前被拒绝。
+
+`jev` Loader 条目将服务地址、模型、决策强度、超时、协议和凭据引用作为 volatile 设置提供。“Reflex 模型配置”专用页面通过 ConfigForms 编辑条目，通过 Credentials 保存 API Key；新请求读取已提交的值，执行中的请求保留已解析的提供方配置。连接池参数由部署管理。
+
+`reflex` Remote 命名空间提供 `readStatus` 和 `testConnection`。OpenJev 连接测试先检查 `/health`，再鉴权访问 `/v1/models` 并确认所选模型，再向 `/v1/systemone` 发送不含用户内容的固定是非判断。测试接受未保存的配置和可选临时密钥，不持久化它们，只返回脱敏错误类别与耗时，也不会把任务能力标记为已验收。运行时模块通过 `registerCapability` 注册能力状态读取器，并负责释放注册。
+
+`ReflexCapabilityId` 标识三个能力所有者；`ReflexCapabilityState` 包含安装、启用、实际执行结果及只读部署参数。`ReflexStatus` 汇集这些状态与已配置提供方。`ReflexConnectionInput` 描述未保存候选及可选临时密钥；`ReflexConnectionResult` 报告测试阶段、脱敏状态及耗时。
+
+目标相关性监督单独报告 `semanticSupervision.enabled` 状态。只有监督模块已安装、处于 active 模式、显式配置语义证据且当前工作区数据策略允许时才启用。该子能力未启用时，操作指纹监督仍可启用；两种状态均不代表已验证执行效果。
 
 <a id="model-experience"></a>
 ## 模型体验

@@ -1,0 +1,24 @@
+{
+  "generatedAt": "2026-10-11T09:57:29.263Z",
+  "endpoint": "https://jev.example.invalid",
+  "model": "APUS-OpenJev-v1-9B-5949",
+  "effort": "high",
+  "minConfidence": 0.8,
+  "sets": {
+    "two-tier": {
+      "tasks": 50,
+      "outcomes": {"selected": 40, "abstain": 6, "low-confidence": 4},
+      "latencyMs": {"p50": 309, "p95": 588, "max": 1918},
+      "jev": {"decisionMatch": 0.92, "effectiveModelMatch": 0.98, "leftBaseline": 0.36, "followUpMisrouted": 0.25},
+      "thrown": []
+    },
+    "four-tier": {
+      "tasks": 30,
+      "outcomes": {"selected": 23, "abstain": 2, "low-confidence": 5},
+      "latencyMs": {"p50": 317, "p95": 405, "max": 565},
+      "jev": {"decisionMatch": 0.9, "effectiveModelMatch": 0.9333333333333333, "leftBaseline": 0.5333333333333333, "followUpMisrouted": 0.16666666666666666},
+      "thrown": []
+    }
+  },
+  "scope": "Route-decision latency only; local admission/status, remote first-byte, full answer latency and user-visible fallback remain separate checks."
+}

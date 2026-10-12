@@ -30,3 +30,7 @@
   - text: Send behavior while busy What Enter and the Send button do while the agent is running; Cmd/Ctrl+Enter uses the other behavior
   - button "Queue"
   - text: "Current version: {{version}}"
+  - link "MIT license and original copyright":
+    - /url: /LICENSE.txt
+  - link "Third-party licenses and acknowledgements":
+    - /url: /THIRD_PARTY_NOTICES.txt

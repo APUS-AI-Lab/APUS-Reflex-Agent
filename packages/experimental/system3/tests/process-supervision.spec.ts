@@ -134,6 +134,17 @@ it('counts a successful progress tool, such as a search, as progress', async () 
   expect(h.notices()).toEqual([])
 })
 
+it('accepts six parallel information reads without a stall notice or extra model turn', async () => {
+  const reads = Array.from({ length: 6 }, (_unused, index) =>
+    call(`read-${String(index)}`, 'read').filter(chunk => chunk.type !== 'finish')
+      .map(chunk => 'index' in chunk ? { ...chunk, index } : chunk)).flat()
+  const h = await setup([reads, textResponse('reconciled')], { progressTools: ['search', 'read'] })
+  await h.ask('Read six sources in parallel and reconcile the amounts without modifying files.')
+  expect(h.notices()).toEqual([])
+  expect(h.adapter.requests).toHaveLength(2)
+  expect(h.adapter.requests.flatMap(h.advised)).toEqual([])
+})
+
 it('asks for verification once after changes, and accepts a passing check as evidence', async () => {
   const h = await setup([call('e1', 'edit'), textResponse('done'), bash('v1', 'pnpm test'), textResponse('verified'),
     call('e2', 'edit'), textResponse('done'), textResponse('cannot verify')])
@@ -149,7 +160,7 @@ it('asks for verification once after changes, and accepts a passing check as evi
     { rule: 'missing-evidence', subject: null, count: 1, advised: true }])
 })
 
-it('records without advising in observe mode, counts stalled steps, and ignores failed changes', async () => {
+it('records without advising in observe mode, counts stalled tool calls, and ignores failed changes', async () => {
   const h = await setup([call('r1', 'read'), call('d1', 'delegate', true), call('e1', 'edit'), textResponse('done')],
     { mode: 'observe', stalledSteps: 2, failedAttempts: 5 })
   await h.ask('look around')
@@ -230,6 +241,6 @@ it('rejects invalid thresholds and patterns at load', async () => {
 })
 
 it('words each advice for the main model', () => {
-  expect(supervisionAdvice('no-progress', undefined, 6)).toBe('[System3 过程监督] 最近 6 步没有产生新的修改或通过的验证。请重新评估方法、换一种策略，或向用户说明卡在哪里。')
+  expect(supervisionAdvice('no-progress', undefined, 6)).toBe('[System3 过程监督] 最近 6 次工具调用没有成功的修改、委派、验证或信息读取。请重新评估方法、换一种策略，或向用户说明卡在哪里。')
   expect(supervisionAdvice('repeated-error', undefined, 2)).toContain('`` 已经第 2 次')
 })

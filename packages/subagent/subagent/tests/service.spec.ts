@@ -1,4 +1,5 @@
 import { describe, expect, expectTypeOf, it, onTestFinished, vi } from 'vitest'
+import { brandString } from '@deepseek-ai/dsh-brand'
 import { Context } from '@deepseek-ai/cordis'
 import { type Agent } from '@deepseek-ai/dsh-agent'
 
@@ -20,6 +21,7 @@ import SubagentRuntime, {
   type SubagentRunEndInfo,
   type SubagentRunInfo,
   type SubagentStartRequest,
+  type SubagentNativeThreadId, type SubagentEvidenceTurnId, type SubagentRecoveryId,
 } from '@deepseek-ai/dsh-subagent'
 import { Session, SessionId, type SessionEvent } from '@deepseek-ai/dsh-session'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
@@ -146,6 +148,7 @@ describe('SubagentRuntime', () => {
         provider: 'one-shot',
       },
       reportActivity: expect.any(Function) as ResolvedSubagentStartRequest['reportActivity'],
+      reportEvidence: expect.any(Function) as NonNullable<ResolvedSubagentStartRequest['reportEvidence']>,
     })
     expect(provider.lastRequest).not.toBe(request)
     expectTypeOf<Parameters<SubagentRuntime['start']>[1]>().toExtend<SubagentStartRequest>()
@@ -307,13 +310,13 @@ describe('SubagentRuntime', () => {
       return { agent: Object.assign(fakeParent(id), { session: { id: SessionId(id), append } }), append }
     }
 
-    async function steerableRun(steer: SubagentRun['steer']) {
+    async function steerableRun(steer: SubagentRun['steer'], recovery: Pick<SubagentRun, 'recover' | 'recoveryState'> = {}) {
       const { ctx, subagents } = await service()
       const result = Promise.withResolvers<SubagentResult>()
       subagents.registerProvider({
         name: 'steerable', capabilities: NO_CAPS, inheritsParentContext: false,
         async start() {
-          return { id: SessionId('child'), localAgent: undefined, result: result.promise, async dispose() {}, ...steer === undefined ? {} : { steer } }
+          return { id: SessionId('child'), localAgent: undefined, result: result.promise, async dispose() {}, ...steer === undefined ? {} : { steer }, ...recovery }
         },
       })
       const starts: SubagentRunInfo[] = []
@@ -325,6 +328,130 @@ describe('SubagentRuntime', () => {
     }
 
     const signal = (): AbortSignal => new AbortController().signal
+
+    it('publishes independent recovery capability without advertising human steering', async () => {
+      const observation = { threadId: brandString<SubagentNativeThreadId>('native-thread'),
+        turnId: brandString<SubagentEvidenceTurnId>('native-turn'), lastActivityAt: 1, retryCount: 0, waiting: false, activeSideEffects: 0 }
+      const recover = vi.fn<NonNullable<SubagentRun['recover']>>(async () => ({ state: 'continued',
+        threadId: observation.threadId, previousTurnId: observation.turnId, turnId: brandString<SubagentEvidenceTurnId>('next-turn') }))
+      const h = await steerableRun(undefined, { recover, recoveryState: () => observation })
+      expect(h.starts[0]!.steerable).toBe(false)
+      expect(h.subagents.recoveryState(h.parent.agent, h.runId)).toEqual(observation)
+      await expect(h.subagents.steerByParent({ runId: h.runId, parentSessionId: h.parent.agent.session.id, text: 'human' }, signal())).rejects.toThrow()
+      await expect(h.subagents.steerFromSupervisor(h.parent.agent, h.runId, 'supervisor', signal())).rejects.toThrow()
+      await expect(h.subagents.recoverFromSupervisor(h.parent.agent, h.runId, {
+        id: brandString<SubagentRecoveryId>('independent'), observation, interruptGraceMs: 10,
+        text: '[reflex-supervision] reconcile', isCurrent: () => true,
+      }, signal())).resolves.toMatchObject({ state: 'continued' })
+      expect(recover).toHaveBeenCalledTimes(1)
+      h.result.resolve({ output: [], stopReason: 'completed' })
+      await h.run.result
+    })
+
+    it('isolates native recovery authority and gives admitted human input priority over continuation', async () => {
+      const observation = { threadId: brandString<SubagentNativeThreadId>('native-thread'),
+        turnId: brandString<SubagentEvidenceTurnId>('native-turn'), lastActivityAt: 1, retryCount: 0, waiting: false, activeSideEffects: 0 }
+      const release = Promise.withResolvers<undefined>()
+      const recover = vi.fn<NonNullable<SubagentRun['recover']>>(async (request) => {
+        expect(request.continuation()).toBeDefined()
+        await release.promise
+        expect(request.continuation()).toBeUndefined()
+        return { state: 'stale', threadId: observation.threadId, previousTurnId: observation.turnId }
+      })
+      const steer = vi.fn(async () => {})
+      const h = await steerableRun(steer, { recover, recoveryState: () => observation })
+      const proposal = { id: brandString<SubagentRecoveryId>('recovery-1'), observation, interruptGraceMs: 100,
+        text: '[reflex-supervision] reconcile', isCurrent: () => true }
+      expect(h.subagents.recoveryState(steeringParent('delegator').agent, h.runId)).toBeUndefined()
+      await expect(h.subagents.recoverFromSupervisor(steeringParent('delegator').agent, h.runId, proposal, signal())).rejects.toThrow()
+      expect(h.parent.append).not.toHaveBeenCalled()
+      const pending = h.subagents.recoverFromSupervisor(h.parent.agent, h.runId, proposal, signal())
+      await vi.waitFor(() => { expect(recover).toHaveBeenCalledTimes(1) })
+      const human = h.subagents.steerByParent({ runId: h.runId, parentSessionId: SessionId('delegator'), text: 'Preserve invoices.csv' }, signal())
+      expect(steer).not.toHaveBeenCalled()
+      release.resolve(undefined)
+      expect(await pending).toMatchObject({ state: 'stale' })
+      await human
+      expect(h.parent.append).toHaveBeenCalledTimes(3)
+      expect(h.parent.append).toHaveBeenNthCalledWith(3, 'subagent/steer', expect.objectContaining({ text: 'Preserve invoices.csv' }))
+      h.result.resolve({ output: [], stopReason: 'completed' })
+      await h.run.result
+      expect(h.subagents.recoveryState(h.parent.agent, h.runId)).toBeUndefined()
+    })
+
+    it('refuses stale recovery before dispatch and records an uncertain transport only once', async () => {
+      const observation = { threadId: brandString<SubagentNativeThreadId>('thread'), turnId: brandString<SubagentEvidenceTurnId>('turn'),
+        lastActivityAt: 1, retryCount: 0, waiting: false, activeSideEffects: 0 }
+      const recover = vi.fn<NonNullable<SubagentRun['recover']>>(async () => { throw new Error('ack lost') })
+      const h = await steerableRun(undefined, { recover, recoveryState: () => observation })
+      const proposal = { id: brandString<SubagentRecoveryId>('uncertain'), observation, interruptGraceMs: 10,
+        text: 'reconcile', isCurrent: () => false }
+      expect(await h.subagents.recoverFromSupervisor(h.parent.agent, h.runId, proposal, signal())).toMatchObject({ state: 'stale' })
+      expect(h.parent.append).not.toHaveBeenCalled()
+      expect(recover).not.toHaveBeenCalled()
+      await expect(h.subagents.recoverFromSupervisor(h.parent.agent, h.runId, { ...proposal, isCurrent: () => true }, signal()))
+        .rejects.toThrow('ack lost')
+      expect(recover).toHaveBeenCalledOnce()
+      expect(h.parent.append).toHaveBeenCalledTimes(2)
+      expect(h.parent.append).toHaveBeenNthCalledWith(1, 'subagent/supervision-recovery', expect.objectContaining({ state: 'intent' }))
+      expect(h.parent.append).toHaveBeenNthCalledWith(2, 'subagent/supervision-recovery', expect.objectContaining({ state: 'unknown' }))
+      h.result.resolve({ output: [], stopReason: 'completed' })
+      await h.run.result
+    })
+
+    it('retains the original recovery activity fingerprint across a queued native control', async () => {
+      const gate = Promise.withResolvers<undefined>()
+      const entered = Promise.withResolvers<undefined>()
+      const observed = { threadId: brandString<SubagentNativeThreadId>('thread'), turnId: brandString<SubagentEvidenceTurnId>('turn'),
+        lastActivityAt: 1, retryCount: 3, waiting: false, activeSideEffects: 0 }
+      let current = observed
+      const recover = vi.fn<NonNullable<SubagentRun['recover']>>(async (request) => {
+        expect(request.expectedActivity).toEqual({ lastActivityAt: 1, retryCount: 3 })
+        expect(current).toMatchObject({ lastActivityAt: 2, retryCount: 0 })
+        return { state: 'stale', threadId: observed.threadId, previousTurnId: observed.turnId }
+      })
+      const h = await steerableRun(async () => { entered.resolve(undefined); await gate.promise },
+        { recover, recoveryState: () => current })
+      const occupying = h.subagents.steerFromSupervisor(h.parent.agent, h.runId, 'first', signal(), () => true)
+      await entered.promise
+      const pending = h.subagents.recoverFromSupervisor(h.parent.agent, h.runId, {
+        id: brandString<SubagentRecoveryId>('queued'), observation: observed, interruptGraceMs: 100,
+        text: 'reconcile', isCurrent: () => true,
+      }, signal())
+      expect(recover).not.toHaveBeenCalled()
+      current = { ...observed, lastActivityAt: 2, retryCount: 0 }
+      gate.resolve(undefined)
+      await occupying
+      expect(await pending).toMatchObject({ state: 'stale' })
+      h.result.resolve({ output: [], stopReason: 'completed' })
+      await h.run.result
+    })
+
+    it.each(['authority', 'human', 'turn'] as const)('rejects queued supervisor advice after %s changes before dispatch', async (change) => {
+      const gate = Promise.withResolvers<undefined>()
+      const entered = Promise.withResolvers<undefined>()
+      let current = true
+      let observation = { threadId: brandString<SubagentNativeThreadId>('thread'),
+        turnId: brandString<SubagentEvidenceTurnId>('turn-1'), lastActivityAt: 1, retryCount: 0, waiting: false, activeSideEffects: 0 }
+      const steer = vi.fn(async () => { entered.resolve(undefined); await gate.promise })
+      const h = await steerableRun(steer, { recoveryState: () => observation })
+      const occupying = h.subagents.steerFromSupervisor(h.parent.agent, h.runId, 'first', signal(), () => true)
+      await entered.promise
+      const old = h.subagents.steerFromSupervisor(h.parent.agent, h.runId, 'obsolete', signal(), () => current)
+      const rejected = expect(old).rejects.toThrow('became stale before dispatch')
+      let human: Promise<unknown> | undefined
+      if (change === 'authority') current = false
+      if (change === 'turn') observation = { ...observation, turnId: brandString<SubagentEvidenceTurnId>('turn-2') }
+      if (change === 'human') human = h.subagents.steerByParent({ runId: h.runId, parentSessionId: h.parent.agent.session.id, text: 'new human constraint' }, signal())
+      gate.resolve(undefined)
+      await occupying
+      await rejected
+      await human
+      expect(steer.mock.calls).toHaveLength(change === 'human' ? 2 : 1)
+      expect(JSON.stringify(h.parent.append.mock.calls)).not.toContain('obsolete')
+      h.result.resolve({ output: [], stopReason: 'completed' })
+      await h.run.result
+    })
 
     it('delivers text to the live run and records it in the parent Session after acceptance', async () => {
       const steer = vi.fn(async () => {})
@@ -399,26 +526,36 @@ describe('SubagentRuntime', () => {
     })
   })
 
-  it('stops publishing steps once the run rejects', async () => {
+  it('publishes evidence only while the run is live and stops activity after rejection', async () => {
     const { ctx, subagents } = await service()
     const result = Promise.withResolvers<SubagentResult>()
     let report: ResolvedSubagentStartRequest['reportActivity'] | undefined
+    let evidence: ResolvedSubagentStartRequest['reportEvidence'] | undefined
     subagents.registerProvider({
       name: 'rejecting',
       capabilities: NO_CAPS,
       inheritsParentContext: false,
       async start(request) {
         report = request.reportActivity
+        evidence = request.reportEvidence
         return { id: SessionId('child'), localAgent: undefined, result: result.promise, async dispose() {} }
       },
     })
     const seen: unknown[] = []
     ctx.on('subagent/activity', info => void seen.push(info))
 
+    const observations: unknown[] = []
+    ctx.on('subagent/evidence', info => void observations.push(info))
     const run = await subagents.start('rejecting', baseRequest())
+    const fact = { turnId: brandString<SubagentEvidenceTurnId>('turn'), kind: 'command' as const,
+      operation: 'verification' as const, operationDigest: 'test', outcome: 'failed' as const }
+    evidence?.(fact)
+    expect(observations).toHaveLength(1)
     result.reject(new Error('infrastructure'))
     await run.result.catch(() => undefined)
     report?.({ kind: 'tool', phase: 'started' })
+    evidence?.(fact)
+    expect(observations).toHaveLength(1)
 
     expect(seen).toEqual([])
   })

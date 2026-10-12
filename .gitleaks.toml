@@ -1,0 +1,41 @@
+title = "APUS Reflex Harness reviewed non-secret findings"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Exact reviewed fixture and archived digest lines; changed lines are scanned."
+regexTarget = "line"
+regexes = [
+  ".*2026\\-06\\-30\\-bash\\-stdin\\-env\\-trusted\\-plugin\\-api\\.md:\\ b9883c88d091e6e932da[7]c65b8b7fe4d107c0fa4.*",
+  ".*2026\\-06\\-30\\-bash\\-stdin\\-env\\-trusted\\-plugin\\-api\\.zh\\.md:\\ 884b83de21243e27fa39[f]7840adfffebc398a9b0.*",
+  ".*2026\\-07\\-15\\-replay\\-token\\-meter\\-service\\.md:\\ 1e6832f1bd049a9568b3[a]f3b925211f0665de288.*",
+  ".*2026\\-07\\-15\\-replay\\-token\\-meter\\-service\\.zh\\.md:\\ 6d00d5e1511aa6681868[9]ccec7d4b023c291f9aa.*",
+  ".*2026\\-07\\-29\\-request\\-level\\-llm\\-config\\-credentials\\.md:\\ dda5cd6710ad432a25bc[e]1214078098f4e797559.*",
+  ".*2026\\-07\\-29\\-request\\-level\\-llm\\-config\\-credentials\\.zh\\.md:\\ e521920586c8fe9d3a49[8]e0369d1693096562973.*",
+  ".*2026\\-07\\-30\\-adapter\\-owned\\-max\\-token\\-defaults\\.md:\\ 30b1840a9ff800926096[9]8e63d061a7d82503e5d.*",
+  ".*2026\\-07\\-30\\-adapter\\-owned\\-max\\-token\\-defaults\\.zh\\.md:\\ 770c61ce1514fa8e16d4[c]babed4dd97b5b7b40fb.*",
+  ".*2026\\-08\\-20\\-preview\\-cloudflare\\-pages\\-deploy\\.md:\\ c987ebedc301076e6de0[e]13ce2f4d0113e8e97f9.*",
+  ".*2026\\-08\\-20\\-preview\\-cloudflare\\-pages\\-deploy\\.zh\\.md:\\ 333513186e4d271af4fb[3]48bbd06adabe8f98e6c.*",
+  ".*2026\\-08\\-06\\-provider\\-credential\\-lifecycle\\.md:\\ dfb1f975faaabf02cf6b[1]7fc53728c42f04c5d1f.*",
+  ".*2026\\-08\\-06\\-provider\\-credential\\-lifecycle\\.zh\\.md:\\ 9166a914b27236a33d3e[6]677ecf21a333a852f2c.*",
+  ".*2026\\-08\\-12\\-max\\-tokens\\-turn\\-end\\-notice\\.md:\\ 927c6486079009e7262f[5]3d378177a7c588699de.*",
+  ".*2026\\-08\\-20\\-composer\\-reference\\-decoration\\-keys\\.md:\\ 316d45841c658d3d6524[6]fb7425526b10e2f6bf3.*",
+  ".*2026\\-06\\-30\\-session\\-store\\-fork\\-api\\.md:\\ ea80da2d948f5f7abfdf[4]42fba1999c926aaa093.*",
+  ".*2026\\-06\\-30\\-session\\-store\\-fork\\-api\\.zh\\.md:\\ 7b14ed5a462d9ae5fcb1[4]774ccee4cffea50b208.*",
+  ".*2026\\-07\\-28\\-sdk\\-max\\-output\\-tokens\\.md:\\ 8038081f1e93c5f2a31c[a]63b1faa75b78b40c801.*",
+  ".*2026\\-07\\-28\\-sdk\\-max\\-output\\-tokens\\.zh\\.md:\\ ffbac3d32eb62e7d3b38[e]6ac4ef4ebe9bb807788.*",
+  ".*2026\\-07\\-30\\-deepseek\\-onboarding\\-credential\\-setup\\.md:\\ b4deba8f5da5dfaa98a8[3]fa71096683c2843d9b0.*",
+  ".*2026\\-07\\-30\\-deepseek\\-onboarding\\-credential\\-setup\\.zh\\.md:\\ 0862a95e96f7c41f3a9a[3]6440d4029f9edf8c19c.*",
+  ".*2026\\-07\\-31\\-gui\\-full\\-access\\-confirmation\\.md:\\ 8bcc6bfbc7f27defd3fd[0]9ceb95f6b17f946bc08.*",
+  ".*2026\\-07\\-31\\-gui\\-full\\-access\\-confirmation\\.zh\\.md:\\ a4b229244cd9d3fce4a1[7]7581db511ab7d0cf670.*",
+  ".*2026\\-07\\-20\\-generated\\-cordis\\-core\\-api\\.md:\\ b6a66e518744354771f2[5]d44d662e2655fa7c758.*",
+  ".*2026\\-07\\-20\\-generated\\-cordis\\-core\\-api\\.zh\\.md:\\ 82dbb308386b7adc678c[6]e4bf8ef3f06c3b2df77.*",
+  ".*2026\\-06\\-20\\-public\\-agent\\-stop\\-api\\.md:\\ 07666e354cfc316e45ab[9]fd019929b92bf57f608.*",
+  ".*2026\\-06\\-20\\-public\\-agent\\-stop\\-api\\.zh\\.md:\\ a80ae4ae0bf5e6f9aa78[c]e2b4ccd87b995adec27.*",
+  ".*\\ \\ \\ \\ \\['a\\ printable\\-ASCII\\ key',\\ 'sk\\-0123456789'\\],.*",
+  ".*const\\ FIXTURE_SECRET\\ =\\ 'sk\\-e2efixture1234567890'.*",
+  ".*const\\ FIXTURE_SECRET\\ =\\ 'sk\\-fixture1234567890'.*",
+  ".*\\ \\ \\ \\ \\ \\ \"ops\\-jev9b\\-api\":\\ \"[a-f0-9]{40}\",.*",
+  ".*\\ \\ \\ \\ \"refs/heads/ops\\-jev9b\\-api\":\\ \"[a-f0-9]{40}\",.*"
+]

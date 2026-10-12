@@ -7,9 +7,12 @@
  * @module @deepseek-ai/dsh-subagent-codex/wire
  */
 
+import { createHash } from 'node:crypto'
+import { summarizeNativeEvidence } from './evidence-summary.ts'
+import { brandString } from '@deepseek-ai/dsh-brand'
 import type { Readable, Writable } from 'node:stream'
 import type { ContentBlock } from '@deepseek-ai/dsh-llm'
-import type { SubagentActivity, SubagentActivityKind, SubagentResult } from '@deepseek-ai/dsh-subagent'
+import type { SubagentEvidence, SubagentEvidenceTurnId, SubagentActivity, SubagentActivityKind, SubagentResult, SubagentNativeThreadId, SubagentRecoveryState, SubagentRecoveryRequest, SubagentRecoveryReceipt } from '@deepseek-ai/dsh-subagent'
 import { JsonRpcLineTransport } from '@deepseek-ai/dsh-sdk-protocol'
 import type { CodexPermissionMode } from './run.ts'
 
@@ -23,6 +26,7 @@ const ITEM_ACTIVITY_KINDS: Readonly<Record<string, SubagentActivityKind>> = {
   fileChange: 'file-change',
   mcpToolCall: 'tool',
   dynamicToolCall: 'tool',
+  collabAgentToolCall: 'tool',
   collabToolCall: 'tool',
   webSearch: 'web-search',
 }
@@ -195,8 +199,11 @@ async function raceAbort<T>(pending: Promise<T>, signal: AbortSignal): Promise<T
   }
 }
 
+/** A dispatched recovery lost its authoritative outcome and requires process quiescence. */
+export class CodexRecoveryUnconfirmedError extends Error {}
+
 /**
- * One app-server connection and its single ephemeral thread/turn.
+ * One app-server connection and its ephemeral thread and sequential native turns.
  *
  * The class deliberately exposes no generic request surface. Supporting
  * another product method must first become part of the provider contract.
@@ -231,6 +238,17 @@ export class CodexAppServerWire {
   private inputEnded = false
   private terminalObserved = false
   private closed = false
+  private lastActivityAt = Date.now()
+  private workspace = ''
+  private retryCount = 0
+  private waiting = false
+  private readonly sideEffects = new Set<string>()
+  private readonly retiredTurns = new Set<string>()
+  private recovery: {
+    readonly request: SubagentRecoveryRequest
+    readonly before: SubagentRecoveryState
+    readonly receipt: PromiseWithResolvers<SubagentRecoveryReceipt>
+  } | undefined
 
   constructor(
     private readonly input: Readable,
@@ -238,6 +256,11 @@ export class CodexAppServerWire {
     private readonly permissionMode: CodexPermissionMode,
     private readonly model?: string,
     private readonly onActivity?: (activity: SubagentActivity) => void,
+    private readonly onEvidence?: (evidence: SubagentEvidence) => void,
+    private readonly evidencePatterns?: { readonly verification: string; readonly diagnostic: string },
+    private readonly evidenceSummary?: { readonly maxActions: number
+      readonly maxPathChars: number
+      readonly verificationTargets?: { readonly maxCommandChars: number } | undefined },
   ) {
     this.transport = new JsonRpcLineTransport(input, output)
     // Fatal protocol state can arrive after the current guarded operation has
@@ -299,6 +322,7 @@ export class CodexAppServerWire {
    * @param signal - unpublished-start cancellation.
    */
   async startThread(cwd: string, signal: AbortSignal): Promise<void> {
+    this.workspace = cwd
     const response = object(await this.guarded(this.transport.request('thread/start', {
       cwd,
       ephemeral: true,
@@ -324,6 +348,7 @@ export class CodexAppServerWire {
     texts: readonly string[],
     signal: AbortSignal,
   ): Promise<SubagentResult> {
+    const continuing = this.recovery
     const completion = Promise.withResolvers<{
       readonly params: JsonObject
       readonly order: number
@@ -334,9 +359,16 @@ export class CodexAppServerWire {
       const response = object(await this.guarded(this.transport.request('turn/start', {
         threadId,
         input: texts.map(text => ({ type: 'text', text, text_elements: [] })),
+        ...continuing === undefined ? {} : { turnTrigger: 'reflex-supervision' },
       }, signal), signal), 'turn/start response')
       const turn = object(response.turn, 'turn/start turn')
       this.commitTurnId(string(turn.id, 'turn/start turn id'))
+      this.lastActivityAt = Date.now()
+      if (continuing !== undefined) {
+        continuing.receipt.resolve({ state: 'continued', threadId: continuing.before.threadId,
+          previousTurnId: continuing.before.turnId, turnId: brandString<SubagentEvidenceTurnId>(this.turnId as string) })
+        this.recovery = undefined
+      }
     } catch (error: unknown) {
       this.recordFailure({ stage: 'turn-start', category: 'unknown' })
       throw error
@@ -355,6 +387,35 @@ export class CodexAppServerWire {
       throw error
     }
     const status = terminal.status
+    const recovery = this.recovery
+    if (recovery !== undefined && status === 'interrupted') {
+      const content = recovery.request.continuation()
+      if (content === undefined) {
+        recovery.receipt.resolve({ state: 'stale', threadId: recovery.before.threadId, previousTurnId: recovery.before.turnId })
+        this.recovery = undefined
+        throw new Error('subagent-codex: recovery authority changed after interruption')
+      }
+      const next = content.map((block) => {
+        if (block.type !== 'text') throw new Error('subagent-codex: recovery requires text input')
+        return block.text
+      })
+      this.retiredTurns.add(recovery.before.turnId)
+      this.turnId = undefined
+      this.pendingTurnId = undefined
+      this.turnCompleted = undefined
+      this.earlyTurnNotifications.length = 0
+      this.lastFinalAnswer = undefined
+      this.lastUnphasedAnswer = undefined
+      this.terminalObserved = false
+      this.retryCount = 0
+      this.waiting = false
+      this.sideEffects.clear()
+      return this.runTurn(next, signal)
+    }
+    if (recovery !== undefined && status === 'completed') {
+      recovery.receipt.resolve({ state: 'completed', threadId: recovery.before.threadId, previousTurnId: recovery.before.turnId })
+      this.recovery = undefined
+    }
     if (status !== 'completed') {
       const parsed = failureInfo(terminal)
       this.recordFailure(parsed.httpStatus === undefined
@@ -404,12 +465,53 @@ export class CodexAppServerWire {
     }, signal), signal)
   }
 
+  /** Read content-free native activity for bounded supervision.
+   * @returns The active turn observations, excluding interrupted or completed turns.
+   */
+  recoveryState(): SubagentRecoveryState | undefined {
+    if (this.threadId === undefined || this.turnId === undefined || this.terminalObserved
+      || this.closed || this.recovery !== undefined) return undefined
+    return { threadId: brandString<SubagentNativeThreadId>(this.threadId), turnId: brandString<SubagentEvidenceTurnId>(this.turnId),
+      lastActivityAt: this.lastActivityAt, retryCount: this.retryCount, waiting: this.waiting, activeSideEffects: this.sideEffects.size }
+  }
+
+  /** Interrupt only the observed turn and await a confirmed same-thread continuation.
+   * @param request - Native identity, terminal deadline, and current authority callback.
+   * @param signal - Supervisor lifetime; cancellation never silently starts replacement work.
+   * @returns The confirmed native transition; a lost acknowledgement rejects without retry.
+   */
+  async recover(request: SubagentRecoveryRequest, signal: AbortSignal): Promise<SubagentRecoveryReceipt> {
+    signal.throwIfAborted()
+    const before = this.recoveryState()
+    if (before === undefined || before.turnId !== request.expectedTurnId || before.waiting || before.activeSideEffects > 0) {
+      throw new Error('subagent-codex: native turn is not recoverable')
+    }
+    if (request.expectedActivity !== undefined && (before.lastActivityAt !== request.expectedActivity.lastActivityAt
+      || before.retryCount !== request.expectedActivity.retryCount)) {
+      return { state: 'stale', threadId: before.threadId, previousTurnId: before.turnId }
+    }
+    if (request.continuation() === undefined) return { state: 'stale', threadId: before.threadId, previousTurnId: before.turnId }
+    const receipt = Promise.withResolvers<SubagentRecoveryReceipt>()
+    const pending = { request, before, receipt }
+    this.recovery = pending
+    const deadline = AbortSignal.any([signal, AbortSignal.timeout(request.interruptGraceMs)])
+    try {
+      // The terminal notification, not the empty interrupt response, authorizes continuation.
+      const dispatched = this.transport.request('turn/interrupt', { threadId: before.threadId, turnId: before.turnId }, deadline)
+      void dispatched.catch((error: unknown) => { if (this.recovery === pending) this.fail(thrown(error)) })
+      return await this.guarded(receipt.promise, deadline)
+    } catch (error) {
+      this.fail(thrown(error))
+      throw new CodexRecoveryUnconfirmedError('subagent-codex: native recovery unconfirmed', { cause: error })
+    }
+  }
+
   /**
    * Best-effort remote cancellation. Local settlement and process teardown
    * remain authoritative when the child no longer accepts protocol requests.
    */
   interrupt(): void {
-    if (this.threadId === undefined || this.turnId === undefined || this.closed) return
+    if (this.threadId === undefined || this.turnId === undefined || this.closed || this.recovery !== undefined) return
     void this.transport.request('turn/interrupt', {
       threadId: this.threadId,
       turnId: this.turnId,
@@ -458,6 +560,7 @@ export class CodexAppServerWire {
   }
 
   private fail(error: Error): void {
+    this.recovery?.receipt.reject(error)
     this.fatal.reject(error)
   }
 
@@ -663,10 +766,41 @@ export class CodexAppServerWire {
   /**
    * Report an item's category and phase. The echoed task item is not child
    * work. Only a completed non-final agent message contributes its text as the
-   * note; commands, paths, arguments, and results never leave this method.
+   * note. The separate opt-in evidence callback includes bounded native labels and relative paths, never commands or results.
    */
   private reportItem(item: JsonObject, phase: SubagentActivity['phase']): void {
+    this.lastActivityAt = Date.now()
+    if (['commandExecution', 'fileChange', 'mcpToolCall', 'dynamicToolCall', 'collabAgentToolCall', 'collabToolCall'].includes(String(item.type))) {
+      if (typeof item.id === 'string') {
+        if (phase === 'started') this.sideEffects.add(item.id)
+        else this.sideEffects.delete(item.id)
+      } else if (phase === 'started') {
+        // An uncorrelatable start blocks automatic recovery for this turn.
+        this.sideEffects.add('unidentified')
+      }
+    }
     if (item.type === 'userMessage') return
+    if (phase === 'completed' && this.turnId !== undefined && (item.type === 'commandExecution' || item.type === 'fileChange')) {
+      const command = typeof item.command === 'string' ? item.command : ''
+      const output = typeof item.aggregatedOutput === 'string' ? item.aggregatedOutput : undefined
+      const failed = item.status === 'failed' || (typeof item.exitCode === 'number' && item.exitCode !== 0)
+      const succeeded = item.status === 'completed' || item.exitCode === 0
+      const digest = (value: string): string => createHash('sha256').update(value).digest('hex')
+      const semantic = this.evidenceSummary === undefined ? undefined
+        : summarizeNativeEvidence(item, this.workspace, this.evidenceSummary)
+      const verificationTarget = semantic?.actions.some(action => action.kind === 'verification-target') === true
+      this.onEvidence?.({
+        turnId: brandString<SubagentEvidenceTurnId>(this.turnId),
+        kind: item.type === 'fileChange' ? 'file-change' : 'command',
+        operation: item.type === 'fileChange' ? 'file-change'
+          : verificationTarget || this.evidencePatterns !== undefined && new RegExp(this.evidencePatterns.verification, 'u').test(command) ? 'verification'
+            : this.evidencePatterns !== undefined && new RegExp(this.evidencePatterns.diagnostic, 'u').test(command) ? 'diagnostic' : 'command',
+        operationDigest: digest(command || JSON.stringify(item.changes ?? [])),
+        ...semantic === undefined ? {} : { semantic },
+        ...output === undefined ? {} : { resultDigest: digest(output) },
+        outcome: failed ? 'failed' : (verificationTarget ? item.exitCode === 0 : succeeded) ? 'succeeded' : 'unknown',
+      })
+    }
     const note = phase === 'completed' && item.type === 'agentMessage' && item.phase !== 'final_answer'
       && typeof item.text === 'string' ? item.text : undefined
     // A finished command failed when Codex marks it failed or reports a nonzero exit code.
@@ -681,7 +815,30 @@ export class CodexAppServerWire {
     params: JsonObject,
     order?: number,
   ): void {
+    if (params.threadId === this.threadId) {
+      const notifiedTurn = typeof params.turnId === 'string' ? params.turnId
+        : typeof params.turn === 'object' && params.turn !== null ? (params.turn as JsonObject).id : undefined
+      if (typeof notifiedTurn === 'string' && this.retiredTurns.has(notifiedTurn)) return
+    }
+    if (params.threadId === this.threadId && this.turnId !== undefined && !this.terminalObserved) {
+      if (method === 'thread/status/changed') {
+        const status = object(params.status, 'thread status')
+        this.waiting = status.type === 'active' && Array.isArray(status.activeFlags) && status.activeFlags.length > 0
+      }
+      if (params.turnId === this.turnId) {
+        if (method === 'error' && params.willRetry === true) this.retryCount += 1
+        if (['item/agentMessage/delta', 'item/reasoning/textDelta', 'item/reasoning/summaryTextDelta', 'item/commandExecution/outputDelta'].includes(method)) {
+          this.lastActivityAt = Date.now()
+          this.retryCount = 0
+        }
+      }
+    }
     if (method === 'item/started') {
+      if (params.threadId === this.threadId && this.turnId === undefined && this.turnCompleted !== undefined && typeof params.turnId === 'string') {
+        this.observePendingTurnId(params.turnId)
+        this.earlyTurnNotifications.push({ method, params, order: this.nextObservationOrder() })
+        return
+      }
       // Observe-only: a malformed start notification is skipped, never a run failure.
       const item = params.item
       if (

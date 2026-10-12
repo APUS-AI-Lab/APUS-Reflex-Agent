@@ -212,6 +212,53 @@ export function TaskFrame({ frame, t }: { readonly frame: System3TaskFrameView; 
     {frame.items.map(item => <p key={item.messageId} className={css.note}>{t('taskItem', { text: item.text })}</p>)}
   </details>
 }
+const REFLEX_STATES: Readonly<Record<string, System3Key>> = {
+  intent: 'reflexIntent', accepted: 'reflexAccepted', unknown: 'reflexUnknown', improved: 'reflexImproved',
+  unchanged: 'reflexUnchanged', inconclusive: 'reflexInconclusive', limit: 'reflexLimit', stale: 'reflexStale',
+}
+const REFLEX_ACTIONS: Readonly<Record<string, System3Key>> = {
+  observe: 'reflexObserve', diagnose: 'reflexDiagnose', verify: 'reflexVerify', narrow: 'reflexNarrow', realign: 'reflexRealign',
+}
+const RECOVERY_STATES: Readonly<Record<string, System3Key>> = {
+  intent: 'recoveryIntent', continued: 'recoveryContinued', completed: 'recoveryCompleted',
+  stale: 'recoveryStale', unknown: 'recoveryUnknown',
+}
+
+function reflexTimelineText(item: NonNullable<NonNullable<System3RuntimeView['reflex']>['timeline']>[number], t: TranslateNS<'system3'>): string {
+  if (item.kind === 'supervision') return t('reflexTimelineSupervision', {
+    state: t(REFLEX_STATES[item.state ?? ''] ?? 'reflexOther'), action: t(REFLEX_ACTIONS[item.action ?? ''] ?? 'reflexOther'),
+  })
+  if (item.kind === 'recovery') return t('reflexTimelineRecovery', { state: t(RECOVERY_STATES[item.state ?? ''] ?? 'recoveryUnknown') })
+  if (item.kind === 'context') return t('reflexTimelineContext', {
+    action: t(item.action === 'remove' ? 'reflexRemoveAction' : 'reflexRestoreAction'),
+    count: String(item.count ?? 0),
+  })
+  return t('reflexTimelineEvidence')
+}
+
+/** Render durable Reflex actions without conflating delivery with effectiveness.
+ * @param props - Runtime projection and localized labels.
+ * @returns Supervision evidence and recoverable-context operation status.
+ */
+export function ReflexRuntimeFeedback({ reflex, t }: { readonly reflex: NonNullable<System3RuntimeView['reflex']>; readonly t: TranslateNS<'system3'> }) {
+  return <div>
+    {reflex.observing && <p className={css.run} role="status" aria-live="polite">{t('reflexObserving')}</p>}
+    {reflex.recovery && <details className={css.details}>
+      <summary>{t('reflexRecovery', { state: t(RECOVERY_STATES[reflex.recovery.state] ?? 'reflexOther') })}</summary>
+      <p className={css.muted}>{t(reflex.recovery.reason === 'retry-budget' ? 'recoveryRetryBudget' : 'recoveryInactivityBudget')}</p>
+    </details>}
+    {reflex.supervision && <details className={css.details}>
+      <summary>{t('reflexSupervision', { state: t(REFLEX_STATES[reflex.supervision.state] ?? 'reflexOther') })}</summary>
+      <p className={css.muted}>{t(REFLEX_ACTIONS[reflex.supervision.action] ?? 'reflexOther')}</p>
+      <p className={css.muted}>{t('reflexEvidence', { count: String(reflex.supervision.evidenceCount) })}</p>
+    </details>}
+    {reflex.context && <p className={css.note} role="status">{t(reflex.context.action === 'remove' ? 'reflexContextRemoved' : 'reflexContextRestored', { count: String(reflex.context.targetsCount) })}</p>}
+    {reflex.timeline.length > 0 && <details className={css.details}>
+      <summary>{t('reflexTimeline', { count: String(reflex.timeline.length) })}</summary>
+      {reflex.timeline.map((item, index) => <p className={css.note} key={`${item.at}:${item.kind}:${String(index)}`}>{reflexTimelineText(item, t)}</p>)}
+    </details>}
+  </div>
+}
 /** Render observed progress and allow a fixed Session to return to automatic mode.
  * @param props - Persisted facts and live Session status.
  * @returns Compact, expandable execution feedback.
@@ -244,6 +291,7 @@ export function System3Feedback(props: System3FeedbackProps) {
     {facts?.subagentRun && <DelegationRun run={facts.subagentRun} turnRunning={props.running} onStop={props.onStop}
       onSteer={props.onSteer} t={t} />}
     {facts?.notices.map((notice, index) => <ProcessNotice key={`${String(index)}:${notice.rule}`} notice={notice} t={t} />)}
+    {facts?.reflex && <ReflexRuntimeFeedback reflex={facts.reflex} t={t} />}
     {facts?.interjection && <p className={css.note} role="status">{t('interjectionSteered')}</p>}
     {facts?.taskFrame && facts.taskFrame.items.length > 0 && <TaskFrame frame={facts.taskFrame} t={t} />}
     {/* From the injected instruction until the delegated run's first snapshot, including the tool call's startup. */}

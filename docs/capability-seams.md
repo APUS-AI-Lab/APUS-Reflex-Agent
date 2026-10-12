@@ -11,6 +11,10 @@ flowchart LR
   svc_jev["ctx.jev<br/>Typed model decisions"]
   pkg_experimental_system3["experimental-system3"]
   svc_system3["ctx.system3<br/>Decision evidence and supervision"]
+  pkg_continuum["continuum"]
+  svc_continuumMemory["ctx.continuumMemory<br/>Source-backed Continuum memory"]
+  pkg_agent_loop["agent-loop"]
+  pkg_experimental_continuum_jev["experimental-continuum-jev"]
   pkg_hmr["hmr"]
   svc_hmr["ctx.hmr<br/>Serialized module and configuration reloads"]
   pkg_app_boot["app-boot"]
@@ -51,7 +55,6 @@ flowchart LR
   pkg_llm["llm"]
   svc_llm["ctx.llm<br/>LLM adapter registry"]
   pkg_llm_replay["llm-replay"]
-  pkg_agent_loop["agent-loop"]
   pkg_compaction_basic["compaction-basic"]
   pkg_deepseek_llm_api_extensions["deepseek-llm-api-extensions"]
   svc_deepseekLlmApiExtensions["ctx.deepseekLlmApiExtensions<br/>Official DeepSeek request extensions"]
@@ -308,6 +311,7 @@ flowchart LR
   pkg_compaction_tool_result_pruner --> svc_toolResultPruner
   pkg_computer_use --> svc_computerUse
   pkg_config_editor --> svc_configEditor
+  pkg_continuum --> svc_continuumMemory
   pkg_cordis_host_runner --> svc_cordisInspect
   pkg_cordis_host_runner --> svc_dynamicCordisRunner
   pkg_credentials --> svc_credentials
@@ -450,6 +454,8 @@ flowchart LR
   svc_configEditor --> pkg_settings
   svc_connection --> pkg_api_gateway
   svc_connection --> pkg_host_frontend_static
+  svc_continuumMemory --> pkg_agent_loop
+  svc_continuumMemory --> pkg_experimental_continuum_jev
   svc_cordisInspect --> pkg_tool_cordis
   svc_credentials --> pkg_api_settings_controller
   svc_credentials --> pkg_llm_deepseek
@@ -576,6 +582,7 @@ flowchart LR
 | --- | --- | --- | --- | --- | --- | --- |
 | `ctx.jev` | `seam` | [`experimental-apus-dsh-jev-plugin`](../packages/experimental/apus-dsh-jev-plugin) | [`experimental-apus-dsh-jev-plugin`](../packages/experimental/apus-dsh-jev-plugin) | [`experimental-system3`](../packages/experimental/system3) | - | Resolves registered decision providers and validates typed answers; System3 owns privacy admission and durable recommendation receipts. |
 | `ctx.system3` | `service` | [`experimental-system3`](../packages/experimental/system3) | - | - | - | Composes routing, evidence and supervision policies; opt-in API input routing records Jev recommendations separately from adopted model selections. |
+| `ctx.continuumMemory` | `service` | [`continuum`](../packages/context/continuum) | - | [`agent-loop`](../packages/core/agent-loop), [`experimental-continuum-jev`](../packages/experimental/continuum-jev) | - | Owns revisioned memory records, bounded recall, and the opt-in user-message admission path; the Reflex plugin supplies Jev selection while the original profile keeps the service disabled. |
 | `ctx.hmr` | `core` | [`hmr`](../packages/boot/hmr) | - | [`app-boot`](../packages/boot/app-boot) | - | Owns module and exact configuration watchers; application mutations share its queue and automatic reloads await the application file lock. |
 | `ctx.pluginRegistryProbe` | `core` | [`client-ui-plugin-manager`](../packages/client/ui-plugin-manager) | - | [`client-ui-plugin-manager`](../packages/client/ui-plugin-manager) | - | Races public registry responses on the Host; the Client owns the initial registry recommendation. |
 | `ctx.pluginManager` | `core` | [`plugin-manager`](../packages/boot/plugin-manager) | - | [`plugin-manager`](../packages/boot/plugin-manager), `ui-settings-plugin-inventory` | - | Shares profile package operations with the CLI and reports persisted and running state to Web and agent callers. |

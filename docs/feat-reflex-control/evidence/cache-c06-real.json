@@ -1,0 +1,663 @@
+{
+  "version": 1,
+  "model": "deepseek-flash",
+  "effort": "low",
+  "coldCacheGuaranteed": false,
+  "prices": null,
+  "records": [
+    {
+      "id": "pair-0-off",
+      "enabled": false,
+      "workspace": "redacted-temporary-workspace",
+      "turns": [
+        {
+          "stage": "first-observed",
+          "elapsedMs": 7701.4,
+          "checks": {
+            "total": true
+          },
+          "events": []
+        },
+        {
+          "stage": "warm-continuation",
+          "elapsedMs": 4985.0,
+          "checks": {
+            "total": true,
+            "orderA": true
+          },
+          "events": []
+        },
+        {
+          "stage": "restart-recovery",
+          "elapsedMs": 6313.2,
+          "checks": {
+            "hotel": true,
+            "breakfast": true,
+            "time": true,
+            "place": true
+          },
+          "events": []
+        }
+      ],
+      "inputUnchanged": true,
+      "inputHashes": {
+        "01-old-trip.txt": "005312143eac90d9be04d66a2893b6a5700f597690c5b4928765a4d4a765d220",
+        "02-invoice-a.txt": "ab1f1a734e231dc6f5e68ff0ed68b83098aacd838ea5854b5325ea2cdd90ebcc",
+        "03-invoice-b.txt": "a8ffaafcbe35b74481f8cabbe31e63bc9d2d4235f4ade9631b80830e6b0a4c79",
+        "04-payment-a.txt": "f54fd92c028345e421a8a5d04d3dd932b7f4093cb4d4197902966057bcf628ce",
+        "05-invoice-c.txt": "fd5e9b53f9082e32d7620952f7f361856cb71d6aed27c9de2501bdf233f7f15f",
+        "06-payment-b.txt": "793583374025eea6af3804636063e40f007b4a64a15625f6319927aaa1f76f7c"
+      },
+      "reflexDecisions": [],
+      "requests": [
+        {
+          "provider": "deepseek-official",
+          "model": "deepseek-flash",
+          "effort": "low",
+          "toolsSha256": "323425e344bfc14feef76f719fd8903554e172c9977c94b0deed0e4c91a62a93",
+          "prefixUnchanged": null,
+          "firstOutputMs": 2519.8177079999996,
+          "totalMs": 3047.279042,
+          "error": null
+        },
+        {
+          "provider": "deepseek-official",
+          "model": "deepseek-flash",
+          "effort": "low",
+          "toolsSha256": "323425e344bfc14feef76f719fd8903554e172c9977c94b0deed0e4c91a62a93",
+          "prefixUnchanged": true,
+          "firstOutputMs": 1321.3406670000004,
+          "totalMs": 2657.9538329999996,
+          "error": null
+        },
+        {
+          "provider": "deepseek-official",
+          "model": "deepseek-flash",
+          "effort": "low",
+          "toolsSha256": "323425e344bfc14feef76f719fd8903554e172c9977c94b0deed0e4c91a62a93",
+          "prefixUnchanged": true,
+          "firstOutputMs": 2430.88325,
+          "totalMs": 3473.1784169999996,
+          "error": null
+        },
+        {
+          "provider": "deepseek-official",
+          "model": "deepseek-flash",
+          "effort": "low",
+          "toolsSha256": "323425e344bfc14feef76f719fd8903554e172c9977c94b0deed0e4c91a62a93",
+          "prefixUnchanged": true,
+          "firstOutputMs": 3372.5656249999997,
+          "totalMs": 4692.525417000001,
+          "error": null
+        }
+      ],
+      "persistedPrefix": [
+        {
+          "path": "redacted-session-log",
+          "bytes": 78121,
+          "unchanged": true,
+          "beforeSha256": "7009855dfff4e32985b4415f253ed35731c79fdc4548793822d4cf4c714b7ef6",
+          "afterPrefixSha256": "7009855dfff4e32985b4415f253ed35731c79fdc4548793822d4cf4c714b7ef6"
+        }
+      ],
+      "checks": {
+        "allAnswers": true,
+        "inputUnchanged": true,
+        "persistedPrefixUnchanged": true,
+        "requestPrefixUnchanged": true,
+        "deployedRoute": true,
+        "stableTools": true,
+        "noRuntimeError": true,
+        "treatmentApplied": true
+      }
+    },
+    {
+      "id": "pair-0-on",
+      "enabled": true,
+      "workspace": "redacted-temporary-workspace",
+      "turns": [
+        {
+          "stage": "first-observed",
+          "elapsedMs": 17212.3,
+          "checks": {
+            "total": true
+          },
+          "events": [
+            {
+              "type": "system3/judgement",
+              "seq": 30,
+              "decision": "reflex.context",
+              "outcome": "[0,3,6,13]",
+              "reason": "judged",
+              "applied": true
+            },
+            {
+              "type": "reflex/context-projection",
+              "seq": 31,
+              "action": "remove",
+              "revision": 12,
+              "targetsCount": 1
+            }
+          ]
+        },
+        {
+          "stage": "warm-continuation",
+          "elapsedMs": 9892.1,
+          "checks": {
+            "total": true,
+            "orderA": true
+          },
+          "events": [
+            {
+              "type": "system3/judgement",
+              "seq": 30,
+              "decision": "reflex.context",
+              "outcome": "[0,3,6,13]",
+              "reason": "judged",
+              "applied": true
+            },
+            {
+              "type": "reflex/context-projection",
+              "seq": 31,
+              "action": "remove",
+              "revision": 12,
+              "targetsCount": 1
+            },
+            {
+              "type": "system3/judgement",
+              "seq": 42,
+              "decision": "reflex.context",
+              "outcome": "[]",
+              "reason": "judged",
+              "applied": true
+            }
+          ]
+        },
+        {
+          "stage": "restart-recovery",
+          "elapsedMs": 7125.6,
+          "checks": {
+            "hotel": true,
+            "breakfast": true,
+            "time": true,
+            "place": true
+          },
+          "events": [
+            {
+              "type": "system3/judgement",
+              "seq": 30,
+              "decision": "reflex.context",
+              "outcome": "[0,3,6,13]",
+              "reason": "judged",
+              "applied": true
+            },
+            {
+              "type": "reflex/context-projection",
+              "seq": 31,
+              "action": "remove",
+              "revision": 12,
+              "targetsCount": 1
+            },
+            {
+              "type": "system3/judgement",
+              "seq": 42,
+              "decision": "reflex.context",
+              "outcome": "[]",
+              "reason": "judged",
+              "applied": true
+            },
+            {
+              "type": "system3/judgement",
+              "seq": 54,
+              "decision": "reflex.context",
+              "outcome": "[0,1]",
+              "reason": "judged",
+              "applied": true
+            }
+          ]
+        }
+      ],
+      "inputUnchanged": true,
+      "inputHashes": {
+        "01-old-trip.txt": "005312143eac90d9be04d66a2893b6a5700f597690c5b4928765a4d4a765d220",
+        "02-invoice-a.txt": "ab1f1a734e231dc6f5e68ff0ed68b83098aacd838ea5854b5325ea2cdd90ebcc",
+        "03-invoice-b.txt": "a8ffaafcbe35b74481f8cabbe31e63bc9d2d4235f4ade9631b80830e6b0a4c79",
+        "04-payment-a.txt": "f54fd92c028345e421a8a5d04d3dd932b7f4093cb4d4197902966057bcf628ce",
+        "05-invoice-c.txt": "fd5e9b53f9082e32d7620952f7f361856cb71d6aed27c9de2501bdf233f7f15f",
+        "06-payment-b.txt": "793583374025eea6af3804636063e40f007b4a64a15625f6319927aaa1f76f7c"
+      },
+      "reflexDecisions": [
+        {
+          "decision": "reflex.context",
+          "outcome": "[0,3,6,13]",
+          "reason": "judged",
+          "applied": true,
+          "elapsedMs": 8123
+        },
+        {
+          "decision": "reflex.context",
+          "outcome": "[0,3,6,13]",
+          "reason": "judged",
+          "applied": true,
+          "elapsedMs": 8123
+        },
+        {
+          "decision": "reflex.context",
+          "outcome": "[]",
+          "reason": "judged",
+          "applied": true,
+          "elapsedMs": 2152
+        },
+        {
+          "decision": "reflex.context",
+          "outcome": "[0,3,6,13]",
+          "reason": "judged",
+          "applied": true,
+          "elapsedMs": 8123
+        },
+        {
+          "decision": "reflex.context",
+          "outcome": "[]",
+          "reason": "judged",
+          "applied": true,
+          "elapsedMs": 2152
+        },
+        {
+          "decision": "reflex.context",
+          "outcome": "[0,1]",
+          "reason": "judged",
+          "applied": true,
+          "elapsedMs": 2126
+        }
+      ],
+      "requests": [
+        {
+          "provider": "deepseek-official",
+          "model": "deepseek-flash",
+          "effort": "low",
+          "toolsSha256": "323425e344bfc14feef76f719fd8903554e172c9977c94b0deed0e4c91a62a93",
+          "prefixUnchanged": null,
+          "firstOutputMs": 2578.849166,
+          "totalMs": 3405.422791,
+          "error": null
+        },
+        {
+          "provider": "deepseek-official",
+          "model": "deepseek-flash",
+          "effort": "low",
+          "toolsSha256": "323425e344bfc14feef76f719fd8903554e172c9977c94b0deed0e4c91a62a93",
+          "prefixUnchanged": true,
+          "firstOutputMs": 2900.5613330000015,
+          "totalMs": 4059.406916,
+          "error": null
+        },
+        {
+          "provider": "deepseek-official",
+          "model": "deepseek-flash",
+          "effort": "low",
+          "toolsSha256": "323425e344bfc14feef76f719fd8903554e172c9977c94b0deed0e4c91a62a93",
+          "prefixUnchanged": true,
+          "firstOutputMs": 4902.3475,
+          "totalMs": 6002.812249999999,
+          "error": null
+        },
+        {
+          "provider": "deepseek-official",
+          "model": "deepseek-flash",
+          "effort": "low",
+          "toolsSha256": "323425e344bfc14feef76f719fd8903554e172c9977c94b0deed0e4c91a62a93",
+          "prefixUnchanged": true,
+          "firstOutputMs": 2747.209875,
+          "totalMs": 3211.2479580000004,
+          "error": null
+        }
+      ],
+      "persistedPrefix": [
+        {
+          "path": "redacted-session-log",
+          "bytes": 127910,
+          "unchanged": true,
+          "beforeSha256": "288b76da722522a4d8c0164f32175224179e53eba6a0cd8e2ebea74ed507d276",
+          "afterPrefixSha256": "288b76da722522a4d8c0164f32175224179e53eba6a0cd8e2ebea74ed507d276"
+        }
+      ],
+      "checks": {
+        "allAnswers": true,
+        "inputUnchanged": true,
+        "persistedPrefixUnchanged": true,
+        "requestPrefixUnchanged": true,
+        "deployedRoute": true,
+        "stableTools": true,
+        "noRuntimeError": true,
+        "treatmentApplied": true
+      }
+    },
+    {
+      "id": "pair-1-on",
+      "enabled": true,
+      "workspace": "redacted-temporary-workspace",
+      "turns": [
+        {
+          "stage": "first-observed",
+          "elapsedMs": 11871.3,
+          "checks": {
+            "total": true
+          },
+          "events": [
+            {
+              "type": "system3/judgement",
+              "seq": 30,
+              "decision": "reflex.context",
+              "outcome": "[0,3,6,13]",
+              "reason": "judged",
+              "applied": true
+            },
+            {
+              "type": "reflex/context-projection",
+              "seq": 31,
+              "action": "remove",
+              "revision": 12,
+              "targetsCount": 1
+            }
+          ]
+        },
+        {
+          "stage": "warm-continuation",
+          "elapsedMs": 7723.6,
+          "checks": {
+            "total": true,
+            "orderA": true
+          },
+          "events": [
+            {
+              "type": "system3/judgement",
+              "seq": 30,
+              "decision": "reflex.context",
+              "outcome": "[0,3,6,13]",
+              "reason": "judged",
+              "applied": true
+            },
+            {
+              "type": "reflex/context-projection",
+              "seq": 31,
+              "action": "remove",
+              "revision": 12,
+              "targetsCount": 1
+            },
+            {
+              "type": "system3/judgement",
+              "seq": 42,
+              "decision": "reflex.context",
+              "outcome": "[]",
+              "reason": "judged",
+              "applied": true
+            }
+          ]
+        },
+        {
+          "stage": "restart-recovery",
+          "elapsedMs": 8370.9,
+          "checks": {
+            "hotel": true,
+            "breakfast": true,
+            "time": true,
+            "place": true
+          },
+          "events": [
+            {
+              "type": "system3/judgement",
+              "seq": 30,
+              "decision": "reflex.context",
+              "outcome": "[0,3,6,13]",
+              "reason": "judged",
+              "applied": true
+            },
+            {
+              "type": "reflex/context-projection",
+              "seq": 31,
+              "action": "remove",
+              "revision": 12,
+              "targetsCount": 1
+            },
+            {
+              "type": "system3/judgement",
+              "seq": 42,
+              "decision": "reflex.context",
+              "outcome": "[]",
+              "reason": "judged",
+              "applied": true
+            },
+            {
+              "type": "system3/judgement",
+              "seq": 54,
+              "decision": "reflex.context",
+              "outcome": "[0,1]",
+              "reason": "judged",
+              "applied": true
+            }
+          ]
+        }
+      ],
+      "inputUnchanged": true,
+      "inputHashes": {
+        "01-old-trip.txt": "005312143eac90d9be04d66a2893b6a5700f597690c5b4928765a4d4a765d220",
+        "02-invoice-a.txt": "ab1f1a734e231dc6f5e68ff0ed68b83098aacd838ea5854b5325ea2cdd90ebcc",
+        "03-invoice-b.txt": "a8ffaafcbe35b74481f8cabbe31e63bc9d2d4235f4ade9631b80830e6b0a4c79",
+        "04-payment-a.txt": "f54fd92c028345e421a8a5d04d3dd932b7f4093cb4d4197902966057bcf628ce",
+        "05-invoice-c.txt": "fd5e9b53f9082e32d7620952f7f361856cb71d6aed27c9de2501bdf233f7f15f",
+        "06-payment-b.txt": "793583374025eea6af3804636063e40f007b4a64a15625f6319927aaa1f76f7c"
+      },
+      "reflexDecisions": [
+        {
+          "decision": "reflex.context",
+          "outcome": "[0,3,6,13]",
+          "reason": "judged",
+          "applied": true,
+          "elapsedMs": 3764
+        },
+        {
+          "decision": "reflex.context",
+          "outcome": "[0,3,6,13]",
+          "reason": "judged",
+          "applied": true,
+          "elapsedMs": 3764
+        },
+        {
+          "decision": "reflex.context",
+          "outcome": "[]",
+          "reason": "judged",
+          "applied": true,
+          "elapsedMs": 1848
+        },
+        {
+          "decision": "reflex.context",
+          "outcome": "[0,3,6,13]",
+          "reason": "judged",
+          "applied": true,
+          "elapsedMs": 3764
+        },
+        {
+          "decision": "reflex.context",
+          "outcome": "[]",
+          "reason": "judged",
+          "applied": true,
+          "elapsedMs": 1848
+        },
+        {
+          "decision": "reflex.context",
+          "outcome": "[0,1]",
+          "reason": "judged",
+          "applied": true,
+          "elapsedMs": 3761
+        }
+      ],
+      "requests": [
+        {
+          "provider": "deepseek-official",
+          "model": "deepseek-flash",
+          "effort": "low",
+          "toolsSha256": "323425e344bfc14feef76f719fd8903554e172c9977c94b0deed0e4c91a62a93",
+          "prefixUnchanged": null,
+          "firstOutputMs": 3489.2683330000004,
+          "totalMs": 3895.1459170000003,
+          "error": null
+        },
+        {
+          "provider": "deepseek-official",
+          "model": "deepseek-flash",
+          "effort": "low",
+          "toolsSha256": "323425e344bfc14feef76f719fd8903554e172c9977c94b0deed0e4c91a62a93",
+          "prefixUnchanged": true,
+          "firstOutputMs": 1639.7024999999994,
+          "totalMs": 2519.1475410000003,
+          "error": null
+        },
+        {
+          "provider": "deepseek-official",
+          "model": "deepseek-flash",
+          "effort": "low",
+          "toolsSha256": "323425e344bfc14feef76f719fd8903554e172c9977c94b0deed0e4c91a62a93",
+          "prefixUnchanged": true,
+          "firstOutputMs": 2599.453,
+          "totalMs": 3942.1063339999996,
+          "error": null
+        },
+        {
+          "provider": "deepseek-official",
+          "model": "deepseek-flash",
+          "effort": "low",
+          "toolsSha256": "323425e344bfc14feef76f719fd8903554e172c9977c94b0deed0e4c91a62a93",
+          "prefixUnchanged": true,
+          "firstOutputMs": 2799.491,
+          "totalMs": 3007.084833000001,
+          "error": null
+        }
+      ],
+      "persistedPrefix": [
+        {
+          "path": "redacted-session-log",
+          "bytes": 125319,
+          "unchanged": true,
+          "beforeSha256": "c617d676f448ff62a499c6114de2ed885d3c3c831154c2179f57f71153caa808",
+          "afterPrefixSha256": "c617d676f448ff62a499c6114de2ed885d3c3c831154c2179f57f71153caa808"
+        }
+      ],
+      "checks": {
+        "allAnswers": true,
+        "inputUnchanged": true,
+        "persistedPrefixUnchanged": true,
+        "requestPrefixUnchanged": true,
+        "deployedRoute": true,
+        "stableTools": true,
+        "noRuntimeError": true,
+        "treatmentApplied": true
+      }
+    },
+    {
+      "id": "pair-1-off",
+      "enabled": false,
+      "workspace": "redacted-temporary-workspace",
+      "turns": [
+        {
+          "stage": "first-observed",
+          "elapsedMs": 9820.3,
+          "checks": {
+            "total": true
+          },
+          "events": []
+        },
+        {
+          "stage": "warm-continuation",
+          "elapsedMs": 6566.8,
+          "checks": {
+            "total": true,
+            "orderA": true
+          },
+          "events": []
+        },
+        {
+          "stage": "restart-recovery",
+          "elapsedMs": 5845.3,
+          "checks": {
+            "hotel": true,
+            "breakfast": true,
+            "time": true,
+            "place": true
+          },
+          "events": []
+        }
+      ],
+      "inputUnchanged": true,
+      "inputHashes": {
+        "01-old-trip.txt": "005312143eac90d9be04d66a2893b6a5700f597690c5b4928765a4d4a765d220",
+        "02-invoice-a.txt": "ab1f1a734e231dc6f5e68ff0ed68b83098aacd838ea5854b5325ea2cdd90ebcc",
+        "03-invoice-b.txt": "a8ffaafcbe35b74481f8cabbe31e63bc9d2d4235f4ade9631b80830e6b0a4c79",
+        "04-payment-a.txt": "f54fd92c028345e421a8a5d04d3dd932b7f4093cb4d4197902966057bcf628ce",
+        "05-invoice-c.txt": "fd5e9b53f9082e32d7620952f7f361856cb71d6aed27c9de2501bdf233f7f15f",
+        "06-payment-b.txt": "793583374025eea6af3804636063e40f007b4a64a15625f6319927aaa1f76f7c"
+      },
+      "reflexDecisions": [],
+      "requests": [
+        {
+          "provider": "deepseek-official",
+          "model": "deepseek-flash",
+          "effort": "low",
+          "toolsSha256": "323425e344bfc14feef76f719fd8903554e172c9977c94b0deed0e4c91a62a93",
+          "prefixUnchanged": null,
+          "firstOutputMs": 4057.4397499999995,
+          "totalMs": 4447.4585,
+          "error": null
+        },
+        {
+          "provider": "deepseek-official",
+          "model": "deepseek-flash",
+          "effort": "low",
+          "toolsSha256": "323425e344bfc14feef76f719fd8903554e172c9977c94b0deed0e4c91a62a93",
+          "prefixUnchanged": true,
+          "firstOutputMs": 1500.3792910000002,
+          "totalMs": 3471.9145,
+          "error": null
+        },
+        {
+          "provider": "deepseek-official",
+          "model": "deepseek-flash",
+          "effort": "low",
+          "toolsSha256": "323425e344bfc14feef76f719fd8903554e172c9977c94b0deed0e4c91a62a93",
+          "prefixUnchanged": true,
+          "firstOutputMs": 3551.4333330000004,
+          "totalMs": 4803.029291000001,
+          "error": null
+        },
+        {
+          "provider": "deepseek-official",
+          "model": "deepseek-flash",
+          "effort": "low",
+          "toolsSha256": "323425e344bfc14feef76f719fd8903554e172c9977c94b0deed0e4c91a62a93",
+          "prefixUnchanged": true,
+          "firstOutputMs": 4162.8346249999995,
+          "totalMs": 4348.956625,
+          "error": null
+        }
+      ],
+      "persistedPrefix": [
+        {
+          "path": "redacted-session-log",
+          "bytes": 78735,
+          "unchanged": true,
+          "beforeSha256": "8abf230f7cbc22f67607959c667f9a6889098879736398066c426f101cac8fb3",
+          "afterPrefixSha256": "8abf230f7cbc22f67607959c667f9a6889098879736398066c426f101cac8fb3"
+        }
+      ],
+      "checks": {
+        "allAnswers": true,
+        "inputUnchanged": true,
+        "persistedPrefixUnchanged": true,
+        "requestPrefixUnchanged": true,
+        "deployedRoute": true,
+        "stableTools": true,
+        "noRuntimeError": true,
+        "treatmentApplied": true
+      }
+    }
+  ]
+}

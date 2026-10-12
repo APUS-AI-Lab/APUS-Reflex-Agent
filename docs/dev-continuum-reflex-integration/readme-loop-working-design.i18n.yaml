@@ -1,0 +1,25 @@
+# Bilingual-pair consistency record for readme-loop-working-design.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/dev-continuum-reflex-integration/readme-loop-working-design.md
+/readme-and-architecture-publication-design:
+  en: 58934d1a3ca4bcb2
+  zh: 8fa118dbc6510ba5
+/readme-and-architecture-publication-design/goal:
+  en: c7d1045a2f94da9d
+  zh: 7cab775d80eff3c8
+/readme-and-architecture-publication-design/architecture:
+  en: 84db3e631fdf46e8
+  zh: b157a3ba35fd85e5
+/readme-and-architecture-publication-design/files-and-api-impact:
+  en: 7d9ce1531ea6ca65
+  zh: dcbf4a86fac2c025
+/readme-and-architecture-publication-design/acceptance:
+  en: 5a21c15504c3e1be
+  zh: b4d14def02d933f9
+/readme-and-architecture-publication-design/restart-evidence-correction:
+  en: 612dafa5a5855e8d
+  zh: 40f610d8d53b769b
+/readme-and-architecture-publication-design/loop-working-narrative-redesign:
+  en: 758871384ccfda92
+  zh: 2e381be7b42963ab

@@ -888,23 +888,24 @@ export interface Config {
 
 ## `@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin`
 
-- `source`: [`packages/experimental/apus-dsh-jev-plugin/src/index.ts:25`](../packages/experimental/apus-dsh-jev-plugin/src/index.ts)
+- `refs`: `Volatile` (`@deepseek-ai/cordis`)
+- `source`: [`packages/experimental/apus-dsh-jev-plugin/src/index.ts:28`](../packages/experimental/apus-dsh-jev-plugin/src/index.ts)
 
 ```ts config-catalog
 /** Plugin configuration for the built-in System One provider. */
 export interface Config {
   /** System One gateway URL; credentials must use apiKeyEnv rather than URL user information. */
-  readonly endpoint: string
+  readonly endpoint: Volatile<string>
   /** Wire protocol; the official API does not receive the OpenJev effort extension. @default 'openjev' */
-  readonly protocol?: 'openjev' | 'typesafe'
+  readonly protocol: Volatile<'openjev' | 'typesafe'>
   /** Model identifier used when a decision request omits its model. */
-  readonly model: string
+  readonly model: Volatile<string>
   /** Decision effort used when a request omits it. @default 'low' */
-  readonly effort?: 'low' | 'high'
+  readonly effort: Volatile<'low' | 'high'>
   /** Maximum duration in milliseconds for the gateway HTTP request. @default 30000 */
-  readonly timeoutMs?: number
+  readonly timeoutMs: Volatile<number>
   /** Credential reference for bearer authentication; omission permits an unauthenticated gateway. */
-  readonly apiKeyEnv?: string
+  readonly apiKeyEnv: Volatile<string | undefined>
   /** Registry identity of the built-in provider, selected when a request omits providerId. @default 'system-one' */
   readonly providerId?: string
   /**
@@ -1015,6 +1016,31 @@ export interface Config {
 }
 ```
 <!-- END GENERATED config-catalog:@deepseek-ai/dsh-experimental-computer-use-cua-driver-mcp -->
+
+<!-- BEGIN GENERATED config-catalog:@deepseek-ai/dsh-experimental-continuum-jev -->
+<a id="deepseek-aidsh-experimental-continuum-jev"></a>
+
+## `@deepseek-ai/dsh-experimental-continuum-jev`
+
+- `source`: [`packages/experimental/continuum-jev/src/index.ts:76`](../packages/experimental/continuum-jev/src/index.ts)
+
+```ts config-catalog
+/** Profile configuration for the optional automatic Continuum selector. */
+export interface ContinuumJevProfileConfig {
+  /** Selector mode; off leaves the deterministic baseline in place. */
+  readonly mode: ContinuumJevMode
+  /** Minimum Jev confidence required to accept a selected candidate. */
+  readonly minConfidence: number
+  /** Maximum provider wait in milliseconds; omitted means no adapter timeout. */
+  readonly timeoutMs?: number
+  /** Maximum number of sequential candidate selections; defaults to one. */
+  readonly maxSelections?: number
+}
+
+/** Controller mode; only active mode lets Jev replace the deterministic choice. */
+export type ContinuumJevMode = 'off' | 'shadow' | 'active'
+```
+<!-- END GENERATED config-catalog:@deepseek-ai/dsh-experimental-continuum-jev -->
 
 <!-- BEGIN GENERATED config-catalog:@deepseek-ai/dsh-experimental-inspector -->
 <a id="deepseek-aidsh-experimental-inspector"></a>
@@ -1237,7 +1263,7 @@ export interface Config {
 ## `@deepseek-ai/dsh-experimental-system3`
 
 - `refs`: [`System3DataClass`](../packages/experimental/system3-policy/src/index.ts) · [`System3ExecutionDomain`](../packages/experimental/system3-policy/src/index.ts) · [`System3PrivacyMode`](../packages/experimental/system3-policy/src/index.ts)
-- `source`: [`packages/experimental/system3/src/index.ts:55`](../packages/experimental/system3/src/index.ts)
+- `source`: [`packages/experimental/system3/src/index.ts:59`](../packages/experimental/system3/src/index.ts)
 
 ```ts config-catalog
 /** Configures the default local-first privacy boundary. */
@@ -1266,6 +1292,10 @@ export interface Config {
   readonly delegationProgress?: false | System3DelegationProgressConfig
   /** Stall rules and acceptance-evidence checks over each Agent loop; `false` or omission disables them. */
   readonly processSupervision?: false | System3ProcessSupervisionConfig
+  /** Reflex diagnosis and bounded correction of Codex runs belonging to an active Goal. */
+  readonly reflexSupervision?: false | ReflexSupervisionConfig
+  /** Reversible, line-aware context selection and same-session memory retrieval. */
+  readonly reflexContext?: false | ReflexContextConfig
   /** Lossless folding of repeated lines in matching shell results; `false` or omission disables it. */
   readonly outputFolding?: false | System3OutputFoldingConfig
   /** The person's goal and later requirements, judged by Jev and shown to the main model verbatim; `false` or omission disables it. */
@@ -1358,6 +1388,51 @@ export interface System3ProcessSupervisionConfig {
   readonly verifyPattern: string
   /** Regular expression for failure output; a command list or pipeline that exits 0 with matching output counts as failed. */
   readonly failurePattern: string
+}
+
+/** Deployment-owned supervision bounds; all durations are milliseconds. */
+export interface ReflexSupervisionConfig extends System3DecisionSettings {
+  /** Optional semantic window; omitted retains fingerprint-only supervision. */
+  readonly semantic?: {
+    /** Minimum complete, path-bearing observations required to assess persistent Goal deviation. */
+    readonly minObservations: number
+  }
+  /** Optional bounded native-turn recovery; omitted means observe only. */
+  readonly recovery?: ReflexRecoveryConfig
+  /** Session data classes submitted to the configured Reflex privacy route. */
+  readonly sessionDataClasses: readonly System3DataClass[]
+  /** Minimum interval between supervision polls, in milliseconds. */
+  readonly intervalMs: number
+  /** Elapsed milliseconds without new successful verification before requesting an observation. */
+  readonly stallMs: number
+  /** Matching failed operations required to request correction before the stall deadline. */
+  readonly repeatedFailures: number
+  /** Maximum recent evidence entries retained for a Goal revision and sent per observation. */
+  readonly evidenceLimit: number
+  /** Minimum milliseconds after a human or supervisor steer before another intervention. */
+  readonly cooldownMs: number
+  /** Maximum reserved automatic deliveries per Goal, including unconfirmed acknowledgements. */
+  readonly maxInterventions: number
+  /** Milliseconds after accepted advice before the first assessment; unverified improvement waits for new evidence. */
+  readonly feedbackMs: number
+}
+
+/** Deployment-owned judgement and retrieval budgets. */
+export interface ReflexContextConfig extends System3DecisionSettings {
+  /** Privacy classes of historical text sent to the decision service. */
+  readonly sessionDataClasses: readonly System3DataClass[]
+  /** Maximum combined task and candidate characters in one decision. */
+  readonly maxRequestChars: number
+  /** Maximum fragments judged in one pre-step, at most 16. */
+  readonly maxCandidates: number
+  /** Maximum original characters in a fragment. */
+  readonly maxFragmentChars: number
+  /** Most recent message nodes that cannot be removed. */
+  readonly protectRecentMessages: number
+  /** Maximum characters restored by one pre-step or tool call. */
+  readonly maxRestoredChars: number
+  /** Maximum memory search results returned to the caller. */
+  readonly maxSearchResults: number
 }
 
 /** Which shell results are folded and how large a repeat must be; deployment-owned. */
@@ -1477,6 +1552,22 @@ export interface System3DecisionSettings {
   readonly deadlineMs: number
 }
 
+/** Explicit deployment policy for native inactivity, independent of task duration. */
+export interface ReflexRecoveryConfig {
+  /** Minimum milliseconds between model assessments, including inconclusive or failed requests. */
+  readonly reassessmentMs: number
+  /** Milliseconds without native output or activity before inactivity recovery is eligible. */
+  readonly nativeSilenceMs: number
+  /** Consecutive native retries that make recovery eligible before the inactivity deadline. */
+  readonly retryLimit: number
+  /** Milliseconds allowed for the matching interrupted terminal after requesting interruption. */
+  readonly interruptGraceMs: number
+  /** Minimum milliseconds after human input or a reserved recovery before another recovery. */
+  readonly cooldownMs: number
+  /** Maximum reserved recoveries per Goal, including unknown transport outcomes. */
+  readonly maxRecoveries: number
+}
+
 /** Deployment-owned model route; choosing it switches the generation model for this input. */
 export interface System3EntryModelCandidate extends System3EntryCandidateBase {
   /** Registered generation provider route. */
@@ -1503,8 +1594,8 @@ export interface System3EntryDelegateCandidate extends System3EntryCandidateBase
     readonly tool: string
   }
   /**
-   * Case-insensitive regular expressions for the person's explicit request to delegate, such as `交给\s*codex`.
-   * A matching input selects this candidate without asking Jev once the hard rules admit it; omission leaves the choice to Jev.
+   * Case-insensitive candidate hints for delegation mentions, such as `交给\s*codex`.
+   * Matches are passed to Reflex as untrusted hints; only a confident semantic choice can select delegation.
    */
   readonly explicitPatterns?: readonly string[]
 }
@@ -3433,7 +3524,7 @@ export type JournalMode = 'wal' | 'delete' | 'truncate' | 'persist'
 ## `@deepseek-ai/dsh-subagent`
 
 - `refs`: `Volatile` (`@deepseek-ai/cordis`)
-- `source`: [`packages/subagent/subagent/src/index.ts:232`](../packages/subagent/subagent/src/index.ts)
+- `source`: [`packages/subagent/subagent/src/index.ts:246`](../packages/subagent/subagent/src/index.ts)
 
 ```ts config-catalog
 /** Host configuration for continuable subagent capacity. */
@@ -3542,7 +3633,7 @@ export type ClaudeCodePermissionMode = typeof CLAUDE_CODE_PERMISSION_MODES[numbe
 ## `@deepseek-ai/dsh-subagent-codex`
 
 - `inject`: `subagents` · `subprocess`
-- `source`: [`packages/subagent/subagent-codex/src/index.ts:36`](../packages/subagent/subagent-codex/src/index.ts)
+- `source`: [`packages/subagent/subagent-codex/src/index.ts:42`](../packages/subagent/subagent-codex/src/index.ts)
 
 ```ts config-catalog
 /** Deployment-owned model, permission, environment, and process-release settings. */
@@ -3560,6 +3651,25 @@ export interface Config {
   permissionMode?: CodexPermissionMode
   /** Grace in milliseconds between app-server managed-range termination tiers. */
   disposeGraceMs?: number
+  /** Opt in to workspace operation labels and relative paths; omitted disables semantic collection. */
+  evidenceSummary?: {
+    /** Maximum structured actions per completed native item. */
+    maxActions: number
+    /** Maximum relative path length; longer paths are omitted, never cut into a different path. */
+    maxPathChars: number
+    /** Opt in to strictly parsed literal test-file targets from native command text. */
+    verificationTargets?: {
+      /** Maximum command characters accepted before static parsing. */
+      maxCommandChars: number
+    } | undefined
+  } | undefined
+  /** Command classification for fingerprint evidence; patterns never establish correctness. */
+  evidencePatterns?: {
+    /** Unicode regular expression matching verification command text emitted by Codex. */
+    verification: string
+    /** Unicode regular expression matching diagnostic command text when verification does not match. */
+    diagnostic: string
+  }
 }
 
 /** Profile-selectable non-interactive Codex permission mode. */
@@ -4685,6 +4795,7 @@ export interface Config {
 | `@deepseek-ai/dsh-client-ui-session` | — | [`packages/client/ui-session/src/index.ts`](../packages/client/ui-session/src/index.ts) |
 | `@deepseek-ai/dsh-client-ui-settings` | — | [`packages/client/ui-settings/src/index.ts`](../packages/client/ui-settings/src/index.ts) |
 | `@deepseek-ai/dsh-client-ui-settings-agent-loop` | — | [`packages/client/ui-settings-agent-loop/src/index.ts`](../packages/client/ui-settings-agent-loop/src/index.ts) |
+| `@deepseek-ai/dsh-client-ui-settings-continuum` | — | [`packages/client/ui-settings-continuum/src/index.ts`](../packages/client/ui-settings-continuum/src/index.ts) |
 | `@deepseek-ai/dsh-client-ui-settings-general` | — | [`packages/client/ui-settings-general/src/index.ts`](../packages/client/ui-settings-general/src/index.ts) |
 | `@deepseek-ai/dsh-client-ui-settings-plugin-inventory` | — | [`packages/client/ui-settings-plugin-inventory/src/index.ts`](../packages/client/ui-settings-plugin-inventory/src/index.ts) |
 | `@deepseek-ai/dsh-client-ui-settings-plugins` | — | [`packages/client/ui-settings-plugins/src/index.ts`](../packages/client/ui-settings-plugins/src/index.ts) |
@@ -4794,6 +4905,7 @@ export interface Config {
 | `@deepseek-ai/dsh-client-ui-slots` | — | [`packages/client/ui-slots/src/index.ts`](../packages/client/ui-slots/src/index.ts) |
 | `@deepseek-ai/dsh-client-web` | — | [`packages/client/web/src/index.ts`](../packages/client/web/src/index.ts) |
 | `@deepseek-ai/dsh-cmdline` | — | [`packages/boot/cmdline/src/index.ts`](../packages/boot/cmdline/src/index.ts) |
+| `@deepseek-ai/dsh-continuum` | — | [`packages/context/continuum/src/index.ts`](../packages/context/continuum/src/index.ts) |
 | `@deepseek-ai/dsh-deque` | — | [`packages/util/deque/src/index.ts`](../packages/util/deque/src/index.ts) |
 | `@deepseek-ai/dsh-experimental-agent-team-profile` | — | [`packages/experimental/agent-team-profile/src/index.ts`](../packages/experimental/agent-team-profile/src/index.ts) |
 | `@deepseek-ai/dsh-experimental-browser-use-runtime` | — | [`packages/experimental/browser-use-runtime/src/index.ts`](../packages/experimental/browser-use-runtime/src/index.ts) |

@@ -63,6 +63,7 @@ describe('release families', () => {
       '@deepseek-ai/dsh-experimental-client-ui-voice-input',
       '@deepseek-ai/dsh-experimental-computer-use-cua-driver-mcp',
       '@deepseek-ai/dsh-experimental-computer-use-cua-driver-native',
+      '@deepseek-ai/dsh-experimental-continuum-jev',
       '@deepseek-ai/dsh-experimental-inspector',
       '@deepseek-ai/dsh-experimental-ptc-runtime-python',
       '@deepseek-ai/dsh-experimental-speech-to-text-sensevoice',

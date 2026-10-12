@@ -150,7 +150,7 @@
 ## 6. 分支与部署状态
 
 - 工作分支：feat-independent-harness；目标默认分支：main。
-- 正式本地目录：/Users/gumpm5/Documents/Code/xDAN-System3-Harness。
+- 正式本地目录：/path/to/projects/xDAN-System3-Harness。
 - 隔离 worktree：.Codex/worktrees/feat-independent-harness，交付时保留。
 - origin 只指向新私有仓库；upstream 为官方 DSH，push URL 为 DISABLED；已移除 donor remote。
 - 新项目未部署。独立 CI 使用 hosted runner；继承 workflow 的 50 个 job 仅在 DSH_UPSTREAM_AUTOMATION=true 时执行。

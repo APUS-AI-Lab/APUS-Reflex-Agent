@@ -1,4 +1,4 @@
-/** Hand-off requirement recognition against the deployed Jev; skipped without JEV_API_KEY. */
+/** Hand-off requirement recognition against the deployed Jev; skipped without explicit JEV_ENDPOINT and JEV_MODEL. */
 import { readFileSync, writeFileSync } from 'node:fs'
 import { Context } from '@deepseek-ai/cordis'
 import AgentLoop from '@deepseek-ai/dsh-agent-loop'
@@ -12,8 +12,8 @@ import Jev from '../../apus-dsh-jev-plugin/src/index.ts'
 import { prepareSystem3HandoffPack } from '../src/handoff-pack.ts'
 
 const deployment = readFileSync(new URL('../../../../deploy/system3/runtime.patch.yml', import.meta.url), 'utf8')
-const endpoint = /endpoint: (\S+)/.exec(deployment)?.[1]
-const jevModel = /model: (APUS-\S+)/.exec(deployment)?.[1]
+const endpoint = process.env.JEV_ENDPOINT?.trim() ?? ''
+const jevModel = process.env.JEV_MODEL?.trim() ?? ''
 const minProbability = Number(/handoffPack:[\s\S]*?minProbability: (\S+)/.exec(deployment)?.[1])
 
 /** Earlier messages, the delegated task, and which earlier messages are requirements. */
@@ -35,10 +35,10 @@ const CASES: readonly { readonly earlier: readonly string[]; readonly task: stri
 const contexts: Context[] = []
 afterAll(async () => { for (const ctx of contexts.splice(0)) await ctx.fiber.dispose() })
 
-describe.skipIf(!process.env.JEV_API_KEY)('System3 hand-off requirements against the deployed Jev', { retry: 0 }, () => {
+describe.skipIf(!endpoint || !jevModel)('System3 hand-off requirements against the deployed Jev', { retry: 0 }, () => {
   it('forwards the labelled requirements and little else', { timeout: 300_000 }, async () => {
-    if (endpoint === undefined || jevModel === undefined || !Number.isFinite(minProbability)) {
-      throw new Error('deploy/system3/runtime.patch.yml no longer declares the Jev endpoint, model and handoffPack minProbability')
+    if (!Number.isFinite(minProbability)) {
+      throw new Error('runtime.patch.yml must declare handoffPack minProbability')
     }
     const results: { task: string; expected: string[]; forwarded: string[]; nouls: number[]; elapsedMs: number }[] = []
     for (const [index, sample] of CASES.entries()) {
@@ -46,7 +46,7 @@ describe.skipIf(!process.env.JEV_API_KEY)('System3 hand-off requirements against
       contexts.push(ctx)
       await mountAgentLoopTestDependencies(ctx)
       await ctx.plugin(AgentLoop, { agents: [] })
-      await ctx.plugin(Jev, { endpoint, model: jevModel, apiKeyEnv: 'JEV_API_KEY', effort: 'high', timeoutMs: 15000 })
+      await ctx.plugin(Jev, { endpoint, model: jevModel, ...(process.env.JEV_API_KEY_ENV || process.env.JEV_API_KEY ? { apiKeyEnv: process.env.JEV_API_KEY_ENV || 'JEV_API_KEY' } : {}), effort: 'high', timeoutMs: 15000 })
       const agent = await ctx.agentLoop.create(SessionId(`handoff-e2e-${String(index)}`), { provider: 'none', model: 'none' })
       for (const text of sample.earlier) {
         agent.session.append('user/message', createUserMessage({ content: [{ type: 'text', text }], source: { kind: 'user' } }), { surfaceOp: 'append' })

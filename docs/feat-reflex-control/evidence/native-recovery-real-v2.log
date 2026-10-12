@@ -1,0 +1,9 @@
+The plugin "vite-tsconfig-paths" is detected. Vite now supports tsconfig paths resolution natively via the resolve.tsconfigPaths option. You can remove the plugin and set resolve.tsconfigPaths: true in your Vite config instead.
+
+ RUN  v4.1.8 /path/to/projects/APUS-Reflex-Harness/.Codex/worktrees/feat-reflex-control
+
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 2 skipped (3)
+   Start at  14:25:53
+   Duration  105.91s (transform 3.36s, setup 466ms, import 3.47s, tests 101.70s, environment 0ms)

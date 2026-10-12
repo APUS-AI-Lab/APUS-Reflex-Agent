@@ -30,6 +30,7 @@ import type {
 } from '@deepseek-ai/dsh-subprocess'
 import {
   CodexAppServerWire,
+  CodexRecoveryUnconfirmedError,
   type CodexWireFailureFacts,
 } from './wire.ts'
 
@@ -139,6 +140,12 @@ export function codexAppServerArgv(): string[] {
 
 /** Fully resolved inputs for one Codex app-server run. */
 export interface CodexRunSpec {
+  /** Opt-in limits for structured native operation labels and workspace-relative paths. */
+  readonly evidenceSummary?: { readonly maxActions: number
+    readonly maxPathChars: number
+    readonly verificationTargets?: { readonly maxCommandChars: number } | undefined }
+  /** Deployment command classification; omitted by low-level callers that need no classification. */
+  readonly evidencePatterns?: { readonly verification: string; readonly diagnostic: string }
   /** Parent Session workspace, also supplied to `thread/start`. */
   readonly cwd: string
   /** Profile-selected native model; omitted to preserve Codex settings. */
@@ -224,7 +231,7 @@ export async function disposeCodexChild(
  * @returns the published run after initialization and ephemeral thread creation.
  */
 export async function startCodexRun(
-  request: SubagentStartRequest & Pick<ResolvedSubagentStartRequest, 'reportActivity'>,
+  request: SubagentStartRequest & Pick<ResolvedSubagentStartRequest, 'reportActivity' | 'reportEvidence'>,
   spec: CodexRunSpec,
 ): Promise<SubagentRun> {
   const texts = textTask(request.prompt)
@@ -254,6 +261,9 @@ export async function startCodexRun(
     spec.permissionMode,
     spec.model,
     request.reportActivity,
+    request.reportEvidence,
+    spec.evidencePatterns,
+    spec.evidenceSummary,
   )
   const onStderr = (chunk: Buffer | string): void => {
     const bytes = typeof chunk === 'string' ? Buffer.from(chunk) : chunk
@@ -430,7 +440,7 @@ export async function startCodexRun(
     onAbort,
   })
 
-  return subprocessRunHandle({
+  const handle = subprocessRunHandle({
     id: brandString<SessionId>(randomUUID()),
     result,
     signal: request.signal,
@@ -439,4 +449,8 @@ export async function startCodexRun(
     teardown: disposeProcess,
     steer: (content, signal) => wire.steer(textTask(content), signal),
   })
+  return { ...handle, recoveryState: () => wire.recoveryState(), recover: async (recovery, signal) => {
+    try { return await wire.recover(recovery, signal) }
+    catch (error) { if (error instanceof CodexRecoveryUnconfirmedError) await handle.dispose(); throw error }
+  } }
 }

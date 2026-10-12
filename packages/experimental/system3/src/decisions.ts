@@ -38,7 +38,7 @@ export interface System3DecisionReceipt {
   readonly executionDomain: System3ExecutionDomain
   readonly providerId?: string
   readonly requestedModel?: string
-  readonly effort: 'low' | 'high'
+  readonly effort?: 'low' | 'high'
   readonly turn?: number
   readonly step?: number
   readonly elapsedMs: number
@@ -59,7 +59,7 @@ declare module '@deepseek-ai/dsh-session/types' {
 export interface System3JevOptions {
   readonly routeId: string
   readonly executionDomain: System3ExecutionDomain
-  readonly effort: 'low' | 'high'
+  readonly effort?: 'low' | 'high'
 }
 
 const CRITERIA: Readonly<Record<System3AdviceAction, string>> = {
@@ -111,7 +111,7 @@ export async function recordSystem3Decision(
       requiredChecks: request.supervisor.requiredChecks.map(check => ({ ...check, evidenceRefs: [...check.evidenceRefs] })),
       availableEvidenceRefs: [...request.supervisor.availableEvidenceRefs], budgetRemaining: request.supervisor.budgetRemaining,
     },
-    effort: options.effort, questions: { action: { type: 'choice', criteria: CRITERIA } },
+    ...options.effort === undefined ? {} : { effort: options.effort }, questions: { action: { type: 'choice', criteria: CRITERIA } },
   }
   let cancellation: Error | undefined
   if (signal?.aborted) {
@@ -123,7 +123,7 @@ export async function recordSystem3Decision(
     const spec = jev.resolve(query)
     providerId = spec.providerId
     requestedModel = spec.model
-    query = { ...query, model: spec.model }
+    query = { ...query, model: spec.model, ...spec.effort === undefined ? {} : { effort: spec.effort } }
     try {
       const result = await jev.decide(query, signal)
       if (result.kind === 'ok') {
@@ -144,7 +144,7 @@ export async function recordSystem3Decision(
     evidenceRefs: [...request.supervisor.advice.evidenceRefs], goalRevision: request.supervisor.currentGoalRevision,
     dataClasses: [...request.dataClasses], routeId: options.routeId, executionDomain: options.executionDomain,
     ...providerId === undefined ? {} : { providerId }, ...requestedModel === undefined ? {} : { requestedModel },
-    effort: options.effort,
+    ...query.effort === undefined ? {} : { effort: query.effort },
     ...request.turn === undefined ? {} : { turn: request.turn },
     ...request.step === undefined ? {} : { step: request.step },
     elapsedMs: Date.now() - started, baseline, advice, comparison: compareSystem3Advice(advice, baseline), outcome,

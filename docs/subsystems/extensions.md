@@ -12,6 +12,58 @@ The extensions subsystem lets an agent define versioned Cordis packages, run the
 
 Generated from source by `scripts/gen-cordis-catalog.ts` (verified fresh by `pnpm run verify-cordis-catalog` in doc-sync; regenerate with `pnpm run gen-cordis-catalog`) — the language sides differ only in locale-specific paired document paths. Signature blocks use a `ts cordis-catalog` fence and keep the original source JSDoc; dispatch modes are defined in the [primer](../cordis-primer.md#dispatch-modes), and the framework-inherited `ctx` API lives in [cordis-api/inherited.md](../cordis-api/inherited.md).
 
+<a id="ctxcontinuummemory--continuummemoryservice"></a>
+
+### `ctx.continuumMemory` — `ContinuumMemoryService`
+
+Public service seam used by profile consumers and tests.
+
+```ts cordis-catalog
+/**
+ * Return the current switch decision for this profile.
+ * @returns The effective feature switch decision.
+ */
+state(): ReturnType<ContinuumMemoryController['state']>
+
+/**
+ * Get the controller associated with one Agent, restoring it from Session events once.
+ * @param agent - Agent whose Session owns the memory projection.
+ * @returns The controller for the Agent's memory projection.
+ */
+controller(agent: Agent): ContinuumMemoryController
+
+/**
+ * Admit and persist one source-backed record in the Agent's Session.
+ * @param agent - Agent whose Session receives the record event.
+ * @param record - Source-backed record to admit.
+ * @returns The created immutable record.
+ */
+create(agent: Agent, record: NewMemoryRecord): MemoryRecord
+
+/**
+ * Supersede and persist one record correction.
+ * @param agent - Agent whose Session receives the correction event.
+ * @param id - Existing record identifier.
+ * @param expectedRevision - Revision observed by the caller.
+ * @param replacement - Source-backed successor record.
+ * @returns The created successor record.
+ */
+supersede(agent: Agent, id: MemoryId, expectedRevision: number, replacement: NewMemoryRecord): MemoryRecord
+
+/**
+ * Deactivate and persist one record.
+ * @param agent - Agent whose Session receives the deactivation event.
+ * @param id - Existing record identifier.
+ * @param expectedRevision - Revision observed by the caller.
+ * @returns The deactivated immutable record.
+ */
+deactivate(agent: Agent, id: MemoryId, expectedRevision: number): MemoryRecord
+```
+
+Types: [Agent](core.md)
+
+Source: [`packages/context/continuum/src/service.ts`](../../packages/context/continuum/src/service.ts)
+
 <a id="ctxcordisinspect--cordisinspectregistryservice"></a>
 
 ### `ctx.cordisInspect` — `CordisInspectRegistryService`
@@ -281,6 +333,25 @@ Source: [`packages/experimental/inspector/src/index.ts`](../../packages/experime
 Cordis service that resolves one pinned Jev provider per request.
 
 ```ts cordis-catalog
+/** Register the runtime owner of one capability's observed status.
+ * @param id - Product capability identity.
+ * @param read - Runtime status projection; connection probes never update it.
+ * @returns Disposer removing this reader.
+ */
+registerCapability(id: ReflexCapabilityId, read: () => ReflexCapabilityState): () => void
+
+/** Read provider identity and independently observed capability states without credentials.
+ * @returns Current provider and capability status.
+ */
+@Remote readStatus(): ReflexStatus
+
+/** Test a candidate without persisting configuration or modifying capability status.
+ * @param input - Candidate endpoint/model and optional transient key; never returned or stored.
+ * @param signal - Caller lifetime.
+ * @returns Sanitized connectivity and real-decision results.
+ */
+@Remote async testConnection(input: ReflexConnectionInput, signal: AbortSignal): Promise<ReflexConnectionResult>
+
 /**
  * Register a provider and return the disposer owned by the caller.
  * @param provider - Provider whose identity is unique in the registry.
@@ -503,4 +574,29 @@ A pending Client activation request left the answerable state.
 ```
 
 Source: [`packages/extensions/cordis-host-runner/src/types.ts`](../../packages/extensions/cordis-host-runner/src/types.ts)
+
+<a id="system3-events"></a>
+
+### `system3/*` events
+
+<a id="system3context-prepare--parallel"></a>
+
+#### `system3/context-prepare` — parallel
+
+Await task-frame judgements already admitted for this step before capturing context-removal constraints. Later queued input is excluded; cancellation ends the wait without cancelling background frame work.
+
+```ts cordis-catalog
+/**
+ * Await task-frame judgements already admitted for this step before capturing context-removal constraints.
+ * Later queued input is excluded; cancellation ends the wait without cancelling background frame work.
+ * @param agent - Agent whose claimed input established the finite admission batch.
+ * @param signal - Context plugin lifetime and turn cancellation.
+ * @mode parallel
+ */
+'system3/context-prepare'(agent: Agent, signal: AbortSignal): Promise<void> | void
+```
+
+Types: [Agent](core.md)
+
+Source: [`packages/experimental/system3/src/task-frame.ts`](../../packages/experimental/system3/src/task-frame.ts)
 <!-- END GENERATED cordis-surface -->

@@ -4,7 +4,7 @@
 
 **瞬策 · 瞬时执行，深度思考 · Model-as-a-Harness**
 
-APUS Reflex Harness 是面向本地项目的 Personal Agent 桌面客户端：选择工作目录、配置模型，在持久化对话中完成任务。可选的 Reflex/Jev 协同通过“设置 → System3”配置。桌面客户端与 Harness 运行时由本仓库统一交付，架构与当前能力边界见[产品 README](../README.zh.md)。
+APUS Reflex Harness 是面向本地项目的 Personal Agent 桌面客户端：选择工作目录、配置模型，在持久化对话中完成任务。可选的 Reflex/Jev 决策服务通过“设置 → Reflex 模型配置”配置。连接服务不会自动启用路由、监督或记忆。桌面客户端与 Harness 运行时由本仓库统一交付，架构与当前能力边界见[产品 README](../README.zh.md)。
 
 ## 下载与配置
 

@@ -11,8 +11,11 @@ import { system3RuntimeProjection } from './runtime-projection.ts'
 import { installSystem3SkillSelection, type System3SkillSelectionConfig } from './skill-selection.ts'
 import { installSystem3KeepWarm } from './keep-warm.ts'
 import { installSystem3Delegation } from './delegation.ts'
+import { installGoalEntryRouting } from './goal-entry-routing.ts'
 import { validateSystem3HandoffPack } from './handoff-pack.ts'
 import { installSystem3DelegationProgress, type System3DelegationProgressConfig } from './delegation-progress.ts'
+import { installReflexContext, validateReflexContextConfig, type ReflexContextConfig } from './reflex-context.ts'
+import { installReflexSupervision, reflexSemanticEnabled, validateReflexSupervision, type ReflexSupervisionConfig } from './reflex-supervision.ts'
 import { installSystem3ProcessSupervision, type System3ProcessSupervisionConfig } from './process-supervision.ts'
 import { installSystem3RouteHealth } from './route-health.ts'
 import { installSystem3OutputFolding, type System3OutputFoldingConfig } from './output-folding.ts'
@@ -31,6 +34,7 @@ export type { System3DelegationAlert, System3DelegationMonitorConfig, System3Del
 export type { System3EntryCandidate, System3EntryDelegateCandidate, System3EntryModelCandidate, System3EntryRoutingConfig, System3EntryDecisionReceipt, System3EntryOutcome } from './entry-routing.ts'
 export type { System3KeepWarmConfig } from './keep-warm.ts'
 export type { System3HandoffOutcome, System3HandoffPack, System3HandoffPackConfig } from './handoff-pack.ts'
+export type { ReflexSupervisionConfig } from './reflex-supervision.ts'
 export type { System3ProcessNotice, System3ProcessRule, System3ProcessSupervisionConfig, System3SupervisionSource } from './process-supervision.ts'
 export type { System3CompletionReview, System3CompletionReviewConfig } from './completion-review.ts'
 export type { System3Interjection, System3TaskFrame, System3TaskFrameConfig, System3TaskGoal, System3TaskMessage } from './task-frame.ts'
@@ -77,6 +81,10 @@ export interface Config {
   readonly delegationProgress?: false | System3DelegationProgressConfig
   /** Stall rules and acceptance-evidence checks over each Agent loop; `false` or omission disables them. */
   readonly processSupervision?: false | System3ProcessSupervisionConfig
+  /** Reflex diagnosis and bounded correction of Codex runs belonging to an active Goal. */
+  readonly reflexSupervision?: false | ReflexSupervisionConfig
+  /** Reversible, line-aware context selection and same-session memory retrieval. */
+  readonly reflexContext?: false | ReflexContextConfig
   /** Lossless folding of repeated lines in matching shell results; `false` or omission disables it. */
   readonly outputFolding?: false | System3OutputFoldingConfig
   /** The person's goal and later requirements, judged by Jev and shown to the main model verbatim; `false` or omission disables it. */
@@ -189,7 +197,7 @@ export default class System3 extends Service implements System3Service {
     observeAgentLoop: z.boolean().default(false),
     jevRouteId: z.string().default('jev'),
     jevExecutionDomain: z.union([z.const('local'), z.const('network')]).default('network'),
-    jevEffort: z.union([z.const('low'), z.const('high')]).default('low'),
+    jevEffort: z.union([z.const('low'), z.const('high')]),
     entryRouting: z.union([z.const(false), z.object({
       deadlineMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS),
       baseline: z.union([z.const(undefined), z.object({ executionDomain: z.union([z.const('local'), z.const('network')]).required(),
@@ -240,6 +248,42 @@ export default class System3 extends Service implements System3Service {
         overtimeMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).required(),
         stallMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).required(),
         startupMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).required(),
+      })]),
+    })]).default(false),
+    reflexContext: z.union([z.const(false), z.object({
+      mode: z.union([z.const('off'), z.const('shadow'), z.const('active')]).required(),
+      yes: z.number().min(0).max(1).required(),
+      no: z.number().min(0).max(1).required(),
+      deadlineMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).required(),
+      sessionDataClasses: z.array(z.union([z.const('public'), z.const('workspace'), z.const('sensitive'), z.const('secret')])).required(),
+      maxRequestChars: z.number().step(1).min(1).max(6000).required(),
+      maxCandidates: z.number().step(1).min(1).max(16).required(),
+      maxFragmentChars: z.number().step(1).min(1).max(2048).required(),
+      protectRecentMessages: z.number().step(1).min(1).required(),
+      maxRestoredChars: z.number().step(1).min(1).required(),
+      maxSearchResults: z.number().step(1).min(1).required(),
+    })]).default(false),
+    reflexSupervision: z.union([z.const(false), z.object({
+      mode: z.union([z.const('off'), z.const('shadow'), z.const('active')]).required(),
+      yes: z.number().min(0).max(1).required(),
+      no: z.number().min(0).max(1).required(),
+      deadlineMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).required(),
+      sessionDataClasses: z.array(z.union([z.const('public'), z.const('workspace'), z.const('sensitive'), z.const('secret')])).required(),
+      intervalMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).required(),
+      stallMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).required(),
+      repeatedFailures: z.number().step(1).min(1).required(),
+      evidenceLimit: z.number().step(1).min(1).required(),
+      cooldownMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).required(),
+      maxInterventions: z.number().step(1).min(1).required(),
+      feedbackMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).required(),
+      semantic: z.union([z.const(undefined), z.object({ minObservations: z.number().step(1).min(2).required() })]),
+      recovery: z.union([z.const(undefined), z.object({
+        nativeSilenceMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).required(),
+        reassessmentMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).required(),
+        retryLimit: z.number().step(1).min(1).required(),
+        interruptGraceMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).required(),
+        cooldownMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).required(),
+        maxRecoveries: z.number().step(1).min(1).required(),
       })]),
     })]).default(false),
     processSupervision: z.union([z.const(false), z.object({
@@ -293,18 +337,26 @@ export default class System3 extends Service implements System3Service {
 
   constructor(ctx: Context, config: Config = {}) {
     super(ctx, 'system3')
-    this.jevOptions = { routeId: config.jevRouteId ?? 'jev', executionDomain: config.jevExecutionDomain ?? 'network', effort: config.jevEffort ?? 'low' }
+    this.jevOptions = { routeId: config.jevRouteId ?? 'jev', executionDomain: config.jevExecutionDomain ?? 'network', ...config.jevEffort === undefined ? {} : { effort: config.jevEffort } }
     this.privacyPolicy = {
       mode: config.privacyMode ?? 'local-only',
       ...(config.approvedRemoteIds === undefined ? {} : { approvedRemoteIds: [...config.approvedRemoteIds] }),
       ...(config.approvedRemoteDataClasses === undefined ? {} : { approvedRemoteDataClasses: [...config.approvedRemoteDataClasses] }),
       ...(config.cloudApproval === undefined ? {} : { cloudApproval: config.cloudApproval }),
     }
+    const installed = new Set<'entryRouting' | 'goalRouting' | 'contextMemory' | 'codexSupervision'>()
+    const markInstalled = (scope: Context, capability: 'entryRouting' | 'goalRouting' | 'contextMemory' | 'codexSupervision'): void => {
+      scope.effect(() => {
+        installed.add(capability)
+        return () => { installed.delete(capability) }
+      })
+    }
     ctx.inject(['sessionProjections'], (ctx) => {
       ctx.sessionProjections.register(system3DecisionProjection)
       ctx.sessionProjections.register(system3RuntimeProjection)
     })
     if (config.entryRouting !== undefined && config.entryRouting !== false) {
+      const entryConfig = config.entryRouting
       const routes = config.entryRouting.candidates.filter(candidate => candidate.delegate === undefined)
         .map(candidate => ({ provider: candidate.provider, model: candidate.model }))
       const health = config.entryRouting.routeHealth === undefined ? undefined
@@ -313,6 +365,7 @@ export default class System3 extends Service implements System3Service {
       const retains = config.entryRouting.retainOnAbstain === true
       ctx.inject(retains ? ['sessionController', 'llm', 'sessionProjections'] : ['sessionController', 'llm'], (ctx) => {
         ctx.effect(() => ctx.sessionController.registerPromptRouter(router))
+        markInstalled(ctx, 'entryRouting')
       })
       if (config.entryRouting.candidates.some(candidate => candidate.delegate !== undefined)) {
         const handoff = config.entryRouting.handoffPack
@@ -320,6 +373,10 @@ export default class System3 extends Service implements System3Service {
         const settings = handoff === undefined ? undefined : { config: handoff, policy: this.privacyPolicy, options: this.jevOptions,
           dataClasses: config.entryRouting.sessionDataClasses }
         ctx.inject(['sessionProjections'], (ctx) => { installSystem3Delegation(ctx, settings) })
+        ctx.inject(['goals', 'subagents', 'tools', 'sessionProjections'], (ctx) => {
+          installGoalEntryRouting(ctx, entryConfig, this.privacyPolicy, this.jevOptions)
+          markInstalled(ctx, 'goalRouting')
+        })
       }
       const keepWarm = config.entryRouting.keepWarm
       if (keepWarm !== undefined) ctx.inject(['jev'], (ctx) => { installSystem3KeepWarm(ctx, keepWarm) })
@@ -330,6 +387,46 @@ export default class System3 extends Service implements System3Service {
     if (config.processSupervision !== undefined && config.processSupervision !== false) {
       installSystem3ProcessSupervision(ctx, config.processSupervision)
     }
+    if (config.reflexContext !== undefined && config.reflexContext !== false) {
+      const contextConfig = config.reflexContext
+      validateReflexContextConfig(contextConfig)
+      ctx.inject(['sessions', 'sessionProjections', 'tools', 'tokenMeter'], (ctx) => {
+        installReflexContext(ctx, contextConfig, { policy: this.privacyPolicy, options: this.jevOptions,
+          dataClasses: contextConfig.sessionDataClasses })
+        markInstalled(ctx, 'contextMemory')
+      })
+    }
+    if (config.reflexSupervision !== undefined && config.reflexSupervision !== false) {
+      const supervisionConfig = config.reflexSupervision
+      validateReflexSupervision(supervisionConfig)
+      ctx.inject(['goals', 'subagents', 'sessionProjections'], (ctx) => {
+        installReflexSupervision(ctx, { config: supervisionConfig, policy: this.privacyPolicy, options: this.jevOptions })
+        markInstalled(ctx, 'codexSupervision')
+      })
+    }
+    ctx.inject(['jev'], (ctx) => {
+      const enabled = (value: false | { readonly mode: string } | undefined): boolean => value !== undefined && value !== false && value.mode === 'active'
+      ctx.effect(() => ctx.jev.registerCapability('entryRouting', () => ({ implemented: true,
+        enabled: installed.has('entryRouting') || installed.has('goalRouting') })))
+      ctx.effect(() => ctx.jev.registerCapability('codexSupervision', () => ({ implemented: true, enabled: enabled(config.reflexSupervision) && installed.has('codexSupervision'),
+        semanticSupervision: { enabled: !!config.reflexSupervision && enabled(config.reflexSupervision)
+          && installed.has('codexSupervision') && reflexSemanticEnabled(config.reflexSupervision, this.privacyPolicy, this.jevOptions) },
+        ...!config.reflexSupervision ? {} : { settings: { stallMs: config.reflexSupervision.stallMs,
+          cooldownMs: config.reflexSupervision.cooldownMs, maxInterventions: config.reflexSupervision.maxInterventions,
+          feedbackMs: config.reflexSupervision.feedbackMs,
+          ...config.reflexSupervision.recovery === undefined ? {} : {
+            nativeSilenceMs: config.reflexSupervision.recovery.nativeSilenceMs,
+            recoveryReassessmentMs: config.reflexSupervision.recovery.reassessmentMs,
+            retryLimit: config.reflexSupervision.recovery.retryLimit,
+            interruptGraceMs: config.reflexSupervision.recovery.interruptGraceMs,
+            recoveryCooldownMs: config.reflexSupervision.recovery.cooldownMs,
+            maxRecoveries: config.reflexSupervision.recovery.maxRecoveries,
+          } } } })))
+      ctx.effect(() => ctx.jev.registerCapability('contextMemory', () => ({ implemented: true, enabled: enabled(config.reflexContext) && installed.has('contextMemory'),
+        ...!config.reflexContext ? {} : { settings: { maxCandidates: config.reflexContext.maxCandidates,
+          maxFragmentChars: config.reflexContext.maxFragmentChars, maxRestoredChars: config.reflexContext.maxRestoredChars,
+          maxRequestChars: config.reflexContext.maxRequestChars } } })))
+    })
     if (config.outputFolding !== undefined && config.outputFolding !== false) {
       installSystem3OutputFolding(ctx, config.outputFolding)
     }

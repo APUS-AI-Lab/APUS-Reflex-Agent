@@ -1,0 +1,21 @@
+{
+  "scenario": "remote-response-observation",
+  "checkedAt": "2026-10-12",
+  "configuration": {
+    "model": "gpt-5.6-sol-relay",
+    "stream": true,
+    "request": "Reply with exactly OK."
+  },
+  "attempts": [
+    {"route": "fidoo-relay", "sample": 1, "outcome": "transport-error", "error": "URLError", "elapsedMs": 33641.1},
+    {"route": "fidoo-relay", "sample": 2, "outcome": "transport-error", "error": "URLError", "elapsedMs": 31722.6},
+    {"route": "fidoo-relay", "sample": 3, "outcome": "transport-error", "error": "URLError", "elapsedMs": 90006.9},
+    {"route": "internal-proxy", "sample": 1, "outcome": "transport-timeout", "error": "TimeoutError", "elapsedMs": 60021.7}
+  ],
+  "decision": "pending",
+  "limitations": [
+    "No first byte or complete response was observed in these attempts.",
+    "The result identifies an unavailable transport path; it is not a model latency measurement.",
+    "No credentials or response content were written to the report."
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "scenario": "real-web-local-submission-echo-performance",
+  "acceptanceRevision": "r04-local-echo-v1",
+  "command": "pnpm exec vitest run --config vitest.web.perf.config.ts apps/web/tests/complex-history.perf.ts -t 'reports local submission paint' --maxWorkers=1 --reporter=verbose",
+  "surface": "built Web client through a real Playwright browser and loopback replay scaffold",
+  "inputSet": ["short arithmetic question", "business JSON export request", "long Chinese constraint text"],
+  "budgetMs": 1000,
+  "samples": [
+    { "cpuThrottle": 1, "count": 3, "p50Ms": 57.779, "p95Ms": 82.275, "maxMs": 82.275, "valuesMs": [50.693, 57.779, 82.275] },
+    { "cpuThrottle": 6, "count": 3, "p50Ms": 373.555, "p95Ms": 523.978, "maxMs": 523.978, "valuesMs": [234.005, 373.555, 523.978] }
+  ],
+  "testStatus": "passed",
+  "scope": [
+    "clickToUserEchoMs starts at the trusted Send click and ends when the user message is visible in the conversation.",
+    "The companion queue test measures visible Sending status at 16 ms.",
+    "These local browser measurements exclude Reflex route time, remote first byte, and full model answer time."
+  ]
+}

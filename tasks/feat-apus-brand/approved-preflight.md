@@ -1,6 +1,6 @@
 # APUS Reflex Harness 全品牌统一设计
 
-状态：待设计批准，未实施。范围：APUS-Reflex-Harness 与 APUS-Reflex-Frontend 的自有产品品牌。依据：用户指定的 report-ceo-onepage.html，以及本轮两仓静态核查。
+状态：待设计批准，未实施。范围：APUS-Reflex-Harness 与 APUS-Reflex-Frontend 的自有产品品牌。依据：用户指定的 internal-presentation (privately archived)，以及本轮两仓静态核查。
 
 ## 品牌定义
 

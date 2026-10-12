@@ -1,0 +1,7 @@
+# Bilingual-pair consistency record for semantic-codex-strict-final-v6.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-reflex-control/evidence/semantic-codex-strict-final-v6.md
+/strict-causal-semantic-supervision-real-codex-trial:
+  en: b14fb6929d6dfa30
+  zh: 7b8283e93b13fc89
