@@ -1,0 +1,187 @@
+/** Qualify a copied DMG application on its native macOS architecture without developer credentials or Node. */
+import { execFile } from 'node:child_process'
+import { createHash } from 'node:crypto'
+import { access, mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises'
+import { createRequire } from 'node:module'
+import { tmpdir } from 'node:os'
+import { dirname, join, resolve } from 'node:path'
+import { fileURLToPath, pathToFileURL } from 'node:url'
+import { promisify } from 'node:util'
+
+const execute = promisify(execFile)
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+const pause = ms => new Promise(resolve => setTimeout(resolve, ms))
+
+/** Construct the installed application's credential-free environment.
+ * @param {NodeJS.ProcessEnv} source Runner environment.
+ * @param {string} profile Private user-data directory.
+ * @returns {NodeJS.ProcessEnv} System-only launch environment.
+ */
+export function smokeEnvironment(source, profile) {
+  const allowed = new Set(['USER', 'LOGNAME', 'TMPDIR', 'LANG', 'LC_ALL', '__CF_USER_TEXT_ENCODING'])
+  return { ...Object.fromEntries(Object.entries(source).filter(([key]) => allowed.has(key))),
+    HOME: join(profile, 'home'), PATH: '/usr/bin:/bin:/usr/sbin:/sbin',
+    SYSTEM3_DESKTOP_USER_DATA_DIR: profile, DSH_HOME: join(profile, 'harness-home'), DSH_TELEMETRY_DISABLED: '1' }
+}
+
+/** Reject an installed runtime from another source revision or architecture.
+ * @param {{mode:string,platform:string,arch:string,sourceRevision:string,sourceDirty:boolean}} runtime Installed runtime manifest.
+ * @param {{sourceRevision:string,target:string}} build Collected build metadata.
+ * @param {string} arch Native runner architecture.
+ * @returns {void}
+ */
+export function verifyInstalledIdentity(runtime, build, arch) {
+  if (!['arm64', 'x64'].includes(arch) || build.target !== `darwin-${arch}` || runtime.mode !== 'deployed' || runtime.platform !== 'darwin' || runtime.arch !== arch || runtime.sourceDirty || runtime.sourceRevision !== build.sourceRevision) {
+    throw new Error('Installed runtime does not match the collected native macOS build')
+  }
+}
+
+/** Remove authorization URLs and credential assignments from bounded failure reports.
+ * @param {string} message Process or browser diagnostic.
+ * @returns {string} Redacted diagnostic.
+ */
+export function redactDiagnostic(message) {
+  return message.replace(/(?:https?|wss?):\/\/[^\s"'<>]+/gi, '[URL redacted]')
+    .replace(/(([\w-]*(?:token|password|secret|api[_-]?key)[\w-]*)\s*[=:]\s*)[^\s,;]+/gi, '$1[redacted]').slice(0, 2000)
+}
+
+async function run(installer, reportDirectory) {
+  if (process.platform !== 'darwin' || !['arm64', 'x64'].includes(process.arch)) throw new Error('Run installed qualification on native macOS')
+  await mkdir(reportDirectory, { recursive: true })
+  const temporary = await mkdtemp(join(tmpdir(), 'apus-macos-installed-'))
+  const mountpoint = join(temporary, 'volume')
+  const installation = join(temporary, 'application', 'APUS Reflex Harness.app')
+  const profile = join(temporary, 'profile')
+  const env = smokeEnvironment(process.env, profile)
+  await mkdir(env.HOME, { recursive: true })
+  await mkdir(mountpoint)
+  const report = { passed: false, stages: [], limitations: ['Unsigned preview; notarization and Gatekeeper trust are not qualified.', 'No provider credentials or real model API task is exercised.'] }
+  let mounted = false
+  let app
+  let known = new Set()
+  const observe = async () => {
+    const { stdout } = await execute('/bin/ps', ['-axo', 'pid=,ppid=,command='], { timeout: 10_000, maxBuffer: 4 * 1024 * 1024 })
+    const processes = stdout.trim().split('\n').map(line => {
+      const match = /^\s*(\d+)\s+(\d+)\s+(.*)$/.exec(line)
+      return match ? { pid: Number(match[1]), parent: Number(match[2]), owned: match[3].includes(installation) || match[3].includes(profile) } : undefined
+    }).filter(Boolean)
+    for (const process of processes) if (process.owned) known.add(process.pid)
+    let size
+    do {
+      size = known.size
+      for (const process of processes) if (known.has(process.parent)) known.add(process.pid)
+    } while (size !== known.size)
+    const alive = processes.filter(process => known.has(process.pid)).map(process => process.pid)
+    known = new Set(alive)
+    return alive
+  }
+  const quiescent = async () => {
+    const deadline = Date.now() + 20_000
+    do {
+      if (!(await observe()).length) return
+      await pause(300)
+    } while (Date.now() < deadline)
+    throw new Error('Installed application left owned processes running after exit')
+  }
+  const close = async () => {
+    if (!app) return
+    await observe()
+    const closing = app
+    app = undefined
+    await closing.close()
+    await quiescent()
+  }
+  try {
+    const suffix = process.arch === 'arm64' ? '' : '-darwin-x64'
+    const build = JSON.parse(await readFile(join(dirname(installer), `build-info${suffix}.json`), 'utf8'))
+    const asset = build.assets.find(asset => asset.name === `apus-reflex-harness-mac-${process.arch}.dmg`)
+    const digest = createHash('sha256').update(await readFile(installer)).digest('hex')
+    if (!asset || digest !== asset.sha256) throw new Error('DMG differs from collected build receipt')
+    report.sourceRevision = build.sourceRevision
+    report.installerSha256 = digest
+    report.version = build.version
+    report.target = build.target
+    report.stages.push('installer-receipt-verified')
+    await execute('/usr/bin/hdiutil', ['attach', installer, '-readonly', '-nobrowse', '-mountpoint', mountpoint], { timeout: 120_000 })
+    mounted = true
+    report.stages.push('dmg-copy-started')
+    await execute('/usr/bin/ditto', [join(mountpoint, 'APUS Reflex Harness.app'), installation], { timeout: 600_000 })
+    await execute('/usr/bin/hdiutil', ['detach', mountpoint], { timeout: 30_000 })
+    mounted = false
+    const executable = join(installation, 'Contents/MacOS/APUS Reflex Harness')
+    await access(executable)
+    const runtime = JSON.parse(await readFile(join(installation, 'Contents/Resources/system3-runtime/runtime-manifest.json'), 'utf8'))
+    verifyInstalledIdentity(runtime, build, process.arch)
+    const { stdout: version } = await execute('/usr/bin/plutil', ['-extract', 'CFBundleShortVersionString', 'raw', '-o', '-', join(installation, 'Contents/Info.plist')])
+    if (version.trim() !== build.version) throw new Error('Installed bundle version differs from collected build')
+    report.stages.push('copied-runtime-identity-verified-and-image-detached')
+    const { stdout } = await execute('/bin/sh', ['-c', 'command -v node'], { env }).catch(error => {
+      if (error.code === 1) return { stdout: '' }
+      throw error
+    })
+    if (stdout.trim()) throw new Error('External Node unexpectedly available on application PATH')
+    report.nodeOnPath = false
+    const { _electron } = createRequire(join(root, 'apps/web/package.json'))('playwright')
+    const launch = async () => {
+      app = await _electron.launch({ executablePath: executable, args: [], cwd: temporary, env, timeout: 60_000 })
+      known.add(app.process().pid)
+      if (await app.evaluate(() => process.arch) !== process.arch) throw new Error('Installed Electron architecture differs from the native runner')
+      const deadline = Date.now() + 90_000
+      do {
+        for (const page of app.windows()) {
+          if (page.isClosed()) continue
+          const blank = page.getByRole('button', { name: /^(从空白开始|Start empty)$/i })
+          if (await blank.isVisible()) { await blank.click(); continue }
+          if (new URL(page.url()).pathname === '/' && await page.getByText(/^(设置|Settings)$/).last().isVisible()) return page
+        }
+        if (app.process().exitCode !== null) throw new Error('Installed application exited before reaching home')
+        await pause(300)
+      } while (Date.now() < deadline)
+      throw new Error('Installed application did not reach its home screen')
+    }
+    let page = await launch()
+    await page.screenshot({ path: join(reportDirectory, 'home.png') })
+    report.stages.push('fresh-profile-home')
+    await page.getByText(/^(设置|Settings)$/).last().click()
+    const versionLabel = page.getByText(new RegExp(`^(当前版本：|Current version: )${build.version.replaceAll('.', '\\.')}$`))
+    await versionLabel.waitFor({ timeout: 20_000 })
+    await versionLabel.scrollIntoViewIfNeeded()
+    await page.screenshot({ path: join(reportDirectory, 'version.png') })
+    report.stages.push('product-version-visible')
+    await close()
+    report.stages.push('first-exit-quiescent')
+    page = await launch()
+    await page.screenshot({ path: join(reportDirectory, 'restart.png') })
+    await close()
+    report.stages.push('restart-home-and-exit-quiescent')
+    report.passed = true
+  } catch (error) {
+    report.failure = { stage: report.stages.at(-1) ?? 'before-install', type: error.name, message: redactDiagnostic(error.message), code: error.code, signal: error.signal, killed: error.killed }
+    throw new Error(`macOS installed qualification failed after ${report.failure.stage}; see report.json`)
+  } finally {
+    try { await close() } catch (error) { report.cleanupFailed = true }
+    try {
+      for (const pid of await observe()) {
+        try { process.kill(pid, 'SIGKILL') } catch (error) { if (error.code !== 'ESRCH') throw error }
+      }
+      await quiescent()
+    } catch (error) { report.cleanupFailed = true }
+    if (mounted) {
+      try { await execute('/usr/bin/hdiutil', ['detach', mountpoint], { timeout: 30_000 }) }
+      catch (error) { report.cleanupFailed = true }
+    }
+    if (report.cleanupFailed) report.passed = false
+    await writeFile(join(reportDirectory, 'report.json'), JSON.stringify(report, null, 2) + '\n')
+    if (report.cleanupFailed) throw new Error('macOS qualification cleanup failed; see report.json')
+  }
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
+  const args = process.argv.slice(2)
+  if (args.length !== 4 || args[0] !== '--installer' || args[2] !== '--report-dir') {
+    console.error('Usage: node scripts/product-macos-smoke.mjs --installer <DMG> --report-dir <directory>')
+    process.exitCode = 1
+  } else {
+    await run(resolve(args[1]), resolve(args[3])).catch(error => { console.error(error.message); process.exitCode = 1 })
+  }
+}

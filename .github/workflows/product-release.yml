@@ -16,6 +16,7 @@ on:
         options:
           - windows
           - mac
+          - mac-intel
           - all
 
 permissions:
@@ -30,7 +31,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJSON(inputs.target == 'all' && '[{"runner":"windows-latest","target":"win32-x64"},{"runner":"macos-15","target":"darwin-arm64"}]' || inputs.target == 'mac' && '[{"runner":"macos-15","target":"darwin-arm64"}]' || '[{"runner":"windows-latest","target":"win32-x64"}]') }}
+        include: ${{ fromJSON(inputs.target == 'all' && '[{"runner":"windows-latest","target":"win32-x64"},{"runner":"macos-15","target":"darwin-arm64"},{"runner":"macos-15-intel","target":"darwin-x64"}]' || inputs.target == 'mac-intel' && '[{"runner":"macos-15-intel","target":"darwin-x64"}]' || inputs.target == 'mac' && '[{"runner":"macos-15","target":"darwin-arm64"}]' || '[{"runner":"windows-latest","target":"win32-x64"}]') }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 120
     env:
@@ -90,6 +91,17 @@ jobs:
           $installer = Join-Path $PWD ".artifacts/product-release/$version/win32-x64/apus-reflex-harness-windows-x64-setup.exe"
           $reports = Join-Path $PWD '.artifacts/product-windows-smoke'
           node scripts/product-windows-smoke.mjs --installer $installer --report-dir $reports
+      - name: Validate macOS smoke checks
+        if: runner.os == 'macOS'
+        run: node --test scripts/product-macos-smoke.test.mjs
+      - name: Install and verify the macOS product
+        if: runner.os == 'macOS'
+        env:
+          PRODUCT_TARGET: ${{ matrix.target }}
+        run: |
+          version=$(node -p "JSON.parse(require('fs').readFileSync('release/manifest.json')).version")
+          arch="${PRODUCT_TARGET#darwin-}"
+          node scripts/product-macos-smoke.mjs --installer "$PWD/.artifacts/product-release/$version/$PRODUCT_TARGET/apus-reflex-harness-mac-$arch.dmg" --report-dir "$PWD/.artifacts/product-macos-smoke"
       - name: Upload installers for manual review
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
@@ -106,6 +118,7 @@ jobs:
           name: apus-review-${{ matrix.target }}-${{ github.run_id }}
           path: |
             .artifacts/product-windows-smoke/
+            .artifacts/product-macos-smoke/
             .artifacts/product-build-receipt.json
           include-hidden-files: true
           if-no-files-found: warn

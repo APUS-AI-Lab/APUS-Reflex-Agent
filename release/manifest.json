@@ -5,6 +5,7 @@
   "repository": "APUS-AI-Lab/APUS-Reflex-Harness",
   "targets": [
     "darwin-arm64",
-    "win32-x64"
+    "win32-x64",
+    "darwin-x64"
   ]
 }

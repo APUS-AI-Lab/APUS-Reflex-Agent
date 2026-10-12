@@ -69,7 +69,7 @@ export function verifyReceipt(receipt, manifest, revision, target, hashFile, bas
 export async function writeReleaseSupportAssets({ base, output, manifest, runtime, revision, target, assets }) {
   const [platform, arch] = target.split('-')
   releaseAssetNames(platform, arch)
-  const suffix = platform === 'win32' ? `-${target}` : ''
+  const suffix = target === 'darwin-arm64' ? '' : `-${target}`
   const names = { info: `build-info${suffix}.json`, licenses: `LICENSES${suffix}.zip`, inventory: `runtime-dependencies${suffix}.json`, checksums: `SHA256SUMS${suffix}` }
   const inventory = { ...runtime.dependencyInventory, path: names.inventory }
   copyFileSync(join(base, 'frontend/.build/system3-runtime', runtime.dependencyInventory.path), join(output, names.inventory))
