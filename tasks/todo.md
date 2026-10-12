@@ -490,5 +490,6 @@ PPT v2为4页主讲+2页备查，实际Keynote打开、六页备注回读和PDF�
 - [x] Re-run real Jev + DeepSeek evaluation with ephemeral credentials.
 - [x] Audit open-source release files, package metadata, docs, CI, secrets, and versioning.
 - [x] Record release blockers and publish-readiness decision in the worktree handoff and release-readiness document.
-- [ ] Run shipped-profile staging black-box E2E with durable flush/restart and model attribution.
-- [ ] Resolve or owner-assign System3 real E2E and pre-existing full-suite failures before public tag.
+- [x] Run production plugin-composition durable E2E with flush/restart/recall/attribution and explicit negative control; shipped-profile subprocess evidence remains separate.
+- [ ] Run shipped-profile staging black-box E2E before public tag.
+- [ ] Resolve or owner-assign the remaining `reflex-context` semantic E2E failure and pre-existing full-suite failures before public tag.
