@@ -17,8 +17,8 @@ This branch is a release candidate for the integrated Continuum/Reflex feature, 
 
 ## Blocking before public release
 
-- Product-level real E2E must run against the shipped profile with automatic admission enabled and prove flush-to-durable storage, process restart, recall injection, and model-visible attribution.
-- System3 real E2E still has failures unrelated to the new admission test: the deployment patch lacks the static endpoint/threshold declarations expected by several evaluator tests, and one completion path does not satisfy its model-output assertions.
+- Product-level shipped-profile E2E remains required; the new production composition test now proves JSONL flush, context disposal, `AgentLoop.resume()` from disk, recall injection, and model-visible source attribution, with an explicit-mode negative control.
+- System3 real Jev validation now passes task-frame, handoff-pack, delegation calibration, entry routing, and completion-review (5 files); `reflex-context` still fails a semantic assertion because this run returned `[Reflex omitted]` instead of injecting the expected Decimal and immutable-CSV constraints. The assertion remains strict.
 - The full repository suite is not green on this branch because of pre-existing desktop/UI/workflow infrastructure failures. Each must be either fixed or explicitly quarantined with an owner before claiming repository-wide release readiness.
 - CI must run the new admission/restart test and the real-provider lane with repository-managed secrets; local credentials must never enter configuration, fixtures, HTML, logs, or commits.
 - Publish the feature from a clean release branch after the final build, typecheck, lint, documentation, persistence, catalog, snapshot, and targeted regression gates pass on the exact release commit.

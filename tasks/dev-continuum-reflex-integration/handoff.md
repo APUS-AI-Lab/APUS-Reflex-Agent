@@ -5,7 +5,7 @@
 - 当前分支：`dev/continuum-reflex-integration`
 - 基线：`feat-reflex-control` 当前提交。
 - 目标：在控制面主力分支上集成 `feat-continuum-memory`，完成冲突解释和场景化验收。
-- 当前状态：已完成本地合并、冲突修复、构建、定向回归、真实 Jev/DeepSeek 评估，以及 opt-in 用户消息准入与重启 recall 的 agent-loop 聚焦链路；产品级 shipped-profile 黑盒 E2E、System3 和全仓基线仍阻塞公开发布。
+- 当前状态：已合入最新 `feat-reflex-control` 控制面提交，完成 opt-in 用户消息准入、JSONL 磁盘 flush/resume/recall/attribution 聚焦链路，以及 5 个真实 Jev System3 E2E 文件；`reflex-context` 语义 E2E 和全仓基线仍阻塞公开发布。
 
 ## 本轮交付物
 
@@ -37,6 +37,8 @@
 - [x] `pnpm exec vitest run packages/context/continuum/tests packages/core/agent-loop/tests/continuum-admission.spec.ts`：11 个文件、55 个测试通过。
 - [x] `pnpm run doc-sync`：42 个文档/目录门禁全部通过。
 - [x] `pnpm run verify-cordis-config`：226 个配置文件通过；persistence changes、tsconfig paths、targeted oxlint 通过。
+- [x] JSONL durable profile E2E：2/2 通过；真实 AgentLoop resume 从磁盘恢复，不使用 seed 替代，并验证 explicit 负向控制。
+- [x] 真实 Jev System3：6 个选定 E2E 文件中 5 个通过；`reflex-context` 保留 1 个严格语义失败。
 - [x] RunPod Jev endpoint health 返回 ready；未提供有效 `JEV_API_KEY` 时 `/v1/models` 正确返回 401，说明真实 Jev E2E 不能伪造为通过。
 - [x] 修复运行时开关开启后仍解析为 `off` 的配置重叠问题；profile 默认使用确定性 `shadow`，Jev provider 仍保持 `off`。
 - [x] 只读检查 RunPod `Jev-Serving` pod：`/root/.config/openjev/gateway.key` 存在且权限为 `600`，真实 key 访问 `/v1/models` 返回 200；key 未写入仓库。
@@ -46,8 +48,8 @@
 ## 未完成的正式验收
 
 - [x] 接入 opt-in 生产级 user-message admission caller；默认仍为 `admission: explicit`，需要 scope 和 Continuum 开关。
-- [ ] 用 shipped profile 补齐真实链路：用户输入 → memory-record → Session flush → 重启恢复 → recall 注入 → 模型请求；当前已由 agent-loop focused harness 覆盖事件、重启和 bounded recall，但尚未替代产品级黑盒验收。
-- [ ] 补齐并重跑 System3 real-API E2E：本轮已提供 Jev/DeepSeek 凭据，但 8 个控制面用例中只有 1 个通过，其他用例暴露部署 patch 的静态 endpoint/阈值声明缺失或实际模型响应不满足断言；不能计为通过。
+- [x] 生产插件组合链路：用户输入 → memory-record → Session flush → 上下文销毁 → `AgentLoop.resume()` 磁盘恢复 → recall 注入 → 模型请求归因；仍需 shipped `dsh --profile` 子进程黑盒作为公开发布补充证据。
+- [ ] 修复或解释 `reflex-context` 真实语义失败，并重跑 System3 完整 real-API 矩阵；不能用重试或弱化断言替代。
 - [ ] 重新设计并执行完整 Web built suite；当前只证明 Continuum 定向浏览器测试通过。
 - [ ] 全量 `pnpm run test` 尚未全绿：本次运行 19 个失败、2 个未处理错误；失败集中在合并前未修改的桌面/UI/workflow 基础设施测试，需单独归档或修复后才能宣称仓库级全绿。
 - [ ] 公开发布前复核包 tarball、CI secrets lane、版本/tag 和干净 release commit；不得把本地 API key 写入配置、fixture、HTML、日志或提交。

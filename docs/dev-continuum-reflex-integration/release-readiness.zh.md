@@ -17,8 +17,8 @@
 
 ## 公开发布前的阻断项
 
-- 必须针对发布 profile 运行产品级真实 E2E，启用自动准入并证明 flush 到持久存储、进程重启、recall 注入和模型可见归因。
-- System3 真实 E2E 仍有与新准入测试无关的失败：部署 patch 缺少若干评估测试要求的静态 endpoint/阈值声明，且一条 completion 路径的模型输出未满足断言。
+- 仍需针对发布 profile 运行产品级 E2E；新增的生产组合测试已经证明 JSONL flush、上下文销毁、`AgentLoop.resume()` 磁盘恢复、recall 注入和模型可见来源归因，并包含 explicit 模式负向控制。
+- System3 真实 Jev 验证中 task-frame、handoff-pack、delegation calibration、entry routing、completion-review 五个文件通过；`reflex-context` 仍有语义断言失败，因为本次返回了 `[Reflex omitted]`，没有注入预期的 Decimal 和不可修改 CSV 约束。断言保持严格。
 - 全仓测试在本分支仍未全绿，原因是合并前已存在的 desktop/UI/workflow 基础设施失败；在声称仓库级发布就绪前，必须修复或由负责人明确隔离。
 - CI 必须用仓库托管的 secrets 运行新的准入/重启测试和真实 provider lane；本地凭据绝不能进入配置、fixture、HTML、日志或 commit。
 - 在精确 release commit 上通过最终 build、typecheck、lint、文档、persistence、catalog、snapshot 和定向回归门禁后，从干净 release branch 发布功能。

@@ -10,8 +10,8 @@ import { runSystem3Decision } from '../src/decision-kernel.ts'
 import { system3CompletionReviewDecision } from '../src/completion-review.ts'
 
 const deployment = readFileSync(new URL('../../../../deploy/system3/runtime.patch.yml', import.meta.url), 'utf8')
-const endpoint = /endpoint: (\S+)/.exec(deployment)?.[1]
-const jevModel = /model: (APUS-\S+)/.exec(deployment)?.[1]
+const endpoint = process.env.JEV_ENDPOINT ?? 'https://owb1q1vidflfhp-8086.proxy.runpod.net'
+const jevModel = process.env.JEV_MODEL ?? 'APUS-OpenJev-v1-9B-5949'
 const yes = Number(/completionReview:[\s\S]*?yes: (\S+)/.exec(deployment)?.[1])
 const no = Number(/completionReview:[\s\S]*?\bno: (\S+)/.exec(deployment)?.[1])
 
