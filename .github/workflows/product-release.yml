@@ -21,7 +21,7 @@ on:
           - all
 
       qualification_run_id:
-        description: Existing product build run to requalify without rebuilding (Windows only; leave empty to build)
+        description: Existing product build run to requalify without rebuilding (one native target; leave empty to build)
         required: false
         type: string
       qualification_source:
@@ -157,7 +157,7 @@ jobs:
           retention-days: 14
 
   windows_requalification:
-    if: ${{ inputs.qualification_run_id != '' || inputs.qualification_source != '' }}
+    if: ${{ inputs.target == 'windows' && (inputs.qualification_run_id != '' || inputs.qualification_source != '') }}
     runs-on: windows-latest
     timeout-minutes: 35
     env:
@@ -187,10 +187,10 @@ jobs:
             const source = process.env.QUALIFICATION_SOURCE;
             if (!/^[1-9][0-9]*$/.test(runId) || !/^[0-9a-f]{40}$/.test(source)) throw new Error('Provide a build run ID and full source SHA');
             const { pathToFileURL } = await import('node:url');
-            const { validateRequalification } = await import(pathToFileURL(`${process.env.GITHUB_WORKSPACE}/scripts/product-windows-smoke.mjs`).href);
+            const { validateRequalification } = await import(pathToFileURL(`${process.env.GITHUB_WORKSPACE}/scripts/product-qualification-source.mjs`).href);
             const { data: run } = await github.rest.actions.getWorkflowRun({ ...context.repo, run_id: Number(runId) });
             const artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts, { ...context.repo, run_id: Number(runId), per_page: 100 });
-            const id = validateRequalification(run, artifacts, `${context.repo.owner}/${context.repo.repo}`, runId, source);
+            const id = validateRequalification(run, artifacts, `${context.repo.owner}/${context.repo.repo}`, runId, source, 'win32-x64');
             core.setOutput('artifact_id', String(id));
       - name: Download the selected immutable installer and support files
         uses: actions/download-artifact@v4
@@ -208,7 +208,7 @@ jobs:
       - name: Install locked qualification dependencies
         run: pnpm install --frozen-lockfile
       - name: Validate Windows qualification helpers
-        run: node --test scripts/product-windows-smoke.test.mjs
+        run: node --test scripts/product-windows-smoke.test.mjs scripts/product-qualification-source.test.mjs
       - name: Requalify the original installed Windows product
         shell: pwsh
         run: |
@@ -222,6 +222,88 @@ jobs:
         with:
           name: apus-windows-requalification-${{ inputs.qualification_run_id }}-${{ github.run_id }}
           path: .artifacts/product-windows-requalification/
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 14
+
+  unix_requalification:
+    if: ${{ inputs.target != 'windows' && (inputs.qualification_run_id != '' || inputs.qualification_source != '') }}
+    runs-on: ${{ inputs.target == 'linux' && 'ubuntu-24.04' || inputs.target == 'mac' && 'macos-15' || 'macos-15-intel' }}
+    timeout-minutes: 45
+    env:
+      DSH_TELEMETRY_DISABLED: '1'
+      QUALIFICATION_RUN_ID: ${{ inputs.qualification_run_id }}
+      QUALIFICATION_SOURCE: ${{ inputs.qualification_source }}
+      QUALIFICATION_TARGET: ${{ inputs.target }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Validate source run and select the exact native artifact
+        id: source
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const target = { mac: 'darwin-arm64', 'mac-intel': 'darwin-x64', linux: 'linux-x64' }[process.env.QUALIFICATION_TARGET];
+            if (!target || target !== `${process.platform}-${process.arch}`) throw new Error('Choose one matching native qualification target');
+            const runId = process.env.QUALIFICATION_RUN_ID;
+            const source = process.env.QUALIFICATION_SOURCE;
+            if (!/^[1-9][0-9]*$/.test(runId) || !/^[0-9a-f]{40}$/.test(source)) throw new Error('Provide a build run ID and full source SHA');
+            const { pathToFileURL } = await import('node:url');
+            const { validateRequalification } = await import(pathToFileURL(`${process.env.GITHUB_WORKSPACE}/scripts/product-qualification-source.mjs`).href);
+            const { data: run } = await github.rest.actions.getWorkflowRun({ ...context.repo, run_id: Number(runId) });
+            const artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts, { ...context.repo, run_id: Number(runId), per_page: 100 });
+            const id = validateRequalification(run, artifacts, `${context.repo.owner}/${context.repo.repo}`, runId, source, target);
+            core.setOutput('artifact_id', String(id));
+      - name: Download the selected immutable installer and support files
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ steps.source.outputs.artifact_id }}
+          run-id: ${{ inputs.qualification_run_id }}
+          github-token: ${{ github.token }}
+          path: .artifacts/requalification-source
+          merge-multiple: true
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: pnpm
+      - name: Prepare Linux installed desktop acceptance
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb xauth dbus-x11 apparmor apparmor-utils desktop-file-utils xdg-utils libgtk-3-0t64 libnss3 libasound2t64 libgbm1
+          sudo aa-status --enabled
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=1
+      - name: Install locked qualification dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Validate native qualification helpers
+        run: node --test scripts/product-qualification-source.test.mjs scripts/product-macos-smoke.test.mjs scripts/product-linux-smoke.test.mjs
+      - name: Requalify the original installed native product
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import { readdir } from 'node:fs/promises';
+          import { resolve } from 'node:path';
+          import { spawnSync } from 'node:child_process';
+          const linux = process.platform === 'linux';
+          const name = linux ? 'apus-reflex-harness-linux-x64.deb' : `apus-reflex-harness-mac-${process.arch}.dmg`;
+          const directory = resolve('.artifacts/requalification-source');
+          const found = (await readdir(directory, { recursive: true })).filter(file => file.split('/').at(-1) === name);
+          if (found.length !== 1) throw new Error('Expected exactly one downloaded native installer');
+          const script = `scripts/product-${linux ? 'linux' : 'macos'}-smoke.mjs`;
+          const args = [script, '--installer', resolve(directory, found[0]), '--report-dir', resolve('.artifacts/product-unix-requalification'), '--expected-source', process.env.QUALIFICATION_SOURCE, '--build-run-id', process.env.QUALIFICATION_RUN_ID];
+          const result = linux ? spawnSync('xvfb-run', ['-a', 'dbus-run-session', '--', process.execPath, ...args], { stdio: 'inherit' }) : spawnSync(process.execPath, args, { stdio: 'inherit' });
+          if (result.error) throw result.error;
+          if (result.status !== 0) throw new Error(`Native qualification failed: ${result.status ?? result.signal}`);
+          NODE
+      - name: Upload requalification report and screenshots
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: apus-${{ inputs.target }}-requalification-${{ inputs.qualification_run_id }}-${{ github.run_id }}
+          path: .artifacts/product-unix-requalification/
           include-hidden-files: true
           if-no-files-found: warn
           retention-days: 14

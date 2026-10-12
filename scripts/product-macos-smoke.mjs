@@ -1,12 +1,12 @@
 /** Qualify a copied DMG application on its native macOS architecture without developer credentials or Node. */
 import { execFile } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { access, mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises'
+import { access, mkdir, mkdtemp, readFile, realpath, writeFile } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { promisify } from 'node:util'
+import { parseArgs, promisify } from 'node:util'
 
 const execute = promisify(execFile)
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -45,17 +45,71 @@ export function redactDiagnostic(message) {
     .replace(/(([\w-]*(?:token|password|secret|api[_-]?key)[\w-]*)\s*[=:]\s*)[^\s,;]+/gi, '$1[redacted]').slice(0, 2000)
 }
 
-async function run(installer, reportDirectory) {
+/** Run one bounded native command and retain elapsed time and redacted exit diagnostics.
+ * @param {string} stage Qualification step name.
+ * @param {string} command Executable path.
+ * @param {string[]} args Executable arguments.
+ * @param {object} options Child-process options, including a bounded timeout.
+ * @param {object[]} diagnostics Mutable report command records.
+ * @returns {Promise<{stdout:string,stderr:string}>} Completed command output.
+ */
+export async function runCommand(stage, command, args, options, diagnostics) {
+  const started = Date.now()
+  const record = { stage, command, timeoutMs: options.timeout }
+  diagnostics.push(record)
+  try {
+    const result = await execute(command, args, options)
+    record.exitCode = 0
+    return result
+  } catch (error) {
+    Object.assign(record, failureDiagnostic(error))
+    throw error
+  } finally { record.durationMs = Date.now() - started }
+}
+
+/** Preserve process exit details without exposing credentials in command output.
+ * @param {Error} error Failed command or browser operation.
+ * @returns {object} Bounded diagnostic suitable for the qualification report.
+ */
+export function failureDiagnostic(error) {
+  return { type: error.name, message: redactDiagnostic(error.message), code: error.code,
+    signal: error.signal, killed: error.killed,
+    stdout: error.stdout === undefined ? undefined : redactDiagnostic(String(error.stdout)),
+    stderr: error.stderr === undefined ? undefined : redactDiagnostic(String(error.stderr)) }
+}
+
+/** Require the selected product source independently of the helper checkout.
+ * @param {string} sourceRevision Source recorded by the collected product build.
+ * @param {string} expectedSource Explicitly selected full source SHA.
+ * @returns {void}
+ */
+export function verifyExpectedSource(sourceRevision, expectedSource) {
+  if (!expectedSource || !/^[0-9a-f]{40}$/.test(expectedSource) || sourceRevision !== expectedSource) {
+    throw new Error('DMG source differs from the explicitly selected build SHA')
+  }
+}
+
+/** Detect the exact private mountpoint, including after a failed attach command.
+ * @param {string} listing Native /sbin/mount output.
+ * @param {string} mountpoint Private image mountpoint.
+ * @returns {boolean} Whether the mount listing contains that exact mountpoint.
+ */
+export function isImageMounted(listing, mountpoint) {
+  return listing.split('\n').some(line => line.includes(` on ${mountpoint} (`))
+}
+
+async function run(installer, reportDirectory, expectedSource = process.env.GITHUB_SHA, buildRunId) {
   if (process.platform !== 'darwin' || !['arm64', 'x64'].includes(process.arch)) throw new Error('Run installed qualification on native macOS')
   await mkdir(reportDirectory, { recursive: true })
-  const temporary = await mkdtemp(join(tmpdir(), 'apus-macos-installed-'))
+  const temporary = await realpath(await mkdtemp(join(tmpdir(), 'apus-macos-installed-')))
   const mountpoint = join(temporary, 'volume')
   const installation = join(temporary, 'application', 'APUS Reflex Harness.app')
   const profile = join(temporary, 'profile')
   const env = smokeEnvironment(process.env, profile)
   await mkdir(env.HOME, { recursive: true })
   await mkdir(mountpoint)
-  const report = { passed: false, stages: [], limitations: ['Unsigned preview; notarization and Gatekeeper trust are not qualified.', 'No provider credentials or real model API task is exercised.'] }
+  const report = { passed: false, stages: [], commands: [], cleanupErrors: [], helperSourceRevision: process.env.GITHUB_SHA, buildRunId, limitations: ['Unsigned preview; notarization and Gatekeeper trust are not qualified.', 'No provider credentials or real model API task is exercised.'] }
+  const command = (stage, executable, args, timeout) => runCommand(stage, executable, args, { timeout, maxBuffer: 4 * 1024 * 1024 }, report.commands)
   let mounted = false
   let app
   let known = new Set()
@@ -97,16 +151,18 @@ async function run(installer, reportDirectory) {
     const asset = build.assets.find(asset => asset.name === `apus-reflex-harness-mac-${process.arch}.dmg`)
     const digest = createHash('sha256').update(await readFile(installer)).digest('hex')
     if (!asset || digest !== asset.sha256) throw new Error('DMG differs from collected build receipt')
+    verifyExpectedSource(build.sourceRevision, expectedSource)
     report.sourceRevision = build.sourceRevision
     report.installerSha256 = digest
     report.version = build.version
     report.target = build.target
     report.stages.push('installer-receipt-verified')
-    await execute('/usr/bin/hdiutil', ['attach', installer, '-readonly', '-nobrowse', '-mountpoint', mountpoint], { timeout: 120_000 })
+    report.stages.push('dmg-attach-started')
+    await command('dmg-attach', '/usr/bin/hdiutil', ['attach', installer, '-readonly', '-nobrowse', '-mountpoint', mountpoint], 600_000)
     mounted = true
     report.stages.push('dmg-copy-started')
-    await execute('/usr/bin/ditto', [join(mountpoint, 'APUS Reflex Harness.app'), installation], { timeout: 600_000 })
-    await execute('/usr/bin/hdiutil', ['detach', mountpoint], { timeout: 30_000 })
+    await command('dmg-copy', '/usr/bin/ditto', [join(mountpoint, 'APUS Reflex Harness.app'), installation], 600_000)
+    await command('dmg-detach', '/usr/bin/hdiutil', ['detach', mountpoint], 30_000)
     mounted = false
     const executable = join(installation, 'Contents/MacOS/APUS Reflex Harness')
     await access(executable)
@@ -156,32 +212,34 @@ async function run(installer, reportDirectory) {
     report.stages.push('restart-home-and-exit-quiescent')
     report.passed = true
   } catch (error) {
-    report.failure = { stage: report.stages.at(-1) ?? 'before-install', type: error.name, message: redactDiagnostic(error.message), code: error.code, signal: error.signal, killed: error.killed }
+    report.failure = { stage: report.stages.at(-1) ?? 'before-install', ...failureDiagnostic(error) }
     throw new Error(`macOS installed qualification failed after ${report.failure.stage}; see report.json`)
   } finally {
-    try { await close() } catch (error) { report.cleanupFailed = true }
+    try { await close() } catch (error) { report.cleanupErrors.push({ stage: 'close-application', ...failureDiagnostic(error) }) }
     try {
       for (const pid of await observe()) {
         try { process.kill(pid, 'SIGKILL') } catch (error) { if (error.code !== 'ESRCH') throw error }
       }
       await quiescent()
-    } catch (error) { report.cleanupFailed = true }
-    if (mounted) {
-      try { await execute('/usr/bin/hdiutil', ['detach', mountpoint], { timeout: 30_000 }) }
-      catch (error) { report.cleanupFailed = true }
-    }
-    if (report.cleanupFailed) report.passed = false
+    } catch (error) { report.cleanupErrors.push({ stage: 'stop-owned-processes', ...failureDiagnostic(error) }) }
+    try {
+      // A timed-out attach may already have mounted the image before its child exited.
+      const { stdout } = await command('inspect-image-mount', '/sbin/mount', [], 10_000)
+      if (mounted || isImageMounted(stdout, mountpoint)) {
+        await command('cleanup-image-detach', '/usr/bin/hdiutil', ['detach', mountpoint], 30_000)
+      }
+    } catch (error) { report.cleanupErrors.push({ stage: 'detach-image', ...failureDiagnostic(error) }) }
+    if (report.cleanupErrors.length) { report.cleanupFailed = true; report.passed = false }
     await writeFile(join(reportDirectory, 'report.json'), JSON.stringify(report, null, 2) + '\n')
-    if (report.cleanupFailed) throw new Error('macOS qualification cleanup failed; see report.json')
+    if (report.cleanupFailed && !report.failure) throw new Error('macOS qualification cleanup failed; see report.json')
   }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
-  const args = process.argv.slice(2)
-  if (args.length !== 4 || args[0] !== '--installer' || args[2] !== '--report-dir') {
-    console.error('Usage: node scripts/product-macos-smoke.mjs --installer <DMG> --report-dir <directory>')
-    process.exitCode = 1
-  } else {
-    await run(resolve(args[1]), resolve(args[3])).catch(error => { console.error(error.message); process.exitCode = 1 })
-  }
+  try {
+    const { values } = parseArgs({ options: { installer: { type: 'string' }, 'report-dir': { type: 'string' },
+      'expected-source': { type: 'string' }, 'build-run-id': { type: 'string' } }, allowPositionals: false })
+    if (!values.installer || !values['report-dir']) throw new Error('Usage: --installer <DMG> --report-dir <directory> [--expected-source <sha> --build-run-id <id>]')
+    await run(resolve(values.installer), resolve(values['report-dir']), values['expected-source'], values['build-run-id'])
+  } catch (error) { console.error(error.message); process.exitCode = 1 }
 }

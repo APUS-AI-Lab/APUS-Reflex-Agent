@@ -68,9 +68,9 @@ it('checks out the dispatch commit and retains review evidence without release-w
     }>
   }
   expect(workflow.permissions).toEqual({ contents: 'read', actions: 'read' })
-  expect(Object.keys(workflow.jobs)).toEqual(['build', 'windows_requalification'])
+  expect(Object.keys(workflow.jobs)).toEqual(['build', 'windows_requalification', 'unix_requalification'])
   expect(workflow.jobs['build']!.if).toBe("${{ inputs.qualification_run_id == '' && inputs.qualification_source == '' }}")
-  expect(workflow.jobs['windows_requalification']!.if).toBe("${{ inputs.qualification_run_id != '' || inputs.qualification_source != '' }}")
+  expect(workflow.jobs['windows_requalification']!.if).toBe("${{ inputs.target == 'windows' && (inputs.qualification_run_id != '' || inputs.qualification_source != '') }}")
   const qualification = workflow.jobs['windows_requalification']!.steps
   const download = qualification.find(step => step.uses?.startsWith('actions/download-artifact@'))
   expect(download?.with?.['run-id']).toBe('${{ inputs.qualification_run_id }}')
@@ -78,6 +78,12 @@ it('checks out the dispatch commit and retains review evidence without release-w
   expect(qualification.some(step => step.with?.['script']?.includes('validateRequalification'))).toBe(true)
   expect(qualification.some(step => step.run?.includes('--expected-source $env:QUALIFICATION_SOURCE'))).toBe(true)
   expect(qualification.some(step => step.run?.includes('package:product') || step.run?.includes('npm ci'))).toBe(false)
+  const unix = workflow.jobs['unix_requalification']!.steps
+  expect(workflow.jobs['unix_requalification']!.if).toContain("inputs.target != 'windows'")
+  expect(unix.find(step => step.uses?.startsWith('actions/download-artifact@'))?.with?.['artifact-ids']).toBe('${{ steps.source.outputs.artifact_id }}')
+  expect(unix.some(step => step.with?.['script']?.includes('validateRequalification'))).toBe(true)
+  expect(unix.some(step => step.run?.includes("'--expected-source', process.env.QUALIFICATION_SOURCE"))).toBe(true)
+  expect(unix.some(step => step.run?.includes('package:product') || step.run?.includes('npm ci'))).toBe(false)
   const steps = workflow.jobs['build']!.steps
   expect(steps.find(step => step.uses?.startsWith('actions/checkout@'))?.with?.['ref']).toBe('${{ github.sha }}')
   expect(steps.filter(step => step.uses?.startsWith('actions/upload-artifact@')).every(step => step.if === '${{ always() }}')).toBe(true)

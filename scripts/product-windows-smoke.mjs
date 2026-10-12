@@ -66,22 +66,6 @@ export function redactDiagnostic(message) {
     .slice(0, 2000)
 }
 
-/** Validate the source run and select its uniquely named Windows product artifact. */
-export function validateRequalification(run, artifacts, repository, runId, source) {
-  if (!/^[0-9a-f]{40}$/.test(source) || !/^[1-9][0-9]*$/.test(String(runId))) throw new Error('Expected a build run ID and full lowercase source SHA')
-  if (String(run.id) !== String(runId) || run.repository?.full_name !== repository
-    || run.head_repository?.full_name !== repository || run.head_sha !== source
-    || run.path !== '.github/workflows/product-release.yml' || run.status !== 'completed') {
-    throw new Error('Qualification source run must be this repository’s completed product-release build at the expected SHA')
-  }
-  const matches = artifacts.filter(item => item.name === `apus-preview-win32-x64-${runId}` && !item.expired)
-  if (matches.length !== 1 || !Number.isSafeInteger(matches[0].id) || matches[0].id < 1
-    || matches[0].workflow_run?.id !== run.id || matches[0].workflow_run?.head_sha !== source) {
-    throw new Error('Expected exactly one unexpired Windows artifact from the selected build run and source')
-  }
-  return matches[0].id
-}
-
 /** Preserve command termination evidence without exposing credential-bearing diagnostics. */
 export function failureDiagnostic(error) {
   return { type: error.name, message: redactDiagnostic(error.message),

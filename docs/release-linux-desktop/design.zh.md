@@ -24,6 +24,8 @@ flowchart LR
 
 `scripts/product-linux-smoke.mjs --installer <absolute deb> --report-dir <absolute directory>` 在原生 Linux x64 上以普通用户运行。它拒绝已有安装，检查包身份和收集的校验和，通过系统包管理器安装，然后核对安装后运行时与源码提交。私有配置目录和受控 PATH 排除继承的凭据、Git 和外部 Node。runner 提供 Xvfb 和会话总线；普通用户使用自己的桌面会话。
 
+复验已有安装包时，脚本接受 `--expected-source <full SHA>` 和 `--build-run-id <run ID>`；预期源码默认取 `GITHUB_SHA`，安装包源码不匹配时在安装前拒绝。报告区分产品的 `sourceRevision` 与验收脚本检出的 `helperSourceRevision`，并记录原始 `buildRunId`。可执行文件使用固定的 Debian 安装路径，定向 `dpkg-query -S` 查询必须确认它仅归产品软件包所有；验收不缓存完整运行时文件清单。
+
 仅临时 GitHub runner 为验收开启 `kernel.apparmor_restrict_unprivileged_userns=1`。脚本要求此限制已开启且应用 AppArmor 配置已安装。Playwright 使用 `chromiumSandbox: true`，应用不得携带 `no-sandbox` 开关。活动窗口的真实渲染进程 PID 由 Electron 提供，`/proc/<pid>/status` 必须显示 Seccomp 过滤和 no-new-privileges。报告记录观测值，不以假定值代替沙箱成功证据。
 
 已安装应用必须进入主页、显示产品版本、退出且不残留自有进程、重启并再次退出，随后卸载软件包，确认可执行文件、AppArmor 配置文件及内核中已加载的配置均已移除，退出后删除临时用户数据目录。即使验收失败，也保留截图和长度受限的脱敏 JSON 报告。清理仅处理本次安装及其自有进程。此检查不调用真实模型，也不代表所有 Linux 桌面环境均已验收。

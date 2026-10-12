@@ -1,10 +1,12 @@
 /** Keyless checks for native Linux installer acceptance and kernel sandbox observations. */
 import assert from 'node:assert/strict'
+import { execFile } from 'node:child_process'
+import { promisify } from 'node:util'
 import { test } from 'node:test'
-import { mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises'
+import { readFile, mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { smokeEnvironment, verifyInstalledIdentity, verifyRendererSandbox, verifyRemovedInstallation, verifySandboxExecution, redactDiagnostic } from './product-linux-smoke.mjs'
+import { installedExecutable, verifyExpectedSource, smokeEnvironment, verifyInstalledIdentity, verifyRendererSandbox, verifyRemovedInstallation, verifySandboxExecution, redactDiagnostic } from './product-linux-smoke.mjs'
 
 test('installed application has isolated state without credentials or developer PATH', () => {
   const source = { HOME: '/existing', PATH: '/usr/bin:/developer', GH_TOKEN: 'private', JEV_API_KEY: 'private', NODE_OPTIONS: '--require=developer.js', ELECTRON_RUN_AS_NODE: '1', DSH_HOME: '/existing-state', DISPLAY: ':99', DBUS_SESSION_BUS_ADDRESS: 'unix:path=/private-bus', USER: 'runner' }
@@ -75,3 +77,33 @@ else { const command = args.slice(args.indexOf('--') + 1); const result = spawnS
       mode === 'unsupported' ? /did not report enforcement/ : /forbidden write/)
   })
 }
+
+test('installer qualification distinguishes selected product source from helper source', () => {
+  const source = 'a'.repeat(40)
+  verifyExpectedSource(source, source)
+  for (const expected of [undefined, '', 'a'.repeat(7), 'b'.repeat(40)]) {
+    assert.throws(() => verifyExpectedSource(source, expected), /explicitly selected build SHA/)
+  }
+})
+
+test('executable ownership query stays bounded for a package with a large runtime file list', async t => {
+  const temporary = await mkdtemp(join(tmpdir(), 'apus-linux-query-unit-'))
+  t.after(() => rm(temporary, { recursive: true, force: true }))
+  const fixture = join(temporary, 'query.cjs')
+  await writeFile(fixture, `const args = process.argv.slice(2);
+if (args[0] === '-L') process.stdout.write('runtime/file\\n'.repeat(200000));
+else if (args[0] === '-S' && args[1] === '/opt/APUS Reflex Harness/apus-reflex-harness') process.stdout.write('apus-reflex-harness: ' + args[1] + '\\n');
+else process.exitCode = 2;
+`)
+  const execute = promisify(execFile)
+  await assert.rejects(execute(process.execPath, [fixture, '-L', 'apus-reflex-harness']), { code: 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER' })
+  const executable = await installedExecutable((command, args, options) => {
+    assert.equal(command, '/usr/bin/dpkg-query')
+    return execute(process.execPath, [fixture, ...args], options)
+  })
+  const { build } = JSON.parse(await readFile(new URL('../frontend/package.json', import.meta.url), 'utf8'))
+  assert.equal(executable, `/opt/${build.productName}/${build.linux.executableName}`)
+  for (const stdout of ['', 'other-package: ' + executable, 'apus-reflex-harness: /opt/other', `apus-reflex-harness: ${executable}\nother-package: ${executable}`]) {
+    await assert.rejects(installedExecutable(async () => ({ stdout })), /not owned exclusively/)
+  }
+})

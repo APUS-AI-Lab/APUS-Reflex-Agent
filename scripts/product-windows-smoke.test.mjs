@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { setImmediate, setTimeout } from 'node:timers/promises'
-import { ownedProcessIds, redactDiagnostic, smokeEnvironment, verifyInstalledIdentity, validateRequalification, failureDiagnostic, runTrackedProcess, terminateOwnedProcesses } from './product-windows-smoke.mjs'
+import { ownedProcessIds, redactDiagnostic, smokeEnvironment, verifyInstalledIdentity, failureDiagnostic, runTrackedProcess, terminateOwnedProcesses } from './product-windows-smoke.mjs'
 
 test('installed application cannot inherit developer Node, credentials or runtime overrides', () => {
   const source = { SystemRoot: 'C:\\Windows', Path: 'C:\\node;C:\\tools', APPDATA: 'C:\\Users\\runner\\AppData', GH_TOKEN: 'secret', DEEPSEEK_API_KEY: 'secret', JEV_API_KEY: 'secret', ELECTRON_RUN_AS_NODE: '1', NODE_OPTIONS: '--require=developer.js', DSH_HOME: 'C:\\existing' }
@@ -41,24 +41,6 @@ test('installed runtime must come from the collected clean Windows revision', ()
 test('failure reports omit local authorization URLs and credential assignments', () => {
   const text = redactDiagnostic('Navigation http://127.0.0.1:123/?token=private-token failed; API_KEY=private-key token: private-token')
   assert.equal(text, 'Navigation [URL redacted] failed; API_KEY=[redacted] token: [redacted]')
-})
-
-test('requalification rejects another run, source, repository, workflow, or ambiguous artifact', () => {
-  const source = 'a'.repeat(40)
-  const repository = 'APUS-AI-Lab/APUS-Reflex-Harness'
-  const run = { id: 123, repository: { full_name: repository }, head_repository: { full_name: repository },
-    head_sha: source, path: '.github/workflows/product-release.yml', status: 'completed' }
-  const artifact = { id: 456, name: 'apus-preview-win32-x64-123', expired: false, workflow_run: { id: 123, head_sha: source } }
-  assert.equal(validateRequalification(run, [artifact], repository, '123', source), 456)
-  for (const change of [{ id: 999 }, { head_sha: 'b'.repeat(40) }, { repository: { full_name: 'other/repo' } },
-    { head_repository: { full_name: 'other/repo' } }, { path: '.github/workflows/ci.yml' }, { status: 'in_progress' }]) {
-    assert.throws(() => validateRequalification({ ...run, ...change }, [artifact], repository, '123', source), /source run/)
-  }
-  for (const artifacts of [[], [artifact, artifact], [{ ...artifact, expired: true }], [{ ...artifact, name: 'other' }],
-    [{ ...artifact, workflow_run: { id: 999, head_sha: source } }], [{ ...artifact, workflow_run: { id: 123, head_sha: 'b'.repeat(40) } }]]) {
-    assert.throws(() => validateRequalification(run, artifacts, repository, '123', source), /exactly one/)
-  }
-  assert.throws(() => validateRequalification(run, [artifact], repository, '123', 'short'), /full lowercase/)
 })
 
 test('numeric exits and timeouts remain distinct and redact command output', () => {

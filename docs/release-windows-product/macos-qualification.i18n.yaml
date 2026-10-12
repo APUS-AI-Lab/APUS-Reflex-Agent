@@ -1,0 +1,16 @@
+# Bilingual-pair consistency record for macos-qualification.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/release-windows-product/macos-qualification.md
+/macos-installed-package-qualification:
+  en: 54f73ae064281b1e
+  zh: 4ece479d6ddbd0ac
+/macos-installed-package-qualification/scope:
+  en: 0f1493ac5879317c
+  zh: cd356a81c5dd08ba
+/macos-installed-package-qualification/image-handling-and-diagnostics:
+  en: d76c59d6e4a4ef27
+  zh: d88f06038aeecc9c
+/macos-installed-package-qualification/verification-and-limits:
+  en: 68ace40b9af6734b
+  zh: 56753ee99ee4427a

@@ -6,7 +6,7 @@ import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { promisify } from 'node:util'
+import { parseArgs, promisify } from 'node:util'
 
 const execute = promisify(execFile)
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -35,6 +35,28 @@ export function smokeEnvironment(source, profile, bin) {
 export function verifyInstalledIdentity(runtime, build) {
   if (build.target !== 'linux-x64' || runtime.mode !== 'deployed' || runtime.platform !== 'linux' || runtime.arch !== 'x64' || runtime.sourceDirty || runtime.sourceRevision !== build.sourceRevision) {
     throw new Error('Installed runtime does not match the collected Linux build')
+  }
+}
+
+/** Query ownership of the fixed Debian executable without enumerating runtime files.
+ * @param {typeof execute} query Shell-free command executor.
+ * @returns {Promise<string>} Executable owned by the installed product package.
+ */
+export async function installedExecutable(query = execute) {
+  const executable = '/opt/APUS Reflex Harness/apus-reflex-harness'
+  const { stdout } = await query('/usr/bin/dpkg-query', ['-S', executable], { timeout: 10_000, maxBuffer: 64 * 1024 })
+  if (stdout.trim() !== `${packageName}: ${executable}`) throw new Error('Installed executable is not owned exclusively by the product package')
+  return executable
+}
+
+/** Require the installer receipt to name the explicitly selected product source.
+ * @param {string} sourceRevision Source recorded in collected build metadata.
+ * @param {string | undefined} expectedSource Selected full commit identifier.
+ * @returns {void}
+ */
+export function verifyExpectedSource(sourceRevision, expectedSource) {
+  if (!expectedSource || !/^[0-9a-f]{40}$/.test(expectedSource) || sourceRevision !== expectedSource) {
+    throw new Error('Installer source differs from the explicitly selected build SHA')
   }
 }
 
@@ -105,14 +127,14 @@ process.stdout.write('node-confined');`
   return probe.trim()
 }
 
-async function run(installer, reportDirectory) {
+async function run(installer, reportDirectory, expectedSource = process.env.GITHUB_SHA, buildRunId) {
   if (process.platform !== 'linux' || process.arch !== 'x64' || process.getuid() === 0) throw new Error('Run installed qualification as an ordinary user on native Linux x64')
   await mkdir(reportDirectory, { recursive: true })
   const temporary = await mkdtemp(join(tmpdir(), 'apus-linux-installed-'))
   const profile = join(temporary, 'profile')
   const bin = join(temporary, 'bin')
   const env = smokeEnvironment(process.env, profile, bin)
-  const report = { passed: false, stages: [], limitations: ['Ubuntu 24.04 x64 only; other distributions and architectures are not qualified.', 'No provider credentials or real model API task is exercised.'] }
+  const report = { passed: false, stages: [], helperSourceRevision: process.env.GITHUB_SHA, buildRunId, limitations: ['Ubuntu 24.04 x64 only; other distributions and architectures are not qualified.', 'No provider credentials or real model API task is exercised.'] }
   let acquired = false
   let app
   let installation
@@ -178,6 +200,7 @@ async function run(installer, reportDirectory) {
     const asset = build.assets.find(asset => asset.name === 'apus-reflex-harness-linux-x64.deb')
     const digest = createHash('sha256').update(await readFile(installer)).digest('hex')
     if (!asset || digest !== asset.sha256) throw new Error('Debian package differs from collected build receipt')
+    verifyExpectedSource(build.sourceRevision, expectedSource)
     for (const [field, value] of [['Package', packageName], ['Version', build.version], ['Architecture', 'amd64']]) {
       const { stdout } = await execute('/usr/bin/dpkg-deb', ['--field', installer, field])
       if (stdout.trim() !== value) throw new Error(`Debian package ${field} differs from the release`)
@@ -188,10 +211,9 @@ async function run(installer, reportDirectory) {
     report.stages.push('installer-receipt-verified')
     acquired = true
     await sudo(['apt-get', 'install', '-y', installer])
-    const { stdout: files } = await execute('/usr/bin/dpkg-query', ['-L', packageName])
-    const binaries = files.trim().split('\n').filter(file => file.startsWith('/opt/') && file.endsWith(`/${packageName}`))
-    if (binaries.length !== 1) throw new Error('Installed package does not identify one desktop executable')
-    executable = binaries[0]
+    report.stages.push('package-manager-install-completed')
+    executable = await installedExecutable()
+    await access(executable)
     installation = dirname(executable)
     const runtime = JSON.parse(await readFile(join(installation, 'resources/system3-runtime/runtime-manifest.json'), 'utf8'))
     verifyInstalledIdentity(runtime, build)
@@ -263,7 +285,7 @@ async function run(installer, reportDirectory) {
     report.stages.push('package-uninstalled')
     report.passed = true
   } catch (error) {
-    report.failure = { stage: report.stages.at(-1) ?? 'before-install', type: error.name, message: redactDiagnostic(error.message), code: error.code, signal: error.signal, killed: error.killed }
+    report.failure = { stage: report.stages.at(-1) ?? 'before-install', type: error.name, message: redactDiagnostic(error.message), command: error.cmd ? redactDiagnostic(error.cmd) : undefined, code: error.code, signal: error.signal, killed: error.killed }
     throw new Error(`Linux installed qualification failed after ${report.failure.stage}; see report.json`)
   } finally {
     try { await close() } catch (error) { report.cleanupFailed = true }
@@ -286,11 +308,10 @@ async function run(installer, reportDirectory) {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
-  const args = process.argv.slice(2)
-  if (args.length !== 4 || args[0] !== '--installer' || args[2] !== '--report-dir') {
-    console.error('Usage: node scripts/product-linux-smoke.mjs --installer <deb> --report-dir <directory>')
-    process.exitCode = 1
-  } else {
-    await run(resolve(args[1]), resolve(args[3])).catch(error => { console.error(error.message); process.exitCode = 1 })
-  }
+  try {
+    const { values } = parseArgs({ options: { installer: { type: 'string' }, 'report-dir': { type: 'string' },
+      'expected-source': { type: 'string' }, 'build-run-id': { type: 'string' } }, allowPositionals: false })
+    if (!values.installer || !values['report-dir']) throw new Error('Usage: --installer <deb> --report-dir <directory> [--expected-source <sha> --build-run-id <id>]')
+    await run(resolve(values.installer), resolve(values['report-dir']), values['expected-source'], values['build-run-id'])
+  } catch (error) { console.error(error.message); process.exitCode = 1 }
 }
