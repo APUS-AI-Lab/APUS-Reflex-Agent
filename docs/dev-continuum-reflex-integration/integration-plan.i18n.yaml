@@ -1,0 +1,22 @@
+# Bilingual-pair consistency record for integration-plan.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/dev-continuum-reflex-integration/integration-plan.md
+/continuum-reflex-control:
+  en: b0bfb0c2617ff366
+  zh: c7d11fd546ae99a0
+/continuum-reflex-control/section:
+  en: 48b1cc4ac076d97c
+  zh: 48b1cc4ac076d97c
+/continuum-reflex-control/section~2:
+  en: adf273822143d680
+  zh: adf273822143d680
+/continuum-reflex-control/section~3:
+  en: eaed1cb93af9fee4
+  zh: eaed1cb93af9fee4
+/continuum-reflex-control/section~4:
+  en: 0211e9bd043b5df1
+  zh: 0211e9bd043b5df1
+/continuum-reflex-control/section~5:
+  en: af31339684225275
+  zh: af31339684225275

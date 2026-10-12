@@ -486,3 +486,17 @@ PPT v2为4页主讲+2页备查，实际Keynote打开、六页备注回读和PDF�
 #### Review
 
 本轮只修复测试 fixture 的 Node 22 loader 兼容性并同步有意变更的 snapshot 期望，没有修改真实模型验收标准；真实 Codex 语义偏航闭环、签名/公证包和最终合并仍未完成。
+
+## Release candidate: Continuum + Reflex integration (2026-10-11)
+
+- [x] Add opt-in production user-message admission with exact Session source references.
+- [x] Add agent-loop focused full-chain test: input -> memory-record -> replay/restart -> recall -> model-visible request context.
+- [x] Keep original profile and no-Jev behavior unchanged; prove explicit negative control.
+- [x] Re-run build, typecheck, lint, config/catalog/persistence/doc gates and targeted bilateral regression.
+- [x] Re-run real Jev + DeepSeek evaluation with ephemeral credentials.
+- [x] Audit open-source release files, package metadata, docs, CI, secrets, and versioning.
+- [x] Record release blockers and publish-readiness decision in the worktree handoff and release-readiness document.
+- [x] Run production plugin-composition durable E2E with flush/restart/recall/attribution and explicit negative control; shipped-profile subprocess evidence remains separate.
+- [ ] Run shipped-profile staging black-box E2E before public tag.
+- [x] Resolve the `reflex-context` semantic E2E failure with deterministic preservation of explicit precision/file-integrity constraints; selected real Jev matrix now passes 6/6.
+- [ ] Fix or owner-assign pre-existing full-suite failures before public tag.

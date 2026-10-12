@@ -264,6 +264,27 @@ it('keeps task-frame constraints even when the semantic response would remove th
   expect(JSON.stringify(h.agent.session.deriveMessages())).not.toContain('historical unrelated details')
 })
 
+it('keeps explicit precision and file-integrity constraints without a task-frame record', async () => {
+  const h = await setup()
+  h.append('财务处理必须使用 Decimal，不能使用浮点数；原始 CSV 文件不可修改。')
+  h.append('已结束的旅行记录与当前软件任务无关，可以删除。')
+  h.append('latest financial task')
+  await h.step()
+  const visible = JSON.stringify(h.agent.session.deriveMessages())
+  expect(visible).toContain('Decimal')
+  expect(visible).toContain('原始 CSV 文件不可修改')
+  expect(visible).not.toContain('已结束的旅行记录')
+})
+
+it('does not unlock a protected fragment for an unrelated replacement request', async () => {
+  const h = await setup()
+  h.append('财务处理必须使用 Decimal，不能使用浮点数。')
+  h.append('请替换之前的旅行计划。')
+  h.append('latest financial task')
+  await h.step()
+  expect(JSON.stringify(h.agent.session.deriveMessages())).toContain('Decimal')
+})
+
 it('restores active memory through the model tool and enforces recovery budgets', async () => {
   const h = await setup()
   const original = h.append('archived travel details that can be restored through a stable memory reference')

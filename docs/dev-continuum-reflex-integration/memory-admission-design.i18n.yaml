@@ -1,0 +1,22 @@
+# Bilingual-pair consistency record for memory-admission-design.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/dev-continuum-reflex-integration/memory-admission-design.md
+/continuum-user-message-admission-design:
+  en: 654a5db4f15cf071
+  zh: b384d715893443f8
+/continuum-user-message-admission-design/goal:
+  en: 799c4d04c66a0374
+  zh: c97392985388bffa
+/continuum-user-message-admission-design/architecture:
+  en: a7e56472b11bd3c8
+  zh: 6150d900a0920ce9
+/continuum-user-message-admission-design/admission-contract:
+  en: 2be3c71ba6313a5f
+  zh: 4ab9323bee9d7109
+/continuum-user-message-admission-design/files:
+  en: 8daa52d51c3a4695
+  zh: d3fca92e1ff1b6f9
+/continuum-user-message-admission-design/verification:
+  en: 2eb736bbe4b68ce3
+  zh: d4494d2f6dc6a83b

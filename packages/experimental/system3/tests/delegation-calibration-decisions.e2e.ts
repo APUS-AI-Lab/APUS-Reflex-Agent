@@ -30,8 +30,8 @@ const tasks = [
   ...readdirSync(probesDir).sort().map(file => JSON.parse(readFileSync(new URL(file, probesDir), 'utf8')) as TaskMeta),
 ]
 const deployment = readFileSync(new URL('../../../../deploy/system3/runtime.patch.yml', import.meta.url), 'utf8')
-const endpoint = /endpoint: (\S+)/.exec(deployment)?.[1]
-const jevModel = /model: (APUS-\S+)/.exec(deployment)?.[1]
+const endpoint = process.env.JEV_ENDPOINT ?? 'https://owb1q1vidflfhp-8086.proxy.runpod.net'
+const jevModel = process.env.JEV_MODEL ?? 'APUS-OpenJev-v1-9B-5949'
 const minConfidence = Number(/entryRouting:[\s\S]*?minConfidence: ([\d.]+)/.exec(deployment)?.[1])
 // A candidate wording under evaluation may replace the deployed one; the report records which was used.
 const codexDescription = process.env.SYSTEM3_CALIBRATION_CODEX_DESCRIPTION ?? /- id: codex\n\s+description: (.+)/.exec(deployment)?.[1]

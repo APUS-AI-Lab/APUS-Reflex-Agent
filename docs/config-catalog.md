@@ -1015,6 +1015,31 @@ export interface Config {
 ```
 <!-- END GENERATED config-catalog:@deepseek-ai/dsh-experimental-computer-use-cua-driver-mcp -->
 
+<!-- BEGIN GENERATED config-catalog:@deepseek-ai/dsh-experimental-continuum-jev -->
+<a id="deepseek-aidsh-experimental-continuum-jev"></a>
+
+## `@deepseek-ai/dsh-experimental-continuum-jev`
+
+- `source`: [`packages/experimental/continuum-jev/src/index.ts:76`](../packages/experimental/continuum-jev/src/index.ts)
+
+```ts config-catalog
+/** Profile configuration for the optional automatic Continuum selector. */
+export interface ContinuumJevProfileConfig {
+  /** Selector mode; off leaves the deterministic baseline in place. */
+  readonly mode: ContinuumJevMode
+  /** Minimum Jev confidence required to accept a selected candidate. */
+  readonly minConfidence: number
+  /** Maximum provider wait in milliseconds; omitted means no adapter timeout. */
+  readonly timeoutMs?: number
+  /** Maximum number of sequential candidate selections; defaults to one. */
+  readonly maxSelections?: number
+}
+
+/** Controller mode; only active mode lets Jev replace the deterministic choice. */
+export type ContinuumJevMode = 'off' | 'shadow' | 'active'
+```
+<!-- END GENERATED config-catalog:@deepseek-ai/dsh-experimental-continuum-jev -->
+
 <!-- BEGIN GENERATED config-catalog:@deepseek-ai/dsh-experimental-inspector -->
 <a id="deepseek-aidsh-experimental-inspector"></a>
 
@@ -1386,7 +1411,7 @@ export interface ReflexSupervisionConfig extends System3DecisionSettings {
   readonly cooldownMs: number
   /** Maximum reserved automatic deliveries per Goal, including unconfirmed acknowledgements. */
   readonly maxInterventions: number
-  /** Milliseconds after accepted advice before the first assessment; inconclusive results wait for new evidence. */
+  /** Milliseconds after accepted advice before the first assessment; unverified improvement waits for new evidence. */
   readonly feedbackMs: number
 }
 
@@ -4768,6 +4793,7 @@ These load from a `cordis.yml` entry with no `config:` block; they declare no co
 | `@deepseek-ai/dsh-client-ui-session` | — | [`packages/client/ui-session/src/index.ts`](../packages/client/ui-session/src/index.ts) |
 | `@deepseek-ai/dsh-client-ui-settings` | — | [`packages/client/ui-settings/src/index.ts`](../packages/client/ui-settings/src/index.ts) |
 | `@deepseek-ai/dsh-client-ui-settings-agent-loop` | — | [`packages/client/ui-settings-agent-loop/src/index.ts`](../packages/client/ui-settings-agent-loop/src/index.ts) |
+| `@deepseek-ai/dsh-client-ui-settings-continuum` | — | [`packages/client/ui-settings-continuum/src/index.ts`](../packages/client/ui-settings-continuum/src/index.ts) |
 | `@deepseek-ai/dsh-client-ui-settings-general` | — | [`packages/client/ui-settings-general/src/index.ts`](../packages/client/ui-settings-general/src/index.ts) |
 | `@deepseek-ai/dsh-client-ui-settings-plugin-inventory` | — | [`packages/client/ui-settings-plugin-inventory/src/index.ts`](../packages/client/ui-settings-plugin-inventory/src/index.ts) |
 | `@deepseek-ai/dsh-client-ui-settings-plugins` | — | [`packages/client/ui-settings-plugins/src/index.ts`](../packages/client/ui-settings-plugins/src/index.ts) |
@@ -4877,6 +4903,7 @@ Imported as libraries by other packages; a `cordis.yml` cannot load them.
 | `@deepseek-ai/dsh-client-ui-slots` | — | [`packages/client/ui-slots/src/index.ts`](../packages/client/ui-slots/src/index.ts) |
 | `@deepseek-ai/dsh-client-web` | — | [`packages/client/web/src/index.ts`](../packages/client/web/src/index.ts) |
 | `@deepseek-ai/dsh-cmdline` | — | [`packages/boot/cmdline/src/index.ts`](../packages/boot/cmdline/src/index.ts) |
+| `@deepseek-ai/dsh-continuum` | — | [`packages/context/continuum/src/index.ts`](../packages/context/continuum/src/index.ts) |
 | `@deepseek-ai/dsh-deque` | — | [`packages/util/deque/src/index.ts`](../packages/util/deque/src/index.ts) |
 | `@deepseek-ai/dsh-experimental-agent-team-profile` | — | [`packages/experimental/agent-team-profile/src/index.ts`](../packages/experimental/agent-team-profile/src/index.ts) |
 | `@deepseek-ai/dsh-experimental-browser-use-runtime` | — | [`packages/experimental/browser-use-runtime/src/index.ts`](../packages/experimental/browser-use-runtime/src/index.ts) |

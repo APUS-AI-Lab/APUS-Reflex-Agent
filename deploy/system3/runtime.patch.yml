@@ -81,6 +81,22 @@
 - insert:
     - id: ui-system3
       name: ../../packages/experimental/client-ui-system3/lib/index.js
+    - id: continuum-jev
+      name: ../../packages/experimental/continuum-jev/lib/index.js
+      config:
+        mode: !!js 'process.env.CONTINUUM_MEMORY_MODE || "off"'
+        minConfidence: 0.8
+    - id: continuum-memory
+      name: ../../packages/context/continuum/lib/index.js
+      config:
+        # The profile keeps the feature off unless the protected deployment environment opts in.
+        enabled: !!js 'process.env.CONTINUUM_MEMORY_ENABLED === "true"'
+        mode: !!js 'process.env.CONTINUUM_MEMORY_MODE || "shadow"'
+        admission: !!js 'process.env.CONTINUUM_MEMORY_ADMISSION || "explicit"'
+        scopes: !!js 'JSON.parse(process.env.CONTINUUM_MEMORY_SCOPES || "[\"workspace\"]")'
+        maxCandidates: 8
+        maxExcerptBytes: 2048
+        maxTotalBytes: 8192
     - id: system3
       name: ../../packages/experimental/system3/lib/index.js
       config:

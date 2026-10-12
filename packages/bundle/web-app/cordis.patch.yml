@@ -408,6 +408,9 @@
     - id: ui-settings-agent-loop
       name: '@deepseek-ai/dsh-client-ui-settings-agent-loop'
 
+    - id: ui-settings-continuum
+      name: '@deepseek-ai/dsh-client-ui-settings-continuum'
+
     - id: ui-settings-subagent
       name: '@deepseek-ai/dsh-client-ui-settings-subagent'
 

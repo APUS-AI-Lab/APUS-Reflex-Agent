@@ -1,0 +1,21 @@
+- id: agent-default-model
+  config:
+    provider: continuum-recording
+    model: continuum-recording
+
+- insert:
+    - id: continuum-recording-llm
+      name: ./continuum-recording-llm.ts
+    - id: jev
+      name: ../../../../../../../packages/experimental/apus-dsh-jev-plugin/lib/index.js
+      config:
+        endpoint: http://127.0.0.1:1
+        model: test
+        apiKeyEnv: JEV_API_KEY
+    - id: continuum-memory
+      name: ../../../../../../../packages/context/continuum/lib/index.js
+      config:
+        enabled: true
+        mode: active
+        admission: user-message
+        scopes: [workspace]

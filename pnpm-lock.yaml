@@ -1140,6 +1140,9 @@ importers:
       '@deepseek-ai/dsh-client-ui-settings':
         specifier: workspace:*
         version: link:../../../packages/client/ui-settings
+      '@deepseek-ai/dsh-client-ui-settings-continuum':
+        specifier: workspace:*
+        version: link:../../../packages/client/ui-settings-continuum
       '@deepseek-ai/dsh-client-ui-settings-general':
         specifier: workspace:*
         version: link:../../../packages/client/ui-settings-general
@@ -1212,6 +1215,9 @@ importers:
       '@deepseek-ai/dsh-config-editor':
         specifier: workspace:*
         version: link:../../../packages/boot/config-editor
+      '@deepseek-ai/dsh-continuum':
+        specifier: workspace:*
+        version: link:../../../packages/context/continuum
       '@deepseek-ai/dsh-cordis-client-runner':
         specifier: workspace:*
         version: link:../../../packages/extensions/cordis-client-runner
@@ -1245,6 +1251,9 @@ importers:
       '@deepseek-ai/dsh-experimental-client-ui-system3':
         specifier: workspace:*
         version: link:../../../packages/experimental/client-ui-system3
+      '@deepseek-ai/dsh-experimental-continuum-jev':
+        specifier: workspace:*
+        version: link:../../../packages/experimental/continuum-jev
       '@deepseek-ai/dsh-experimental-system3':
         specifier: workspace:*
         version: link:../../../packages/experimental/system3
@@ -3265,6 +3274,9 @@ importers:
       '@deepseek-ai/dsh-client-ui-settings-agent-loop':
         specifier: workspace:*
         version: link:../../client/ui-settings-agent-loop
+      '@deepseek-ai/dsh-client-ui-settings-continuum':
+        specifier: workspace:*
+        version: link:../../client/ui-settings-continuum
       '@deepseek-ai/dsh-client-ui-settings-general':
         specifier: workspace:*
         version: link:../../client/ui-settings-general
@@ -5519,6 +5531,36 @@ importers:
         specifier: ^18.2.0
         version: 18.3.1
 
+  packages/client/ui-settings-continuum:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:~
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-client-locale':
+        specifier: workspace:*
+        version: link:../locale
+      '@deepseek-ai/dsh-client-store':
+        specifier: workspace:*
+        version: link:../store
+      '@deepseek-ai/dsh-client-ui-primitives':
+        specifier: workspace:*
+        version: link:../ui-primitives
+      '@deepseek-ai/dsh-client-ui-renderer':
+        specifier: workspace:*
+        version: link:../ui-renderer
+      '@deepseek-ai/dsh-client-ui-settings':
+        specifier: workspace:*
+        version: link:../ui-settings
+      '@deepseek-ai/dsh-client-ui-slots':
+        specifier: workspace:*
+        version: link:../ui-slots
+      '@types/react':
+        specifier: ~18.3.1
+        version: 18.3.31
+      react:
+        specifier: ^18.2.0
+        version: 18.3.1
+
   packages/client/ui-settings-general:
     dependencies:
       '@deepseek-ai/schemastery':
@@ -7196,6 +7238,27 @@ importers:
         specifier: workspace:*
         version: link:../../core/tools
 
+  packages/context/continuum:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:~
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-agent':
+        specifier: workspace:*
+        version: link:../../core/agent
+      '@deepseek-ai/dsh-brand':
+        specifier: workspace:*
+        version: link:../../util/brand
+      '@deepseek-ai/dsh-llm':
+        specifier: workspace:*
+        version: link:../../llm/llm
+      '@deepseek-ai/dsh-session':
+        specifier: workspace:*
+        version: link:../../core/session
+      '@deepseek-ai/dsh-session-persistence':
+        specifier: workspace:*
+        version: link:../../session/session-persistence
+
   packages/context/file-reference:
     devDependencies:
       '@deepseek-ai/cordis':
@@ -7510,6 +7573,9 @@ importers:
       '@deepseek-ai/dsh-system-prompt':
         specifier: workspace:*
         version: link:../system-prompt
+      '@deepseek-ai/dsh-token-meter':
+        specifier: workspace:*
+        version: link:../../llm/token-meter
       '@deepseek-ai/dsh-tools':
         specifier: workspace:*
         version: link:../tools
@@ -8693,6 +8759,18 @@ importers:
       '@deepseek-ai/dsh-tools':
         specifier: workspace:*
         version: link:../../core/tools
+
+  packages/experimental/continuum-jev:
+    dependencies:
+      '@deepseek-ai/dsh-continuum':
+        specifier: workspace:*
+        version: link:../../context/continuum
+      '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin':
+        specifier: workspace:*
+        version: link:../apus-dsh-jev-plugin
+      '@deepseek-ai/dsh-session':
+        specifier: workspace:*
+        version: link:../../core/session
 
   packages/experimental/inspector:
     dependencies:
@@ -17064,10 +17142,12 @@ packages:
 
   '@modelcontextprotocol/server-everything@2026.7.4':
     resolution: {integrity: sha512-ydMW/M6rk9tK23b+U38trsNLHhd5eF+ntiv2Vr+RPMDhbiKY/IKrZU25ukvSXVPUBvy7TxTPWpeV4KcYcXg72w==}
+    deprecated: 'Date-based versions are no longer published. This package has resumed semantic versioning at 1.0.0: install the latest version.'
     hasBin: true
 
   '@modelcontextprotocol/server-filesystem@2026.7.10':
     resolution: {integrity: sha512-Mmjg4anFBD5OzbPnGJOA0jPPN8645ERhQk38HQLpSenx1ox9bfdPkmAzUnNjeQtqQGFLtKe13J20RtLBmUKMZA==}
+    deprecated: 'Date-based versions are no longer published. This package has resumed semantic versioning at 1.0.0: install the latest version.'
     hasBin: true
 
   '@modelcontextprotocol/server@2.0.0':

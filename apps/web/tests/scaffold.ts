@@ -682,15 +682,37 @@ export async function launchWebScaffold(options: LaunchOptions = {}): Promise<We
   // Live fields use a shared deployment layer; process-specific ports and roots stay in CLI overlays.
   const formEntries = new Set(['agent-default-model', 'agent-preset-registry', 'llm-deepseek', 'llm-pi-ai',
     'web-search-deepseek', 'agent-loop', 'subagent', 'bash-sandbox', 'pwsh-sandbox',
-    'ui-theme', 'locale', 'ui-chat', 'ui-conversation', 'ui-settings', 'ui-settings-general', 'permission'])
+    'ui-theme', 'locale', 'ui-chat', 'ui-conversation', 'ui-settings', 'ui-settings-general', 'permission',
+    'continuum-memory', 'continuum-jev', 'include:continuum-memory', 'include:continuum-jev'])
   const formDefaults: PatchOptions[] = []
   const processOverlays = overlayPatches.map((patch) => {
-    if (patch.id === undefined || !formEntries.has(patch.id) || patch.config === undefined) return patch
-    const config: unknown = patch.config
-    formDefaults.push({ id: patch.id, config })
-    const ordinary = { ...patch }
-    Reflect.deleteProperty(ordinary, 'config')
-    return ordinary
+    if (patch.id !== undefined && formEntries.has(patch.id) && patch.config !== undefined) {
+      const config: unknown = patch.config
+      formDefaults.push({ id: patch.id, config })
+      const ordinary = { ...patch }
+      Reflect.deleteProperty(ordinary, 'config')
+      return ordinary
+    }
+    if (patch.insert === undefined) return patch
+    const insert: typeof patch.insert = []
+    const formInsert: NonNullable<PatchOptions['insert']> = []
+    for (const entry of patch.insert) {
+      if (entry.id === undefined || !formEntries.has(entry.id) || entry.config === undefined) {
+        insert.push(entry)
+        continue
+      }
+      const ordinary = { ...entry }
+      Reflect.deleteProperty(ordinary, 'config')
+      formInsert.push(ordinary)
+      const config: unknown = entry.config
+      formDefaults.push({ id: entry.id, ...entry.name === undefined ? {} : { name: entry.name }, config })
+    }
+    if (formInsert.length > 0) formDefaults.unshift({ insert: formInsert })
+    if (insert.length === 0) {
+      const { insert: _ignored, ...withoutInsert } = patch
+      return withoutInsert
+    }
+    return { ...patch, insert }
   })
 
   // Sessions inherit the gateway's process.cwd() default; run the boot from

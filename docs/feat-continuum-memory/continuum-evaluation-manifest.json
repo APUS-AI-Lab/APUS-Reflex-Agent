@@ -1,0 +1,124 @@
+{
+  "version": 1,
+  "status": "jev-real-pass-deepseek-pass-continuum-evaluator-pass",
+  "source": "feat-continuum-memory worktree",
+  "variants": [
+    {
+      "id": "A0",
+      "name": "original-harness",
+      "continuum": false,
+      "jev": false,
+      "summaryTree": false,
+      "stableCache": false
+    },
+    {
+      "id": "A1",
+      "name": "original-harness-with-existing-history-query",
+      "continuum": false,
+      "jev": false,
+      "summaryTree": false,
+      "stableCache": false
+    },
+    {
+      "id": "B",
+      "name": "continuum-deterministic",
+      "continuum": true,
+      "jev": false,
+      "summaryTree": false,
+      "stableCache": false
+    },
+    {
+      "id": "C",
+      "name": "continuum-reflex",
+      "continuum": true,
+      "jev": true,
+      "summaryTree": false,
+      "stableCache": false
+    },
+    {
+      "id": "U",
+      "name": "reference-harness-reproduction",
+      "continuum": false,
+      "jev": false,
+      "summaryTree": true,
+      "stableCache": true
+    }
+  ],
+  "tasks": [
+    {
+      "id": "exact-fact",
+      "input": "Which invoice was disputed?",
+      "expected": "INV-42",
+      "source": "fixture:invoice"
+    },
+    {
+      "id": "correction",
+      "input": "The cutover moved to Monday; continue the task.",
+      "expected": "Monday supersedes Friday",
+      "source": "fixture:migration"
+    },
+    {
+      "id": "scope-denial",
+      "input": "Recall the private migration note.",
+      "expected": "no private record injected",
+      "source": "fixture:private"
+    },
+    {
+      "id": "restart-replay",
+      "input": "Continue after process restart.",
+      "expected": "same Session-backed record IDs",
+      "source": "fixture:replay"
+    }
+  ],
+  "requiredEvidence": [
+    "provider and model identifiers",
+    "Session/request identifiers",
+    "retrieved record IDs and source event sequences",
+    "selected IDs and baseline IDs",
+    "actual model usage and latency",
+    "final file or database assertions",
+    "errors, retries, cancellations, and skips"
+  ],
+  "observed": {
+    "jev": {
+      "status": "pass",
+      "evidence": "continuum-live-e2e.json",
+      "model": "APUS-OpenJev-v1-9B-5949"
+    },
+    "deepseek": {
+      "status": "pass",
+      "evidence": "continuum-deepseek-e2e.json",
+      "endpoint": "https://api.deepseek.com/anthropic",
+      "testFiles": 2,
+      "passed": 21,
+      "skipped": 0,
+      "failed": 0,
+      "detail": "Protected official endpoint run passed adapter 13/13 and runtime 8/8 with both optional image flags enabled; in-history updates and image upload/reference/delete checks passed.",
+      "model": "deepseek-v4-pro"
+    },
+    "evaluator": {
+      "status": "pass",
+      "evidence": "continuum-evaluation-results.json",
+      "total": 20,
+      "matched": 11,
+      "failedAssertions": 0,
+      "detail": "All 20 variant/task model requests completed with protected credentials. All 11 applicable assertions passed: A1 existing-history 3/3, B deterministic 4/4, C Reflex 4/4. A0/U are not-applicable controls. Scope filtering excludes private records before Jev.",
+      "applicable": 11
+    },
+    "keylessSnapshot": {
+      "status": "pass-with-platform-skips",
+      "command": "pnpm run test:snapshot",
+      "passed": 180,
+      "failed": 0,
+      "skipped": 2,
+      "detail": "Keyless replay suite completed with 180 passed, 0 failed, and 2 expected Windows-only pwsh scenarios skipped on macOS. Browser-use-stagehand-native now passes after moving fixture transpilation into resolve-time data modules; no Continuum snapshot failed."
+    }
+  },
+  "policy": "Missing credentials, unreachable endpoints, or skipped required variants remain pending and are not treated as success.",
+  "executor": {
+    "path": "scripts/continuum-evaluation.ts",
+    "status": "real-run-pass",
+    "lastRun": "20/20 requests completed; 11/11 applicable assertions passed; B/C 8/8; A1 3/3; A0/U not-applicable",
+    "strictMissingCredentials": true
+  }
+}

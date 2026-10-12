@@ -759,6 +759,43 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
+    key: 'continuumMemory',
+    summary: 'Public service seam used by profile consumers and tests.',
+    description: 'Public service seam used by profile consumers and tests.',
+    methods: [
+      {
+        signature: 'state(): ReturnType<ContinuumMemoryController[\'state\']>',
+        description: 'Return the current switch decision for this profile.',
+        parameters: [],
+        returns: 'The effective feature switch decision.',
+      },
+      {
+        signature: 'controller(agent: Agent): ContinuumMemoryController',
+        description: 'Get the controller associated with one Agent, restoring it from Session events once.',
+        parameters: [{ name: 'agent', description: 'Agent whose Session owns the memory projection.' }],
+        returns: 'The controller for the Agent\'s memory projection.',
+      },
+      {
+        signature: 'create(agent: Agent, record: NewMemoryRecord): MemoryRecord',
+        description: 'Admit and persist one source-backed record in the Agent\'s Session.',
+        parameters: [{ name: 'agent', description: 'Agent whose Session receives the record event.' }, { name: 'record', description: 'Source-backed record to admit.' }],
+        returns: 'The created immutable record.',
+      },
+      {
+        signature: 'supersede(agent: Agent, id: MemoryId, expectedRevision: number, replacement: NewMemoryRecord): MemoryRecord',
+        description: 'Supersede and persist one record correction.',
+        parameters: [{ name: 'agent', description: 'Agent whose Session receives the correction event.' }, { name: 'id', description: 'Existing record identifier.' }, { name: 'expectedRevision', description: 'Revision observed by the caller.' }, { name: 'replacement', description: 'Source-backed successor record.' }],
+        returns: 'The created successor record.',
+      },
+      {
+        signature: 'deactivate(agent: Agent, id: MemoryId, expectedRevision: number): MemoryRecord',
+        description: 'Deactivate and persist one record.',
+        parameters: [{ name: 'agent', description: 'Agent whose Session receives the deactivation event.' }, { name: 'id', description: 'Existing record identifier.' }, { name: 'expectedRevision', description: 'Revision observed by the caller.' }],
+        returns: 'The deactivated immutable record.',
+      },
+    ],
+  },
+  {
     key: 'credentials',
     summary: 'Abstract credential service over two key spaces that answer two questions.',
     description: 'Abstract credential service over two key spaces that answer two questions.\n\nA CredentialRef answers "what is behind this environment-variable name", layered over the process environment, the provider-managed store, and `.env` files. One seam-wide rule binds that half: an empty stored value is absent everywhere — `resolve` skips it, `describe` reports it unconfigured — so a blank never masquerades as a configured secret.\n\nA CredentialKey answers "what credential does this plugin hold for this id". Nothing can layer here — an authorization grant has no environment to be read from — so presence of the record is the whole fact, and modifyRecord is the only write path because a correct write depends on the current value (a token refresh is read-decide-replace under one lock).',
@@ -4991,6 +5028,38 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface ContinuableSubagentDescriptorData extends SubagentDescriptorBase {\n    readonly mode: \'continuable\';\n    readonly label: string;\n    readonly agentProvider?: string;\n    readonly agentModel?: string;\n    readonly agentReasoningEffort?: ReasoningEffortId;\n    readonly persona?: string;\n    readonly toolFilter?: ToolRestriction;\n}',
   },
   {
+    name: 'ContinuumMemoryController',
+    declaration: 'export class ContinuumMemoryController {\n    constructor(private readonly store: MemoryRecordStore, config: ContinuumMemorySwitch);\n    state(): ContinuumMemorySwitchDecision;\n    setSwitch(config: ContinuumMemorySwitch): ContinuumMemorySwitchDecision;\n    beginRead(principal: ContinuumMemoryPrincipal): ContinuumMemoryReadTicket | undefined;\n    read(ticket: ContinuumMemoryReadTicket, config: MemoryRetrievalConfig, query: string): MemoryWorkingSet | undefined;\n    summary(ticket: ContinuumMemoryReadTicket, config: ContinuumSummaryTreeConfig = {}): ContinuumSummaryTreeNode | undefined;\n    zoom(ticket: ContinuumMemoryReadTicket, path: string, config: ContinuumSummaryTreeConfig = {}): readonly ContinuumSummarySource[] | undefined;\n    isCurrent(ticket: ContinuumMemoryReadTicket): boolean;\n    observe(record: MemoryRecord): void;\n    supersede(record: MemoryRecord): void;\n    deactivate(id: MemoryId, expectedRevision: number): MemoryRecord;\n}',
+  },
+  {
+    name: 'ContinuumMemoryPrincipal',
+    declaration: 'export interface ContinuumMemoryPrincipal {\n    readonly scopes: readonly string[];\n}',
+  },
+  {
+    name: 'ContinuumMemoryReadTicket',
+    declaration: 'export interface ContinuumMemoryReadTicket {\n    readonly generation: number;\n    readonly principal: ContinuumMemoryPrincipal;\n}',
+  },
+  {
+    name: 'ContinuumMemorySwitch',
+    declaration: 'export interface ContinuumMemorySwitch {\n    readonly enabled: boolean;\n    readonly mode: \'off\' | \'shadow\' | \'active\';\n    readonly reflexMounted: boolean;\n}',
+  },
+  {
+    name: 'ContinuumMemorySwitchDecision',
+    declaration: 'export interface ContinuumMemorySwitchDecision {\n    readonly enabled: boolean;\n    readonly mode: ContinuumMemorySwitch[\'mode\'];\n    readonly reason: \'disabled\' | \'reflex-required\' | \'ready\';\n}',
+  },
+  {
+    name: 'ContinuumSummarySource',
+    declaration: 'export interface ContinuumSummarySource {\n    readonly recordId: MemoryRecord[\'id\'];\n    readonly sourceRefs: readonly MemorySourceRef[];\n}',
+  },
+  {
+    name: 'ContinuumSummaryTreeConfig',
+    declaration: 'export interface ContinuumSummaryTreeConfig {\n    readonly maxItemsPerLeaf?: number;\n    readonly maxSummaryBytes?: number;\n}',
+  },
+  {
+    name: 'ContinuumSummaryTreeNode',
+    declaration: 'export interface ContinuumSummaryTreeNode {\n    readonly path: string;\n    readonly label: string;\n    readonly summary: string;\n    readonly itemIds: readonly string[];\n    readonly children: readonly ContinuumSummaryTreeNode[];\n}',
+  },
+  {
     name: 'CordisDynamicPackageId',
     declaration: 'export type CordisDynamicPackageId = Branded<\'CordisDynamicPackageId\'>;',
   },
@@ -5875,6 +5944,46 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type McpResourceRequest = {\n    method: \'resources/list\' | \'resources/templates/list\';\n    cursor?: string;\n} | {\n    method: \'resources/read\';\n    uri: string;\n};',
   },
   {
+    name: 'MemoryCandidate',
+    declaration: 'export interface MemoryCandidate {\n    readonly id: MemoryId;\n    readonly record: MemoryRecord;\n    readonly score: number;\n    readonly excerpt: string;\n}',
+  },
+  {
+    name: 'MemoryId',
+    declaration: 'export type MemoryId = Branded<\'MemoryId\'>;',
+  },
+  {
+    name: 'MemoryIndexRebuildResult',
+    declaration: 'export interface MemoryIndexRebuildResult {\n    readonly indexedRecords: number;\n    readonly pendingRecords: number;\n}',
+  },
+  {
+    name: 'MemoryRecord',
+    declaration: 'export interface MemoryRecord {\n    readonly id: MemoryId;\n    readonly revision: number;\n    readonly kind: \'fact\' | \'task\' | \'decision\';\n    readonly scope: string;\n    readonly content: string;\n    readonly sourceRefs: readonly [\n        MemorySourceRef,\n        ...MemorySourceRef[]\n    ];\n    readonly status: MemoryStatus;\n    readonly supersedes?: MemoryId;\n}',
+  },
+  {
+    name: 'MemoryRecordIndex',
+    declaration: 'export class MemoryRecordIndex {\n    rebuild(records: readonly MemoryRecord[]): MemoryIndexRebuildResult;\n    enqueue(record: MemoryRecord): void;\n    rebuildPending(limit: number): MemoryIndexRebuildResult;\n    pendingCount(): number;\n    indexedCount(): number;\n    idsForTerms(terms: readonly string[]): readonly MemoryId[];\n}',
+  },
+  {
+    name: 'MemoryRecordStore',
+    declaration: 'export class MemoryRecordStore {\n    create(record: NewMemoryRecord): MemoryRecord;\n    supersede(id: MemoryId, expectedRevision: number, replacement: NewMemoryRecord): MemoryRecord;\n    deactivate(id: MemoryId, expectedRevision: number): MemoryRecord;\n    get(id: MemoryId): MemoryRecord | undefined;\n    snapshot(): readonly MemoryRecord[];\n}',
+  },
+  {
+    name: 'MemoryRetrievalConfig',
+    declaration: 'export interface MemoryRetrievalConfig {\n    readonly maxCandidates: number;\n    readonly maxExcerptBytes: number;\n    readonly maxTotalBytes: number;\n    readonly index?: MemoryRecordIndex;\n}',
+  },
+  {
+    name: 'MemorySourceRef',
+    declaration: 'export interface MemorySourceRef {\n    readonly sessionId: SessionId;\n    readonly eventSeq: SessionSeq;\n}',
+  },
+  {
+    name: 'MemoryStatus',
+    declaration: 'export type MemoryStatus = \'active\' | \'superseded\' | \'deactivated\';',
+  },
+  {
+    name: 'MemoryWorkingSet',
+    declaration: 'export interface MemoryWorkingSet {\n    readonly query: string;\n    readonly candidates: readonly MemoryCandidate[];\n    readonly text: string;\n    readonly bytes: number;\n}',
+  },
+  {
     name: 'Message',
     declaration: 'export type Message = MessageRoleMap[keyof MessageRoleMap];',
   },
@@ -6005,6 +6114,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'NativeFileApplication',
     declaration: 'export interface NativeFileApplication {\n    readonly id: string;\n    readonly name: string;\n    readonly default: boolean;\n    readonly icon: string | null;\n}',
+  },
+  {
+    name: 'NewMemoryRecord',
+    declaration: 'export type NewMemoryRecord = Omit<MemoryRecord, \'revision\' | \'status\' | \'supersedes\'>;',
   },
   {
     name: 'NotFutureError',

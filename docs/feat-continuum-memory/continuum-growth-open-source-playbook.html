@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>APUS Continuum · 传播与开源增长作战图</title>
+<style>
+:root{--ink:#172b3a;--muted:#607080;--paper:#f5f7f8;--card:#fff;--line:#dbe3e8;--blue:#1f6feb;--cyan:#08a6a6;--orange:#df6d32;--green:#16845b;--dark:#10202c;--shadow:0 12px 30px #19344b12}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.7 Inter,-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}main{max-width:1220px;margin:auto;padding:36px 24px 80px}h1{font-size:clamp(30px,4vw,52px);line-height:1.13;margin:12px 0 14px;letter-spacing:-.04em}h2{font-size:28px;line-height:1.25;margin:52px 0 14px}h3{font-size:18px;margin:0 0 8px}.eyebrow{color:var(--blue);font:700 12px/1.3 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:1.7px}.lead{font-size:21px;line-height:1.55;max-width:980px;color:#324b5c}.note{color:var(--muted);font-size:13px}.hero{background:linear-gradient(135deg,#e7f2ff,#e9fbf4 58%,#fff3e7);border:1px solid #cddfe8;border-radius:22px;padding:34px;box-shadow:var(--shadow)}.badge{display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid #cbdce8;border-radius:999px;padding:5px 12px;color:#28536f;font-size:13px;font-weight:650}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.grid.two{grid-template-columns:repeat(2,1fr)}.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:var(--shadow)}.card strong{color:var(--blue)}.quote{border-left:4px solid var(--orange);background:#fff8f2;padding:14px 18px;border-radius:0 10px 10px 0;font-size:19px}.flow{background:var(--dark);border-radius:16px;padding:18px;overflow:auto;box-shadow:var(--shadow)}svg{display:block;min-width:900px;width:100%;height:auto}.table-wrap{overflow:auto;border-radius:12px;box-shadow:var(--shadow)}table{border-collapse:collapse;width:100%;background:#fff;font-size:14px}th,td{text-align:left;vertical-align:top;border-bottom:1px solid var(--line);padding:12px 13px}th{background:#eaf1f5;color:#27465a}.pill{display:inline-block;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:700}.p1{background:#e2f2ff;color:#155da5}.p2{background:#e5f8ef;color:#13704e}.p3{background:#fff0df;color:#a24d15}.timeline{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.phase{position:relative;background:#fff;border:1px solid var(--line);border-top:5px solid var(--blue);border-radius:12px;padding:16px;min-height:190px}.phase:nth-child(2){border-top-color:var(--cyan)}.phase:nth-child(3){border-top-color:var(--orange)}.phase:nth-child(4){border-top-color:var(--green)}.phase .number{font:700 28px/1 ui-monospace,monospace;color:#b2c3cf}.check{color:var(--green);font-weight:700}.avoid{color:#a44f32;font-weight:700}.code{background:#10202c;color:#d9eef5;padding:18px;border-radius:12px;font:13px/1.65 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;overflow:auto}.footer{margin-top:52px;border-top:1px solid var(--line);padding-top:16px;color:var(--muted);font-size:13px}@media(max-width:800px){main{padding:22px 14px 60px}.grid,.grid.two{grid-template-columns:1fr}.timeline{grid-template-columns:1fr 1fr}.hero{padding:24px}h2{font-size:24px}}@media(max-width:500px){.timeline{grid-template-columns:1fr}.lead{font-size:18px}}@media print{main{max-width:none;padding:0}.card,.hero,.phase,.table-wrap{box-shadow:none}.flow{break-inside:avoid}}
+</style>
+</head>
+<body><main>
+<section class="hero">
+  <span class="eyebrow">APUS REFLEX HARNESS · CONTINUUM · 2026 GROWTH PLAYBOOK</span>
+  <h1>让 AI 记住任务，<br>而不是堆积聊天记录。</h1>
+  <p class="lead">一份面向自媒体传播、GitHub 开源和开发者增长的可执行作战图：把“无限记忆”从一句口号，转化为可演示、可复现、可贡献的产品认知。</p>
+  <p><span class="badge">核心定位</span> <strong>Session-native · Reflex-governed · Source-backed memory</strong></p>
+  <p class="note">“无限”指不被单次模型上下文窗口硬截断；不承诺无限存储、零成本或每次召回都正确。所有公开内容都应保留这个边界。</p>
+</section>
+
+<h2>00 · 技术架构：事实源、决策层与执行权分离</h2>
+<div class="card">
+  <img src="diagram/apus-continuum-architecture.svg" alt="APUS Continuum 技术架构：Session 事实源、Continuum 记忆投影、Reflex Jev 决策、主模型执行与 Session 回放" style="display:block;width:100%;height:auto">
+  <p class="note" style="margin-bottom:0">独立原图：<a href="diagram/apus-continuum-architecture.svg">SVG</a> · <a href="diagram/apus-continuum-architecture@2x.png">PNG（2×）</a>。图中把 Session 作为唯一事实源，把 Reflex/Jev 限定为有界决策层；权限、预算、执行和回放仍由 Harness 持有。</p>
+</div>
+
+<h2>01 · 一张图讲清产品价值</h2>
+<div class="flow"><svg viewBox="0 0 1160 360" role="img" aria-label="从用户痛点到传播与开源资产的转化路径"><defs><marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0 0L8 3L0 6Z" fill="#8bc1d1"/></marker><style>.b{fill:#183241;stroke:#558696;stroke-width:1.2}.f{fill:#203f4c;stroke:#55c2b4;stroke-width:1.5}.o{fill:#4b3026;stroke:#e28a54;stroke-width:1.5}.t{font:700 18px system-ui;fill:#eefaff}.s{font:13px system-ui;fill:#a9c6d0}.w{fill:none;stroke:#8bc1d1;stroke-width:2;marker-end:url(#arrow)}</style></defs><rect x="25" y="92" width="190" height="120" rx="12" class="b"/><text x="45" y="128" class="t">用户痛点</text><text x="45" y="157" class="s">重启后要重讲</text><text x="45" y="181" class="s">旧事实污染新任务</text><text x="45" y="205" class="s">无法解释为什么召回</text><rect x="270" y="92" width="215" height="120" rx="12" class="f"/><text x="290" y="128" class="t">APUS Continuum</text><text x="290" y="157" class="s">Session 唯一事实源</text><text x="290" y="181" class="s">来源 / 权限 / 版本 / 预算</text><text x="290" y="205" class="s">可重建、可撤销、可回放</text><rect x="540" y="92" width="210" height="120" rx="12" class="o"/><text x="560" y="128" class="t">Reflex / Jev</text><text x="560" y="157" class="s">判断现在该想起什么</text><text x="560" y="181" class="s">拒绝无关、过期、越权记忆</text><text x="560" y="205" class="s">同一步受控注入</text><rect x="805" y="92" width="145" height="120" rx="12" class="b"/><text x="825" y="128" class="t">体验结果</text><text x="825" y="157" class="s">跨重启续做</text><text x="825" y="181" class="s">更少重复说明</text><text x="825" y="205" class="s">有证据的回答</text><rect x="1005" y="92" width="130" height="120" rx="12" class="f"/><text x="1025" y="128" class="t">传播资产</text><text x="1025" y="157" class="s">Demo</text><text x="1025" y="181" class="s">Repo</text><text x="1025" y="205" class="s">Case study</text><path d="M215 152h55M485 152h55M750 152h55M950 152h55" class="w"/><text x="380" y="52" class="s">从“更大窗口”转向“长期任务连续性”</text><path d="M1135 245v70H120v-70" class="w"/><text x="455" y="342" class="s">每一条传播主张都回链到测试、Session 事件或真实模型证据</text></svg></div>
+
+<h2>02 · 核心叙事：从 Context Window 到 Continuity Layer</h2>
+<div class="grid"><article class="card"><h3>普通 AI 记忆</h3><p>保存聊天、生成摘要、做相似度召回。它回答“过去出现过什么”。</p></article><article class="card"><h3>APUS Continuum</h3><p>记录任务事实、纠正、权限和版本，由 Reflex 判断当前需要恢复什么。它回答“现在什么仍然有效”。</p></article><article class="card"><h3>一句话传播</h3><p><strong>让 AI 从昨天的工作继续今天的任务。</strong></p><p class="note">这比“我们有更大的上下文”更容易形成长期产品认知。</p></article></div>
+<p class="quote">不是把所有记忆都塞给模型，而是让 Reflex 决定此刻什么值得被想起。</p>
+
+<h2>03 · 自媒体传播矩阵</h2>
+<div class="table-wrap"><table><thead><tr><th>内容支柱</th><th>观众问题</th><th>标题模板</th><th>展示证据</th><th>行动入口</th></tr></thead><tbody>
+<tr><td><span class="pill p1">认知</span> 无限记忆到底是什么</td><td>为什么上下文窗口变大仍然会遗忘？</td><td>《AI 记住更多，不等于记住正确的事》</td><td>旧事实、纠正、来源回读</td><td>阅读架构图</td></tr>
+<tr><td><span class="pill p2">实战</span> 跨重启续做</td><td>AI 能否从昨天的项目继续？</td><td>《我关掉进程，再让 Agent 继续迁移任务》</td><td>JSONL Session、cold restart、同一 record ID</td><td>运行一键 Demo</td></tr>
+<tr><td><span class="pill p3">对比</span> 摘要树与缓存</td><td>摘要、向量库、缓存分别解决什么？</td><td>《摘要树不是记忆，缓存也不是事实源》</td><td>2×2 ablation、命中率、cache read ratio</td><td>查看评测 JSON</td></tr>
+<tr><td><span class="pill p1">信任</span> 可审计 Agent</td><td>为什么 AI 会召回这条内容？</td><td>《每条 AI 记忆都能找到它的 Session 来源》</td><td>sourceRefs、scope deny、supersede、replay</td><td>查看验收矩阵</td></tr>
+<tr><td><span class="pill p2">开发者</span> Jev 决策层</td><td>为什么不让主模型直接搜记忆？</td><td>《把“该不该想起”交给一个即时决策层》</td><td>off/shadow/active、timeout、fallback</td><td>Star / Fork Repo</td></tr>
+</tbody></table></div>
+
+<h2>04 · 最强 Demo：周五改到周一</h2>
+<div class="grid two"><div class="card"><h3>90 秒视频脚本</h3><ol><li>输入：“迁移安排在周五。”</li><li>输入：“纠正，改到下周一。”</li><li>关闭 Agent，重新打开。</li><li>问：“继续迁移任务。”</li><li>展示 Reflex 选择、来源事件、旧版本 supersedes 关系。</li></ol></div><div class="card"><h3>镜头必须出现的 5 个信号</h3><p><span class="check">✓</span> 旧事实没有被物理删除</p><p><span class="check">✓</span> 新事实成为当前有效版本</p><p><span class="check">✓</span> 私有 scope 没有被注入</p><p><span class="check">✓</span> 重启后 record ID 一致</p><p><span class="check">✓</span> 模型可见输入可从 Session 重放</p></div></div>
+
+<h2>05 · GitHub 开源路径</h2>
+<div class="timeline"><article class="phase"><div class="number">01</div><h3>可运行</h3><p><strong>One-command Demo</strong></p><p>默认 off；一个命令启动原版 Harness，一个 overlay 开启 Continuum。</p><p class="note">目标：让访客 5 分钟看到跨重启记忆。</p></article><article class="phase"><div class="number">02</div><h3>可理解</h3><p><strong>Architecture-first README</strong></p><p>用一张图解释 Session、Continuum、Reflex、Jev 和主模型的边界。</p><p class="note">目标：开发者能判断它是否适合自己的 Agent。</p></article><article class="phase"><div class="number">03</div><h3>可验证</h3><p><strong>Evidence in Repo</strong></p><p>提交测试、JSON 证据、E2E 命令和明确限制；不把 skip 当 pass。</p><p class="note">目标：让 Star 变成可信赖的 Fork。</p></article><article class="phase"><div class="number">04</div><h3>可贡献</h3><p><strong>Good first issues</strong></p><p>索引、summary tree、cache adapter、provider adapter、SDK replay 各有独立入口。</p><p class="note">目标：贡献者可以从一个小模块进入。</p></article></div>
+<div class="grid two" style="margin-top:16px"><div class="card"><h3>Repo 首页应在首屏回答</h3><p>它解决什么问题？为什么不是普通 RAG？怎么跑？怎么证明？哪里还没做？</p><pre class="code">pnpm install
+pnpm exec tsx scripts/continuum-demo.ts
+pnpm exec vitest run packages/context/continuum/tests
+# real Jev / DeepSeek: protected credentials only</pre></div><div class="card"><h3>GitHub 可信度资产</h3><p><span class="check">✓</span> Architecture diagram</p><p><span class="check">✓</span> Reproducible fixture</p><p><span class="check">✓</span> Acceptance matrix</p><p><span class="check">✓</span> Security / scope policy</p><p><span class="avoid">×</span> 不用“无限、零幻觉、永不遗忘”做未经证明的标题</p></div></div>
+
+<h2>06 · 传播漏斗与指标</h2>
+<div class="table-wrap"><table><thead><tr><th>阶段</th><th>用户动作</th><th>内容资产</th><th>可量化指标</th><th>禁止误读</th></tr></thead><tbody>
+<tr><td>认知</td><td>看懂问题</td><td>“为什么大窗口仍会遗忘”短视频/长图</td><td>完播率、收藏率、评论中的问题质量</td><td>曝光不等于产品理解</td></tr>
+<tr><td>兴趣</td><td>看到结果</td><td>周五→周一跨重启 Demo</td><td>Demo 点击、页面停留、Repo 访问</td><td>一次 Demo 不等于泛化能力</td></tr>
+<tr><td>验证</td><td>自己运行</td><td>Quickstart、fixture、测试命令</td><td>成功运行率、Issue 类型、Fork 后首次提交时间</td><td>下载量不等于有效采用</td></tr>
+<tr><td>信任</td><td>审查证据</td><td>验收矩阵、sourceRefs、失败记录</td><td>复现实验数、复现失败反馈、PR 质量</td><td>模型通过不等于系统全通过</td></tr>
+<tr><td>贡献</td><td>加入生态</td><td>Good first issue、模块边界、贡献指南</td><td>有效 PR、维护者响应时间、贡献者留存</td><td>Star 数不能代替社区健康</td></tr>
+</tbody></table></div>
+
+<h2>07 · 对外表达的边界</h2>
+<div class="grid two"><div class="card"><h3>推荐说法</h3><p>“可持续任务记忆”</p><p>“来源可追溯的 Agent memory”</p><p>“在有限窗口内维持任务连续性”</p><p>“Reflex-governed memory”</p></div><div class="card"><h3>避免说法</h3><p class="avoid">“真正无限记忆”</p><p class="avoid">“永不遗忘”</p><p class="avoid">“零幻觉记忆”</p><p class="avoid">“自动记住一切”</p></div></div>
+<p class="quote">APUS Continuum 不承诺 AI 记住一切；它承诺记忆有事实来源，召回有决策，注入有边界，结果可回放。</p>
+
+<h2>08 · 发布节奏</h2>
+<div class="timeline"><article class="phase"><div class="number">W1</div><h3>问题教育</h3><p>发布“上下文窗口 ≠ 任务连续性”文章和一张架构图。</p></article><article class="phase"><div class="number">W2</div><h3>场景证明</h3><p>发布周五→周一 Demo，公开 Session event 和 replay。</p></article><article class="phase"><div class="number">W3</div><h3>开源发布</h3><p>GitHub README、Quickstart、验收矩阵、真实测试证据同步上线。</p></article><article class="phase"><div class="number">W4</div><h3>社区共建</h3><p>发起 summary tree、cache、provider adapter 和 SDK issue。</p></article></div>
+
+<p class="footer">关联交付物：<a href="continuum-full-chain-acceptance.html">全链路验收矩阵</a> · <a href="continuum-memory-proposal.html">产品设计提案</a> · <a href="continuum-ablation.json">摘要树/缓存消融</a> · <a href="continuum-live-e2e.json">真实 Jev 证据</a>。所有公开声明应以仓库中当前版本测试和证据为准。</p>
+</main></body></html>
