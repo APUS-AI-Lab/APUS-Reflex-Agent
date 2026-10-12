@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-bash-local",
-  "description": "Local-subprocess implementation of the DeepSeek Harness bash executor seam",
+  "description": "Local-subprocess implementation of the APUS Reflex bash executor seam",
   "version": "0.1.7-rc.2",
   "publishConfig": {
     "access": "public"

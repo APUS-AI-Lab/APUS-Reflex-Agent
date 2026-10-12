@@ -1,4 +1,4 @@
-You are an AI agent powered by APUS Reflex Harness.
+You are an AI agent powered by APUS Reflex.
 
 You are a coding agent powered by the smoke-model model.
 

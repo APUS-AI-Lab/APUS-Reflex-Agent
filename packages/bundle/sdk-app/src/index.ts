@@ -38,7 +38,7 @@ export const Config: z<Config> = z.object({
 function sdkCommand(profile: string): Command {
   return new Command()
     .name(`dsh --profile ${profile}`)
-    .description('Serve DeepSeek Harness SDK clients over stdio JSON-RPC.')
+    .description('Serve APUS Reflex SDK clients over stdio JSON-RPC.')
     .helpOption('-h, --help', 'show this help')
     .addHelpText('after', `
 Example:

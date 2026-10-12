@@ -2,24 +2,24 @@
 # section, a hash of its English and Chinese blocks outside code blocks and generated regions.
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/feat-apus-brand/design.md
-/apus-reflex-harness-brand-unification-design:
-  en: d3fea10c611ede55
-  zh: bdeb4ec7e2c40bc5
-/apus-reflex-harness-brand-unification-design/brand-definition:
-  en: 41e9e0e920e77a6a
-  zh: 101f8f8434c3c26b
-/apus-reflex-harness-brand-unification-design/integration-architecture:
+/apus-reflex-brand-unification-design:
+  en: 22dd24335ce1abea
+  zh: 88947c682a400bfd
+/apus-reflex-brand-unification-design/brand-definition:
+  en: bb99b2e108be9098
+  zh: e8a54da058b7c45b
+/apus-reflex-brand-unification-design/integration-architecture:
   en: 3629d6f1b5283cc5
   zh: a4b17331488ae54e
-/apus-reflex-harness-brand-unification-design/file-scope:
+/apus-reflex-brand-unification-design/file-scope:
   en: 56fd1750633179fe
   zh: a451bb26dc5f6b18
-/apus-reflex-harness-brand-unification-design/api-and-compatibility-requirements:
+/apus-reflex-brand-unification-design/api-and-compatibility-requirements:
   en: f1c36126227b7a77
   zh: 5ce2330030647f99
-/apus-reflex-harness-brand-unification-design/worktrees-and-release-order:
+/apus-reflex-brand-unification-design/worktrees-and-release-order:
   en: f4dae3832f539049
   zh: ed452f783669651e
-/apus-reflex-harness-brand-unification-design/acceptance-plan:
+/apus-reflex-brand-unification-design/acceptance-plan:
   en: b9c462cb6a20c890
   zh: b1919a7aef484322

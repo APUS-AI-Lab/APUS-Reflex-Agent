@@ -10,7 +10,7 @@
 
 ```mermaid
 flowchart LR
-  Desktop[System3 Desktop] --> Host[Authenticated Harness Host]
+  Desktop[APUS Reflex Desktop] --> Host[Authenticated Harness Host]
   Browser[Web UI through SSH tunnel] --> Host
   Host --> Rules[Eligibility and permission rules]
   Rules --> Jev[A100 Jev bounded decisions]

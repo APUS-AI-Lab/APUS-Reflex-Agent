@@ -3,8 +3,8 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write python/sdk-runtime/README.md
 /deepseek-harness-runtime-bin:
-  en: 1ea1d8e6d2c14b02
-  zh: 8e0b9903158667a1
+  en: 4733ffd54c4bec98
+  zh: e67daa9a33ae33d7
 /deepseek-harness-runtime-bin/installed-commands-and-artifacts:
   en: af4e7919327e1991
   zh: b4114823b4f1a3fa

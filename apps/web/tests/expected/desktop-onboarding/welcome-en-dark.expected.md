@@ -1,6 +1,6 @@
-- region "Welcome to APUS Reflex Harness":
-  - heading "Welcome to APUS Reflex Harness" [level=1]:
+- region "Welcome to APUS Reflex":
+  - heading "Welcome to APUS Reflex" [level=1]:
     - text: Welcome to
-    - emphasis: APUS Reflex Harness
-  - paragraph: APUS Reflex Harness (瞬策) — Model as Harness. Act instantly, think deeply. It works in a local folder and uses tools to read and write files on your computer. It can help you research and organize information, create documents and spreadsheets, write code, troubleshoot issues, and more.
+    - emphasis: APUS Reflex
+  - paragraph: APUS Reflex (瞬策) — Model as Harness. Act instantly, think deeply. It works in a local folder and uses tools to read and write files on your computer. It can help you research and organize information, create documents and spreadsheets, write code, troubleshoot issues, and more.
   - button "Get started"

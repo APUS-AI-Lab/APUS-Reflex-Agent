@@ -391,10 +391,10 @@ it('requires the standalone shortcut protocol and rejects unrelated runtime file
 
 
 describe('fork-owned release members', () => {
-  const forkUrl = 'git+https://github.com/cryptoSUN2049/xDAN-System3-Harness.git'
+  const forkUrl = 'git+https://github.com/APUS-AI-Lab/APUS-Reflex-Harness.git'
   const upstreamUrl = 'git+https://github.com/deepseek-ai/deepseek-harness.git'
   const members = [
-    'agui', 'apus-dsh-jev-plugin', 'client-ui-system3', 'system3',
+    'agui', 'apus-dsh-jev-plugin', 'client-ui-system3', 'continuum-jev', 'system3',
     'system3-evidence', 'system3-policy', 'system3-supervisor',
   ]
   const functions = ['system3-evidence', 'system3-policy', 'system3-supervisor']

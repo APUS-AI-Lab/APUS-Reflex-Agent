@@ -1,5 +1,5 @@
 ---
-description: "面向让进程外 SDK 客户端在 DeepSeek Harness 运行时中打开会话并驱动 agent 的部署的 stdio JSON-RPC 服务插件。"
+description: "面向让进程外 SDK 客户端在 APUS Reflex 运行时中打开会话并驱动 agent 的部署的 stdio JSON-RPC 服务插件。"
 kind: "package-reference"
 ---
 

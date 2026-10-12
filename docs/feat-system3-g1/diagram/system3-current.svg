@@ -13,7 +13,7 @@
 <rect width="1280" height="1050" fill="#0f172a"/>
 <rect width="1280" height="1050" fill="url(#grid)"/>
 <rect x="30" y="110" width="800" height="346" rx="12" fill="#111d32" stroke="#475569" stroke-dasharray="7 5"/>
-<text class="group-label" x="48" y="136">本机 · System3 Desktop / Frontend</text>
+<text class="group-label" x="48" y="136">本机 · APUS Reflex Desktop / Frontend</text>
 <rect x="30" y="490" width="800" height="346" rx="12" fill="#111d32" stroke="#475569" stroke-dasharray="7 5"/>
 <text class="group-label" x="48" y="516">远端 Web 访问链路 · 跨本机与服务器</text>
 <rect x="880" y="110" width="365" height="726" rx="12" fill="#111d32" stroke="#475569" stroke-dasharray="7 5"/>
@@ -70,7 +70,7 @@
 <text class="copy" x="78" y="621">隧道连接远端回环 18731</text>
 <rect x="330" y="542" width="465" height="146" rx="8" fill="#0f172a"/>
 <rect x="330" y="542" width="465" height="146" rx="8" fill="#34d399" fill-opacity=".08" stroke="#34d399" stroke-width="1.5"/>
-<text class="label" x="348" y="572">litellm 服务器 · Harness Host</text>
+<text class="label" x="348" y="572">部署服务器 · Harness Host</text>
 <text class="copy" x="348" y="598">Session API → 合法候选 → 采用</text>
 <text class="copy" x="348" y="621">同一实现，各自 AgentLoop 与 Session</text>
 <text class="copy" x="348" y="644">非 root systemd + 原生 bwrap</text>
@@ -81,7 +81,7 @@
 <rect x="405" y="734" width="390" height="75" rx="8" fill="#0f172a"/>
 <rect x="405" y="734" width="390" height="75" rx="8" fill="#a78bfa" fill-opacity=".08" stroke="#a78bfa" stroke-width="1.5"/>
 <text class="label" x="423" y="764">服务器工作区 / 产物</text>
-<text class="copy" x="423" y="790">/var/lib/xdan-system3/workspace</text>
+<text class="copy" x="423" y="790">服务工作区</text>
 <rect x="910" y="192" width="300" height="146" rx="8" fill="#0f172a"/>
 <rect x="910" y="192" width="300" height="146" rx="8" fill="#fbbf24" fill-opacity=".08" stroke="#fbbf24" stroke-width="1.5"/>
 <text class="label" x="928" y="222">A100 · Jev 9B / high</text>

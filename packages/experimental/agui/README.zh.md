@@ -1,5 +1,5 @@
 ---
-description: "基于 HTTP 的 AG-UI 桥：把 DeepSeek Harness 的轮次、线程、审批与提问流式送给 外部客户端。"
+description: "基于 HTTP 的 AG-UI 桥：把 APUS Reflex 的轮次、线程、审批与提问流式送给 外部客户端。"
 kind: "package-reference"
 ---
 
@@ -9,7 +9,7 @@ kind: "package-reference"
 
 ## 概述
 
-`dsh-experimental-agui` 让任何会说 [AG-UI](https://docs.ag-ui.com) 的客户端（例如 `HttpAgent`）通过 HTTP 驱动 DeepSeek Harness 的 agent。一次 `POST <basePath>/run` 以 server-sent AG-UI 事件流式返回一个轮次；一组小巧的线程 API 负责列出、创建、重命名、归档持久化的 Session 并回放其历史；运行期间 agent 发起的审批与提问会变成 `CUSTOM` 事件，由客户端通过对应路由作答。线程 id 就是 Session id，因此持久化 Session 日志始终是唯一的事实来源。
+`dsh-experimental-agui` 让任何会说 [AG-UI](https://docs.ag-ui.com) 的客户端（例如 `HttpAgent`）通过 HTTP 驱动 APUS Reflex 的 agent。一次 `POST <basePath>/run` 以 server-sent AG-UI 事件流式返回一个轮次；一组小巧的线程 API 负责列出、创建、重命名、归档持久化的 Session 并回放其历史；运行期间 agent 发起的审批与提问会变成 `CUSTOM` 事件，由客户端通过对应路由作答。线程 id 就是 Session id，因此持久化 Session 日志始终是唯一的事实来源。
 
 ## 目录
 
@@ -61,7 +61,7 @@ pnpm dsh --patch packages/experimental/agui/cordis.patch.yml --profile web --no-
 | `refreshMcpServers` | 每次 run 前重新列出工具的 MCP `serverName`，用于无法通知工具变更的服务器。默认 `[]`。 |
 | `mcpRefreshTimeoutMs` | run 等待该重新列出的最长时间；超时或失败时 run 使用缓存的工具开始。默认 3000。 |
 
-run 可携带 `forwardedProps.persona` `{ name, tone, hidden? }`；默认是 System3、`concise` 语气。persona 替换 harness 身份与仅用于 Web 的 prompt 段落。`persona:capabilities` 在每一步只列出已挂载工具且不在 `hidden` 中的通用能力组（`web`、`search`、`files`、`terminal`、`experts`）。未分类工具仍可调用，模型通过其工具描述了解用途；桥不会根据 MCP 服务器名推断业务能力，也不会要求使用某个产品的设置或页面。
+run 可携带 `forwardedProps.persona` `{ name, tone, hidden? }`；默认是 APUS Reflex、`concise` 语气。persona 替换 harness 身份与仅用于 Web 的 prompt 段落。`persona:capabilities` 在每一步只列出已挂载工具且不在 `hidden` 中的通用能力组（`web`、`search`、`files`、`terminal`、`experts`）。未分类工具仍可调用，模型通过其工具描述了解用途；桥不会根据 MCP 服务器名推断业务能力，也不会要求使用某个产品的设置或页面。
 
 自定义 profile 插件可调用 `installPersona(agent.ctx, { persona })`，复用相同的 Agent 局部 prompt 段落。
 

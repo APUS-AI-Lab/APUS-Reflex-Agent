@@ -69,7 +69,7 @@ Use a singular `ctx` key for one engine, runtime, policy, controller, resolver, 
 | `Config` | It owns one resolved configuration value or one tightly bounded record and its update contract. | It stores a general collection, executes work, or exposes unrelated settings. |
 | `Service` | It owns a cohesive domain service that no sharper role above states honestly. | The name exists only because the class extends Cordis `Service`. |
 
-Use `SDK` only for the JSON-RPC client/server protocol used by the supported Python and TypeScript SDKs. DeepSeek Harness itself is an agent harness, not an SDK project. Use the canonical product spelling `Typert`, never `TypeRT` or `typeRT`.
+Use `SDK` only for the JSON-RPC client/server protocol used by the supported Python and TypeScript SDKs. APUS Reflex itself is an agent harness, not an SDK project. Use the canonical product spelling `Typert`, never `TypeRT` or `typeRT`.
 
 <a id="4-write-the-package-readme"></a>
 

@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-agent",
-  "description": "Agent interface, registry, initiator scope, and event vocabulary for the DeepSeek Harness",
+  "description": "Agent interface, registry, initiator scope, and event vocabulary for the APUS Reflex",
   "version": "0.1.7-rc.2",
   "publishConfig": {
     "access": "public"

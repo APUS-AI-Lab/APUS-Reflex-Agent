@@ -1,8 +1,8 @@
-# APUS Reflex Harness 品牌与装配
+# APUS Reflex 品牌与装配
 
 [English](branding.md) | 中文
 
-APUS Reflex Harness 的中文名为“瞬策”，Slogan 为“瞬时执行，深度思考”，产品定位为 Model as Harness。报告中的管理范围是战略目标；品牌文案不代表记忆等能力已经接入或通过验收。
+APUS Reflex 的中文名为“瞬策”，Slogan 为“瞬时执行，深度思考”，产品定位为 Model as Harness。报告中的管理范围是战略目标；品牌文案不代表记忆等能力已经接入或通过验收。
 
 ## 权威输入
 

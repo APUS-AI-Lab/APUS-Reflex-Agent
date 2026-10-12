@@ -1,7 +1,7 @@
-- region "你希望 APUS Reflex Harness 帮你做什么？":
-  - heading "你希望 APUS Reflex Harness 帮你做什么？" [level=1]:
+- region "你希望 APUS Reflex 帮你做什么？":
+  - heading "你希望 APUS Reflex 帮你做什么？" [level=1]:
     - text: 你希望
-    - emphasis: APUS Reflex Harness
+    - emphasis: APUS Reflex
     - text: 帮你做什么？
   - paragraph: 我们会根据你的选择调整界面和工具，以更适合你的工作方式。
   - checkbox "办公与创作"

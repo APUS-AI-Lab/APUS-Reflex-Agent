@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-session-telemetry",
-  "description": "SessionTelemetryBackend seam for the DeepSeek Harness: session-event capture, projection, redaction, and handoff to a reporting backend",
+  "description": "SessionTelemetryBackend seam for the APUS Reflex: session-event capture, projection, redaction, and handoff to a reporting backend",
   "version": "0.1.7-rc.2",
   "publishConfig": {
     "access": "public"

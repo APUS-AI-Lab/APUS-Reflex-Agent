@@ -3,7 +3,7 @@
   "description": "Experimental Reflex/Jev controller for bounded Continuum memory selection",
   "version": "0.1.7-rc.2",
   "publishConfig": { "access": "public" },
-  "repository": { "type": "git", "url": "git+https://github.com/cryptoSUN2049/xDAN-System3-Harness.git", "directory": "packages/experimental/continuum-jev" },
+  "repository": { "type": "git", "url": "git+https://github.com/APUS-AI-Lab/APUS-Reflex-Harness.git", "directory": "packages/experimental/continuum-jev" },
   "type": "module",
   "main": "lib/index.js",
   "types": "lib/types/index.d.ts",
@@ -11,12 +11,14 @@
   "files": ["lib/index.js", "lib/types/**/*.d.ts"],
   "license": "MIT",
   "dependencies": {
+    "@deepseek-ai/schemastery": "workspace:~",
     "@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin": "workspace:*",
     "@deepseek-ai/dsh-continuum": "workspace:*",
     "@deepseek-ai/dsh-session": "workspace:*"
   },
-  "peerDependencies": {},
+  "peerDependencies": { "@deepseek-ai/cordis": "workspace:~" },
   "devDependencies": {
+    "@deepseek-ai/cordis": "workspace:~",
     "@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin": "workspace:*",
     "@deepseek-ai/dsh-continuum": "workspace:*",
     "@deepseek-ai/dsh-session": "workspace:*"

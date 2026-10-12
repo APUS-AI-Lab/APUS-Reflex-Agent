@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>APUS Reflex Harness 瞬策</title>
+<title>APUS Reflex 瞬策</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700;900&family=Noto+Sans+SC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 :root {
@@ -124,12 +124,12 @@ a { color: var(--accent); }
 }
 </style>
 </head>
-<body>
+<body><p role="note">历史验收部署地址已脱敏；example.invalid 为不可用占位域名，不是公开服务入口。</p>
 <main>
 
 <header class="hero">
   <div class="brand">APUS REFLEX 瞬策 · v0.1 · 战略更新 2026-10-09</div>
-  <h1>APUS Reflex Harness 瞬策</h1>
+  <h1>APUS Reflex 瞬策</h1>
   <p class="tagline">瞬时执行，深度思考</p>
   <p class="sub">我们的战略是 Model as Harness：让大小脑混合模型成为 Harness 的运行管理者，接管 tools、skills、memory、context、subagent 等事务的决策与调度。小脑负责即时判断，大脑负责复杂推理、规划与执行，运行时落实权限、执行动作并记录结果；五类事务分阶段接入，以真实任务验收。</p>
   <p class="sub"><a href="../dev-continuum-reflex-integration/open-source-docs-audit.zh.md">内部汇报已私有归档；公开资料说明</a> · <a href="demo-plan.html">演示方案与UIUX对照</a> · <a href="architecture.html">产品与技术架构总览</a> · <a href="mu-p0-review.html">mu 参考与下一批 P0 排序</a> · <a href="feature-acceptance.html">逐项实现及真实验收</a></p>
@@ -410,7 +410,7 @@ a { color: var(--accent); }
   <div class="eyebrow">架构创新</div>
   <h2>融合 Jev 之后，harness 多了什么</h2>
   <div class="points">
-    <div class="point"><span class="no">01</span><h3>亚秒级即时决策</h3><p>每个判断 0.3–1 秒，任务卡和插话在后台进行，不拖慢回答。一次请求可同时问多道题，判断成本远低于让大模型自查。</p><span class="proof">prd 实测：入口路由 0.3–1 s，插话约 1 s 生效</span></div>
+    <div class="point"><span class="no">01</span><h3>亚秒级即时决策</h3><p>每个判断 0.3–1 秒，任务卡和插话在后台进行，不拖慢回答。一次请求可同时问多道题，判断成本远低于让大模型自查。</p><span class="proof">历史部署环境 实测：入口路由 0.3–1 s，插话约 1 s 生效</span></div>
     <div class="point"><span class="no">02</span><h3>决策与生成分离</h3><p>小模型负责“判断”，大模型负责“干活”。判断结果不是塞给大模型的一段提示，而是 harness 直接执行的动作。</p><span class="proof">换模型、插入当前轮、转发 Codex 都是直接动作</span></div>
     <div class="point"><span class="no">03</span><h3>反射点覆盖完整生命周期</h3><p>从用户开口、每条新消息、运行中插话、工具输出，到宣布完成之前，每个关键时刻都有对应的反射判断。</p><span class="proof">5 个反射点已上线，完成前核验即将上线</span></div>
     <div class="point"><span class="no">04</span><h3>概率可控，拿不准就不动</h3><p>每个判断带概率和阈值，设有弃权选项。拿不准、超时或出错时回退到原有行为，永远不挡主流程。</p><span class="proof">只改问法、不调阈值；精确率优先</span></div>
@@ -481,7 +481,7 @@ a { color: var(--accent); }
     <tbody>
       <tr><td>真实 Jev 标注集</td><td>先写标签再运行；问法调整后必须换一组从未见过的留出集，只跑一次</td><td>126 条；最后两组留出集全对；只改问法，不调阈值</td></tr>
       <tr><td>单元与组合测试</td><td>新代码 100% 覆盖；用真实 agent loop 和目标服务组合测试</td><td>全部通过</td></tr>
-      <tr><td>公网浏览器验收</td><td>以用户身份在 system3.xdan.work 操作，断言用户看到的和日志记录的</td><td>入口路由、日志折叠、任务卡、目标加打断、转发 Codex，5/5 通过</td></tr>
+      <tr><td>公网浏览器验收</td><td>以用户身份在 acceptance.example.invalid 操作，断言用户看到的和日志记录的</td><td>入口路由、日志折叠、任务卡、目标加打断、转发 Codex，5/5 通过</td></tr>
       <tr><td>发现问题就修再测</td><td>验收中只要发现体验问题，修复后重新发布再测</td><td>修复了标记行号不可用、提示过期、单复数、打断识别遗漏等 6 处</td></tr>
     </tbody>
   </table></div>
@@ -536,7 +536,7 @@ a { color: var(--accent); }
 <section>
   <div class="eyebrow">汇报用</div>
   <h2>30 秒电梯稿</h2>
-  <p class="pitch">APUS Reflex Harness 瞬策的战略是 Model as Harness。我们让大小脑混合模型共同管理 agent 的工具、技能、记忆、上下文与子 agent：小脑即时判断，大脑深度思考，运行时执行动作、落实权限并保存事实。已接入选模型、选技能、任务卡、插话与 Codex 管理；完成核验已有本地真实闭环。下一步逐项贯通五类运行事务，验证任务成功率、人工介入和成功交付的时间与成本，让模型管理能力复用到更多业务场景。</p>
+  <p class="pitch">APUS Reflex 瞬策的战略是 Model as Harness。我们让大小脑混合模型共同管理 agent 的工具、技能、记忆、上下文与子 agent：小脑即时判断，大脑深度思考，运行时执行动作、落实权限并保存事实。已接入选模型、选技能、任务卡、插话与 Codex 管理；完成核验已有本地真实闭环。下一步逐项贯通五类运行事务，验证任务成功率、人工介入和成功交付的时间与成本，让模型管理能力复用到更多业务场景。</p>
   <h2>3 分钟汇报提纲</h2>
   <ol class="outline">
     <li><b>问题</b>：agent 把本该条件反射的判断全交给大模型慢慢想，结果是忘要求、听不进中途的话、委派出去就失控。</li>

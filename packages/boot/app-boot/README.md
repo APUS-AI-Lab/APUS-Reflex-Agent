@@ -121,7 +121,7 @@ When your app boots a model-backed agent, you can tell the agent where the DSH i
 <a id="understand-the-implementation"></a>
 ## Understand the implementation
 
-The model-visible source checkout section identifies APUS Reflex Harness; launcher and configuration identifiers remain unchanged.
+The model-visible source checkout section identifies APUS Reflex; launcher and configuration identifiers remain unchanged.
 
 <details>
 <summary>Implementation internals — click to expand</summary>

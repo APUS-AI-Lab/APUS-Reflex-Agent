@@ -49,3 +49,10 @@ native/system/test/bin/
 
 # Generated VitePress build workspace.
 /website/.vitepress/.temp/
+
+# Python bytecode caches in deployment and integration fixtures.
+__pycache__/
+*.pyc
+
+# Local work plans and private execution handoffs.
+/tasks/

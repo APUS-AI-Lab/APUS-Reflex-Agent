@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-subagent-dsh-sdk",
-  "description": "Out-of-process SDK subagent backend: drives a child DeepSeek Harness runtime subprocess over stdio JSON-RPC through the TypeScript SDK client",
+  "description": "Out-of-process SDK subagent backend: drives a child APUS Reflex runtime subprocess over stdio JSON-RPC through the TypeScript SDK client",
   "version": "0.1.7-rc.2",
   "publishConfig": {
     "access": "public"

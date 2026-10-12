@@ -18,5 +18,5 @@
       - text: 本地插件目录 本机上插件目录的绝对路径，适用于自行开发或已下载的插件。 示例：
       - code: /Users/name/my-plugin
       - button "填入示例 /Users/name/my-plugin": 填入示例
-  - note: 请确认插件来源可信。插件在本机以你的权限运行，来源不明的插件可能损坏 APUS Reflex Harness，或读取和泄露你的数据。
+  - note: 请确认插件来源可信。插件在本机以你的权限运行，来源不明的插件可能损坏 APUS Reflex，或读取和泄露你的数据。
   - button "安装" [disabled]

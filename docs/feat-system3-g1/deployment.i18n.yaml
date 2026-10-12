@@ -2,21 +2,15 @@
 # section, a hash of its English and Chinese blocks outside code blocks and generated regions.
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/feat-system3-g1/deployment.md
-/system3-server-deployment-reference:
-  en: 28f4ed3f030c1c0d
-  zh: 031d97dcb12c52e8
-/system3-server-deployment-reference/scope:
-  en: b08fe0f29019b95f
-  zh: f2c1b9d094432565
-/system3-server-deployment-reference/access-and-isolation:
-  en: f5163b972714081a
-  zh: 3e5bdaf081a84553
-/system3-server-deployment-reference/release-and-recovery:
-  en: 1e06bbf5267391f9
-  zh: 3c82a0d44d92ba17
-/system3-server-deployment-reference/source-files:
-  en: c7377e6177f34664
-  zh: 707c18c65653dde8
-/system3-server-deployment-reference/verified-deployment-constraints:
-  en: da55940900bad3e9
-  zh: 4c9588c570db5614
+/apus-reflex-deployment-reference:
+  en: d20f2e2a2021eb27
+  zh: 01a15486778abb59
+/apus-reflex-deployment-reference/public-deployment-entry-points:
+  en: 099d864c5e217f57
+  zh: b263598da270e515
+/apus-reflex-deployment-reference/source-files:
+  en: 2579aea98f6c433f
+  zh: 56b45ca3dadf9ea1
+/apus-reflex-deployment-reference/acceptance-scope:
+  en: c0e7c401ebd7ee9f
+  zh: 63fa93a714c86a40

@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-session-title-llm",
-  "description": "Shared LLM generation policy for DeepSeek Harness session-title providers",
+  "description": "Shared LLM generation policy for APUS Reflex session-title providers",
   "version": "0.1.7-rc.2",
   "publishConfig": {
     "access": "public"

@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-workspace",
-  "description": "Workspace entity registry (ctx.workspaceRegistry): durable workspace records with validated session attachment over the domain data form for the DeepSeek Harness",
+  "description": "Workspace entity registry (ctx.workspaceRegistry): durable workspace records with validated session attachment over the domain data form for the APUS Reflex",
   "version": "0.1.7-rc.2",
   "publishConfig": {
     "access": "public"

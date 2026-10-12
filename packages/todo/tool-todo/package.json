@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-tool-todo",
-  "description": "Model-facing todo_write tool over the DeepSeek Harness event-sourced session log",
+  "description": "Model-facing todo_write tool over the APUS Reflex event-sourced session log",
   "version": "0.1.7-rc.2",
   "publishConfig": {
     "access": "public"

@@ -1,4 +1,4 @@
-# xDAN System3 Personal Agent · Harness：四条工作线与首发设计
+# APUS Reflex · Harness：四条工作线与首发设计
 
 [English](design.md) | 中文
 
@@ -16,11 +16,11 @@ System1 是 APUS/OpenJev 的高频候选判断与经专项验证的轻量工作�
 
 官方上游为 https://github.com/deepseek-ai/deepseek-harness ，源码审阅日期为 2026-09-24，审阅来源为当时的 upstream/master；原默认分支 master，许可证 MIT。
 
-已完整 clone 到 /path/to/projects/xDAN-System3-PersonalAgent-Harness，保留 Git 历史；本地根分支改为 main，上游 remote 为 upstream，自有 origin 为 https://github.com/cryptoSUN2049/xDAN-System3-PersonalAgent-Harness.git。远端已创建并回读 private=true。工作树为 .Codex/worktrees/feat-system3-foundation，分支同名。
+本仓库维护 APUS Reflex 的 Harness 实现；源代码和贡献入口见[项目主页](../../README.zh.md)。历史检出位置与远端管理记录已私有归档。
 
 已完成原始上游的 Ruff 修复与格式化；main 保留官方基线，feat-system3-foundation 已推送到自有私有仓库。基础 System3 包、统一 Cordis 服务和真实 AgentLoop smoke 已交付；真实模型、训练与部署仍未启动。
 
-品牌改名分两层：仓库名使用 xDAN-System3-PersonalAgent-Harness、产品名为 xDAN System3 Personal Agent（2026-09-28 起仓库更名为 xDAN-System3-PersonalAgent-Harness，产品品牌为 xDAN System3 Personal Agent；旧仓库名自动重定向，旧本地路径为软链接。）；首阶段保留 @deepseek-ai/* 包名、dsh 命令与 MIT 声明，避免全仓字符串替换造成依赖和上游同步破坏。发布自有 npm 包及外部插件前再审独立 namespace 与发布清单。私有仓库不改变继承代码的许可义务。
+产品名称为 APUS Reflex；保留实际的 `@deepseek-ai/*` 包名、`dsh` 命令、上游来源与 MIT 声明。品牌统一不改变依赖标识或许可义务。
 
 ## 3. 四条工作线
 
@@ -156,7 +156,7 @@ CostRecord: 每请求input/output/cache_read/cache_write/reasoning计量口径�
 | 阶段 | 拟新增/修改路径 | 目的 |
 | --- | --- | --- |
 | 本轮 | docs/feat-system3-foundation/design.md、index.html、evidence.json | 方案、阅读版和固定来源 |
-| 本轮 | tasks/todo.md、tasks/feat-system3-foundation/handoff.md | 计划与跨session恢复 |
+| 本轮 | 内部计划与交接（已私有归档） | 计划与跨session恢复 |
 | M0批准后 | 上游4处lint与28个Python格式文件；README品牌入口 | 可推送基线与产品入口，保留历史与许可证 |
 | M1批准后 | packages/experimental/system3-policy/ | 决策接口、校验、预算与回退，包名待约束检查 |
 | M1批准后 | packages/experimental/system3-evidence/ | 原文索引、片段筛选、可恢复模型投影 |
@@ -201,4 +201,4 @@ M0：审批设计、修复上游推送门禁、发布私有基线。M1：DSH原�
 - [Jev Skills固定revision](https://github.com/wuyoscar/jev-skill/tree/259a798ab8df70a3566f1cb7f8226e533782d847)
 - [Jev Skills原始负结果](https://github.com/wuyoscar/jev-skill/blob/259a798ab8df70a3566f1cb7f8226e533782d847/evals/RESULTS.md)
 
-本地HTML、训练报告及关键源码的绝对路径与SHA256收录于evidence.json，方便下一session定位；它是来源快照，不包含模型权重、密钥或用户日志正文。API参考首选路径不存在，已读取备用xDAN-Project-Hope-2026/5-Develop/api-structures/API-REFERENCE.md；其中历史服务地址不当作现行部署依据。
+历史本机资料清单已私有归档。当前实现与配置应查阅仓库内的包文档；历史实验服务地址不作为现行部署依据。

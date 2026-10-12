@@ -3,8 +3,8 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/feat-reflex-control/supervision-minimal-scope.md
 /minimal-codex-process-supervision:
-  en: 4d4d8ed2c8d22928
-  zh: 0313949120aa1788
+  en: c4c5459b713f049e
+  zh: 222e9abd47c5b359
 /minimal-codex-process-supervision/user-visible-flow:
   en: 31a43391c42ac5f8
   zh: f230a44deb9a77d2

@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-brand",
-  "description": "Stateless branded primitive types for the DeepSeek Harness",
+  "description": "Stateless branded primitive types for the APUS Reflex",
   "version": "0.1.7-rc.2",
   "publishConfig": {
     "access": "public"

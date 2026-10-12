@@ -1,4 +1,4 @@
-# APUS Reflex Harness
+# APUS Reflex
 
 English | [中文](README.zh.md)
 
@@ -6,7 +6,7 @@ English | [中文](README.zh.md)
 
 APUS turns a sequence of model calls into work that can continue around a goal: understand the request, choose an action, execute, inspect the evidence, recover relevant context and continue. You choose the general model for planning and generation; optionally connect your own Reflex/Jev decision service for structured decisions along the way.
 
-Built on DeepSeek Harness, APUS separates model reasoning from execution, permissions and durable Session history. It is a **developer preview**. The [release readiness review](docs/dev-continuum-reflex-integration/release-readiness.md) records what has been tested and what still needs acceptance.
+APUS Reflex separates model reasoning from execution, permissions and durable Session history. It is a **developer preview**. The [release readiness review](docs/dev-continuum-reflex-integration/release-readiness.md) records what has been tested and what still needs acceptance.
 
 ## A Personal Agent for ongoing projects
 
@@ -44,7 +44,7 @@ The “large brain” is your configured general model: it reasons, plans, gener
 | Reflex decisions | Configured integrations select routes or memory candidates, assess progress and propose bounded recovery actions. |
 | Harness execution | Tools, skills and subagents perform work with permissions, cancellation and owned process lifecycles. |
 | Persistent memory | Continuum restores admitted records from the same Session and rebuilds its retrieval index. |
-| Context projection | Relevant excerpts form a bounded model request; System3 context projection protects submitted history prefixes. |
+| Context projection | Relevant excerpts form a bounded model request; Reflex control context projection protects submitted history prefixes. |
 | Outcome feedback | Recorded actions, results and decision receipts inform subsequent work and independent review. |
 
 The decision service is configurable. A replacement must implement the supported Jev/System One protocol; an arbitrary chat-completions endpoint is not automatically a replacement for every Reflex integration. See the [Jev provider guide](packages/experimental/apus-dsh-jev-plugin/README.md).
@@ -66,7 +66,7 @@ The decision service is configurable. A replacement must implement the supported
 
 “Lossless” needs a precise scope. Accepted text events can remain available in the Session after successful flush; this is not a guarantee of lossless recall or preservation of every uploaded byte. Automatic memory admission extracts text, attachments have separate storage rules, and images may be normalized or resized. A successful in-memory append is not proof that a disk write succeeded.
 
-Summary-tree and zoom helpers are available through explicit APIs; automatic lifecycle retrieval currently uses the record index. Local stable-prefix measurements are not provider cache-hit or billing measurements. System3’s live context integration separately protects frozen/submitted prefixes. See the [architecture follow-ups](docs/dev-continuum-reflex-integration/architecture-followups.md).
+Summary-tree and zoom helpers are available through explicit APIs; automatic lifecycle retrieval currently uses the record index. Local stable-prefix measurements are not provider cache-hit or billing measurements. Reflex control’s live context integration separately protects frozen/submitted prefixes. See the [architecture follow-ups](docs/dev-continuum-reflex-integration/architecture-followups.md).
 
 ## Continuity with control
 
@@ -77,18 +77,18 @@ Summary-tree and zoom helpers are available through explicit APIs; automatic lif
 | Recovery | Bounded Codex recovery checks inactivity, pending approval and active side effects before interrupting and reconciling existing work. |
 | Completion review | Active mode can reject unsupported completion within its refusal allowance; the deployment example defaults to shadow review. Independent acceptance remains necessary. |
 | Execution limits | Goal rounds, decision deadlines, intervention counts and recovery counts bound work. They are not a promise of a universal monetary budget. |
-| Permissions and data | Tool permissions, process confinement, System3 route policies and Continuum scopes have separate owners. A model decision does not grant additional authority. |
+| Permissions and data | Tool permissions, process confinement, Reflex control route policies and Continuum scopes have separate owners. A model decision does not grant additional authority. |
 
-Choose where generation and decision requests run. System3 data-class settings are not a global network firewall; explicitly enabled memory selection sends its query and candidate excerpts to the configured Jev service. The [public provider guide](docs/dev-continuum-reflex-integration/public-provider-configuration.md) explains configuration, credentials and the default general-model path.
+Choose where generation and decision requests run. Reflex control data-class settings are not a global network firewall; explicitly enabled memory selection sends its query and candidate excerpts to the configured Jev service. The [public provider guide](docs/dev-continuum-reflex-integration/public-provider-configuration.md) explains configuration, credentials and the default general-model path.
 
 ## Use Reflex, or start with a general model
 
 | Configuration | Available behavior |
 | --- | --- |
-| General model, no Jev | Original DSH generation, tools and Session persistence. The Reflex-only Continuum feature remains inactive. |
+| General model, no Jev | Harness generation, tools and Session persistence. The Reflex-only Continuum feature remains inactive. |
 | Reflex/Jev configured | Structured decision capabilities can be enabled individually; mounting the provider alone does not activate every integration. |
 | Continuum enabled | Requires Reflex plus memory admission/scope settings. The selector’s off/shadow/active modes distinguish baseline selection, recorded advice and validated advice adoption. |
-| System3 deployment without data classification | System3 is explicitly disabled, including its local process supervision. Ordinary generation continues using the configured provider. |
+| Reflex control deployment without data classification | Reflex control is explicitly disabled, including its local process supervision. Ordinary generation continues using the configured provider. |
 
 This preserves a useful general-model runtime while allowing Reflex to participate at explicit decision points. Configuration and deployment remain part of enabling a capability.
 
@@ -96,7 +96,7 @@ This preserves a useful general-model runtime while allowing Reflex to participa
 
 The [shipped-profile memory tests](apps/cli/tests/profiles/headless/tests/continuum-memory.e2e.ts) start source/built profiles in separate processes. They inspect the first process’s persisted fact and source references, then require that fact in the resumed process’s separate model-request log. Disabled/no-Jev and new-Session controls check activation and isolation.
 
-The [public bundle tests](packages/experimental/apus-dsh-jev-plugin/tests/public-bundle.spec.ts) exercise actual Loader configuration and local HTTP dispatch, including anonymous/authenticated providers, invalid configuration and existing profile overrides. [System3 context tests](packages/experimental/system3/tests/reflex-context.spec.ts) cover projection and protected constraints. Recording providers establish integration behavior, not real-model decision or recall quality.
+The [public bundle tests](packages/experimental/apus-dsh-jev-plugin/tests/public-bundle.spec.ts) exercise actual Loader configuration and local HTTP dispatch, including anonymous/authenticated providers, invalid configuration and existing profile overrides. [Reflex control context tests](packages/experimental/system3/tests/reflex-context.spec.ts) cover projection and protected constraints. Recording providers establish integration behavior, not real-model decision or recall quality.
 
 The [acceptance review](docs/feat-reflex-control/apus-reflex-harness-acceptance-review.html) records real-provider examples and their limits. Healthy long tasks, mid-run Goal changes, large-history performance, remote quality/fallback measurements, full regression and signed desktop packaging need their own evidence. A merge is not a release certificate.
 
@@ -118,19 +118,11 @@ pnpm dsh web
 
 `pnpm run build` prepares repository artifacts; `pnpm dsh web` launches those artifacts without rebuilding. Configure a generation model and credentials in Web settings. For development with rebuilds, use `pnpm run dev:web`.
 
-Optional Reflex, System3 and memory need their corresponding profile configuration. Follow the [public provider guide](docs/dev-continuum-reflex-integration/public-provider-configuration.md), [System3 guide](packages/experimental/system3/README.md) and [Continuum guide](packages/context/continuum/README.md). The launch command above does not activate them all.
-
-### Upstream npm distribution
-
-```sh
-npx @deepseek-ai/dsh web
-```
-
-This command installs upstream DeepSeek Harness, not APUS or this fork’s Jev additions. Its Web UI defaults to `http://127.0.0.1:3080`; use `--no-open` to suppress opening a local browser. See the [Web UI guide](docs/user/guide/index.md).
+Optional Reflex decision and memory capabilities need their corresponding profile configuration. Follow the [public provider guide](docs/dev-continuum-reflex-integration/public-provider-configuration.md), [Reflex control guide](packages/experimental/system3/README.md) and [Continuum guide](packages/context/continuum/README.md). The launch command above does not activate them all.
 
 ## Two independent repositories
 
-[APUS Reflex Harness](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness) owns the runtime and its Web/client components. [APUS Reflex Frontend](https://github.com/APUS-AI-Lab/APUS-Reflex-Frontend) owns the independent desktop assembly and pins a Harness revision. Updating Harness `main` does not update an already packaged desktop runtime; prepare and verify the intended pin.
+[APUS Reflex](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness) owns the runtime and its Web/client components. [APUS Reflex Desktop](https://github.com/APUS-AI-Lab/APUS-Reflex-Frontend) owns the independent desktop assembly and pins a Harness revision. Updating Harness `main` does not update an already packaged desktop runtime; prepare and verify the intended pin.
 
 ## Contribute and get support
 
@@ -140,18 +132,6 @@ This command installs upstream DeepSeek Harness, not APUS or this fork’s Jev a
 - Read [SAFETY.md](SAFETY.md) before running the project; report vulnerabilities through [SECURITY.md](SECURITY.md), never a public issue.
 - Agent contributors should follow [AGENTS.md](AGENTS.md). Public APIs remain pre-stable and may change incompatibly.
 
-## Upstream and license
+## License and attribution
 
-APUS extends [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness), developed by [DeepSeek AI](https://deepseek.com). Its plugin architecture uses [Cordis](https://github.com/cordiverse/cordis), described in [A Programming Paradigm for Spatiotemporal Composability](https://arxiv.org/abs/2608.25512). The [upstream documentation](https://deepseek-harness.github.io/deepseek-harness/) describes the upstream distribution; APUS configuration is documented here.
-
-[MIT](LICENSE). The original DeepSeek copyright and permission notice are retained. [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) documents third-party dependencies and licenses. APUS branding does not replace upstream authorship or imply endorsement. See [brand and assembly](docs/feat-apus-brand/branding.md).
-
-```bibtex
-@misc{deepseek-harness2026,
-  title={DeepSeek Harness: Everything is a Plugin},
-  author={DeepSeek-AI},
-  year={2026},
-  publisher={GitHub},
-  howpublished={\url{https://github.com/deepseek-ai/deepseek-harness}},
-}
-```
+[MIT](LICENSE). Original copyright and permission notices are retained in [LICENSE](LICENSE) and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). APUS Reflex is an independent product; its branding does not replace upstream authorship or imply endorsement. See [brand and assembly](docs/feat-apus-brand/branding.md).

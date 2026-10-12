@@ -3,8 +3,8 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/sdk/server/README.md
 /:
-  en: 9fd8e0cf5872dc5b
-  zh: c5209369edd2e941
+  en: 42102ade391e523f
+  zh: 3d465f7da0900397
 /deepseek-ai-dsh-sdk-jsonrpc-server:
   en: 96813b70808d7c86
   zh: ab20ab1cb59432c1

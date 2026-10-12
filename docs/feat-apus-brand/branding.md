@@ -1,8 +1,8 @@
-# APUS Reflex Harness branding and assembly
+# APUS Reflex branding and assembly
 
 English | [中文](branding.zh.md)
 
-APUS Reflex Harness uses the Chinese name “瞬策”, the slogan “瞬时执行，深度思考” (Instant action. Deep thinking.), and the positioning Model as Harness. The management scope in the report is a strategic objective; brand copy does not imply that capabilities such as memory have been integrated or accepted.
+APUS Reflex uses the Chinese name “瞬策”, the slogan “瞬时执行，深度思考” (Instant action. Deep thinking.), and the positioning Model as Harness. The management scope in the report is a strategic objective; brand copy does not imply that capabilities such as memory have been integrated or accepted.
 
 ## Authoritative inputs
 

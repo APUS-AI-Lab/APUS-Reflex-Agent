@@ -2,51 +2,51 @@
 # section, a hash of its English and Chinese blocks outside code blocks and generated regions.
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/feat-system3-foundation/design.md
-/xdan-system3-personal-agent-harness:
-  en: 074cb65ebfd58c0e
-  zh: 3b9caeec6f93f342
-/xdan-system3-personal-agent-harness/1-system3:
+/apus-reflex-harness:
+  en: 7c218cd16ce99f29
+  zh: dac01d5b231b570e
+/apus-reflex-harness/1-system3:
   en: 551d11be2c7bf632
   zh: 551d11be2c7bf632
-/xdan-system3-personal-agent-harness/2:
-  en: 07320b746b3b1199
-  zh: 07320b746b3b1199
-/xdan-system3-personal-agent-harness/3:
+/apus-reflex-harness/2:
+  en: 694f49ed525f9b57
+  zh: 7b1b2fbee7c4e401
+/apus-reflex-harness/3:
   en: b68364cfb57409f6
   zh: b68364cfb57409f6
-/xdan-system3-personal-agent-harness/4-dsh:
+/apus-reflex-harness/4-dsh:
   en: e3bd1c8a174fc3e8
   zh: e3bd1c8a174fc3e8
-/xdan-system3-personal-agent-harness/4-1:
+/apus-reflex-harness/4-1:
   en: 5bb09cf9aeb5331b
   zh: 5bb09cf9aeb5331b
-/xdan-system3-personal-agent-harness/5-jev:
+/apus-reflex-harness/5-jev:
   en: cfe745f0f11a8bf4
   zh: cfe745f0f11a8bf4
-/xdan-system3-personal-agent-harness/6-toc:
+/apus-reflex-harness/6-toc:
   en: f0126b9830a08c4b
   zh: f0126b9830a08c4b
-/xdan-system3-personal-agent-harness/7:
+/apus-reflex-harness/7:
   en: a43c0e3b8ba78f5c
   zh: a43c0e3b8ba78f5c
-/xdan-system3-personal-agent-harness/7-1-uni-agent:
+/apus-reflex-harness/7-1-uni-agent:
   en: 1ae267898f68177b
   zh: 1ae267898f68177b
-/xdan-system3-personal-agent-harness/8:
+/apus-reflex-harness/8:
   en: baf1fc15c99edb80
   zh: baf1fc15c99edb80
-/xdan-system3-personal-agent-harness/9:
-  en: c59e37c49daa55e6
-  zh: c59e37c49daa55e6
-/xdan-system3-personal-agent-harness/10:
+/apus-reflex-harness/9:
+  en: 33fa1d03dba4e310
+  zh: 74e49322fc8dd16c
+/apus-reflex-harness/10:
   en: 06d5ae45b777a70c
   zh: 06d5ae45b777a70c
-/xdan-system3-personal-agent-harness/11:
+/apus-reflex-harness/11:
   en: 5c468b5abb93df94
   zh: 5c468b5abb93df94
-/xdan-system3-personal-agent-harness/12:
+/apus-reflex-harness/12:
   en: 9838a8e06e5dc5b3
   zh: 9838a8e06e5dc5b3
-/xdan-system3-personal-agent-harness/13:
-  en: 9831c660107ea0ed
-  zh: 9831c660107ea0ed
+/apus-reflex-harness/13:
+  en: 3b854d2c48910df4
+  zh: c81e553b56d5f29c

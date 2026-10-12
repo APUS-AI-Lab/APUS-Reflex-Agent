@@ -2,21 +2,18 @@
 # section, a hash of its English and Chinese blocks outside code blocks and generated regions.
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/dev-continuum-reflex-integration/integration-plan.md
-/continuum-reflex-control:
-  en: b0bfb0c2617ff366
-  zh: c7d11fd546ae99a0
-/continuum-reflex-control/section:
-  en: 48b1cc4ac076d97c
-  zh: 48b1cc4ac076d97c
-/continuum-reflex-control/section~2:
-  en: adf273822143d680
-  zh: adf273822143d680
-/continuum-reflex-control/section~3:
-  en: eaed1cb93af9fee4
-  zh: eaed1cb93af9fee4
-/continuum-reflex-control/section~4:
-  en: 0211e9bd043b5df1
-  zh: 0211e9bd043b5df1
-/continuum-reflex-control/section~5:
-  en: af31339684225275
-  zh: af31339684225275
+/continuum-reflex-integration-acceptance:
+  en: 6e2c852c5a10fd4f
+  zh: 4aa4cbe2f11943fb
+/continuum-reflex-integration-acceptance/integration-status:
+  en: 1e9c44b967ce032c
+  zh: 4f40b05f87d8c6f2
+/continuum-reflex-integration-acceptance/shared-implementation-responsibilities:
+  en: 7b3e3044669def35
+  zh: f8c157643fd3d9d0
+/continuum-reflex-integration-acceptance/acceptance-matrix:
+  en: 5e656649e893d7a6
+  zh: f79b923405395860
+/continuum-reflex-integration-acceptance/release-condition:
+  en: 3690072ab5c8522d
+  zh: 14f5c642fe3362f5

@@ -2,45 +2,45 @@
 # section, a hash of its English and Chinese blocks outside code blocks and generated regions.
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/feat-jev-decision-kernel/demo-plan.md
-/apus-reflex-harness-demonstration-plan:
-  en: d475652853b3971b
-  zh: 6b5a181340e518fc
-/apus-reflex-harness-demonstration-plan/summary:
+/apus-reflex-demonstration-plan:
+  en: 415ae1d5ee16735b
+  zh: b1d34ec5c205191f
+/apus-reflex-demonstration-plan/summary:
   en: 30e6c50bfaedc2eb
   zh: 8cbe00346d0e20ea
-/apus-reflex-harness-demonstration-plan/contents:
+/apus-reflex-demonstration-plan/contents:
   en: 372831cd44985ac7
   zh: 1fbba8e5d666c916
-/apus-reflex-harness-demonstration-plan/preparation-and-presentation-routes:
+/apus-reflex-demonstration-plan/preparation-and-presentation-routes:
   en: b893a75396994ff5
   zh: 1a3ed05d868c717a
-/apus-reflex-harness-demonstration-plan/six-demonstration-scenarios:
+/apus-reflex-demonstration-plan/six-demonstration-scenarios:
   en: 3b62912296784ea1
   zh: f1bb940b9a0cdb79
-/apus-reflex-harness-demonstration-plan/six-demonstration-scenarios/1-one-request-choose-an-executor:
+/apus-reflex-demonstration-plan/six-demonstration-scenarios/1-one-request-choose-an-executor:
   en: 97066fb23a7e7bd6
   zh: fc497de2c4759246
-/apus-reflex-harness-demonstration-plan/six-demonstration-scenarios/2-change-requirements-during-work-and-inspect-delivery:
+/apus-reflex-demonstration-plan/six-demonstration-scenarios/2-change-requirements-during-work-and-inspect-delivery:
   en: 96278f799f27740f
   zh: 16d6fbe9c1060414
-/apus-reflex-harness-demonstration-plan/six-demonstration-scenarios/3-request-completion-before-doing-the-work:
+/apus-reflex-demonstration-plan/six-demonstration-scenarios/3-request-completion-before-doing-the-work:
   en: aea33baf04fe1000
   zh: e3cd01a0c8ece2a8
-/apus-reflex-harness-demonstration-plan/six-demonstration-scenarios/4-delegate-to-codex-and-forward-a-new-requirement:
+/apus-reflex-demonstration-plan/six-demonstration-scenarios/4-delegate-to-codex-and-forward-a-new-requirement:
   en: 4583d4ea32cce7b4
   zh: 4c2816e44b70c9e5
-/apus-reflex-harness-demonstration-plan/six-demonstration-scenarios/5-find-the-error-that-prevents-delivery-in-a-long-log:
+/apus-reflex-demonstration-plan/six-demonstration-scenarios/5-find-the-error-that-prevents-delivery-in-a-long-log:
   en: f7b1ed857872b4d2
   zh: 7f0b6611ef93a1a5
-/apus-reflex-harness-demonstration-plan/six-demonstration-scenarios/6-reload-and-inspect-the-same-denial-and-delivery:
+/apus-reflex-demonstration-plan/six-demonstration-scenarios/6-reload-and-inspect-the-same-denial-and-delivery:
   en: c6cbd860eb767d1f
   zh: d2e810a74a0623e9
-/apus-reflex-harness-demonstration-plan/layered-timing-and-capability-coverage:
+/apus-reflex-demonstration-plan/layered-timing-and-capability-coverage:
   en: eaa1925dd235fcfa
   zh: 7b6a76ef981cf215
-/apus-reflex-harness-demonstration-plan/acceptance-and-review:
+/apus-reflex-demonstration-plan/acceptance-and-review:
   en: 1e9dd63182ff0077
   zh: 5f182166ef5dd843
-/apus-reflex-harness-demonstration-plan/dev-note:
+/apus-reflex-demonstration-plan/dev-note:
   en: ce00123339459884
   zh: c4c862c8196384fc

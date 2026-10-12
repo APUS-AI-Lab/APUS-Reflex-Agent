@@ -52,11 +52,12 @@ const publicationSourceAllowlist: Readonly<Record<string, readonly string[]>> = 
 /** Public source home recorded in maintained package manifests. */
 const publishedRepositoryUrl = 'git+https://github.com/deepseek-ai/deepseek-harness.git'
 /** Fork-owned release members; both directory and package name must match. */
-const forkRepositoryUrl = 'git+https://github.com/cryptoSUN2049/xDAN-System3-Harness.git'
+const forkRepositoryUrl = 'git+https://github.com/APUS-AI-Lab/APUS-Reflex-Harness.git'
 const forkReleaseMembers: Readonly<Record<string, { name: string; needsCordis: boolean }>> = {
   'packages/experimental/agui': { name: '@deepseek-ai/dsh-experimental-agui', needsCordis: true },
   'packages/experimental/apus-dsh-jev-plugin': { name: '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin', needsCordis: true },
   'packages/experimental/client-ui-system3': { name: '@deepseek-ai/dsh-experimental-client-ui-system3', needsCordis: true },
+  'packages/experimental/continuum-jev': { name: '@deepseek-ai/dsh-experimental-continuum-jev', needsCordis: true },
   'packages/experimental/system3': { name: '@deepseek-ai/dsh-experimental-system3', needsCordis: true },
   // These libraries export deterministic functions without Cordis registrations.
   'packages/experimental/system3-evidence': { name: '@deepseek-ai/dsh-experimental-system3-evidence', needsCordis: false },

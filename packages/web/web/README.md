@@ -54,7 +54,7 @@ The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-a
 
 ```text
 // Search the web; sources[] is capped to maxResults:
-const result = await ctx.web.search({ query: 'deepseek harness', maxResults: 8 })
+const result = await ctx.web.search({ query: 'APUS Reflex', maxResults: 8 })
 
 // Fetch one URL; a non-2xx response is a result, not an error:
 const page = await ctx.web.fetch({ url: 'https://example.com' })

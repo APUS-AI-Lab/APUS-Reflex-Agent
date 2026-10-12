@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-agent-loop",
-  "description": "The concrete agent loop plugin for the DeepSeek Harness",
+  "description": "The concrete agent loop plugin for the APUS Reflex",
   "version": "0.1.7-rc.2",
   "publishConfig": {
     "access": "public"

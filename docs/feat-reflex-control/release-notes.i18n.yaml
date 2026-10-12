@@ -2,18 +2,18 @@
 # section, a hash of its English and Chinese blocks outside code blocks and generated regions.
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/feat-reflex-control/release-notes.md
-/apus-reflex-harness-release-notes:
-  en: 04c1d283908496f7
-  zh: 885fd9002b72ba12
-/apus-reflex-harness-release-notes/0-1-7-rc-2-reflex-control-closeout:
-  en: 2b5ea9e17f06bfaf
-  zh: 356f5e3de15396d3
-/apus-reflex-harness-release-notes/0-1-7-rc-2-reflex-control-closeout/added-and-verified:
-  en: f40ff88ec4a8e2eb
-  zh: df6537c27b8dfcd3
-/apus-reflex-harness-release-notes/0-1-7-rc-2-reflex-control-closeout/known-limits-before-a-public-release:
+/apus-reflex-release-notes:
+  en: 01fed25221d5210d
+  zh: 3d303241cd0c76c9
+/apus-reflex-release-notes/0-1-7-rc-2-reflex-control-closeout:
+  en: ad57970f3ef9e259
+  zh: b2283e13fadcd13e
+/apus-reflex-release-notes/0-1-7-rc-2-reflex-control-closeout/added-and-verified:
+  en: 015e10ac99ac8da2
+  zh: f0e5c15510c6a0df
+/apus-reflex-release-notes/0-1-7-rc-2-reflex-control-closeout/known-limits-before-a-public-release:
   en: 54a98b06d81d2f63
   zh: 1f83266b9e5ddab2
-/apus-reflex-harness-release-notes/0-1-7-rc-2-reflex-control-closeout/attribution-and-license:
-  en: ff7bd47d4df6e068
-  zh: 37f766564da131da
+/apus-reflex-release-notes/0-1-7-rc-2-reflex-control-closeout/attribution-and-license:
+  en: be32768c61bdccf9
+  zh: 04660c6dd12d7fe8

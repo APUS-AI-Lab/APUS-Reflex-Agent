@@ -2,7 +2,7 @@
 <p class="badge">验收排程 · 2026-10-08 · 进行中</p><h1>APUS Reflex：每项能力的实现与真实验收</h1>
 <p><b>直接执行：</b>逐项对照宣传页、当前源码、配置和实际场景。本轮已有真实源码组合2/2与本地built shipped Web 1/1通过；本地未部署prd，不表示14项招牌能力全部完成。</p>
 <p><b>深度交互：</b>“存在代码”“配置开启”“某场景通过”各有证明范围。提前完成负路径通过，仍发现初始附加要求在create_goal后丢失；专用核验依据UI也尚未实现。已运行的场景与尚待交付范围分别保留。</p>
-<p><strong>公开证据范围：</strong>本页浏览器结论来自历史原始记录；原始 Session、精确 UI build、overlay 和详细执行证据已私有归档。公开 JSON 仅保留摘要元数据，不含事件正文，不能独立复核下文 seq 引用。资料清理不代表重新验收。</p>
+<p><strong>公开证据范围：</strong>本页浏览器与源码组合结论来自历史原始记录；原始 Session、精确 UI build、overlay 和详细执行证据已私有归档。公开 JSON 仅保留摘要元数据，不含事件正文，不能独立复核下文 seq 引用。资料清理不代表重新验收。</p>
 <nav><a href="#evidence">证据层次</a><a href="#gaps">已证差距</a><a href="#signature">招牌能力</a><a href="#native">原生能力</a><a href="#planned">下一步</a><a href="feature-acceptance.json">机器可读矩阵</a></nav><h2 id="evidence">当前可确认的证据</h2><div class="grid">
 <div class="card"><h3>历史生产发布：5/5</h3><p>seal-v01d/accept.log：apus-reflex-v0.1.0（runtime 0.1.7-rc.2），routing 26s、folding 38s、task-frame 64s、goal-interrupt 67s、codex-forward 99s。仅代表v0.1基线。</p></div>
 <div class="card"><h3>真实源码组合：2/2</h3><p>DeepSeek Flash + Jev + 生产FS/Goal服务，goal 49事件、47.105s会话跨度，判断2306/3768ms；追加要求：65事件、15.699s、判断1496/2331ms。均完成rev2并重开JSONL。事件数组不含Session header；测试进程总耗时63.97s（主代理执行记录），与会话跨度分别记录。</p><a href="completion-live-product-result.json">目标核验报告</a> · <a href="completion-live-product-result-requirement.json">追加要求报告</a></div>

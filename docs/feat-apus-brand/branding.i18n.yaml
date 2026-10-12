@@ -2,12 +2,12 @@
 # section, a hash of its English and Chinese blocks outside code blocks and generated regions.
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/feat-apus-brand/branding.md
-/apus-reflex-harness-branding-and-assembly:
-  en: 7cd7dcccc10fc623
-  zh: 85d461ac9f233c3a
-/apus-reflex-harness-branding-and-assembly/authoritative-inputs:
+/apus-reflex-branding-and-assembly:
+  en: 10e610e12f967a06
+  zh: f17b2b45587f1d4f
+/apus-reflex-branding-and-assembly/authoritative-inputs:
   en: 26925c1254e41d58
   zh: d0c8e839b1e14219
-/apus-reflex-harness-branding-and-assembly/compatibility-and-attribution:
+/apus-reflex-branding-and-assembly/compatibility-and-attribution:
   en: 800ff70cdde31176
   zh: f362af9371c9fc3c

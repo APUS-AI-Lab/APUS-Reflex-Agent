@@ -3,8 +3,8 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/cordis-primer.md
 /cordis-primer:
-  en: 065178153a059ae3
-  zh: d1c5c429a8c35ac2
+  en: 0d6aabe693bb7e65
+  zh: 82ea6dfb8539c2cb
 /cordis-primer/cordis-in-five-ideas:
   en: c11cc0f2927f7bad
   zh: 4fc01f41da6b1c3e

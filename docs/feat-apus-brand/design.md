@@ -1,4 +1,4 @@
-# APUS Reflex Harness brand unification design
+# APUS Reflex brand unification design
 
 English | [中文](design.zh.md)
 
@@ -8,7 +8,7 @@ Status: approved by the user for implementation. Scope: first-party product bran
 
 | Item | Unified value |
 | --- | --- |
-| English product and Harness name | APUS Reflex Harness |
+| English product and Harness name | APUS Reflex |
 | Chinese name | 瞬策 |
 | Wordmark | APUS / REFLEX |
 | Slogan | 瞬时执行，深度思考 |

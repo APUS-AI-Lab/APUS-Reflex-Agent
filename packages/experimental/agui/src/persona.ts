@@ -22,7 +22,7 @@ export interface Persona {
 }
 
 /** Used until a client sends its own persona. */
-export const DEFAULT_PERSONA: Persona = { name: 'System3', tone: 'concise' }
+export const DEFAULT_PERSONA: Persona = { name: 'APUS Reflex', tone: 'concise' }
 
 /** Name of the per-Agent section that lists the capabilities of the mounted tools. */
 export const CAPABILITIES_SECTION = 'persona:capabilities'

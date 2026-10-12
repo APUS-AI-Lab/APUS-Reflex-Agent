@@ -1270,7 +1270,7 @@ describe('boot', () => {
 
 describe('addHarnessSourceSection', () => {
   const SOURCE_ROOT = `${sep}opt${sep}harness-src`
-  const EXPECTED = `The APUS Reflex Harness implementation checkout is at ${SOURCE_ROOT}. The checkout location and current working directory are separate values and may differ; never infer the working directory from this path. Use pwd to determine the current working directory. Use this checkout only to inspect or extend DSH itself.`
+  const EXPECTED = `The APUS Reflex implementation checkout is at ${SOURCE_ROOT}. The checkout location and current working directory are separate values and may differ; never infer the working directory from this path. Use pwd to determine the current working directory. Use this checkout only to inspect or extend DSH itself.`
 
   it('distinguishes the source path from the current workdir after reusable instructions', async () => {
     const ctx = new Context()
@@ -1286,7 +1286,7 @@ describe('addHarnessSourceSection', () => {
       expect(rendered).toContain(EXPECTED)
       // The >= 0 guards keep a drifted opener/persona string from a false pass
       // through `-1 < n`.
-      const identityAt = rendered.indexOf('You are an AI agent powered by APUS Reflex Harness.')
+      const identityAt = rendered.indexOf('You are an AI agent powered by APUS Reflex.')
       const sourceAt = rendered.indexOf(EXPECTED)
       const personaAt = rendered.indexOf('You are a coding agent.')
       expect(identityAt).toBeGreaterThanOrEqual(0)

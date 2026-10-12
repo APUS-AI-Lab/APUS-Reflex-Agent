@@ -1,5 +1,5 @@
 ---
-description: "面向 DeepSeek Harness 会话日志的模型侧 todo_write 工具：整表替换、单一会话归属与 todos 投影，供选择、配置或排查该工具的用户与维护者阅读。"
+description: "面向 APUS Reflex 会话日志的模型侧 todo_write 工具：整表替换、单一会话归属与 todos 投影，供选择、配置或排查该工具的用户与维护者阅读。"
 kind: "package-reference"
 ---
 

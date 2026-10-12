@@ -1,4 +1,4 @@
-# APUS Reflex Harness
+# APUS Reflex
 
 [English](README.md) | 中文
 
@@ -6,7 +6,7 @@
 
 APUS 将连续的模型调用组织成围绕目标持续推进的工作：理解需求、选择行动、执行、检查证据、恢复相关上下文，再继续。你选择通用模型负责规划与生成，也可以接入自己的 Reflex/Jev 决策服务，在关键节点进行结构化判断。
 
-APUS 基于 DeepSeek Harness，将模型推理与执行、权限及持久 Session 历史分开管理。项目处于 **开发者预览阶段**。[发布准备评审](docs/dev-continuum-reflex-integration/release-readiness.zh.md) 记录了已验证行为和仍需完成的验收。
+APUS Reflex 将模型推理与执行、权限及持久 Session 历史分开管理。项目处于 **开发者预览阶段**。[发布准备评审](docs/dev-continuum-reflex-integration/release-readiness.zh.md) 记录了已验证行为和仍需完成的验收。
 
 ## 为持续的个人项目打造 Personal Agent
 
@@ -44,7 +44,7 @@ APUS 基于 DeepSeek Harness，将模型推理与执行、权限及持久 Sessio
 | Reflex 决策层 | 已配置能力选择路由或记忆候选、判断进展，并提出有界恢复建议。 |
 | Harness 执行层 | 工具、skills 与子 Agent 执行工作，遵守权限、取消规则和进程生命周期管理。 |
 | 持久记忆层 | Continuum 从同一 Session 恢复已准入的记录，并重建检索索引。 |
-| 上下文投影层 | 用相关片段组成有界模型请求；System3 上下文投影保护已提交的历史前缀。 |
+| 上下文投影层 | 用相关片段组成有界模型请求；Reflex 控制层 上下文投影保护已提交的历史前缀。 |
 | 结果反馈层 | 已记录的行动、结果与决策记录，为后续工作和独立检查提供依据。 |
 
 决策服务可以自行配置。替换服务需要实现受支持的 Jev/System One 协议；任意 chat-completions 端点并不会自动成为所有 Reflex 能力的替代品。参见 [Jev provider 指南](packages/experimental/apus-dsh-jev-plugin/README.zh.md)。
@@ -66,7 +66,7 @@ APUS 基于 DeepSeek Harness，将模型推理与执行、权限及持久 Sessio
 
 “无损”需要限定范围。成功 flush 后，已接纳的文本事件可以继续保留在 Session 中；这不保证无损召回，也不保证所有上传内容的每个原始字节均被保留。自动记忆准入提取文本，附件遵循独立存储规则，图片可能归一化或缩放。一次内存 append 成功不能证明磁盘写入已成功。
 
-摘要树和 zoom 辅助能力提供显式 API；自动生命周期检索目前使用记录索引。本地稳定前缀测量不等于 provider 缓存命中或计费测量。System3 的实时上下文集成另行保护冻结或已提交前缀。参见 [架构后续任务](docs/dev-continuum-reflex-integration/architecture-followups.zh.md)。
+摘要树和 zoom 辅助能力提供显式 API；自动生命周期检索目前使用记录索引。本地稳定前缀测量不等于 provider 缓存命中或计费测量。Reflex 控制层 的实时上下文集成另行保护冻结或已提交前缀。参见 [架构后续任务](docs/dev-continuum-reflex-integration/architecture-followups.zh.md)。
 
 ## 持续工作，也保留控制
 
@@ -77,18 +77,18 @@ APUS 基于 DeepSeek Harness，将模型推理与执行、权限及持久 Sessio
 | 恢复 | 有界 Codex 恢复在中断并核对已有工作前，检查无活动时长、待审批状态和仍在执行的副作用。 |
 | 完成审查 | active 模式可在拒绝额度内拦截缺乏支持的完成声明；部署示例默认 shadow 审查。独立验收仍然必要。 |
 | 执行额度 | Goal 轮次、决策超时、干预次数与恢复次数限制持续工作，不代表已实现统一的金额预算。 |
-| 权限与数据 | 工具权限、进程隔离、System3 路由策略和 Continuum scope 分别管理。模型判断不会授予额外权限。 |
+| 权限与数据 | 工具权限、进程隔离、Reflex 控制层 路由策略和 Continuum scope 分别管理。模型判断不会授予额外权限。 |
 
-你决定生成与决策请求在哪里运行。System3 数据类别配置不是全局网络防火墙；显式启用记忆选择器后，它会向配置的 Jev 服务发送查询及候选片段。[公共 provider 指南](docs/dev-continuum-reflex-integration/public-provider-configuration.zh.md) 说明了配置、凭据和默认通用模型路径。
+你决定生成与决策请求在哪里运行。Reflex 控制层 数据类别配置不是全局网络防火墙；显式启用记忆选择器后，它会向配置的 Jev 服务发送查询及候选片段。[公共 provider 指南](docs/dev-continuum-reflex-integration/public-provider-configuration.zh.md) 说明了配置、凭据和默认通用模型路径。
 
 ## 使用 Reflex，也可以先用通用模型
 
 | 配置 | 可用行为 |
 | --- | --- |
-| 通用模型，不接 Jev | 原版 DSH 的生成、工具与 Session 持久化。Reflex 专属 Continuum 功能保持关闭。 |
+| 通用模型，不接 Jev | Harness 的生成、工具与 Session 持久化。Reflex 专属 Continuum 功能保持关闭。 |
 | 已配置 Reflex/Jev | 可分别启用结构化决策能力；仅挂载 provider 不会自动激活所有集成。 |
 | 已启用 Continuum | 需要 Reflex，以及记忆准入和 scope 设置。选择器的 off/shadow/active 分别对应基线选择、记录建议和采纳验证后的建议。 |
-| System3 部署未配置数据类别 | System3 显式关闭，包括本地过程监督；普通生成继续使用已配置的 provider。 |
+| Reflex 控制层 部署未配置数据类别 | Reflex 控制层 显式关闭，包括本地过程监督；普通生成继续使用已配置的 provider。 |
 
 这样既保留独立可用的通用模型运行时，也让 Reflex 在明确的决策节点参与工作。启用能力包含对应的配置与部署工作。
 
@@ -96,7 +96,7 @@ APUS 基于 DeepSeek Harness，将模型推理与执行、权限及持久 Sessio
 
 [正式 profile 记忆测试](apps/cli/tests/profiles/headless/tests/continuum-memory.e2e.ts) 在独立进程中启动源码和构建后的 profile：检查第一个进程持久化的事实与来源引用，再要求事实出现在恢复进程自己的模型请求日志里。关闭开关、无 Jev 及新 Session 对照用例检查启用条件与隔离行为。
 
-[公开 bundle 测试](packages/experimental/apus-dsh-jev-plugin/tests/public-bundle.spec.ts) 验证实际 Loader 配置与本地 HTTP 请求，包括匿名或认证 provider、非法配置和已有 profile 覆盖。[System3 上下文测试](packages/experimental/system3/tests/reflex-context.spec.ts) 覆盖投影及受保护约束。录制型 provider 能证明集成行为，不能证明真实模型的决策或召回质量。
+[公开 bundle 测试](packages/experimental/apus-dsh-jev-plugin/tests/public-bundle.spec.ts) 验证实际 Loader 配置与本地 HTTP 请求，包括匿名或认证 provider、非法配置和已有 profile 覆盖。[Reflex 控制层 上下文测试](packages/experimental/system3/tests/reflex-context.spec.ts) 覆盖投影及受保护约束。录制型 provider 能证明集成行为，不能证明真实模型的决策或召回质量。
 
 [验收评审](docs/feat-reflex-control/apus-reflex-harness-acceptance-review.html) 记录真实 provider 示例及其边界。健康长任务、中途修改 Goal、大规模历史性能、远程质量与回退测量、完整回归及签名桌面打包，都需要各自的证据。一次合并不是发布认证。
 
@@ -118,19 +118,11 @@ pnpm dsh web
 
 `pnpm run build` 准备仓库构建产物；`pnpm dsh web` 直接启动这些产物，不会重新构建。在 Web 设置中配置生成模型和凭据。需要开发时自动重建，可使用 `pnpm run dev:web`。
 
-可选的 Reflex、System3 与记忆需要对应的 profile 配置。请参阅 [公共 provider 指南](docs/dev-continuum-reflex-integration/public-provider-configuration.zh.md)、[System3 指南](packages/experimental/system3/README.zh.md) 和 [Continuum 指南](packages/context/continuum/README.zh.md)。上面的启动命令不会自动开启所有能力。
-
-### 上游 npm 发行版
-
-```sh
-npx @deepseek-ai/dsh web
-```
-
-此命令安装上游 DeepSeek Harness，不安装 APUS 或此分支的 Jev 扩展。其 Web UI 默认地址为 `http://127.0.0.1:3080`；使用 `--no-open` 可避免打开本地浏览器。参见 [Web UI 指南](docs/user/guide/index.zh.md)。
+可选的 Reflex 决策与记忆需要对应的 profile 配置。请参阅 [公共 provider 指南](docs/dev-continuum-reflex-integration/public-provider-configuration.zh.md)、[Reflex 控制层 指南](packages/experimental/system3/README.zh.md) 和 [Continuum 指南](packages/context/continuum/README.zh.md)。上面的启动命令不会自动开启所有能力。
 
 ## 两个独立仓库
 
-[APUS Reflex Harness](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness) 管理运行时及其 Web/client 组件。[APUS Reflex Frontend](https://github.com/APUS-AI-Lab/APUS-Reflex-Frontend) 管理独立桌面组装，并固定一个 Harness revision。更新 Harness `main` 不会更新已经打包的桌面运行时；需要准备并验证目标 pin。
+[APUS Reflex](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness) 管理运行时及其 Web/client 组件。[APUS Reflex Desktop](https://github.com/APUS-AI-Lab/APUS-Reflex-Frontend) 管理独立桌面组装，并固定一个 Harness revision。更新 Harness `main` 不会更新已经打包的桌面运行时；需要准备并验证目标 pin。
 
 ## 贡献与支持
 
@@ -140,18 +132,6 @@ npx @deepseek-ai/dsh web
 - 运行前阅读 [SAFETY.zh.md](SAFETY.zh.md)；安全漏洞请通过 [SECURITY.md](SECURITY.md) 报告，不要提交公开 issue。
 - Agent 贡献者应遵循 [AGENTS.md](AGENTS.md)。公共 API 尚未稳定，可能出现不兼容变更。
 
-## 上游与许可证
+## 许可证与归属
 
-APUS 扩展了 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)，上游由 [DeepSeek AI](https://deepseek.com) 开发。其插件架构采用 [Cordis](https://github.com/cordiverse/cordis)，设计说明见 [A Programming Paradigm for Spatiotemporal Composability](https://arxiv.org/abs/2608.25512)。[上游文档](https://deepseek-harness.github.io/deepseek-harness/) 描述上游发行版，APUS 配置以本仓库说明为准。
-
-[MIT](LICENSE)。完整保留 DeepSeek 原版权与许可声明。[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) 记录第三方依赖及许可证。APUS 品牌不替代上游作者归属，也不表示获得其背书。参见 [品牌与组装说明](docs/feat-apus-brand/branding.zh.md)。
-
-```bibtex
-@misc{deepseek-harness2026,
-  title={DeepSeek Harness: Everything is a Plugin},
-  author={DeepSeek-AI},
-  year={2026},
-  publisher={GitHub},
-  howpublished={\url{https://github.com/deepseek-ai/deepseek-harness}},
-}
-```
+[MIT](LICENSE)。原始版权及许可声明保留在 [LICENSE](LICENSE) 与 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。APUS Reflex 是独立产品；产品品牌不替代上游作者归属，也不暗示上游背书。参见 [品牌与组装](docs/feat-apus-brand/branding.zh.md)。

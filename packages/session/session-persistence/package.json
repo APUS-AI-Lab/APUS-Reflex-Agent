@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-session-persistence",
-  "description": "Abstract durable session persistence seam (ctx.sessionPersistence) for the DeepSeek Harness",
+  "description": "Abstract durable session persistence seam (ctx.sessionPersistence) for the APUS Reflex",
   "version": "0.1.7-rc.2",
   "publishConfig": {
     "access": "public"

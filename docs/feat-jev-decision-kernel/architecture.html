@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>APUS Reflex Harness 架构总览</title>
+<title>APUS Reflex 架构总览</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700&family=Noto+Sans+SC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 :root {
@@ -74,7 +74,7 @@ a { color: var(--accent); }
 <main>
 <header style="display:grid;gap:12px">
   <div class="eyebrow">System3 · 架构与体验总览 · 2026-10-08</div>
-  <h1>APUS Reflex Harness：agent 的管家与模型路由管理层</h1>
+  <h1>APUS Reflex：agent 的管家与模型路由管理层</h1>
   <p class="lead muted">分层架构包含 System3 即时决策层与 DSH 原生底座。下文运行流程和历史数据对应 v0.1 基线；第六节列出新一轮 P0 设计与真实验收进度。每项完整实现和当前构建验收见<a href="feature-acceptance.html">逐项验收矩阵</a>。</p>
   <p class="thesis">DSH 负责“让 agent 能干活”，System3 负责“让 agent 干对、干快、按用户说的干”。Jev 只做快速、可回放的封闭判断，动作由 System3 直接执行，文字只用用户原话或模型生成。</p>
 </header>
@@ -176,11 +176,11 @@ a { color: var(--accent); }
 <section>
   <h2>五、实测数据</h2>
   <div class="metrics">
-    <div class="metric"><span class="n">0.3–1 s</span><span class="k">入口路由判断</span><span class="c">prd 会话日志</span></div>
-    <div class="metric"><span class="n">~1 s</span><span class="k">运行中插话生效</span><span class="c">判断加插入，prd 多次实测</span></div>
+    <div class="metric"><span class="n">0.3–1 s</span><span class="k">入口路由判断</span><span class="c">历史部署环境 会话日志</span></div>
+    <div class="metric"><span class="n">~1 s</span><span class="k">运行中插话生效</span><span class="c">判断加插入，历史部署环境 多次实测</span></div>
     <div class="metric"><span class="n">126 条</span><span class="k">任务卡与插话标注集</span><span class="c">最后两组留出集全对</span></div>
     <div class="metric"><span class="n">57–65%</span><span class="k">失败日志节省</span><span class="c">可逐字节还原</span></div>
-    <div class="metric"><span class="n">5 / 5</span><span class="k">浏览器验收场景</span><span class="c">main 发布到 prd 后</span></div>
+    <div class="metric"><span class="n">5 / 5</span><span class="k">浏览器验收场景</span><span class="c">main 发布到 历史部署环境 后</span></div>
   </div>
 </section>
 

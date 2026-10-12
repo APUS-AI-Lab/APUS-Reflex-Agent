@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-The runtime-diagnostics group provides runtime self-checking for DeepSeek Harness compositions: one package, `invariants`, runs package-owned checks that verify each package's durable event and data relationships while the composition is live. A violation surfaces as an error attributed to the package that owns the relationship; a global switch and package-name filters control which checks run. Use this group's package when a composition should verify its own runtime contracts as part of normal operation.
+The runtime-diagnostics group provides runtime self-checking for APUS Reflex compositions: one package, `invariants`, runs package-owned checks that verify each package's durable event and data relationships while the composition is live. A violation surfaces as an error attributed to the package that owns the relationship; a global switch and package-name filters control which checks run. Use this group's package when a composition should verify its own runtime contracts as part of normal operation.
 
 ## Table of Contents
 

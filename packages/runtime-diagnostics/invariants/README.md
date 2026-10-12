@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-`dsh-invariants` runs package-owned runtime checks — invariants — inside a DeepSeek Harness composition: any package can ship a `./invariant` companion that verifies its own durable relationships (authoritative event streams and mutable snapshots) while the composition runs. Checks run automatically, and a failed check reports an `InvariantError` attributed to the package that owns the violated relationship. Choose it for compositions that want self-checking diagnostics with a global switch and package-name filters; the standard agent composition already mounts it with the four core companions, and loading the service alone installs no checks.
+`dsh-invariants` runs package-owned runtime checks — invariants — inside a APUS Reflex composition: any package can ship a `./invariant` companion that verifies its own durable relationships (authoritative event streams and mutable snapshots) while the composition runs. Checks run automatically, and a failed check reports an `InvariantError` attributed to the package that owns the violated relationship. Choose it for compositions that want self-checking diagnostics with a global switch and package-name filters; the standard agent composition already mounts it with the four core companions, and loading the service alone installs no checks.
 
 ## Table of Contents
 

@@ -28,7 +28,7 @@
 <path d="M1090 406V462" fill="none" stroke="#fb7185" stroke-width="2" marker-end="url(#policy-arrow)"/>
 <rect x="60" y="158" width="520" height="96" rx="8" fill="#0f172a"/>
 <rect x="60" y="158" width="520" height="96" rx="8" fill="#22d3ee" fill-opacity=".08" stroke="#22d3ee" stroke-width="1.5"/>
-<text class="label" x="78" y="188">xDAN System3.app</text>
+<text class="label" x="78" y="188">APUS Reflex Desktop</text>
 <text class="copy" x="78" y="214">Electron 主进程 / preload / 原生 Conversation</text>
 <text class="copy" x="78" y="237">固定自有 runtime manifest；禁止 stock fallback</text>
 <rect x="60" y="310" width="520" height="96" rx="8" fill="#0f172a"/>
@@ -55,19 +55,19 @@
 <text class="copy" x="708" y="237">私有 launch URL 换 cookie；匿名 API 请求 401</text>
 <rect x="690" y="310" width="520" height="96" rx="8" fill="#0f172a"/>
 <rect x="690" y="310" width="520" height="96" rx="8" fill="#34d399" fill-opacity=".08" stroke="#34d399" stroke-width="1.5"/>
-<text class="label" x="708" y="340">litellm · xdan-system3.service · 非 root</text>
+<text class="label" x="708" y="340">兼容 systemd 服务 · 非 root</text>
 <text class="copy" x="708" y="366">原生 systemd + bubblewrap；回环监听</text>
 <text class="copy" x="708" y="389">Docker 构建产物，不是最终应用运行容器</text>
 <rect x="690" y="462" width="245" height="123" rx="8" fill="#0f172a"/>
 <rect x="690" y="462" width="245" height="123" rx="8" fill="#a78bfa" fill-opacity=".08" stroke="#a78bfa" stroke-width="1.5"/>
 <text class="label" x="708" y="492">服务器数据</text>
-<text class="copy" x="708" y="518">/var/lib/xdan-system3</text>
+<text class="copy" x="708" y="518">服务数据目录</text>
 <text class="copy" x="708" y="541">专属 DSH_HOME 与 workspace</text>
 <text class="copy" x="708" y="564">Session / Schedule / 产物</text>
 <rect x="975" y="462" width="235" height="123" rx="8" fill="#0f172a"/>
 <rect x="975" y="462" width="235" height="123" rx="8" fill="#fb7185" fill-opacity=".08" stroke="#fb7185" stroke-width="1.5"/>
 <text class="label" x="993" y="492">服务器 Host 凭据</text>
-<text class="copy" x="993" y="518">/etc/xdan-system3</text>
+<text class="copy" x="993" y="518">受限配置目录</text>
 <text class="copy" x="993" y="541">runtime.env / 0600</text>
 <text class="copy" x="993" y="564">工具子进程已验证不携带 Key</text>
 <rect x="60" y="704" width="1150" height="99" rx="8" fill="#0f172a"/>
