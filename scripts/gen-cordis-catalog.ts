@@ -223,6 +223,7 @@ export const EVENT_SCOPE_PAGE: Record<string, string> = {
   'connection': 'web-server.md',
   'compaction': 'compaction.md',
   'cordis': 'extensions.md',
+  'system3': 'extensions.md',
   'authorization': 'credentials.md',
   'credentials': 'credentials.md',
   'deepseek-account': 'credentials.md',
@@ -610,6 +611,13 @@ export const LINK_MAP: Readonly<Record<string, string>> = {
   SubagentPromptRequest: 'subagent.md',
   SubagentProvider: 'subagent.md',
   SubagentRun: 'subagent.md',
+  SubagentEvidenceInfo: 'subagent.md',
+  VerificationEnvelope: 'subagent.md',
+  VerificationRejection: 'subagent.md',
+  SubagentRunId: 'subagent.md',
+  SubagentRecoveryState: 'subagent.md',
+  SubagentRecoveryReceipt: 'subagent.md',
+  SubagentSupervisorRecovery: 'subagent.md',
   SubagentRuntime: 'subagent.md',
   SubagentStartRequest: 'subagent.md',
   SubagentSteerReceipt: 'subagent.md',
@@ -839,6 +847,16 @@ export const TYPE_LINK_EXEMPTIONS: Readonly<Record<string, string>> = {
   JevProvider: 'System One decision contract is owned by packages/experimental/apus-dsh-jev-plugin/README.md',
   JevProviderInfo: 'System One decision contract is owned by packages/experimental/apus-dsh-jev-plugin/README.md',
   JevRequest: 'System One decision contract is owned by packages/experimental/apus-dsh-jev-plugin/README.md',
+  ReflexCapabilityId:
+    'Reflex configuration API is owned by packages/experimental/apus-dsh-jev-plugin/README.md#reflex-model-configuration',
+  ReflexCapabilityState:
+    'Reflex configuration API is owned by packages/experimental/apus-dsh-jev-plugin/README.md#reflex-model-configuration',
+  ReflexStatus:
+    'Reflex configuration API is owned by packages/experimental/apus-dsh-jev-plugin/README.md#reflex-model-configuration',
+  ReflexConnectionInput:
+    'Reflex configuration API is owned by packages/experimental/apus-dsh-jev-plugin/README.md#reflex-model-configuration',
+  ReflexConnectionResult:
+    'Reflex configuration API is owned by packages/experimental/apus-dsh-jev-plugin/README.md#reflex-model-configuration',
   JevSpec: 'System One decision contract is owned by packages/experimental/apus-dsh-jev-plugin/README.md',
   System3AdviceAction: 'System3 policy contract is owned by packages/experimental/system3/README.md',
   System3CostRecord: 'System3 policy contract is owned by packages/experimental/system3/README.md',

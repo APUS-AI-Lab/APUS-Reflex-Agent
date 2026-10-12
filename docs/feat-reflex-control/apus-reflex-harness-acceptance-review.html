@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>APUS Reflex Harness｜专家级产品闭环验收</title>
+  <meta name="description" content="APUS Reflex Harness 前后端统一品牌、产品闭环、动态上下文、Codex 监督与发布合并的逐项验收报告。">
+  <style>
+    :root {
+      --ink: #1b2b28; --muted: #66726e; --paper: #f6f7f2; --panel: #fff;
+      --line: #dce4df; --green: #13795b; --green-soft: #dff3e9; --amber: #a76414;
+      --amber-soft: #fff0d7; --red: #a53b35; --red-soft: #fde5e2; --blue: #245f8f;
+      --blue-soft: #e4f0f9; --shadow: 0 10px 30px rgba(25, 48, 42, .08);
+      --radius: 14px; --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; color: var(--ink); background: var(--paper); font: 15px/1.65 var(--font); }
+    a { color: var(--blue); text-underline-offset: 3px; }
+    a:focus-visible, button:focus-visible, summary:focus-visible { outline: 3px solid #e3a32d; outline-offset: 3px; }
+    header { padding: 58px max(24px, calc((100vw - 1240px) / 2)); color: #f5fbf7; background: #153b31; border-bottom: 5px solid #e1962d; }
+    header .eyebrow { letter-spacing: .14em; text-transform: uppercase; font-size: 12px; color: #a9d6bd; }
+    h1 { max-width: 900px; margin: 10px 0 12px; font-size: clamp(30px, 5vw, 58px); line-height: 1.08; letter-spacing: -.035em; }
+    header p { max-width: 850px; margin: 0; color: #d7e8df; font-size: 17px; }
+    .shell { width: min(1240px, calc(100% - 40px)); margin: 0 auto; }
+    nav { position: sticky; top: 0; z-index: 3; background: rgba(246,247,242,.94); border-bottom: 1px solid var(--line); backdrop-filter: blur(12px); }
+    nav .shell { display: flex; gap: 18px; overflow-x: auto; padding: 12px 0; white-space: nowrap; }
+    nav a { font-size: 13px; color: var(--muted); text-decoration: none; }
+    nav a:hover { color: var(--green); }
+    main { padding: 28px 0 80px; }
+    section { scroll-margin-top: 66px; margin: 28px 0; }
+    .hero-grid, .stats, .two-col, .three-col { display: grid; gap: 16px; }
+    .hero-grid { grid-template-columns: 1.15fr .85fr; align-items: stretch; }
+    .stats { grid-template-columns: repeat(4, 1fr); }
+    .two-col { grid-template-columns: repeat(2, 1fr); }
+    .three-col { grid-template-columns: repeat(3, 1fr); }
+    .panel, .stat, .capability, details { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+    .panel, .capability { padding: 22px; }
+    .panel h2, .panel h3, .capability h3 { margin-top: 0; }
+    .stat { padding: 18px; }
+    .stat strong { display: block; font-size: 32px; line-height: 1; margin-bottom: 7px; }
+    .stat small { color: var(--muted); }
+    .kicker { color: var(--green); font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+    .status { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 3px 9px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+    .status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+    .pass { color: var(--green); background: var(--green-soft); }
+    .partial, .pending { color: var(--amber); background: var(--amber-soft); }
+    .blocked { color: var(--red); background: var(--red-soft); }
+    .scope { color: var(--blue); background: var(--blue-soft); }
+    .callout { border-left: 4px solid var(--amber); background: #fff9ed; padding: 13px 16px; }
+    .callout strong { color: #7b4d12; }
+    .flow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; align-items: stretch; margin: 18px 0 6px; }
+    .flow div { position: relative; min-height: 94px; padding: 13px; background: #edf7f0; border: 1px solid #c9e3d2; border-radius: 10px; }
+    .flow div:not(:last-child)::after { content: "→"; position: absolute; right: -16px; top: 32px; color: var(--green); font-size: 22px; font-weight: 700; z-index: 1; }
+    .flow b { display: block; margin-bottom: 4px; }
+    table { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+    th, td { padding: 12px 13px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { background: #eff4f0; color: #38534a; font-size: 12px; letter-spacing: .04em; }
+    tr:last-child td { border-bottom: 0; }
+    td.id { width: 86px; font-weight: 800; white-space: nowrap; color: var(--green); }
+    td.state { width: 116px; }
+    td.evidence { color: var(--muted); }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 9px; align-items: center; margin: 12px 0; }
+    .toolbar button, .toolbar input { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); padding: 8px 11px; font: inherit; }
+    .toolbar button { cursor: pointer; }
+    .toolbar button[aria-pressed="true"] { color: #fff; background: var(--green); border-color: var(--green); }
+    .toolbar input { min-width: 230px; }
+    details { margin: 10px 0; box-shadow: none; }
+    summary { cursor: pointer; list-style-position: inside; padding: 13px 16px; font-weight: 700; }
+    details .detail { padding: 0 16px 16px; color: var(--muted); }
+    .checklist { list-style: none; margin: 0; padding: 0; }
+    .checklist li { display: flex; gap: 9px; align-items: flex-start; padding: 7px 0; border-bottom: 1px dashed var(--line); }
+    .checklist li:last-child { border-bottom: 0; }
+    .check { color: var(--green); font-weight: 800; }
+    .x { color: var(--red); font-weight: 800; }
+    footer { padding: 30px 0 70px; color: var(--muted); border-top: 1px solid var(--line); }
+    code { padding: 1px 4px; color: #704c17; background: #fff4dc; border-radius: 4px; overflow-wrap: anywhere; }
+    .muted { color: var(--muted); }
+    @media (max-width: 1024px) { .hero-grid, .three-col { grid-template-columns: 1fr; } .flow { grid-template-columns: repeat(3, 1fr); } .flow div:nth-child(3)::after { display: none; } }
+    @media (max-width: 768px) { .stats, .two-col { grid-template-columns: repeat(2, 1fr); } .flow { grid-template-columns: 1fr 1fr; } .flow div:nth-child(even)::after { display: none; } table { display: block; overflow-x: auto; } }
+    @media (max-width: 375px) { .shell { width: min(100% - 24px, 1240px); } header { padding: 40px 12px; } .stats, .two-col, .flow { grid-template-columns: 1fr; } .flow div::after { display: none !important; } .toolbar input { min-width: 100%; } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; } }
+    @media (prefers-color-scheme: dark) { :root { --ink:#e8f0eb; --muted:#a5b3ad; --paper:#11221d; --panel:#193229; --line:#345148; --green-soft:#1d4b3a; --amber-soft:#533b1f; --red-soft:#572c2a; --blue-soft:#203d52; --shadow:0 10px 30px rgba(0,0,0,.2); } nav { background: rgba(17,34,29,.94); } th { background:#214339; color:#d0e7da; } .callout { background:#392d1b; } code { background:#42351f; color:#f0d28c; } }
+  </style>
+</head>
+<body>
+<header>
+  <div class="shell">
+    <div class="eyebrow">APUS REFLEX HARNESS · PRODUCT CLOSURE REVIEW</div>
+    <h1>三层智能产品闭环<br>专家级逐项验收报告</h1>
+    <p>把用户入口路由、Codex Goal 监督与纠偏、动态上下文与可恢复记忆、Reflex 配置、UI/UX、MIT 交付和两仓合并放在同一条可审计证据链上。</p>
+    <p class="muted" style="margin-top:18px;color:#b7d1c5">审计快照：2026-10-11 · Harness / Frontend <code>feat-reflex-control</code> · 不是 main 或签名发布版</p>
+  </div>
+</header>
+<nav aria-label="报告导航"><div class="shell">
+  <a href="#decision">结论</a><a href="#architecture">闭环架构</a><a href="#capabilities">三项能力</a><a href="#matrix">逐项验收</a><a href="#ux">用户体验</a><a href="#release">合并发布</a><a href="#opensource">开源 P0/P1</a><a href="#roadmap">P0–P3 计划</a><a href="#limits">范围边界</a>
+</div></nav>
+<main class="shell">
+  <section id="decision" class="hero-grid">
+    <div class="panel">
+      <div class="kicker">Executive decision</div>
+      <h2>当前结论：工程回归接近收口，产品闭环尚未达到 main 合并门槛</h2>
+      <p>入口路由、Reflex 配置、按行/片段上下文投影与恢复、cache 区保护、受控重复失败恢复、原生静默恢复、严格 v6 语义纠偏和品牌/MIT 检查已有证据。Electron 200% 系统缩放、页面级 200% 缩放矩阵也已有证据；真实用户中途改需求、默认部署健康任务对照、远端首字节/回退、签名公证与正式发布仍缺证据。</p>
+      <div class="callout"><strong>合并判断：</strong>保留 Draft PR。先完成剩余 P0 的真实用户路径、远端门禁和正式包验收，再合并两仓 main。</div>
+    </div>
+    <div class="panel">
+      <div class="kicker">Evidence rule</div>
+      <h3>状态含义</h3>
+      <ul class="checklist">
+        <li><span class="check">●</span><span><b>真实通过</b>：用户入口或真实运行时产生了所需证据。</span></li>
+        <li><span style="color:var(--amber);font-weight:800">●</span><span><b>部分通过</b>：确定性回归或受控场景通过，核心真实路径仍缺。</span></li>
+        <li><span style="color:var(--amber);font-weight:800">●</span><span><b>待测</b>：已有设计/代码，但没有对应最终包或用户路径证据。</span></li>
+        <li><span class="x">●</span><span><b>阻断</b>：已有试验暴露因果或环境问题，不能以成功结果覆盖。</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="stats" aria-label="验收统计">
+    <div class="stat"><strong>37</strong><small>逐项验收目标</small></div>
+    <div class="stat"><strong>12</strong><small>完整用户流程</small></div>
+    <div class="stat"><strong>6</strong><small>已具备真实闭环证据的主要场景</small></div>
+    <div class="stat"><strong style="color:var(--red)">P0</strong><small>仍有监督、UX 与正式发布缺口</small></div>
+  </section>
+
+  <section id="architecture" class="panel">
+    <div class="kicker">One operating loop</div>
+    <h2>同一任务的判断、执行、反馈与恢复</h2>
+    <div class="flow" aria-label="APUS Reflex Harness 闭环流程">
+      <div><b>用户入口</b><span>问题、Goal、手动模型选择</span></div>
+      <div><b>Reflex 判断</b><span>路由、监督、相关性与配置</span></div>
+      <div><b>原生执行</b><span>Harness AgentLoop、Codex、工具与权限</span></div>
+      <div><b>有限干预</b><span>带来源 steer、上下文投影、恢复</span></div>
+      <div><b>独立验证</b><span>产物、目标测试、Session 事件与 UI 状态</span></div>
+    </div>
+    <p class="muted">模型可见输入必须可由日志重建；原始 Session 日志保留。上下文“删除”只代表从后续 Harness 请求投影中移出，不能宣称编辑 Codex 私有内部历史或提供无限物理上下文。</p>
+  </section>
+
+  <section id="response-contract" class="two-col">
+    <div class="panel">
+      <div class="kicker">P0 experience contract</div>
+      <h2>“1 秒级响应”必须拆成可验收的两层</h2>
+      <p><b>用户可见确认：</b>输入被本地接收、持久化并显示“正在判断/已进入任务”的状态，目标为健康运行时 1 秒内完成。这个时间不依赖远程模型已经生成完整答案。</p>
+      <p><b>快速决策：</b>对预先冻结的简单/中等题集，Reflex 路由或“继续当前模型”的决策测量 p50/p95；复杂、含糊或网络拥塞时仍在 1 秒内给出明确状态，并异步继续判断。</p>
+      <p><b>完整回答：</b>首字节和总耗时单独记录，受模型、网络、工具和 Codex 任务影响，不把它们写成所有输入 1 秒完成。</p>
+    </div>
+    <div class="panel">
+      <div class="kicker">P0 UI/UX quality bar</div>
+      <h2>交互良好不是“看起来漂亮”</h2>
+      <ul class="checklist"><li><span class="check">✓</span><span>输入后立即有状态回显；没有空白等待和假成功。</span></li><li><span class="check">✓</span><span>用户能区分正在判断、执行中、等待审批、无进展、调整已发送、改善已验证和失败恢复。</span></li><li><span class="check">✓</span><span>追加要求、停止、取消、重试和恢复路径可见，旧状态不覆盖新意图。</span></li><li><span class="check">✓</span><span>窄屏、主题、键盘、错误字段、弹层、200% 系统缩放和页面级 200% 缩放均有实测证据。</span></li><li><span class="x">!</span><span>启动失败恢复和真实中途改需求仍未闭环。</span></li></ul>
+    </div>
+  </section>
+
+  <section id="capabilities">
+    <div class="kicker">Three core capabilities</div>
+    <h2>三项核心能力逐项对照</h2>
+    <div class="three-col">
+      <article class="capability"><span class="status partial">部分闭环</span><h3>1 · 即时响应与入口路由</h3><p><b>目标：</b>用户提问后由 Reflex 判断难度与任务类型，自动选择合适模型/agent，并让实际请求与 UI 状态一致。</p><p><b>已证：</b>算术即时入口、Goal→Codex JSON 任务、手动固定模型、恢复自动和手动优先均有真实浏览器证据。</p><p><b>缺口：</b>模型判断失败/无候选的用户可见回退和最终 Electron 复验仍待完成；入口 1 秒级观察值不是已批准 SLO。</p></article>
+      <article class="capability"><span class="status partial">受控通过</span><h3>2 · Codex 长时任务监督与纠偏</h3><p><b>目标：</b>观察异常超时、重复失败、无实质进展与偏离 Goal，自动插入调整消息，确认 Codex 消费并验证改善。</p><p><b>已证：</b>严格 v6 真实试验记录营销偏航、`unrelated`、realign accepted、Codex 原生消费、后续财务文件、结构化 verification-target、独立财务产物与 improved；重复失败、静默恢复也有独立证据。</p><p><b>保留边界：</b>健康长任务无误干预、用户中途追加要求、Codex 子线程自动聚合和正式 Electron 参数仍待验收。</p></article>
+      <article class="capability"><span class="status pass">核心通过</span><h3>3 · 动态上下文与记忆管理</h3><p><b>目标：</b>按行/片段判断相关性，移出无用内容，保留约束与结论，重启后按需恢复。</p><p><b>已证：</b>六次读取、关键财务事实保留、旅行事实移出后跨进程恢复；原日志、冻结前缀、工具配对和 cache 区保护均有证据。</p><p><b>边界：</b>不修改供应商 cache，不承诺 provider cache 命中/成本下降；不管理 Codex 私有上下文，不提供跨会话无限记忆。</p></article>
+    </div>
+  </section>
+
+  <section id="matrix">
+    <div class="kicker">37 acceptance records</div>
+    <h2>逐个对照：目标、实现、证据与决定</h2>
+    <p class="muted">每一行对应验收清单中的一个 ID。点击状态筛选，或搜索编号/关键词。证据链接均指向本目录中的原始报告或验收入口。</p>
+    <div class="toolbar" role="toolbar" aria-label="验收筛选">
+      <button data-filter="all" aria-pressed="true">全部</button><button data-filter="pass" aria-pressed="false">真实通过</button><button data-filter="partial" aria-pressed="false">部分通过</button><button data-filter="pending" aria-pressed="false">待测</button><button data-filter="blocked" aria-pressed="false">阻断</button>
+      <input id="matrix-search" type="search" placeholder="搜索 ID、目标或证据" aria-label="搜索验收项目">
+    </div>
+    <table id="matrix-table"><thead><tr><th>ID</th><th>用户目标与通过标准</th><th>实现/用户路径</th><th>证据与当前决定</th><th>状态</th></tr></thead><tbody>
+      <tr data-status="pass"><td class="id">R-01</td><td>简单问题先经 Reflex 判断；实际模型请求正确，用户得到 0.30 元。</td><td>用户入口 → automatic route → selected provider → response。</td><td class="evidence"><a href="evidence/browser-progress.json">browser-progress.json</a>、<a href="evidence/reflex-ux-routing.png">UI 截图</a>。即时入口真实通过。</td><td class="state"><span class="status pass">通过</span></td></tr>
+      <tr data-status="pass"><td class="id">R-02</td><td>设置 Goal 后自动委派 Codex，增加 JSON 输出且原 CSV 不变。</td><td>Goal activation → Codex start → file/test result → independent check。</td><td class="evidence"><a href="evidence/browser-goal-json-independent.json">独立报告</a>、<a href="evidence/browser-goal-json-tests.log">10 项测试</a>。真实通过。</td><td class="state"><span class="status pass">通过</span></td></tr>
+      <tr data-status="partial"><td class="id">R-03</td><td>判断失败、弃权、无候选时安全回退；手动选择优先且实际请求一致。</td><td>Prompt router controller、entry routing、Goal routing 与设置页状态。</td><td class="evidence"><a href="../../packages/api/session-controller/tests/prompt-router.host.spec.ts">控制器回归</a>、<a href="evidence/browser-manual-routing.json">手动路由真实记录</a>。失败/无候选用户路径待测。</td><td class="state"><span class="status partial">部分</span></td></tr>
+      <tr data-status="partial"><td class="id">R-04</td><td>任何用户输入在 1 秒内得到可理解的可见响应；自动路由在预先定义的快判题集中达到约定 p95；复杂模型生成继续异步进行并显示阶段。</td><td>本地 admission、Session 持久化、即时状态卡与 Reflex route decision 分层；不得把远程模型完整回答时间伪装成 1 秒。</td><td class="evidence"><a href="evidence/r04-admission-status-queue.md">本地准入状态</a>16ms；<a href="evidence/r04-local-echo-perf.md">真实浏览器回显矩阵</a>正常 CPU p95=82.275ms、6× CPU p95=523.978ms；<a href="evidence/entry-routing-eval-v2.md">Jev v2</a> route p50/p95=309/588ms、317/405ms。远端首字节、完整回答和可见回退仍待测。</td><td class="state"><span class="status partial">部分</span></td></tr>
+
+      <tr data-status="partial"><td class="id">S-01</td><td>Codex 连续失败/重复无效操作后，Reflex 调整，Codex 消费并有效修复。</td><td>Observation window → decision → sourced steer → native input → repair → verification。</td><td class="evidence"><a href="evidence/supervision-real-repeated-failure.zh.md">重复失败真实证据</a>。狭义 semantic=false 场景通过；语义偏航仍缺。</td><td class="state"><span class="status partial">部分</span></td></tr>
+      <tr data-status="partial"><td class="id">S-02</td><td>正常长任务有进展时不因耗时长误干预；相同证据不重复重判。</td><td>Evidence fingerprint、cooldown、progress window、supervision regression。</td><td class="evidence"><a href="../../packages/experimental/system3/tests/reflex-supervision.spec.ts">监督回归</a>通过；默认部署真实正常长任务对照待测。</td><td class="state"><span class="status partial">部分</span></td></tr>
+      <tr data-status="pass"><td class="id">S-03</td><td>原生请求静默时，经 Reflex 授权中断，确认 interrupted 后同线程续跑。</td><td>Native lifecycle → controlled interrupt → resumed turn → completed artifact。</td><td class="evidence"><a href="evidence/native-recovery-real-v4.json">native recovery v4</a>，127.41 秒受控真实通过。</td><td class="state"><span class="status pass">通过</span></td></tr>
+      <tr data-status="pass"><td class="id">S-04</td><td>财务 Goal 下持续修改营销材料，即使操作成功也要识别偏航并拉回财务任务。</td><td>Strict v6 real route: marketing drift → `unrelated` → accepted realign → native consume → finance work.</td><td class="evidence"><a href="evidence/semantic-codex-strict-final-v6.md">严格 v6 真实证据</a>：顺序、消费时点和后续财务文件均由脱敏报告记录；Host20 历史证据继续保留。</td><td class="state"><span class="status pass">通过（受控）</span></td></tr>
+      <tr data-status="partial"><td class="id">S-05</td><td>自动建议有来源，分别记录 decision、ACK、Codex 原生消费和后续执行证据。</td><td>Supervision decision/intervention/feedback events + native item lifecycle。</td><td class="evidence"><a href="evidence/supervision-real-repeated-failure.json">生命周期证据</a>满足受控重复失败；语义场景仍缺完整链。</td><td class="state"><span class="status partial">部分</span></td></tr>
+      <tr data-status="pass"><td class="id">S-06</td><td>调整后执行与 Goal 相关的结构化 verification-target，并由 Reflex 判断改善。</td><td>Strict v6 collected `finance/test_remaining.py`, independently checked 1137.41, and recorded `improved`.</td><td class="evidence"><a href="evidence/semantic-codex-strict-final-v6.md">严格 v6 证据</a>：目标验证、独立金额和受保护文件哈希均有脱敏记录。</td><td class="state"><span class="status pass">通过（受控）</span></td></tr>
+      <tr data-status="partial"><td class="id">S-07</td><td>用户执行中追加中文列名和兼容性要求；旧判断、迟到 ACK 不得覆盖新意图。</td><td>真实 Web 插话经 task frame 与 subagent/steer 送达，界面报告启动超时并允许停止；最终产物未完成。</td><td class="evidence"><a href="evidence/ui-interjection-20261011.zh.md">真实插话试验</a>：120 秒启动提示、229.338 秒停止、零 native 步骤，原文件哈希不变。不得把送达当成果通过。</td><td class="state"><span class="status partial">部分</span></td></tr>
+      <tr data-status="pass"><td class="id">S-08</td><td>未授权工作区数据不外发；未知回执不盲目重复副作用。</td><td>Evidence summary redaction、permission admission、unknown ACK fence。</td><td class="evidence"><a href="../../packages/subagent/subagent-codex/tests/evidence-summary.spec.ts">采集回归</a>和监督回归通过。</td><td class="state"><span class="status pass">通过</span></td></tr>
+      <tr data-status="partial"><td class="id">S-09</td><td>用实际发布配置完成 S-01～S-06，并报告模型、effort、观察窗口和阈值。</td><td>Strict v6 用 `gpt-5.6-sol-relay` 和 release 配置完成受控 S-04/S-06；健康长任务误干预与中途改 Goal 仍待测。</td><td class="evidence"><a href="evidence/semantic-codex-strict-final-v6.md">严格 v6 参数/证据</a>：15s deadline、15s observation、180s stall、60s feedback、3 interventions。</td><td class="state"><span class="status partial">部分</span></td></tr>
+
+      <tr data-status="pass"><td class="id">C-01</td><td>六份材料分别读取；移出无关旅行行，保留财务约束，结果 1137.41 元。</td><td>Context v3 line/segment projection + protected facts。</td><td class="evidence"><a href="evidence/browser-context-v3.json">Host16 浏览器证据</a>：恰好六次 read。</td><td class="state"><span class="status pass">通过</span></td></tr>
+      <tr data-status="partial"><td class="id">C-02</td><td>长行、Unicode、多文本块和混合删除/恢复不损坏结构与工具配对。</td><td>范围校验、原行映射、Unicode-safe selection 有回归。</td><td class="evidence"><a href="../../packages/experimental/system3/tests/reflex-context.spec.ts">上下文回归</a>通过；所有格式尚未真实实测。</td><td class="state"><span class="status partial">部分</span></td></tr>
+      <tr data-status="pass"><td class="id">C-03</td><td>完整退出 Host 后重启，同一会话在首个主模型请求前恢复旧旅行事实。</td><td>Persistent event index → relevance check → restore projection。</td><td class="evidence"><a href="evidence/browser-context-v3.json">跨重启证据</a>、<a href="evidence/reflex-context-v3-restored.png">恢复截图</a>。零工具调用。</td><td class="state"><span class="status pass">通过</span></td></tr>
+      <tr data-status="pass"><td class="id">C-04</td><td>已提交前缀和模型生成内容不变；只编辑未发送尾部，恢复只追加。</td><td>Freeze committed prefix；projection version/CAS；restore append-only。</td><td class="evidence"><a href="../../snapshots/sdk/reflex-context/">TS 回放</a>、<a href="../../scripts/snapshots/python-sdk-single-exe/reflex-context/">Python 回放</a>及 Host16 通过。</td><td class="state"><span class="status pass">通过</span></td></tr>
+      <tr data-status="pass"><td class="id">C-05</td><td>切换话题后重新判断相关性；保留约束，保护最近 4 条，无候选安全跳过。</td><td>Priority groups、recent-message fence、deduplicated restore。</td><td class="evidence"><a href="evidence/context-v3-priority-validation.zh.md">优先级验证</a>通过；不能承诺每轮都省 tokens。</td><td class="state"><span class="status pass">通过</span></td></tr>
+      <tr data-status="pass"><td class="id">C-06</td><td>跨进程比较裁剪开关、恢复和路由变化，并证明 cache/session 前缀保护。</td><td>Four conditions × three CLI processes × line remove projection。</td><td class="evidence"><a href="evidence/cache-c06-real.zh.md">C-06 脱敏报告</a>通过；价格未知、无法宣称 provider 冷缓存或成本收益。</td><td class="state"><span class="status pass">通过</span></td></tr>
+      <tr data-status="scope"><td class="id">C-07</td><td>明确管理对象和存储含义。</td><td>Harness 后续请求投影；原始日志保留；不编辑 Codex 私有上下文。</td><td class="evidence"><a href="context-cache-design.zh.md">cache 设计</a>和验收清单已明确范围边界。</td><td class="state"><span class="status scope">范围已定</span></td></tr>
+
+      <tr data-status="pass"><td class="id">F-01</td><td>专用“Reflex 模型配置”页保存服务、模型、effort，重启后真实判断使用保存值。</td><td>Settings form → credentials → persisted config → decision provider。</td><td class="evidence"><a href="evidence/reflex-settings-real.zh.md">F-01 真实报告</a>：low 保存、重启、实际消费通过。</td><td class="state"><span class="status pass">通过</span></td></tr>
+      <tr data-status="pass"><td class="id">F-02</td><td>错误 key/模型显式失败，不覆盖有效配置，不回显秘密。</td><td>Field errors、connection test、secret redaction。</td><td class="evidence"><a href="evidence/reflex-ux-settings-rejected-key.png">错误截图</a>及配置回归通过。</td><td class="state"><span class="status pass">通过</span></td></tr>
+      <tr data-status="partial"><td class="id">F-03</td><td>最终 Electron 包独立用户目录保存配置，正常/Safe Mode 重启恢复。</td><td>Rebuilt unsigned macOS arm64 directory package matches the current runtime.</td><td class="evidence"><a href="https://github.com/cryptoSUN2049/APUS-Reflex-Frontend/blob/feat-reflex-control/docs/feat-reflex-control/evidence/electron-final-real.zh.md">历史配置报告</a>；<a href="https://github.com/cryptoSUN2049/APUS-Reflex-Frontend/blob/feat-reflex-control/docs/feat-reflex-control/evidence/electron-ui-scale-200.zh.md">200% 系统缩放</a>矩阵；<a href="https://github.com/cryptoSUN2049/APUS-Reflex-Frontend/blob/feat-reflex-control/docs/feat-reflex-control/evidence/electron-page-zoom-200.zh.md">页面级 200% 缩放</a>矩阵；<a href="evidence/electron-package-license-audit.zh.md">当前包品牌/MIT/NOTICE 与 Safe Mode/CDP 审计</a>通过。正常模式设置/重启、签名、公证仍待测。</td><td class="state"><span class="status partial">部分</span></td></tr>
+
+      <tr data-status="partial"><td class="id">D-01</td><td>全产品统一 APUS Reflex Harness；MIT 原版权、全文和第三方致谢随产物保留。</td><td>Brand assets、package metadata、license/NOTICE gates。</td><td class="evidence"><a href="../../BRAND_GUIDELINES.zh.md">品牌规则</a>、Harness 324 包 MIT/NOTICE 检查通过；最终签名包仍待核对。</td><td class="state"><span class="status partial">部分</span></td></tr>
+      <tr data-status="pass"><td class="id">D-02</td><td>模型可见输入、纠偏、上下文投影和恢复可从日志重建，TS/Python 同步。</td><td>Session events、record/replay、persistence type checks。</td><td class="evidence"><a href="acceptance-checklist.zh.md#acceptance-cases">双 SDK 与持久化回归</a>通过。</td><td class="state"><span class="status pass">通过</span></td></tr>
+      <tr data-status="partial"><td class="id">D-03</td><td>后端干净提交，前端固定同一 Harness revision，最终包 manifest 无 dirty。</td><td>Frontend workflow pins the reviewed Harness release revision; rebuilt manifest and Safe Mode startup are verified.</td><td class="evidence">release-pin manifest sourceDirty=false、revision parity 与 Safe Mode/CDP 启动通过；签名/公证仍待外部 runner。</td><td class="state"><span class="status partial">部分</span></td></tr>
+      <tr data-status="blocked"><td class="id">D-04</td><td>必需检查、独立 review、PR/main 合并和远端回读全部完成。</td><td>Two Draft PRs remain open; product P0 and final package gates remain.</td><td class="evidence"><a href="https://github.com/cryptoSUN2049/APUS-Reflex-Harness/pull/1">Harness PR #1</a>、<a href="https://github.com/cryptoSUN2049/APUS-Reflex-Frontend/pull/1">Frontend PR #1</a>。当前不得标完成。</td><td class="state"><span class="status blocked">阻断</span></td></tr>
+
+      <tr data-status="pending"><td class="id">UX-01</td><td>首次启动能找到工作区、对话和 Reflex 配置；空状态给出下一步。</td><td>组件存在；首次用户真实路径尚未记录。</td><td class="evidence">待最终 Electron 包空状态操作证据。</td><td class="state"><span class="status pending">待测</span></td></tr>
+      <tr data-status="partial"><td class="id">UX-02</td><td>字段、测试、保存、错误、等待和秘密保护对用户清晰。</td><td>Settings page field errors、Escape、persisted config。</td><td class="evidence">字段错误和配置真实链路已有；最终包全反馈复验待完成。</td><td class="state"><span class="status partial">部分</span></td></tr>
+      <tr data-status="partial"><td class="id">UX-03</td><td>自动/固定模型、路由建议、实际采用和最终响应不混淆。</td><td>Manual routing state and request matching in Web evidence。</td><td class="evidence"><a href="evidence/browser-manual-routing.json">真实记录</a>通过；失败回退和 Electron 复验待测。</td><td class="state"><span class="status partial">部分</span></td></tr>
+      <tr data-status="partial"><td class="id">UX-04</td><td>长任务显示阶段、时间、有效进展；区分等待审批、无进展和正常工作。</td><td>Observing card、bounded timeline、supervision projection。</td><td class="evidence">组件回归通过；最终 Electron 真实长任务待测。</td><td class="state"><span class="status partial">部分</span></td></tr>
+      <tr data-status="pending"><td class="id">UX-05</td><td>用户能追加要求、停止、取消、继续等待；最终成果遵守新要求。</td><td>Controls and projection regression exist；真实 UI→产物流程缺。</td><td class="evidence">对应 S-07，待真实用户路径。</td><td class="state"><span class="status pending">待测</span></td></tr>
+      <tr data-status="partial"><td class="id">UX-06</td><td>清楚区分判断、发送、已接收、未知、恢复和改善已验证。</td><td>Recent bounded timeline、new-message stale-state clearing。</td><td class="evidence">完整客户端 69 项回归通过；System3Dock 四项严格覆盖率 100%；最终构建 UI 复验待完成。</td><td class="state"><span class="status partial">部分</span></td></tr>
+      <tr data-status="partial"><td class="id">UX-07</td><td>上下文移出可恢复，恢复后能回答；不宣称永久删除或无限上下文。</td><td>Context restore event + user-facing notice。</td><td class="evidence"><a href="evidence/browser-context-v3.json">后端真实恢复</a>通过；最终包可读性待核对。</td><td class="state"><span class="status partial">部分</span></td></tr>
+      <tr data-status="pending"><td class="id">UX-08</td><td>凭据、网络、超时、断开、重启都有理解和恢复路径，保留输入。</td><td>Error handling components exist；有限真实错误场景尚未验收。</td><td class="evidence">待最终包错误/重启体验证据。</td><td class="state"><span class="status pending">待测</span></td></tr>
+      <tr data-status="passed"><td class="id">UX-09</td><td>375/768/1280、明暗主题、200% 缩放、键盘和弹层均可用。</td><td>Web matrix after.json 与 Electron scale-2 recovery smoke 通过；页面级 200% 缩放在 8 轮、320 个恢复页变体中通过。</td><td class="evidence"><a href="evidence/uiux/after.json">Web UI 矩阵</a>；<a href="https://github.com/cryptoSUN2049/APUS-Reflex-Frontend/blob/feat-reflex-control/docs/feat-reflex-control/evidence/electron-ui-scale-200.zh.md">Electron 200% 系统缩放</a>；<a href="https://github.com/cryptoSUN2049/APUS-Reflex-Frontend/blob/feat-reflex-control/docs/feat-reflex-control/evidence/electron-page-zoom-200.zh.md">页面级 200% 缩放</a>。</td><td class="state"><span class="status passed">通过</span></td></tr>
+      <tr data-status="partial"><td class="id">UX-10</td><td>Electron 正常/Safe Mode、关闭重开、会话恢复、启动失败恢复和进程清理可用。</td><td>Unsigned arm64 normal/safe/config persistence/process cleanup and scale-2/page-zoom UI smoke passed.</td><td class="evidence"><a href="https://github.com/cryptoSUN2049/APUS-Reflex-Frontend/blob/feat-reflex-control/docs/feat-reflex-control/evidence/electron-final-real.json">Electron 证据</a>；<a href="https://github.com/cryptoSUN2049/APUS-Reflex-Frontend/blob/feat-reflex-control/docs/feat-reflex-control/evidence/electron-page-zoom-200.json">200% 页面缩放</a>；会话恢复、启动失败仍待测。</td><td class="state"><span class="status partial">部分</span></td></tr>
+    </tbody></table>
+  </section>
+
+  <section id="ux" class="two-col">
+    <div class="panel"><div class="kicker">User experience acceptance</div><h2>用户真正看到的闭环</h2><ol><li>首次启动找到工作区和“Reflex 模型配置”。</li><li>输入问题后能看懂自动路由、实际模型和响应状态。</li><li>长 Goal 中能看见“正在观察”、有效进展、调整已发送和改善已验证。</li><li>用户追加要求或停止后，旧监督状态立即失效，最终产物服从新要求。</li><li>上下文移出提示可恢复，恢复时不遮挡输入，也不修改 cache 区。</li><li>网络、凭据、超时、重启错误给出下一步，而不是要求用户阅读原始日志。</li></ol><p class="callout"><strong>当前 UX 判断：</strong>Web 交互矩阵、Electron 配置流程及系统/页面级 200% 缩放已有证据；启动失败恢复、真实中途改需求和错误恢复仍是 P0。</p></div>
+    <div class="panel"><div class="kicker">Evidence inventory</div><h2>核心证据入口</h2><ul class="checklist"><li><span class="check">✓</span><a href="acceptance-checklist.zh.md">总验收清单</a></li><li><span class="check">✓</span><a href="evidence/cache-c06-real.zh.md">C-06 cache/session 保护</a></li><li><span class="check">✓</span><a href="evidence/browser-context-v3.json">Context v3 跨进程恢复</a></li><li><span class="check">✓</span><a href="evidence/supervision-real-repeated-failure.zh.md">受控重复失败纠偏</a></li><li><span class="x">!</span><a href="evidence/semantic-codex-host16.zh.md">语义偏航失败记录</a></li><li><span class="check">✓</span><a href="../../../APUS-Reflex-Frontend/.Codex/worktrees/feat-reflex-control/docs/feat-reflex-control/evidence/electron-ui-scale-200.zh.md">Electron 200% 系统缩放</a></li><li><span class="x">!</span><a href="../../../APUS-Reflex-Frontend/.Codex/worktrees/feat-reflex-control/docs/feat-reflex-control/evidence/electron-final-real.zh.md">Electron 剩余限制</a></li></ul></div>
+  </section>
+
+  <section id="release" class="panel">
+    <div class="kicker">Release and merge gate</div>
+    <h2>合并 main 前的逐项门槛</h2>
+    <table><thead><tr><th>门槛</th><th>当前状态</th><th>必须完成</th></tr></thead><tbody>
+      <tr><td>工作树和版本身份</td><td><span class="status partial">需回读</span></td><td>提交后确认两个 worktree clean，回读 Harness SHA 与 Frontend runtime pin，并核对运行时包使用同一 reviewed revision。</td></tr>
+      <tr><td>行为回归与 CI</td><td><span class="status partial">需回读</span></td><td>本地等价检查和差异审查完成后再判断；GitHub Actions 因账户 budget 未启动，不能写成远程通过。Frontend release workflow 的 macOS runtime/brand 准备已补齐，仍需 runner 恢复后回读。</td></tr>
+      <tr><td>产品监督闭环</td><td><span class="status partial">部分</span></td><td>Host20 受控真实链路已通过；继续完成健康长任务无误干预、用户中途改 Goal 和最终 Electron 路径，再重跑发布门禁。</td></tr>
+      <tr><td>用户中途改需求</td><td><span class="status pending">待测</span></td><td>从真实 UI 注入中文列名/兼容性要求，确认旧判断与迟到 ACK 不覆盖新 Goal，最终产物通过独立检查。</td></tr>
+      <tr><td>最终 Electron 与品牌/MIT</td><td><span class="status partial">部分</span></td><td>系统和页面级 200% 缩放矩阵与未签名包品牌/MIT/NOTICE 审计已通过；仍需当前 runtime 修订重建、启动失败恢复、会话恢复，以及正式签名/公证/staple。</td></tr>
+      <tr><td>PR 与 main</td><td><span class="status blocked">阻断</span></td><td>独立 review 无 P0 阻断，两个 Draft PR 转 ready，合并后回读两仓 main、运行包和版本 pin。</td></tr>
+    </tbody></table>
+  </section>
+
+  <section id="opensource" class="panel">
+    <div class="kicker">Open-source release review</div>
+    <h2>开源 P0/P1 门禁：先让别人敢用，再让别人能贡献</h2>
+    <p class="muted">下面的优先级按公开仓库的最小信任闭环排序。P0 任一项未通过，都不应把 Draft PR 合并到 main 或对外宣称“可直接使用”；P1 用于降低首次采用和外部贡献成本。</p>
+    <table><thead><tr><th>优先级</th><th>开源风险</th><th>必须完成的修复</th><th>可验证完成门</th><th>当前判断</th></tr></thead><tbody>
+      <tr><td><span class="status blocked">P0</span></td><td><b>许可证与归属</b><br>用户无法确认能否分发，第三方依赖归属可能遗漏。</td><td>两仓根目录与最终安装包提供 MIT 全文；保留原版权、上游归属和第三方 NOTICE；安装包、npm tarball、Electron 产物逐一核对。</td><td>机器检查通过；包内文件可直接打开；README、release notes 与安装包指向同一许可说明。</td><td><span class="status partial">部分</span><br>未签名 Electron 目录包的品牌/MIT/NOTICE 已逐字节核对；当前 revision 重建与签名发布包仍待补齐。</td></tr>
+      <tr><td><span class="status blocked">P0</span></td><td><b>安全与数据边界</b><br>公开证据可能泄露凭据、原始思考或把上下文删除误解为 cache 删除。</td><td>补齐 SECURITY.md、漏洞报告入口、脱敏规则和信任边界；明确 Harness 只投影后续请求、原始 Session 保留、不得编辑 Codex 私有历史、不得宣称 provider cache 成本收益。</td><td>秘密扫描和脱敏回归通过；安全说明能从仓库首屏找到；C-06/上下文边界证据可回链。</td><td><span class="status partial">部分</span><br>两仓已具备私密漏洞报告政策和 README 入口；秘密扫描、统一脱敏回归与最终包核对仍待完成。</td></tr>
+      <tr><td><span class="status blocked">P0</span></td><td><b>可复现构建与 CI</b><br>外部用户无法重建同一版本，CI 绿色也可能只是跳过关键检查。</td><td>锁定 Harness/Frontend 分支与版本 pin；清理未提交变更；要求 lint、typecheck、单元/快照、关键 E2E、包 smoke 和文档门禁；区分产品检查与可选 artifact 上传。</td><td>干净工作树从 README 命令构建成功；PR required checks 全部通过；远端 main 回读 SHA 与本地发布清单一致。</td><td><span class="status pending">进行中</span><br>本地替代检查正在收口；Harness 与 Frontend 的 GitHub runner 因 Actions budget 未启动。</td></tr>
+      <tr><td><span class="status blocked">P0</span></td><td><b>公开能力声明</b><br>“1 秒响应”、监督纠偏和动态上下文若没有口径，会变成不可复核的营销承诺。</td><td>公开 R-04 的三段指标：本地 admission/status ≤1s、简单题集路由 p50/p95、远端模型首字节/总时延分开统计；明确监督语义闭环、健康长任务无误干预和 cache 限制。</td><td>冻结题集、阈值、环境和负向场景；每个 README/截图/报告数字能回链证据；未完成项明确标为 pending/blocked。</td><td><span class="status partial">部分</span><br>HTML 已拆分响应口径，受控语义闭环有真实证据；远端首字节、健康无误干预和默认窗口仍待补齐。</td></tr>
+      <tr><td><span class="status partial">P1</span></td><td><b>新用户上手</b><br>首次安装、配置 Reflex 模型和跑通真实任务的路径过长。</td><td>README 首屏 quickstart、运行时版本、最小模型配置、无密钥 keyless 测试与真实 E2E 分流；提供入口路由、Goal→Codex、监督、上下文恢复的单条演示脚本。</td><td>干净环境新用户在 5 分钟内启动并完成一条任务；失败时看到下一步，不要求阅读原始日志。</td><td><span class="status partial">部分</span><br>双仓 README、配置/API 参考、release notes 和验收证据入口已统一；干净环境 5 分钟真实任务仍待远程 relay 恢复后验证。</td></tr>
+      <tr><td><span class="status pass">P1</span></td><td><b>贡献者可维护性</b><br>外部贡献者不知道如何测试、如何提交证据、哪些 API 仍不稳定。</td><td>CONTRIBUTING、开发环境、测试矩阵、故障注入、PR/Issue 模板、CODEOWNERS 和 Session/API 版本策略；为 Reflex settings、监督事件、context projection/restore 提供最小 API 参考。</td><td>外部贡献者能运行定向测试并提交带证据的 PR；pre-stable API 与持久化版本规则在文档中可查。</td><td><span class="status pass">已完成（文档）</span><br>双仓贡献指南、CODEOWNERS、Security、API/配置参考、PR 证据模板和文档门禁已存在；远端 CI 启动仍是独立门禁。</td></tr>
+      <tr><td><span class="status pass">P1</span></td><td><b>传播材料可信</b><br>截图和演示容易把单例观察包装成普遍性能或成功率。</td><td>发布 notes、短 GIF/截图、架构图、已知限制和 benchmark report；演示标注环境、模型、版本、是否真实 provider，并保留失败路径。</td><td>传播材料每个数字可回链到验收记录；不宣称无限上下文、cache 命中或自动纠偏已普遍成立。</td><td><span class="status pass">已完成（材料）</span><br>双语 README、release notes、专家 HTML、严格 v6/失败证据和 cache benchmark 已互链；远端响应失败仍明确标为 pending。</td></tr>
+    </tbody></table>
+  </section>
+
+  <section id="roadmap">
+    <div class="kicker">Next development order</div>
+    <h2>P0–P3：按体验、传播、开源价值排序的推进计划</h2>
+    <p class="muted">排序原则：先修复用户完成任务时能感知的信任断点，再准备可被理解和复述的产品故事，最后扩大贡献者和部署范围。每一级都有可停止的验收门，不用宣传材料掩盖产品缺口。</p>
+    <table><thead><tr><th>优先级</th><th>价值排序</th><th>开发工作包</th><th>完成门槛</th><th>交付物</th></tr></thead><tbody>
+      <tr><td><span class="status blocked">P0</span></td><td><b>用户体验与产品可信度</b><br>先让用户感到“马上有回应”，再看到任务被正确观察、纠偏、恢复。</td><td><b>P0-A 即时响应：</b>输入 admission、Session 持久化和状态卡在健康运行时 1 秒内可见；简单题集测量 Reflex route p50/p95；复杂任务显示明确的异步判断状态。<br><b>P0-B 监督闭环：</b>严格 v6 已完成 realign→Codex consume→verification-target→improved→独立产物验证；真实 UI 中途追加要求、健康任务误干预对照和子线程聚合仍待验收。<br><b>P0-C 最终包：</b>Electron 空状态、错误恢复、会话恢复、原生 200% 关键路径；保留输入、停止和 Safe Mode 行为。<br><b>P0-D 发布纪律：</b>重新得到 clean Harness SHA，Frontend 固定同一 SHA，完成 Windows/macOS 发布 job、Ruff、双 SDK、MIT/NOTICE。</td><td>R-04、S-04～S-09、UX-01～UX-10 的 P0 缺口关闭；最终包可从入口完成路由、Goal、监督、上下文恢复；验收清单所有 P0 勾选；独立 review 无阻断。</td><td>1 秒 admission/状态计时、真实语义闭环证据、用户中途改需求证据、Electron UX 证据、clean manifest、双 PR ready、两仓 main 回读。</td></tr>
+      <tr><td><span class="status pending">P1</span></td><td><b>传播与采用</b><br>把已证能力讲清楚，让用户能在 5 分钟内理解并复现。</td><td><b>P1-A 可演示路径：</b>入口即时路由、Goal→Codex、监督纠偏、上下文恢复、Reflex 配置各做一条真实用户脚本，录制短 GIF/截图。<br><b>P1-B 对外叙事：</b>README 首屏、架构图、限制说明、quickstart、版本说明和 FAQ 统一 APUS Reflex Harness；明确“删除后续请求投影”与“原始日志保留”，不宣称无限上下文或 provider cache 成本收益。<br><b>P1-C 可测基准：</b>冻结 R-04 题集与路由 p50/p95、首个输出和总耗时指标；C-06 明确 provider 未提供冷 cache 隔离的限制。</td><td>新用户按 README 完成一次真实任务；传播材料中的每个数字/截图都能回链到证据；没有把单例观察写成普遍性能承诺。</td><td>README/网站投影、演示 HTML/GIF、架构 SVG、release notes、benchmark report。</td></tr>
+      <tr><td><span class="status scope">P2</span></td><td><b>规模化与效率</b><br>在核心体验和开源门禁稳定后扩大模型、平台和性能范围。</td><td><b>P2-A 性能：</b>多模型/多 provider 对照，路由误选率、p50/p95、额外 Reflex 调用和真实成本；供应商支持后再测冷/暖 cache。<br><b>P2-B 监督：</b>扩展结构化 target parser、健康长任务长期对照、更多异常类别和跨平台 native package。<br><b>P2-C 记忆：</b>跨会话记忆、复杂代码/表格依赖组、恢复权限策略；仍以原始日志可追溯和 cache fencing 为前提。</td><td>每项都有预先冻结的指标、负向场景和成本预算；没有以删除率或单次成功推导普遍收益；新平台均有最终包验收。</td><td>性能基线、跨平台签名安装包、扩展 parser/记忆设计、模型与 provider 对照报告。</td></tr>
+      <tr><td><span class="status scope">P3</span></td><td><b>生态扩展</b><br>把稳定能力扩展到更多模型、平台和复杂记忆场景。</td><td><b>P3-A provider：</b>新增模型/供应商适配与兼容矩阵。<br><b>P3-B native：</b>更多签名平台和升级回滚路径。<br><b>P3-C memory：</b>跨会话记忆、复杂代码/表格依赖组、恢复权限策略；继续以原始日志可追溯和 cache fencing 为前提。</td><td>每项都有预先冻结的指标、负向场景和成本预算；新平台均有最终包验收。</td><td>provider 兼容矩阵、跨平台签名安装包、扩展记忆设计与对照报告。</td></tr>
+    </tbody></table>
+    <div class="two-col" style="margin-top:16px">
+      <div class="panel" style="box-shadow:none"><h3>建议的执行顺序</h3><ol><li>严格监督因果链已通过；下一步完成健康长任务、中途改 Goal 和远端首字节/回退对照，期间不重写已有成功证据。</li><li>再处理 P0 最终 Electron 用户路径、签名/公证和 clean SHA/发布门禁。</li><li>两个 PR 通过 review 与 CI 后合并 main，并回读运行包和版本 pin。</li><li>README、release notes、CODEOWNERS、API/配置参考、演示和 benchmark 已收口；后续只随新证据更新。</li><li>P2 只有在 P0 远程门禁和发布边界固定后进入开发。</li></ol></div>
+      <div class="panel" style="box-shadow:none"><h3>每轮停止条件</h3><ul class="checklist"><li><span class="x">×</span><span>没有结构化目标验证时，不把 steer ACK 写成改善。</span></li><li><span class="x">×</span><span>没有最终包证据时，不把 Web 矩阵写成 Electron 通过。</span></li><li><span class="x">×</span><span>工作树存在未审变更时，不推送或合并。</span></li><li><span class="x">×</span><span>没有供应商 cache 计量时，不宣传命中率或成本下降。</span></li></ul></div>
+    </div>
+  </section>
+
+  <section id="limits" class="two-col">
+    <div class="panel"><div class="kicker">Cache and context boundary</div><h2>必须保留的技术边界</h2><ul class="checklist"><li><span class="check">✓</span><span>移出的是后续 Harness 模型请求中的投影片段；原始 Session 日志不删除。</span></li><li><span class="check">✓</span><span>已提交前缀被冻结；恢复只追加新投影，不改旧事件。</span></li><li><span class="check">✓</span><span>工具调用与工具结果保持配对；受保护约束和最近消息优先保留。</span></li><li><span class="check">✓</span><span>不读取或编辑 Codex 私有内部历史，不把 Harness 投影称为无限上下文。</span></li><li><span class="check">✓</span><span>C-06 证明输入/Session/cache 前缀保护与恢复；没有 provider 冷 cache 命中或成本下降证据。</span></li></ul></div>
+    <div class="panel"><div class="kicker">MIT and attribution</div><h2>品牌交付边界</h2><p>产品可见名称统一为 <b>APUS Reflex Harness</b>，配置入口统一为 <b>Reflex 模型配置</b>。发行定位可在技术说明中低调写为“基于 DSH 发行版本并保持兼容”，不进入主标题、用户入口或任务状态文案。MIT 原版权、许可全文、上游归属和第三方依赖 NOTICE 需要随最终产物保留；README 致谢不能替代分发包内许可文件。</p><p class="muted">本报告不把旧 Jev 协议名、模型 ID、包名或上游技术归属误当品牌残留；兼容标识与产品品牌分别维护。</p></div>
+  </section>
+</main>
+<footer><div class="shell"><b>APUS Reflex Harness</b><br>本报告是当前 feat-reflex-control 的验收审计快照。它保留失败证据与能力边界，不对未实测平台、模型、成本、延迟或供应商 cache 做普遍承诺。返回完整清单：<a href="acceptance-checklist.zh.md">acceptance-checklist.zh.md</a>。</div></footer>
+<script>
+  const buttons = [...document.querySelectorAll('[data-filter]')]
+  const rows = [...document.querySelectorAll('#matrix-table tbody tr')]
+  const search = document.querySelector('#matrix-search')
+  let filter = 'all'
+  function applyFilter() {
+    const needle = search.value.trim().toLowerCase()
+    for (const row of rows) {
+      const visible = (filter === 'all' || row.dataset.status === filter) && (!needle || row.textContent.toLowerCase().includes(needle))
+      row.hidden = !visible
+    }
+  }
+  for (const button of buttons) button.addEventListener('click', () => { filter = button.dataset.filter; buttons.forEach(item => item.setAttribute('aria-pressed', String(item === button))); applyFilter() })
+  search.addEventListener('input', applyFilter)
+  // Keep report text reflow responsive without changing evidence content.
+  new ResizeObserver(() => document.documentElement.style.setProperty('--report-width', `${document.documentElement.clientWidth}px`)).observe(document.body)
+</script>
+</body>
+</html>

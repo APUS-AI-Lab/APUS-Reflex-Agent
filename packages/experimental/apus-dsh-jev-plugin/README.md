@@ -1,6 +1,6 @@
 ---
-description: "Experimental provider-neutral Jev decision service with a typed System One HTTP provider."
-kind: "package-reference"
+description: "Profile bundle adding the configurable Reflex decision service and typed System One provider."
+kind: "package-bundle"
 ---
 
 # @deepseek-ai/dsh-experimental-apus-dsh-jev-plugin
@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-Ask a Jev model to choose from supplied candidates, score ordered criteria, or estimate a proposition's probability. An explicit profile can send these typed questions to a System One HTTP gateway and receive validated answers or an unavailable result. The caller decides which data leaves the host and which result affects its policy. `apus` is a name; the questions do not require a particular deployment or model vendor.
+This opt-in profile bundle adds the Reflex decision service. Its `jev` row supplies deployment defaults below user profile patches, so saved model settings apply to new requests. The System3 deployment prepares this bundle in its web profile; standard profiles do not include it. Consumers submit typed questions and retain authority over data sharing and action selection.
 
 ## Table of Contents
 
@@ -25,13 +25,16 @@ Ask a Jev model to choose from supplied candidates, score ordered criteria, or e
 <a id="use-this-package"></a>
 ## Use this package
 
-Mount this plugin when a host needs typed Jev decisions; it is absent from default profiles. Keep the Jev key in the harness credential plane or launch environment referenced by `apiKeyEnv`.
+### Add the profile layer
+
+The shipped System3 service runs [prepare-profile.mjs](../../../deploy/system3/prepare-profile.mjs) before launching its web profile. Preparation adds this bundle once and preserves existing user patches. [cordis.patch.yml](cordis.patch.yml) supplies the `jev` row; profile edits override these defaults without changing the bundle. Keep the key in the Harness credential store or the launch environment referenced by `apiKeyEnv`.
 
 ### Configure the gateway
 
+Override the bundle row in a profile patch. The table lists service defaults; the shipped bundle selects its deployment endpoint, model, `high` effort and a 15-second timeout.
+
 ```yaml
 - id: jev
-  name: '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
   config:
     endpoint: http://127.0.0.1:30135
     model: APUS-OpenJev-v1-9B-5949
@@ -115,6 +118,20 @@ These pages cover the consumer and deployment responsibilities.
 - [Fidoo and RunPod profile](../../../docs/feat-system3-foundation/model-chain.md) — explicit source-checkout overlays and credential references.
 
 -----
+
+## Reflex model configuration
+
+The package also supplies a standard profile bundle with editable Reflex defaults. APUS deployment prepares that bundle below the user profile; command-line overlays must not repeat the `jev` row, because such overrides intentionally prevent persisted edits.
+
+The form schema contains only serializable data. The service validates endpoints on initial load and in its own `internal/config` update hook; invalid endpoints are rejected before the profile is written.
+
+The `jev` Loader entry exposes its endpoint, model, effort, deadline, protocol and credential reference as volatile settings. The dedicated **Reflex model configuration** page edits this entry through ConfigForms and writes API keys through Credentials; new requests read the committed values while requests already in flight retain their resolved provider. Pool parameters remain deployment-owned.
+
+The `reflex` Remote namespace exposes `readStatus` and `testConnection`. An OpenJev connection test checks `/health`, authenticates `/v1/models`, confirms the selected model, and submits a fixed non-user yes/no proposition to `/v1/systemone`. It accepts unsaved values and an optional transient key without storing them, returns only sanitized failure classes and elapsed time, and never marks task capabilities verified. Runtime owners register capability readers through `registerCapability` and own their disposers.
+
+`ReflexCapabilityId` names the three capability owners; `ReflexCapabilityState` carries installation, enablement, observed outcomes and read-only deployment limits. `ReflexStatus` combines those states with the configured provider. `ReflexConnectionInput` describes the unsaved candidate and optional transient key; `ReflexConnectionResult` reports the tested stage, sanitized status and duration.
+
+Goal-relevance supervision has an independent `semanticSupervision.enabled` status. It is enabled only when the supervision module is installed, active, explicitly configured for semantic evidence and admitted by the current workspace-data policy. Fingerprint supervision may remain enabled when this sub-capability is disabled; neither state claims a verified outcome.
 
 <a id="model-experience"></a>
 ## Model Experience

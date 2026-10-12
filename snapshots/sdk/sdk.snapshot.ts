@@ -126,6 +126,11 @@ interface SdkAssertions {
 
 const SDK_ASSERTIONS: Readonly<Record<string, SdkAssertions>> = {
   'system3-shadow': { expectedFinalResponse: 'SDK snapshot OK' },
+  'reflex-supervision': { expectedFinalResponse: 'SDK snapshot OK' },
+  'reflex-semantic-supervision': { expectedFinalResponse: 'SDK snapshot OK' },
+  'reflex-context': { expectedFinalResponse: 'SDK snapshot OK' },
+  'goal-entry-routing': { expectedFinalResponse: 'SDK snapshot OK' },
+  'reflex-native-recovery': { expectedFinalResponse: 'SDK snapshot OK' },
   'system3-entry-route': { expectedFinalResponse: 'SDK snapshot OK' },
   'system3-completion-review': { expectedFinalResponse: 'COMPLETION_REVIEW_OK' },
   'system3-completion-review-stale': { expectedFinalResponse: 'COMPLETION_REVIEW_STALE_OK' },
@@ -639,7 +644,7 @@ async function runScenario(scenario: CorpusScenario): Promise<{
             subscription,
             sessionId,
             event => event.type === 'turn/end' && (event.data as JsonObject | undefined)?.turn === action.turn,
-            observe,
+            (notification) => { notifications.push(notification); observe(notification) },
           )
           continue
         }
@@ -831,7 +836,8 @@ describe('TypeScript SDK snapshots over the jsonrpc runtime', () => {
       const retained = scenario.manifest.sessionFormat !== undefined
       const notificationsExpectedPath = join(scenarioDir, retained ? 'notifications.current.expected.jsonl' : 'notifications.expected.jsonl')
       const resultExpectedPath = join(scenarioDir, 'result.expected.json')
-      const hasWireGoldens = existsSync(notificationsExpectedPath) || existsSync(resultExpectedPath)
+      const hasWireGoldens = scenario.name === 'reflex-semantic-supervision'
+        || existsSync(notificationsExpectedPath) || existsSync(resultExpectedPath)
       const assertions = SDK_ASSERTIONS[scenario.name] ?? {}
       const writesSessionFixtures = writesCurrentSessionFixtures(scenario.manifest, sessionWriteMode)
 
@@ -898,6 +904,98 @@ describe('TypeScript SDK snapshots over the jsonrpc runtime', () => {
         expect(changes.at(-1)!.seq).toBeGreaterThan(reviews[1]!.seq)
         expect(toolMessages.find(message => message.toolCallId === 'completion-confirmed')).toMatchObject({ isError: false })
         for (const review of reviews) expect(review).not.toHaveProperty('surfaceOp')
+      }
+      if (scenario.name === 'goal-entry-routing' || scenario.name === 'reflex-native-recovery') {
+        const events = records(ordered[0]!.content)
+        const routing = events.filter(event => event.type === 'system3/goal-entry')
+        expect(routing.map(event => (event.data as { state: string }).state)).toEqual(['reserved', 'started', 'completed'])
+        const result = events.find(event => event.type === 'user/message'
+          && (event.data as { source: { kind: string } }).source.kind === 'system3-goal-delegation')
+        expect(result).toBeDefined()
+        expect(result!.seq).toBeGreaterThan(routing.at(-1)!.seq)
+        const selectedTypes = new Set(['system3/goal-entry', ...scenario.name === 'reflex-native-recovery'
+          ? ['system3/reflex-recovery', 'subagent/supervision-recovery'] : []])
+        const selected = events.filter(event => typeof event.type === 'string' && selectedTypes.has(event.type))
+        const subscribed = notifications.flatMap(notification => {
+          const event = notificationEvent(notification)
+          return event !== undefined && typeof event.type === 'string' && selectedTypes.has(event.type) ? [event] : []
+        })
+        expect(subscribed).toEqual(selected)
+        if (scenario.name === 'reflex-native-recovery') {
+          for (const type of ['system3/reflex-recovery', 'subagent/supervision-recovery']) {
+            expect(events.filter(event => event.type === type).map(event => (event.data as { state: string }).state))
+              .toEqual(['intent', 'continued'])
+          }
+          expect(events.filter(event => event.type === 'subagent/steer')).toHaveLength(0)
+          expect(events.filter(event => event.type === 'system3/judgement')).toContainEqual(expect.objectContaining({
+            data: expect.objectContaining({ decision: 'reflex.native-recovery', decisionVersion: 2, outcome: 'recover', applied: true }),
+          }))
+          const recovery = events.find(event => event.type === 'subagent/supervision-recovery'
+            && (event.data as { state: string }).state === 'continued')
+          expect(recovery?.data).toMatchObject({ source: 'reflex-supervision',
+            observation: { threadId: 'snapshot-native-thread', turnId: 'snapshot-native-turn-1' }, turnId: 'snapshot-native-turn-2' })
+          expect(JSON.stringify(result)).toContain('NATIVE_RECOVERY_OK')
+        }
+      }
+      if (scenario.name === 'reflex-supervision') {
+        const types = new Set(['system3/reflex-supervision', 'system3/reflex-evidence', 'subagent/supervision-steer'])
+        const events = results.flatMap(result => result.events)
+        const selected = events.filter(event => types.has(event.type))
+        expect(events.filter(event => event.type === 'system3/reflex-supervision').map(event => event.data['state']), JSON.stringify(events.filter(event => event.type === 'turn/end' || event.type === 'agent/error')))
+          .toEqual(['intent', 'accepted', 'improved'])
+        expect(events.filter(event => event.type === 'subagent/steer')).toHaveLength(0)
+        expect(events.filter(event => event.type === 'subagent/supervision-steer')).toHaveLength(1)
+        expect(JSON.stringify(selected)).toContain('[Reflex 自动监督 / reflex-supervision]')
+        expect(records(ordered[0]!.content).filter(event => typeof event.type === 'string' && types.has(event.type))).toEqual(selected)
+        expect(notifications.flatMap(notification => {
+          const event = notificationEvent(notification)
+          return event !== undefined && typeof event.type === 'string' && types.has(event.type) ? [event] : []
+        })).toEqual(selected)
+      }
+      if (scenario.name === 'reflex-semantic-supervision') {
+        const types = new Set(['system3/reflex-supervision', 'system3/reflex-evidence', 'subagent/supervision-steer', 'system3/judgement'])
+        const events = results.flatMap(result => result.events)
+        const selected = events.filter(event => types.has(event.type))
+        expect(events.filter(event => event.type === 'system3/reflex-supervision').map(event => event.data['state']))
+          .toEqual(['intent', 'accepted', 'improved'])
+        expect(events.filter(event => event.type === 'subagent/steer')).toHaveLength(0)
+        expect(events.filter(event => event.type === 'subagent/supervision-steer')).toHaveLength(1)
+        expect(JSON.stringify(selected)).toContain('[Reflex 自动监督 / reflex-supervision]')
+        const evidence = events.filter(event => event.type === 'system3/reflex-evidence')
+        expect(evidence).toHaveLength(3)
+        expect(evidence.slice(0, 2)).toMatchObject([
+          { data: { evidence: { operationDigest: 'unrelated-edit-0', outcome: 'succeeded', semantic: { actions: [{ path: 'marketing/banner.svg' }] } } } },
+          { data: { evidence: { operationDigest: 'unrelated-edit-1', outcome: 'succeeded', semantic: { actions: [{ path: 'marketing/landing.css' }] } } } },
+        ])
+        expect(evidence[2]).toMatchObject({ data: { evidence: { operation: 'verification', outcome: 'succeeded',
+          semantic: { actions: [{ kind: 'verification-target', path: 'finance/decimal-total.test.ts' }], truncated: false } } } })
+        const decisions = events.filter(event => event.type === 'system3/judgement')
+        expect(decisions).toMatchObject([
+          { data: { decision: 'reflex.supervision', decisionVersion: 3, outcome: 'realign', applied: true,
+            request: { state: { semanticReady: true, evidence: evidence.slice(0, 2).map(event => event.data['evidence']),
+              semanticEvidence: evidence.slice(0, 2).map(event => event.data['evidence']) } } } },
+          { data: { decision: 'reflex.supervision-feedback', decisionVersion: 2, outcome: 'improved', applied: true,
+            request: { state: { after: [evidence[2]!.data['evidence']] } },
+            response: { answers: { relevantVerification: { type: 'noul', noul: 1 } } } } },
+        ])
+        expect(records(ordered[0]!.content).filter(event => typeof event.type === 'string' && types.has(event.type))).toEqual(selected)
+        expect(notifications.flatMap(notification => {
+          const event = notificationEvent(notification)
+          return event !== undefined && typeof event.type === 'string' && types.has(event.type) ? [event] : []
+        })).toEqual(selected)
+      }
+      if (scenario.name === 'reflex-context') {
+        const events = results.flatMap(result => result.events).filter(event => event.type === 'reflex/context-projection')
+        expect(events).toMatchObject([{ data: { action: 'remove' } }])
+        expect(events).toHaveLength(1)
+        expect(results.flatMap(result => result.events).some(event => event.type === 'user/message'
+          && (event.data['source'] as { kind: string }).kind === 'reflex-memory')).toBe(true)
+        expect(records(ordered[0]!.content).filter(event => event.type === 'reflex/context-projection')).toEqual(events)
+        const subscribed = notifications.flatMap(notification => {
+          const event = notificationEvent(notification)
+          return event?.type === 'reflex/context-projection' ? [event] : []
+        })
+        expect(subscribed).toEqual(events)
       }
       if (scenario.name === 'system3-shadow' || scenario.name === 'system3-entry-route') {
         const decisions = results.flatMap(result => result.events).filter(event => event.type === 'system3/decision')
@@ -988,7 +1086,7 @@ describe('TypeScript SDK snapshots over the jsonrpc runtime', () => {
         const parent = ordered[0]
         if (parent === undefined) throw new Error(`${scenario.name}: no primary session log`)
         const turnEnds = records(parent.content).filter(record => record.type === 'turn/end')
-        expect(turnEnds, `${scenario.name}: completed turns`).toHaveLength(results.length)
+        expect(turnEnds, `${scenario.name}: completed turns`).toHaveLength(turnActions(replayContents[0]!).length)
         for (const turnEnd of turnEnds) expect(turnEnd).toMatchObject({ data: { reason: { kind: 'completed' } } })
       }
 

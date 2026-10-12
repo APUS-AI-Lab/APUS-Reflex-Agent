@@ -1,0 +1,13 @@
+# Bilingual-pair consistency record for reflex-context-implementation.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-reflex-control/reflex-context-implementation.md
+/reflex-context-and-same-session-memory:
+  en: 90fcf8e2df60c840
+  zh: 7ed884e8b886180e
+/reflex-context-and-same-session-memory/validation-evidence:
+  en: 6ed5874aff62e7c9
+  zh: 2e871838b4fffc95
+/reflex-context-and-same-session-memory/remaining-integration-verification:
+  en: 927473e04096de3f
+  zh: 9886ac6414e7fb3b

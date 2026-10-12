@@ -1,0 +1,8 @@
+version: 1
+scenario: reflex-context
+profile: sdk
+composition: sdk-reflex-context
+recording: authored
+header:
+  class: sdk-reflex-context
+  pin: true

@@ -1,0 +1,7 @@
+# Bilingual-pair consistency record for context-semantic-validation.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-reflex-control/evidence/context-semantic-validation.md
+/context-semantic-validation:
+  en: 9a43f1fd9944d236
+  zh: a068e7beaee40e36

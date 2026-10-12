@@ -604,9 +604,9 @@
               "instructions": "state.evidence 是 AI 为完成任务实际执行的工具调用和结果。任务目标是：「Read completion-evidence.txt and verify COMPLETION_EVIDENCE_OK before completing.」。根据执行记录，这个目标是否已经完成？记录里看不出来的不算完成；没有真正执行到任何用例的“通过”也不算。"
             }
           },
-          "effort": "low",
           "providerId": "system-one",
-          "model": "jev-snapshot"
+          "model": "jev-snapshot",
+          "effort": "low"
         },
         "response": {
           "model": "jev-snapshot",
@@ -1253,9 +1253,9 @@
               "instructions": "state.evidence 是 AI 为完成任务实际执行的工具调用和结果。任务目标是：「Read completion-evidence.txt and verify COMPLETION_EVIDENCE_OK before completing.」。根据执行记录，这个目标是否已经完成？记录里看不出来的不算完成；没有真正执行到任何用例的“通过”也不算。"
             }
           },
-          "effort": "low",
           "providerId": "system-one",
-          "model": "jev-snapshot"
+          "model": "jev-snapshot",
+          "effort": "low"
         },
         "response": {
           "model": "jev-snapshot",
@@ -2241,9 +2241,9 @@
                   "instructions": "state.evidence 是 AI 为完成任务实际执行的工具调用和结果。任务目标是：「Read completion-evidence.txt and verify COMPLETION_EVIDENCE_OK before completing.」。根据执行记录，这个目标是否已经完成？记录里看不出来的不算完成；没有真正执行到任何用例的“通过”也不算。"
                 }
               },
-              "effort": "low",
               "providerId": "system-one",
-              "model": "jev-snapshot"
+              "model": "jev-snapshot",
+              "effort": "low"
             },
             "response": {
               "model": "jev-snapshot",
@@ -3010,9 +3010,9 @@
                   "instructions": "state.evidence 是 AI 为完成任务实际执行的工具调用和结果。任务目标是：「Read completion-evidence.txt and verify COMPLETION_EVIDENCE_OK before completing.」。根据执行记录，这个目标是否已经完成？记录里看不出来的不算完成；没有真正执行到任何用例的“通过”也不算。"
                 }
               },
-              "effort": "low",
               "providerId": "system-one",
-              "model": "jev-snapshot"
+              "model": "jev-snapshot",
+              "effort": "low"
             },
             "response": {
               "model": "jev-snapshot",

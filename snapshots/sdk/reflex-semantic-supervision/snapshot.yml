@@ -1,0 +1,8 @@
+version: 1
+scenario: reflex-semantic-supervision
+profile: sdk
+composition: sdk-reflex-semantic-supervision
+recording: authored
+header:
+  class: sdk-reflex-semantic-supervision
+  pin: true

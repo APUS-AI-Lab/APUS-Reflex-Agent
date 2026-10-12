@@ -1,0 +1,122 @@
+[
+  {
+    "inside": true,
+    "id": "",
+    "role": null,
+    "text": "内置插件"
+  },
+  {
+    "inside": true,
+    "id": "",
+    "role": null,
+    "text": "Agent 预设"
+  },
+  {
+    "inside": true,
+    "id": "",
+    "role": null,
+    "text": "打开配置文件"
+  },
+  {
+    "inside": true,
+    "id": "",
+    "role": null,
+    "text": "关闭"
+  },
+  {
+    "inside": true,
+    "id": "reflex-endpoint",
+    "role": null,
+    "text": ""
+  },
+  {
+    "inside": true,
+    "id": "reflex-model",
+    "role": null,
+    "text": ""
+  },
+  {
+    "inside": true,
+    "id": "reflex-effort",
+    "role": null,
+    "text": ""
+  },
+  {
+    "inside": true,
+    "id": "reflex-timeoutMs",
+    "role": null,
+    "text": ""
+  },
+  {
+    "inside": true,
+    "id": "reflex-apiKeyEnv",
+    "role": null,
+    "text": ""
+  },
+  {
+    "inside": true,
+    "id": "",
+    "role": null,
+    "text": "测试连接与真实判断"
+  },
+  {
+    "inside": true,
+    "id": "",
+    "role": null,
+    "text": "高级参数（部署管理，只读）"
+  },
+  {
+    "inside": true,
+    "id": "",
+    "role": null,
+    "text": "高级参数（部署管理，只读）"
+  },
+  {
+    "inside": true,
+    "id": "",
+    "role": null,
+    "text": "刷新能力状态"
+  },
+  {
+    "inside": true,
+    "id": "",
+    "role": null,
+    "text": "通用设置"
+  },
+  {
+    "inside": true,
+    "id": "",
+    "role": null,
+    "text": "模型"
+  },
+  {
+    "inside": true,
+    "id": "",
+    "role": null,
+    "text": "Reflex 模型配置"
+  },
+  {
+    "inside": true,
+    "id": "",
+    "role": null,
+    "text": "内置插件"
+  },
+  {
+    "inside": true,
+    "id": "",
+    "role": null,
+    "text": "Agent 预设"
+  },
+  {
+    "inside": true,
+    "id": "",
+    "role": null,
+    "text": "打开配置文件"
+  },
+  {
+    "inside": true,
+    "id": "",
+    "role": null,
+    "text": "关闭"
+  }
+]

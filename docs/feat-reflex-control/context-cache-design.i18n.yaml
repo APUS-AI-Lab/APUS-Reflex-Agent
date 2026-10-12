@@ -1,0 +1,22 @@
+# Bilingual-pair consistency record for context-cache-design.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-reflex-control/context-cache-design.md
+/cache-aware-reflex-context-design:
+  en: 4c6b344f486670b1
+  zh: 95cb69d85422fc35
+/cache-aware-reflex-context-design/local-request-evidence:
+  en: 6b50dda5f041e818
+  zh: d2d8d3c4b1b797f6
+/cache-aware-reflex-context-design/default-behavior-and-configuration:
+  en: d4d7330dfbb83186
+  zh: 9fe18fab3d159b49
+/cache-aware-reflex-context-design/proposed-api-and-durable-state:
+  en: 085473a3b2094eb0
+  zh: fc2429db441d1816
+/cache-aware-reflex-context-design/cost-and-latency-acceptance:
+  en: 0800d76c05ba494c
+  zh: 75ac099dc55fb583
+/cache-aware-reflex-context-design/file-ownership:
+  en: 51a2dffd4f61d54e
+  zh: b12f25edc4d371c4

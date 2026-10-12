@@ -32,9 +32,10 @@ interface Row { task: EvalTask; decision: string; outcome: string; confidence?: 
 const load = (name: string) => JSON.parse(readFileSync(new URL(`./fixtures/${name}`, import.meta.url), 'utf8')) as EvalSet
 const sets = { 'two-tier': load('entry-routing-eval.tasks.json'), 'four-tier': load('entry-routing-eval.tiers.json') }
 const deployment = readFileSync(new URL('../../../../deploy/system3/runtime.patch.yml', import.meta.url), 'utf8')
-const endpoint = /endpoint: (\S+)/.exec(deployment)?.[1]
-const jevModel = /model: (APUS-\S+)/.exec(deployment)?.[1]
-const minConfidence = Number(/entryRouting:[\s\S]*?minConfidence: ([\d.]+)/.exec(deployment)?.[1])
+const endpoint = process.env.JEV_ENDPOINT ?? /endpoint: (\S+)/.exec(deployment)?.[1] ?? 'https://owb1q1vidflfhp-8086.proxy.runpod.net'
+const jevModel = process.env.JEV_MODEL ?? /model: (APUS-\S+)/.exec(deployment)?.[1] ?? 'APUS-OpenJev-v1-9B-5949'
+const minConfidence = Number(process.env.SYSTEM3_ENTRY_MIN_CONFIDENCE
+  ?? /entryRouting:[\s\S]*?minConfidence: ([\d.]+)/.exec(deployment)?.[1] ?? '0.8')
 
 const FOLLOW_UP = /^(继续|好的|还有吗)$|刚才|上面|第[一二三四五六七八九十\d]+[段点条个]|^(这个|把它|换成|再|不对)/
 const HARD = /设计|权衡|排查|死锁|证明|推导|迁移方案|重构|分析|比较|design|scheduler/i

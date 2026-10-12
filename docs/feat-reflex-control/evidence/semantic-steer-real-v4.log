@@ -1,0 +1,30 @@
+The plugin "vite-tsconfig-paths" is detected. Vite now supports tsconfig paths resolution natively via the resolve.tsconfigPaths option. You can remove the plugin and set resolve.tsconfigPaths: true in your Vite config instead.
+
+ RUN  v4.1.8 /Users/gumpm5/Documents/Code/APUS-Reflex-Harness/.Codex/worktrees/feat-reflex-control
+
+ ❯ packages/experimental/system3/tests/reflex-supervision.e2e.ts (3 tests | 1 failed | 2 skipped) 303042ms
+     × changes a bounded repeated-failure task after autonomous advice and verifies its actual result 303040ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  packages/experimental/system3/tests/reflex-supervision.e2e.ts > Reflex Goal supervision through real Codex > changes a bounded repeated-failure task after autonomous advice and verifies its actual result
+AssertionError: expected 'aborted' to be 'completed' // Object.is equality
+
+Expected: "completed"
+Received: "aborted"
+
+ ❯ packages/experimental/system3/tests/reflex-supervision.e2e.ts:244:33
+    242|       const result = await run.result
+    243|       stopReason = result.stopReason
+    244|       expect(result.stopReason).toBe('completed')
+       |                                 ^
+    245|     } finally { await run.dispose(); report('fault', stopReason) }
+    246|     expect(readFileSync(join(workspace, 'result.txt'), 'utf8')).toBe(`…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 skipped (3)
+   Start at  15:08:31
+   Duration  307.88s (transform 3.62s, setup 735ms, import 3.72s, tests 303.04s, environment 0ms)

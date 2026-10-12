@@ -14,7 +14,15 @@
 
 [SVG 源文件](docs/feat-independent-harness/architecture.svg) · [Jev Native + DSH Native 专项方案](docs/feat-independent-harness/jev-native-dsh-native-plan.html)
 
-当前实现支持空闲 Web/API 文本入口的 Fidoo LiteLLM 选模、原生模型步骤前的有界 Skill 选择，以及区分建议、采用、模型响应和 Skill 注入的 Conversation 界面。参见[实施与验收范围](docs/feat-system3-g1/implementation.zh.md)、[部署指南](docs/feat-system3-g1/deployment.zh.md)与 [System3 配置及限制](packages/experimental/system3/README.zh.md)。专业交接、排队入口路由、Jev 驱动的记忆与持续 Goal 判断、本地 9B／27B Lead Agent 仍需进一步接入和验证。Pilot 保留为实验参考。
+当前实现支持空闲 Web/API 文本入口的 Fidoo LiteLLM 选模、原生模型步骤前的有界 Skill 选择，以及区分建议、采用、模型响应和 Skill 注入的 Conversation 界面。APUS Reflex 层还提供专用 Reflex 模型配置页、可逆上下文投影与恢复、cache/Session 前缀保护，以及有界 Codex Goal 监督。参见[实施与验收范围](docs/feat-system3-g1/implementation.zh.md)、[部署指南](docs/feat-system3-g1/deployment.zh.md)、[System3 配置及限制](packages/experimental/system3/README.zh.md)和[专家级验收报告](docs/feat-reflex-control/apus-reflex-harness-acceptance-review.html)。严格受控监督链路和代表性上下文恢复已有验证；健康长任务对照、中途修改 Goal、远端首字节/回退和签名发布包仍待完成。Pilot 保留为实验参考。
+
+## APUS Reflex 能力指南
+
+- **入口路由：** 用户输入准入后，Reflex 可以在允许的模型或 Codex 路径中选择去向；本地 admission/status 和路由决策测量记录在[验收清单](docs/feat-reflex-control/acceptance-checklist.zh.md)中。
+- **Reflex 模型配置：** Web 与 Electron 共用专用的**Reflex 模型配置**页面。provider、模型和 effort 设置会持久化并被真实请求使用，详见 [System3 API/配置参考](packages/experimental/system3/README.zh.md)。
+- **上下文与 cache 安全：** 按行/片段投影只编辑未提交且未冻结的请求尾部，通过追加可恢复引用恢复内容，并保留原始 Session 日志和 cache 前缀。[cache 基准设计](docs/feat-reflex-control/cache-benchmark-design.zh.md)说明了边界。
+- **Codex 监督：** 监督保持轻量，使用有界证据、一次带来源调整和调整后的验证。[严格 v6 证据](docs/feat-reflex-control/evidence/semantic-codex-strict-final-v6.zh.md)是用户流程参考，不代表所有健康长任务都会自动纠偏。
+- **发布状态：** 当前变更和已知限制见[发布说明](docs/feat-reflex-control/release-notes.zh.md)。当前开发预览版本不能当作安全边界。
 
 DeepSeek Harness（`dsh`）是由 [DeepSeek AI](https://deepseek.com) 开发的开源 agent harness（智能体框架）。
 
@@ -26,7 +34,7 @@ DeepSeek Harness（`dsh`）是由 [DeepSeek AI](https://deepseek.com) 开发的�
 
 DeepSeek Harness 处于 _开发者预览_ 阶段，正在快速迭代。**未来将出现破坏兼容性的变更。**
 
-运行本项目前，请阅读[安全说明](SAFETY.zh.md)。
+运行本项目前，请阅读[安全说明](SAFETY.zh.md)。发现漏洞请按[安全政策](SECURITY.md)私下报告，不要在公开 Issue 中披露。
 
 <a id="run"></a>
 

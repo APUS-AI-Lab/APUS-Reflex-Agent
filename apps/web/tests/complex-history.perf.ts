@@ -1075,13 +1075,14 @@ async function continueConversation(
   }
 }
 
-async function measurePostSoakUserRender(
+async function measureUserRender(
   world: PerformanceWorld,
   cdp: CDPSession,
-): Promise<object> {
-  const spec = soakTurn(POST_SOAK_RENDER_TURN)
+  ordinal: number,
+  spec: ConversationTurnSpec,
+) {
   if (spec.toolResultMarker !== undefined) {
-    throw new Error('post-soak render probe must remain a text-only turn')
+    throw new Error('user render probe must remain a text-only turn')
   }
   const composer = world.page.locator('[data-composer-input][contenteditable="true"]').last()
   const composerFill = await measure(cdp, async () => {
@@ -1131,11 +1132,11 @@ async function measurePostSoakUserRender(
   expect(turnEvents.filter(event => event.type === 'tool/call')).toHaveLength(0)
   expect(turnEvents.filter(event => event.type === 'tool/result')).toHaveLength(0)
   expect(world.scaffold.ctx.agents.get(settledSessionId)).toBeDefined()
-  expect(await conversationTurns(world.page)).toBe(POST_SOAK_RENDER_TURN)
+  expect(await conversationTurns(world.page)).toBe(ordinal)
 
   return {
-    ordinal: POST_SOAK_RENDER_TURN,
-    resultingTurns: POST_SOAK_RENDER_TURN,
+    ordinal,
+    resultingTurns: ordinal,
     promptChars: spec.prompt.length,
     composerFill: composerFill.measurement,
     trustedClick: browserTiming.trustedClick,
@@ -1424,7 +1425,7 @@ describe('manual web performance: complex workspace and history', () => {
         checkpointInterval: SOAK_CHECKPOINT_INTERVAL,
       })
       expect(conversation.toolTurns).toBe(SOAK_TURNS / SOAK_TOOL_INTERVAL)
-      const postSoakUserRender = await measurePostSoakUserRender(world, cdp)
+      const postSoakUserRender = await measureUserRender(world, cdp, POST_SOAK_RENDER_TURN, soakTurn(POST_SOAK_RENDER_TURN))
       const { turns, ...retained } = conversation
       console.info(`WEB_PERF_RESULT ${JSON.stringify({
         scenario: 'continuous-100-turn-soak',
@@ -1450,5 +1451,36 @@ describe('manual web performance: complex workspace and history', () => {
         )
       }
     }
+  })
+
+  it.each([1, 6])('reports local submission paint across input sizes at CPU throttle %s', async (cpuThrottle) => {
+    const inputs = ['0.10 元加 0.20 元是多少？', '请检查账龄工具的 JSON 导出，保留 CSV 兼容行为，并运行已有测试。',
+      '请整理以下材料并保留关键约束。\n' + '业务材料：金额使用精确小数，输入原文保持不变。\n'.repeat(300)]
+    const echoTimes: number[] = []
+    for (const [index, prompt] of inputs.entries()) {
+      const marker = `ADMISSION_SAMPLE_${String(index + 1)}`
+      const specFor = (): ConversationTurnSpec => ({ prompt: `${marker} ${prompt}`.trimEnd(),
+        userMarker: marker, firstMarker: `ADMISSION_REPLY_${String(index + 1)}`,
+        doneMarker: `ADMISSION_DONE_${String(index + 1)}`,
+        deltas: [`ADMISSION_REPLY_${String(index + 1)} `, `ADMISSION_DONE_${String(index + 1)}`] })
+      const world = await launchPerformanceWorld({ browser, replay: performanceReplayOverride(1, specFor) })
+      try {
+        await world.page.goto(world.scaffold.authenticatedUrl, { waitUntil: 'load' })
+        await world.page.waitForSelector('[class*="frame"]', { timeout: 30_000 })
+        await connectFreshWorkspace(world.page, world.scaffold.workspaceCwd, 'admission-performance')
+        const cdp = await world.page.context().newCDPSession(world.page)
+        await cdp.send('Performance.enable')
+        await cdp.send('Emulation.setCPUThrottlingRate', { rate: cpuThrottle })
+        const conversation = await continueConversation(world, cdp, { startingTurns: 0, turnCount: 1, turnSpec: specFor })
+        echoTimes.push(conversation.turns[0]?.stream.clickToUserEchoMs ?? Infinity)
+        expect(world.tripwire.warnings).toEqual([])
+        expect(world.tripwire.pageErrors).toEqual([])
+      } finally { await closePerformanceWorld(world) }
+    }
+    echoTimes.sort((a, b) => a - b)
+    console.info(`WEB_PERF_RESULT ${JSON.stringify({ scenario: 'local-submission-paint', cpuThrottle,
+      metric: 'clickToUserEchoMs', budgetMs: 1000, sampleCount: echoTimes.length,
+      p50Ms: echoTimes[Math.floor(echoTimes.length / 2)], p95Ms: p95(echoTimes), maxMs: echoTimes.at(-1),
+      samples: echoTimes }, null, 2)}`)
   })
 })

@@ -1,0 +1,14 @@
+# Editable Reflex defaults; profile settings override this bundle.
+- insert:
+    - id: jev
+      name: ./lib/index.js
+      config:
+        endpoint: https://owb1q1vidflfhp-8086.proxy.runpod.net
+        model: APUS-OpenJev-v1-9B-5949
+        apiKeyEnv: JEV_API_KEY
+        effort: high
+        timeoutMs: 15000
+        keepAliveMs: 120000
+        http2: true
+        # Two decisions without a response on the shared HTTP/2 connection reopen it.
+        resetAfterFailures: 2

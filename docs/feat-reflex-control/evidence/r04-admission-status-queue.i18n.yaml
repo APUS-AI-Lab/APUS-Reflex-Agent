@@ -1,0 +1,7 @@
+# Bilingual-pair consistency record for r04-admission-status-queue.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-reflex-control/evidence/r04-admission-status-queue.md
+/r-04-local-admission-status-acceptance:
+  en: cd82a519978bd7d9
+  zh: 65d86e01d28926a8

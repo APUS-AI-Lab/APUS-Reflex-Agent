@@ -1,0 +1,21 @@
+{
+  "scenario": "real-web-queue-local-admission-status",
+  "acceptanceRevision": "r04-local-admission-v1",
+  "command": "pnpm exec vitest run --config vitest.web.config.ts apps/web/tests/queue-actions.e2e.ts -t 'edits and removes exact occurrences and preserves Queue across button stop' --maxWorkers=1 --reporter=verbose",
+  "surface": "built Web client through a real Playwright browser and loopback scaffold",
+  "userAction": "submit a second message while the first turn is held",
+  "observed": {
+    "admissionStatus": "Sending…",
+    "visibleLatencyMs": 16,
+    "budgetMs": 1000,
+    "submissionEchoVisible": true,
+    "composerClearedAndEditable": true,
+    "remotePromptHeld": true,
+    "testStatus": "passed"
+  },
+  "scope": [
+    "The measurement starts at Enter and ends when the user-visible submission status is available.",
+    "This proves local admission/status feedback only; it does not measure Reflex route decision, remote first byte, or full answer time.",
+    "The held request is a deterministic transport fixture for the UI boundary, not a provider-latency claim."
+  ]
+}

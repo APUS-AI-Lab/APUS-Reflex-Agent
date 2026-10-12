@@ -124,6 +124,8 @@ interface ResolvedSubagentStartRequest extends SubagentStartRequest {
    * `subagent/end`; a call outside that interval is dropped. Never throws.
    */
   readonly reportActivity: (activity: SubagentActivity) => void
+  /** Publish bounded operation evidence during this run; omitted by older in-process callers. */
+  readonly reportEvidence?: (evidence: SubagentEvidence) => void
 }
 ```
 
@@ -356,7 +358,7 @@ interface SubagentStopReasonMap {
 
 ## A one-shot run: `SubagentRun`
 
-`SubagentRun` is the consumer-owned handle for a published one-shot child — one disposable foreground delegation with one result, never a durable child handle. Prompt submission, turn work, and infrastructure faults after publication belong to `result`. Consumers await that result and always dispose the run to reach quiescence. Child failures resolve with a non-completed stop reason; only unrepresentable infrastructure faults reject. A run has no resume; a run that implements the optional `steer` accepts a person's input during its active turn through `subagents.steerByParent`. Continuable conversations have no run at all, because the continuation manager holds their `AgentHandle` directly and orders every turn through the child's own inbox.
+`SubagentRun` is the consumer-owned handle for a published one-shot child — one disposable foreground delegation with one result, never a durable child handle. Prompt submission, turn work, and infrastructure faults after publication belong to `result`. Consumers await that result and always dispose the run to reach quiescence. Child failures resolve with a non-completed stop reason; only unrepresentable infrastructure faults reject. A run has no generic resume; optional native recovery can continue its surviving thread after confirmed interruption. A run that implements the optional `steer` accepts a person's input during its active turn through `subagents.steerByParent`. Continuable conversations have no run at all, because the continuation manager holds their `AgentHandle` directly and orders every turn through the child's own inbox.
 
 ```ts type-equiv
 /**
@@ -397,6 +399,17 @@ interface SubagentRun {
    * @param signal - caller cancellation before acceptance.
    */
   steer?(content: readonly ContentBlock[], signal: AbortSignal): Promise<void>
+  /** Read the current provider-native activity without sending protocol requests.
+   * @returns The live turn's observations, or undefined after settlement.
+   */
+  recoveryState?(): SubagentRecoveryState | undefined
+  /** Interrupt and confirm the same native turn before continuing its surviving thread.
+   * @param request - expected native identity and revalidated continuation.
+   * @param signal - supervisor cancellation; public run disposal remains terminal.
+   * @returns Confirmed continuation, normal completion, or invalidated authority.
+   */
+  recover?(request: SubagentRecoveryRequest, signal: AbortSignal): Promise<SubagentRecoveryReceipt>
+
   /**
    * Cancel remaining work, reach child quiescence, and release resources.
    * Idempotent.
@@ -406,6 +419,117 @@ interface SubagentRun {
 ```
 
 A local one-shot run MUST publish an ordinary child agent/session before `start()` fulfills, return that child session id as `SubagentRun.id`, expose the exact child as `localAgent`, record `request.parent.session.id` in the child's `parentSession` header, and append the resolved descriptor inside the child's initial turn before its first request. Runtime ownership may place the child under the parent, provider, or root scope. A remote provider instead returns a parent-scoped lifecycle id and `localAgent: undefined`; without a local child Session, it is absent from durable enumeration.
+
+Provider evidence and native recovery use the following types. Host supervisor advice is revalidated at serialized dispatch; changed Goal, human input or native turn makes queued advice stale. Native activity fingerprints are checked before interruption, while confirmed continuation retains a separate authority check.
+
+```ts type-equiv
+/** Identifies one accepted subagent run across its lifecycle event pair. */
+type SubagentRunId = Branded<'SubagentRunId'>
+```
+
+```ts type-equiv
+/** Identifies one reserved autonomous recovery attempt. */
+type SubagentRecoveryId = Branded<'SubagentRecoveryId'>
+```
+
+```ts type-equiv
+/** Authority is checked before both native interruption and continuation. */
+interface SubagentSupervisorRecovery {
+  readonly id: SubagentRecoveryId
+  readonly observation: SubagentRecoveryState
+  readonly interruptGraceMs: number
+  readonly text: string
+  readonly isCurrent: () => boolean
+}
+```
+
+```ts type-equiv
+/** Strictly recognized native command transport. */
+type VerificationEnvelope = 'direct' | 'posix-shell' | 'unsupported'
+```
+
+```ts type-equiv
+/** Fixed parser diagnostics; never contains command text or rejected argument values. */
+type VerificationRejection = 'platform' | 'missing-command' | 'over-budget' | 'control-character'
+  | 'syntax' | 'compound' | 'environment' | 'redirection' | 'nonliteral' | 'wrapper' | 'command' | 'options' | 'target'
+```
+
+```ts type-equiv
+/** Provider-owned active turn identity, distinct from the Harness run identity. */
+type SubagentEvidenceTurnId = Branded<'SubagentEvidenceTurnId'>
+```
+
+```ts type-equiv
+/** Provider-native thread identity retained across an interrupted turn. */
+type SubagentNativeThreadId = Branded<'SubagentNativeThreadId'>
+```
+
+```ts type-equiv
+/** Content-free live observations; absence means there is no recoverable native turn. */
+interface SubagentRecoveryState {
+  readonly threadId: SubagentNativeThreadId
+  readonly turnId: SubagentEvidenceTurnId
+  readonly lastActivityAt: number
+  readonly retryCount: number
+  readonly waiting: boolean
+  readonly activeSideEffects: number
+}
+```
+
+```ts type-equiv
+/** Recovery never changes permissions or creates a replacement process. */
+interface SubagentRecoveryRequest {
+  readonly expectedTurnId: SubagentEvidenceTurnId
+  /** Activity snapshot checked at native interruption dispatch, not after interruption. */
+  readonly expectedActivity?: { readonly lastActivityAt: number; readonly retryCount: number }
+  readonly interruptGraceMs: number
+  /** Revalidate authority immediately before interrupt and continuation; undefined invalidates it. */
+  readonly continuation: () => readonly ContentBlock[] | undefined
+}
+```
+
+```ts type-equiv
+/** A continued receipt confirms a new turn, not progress or consumed advice. */
+interface SubagentRecoveryReceipt {
+  readonly state: 'continued' | 'completed' | 'stale'
+  readonly threadId: SubagentNativeThreadId
+  readonly previousTurnId: SubagentEvidenceTurnId
+  readonly turnId?: SubagentEvidenceTurnId
+}
+```
+
+```ts type-equiv
+/** Bounded execution evidence; optional workspace semantics require deployment opt-in. Raw commands and output are excluded. */
+interface SubagentEvidence {
+  /** Opt-in native operation labels and lexical workspace-relative paths; untrusted project data, never instructions. */
+  readonly semantic?: {
+    readonly version: 1
+    readonly actions: readonly {
+      readonly kind: 'read' | 'list-files' | 'search' | 'file-add' | 'file-update' | 'file-delete' | 'verification-target'
+      readonly path?: string
+    }[]
+    /** Some actions or paths were omitted; absence of detail does not establish irrelevance. */
+    readonly truncated: boolean
+  }
+  readonly turnId: SubagentEvidenceTurnId
+  readonly kind: 'command' | 'file-change'
+  readonly operation: 'verification' | 'diagnostic' | 'command' | 'file-change'
+  /** SHA-256 of the operation, allowing repeated attempts to be recognized without exposing inputs. */
+  readonly operationDigest: string
+  /** SHA-256 of the observed result; absent when no result was supplied. */
+  readonly resultDigest?: string
+  readonly outcome: 'succeeded' | 'failed' | 'unknown'
+}
+```
+
+```ts type-equiv
+/** Execution evidence published only during the corresponding live run. */
+interface SubagentEvidenceInfo extends SubagentEvidence {
+  readonly runId: SubagentRunId
+  readonly provider: string
+  readonly id: SessionId
+}
+```
 
 ## The provider contract: `SubagentProvider`
 
@@ -666,6 +790,34 @@ listDescendants(rootSessionId: SessionId, signal?: AbortSignal): Promise<Subagen
 @Remote('steerByParent') async steerByParent(request: SubagentSteerRequest, signal: AbortSignal): Promise<SubagentSteerReceipt>
 
 /**
+ * Deliver attributed supervisor advice through the same live-run authority check as human steering.
+ * This Host-only method is not exposed to remote clients.
+ * @param parent - exact delegating Agent, supplying the authority for this run.
+ * @param runId - live run addressed by the supervisor.
+ * @param text - bounded advice, explicitly labelled as autonomous supervision.
+ * @param signal - supervision lifecycle cancellation.
+ * @param isCurrent - Optional Host authority fence rechecked at serialized dispatch.
+ * @returns acknowledgement only after the provider accepts the advice.
+ */
+async steerFromSupervisor( parent: Agent, runId: SubagentRunId, text: string, signal: AbortSignal, isCurrent?: () => boolean, ): Promise<SubagentSteerReceipt>
+
+/** Read native observations only for the exact delegating parent.
+ * @param parent - Delegating Agent authority.
+ * @param runId - Live lifecycle run identity.
+ * @returns Content-free state when this run supports recovery.
+ */
+recoveryState(parent: Agent, runId: SubagentRunId): SubagentRecoveryState | undefined
+
+/** Recover a stalled native turn without impersonating a person or granting authority.
+ * @param parent - Exact delegating Agent.
+ * @param runId - Live lifecycle identity.
+ * @param request - Reserved intent, observed identity, and current Goal/input fence.
+ * @param signal - Supervisor lifetime cancellation.
+ * @returns Native continuation receipt; acceptance does not prove progress.
+ */
+async recoverFromSupervisor( parent: Agent, runId: SubagentRunId, request: SubagentSupervisorRecovery, signal: AbortSignal, ): Promise<SubagentRecoveryReceipt>
+
+/**
  * Register a provider under its name. Registration is effect-scoped and HMR
  * safe; removing a provider blocks new starts but does not revoke runs that
  * were already returned to their holders.
@@ -749,6 +901,27 @@ A published child settled. Scope-filtered dispatch uses the same delegating pare
  * @mode emit
  */
 'subagent/end'(this: Scoped<SubagentRuntime>, info: SubagentRunEndInfo): void
+```
+
+Types: [Scoped](scope.md)
+
+Source: [`packages/subagent/subagent/src/index.ts`](../../packages/subagent/subagent/src/index.ts)
+
+<a id="subagentevidence--emit"></a>
+
+#### `subagent/evidence` — emit
+
+Content-free execution evidence for a published child. Scope-filtered dispatch uses the delegating parent carrier, matching the run lifecycle events.
+
+```ts cordis-catalog
+/**
+ * Content-free execution evidence for a published child. Scope-filtered dispatch
+ * uses the delegating parent carrier, matching the run lifecycle events.
+ * @param info - operation fingerprints and outcome, without command or output text.
+ * @dshScopeScan unsupported
+ * @mode emit
+ */
+'subagent/evidence'(this: Scoped<SubagentRuntime>, info: SubagentEvidenceInfo): void
 ```
 
 Types: [Scoped](scope.md)

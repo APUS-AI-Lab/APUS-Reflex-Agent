@@ -1,0 +1,158 @@
+{
+  "version": 1,
+  "stage": "after-built-fix",
+  "runtime": "Host18 + system3 Host19 incremental / Client12 / Web12 / server14",
+  "liveBrowser": true,
+  "modelRequestsSent": 0,
+  "providerSettingsSaved": false,
+  "themeRestored": "system",
+  "matrix": [
+    {
+      "theme": "light",
+      "viewport": [
+        375,
+        812
+      ],
+      "metrics": {
+        "viewport": 375,
+        "body": 375,
+        "fieldWidth": 271,
+        "dialogWidth": 327
+      },
+      "screenshot": "reflex-after-375-light.png"
+    },
+    {
+      "theme": "light",
+      "viewport": [
+        768,
+        1024
+      ],
+      "metrics": {
+        "viewport": 768,
+        "body": 768,
+        "fieldWidth": 452,
+        "dialogWidth": 720
+      },
+      "screenshot": "reflex-after-768-light.png"
+    },
+    {
+      "theme": "light",
+      "viewport": [
+        1280,
+        900
+      ],
+      "metrics": {
+        "viewport": 1280,
+        "body": 1280,
+        "fieldWidth": 532,
+        "dialogWidth": 800
+      },
+      "screenshot": "reflex-after-1280-light.png"
+    },
+    {
+      "theme": "light",
+      "viewport": [
+        640,
+        450
+      ],
+      "metrics": {
+        "viewport": 640,
+        "body": 640,
+        "fieldWidth": 536,
+        "dialogWidth": 592
+      },
+      "screenshot": "reflex-after-640-light.png"
+    },
+    {
+      "theme": "dark",
+      "viewport": [
+        375,
+        812
+      ],
+      "metrics": {
+        "viewport": 375,
+        "body": 375,
+        "fieldWidth": 271,
+        "dialogWidth": 327
+      },
+      "screenshot": "reflex-after-375-dark.png"
+    },
+    {
+      "theme": "dark",
+      "viewport": [
+        768,
+        1024
+      ],
+      "metrics": {
+        "viewport": 768,
+        "body": 768,
+        "fieldWidth": 452,
+        "dialogWidth": 720
+      },
+      "screenshot": "reflex-after-768-dark.png"
+    },
+    {
+      "theme": "dark",
+      "viewport": [
+        1280,
+        900
+      ],
+      "metrics": {
+        "viewport": 1280,
+        "body": 1280,
+        "fieldWidth": 532,
+        "dialogWidth": 800
+      },
+      "screenshot": "reflex-after-1280-dark.png"
+    },
+    {
+      "theme": "dark",
+      "viewport": [
+        640,
+        450
+      ],
+      "metrics": {
+        "viewport": 640,
+        "body": 640,
+        "fieldWidth": 536,
+        "dialogWidth": 592
+      },
+      "screenshot": "reflex-after-640-dark.png"
+    }
+  ],
+  "keyboard": {
+    "tabCount": 20,
+    "allInsideDialog": true,
+    "escapeClosedDialog": true,
+    "escapeRestoredFocus": "设置",
+    "evidence": "keyboard-after.json"
+  },
+  "invalidDrafts": {
+    "fields": [
+      "endpoint",
+      "effort",
+      "timeoutMs"
+    ],
+    "ariaInvalid": true,
+    "descriptionsAssociated": true,
+    "discardedOnClose": true,
+    "evidence": "reflex-invalid-after.png"
+  },
+  "contextRestoration": {
+    "sessionId": "session-23def194-ec8f-4440-a71a-5f19536615ac",
+    "text": "Reflex 已恢复 1 个上下文片段",
+    "evidence": "context-restored-after-375.png",
+    "source": "existing persisted real session; no new model request"
+  },
+  "firstEntry": {
+    "result": "pass",
+    "evidence": "entry-after-375.png"
+  },
+  "consoleErrorsAfterHistoricalBufferClear": 0,
+  "remaining": [
+    "native Electron 200% zoom",
+    "packaged desktop restart/safe-mode",
+    "live provider save/probe handled separately",
+    "unknown delivery is controlled React regression, not a new real provider event"
+  ]
+}

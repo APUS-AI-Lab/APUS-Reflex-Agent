@@ -13,24 +13,20 @@ const chromiumFixture = new URL('tests/fixtures/chromium.ts', packageRoot).href
 
 /** Install external browser mocks in one real Node isolate. */
 export function installExternalBrowserHooks() {
+  const toDataModule = source => `data:text/javascript,${encodeURIComponent(source)}`
+  const zodModule = new URL('node_modules/zod/index.js', packageRoot).href
+  const transpiledFixture = url => ts.transpileModule(readFileSync(new URL(url), 'utf8'), {
+    compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
+  }).outputText.replaceAll("from 'zod'", `from ${JSON.stringify(zodModule)}`)
+  const sdkFixtureModule = toDataModule(transpiledFixture(sdkFixture))
+  const chromiumFixtureModule = toDataModule(transpiledFixture(chromiumFixture).replaceAll("'./stagehand.ts'", JSON.stringify(sdkFixtureModule)))
   const hooks = registerHooks({
     resolve(specifier, context, nextResolve) {
-      if (specifier === '@puppeteer/browsers') return { url: chromiumFixture, shortCircuit: true }
+      if (specifier === '@puppeteer/browsers') return { url: chromiumFixtureModule, shortCircuit: true }
       if (specifier !== '@browserbasehq/stagehand') return nextResolve(specifier, context)
       const actual = nextResolve(specifier, context).url
-      const proxy = `export * from ${JSON.stringify(sdkFixture)}; export { StagehandClientCreateConfigSchema } from ${JSON.stringify(actual)};`
+      const proxy = `export * from ${JSON.stringify(sdkFixtureModule)}; export { StagehandClientCreateConfigSchema } from ${JSON.stringify(actual)};`
       return { url: `data:text/javascript,${encodeURIComponent(proxy)}`, shortCircuit: true }
-    },
-    // Built profiles use plain Node; only the external fixtures need transpilation.
-    load(url, context, nextLoad) {
-      if (url !== sdkFixture && url !== chromiumFixture) return nextLoad(url, context)
-      return {
-        format: 'module',
-        source: ts.transpileModule(readFileSync(new URL(url), 'utf8'), {
-          compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
-        }).outputText,
-        shortCircuit: true,
-      }
     },
   })
   return () => hooks.deregister()

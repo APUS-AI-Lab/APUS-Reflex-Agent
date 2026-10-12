@@ -10,6 +10,9 @@ import type {} from './skill-selection.ts'
 import type {} from './delegation.ts'
 import type {} from './delegation-progress.ts'
 import type {} from './process-supervision.ts'
+import type {} from './reflex-supervision.ts'
+import type {} from './reflex-recovery.ts'
+import type {} from '@deepseek-ai/dsh-compaction/reflex-context-projection'
 import type {} from './task-frame.ts'
 import type {} from '@deepseek-ai/dsh-subagent'
 
@@ -50,6 +53,14 @@ const taskGoal = z.object({ text: z.string(), messageId: z.string().optional(), 
   .transform(({ text, messageId, goalId }) => ({ text, ...messageId === undefined ? {} : { messageId },
     ...goalId === undefined ? {} : { goalId } }))
 const viewSchema = z.object({
+  reflex: z.object({
+    observing: z.boolean(),
+    recovery: z.object({ state: z.string(), reason: z.string(), runId: z.string() }).optional(),
+    supervision: z.object({ state: z.string(), action: z.string(), evidenceCount: z.number(), runId: z.string() }).nullable(),
+    context: z.object({ revision: z.number(), action: z.enum(['remove', 'restore']), targetsCount: z.number() }).nullable(),
+    timeline: z.array(z.object({ kind: z.enum(['supervision', 'recovery', 'context', 'evidence']), at: z.number(),
+      state: z.string().nullable(), action: z.string().nullable(), count: z.number().nullable() })),
+  }).optional(),
   entry: entrySchema.nullable(),
   history: z.array(entrySchema),
   skill: z.object({ requestId: requestId.nullable(), turn: z.number(), step: z.number(), outcome: z.string(),
@@ -63,7 +74,7 @@ const viewSchema = z.object({
   interjection: z.object({ messageId: z.string() }).nullable(),
 })
 const stateSchema: ZodType<System3RuntimeState> = z.object({ entry: viewSchema.shape.entry, history: viewSchema.shape.history,
-  skill: viewSchema.shape.skill,
+  skill: viewSchema.shape.skill, reflex: viewSchema.shape.reflex,
   subagentRun: viewSchema.shape.subagentRun, notices: viewSchema.shape.notices, taskFrame: viewSchema.shape.taskFrame,
   interjection: viewSchema.shape.interjection,
   header: selection.nullable(), currentTurn: z.number().nullable(), currentStep: z.number().nullable(),
@@ -87,13 +98,49 @@ function hasResponseContent(stream: readonly AssistantStreamRecord[]): boolean {
 
 /** Fold advice and adoption; confirm request use from output or a streamed attempt in the exact input turn. */
 export const system3RuntimeProjection = {
-  key: 'system3Runtime', stateVersion: 13, stateSchema,
+  key: 'system3Runtime', stateVersion: 16, stateSchema,
   init: () => ({ entry: null, history: [], skill: null, subagentRun: null, notices: [], taskFrame: null, interjection: null, header: null,
     currentTurn: null, currentStep: null, entryTurn: null, startRequestId: null, skillMessageId: null, imageInSession: false,
     route: null }),
   wire: { viewSchema, view: state => ({ entry: state.entry, history: state.history, skill: state.skill, subagentRun: state.subagentRun,
-    notices: state.notices, taskFrame: state.taskFrame, interjection: state.interjection }) },
+    notices: state.notices, taskFrame: state.taskFrame, interjection: state.interjection,
+    ...state.reflex === undefined ? {} : { reflex: state.reflex } }) },
   apply(state, event) {
+    const timeline = (entry: NonNullable<NonNullable<System3RuntimeState['reflex']>['timeline']>[number]): NonNullable<System3RuntimeState['reflex']>['timeline'] => [
+      ...(state.reflex?.timeline ?? []), entry,
+    ].slice(-12)
+    if (event.type === 'system3/reflex-recovery') {
+      const { state: status, reason, runId } = event.data
+      return { ...state, reflex: { observing: status === 'intent' || status === 'continued', supervision: state.reflex?.supervision ?? null,
+        context: state.reflex?.context ?? null, timeline: timeline({ kind: 'recovery', at: event.time, state: status, action: null, count: null }),
+        recovery: { state: status, reason, runId } } }
+    }
+    if (event.type === 'system3/reflex-supervision') {
+      const { state: status, action, evidenceCount, runId } = event.data
+      return { ...state, reflex: { observing: state.reflex?.observing ?? true, ...state.reflex, context: state.reflex?.context ?? null,
+        timeline: timeline({ kind: 'supervision', at: event.time, state: status, action, count: evidenceCount }),
+        supervision: { state: status, action, evidenceCount, runId } } }
+    }
+    if (event.type === 'system3/reflex-evidence') {
+      return { ...state, reflex: { observing: state.reflex?.observing ?? true, ...state.reflex,
+        supervision: state.reflex?.supervision ?? null, context: state.reflex?.context ?? null,
+        timeline: timeline({ kind: 'evidence', at: event.time, state: null, action: null, count: 1 }) } }
+    }
+    if (event.type === 'reflex/context-projection') {
+      return { ...state, reflex: { observing: state.reflex?.observing ?? true, ...state.reflex,
+        supervision: state.reflex?.supervision ?? null,
+        timeline: timeline({ kind: 'context', at: event.time, state: null, action: event.data.action, count: event.data.targets.length }),
+        context: { revision: event.data.revision, action: event.data.action, targetsCount: event.data.targets.length } } }
+    }
+    if (event.type === 'user/message' && event.data.source.kind === 'reflex-memory') {
+      return { ...state, reflex: { observing: state.reflex?.observing ?? true, ...state.reflex,
+        supervision: state.reflex?.supervision ?? null,
+        timeline: timeline({ kind: 'context', at: event.time, state: null, action: 'restore', count: event.data.content.filter(block => block.type === 'text').length }),
+        context: { revision: event.seq, action: 'restore', targetsCount: event.data.content.filter(block => block.type === 'text').length } } }
+    }
+    if (event.type === 'user/message' && event.data.source.kind === 'user' && state.reflex !== undefined) {
+      state = { ...state, reflex: { ...state.reflex, recovery: undefined, supervision: null, context: null } }
+    }
     if (!state.imageInSession && (event.type === 'user/message' || event.type === 'tool/result')) {
       const content = event.type === 'user/message' ? event.data.content : event.data.message.content
       if (content.some(block => block.type === 'image')) state = { ...state, imageInSession: true }
@@ -107,7 +154,8 @@ export const system3RuntimeProjection = {
     if (event.type === 'system3/task-frame') return { ...state, taskFrame: { goal: event.data.goal, items: event.data.items } }
     if (event.type === 'step/start') return { ...state, currentTurn: event.data.turn, currentStep: event.data.step }
     if (event.type === 'step/end') return { ...state, currentTurn: null, currentStep: null }
-    if (event.type === 'turn/end') return { ...state, currentTurn: null, currentStep: null, interjection: null }
+    if (event.type === 'turn/end') return { ...state, currentTurn: null, currentStep: null, interjection: null,
+      ...state.reflex === undefined ? {} : { reflex: { ...state.reflex, observing: false } } }
     if (event.type === 'request/header') {
       const config = event.data.header.config
       return { ...state, header: { provider: config.provider, model: config.model,
@@ -172,7 +220,9 @@ export const system3RuntimeProjection = {
       const alert = run.state !== 'running' || previous?.alert == null ? null
         : previous.alert.kind === 'overtime' || lastStepAt === previous.lastStepAt ? previous.alert : null
       return { ...state, subagentRun: { ...run, lastStepAt, note, alert, steerable: steerable && run.state === 'running',
-        steers: previous?.steers ?? [] } }
+        steers: previous?.steers ?? [] }, reflex: { ...state.reflex, observing: run.state === 'running',
+        supervision: state.reflex?.supervision ?? null, context: state.reflex?.context ?? null,
+        timeline: state.reflex?.timeline ?? [] } }
     }
     if (event.type === 'subagent/steer' && state.subagentRun?.runId === event.data.runId) {
       const steer = { text: event.data.text, atMs: Math.max(0, event.time - state.subagentRun.startedAt) }

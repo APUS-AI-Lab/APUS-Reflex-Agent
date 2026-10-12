@@ -2336,6 +2336,66 @@
       "doc": "docs/subsystems/product-telemetry.md",
       "symbol": "ProductTelemetryRecord",
       "source": "packages/host/product-telemetry-otel/src/index.ts"
+    },
+    {
+      "doc": "docs/subsystems/subagent.md",
+      "symbol": "SubagentEvidenceTurnId",
+      "source": "packages/subagent/subagent/src/types.ts"
+    },
+    {
+      "doc": "docs/subsystems/subagent.md",
+      "symbol": "SubagentNativeThreadId",
+      "source": "packages/subagent/subagent/src/types.ts"
+    },
+    {
+      "doc": "docs/subsystems/subagent.md",
+      "symbol": "SubagentRecoveryState",
+      "source": "packages/subagent/subagent/src/types.ts"
+    },
+    {
+      "doc": "docs/subsystems/subagent.md",
+      "symbol": "SubagentRecoveryRequest",
+      "source": "packages/subagent/subagent/src/types.ts"
+    },
+    {
+      "doc": "docs/subsystems/subagent.md",
+      "symbol": "SubagentRecoveryReceipt",
+      "source": "packages/subagent/subagent/src/types.ts"
+    },
+    {
+      "doc": "docs/subsystems/subagent.md",
+      "symbol": "SubagentEvidence",
+      "source": "packages/subagent/subagent/src/types.ts"
+    },
+    {
+      "doc": "docs/subsystems/subagent.md",
+      "symbol": "SubagentEvidenceInfo",
+      "source": "packages/subagent/subagent/src/types.ts"
+    },
+    {
+      "doc": "docs/subsystems/subagent.md",
+      "symbol": "SubagentRunId",
+      "source": "packages/subagent/subagent/src/types.ts"
+    },
+    {
+      "doc": "docs/subsystems/subagent.md",
+      "symbol": "SubagentRecoveryId",
+      "source": "packages/subagent/subagent/src/recovery.ts"
+    },
+    {
+      "doc": "docs/subsystems/subagent.md",
+      "symbol": "SubagentSupervisorRecovery",
+      "source": "packages/subagent/subagent/src/recovery.ts"
+    },
+    {
+      "doc": "docs/subsystems/subagent.md",
+      "symbol": "VerificationEnvelope",
+      "source": "packages/subagent/subagent-codex/src/verification-target.ts"
+    },
+    {
+      "doc": "docs/subsystems/subagent.md",
+      "symbol": "VerificationRejection",
+      "source": "packages/subagent/subagent-codex/src/verification-target.ts"
     }
   ]
 }

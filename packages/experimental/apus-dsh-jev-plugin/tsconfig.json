@@ -1,14 +1,36 @@
 {
   "extends": "../../../tsconfig.base.json",
-  "compilerOptions": { "rootDir": "src", "outDir": "lib/types" },
-  "include": ["src"],
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "lib/types"
+  },
+  "include": [
+    "src"
+  ],
   "references": [
-    { "path": "../../../vendor/cordis" },
-    { "path": "../../../vendor/schemastery" },
-    { "path": "../../credentials/credentials" },
-    { "path": "../../util/http-proxy" },
-    { "path": "../../util/launch-environment" },
-    { "path": "../../util/timeout" },
-    { "path": "../../util/values" }
+    {
+      "path": "../../../vendor/cordis"
+    },
+    {
+      "path": "../../../vendor/schemastery"
+    },
+    {
+      "path": "../../credentials/credentials"
+    },
+    {
+      "path": "../../util/http-proxy"
+    },
+    {
+      "path": "../../util/launch-environment"
+    },
+    {
+      "path": "../../util/timeout"
+    },
+    {
+      "path": "../../util/values"
+    },
+    {
+      "path": "../../typert/protocol"
+    }
   ]
 }

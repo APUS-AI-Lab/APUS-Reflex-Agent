@@ -281,6 +281,25 @@ Source: [`packages/experimental/inspector/src/index.ts`](../../packages/experime
 Cordis service that resolves one pinned Jev provider per request.
 
 ```ts cordis-catalog
+/** Register the runtime owner of one capability's observed status.
+ * @param id - Product capability identity.
+ * @param read - Runtime status projection; connection probes never update it.
+ * @returns Disposer removing this reader.
+ */
+registerCapability(id: ReflexCapabilityId, read: () => ReflexCapabilityState): () => void
+
+/** Read provider identity and independently observed capability states without credentials.
+ * @returns Current provider and capability status.
+ */
+@Remote readStatus(): ReflexStatus
+
+/** Test a candidate without persisting configuration or modifying capability status.
+ * @param input - Candidate endpoint/model and optional transient key; never returned or stored.
+ * @param signal - Caller lifetime.
+ * @returns Sanitized connectivity and real-decision results.
+ */
+@Remote async testConnection(input: ReflexConnectionInput, signal: AbortSignal): Promise<ReflexConnectionResult>
+
 /**
  * Register a provider and return the disposer owned by the caller.
  * @param provider - Provider whose identity is unique in the registry.
@@ -503,4 +522,29 @@ A pending Client activation request left the answerable state.
 ```
 
 Source: [`packages/extensions/cordis-host-runner/src/types.ts`](../../packages/extensions/cordis-host-runner/src/types.ts)
+
+<a id="system3-events"></a>
+
+### `system3/*` events
+
+<a id="system3context-prepare--parallel"></a>
+
+#### `system3/context-prepare` — parallel
+
+Await task-frame judgements already admitted for this step before capturing context-removal constraints. Later queued input is excluded; cancellation ends the wait without cancelling background frame work.
+
+```ts cordis-catalog
+/**
+ * Await task-frame judgements already admitted for this step before capturing context-removal constraints.
+ * Later queued input is excluded; cancellation ends the wait without cancelling background frame work.
+ * @param agent - Agent whose claimed input established the finite admission batch.
+ * @param signal - Context plugin lifetime and turn cancellation.
+ * @mode parallel
+ */
+'system3/context-prepare'(agent: Agent, signal: AbortSignal): Promise<void> | void
+```
+
+Types: [Agent](core.zh.md)
+
+Source: [`packages/experimental/system3/src/task-frame.ts`](../../packages/experimental/system3/src/task-frame.ts)
 <!-- END GENERATED cordis-surface -->

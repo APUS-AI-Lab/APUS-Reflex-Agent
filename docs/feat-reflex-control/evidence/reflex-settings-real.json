@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "case": "F-01",
+  "date": "2026-10-10",
+  "page": "Reflex 模型配置",
+  "endpoint": "redacted-configured-http-endpoint",
+  "model": "APUS-OpenJev-v1-9B-5949",
+  "protocol": "openjev",
+  "connectionTests": [
+    {
+      "candidate": "canonical-model",
+      "result": "ok",
+      "effort": "high",
+      "observedLatencyMs": 3808
+    },
+    {
+      "candidate": "alternate-invalid-model",
+      "result": "failed-expected",
+      "model": "jev-latest",
+      "observedLatencyMs": 3010,
+      "secretExposed": false
+    }
+  ],
+  "persistence": {
+    "saveLowHttpStatus": 200,
+    "saveLow": true,
+    "restartServerProcess": true,
+    "reloadEffortAfterRestart": "low",
+    "actualRequestEffortAfterRestart": "low",
+    "restoreHighHttpStatus": 200,
+    "finalEffort": "high",
+    "finalProfileUsesBundleDefault": true,
+    "userOverrideRemovedAfterRestore": true
+  },
+  "requestEvidence": {
+    "settingsMutateHttpStatus": 200,
+    "settingsDescribeAfterRestart": true,
+    "modelCatalogAfterRestart": true,
+    "apiKeyMasked": true,
+    "endpointAndCredentialsCommitted": false
+  },
+  "scope": "This proves the web settings save and cross-process reload path plus one real model request. It does not claim final Electron package persistence; that is F-03."
+}

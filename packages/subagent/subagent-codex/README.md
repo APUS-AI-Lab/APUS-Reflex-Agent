@@ -97,7 +97,7 @@ This section explains how the provider drives a real Codex app-server and where 
 
 ### Design concept
 
-- **One fresh process, thread, and turn per run.** Every run spawns a fresh app-server, creates one ephemeral thread, and executes exactly one turn; there is no continuation, resume, or pooling.
+- **One fresh process and ephemeral thread per run.** A Host supervisor can interrupt a confirmed native turn and continue that surviving thread; process death never resumes an ephemeral thread. There is no process pooling.
 - **Native configuration is authoritative.** Codex configuration and authentication stay native through the parent cwd, `HOME`, and `CODEX_HOME`; the provider overrides only the optional model and the thread's approval, reviewer, and sandbox fields.
 - **Unattended by design.** Approval, user-input, and MCP requests are answered or declined without a human; unknown server requests fail the run.
 
@@ -112,7 +112,9 @@ This section explains how the provider drives a real Codex app-server and where 
 
 ### Run flow
 
-A start accepts only a non-empty sequence of text blocks and derives the child cwd from the parent session. It spawns the fixed command through the subprocess seam, performs the `initialize` → `initialized` handshake, maps the Profile-selected mode and optional model into official `thread/start` fields beside `{ cwd, ephemeral: true }`, and publishes the run only after Codex returns a valid ephemeral thread. The published result starts exactly one turn, accepts only notifications for that run's thread and turn, and waits for the authoritative `turn/completed` terminal. The latest `agentMessage` with `phase: "final_answer"` wins; when Codex emits no explicit final phase, the latest message with `phase: null` is the compatibility fallback. A successful turn with no nonblank answer settles as an error. Failed turns use the coarse categories `limit`, `access-policy`, `service`, `transport`, `product-error`, `invalid-result`, or `unknown`; an early app-server exit uses `process`, and applicable connection and stream failures retain a numeric `httpStatusCode`.
+A start accepts only a non-empty sequence of text blocks and derives the child cwd from the parent session. It spawns the fixed command through the subprocess seam, performs the `initialize` → `initialized` handshake, maps the Profile-selected mode and optional model into official `thread/start` fields beside `{ cwd, ephemeral: true }`, and publishes the run only after Codex returns a valid ephemeral thread. The published result starts its first turn, accepts only notifications for that run's thread and turn, and waits for the authoritative `turn/completed` terminal. The latest `agentMessage` with `phase: "final_answer"` wins; when Codex emits no explicit final phase, the latest message with `phase: null` is the compatibility fallback. A successful turn with no nonblank answer settles as an error. Failed turns use the coarse categories `limit`, `access-policy`, `service`, `transport`, `product-error`, `invalid-result`, or `unknown`; an early app-server exit uses `process`, and applicable connection and stream failures retain a numeric `httpStatusCode`.
+
+The optional Host-only recovery capability reports native activity, retry count, approval waits and active side effects. Recovery waits for the matching `interrupted` terminal before starting another turn, preserves permissions and one logical result, and lets a late normal completion win. Authority is rechecked before interruption and continuation. Unknown interruption or start acknowledgements stop the owned process to quiescence without retry; public cancellation remains terminal. Streaming activity and protected waits prevent policy-driven interruption. Protocol fields were verified against the bundled Codex 0.153.4.
 
 </details>
 
@@ -130,6 +132,14 @@ Read these pages when the package-level contract is not enough. They move from t
 - [Generated configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-subagent-codex) — every accepted config field and its source declaration.
 
 -----
+
+Completed commands and file changes also publish content-free `subagent/evidence`: active turn id, SHA-256 operation/result fingerprints, outcome and operation category. Configurable `evidencePatterns.verification` and `.diagnostic` classify commands; classification and exit zero alone do not prove the Goal is complete. Raw commands, diffs, output and reasoning are not forwarded through this event. Autonomous Reflex advice uses the same active-turn guard with distinct parent-session attribution.
+
+Optional `evidenceSummary: { maxActions: 8, maxPathChars: 160 }` enables bounded `semantic` evidence from Codex 0.153.4 structured actions: read/list/search and file add/update/delete. Collection is off when omitted. Both budgets must be positive safe integers. Only lexical workspace-relative paths are included; command-relative targets require the native item cwd. Outside, malformed or over-budget paths are omitted rather than shortened into another path. Unknown actions are omitted; discarded details set `truncated`, and an entirely unknown item has no semantic summary. No files are read to produce the summary. Paths remain untrusted project data and the supervision consumer must admit their data class before remote submission; truncation is not secret redaction. Summaries do not establish Goal relevance or success by themselves.
+
+Optional `evidenceSummary.verificationTargets: { maxCommandChars: 4096 }` statically parses bounded command text locally using the public `@yarnpkg/parsers` API. It recognizes only literal `.py` file targets for `pytest`, `python[3] -m pytest` or `python[3] -m unittest`, directly or inside one POSIX `sh`/`bash`/`zsh -c/-lc` wrapper. Options, node selectors, expansions, assignments, pipelines, redirects, nested wrappers and Windows are unsupported. The distinct `verification-target` action carries only an admitted workspace-relative file path, never the command. Native success and Goal relevance remain separate requirements; reading a test file does not establish executed verification.
+
+The exported pure `verificationTargets(command, maxCommandChars, platform)` function is the collector’s own parser and returns targets or a fixed `VerificationRejection` category. Diagnostic consumers must not log its command argument. A rejection category is not successful verification evidence.
 
 <a id="model-experience"></a>
 ## Model Experience
@@ -162,6 +172,8 @@ Foreground input grows by the retained final answer or error. Background input a
 
 Append-only: foreground adds one result after the reusable parent prefix, while background appends the Job acknowledgement, notice, and later control or collection results. Background scheduling can add a notice-driven turn, but none of these messages rewrites the earlier prefix.
 
+
+
 ## Known Limitations and Deferred Work
 
 <a id="known-limitations-and-deferred-work"></a>
@@ -169,7 +181,7 @@ Append-only: foreground adds one result after the reusable parent prefix, while 
 
 These limits define when this provider is a poor fit or needs special operational care. They are current package constraints, not a general Codex comparison or a task backlog.
 
-- **One fresh process, thread, and turn per run** — there is no continuation, resume, pooling, or product-session persistence. Progress is the category and phase of each child item, published as the live `subagent/activity` event. A completed non-final agent message also contributes its text as the step's note so a person can judge whether the work is on track; commands, paths, arguments, and results are never forwarded. A completed command item whose status is `failed` or whose exit code is nonzero is published with `outcome: 'failed'`. While the turn is open, `SubagentRun.steer` sends a person's text through `turn/steer` with the committed turn id as `expectedTurnId`; before the turn starts, after it completes, or after the connection closes, the input is refused.
+- **One fresh process and ephemeral thread per run** — bounded Host recovery may continue another native turn on the same living thread. There is no process pooling or product-session persistence. Progress is the category and phase of each child item, published as the live `subagent/activity` event. A completed non-final agent message also contributes its text as the step's note so a person can judge whether the work is on track; commands, paths, arguments, and results are never forwarded. A completed command item whose status is `failed` or whose exit code is nonzero is published with `outcome: 'failed'`. While the turn is open, `SubagentRun.steer` sends a person's text through `turn/steer` with the committed turn id as `expectedTurnId`; before the turn starts, after it completes, or after the connection closes, the input is refused.
 - **Static instance selection** — Profile rows fix provider names, optional models, and tool bindings; calls cannot choose or change either a provider or model dynamically, and every exposed tool needs a unique `toolName`.
 - **Authentication and account state remain native** — the Bundle supplies the CLI but does not create an account, log in, trust a project, or rewrite Codex settings; configuration and authentication failures surface with their lifecycle stage and the safe `unknown` fallback rather than a separate public taxonomy.
 - **The native platform payload is required at delegation time** — installs that omit optional dependencies, unsupported platforms, and missing or damaged payloads fail at the first run; there is no host-CLI fallback.
@@ -193,3 +205,5 @@ This Dev Note is working context for maintainers: open questions and undecided d
 </details>
 
 **Runtime invariant:** No companion is published. Lifecycle pairing belongs to the shared subagent service, and managed-range ownership belongs to the subprocess service.
+
+A recovery request with `expectedActivity` is refused as stale before interruption if native activity or retry count has changed. This check does not apply after confirmed interruption when authorizing continuation.

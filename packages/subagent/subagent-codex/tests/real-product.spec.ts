@@ -513,6 +513,42 @@ describe('real @openai/codex 0.153.4 product', () => {
     await expectQuiescent(harness.handles)
   }, 60_000)
 
+  it('interrupts a stalled response and completes a new turn in the same real thread', async () => {
+    const { harness, fixture } = await realHarness(workspace => [
+      { kind: 'hold' },
+      { kind: 'advertisedFunctionCall', choices: [
+        { name: 'exec_command', arguments: { cmd: 'printf recovered > recovered.txt', workdir: workspace } },
+        { name: 'shell_command', arguments: { command: 'printf recovered > recovered.txt', workdir: workspace } },
+      ] },
+      { kind: 'complete', text: 'Recovery verified.' },
+    ], 'dangerously-bypass-approvals-and-sandbox')
+    const run = await harness.ctx.subagents.start('codex', {
+      prompt: [{ type: 'text', text: 'Write the recovery marker after the response is available.' }],
+      parent: harness.parent,
+      signal: new AbortController().signal,
+    })
+    await fixture.requestStarted
+    const observed = run.recoveryState?.()
+    if (observed === undefined || run.recover === undefined) throw new Error('Codex recovery is unavailable')
+    let checks = 0
+    const instruction = '[Reflex 自动监督 / reflex-supervision] Resume the task; preserve transactions.csv and test_ledger.py.'
+    const receipt = await run.recover({
+      expectedTurnId: observed.turnId,
+      interruptGraceMs: 15_000,
+      continuation: () => { checks++; return [{ type: 'text', text: instruction }] },
+    }, new AbortController().signal)
+    expect(receipt).toMatchObject({ state: 'continued', threadId: observed.threadId, previousTurnId: observed.turnId })
+    expect(receipt.turnId).not.toBe(observed.turnId)
+    expect(checks).toBeGreaterThanOrEqual(2)
+    await expect(run.result).resolves.toEqual({ output: [{ type: 'text', text: 'Recovery verified.' }], stopReason: 'completed' })
+    expect(readFileSync(join(harness.workspace, 'recovered.txt'), 'utf8')).toBe('recovered')
+    expect(fixture.requests).toHaveLength(3)
+    expect(responseInputTexts(fixture.requests[1]!.body)).toContain(instruction)
+    expect(harness.handles).toHaveLength(1)
+    await run.dispose()
+    await expectQuiescent(harness.handles)
+  }, 60_000)
+
   it('settles cancellation locally and leaves the real app-server tree quiescent', async () => {
     const { harness, fixture } = await realHarness([{ kind: 'hold' }])
     const controller = new AbortController()

@@ -3,23 +3,26 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/experimental/apus-dsh-jev-plugin/README.md
 /:
-  en: 9c8f52383b801321
-  zh: 1480a1297d0beee0
+  en: 63414b5e1cc0d965
+  zh: 6e9edc00898808a4
 /deepseek-ai-dsh-experimental-apus-dsh-jev-plugin:
   en: cbf9faccecd3cdef
   zh: 13ebf4216e0e1ac0
 /deepseek-ai-dsh-experimental-apus-dsh-jev-plugin/summary:
-  en: 07e821c273b44cf2
-  zh: 5053715be91fc530
+  en: f1d0565782fd6f57
+  zh: 77312b8c151ff8f7
 /deepseek-ai-dsh-experimental-apus-dsh-jev-plugin/table-of-contents:
   en: d152484eb41ac6b4
   zh: 9fddfa200be6a5a2
 /deepseek-ai-dsh-experimental-apus-dsh-jev-plugin/use-this-package:
-  en: f6a25fdcc72d5e68
-  zh: 6a111ab7b3b25920
+  en: bbff250eba0f1b89
+  zh: b86e34a4155e44fa
+/deepseek-ai-dsh-experimental-apus-dsh-jev-plugin/use-this-package/add-the-profile-layer:
+  en: 7af0bdce8026cf6c
+  zh: 0da966f1c98f1a74
 /deepseek-ai-dsh-experimental-apus-dsh-jev-plugin/use-this-package/configure-the-gateway:
-  en: 990b64d2f3671453
-  zh: 54d4026d613fdee7
+  en: 336611726e2a4716
+  zh: b9c5b9a81de53f42
 /deepseek-ai-dsh-experimental-apus-dsh-jev-plugin/use-this-package/ask-a-typed-question:
   en: f5516c0eb45144e8
   zh: de91370339c49a8d
@@ -30,8 +33,11 @@
   en: 05680c35f2e4239f
   zh: fbbacee5d1f343af
 /deepseek-ai-dsh-experimental-apus-dsh-jev-plugin/further-exploration:
-  en: 7e47fa09daa0e726
-  zh: 11490250365bfd40
+  en: 8382dd70ea964c20
+  zh: d87d94a35b614b4a
+/deepseek-ai-dsh-experimental-apus-dsh-jev-plugin/reflex-model-configuration:
+  en: b220cfd2bad16140
+  zh: debd502952356256
 /deepseek-ai-dsh-experimental-apus-dsh-jev-plugin/model-experience:
   en: 215e7ba838619b7b
   zh: a311da3843709f90

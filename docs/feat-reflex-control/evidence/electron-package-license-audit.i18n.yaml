@@ -1,0 +1,7 @@
+# Bilingual-pair consistency record for electron-package-license-audit.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-reflex-control/evidence/electron-package-license-audit.md
+/electron-package-brand-and-license-audit:
+  en: 5f62da650b442133
+  zh: fc17a1d5dd37260a

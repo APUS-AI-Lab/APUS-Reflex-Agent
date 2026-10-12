@@ -49,6 +49,15 @@
     },
     {
       "path": "../../subagent/subagent"
+    },
+    {
+      "path": "../../client/ui-settings/tsconfig.client.json"
+    },
+    {
+      "path": "../apus-dsh-jev-plugin"
+    },
+    {
+      "path": "../../typert/protocol"
     }
   ]
 }

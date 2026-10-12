@@ -1,0 +1,7 @@
+# Bilingual-pair consistency record for reflex-settings-real.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-reflex-control/evidence/reflex-settings-real.md
+/f-01-real-reflex-model-settings-acceptance:
+  en: ea4c24185f017953
+  zh: 7d440f15bff772df

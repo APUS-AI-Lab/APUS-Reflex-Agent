@@ -1,0 +1,42 @@
+{
+  "scenario": "S-07 / UX-04 / UX-05 real Web interjection",
+  "sessionId": "session-28e34938-3435-4163-bd1e-9d3c0e98510b",
+  "route": {
+    "selected": "codex",
+    "confidence": 0.9852588360208109,
+    "elapsedMs": 516
+  },
+  "goal": {
+    "created": true,
+    "active": true,
+    "userUpdate": {
+      "queued": true,
+      "system3InterjectionDelivered": true,
+      "nativeSteerRecorded": true,
+      "textConsumedByCodexNativeItem": false
+    }
+  },
+  "monitor": {
+    "delegationAlert": "starting",
+    "alertAtElapsedMs": 120000,
+    "runElapsedMs": 229338,
+    "userStopped": true,
+    "nativeSteps": 0
+  },
+  "outcome": "partial-failure",
+  "acceptance": {
+    "routeAndGoalEntry": true,
+    "interjectionQueuedAndDelivered": true,
+    "processTimeoutVisible": true,
+    "codexConsumption": false,
+    "finalArtifact": false,
+    "S07": "pending"
+  },
+  "protectedFilesUnchanged": true,
+  "protectedSha256": {
+    "ux-aging/receivables/invoices.csv": "64b19460f3aa00e191fb11a4f86ed39b74c790343a347920331c1f7e6272cdd0",
+    "ux-aging/receivables/aging.csv": "edd52e4128ae69dde64aabe88afbe9c3f7ab195a92c124e61995766362e101d2",
+    "ux-aging/test_aging.py": "5ab6a4160e222adf791c3075e62856ddccc3e6a6fa63a2444180dcd4baa458a6"
+  },
+  "source": "sanitized replay of the committed Session JSONL; no command text, model output, credentials, or reasoning retained"
+}

@@ -97,7 +97,7 @@ export function supervisionAdvice(rule: Exclude<System3ProcessRule, 'delegate-fa
     case 'failed-attempts':
       return `[System3 过程监督] 本轮已有 ${String(count)} 次工具调用失败。请暂停重试，向用户简要说明遇到的问题，并请用户确认下一步。`
     case 'no-progress':
-      return `[System3 过程监督] 最近 ${String(count)} 步没有产生新的修改或通过的验证。请重新评估方法、换一种策略，或向用户说明卡在哪里。`
+      return `[System3 过程监督] 最近 ${String(count)} 次工具调用没有成功的修改、委派、验证或信息读取。请重新评估方法、换一种策略，或向用户说明卡在哪里。`
     case 'missing-evidence':
       return '[System3 过程监督] 本轮修改了文件或完成了委派，但还没有运行通过的测试或构建来验证。请先运行项目的验证命令，再向用户报告结果；如果无法验证，请明确说明原因。'
   }

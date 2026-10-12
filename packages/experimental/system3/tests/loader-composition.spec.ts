@@ -1,4 +1,5 @@
 /** Real Loader composition with external HTTP fixtures and JSONL receipt replay. */
+import { createHash } from 'node:crypto'
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { createServer, type Server } from 'node:http'
 import { tmpdir } from 'node:os'
@@ -190,6 +191,9 @@ it('loads Jev beside the unchanged main route and replays persisted shadow recei
   expect(persisted.events.filter(event => event.type === 'system3/task-frame').map(event => event.data.goal.text)).toEqual(['run one bounded step'])
   const replayed = persisted.events.flatMap(event => event.type === 'system3/decision' ? [event.data] : [])
   expect(replayed).toEqual([first, second])
+  for (const receipt of replayed) {
+    expect(receipt.stateDigest).toBe(createHash('sha256').update(JSON.stringify(receipt.request)).digest('hex'))
+  }
   expect(ctx.system3.lastDecision(restored)).toEqual(second)
   expect(requests).toHaveLength(receiptCount)
   expect(restored.deriveMessages()).toEqual(agent.session.deriveMessages())

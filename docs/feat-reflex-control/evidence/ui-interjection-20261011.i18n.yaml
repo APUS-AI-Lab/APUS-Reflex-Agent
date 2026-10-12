@@ -1,0 +1,7 @@
+# Bilingual-pair consistency record for ui-interjection-20261011.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-reflex-control/evidence/ui-interjection-20261011.md
+/real-web-interjection-and-codex-startup-timeout:
+  en: 1b3dd51b1e6d4760
+  zh: 78db10901934bf13

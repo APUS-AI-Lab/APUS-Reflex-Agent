@@ -1,0 +1,201 @@
+{
+  "scenario": "literal-verification",
+  "acceptanceRevision": "queued-recovery-fences-v4",
+  "budgetMs": 150000,
+  "model": "gpt-6-sol-relay",
+  "reasoningEffort": "low",
+  "effectiveReasoningEffort": "low",
+  "nativeEvents": [
+    {
+      "at": 1791714371331,
+      "method": "item/started",
+      "supervisionInput": false,
+      "realignmentInput": false
+    },
+    {
+      "at": 1791714371332,
+      "method": "item/completed",
+      "supervisionInput": false,
+      "realignmentInput": false
+    },
+    {
+      "at": 1791714520731,
+      "method": "turn/completed",
+      "supervisionInput": false,
+      "realignmentInput": false
+    }
+  ],
+  "nativeShapes": [
+    {
+      "at": 1791714371332,
+      "itemType": "userMessage",
+      "commandActions": [],
+      "rejection": "missing-command",
+      "nativeCwd": false,
+      "commandOverBudget": false,
+      "envelope": "unsupported",
+      "verificationCommand": false
+    }
+  ],
+  "transport": [
+    {
+      "requestAt": 1791714371347,
+      "requestBytes": 37806,
+      "responseBytes": 0,
+      "outcome": "closed",
+      "endAt": 1791714520738,
+      "errorName": "AbortError"
+    }
+  ],
+  "semanticEvidenceLimit": 16,
+  "semanticMinObservations": 2,
+  "semanticConfiguration": {
+    "yes": 0.8,
+    "no": 0.2,
+    "deadlineMs": 5000,
+    "intervalMs": 15000,
+    "stallMs": 180000,
+    "repeatedFailures": 3,
+    "cooldownMs": 60000,
+    "maxInterventions": 3,
+    "feedbackMs": 60000,
+    "recovery": null
+  },
+  "injection": false,
+  "faultLocation": null,
+  "recovery": false,
+  "controlledFault": null,
+  "csvArtifacts": [
+    {
+      "name": "finance/invoices.csv",
+      "unavailable": true
+    },
+    {
+      "name": "finance/payments.csv",
+      "unavailable": true
+    },
+    {
+      "name": "finance/remaining.csv",
+      "unavailable": true
+    }
+  ],
+  "writtenAt": 1791714520846,
+  "stopReason": "aborted",
+  "activity": [
+    {
+      "at": 1791714371240,
+      "event": "start"
+    },
+    {
+      "at": 1791714520721,
+      "event": "end",
+      "outcome": "aborted"
+    }
+  ],
+  "events": [],
+  "initialFiles": [
+    {
+      "name": "expected.txt",
+      "unavailable": "Error"
+    },
+    {
+      "name": "result.txt",
+      "unavailable": "Error"
+    },
+    {
+      "name": "verify.py",
+      "unavailable": "Error"
+    },
+    {
+      "name": "ledger.py",
+      "unavailable": "Error"
+    },
+    {
+      "name": "finance/invoices.csv",
+      "unavailable": "Error"
+    },
+    {
+      "name": "finance/payments.csv",
+      "unavailable": "Error"
+    },
+    {
+      "name": "finance/remaining.csv",
+      "unavailable": "Error"
+    },
+    {
+      "name": "finance/test_remaining.py",
+      "bytes": 106,
+      "sha256": "46217ceba9aa87b31ba82f4ca3f31d5a611f98e4ffa422e9f886dbc11e08f92a"
+    },
+    {
+      "name": "marketing/landing.txt",
+      "unavailable": "Error"
+    },
+    {
+      "name": "marketing/campaign.txt",
+      "unavailable": "Error"
+    }
+  ],
+  "files": [
+    {
+      "name": "expected.txt",
+      "unavailable": "Error"
+    },
+    {
+      "name": "result.txt",
+      "unavailable": "Error"
+    },
+    {
+      "name": "verify.py",
+      "unavailable": "Error"
+    },
+    {
+      "name": "ledger.py",
+      "unavailable": "Error"
+    },
+    {
+      "name": "finance/invoices.csv",
+      "unavailable": "Error"
+    },
+    {
+      "name": "finance/payments.csv",
+      "unavailable": "Error"
+    },
+    {
+      "name": "finance/remaining.csv",
+      "unavailable": "Error"
+    },
+    {
+      "name": "finance/test_remaining.py",
+      "bytes": 106,
+      "sha256": "46217ceba9aa87b31ba82f4ca3f31d5a611f98e4ffa422e9f886dbc11e08f92a"
+    },
+    {
+      "name": "marketing/landing.txt",
+      "unavailable": "Error"
+    },
+    {
+      "name": "marketing/campaign.txt",
+      "unavailable": "Error"
+    }
+  ],
+  "providerTelemetry": [
+    {
+      "at": 1791714385000,
+      "level": "WARN",
+      "target": "codex_core_plugins::manifest",
+      "status": null,
+      "kind": "diagnostic",
+      "categories": []
+    },
+    {
+      "at": 1791714385000,
+      "level": "WARN",
+      "target": "codex_core_plugins::manifest",
+      "status": null,
+      "kind": "diagnostic",
+      "categories": []
+    }
+  ],
+  "reportMetadataCorrection": "Semantic observation was enabled, but this literal task had no fault injection or native recovery. Events and outcome are unchanged."
+}

@@ -1,0 +1,44 @@
+{
+  "status": "in_progress",
+  "realBrowser": true,
+  "mainModel": "deepseek-official/deepseek-flash",
+  "routing": {
+    "question": "一张账单中的0.10元加0.20元等于多少？",
+    "answer": "0.30 元",
+    "uiReportedSeconds": 3,
+    "reflexDecisionMs": 1088,
+    "routeMatchesExecution": true
+  },
+  "settings": {
+    "probeMs": 3543,
+    "invalidDraftKeyRejectedMs": 2469,
+    "keyMasked": true,
+    "savePassed": true,
+    "reloadEffort": "low",
+    "hostRestartEffort": "low",
+    "actualDecisionEffort": "low",
+    "consumedBy": [
+      "task.frame seq106",
+      "reflex.context seq108"
+    ]
+  },
+  "context": {
+    "semanticSelectionObserved": true,
+    "travelCandidateConfidence": 0.9579122767402743,
+    "removalCommitted": false,
+    "blocker": "Task-frame revision race fixed; 59 focused tests and targeted build pass; browser removal/restart/recovery acceptance pending",
+    "cacheProtectionAccepted": false,
+    "cacheConstraint": "Already-submitted prefix must remain immutable; implementation is being revised to enforce this boundary"
+  },
+  "goal": {
+    "startedFromUserCommand": true,
+    "activeAndArmed": true,
+    "codexRunning": false,
+    "terminalVerified": true,
+    "phase": "complete",
+    "independentVerification": "PASS: immutable originals and held-out Decimal/refund/thousands cases",
+    "initialGoalRoutingPassed": false,
+    "initialGoalRoutingGap": "Goal first round bypassed entry routing; Codex delegation occurred after a user supplemental message"
+  },
+  "mergedToMain": false
+}

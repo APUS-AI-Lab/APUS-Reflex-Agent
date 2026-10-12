@@ -8,6 +8,7 @@ import { z } from 'zod'
 import { canonicalHeader, isSurfaceEvent, SessionSeq } from '@deepseek-ai/dsh-session'
 import type { ProjectionDefinition } from '@deepseek-ai/dsh-session-projection'
 import { estimateToolsTokens } from './estimate.ts'
+import { repriceReflexNodes } from './reflex-projection.ts'
 import { commitSurfaceTokens, planSurfaceTokens } from './surface-fold.ts'
 // Import for the `contextBreakdown` SessionProjectionStateMap key merge.
 import type {} from './projection.ts'
@@ -47,7 +48,7 @@ type ContextBreakdownState = z.infer<typeof contextBreakdownStateSchema>
  */
 export const contextBreakdownProjectionDefinition = {
   key: 'contextBreakdown',
-  stateVersion: 5,
+  stateVersion: 6,
   stateSchema: contextBreakdownStateSchema,
   init: (): ContextBreakdownState => ({
     nodes: [],
@@ -59,6 +60,12 @@ export const contextBreakdownProjectionDefinition = {
       return toolsTokens === state.breakdown.toolsTokens
         ? state
         : { ...state, breakdown: { ...state.breakdown, toolsTokens } }
+    }
+    if (event.type === 'reflex/context-projection') {
+      const nodes = repriceReflexNodes(state.nodes, event)
+      const systemTokens = nodes.findLast(node => node.system && node.heuristicTokens > 0)?.heuristicTokens ?? 0
+      const messageTokens = nodes.reduce((sum, node) => sum + node.heuristicTokens, 0) - systemTokens
+      return { nodes, breakdown: { ...state.breakdown, systemTokens, messageTokens } }
     }
     if (!isSurfaceEvent(event)) return state
     const plan = planSurfaceTokens(state.nodes, event)

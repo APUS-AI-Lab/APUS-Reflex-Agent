@@ -62,6 +62,12 @@
     },
     {
       "path": "../../core/system-prompt"
+    },
+    {
+      "path": "../../compaction/compaction"
+    },
+    {
+      "path": "../../llm/token-meter"
     }
   ]
 }

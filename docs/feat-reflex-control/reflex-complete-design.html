@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Reflex 完整能力设计</title><style>body{max-width:1100px;margin:32px auto;padding:0 20px;background:#fafaf7;color:#17324d;font:16px/1.75 system-ui}h1,h2{line-height:1.3}table{border-collapse:collapse;width:100%;background:white}td,th{border:1px solid #ccd5df;padding:10px;text-align:left}pre{white-space:pre-wrap;background:#e9eff5;padding:20px}aside{border-left:4px solid #22887c;padding:12px;background:white}code{overflow-wrap:anywhere}</style></head><body>
+<h1>Reflex 模型配置、Goal 监督与动态上下文</h1>
+<aside>设计提案，尚未实现。供用户确认实现范围；本页不构成新的 E2E 通过声明。产品统一称 Reflex，底层既有 Jev 协议、模型 ID、包名保持兼容。</aside>
+<h2>1. 目标与完成定义</h2>
+<p>用户从专用页面配置 Reflex；长时 Goal 的 Codex 子任务异常或持续无进展时，Reflex 根据执行证据判断并自动发送调整消息，再观察调整效果；Harness 每次模型请求按当前任务需要保留或移出上下文的行/片段，并可找回旧信息。三个能力均以运行行为而不是配置开关验收。</p>
+<p>入口选路保留已有回归。原始会话日志不删除，“删除上下文”指后续模型请求不再携带选中的无用内容。持久记忆首期为同一会话、跨进程重启可恢复；跨会话共享记忆不默认为启用。外部 Codex 内部上下文目前没有按行编辑接口，不把 Harness 投影能力冒充 Codex 内存编辑。</p>
+<h2>2. 架构与责任</h2>
+<pre>Web / Electron：设置 → Reflex 模型配置
+                 ↓ ConfigForms / Credentials
+Host：有效配置、凭据、连接测试、能力状态
+                 ↓ 既有决策 provider
+Reflex 决策 API（choice / noul / score）
+     ↑                         ↑
+Goal + Codex 执行证据          当前目标 + 稳定文本片段
+     ↓                         ↓
+监督插件：判定→有效性校验      上下文插件：判定→范围校验
+     ↓                         ↓
+steerByParent → turn/steer     持久化投影→实际模型请求
+     ↓                         ↓
+观察后续进展→有效/无效         原始日志→检索→恢复投影
+     └──────会话事件、状态界面、回放证据──────┘</pre>
+<p>使用插件扩展点；不向 agent-loop 塞业务策略。新模型可见输入、干预消息和投影动作都记录事件。每次异步判断固定输入版本，应用前重新检查，不修改已发出的请求。</p>
+<h2>3. 专用配置页面</h2>
+<p>沿用<a href="reflex-settings-proposal.html">Reflex 模型配置设计</a>：地址、受保护 API Key、模型、high/low、超时、真实判断测试和保存。复用 ConfigForms 与 Credentials，不增加浏览器明文密钥存储。展示部署锁定/配置来源；保存后的新请求生效，若设施需重启则明确提示。连接测试不能自动覆盖此前有效配置。</p>
+<p>三项能力分别显示 implemented、enabled、最近判定与执行结果；配置成功不等于能力完成。监督频率、无进展阈值、冷却时间、每 Goal 干预上限、上下文预算与单批判断大小均是验证后的部署配置，提供解释清楚的高级设置，不散落硬编码。</p>
+<h2>4. Goal 长时监督闭环</h2>
+<p>范围包括活跃 Goal 下正在执行的 Codex 子任务，以及该 Goal 多轮继续执行时反复失败的任务。监督基于同一个 goalId/revision 关联 runId、turnId、证据序号，不能只看最后一条活动时间。等待真实进程/审批、持续产生新结果等状态不得仅因耗时长判为打转。</p>
+<p>现有 subagent/activity 是受限活动摘要，不允许悄悄塞入完整命令和工具输出。新增独立监督证据事件：操作类别、归一化操作指纹、失败类别、结果变化指纹、验证结果及有限脱敏摘要；来源和缺失字段明确。命令输出按不可信数据处理，不能成为监督指令。不能仅凭文件改变判定目标已取得进展。</p>
+<pre>观察 → 候选异常 → Reflex 判定
+                   ├ 正常/证据不足：继续观察
+                   └ 需要调整：复核 Goal / run / turn / evidence revision
+                               → 记录干预意图 → steer → 记录回执
+                               → 冷却与新证据观察 → 有效 / 无效 / 无法确认
+无效且预算尚存：换策略再次判断；预算耗尽：停止自动插话并显示需处理原因</pre>
+<p>Reflex 接口本身是结构化判断，不假设可自由生成纠偏长文。首期选择有证据支持的策略：停止重复操作并检查根因、先做最小验证、缩小单步范围但保留原目标、重新核对目标约束。Host 根据策略和证据构造有界消息；不得擅自换目标、宣称完成、扩大权限或执行破坏操作。需要额外生成模型时另作显式配置，不隐藏调用。</p>
+<p>每个运行实例只允许一个待处理判断；冷却以成功回执为准。人工插话优先，使旧自动判断失效。Goal 暂停/完成/修订、子任务退出、turn 改变、进展更新都使旧结果失效。steer 失败记录失败，不冒充成功；超时回执不确定时不得盲目重发。重启后从持久化意图/结果恢复，无法确认是否已发送的干预标记为未知，等待新证据重新评估。</p>
+<h3>观察 Codex 运行异常与超时</h3>
+<table><tr><th>观察信号</th><th>证据与判断</th><th>动作</th></tr><tr><td>运行较久但有进展</td><td>进程仍活跃，产生新的验证结果或相关成果；操作不只是重复</td><td>继续观察，不因总时长插话</td></tr><tr><td>无进展超时</td><td>距最近可验证进展超过配置阈值，对比前后证据窗；仅心跳/commentary不重置有效进展时间</td><td>Reflex判断继续等待或调整策略</td></tr><tr><td>重复失败/打转</td><td>相同操作指纹、相同错误类别/结果跨多次或多轮重复，没有新的诊断证据</td><td>Reflex选择根因诊断/最小验证等策略并发送有来源的调整消息</td></tr><tr><td>进程退出/连接失效</td><td>真实run结束、异常退出或传输不可用；观察失败不等于任务进程死亡</td><td>记录故障并通知父任务；已结束run不能接收steer，不自动重启冒充纠偏</td></tr><tr><td>偏离目标</td><td>操作/结果与当前Goal约束和验收项持续不相关</td><td>引用未满足约束，引导回到原目标</td></tr></table>
+<p>输入给 Reflex 的监督包包含 Goal objective/revision、验收约束、run/turn、观察窗口起止、运行状态、距最近有效进展时长、有限操作/错误摘要与证据引用、历史干预及后续变化。采用既有 decision-kernel 的隐私准入，服务不可用/低置信度则继续观察并显示诊断。不能将完整工作区或任意终端日志默认发送到外部服务。</p>
+<p>复用 goal/changed、goal/activation-changed、subagent/start/activity/end 和既有告警作为触发。自动消息必须明确标记 reflex-supervision 来源，与 human 输入区分；扩展既有 steer 持久化类型或提供内部监督接口，底层复用 turn/steer。判断成功、消息已接收和行为改善为三种独立状态。生命周期销毁时取消计时器和待处理判断，重启不对陈旧 run 投递。</p>
+<h2>5. 按行上下文与恢复记忆</h2>
+<p>片段引用为 sessionId、原事件序号、文本块序号、内容摘要及 1-based 闭区间行号；行号相对于原始文本，不相对于此前裁剪后的文本。范围、内容摘要、当前投影版本全部匹配才可应用。中文、空行、CRLF、无末尾换行和超长单行需一致处理；超长单行进一步分片并保留原行映射。</p>
+<p>Reflex 根据当前 Goal、最新有效用户要求、候选片段和已有关键记忆，判断 keep/remove/uncertain。uncertain 保留。先按语义单元组织候选，再允许精确行范围；代码、JSON、表格等相互依赖结构按组保护，不能删除一行导致剩余信息失真。系统/开发者指令、当前目标、未解决约束、正在执行的工具调用与配对、最近必要输入受保护；新版本用户约束取代旧版本需可追溯。</p>
+<p>以有限批次调用决策 API，符合服务单问题 token 和每请求问题数上限；单轮时间/调用预算用尽即保留未判断片段。判断失败不做删除。上下文插件将替代消息写入持久化投影，保留原始消息、工具调用配对和来源引用；计量同步更新。不重用“固定头尾裁剪成功”作为语义裁剪证明。</p>
+<p>恢复使用受会话权限约束的记忆索引：原事件/片段定位、关键词或引用查询、Reflex 相关性复核，将原文恢复到后续请求并记录事件。用户或主模型可请求恢复；任务目标/主题改变时自动重新评估相关的已移出内容。索引可从日志重建，重启后不丢失恢复路径。不得将另一个会话内容混入本会话。</p>
+<p>现有 Codex wire 仅见 thread/start、turn/start/steer 等生命周期操作，没有按行投影接口。对子任务可发送新证据或恢复片段，但不能宣称删除其内部历史。若后续要求直接编辑 Codex 上下文，需要协议支持或单独批准的运行实例重建方案，不能偷偷中断重启任务来伪装。</p>
+<h2>6. 拟定接口与事件字段</h2>
+<table><tr><th>接口</th><th>主要输入</th><th>返回/约束</th></tr>
+<tr><td>监督 evaluate</td><td>GoalRef、runId、turnId、evidenceRevision、有限证据窗</td><td>observe / intervene / insufficient；策略、证据引用；外部JSON严格校验</td></tr>
+<tr><td>监督 apply</td><td>decisionId、匹配版本、策略</td><td>applied / stale / failed / unknown；复用父子归属校验，不绕过既有steer权限</td></tr>
+<tr><td>上下文 plan/apply</td><td>sessionId、projectionRevision、goalRevision、片段引用及行范围</td><td>保留/移出计划；过期、越界、受保护或依赖不完整的计划拒绝</td></tr>
+<tr><td>记忆 search/restore</td><td>当前会话、查询或精确片段引用、请求预算</td><td>有限结果及原文恢复事件；不回传其他会话内容</td></tr>
+<tr><td>状态读取</td><td>会话/运行实例</td><td>实现、启用、判定、动作、反馈分开；无密钥、无未经脱敏原始输出</td></tr></table>
+<p>拟新增监督 observation/decision/intervention/feedback 以及 context decision/projection/restore 事件，最终名称在类型设计时收敛。ID 使用 branded 类型。新增持久化类型需记录类型变更声明，保持已有 Session generations 不变；新模型可见事件不能错误标成 ignorable，旧读取器按既有机制拒绝未知必读类型。两套 SDK 预期、回放和读取路径一起更新。</p>
+<h2>7. 文件改动范围</h2>
+<table><tr><th>路径</th><th>责任</th></tr>
+<tr><td>packages/experimental/apus-dsh-jev-plugin</td><td>配置桥、连接诊断；沿用协议与凭据解析</td></tr>
+<tr><td>packages/experimental/system3/src</td><td>新增监督与上下文协调模块；接入现有 delegation-progress/task-frame；不改变旧活动摘要语义</td></tr>
+<tr><td>packages/subagent/subagent-codex/src 与 subagent 定义</td><td>受限执行证据事件、运行实例与steer回执；生命周期与竞态覆盖</td></tr>
+<tr><td>packages/goal/goal、goal-round-driver</td><td>复用Goal投影/CAS/继续执行；仅在缺少必要公开观察点时最小扩展</td></tr>
+<tr><td>packages/compaction 与 session 扩展</td><td>可回放行片段投影、计量、检索恢复；保留既有pruner独立语义</td></tr>
+<tr><td>packages/experimental/client-ui-system3 或 ui-settings companion</td><td>专用页面、locale、能力与干预/上下文状态</td></tr>
+<tr><td>apps/cli/config、部署overlay、Frontend runtime装配</td><td>注册服务与设置页、配置优先级、前后端固定版本联动</td></tr>
+<tr><td>对应README、docs/subsystems、类型变更声明、TypeScript/Python SDK预期、快照</td><td>同步新事件及用户可见行为；新快照追加，不覆盖历史世代</td></tr></table>
+<h2>8. 验收矩阵</h2>
+<table><tr><th>范围</th><th>必须观察到的证据</th><th>负向验收</th></tr>
+<tr><td>配置真实 E2E</td><td>Web/Electron保存→重启→新会话命中指定Reflex地址/模型→判断被消费</td><td>错误凭据/模型、超时、无权限；不显示假成功、不泄露密钥</td></tr>
+<tr><td>监督真实 E2E</td><td>隔离Goal任务重复失败→真实Reflex判定→真实Codex turn/steer回执→操作策略发生变化→完成预先定义的成果验证</td><td>正常长任务不插话；Goal修订/人工插话/turn结束丢弃旧判断；断线不重复发消息</td></tr>
+<tr><td>无效纠偏</td><td>干预后仍失败→记录无效→预算耗尽后停止插话并显示原因</td><td>不把收到steer回执当任务解决；不篡改Goal为complete</td></tr>
+<tr><td>上下文真实 E2E</td><td>混合关键约束/无关文本→真实Reflex选择→下一请求正文确实排除指定行→任务仍满足关键约束</td><td>过期/越界引用、结构依赖、注入文本、判断超时均不导致误删</td></tr>
+<tr><td>恢复真实 E2E</td><td>移出旧片段→重启→改变问题→检索恢复原文→请求含恢复内容→回答准确</td><td>跨会话拒绝；索引丢失可重建；原始日志仍完整</td></tr>
+<tr><td>组合回归</td><td>入口路由、Goal多轮、监督插话、上下文调整同时开启；日志回放与两套SDK一致</td><td>并发不会重复干预、恢复旧Goal约束或应用过期投影</td></tr></table>
+<p>真实 E2E 使用可控隔离项目与有界失败场景，但 Reflex 判断与 Codex 执行必须是真实调用；记录注入故障与模拟设施，不能用 stub steer 冒充真实闭环。确定性测试覆盖全部生命周期，模型测试按预先定义场景报告每次结果，不挑选成功重跑。记录监督误报、纠偏有效率、关键约束保留、恢复成功、token节省、额外耗时与调用数；阈值与样本表在实现前固定，不能用一个样本宣称普遍可靠。</p>
+<h2>9. 实施顺序与审阅</h2>
+<ol><li>配置页面与真实连通/持久化；同时补齐状态接口。</li><li>监督证据、Reflex判定、steer及反馈；真实Goal异常和正常对照验收。</li><li>行片段投影、恢复与重启；真实模型请求验收。</li><li>两仓组合验收、构建/lint/回归/快照、review、交接与授权范围内合并。</li></ol>
+<p>四步属于同一完整Goal，任一步通过不代表整体完成。依据用户提供的 AGENTS.md Human Gate：“Do NOT start implementation until explicit approval”。请确认本设计后开始产品代码实现。</p>
+</body></html>

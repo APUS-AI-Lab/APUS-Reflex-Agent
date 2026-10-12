@@ -112,7 +112,7 @@ export async function prepareSystem3HandoffPack(ctx: Context, agent: Agent, requ
     if (jev === undefined) return []
     request = jev.resolve({
       state: { task },
-      effort: settings.options.effort,
+      ...settings.options.effort === undefined ? {} : { effort: settings.options.effort },
       questions: Object.fromEntries(earlier.map((message, index) => [`m${String(index + 1)}`, {
         type: 'noul' as const,
         instructions: `用户在本会话更早时说过：「${message.text}」。state.task 是现在要交给另一个执行者的任务。判断这句话是否是用户定下的、执行这个任务时仍然有效的工作要求或约束，例如命名规范、不许改动的文件或目录、提交前必须通过的检查、文件放置约定、需要同步更新的文档、输出语言或安全规定。闲聊、提问、感谢、对已完成工作的评价、与这个项目无关的请求都不算。`,

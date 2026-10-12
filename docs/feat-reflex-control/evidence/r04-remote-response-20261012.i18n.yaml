@@ -1,0 +1,7 @@
+# Bilingual-pair consistency record for r04-remote-response-20261012.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-reflex-control/evidence/r04-remote-response-20261012.md
+/remote-response-observation-2026-10-12:
+  en: 7a1d861d08d8ffa0
+  zh: 5af19d767f3a663a

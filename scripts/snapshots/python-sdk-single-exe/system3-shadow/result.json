@@ -355,7 +355,6 @@
             ],
             "budgetRemaining": 10
           },
-          "effort": "low",
           "questions": {
             "action": {
               "type": "choice",
@@ -368,9 +367,10 @@
               }
             }
           },
-          "model": "jev-snapshot"
+          "model": "jev-snapshot",
+          "effort": "low"
         },
-        "stateDigest": "130513eb8bde7d6cb71d25168458913f479b001c7b279dbcc43060934d70f73a",
+        "stateDigest": "4ed06feff329a011cfb6cbb30b523aaee8aaeb84d30496b797ffcc4cd3d6452c",
         "evidenceRefs": [
           "check:snapshot"
         ],
@@ -882,7 +882,6 @@
                 ],
                 "budgetRemaining": 10
               },
-              "effort": "low",
               "questions": {
                 "action": {
                   "type": "choice",
@@ -895,9 +894,10 @@
                   }
                 }
               },
-              "model": "jev-snapshot"
+              "model": "jev-snapshot",
+              "effort": "low"
             },
-            "stateDigest": "130513eb8bde7d6cb71d25168458913f479b001c7b279dbcc43060934d70f73a",
+            "stateDigest": "4ed06feff329a011cfb6cbb30b523aaee8aaeb84d30496b797ffcc4cd3d6452c",
             "evidenceRefs": [
               "check:snapshot"
             ],

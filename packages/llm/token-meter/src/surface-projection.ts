@@ -19,6 +19,7 @@ import { deriveEventMessage, isSurfaceEvent, SessionSeq } from '@deepseek-ai/dsh
 import type { SessionEvent } from '@deepseek-ai/dsh-session'
 // Type-only: the `compaction/*` SessionEventMap merges (shadow-price events).
 import type {} from '@deepseek-ai/dsh-compaction'
+import type {} from '@deepseek-ai/dsh-compaction/reflex-context-projection'
 import { estimateMessage } from './estimate.ts'
 
 /**
@@ -65,6 +66,9 @@ export function foldSurfaceProjection(
   claim: ShadowPriceClaim | undefined,
   event: SessionEvent,
 ): SurfaceTokensFold {
+  if (event.type === 'reflex/context-projection') {
+    return { deltaTokens: event.data.targets.reduce((sum, target) => sum + target.tokenDelta, 0), claim: undefined }
+  }
   if (event.type === 'compaction/summary' || event.type === 'compaction/prune') {
     const { shadowedRange, shadowedTokenCount } = event.data
     return {
