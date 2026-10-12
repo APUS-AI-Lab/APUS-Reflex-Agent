@@ -153,15 +153,11 @@ describe('maintained repository reference policy', () => {
     const fixture = repository(test)
     const historicalPaths = [
       'frontend/.upstream-workflows/workflows/release.yml',
-      'frontend/docs/feat-system3-integration/packaging-preflight.json',
       'frontend/docs/harness-0.1.2-alpha.3-upgrade.md',
       'frontend/docs/harness-0.1.2-rc.1-upgrade.md',
       'frontend/docs/superpowers/plans/2026-08-31-harness-0.1.2-alpha.3-upgrade.md',
       'frontend/docs/superpowers/plans/2026-09-01-harness-0.1.2-alpha.4-upgrade.md',
       'frontend/docs/superpowers/specs/2026-09-01-harness-0.1.2-alpha.4-upgrade-design.md',
-      'frontend/tasks/chore-apus-fork/handoff.md',
-      'frontend/tasks/chore-apus-fork/import-verification.json',
-      'frontend/tasks/feat-apus-brand/handoff.md',
     ]
     for (const file of historicalPaths) fixture.write(file, `${fixture.commit}\n${organizationUrl}`)
     const maintainedPaths = [
@@ -171,6 +167,10 @@ describe('maintained repository reference policy', () => {
       'frontend/docs/current-guide.md',
       'frontend/docs/harness-0.1.2-alpha.3-upgrade.md.bak',
       'frontend/tasks/feat-integrated-product/handoff.md',
+      'frontend/docs/feat-system3-integration/packaging-preflight.json',
+      'frontend/tasks/chore-apus-fork/handoff.md',
+      'frontend/tasks/chore-apus-fork/import-verification.json',
+      'frontend/tasks/feat-apus-brand/handoff.md',
       'frontend/.upstream-workflows/new-workflow.yml',
       'docs/feat-integrated-product/release.md',
     ]

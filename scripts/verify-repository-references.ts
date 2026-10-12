@@ -29,15 +29,11 @@ const retainedRevisionFiles = new Set([
   'tasks/chore-apus-fork/branch-cleanup-verification.json',
   // Imported desktop history keeps its original source and build identifiers.
   'frontend/.upstream-workflows/workflows/release.yml',
-  'frontend/docs/feat-system3-integration/packaging-preflight.json',
   'frontend/docs/harness-0.1.2-alpha.3-upgrade.md',
   'frontend/docs/harness-0.1.2-rc.1-upgrade.md',
   'frontend/docs/superpowers/plans/2026-08-31-harness-0.1.2-alpha.3-upgrade.md',
   'frontend/docs/superpowers/plans/2026-09-01-harness-0.1.2-alpha.4-upgrade.md',
   'frontend/docs/superpowers/specs/2026-09-01-harness-0.1.2-alpha.4-upgrade-design.md',
-  'frontend/tasks/chore-apus-fork/handoff.md',
-  'frontend/tasks/chore-apus-fork/import-verification.json',
-  'frontend/tasks/feat-apus-brand/handoff.md',
 ])
 const gitOutputLimit = 64 * 1024 * 1024
 

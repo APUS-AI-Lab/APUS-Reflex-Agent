@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from 'node:fs'
-import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
+import { mkdir, rm, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 
 export const STORAGE_FILENAME = 'desktop-storage.json'
@@ -20,6 +20,8 @@ export class DesktopStorageManager {
   private debounceMs: number
   private flushTimer?: NodeJS.Timeout
   private isDirty = false
+  private activeFlush?: Promise<void>
+  private snapshotVersion = 0
   private onError?: (error: Error, context: string) => void
 
   constructor(profileDirectory: string, options: DesktopStorageOptions = {}) {
@@ -85,49 +87,70 @@ export class DesktopStorageManager {
 
   /**
    * Switch the storage manager to a new profile directory.
-   * Flushes any pending changes for the previous profile first.
+   * Flushes pending changes first; a failed save throws and retains the previous Profile and settings.
    */
   switchProfile(profileDirectory: string): void {
     this.flushSync()
+    if (this.isDirty) throw new Error('Cannot switch Profile because pending desktop settings could not be saved.')
     this.filePath = join(profileDirectory, STORAGE_FILENAME)
     this.memoryStore.clear()
     this.loadFromDiskSync()
   }
 
   /**
-   * Flushes any dirty state asynchronously.
+   * Waits for active writes and flushes dirty state before resolving.
    */
   async flush(): Promise<void> {
     if (this.flushTimer !== undefined) {
       clearTimeout(this.flushTimer)
       this.flushTimer = undefined
     }
+    if (this.activeFlush !== undefined) {
+      await this.activeFlush
+      return this.flush()
+    }
     if (!this.isDirty) return
+    this.activeFlush = this.writeSnapshot()
+    try {
+      await this.activeFlush
+    } finally {
+      this.activeFlush = undefined
+    }
+  }
 
+  private async writeSnapshot(): Promise<void> {
     this.isDirty = false
+    const filePath = this.filePath
+    const version = this.snapshotVersion
     const serialized = JSON.stringify(this.getAll(), null, 2)
-    const tmpPath = `${this.filePath}.tmp.${Date.now()}.${Math.random().toString(36).slice(2, 8)}`
+    const tmpPath = `${filePath}.tmp.${Date.now()}.${Math.random().toString(36).slice(2, 8)}`
 
     try {
-      await mkdir(dirname(this.filePath), { recursive: true })
+      await mkdir(dirname(filePath), { recursive: true })
       await writeFile(tmpPath, serialized, 'utf8')
-      await rename(tmpPath, this.filePath)
+      if (version !== this.snapshotVersion) {
+        await rm(tmpPath, { force: true })
+        return
+      }
+      // Commit without yielding so flushSync cannot publish between the version check and rename.
+      renameSync(tmpPath, filePath)
     } catch (error) {
-      this.isDirty = true
+      if (version === this.snapshotVersion) this.isDirty = true
       this.handleError(error, 'async-flush')
     }
   }
 
   /**
-   * Flushes any dirty state synchronously (e.g., during app before-quit or window close).
+   * Persists the current state synchronously, superseding any active asynchronous snapshot.
    */
   flushSync(): void {
     if (this.flushTimer !== undefined) {
       clearTimeout(this.flushTimer)
       this.flushTimer = undefined
     }
-    if (!this.isDirty) return
+    if (!this.isDirty && this.activeFlush === undefined) return
 
+    this.snapshotVersion++
     this.isDirty = false
     const serialized = JSON.stringify(this.getAll(), null, 2)
     const tmpPath = `${this.filePath}.tmp.${Date.now()}.${Math.random().toString(36).slice(2, 8)}`

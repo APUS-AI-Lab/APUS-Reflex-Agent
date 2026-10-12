@@ -11,7 +11,7 @@
 | 运行方式 | 默认 `DSH_HOME` |
 | --- | --- |
 | 网页版 `npx @deepseek-ai/dsh web` | `~/.dsh` |
-| DSH Desktop | `{Electron userData}/harness`（macOS 约为 `~/Library/Application Support/dsh-desktop/harness`） |
+| APUS Reflex | `{Electron userData}/harness`（macOS 约为 `~/Library/Application Support/xdan-system3/harness`） |
 
 两边会话、设置、密钥、工作区 registry、Preset、Skill、插件清单格式兼容。桌面端打开后像「全新安装」，是因为从未读取 `~/.dsh`。
 
@@ -42,7 +42,7 @@ flowchart TD
   Gen --> Ready[Harness 就绪]
 ```
 
-1. 用户安装并打开 DSH Desktop。
+1. 用户安装并打开 APUS Reflex。
 2. `launchHarness()` 在 `runProfileStartupMaintenance` **之前**检测本机 `~/.dsh`。此时 Harness 已 stop，桌面 profile 尚未被 `initProfile` 写成空壳。
 3. 若命中，主窗口从 splash 切到导入页（风格对齐现有 `build/splash.html` / `build/safe-mode.html`）：
    - 标题：发现网页版数据
@@ -237,7 +237,7 @@ flowchart LR
 
 ### 8.2 和本方案的差异
 
-| 点 | 官方 `apps/desktop` | 本仓库 DSH Desktop（本方案） |
+| 点 | 官方 `apps/desktop` | 本仓库 APUS Reflex（本方案） |
 | --- | --- | --- |
 | 默认 `DSH_HOME` | `~/.dsh` | `{userData}/harness` |
 | 与网页版数据关系 | 实时共用，无需导入 | 首次启动复制一次，之后独立 |

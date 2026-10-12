@@ -1,6 +1,6 @@
-# DSH preset packages
+# APUS Reflex preset packages
 
-DSH Desktop exchanges custom Agent presets as `.dshpreset` files. A package is a ZIP archive with this layout:
+APUS Reflex exchanges custom Agent presets as `.dshpreset` files. A package is a ZIP archive with this layout:
 
 ```text
 manifest.json
@@ -25,7 +25,7 @@ preset/
 
 The settings page exports custom presets. The 0.1.7 registry supplies the declared plugin list and display metadata; the export does not include referenced skills, plugins, or other files. Review such references before sharing a package. Model-provider settings, API keys, credentials, sessions, and workspace files are not added.
 
-Import is a two-step operation. DSH Desktop first validates and previews the archive, then writes it only after confirmation. Existing preset identifiers are never overwritten: the user must choose a new identifier. Installation writes to a temporary directory, validates the YAML plugin list, and atomically moves it into the legacy preset root. Desktop converts it to a 0.1.7 Profile entry at the next launch, so the new preset requires a restart. The original directory and a backup of existing legacy presets are retained.
+Import is a two-step operation. APUS Reflex first validates and previews the archive, then writes it only after confirmation. Existing preset identifiers are never overwritten: the user must choose a new identifier. Installation writes to a temporary directory, validates the YAML plugin list, and atomically moves it into the legacy preset root. Desktop converts it to a 0.1.7 Profile entry at the next launch, so the new preset requires a restart. The original directory and a backup of existing legacy presets are retained.
 
 The importer rejects absolute archive paths, parent traversal, backslash-based paths, missing compositions, unsupported manifests, oversized packages, and invalid preset compositions. It retains extra files from older archives in the legacy directory, but the 0.1.7 Profile migration publishes the YAML plugin list only. Relative references to those extra files need review in the new Profile. Common OS metadata such as `.DS_Store`, `Thumbs.db`, and `desktop.ini` is omitted.
 
@@ -33,7 +33,7 @@ Custom presets are executable configuration. Their compositions may load plugins
 
 ## Agent and online Skill contract
 
-DSH Desktop exposes package transfer through the same loopback Harness server used by the UI. Harness contributes its canonical loopback origin to shell tools as `DSH_WEB_URL`, so an explicitly requested online Skill can call the local transfer API without knowing the random port and without requiring the `dsh` CLI.
+APUS Reflex exposes package transfer through the same loopback Harness server used by the UI. Harness contributes its canonical loopback origin to shell tools as `DSH_WEB_URL`, so an explicitly requested online Skill can call the local transfer API without knowing the random port and without requiring the `dsh` CLI.
 
 - `GET $DSH_WEB_URL/api/agent-preset.export?agentPreset=<id>` exports one custom Preset.
 - `POST $DSH_WEB_URL/api/agent-preset.import` previews a binary package without writing it.

@@ -56,3 +56,8 @@ __pycache__/
 
 # Local work plans and private execution handoffs.
 /tasks/
+
+# Local records retained from the imported desktop checkout.
+/frontend/tasks/
+/frontend/docs/feat-system3-integration/packaging-preflight.json
+/frontend/docs/feat-system3-integration/ci-recovery-plan.md
