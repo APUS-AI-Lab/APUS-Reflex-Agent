@@ -1664,3 +1664,121 @@ describe('API key field', () => {
     expect(screen.queryByRole('textbox', { name: en.customRoute })).toBeNull()
   })
 })
+
+describe('endpoint credential switching', () => {
+  const original = { api: 'openai-completions', baseURL: 'https://old.example/v1', apiKeyEnv: 'GATEWAY_API_KEY', models: [{ id: 'm' }] }
+
+  it.each(['credential-refused', 'settings-conflict', 'settings-unconfirmed', 'success'] as const)(
+    'isolates the replacement key when the result is %s', async (outcome) => {
+      const stored = new Map([['GATEWAY_API_KEY', 'old-key']])
+      const set = vi.fn(async (ref: string, value: string) => {
+        if (outcome === 'credential-refused') return remoteFail('credential store refused')
+        stored.set(ref, value)
+        return remoteOk(undefined)
+      })
+      const mutate = vi.fn(async () => {
+        if (outcome === 'settings-conflict') return remoteFail('changed revision', 'settings/conflict')
+        if (outcome === 'settings-unconfirmed') throw new Error('acknowledgement lost')
+        return remoteOk(piAiNamespace({ gateway: original }))
+      })
+      await mountSection({ providers: { gateway: original }, declaredRoutes: ['gateway'], set, mutate })
+      openEditor('gateway')
+      fireEvent.change(screen.getByLabelText(en.baseUrl), { target: { value: 'https://new.example/v1' } })
+      fireEvent.change(screen.getByLabelText(en.keyInput), { target: { value: 'new-key' } })
+      fireEvent.click(screen.getByText(en.apply))
+      const message = outcome === 'credential-refused' ? 'credential store refused'
+        : outcome === 'settings-conflict' ? en.conflict : outcome === 'settings-unconfirmed' ? en.saveUnconfirmed
+          : providerCopy(en.savedProvider, { provider: 'gateway', displayName: 'gateway' })
+      await screen.findByText(message)
+      const ref = set.mock.calls[0]?.[0]
+      expect(ref).toMatch(/^MODEL_API_KEY_[a-f0-9_]+$/)
+      expect(stored.get('GATEWAY_API_KEY')).toBe('old-key')
+      if (outcome === 'credential-refused') {
+        expect(mutate).not.toHaveBeenCalled()
+        expect(stored.size).toBe(1)
+      } else {
+        expect(set.mock.invocationCallOrder[0]).toBeLessThan(mutate.mock.invocationCallOrder[0]!)
+        expect(firstMutate(mutate).ops).toEqual([
+          { op: 'set', path: ['providers', 'gateway', 'baseURL'], value: 'https://new.example/v1' },
+          { op: 'set', path: ['providers', 'gateway', 'apiKeyEnv'], value: ref },
+        ])
+        expect(stored.get(ref!)).toBe('new-key')
+      }
+    },
+  )
+
+  it('retains a credential referenced by a committed write whose acknowledgement was lost', async () => {
+    const stored = new Map([['GATEWAY_API_KEY', 'old-key']])
+    let effective: Record<string, unknown> = { providers: { gateway: original } }
+    const set = vi.fn(async (ref: string, value: string) => {
+      stored.set(ref, value)
+      return remoteOk(undefined)
+    })
+    let committed = false
+    const mutate = vi.fn(async (_ns: string, ops: MutateCall['ops'], _revision: number) => {
+      if (committed) return remoteFail('changed revision', 'settings/conflict')
+      for (const op of ops) {
+        if (op.op === 'set') effective = settingsSchema.setPath(effective, op.path, op.value)
+      }
+      committed = true
+      throw new Error('acknowledgement lost after commit')
+    })
+    const { face } = await mountSection({ providers: { gateway: original }, declaredRoutes: ['gateway'], set, mutate })
+    openEditor('gateway')
+    fireEvent.change(screen.getByLabelText(en.baseUrl), { target: { value: 'https://new.example/v1' } })
+    fireEvent.change(screen.getByLabelText(en.keyInput), { target: { value: 'first-key' } })
+    fireEvent.click(screen.getByText(en.apply))
+    await screen.findByText(en.saveUnconfirmed)
+    const committedRef = set.mock.calls[0]![0]
+    expect(settingsSchema.getPath(effective, ['providers', 'gateway'])).toEqual({
+      ...original, baseURL: 'https://new.example/v1', apiKeyEnv: committedRef,
+    })
+    fireEvent.click(screen.getByText(en.apply))
+    await screen.findByText(en.conflict)
+    expect(set.mock.calls[1]).toEqual(set.mock.calls[0])
+    fireEvent.change(screen.getByLabelText(en.keyInput), { target: { value: 'second-key' } })
+    fireEvent.click(screen.getByText(en.apply))
+    await waitFor(() => { expect(mutate).toHaveBeenCalledTimes(3) })
+    expect(set.mock.calls[2]![0]).not.toBe(committedRef)
+    expect(stored.get(committedRef)).toBe('first-key')
+    expect(stored.get('GATEWAY_API_KEY')).toBe('old-key')
+    expect(face.credentials.unset).not.toHaveBeenCalled()
+    expect(mutate.mock.calls.every(call => call[2] === 3)).toBe(true)
+  })
+
+  it('refuses a drafted key when the credential becomes read-only before saving', async () => {
+    const { face, mutate, set } = await mountSection({ providers: { gateway: original }, declaredRoutes: ['gateway'] })
+    const pending = Promise.withResolvers<Awaited<ReturnType<typeof face.credentials.describe>>>()
+    face.credentials.describe.mockReturnValue(pending.promise)
+    openEditor('gateway')
+    fireEvent.change(screen.getByLabelText(en.baseUrl), { target: { value: 'https://new.example/v1' } })
+    fireEvent.change(screen.getByLabelText(en.keyInput), { target: { value: 'new-key' } })
+    pending.resolve(remoteOk({ GATEWAY_API_KEY: { configured: true, writable: false } }))
+    await waitFor(() => { expect(screen.getByLabelText(en.keyInput)).toHaveProperty('disabled', true) })
+    fireEvent.click(screen.getByText(en.apply))
+    await screen.findByText(en.keyEnvLocked)
+    expect(mutate).not.toHaveBeenCalled()
+    expect(set).not.toHaveBeenCalled()
+  })
+
+  it('reuses a staged reference on retry and allocates another when the key changes', async () => {
+    const set = vi.fn(async () => remoteOk(undefined))
+    const mutate = vi.fn(async () => remoteFail('changed revision', 'settings/conflict'))
+    await mountSection({ providers: { gateway: original }, declaredRoutes: ['gateway'], set, mutate })
+    openEditor('gateway')
+    fireEvent.change(screen.getByLabelText(en.customApi), { target: { value: 'anthropic-messages' } })
+    fireEvent.change(screen.getByLabelText(en.keyInput), { target: { value: 'first-key' } })
+    fireEvent.click(screen.getByText(en.apply))
+    await screen.findByText(en.conflict)
+    fireEvent.click(screen.getByText(en.apply))
+    await waitFor(() => { expect(mutate).toHaveBeenCalledTimes(2) })
+    expect(set.mock.calls[1]).toEqual(set.mock.calls[0])
+    fireEvent.change(screen.getByLabelText(en.keyInput), { target: { value: 'second-key' } })
+    fireEvent.click(screen.getByText(en.apply))
+    await waitFor(() => { expect(mutate).toHaveBeenCalledTimes(3) })
+    expect(set.mock.calls[2]).not.toEqual(set.mock.calls[0])
+    expect(firstMutate(mutate).ops).toEqual(expect.arrayContaining([
+      { op: 'set', path: ['providers', 'gateway', 'api'], value: 'anthropic-messages' },
+    ]))
+  })
+})
