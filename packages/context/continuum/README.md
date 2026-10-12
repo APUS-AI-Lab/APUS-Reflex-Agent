@@ -35,7 +35,7 @@ Import `MemoryRecordStore` for deterministic revision semantics. Use `appendMemo
 <a id="understand-the-implementation"></a>
 ## Understand the implementation
 
-`MemoryRecordStore` keeps immutable snapshots and requires the caller's observed revision for superseding or deactivation. `ContinuumMemory` restores one projection per Agent from the Agent Session and persists explicit create/supersede/deactivate calls as `continuum/memory-record`. In `user-message` admission mode, a committed human `user/message` is converted after the Session append completes; generated recall messages and non-user sources are ignored. Its controller keeps a disposable index current after committed transitions; folding applies events without model calls or a second durable source.
+`MemoryRecordStore` keeps immutable snapshots and requires the caller's observed revision for superseding or deactivation. `ContinuumMemory` restores one projection per Agent from the Agent Session and persists explicit create/supersede/deactivate calls as `continuum/memory-record`. In `user-message` admission mode, a committed human `user/message` is converted after the Session append completes; generated recall messages and non-user sources are ignored. Its controller keeps a disposable index current after committed transitions; indexed candidates preserve the same lexical substring matches as direct retrieval; folding applies events without model calls or a second durable source.
 
 -----
 

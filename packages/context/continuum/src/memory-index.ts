@@ -79,14 +79,15 @@ export class MemoryRecordIndex {
   }
 
   /**
-   * Return IDs from the union of posting lists for the supplied terms.
+   * Return IDs whose indexed tokens contain any supplied term as a substring.
    * @param terms - normalized search terms.
    * @returns stable IDs; missing terms produce an empty result.
    */
   idsForTerms(terms: readonly string[]): readonly MemoryId[] {
     const ids = new Set<MemoryId>()
-    for (const term of terms) {
-      for (const id of this.postings.get(term) ?? []) ids.add(id)
+    for (const [token, postings] of this.postings) {
+      if (!terms.some(term => token.includes(term))) continue
+      for (const id of postings) ids.add(id)
     }
     return Object.freeze([...ids].sort((left, right) => String(left).localeCompare(String(right))))
   }
