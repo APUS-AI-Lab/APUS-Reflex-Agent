@@ -186,11 +186,23 @@ export async function qualify(archive, reports) {
       await page.getByRole('button', { name: 'Settings', exact: true }).click()
       return page.getByRole('dialog', { name: 'Settings', exact: true })
     }
+    const workspace = join(env.DSH_HOME, 'Documents', 'deepseek-harness', 'default-workspace')
+    const verifyWorkspace = async page => {
+      await page.locator('[data-composer-input][contenteditable="true"]').waitFor({ timeout: 30_000 })
+      if ((await page.getByRole('button', { name: 'Choose workspace', exact: true }).textContent())?.trim() !== 'Default workspace') {
+        throw new Error('Web first-use workspace was not selected.')
+      }
+    }
     let page = await start()
+    await verifyWorkspace(page)
+    await writeFile(join(workspace, 'qualification.txt'), 'workspace-retained', { flag: 'wx' })
+    report.stages.push('default-workspace-created-and-composer-editable')
     await page.getByText(`${build.version}-${build.sourceRevision.slice(0, 7)}`, { exact: true }).waitFor()
     await page.screenshot({ path: join(reports, 'home.png') })
     let dialog = await settings(page)
-    await dialog.getByText(`Current version: ${build.version}`, { exact: true }).waitFor()
+    const versionLabel = dialog.getByText(`Current version: ${build.version}`, { exact: true })
+    await versionLabel.waitFor()
+    await versionLabel.scrollIntoViewIfNeeded()
     await page.screenshot({ path: join(reports, 'version.png') })
     report.stages.push('product-version-in-home-and-general-settings')
     await dialog.getByRole('button', { name: 'Models', exact: true }).click()
@@ -213,6 +225,11 @@ export async function qualify(archive, reports) {
     await stop()
     report.stages.push('first-exit-quiescent')
     page = await start()
+    await verifyWorkspace(page)
+    if (await readFile(join(workspace, 'qualification.txt'), 'utf8') !== 'workspace-retained') {
+      throw new Error('Web workspace contents did not survive restart.')
+    }
+    report.stages.push('default-workspace-retained-after-restart')
     dialog = await settings(page)
     await dialog.getByRole('button', { name: 'Reflex model configuration', exact: true }).click()
     if (await dialog.locator('#reflex-endpoint').inputValue() !== 'https://qualification.invalid'

@@ -7,7 +7,7 @@ import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSyn
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { digest, inventoryName, linuxNativePackage, payloadFiles, verifyWebRuntime, verifyProductClientBuild } from './product-web-package.mjs'
+import { digest, inventoryName, linuxNativePackage, payloadFiles, verifyWebRuntime, verifyProductClientBuild, webProfilePatch } from './product-web-package.mjs'
 import { launchOptions } from './product-web-launch.mjs'
 import { readinessUrl, redact, smokeEnvironment, verifyPayload, verifyPublishedInventory, verifyHttpAuthentication, verifySandboxExecution } from './product-web-smoke.mjs'
 
@@ -184,4 +184,25 @@ test('collector verifies product version and clean commit against the complete c
   writeRecord(environment)
   writeFileSync(join(directory, 'apps/web/dist/index.html'), '<main>stale</main>')
   assert.throws(() => verifyProductClientBuild(directory, version, revision), /artifacts differ/)
+})
+
+test('product overlay resolves the first workspace inside persistent data without OS directory tools', t => {
+  const directory = fixture(t)
+  const patch = join(directory, 'web.patch.yml')
+  writeFileSync(patch, webProfilePatch)
+  const boot = new URL('../packages/boot/app-boot/src/index.ts', import.meta.url).href
+  const resolver = new URL('../packages/api/workspace-controller/src/default-directory.ts', import.meta.url).href
+  const script = `import { loadOptionalPatches } from ${JSON.stringify(boot)};
+import { defaultWorkspaceDirectory } from ${JSON.stringify(resolver)};
+const patches = loadOptionalPatches('web', process.argv[1]);
+const expression = patches.find(row => row.id === 'workspace-controller').config.documentsDirectory.__jsExpr;
+const documents = new Function('process', 'return (' + expression + ')')({env:{DSH_HOME:process.argv[2]}});
+const workspace = await defaultWorkspaceDirectory(documents, new AbortController().signal, {
+  platform:'linux', run:async () => {throw new Error('OS directory lookup must not run')}
+});
+process.stdout.write(workspace);`;
+  const home = join(directory, 'persistent data')
+  const output = execFileSync(process.execPath, ['--import', fileURLToPath(import.meta.resolve('tsx/esm')), '--input-type=module', '-e', script, patch, home],
+    { cwd: root, encoding: 'utf8', timeout: 30_000 });
+  assert.equal(output, join(home, 'Documents', 'deepseek-harness', 'default-workspace'))
 })

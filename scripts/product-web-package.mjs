@@ -14,6 +14,20 @@ export const archiveName = 'apus-reflex-harness-web-linux-x64.tar.gz'
 export const inventoryName = 'runtime-dependencies-web-linux-x64.json'
 export const linuxNativePackage = 'node_modules/@deepseek-ai/node-addon-system-linux-x64'
 
+/** Product-only profile additions; the launcher supplies an absolute persistent DSH_HOME. */
+export const webProfilePatch = `- insert:
+    - id: ui-system3
+      name: "@deepseek-ai/dsh-experimental-client-ui-system3"
+- id: session-log-deepseek
+  config:
+    enabled: false
+- id: ui-settings-account
+  disabled: true
+- id: workspace-controller
+  config:
+    documentsDirectory: !!js process.env.DSH_HOME + '/Documents'
+`
+
 /** Record every physical payload file; reject links rather than trusting a checkout. */
 export function payloadFiles(directory) {
   const records = []
@@ -94,7 +108,7 @@ export function packageWeb(base = root) {
     chmodSync(join(payload, 'bin/node'), 0o755)
     copyFileSync(join(base, 'scripts/product-web-launch.mjs'), join(payload, 'launch.mjs'))
     writeFileSync(join(payload, 'start.sh'), '#!/bin/sh\nset -eu\nROOT=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)\nunset NODE_OPTIONS NODE_PATH ELECTRON_RUN_AS_NODE\nexec "$ROOT/bin/node" "$ROOT/launch.mjs" "$@"\n', { mode: 0o755 })
-    writeFileSync(join(payload, 'web.patch.yml'), '- insert:\n    - id: ui-system3\n      name: "@deepseek-ai/dsh-experimental-client-ui-system3"\n- id: session-log-deepseek\n  config:\n    enabled: false\n- id: ui-settings-account\n  disabled: true\n')
+    writeFileSync(join(payload, 'web.patch.yml'), webProfilePatch)
     mkdirSync(join(payload, 'licenses'))
     for (const [source, name] of [['LICENSE', 'HARNESS-LICENSE.txt'], ['THIRD_PARTY_NOTICES.md', 'HARNESS-NOTICES.md'],
       ['frontend/LICENSE', 'FRONTEND-LICENSE.txt'], ['frontend/THIRD_PARTY_NOTICES.md', 'FRONTEND-NOTICES.md']]) {
