@@ -8,13 +8,13 @@ English | [中文](README.zh.md)
 
 APUS Reflex Harness is a Personal Agent desktop app for working with models on local projects: choose a workspace, configure a model, and carry out tasks in a persistent conversation. The optional Reflex/Jev decision service is configured in Settings → Reflex model configuration. Connecting the service does not automatically enable routing, supervision or memory. The desktop client and Harness runtime ship from this repository. See the [product README](../README.md) for the architecture and current capability limits.
 
-This integration brings the desktop client into `frontend/` of the existing Harness repository, merging frontend and backend configuration, builds and packaging. The installer bundles the backend; no separate backend installation or startup is needed. The Windows preview installer is still being prepared.
+This integration brings the desktop client into `frontend/` of the existing Harness repository, merging frontend and backend configuration, builds and packaging. The installer bundles the backend; no separate backend installation or startup is needed.
 
 ## Download and configure
 
 The repository is currently private: Release downloads require repository access until an administrator makes it public.
 
-Published installers and platform validation appear on [Releases](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/releases). Existing macOS arm64 assets remain unchanged; the Windows x64 unsigned NSIS installer requires native installation and launch validation before publication. Installers bundle the backend and need no Git or Node.js. Model configuration is required, and the first real-model task has not been validated. Source archives are not installers; Web runs from source only. Follow [installation](../docs/feat-integrated-product/installation.md) and [model configuration](../docs/feat-integrated-product/configuration.md).
+Published installers and platform validation appear on [Releases](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/releases). Version `0.1.0` uses the same reviewed source commit across its desktop and Web targets; availability is limited to qualified assets attached to the Release. Installers bundle the backend and need no Git or Node.js. Model configuration is required, and the first real-model task has not been validated. Source archives are not installers. The complete Linux x64 Web package includes its own runtime; platform requirements and first-use steps belong to the installation guide. Follow [installation](../docs/feat-integrated-product/installation.md) and [model configuration](../docs/feat-integrated-product/configuration.md).
 
 ## Develop
 

@@ -7,9 +7,9 @@ import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSyn
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { digest, linuxNativePackage, payloadFiles, verifyWebRuntime } from './product-web-package.mjs'
+import { digest, inventoryName, linuxNativePackage, payloadFiles, verifyWebRuntime } from './product-web-package.mjs'
 import { launchOptions } from './product-web-launch.mjs'
-import { readinessUrl, redact, smokeEnvironment, verifyPayload, verifyHttpAuthentication, verifySandboxExecution } from './product-web-smoke.mjs'
+import { readinessUrl, redact, smokeEnvironment, verifyPayload, verifyPublishedInventory, verifyHttpAuthentication, verifySandboxExecution } from './product-web-smoke.mjs'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
 const fixture = t => {
@@ -146,3 +146,18 @@ exec "$@"
     if (mode === 'passthrough') assert.equal(readFileSync(join(directory, 'outside-sandbox.txt'), 'utf8'), 'escaped')
   })
 }
+
+test('published inventory references the named release file and the extracted runtime hash and version', t => {
+  const directory = fixture(t)
+  const file = join(directory, inventoryName)
+  writeFileSync(file, '{"packages":[]}\n')
+  const runtime = { version: 'fixture-runtime', dependencyInventory: { path: 'runtime-dependencies.json', sha256: digest(file) } }
+  const build = { harnessVersion: runtime.version, runtimeDependencyInventory: { ...runtime.dependencyInventory, path: inventoryName } }
+  verifyPublishedInventory(directory, build, runtime)
+  assert.throws(() => verifyPublishedInventory(directory, { ...build, runtimeDependencyInventory: runtime.dependencyInventory }, runtime), /metadata differs/)
+  assert.throws(() => verifyPublishedInventory(directory, { ...build, runtimeDependencyInventory: { ...build.runtimeDependencyInventory, path: '../elsewhere.json' } }, runtime), /metadata differs/)
+  assert.throws(() => verifyPublishedInventory(directory, { ...build, harnessVersion: 'another-runtime' }, runtime), /metadata differs/)
+  assert.throws(() => verifyPublishedInventory(directory, build, { ...runtime, dependencyInventory: { ...runtime.dependencyInventory, sha256: 'changed' } }), /metadata differs/)
+  writeFileSync(file, 'changed inventory')
+  assert.throws(() => verifyPublishedInventory(directory, build, runtime), /file differs/)
+})

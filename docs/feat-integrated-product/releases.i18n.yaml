@@ -3,17 +3,17 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/feat-integrated-product/releases.md
 /release-apus-reflex-harness:
-  en: cac71dc4ff5b940e
-  zh: 9690551fac662929
+  en: b106127ffac2b9ac
+  zh: 588e44f156e36cef
 /release-apus-reflex-harness/version-and-source:
-  en: 3da4cbed123f5d7f
-  zh: 69990e247149c6e1
+  en: ca809ed8d9296703
+  zh: 8d9eea36744acedc
 /release-apus-reflex-harness/package-and-qualify:
-  en: 5be960b4a8434baf
-  zh: 015a1d99a3611f1e
+  en: ebf8e06785510c03
+  zh: cd197a08b7d7d304
 /release-apus-reflex-harness/acceptance-checklist:
   en: 1c4701fde0b25507
   zh: a0c558d495df0e11
 /release-apus-reflex-harness/publish-and-update:
-  en: 71d79e08e8d96dc7
-  zh: 7d90a80361f30083
+  en: 39746980de58d56d
+  zh: f63a12a070ef82e8

@@ -11,6 +11,7 @@ const root = fileURLToPath(new URL('..', import.meta.url))
 const json = file => JSON.parse(readFileSync(file, 'utf8'))
 export const digest = file => createHash('sha256').update(readFileSync(file)).digest('hex')
 export const archiveName = 'apus-reflex-harness-web-linux-x64.tar.gz'
+export const inventoryName = 'runtime-dependencies-web-linux-x64.json'
 export const linuxNativePackage = 'node_modules/@deepseek-ai/node-addon-system-linux-x64'
 
 /** Record every physical payload file; reject links rather than trusting a checkout. */
@@ -91,15 +92,15 @@ export function packageWeb(base = root) {
     const archive = join(output, archiveName)
     execFileSync('tar', ['-czf', archive, '-C', stage, 'apus-reflex-harness-web'])
     const sourceArchive = execFileSync('git', ['archive', '--format=tar', 'HEAD'], { cwd: base, maxBuffer: 512 * 1024 * 1024 })
-    const info = { product: manifest.product, version: manifest.version, channel: manifest.channel, target: 'web-linux-x64',
+    const info = { product: manifest.product, version: manifest.version, channel: manifest.channel, target: 'web-linux-x64', harnessVersion: runtime.version,
       sourceRevision: revision, sourceArchiveSha256: createHash('sha256').update(sourceArchive).digest('hex'),
       bundledNode: { version: pin, sha256: digest(node) },
       lockfiles: { pnpm: digest(join(base, 'pnpm-lock.yaml')), npm: digest(join(base, 'frontend/package-lock.json')) },
-      payloadManifestSha256: digest(join(payload, 'files.json')), runtimeDependencyInventory: runtime.dependencyInventory,
+      payloadManifestSha256: digest(join(payload, 'files.json')), runtimeDependencyInventory: { ...runtime.dependencyInventory, path: inventoryName },
       assets: [{ name: archiveName, sha256: digest(archive) }] }
     writeFileSync(join(output, 'build-info-web-linux-x64.json'), `${JSON.stringify(info, null, 2)}\n`)
-    copyFileSync(join(prepared, runtime.dependencyInventory.path), join(output, 'runtime-dependencies-web-linux-x64.json'))
-    const names = [archiveName, 'build-info-web-linux-x64.json', 'runtime-dependencies-web-linux-x64.json']
+    copyFileSync(join(prepared, runtime.dependencyInventory.path), join(output, inventoryName))
+    const names = [archiveName, 'build-info-web-linux-x64.json', inventoryName]
     writeFileSync(join(output, 'SHA256SUMS-web-linux-x64'), `${names.map(name => `${digest(join(output, name))}  ${name}`).join('\n')}\n`)
     console.log(`Collected ${archive}. Native extracted-archive qualification is required before publishing.`)
     return output

@@ -3,11 +3,11 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write README.md
 /apus-reflex-harness:
-  en: 3cbb8333c1539112
-  zh: bf675cab4a3341c7
+  en: 4475c23ad05e0d32
+  zh: 6daaa01fefe0b530
 /apus-reflex-harness/download-the-desktop-app:
-  en: b1b50fa7b227cc86
-  zh: 1a140bf0ab07a05a
+  en: 91b7b5b8663705d5
+  zh: 761d2c85c73047de
 /apus-reflex-harness/a-personal-agent-for-ongoing-projects:
   en: 40536b86550bc094
   zh: 5698a3d057316b70

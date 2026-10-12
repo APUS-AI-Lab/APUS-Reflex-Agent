@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
-import { archiveName, digest, linuxNativePackage, payloadFiles, verifyWebRuntime } from './product-web-package.mjs'
+import { archiveName, digest, inventoryName, linuxNativePackage, payloadFiles, verifyWebRuntime } from './product-web-package.mjs'
 
 const execute = promisify(execFile)
 const root = fileURLToPath(new URL('..', import.meta.url))
@@ -41,6 +41,14 @@ export function verifyPayload(directory, build) {
   const actual = payloadFiles(directory).filter(file => file.path !== 'files.json')
   const expected = JSON.parse(readFileSync(join(directory, 'files.json'), 'utf8'))
   if (JSON.stringify(actual) !== JSON.stringify(expected)) throw new Error('Extracted Web payload differs from its file inventory.')
+}
+
+/** Bind the adjacent release inventory to its published filename and extracted runtime metadata. */
+export function verifyPublishedInventory(directory, build, runtime) {
+  const inventory = build.runtimeDependencyInventory
+  if (inventory?.path !== inventoryName || inventory.sha256 !== runtime.dependencyInventory?.sha256
+    || build.harnessVersion !== runtime.version) throw new Error('Published Web inventory metadata differs from the extracted runtime.')
+  if (digest(join(directory, inventory.path)) !== inventory.sha256) throw new Error('Published Web inventory file differs from its recorded hash.')
 }
 
 /** Verify the real token exchange and cookie-protected frontend without exposing credentials. */
@@ -136,6 +144,7 @@ export async function qualify(archive, reports) {
     verifyPayload(installed, build)
     const runtime = JSON.parse(await readFile(join(installed, 'runtime/runtime-manifest.json'), 'utf8'))
     verifyWebRuntime(runtime, build.sourceRevision)
+    verifyPublishedInventory(dirname(archive), build, runtime)
     const { stdout: tools } = await execute('/bin/sh', ['-c', 'command -v node || command -v git || command -v pnpm || true'], { env })
     if (tools.trim()) throw new Error('External developer tools are unexpectedly available.')
     report.stages.push('extracted-payload-verified-no-external-tools')

@@ -33,7 +33,7 @@ it('combines macOS, Windows and Linux support files without replacing either tar
     expect(names).toEqual(target !== 'darwin-arm64'
       ? { info: `build-info-${target}.json`, licenses: `LICENSES-${target}.zip`, inventory: `runtime-dependencies-${target}.json`, checksums: `SHA256SUMS-${target}` }
       : { info: 'build-info.json', licenses: 'LICENSES.zip', inventory: 'runtime-dependencies.json', checksums: 'SHA256SUMS' })
-    const info = JSON.parse(readFileSync(join(output, names.info), 'utf8'))
+    const info: unknown = JSON.parse(readFileSync(join(output, names.info), 'utf8'))
     expect(info).toMatchObject({ sourceRevision: 'a'.repeat(40), target, harnessVersion: runtime.version,
       runtimeDependencyInventory: { path: names.inventory, sha256: digest(readFileSync(join(output, names.inventory))) },
       assets: assets.map(name => ({ name, sha256: digest(readFileSync(join(output, name))) })) })

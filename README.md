@@ -10,13 +10,13 @@ APUS turns a sequence of model calls into work that can continue around a goal: 
 
 APUS separates model reasoning from execution, permissions and durable Session history. It is a **developer preview**. The [release readiness review](docs/dev-continuum-reflex-integration/release-readiness.md) records what has been tested and what still needs acceptance.
 
-This integration merges frontend and backend delivery into the existing Harness repository: the desktop client lives in `frontend/`, with configuration, builds and packaging managed together. Desktop installers bundle the backend, so users do not start or install a separate service. The Windows preview installer is still being prepared.
+This integration merges frontend and backend delivery into the existing Harness repository: the desktop client lives in `frontend/`, with configuration, builds and packaging managed together. Desktop installers bundle the backend, so users do not start or install a separate service.
 
 ## Download the desktop app
 
 The repository is currently private: Release downloads require repository access until an administrator makes it public.
 
-Visit [Releases](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/releases) for published installers, supported platforms and validation results. `0.1.0` (`v0.1.0`) retains the existing macOS Apple Silicon assets. A Windows x64 unsigned NSIS installer is being prepared and will be published only after native Windows installation and launch validation. The first task with a real model has not been validated; configure your own model using the guide. Installers are available only when listed as release assets. GitHub’s “Source code” archives contain source files, not installable applications. Web runs from source; it has no standalone installer.
+Visit [Releases](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/releases) for installers, supported platforms and validation results. `0.1.0` (`v0.1.0`) targets macOS Apple Silicon (arm64), macOS Intel (x64), Windows x64, Ubuntu 24.04 x64 desktop and a complete Linux x64 Web archive from the same reviewed clean source commit. Availability is limited to the qualified installers actually attached to the Release. This is an unsigned preview; macOS is not notarized. The first task with a real model has not been validated; configure your own model using the guide. GitHub’s “Source code” archives contain source files, not installable applications. The Web archive bundles Node and the backend, listens on localhost, and needs no Electron; see the [Web guide](docs/release-web-runtime/README.md).
 
 The desktop distribution bundles its runtime: users do not need Git, Node.js or a separate backend. Follow [installation](docs/feat-integrated-product/installation.md) and [model configuration](docs/feat-integrated-product/configuration.md) using your own provider credentials. Preview builds can break compatibility. Read [SAFETY.md](SAFETY.md) before granting file access.
 

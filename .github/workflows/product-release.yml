@@ -114,10 +114,11 @@ jobs:
           arch="${PRODUCT_TARGET#darwin-}"
           node scripts/product-macos-smoke.mjs --installer "$PWD/.artifacts/product-release/$version/$PRODUCT_TARGET/apus-reflex-harness-mac-$arch.dmg" --report-dir "$PWD/.artifacts/product-macos-smoke"
       - name: Validate Linux smoke checks
-        if: runner.os == 'Linux'
+        id: linux_smoke_checks
+        if: ${{ !cancelled() && runner.os == 'Linux' && steps.installers.outcome == 'success' }}
         run: node --test scripts/product-linux-smoke.test.mjs
       - name: Install and verify the Linux product with Chromium sandbox enabled
-        if: runner.os == 'Linux'
+        if: ${{ !cancelled() && steps.linux_smoke_checks.outcome == 'success' }}
         run: |
           version=$(node -p "JSON.parse(require('fs').readFileSync('release/manifest.json')).version")
           xvfb-run -a dbus-run-session -- node scripts/product-linux-smoke.mjs --installer "$PWD/.artifacts/product-release/$version/linux-x64/apus-reflex-harness-linux-x64.deb" --report-dir "$PWD/.artifacts/product-linux-smoke"

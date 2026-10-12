@@ -2,26 +2,33 @@
 
 Model-as-a-Harness · 瞬时执行，深度思考。
 
-Tag / 标签：`v0.1.0`. GitHub prerelease / GitHub 预发布；unsigned preview / 未签名预览版；Windows addition pending native installation and launch validation / Windows 新增附件待原生安装与启动验收。
+Tag / 标签：`v0.1.0`. GitHub prerelease / GitHub 预发布；unsigned preview / 未签名预览版。
 
-This integration brings the desktop client into `frontend/` of the existing Harness repository, merging frontend and backend configuration, builds and packaging. The installer bundles the backend; users do not install or start a separate service. The Windows addition remains pending native installation and launch validation before publication; existing macOS assets remain unchanged. Configure your own model in Settings → Models. Configure an optional decision service in Settings → Reflex model configuration. Connection tests do not automatically enable routing, supervision or memory.
+This release merges the desktop frontend into `frontend/` of the Harness repository. Configuration, builds and packaging use one reviewed source commit. Desktop installers include the backend; the complete Web archive includes Node, the backend and browser resources without Electron. No separate Git clone, Node installation or backend setup is needed for qualified download assets.
 
-本次以前后端合并的一体化仓库交付：保留原 Harness 为主仓，客户端纳入 `frontend/`，统一配置、构建与打包。安装包内置后端，无需额外安装或启动服务。Windows 新增附件须通过原生安装与启动验收后发布，现有 macOS 附件保持不变。普通任务在“设置 → 模型”填写自己的模型服务；可在“设置 → Reflex 模型配置”接入决策服务。连接测试不会自动启用路由、监督或记忆。
+本次以前后端合并的一体化仓库交付：以 Harness 为主仓，客户端纳入 `frontend/`，统一配置、构建和打包。桌面安装包内置后端；完整 Web 包内置 Node、后端和浏览器资源，无需 Electron。使用已验收下载包不需要另外 clone、安装 Node 或部署后端。
 
-Access / 下载权限：the repository is currently private; repository access is required until an administrator makes it public / 仓库当前私有，管理员公开前需有仓库访问权限。
+| Target / 平台 | Download asset / 下载附件 |
+| --- | --- |
+| macOS Apple Silicon | `apus-reflex-harness-mac-arm64.dmg` / `.zip` |
+| macOS Intel | `apus-reflex-harness-mac-x64.dmg` / `.zip` |
+| Windows x64 | `apus-reflex-harness-windows-x64-setup.exe` |
+| Ubuntu 24.04 x64 desktop / 桌面 | `apus-reflex-harness-linux-x64.deb` |
+| Linux x64 Web | `apus-reflex-harness-web-linux-x64.tar.gz` |
 
-- Targets / 平台：macOS Apple Silicon (arm64), plus Windows x64 NSIS installer pending qualification / 保留 macOS arm64，新增待验收的 Windows x64 NSIS 安装包。
-- Signing / 签名：unsigned; macOS not notarized, Windows without code signature / 未签名；macOS 未公证，Windows 无代码签名，系统可能提示未知发布者或阻止打开。
-- Runtime / 运行时：bundled; no Git, Node.js or separate backend installation / 已内置，无需安装 Git、Node.js 或单独后端。
-- Models / 模型：bring your own provider and credentials; inference may send task data to that service / 需自行配置模型与凭证，推理可能向所选服务发送任务数据。
-- Updates / 更新：manual replacement; keep existing application data / 手动更新并保留已有应用数据；自动更新尚未开启。
+Availability is limited to the qualified assets actually attached below. All published assets must identify the same source commit. Verify the corresponding SHA256SUMS file. macOS arm64 uses the unsuffixed metadata names; other targets use their target suffix. Original dependency license notices are retained. GitHub's automatic Source code archives are not installers.
 
-For macOS, download the existing DMG or application ZIP and use its `SHA256SUMS`, `build-info.json` and `LICENSES.zip`. For Windows, choose the x64 NSIS `.exe` when published; its companion files are `SHA256SUMS-win32-x64`, `build-info-win32-x64.json`, `runtime-dependencies-win32-x64.json` and `LICENSES-win32-x64.zip`. Each platform records its own build commit and preserves original license notices.
+可用平台以本页实际附上的已验收附件为准，全部已发布附件必须对应同一源码提交。下载后核对各目标的 SHA256SUMS 文件；macOS arm64 元数据不带后缀，其他目标使用对应平台后缀。原始依赖许可声明保留。GitHub 自动生成的 Source code 压缩包不是安装包。
 
-macOS 继续使用现有 DMG/应用 ZIP 及其 `SHA256SUMS`、`build-info.json`、`LICENSES.zip`。Windows 发布后选择 x64 NSIS `.exe`，配套文件为 `SHA256SUMS-win32-x64`、`build-info-win32-x64.json`、`runtime-dependencies-win32-x64.json` 与 `LICENSES-win32-x64.zip`。各平台分别记录构建提交并保留原始许可声明。
+- Models / 模型：configure your own generation provider in Settings → Models; Reflex/Jev supports separately configured OpenJev or Typesafe decision endpoints / 在“设置 → 模型”配置自己的生成服务；Reflex/Jev 决策服务单独配置，支持 OpenJev 或 Typesafe 协议。
+- Configuration / 配置：draft connection tests do not save settings or automatically enable routing, supervision or memory / 草稿连接测试不会保存配置，也不会自动启用路由、监督或记忆。
+- Signing / 签名：unsigned preview; macOS is not notarized and Windows has no code signature / 未签名预览版，macOS 未公证，Windows 无代码签名。
+- Web / 浏览器版：localhost only by default, persistent data outside the extracted directory / 默认仅监听 localhost，持久数据保存在解压目录外。
+- Updates / 更新：manual; preserve application data / 手动更新并保留应用数据。
+- Access / 下载权限：repository access is required while the repository is private / 仓库私有期间下载需要仓库访问权限。
 
 Installation and configuration / 安装与配置：[guide](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/blob/main/docs/feat-integrated-product/installation.md) · [中文教程](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/blob/main/docs/feat-integrated-product/installation.zh.md).
 
-Intel Mac, Linux and signed stable distributions are outside this Windows addition. Web runs from source, not a standalone installer. Configuration is necessary; the first task with a real model has not been validated. Installation and launch checks do not establish model-task success.
+Native installation, startup and restart checks do not establish model-task success. A first task with a real model remains unvalidated; bring your own provider credentials and verify a small task. Other Linux distributions and architectures are not qualified.
 
-本次 Windows 新增交付不包含 Intel Mac、Linux 或正式签名稳定版。Web 通过源码启动，不是独立安装包。必须自行配置模型；真实模型首个任务尚未验证，安装启动通过不代表模型任务通过。
+原生安装、启动与重启检查通过不代表模型任务通过。真实模型首个任务尚未验证，请使用自己的服务凭证配置并验证一个小任务。其他 Linux 发行版及架构尚未验收。
