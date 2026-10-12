@@ -176,4 +176,29 @@ describe('workflow runtime outcomes', () => {
       await handle.dispose()
     }
   })
+
+  it.each(['publication', 'result request'] as const)('retains a rejection before child %s until the guest requests it', async (stage) => {
+    const childResult = Promise.withResolvers<SubagentResult>()
+    const failure = new Error('child backend failed')
+    const disposed = vi.fn(() => Promise.resolve())
+    const { ctx, start } = await setup(async (bindings) => {
+      const child = await bindings.startChild!({ prompt: 'child' })
+      if (stage === 'result request') childResult.reject(failure)
+      // Cross Node's rejection checkpoint while the guest has not requested the result.
+      await new Promise(resolve => setImmediate(resolve))
+      await expect(bindings.childResult!(child)).rejects.toBe(failure)
+      return completed
+    })
+    vi.spyOn(ctx.subagents.getProvider('stub')!, 'start').mockImplementation(async () => {
+      if (stage === 'publication') childResult.reject(failure)
+      return { id: SessionId('rejected-child'), localAgent: undefined, result: childResult.promise, dispose: disposed }
+    })
+    const handle = start()
+    try {
+      expect((await handle.result).stopReason).toBe('completed')
+      expect(disposed).toHaveBeenCalledOnce()
+    } finally {
+      await handle.dispose()
+    }
+  })
 })
