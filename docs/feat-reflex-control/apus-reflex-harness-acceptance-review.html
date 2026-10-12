@@ -101,7 +101,7 @@
       <div class="kicker">Executive decision</div>
       <h2>当前结论：工程回归接近收口，产品闭环尚未达到 main 合并门槛</h2>
       <p>入口路由、Reflex 配置、按行/片段上下文投影与恢复、cache 区保护、受控重复失败恢复、原生静默恢复、严格 v6 语义纠偏和品牌/MIT 检查已有证据。Electron 200% 系统缩放、页面级 200% 缩放矩阵也已有证据；真实用户中途改需求、默认部署健康任务对照、远端首字节/回退、签名公证与正式发布仍缺证据。</p>
-      <div class="callout"><strong>合并判断：</strong>保留 Draft PR。先完成剩余 P0 的真实用户路径、远端门禁和正式包验收，再合并两仓 main。</div>
+      <div class="callout"><strong>合并判断：</strong>两仓 main 已按本地等价检查和独立 review 合并；剩余 P0 的真实用户路径、远端门禁和正式包验收仍未完成，因此当前版本不能宣称可直接发布。</div>
     </div>
     <div class="panel">
       <div class="kicker">Evidence rule</div>
@@ -235,7 +235,7 @@
   <section id="opensource" class="panel">
     <div class="kicker">Open-source release review</div>
     <h2>开源 P0/P1 门禁：先让别人敢用，再让别人能贡献</h2>
-    <p class="muted">下面的优先级按公开仓库的最小信任闭环排序。P0 任一项未通过，都不应把 Draft PR 合并到 main 或对外宣称“可直接使用”；P1 用于降低首次采用和外部贡献成本。</p>
+    <p class="muted">下面的优先级按公开仓库的最小信任闭环排序。P0 任一项未通过，都不应对外宣称“可直接使用”；main 的合并状态与正式发布状态分别记录。P1 用于降低首次采用和外部贡献成本。</p>
     <table><thead><tr><th>优先级</th><th>开源风险</th><th>必须完成的修复</th><th>可验证完成门</th><th>当前判断</th></tr></thead><tbody>
       <tr><td><span class="status blocked">P0</span></td><td><b>许可证与归属</b><br>用户无法确认能否分发，第三方依赖归属可能遗漏。</td><td>两仓根目录与最终安装包提供 MIT 全文；保留原版权、上游归属和第三方 NOTICE；安装包、npm tarball、Electron 产物逐一核对。</td><td>机器检查通过；包内文件可直接打开；README、release notes 与安装包指向同一许可说明。</td><td><span class="status partial">部分</span><br>未签名 Electron 目录包的品牌/MIT/NOTICE 已逐字节核对；当前 revision 重建与签名发布包仍待补齐。</td></tr>
       <tr><td><span class="status blocked">P0</span></td><td><b>安全与数据边界</b><br>公开证据可能泄露凭据、原始思考或把上下文删除误解为 cache 删除。</td><td>补齐 SECURITY.md、漏洞报告入口、脱敏规则和信任边界；明确 Harness 只投影后续请求、原始 Session 保留、不得编辑 Codex 私有历史、不得宣称 provider cache 成本收益。</td><td>秘密扫描和脱敏回归通过；安全说明能从仓库首屏找到；C-06/上下文边界证据可回链。</td><td><span class="status partial">部分</span><br>两仓已具备私密漏洞报告政策和 README 入口；秘密扫描、统一脱敏回归与最终包核对仍待完成。</td></tr>
