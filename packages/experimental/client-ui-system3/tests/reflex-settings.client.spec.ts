@@ -44,14 +44,14 @@ describe('Reflex dedicated settings controller', () => {
     } finally { f.controller.dispose() }
   })
 
-  it('drops a probe response after the user changes its input', async () => {
+  it.each(['endpoint', 'protocol'])('drops a probe response after the user changes %s', async (field) => {
     const f = fixture()
     try {
       const deferred = Promise.withResolvers<Awaited<ReturnType<typeof f.reflex.testConnection>>>()
       f.reflex.testConnection.mockReturnValueOnce(deferred.promise)
       const pending = f.face.testConnection()
       const signal = f.reflex.testConnection.mock.calls[0]?.[1]
-      f.face.edit('endpoint', 'https://new.test')
+      f.face.edit(field, field === 'protocol' ? 'typesafe' : 'https://new.test')
       expect(signal?.aborted).toBe(true)
       deferred.resolve({ ok: true, value: { kind: 'ok', stage: 'decision', model: 'decision', effort: 'high', latencyMs: 4 } })
       await pending
@@ -59,7 +59,7 @@ describe('Reflex dedicated settings controller', () => {
     } finally { f.controller.dispose() }
   })
 
-  it.each([['effort', 'invalid'], ['endpoint', 'https://key:secret@host'], ['endpoint', 'ftp://reflex.test'], ['timeoutMs', '-1']])('blocks invalid %s before calling the Host', async (field, value) => {
+  it.each([['protocol', 'invalid'], ['effort', 'invalid'], ['endpoint', 'https://key:secret@host'], ['endpoint', 'ftp://reflex.test'], ['timeoutMs', '-1']])('blocks invalid %s before calling the Host', async (field, value) => {
     const f = fixture()
     try {
       f.face.edit(field, value)
@@ -350,5 +350,20 @@ it('refreshes unconfigured runtime status after saving the first connection', as
     f.face.save()
     await vi.waitFor(() => { expect(f.state().runtime).toBeUndefined() })
     expect(f.state().failed).toBe(false)
+  } finally { f.controller.dispose() }
+})
+
+it.each(['openjev', 'typesafe'] as const)('probes and saves the draft protocol %s without saving during a probe', async (protocol) => {
+  const f = fixture()
+  try {
+    expect(f.state().protocol.text).toBe('openjev')
+    f.host.publish({ ...f.host.scope.getSnapshot(), value: { ...f.host.scope.getSnapshot().value, protocol: protocol === 'openjev' ? 'typesafe' : 'openjev' } })
+    f.face.edit('protocol', protocol)
+    await f.face.testConnection()
+    expect(f.reflex.testConnection).toHaveBeenCalledWith(expect.objectContaining({ protocol }), expect.any(AbortSignal))
+    expect(f.host.mutate).not.toHaveBeenCalled()
+    f.face.save()
+    await vi.waitFor(() => { expect(f.state().saving).toBe(false) })
+    expect(f.host.mutate).toHaveBeenCalledWith(expect.arrayContaining([{ op: 'set', path: ['protocol'], value: protocol }]), undefined)
   } finally { f.controller.dispose() }
 })

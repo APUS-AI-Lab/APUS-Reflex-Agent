@@ -34,9 +34,9 @@ it.each([false, true])('saves through ConfigForms and BFF with a read-only key; 
   writeFileSync(join(providerBundle, 'package.json'), readFileSync(new URL('../../apus-dsh-jev-plugin/package.json', import.meta.url)))
   writeFileSync(join(providerBundle, 'cordis.patch.yml'), readFileSync(new URL('../../apus-dsh-jev-plugin/cordis.patch.yml', import.meta.url), 'utf8').replace('name: ./lib/index.js', 'name: cordis:jev'))
   writeFileSync(join(dir, 'cordis.yml'), '[]\n')
-  // The shipped provider stays disabled until the profile supplies a connection.
+  // An unlocked profile starts without a provider and remains editable.
   writeFileSync(join(dir, 'cordis.patch.yml'), JSON.stringify([{ id: 'jev', config: {
-    endpoint: 'https://reflex.test', model: 'fixture', effort: 'high', apiKeyEnv: 'JEV_API_KEY',
+    endpoint: locked ? 'https://reflex.test' : '', model: locked ? 'fixture' : '', effort: 'high', apiKeyEnv: 'JEV_API_KEY',
   } }]))
   const profile: ProfileContext = { name: 'test', startedBundles: ['test-bundle'], dir, patchPath: join(dir, 'cordis.patch.yml'),
     installAnchor: join(home, 'package.json'), cwd: home, home, overlays: locked ? [{ id: 'jev', config: { endpoint: 'https://reflex.test', model: 'fixture', effort: 'high', apiKeyEnv: 'JEV_API_KEY' } }] : [], telemetryDisabledEnv: undefined }
@@ -95,6 +95,17 @@ it.each([false, true])('saves through ConfigForms and BFF with a read-only key; 
     expect(readFileSync(profile.patchPath, 'utf8')).toContain('low')
     await mirror.load()
     expect(scope.getSnapshot().value?.effort).toBe('low')
+    for (const protocol of ['typesafe', 'openjev'] as const) {
+      face.edit('protocol', protocol)
+      face.save()
+      await vi.waitFor(() => { expect(face.hooks.reflexCard.getSnapshot().saving).toBe(false) })
+      expect(face.hooks.reflexCard.getSnapshot().failed).toBe(false)
+      await mirror.load()
+      expect(scope.getSnapshot().value?.protocol).toBe(protocol)
+      const restarted = await start()
+      expect(restarted.settings.describe().find(row => row.ns === 'jev')?.value).toMatchObject({ protocol })
+      await restarted.fiber.dispose()
+    }
     await scope.mutate([{ op: 'set', path: ['endpoint'], value: 'https://original.test' },
       { op: 'set', path: ['model'], value: 'original-model' }], scope.getSnapshot().revision)
     const original = scope.getSnapshot().value

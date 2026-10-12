@@ -13,7 +13,7 @@ afterEach(cleanup)
 const field = (text: string) => ({ text, invalid: false, overridden: false })
 const state: ReflexCardState = {
   available: true, writable: true, dirty: false, invalid: false, saving: false, failed: false,
-  endpoint: field('https://reflex.test'), model: field('decision'), effort: field('high'),
+  endpoint: field('https://reflex.test'), model: field('decision'), protocol: field('openjev'), effort: field('high'),
   timeoutMs: field('1000'), apiKeyEnv: field('REFLEX_API_KEY'), apiKey: field(''),
   apiKeyConfigured: true, apiKeyWritable: true, credentialFailed: false, credentialSaveError: undefined,
   partialSave: false, probe: { pending: false, failed: false },
@@ -142,4 +142,31 @@ it('keeps first-run configuration editable and distinguishes a draft probe from 
   expect(screen.getByText('尚未配置决策服务；填写服务地址和模型后保存')).toBeTruthy()
   expect(screen.getByText(/真实判断通过/)).toBeTruthy()
   expect(screen.queryByText('已启用')).toBeNull()
+})
+
+it('selects the decision protocol and restores its deployment value', () => {
+  const p = props({ ...state, protocol: { ...state.protocol, text: 'typesafe', overridden: true } })
+  render(<ReflexSettings {...p} />)
+  const select = screen.getByRole('combobox', { name: zh.protocol }) as HTMLSelectElement
+  expect(select.value).toBe('typesafe')
+  const effort = screen.getByLabelText(zh.effort) as HTMLInputElement
+  expect(effort.disabled).toBe(true)
+  expect(effort.value).toBe('high')
+  expect(screen.getByText(zh.effortNotApplicable)).toBeTruthy()
+  fireEvent.change(select, { target: { value: 'openjev' } })
+  expect(p.edit).toHaveBeenCalledWith('protocol', 'openjev')
+  fireEvent.click(screen.getByRole('button', { name: zh.reset }))
+  expect(p.resetField).toHaveBeenCalledWith('protocol')
+})
+
+it.each(['read-only', 'saving'] as const)('locks the protocol selector while %s', (reason) => {
+  render(<ReflexSettings {...props({ ...state, writable: reason !== 'read-only', saving: reason === 'saving' })} />)
+  expect(screen.getByRole('combobox', { name: zh.protocol }).hasAttribute('disabled')).toBe(true)
+})
+
+it('explains an invalid protocol with protocol-specific guidance', () => {
+  render(<ReflexSettings {...props({ ...state, protocol: { ...state.protocol, text: 'invalid', invalid: true } })} />)
+  expect(screen.getByText(zh.invalidProtocol)).toBeTruthy()
+  expect(screen.queryByText(zh.invalidNumber)).toBeNull()
+  expect(screen.getByRole('combobox', { name: zh.protocol }).getAttribute('aria-invalid')).toBe('true')
 })

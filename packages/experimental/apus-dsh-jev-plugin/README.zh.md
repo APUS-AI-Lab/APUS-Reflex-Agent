@@ -53,7 +53,8 @@ kind: "package-bundle"
 |---|---|---|
 | `endpoint` | 空 | HTTP gateway 根 URL 或 `/v1` URL；执行决策前须与 `model` 一同配置 |
 | `model` | 空 | 发给 gateway 的模型 id；执行决策前须与 `endpoint` 一同配置 |
-| `effort` | `low` | System One 推理 effort：`low` 或 `high` |
+| `protocol` | `openjev` | 决策协议：OpenJev（`openjev`）或 Typesafe（`typesafe`） |
+| `effort` | `low` | OpenJev 推理 effort：`low` 或 `high`；Typesafe 不发送该扩展 |
 | `timeoutMs` | `30000` | 请求期限，单位毫秒 |
 | `apiKeyEnv` | 无 | 每次请求解析的凭据引用 |
 | `keepAliveMs` | 无 | 专用直连连接空闲后保留复用的时长；省略时使用进程级传输。经已配置 HTTP 代理的请求始终使用代理的传输 |
@@ -129,9 +130,9 @@ const outcome = await ctx.jev.decide({
 
 表单 schema 只包含可序列化的数据；服务在初次加载和所属 `internal/config` 更新流程中校验地址。非法地址在 profile 写入前被拒绝。
 
-`jev` Loader 条目将服务地址、模型、决策强度、超时、协议和凭据引用作为 volatile 设置提供。“Reflex 模型配置”专用页面通过 ConfigForms 编辑条目，通过 Credentials 保存 API Key；新请求读取已提交的值，执行中的请求保留已解析的提供方配置。连接池参数由部署管理。
+`jev` Loader 条目将服务地址、模型、决策强度、超时、协议和凭据引用作为 volatile 设置提供。“Reflex 模型配置”专用页面提供 OpenJev/Typesafe 选择，通过 ConfigForms 编辑条目，通过 Credentials 保存 API Key；新请求读取已提交的值，执行中的请求保留已解析的提供方配置。连接池参数由部署管理。
 
-`reflex` Remote 命名空间提供 `readStatus` 和 `testConnection`。OpenJev 连接测试先检查 `/health`，再鉴权访问 `/v1/models` 并确认所选模型，再向 `/v1/systemone` 发送不含用户内容的固定是非判断。测试接受未保存的配置和可选临时密钥，不持久化它们，只返回脱敏错误类别与耗时，也不会把任务能力标记为已验收。运行时模块通过 `registerCapability` 注册能力状态读取器，并负责释放注册。
+`reflex` Remote 命名空间提供 `readStatus` 和 `testConnection`。OpenJev 连接测试先检查 `/health`，再鉴权访问 `/v1/models` 并确认所选模型，再向 `/v1/systemone` 发送不含用户内容的固定是非判断。Typesafe 跳过 `/health`，检查模型列表后发送不带 effort 扩展的相同判断。测试使用草稿所选协议，接受未保存的配置和可选临时密钥，不持久化它们，只返回脱敏错误类别与耗时，也不会把任务能力标记为已验收。运行时模块通过 `registerCapability` 注册能力状态读取器，并负责释放注册。
 
 `ReflexCapabilityId` 标识三个能力所有者；`ReflexCapabilityState` 包含安装、启用、实际执行结果及只读部署参数。`ReflexStatus` 汇集这些状态与已配置提供方；首次配置前或清空两个字段后，`provider` 为 `null`。`ReflexConnectionInput` 描述未保存候选及可选临时密钥；`ReflexConnectionResult` 报告测试阶段、脱敏状态及耗时。
 

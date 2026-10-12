@@ -11,3 +11,14 @@
 .capabilities { display: flex; flex-direction: column; gap: 12px; padding: 0; list-style: none; }
 .capabilities li { display: flex; flex-wrap: wrap; gap: 8px; }
 .capabilities small { flex-basis: 100%; font-size: inherit; }
+.protocol { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.protocol select {
+  font: inherit;
+  color: var(--dsw-alias-label-primary);
+  background: var(--dsw-alias-bg-layer-1);
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 6px;
+  padding: 8px;
+  width: 100%;
+}
+.protocol p { color: var(--dsw-alias-label-secondary); }
