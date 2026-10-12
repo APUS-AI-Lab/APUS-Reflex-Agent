@@ -39,40 +39,6 @@
             maxTokens: 8192
             input: [text]
             reasoningEfforts: {off: null, low: low, medium: medium, high: high}
-      fidoo:
-        displayName: Fidoo LiteLLM
-        api: openai-completions
-        baseURL: https://proxy.fidoo.ai/v1
-        apiKeyEnv: SYSTEM3_LITELLM_API_KEY
-        compat:
-          thinkingFormat: deepseek
-        models:
-          - id: deepseek-v4-flash
-            contextWindow: 131072
-            maxTokens: 8192
-            input: [text, image]
-            reasoningEfforts: {off: null, low: low, medium: medium, high: high}
-          - id: deepseek-v4-pro
-            contextWindow: 131072
-            maxTokens: 8192
-            input: [text]
-            reasoningEfforts: {off: null, low: low, medium: medium, high: high}
-      fidoo-relay:
-        displayName: Fidoo LiteLLM relay
-        api: openai-completions
-        baseURL: https://proxy.fidoo.ai/v1
-        apiKeyEnv: SYSTEM3_LITELLM_API_KEY
-        models:
-          - id: gpt-5.6-sol-relay
-            contextWindow: 131072
-            maxTokens: 8192
-            input: [text, image]
-            reasoningEfforts: {low: low, medium: medium, high: high}
-          - id: gpt-6-sol-relay
-            contextWindow: 131072
-            maxTokens: 8192
-            input: [text, image]
-            reasoningEfforts: {low: low, medium: medium, high: high}
 - id: agent-default-model
   config:
     provider: deepseek-official
@@ -99,10 +65,19 @@
         maxTotalBytes: 8192
     - id: system3
       name: ../../packages/experimental/system3/lib/index.js
+      # Unknown classification selects the general-model path; user config-only profiles still override it.
+      disabled: !!js >-
+        (() => {
+          const entry = ctx[Symbol.for("cordis.entry")];
+          const value = entry.options.config?.approvedRemoteDataClasses;
+          const classes = value && typeof value === "object" && "__jsExpr" in value
+            ? entry.evaluate(value.__jsExpr) : value;
+          return classes === null;
+        })()
       config:
         privacyMode: controlled
         observeAgentLoop: true
-        approvedRemoteIds: [jev, fast, reasoning, expert, frontier, codex]
+        approvedRemoteIds: [jev, fast, reasoning, codex]
         approvedRemoteDataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'
         jevRouteId: jev
         jevExecutionDomain: network
@@ -206,7 +181,7 @@
           keepWarm:
             windowMs: 300000
             intervalMs: 2000
-          # Avoid only clearly broken lines: on prd the relay first token is about 26 s and every route streams 100+ tok/s.
+          # Route health uses observed first-token latency, throughput and errors.
           routeHealth:
             window: 20
             sampleTtlMs: 1800000
@@ -241,22 +216,6 @@
               reasoningEffort: low
               executionDomain: network
               dataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'
-            - id: expert
-              description: 约束多、跨度大的专业任务：完整系统设计、跨模块代码改造、长篇材料综合，以及需要权衡依赖与风险的方案。
-              label: 复杂专业任务 · GPT-5.6 Sol
-              provider: fidoo-relay
-              model: gpt-5.6-sol-relay
-              reasoningEffort: medium
-              executionDomain: network
-              dataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'
-            - id: frontier
-              description: 最难的一类问题：开放式研究、严格证明、前沿难题，以及前几档模型很可能无法可靠完成的任务。
-              label: 前沿难题 · GPT-6 Sol
-              provider: fidoo-relay
-              model: gpt-6-sol-relay
-              reasoningEffort: high
-              executionDomain: network
-              dataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'
             - id: codex
               description: 用户真实、肯定地指定 Codex 执行时优先遵守，不以工作量限制；否定、引用和仅讨论名称不构成指定，也不增加权限。用户未指定执行者时，默认用于大型工程任务：长时间探索代码库、跨多个文件改造、反复构建和测试。小型修复、函数实现或单个功能默认由当前模型处理。
               label: 工程任务 · 委派 Codex
@@ -269,7 +228,7 @@
                 - 'delegate (this |it )?to codex'
               executionDomain: network
               dataClasses: !!js 'JSON.parse(process.env.SYSTEM3_SESSION_DATA_CLASSES || "null")'
-    # Delegation target: Codex with the private home release.sh installs, calling the Fidoo relay.
+    # Delegation uses the service-owned Codex home and its explicitly configured provider.
     - id: subagent-codex
       name: ../../packages/subagent/subagent-codex/lib/index.js
       config:
@@ -281,6 +240,8 @@
             maxCommandChars: 4096
         env:
           CODEX_HOME: !!js process.env.SYSTEM3_CODEX_HOME
+          OPENAI_API_KEY: !!js process.env.OPENAI_API_KEY
+          # Preserve credentials for operator-owned Codex profiles using the legacy reference.
           SYSTEM3_LITELLM_API_KEY: !!js process.env.SYSTEM3_LITELLM_API_KEY
     - id: tool-subagent-codex-system3
       name: ../../packages/subagent/tool-subagent/lib/index.js

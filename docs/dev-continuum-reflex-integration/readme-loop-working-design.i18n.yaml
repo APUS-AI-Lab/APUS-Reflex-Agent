@@ -2,18 +2,24 @@
 # section, a hash of its English and Chinese blocks outside code blocks and generated regions.
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/dev-continuum-reflex-integration/readme-loop-working-design.md
-/readme-loop-working:
-  en: 234bcd577d56d20d
-  zh: fada6071d2403bc9
-/readme-loop-working/goal:
-  en: ecc7866331abf583
-  zh: 4a03cd581818d348
-/readme-loop-working/reader-path:
-  en: d91d095ce381ce4d
-  zh: e691314ac7e49f40
-/readme-loop-working/files:
-  en: fc79371c85a75099
-  zh: b67d373948ee5521
-/readme-loop-working/acceptance:
-  en: a11b3318ade543a1
-  zh: 9b2a9c6ef9c0248d
+/readme-and-architecture-publication-design:
+  en: 58934d1a3ca4bcb2
+  zh: 8fa118dbc6510ba5
+/readme-and-architecture-publication-design/goal:
+  en: c7d1045a2f94da9d
+  zh: 7cab775d80eff3c8
+/readme-and-architecture-publication-design/architecture:
+  en: 84db3e631fdf46e8
+  zh: b157a3ba35fd85e5
+/readme-and-architecture-publication-design/files-and-api-impact:
+  en: 7d9ce1531ea6ca65
+  zh: dcbf4a86fac2c025
+/readme-and-architecture-publication-design/acceptance:
+  en: 5a21c15504c3e1be
+  zh: b4d14def02d933f9
+/readme-and-architecture-publication-design/restart-evidence-correction:
+  en: 612dafa5a5855e8d
+  zh: 40f610d8d53b769b
+/readme-and-architecture-publication-design/loop-working-narrative-redesign:
+  en: 758871384ccfda92
+  zh: 2e381be7b42963ab

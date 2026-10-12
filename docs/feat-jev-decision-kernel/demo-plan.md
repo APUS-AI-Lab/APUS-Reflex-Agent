@@ -7,7 +7,7 @@ Instant execution, deep thinking. This guide helps presenters rehearse one task 
 
 Main story: assign a task → change requirements during execution → open the real artifact → inspect execution evidence. The six new scripts require individual live rehearsal; passing synthetic-fixture checks does not establish product E2E.
 
-Open the [visual demonstration desk](demo-plan.html), [synthetic kit](APUS-Reflex-demo-kit.zip), [fixture verification](demo-fixture-verification.json) and [CEO presentation v2](APUS-Reflex-Harness-CEO-brief-v2.pptx).
+Open the [visual demonstration desk](demo-plan.html), [synthetic kit](APUS-Reflex-demo-kit.zip), [fixture verification](demo-fixture-verification.json) and [internal-presentation archive policy](../dev-continuum-reflex-integration/open-source-docs-audit.md).
 
 ## Contents
 

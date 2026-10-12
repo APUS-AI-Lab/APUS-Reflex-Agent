@@ -7,7 +7,7 @@
 
 主故事：一句任务 → 中途改变要求 → 打开真实成果 → 核对执行证据。六个新脚本仍待逐一真实彩排；合成材料验算通过不能替代产品E2E。
 
-查看[可视化演示台](demo-plan.html)、[合成材料包](APUS-Reflex-demo-kit.zip)、[材料验算](demo-fixture-verification.json)和[CEO汇报PPT v2](APUS-Reflex-Harness-CEO-brief-v2.pptx)。
+查看[可视化演示台](demo-plan.html)、[合成材料包](APUS-Reflex-demo-kit.zip)、[材料验算](demo-fixture-verification.json)和[内部汇报归档说明](../dev-continuum-reflex-integration/open-source-docs-audit.zh.md)。
 
 ## 目录
 

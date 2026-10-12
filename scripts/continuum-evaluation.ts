@@ -39,16 +39,15 @@ interface ModelResult {
 
 async function main(): Promise<void> {
   const deepseekKey = process.env.DEEPSEEK_API_KEY
-  const jevKey = process.env.JEV_API_KEY
-  if (deepseekKey === undefined || deepseekKey.length === 0 || jevKey === undefined || jevKey.length === 0) {
-    throw new Error('continuum-evaluation requires protected DEEPSEEK_API_KEY and JEV_API_KEY')
+  const jevEndpoint = process.env.CONTINUUM_JEV_ENDPOINT?.trim()
+  const jevModel = process.env.CONTINUUM_JEV_MODEL?.trim()
+  if (deepseekKey === undefined || deepseekKey.length === 0 || !jevEndpoint || !jevModel) {
+    throw new Error('continuum-evaluation requires DEEPSEEK_API_KEY, CONTINUUM_JEV_ENDPOINT and CONTINUUM_JEV_MODEL (JEV_API_KEY optional)')
   }
   const baseURL = (process.env.DEEPSEEK_BASE_URL ?? 'https://api.deepseek.com/anthropic').replace(/\/$/u, '')
   const model = process.env.DEEPSEEK_EVAL_MODEL ?? 'deepseek-v4-pro'
-  const jevEndpoint = process.env.CONTINUUM_JEV_ENDPOINT ?? 'https://owb1q1vidflfhp-8086.proxy.runpod.net'
-  const jevModel = process.env.CONTINUUM_JEV_MODEL ?? 'APUS-OpenJev-v1-9B-5949'
   const jevContext = new Context()
-  await jevContext.plugin(Jev, { endpoint: jevEndpoint, model: jevModel, effort: 'low', timeoutMs: 30_000, apiKeyEnv: 'JEV_API_KEY' })
+  await jevContext.plugin(Jev, { endpoint: jevEndpoint, model: jevModel, effort: 'low', timeoutMs: 30_000, ...(process.env.JEV_API_KEY_ENV || process.env.JEV_API_KEY ? { apiKeyEnv: process.env.JEV_API_KEY_ENV || 'JEV_API_KEY' } : {}) })
   activeJevContext = jevContext
   const results: EvaluationResult[] = []
   try {

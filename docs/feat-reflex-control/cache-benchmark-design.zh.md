@@ -21,11 +21,11 @@
 `cache-benchmark/run.py` 默认只打印固定计划，不加载 SDK、不调用模型。执行必须显式 `--execute`、提供已构建 CLI、未使用的输出目录，并等待 root 分配供应商独占时段。凭据静默加载到父进程环境。执行器创建唯一临时 workspace；每一轮通过独立的已构建 headless CLI 进程运行，第二、三轮显式传入同一 Session ID，第三轮因此是真实进程重启恢复；保留 workspace/session 日志供审计，不构建或安装依赖。
 
 ```sh
-uv run --project python/sdk python docs/feat-reflex-control/cache-benchmark/run.py --exe apps/cli/lib/bin.js --output /private/tmp/reflex-cache-c06 --endpoint https://owb1q1vidflfhp-8086.proxy.runpod.net
+uv run --project python/sdk python docs/feat-reflex-control/cache-benchmark/run.py --exe apps/cli/lib/bin.js --output /private/tmp/reflex-cache-c06 --endpoint https://jev.example.invalid
 ```
 
 仅在指定运行窗口加入 `--execute`。`report.json` 遵循[证据 schema](cache-benchmark/report.schema.json)，各条件 `*.requests.jsonl` 保存规范化输入哈希及流观察。材料均为合成数据，不记录凭据或授权请求头。可提交事件中的 reasoning/thinking 块和字段替换为哈希，请求 trace 只含哈希、不含原始消息；原始 Session 日志只留在私有临时 workspace，不进入提交证据。每个条件后保存局部报告；进程级中断可能只留下当前 trace 和持久 Session 日志而没有完成的报告行。四项无密钥负例检查覆盖错误的 A 余额、缺失记忆事实、reasoning 清理和原日志改写，语法、Ruff 与计划检查也通过。真实证据见 [C-06 报告](evidence/cache-c06-real.zh.md)；四个条件的全部断言通过。金额成本未知，四个条件共记录 16 条生成请求加有界 Reflex 判断；模型额外调用如实记录，不隐藏。
 
 ## 当前运行状态
 
-第一次真实尝试在原进程复用第三轮 `cache-pair` Session，运行时正确返回“session already exists”，因此失败。第二次尝试虽然所有回答、工具、投影和前缀断言通过，但第三轮仍在同一进程执行；这不能作为重启验收，已保留为[脱敏诊断](evidence/cache-benchmark-c06-attempt2-same-process.json)。修正后的第三次运行使用三个独立 headless CLI 进程，四个条件的答案、输入保护、持久前缀、请求前缀、路由、工具和真实 `remove` 投影断言全部通过，脱敏结果见 [C-06 报告](evidence/cache-c06-real.zh.md)。原始 Session 日志和模型输出只留在私有临时目录。
+第一次真实尝试在原进程复用第三轮 `cache-pair` Session，运行时正确返回“session already exists”，因此失败。第二次尝试虽然所有回答、工具、投影和前缀断言通过，但第三轮仍在同一进程执行；这不能作为重启验收，已保留为[公开诊断摘要（原始记录私有归档）](evidence/cache-benchmark-c06-attempt2-same-process.json)。修正后的第三次运行使用三个独立 headless CLI 进程，四个条件的答案、输入保护、持久前缀、请求前缀、路由、工具和真实 `remove` 投影断言全部通过，脱敏结果见 [C-06 报告](evidence/cache-c06-real.zh.md)。原始 Session 日志和模型输出只留在私有临时目录。

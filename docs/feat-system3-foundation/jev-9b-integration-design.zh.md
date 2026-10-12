@@ -53,9 +53,9 @@ flowchart LR
 
 [Profile 指南](model-chain.zh.md) 与已跟踪 overlay 保存可执行配置。Jev 插件使用 `endpoint`、`model`、`effort`、`timeoutMs`、`apiKeyEnv`。System3 使用 `privacyMode`、`approvedRemoteIds`、`approvedRemoteDataClasses`、`observeAgentLoop`、`jevRouteId`、`jevExecutionDomain`、`jevEffort`。
 
-主 route 是 `https://proxy.fidoo.ai/v1`，通过 `SYSTEM3_LITELLM_API_KEY` 引用已有的 `system3-dsh` 虚拟 key。已验证模型为 `deepseek-v4-flash`；`deepseek-v4.1-flash` 尚未注册。Overlay 显式配置 8192-token 输出上限与 low reasoning effort。RunPod 在 `127.0.0.1:30135` 提供需要鉴权的 gateway，后接 `30132` 的 high32 与 `30134` 的 low16；回答标识模型 `APUS-OpenJev-v1-9B-5949`。Key 保留在 `/root/.config/openjev/gateway.key`，通过 `APUS_JEV_API_KEY` 引用。
+公开部署使用用户配置的生成 provider 与可选 Jev provider。通过[部署配置](../dev-continuum-reflex-integration/public-provider-configuration.zh.md)明确指定 endpoint、model 和凭据引用；不分发内部服务地址或凭据文件位置。
 
-已经授权的[启动脚本](run-system3.py) 通过 SSH 捕获两个已有 key，只注入 dsh 子进程环境。它拥有临时 loopback tunnel 与 overlay，并在退出时等待自有进程结束。开发机 tunnel 的 `jevExecutionDomain` 为 `network`，即使 endpoint 是 loopback。Overlay 使用 `controlled` 准入，允许 `jev` route 与 `public` 事实。[同机覆盖层](system3-fidoo-runpod-local.patch.yml) 允许本地 Jev 执行；主 Fidoo 生成仍为远程调用。Key 不进入已跟踪配置、argv 或 receipt。
+原维护者专用 SSH 启动器已私有归档。通过进程环境或用户自己的 profile 提供凭据，不复制维护者的凭据文件布局。经 loopback tunnel 访问远端 Jev 仍需要网络数据许可；[同机覆盖层](system3-fidoo-runpod-local.patch.yml)仅适合真正的本地执行域。
 
 <a id="verification-and-limits"></a>
 ## 验证与限制

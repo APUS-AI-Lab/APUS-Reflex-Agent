@@ -106,7 +106,7 @@
         <article class="case"><span class="tag">已验证 · negative controls</span><h3>“关掉开关，AI 立刻回到原版。”</h3><p>shipped profile 已验证 no-reflex 和 disabled：不产生 memory record，也不注入 recall。标题可用：<strong>无限记忆是能力，不是绑定。</strong></p></article>
         <article class="case"><span class="tag">部分验证 · matrix evidence</span><h3>“Jev 先旁观，再接管。”</h3><p>Shadow/Active 的组件和决策矩阵已有覆盖；仍需在同一 shipped profile 中补齐完整 shadow receipt 与 active provider request 对照。标题可用：<strong>AI 决策也可以先灰度。</strong></p></article>
         <article class="case"><span class="tag">部分验证 · bounded retrieval</span><h3>“长对话不再等于长账单。”</h3><p>有界 working set 和字节预算已有单测，但尚未完成 provider 计费或 token 曲线的产品级基准，因此只能传播为设计能力。标题可用：<strong>无限记忆，不等于无限 token。</strong></p></article>
-        <article class="case"><span class="tag">已验证 · restore attribution</span><h3>“问一个半年前的决定，它能指出出处。”</h3><p>真实恢复场景已检查历史事实、event/block reference 和 <code>reflex-memory</code> 来源。标题可用：<strong>AI 的记忆第一次可以追责。</strong></p></article>
+        <article class="case"><span class="tag">已验证 · restore attribution</span><h3>“恢复一个历史决定，并核对出处。”</h3><p>真实恢复场景已检查历史事实、event/block reference 和 <code>reflex-memory</code> 来源。标题可用：<strong>召回事实，可以核对出处。</strong></p></article>
         <article class="case"><span class="tag">已验证 · real Jev</span><h3>“无关内容会退场，关键内容会留下。”</h3><p>严格真实 Jev 场景已验证旅行内容可移除，同时财务约束保留。标题可用：<strong>不是把所有东西都记住，而是知道什么不能忘。</strong></p></article>
         <article class="case"><span class="tag">已验证 · provider request</span><h3>“测试不是看日志，是看模型真的收到了什么。”</h3><p>shipped profile 测试直接捕获第二进程 provider request，检查 <code>continuum-memory</code>、record id 和召回文本。标题可用：<strong>无限记忆，必须在模型请求里证明。</strong></p></article>
       </div>
@@ -119,7 +119,7 @@
         <article class="case"><span class="tag">PASS · safety</span><h3>财务 CSV：精度不能被压缩掉</h3><p>用户要求金额必须使用 Decimal，原始 CSV 不可修改。上下文整理可以移除无关旅行内容，但 precision 和 file-integrity constraint 仍保留；真实 Jev 测试还验证新 Host 能恢复旅行事实。</p></article>
         <article class="case"><span class="tag">PASS · compatibility</span><h3>没有 Jev：系统照旧工作</h3><p>未接入 Jev 时，Continuum 的 Reflex 专属开关不生效。任务继续走原 provider 路径，不写 memory record，也不注入 recall。</p></article>
         <article class="case"><span class="tag">PASS · control</span><h3>开关关闭：记忆不会偷偷工作</h3><p>即使插件配置存在，disabled 场景也不产生记忆召回。这个负向测试证明“无限记忆”是显式能力，而不是隐式改变原版行为。</p></article>
-        <article class="case"><span class="tag">PASS · source</span><h3>历史内容回来，但没有执行权限</h3><p>Reflex 恢复内容通过 <code>reflex-memory</code> 标记为历史数据，带 event/block 引用。它可以提供事实，不能变成新的操作指令。</p></article>
+        <article class="case"><span class="tag">部分验证 · 来源标记</span><h3>历史内容以数据身份恢复</h3><p>Reflex 恢复内容通过 <code>reflex-memory</code> 标记为历史数据，带 event/block 引用。这证明来源归因；阻止历史文本诱导工具执行仍需独立负向 E2E。</p></article>
         <article class="case"><span class="tag">MATRIX · decision</span><h3>Shadow 与 Active：同一候选，两种职责</h3><p>Shadow 让 Jev 观察并记录 decision receipt，但保留 baseline；Active 才应用 selected ids。路由失败或隐私拒绝时回退到确定性 baseline。</p></article>
         <article class="case fail"><span class="tag">必须诚实记录</span><h3>全仓绿，不等于核心链路通过</h3><p>组件测试不能代替真实进程；无密钥回放不能代替真实 Jev；跳过和未执行都不能计为通过。发布页必须同时展示证据和剩余基线问题。</p></article>
       </div>

@@ -31,10 +31,13 @@ The shipped System3 service runs [prepare-profile.mjs](../../../deploy/system3/p
 
 ### Configure the gateway
 
-Override the bundle row in a profile patch. The table lists service defaults; the shipped bundle selects its deployment endpoint, model, `high` effort and a 15-second timeout.
+Set `JEV_ENDPOINT` and `JEV_MODEL` to your serving endpoint and model. Values are trimmed; when both effective profile fields are absent or blank, the bundle is disabled and general-model operation continues without Jev. A partial configuration or invalid endpoint fails startup. The bundle uses `high` effort and a 15-second timeout. Existing config-only profile overrides remain enabled without environment variables; an explicit `disabled: true` takes precedence. A profile patch can explicitly enable the row and override these values as below.
+
+`JEV_API_KEY_ENV` explicitly names a credential reference; otherwise a nonempty `JEV_API_KEY` binds that reference. With neither, the endpoint is anonymous. A declared but missing credential fails the decision before HTTP dispatch; do not supply a fake key. Environment expressions are evaluated at startup.
 
 ```yaml
 - id: jev
+  disabled: false
   config:
     endpoint: http://127.0.0.1:30135
     model: APUS-OpenJev-v1-9B-5949
@@ -115,7 +118,7 @@ These pages cover the consumer and deployment responsibilities.
 
 - [System3](../system3/README.md) — deterministic policy and Session decision receipts.
 - [LLM adapter](../../llm/llm-pi-ai/README.md) — generation requests through OpenAI-compatible gateways.
-- [Fidoo and RunPod profile](../../../docs/feat-system3-foundation/model-chain.md) — explicit source-checkout overlays and credential references.
+- [Provider profile](../../../docs/feat-system3-foundation/model-chain.md) — explicit source-checkout overlays and credential references.
 
 -----
 

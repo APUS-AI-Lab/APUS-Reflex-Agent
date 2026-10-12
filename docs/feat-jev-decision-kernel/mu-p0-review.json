@@ -167,9 +167,10 @@
     {
       "id": "initial-requirements-overwritten",
       "status": "verified-code-and-local-browser-log",
-      "evidence": "completion-browser-session.jsonl seq6 preserves full human instruction; seq18 native create_goal replaces goal text and clears items. Clean browser case follows allowed tools; an earlier isolated fixture run used glob outside the five-tool restriction and later completed. Not counted as accepted browser run.",
+      "evidence": "Privately archived original Session (public summary contains no event bodies): seq6 preserves full human instruction; seq18 native create_goal replaces goal text and clears items. Clean browser case follows allowed tools; an earlier isolated fixture run used glob outside the five-tool restriction and later completed. Not counted as accepted browser run.",
       "next": "Implement instruction-source retention as a prerequisite of the proposed constraint P0; add forbidden read-only tool E2E."
     }
   ],
-  "publicCopyRule": "All slogans are proposals; published claims must state supported execution scope and measured scenarios. Unknown judge answers and bounded completion refusals are not absolute enforcement."
+  "publicCopyRule": "All slogans are proposals; published claims must state supported execution scope and measured scenarios. Unknown judge answers and bounded completion refusals are not absolute enforcement.",
+  "publicationNote": "Browser findings describe the recorded historical run. Its raw Session, exact UI build, overlays and detailed execution evidence are privately archived; completion-browser-result.json and completion-browser-session.summary.json contain public metadata only and cannot independently verify event-sequence claims. This cleanup is not a new test run."
 }

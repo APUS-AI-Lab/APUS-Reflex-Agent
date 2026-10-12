@@ -1,7 +1,7 @@
 /**
  * Real-Jev evaluation of the System3 entry router over labelled public task sets.
  *
- * Self-skips without JEV_API_KEY. Each run prints a JSON report per task set and writes them to
+ * Self-skips without explicit JEV_ENDPOINT and JEV_MODEL. Each run prints a JSON report per task set and writes them to
  * SYSTEM3_ENTRY_EVAL_REPORT when that path is set; assertions cover only transport health,
  * because routing quality is reported, not gated.
  */
@@ -32,8 +32,8 @@ interface Row { task: EvalTask; decision: string; outcome: string; confidence?: 
 const load = (name: string) => JSON.parse(readFileSync(new URL(`./fixtures/${name}`, import.meta.url), 'utf8')) as EvalSet
 const sets = { 'two-tier': load('entry-routing-eval.tasks.json'), 'four-tier': load('entry-routing-eval.tiers.json') }
 const deployment = readFileSync(new URL('../../../../deploy/system3/runtime.patch.yml', import.meta.url), 'utf8')
-const endpoint = process.env.JEV_ENDPOINT ?? /endpoint: (\S+)/.exec(deployment)?.[1] ?? 'https://owb1q1vidflfhp-8086.proxy.runpod.net'
-const jevModel = process.env.JEV_MODEL ?? /model: (APUS-\S+)/.exec(deployment)?.[1] ?? 'APUS-OpenJev-v1-9B-5949'
+const endpoint = process.env.JEV_ENDPOINT?.trim() ?? ''
+const jevModel = process.env.JEV_MODEL?.trim() ?? ''
 const minConfidence = Number(process.env.SYSTEM3_ENTRY_MIN_CONFIDENCE
   ?? /entryRouting:[\s\S]*?minConfidence: ([\d.]+)/.exec(deployment)?.[1] ?? '0.8')
 
@@ -72,10 +72,10 @@ function tally(rows: readonly Row[], expected: string): Record<string, number> {
 const contexts: Context[] = []
 afterAll(async () => { for (const ctx of contexts.splice(0)) await ctx.fiber.dispose() })
 
-describe.skipIf(!process.env.JEV_API_KEY)('System3 entry routing against the deployed Jev', { retry: 0 }, () => {
+describe.skipIf(!endpoint || !jevModel)('System3 entry routing against the deployed Jev', { retry: 0 }, () => {
   it('reports outcome distribution, latency and controls for each labelled task set', async () => {
     if (endpoint === undefined || jevModel === undefined || !Number.isFinite(minConfidence)) {
-      throw new Error('deploy/system3/runtime.patch.yml no longer declares the Jev endpoint, model and entry confidence')
+      throw new Error('deploy/system3/runtime.patch.yml requires explicit Jev endpoint/model and deployment entry confidence')
     }
     const reports: Record<string, unknown> = {}
     for (const [name, set] of Object.entries(sets)) {
@@ -90,7 +90,7 @@ describe.skipIf(!process.env.JEV_API_KEY)('System3 entry routing against the dep
         reasoning: { efforts: ['low', 'medium', 'high'].map(id => ({ id: ReasoningEffortId(id), name: id })) },
       }))
       ctx.effect(() => ctx.llm.registerAdapter([...new Set(set.candidates.map(candidate => candidate.provider))], adapter))
-      await ctx.plugin(Jev, { endpoint, model: jevModel, apiKeyEnv: 'JEV_API_KEY', effort: 'high', timeoutMs: 15000 })
+      await ctx.plugin(Jev, { endpoint, model: jevModel, ...(process.env.JEV_API_KEY_ENV || process.env.JEV_API_KEY ? { apiKeyEnv: process.env.JEV_API_KEY_ENV || 'JEV_API_KEY' } : {}), effort: 'high', timeoutMs: 15000 })
       const router = createSystem3EntryRouter(ctx, {
         deadlineMs: 15000, minConfidence, maxInputBytes: 16384, sessionDataClasses: ['public'],
         baseline: { executionDomain: 'network', dataClasses: ['public'] },

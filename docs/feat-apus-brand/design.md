@@ -2,7 +2,7 @@
 
 English | [中文](design.zh.md)
 
-Status: approved by the user for implementation. Scope: first-party product branding in APUS-Reflex-Harness and APUS-Reflex-Frontend. Basis: the user-specified report-ceo-onepage.html and the static inspection of both repositories in this session.
+Status: approved by the user for implementation. Scope: first-party product branding in APUS-Reflex-Harness and APUS-Reflex-Frontend. Basis: the user-specified internal-presentation (privately archived) and the static inspection of both repositories in this session.
 
 ## Brand definition
 

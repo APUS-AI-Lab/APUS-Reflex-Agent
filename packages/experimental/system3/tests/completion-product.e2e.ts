@@ -29,7 +29,7 @@ afterEach(async () => {
 })
 
 const OBJECTIVE = '读取 acceptance.txt，确认它的内容为 approved，并把 acceptance-copy.txt 写成完全相同的内容，再读取副本核验'
-const hasKeys = Boolean(process.env.JEV_API_KEY && process.env.DEEPSEEK_API_KEY)
+const hasKeys = Boolean(process.env.JEV_ENDPOINT?.trim() && process.env.JEV_MODEL?.trim() && process.env.DEEPSEEK_API_KEY)
 
 describe.skipIf(!hasKeys)('System3 completion review through live model execution', { retry: 0 }, () => {
   it.each([
@@ -63,9 +63,9 @@ describe.skipIf(!hasKeys)('System3 completion review through live model executio
       },
     } })
     await ctx.plugin(Jev, {
-      endpoint: process.env.JEV_ENDPOINT ?? 'https://owb1q1vidflfhp-8086.proxy.runpod.net',
-      model: process.env.JEV_MODEL ?? 'APUS-OpenJev-v1-9B-5949',
-      apiKeyEnv: 'JEV_API_KEY', effort: 'high', timeoutMs: 15000,
+      endpoint: process.env.JEV_ENDPOINT?.trim() ?? '',
+      model: process.env.JEV_MODEL?.trim() ?? '',
+      ...(process.env.JEV_API_KEY_ENV || process.env.JEV_API_KEY ? { apiKeyEnv: process.env.JEV_API_KEY_ENV || 'JEV_API_KEY' } : {}), effort: 'high', timeoutMs: 15000,
     })
     await ctx.plugin(System3, {
       privacyMode: 'controlled', approvedRemoteIds: ['jev'], approvedRemoteDataClasses: ['workspace'],
@@ -99,7 +99,7 @@ describe.skipIf(!hasKeys)('System3 completion review through live model executio
     const goal = ctx.goals.get(agent)
     const artifact = await readFile(join(root, sample.filename), 'utf8').catch(() => '')
     const report = {
-      version: 1, model, jevModel: process.env.JEV_MODEL ?? 'APUS-OpenJev-v1-9B-5949',
+      version: 1, model, jevModel: process.env.JEV_MODEL?.trim() ?? '',
       caseId: sample.id,
       recordedAt: new Date().toISOString(), execution: 'in-process-production-services', sourceHashes,
       passed: false, reopened: false,

@@ -1,31 +1,29 @@
-# Open-source documentation audit
+# Public documentation and evidence review
 
 English | [中文](open-source-docs-audit.zh.md)
 
-This audit is for a public release of the Harness and its separate Frontend repository. It classifies documentation by release action; it does not delete evidence automatically because some files are needed for internal reproducibility.
+## Scope
 
-## Block before making the repository public
+The initial tracked inventory covers 749 text files under `docs/` and `tasks/`: 542 Markdown, 43 HTML, 158 JSON, one Session JSONL and five logs. It also includes 72 PNG/JPEG images and six PDF/PPTX/ZIP attachments. README, configuration and source files additionally belong to the tracked-checkout secret scan. This is a review inventory, not proof that every artifact is approved.
 
-- Remove or rewrite absolute local paths and `.Codex`/`.claude` worktree paths. Current examples include `docs/feat-jev-decision-kernel/completion-browser-result.json`, `docs/feat-jev-decision-kernel/completion-browser-session.jsonl`, `docs/feat-system3-foundation/evidence.json`, `docs/feat-system3-foundation/design.md`, `docs/feat-system3-desktop/delivery-objectives-and-ux-audit.html`, and several `tasks/*/handoff.md` files.
-- Remove private infrastructure endpoints from public instructions and evidence, or replace them with `<JEV_ENDPOINT>` and a reproducible owner-controlled test fixture. Current examples include `docs/feat-continuum-memory/continuum-evaluation-results.json`, `docs/feat-reflex-control/cache-benchmark-design.md`, `docs/feat-reflex-control/evidence/entry-routing-eval-v2.json`, and the `native-recovery-real-v*.log` files.
-- Replace links into local Frontend worktrees and feature branches in `docs/feat-reflex-control/apus-reflex-harness-acceptance-review.html` with merged `main` links or versioned release artifacts.
-- Keep provider request logs, session JSONL, raw browser captures and screenshots out of the public tree until they have a data-owner review. Treat `docs/feat-jev-decision-kernel/completion-browser-session.jsonl`, `docs/feat-reflex-control/evidence/*.json`, `*.log`, and user-facing PNGs as internal by default.
-- Complete a real Gitleaks scan after Actions capacity is restored. The local scan is still running in the current session; no secret-scan result should be advertised until it exits successfully.
+## Publication policy
 
-## Keep after review and redaction
+Keep architecture, API documentation, reproducible synthetic fixtures, source references and bounded acceptance summaries. Exclude raw operational conversations, private deployment configuration, private source inventories and internal management presentations. Retain original evidence privately with checksums; public summaries must say when raw payloads have been omitted.
 
-- Architecture, API contracts, README examples, deterministic keyless fixtures, and compact evidence that contains no private endpoint, user content, local path or credential.
-- The Loop Working architecture diagram and the classic casebook after replacing internal links with repository-relative or public release links.
-- Acceptance summaries that state the test command, date, mode and limitations without embedding raw provider traffic.
+## Current cleanup
 
-## Do not publish as product proof
+- Replace the completion-browser Session dump and its operational result with explicit public metadata; remove full request/turn payloads from two cache diagnostics and private source paths from the foundation evidence.
+- Archive eight internal management assets: two presentations, three PDFs, two previews and the management HTML. Preserve the synthetic demo ZIP after reviewing its eight members.
+- Replace personal machine paths and deployment-specific RunPod endpoints with examples. Repair links to removed artifacts and use the Frontend `main` for public cross-repository references.
+- Correct README and casebook claims: retained originals do not guarantee lossless recall, no-Jev compatibility does not enable Continuum, and source labels alone do not prove resistance to malicious recalled instructions.
 
-- Internal handoff notes, abandoned design explorations, private organization/repository history, raw model transcripts, incomplete performance runs, or documents that call a skipped workflow “passed”. Move them to a private evidence archive or rewrite them as a short, current release note.
-- Any document that presents a RunPod URL, a gateway URL, a machine path, a branch-only link or a commit pin as a durable public dependency.
+## Acceptance still required
 
-## Required release checks
+- Image review executed: 72 of 74 OCR inputs were read successfully; two archived internal previews were no longer present. Ten images were manually inspected. Thirteen settings screenshots exposing deployment addresses were privately archived. This coverage is not a pixel-by-pixel manual guarantee.
+- The tracked-checkout Gitleaks scan passed over 124.24 MB without findings. Frontend history passed over 424 commits. Harness history scanned 12,223 commits / 320.52 MB and returned 470 pattern matches: 455 pairing digests, two document digests, nine synthetic credential fixtures, two prose matches, one environment-variable name and one storage identifier. Reviewed matches contain no identified live credential; this is triage of a nonzero scanner result, not a clean scanner exit. Final changed-file scanning, documentation checks and independent diff review remain pending.
+- Account for removed files in prior commits, branches, tags and release attachments before public access. Removing files at HEAD does not remove historical copies.
+- Validate the Frontend's pinned Runtime and release package separately. Documentation cleanup does not complete provider, platform or signing acceptance.
 
-1. Run Gitleaks on the tracked checkout and history with the repository configuration.
-2. Run `pnpm run verify-public-repository-links`, `pnpm run verify-repository-references`, `pnpm run test:docs`, and `pnpm run doc-sync`.
-3. Inspect every HTML/JSON/JSONL/log/image under `docs/` and `tasks/` against the block list above.
-4. Rebuild both independent repositories from clean `main` checkouts and verify that README commands use public paths and placeholder credentials.
+## Repository ownership
+
+The intended organization is APUS AI Lab; the two repositories remain independent. Ownership transfer and public visibility are separate actions. Keep repositories private until historical material and release disclosures have a reviewed disposition; do not silently rewrite shared history or describe an unrun CI job as passed.

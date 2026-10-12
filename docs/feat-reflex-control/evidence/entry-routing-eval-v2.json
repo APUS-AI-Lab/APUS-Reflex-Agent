@@ -1,6 +1,6 @@
 {
   "generatedAt": "2026-10-11T09:57:29.263Z",
-  "endpoint": "owb1q1vidflfhp-8086.proxy.runpod.net",
+  "endpoint": "https://jev.example.invalid",
   "model": "APUS-OpenJev-v1-9B-5949",
   "effort": "high",
   "minConfidence": 0.8,

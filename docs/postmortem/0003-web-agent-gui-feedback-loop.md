@@ -14,7 +14,7 @@ The session ran inside the DeepSeek Harness Web GUI at port 3081 while its selec
 
 The resulting actions were individually plausible but did not share one acceptance target. A source edit, a successful build, an HTTP 200, an injected boot manifest, and the user's existing page were treated as interchangeable facts.
 
-The evidence source is the persisted event log for `session-3eb796c2-5159-4686-affe-df8719f6f987`, whose header records cwd `/Users/tn.shen/Documents/deepseek-harness-gui-master/test`. Its initial request header is sequence 6; the user-facing handoff, bare-Vite launch, replacement-host launch, boot-manifest probe, and first 3081 process probe are sequences 30939, 31865, 34309, 34441, and 34681 respectively. The timeline below follows those events rather than reconstructing intent from the later report.
+The evidence source is the persisted event log for `session-3eb796c2-5159-4686-affe-df8719f6f987`, whose header records cwd `/path/to/project`. Its initial request header is sequence 6; the user-facing handoff, bare-Vite launch, replacement-host launch, boot-manifest probe, and first 3081 process probe are sequences 30939, 31865, 34309, 34441, and 34681 respectively. The timeline below follows those events rather than reconstructing intent from the later report.
 
 ## Impact
 

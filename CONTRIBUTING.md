@@ -8,7 +8,7 @@ We deeply believe in the power of open source communities, and that belief has s
 
 APUS Reflex Harness is still at an early stage and under active development. We are sorry that we cannot accept external pull requests at the moment. However, contributing code to this repository is far from the only way to help. There are many other ways to get involved:
 
-- Report product issues in [APUS Reflex Harness Issues](https://github.com/cryptoSUN2049/APUS-Reflex-Harness/issues):
+- Report product issues in [APUS Reflex Harness Issues](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/issues):
   - Upvote issues that you would like to bring to the team's attention. We are a very small team and may not be able to reply to every post, but we monitor them and consider them when allocating resources.
 - Contribute to the ecosystem:
   - Create a plugin that excites you and share it with others:

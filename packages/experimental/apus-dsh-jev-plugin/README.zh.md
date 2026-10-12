@@ -31,12 +31,16 @@ kind: "package-bundle"
 
 传输使用 `@typesafe-ai/sdk` 0.6.0，禁用自动重试及 SDK 日志。`protocol: openjev` 发送配置的 effort，`protocol: typesafe` 不发送该扩展。端点可使用 API 根地址或 `/v1` 前缀。超时覆盖凭据解析与响应接收；取消后迟到的凭据不会触发网络调用。state 接受文本、对象、数组和 null。
 
+<a id="configure-the-gateway"></a>
 ### 配置 gateway
 
-在 profile 补丁中覆盖 bundle 行。下表列出服务默认值；正式 bundle 选择其部署地址、模型、`high` 强度和 15 秒超时。
+设置 `JEV_ENDPOINT` 和 `JEV_MODEL` 为自己的服务地址和模型。值会去除首尾空白；profile 最终生效的两个字段均未设置或为空时禁用 bundle，通用模型继续独立运行。只配置一个字段或地址非法时启动失败。bundle 使用 `high` 强度和 15 秒超时。旧版仅覆盖 config 的用户 profile 无需环境变量仍会启用；显式 `disabled: true` 优先。也可以通过下方 profile 补丁显式启用并覆盖配置。
+
+`JEV_API_KEY_ENV` 显式指定凭据引用；否则非空的 `JEV_API_KEY` 自动绑定同名引用。两者均未设置时使用匿名端点。已声明但缺失的凭据会在 HTTP 发送前导致决策失败，不要填入假密钥。环境表达式在启动时求值。
 
 ```yaml
 - id: jev
+  disabled: false
   config:
     endpoint: http://127.0.0.1:30135
     model: APUS-OpenJev-v1-9B-5949
@@ -115,7 +119,7 @@ const outcome = await ctx.jev.decide({
 
 - [System3](../system3/README.zh.md)——确定性策略与 Session 决策 receipt。
 - [LLM adapter](../../llm/llm-pi-ai/README.zh.md)——通过 OpenAI-compatible gateway 发送生成请求。
-- [Fidoo 与 RunPod profile](../../../docs/feat-system3-foundation/model-chain.zh.md)——显式的源码 checkout overlay 与凭据引用。
+- [模型服务 profile](../../../docs/feat-system3-foundation/model-chain.zh.md)——显式的源码 checkout overlay 与凭据引用。
 
 -----
 

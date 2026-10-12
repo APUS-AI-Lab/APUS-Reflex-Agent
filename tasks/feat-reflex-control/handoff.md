@@ -95,7 +95,7 @@ GitHub 操作须显式 `--repo cryptoSUN2049/APUS-Reflex-Harness` 或 Frontend�
 
 ## 分支/部署状态
 
-Harness worktree：`/Users/gumpm5/Documents/Code/APUS-Reflex-Harness/.Codex/worktrees/feat-reflex-control`，分支 `feat-reflex-control`，当前有验收、HTML、scanner 和 handoff 文档改动待提交。Frontend 位于 `/Users/gumpm5/Documents/Code/APUS-Reflex-Frontend/.Codex/worktrees/feat-reflex-control`，页面级 200% 缩放改动已提交；其 `.github/workflows/release.yml` 已固定待最终复核的 Harness revision。Frontend 本地 manifest 为 `sourceDirty=false` 的已部署包才算正式 runtime 证据。
+Harness worktree：`/path/to/projects/APUS-Reflex-Harness/.Codex/worktrees/feat-reflex-control`，分支 `feat-reflex-control`，当前有验收、HTML、scanner 和 handoff 文档改动待提交。Frontend 位于 `/path/to/projects/APUS-Reflex-Frontend/.Codex/worktrees/feat-reflex-control`，页面级 200% 缩放改动已提交；其 `.github/workflows/release.yml` 已固定待最终复核的 Harness revision。Frontend 本地 manifest 为 `sourceDirty=false` 的已部署包才算正式 runtime 证据。
 
 Host16 完整通过并完成本轮 SDK/浏览器验收。Host17 已由 root 收集 exit0，session 22268，日志 `/private/tmp/reflex-control-host17.log`。Client11 / Web11 通过。C-06 real7 已完成且无活动模型进程；literal 诊断失败记录已落盘。所有 Web server7–16 已停止；以后新启动使用新编号并保留独立日志。
 

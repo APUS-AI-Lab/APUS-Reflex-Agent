@@ -379,7 +379,8 @@
     "result": "1/1 passed",
     "scope": "built-shipped-web-profile-local-browser; live DeepSeek+Jev; native Goal/FS; isolated temporary workspace; not production deployment",
     "report": "completion-browser-result.json",
-    "sessionLog": "completion-browser-session.jsonl",
+    "sessionSummary": "completion-browser-session.summary.json",
+    "rawSessionPublished": false,
     "screenshot": "completion-browser.png",
     "recordedAt": "2026-10-08T14:29:27Z",
     "recordCount": 62,
@@ -442,7 +443,7 @@
     "reviewCriteriaUi": "not-implemented; current UI shows the native tool denial; full review criteria and responses are in logged judgements",
     "limitation": "One explicitly induced premature-completion scenario passed. This does not establish general completion accuracy, instruction enforcement, production deployment, or all 14 signature items.",
     "runtimeVersion": "0.1.7-rc.2",
-    "exactUIVersionSource": "completion-browser-result.json /uiVersion",
+    "exactUIVersionSource": "Privately archived original browser report /uiVersion; omitted from public metadata.",
     "sourceHashes": {
       "completion-review.ts": "9f60e4dbaa07a6d22af964382e4e674abdc7a593402548625e20769015e509ba",
       "task-frame.ts": "893bf341b256d9bca94d211af0394869729ee8e2ba5d6a9f86966e7a8ba3b99a",
@@ -458,7 +459,7 @@
         "S02",
         "S06"
       ],
-      "evidence": "completion-browser-session.jsonl: seq6 task-frame.goal holds the full human message; seq18 after native create_goal replaces it with the model-written objective and items=[]; completion reviews only receive that objective and no initial extra requirements.",
+      "evidence": "Privately archived original Session (public summary contains no event bodies): seq6 task-frame.goal holds the full human message; seq18 after native create_goal replaces it with the model-written objective and items=[]; completion reviews only receive that objective and no initial extra requirements.",
       "scope": "Initial additional human requirements can be absent from review, including allowed/forbidden tools, paths, dependencies, output and acceptance requirements. This is not limited to the five tools used by this scenario.",
       "capacity": "Messages longer than maxMessageChars are skipped by the task frame; additions beyond maxItems retain only the most recent items. Neither limit is a safety guarantee or proof that all human requirements are preserved.",
       "design": "mu-p0-review.html#instruction-retention",
@@ -484,5 +485,6 @@
       "../../packages/experimental/system3/tests/decision-kernel.spec.ts"
     ],
     "limitation": "These configuration/lifecycle mechanisms are deterministic focused regressions; the three fresh real scenarios validate normal active execution, not fault injection of every lifecycle path."
-  }
+  },
+  "publicationNote": "Browser findings describe the recorded historical run. Its raw Session, exact UI build, overlays and detailed execution evidence are privately archived; completion-browser-result.json and completion-browser-session.summary.json contain public metadata only and cannot independently verify event-sequence claims. This cleanup is not a new test run."
 }

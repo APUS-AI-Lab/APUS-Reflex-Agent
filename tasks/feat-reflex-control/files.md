@@ -68,8 +68,8 @@ Current changed and untracked files relative to HEAD; line counts describe each 
 | `docs/feat-reflex-control/evidence/reflex-ux-routing.png` | binary | 73485 |
 | `docs/feat-reflex-control/evidence/reflex-ux-settings-probe.png` | binary | 104133 |
 | `docs/feat-reflex-control/evidence/reflex-ux-settings-rejected-key.png` | binary | 109102 |
-| `docs/feat-reflex-control/evidence/reflex-ux-settings-restarted.png` | binary | 105048 |
-| `docs/feat-reflex-control/evidence/reflex-ux-settings-saved.png` | binary | 105048 |
+| `docs/feat-reflex-control/evidence/privately archived screenshot` | binary | 105048 |
+| `docs/feat-reflex-control/evidence/privately archived screenshot` | binary | 105048 |
 | `docs/feat-reflex-control/evidence/semantic-codex-attempt1-interrupted.json` | 1012 | 23789 |
 | `docs/feat-reflex-control/evidence/semantic-codex-host16.i18n.yaml` | 7 | 455 |
 | `docs/feat-reflex-control/evidence/semantic-codex-host16.json` | 2673 | 63825 |

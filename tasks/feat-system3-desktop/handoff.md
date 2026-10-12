@@ -118,7 +118,7 @@
 
 原型已修复提交快照与下一草稿混用、停止后遗失待答复/取证、排除来源仍通过验收、普通任务误称 Goal 的问题。恢复依据独立待办事实，重新允许来源不倒填旧请求。推进按钮禁用后仅在该用户动作原本持焦点时交接到新控件。
 
-前端本地根目录为 `/Users/gumpm5/Documents/Code/xDAN-System3-Frontend`，隔离工作区 `.Codex/worktrees/chore-bootstrap`；GitHub `cryptoSUN2049/xDAN-System3-Frontend` 已核验 private=true、fork=false、default=main，远端与本地初始化提交一致。保留 481 条上游历史和 MIT；origin 为私有仓库、upstream 为 dataelement。HTTPS 首推连接重置后，HTTP/1.1 加缓冲完成传输。应用品牌与 runtime 未修改、未安装依赖或启动。后续从该仓库 `tasks/chore-bootstrap/handoff.md` 冷启动。
+前端本地根目录为 `/path/to/projects/xDAN-System3-Frontend`，隔离工作区 `.Codex/worktrees/chore-bootstrap`；GitHub `cryptoSUN2049/xDAN-System3-Frontend` 已核验 private=true、fork=false、default=main，远端与本地初始化提交一致。保留 481 条上游历史和 MIT；origin 为私有仓库、upstream 为 dataelement。HTTPS 首推连接重置后，HTTP/1.1 加缓冲完成传输。应用品牌与 runtime 未修改、未安装依赖或启动。后续从该仓库 `tasks/chore-bootstrap/handoff.md` 冷启动。
 
 - [x] 完成三层穿透设计、桌面 v3 与前端私有源码仓库。
 - [ ] 确认具体设计，执行 G1 版本与桌面接入；保持唯一 Harness 执行核心。
@@ -126,7 +126,7 @@
 
 ## 12. 任务目标记录与前端接入复核（2026-10-01）
 
-用户要求把完整任务目标记录下来，并审视 UI/UX 与前端对接是否完成，再次明确前端目录为 `/Users/gumpm5/Documents/Code/xDAN-System3-Frontend`。当前计划已记录三层目标、完整完成标准和具体接入文件；评审文档为 `docs/feat-system3-desktop/delivery-objectives-and-ux-audit.html`，主设计和详细设计均已链接。
+用户要求把完整任务目标记录下来，并审视 UI/UX 与前端对接是否完成，再次明确前端目录为 `/path/to/projects/xDAN-System3-Frontend`。当前计划已记录三层目标、完整完成标准和具体接入文件；评审文档为 `docs/feat-system3-desktop/delivery-objectives-and-ux-audit.html`，主设计和详细设计均已链接。
 
 完成度：设计覆盖和离线原型已交付，生产交互尚未全部定稿；Frontend 产品接入未实施，真实安装包/用户验收未完成。前端相对上游只有两份 Python 格式与两份文档改动；`src/main/index.ts` / `src/main/runtime/harness-runtime.ts` 仍加载官方 npm runtime；`build/dsh-desktop.patch.yml` 与 `packages/dsh-desktop-client-ui/` 是可复用装配点。后端当前 shadow 投影 Host-only，不能直接作为客户端入口采用投影。
 
@@ -150,4 +150,4 @@ UX复核要求收敛首次使用/真实材料、任务与对话/Goal、成果优
 
 用户截图与 ops-jev9b-a100 指南一致：A100/high32；27决策+15原生回归、5指南示例通过。计划已更新8086决策根地址和8002标准Base URL；结构化决策无stream、原生SSE可用且共用high引擎，模型名不可混用。旧Pod不再作为当前接入目标。新决策样本中位数3.52秒（15项成功含并发）不是生产SLA或与旧环境可比基准；未配置自动重启恢复。本轮只读核对，无服务请求、密钥读取或运行配置变更。
 
-核心目标是Harness与 `/Users/gumpm5/Documents/Code/xDAN-System3-Frontend` 贯通入口、过程、体感的真实任务。下一主线是自有runtime装配→真实入口与过程采用→成果/控制/恢复UI→端到端验收，不能用服务部署或静态设计替代。更新文件：plan.md、现有UX审查HTML、lessons.md及本交接；未合并运维分支。
+核心目标是Harness与 `/path/to/projects/xDAN-System3-Frontend` 贯通入口、过程、体感的真实任务。下一主线是自有runtime装配→真实入口与过程采用→成果/控制/恢复UI→端到端验收，不能用服务部署或静态设计替代。更新文件：plan.md、现有UX审查HTML、lessons.md及本交接；未合并运维分支。

@@ -1,29 +1,33 @@
-# README Loop Working 叙事设计
+# README and architecture publication design
 
 English | [中文](readme-loop-working-design.zh.md)
 
 ## Goal
 
-让第一次打开仓库的用户在一分钟内理解 APUS Reflex Harness 的核心结果：Personal Agent 可以把一次性问答变成可恢复、可持续、可验证的 Loop Working。README 必须把“无限上下文”解释为工程能力边界，而不是承诺模型拥有无限 token 窗口。
+Explain Personal Agent and Loop Working through current code and bounded evidence. Keep the two repositories independent and distinguish a runtime merge from a validated desktop release.
 
-## Reader path
+## Architecture
 
-1. 用户结果：Personal Agent 从一次响应进入持续工作循环。
-2. 关键机制：无限记忆保存可恢复事实，无损输入保留原始意图，无损记忆保留原始 Session。
-3. 决策模型：Reflex/Jev 提供低延迟专用决策；没有 Jev 时使用通用模型或原版 DSH 路径。
-4. 真实架构：决策层选择路径，Harness 负责执行、权限、Session 和恢复，模型只接收有界投影。
-5. 证据与边界：链接到真实 E2E、持久化回放、配置页和已知限制，不把开发预览写成完整产品承诺。
+Input facts feed the durable Session. Optional Reflex decisions guide allowed actions. Continuum restores source-backed records into a bounded model projection; the generation model reasons, the Harness executes, and outcomes return to the Session. The diagram uses the existing light/orange visual style with offline system fonts.
 
-## Files
+## Files and API impact
 
-- `README.md`：增加英文价值主叙事、双模型路径、Loop Working 和架构解释。
-- `README.zh.md`：同步中文叙事和术语。
-- `tasks/todo.md`：记录本次文档目标和验收结果。
+Update the root README pair, the architecture SVG/HTML and the contributor follow-up list. Review tracked documents, raw evidence and binary attachments; archive unsuitable originals outside the repository and repair references. No runtime API or persistence format changes are included.
 
 ## Acceptance
 
-- 英中 README 都明确 Personal Agent、Loop Working、无限记忆、无损输入、无损记忆的关系。
-- 明确 Reflex 专用模型和通用模型兼容路径，不暗示必须部署 Jev。
-- 明确模型上下文仍然有界，系统通过记忆与投影实现可持续工作。
-- 所有新增操作性描述都有当前代码、测试或现有文档链接作为证据。
-- 通过 README gate、translation pairing、doc tests、doc-sync 和 diff check。
+- Describe same-Session restoration, successful flush, explicit admission and Reflex-only enablement accurately.
+- Distinguish retained source text from incomplete retrieval, excerpting and summaries.
+- Link tests without claiming mocked-provider checks establish real-provider quality.
+- Validate paired documentation, references, SVG accessibility, rendered layout and tracked-file secret scans.
+- Review history separately before repository visibility or ownership changes; a clean checkout alone is insufficient.
+
+## Restart-evidence correction
+
+The shared request log and repeated recall phrase can let first-process or newly admitted query text satisfy the current restart assertion. Change only the shipped-profile memory test: separate process logs, query without the stored canary, assert the complete original fact and record attribution in resumed-process requests, and add a fresh-Session negative control. Run the focused keyless profile test against source and built launch paths. No production API or format changes.
+
+## Loop Working narrative redesign
+
+The approved redesign starts with the Personal Agent outcome, then explains goal-governed continuation, model decisions, controlled execution and evidence feedback. An eight-node architecture overview shows the default generation path and optional Reflex/Continuum augmentation; a six-node memory detail separates durable source events, admission, source-linked records, derived retrieval, optional selection and bounded request projection. Both retain the current visual skin, use offline SVG/HTML and link to the owning implementation. README English/Chinese and Frontend entry copy share these responsibilities.
+
+The source record is the authority; automatic text admission trims text, image storage can normalize bytes, and durability requires successful flush. Goal state survives restoration while continuation activation is disarmed until resumed. Neither unbounded storage nor universal recall is claimed. Verification covers accessible SVG structure, visual inspection, bilingual pairing, local links, the shipped-profile memory cases and configuration regressions; new prose does not turn remaining release tests into passes.

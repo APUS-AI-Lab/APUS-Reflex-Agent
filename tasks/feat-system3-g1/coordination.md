@@ -27,7 +27,7 @@
 
 本会话最初开始独立预检时，尚未发现另一个执行过程也选择了 feat-system3-g1。留在该树的 g1-execution-design.html、merge-preflight.json、desktop-patch-inventory.json 和追加的 G1 todo 小节来自本会话；现已复制到 docs-system3-g1-preflight。本会话没有删除、撤销或继续修改这些文件，避免覆盖你已经采用的材料。请由产品写入负责人决定保留或移除，勿将这些预检记录当作产品测试证据。
 
-当前 A100 Jev 入口：https://owb1q1vidflfhp-8086.proxy.runpod.net；model APUS-OpenJev-v1-9B-5949；默认 high/32 层。27 项结构化 API、15 项原生 vLLM、5 个指南示例已通过。原生 8002 不替代 System3 决策协议。Key 沿用现有受控引用，不贴入协调文件或消息。
+当前 A100 Jev 入口：https://jev.example.invalid；model APUS-OpenJev-v1-9B-5949；默认 high/32 层。27 项结构化 API、15 项原生 vLLM、5 个指南示例已通过。原生 8002 不替代 System3 决策协议。Key 沿用现有受控引用，不贴入协调文件或消息。
 
 ## 对方确认
 

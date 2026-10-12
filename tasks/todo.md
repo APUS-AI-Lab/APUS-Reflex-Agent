@@ -6,6 +6,9 @@
 
 ### README Loop Working 叙事（2026-10-12）
 
+- [x] 按最新实现重画八节点工作闭环和六节点记忆流，使用 diagram-design；两图嵌入离线 HTML，英中 README 统一为 Personal Agent → Loop Working → 职责分工 → 持久记忆与有限上下文。
+- [x] 架构交付完成 SVG 可访问性检查、渲染检查、HTML 唯一 ID / 两图数量 / 本地链接检查；发布与 main 合并仍独立验证。
+
 - [x] 将 Personal Agent、Loop Working、无限记忆、无损输入和无损记忆写入英中 README，并区分 Reflex 专用模型与通用模型路径。
 - [x] 用真实架构和现有验收证据解释“无限上下文”的工程含义，避免承诺无限 token 窗口。
 - [ ] 完成 README pairing、README gate、doc tests、doc-sync 和 diff check；本轮 doc-quick 仍暴露既有 concrete-terms 与 repository-reference 卡点，已修复其中的文档引用，需重跑确认。
@@ -40,7 +43,7 @@
 - [x] 隔离环境下验证 profile 配置、Web 启动及认证 HTTP 200。
 - [x] Ruff 双检查、提交与推送，回读新 main。
 - [x] 写入 tasks/feat-independent-harness/handoff.md。
-- [x] 迁移并核对正式本地目录 /Users/gumpm5/Documents/Code/xDAN-System3-Harness，修复并保留隔离 worktree。
+- [x] 迁移并核对正式本地目录 /path/to/projects/xDAN-System3-Harness，修复并保留隔离 worktree。
 
 ## Review
 
@@ -323,7 +326,7 @@
 
 ### 当前构建浏览器 Review
 
-[浏览器报告](../docs/feat-jev-decision-kernel/completion-browser-result.json)、[原始日志](../docs/feat-jev-decision-kernel/completion-browser-session.jsonl)和[截图](../docs/feat-jev-decision-kernel/completion-browser.png)绑定当前源码与 built Web：真实 DeepSeek + Jev，拒绝 → read/write/read → complete rev2；Jev 2914/1960ms；刷新没有新增事件。此为本地 shipped profile，未部署到 prd，专用核验依据 UI 和独立准确率评测未完成。初始用户额外限制会在 create_goal 重置任务卡时丢失，已加入 mu 设计 v2 的共同前提，不能称约束已受保护。OpenOx 8/8 完整 key 已私密保存；三站真实模型权限仍待验证。
+[浏览器报告](../docs/feat-jev-decision-kernel/completion-browser-result.json)、[Session 公开摘要（原始事件已私有归档）](../docs/feat-jev-decision-kernel/completion-browser-session.summary.json)和[截图](../docs/feat-jev-decision-kernel/completion-browser.png)绑定当前源码与 built Web：真实 DeepSeek + Jev，拒绝 → read/write/read → complete rev2；Jev 2914/1960ms；刷新没有新增事件。此为本地 shipped profile，未部署到 prd，专用核验依据 UI 和独立准确率评测未完成。初始用户额外限制会在 create_goal 重置任务卡时丢失，已加入 mu 设计 v2 的共同前提，不能称约束已受保护。OpenOx 8/8 完整 key 已私密保存；三站真实模型权限仍待验证。
 
 ## CEO 一页汇报（2026-10-09）
 
@@ -337,7 +340,7 @@
 
 本页为用户明确请求的汇报交付物，不新增运行功能。既有证据、待完善能力与建议试点分别标注；业务收益以试点测量，不从局部时延或通过用例数推算。
 
-交付：[一页 HTML](../docs/feat-jev-decision-kernel/report-ceo-onepage.html)、[A4 单页 PDF](../docs/feat-jev-decision-kernel/report-ceo-onepage.pdf)及[布局核对](../docs/feat-jev-decision-kernel/report-ceo-onepage-verification.json)。实际核对375/768/1440宽度、离线资源、SVG文字与PDF页内文本；独立内容审查后限定可见依据范围，去掉未由精确计时证据支撑的时延大字。
+历史一页 HTML、A4 PDF 及原始布局记录已私有归档；参见[公开资料说明](../docs/dev-continuum-reflex-integration/open-source-docs-audit.zh.md)。实际核对375/768/1440宽度、离线资源、SVG文字与PDF页内文本；独立内容审查后限定可见依据范围，去掉未由精确计时证据支撑的时延大字。
 
 文档检查：test:docs20/20、doc-sync42/42、lint:contracts-ready、相对链接、Ruff check/format及diff检查通过；本轮未重复运行产品模型测试，既有验证范围保持原样。
 
@@ -504,6 +507,39 @@ PPT v2为4页主讲+2页备查，实际Keynote打开、六页备注回读和PDF�
 - [x] Audit open-source release files, package metadata, docs, CI, secrets, and versioning.
 - [x] Record release blockers and publish-readiness decision in the worktree handoff and release-readiness document.
 - [x] Run production plugin-composition durable E2E with flush/restart/recall/attribution and explicit negative control; shipped-profile subprocess evidence remains separate.
-- [ ] Run shipped-profile staging black-box E2E before public tag.
+- [x] Run strict shipped-profile black-box E2E: five distinct cases passed across two filtered runs; real-provider quality and release packaging remain separate.
 - [x] Resolve the `reflex-context` semantic E2E failure with deterministic preservation of explicit precision/file-integrity constraints; selected real Jev matrix now passes 6/6.
 - [ ] Fix or owner-assign pre-existing full-suite failures before public tag.
+
+## README 与公开资料收口
+
+- [x] 核对前后端 README 与 runtime pin，更新架构 SVG / HTML。
+- [ ] 按受跟踪文件清单审阅文档、原始证据与私有配置，保留仓库外备份并脱敏。
+- [x] 更新新人任务清单，区分已有覆盖、增量测试与设计任务。
+- [ ] 完成文档检查、秘密扫描、独立 review 后合入远端 main。
+- [ ] 核实组织目标与迁移条件；迁移两仓后验证链接和权限。
+
+### 部署 URL 与参数公开性复核
+
+- [x] 逐项审阅两仓受跟踪的 Fidoo / LiteLLM / proxy / Jev URL 与启动参数。
+- [ ] 区分公共供应商地址、用户部署地址、占位符、环境变量名与凭据，修复文档及配置中的不适合公开项。
+- [ ] 若调整可执行配置，验证缺少配置时的错误路径和已配置时的启动路径；不将文字脱敏当作运行时验证。
+
+### 本轮执行确认
+
+用户已确认配置整改后将两个独立仓库迁入 APUS-AI-Lab，并要求优先确保远端 main 包含最新修改。按 deployment-publication-review 设计实施；不删通用配置能力，不公开凭据，不把迁移等同于公开发布。
+
+- [ ] 合并公共配置与文档清理并回读 Harness main SHA。
+- [ ] Frontend 固定已验收的新 Harness SHA，验证打包配置并合并 main。
+- [ ] 根据历史保留策略完成组织迁移并核实两仓 refs/可见性。
+
+## 无限记忆产品验收与任务派发（2026-10-12）
+
+- [x] 阅读 classic-cases、handoff，核对已有测试及新人任务来源。
+- [ ] 执行记忆定向测试、shipped 双进程和 Web 开关验收，保留失败与阻塞。
+- [ ] 将功能设计、验证、优化、修复整理为可派发任务与测试目标。
+- [ ] 校验 Markdown、证据链接及当前变更，更新交接。
+
+### Review
+
+仅验收与文档交付；不修改产品实现，不将历史结果或跳过用例记作本轮通过。目标工作树已有大量未提交改动，保留原状，不代为提交。

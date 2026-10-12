@@ -38,13 +38,13 @@ This command inspects composition; it does not make a Jev decision. A consumer c
 <a id="fidoo-entry"></a>
 ## Fidoo and entry routing
 
-The [Fidoo overlay](system3-fidoo.patch.yml) uses the existing `llm-pi-ai` adapter and OpenAI-compatible `https://proxy.fidoo.ai/v1` endpoint. It reads `SYSTEM3_LITELLM_API_KEY` from the environment and declares `deepseek-v4-flash` and `deepseek-v4-pro`. Both use a conservative 131,072-token context setting and an 8,192-token output limit; these are deployment settings, not claims about the gateway's maximum capacity. This generation overlay also works without Jev.
+The [Fidoo overlay](system3-fidoo.patch.yml) uses the existing `llm-pi-ai` adapter and a user-supplied OpenAI-compatible `SYSTEM3_GENERATION_BASE_URL` endpoint. It reads `SYSTEM3_LITELLM_API_KEY` from the environment and declares `deepseek-v4-flash` and `deepseek-v4-pro`. Both use a conservative 131,072-token context setting and an 8,192-token output limit; these are deployment settings, not claims about the gateway's maximum capacity. This generation overlay also works without Jev.
 
 ```sh
 pnpm dsh --patch docs/feat-independent-harness/system3-fidoo.patch.yml --profile headless "Reply with exactly READY. Do not use tools."
 ```
 
-To enable entry decisions, configure `JEV_ENDPOINT`, `JEV_MODEL`, `JEV_API_KEY`, and `SYSTEM3_LITELLM_API_KEY`, then explicitly classify all session data in `SYSTEM3_SESSION_DATA_CLASSES` as a JSON array. Use `["public"]` only for a public-data session. The classification includes history that the selected generation model may receive; it is a deployment declaration, not an automatic sensitivity detector. The [entry overlay](system3-entry.patch.yml) admits both Jev and the named generation candidates for those declared classes. A remote GPU reached through a loopback tunnel remains network execution.
+To enable entry decisions, configure `JEV_ENDPOINT`, `JEV_MODEL`, `JEV_API_KEY`, `SYSTEM3_GENERATION_BASE_URL`, and `SYSTEM3_LITELLM_API_KEY`, then explicitly classify all session data in `SYSTEM3_SESSION_DATA_CLASSES` as a JSON array. Use `["public"]` only for a public-data session. The classification includes history that the selected generation model may receive; it is a deployment declaration, not an automatic sensitivity detector. The [entry overlay](system3-entry.patch.yml) admits both Jev and the named generation candidates for those declared classes. A remote GPU reached through a loopback tunnel remains network execution.
 
 ```sh
 pnpm dsh --patch docs/feat-independent-harness/system3-jev.patch.yml --patch docs/feat-independent-harness/system3-fidoo.patch.yml --patch docs/feat-independent-harness/system3-entry.patch.yml --profile web --no-open

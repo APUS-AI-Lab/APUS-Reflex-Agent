@@ -3,47 +3,41 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write README.md
 /apus-reflex-harness:
-  en: c4985374650d363a
-  zh: 78e93bf52671f1d2
-/apus-reflex-harness/architecture:
-  en: c690e0c2574bada9
-  zh: 1a23b966816a42e7
-/apus-reflex-harness/from-personal-agent-to-loop-working:
-  en: 5d40f3b3e73161c7
-  zh: 8e4e3f29dd50ca7a
-/apus-reflex-harness/two-decision-model-paths:
-  en: ebbc83ec9b8ec8ea
-  zh: 75f9fec7d9c84105
-/apus-reflex-harness/how-the-architecture-sustains-a-work-loop:
-  en: 20be67d9366ee366
-  zh: e660892cf2028c1d
-/apus-reflex-harness/apus-reflex-capability-guide:
-  en: c2fc7cd14b2ffbf1
-  zh: 6e63faf6ba1e4fc8
-/apus-reflex-harness/developer-preview:
-  en: 528c922c2912e05b
-  zh: 31eaff1cfa745b9e
-/apus-reflex-harness/run:
-  en: 4e0248e4c6474fc6
-  zh: eb2fb8d78c7d6bc0
-/apus-reflex-harness/run/run-the-upstream-distribution-from-npm:
-  en: 27324faf44b3a4ce
-  zh: 8c54157bcf5fd270
-/apus-reflex-harness/run/run-from-source:
-  en: 819e3f7c144d0d64
-  zh: de815f040975dba7
-/apus-reflex-harness/community-and-support:
-  en: a4cd72bb08542644
-  zh: ad5dc94e3c0b721a
-/apus-reflex-harness/contributing:
-  en: cabc2d3e9f8898bd
-  zh: 83b6d238bae29ce3
-/apus-reflex-harness/development:
-  en: 803ca2b11b497bed
-  zh: 8b4071eb0e7783ef
-/apus-reflex-harness/citation:
-  en: 6704e9e5a8d49a91
-  zh: 85c9cdd8d56f8e9d
-/apus-reflex-harness/license:
-  en: 70369c3d22ce7583
-  zh: d5a226cf5cc48926
+  en: dd52cb460b583308
+  zh: 5dc6510e93e4c0dc
+/apus-reflex-harness/a-personal-agent-for-ongoing-projects:
+  en: 40536b86550bc094
+  zh: 5698a3d057316b70
+/apus-reflex-harness/loop-working-a-goal-actions-and-feedback:
+  en: f0a9b3ae4bd2424f
+  zh: 88db8ec666629b13
+/apus-reflex-harness/the-models-decide-the-harness-executes:
+  en: 4738fbac35d9ccde
+  zh: c43c128f58c11d7f
+/apus-reflex-harness/persistent-memory-finite-context:
+  en: 773a2de70f7a0d0d
+  zh: 44a729df07000edf
+/apus-reflex-harness/continuity-with-control:
+  en: 3478edf93ac04970
+  zh: 44555858cdb93f86
+/apus-reflex-harness/use-reflex-or-start-with-a-general-model:
+  en: dd0c9415c270ba1d
+  zh: fb14cfc139d7ff25
+/apus-reflex-harness/evidence-not-a-release-claim:
+  en: 53a1afccb9bcce74
+  zh: 9ed567d1ebcd416d
+/apus-reflex-harness/run-from-source:
+  en: e1e34025135864a4
+  zh: 8c557a2dcfe1dc7b
+/apus-reflex-harness/run-from-source/upstream-npm-distribution:
+  en: 0575405d356335d0
+  zh: a0b69cbcc92ac6eb
+/apus-reflex-harness/two-independent-repositories:
+  en: 301ac6d151a8c374
+  zh: 9ed3f81a59636a89
+/apus-reflex-harness/contribute-and-get-support:
+  en: c75b077a7344d5f8
+  zh: a64586d3a673fb61
+/apus-reflex-harness/upstream-and-license:
+  en: fe3aef84772f0290
+  zh: f0398f62f1d9f21e

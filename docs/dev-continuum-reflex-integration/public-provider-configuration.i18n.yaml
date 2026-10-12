@@ -1,0 +1,19 @@
+# Bilingual-pair consistency record for public-provider-configuration.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/dev-continuum-reflex-integration/public-provider-configuration.md
+/public-provider-configuration:
+  en: 9e8474d48c671e05
+  zh: ccd984c3e1c7ba1c
+/public-provider-configuration/optional-reflex:
+  en: 79808fe1d0d7e191
+  zh: 11cff6e55afddc1a
+/public-provider-configuration/your-own-relay:
+  en: fdbf9d100f3e88ec
+  zh: a10c0e732455050d
+/public-provider-configuration/codex-delegation:
+  en: a0f05e875f811f87
+  zh: 6ef927e233524ea7
+/public-provider-configuration/validation-scope:
+  en: 26fedc7794014bfd
+  zh: 8e713f3e8ed6cd2b

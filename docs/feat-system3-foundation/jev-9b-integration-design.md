@@ -53,9 +53,9 @@ Privacy denial and provider unavailability record an unknown outcome without sen
 
 The [profile guide](model-chain.md) and tracked overlays own executable configuration. The Jev plugin uses `endpoint`, `model`, `effort`, `timeoutMs`, and `apiKeyEnv`. System3 uses `privacyMode`, `approvedRemoteIds`, `approvedRemoteDataClasses`, `observeAgentLoop`, `jevRouteId`, `jevExecutionDomain`, and `jevEffort`.
 
-The main route is `https://proxy.fidoo.ai/v1` using the existing `system3-dsh` virtual key through `SYSTEM3_LITELLM_API_KEY`. The verified model is `deepseek-v4-flash`; `deepseek-v4.1-flash` is not registered. The overlay sets an explicit 8192-token output cap and low reasoning effort. RunPod serves the authenticated gateway at `127.0.0.1:30135`, backed by high32 at `30132` and low16 at `30134`; replies identify `APUS-OpenJev-v1-9B-5949`. Its key stays at `/root/.config/openjev/gateway.key` and is referenced as `APUS_JEV_API_KEY`.
+The public deployment uses user-configured generation and optional Jev providers. Set each endpoint, model and credential reference explicitly in the [deployment configuration](../dev-continuum-reflex-integration/public-provider-configuration.md); internal service addresses and credential-file locations are not distributed.
 
-The approved [launcher](run-system3.py) captures both existing keys through SSH and injects them only into the dsh child environment. It owns a temporary loopback tunnel and overlay, and joins its processes on exit. A developer-machine tunnel is `jevExecutionDomain: network` even with a loopback endpoint. The overlay uses `controlled` admission and permits route `jev` with `public` facts. The [same-host override](system3-fidoo-runpod-local.patch.yml) permits local Jev execution; the main Fidoo generation remains remote. Keys never enter tracked configuration, argv, or receipts.
+The former maintainer-only SSH launcher is privately archived. Supply credentials through the process environment or a user-owned profile; do not copy a maintainer’s credential-file layout. A remote Jev service reached through a loopback tunnel still requires network data approval. The [same-host override](system3-fidoo-runpod-local.patch.yml) is appropriate only for a genuinely local execution domain.
 
 <a id="verification-and-limits"></a>
 ## Verification and limits

@@ -14,9 +14,9 @@
 
 | 文件 | 行数或大小 | 说明 |
 |---|---:|---|
-| `docs/feat-jev-decision-kernel/APUS-Reflex-Harness-CEO-brief-v2.pptx` | 61819 bytes | CEO v2或演示方案交付/验证 |
-| `docs/feat-jev-decision-kernel/APUS-Reflex-Harness-CEO-brief-v2.pdf` | 232514 bytes | CEO v2或演示方案交付/验证 |
-| `docs/feat-jev-decision-kernel/APUS-Reflex-Harness-CEO-brief-v2-preview.png` | 370701 bytes | CEO v2或演示方案交付/验证 |
+| `docs/feat-jev-decision-kernel/internal-presentation (privately archived)` | 61819 bytes | CEO v2或演示方案交付/验证 |
+| `docs/feat-jev-decision-kernel/internal-presentation (privately archived)` | 232514 bytes | CEO v2或演示方案交付/验证 |
+| `docs/feat-jev-decision-kernel/internal-presentation (privately archived)` | 370701 bytes | CEO v2或演示方案交付/验证 |
 | `docs/feat-jev-decision-kernel/report-ceo-ppt-v2-verification.json` | 93 | CEO v2或演示方案交付/验证 |
 | `docs/feat-jev-decision-kernel/demo-plan.html` | 111 | CEO v2或演示方案交付/验证 |
 | `docs/feat-jev-decision-kernel/demo-plan.md` | 177 | CEO v2或演示方案交付/验证 |
@@ -28,9 +28,9 @@
 | `docs/feat-jev-decision-kernel/demo-fixture-verification.json` | 44 | CEO v2或演示方案交付/验证 |
 | `tasks/lessons.md` | 120 | 用户战略纠正和PPT导入要求 |
 | `docs/feat-jev-decision-kernel/report-ceo-ppt-verification.json` | 130 | 六页文本/尺寸/备注/兼容性核对 |
-| `docs/feat-jev-decision-kernel/APUS-Reflex-Harness-CEO-brief-preview.png` | 359511 bytes | 最终六页版面预览 |
-| `docs/feat-jev-decision-kernel/APUS-Reflex-Harness-CEO-brief.pdf` | 228253 bytes | Keynote实际导出的六页汇报 |
-| `docs/feat-jev-decision-kernel/APUS-Reflex-Harness-CEO-brief.pptx` | 60459 bytes | 可编辑六页CEO汇报与逐页讲稿备注 |
+| `docs/feat-jev-decision-kernel/internal-presentation (privately archived)` | 359511 bytes | 最终六页版面预览 |
+| `docs/feat-jev-decision-kernel/internal-presentation (privately archived)` | 228253 bytes | Keynote实际导出的六页汇报 |
+| `docs/feat-jev-decision-kernel/internal-presentation (privately archived)` | 60459 bytes | 可编辑六页CEO汇报与逐页讲稿备注 |
 | `.github/workflows/independent-harness.yml` | 64 | CI中双SDK核验场景 |
 | `deploy/system3/acceptance/accept.py` | 569 | 验收脚本或固定构建证据检查 |
 | `deploy/system3/runtime.patch.yml` | 248 | 验收脚本或固定构建证据检查 |
@@ -39,8 +39,8 @@
 | `docs/event-producer-consumer.md` | 111 | 源代码生成的配置/事件参考 |
 | `docs/event-producer-consumer.zh.md` | 113 | 源代码生成的配置/事件参考 |
 | `docs/feat-jev-decision-kernel/architecture.html` | 213 | 架构/设计及配对任务更新 |
-| `docs/feat-jev-decision-kernel/completion-browser-result.json` | 349 | 当前built Web真实浏览器验收证据 |
-| `docs/feat-jev-decision-kernel/completion-browser-session.jsonl` | 62 | 当前built Web真实浏览器验收证据 |
+| `docs/feat-jev-decision-kernel/completion-browser-result.json` | 11 | 历史浏览器验收的公开摘要；原始配置与执行记录已私有归档 |
+| `docs/feat-jev-decision-kernel/completion-browser-session.summary.json` | 5 | 公开元数据，不含原始 62 条记录的事件正文 |
 | `docs/feat-jev-decision-kernel/completion-browser.png` | 126907 bytes | 当前built Web真实浏览器验收证据 |
 | `docs/feat-jev-decision-kernel/completion-continuation.html` | 22 | 架构/设计及配对任务更新 |
 | `docs/feat-jev-decision-kernel/completion-evaluation-history.json` | 432 | 架构/设计及配对任务更新 |
@@ -53,8 +53,8 @@
 | `docs/feat-jev-decision-kernel/mu-p0-review.json` | 175 | mu源码评审、P0排序及待确认设计v2 |
 | `docs/feat-jev-decision-kernel/relay-directory-status.json` | 50 | 三站只读目录审查，不含凭据 |
 | `docs/feat-jev-decision-kernel/report.html` | 557 | 架构/设计及配对任务更新 |
-| `docs/feat-jev-decision-kernel/report-ceo-onepage.html` | 190 | CEO一页价值、大小脑架构与场景交付汇报 |
-| `docs/feat-jev-decision-kernel/report-ceo-onepage.pdf` | 988351 bytes | 实际导出的A4单页，中文文字与架构可读 |
+| `docs/feat-jev-decision-kernel/internal-presentation (privately archived)` | 190 | CEO一页价值、大小脑架构与场景交付汇报 |
+| `docs/feat-jev-decision-kernel/internal-presentation (privately archived)` | 988351 bytes | 实际导出的A4单页，中文文字与架构可读 |
 | `docs/feat-jev-decision-kernel/report-ceo-onepage-verification.json` | 95 | 三种宽度及PDF页面文字核对 |
 | `docs/feat-jev-decision-kernel/tasks/task.i18n.yaml` | 40 | 架构/设计及配对任务更新 |
 | `docs/feat-jev-decision-kernel/tasks/task.md` | 109 | 架构/设计及配对任务更新 |
@@ -192,7 +192,7 @@
 
 ## 冷启动 checklist
 
-- [ ] 先读本文件、lessons.md、report-ceo-onepage.html、APUS-Reflex-Harness-CEO-brief-v2.pptx、demo-plan.html、mu-p0-review.html、feature-acceptance.html、completion-continuation.html 和 tasks/task.zh.md。
+- [ ] 先读本文件、lessons.md、internal-presentation (privately archived)、internal-presentation (privately archived)、demo-plan.html、mu-p0-review.html、feature-acceptance.html、completion-continuation.html 和 tasks/task.zh.md。
 - [ ] 核对 status、diff、stash、branch、HEAD、worktree list 及其他会话写入归属，不覆盖 WIP。
 - [ ] 修改 packages 前读 architecture.md、defensive-patterns.md、相关 AGENTS；review 来源文件而非复述稿。
 - [ ] 保持 shadow；先补独立评测与当前构建浏览器证据，再决定上线。
@@ -201,7 +201,7 @@
 
 ## CEO 汇报交付（2026-10-09）
 
-- 用户明确要求将 report 浓缩为一页老板汇报；原 report 保留，新增 report-ceo-onepage.html/pdf 与布局证据，均在本 worktree 文档目录。
+- 用户明确要求将 report 浓缩为一页老板汇报；原 report 保留，新增 internal-presentation (privately archived)/pdf 与布局证据，均在本 worktree 文档目录。
 - 叙事为业务价值、大小脑和DSH执行底座、软件/文档/业务助手成果、限定范围的真实证据、可衡量的试点建议；以可复用交付体系表达潜力，不宣称尚未测得的成本收益或全部功能完成。
 - gstack browse实际核对375/768/1440宽度；文档本身无横向越界，手机架构区域可横滑。PDF为A4一页，所有文字块在页内；无外部资源、SVG文字无越界、三个本地链接有效。
 - 独立CEO内容审查完成。当前完成核验为本地验证未生产发布，质量监控和新增P0仍待完善；汇报不扩大运行验收范围，不变更产品源码或生产环境。
@@ -216,7 +216,7 @@
 ### CEO 分页 PPT
 
 - 六页汇报为战略、大小脑架构、五类事务、场景交付、真实验证和试点决策；参考用户指定2026-09-30协同计划PPT的16:9、苹方与暖白/深绿/橙色。原参考文件未写入。
-- APUS-Reflex-Harness-CEO-brief.pptx为可编辑原生文本/形状，每页有讲稿备注；配套六页PDF、六页预览和report-ceo-ppt-verification.json。主report提供PPT/PDF入口。
+- internal-presentation (privately archived)为可编辑原生文本/形状，每页有讲稿备注；配套六页PDF、六页预览和report-ceo-ppt-verification.json。主report提供PPT/PDF入口。
 - Keynote最初拒绝导入，因为生成的备注母版未在presentation.xml的notesMasterIdLst登记；引用已有notesMaster关系后最终交付文件实际导入、备注回读和六页PDF导出通过。全部页内文本与PPT匹配，图形与PDF文字均未越界；独立CEO事实复核通过。
 - 用户可重点讲1/2/4/6页，3/5页支撑进展和证据。当前本地完成核验未生产发布，五域完整接管仍为目标；不变更运行源码或生产。
 - 当前分页批次test:docs20/20（38.37s）、Ruff check/format与diff通过；本地提交、未推送或部署，最终PPT已在Keynote打开。

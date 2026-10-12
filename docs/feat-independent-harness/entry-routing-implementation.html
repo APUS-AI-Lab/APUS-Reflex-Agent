@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>原生入口路由首期实施</title><style>body{font:17px/1.8 system-ui,sans-serif;background:#0b1220;color:#e2e8f0;max-width:960px;padding:40px 24px;margin:auto}h1,h2{color:#7dd3fc}p{overflow-wrap:anywhere}</style><main>
 <h1>原生入口路由首期实施</h1>
-<p>用户已批准沿专项 HTML 推进，并接入 proxy.fidoo.ai LiteLLM proxy。本实施补充收敛 M1a 的可验证交付，不改变总方案。</p>
+<p>用户已批准沿专项 HTML 推进，并接入 gateway.example.invalid LiteLLM proxy。本实施补充收敛 M1a 的可验证交付，不改变总方案。</p>
 <h2>目标与流程</h2>
 <p>用户输入 → SessionController 准入（空闲、文本、无待处理消息、无人工固定选型）→ System3 隐私与候选校验 → Jev 原生 choice → 原生 ModelSelection → Fidoo 生成 → Session 记录与回合结束恢复。</p>
 <p>系统通过 Cordis 原生服务注册一个可释放的入口 router。AgentLoop 保持原实现。Jev 选择只绑定本次请求触发的回合；失败或弃权沿用已有合法 baseline。人工选型保持优先，自动选择不写人工 model/selection。</p>
