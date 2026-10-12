@@ -58,7 +58,7 @@
 ## 分支/部署状态
 
 - 本地 worktree：`.Codex/worktrees/dev-continuum-reflex-integration`
-- 分支已推送到 `origin/dev/continuum-reflex-integration`，未创建 PR，未部署；仓库当前没有 `dev` 目标分支。
+- 分支已推送到 `origin/dev/continuum-reflex-integration`，未创建 PR，未部署；精确 `dev` 分支无法与现有 `dev/continuum-reflex-integration` refs 同时创建，Git 远端拒绝了该 ref。
 - 源分支 worktree 均保持不变。
 
 ## 冷启动 checklist
