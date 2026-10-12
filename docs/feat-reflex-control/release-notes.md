@@ -1,10 +1,10 @@
-# APUS Reflex release notes
+# APUS Reflex Harness release notes
 
 English | [中文](release-notes.zh.md)
 
 ## 0.1.7-rc.2 · Reflex control closeout
 
-This release candidate aligns the DSH runtime and the APUS Reflex product surface. It is a developer preview and does not replace the upstream DSH license or notices.
+This release candidate aligns the DSH runtime and the APUS Reflex Harness product surface. It is a developer preview and does not replace the upstream DSH license or notices.
 
 ### Added and verified
 
@@ -12,7 +12,7 @@ This release candidate aligns the DSH runtime and the APUS Reflex product surfac
 - Reversible line/segment context projection with durable recovery, original Session preservation and cache-prefix protection.
 - Lightweight Codex Goal supervision with bounded evidence, attributed realignment, native consumption and post-adjustment verification.
 - A strict controlled real Codex trial that reaches a finance artifact, `verification-target`, independent `1137.41` validation and `improved`; see [semantic v6 evidence](evidence/semantic-codex-strict-final-v6.md).
-- APUS Reflex branding, MIT/NOTICE preservation, SECURITY guidance and Electron package audits.
+- APUS Reflex Harness branding, MIT/NOTICE preservation, SECURITY guidance and Electron package audits.
 
 ### Known limits before a public release
 
@@ -24,4 +24,4 @@ This release candidate aligns the DSH runtime and the APUS Reflex product surfac
 
 ### Attribution and license
 
-APUS Reflex is distributed under MIT while retaining the upstream DSH copyright and permission notice. Third-party licenses are listed in [THIRD_PARTY_NOTICES.md](../../THIRD_PARTY_NOTICES.md). See [SECURITY.md](../../SECURITY.md) before running model-generated tools.
+APUS Reflex Harness is distributed under MIT while retaining the upstream DSH copyright and permission notice. Third-party licenses are listed in [THIRD_PARTY_NOTICES.md](../../THIRD_PARTY_NOTICES.md). See [SECURITY.md](../../SECURITY.md) before running model-generated tools.

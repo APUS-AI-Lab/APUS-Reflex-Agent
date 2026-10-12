@@ -1,4 +1,4 @@
-# APUS Reflex · Harness：四条工作线与首发设计
+# APUS Reflex Harness · Harness：四条工作线与首发设计
 
 English | [中文](design.zh.md)
 
@@ -16,11 +16,11 @@ System1 是 APUS/OpenJev 的高频候选判断与经专项验证的轻量工作�
 
 官方上游为 https://github.com/deepseek-ai/deepseek-harness ，源码审阅日期为 2026-09-24，审阅来源为当时的 upstream/master；原默认分支 master，许可证 MIT。
 
-This repository maintains the Harness implementation for APUS Reflex; see the [project entry point](../../README.md) for source and contribution guidance. Historical checkout locations and remote-management records are privately archived.
+This repository maintains the Harness implementation for APUS Reflex Harness; see the [project entry point](../../README.md) for source and contribution guidance. Historical checkout locations and remote-management records are privately archived.
 
 已完成原始上游的 Ruff 修复与格式化；main 保留官方基线，feat-system3-foundation 已推送到自有私有仓库。基础 System3 包、统一 Cordis 服务和真实 AgentLoop smoke 已交付；真实模型、训练与部署仍未启动。
 
-The product name is APUS Reflex; actual `@deepseek-ai/*` package names, the `dsh` command, upstream attribution and MIT notices retain their meaning. Branding changes do not rename dependencies or alter license obligations.
+The product name is APUS Reflex Harness; actual `@deepseek-ai/*` package names, the `dsh` command, upstream attribution and MIT notices retain their meaning. Branding changes do not rename dependencies or alter license obligations.
 
 ## 3. 四条工作线
 

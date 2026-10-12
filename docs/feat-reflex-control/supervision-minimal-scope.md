@@ -2,7 +2,7 @@
 
 English | [中文](supervision-minimal-scope.zh.md)
 
-APUS Reflex keeps Codex process supervision small: observe bounded activity evidence, identify a clear stall or repeated failure, send one attributed adjustment when the run accepts input, and wait for new evidence before judging the result.
+APUS Reflex Harness keeps Codex process supervision small: observe bounded activity evidence, identify a clear stall or repeated failure, send one attributed adjustment when the run accepts input, and wait for new evidence before judging the result.
 
 ## User-visible flow
 

@@ -1,4 +1,4 @@
-# APUS Reflex 测试验收目标清单
+# APUS Reflex Harness 测试验收目标清单
 
 [English](acceptance-checklist.md) | 中文
 
@@ -93,7 +93,7 @@ P0 是本轮功能完整交付的必需项；P1 是性能或推广范围的验�
 
 | ID / 级别 | 场景与通过标准 | 当前证据与缺口 |
 | --- | --- | --- |
-| D-01 / P0 | 用户可见品牌为 APUS Reflex，配置页称 Reflex；MIT 原版权、许可和上游致谢随产物保留。 | 上一批品牌已合 main；本批 324 个 Harness 包 MIT 与第三方通知检查通过。未签名 Electron 目录包已直接通过品牌与四个 MIT/NOTICE 文件逐字节比对，见[包审计](evidence/electron-package-license-audit.zh.md)；当前 runtime 一致性和签名/公证产物仍归入 F-03。 |
+| D-01 / P0 | 用户可见品牌为 APUS Reflex Harness，配置页称 Reflex；MIT 原版权、许可和上游致谢随产物保留。 | 上一批品牌已合 main；本批 324 个 Harness 包 MIT 与第三方通知检查通过。未签名 Electron 目录包已直接通过品牌与四个 MIT/NOTICE 文件逐字节比对，见[包审计](evidence/electron-package-license-audit.zh.md)；当前 runtime 一致性和签名/公证产物仍归入 F-03。 |
 | D-02 / P0 | 模型可见输入、自动纠偏、上下文投影和恢复均可从日志重建；TypeScript/Python 消费同一事件，历史格式不被覆盖。 | 定向回归、持久化检查及 Goal、监督、恢复、上下文的双 SDK 录制/独立回放通过；外部模型夹具不算真实模型 E2E。 |
 | D-03 / P0 | 后端提交形成干净版本，前端固定该版本；生成真实运行包，manifest 无 dirty 标记，实际启动与配置链路通过。 | Harness 与 Frontend `feat-reflex-control` 修订均已提交并推送；release workflow 固定审查过的 Harness revision，重新构建的部署 manifest 与该 clean release pin 一致且 `sourceDirty=false`，真实 Electron Safe Mode/CDP 启动通过。 |
 | D-04 / P0 | 必需检查通过、独立审查无未解决阻断、PR 按授权合并两仓 main；回读远端与 CI，并保留交接。 | 进行中；相关构建、lint、Ruff、文档和包检查已有通过记录，真实闭环与正式包仍阻断完整交付。CI 未运行或仍排队都不算通过。 |
@@ -113,7 +113,7 @@ P0 是本轮功能完整交付的必需项；P1 是性能或推广范围的验�
 | UX-07 / P0 | 上下文移出与恢复提示说明原文可恢复；相关信息恢复后能回答，避免“已永久删除”或“无限上下文”误导，过程不遮挡输入和答案。 | 后端真实恢复与跨进程 C-06 已过；UI 的可恢复提示和时间线已加入并有组件回归，最终包的对话可读性仍待专项核对。 |
 | UX-08 / P0 | 网络/凭据错误、超时、断开与重启有可理解的说明和恢复路径；保留用户输入和已有内容，不要求用户读原始日志才能继续。 | 待有限错误场景与重启体验验收。 |
 | UX-09 / P0 | 375/768/1280 宽度、明暗主题、200% 缩放下，关键字段与按钮可用、无横向页面溢出或遮挡；键盘顺序、可见焦点、Escape 与焦点返回正确，弹层适应边缘。 | [初测证据](evidence/uiux/before.json)保留375px侧栏挤压输入到约59px的失败。[构建后复验](evidence/uiux/after.json)已通过375/768/1280明暗矩阵、键盘遍历、字段错误关联、Escape、焦点返回及清理历史缓冲后的零控制台错误；Frontend 的真实 Electron 恢复界面已通过 200% 系统缩放及页面级 200% 缩放 320 个变体，见[Frontend 页面级证据](https://github.com/APUS-AI-Lab/APUS-Reflex-Frontend/blob/feat-reflex-control/docs/feat-reflex-control/evidence/electron-page-zoom-200.md)。 |
-| UX-10 / P0 | 最终 Electron 正常/安全模式、关闭/重开、设置及会话恢复可用；品牌与标题一致，窗口边框不遮挡控制；启动失败可恢复且不留下本轮拥有的后台进程。 | 未签名 arm64 包已通过正常/Safe Mode 启动、关闭重开、配置恢复、APUS Reflex 品牌一致性和进程清理；恢复界面 200% 系统缩放及页面级 200% 缩放已通过；会话恢复、启动失败恢复仍待测。 |
+| UX-10 / P0 | 最终 Electron 正常/安全模式、关闭/重开、设置及会话恢复可用；品牌与标题一致，窗口边框不遮挡控制；启动失败可恢复且不留下本轮拥有的后台进程。 | 未签名 arm64 包已通过正常/Safe Mode 启动、关闭重开、配置恢复、APUS Reflex Harness 品牌一致性和进程清理；恢复界面 200% 系统缩放及页面级 200% 缩放已通过；会话恢复、启动失败恢复仍待测。 |
 
 <a id="acceptance-journeys"></a>
 

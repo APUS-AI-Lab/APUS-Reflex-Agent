@@ -1,7 +1,7 @@
 Usage: dsh [--profile] <name> [options] [app-args...]
        dsh plugin --profile <name> <pnpm-args...>
 
-dsh: boot an APUS Reflex profile — an ordered stack of plugin-bundle patch
+dsh: boot an APUS Reflex Harness profile — an ordered stack of plugin-bundle patch
 layers under your own overrides.
 
 Arguments:

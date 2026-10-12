@@ -221,7 +221,7 @@ describe('web e2e: fresh round trip through the real assembly', () => {
     if (system === undefined) throw new Error('the settled Web request has no system prompt')
     const paragraphs = system.split('\n\n')
     expect(paragraphs.slice(0, 2)).toEqual([
-      'You are an AI agent powered by APUS Reflex.',
+      'You are an AI agent powered by APUS Reflex Harness.',
       'You are a coding agent powered by the deepseek-v4-flash model.',
     ])
     const suffix = paragraphs.slice(-3).join('\n\n')

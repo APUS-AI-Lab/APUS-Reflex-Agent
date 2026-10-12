@@ -2,39 +2,42 @@
 # section, a hash of its English and Chinese blocks outside code blocks and generated regions.
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write README.md
-/apus-reflex:
-  en: 8fb7a034de8ced82
-  zh: 874903984bd0b303
-/apus-reflex/a-personal-agent-for-ongoing-projects:
+/apus-reflex-harness:
+  en: eefd471e45b1ddbd
+  zh: cdf255e20a18d31b
+/apus-reflex-harness/download-the-desktop-app:
+  en: e4371abd42cb5e32
+  zh: 77c2a61227f57068
+/apus-reflex-harness/a-personal-agent-for-ongoing-projects:
   en: 40536b86550bc094
   zh: 5698a3d057316b70
-/apus-reflex/loop-working-a-goal-actions-and-feedback:
+/apus-reflex-harness/loop-working-a-goal-actions-and-feedback:
   en: f0a9b3ae4bd2424f
   zh: 88db8ec666629b13
-/apus-reflex/the-models-decide-the-harness-executes:
+/apus-reflex-harness/the-models-decide-the-harness-executes:
   en: d3ad8343aa97d634
   zh: 23aba7b6121c99f7
-/apus-reflex/persistent-memory-finite-context:
+/apus-reflex-harness/persistent-memory-finite-context:
   en: 57315ec046a1c7f1
   zh: e3e2cf7bd158729d
-/apus-reflex/continuity-with-control:
+/apus-reflex-harness/continuity-with-control:
   en: 2bfee0e6af02df21
   zh: 8d5ef336bbab2720
-/apus-reflex/use-reflex-or-start-with-a-general-model:
-  en: 748ea1312ae17c40
-  zh: 8671606ff949b466
-/apus-reflex/evidence-not-a-release-claim:
+/apus-reflex-harness/use-reflex-or-start-with-a-general-model:
+  en: 7ca8574d1877b405
+  zh: a4b5927381a74171
+/apus-reflex-harness/evidence-not-a-release-claim:
   en: 8f6a83c553985220
   zh: 73bf91d2732989b4
-/apus-reflex/run-from-source:
-  en: f1f9dd1c22bf3ef4
-  zh: dce4101610091441
-/apus-reflex/two-independent-repositories:
-  en: af3ce497193d60ef
-  zh: fd32978e84feaec1
-/apus-reflex/contribute-and-get-support:
+/apus-reflex-harness/run-from-source:
+  en: 30ebeaafb350b8d0
+  zh: 096313f23de8616a
+/apus-reflex-harness/integrated-repository-and-releases:
+  en: 01a60d69397a85fe
+  zh: be2ac2e5edbc8580
+/apus-reflex-harness/contribute-and-get-support:
   en: c75b077a7344d5f8
   zh: a64586d3a673fb61
-/apus-reflex/license-and-attribution:
-  en: 346a9426dd4d8ab9
-  zh: bc10f75651132242
+/apus-reflex-harness/license-and-attribution:
+  en: 8bf1c0f6aab54669
+  zh: 0870049fca35c845

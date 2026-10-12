@@ -28,12 +28,15 @@ async function start(override?: { disabled?: boolean; config?: Record<string, un
   return ctx
 }
 
-it.each([undefined, '', '   '])('starts without Reflex when both settings are %j', async (value) => {
+it.each([undefined, '', '   '])('keeps first-run Reflex settings available when both fields are %j', async (value) => {
   vi.stubEnv('JEV_ENDPOINT', value)
   vi.stubEnv('JEV_MODEL', value)
   const ctx = await start()
-  expect(ctx.get('jev')).toBeUndefined()
-  expect([...ctx.loader.entries()].find(entry => entry.options.id === 'jev')?.disabled).toBe(true)
+  expect(ctx.jev.readStatus().provider).toBeNull()
+  expect(ctx.jev.listProviders()).toEqual([])
+  expect([...ctx.loader.entries()].find(entry => entry.options.id === 'jev')?.disabled).toBe(false)
+  await expect(ctx.jev.decide({ state: null, questions: { q: { type: 'noul' } } })).rejects.toThrow('Jev is not configured')
+  expect(await ctx.jev.warm()).toBe(false)
 })
 
 it.each([

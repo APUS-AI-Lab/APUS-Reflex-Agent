@@ -343,7 +343,7 @@ describe('DeepSeekHarness', () => {
       const failure = await harness.start().catch((error: unknown) => error)
       expect(failure).toBeInstanceOf(AggregateError)
       expect((failure as AggregateError).errors).toEqual([initializeError, cleanupError])
-      expect((failure as Error).message).toBe('APUS Reflex initialization and cleanup failed')
+      expect((failure as Error).message).toBe('APUS Reflex Harness initialization and cleanup failed')
       expect(harness.client).toBe(failedClient)
     } finally {
       start.mockRestore()

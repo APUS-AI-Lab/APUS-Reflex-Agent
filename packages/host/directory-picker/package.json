@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-host-directory-picker",
-  "description": "Abstract workspace-directory picking seam (ctx.directoryPicker) for the APUS Reflex web GUI host",
+  "description": "Abstract workspace-directory picking seam (ctx.directoryPicker) for the APUS Reflex Harness web GUI host",
   "version": "0.1.7-rc.2",
   "publishConfig": {
     "access": "public"

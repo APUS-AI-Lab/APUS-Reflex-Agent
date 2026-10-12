@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-storage-sqlite",
-  "description": "SQLite storage backend (kv facet) for the APUS Reflex storage hub",
+  "description": "SQLite storage backend (kv facet) for the APUS Reflex Harness storage hub",
   "version": "0.1.7-rc.2",
   "publishConfig": {
     "access": "public"

@@ -44,7 +44,7 @@ async function versionCommand(profile: string, args: readonly string[]): Promise
         process.stdout.write(JSON.stringify(exemptions, undefined, 2) + '\n')
       } else {
         await setProfileVersionExemption(dir, request.packageVersion, request.runtimeVersion, command === 'allow-version', acceptRisk)
-        process.stdout.write(`dsh: ${command === 'allow-version' ? 'allowed' : 'revoked'} ${request.packageVersion} for APUS Reflex ${request.runtimeVersion}\n`)
+        process.stdout.write(`dsh: ${command === 'allow-version' ? 'allowed' : 'revoked'} ${request.packageVersion} for APUS Reflex Harness ${request.runtimeVersion}\n`)
       }
     }, { waitMs: 120000 })
     return 0

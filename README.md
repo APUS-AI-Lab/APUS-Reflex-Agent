@@ -1,12 +1,22 @@
-# APUS Reflex
+# APUS Reflex Harness
+
+![APUS Reflex Harness](apps/web/public/brand-source.webp)
 
 English | [中文](README.zh.md)
 
-> **瞬策 · Instant action. Deep thinking.** Build a Personal Agent with your models, persistent task history and **Loop Working**.
+> **瞬策 · Instant action. Deep thinking. · Model-as-a-Harness.** Build a Personal Agent with your models, persistent task history and **Loop Working**.
 
 APUS turns a sequence of model calls into work that can continue around a goal: understand the request, choose an action, execute, inspect the evidence, recover relevant context and continue. You choose the general model for planning and generation; optionally connect your own Reflex/Jev decision service for structured decisions along the way.
 
-APUS Reflex separates model reasoning from execution, permissions and durable Session history. It is a **developer preview**. The [release readiness review](docs/dev-continuum-reflex-integration/release-readiness.md) records what has been tested and what still needs acceptance.
+APUS separates model reasoning from execution, permissions and durable Session history. It is a **developer preview**. The [release readiness review](docs/dev-continuum-reflex-integration/release-readiness.md) records what has been tested and what still needs acceptance.
+
+This integration merges frontend and backend delivery into the existing Harness repository: the desktop client lives in `frontend/`, with configuration, builds and packaging managed together. Desktop installers bundle the backend, so users do not start or install a separate service. The integrated release is still being prepared.
+
+## Download the desktop app
+
+Visit [Releases](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/releases) for published installers, supported platforms and validation results. The integrated `0.1.0` (`v0.1.0`) unsigned preview is being prepared; production signing is not configured. Installers are available only when listed as release assets. GitHub’s “Source code” archives contain source files, not installable applications.
+
+The desktop distribution bundles its runtime: users do not need Git, Node.js or a separate backend. Follow [installation](docs/feat-integrated-product/installation.md) and [model configuration](docs/feat-integrated-product/configuration.md) using your own provider credentials. Preview builds can break compatibility. Read [SAFETY.md](SAFETY.md) before granting file access.
 
 ## A Personal Agent for ongoing projects
 
@@ -85,7 +95,7 @@ Choose where generation and decision requests run. Reflex control data-class set
 
 | Configuration | Available behavior |
 | --- | --- |
-| General model, no Jev | Harness generation, tools and Session persistence. The Reflex-only Continuum feature remains inactive. |
+| General model, no Jev | General-model generation, tool execution and Session persistence. The Reflex-only Continuum feature remains inactive. |
 | Reflex/Jev configured | Structured decision capabilities can be enabled individually; mounting the provider alone does not activate every integration. |
 | Continuum enabled | Requires Reflex plus memory admission/scope settings. The selector’s off/shadow/active modes distinguish baseline selection, recorded advice and validated advice adoption. |
 | Reflex control deployment without data classification | Reflex control is explicitly disabled, including its local process supervision. Ordinary generation continues using the configured provider. |
@@ -102,7 +112,7 @@ The [acceptance review](docs/feat-reflex-control/apus-reflex-harness-acceptance-
 
 ## Run from source
 
-Requires Node.js `^22.19 || >=24` and the pnpm version declared by `packageManager`.
+Install Git, Node.js 24 and the pnpm version declared by the root `packageManager`, then run:
 
 <a id="run"></a>
 
@@ -111,18 +121,19 @@ Requires Node.js `^22.19 || >=24` and the pnpm version declared by `packageManag
 ```sh
 git clone https://github.com/APUS-AI-Lab/APUS-Reflex-Harness.git
 cd APUS-Reflex-Harness
-pnpm install
-pnpm run build
-pnpm dsh web
+pnpm run setup
+pnpm run start:desktop
 ```
 
-`pnpm run build` prepares repository artifacts; `pnpm dsh web` launches those artifacts without rebuilding. Configure a generation model and credentials in Web settings. For development with rebuilds, use `pnpm run dev:web`.
+`setup` installs both dependency sets, builds the Harness and prepares the desktop runtime from this checkout. The initial download and build require network access and time. Configure a provider in Settings → Models, then select a model in the conversation. For Web development, run `pnpm run dev:web`. See [source development](docs/feat-integrated-product/development.md) for prerequisites and troubleshooting.
 
-Optional Reflex decision and memory capabilities need their corresponding profile configuration. Follow the [public provider guide](docs/dev-continuum-reflex-integration/public-provider-configuration.md), [Reflex control guide](packages/experimental/system3/README.md) and [Continuum guide](packages/context/continuum/README.md). The launch command above does not activate them all.
+Configure an optional Reflex service in Settings → Reflex model configuration. A successful connection does not automatically enable routing, supervision or Continuum: each capability needs its own configuration, permissions and validation. See [configuration](docs/feat-integrated-product/configuration.md), the [public provider guide](docs/dev-continuum-reflex-integration/public-provider-configuration.md), [Reflex control guide](packages/experimental/system3/README.md) and [Continuum guide](packages/context/continuum/README.md).
 
-## Two independent repositories
+## Integrated repository and releases
 
-[APUS Reflex](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness) owns the runtime and its Web/client components. [APUS Reflex Desktop](https://github.com/APUS-AI-Lab/APUS-Reflex-Frontend) owns the independent desktop assembly and pins a Harness revision. Updating Harness `main` does not update an already packaged desktop runtime; prepare and verify the intended pin.
+`frontend/` owns the Electron desktop client, `apps/web/` owns the Web entry and `packages/` owns the runtime and shared UI. Desktop installers assemble frontend and runtime from the same commit; no separate frontend clone is needed. Installed clients retain their packaged runtime. Source updates do not change an installed app; use an installer from the corresponding Release to upgrade.
+
+The [development guide](docs/feat-integrated-product/development.md) covers the local workflow. The [release procedure](docs/feat-integrated-product/releases.md) covers packaging, validation and publication.
 
 ## Contribute and get support
 
@@ -134,4 +145,4 @@ Optional Reflex decision and memory capabilities need their corresponding profil
 
 ## License and attribution
 
-[MIT](LICENSE). Original copyright and permission notices are retained in [LICENSE](LICENSE) and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). APUS Reflex is an independent product; its branding does not replace upstream authorship or imply endorsement. See [brand and assembly](docs/feat-apus-brand/branding.md).
+APUS builds on [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness), DataElement’s DSH Desktop, [Cordis](https://github.com/cordiverse/cordis) and their contributors. Original MIT notices remain in [LICENSE](LICENSE) and [frontend/LICENSE](frontend/LICENSE); dependency terms remain in the [Harness notices](THIRD_PARTY_NOTICES.md) and [desktop notices](frontend/THIRD_PARTY_NOTICES.md). APUS branding does not replace upstream authorship or imply endorsement. See [brand and assembly](docs/feat-apus-brand/branding.md).

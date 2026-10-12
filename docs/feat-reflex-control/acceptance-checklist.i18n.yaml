@@ -2,51 +2,51 @@
 # section, a hash of its English and Chinese blocks outside code blocks and generated regions.
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/feat-reflex-control/acceptance-checklist.md
-/apus-reflex-acceptance-checklist:
-  en: a898f9396ddbbf4a
-  zh: facb2485a721da63
-/apus-reflex-acceptance-checklist/summary:
+/apus-reflex-harness-acceptance-checklist:
+  en: 002e9ab9af0affc3
+  zh: d11afabaa7bdca3e
+/apus-reflex-harness-acceptance-checklist/summary:
   en: 7d89572409d1be3b
   zh: 36367eb3e896d62b
-/apus-reflex-acceptance-checklist/table-of-contents:
+/apus-reflex-harness-acceptance-checklist/table-of-contents:
   en: 6873d0e699d9d48e
   zh: 02c8aba4e2f2a5dd
-/apus-reflex-acceptance-checklist/requirements-and-designs:
+/apus-reflex-harness-acceptance-checklist/requirements-and-designs:
   en: f87c605082579a9a
   zh: 08e66129e0bca130
-/apus-reflex-acceptance-checklist/verdict-rules:
+/apus-reflex-harness-acceptance-checklist/verdict-rules:
   en: a317c44fe84f7fe6
   zh: db7e8d444af70829
-/apus-reflex-acceptance-checklist/acceptance-cases:
+/apus-reflex-harness-acceptance-checklist/acceptance-cases:
   en: ad4a223da5298ed1
   zh: 8ae0e170e4e72fb2
-/apus-reflex-acceptance-checklist/acceptance-cases/user-entry-routing:
+/apus-reflex-harness-acceptance-checklist/acceptance-cases/user-entry-routing:
   en: ca6b26a960705019
   zh: 632a60f924734c64
-/apus-reflex-acceptance-checklist/acceptance-cases/long-goal-supervision-and-correction:
+/apus-reflex-harness-acceptance-checklist/acceptance-cases/long-goal-supervision-and-correction:
   en: 77dae0c3e226f87f
   zh: 644b39009951223b
-/apus-reflex-acceptance-checklist/acceptance-cases/dynamic-context-memory-and-cache:
+/apus-reflex-harness-acceptance-checklist/acceptance-cases/dynamic-context-memory-and-cache:
   en: ddb1b8674b844a7f
   zh: 69d120038bc233b5
-/apus-reflex-acceptance-checklist/acceptance-cases/reflex-model-settings:
+/apus-reflex-harness-acceptance-checklist/acceptance-cases/reflex-model-settings:
   en: 6e47c8adc4f9e496
   zh: b9c18cb5b5333923
-/apus-reflex-acceptance-checklist/acceptance-cases/branding-licensing-and-delivery:
-  en: 99713216db3f2c4a
-  zh: 36e7a8fe329acc11
-/apus-reflex-acceptance-checklist/acceptance-cases/ui-ux-acceptance:
-  en: ab6af43bd79ebd43
-  zh: 623101c05d277490
-/apus-reflex-acceptance-checklist/complete-user-journeys:
+/apus-reflex-harness-acceptance-checklist/acceptance-cases/branding-licensing-and-delivery:
+  en: 86fc74dc144efe4d
+  zh: a4f655b5bf0625c5
+/apus-reflex-harness-acceptance-checklist/acceptance-cases/ui-ux-acceptance:
+  en: 3d8f2ab01e45171f
+  zh: 056033e8d6655b1b
+/apus-reflex-harness-acceptance-checklist/complete-user-journeys:
   en: 31d735ecae60f302
   zh: 48edd19e6e83c16f
-/apus-reflex-acceptance-checklist/evidence-and-execution-order:
+/apus-reflex-harness-acceptance-checklist/evidence-and-execution-order:
   en: 28406ae15dc7b328
   zh: 7ed9200c160f8641
-/apus-reflex-acceptance-checklist/release-completion-criteria:
+/apus-reflex-harness-acceptance-checklist/release-completion-criteria:
   en: b7a95650ffe9c68c
   zh: 5f0a24eec61c4b38
-/apus-reflex-acceptance-checklist/dev-note:
+/apus-reflex-harness-acceptance-checklist/dev-note:
   en: 1bc2605d0f771b56
   zh: 55ec4e6454d6911b

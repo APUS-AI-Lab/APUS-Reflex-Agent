@@ -3,14 +3,14 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/util/home-paths/README.md
 /:
-  en: 11d756f25b0996f7
-  zh: 635dc5e56a1cc32e
+  en: 76d08133f5a22720
+  zh: 48c165359b69d30e
 /deepseek-ai-dsh-home-paths:
   en: 6a18bcb84ce35987
   zh: f26144b659925421
 /deepseek-ai-dsh-home-paths/summary:
-  en: d2d457128d057a3f
-  zh: 1cfd1ecb7605929e
+  en: 5017b186e0406338
+  zh: b7629bfe0c9fa06e
 /deepseek-ai-dsh-home-paths/table-of-contents:
   en: 80b31a934611cb4a
   zh: 05f3f7f9cb2fd881

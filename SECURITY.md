@@ -1,6 +1,6 @@
 # Security policy
 
-APUS Reflex is experimental developer-preview software. It can execute model-generated code, load third-party plugins, access configured files and credentials, and make network requests. Do not treat it as a security boundary or run untrusted workloads with production privileges.
+APUS Reflex Harness is experimental developer-preview software. It can execute model-generated code, load third-party plugins, access configured files and credentials, and make network requests. Do not treat it as a security boundary or run untrusted workloads with production privileges.
 
 ## Report a vulnerability
 

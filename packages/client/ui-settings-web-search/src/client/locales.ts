@@ -13,7 +13,7 @@ export type WebSearchSettingsLocaleKey =
 /** English copy. */
 export const en: Record<WebSearchSettingsLocaleKey, string> = {
   title: 'Web search',
-  description: 'Set up the DeepSeek search provider.',
+  description: 'Configure the search service.',
   apiKey: 'API key',
   apiKeyHint: 'Stored outside the settings file. Leave blank to keep the current key.',
   apiKeySet: 'A key is configured.',
@@ -35,7 +35,7 @@ export const en: Record<WebSearchSettingsLocaleKey, string> = {
 /** Simplified Chinese copy. */
 export const zh: Record<WebSearchSettingsLocaleKey, string> = {
   title: '网页搜索',
-  description: '设置 DeepSeek 的搜索提供方。',
+  description: '配置搜索服务。',
   apiKey: 'API Key',
   apiKeyHint: '不写入设置文件。留空表示保持当前密钥。',
   apiKeySet: '已配置密钥。',

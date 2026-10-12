@@ -6,6 +6,6 @@ head:
       content: 0; url=./guide/quickstart
 ---
 
-# APUS Reflex
+# APUS Reflex Harness
 
 English | [中文](index.zh.md)

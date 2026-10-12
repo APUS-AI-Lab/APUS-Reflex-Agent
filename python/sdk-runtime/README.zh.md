@@ -2,7 +2,7 @@
 
 [English](README.md) | 中文
 
-APUS Reflex Python SDK 的平台运行时 wheel 包。它把普通 `dsh` CLI（命令行界面）及其封闭的 Node 依赖树打包成原生可执行程序，因此使用 SDK 不需要系统 Node.js。本包只发布 wheel 包。
+APUS Reflex Harness Python SDK 的平台运行时 wheel 包。它把普通 `dsh` CLI（命令行界面）及其封闭的 Node 依赖树打包成原生可执行程序，因此使用 SDK 不需要系统 Node.js。本包只发布 wheel 包。
 
 ## 安装命令与产物
 

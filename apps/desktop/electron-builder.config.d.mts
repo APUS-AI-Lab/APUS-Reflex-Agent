@@ -5,7 +5,7 @@ export interface DesktopElectronBuilderConfig {
   readonly appId: string
   readonly productName: string
   readonly artifactName: string
-  readonly protocols: readonly [{ readonly name: 'APUS Reflex'; readonly schemes: readonly ['dsh'] }]
+  readonly protocols: readonly [{ readonly name: 'APUS Reflex Harness'; readonly schemes: readonly ['dsh'] }]
   readonly directories: {
     readonly output: string
   }

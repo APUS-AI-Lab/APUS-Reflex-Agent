@@ -20,7 +20,7 @@ it('resolves the registered executable and data directory under the new displaye
   const installed = join(root, 'registered-installation')
   mkdirSync(installed)
   writeFileSync(join(installed, 'APUS Reflex Harness.exe'), 'installed executable')
-  expect(identity.productName).toBe('APUS Reflex')
+  expect(identity.productName).toBe('APUS Reflex Harness')
   expect(identity.productFilename).toBe('APUS Reflex Harness')
   expect(existsSync(join(installed, `${identity.productFilename}.exe`))).toBe(true)
   expect(identity.id).toBe('com.example.apus')

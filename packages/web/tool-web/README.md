@@ -58,7 +58,7 @@ The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-a
 Call `web_search` with a `queries` array of one to `searchMaxQueries` non-empty strings. Exact duplicate queries run once; multiple queries run concurrently and their sources merge round-robin before the combined `searchMaxResults` cap applies. The result is an optional provider answer followed by `Sources:` with one line per source — `- [<title-or-url>](<url>)`, optionally with snippet and date — and a standing instruction to cite the URLs.
 
 ```text
-web_search({ queries: ['APUS Reflex documentation'] })
+web_search({ queries: ['APUS Reflex Harness documentation'] })
 ```
 
 If any query in a multi-query call fails, `web_search` aborts the remaining searches, waits for every started search to settle, discards successful results, and returns `Error: <message>` for the first failure.

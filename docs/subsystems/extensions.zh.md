@@ -369,6 +369,7 @@ listProviders(): readonly JevProviderInfo[]
  * Resolve a request to a provider and effective model without performing I/O.
  * @param request - Host request and optional provider selection.
  * @returns Validated request with provider and model pinned.
+ * @throws When the selected provider is unconfigured or not registered.
  */
 resolve(request: JevRequest): JevSpec
 
@@ -385,6 +386,7 @@ async warm(providerId?: string, signal?: AbortSignal): Promise<boolean>
  * @param request - Host state and typed questions.
  * @param signal - Cancellation propagated to the caller.
  * @returns Validated result or a safe failure description.
+ * @throws When the selected provider is unconfigured or not registered, or the caller cancels.
  */
 async decide(request: JevRequest, signal?: AbortSignal): Promise<JevOutcome>
 ```

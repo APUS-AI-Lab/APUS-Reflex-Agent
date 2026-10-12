@@ -5,7 +5,7 @@ import type { SessionId as SessionIdType } from '@deepseek-ai/dsh-session'
 import { SessionReferenceError } from './config.ts'
 import type { SessionReferenceInput } from './types.ts'
 
-/** URI scheme reserved for APUS Reflex session snapshots. */
+/** URI scheme reserved for APUS Reflex Harness session snapshots. */
 export const SESSION_REFERENCE_SCHEME = 'dsh-session:'
 
 /**

@@ -145,7 +145,7 @@ export class InspectorEndpoint {
     }
     const session = new CdpSession(
       transport,
-      { targetId: this.config.targetId, title: 'APUS Reflex Host' },
+      { targetId: this.config.targetId, title: 'APUS Reflex Harness Host' },
       this.sources,
       this.network,
       this.realms,
@@ -224,7 +224,7 @@ export class InspectorEndpoint {
     return {
       id: this.config.targetId,
       type: 'page',
-      title: 'APUS Reflex Host',
+      title: 'APUS Reflex Harness Host',
       description: 'Experimental cross-realm Inspector target',
       url: 'dsh://host',
       webSocketDebuggerUrl: this.cdpUrl(),

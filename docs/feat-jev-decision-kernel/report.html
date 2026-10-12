@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>APUS Reflex 瞬策</title>
+<title>APUS Reflex Harness 瞬策</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700;900&family=Noto+Sans+SC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 :root {
@@ -129,7 +129,7 @@ a { color: var(--accent); }
 
 <header class="hero">
   <div class="brand">APUS REFLEX 瞬策 · v0.1 · 战略更新 2026-10-09</div>
-  <h1>APUS Reflex 瞬策</h1>
+  <h1>APUS Reflex Harness 瞬策</h1>
   <p class="tagline">瞬时执行，深度思考</p>
   <p class="sub">我们的战略是 Model as Harness：让大小脑混合模型成为 Harness 的运行管理者，接管 tools、skills、memory、context、subagent 等事务的决策与调度。小脑负责即时判断，大脑负责复杂推理、规划与执行，运行时落实权限、执行动作并记录结果；五类事务分阶段接入，以真实任务验收。</p>
   <p class="sub"><a href="../dev-continuum-reflex-integration/open-source-docs-audit.zh.md">内部汇报已私有归档；公开资料说明</a> · <a href="demo-plan.html">演示方案与UIUX对照</a> · <a href="architecture.html">产品与技术架构总览</a> · <a href="mu-p0-review.html">mu 参考与下一批 P0 排序</a> · <a href="feature-acceptance.html">逐项实现及真实验收</a></p>
@@ -144,11 +144,11 @@ a { color: var(--accent); }
 <section>
   <div class="eyebrow">定位</div>
   <h2>即时决策融合：反射层 + 推理层</h2>
-  <p class="thesis">人碰到烫的东西会先缩手、再思考。今天的 agent 却把“该不该换个模型”“这句是不是新要求”“现在能不能插话”这些本该条件反射的判断，全部交给大模型慢慢想，或者干脆不判断。APUS Reflex 瞬策把这些判断抽出来，交给专门做即时决策的 Jev，融合进 harness 的每个关键节点。</p>
+  <p class="thesis">人碰到烫的东西会先缩手、再思考。今天的 agent 却把“该不该换个模型”“这句是不是新要求”“现在能不能插话”这些本该条件反射的判断，全部交给大模型慢慢想，或者干脆不判断。APUS Reflex Harness 瞬策把这些判断抽出来，交给专门做即时决策的 Jev，融合进 harness 的每个关键节点。</p>
   <div class="arch-wrap">
   <svg class="arch" viewBox="0 0 1120 752" role="img" aria-labelledby="product-arch-title product-arch-desc">
-    <title id="product-arch-title">APUS Reflex 瞬策产品架构：小脑、大脑与 harness 底座</title>
-    <desc id="product-arch-desc">APUS Reflex 瞬策是一个完整的 agent harness：用户的每条消息先经过瞬策小脑（System 1，Jev 9B 亚秒级封闭判断），小脑给深度推理大脑（System 2）派活、插话并核验完成，经下游管理与编排选择和监控本地模型、云端模型和专业 agent；两者都建立在 harness 底座的原生能力之上。</desc>
+    <title id="product-arch-title">APUS Reflex Harness 瞬策产品架构：小脑、大脑与 harness 底座</title>
+    <desc id="product-arch-desc">APUS Reflex Harness 瞬策是一个完整的 agent harness：用户的每条消息先经过瞬策小脑（System 1，Jev 9B 亚秒级封闭判断），小脑给深度推理大脑（System 2）派活、插话并核验完成，经下游管理与编排选择和监控本地模型、云端模型和专业 agent；两者都建立在 harness 底座的原生能力之上。</desc>
     <defs>
       <marker id="parch-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon class="tip" points="0 0, 8 3, 0 6"/></marker>
       <marker id="parch-arrow-sig" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon class="tip sig" points="0 0, 8 3, 0 6"/></marker>
@@ -269,7 +269,7 @@ a { color: var(--accent); }
   <p>瞬策本身就是一个完整的 harness：底座沿用成熟 harness 的全部原生能力，瞬策反射插件挂在它的公开扩展点上。每个反射点把当下的问题交给判定内核，内核向 Jev 提封闭问题，再把带概率的判断交回插件，由插件直接执行动作；推理层模型只管干活。</p>
   <div class="arch-wrap">
   <svg class="arch" viewBox="0 0 1080 772" role="img" aria-labelledby="reflex-arch-title reflex-arch-desc">
-    <title id="reflex-arch-title">APUS Reflex 瞬策技术架构</title>
+    <title id="reflex-arch-title">APUS Reflex Harness 瞬策技术架构</title>
     <desc id="reflex-arch-desc">浏览器消息进入 harness 底座（agent loop、会话日志、工具、子 agent、目标、上下文、技能与 MCP、Web 客户端）；瞬策反射插件经公开扩展点接入，通过判定内核向 Jev 9B 提封闭问题，把判断直接变成换模型、插话、转发 Codex 等动作，每次判断写入会话日志，进展通过 dock 呈现给用户。</desc>
     <defs>
       <marker id="arch-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon class="tip" points="0 0, 8 3, 0 6"/></marker>
@@ -536,7 +536,7 @@ a { color: var(--accent); }
 <section>
   <div class="eyebrow">汇报用</div>
   <h2>30 秒电梯稿</h2>
-  <p class="pitch">APUS Reflex 瞬策的战略是 Model as Harness。我们让大小脑混合模型共同管理 agent 的工具、技能、记忆、上下文与子 agent：小脑即时判断，大脑深度思考，运行时执行动作、落实权限并保存事实。已接入选模型、选技能、任务卡、插话与 Codex 管理；完成核验已有本地真实闭环。下一步逐项贯通五类运行事务，验证任务成功率、人工介入和成功交付的时间与成本，让模型管理能力复用到更多业务场景。</p>
+  <p class="pitch">APUS Reflex Harness 瞬策的战略是 Model as Harness。我们让大小脑混合模型共同管理 agent 的工具、技能、记忆、上下文与子 agent：小脑即时判断，大脑深度思考，运行时执行动作、落实权限并保存事实。已接入选模型、选技能、任务卡、插话与 Codex 管理；完成核验已有本地真实闭环。下一步逐项贯通五类运行事务，验证任务成功率、人工介入和成功交付的时间与成本，让模型管理能力复用到更多业务场景。</p>
   <h2>3 分钟汇报提纲</h2>
   <ol class="outline">
     <li><b>问题</b>：agent 把本该条件反射的判断全交给大模型慢慢想，结果是忘要求、听不进中途的话、委派出去就失控。</li>

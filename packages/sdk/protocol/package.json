@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-sdk-protocol",
-  "description": "Shared wire protocol for the APUS Reflex SDK runtime: the newline-delimited JSON-RPC stdio transport and the named request, result, and notification types spoken between the runtime server and SDK clients",
+  "description": "Shared wire protocol for the APUS Reflex Harness SDK runtime: the newline-delimited JSON-RPC stdio transport and the named request, result, and notification types spoken between the runtime server and SDK clients",
   "version": "0.1.7-rc.2",
   "publishConfig": {
     "access": "public"

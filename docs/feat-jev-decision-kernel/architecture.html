@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>APUS Reflex 架构总览</title>
+<title>APUS Reflex Harness 架构总览</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700&family=Noto+Sans+SC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 :root {
@@ -74,7 +74,7 @@ a { color: var(--accent); }
 <main>
 <header style="display:grid;gap:12px">
   <div class="eyebrow">System3 · 架构与体验总览 · 2026-10-08</div>
-  <h1>APUS Reflex：agent 的管家与模型路由管理层</h1>
+  <h1>APUS Reflex Harness：agent 的管家与模型路由管理层</h1>
   <p class="lead muted">分层架构包含 System3 即时决策层与 DSH 原生底座。下文运行流程和历史数据对应 v0.1 基线；第六节列出新一轮 P0 设计与真实验收进度。每项完整实现和当前构建验收见<a href="feature-acceptance.html">逐项验收矩阵</a>。</p>
   <p class="thesis">DSH 负责“让 agent 能干活”，System3 负责“让 agent 干对、干快、按用户说的干”。Jev 只做快速、可回放的封闭判断，动作由 System3 直接执行，文字只用用户原话或模型生成。</p>
 </header>

@@ -29,7 +29,7 @@ describe('the persona row', () => {
       const fiber = await scope.ctx.plugin(Persona, { prefix: 'Preset.', suffix: 'Workspace {{cwd}}.' })
       const assembly = await ctx.systemPrompt.assemble({ scope: key })
       expect(assembly.sections.find(section => section.name === PERSONA_SUFFIX_SECTION)?.text).toBe('Workspace {{cwd}}.')
-      expect(renderPrompt(assembly)).toBe('You are an AI agent powered by APUS Reflex.\n\nPreset.\n\nUse tools.\n\nWorkspace /local.')
+      expect(renderPrompt(assembly)).toBe('You are an AI agent powered by APUS Reflex Harness.\n\nPreset.\n\nUse tools.\n\nWorkspace /local.')
       expect(renderPrompt(await ctx.systemPrompt.assemble())).toContain('Global workspace.')
       await fiber.dispose()
       const restored = renderPrompt(await ctx.systemPrompt.assemble({ scope: key }))

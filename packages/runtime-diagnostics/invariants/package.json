@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-invariants",
-  "description": "Registry service for package-owned APUS Reflex runtime invariants",
+  "description": "Registry service for package-owned APUS Reflex Harness runtime invariants",
   "version": "0.1.7-rc.2",
   "publishConfig": {
     "access": "public"

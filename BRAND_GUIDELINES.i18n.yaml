@@ -2,6 +2,15 @@
 # section, a hash of its English and Chinese blocks outside code blocks and generated regions.
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write BRAND_GUIDELINES.md
-/apus-reflex-brand-guidelines:
-  en: 9f96f9f4cc80552e
-  zh: 94fc99211551c6cd
+/apus-reflex-harness-brand-guide:
+  en: b760797611426339
+  zh: 9e6d348638e4da30
+/apus-reflex-harness-brand-guide/name-and-message:
+  en: ecfb0502cb8ecae7
+  zh: b39f6b0bdca0c70a
+/apus-reflex-harness-brand-guide/gradient-bird-logo:
+  en: 6af3991eee30d13d
+  zh: 2e8c78122e08c0fb
+/apus-reflex-harness-brand-guide/licenses-and-attribution:
+  en: fb9f1cca16a73807
+  zh: 151caa7bf3dd3cdf

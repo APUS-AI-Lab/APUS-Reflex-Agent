@@ -2,69 +2,69 @@
 # section, a hash of its English and Chinese blocks outside code blocks and generated regions.
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write apps/desktop/README.md
-/apus-reflex-desktop:
-  en: f24224e36889298a
-  zh: 914d523228eb57e6
-/apus-reflex-desktop/closing-the-window-and-quitting:
-  en: 2be64b9664384109
-  zh: 8ec11426b310ad61
-/apus-reflex-desktop/key-technical-decisions:
-  en: 454623d73909e99c
-  zh: d0b31e4bef01ef2b
-/apus-reflex-desktop/key-technical-decisions/bundled-workspace-dependencies:
+/apus-reflex-harness-desktop:
+  en: 1ab98fea418e3bf7
+  zh: f910ad9775f613a2
+/apus-reflex-harness-desktop/closing-the-window-and-quitting:
+  en: e51ee348be65b1cc
+  zh: 1e7336b00faae7b7
+/apus-reflex-harness-desktop/key-technical-decisions:
+  en: 016eb450b68dd11d
+  zh: de5fbe181a65340c
+/apus-reflex-harness-desktop/key-technical-decisions/bundled-workspace-dependencies:
   en: 31cbb7452be8e1ad
   zh: 502ec556e2ec301e
-/apus-reflex-desktop/installation-ownership:
+/apus-reflex-harness-desktop/installation-ownership:
   en: 8307baf6c5b691d0
   zh: 86e46b9552017ff6
-/apus-reflex-desktop/installation-ownership/runtime-and-plugin-activation:
-  en: 6e867a740a9f0472
-  zh: 771344b0bd082e8d
-/apus-reflex-desktop/develop:
+/apus-reflex-harness-desktop/installation-ownership/runtime-and-plugin-activation:
+  en: 25cdb31bc8f41114
+  zh: 107a9d9260d36719
+/apus-reflex-harness-desktop/develop:
   en: 9b9b362a9865e763
   zh: c748901168e2db8c
-/apus-reflex-desktop/develop/startup-onboarding:
+/apus-reflex-harness-desktop/develop/startup-onboarding:
   en: 5e2d62207a603d81
   zh: 5fb863d4906f4a67
-/apus-reflex-desktop/develop/welcome-window-appearance:
+/apus-reflex-harness-desktop/develop/welcome-window-appearance:
   en: 7220801ccc3b2e6b
   zh: 042dc97976aef979
-/apus-reflex-desktop/package:
+/apus-reflex-harness-desktop/package:
   en: 4cd8a8da6977928d
   zh: 9f624855a2edac37
-/apus-reflex-desktop/package/release-versions:
+/apus-reflex-harness-desktop/package/release-versions:
   en: f461b255133384cc
   zh: 2b9db718f22fdd04
-/apus-reflex-desktop/package/runtime-file-selection:
+/apus-reflex-harness-desktop/package/runtime-file-selection:
   en: b590b8ced88e6ad9
   zh: f6a43f5ee989c5a9
-/apus-reflex-desktop/package/upload-updates:
+/apus-reflex-harness-desktop/package/upload-updates:
   en: c64d7fe2fe2534b7
   zh: 2188e1ae99ab4b33
-/apus-reflex-desktop/package/unsigned-windows-test-installer:
+/apus-reflex-harness-desktop/package/unsigned-windows-test-installer:
   en: cfd5780dd26a8e46
   zh: f7a16b1ede793b7b
-/apus-reflex-desktop/package/windows-installer-interface:
+/apus-reflex-harness-desktop/package/windows-installer-interface:
   en: f176a8b1c7de3064
   zh: 6ea2dbe6bb808c34
-/apus-reflex-desktop/package/windows-ev-signing:
+/apus-reflex-harness-desktop/package/windows-ev-signing:
   en: d76caf74223b316c
   zh: b427e70ce8d6ecd8
-/apus-reflex-desktop/updates:
-  en: c680c95aa1093262
-  zh: dfc20e8fe40779e3
-/apus-reflex-desktop/updates/mandatory-update-policy:
+/apus-reflex-harness-desktop/updates:
+  en: b612703043945861
+  zh: 16665f14291c1b14
+/apus-reflex-harness-desktop/updates/mandatory-update-policy:
   en: 2f789a4949fafb12
   zh: d8b28c01cfee11b7
-/apus-reflex-desktop/updates/local-updater-qualification:
+/apus-reflex-harness-desktop/updates/local-updater-qualification:
   en: bc50fd8a4d96c227
   zh: fb0a6ce80c31cda6
-/apus-reflex-desktop/low-level-development-overrides:
+/apus-reflex-harness-desktop/low-level-development-overrides:
   en: 0b225f914142ef0b
   zh: 9ffd07768d37824e
-/apus-reflex-desktop/known-limitations:
-  en: 2e4ce87236d1ec26
-  zh: 6074eeff148a8573
-/apus-reflex-desktop/dev-note:
+/apus-reflex-harness-desktop/known-limitations:
+  en: a53dac8d809c5c8e
+  zh: 1554a795a7d918fb
+/apus-reflex-harness-desktop/dev-note:
   en: 8e26b460ba31f21b
   zh: fbcd0307b3867125

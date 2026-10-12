@@ -1,8 +1,8 @@
-# APUS Reflex Python SDK
+# APUS Reflex Harness Python SDK
 
 English | [中文](README.zh.md)
 
-Python packages for driving APUS Reflex as a subprocess. The client SDK communicates with the bundled runtime over newline-delimited JSON-RPC on stdio.
+Python packages for driving APUS Reflex Harness as a subprocess. The client SDK communicates with the bundled runtime over newline-delimited JSON-RPC on stdio.
 
 ## Packages
 

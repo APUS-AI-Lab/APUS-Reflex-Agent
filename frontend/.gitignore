@@ -1,0 +1,47 @@
+node_modules/
+out/
+dist/
+dist-dev/
+.DS_Store
+*.log
+coverage/
+/doc/
+/deliverables/
+build/icon.iconset/
+build/app-icon.iconset/
+build/icon-1024.png
+.env
+.env.*
+!.env.example
+.coaligne/
+.coaligneignore
+
+
+# Python bytecode from release-note scripts / tests
+__pycache__/
+*.pyc
+
+# Native recovery UI smoke-test output
+/artifacts/recovery-ui/
+/artifacts/brand/
+
+# Local-only design docs
+docs/plugin-management.zh.md
+docs/default-capabilities.zh.md
+docs/mobile-connection-latency.zh.md
+
+# Local pnpm content store
+/.pnpm-store/
+/.build/
+/packages/ppt-runtime/templates/
+/packages/ppt-bundles/
+
+# Maintained PPT JavaScript seeds are inputs, not Harness lib/ build outputs.
+!/packages/ppt-runtime/core/lib/
+!/packages/ppt-runtime/core/lib/**
+!/packages/ppt-runtime/adapter/lib/
+!/packages/ppt-runtime/adapter/lib/**
+
+# The image plugin imports these maintained modules directly.
+!/packages/dsh-image-generation/lib/
+!/packages/dsh-image-generation/lib/**

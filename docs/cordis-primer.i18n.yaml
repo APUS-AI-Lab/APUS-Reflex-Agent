@@ -3,13 +3,13 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/cordis-primer.md
 /cordis-primer:
-  en: 0d6aabe693bb7e65
-  zh: 82ea6dfb8539c2cb
+  en: 59b741eefe24466c
+  zh: b35e9f8701910193
 /cordis-primer/cordis-in-five-ideas:
   en: c11cc0f2927f7bad
   zh: 4fc01f41da6b1c3e
 /cordis-primer/dispatch-modes:
-  en: 7adc1e4cc7a7a471
+  en: 7d5cd2ffb5b3053a
   zh: 879bf8afcd8f7c9f
 /cordis-primer/cordis-waterfall-semantics:
   en: 34055815ef4034ee

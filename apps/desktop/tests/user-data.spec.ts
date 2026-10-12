@@ -68,3 +68,17 @@ it('preserves a separately configured Session directory', () => {
   expect(f.paths.sessionData).toBe(join(f.root, 'isolated session'))
   expect(f.app.setPath).toHaveBeenCalledExactlyOnceWith('userData', f.stable)
 })
+
+
+it('leaves the full product-name default and existing data unchanged', () => {
+  const f = fixture()
+  mkdirSync(f.stable)
+  writeFileSync(join(f.stable, 'Cookies'), 'existing full-name session')
+  f.paths.userData = f.stable
+  f.paths.sessionData = f.stable
+  preserveDesktopUserData(f.app)
+  expect(f.app.setPath).not.toHaveBeenCalled()
+  expect(f.paths.userData).toBe(f.stable)
+  expect(f.paths.sessionData).toBe(f.stable)
+  expect(readFileSync(join(f.stable, 'Cookies'), 'utf8')).toBe('existing full-name session')
+})

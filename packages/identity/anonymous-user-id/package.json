@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-anonymous-user-id",
-  "description": "Shared anonymous user identity for APUS Reflex telemetry and feedback correlation",
+  "description": "Shared anonymous user identity for APUS Reflex Harness telemetry and feedback correlation",
   "version": "0.1.7-rc.2",
   "publishConfig": {
     "access": "public"

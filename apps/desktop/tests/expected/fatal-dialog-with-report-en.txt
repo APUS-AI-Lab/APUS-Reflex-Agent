@@ -1,4 +1,4 @@
-APUS Reflex is unavailable
+APUS Reflex Harness is unavailable
 The application could not start or stopped unexpectedly.
 Desktop Host failed
 Plugin initialization failed

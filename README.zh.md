@@ -1,12 +1,22 @@
-# APUS Reflex
+# APUS Reflex Harness
+
+![APUS Reflex Harness](apps/web/public/brand-source.webp)
 
 [English](README.md) | 中文
 
-> **瞬策 · Instant action. Deep thinking.** 用自己的模型、持久任务历史与 **Loop Working（循环工程）**，构建 Personal Agent。
+> **瞬策 · 瞬时执行，深度思考 · Model-as-a-Harness。** 用自己的模型、持久任务历史与 **Loop Working（循环工程）**，构建 Personal Agent。
 
 APUS 将连续的模型调用组织成围绕目标持续推进的工作：理解需求、选择行动、执行、检查证据、恢复相关上下文，再继续。你选择通用模型负责规划与生成，也可以接入自己的 Reflex/Jev 决策服务，在关键节点进行结构化判断。
 
-APUS Reflex 将模型推理与执行、权限及持久 Session 历史分开管理。项目处于 **开发者预览阶段**。[发布准备评审](docs/dev-continuum-reflex-integration/release-readiness.zh.md) 记录了已验证行为和仍需完成的验收。
+APUS 将模型推理与执行、权限及持久 Session 历史分开管理。项目处于 **开发者预览阶段**。[发布准备评审](docs/dev-continuum-reflex-integration/release-readiness.zh.md) 记录了已验证行为和仍需完成的验收。
+
+本次以前后端合并的一体化仓库交付：保留原 Harness 为主仓，桌面客户端纳入 `frontend/`，统一管理配置、构建与打包。下载安装包后无需另外安装或启动后端；一体化 Release 仍在准备中。
+
+## 下载桌面客户端
+
+前往 [Releases](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/releases) 查看已发布安装包、支持平台与验收情况。一体化 `0.1.0`（`v0.1.0`）未签名预览版正在准备中，正式签名尚未配置；安装包以实际发布的附件为准。GitHub 的“Source code”压缩包是源码，不是可安装应用。
+
+桌面安装包内置运行时，使用者无需另装 Git、Node.js 或后端。按[安装教程](docs/feat-integrated-product/installation.zh.md)安装，再按[模型配置教程](docs/feat-integrated-product/configuration.zh.md)接入自己的服务商。预览版可能存在兼容性变化，授予文件访问权限前请阅读 [SAFETY.zh.md](SAFETY.zh.md)。
 
 ## 为持续的个人项目打造 Personal Agent
 
@@ -85,7 +95,7 @@ APUS Reflex 将模型推理与执行、权限及持久 Session 历史分开管�
 
 | 配置 | 可用行为 |
 | --- | --- |
-| 通用模型，不接 Jev | Harness 的生成、工具与 Session 持久化。Reflex 专属 Continuum 功能保持关闭。 |
+| 通用模型，不接 Jev | 通用模型生成、工具执行与 Session 持久化。Reflex 专属 Continuum 功能保持关闭。 |
 | 已配置 Reflex/Jev | 可分别启用结构化决策能力；仅挂载 provider 不会自动激活所有集成。 |
 | 已启用 Continuum | 需要 Reflex，以及记忆准入和 scope 设置。选择器的 off/shadow/active 分别对应基线选择、记录建议和采纳验证后的建议。 |
 | Reflex 控制层 部署未配置数据类别 | Reflex 控制层 显式关闭，包括本地过程监督；普通生成继续使用已配置的 provider。 |
@@ -102,7 +112,7 @@ APUS Reflex 将模型推理与执行、权限及持久 Session 历史分开管�
 
 ## 从源码运行
 
-需要 Node.js `^22.19 || >=24`，以及 `packageManager` 声明的 pnpm 版本。
+安装 Git、Node.js 24 与根 `packageManager` 声明的 pnpm 版本，然后执行：
 
 <a id="run"></a>
 
@@ -111,18 +121,19 @@ APUS Reflex 将模型推理与执行、权限及持久 Session 历史分开管�
 ```sh
 git clone https://github.com/APUS-AI-Lab/APUS-Reflex-Harness.git
 cd APUS-Reflex-Harness
-pnpm install
-pnpm run build
-pnpm dsh web
+pnpm run setup
+pnpm run start:desktop
 ```
 
-`pnpm run build` 准备仓库构建产物；`pnpm dsh web` 直接启动这些产物，不会重新构建。在 Web 设置中配置生成模型和凭据。需要开发时自动重建，可使用 `pnpm run dev:web`。
+`setup` 安装前后端依赖、构建 Harness，并从当前仓库准备桌面运行时；首次下载与构建需要联网和时间。启动后在“设置 → 模型”配置服务商，并在对话中选择模型。需要 Web 开发入口可运行 `pnpm run dev:web`。环境要求与排查见[源码开发教程](docs/feat-integrated-product/development.zh.md)。
 
-可选的 Reflex 决策与记忆需要对应的 profile 配置。请参阅 [公共 provider 指南](docs/dev-continuum-reflex-integration/public-provider-configuration.zh.md)、[Reflex 控制层 指南](packages/experimental/system3/README.zh.md) 和 [Continuum 指南](packages/context/continuum/README.zh.md)。上面的启动命令不会自动开启所有能力。
+可选的 Reflex 服务通过“设置 → Reflex 模型配置”配置。连接成功不会自动开启路由、监督或 Continuum；这些能力仍需对应的配置、权限与验收。参见[配置教程](docs/feat-integrated-product/configuration.zh.md)、[公共 provider 指南](docs/dev-continuum-reflex-integration/public-provider-configuration.zh.md)、[Reflex 控制指南](packages/experimental/system3/README.zh.md)与 [Continuum 指南](packages/context/continuum/README.zh.md)。
 
-## 两个独立仓库
+## 一体化仓库与发行
 
-[APUS Reflex](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness) 管理运行时及其 Web/client 组件。[APUS Reflex Desktop](https://github.com/APUS-AI-Lab/APUS-Reflex-Frontend) 管理独立桌面组装，并固定一个 Harness revision。更新 Harness `main` 不会更新已经打包的桌面运行时；需要准备并验证目标 pin。
+`frontend/` 管理 Electron 桌面客户端，`apps/web/` 管理 Web 入口，`packages/` 管理运行时与共享 UI。桌面安装包从同一提交组装前后端，不需要另行克隆前端仓库。已安装客户端包含打包时的运行时，更新源码不会修改已安装版本；升级请使用对应 Release 的安装包。
+
+[开发教程](docs/feat-integrated-product/development.zh.md)说明本地工作流程，[发行流程](docs/feat-integrated-product/releases.zh.md)说明打包、校验和发布要求。
 
 ## 贡献与支持
 
@@ -134,4 +145,4 @@ pnpm dsh web
 
 ## 许可证与归属
 
-[MIT](LICENSE)。原始版权及许可声明保留在 [LICENSE](LICENSE) 与 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。APUS Reflex 是独立产品；产品品牌不替代上游作者归属，也不暗示上游背书。参见 [品牌与组装](docs/feat-apus-brand/branding.zh.md)。
+APUS 基于 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)、DataElement 的 DSH Desktop、[Cordis](https://github.com/cordiverse/cordis) 及其贡献者的工作。原始 MIT 声明完整保留在 [LICENSE](LICENSE) 与 [frontend/LICENSE](frontend/LICENSE)，依赖许可见 [Harness 声明](THIRD_PARTY_NOTICES.md)与[桌面声明](frontend/THIRD_PARTY_NOTICES.md)。APUS 品牌不替代上游作者归属，也不表示获得其背书。参见[品牌与组装说明](docs/feat-apus-brand/branding.zh.md)。

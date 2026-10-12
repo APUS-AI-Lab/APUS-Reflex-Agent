@@ -162,7 +162,7 @@ function runtimeResources(): RuntimeResources {
 function developmentPrimaryRuntime(): string {
   const directory = process.env.DSH_DESKTOP_PRIMARY_RUNTIME_DIR
   if (directory === undefined || directory === '') {
-    throw new Error('APUS Reflex desktop: DSH_DESKTOP_PRIMARY_RUNTIME_DIR is required for an unpackaged launch')
+    throw new Error('APUS Reflex Harness desktop: DSH_DESKTOP_PRIMARY_RUNTIME_DIR is required for an unpackaged launch')
   }
   return directory
 }
@@ -172,7 +172,7 @@ function developmentHostInspectPort(enabled: boolean): number | undefined {
   if (!enabled || configured === undefined || configured === '') return undefined
   const port = Number(configured)
   if (!Number.isSafeInteger(port) || port < 1 || port > 65_535) {
-    throw new Error('APUS Reflex desktop: DSH_DESKTOP_HOST_INSPECT_PORT must be an integer from 1 through 65535')
+    throw new Error('APUS Reflex Harness desktop: DSH_DESKTOP_HOST_INSPECT_PORT must be an integer from 1 through 65535')
   }
   return port
 }
@@ -388,7 +388,7 @@ async function main(): Promise<void> {
     assertDesktopSender(event, ['app'])
     if (mainWindow === undefined || mainWindow.isDestroyed() || event.sender !== mainWindow.webContents
       || event.senderFrame === null || event.senderFrame !== mainWindow.webContents.mainFrame) {
-      throw new Error('APUS Reflex desktop: rejected IPC from an unowned renderer')
+      throw new Error('APUS Reflex Harness desktop: rejected IPC from an unowned renderer')
     }
   }
   let navigation: { window: BrowserWindow; url: string; promise: Promise<void> } | undefined
@@ -650,9 +650,9 @@ async function main(): Promise<void> {
   ipcMain.handle(DESKTOP_IPC.bootFailed, (event, message: unknown) => {
     assertDesktopSender(event, ['app'])
     if (event.sender !== mainWindow?.webContents || event.senderFrame !== event.sender.mainFrame) {
-      throw new Error('APUS Reflex desktop: rejected startup failure from a non-primary frame')
+      throw new Error('APUS Reflex Harness desktop: rejected startup failure from a non-primary frame')
     }
-    if (typeof message !== 'string') throw new Error('APUS Reflex desktop: startup failure must be text')
+    if (typeof message !== 'string') throw new Error('APUS Reflex Harness desktop: startup failure must be text')
     reportFatal(new Error(message), 'web-boot')
   })
 
@@ -877,7 +877,7 @@ async function main(): Promise<void> {
   const applicationIconPath = development ? join(app.getAppPath(), 'resources', 'icon-windows.png')
     : join(process.resourcesPath, 'icon.png')
   app.setAboutPanelOptions({
-    applicationName: 'APUS Reflex',
+    applicationName: 'APUS Reflex Harness',
     applicationVersion: app.getVersion(),
     // The release has no separate build number; omit Electron's bundle version.
     version: '',

@@ -1,1 +1,1 @@
-Add creditsAPUS Reflex charges credits based on the tokens used by models and tools. Add credits in advance to keep your tasks running without interruption. Your balance is only used while the agent is working on a task.Add creditsNextBackSkip
+Add creditsAPUS Reflex Harness charges credits based on the tokens used by models and tools. Add credits in advance to keep your tasks running without interruption. Your balance is only used while the agent is working on a task.Add creditsNextBackSkip

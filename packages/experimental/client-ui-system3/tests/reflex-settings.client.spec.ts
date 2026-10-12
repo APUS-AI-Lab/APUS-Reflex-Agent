@@ -1,17 +1,18 @@
 import { describe, expect, it, vi } from 'vitest'
+import type { ReflexStatus } from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
 import { stubConfigForm } from '@deepseek-ai/dsh-client-test-runtime'
 import { ReflexCardController, type ReflexSettings } from '../src/client/reflex-settings-controller.ts'
 
-function fixture() {
+function fixture(configured = true) {
   const host = stubConfigForm<ReflexSettings>()
   host.publish({ status: 'ready', writable: true, value: { endpoint: 'https://reflex.test', model: 'decision', effort: 'high', timeoutMs: 1000, apiKeyEnv: 'REFLEX_API_KEY' }, user: {} })
   const credentials = {
-    describe: vi.fn(async () => ({ ok: true, value: { REFLEX_API_KEY: { configured: true, writable: true } } })),
+    describe: vi.fn(async () => ({ ok: true, value: { REFLEX_API_KEY: { configured, writable: true } } })),
     set: vi.fn(async () => ({ ok: true, value: undefined })), unset: vi.fn(async () => ({ ok: true, value: undefined })),
   }
   const reflex = {
     testConnection: vi.fn(async (_input: object, _signal?: AbortSignal) => ({ ok: true, value: { kind: 'ok', stage: 'decision', model: 'decision', effort: 'high', latencyMs: 4 } })),
-    readStatus: vi.fn(async () => ({ ok: true, value: { provider: { id: 'system-one', model: 'decision', endpoint: 'https://reflex.test' }, capabilities: [{ id: 'codexSupervision', implemented: false, enabled: false }] } })),
+    readStatus: vi.fn(async (): Promise<{ ok: boolean; value: ReflexStatus }> => ({ ok: true, value: { provider: { id: 'system-one', model: 'decision', endpoint: 'https://reflex.test' }, capabilities: [{ id: 'codexSupervision', implemented: false, enabled: false }] } })),
   }
   const controller = new ReflexCardController(host.scope, { remote: { credentials, reflex } } as never)
   const face = controller.inject()
@@ -68,7 +69,7 @@ describe('Reflex dedicated settings controller', () => {
     } finally { f.controller.dispose() }
   })
 
-  it('does not claim a refused replacement succeeded because an old key exists', async () => {
+  it('refuses replacing an existing reference and retains the draft', async () => {
     const f = fixture()
     try {
       f.credentials.set.mockResolvedValueOnce({ ok: false, value: undefined })
@@ -77,16 +78,21 @@ describe('Reflex dedicated settings controller', () => {
       await vi.waitFor(() =>{  expect(f.state().failed).toBe(true) })
       expect(f.state().apiKey.text).toBe('new-secret')
       expect(f.host.mutate).not.toHaveBeenCalled()
+      expect(f.credentials.set).not.toHaveBeenCalled()
+      expect(f.state().credentialSaveError).toBe('configured')
       f.face.discard()
       expect(f.state().apiKey.text).toBe('')
     } finally { f.controller.dispose() }
   })
 
   it('keeps an acknowledged credential save successful when the status refresh fails', async () => {
-    const f = fixture()
+    const f = fixture(false)
     try {
-      await vi.waitFor(() => { expect(f.state().apiKeyConfigured).toBe(true) })
-      f.credentials.describe.mockRejectedValueOnce(new Error('status unavailable'))
+      await f.face.refresh()
+      f.credentials.set.mockImplementationOnce(async () => {
+        f.credentials.describe.mockRejectedValueOnce(new Error('status unavailable'))
+        return { ok: true, value: undefined }
+      })
       f.face.edit('apiKey', 'replacement')
       f.face.save()
       await vi.waitFor(() => { expect(f.state().saving).toBe(false) })
@@ -97,7 +103,7 @@ describe('Reflex dedicated settings controller', () => {
   })
 
   it('uses the managed reference when saving a key with an empty reference', async () => {
-    const f = fixture()
+    const f = fixture(false)
     try {
       f.face.edit('apiKey', 'replacement')
       f.face.edit('apiKeyEnv', '')
@@ -120,7 +126,7 @@ describe('Reflex dedicated settings controller', () => {
 })
 
 it('saves a replacement key through Credentials and clears it through the current reference', async () => {
-  const f = fixture()
+  const f = fixture(false)
   try {
     f.face.edit('apiKey', 'new-secret')
     f.face.save()
@@ -200,7 +206,7 @@ it('rejects malformed URLs and clears unavailable runtime observations', async (
 })
 
 it('invalidates probes after Host settings change and assigns the first managed key reference', async () => {
-  const f = fixture()
+  const f = fixture(false)
   try {
     await f.face.testConnection()
     f.host.publish({ status: 'ready', writable: true, value: { endpoint: 'http://localhost', model: 'decision',
@@ -232,19 +238,19 @@ it('ignores pending runtime and credential deletion results after disposal', asy
   status.resolve({ ok: false, value: { provider: { id: '', model: '', endpoint: '' }, capabilities: [] } })
   clear.resolve({ ok: false, value: undefined })
   await Promise.all([refreshing, clearing])
-  expect(f.state().runtime?.provider.model).toBe('decision')
+  expect(f.state().runtime?.provider?.model).toBe('decision')
   expect(f.state().credentialFailed).toBe(false)
 })
 
 it('does not start a second save while credential acknowledgement is pending', async () => {
-  const f = fixture()
+  const f = fixture(false)
   const pending = Promise.withResolvers<Awaited<ReturnType<typeof f.credentials.set>>>()
   try {
     f.credentials.set.mockReturnValueOnce(pending.promise)
     f.face.edit('apiKey', 'new-secret')
     f.face.save()
     f.face.save()
-    expect(f.credentials.set).toHaveBeenCalledOnce()
+    await vi.waitFor(() => { expect(f.credentials.set).toHaveBeenCalledOnce() })
   } finally {
     pending.resolve({ ok: true, value: undefined })
     await vi.waitFor(() => { expect(f.state().saving).toBe(false) })
@@ -262,5 +268,87 @@ it('retains drafts when a profile without a user layer rejects its first configu
     await vi.waitFor(() => { expect(f.state().failed).toBe(true) })
     expect(f.state().endpoint.text).toBe('https://candidate.test')
     expect(f.credentials.set).not.toHaveBeenCalled()
+  } finally { f.controller.dispose() }
+})
+
+
+it('rejects a reused reference before changing the endpoint or writing its new key', async () => {
+  const f = fixture()
+  try {
+    f.face.edit('endpoint', 'https://other-service.test')
+    f.face.edit('apiKey', 'other-service-secret')
+    f.face.save()
+    await vi.waitFor(() => { expect(f.state().credentialSaveError).toBe('configured') })
+    expect(f.host.mutate).not.toHaveBeenCalled()
+    expect(f.credentials.set).not.toHaveBeenCalled()
+    expect(f.state().endpoint.text).toBe('https://other-service.test')
+    expect(f.state().apiKey.text).toBe('other-service-secret')
+    f.face.edit('apiKeyEnv', 'OTHER_SERVICE_KEY')
+    expect(f.state().credentialSaveError).toBeUndefined()
+    f.face.save()
+    await vi.waitFor(() => { expect(f.credentials.set).toHaveBeenCalledWith('OTHER_SERVICE_KEY', 'other-service-secret') })
+    expect(f.credentials.set).toHaveBeenCalledOnce()
+  } finally { f.controller.dispose() }
+})
+
+it.each(['throws', 'refused'])('keeps both stores unchanged when credential preflight %s', async (failure) => {
+  const f = fixture(false)
+  try {
+    await f.face.refresh()
+    if (failure === 'throws') f.credentials.describe.mockRejectedValueOnce(new Error('offline'))
+    else f.credentials.describe.mockResolvedValueOnce({ ok: false, value: { REFLEX_API_KEY: { configured: false, writable: false } } })
+    f.face.edit('endpoint', 'https://other-service.test')
+    f.face.edit('apiKey', 'new-key')
+    f.face.save()
+    await vi.waitFor(() => { expect(f.state().credentialSaveError).toBe('unavailable') })
+    expect(f.host.mutate).not.toHaveBeenCalled()
+    expect(f.credentials.set).not.toHaveBeenCalled()
+    expect(f.state().apiKey.text).toBe('new-key')
+  } finally { f.controller.dispose() }
+})
+
+it.each([false, true])('owns one credential preflight and prevents late writes after disposal=%s', async (dispose) => {
+  const f = fixture(false)
+  await f.face.refresh()
+  const held = Promise.withResolvers<Awaited<ReturnType<typeof f.credentials.describe>>>()
+  f.credentials.describe.mockReturnValueOnce(held.promise)
+  const before = f.credentials.describe.mock.calls.length
+  f.face.edit('apiKey', 'new-key')
+  f.face.save()
+  f.face.save()
+  expect(f.state().saving).toBe(true)
+  expect(f.credentials.describe.mock.calls.length - before).toBe(1)
+  f.face.edit('apiKeyEnv', 'CHANGED_WHILE_CHECKING')
+  f.face.resetField('apiKeyEnv')
+  f.face.discard()
+  expect(f.state().apiKeyEnv.text).toBe('REFLEX_API_KEY')
+  expect(f.state().apiKey.text).toBe('new-key')
+  if (dispose) f.controller.dispose()
+  held.resolve({ ok: true, value: { REFLEX_API_KEY: { configured: false, writable: true } } })
+  await held.promise
+  if (dispose) {
+    expect(f.host.mutate).not.toHaveBeenCalled()
+    expect(f.credentials.set).not.toHaveBeenCalled()
+  } else {
+    await vi.waitFor(() => { expect(f.credentials.set).toHaveBeenCalledOnce() })
+    f.controller.dispose()
+  }
+})
+
+it('refreshes unconfigured runtime status after saving the first connection', async () => {
+  const f = fixture(false)
+  try {
+    f.reflex.readStatus.mockResolvedValueOnce({ ok: true, value: { provider: null, capabilities: [] } })
+    await f.face.refresh()
+    expect(f.state().runtime?.provider).toBeNull()
+    f.face.edit('endpoint', 'https://first.test')
+    f.face.save()
+    await vi.waitFor(() => { expect(f.state().runtime?.provider?.model).toBe('decision') })
+    expect(f.state().failed).toBe(false)
+    f.reflex.readStatus.mockRejectedValueOnce(new Error('status transport unavailable'))
+    f.face.edit('endpoint', 'https://next.test')
+    f.face.save()
+    await vi.waitFor(() => { expect(f.state().runtime).toBeUndefined() })
+    expect(f.state().failed).toBe(false)
   } finally { f.controller.dispose() }
 })

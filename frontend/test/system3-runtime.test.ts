@@ -1,0 +1,77 @@
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, realpathSync } from 'node:fs'
+import { join } from 'node:path'
+import { tmpdir } from 'node:os'
+import { afterEach, describe, expect, it } from 'vitest'
+import { resolveSystem3Runtime } from '../src/main/system3-runtime'
+
+const roots: string[] = []
+function fixture(mode: 'workspace' | 'deployed' = 'workspace') {
+  const root = mkdtempSync(join(tmpdir(), 'system3-runtime-'))
+  roots.push(root)
+  const runtime = join(root, '.build', 'system3-runtime')
+  mkdirSync(runtime, { recursive: true })
+  const source = mode === 'workspace' ? join(root, 'source') : runtime
+  mkdirSync(source, { recursive: true })
+  const names = ['@deepseek-ai/dsh', '@deepseek-ai/dsh-experimental-system3', '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin', '@deepseek-ai/dsh-experimental-system3-policy', '@deepseek-ai/dsh-experimental-system3-evidence', '@deepseek-ai/dsh-experimental-system3-supervisor', '@deepseek-ai/dsh-experimental-client-ui-system3']
+  const packages = names.map((name, index) => {
+    const path = `package-${index}.json`
+    writeFileSync(join(source, path), JSON.stringify({ name, version: '0.1.7-rc.2' }))
+    return { name, path }
+  })
+  writeFileSync(join(source, 'entry.js'), '')
+  const manifest = { formatVersion: 1, product: 'xdan-system3', version: '0.1.7-rc.2', sourceRevision: 'a'.repeat(40), platform: process.platform, arch: process.arch, mode, sourceRoot: source, entry: 'entry.js', packages }
+  const save = () => writeFileSync(join(runtime, 'runtime-manifest.json'), JSON.stringify(manifest))
+  save()
+  return { root, runtime, source, manifest, save }
+}
+afterEach(() => { for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true }) })
+
+describe('own System3 runtime identity', () => {
+  it('launches the explicitly prepared rc.2 checkout', () => {
+    const f = fixture()
+    expect(resolveSystem3Runtime(f.root, '/unused', false)).toMatchObject({ entry: realpathSync(join(f.source, 'entry.js')), version: '0.1.7-rc.2', mode: 'workspace' })
+  })
+  it('fails without a prepared runtime even when a stock install exists', () => {
+    const f = fixture()
+    rmSync(join(f.runtime, 'runtime-manifest.json'))
+    expect(() => resolveSystem3Runtime(f.root, '/unused', false)).toThrow('runtime is missing')
+  })
+  it('rejects a mismatched package version', () => {
+    const f = fixture()
+    const jev = f.manifest.packages[2]
+    if (!jev) throw new Error('Missing Jev fixture')
+    writeFileSync(join(f.source, 'package-2.json'), JSON.stringify({ name: jev.name, version: '0.1.7-rc.1' }))
+    expect(() => resolveSystem3Runtime(f.root, '/unused', false)).toThrow('own rc.2')
+  })
+  it('rejects stock-only or incomplete manifests', () => {
+    const f = fixture()
+    f.manifest.packages = f.manifest.packages.slice(0, 1)
+    f.save()
+    expect(() => resolveSystem3Runtime(f.root, '/unused', false)).toThrow('incomplete')
+  })
+  it('rejects path traversal', () => {
+    const f = fixture()
+    f.manifest.entry = '../outside.js'
+    writeFileSync(join(f.root, 'outside.js'), '')
+    f.save()
+    expect(() => resolveSystem3Runtime(f.root, '/unused', false)).toThrow('escapes')
+  })
+  it('rejects an unpinned source revision', () => {
+    const f = fixture()
+    f.manifest.sourceRevision = 'main'
+    f.save()
+    expect(() => resolveSystem3Runtime(f.root, '/unused', false)).toThrow('incompatible')
+  })
+  it('rejects a runtime prepared for another platform', () => {
+    const f = fixture('deployed')
+    f.manifest.arch = 'wrong-target' as NodeJS.Architecture
+    f.save()
+    expect(() => resolveSystem3Runtime('/unused', join(f.root, '.build'), true)).toThrow('target')
+  })
+  it('requires a deployed closure in packaged apps', () => {
+    const f = fixture()
+    expect(() => resolveSystem3Runtime('/unused', join(f.root, '.build'), true)).toThrow('source checkout')
+    const d = fixture('deployed')
+    expect(resolveSystem3Runtime('/unused', join(d.root, '.build'), true).mode).toBe('deployed')
+  })
+})

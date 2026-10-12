@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Scripted stand-in for the APUS Reflex SDK runtime, driven entirely by
+ * Scripted stand-in for the APUS Reflex Harness SDK runtime, driven entirely by
  * env vars — no model, no network, no harness imports. Speaks the runtime's
  * newline-delimited JSON-RPC protocol on stdio: answers `initialize`,
  * `session/prompt` (streaming scripted `session.event` notifications, then

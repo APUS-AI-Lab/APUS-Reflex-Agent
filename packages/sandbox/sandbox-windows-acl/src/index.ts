@@ -1,5 +1,5 @@
 /**
- * Windows ACL write-restriction sandbox backend for the APUS Reflex
+ * Windows ACL write-restriction sandbox backend for the APUS Reflex Harness
  * sandbox seam. Mirrors the mechanism of github.com/huoyaoyuan/
  * windows-acl-restrict-poc @ 10e4dfb (the fixed revision): a WRITE_RESTRICTED
  * token whose restricting SIDs include distinct workspace and temp write

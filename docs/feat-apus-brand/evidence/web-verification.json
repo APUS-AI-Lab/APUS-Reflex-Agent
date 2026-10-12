@@ -23,5 +23,5 @@
     "web-main-dark-zh.png",
     "web-mobile-dark-zh.png"
   ],
-  "publicationNote": "Historical artifact and UI strings remain unchanged to preserve the recorded test. They do not define current APUS Reflex branding or certify a renamed build."
+  "publicationNote": "Historical artifact and UI strings remain unchanged to preserve the recorded test. They do not define current APUS Reflex Harness branding or certify a renamed build."
 }

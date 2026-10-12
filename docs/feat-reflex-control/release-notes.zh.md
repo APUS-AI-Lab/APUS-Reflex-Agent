@@ -1,10 +1,10 @@
-# APUS Reflex 发布说明
+# APUS Reflex Harness 发布说明
 
 [English](release-notes.md) | 中文
 
 ## 0.1.7-rc.2 · Reflex control 收口
 
-本候选版本统一 DSH runtime 与 APUS Reflex 产品表面，仍属于开发预览，不替代上游 DSH 的许可证和 NOTICE。
+本候选版本统一 DSH runtime 与 APUS Reflex Harness 产品表面，仍属于开发预览，不替代上游 DSH 的许可证和 NOTICE。
 
 ### 新增与已验证
 
@@ -12,7 +12,7 @@
 - 可逆的按行/片段上下文投影与持久恢复，保留原始 Session 并保护 cache 前缀。
 - 轻量 Codex Goal 监督，使用有界证据、带来源回正、原生消费和调整后验证。
 - 严格受控真实 Codex 场景已完成财务产物、`verification-target`、独立 `1137.41` 校验和 `improved`，详见[语义 v6 证据](evidence/semantic-codex-strict-final-v6.zh.md)。
-- APUS Reflex 品牌、MIT/NOTICE 保留、SECURITY 指南和 Electron 包审计。
+- APUS Reflex Harness 品牌、MIT/NOTICE 保留、SECURITY 指南和 Electron 包审计。
 
 ### 公开发布前的已知限制
 
@@ -24,4 +24,4 @@
 
 ### 归属与许可证
 
-APUS Reflex 采用 MIT 分发，同时保留上游 DSH 版权和许可声明。第三方许可证见 [THIRD_PARTY_NOTICES.md](../../THIRD_PARTY_NOTICES.md)。运行模型生成工具前请阅读 [SECURITY.md](../../SECURITY.md)。
+APUS Reflex Harness 采用 MIT 分发，同时保留上游 DSH 版权和许可声明。第三方许可证见 [THIRD_PARTY_NOTICES.md](../../THIRD_PARTY_NOTICES.md)。运行模型生成工具前请阅读 [SECURITY.md](../../SECURITY.md)。

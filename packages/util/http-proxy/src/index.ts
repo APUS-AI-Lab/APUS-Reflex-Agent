@@ -1,5 +1,5 @@
 /**
- * Outbound HTTP proxy support for APUS Reflex.
+ * Outbound HTTP proxy support for APUS Reflex Harness.
  *
  * Node's built-in `fetch` ignores `HTTP_PROXY` and friends, so every harness request would connect
  * directly no matter what the user exported. The launcher resolves one policy from the launch

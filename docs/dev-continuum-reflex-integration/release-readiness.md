@@ -1,4 +1,4 @@
-# APUS Reflex release readiness
+# APUS Reflex Harness release readiness
 
 English | [中文](release-readiness.zh.md)
 
@@ -14,7 +14,7 @@ The memory and Reflex control integration is on `main`. The latest local build, 
 - All seven shipped headless memory cases and one CLI smoke pass. Memory cases include English and Chinese partial-query recovery across source/built process restarts, no Reflex, disabled memory and new-Session isolation. Both built Web memory cases and both PWA cases pass.
 - The final live fusion case uses two independent built headless processes, real Jev selection and DeepSeek generation. The durable memory record retains exact source references; the resumed model request contains the complete original fact under `continuum-memory` with that record ID. The active Jev receipt selects that record with confidence 0.853179; recall is logged, the provider completes normally and the final answer contains the random verification marker. The selector keeps its 2-second deadline and 0.8 threshold with zero retries. Source and artifact hashes remain unchanged during the run. This proves one synthetic same-Session case, not general answer quality or the Reflex control layer's privacy-routing policy.
 - Recorded Session replay passes 186 cases with 2 skips. All eight affected Python SDK scenarios pass after identity-text refresh and again in replay. Their only fixture changes are the model identity text; historical Session generations are unchanged.
-- The Frontend passes all 1,590 tests, typecheck and build. An isolated first launch displays APUS Reflex. These checks do not replace an existing installation or update its old runtime.
+- The Frontend passes all 1,590 tests, typecheck and build. An isolated first launch displays APUS Reflex Harness. These checks do not replace an existing installation or update its old runtime.
 - Earlier live Jev and completion-recovery checks remain bounded historical evidence. Injected premature-completion cases retain actual tool denial, Jev review, real generation and final-artifact assertions; they do not show a model autonomously choosing the injected error. The earlier [Independent harness CI](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/actions/runs/38243375340) does not certify the final release revision, and its skipped real-provider lane is not a pass.
 
 ## Remaining acceptance work

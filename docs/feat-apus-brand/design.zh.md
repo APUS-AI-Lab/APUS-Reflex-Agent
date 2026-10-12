@@ -1,4 +1,4 @@
-# APUS Reflex 全品牌统一设计
+# APUS Reflex Harness 全品牌统一设计
 
 [English](design.md) | 中文
 
@@ -8,7 +8,7 @@
 
 | 项目 | 统一值 |
 | --- | --- |
-| 产品与 Harness 英文全称 | APUS Reflex |
+| 产品与 Harness 英文全称 | APUS Reflex Harness |
 | 中文名 | 瞬策 |
 | 品牌字标 | APUS / REFLEX |
 | Slogan | 瞬时执行，深度思考 |

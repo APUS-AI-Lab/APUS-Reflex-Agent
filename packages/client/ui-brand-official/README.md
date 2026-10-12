@@ -1,5 +1,5 @@
 ---
-description: "Official APUS Reflex brand occupants for the sidebar, active only in official builds; for users and maintainers choosing or replacing brand presentation."
+description: "Official APUS Reflex Harness brand occupants for the sidebar, active only in official builds; for users and maintainers choosing or replacing brand presentation."
 kind: "package-reference"
 ---
 
@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-This package gives an `official` client build the APUS Reflex mark and name in the sidebar. Other build profiles keep the shell's APUS letter mark and product name, while the conversation hero always uses the static APUS letter mark. Choose it for deployments branded as APUS Reflex; deployments with another identity should provide a replacement brand package. It has no runtime state and does not affect model requests.
+This package gives an `official` client build the APUS Reflex Harness mark and name in the sidebar. Other build profiles keep the shell's APUS letter mark and product name, while the conversation hero always uses the static APUS letter mark. Choose it for deployments branded as APUS Reflex Harness; deployments with another identity should provide a replacement brand package. It has no runtime state and does not affect model requests.
 
 ## Table of Contents
 
@@ -25,7 +25,7 @@ This package gives an `official` client build the APUS Reflex mark and name in t
 <a id="use-this-package"></a>
 ## Use this package
 
-Mount this plugin in the browser roster of a deployment whose identity is APUS Reflex, then build the client with the `official` profile so the occupants register.
+Mount this plugin in the browser roster of a deployment whose identity is APUS Reflex Harness, then build the client with the `official` profile so the occupants register.
 
 ### Choosing the profile
 

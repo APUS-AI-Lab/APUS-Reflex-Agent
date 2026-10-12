@@ -46,7 +46,7 @@ Choose this backend when the child must run with its own runtime, model, and too
 
 The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-subagent-acp) is the exhaustive source for every accepted field and its JSDoc.
 
-A APUS Reflex child uses the product launcher and an explicit absolute `DSH_HOME`. The isolated home prevents a nested runtime from discovering the launching person's profiles or credentials; the generic ACP provider does not impose this requirement on non-DSH agents.
+A APUS Reflex Harness child uses the product launcher and an explicit absolute `DSH_HOME`. The isolated home prevents a nested runtime from discovering the launching person's profiles or credentials; the generic ACP provider does not impose this requirement on non-DSH agents.
 
 ```yaml
 - id: subagent-acp

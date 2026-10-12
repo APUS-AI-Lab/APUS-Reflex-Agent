@@ -119,7 +119,7 @@ it('samples one local environment at startup without validating watcher outputs'
     writeClientBuildRecord(root, {
       DSH_CLIENT_BUILD_PROFILE: 'official',
       DSH_CLIENT_COMMIT_HASH: 'fffffff',
-      DSH_CLIENT_TITLE: 'APUS Reflex',
+      DSH_CLIENT_TITLE: 'APUS Reflex Harness',
       DSH_CLIENT_VERSION: '1.2.2',
     })
     await writeFile(join(root, 'packages/client/example/lib/client.js'), 'module.exports = { changed: true }\n')

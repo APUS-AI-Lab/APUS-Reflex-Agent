@@ -3,14 +3,14 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/experimental/agui/README.md
 /:
-  en: 49a027326457981f
-  zh: e9293350e79dd068
+  en: c08f269bc6619921
+  zh: 1c8bbdc667399c2d
 /deepseek-ai-dsh-experimental-agui:
   en: 33038c7de1d574aa
   zh: 8313914d69a6f36f
 /deepseek-ai-dsh-experimental-agui/summary:
-  en: 5c426ef9ba82b289
-  zh: b6ed1f16f5c5224f
+  en: d3c79388c0ced45b
+  zh: ea57aee7e7b2045f
 /deepseek-ai-dsh-experimental-agui/table-of-contents:
   en: 76368b6b1da79c80
   zh: 52384aee991ac542
@@ -18,8 +18,8 @@
   en: e96d73f19d38c2f4
   zh: abd2a952307bd341
 /deepseek-ai-dsh-experimental-agui/use-this-package/configuration:
-  en: 9ab6a06226d44c99
-  zh: e0e0fe0f63291846
+  en: 7b2fb5d3c9c0d315
+  zh: 5ea0713e1039df3a
 /deepseek-ai-dsh-experimental-agui/understand-the-implementation:
   en: 30c1272c1368680e
   zh: 0c5eab21098bdf18

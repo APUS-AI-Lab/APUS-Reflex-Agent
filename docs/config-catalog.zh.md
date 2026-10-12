@@ -894,11 +894,11 @@ export interface Config {
 ```ts config-catalog
 /** Plugin configuration for the built-in System One provider. */
 export interface Config {
-  /** System One gateway URL; credentials must use apiKeyEnv rather than URL user information. */
+  /** System One gateway URL; empty with model leaves the provider unconfigured. Credentials use apiKeyEnv. */
   readonly endpoint: Volatile<string>
   /** Wire protocol; the official API does not receive the OpenJev effort extension. @default 'openjev' */
   readonly protocol: Volatile<'openjev' | 'typesafe'>
-  /** Model identifier used when a decision request omits its model. */
+  /** Model identifier used when a decision request omits its model; empty with endpoint permits first-run settings. */
   readonly model: Volatile<string>
   /** Decision effort used when a request omits it. @default 'low' */
   readonly effort: Volatile<'low' | 'high'>
@@ -3265,7 +3265,7 @@ export type Config = SessionTitleLlmConfig
 ```ts config-catalog
 /** Plugin config (all optional — the built-in facts resolve without defaults). */
 export interface Config {
-  /** APUS Reflex home directory exposed as `DSH_HOME`; defaults to `$DSH_HOME` or `~/.dsh`. */
+  /** APUS Reflex Harness home directory exposed as `DSH_HOME`; defaults to `$DSH_HOME` or `~/.dsh`. */
   dshHome?: string
 }
 ```
@@ -3302,7 +3302,7 @@ export interface Config {
   providerName?: string
   /** Whether project and user roots are included around custom roots. */
   includeDefaultRoots?: boolean
-  /** APUS Reflex config root. Defaults to `$DSH_HOME` or `~/.dsh`. */
+  /** APUS Reflex Harness config root. Defaults to `$DSH_HOME` or `~/.dsh`. */
   dshHome?: string
   /** Shared agent config root. Defaults to `$DSH_AGENTS_HOME` or `~/.agents`. */
   agentsHome?: string
@@ -3781,7 +3781,7 @@ export interface Config {
 ```ts config-catalog
 /** Plugin config: the deployment-authored fragment of the system prompt (see {@link Config.personaPrefix} for its contract). */
 export interface Config {
-  /** Include the fixed APUS Reflex identity before the deployment persona (default true). */
+  /** Include the fixed APUS Reflex Harness identity before the deployment persona (default true). */
   includeHarnessIdentity?: boolean
   /** Include dynamic runtime-context snapshots in model history (default true). */
   includeRuntimeContext?: boolean

@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-terminal-bash",
-  "description": "Persistent shell PTY backend over the APUS Reflex subprocess terminal primitive",
+  "description": "Persistent shell PTY backend over the APUS Reflex Harness subprocess terminal primitive",
   "version": "0.1.7-rc.2",
   "publishConfig": {
     "access": "public"

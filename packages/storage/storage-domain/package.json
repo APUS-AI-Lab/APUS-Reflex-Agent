@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-storage-domain",
-  "description": "Domain data form (ctx.storage.domain): schema-validated, event-emitting KV domains over storage backends for the APUS Reflex",
+  "description": "Domain data form (ctx.storage.domain): schema-validated, event-emitting KV domains over storage backends for the APUS Reflex Harness",
   "version": "0.1.7-rc.2",
   "publishConfig": {
     "access": "public"

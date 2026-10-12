@@ -2,18 +2,18 @@
 # section, a hash of its English and Chinese blocks outside code blocks and generated regions.
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/dev-continuum-reflex-integration/release-readiness.md
-/apus-reflex-release-readiness:
-  en: 3e37a6ec78b04f82
-  zh: 280fb3de1ca56a4e
-/apus-reflex-release-readiness/decision:
+/apus-reflex-harness-release-readiness:
+  en: 72a07917d1c71b85
+  zh: 27d8efdb02a8c416
+/apus-reflex-harness-release-readiness/decision:
   en: f530788029eceae2
   zh: 8b9dbb5c257886a1
-/apus-reflex-release-readiness/verified-evidence:
-  en: 6a60a45f26305f83
-  zh: 16cea2041f86152f
-/apus-reflex-release-readiness/remaining-acceptance-work:
+/apus-reflex-harness-release-readiness/verified-evidence:
+  en: f4bb33a2ec029151
+  zh: f5e301512ec0b69f
+/apus-reflex-harness-release-readiness/remaining-acceptance-work:
   en: ce9065d032c7b419
   zh: c77a4c5e7c2db907
-/apus-reflex-release-readiness/scope:
+/apus-reflex-harness-release-readiness/scope:
   en: 6a8ad36bf48342de
   zh: 68dc216a918221a4

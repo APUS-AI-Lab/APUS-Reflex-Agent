@@ -1,4 +1,4 @@
-# APUS Reflex 演示方案
+# APUS Reflex Harness 演示方案
 [English](demo-plan.md) | 中文
 
 瞬时执行，深度思考。本文是现场演示与彩排指南，先用一条任务展示大小脑协作，再逐项核对招牌能力覆盖。

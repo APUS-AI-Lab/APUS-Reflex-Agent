@@ -26,8 +26,8 @@
     "build:lib:client": "tsc -b tsconfig.client.json && tsdown --env.DSH_BUILD_FACE client",
     "build:web": "pnpm --filter @deepseek-ai/dsh-web-frontend run build",
     "build:desktop": "pnpm --filter @deepseek-ai/dsh-desktop run build",
-    "dev:desktop": "pnpm --filter @deepseek-ai/dsh-desktop run dev",
-    "start:desktop": "pnpm --filter @deepseek-ai/dsh-desktop run start",
+    "dev:desktop": "node scripts/product.mjs dev",
+    "start:desktop": "node scripts/product.mjs start",
     "prepare:desktop": "pnpm --filter @deepseek-ai/dsh-desktop run prepare:package",
     "package:desktop": "pnpm --filter @deepseek-ai/dsh-desktop run package",
     "package:desktop:dir": "pnpm --filter @deepseek-ai/dsh-desktop run package:dir",
@@ -200,7 +200,13 @@
     "mock:llm": "node --import tsx packages/test-support/llm-mock-server/src/bin.ts",
     "start:web": "node --import tsx/esm apps/cli/src/bin.ts web",
     "dev:web": "tsx scripts/dev-web.ts --poll",
-    "postinstall": "node scripts/install-lefthook.mjs"
+    "postinstall": "node scripts/install-lefthook.mjs",
+    "dev:harness-desktop": "pnpm --filter @deepseek-ai/dsh-desktop run dev",
+    "start:harness-desktop": "pnpm --filter @deepseek-ai/dsh-desktop run start",
+    "setup": "node scripts/product.mjs setup",
+    "package:product": "node scripts/product.mjs package",
+    "release:check": "node scripts/product-release.mjs check",
+    "release:collect": "node scripts/product-release.mjs collect"
   },
   "devDependencies": {
     "@deepseek-ai/dsh-agent": "workspace:*",

@@ -1,4 +1,4 @@
-# APUS Reflex demonstration plan
+# APUS Reflex Harness demonstration plan
 English | [中文](demo-plan.zh.md)
 
 Instant execution, deep thinking. This guide helps presenters rehearse one task that demonstrates small/large-model collaboration and review signature capability coverage.

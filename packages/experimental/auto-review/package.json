@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-experimental-auto-review",
-  "description": "Per-tool LLM authorization review for the APUS Reflex Auto permission preset",
+  "description": "Per-tool LLM authorization review for the APUS Reflex Harness Auto permission preset",
   "version": "0.1.7-rc.2",
   "icon": "./icon.svg",
   "repository": {

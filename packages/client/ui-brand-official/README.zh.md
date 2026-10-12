@@ -1,5 +1,5 @@
 ---
-description: "面向侧栏的官方 APUS Reflex 品牌填充，仅在官方构建中生效；供选择或替换品牌呈现的用户与维护者阅读。"
+description: "面向侧栏的官方 APUS Reflex Harness 品牌填充，仅在官方构建中生效；供选择或替换品牌呈现的用户与维护者阅读。"
 kind: "package-reference"
 ---
 
@@ -9,7 +9,7 @@ kind: "package-reference"
 
 ## 概述
 
-本包让以 `official` profile 构建的客户端在侧栏显示 APUS Reflex 标志与名称。其他构建 profile 保留外壳的APUS 字母标志与产品名称，会话首屏则始终使用静态 APUS 字母标志。品牌为 APUS Reflex 的部署应选择本包；使用其他品牌的部署应提供替代品牌包。本包不保留运行时状态，也不影响模型请求。
+本包让以 `official` profile 构建的客户端在侧栏显示 APUS Reflex Harness 标志与名称。其他构建 profile 保留外壳的APUS 字母标志与产品名称，会话首屏则始终使用静态 APUS 字母标志。品牌为 APUS Reflex Harness 的部署应选择本包；使用其他品牌的部署应提供替代品牌包。本包不保留运行时状态，也不影响模型请求。
 
 ## 目录
 
@@ -25,7 +25,7 @@ kind: "package-reference"
 <a id="use-this-package"></a>
 ## 使用本包
 
-在采用 APUS Reflex 品牌的部署中，将本插件挂载到浏览器插件名单，然后以 `official` profile 构建客户端，让填充得以注册。
+在采用 APUS Reflex Harness 品牌的部署中，将本插件挂载到浏览器插件名单，然后以 `official` profile 构建客户端，让填充得以注册。
 
 ### 选择 profile
 

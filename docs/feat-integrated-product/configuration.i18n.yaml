@@ -1,0 +1,22 @@
+# Bilingual-pair consistency record for configuration.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-integrated-product/configuration.md
+/configure-models-and-run-a-first-task:
+  en: 6e9f6e52d8867e61
+  zh: b646f6c3461f0a05
+/configure-models-and-run-a-first-task/configure-a-provider:
+  en: 51cd97115a427868
+  zh: 43f4e3e77f62676d
+/configure-models-and-run-a-first-task/verify-a-task:
+  en: e6ee84aea08b7632
+  zh: 3fbde41da4c531c6
+/configure-models-and-run-a-first-task/recover-from-a-configuration-error:
+  en: fb91fd809a0dee5a
+  zh: 25bca4b494ddf764
+/configure-models-and-run-a-first-task/optional-reflex-decision-service:
+  en: dab379171522e7b6
+  zh: 0a32b10427caa47c
+/configure-models-and-run-a-first-task/check-which-capabilities-are-enabled:
+  en: 5e72e6c799e337c4
+  zh: fcf96345acf88e8f

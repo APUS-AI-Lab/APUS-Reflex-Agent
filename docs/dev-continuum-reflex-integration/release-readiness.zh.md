@@ -1,4 +1,4 @@
-# APUS Reflex 发布就绪审计
+# APUS Reflex Harness 发布就绪审计
 
 [English](release-readiness.md) | 中文
 
@@ -14,7 +14,7 @@
 - 七个发布版 headless 记忆场景与一个 CLI smoke 全部通过。记忆场景包括源码及构建版进程重启后的英文与中文部分词恢复、无 Reflex、记忆关闭及新 Session 隔离。两个构建版 Web 记忆场景和两个 PWA 场景也全部通过。
 - 最终真实融合场景使用两个独立构建版 headless 进程、真实 Jev 选择及 DeepSeek 生成。持久记忆记录保留精确来源引用；恢复后的模型请求在 `continuum-memory` 来源中包含完整原始事实及该记录 ID。active Jev 回执以 0.853179 置信度选择该记录；召回已记入日志，provider 正常完成，最终答案包含随机验证标识。选择器保持 2 秒期限与 0.8 门槛，零重试。执行期间源码与产物哈希保持不变。这只证明一个同 Session 合成场景，不代表通用回答质量或 Reflex 控制层的隐私路由策略已验收。
 - 已录制 Session 回放通过 186 项，跳过 2 项。八个受影响的 Python SDK 场景在刷新身份文案后及随后回放中均通过。fixture 仅修改模型身份文案，历史 Session 代际未变。
-- Frontend 的 1,590 项测试、类型检查及构建全部通过。隔离环境首次启动显示 APUS Reflex。这些检查没有替换既有安装，也没有更新其旧 runtime。
+- Frontend 的 1,590 项测试、类型检查及构建全部通过。隔离环境首次启动显示 APUS Reflex Harness。这些检查没有替换既有安装，也没有更新其旧 runtime。
 - 此前真实 Jev 与完成恢复检查仍属于范围有限的历史证据。注入过早完成请求的场景保留真实工具拒绝、Jev 审核、真实生成和最终产物断言，但不代表模型自主选择了所注入的错误。此前的 [Independent harness CI](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/actions/runs/38243375340) 不证明最终发布版本已验收，其中跳过的真实 provider 通道不计为通过。
 
 ## 剩余验收工作

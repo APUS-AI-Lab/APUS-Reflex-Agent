@@ -10,7 +10,7 @@ Connect the real Frontend, native Harness execution, bounded Jev decisions, Fido
 
 ```mermaid
 flowchart LR
-  Desktop[APUS Reflex Desktop] --> Host[Authenticated Harness Host]
+  Desktop[APUS Reflex Harness Desktop] --> Host[Authenticated Harness Host]
   Browser[Web UI through SSH tunnel] --> Host
   Host --> Rules[Eligibility and permission rules]
   Rules --> Jev[A100 Jev bounded decisions]

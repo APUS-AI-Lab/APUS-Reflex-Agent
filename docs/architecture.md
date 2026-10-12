@@ -1,4 +1,4 @@
-# APUS Reflex Architecture
+# APUS Reflex Harness Architecture
 
 English | [中文](architecture.zh.md)
 

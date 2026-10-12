@@ -1,5 +1,5 @@
 /**
- * Named wire types for the APUS Reflex SDK runtime protocol: the three
+ * Named wire types for the APUS Reflex Harness SDK runtime protocol: the three
  * request/result pairs and the four server-to-client notification payloads
  * exchanged over the newline-delimited JSON-RPC stdio transport. The server
  * plugin (`@deepseek-ai/dsh-sdk-jsonrpc-server`) and SDK clients share these shapes;

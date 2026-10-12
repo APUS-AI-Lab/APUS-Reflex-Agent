@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-The acp group provides one package: a server that lets programs and automation run persistent APUS Reflex agents over the standard Agent Client Protocol. A client can create, list, resume, and close sessions; attach standard MCP servers; select model options; send text and image prompts; receive semantic updates; answer permission prompts; and cancel work without a human in the loop. The matching client for spawning such a server from another harness lives in `subagent/subagent-acp`. This page maps the group; the package README owns the per-package contract.
+The acp group provides one package: a server that lets programs and automation run persistent APUS Reflex Harness agents over the standard Agent Client Protocol. A client can create, list, resume, and close sessions; attach standard MCP servers; select model options; send text and image prompts; receive semantic updates; answer permission prompts; and cancel work without a human in the loop. The matching client for spawning such a server from another harness lives in `subagent/subagent-acp`. This page maps the group; the package README owns the per-package contract.
 
 ## Table of Contents
 

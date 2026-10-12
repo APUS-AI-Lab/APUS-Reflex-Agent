@@ -2,15 +2,15 @@
 # section, a hash of its English and Chinese blocks outside code blocks and generated regions.
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/feat-system3-g1/deployment.md
-/apus-reflex-deployment-reference:
-  en: d20f2e2a2021eb27
-  zh: 01a15486778abb59
-/apus-reflex-deployment-reference/public-deployment-entry-points:
+/apus-reflex-harness-deployment-reference:
+  en: 90218893b19ce88f
+  zh: 45b09f1326f8fce5
+/apus-reflex-harness-deployment-reference/public-deployment-entry-points:
   en: 099d864c5e217f57
   zh: b263598da270e515
-/apus-reflex-deployment-reference/source-files:
+/apus-reflex-harness-deployment-reference/source-files:
   en: 2579aea98f6c433f
   zh: 56b45ca3dadf9ea1
-/apus-reflex-deployment-reference/acceptance-scope:
+/apus-reflex-harness-deployment-reference/acceptance-scope:
   en: c0e7c401ebd7ee9f
   zh: 63fa93a714c86a40

@@ -1,5 +1,5 @@
 ---
-description: "APUS Reflex 主目录与用户数据路径的共享解析，供需要统一根目录、波浪号展开与稳定监听路径的包使用。"
+description: "APUS Reflex Harness 主目录与用户数据路径的共享解析，供需要统一根目录、波浪号展开与稳定监听路径的包使用。"
 kind: "package-library"
 ---
 
@@ -9,7 +9,7 @@ kind: "package-library"
 
 ## 概述
 
-`@deepseek-ai/dsh-home-paths` 让包作者能够解析统一的 APUS Reflex 数据根目录，并由它派生子路径。显式路径优先于 `$DSH_HOME`，后者优先于 `~/.dsh`；空白环境变量会被忽略。其公开辅助函数可以在不暴露机器绝对路径的情况下显示根目录，仅展开单独或当前用户的波浪号形式，并规范化最终路径段尚不存在的监听目标。请把它作为库依赖直接使用，不要通过 `cordis.yml` 加载。
+`@deepseek-ai/dsh-home-paths` 让包作者能够解析统一的 APUS Reflex Harness 数据根目录，并由它派生子路径。显式路径优先于 `$DSH_HOME`，后者优先于 `~/.dsh`；空白环境变量会被忽略。其公开辅助函数可以在不暴露机器绝对路径的情况下显示根目录，仅展开单独或当前用户的波浪号形式，并规范化最终路径段尚不存在的监听目标。请把它作为库依赖直接使用，不要通过 `cordis.yml` 加载。
 
 ## 目录
 

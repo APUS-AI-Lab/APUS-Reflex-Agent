@@ -29,7 +29,7 @@ NotificationFilter: TypeAlias = Callable[[Notification], bool]
 
 @dataclass(slots=True)
 class HarnessConfig:
-    """Configuration for launching the local APUS Reflex SDK runtime."""
+    """Configuration for launching the local APUS Reflex Harness SDK runtime."""
 
     dsh_bin: str | None = None
     profile: str = "sdk"
@@ -43,7 +43,7 @@ class HarnessConfig:
 
 
 class HarnessClient:
-    """Synchronous JSON-RPC client for the APUS Reflex SDK runtime over stdio."""
+    """Synchronous JSON-RPC client for the APUS Reflex Harness SDK runtime over stdio."""
 
     def __init__(
         self,
@@ -138,7 +138,9 @@ class HarnessClient:
                 proc.kill()
                 proc.wait()
         self._proc = None
-        self._fail_waiters(self._runtime_closed_error("APUS Reflex runtime closed"))
+        self._fail_waiters(
+            self._runtime_closed_error("APUS Reflex Harness runtime closed")
+        )
         if self._reader_thread and self._reader_thread.is_alive():
             self._reader_thread.join(timeout=0.5)
         if self._stderr_thread and self._stderr_thread.is_alive():
@@ -333,7 +335,7 @@ class HarnessClient:
                         diagnostics = self._runtime_diagnostics()
                         suffix = f"\n{diagnostics}" if diagnostics else ""
                         raise TimeoutError(
-                            f"{method} timed out waiting for APUS Reflex runtime{suffix}"
+                            f"{method} timed out waiting for APUS Reflex Harness runtime{suffix}"
                         )
                     wait_timeout = (
                         remaining
@@ -363,7 +365,7 @@ class HarnessClient:
     def _write_message(self, message: JsonObject) -> None:
         proc = self._proc
         if proc is None or proc.stdin is None:
-            raise TransportClosedError("APUS Reflex runtime is not running")
+            raise TransportClosedError("APUS Reflex Harness runtime is not running")
         try:
             payload = json.dumps(message, separators=(",", ":")) + "\n"
             with self._write_lock:
@@ -371,7 +373,7 @@ class HarnessClient:
                 proc.stdin.flush()
         except Exception as exc:
             raise self._runtime_closed_error(
-                "Failed to write to APUS Reflex runtime"
+                "Failed to write to APUS Reflex Harness runtime"
             ) from exc
 
     def _start_reader_thread(self) -> None:
@@ -403,7 +405,7 @@ class HarnessClient:
             self._fail_waiters(exc)
         finally:
             self._fail_waiters(
-                self._runtime_closed_error("APUS Reflex runtime stdout closed")
+                self._runtime_closed_error("APUS Reflex Harness runtime stdout closed")
             )
 
     def _stderr_loop(self) -> None:
@@ -516,7 +518,7 @@ class HarnessClient:
                 from deepseek_harness_runtime import resolve_bundled_launch_args
             except ImportError as exc:
                 raise FileNotFoundError(
-                    "Unable to locate the bundled APUS Reflex dsh runtime. "
+                    "Unable to locate the bundled APUS Reflex Harness dsh runtime. "
                     "Install deepseek-harness-runtime-bin."
                 ) from exc
             base = resolve_bundled_launch_args()

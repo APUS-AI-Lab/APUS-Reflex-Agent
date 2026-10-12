@@ -752,7 +752,7 @@ describe('CodexAppServerWire', () => {
     expect(initialize.params).toEqual({
       clientInfo: {
         name: 'deepseek-harness',
-        title: 'APUS Reflex',
+        title: 'APUS Reflex Harness',
         version: '0.0.1',
       },
       capabilities: {

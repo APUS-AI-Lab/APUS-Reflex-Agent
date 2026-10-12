@@ -304,7 +304,7 @@ export class CodexAppServerWire {
     object(await this.guarded(this.transport.request('initialize', {
       clientInfo: {
         name: 'deepseek-harness',
-        title: 'APUS Reflex',
+        title: 'APUS Reflex Harness',
         version: '0.0.1',
       },
       capabilities: {

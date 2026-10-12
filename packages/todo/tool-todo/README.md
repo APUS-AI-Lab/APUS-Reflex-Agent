@@ -1,5 +1,5 @@
 ---
-description: "The model-facing todo_write tool over the APUS Reflex session log: whole-list replacement, per-session ownership, and the todos projection, for users and maintainers choosing, configuring, or debugging the tool."
+description: "The model-facing todo_write tool over the APUS Reflex Harness session log: whole-list replacement, per-session ownership, and the todos projection, for users and maintainers choosing, configuring, or debugging the tool."
 kind: "package-reference"
 ---
 

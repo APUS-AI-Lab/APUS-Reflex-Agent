@@ -1,6 +1,6 @@
-- region "欢迎使用 APUS Reflex":
-  - heading "欢迎使用 APUS Reflex" [level=1]:
+- region "欢迎使用 APUS Reflex Harness":
+  - heading "欢迎使用 APUS Reflex Harness" [level=1]:
     - text: 欢迎使用
-    - emphasis: APUS Reflex
-  - paragraph: APUS Reflex（瞬策）以 Model as Harness 为产品定位。瞬时执行，深度思考。它会以本地文件夹作为工作区，通过调用各种工具，读写本机文件，完成搜索整理资料、制作文档表格、编写代码、排查问题等各种任务。
+    - emphasis: APUS Reflex Harness
+  - paragraph: APUS Reflex Harness（瞬策）以 Model as Harness 为产品定位。瞬时执行，深度思考。它会以本地文件夹作为工作区，通过调用各种工具，读写本机文件，完成搜索整理资料、制作文档表格、编写代码、排查问题等各种任务。
   - button "开始设置"

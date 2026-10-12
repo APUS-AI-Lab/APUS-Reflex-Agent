@@ -1,7 +1,7 @@
 /**
  * Reject maintained commit references and the disallowed organization URL.
- * Exact machine acceptance-evidence files retain raw revisions for artifact
- * identification; their organization URLs remain subject to the same policy.
+ * Exact machine evidence and imported historical records retain raw revisions;
+ * their organization URLs remain subject to the same policy.
  */
 
 import { execFileSync } from 'node:child_process'
@@ -16,8 +16,10 @@ const organizationUrl = new RegExp(`\\bgithub\\.com/${organization}(?![a-z0-9-])
 // The independent kit repository owns the engine source and documentation.
 const kitRepositoryUrl = new RegExp(`\\bgithub\\.com/${organization}/libreoffice-kit(?:\\.git)?(?=/|[^a-zA-Z0-9_.-]|$)`, 'g')
 const commitCandidate = /(?<![a-z0-9])[\da-f]{7,40}(?![a-z0-9])/gi
+// UUID fields in recorded evidence are identifiers, even when a segment matches a commit prefix.
+const uuidIdentifier = /\b[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}\b/gi
 const excludedPrefixes = ['vendor/', '.agents/notes/archived/']
-const machineReleaseEvidenceFiles = new Set([
+const retainedRevisionFiles = new Set([
   'docs/feat-reflex-control/evidence/supervision-audit-20261011.json',
   'docs/feat-jev-decision-kernel/completion-browser-result.json',
   'docs/feat-system3-g1/desktop-acceptance.json',
@@ -25,6 +27,17 @@ const machineReleaseEvidenceFiles = new Set([
   'tasks/feat-system3-g1/review-regression.json',
   'tasks/chore-apus-fork/import-verification.json',
   'tasks/chore-apus-fork/branch-cleanup-verification.json',
+  // Imported desktop history keeps its original source and build identifiers.
+  'frontend/.upstream-workflows/workflows/release.yml',
+  'frontend/docs/feat-system3-integration/packaging-preflight.json',
+  'frontend/docs/harness-0.1.2-alpha.3-upgrade.md',
+  'frontend/docs/harness-0.1.2-rc.1-upgrade.md',
+  'frontend/docs/superpowers/plans/2026-08-31-harness-0.1.2-alpha.3-upgrade.md',
+  'frontend/docs/superpowers/plans/2026-09-01-harness-0.1.2-alpha.4-upgrade.md',
+  'frontend/docs/superpowers/specs/2026-09-01-harness-0.1.2-alpha.4-upgrade-design.md',
+  'frontend/tasks/chore-apus-fork/handoff.md',
+  'frontend/tasks/chore-apus-fork/import-verification.json',
+  'frontend/tasks/feat-apus-brand/handoff.md',
 ])
 const gitOutputLimit = 64 * 1024 * 1024
 
@@ -47,7 +60,7 @@ function isMaintained(file: string): boolean {
  * @param file - Repository-relative path used in diagnostics and exclusions.
  * @param source - File text or a symlink's stored target.
  * @param commits - Lowercase, unambiguous full or abbreviated commit identifiers.
- * @returns Findings per line and kind; exact release-evidence paths accept commit pins, all maintained paths reject organization URLs.
+ * @returns Findings per line and kind; listed evidence and history accept pins, maintained paths reject organization URLs.
  */
 export function findRepositoryReferences(
   file: string,
@@ -60,8 +73,8 @@ export function findRepositoryReferences(
     if (organizationUrl.test(canonicalReferenceText(line).replace(kitRepositoryUrl, ''))) {
       references.push({ file, line: index + 1, kind: 'organization-url' })
     }
-    if (!machineReleaseEvidenceFiles.has(file)
-      && [...line.matchAll(commitCandidate)].some(match => commits.has(match[0].toLowerCase()))) {
+    if (!retainedRevisionFiles.has(file)
+      && [...line.replace(uuidIdentifier, '').matchAll(commitCandidate)].some(match => commits.has(match[0].toLowerCase()))) {
       references.push({ file, line: index + 1, kind: 'commit-hash' })
     }
   }
@@ -86,7 +99,7 @@ function readMaintainedFiles(repoRoot: string): Map<string, string> {
 
 function repositoryCommits(repoRoot: string, sources: Iterable<string>): Set<string> {
   const candidates = [...new Set([...sources].flatMap(source =>
-    [...source.matchAll(commitCandidate)].map(match => match[0].toLowerCase())))]
+    [...source.replace(uuidIdentifier, '').matchAll(commitCandidate)].map(match => match[0].toLowerCase())))]
   if (candidates.length === 0) return new Set()
   const results = execFileSync('git', ['cat-file', '--batch-check=%(objectname) %(objecttype)'], {
     cwd: repoRoot,
@@ -107,7 +120,7 @@ function repositoryCommits(repoRoot: string, sources: Iterable<string>): Set<str
 /**
  * Scan tracked and nonignored new files using only the local Git object database.
  * @param repoRoot - Working tree whose files and Git objects are inspected.
- * @returns Prohibited references outside vendor and frozen notes; release evidence accepts commit pins, missing Git objects cannot match.
+ * @returns Prohibited references in maintained files; missing Git objects cannot match.
  */
 export function scanRepositoryReferences(repoRoot: string): RepositoryReference[] {
   const sources = readMaintainedFiles(repoRoot)
@@ -119,7 +132,7 @@ const invokedPath = process.argv[1]
 if (invokedPath !== undefined && import.meta.url === pathToFileURL(resolve(invokedPath)).href) {
   const references = scanRepositoryReferences(root)
   if (references.length === 0) {
-    console.log('verify-repository-references: no prohibited commit references or organization URLs; exact machine evidence retains revision pins.')
+    console.log('verify-repository-references: no prohibited commit references or organization URLs; listed evidence and imported history retain revision pins.')
   } else {
     console.error('verify-repository-references: use release tags or maintained repository links:')
     for (const { file, line, kind } of references) console.error(`  ${file}:${String(line)} ${kind}`)

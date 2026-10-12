@@ -1,0 +1,45 @@
+name: Integrated product
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: integrated-product-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  desktop:
+    runs-on: macos-15
+    timeout-minutes: 60
+    env:
+      DSH_TELEMETRY_DISABLED: '1'
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: pnpm
+      - name: Prepare both applications from this checkout
+        run: pnpm run setup
+      - name: Check release version owners
+        run: pnpm run release:check
+      - name: Product orchestration regressions
+        run: pnpm exec vitest run scripts/product.spec.ts
+      - name: Desktop types and tests
+        working-directory: frontend
+        run: |
+          npm run typecheck
+          npm test -- --no-file-parallelism
+      - name: Probe the packaged-runtime launcher
+        working-directory: frontend
+        run: node scripts/probe-electron-node-runtime.mjs --system3

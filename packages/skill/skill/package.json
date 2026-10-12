@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-skill",
-  "description": "Agent skill provider registry for the APUS Reflex",
+  "description": "Agent skill provider registry for the APUS Reflex Harness",
   "version": "0.1.7-rc.2",
   "publishConfig": {
     "access": "public"

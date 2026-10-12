@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-hooks-claude-code",
-  "description": "Bridge plugin: run a Claude Code hooks.json / settings hook config on the APUS Reflex interception seams",
+  "description": "Bridge plugin: run a Claude Code hooks.json / settings hook config on the APUS Reflex Harness interception seams",
   "version": "0.1.7-rc.2",
   "publishConfig": {
     "access": "public"

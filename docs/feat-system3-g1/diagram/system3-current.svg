@@ -13,7 +13,7 @@
 <rect width="1280" height="1050" fill="#0f172a"/>
 <rect width="1280" height="1050" fill="url(#grid)"/>
 <rect x="30" y="110" width="800" height="346" rx="12" fill="#111d32" stroke="#475569" stroke-dasharray="7 5"/>
-<text class="group-label" x="48" y="136">本机 · APUS Reflex Desktop / Frontend</text>
+<text class="group-label" x="48" y="136">本机 · APUS Reflex Harness Desktop / Frontend</text>
 <rect x="30" y="490" width="800" height="346" rx="12" fill="#111d32" stroke="#475569" stroke-dasharray="7 5"/>
 <text class="group-label" x="48" y="516">远端 Web 访问链路 · 跨本机与服务器</text>
 <rect x="880" y="110" width="365" height="726" rx="12" fill="#111d32" stroke="#475569" stroke-dasharray="7 5"/>

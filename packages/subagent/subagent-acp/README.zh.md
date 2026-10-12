@@ -46,7 +46,7 @@ kind: "package-reference"
 
 生成的[配置目录](../../../docs/config-catalog.zh.md#deepseek-aidsh-subagent-acp)是每个受支持字段及其 JSDoc 的穷尽式真源。
 
-APUS Reflex 子进程使用产品启动器和一个显式的绝对路径 `DSH_HOME`。隔离的 home 可防止嵌套运行时发现启动者个人的 profile 或凭据；通用 ACP 提供方不会把这一要求强加给非 DSH agent。
+APUS Reflex Harness 子进程使用产品启动器和一个显式的绝对路径 `DSH_HOME`。隔离的 home 可防止嵌套运行时发现启动者个人的 profile 或凭据；通用 ACP 提供方不会把这一要求强加给非 DSH agent。
 
 ```yaml
 - id: subagent-acp

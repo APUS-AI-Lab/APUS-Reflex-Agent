@@ -69,6 +69,19 @@ describe('maintained repository reference policy', () => {
     expect(scanRepositoryReferences(fixture.root)).toHaveLength(4)
   })
 
+  it('keeps UUID identifiers while rejecting a standalone matching commit on the same line', () => {
+    const prefix = 'abcdef12'
+    const identifier = `${prefix}-1234-4abc-8def-123456789abc`
+    const commits = new Set([prefix])
+    expect(findRepositoryReferences('evidence.json', identifier, commits)).toEqual([])
+    expect(findRepositoryReferences('evidence.json', `${identifier} ${prefix}`, commits)).toEqual([
+      { file: 'evidence.json', line: 1, kind: 'commit-hash' },
+    ])
+    expect(findRepositoryReferences('evidence.json', `${identifier} ${organizationUrl}`, commits)).toEqual([
+      { file: 'evidence.json', line: 1, kind: 'organization-url' },
+    ])
+  })
+
   it('retains raw commit pins in exact tracked, staged and new machine evidence files', (test) => {
     const fixture = repository(test)
     fixture.write('docs/feat-system3-g1/desktop-acceptance.json', JSON.stringify({ sourceRevision: fixture.commit }))
@@ -134,6 +147,40 @@ describe('maintained repository reference policy', () => {
         { file, line: 2, kind: 'organization-url' },
       ]),
     )
+  })
+
+  it('preserves exact imported desktop revisions while checking URLs and maintained product files', (test) => {
+    const fixture = repository(test)
+    const historicalPaths = [
+      'frontend/.upstream-workflows/workflows/release.yml',
+      'frontend/docs/feat-system3-integration/packaging-preflight.json',
+      'frontend/docs/harness-0.1.2-alpha.3-upgrade.md',
+      'frontend/docs/harness-0.1.2-rc.1-upgrade.md',
+      'frontend/docs/superpowers/plans/2026-08-31-harness-0.1.2-alpha.3-upgrade.md',
+      'frontend/docs/superpowers/plans/2026-09-01-harness-0.1.2-alpha.4-upgrade.md',
+      'frontend/docs/superpowers/specs/2026-09-01-harness-0.1.2-alpha.4-upgrade-design.md',
+      'frontend/tasks/chore-apus-fork/handoff.md',
+      'frontend/tasks/chore-apus-fork/import-verification.json',
+      'frontend/tasks/feat-apus-brand/handoff.md',
+    ]
+    for (const file of historicalPaths) fixture.write(file, `${fixture.commit}\n${organizationUrl}`)
+    const maintainedPaths = [
+      'README.md',
+      'frontend/README.md',
+      'frontend/src/main/index.ts',
+      'frontend/docs/current-guide.md',
+      'frontend/docs/harness-0.1.2-alpha.3-upgrade.md.bak',
+      'frontend/tasks/feat-integrated-product/handoff.md',
+      'frontend/.upstream-workflows/new-workflow.yml',
+      'docs/feat-integrated-product/release.md',
+    ]
+    for (const file of maintainedPaths) fixture.write(file, fixture.commit)
+
+    expect(scanRepositoryReferences(fixture.root)).toEqual(expect.arrayContaining([
+      ...historicalPaths.map(file => ({ file, line: 2, kind: 'organization-url' })),
+      ...maintainedPaths.map(file => ({ file, line: 1, kind: 'commit-hash' })),
+    ]))
+    expect(scanRepositoryReferences(fixture.root)).toHaveLength(historicalPaths.length + maintainedPaths.length)
   })
 
   it('checks available unreachable commits without requiring a branch or network', (test) => {

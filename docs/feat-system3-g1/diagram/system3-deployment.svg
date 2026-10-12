@@ -28,7 +28,7 @@
 <path d="M1090 406V462" fill="none" stroke="#fb7185" stroke-width="2" marker-end="url(#policy-arrow)"/>
 <rect x="60" y="158" width="520" height="96" rx="8" fill="#0f172a"/>
 <rect x="60" y="158" width="520" height="96" rx="8" fill="#22d3ee" fill-opacity=".08" stroke="#22d3ee" stroke-width="1.5"/>
-<text class="label" x="78" y="188">APUS Reflex Desktop</text>
+<text class="label" x="78" y="188">APUS Reflex Harness Desktop</text>
 <text class="copy" x="78" y="214">Electron 主进程 / preload / 原生 Conversation</text>
 <text class="copy" x="78" y="237">固定自有 runtime manifest；禁止 stock fallback</text>
 <rect x="60" y="310" width="520" height="96" rx="8" fill="#0f172a"/>

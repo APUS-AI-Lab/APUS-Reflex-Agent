@@ -1,7 +1,7 @@
 import type {} from '@deepseek-ai/dsh-client-ui-slots'
 /** Product-owned labels for observed System3 states. */
 export const zh = {
-  title: 'APUS Reflex', auto: '自动调度', fixed: '固定模型', reset: '恢复自动', resetting: '正在切换…',
+  title: 'APUS Reflex Harness', auto: '自动调度', fixed: '固定模型', reset: '恢复自动', resetting: '正在切换…',
   ready: '准备就绪', received: '已接收，正在准备', deciding: '正在选择处理方式',
   adopted: '已选择，等待模型响应', used: '模型已响应', running: '正在执行', settled: '本轮已结束',
   interrupted: '执行未完成', loading: '正在恢复记录', details: '查看执行依据',
@@ -42,7 +42,7 @@ export const zh = {
 export type System3Key = keyof typeof zh
 /** English product dictionary. */
 export const en = {
-  title: 'APUS Reflex', auto: 'Automatic routing', fixed: 'Fixed model', reset: 'Use automatic', resetting: 'Switching…',
+  title: 'APUS Reflex Harness', auto: 'Automatic routing', fixed: 'Fixed model', reset: 'Use automatic', resetting: 'Switching…',
   ready: 'Ready', received: 'Received, preparing', deciding: 'Choosing how to proceed',
   adopted: 'Selected, awaiting model response', used: 'Model responded', running: 'Working', settled: 'Turn ended',
   interrupted: 'Execution incomplete', loading: 'Restoring history', details: 'Execution details',

@@ -1,0 +1,19 @@
+# Bilingual-pair consistency record for development.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-integrated-product/development.md
+/develop-apus-from-one-checkout:
+  en: a01c1d396725747d
+  zh: 0698dd0da09b62b0
+/develop-apus-from-one-checkout/prerequisites:
+  en: aa84aece1e0b860f
+  zh: ed6ed4352566854f
+/develop-apus-from-one-checkout/prepare-and-start:
+  en: 6ad9cdf80dad3599
+  zh: 573539ca3b49dbf4
+/develop-apus-from-one-checkout/code-ownership:
+  en: 7637aea9d596ab6c
+  zh: e931d81c610527c9
+/develop-apus-from-one-checkout/verify-and-troubleshoot:
+  en: 05bcda06e030a97e
+  zh: b4f895910996eb1d

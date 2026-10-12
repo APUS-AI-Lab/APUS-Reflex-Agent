@@ -176,12 +176,12 @@ const base = process.env.DOCS_BASE ?? '/'
 
 /** Site identity shared by the VitePress configuration and the llms.txt index. */
 const siteIdentity = {
-  title: 'APUS Reflex',
+  title: 'APUS Reflex Harness',
   description: '用于构建 Agent Harness 的插件化 SDK',
 }
 
 /**
- * The APUS Reflex wordmark, inlined so its `currentColor` fills follow the active
+ * The APUS Reflex Harness wordmark, inlined so its `currentColor` fills follow the active
  * theme. An `<img>` would freeze the mark at the colors the file declares.
  */
 const wordmark = readFileSync(resolve(import.meta.dirname, '../public/wordmark.svg'), 'utf8')
@@ -252,7 +252,7 @@ const scrollbarScript = `
 `
 
 /**
- * Navigation-bar title: the APUS Reflex wordmark and the release-stage tag.
+ * Navigation-bar title: the APUS Reflex Harness wordmark and the release-stage tag.
  * VitePress renders `siteTitle` as HTML.
  *
  * @param previewTag - Localized release-stage label.
