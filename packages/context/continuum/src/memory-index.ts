@@ -89,7 +89,7 @@ export class MemoryRecordIndex {
       if (!terms.some(term => token.includes(term))) continue
       for (const id of postings) ids.add(id)
     }
-    return Object.freeze([...ids].sort((left, right) => String(left).localeCompare(String(right))))
+    return Object.freeze([...ids].sort())
   }
 
   private removeIndexed(id: MemoryId): void {
@@ -108,12 +108,12 @@ export class MemoryRecordIndex {
   }
 }
 
-/** Normalize the fields that participate in deterministic lexical search.
+/** Normalize lexical search fields independently of the host locale.
  * @param value - Text to tokenize.
  * @returns Unique normalized search terms.
  */
 export function memorySearchTerms(value: string): readonly string[] {
-  return [...new Set(value.toLocaleLowerCase().split(/[^\p{L}\p{N}_-]+/u).filter(term => term.length > 1))]
+  return [...new Set(value.toLowerCase().split(/[^\p{L}\p{N}_-]+/u).filter(term => term.length > 1))]
 }
 
 function recordSearchText(record: MemoryRecord): string {

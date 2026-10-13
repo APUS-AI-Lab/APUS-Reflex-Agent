@@ -93,7 +93,7 @@ Resolving or executing a request with an unconfigured default provider throws a 
 <details>
 <summary>Implementation internals — click to expand</summary>
 
-`ctx.jev` is the service definition and registry. `SystemOneProvider` is the first provider implementation and validates the complete response against the exact request question set, including candidate keys, probability totals, confidence, score expectations, and usage counters. A provider is resolved before network I/O and its effective model is pinned in the returned `JevSpec`.
+`ctx.jev` is the service definition and registry. `SystemOneProvider` is the first provider implementation and validates the complete response against the exact request question set, including candidate keys, probability totals, confidence, score expectations, and usage counters. A provider is resolved before network I/O and its effective model is pinned in the returned `JevSpec`. Missing deployment configuration or an unregistered provider raises `JevConfigurationError`; callers must not treat that configuration failure as model uncertainty.
 
 The package does not own an AgentLoop, select an LLM generation route, edit prompts, authorize tools, or persist Session receipts. A System3 consumer must decide when to call Jev, apply privacy policy, and persist a replayable receipt. This keeps the Jev request visible and makes the provider replaceable.
 

@@ -22,6 +22,8 @@ Full 与 Lite 构建仅在是否内置 Office 引擎上有区别。`0.1.1` 尚�
 
 在仓库根目录执行准备和桌面启动命令。[开发教程](../docs/feat-integrated-product/development.zh.md)介绍单仓使用流程，打包与验收见[发行流程](../docs/feat-integrated-product/releases.zh.md)。
 
+兼容迁移保留旧预设 ID 和现有配置数据。仓库检查区分运行时标识、带 scope 的包目录名与 npm 包引用。
+
 ## 许可
 
 DataElement 原始 MIT 声明保留在 [LICENSE](LICENSE)，依赖许可保留在 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。产品致谢集中在[根 README](../README.zh.md)。

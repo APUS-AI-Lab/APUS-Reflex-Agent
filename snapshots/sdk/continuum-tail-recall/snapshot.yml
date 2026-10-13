@@ -1,0 +1,8 @@
+version: 1
+scenario: continuum-tail-recall
+profile: sdk
+composition: sdk-continuum-tail-recall
+recording: authored
+header:
+  class: sdk-continuum-tail-recall
+  pin: true

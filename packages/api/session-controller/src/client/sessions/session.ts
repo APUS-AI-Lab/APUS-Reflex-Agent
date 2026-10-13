@@ -17,6 +17,7 @@ import type {
   SessionAssistantStreamBaseline,
   SessionProjectionBaseline,
   SessionRequestId,
+  SessionPromptValue,
 } from '../../types.ts'
 import type {
   BeginSubmissionInput, PendingSubmissionRetirement, SessionFace, SubmissionHandle,
@@ -256,7 +257,7 @@ export class Session implements SessionFace {
     mode: 'queue' | 'steer',
     signal?: AbortSignal,
     requestId?: SessionRequestId,
-  ): Promise<RemoteResult<{ accepted: true }>> {
+  ): Promise<RemoteResult<SessionPromptValue>> {
     this.promptError = null
     this.lastAgentError = null
     // Synchronous, before the first await: the blank → engaging edge must be
@@ -265,7 +266,7 @@ export class Session implements SessionFace {
     this.promptAttempted = true
     if (this.blankBit) this.firstPromptPendingTurn = true
     this.notifier.markDirty()
-    let result: RemoteResult<{ accepted: true }>
+    let result: RemoteResult<SessionPromptValue>
     if (this.address === undefined) {
       const clientTimeZone = resolvedClientTimeZone()
       result = await this.remote.session.prompt({

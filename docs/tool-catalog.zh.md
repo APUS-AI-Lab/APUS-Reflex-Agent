@@ -1790,7 +1790,7 @@ lsp 工具将提供方选择和语言服务器子进程置于 ctx.lsp 之后，�
 
 ### `session_event_read`
 
-从一个已获授权的会话中读取一个完整且未删节的事件，以及可选的相邻原始事件概述。
+从已获授权的会话读取精确事件数据。大型结果返回包含续读偏移量和事件摘要值的原文分页。
 
 ```json
 {
@@ -1804,13 +1804,33 @@ lsp 工具将提供方选择和语言服务器子进程置于 ctx.lsp 之后，�
       "type": "integer",
       "description": "Target event sequence number."
     },
+    "view": {
+      "type": "string",
+      "description": "Select event JSON or one original text block. Omit for a complete read when it fits the output budget.",
+      "enum": [
+        "event-json",
+        "text-block"
+      ]
+    },
+    "block": {
+      "type": "integer",
+      "description": "Required content-array index for text-block; omit for event-json."
+    },
+    "offset": {
+      "type": "integer",
+      "description": "UTF-16 offset from next_offset. Omit to start at 0; cannot split a Unicode character."
+    },
+    "expected_sha256": {
+      "type": "string",
+      "description": "Event digest from the first page; required when offset is greater than 0."
+    },
     "before": {
       "type": "integer",
-      "description": "Number of preceding raw events to summarize. Omit for none."
+      "description": "Number of preceding raw events to summarize. Omit for none; unavailable with explicit paging."
     },
     "after": {
       "type": "integer",
-      "description": "Number of following raw events to summarize. Omit for none."
+      "description": "Number of following raw events to summarize. Omit for none; unavailable with explicit paging."
     }
   },
   "required": [
@@ -1819,7 +1839,7 @@ lsp 工具将提供方选择和语言服务器子进程置于 ctx.lsp 之后，�
 }
 ```
 
-来源：[`packages/session-query/tool-session-query/src/index.ts`](../packages/session-query/tool-session-query/src/index.ts)
+来源： [`packages/session-query/tool-session-query/src/index.ts`](../packages/session-query/tool-session-query/src/index.ts)
 
 ### `session_event_search`
 

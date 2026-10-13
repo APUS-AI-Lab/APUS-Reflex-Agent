@@ -45,7 +45,13 @@ export function parseDesktopInstallState(value: unknown): DesktopInstallState | 
     typeof candidate.classifiedAt !== 'string' ||
     !Number.isFinite(Date.parse(candidate.classifiedAt))
   ) return undefined
-  return candidate as unknown as DesktopInstallState
+  return {
+    ...candidate,
+    schemaVersion: candidate.schemaVersion,
+    classification: candidate.classification,
+    firstSeenVersion: candidate.firstSeenVersion,
+    classifiedAt: candidate.classifiedAt
+  }
 }
 
 export function readDesktopInstallState(dshHome: string): DesktopInstallState | undefined {

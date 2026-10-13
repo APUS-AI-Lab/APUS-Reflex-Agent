@@ -243,3 +243,66 @@ describe('tool-session-query with the real SQLite provider', () => {
     expect(preEpochUpperText).not.toContain('seq 3')
   })
 })
+
+it('reconstructs authorized source pages after a real JSONL and SQLite restart', { timeout: 20_000 }, async () => {
+  const root = await mkdtemp(join(tmpdir(), 'dsh-source-pages-restart-'))
+  temporaryDirectories.push(root)
+  const mount = async () => {
+    const ctx = new Context()
+    contexts.push(ctx)
+    await ctx.plugin(SessionStore)
+    await ctx.plugin(SessionProjectionRegistry)
+    registerTurnBoundary(ctx)
+    await ctx.plugin(SystemPrompt)
+    await ctx.plugin(ToolRuntime)
+    await ctx.plugin(JsonlSessionPersistence, { root, compression: 'none' })
+    await ctx.plugin(SqliteSessionQueryEngine, { path: join(root, 'pages.db') })
+    await ctx.plugin(ToolSessionQuery, { maxReadBytes: 400 })
+    return ctx
+  }
+  const writerContext = await mount()
+  const sourceId = SessionId('source-pages')
+  const source = { type: 'user/message' as const, seq: SessionSeq(0), time: 2,
+    data: createUserMessage({ source: { kind: 'user' }, content: [{ type: 'text' as const, text: '  中文😀\r\n"\\ '.repeat(70) }] }),
+    surfaceOp: 'append' as const }
+  const writer = await writerContext.sessionPersistence.create({ version: SESSION_FORMAT_VERSION, id: sourceId, createdAt: 1, cwd: '/work', isSeeded: false })
+  await writer.append([source])
+  await writer.flush()
+  await writer.close()
+  // Populate the real derived index before restarting both provider services.
+  expect((await writerContext.sessionQuery.searchSessions({ query: '中文' })).items).toHaveLength(1)
+  await writerContext.fiber.dispose()
+  contexts.splice(contexts.indexOf(writerContext), 1)
+
+  const ctx = await mount()
+  const caller = ctx.sessions.create(SessionId('reader'), { meta: { cwd: '/work' } })
+  const stranger = ctx.sessions.create(SessionId('stranger'), { meta: { cwd: '/elsewhere' } })
+  let call = 0
+  const execute = (args: object, session = caller) => ctx.tools.execute({ name: 'session_event_read',
+    arguments: { session_id: sourceId, seq: 0, ...args }, callId: ToolCallId(`page-${++call}`),
+    signal: new AbortController().signal, agent: fakeAgent(session) })
+  const render = (result: Awaited<ReturnType<typeof execute>>) => result.content.map(block => block.type === 'text' ? block.text : '').join('\n')
+  for (const view of ['event-json', 'text-block'] as const) {
+    let offset = 0
+    let digest: string | undefined
+    let reconstructed = ''
+    while (true) {
+      const args = { view, ...(view === 'text-block' ? { block: 0 } : {}), offset,
+        ...(digest === undefined ? {} : { expected_sha256: digest }) }
+      const result = await execute(args)
+      expect(result.isError).toBe(false)
+      expect(Buffer.byteLength(render(result))).toBeLessThanOrEqual(400)
+      const page = JSON.parse(render(result)) as { content: string; next_offset: number | null; sha256: string }
+      expect(page.sha256).toBe(digest ?? page.sha256)
+      digest = page.sha256
+      reconstructed += page.content
+      if (page.next_offset === null) break
+      expect(page.next_offset).toBeGreaterThan(offset)
+      offset = page.next_offset
+      const denied = await execute({ ...args, offset, expected_sha256: digest }, stranger)
+      expect(denied.isError).toBe(true)
+      expect(render(denied)).not.toContain('中文')
+    }
+    expect(reconstructed).toBe(view === 'event-json' ? JSON.stringify(source, null, 2) : source.data.content[0]!.text)
+  }
+})

@@ -55,6 +55,9 @@
 - insert:
     - id: tool-session-query
       name: '@deepseek-ai/dsh-tool-session-query'
+      config:
+        # This scenario verifies a complete event spill; default source paging has separate coverage.
+        maxReadBytes: 65536
 
 - id: timeout-policy
   name: '@deepseek-ai/dsh-tool-call-timeout-policy'

@@ -643,7 +643,7 @@ export class SessionInputShell implements SessionInput {
       this.failedRestoreRev = undefined
     }
     if (occurrences.length === 0) {
-      this.settleSink(attempt, this.deps.defaultSink(draft.trim(), attachmentIds, mode, attempt.signal))
+      this.settleSink(attempt, this.deps.defaultSink(draft, attachmentIds, mode, attempt.signal))
       return
     }
     const inputTriggers = this.deps.inputTriggers?.()
@@ -667,7 +667,7 @@ export class SessionInputShell implements SessionInput {
           cursor = part.offset + part.length
         }
         out += draft.slice(cursor)
-        this.settleSink(attempt, this.deps.defaultSink(out.trim(), attachmentIds, mode, attempt.signal))
+        this.settleSink(attempt, this.deps.defaultSink(out, attachmentIds, mode, attempt.signal))
       },
       (error: unknown) => {
         if (this.dead(attempt)) return

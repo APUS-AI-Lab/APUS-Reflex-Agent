@@ -328,6 +328,9 @@ describe('registration and schemas', () => {
 
   it('fails invalid direct config before registering anything', async () => {
     const mounted = await mount()
+    for (const maxReadBytes of [255, 1.5, Number.NaN]) {
+      expect(() => { ToolSessionQuery.apply(mounted.ctx, { maxReadBytes }) }).toThrow('maxReadBytes')
+    }
     for (const maxSearchResults of [0, 1.5, Number.NaN]) {
       expect(() => { ToolSessionQuery.apply(mounted.ctx, { maxSearchResults }) })
         .toThrow('maxSearchResults')
@@ -341,7 +344,7 @@ describe('registration and schemas', () => {
 
   it('expresses the complete Node timer range in the Loader config schema', () => {
     expect(new ToolSessionQuery.Config({ searchTimeoutMs: MAX_TIMER_DELAY_MS }))
-      .toEqual({ maxSearchResults: 100, searchTimeoutMs: MAX_TIMER_DELAY_MS })
+      .toEqual({ maxReadBytes: 8192, maxSearchResults: 100, searchTimeoutMs: MAX_TIMER_DELAY_MS })
     expect(() => new ToolSessionQuery.Config({ searchTimeoutMs: 1.5 })).toThrow()
     expect(() => new ToolSessionQuery.Config({ searchTimeoutMs: MAX_TIMER_DELAY_MS + 1 })).toThrow()
   })
@@ -2105,5 +2108,44 @@ describe('trace and exact read rendering', () => {
   ])('rejects invalid exact-read integers for %s', async (name, args, expected = 'SESSION_QUERY_INVALID_FILTER') => {
     const mounted = await mount()
     expect(errorCode(await mounted.call(name, args))).toBe(expected)
+  })
+})
+
+
+describe('bounded event read operation', () => {
+  it('automatically pages oversized legacy output and supports exact text continuation', async () => {
+    const mounted = await mount({ maxReadBytes: 400 })
+    const target = createSession(mounted.ctx, 'long', '/work')
+    const original = '  中文😀\r\n"\\ '.repeat(100)
+    const source = target.append('user/message', createUserMessage({ source: { kind: 'user' }, content: [{ type: 'text', text: original }] }), { surfaceOp: 'append' })
+    const first = await mounted.call('session_event_read', { session_id: target.id, seq: source.seq, before: 1 })
+    expect(first.isError).toBe(false)
+    expect(Buffer.byteLength(text(first))).toBeLessThanOrEqual(400)
+    expect(JSON.parse(text(first)) as object).toMatchObject({ view: 'event-json', neighbors_omitted: true })
+    for (const neighbors of [{}, { before: 0, after: 0 }, { after: 1 }]) {
+      const auto = await mounted.call('session_event_read', { session_id: target.id, seq: source.seq, ...neighbors })
+      expect(auto.isError).toBe(false)
+      expect(Buffer.byteLength(text(auto))).toBeLessThanOrEqual(400)
+    }
+    const page = await mounted.call('session_event_read', { session_id: target.id, seq: source.seq, view: 'text-block', block: 0 })
+    expect(page.isError).toBe(false)
+    const parsed = JSON.parse(text(page)) as { content: string; next_offset: number; sha256: string }
+    expect(original.startsWith(parsed.content)).toBe(true)
+    const next = await mounted.call('session_event_read', { session_id: target.id, seq: source.seq, view: 'text-block', block: 0, offset: parsed.next_offset, expected_sha256: parsed.sha256 })
+    expect(next.isError).toBe(false)
+    const content = (JSON.parse(text(next)) as { content: string }).content
+    expect(original.slice(parsed.next_offset).startsWith(content)).toBe(true)
+    expect(errorCode(await mounted.call('session_event_read', { seq: 0, offset: 0, before: 1 }))).toBe('SESSION_QUERY_TOOL_INVALID_PAGE')
+  })
+
+  it('rejects inadequate direct configuration and large metadata without overlong content', async () => {
+    await expect(mount({ maxReadBytes: 255 })).rejects.toThrow('maxReadBytes')
+    const mounted = await mount({ maxReadBytes: 256 })
+    const target = createSession(mounted.ctx, 'x'.repeat(500), '/work')
+    const source = target.append('user/message', createUserMessage({ source: { kind: 'user' }, content: [{ type: 'text', text: 'secret'.repeat(100) }] }), { surfaceOp: 'append' })
+    const result = await mounted.call('session_event_read', { session_id: target.id, seq: source.seq, view: 'event-json' })
+    expect(errorCode(result)).toBe('SESSION_QUERY_TOOL_READ_BUDGET_TOO_SMALL')
+    expect(Buffer.byteLength(text(result))).toBeLessThanOrEqual(256)
+    expect(text(result)).not.toContain('secret')
   })
 })

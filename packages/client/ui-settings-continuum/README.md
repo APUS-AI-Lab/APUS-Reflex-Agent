@@ -76,6 +76,8 @@ This package does not assemble a provider request or change a request prefix.
 - **Reflex dependency** — enabling the setting remains subject to the Continuum service's Reflex/Jev switch and does not create a no-Reflex infinite-memory mode.
 - **Deferred product surface** — summary-tree browsing, runtime activity projection, and cache billing remain separate P4/P5 work.
 
+No invariant companion is published because the settings row reads the Host ConfigForms namespace and owns no independent persistent state.
+
 <a id="dev-note"></a>
 ### Dev Note
 

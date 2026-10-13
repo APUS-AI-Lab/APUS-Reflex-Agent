@@ -1,6 +1,6 @@
 import { EventEmitter } from 'node:events'
 import { mkdtemp, rm } from 'node:fs/promises'
-import type { ClientRequest, IncomingMessage } from 'node:http'
+import type { IncomingMessage } from 'node:http'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { PassThrough } from 'node:stream'
@@ -30,7 +30,7 @@ describe('cloudflared download lifecycle', () => {
     const request = fakeRequest()
     httpsMocks.get.mockImplementation((_url, callback) => {
       callback(response as IncomingMessage)
-      return request as unknown as ClientRequest
+      return request
     })
     const destination = await tempDestination()
 
@@ -49,7 +49,7 @@ describe('cloudflared download lifecycle', () => {
       queueMicrotask(callback)
       return request
     })
-    httpsMocks.get.mockReturnValue(request as unknown as ClientRequest)
+    httpsMocks.get.mockReturnValue(request)
     const destination = await tempDestination()
 
     const error = await downloadFileWithRedirects('https://example.test/cloudflared', destination, 5, 25).catch(

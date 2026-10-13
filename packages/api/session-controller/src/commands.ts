@@ -1,5 +1,6 @@
 /** Session commands whose activation policy is explicit at each Remote method. */
 
+import { assertTextPromptMatches, findPromptAdmission, textPromptReceipt } from './prompt-receipt.ts'
 import { SessionPromptRouting } from './prompt-router.ts'
 import { modelAvailable } from './catalog.ts'
 import { randomUUID } from 'node:crypto'
@@ -343,7 +344,16 @@ export class SessionCommandController {
       )
     }
     const agent = await this.resolveAgent(request.sessionId)
-    if (hasPromptRequest(agent, request.requestId)) return { accepted: true }
+    const textOnly = request.content.every(part => part.type === 'text')
+    const replayText = (): Promise<SessionPromptValue> | undefined => {
+      const existing = findPromptAdmission(agent, request.requestId)
+      if (existing === undefined || (!textOnly && existing.message.content.some(block => block.type !== 'text'))) return undefined
+      assertTextPromptMatches(existing, request)
+      return textPromptReceipt(this.ctx, agent, existing.message, existing)
+    }
+    const replay = replayText()
+    if (replay !== undefined) return replay
+    if (!textOnly && hasPromptRequest(agent, request.requestId)) return { accepted: true }
     const source: MessageSource = {
       kind: 'user',
       rpcId: request.requestId,
@@ -352,6 +362,7 @@ export class SessionCommandController {
     const hasImage = request.content.some(part => part.type === 'image')
     let routedMessage: UserMessage | undefined
     const admit = async (signal?: AbortSignal, select?: () => void): Promise<SessionPromptValue> => {
+      let acceptedMessage: UserMessage | undefined
       try {
         if (hasImage) {
           const current = this.agents.selectionFor(agent).current
@@ -378,11 +389,14 @@ export class SessionCommandController {
           )
         }
         signal?.throwIfAborted()
+        const duplicate = replayText()
+        if (duplicate !== undefined) return await duplicate
         using binding = this.ctx.fileUploads.bindPrompt(agent, admission.receiptIds, request.requestId)
         if (request.mode === 'steer') agent.steer(message)
         else agent.followup(message)
         select?.()
         binding.commit()
+        acceptedMessage = message
       } catch (error) {
         if (remoteErrorOf(error) !== undefined) throw error
         if (error instanceof AttachmentError) {
@@ -390,10 +404,14 @@ export class SessionCommandController {
         }
         throw new RemoteError('session/agent-busy', 'prompt rejected', { reason: String(error) })
       }
-      return { accepted: true }
+      return textOnly
+        ? textPromptReceipt(this.ctx, agent, acceptedMessage, findPromptAdmission(agent, request.requestId))
+        : { accepted: true }
     }
     const routeAndAdmit = async (): Promise<SessionPromptValue> => {
-      if (hasPromptRequest(agent, request.requestId)) return { accepted: true }
+      const duplicate = replayText()
+      if (duplicate !== undefined) return duplicate
+      if (!textOnly && hasPromptRequest(agent, request.requestId)) return { accepted: true }
       if (this.promptRouting === undefined || request.content.some(part => part.type !== 'text')) return admit()
       const message = createUserMessage({ content: request.content.flatMap(part => part.type === 'text' ? [part] : []), source })
       routedMessage = message

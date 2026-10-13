@@ -1780,7 +1780,7 @@ Source: [`packages/skill/tool-skill/src/index.ts`](../packages/skill/tool-skill/
 
 ### `session_event_read`
 
-Read one full unabridged event and optional neighboring raw-event summaries from an authorized session.
+Read exact event data from an authorized session. Large results return a source page with a continuation offset and event digest.
 
 ```json
 {
@@ -1794,13 +1794,33 @@ Read one full unabridged event and optional neighboring raw-event summaries from
       "type": "integer",
       "description": "Target event sequence number."
     },
+    "view": {
+      "type": "string",
+      "description": "Select event JSON or one original text block. Omit for a complete read when it fits the output budget.",
+      "enum": [
+        "event-json",
+        "text-block"
+      ]
+    },
+    "block": {
+      "type": "integer",
+      "description": "Required content-array index for text-block; omit for event-json."
+    },
+    "offset": {
+      "type": "integer",
+      "description": "UTF-16 offset from next_offset. Omit to start at 0; cannot split a Unicode character."
+    },
+    "expected_sha256": {
+      "type": "string",
+      "description": "Event digest from the first page; required when offset is greater than 0."
+    },
     "before": {
       "type": "integer",
-      "description": "Number of preceding raw events to summarize. Omit for none."
+      "description": "Number of preceding raw events to summarize. Omit for none; unavailable with explicit paging."
     },
     "after": {
       "type": "integer",
-      "description": "Number of following raw events to summarize. Omit for none."
+      "description": "Number of following raw events to summarize. Omit for none; unavailable with explicit paging."
     }
   },
   "required": [

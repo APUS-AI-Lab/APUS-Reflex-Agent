@@ -1,0 +1,8 @@
+version: 1
+scenario: continuum-source-pages
+profile: sdk
+composition: sdk-continuum-source-pages
+recording: authored
+header:
+  class: sdk-continuum-source-pages
+  pin: true

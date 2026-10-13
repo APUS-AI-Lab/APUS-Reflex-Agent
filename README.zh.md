@@ -67,7 +67,7 @@ APUS 将模型推理与执行、权限及持久 Session 历史分开管理。项
 
 <img src="docs/dev-continuum-reflex-integration/apus-continuum-memory-flow.svg" alt="Continuum 记忆流程：已准入的 Session 事实、持久存储、scope 检索、可选 Reflex 选择与有界模型上下文。" />
 
-[英文记忆流程](docs/dev-continuum-reflex-integration/apus-reflex-loop-working-architecture.en.html#memory) · [中文记忆流程](docs/dev-continuum-reflex-integration/apus-reflex-loop-working-architecture.html#memory) · [Continuum 语义](packages/context/continuum/README.zh.md) · [可选 Jev 选择器](packages/experimental/continuum-jev/README.zh.md)
+[Continuum 整体架构与验收设计](docs/feat-lossless-memory/design.html) · [英文记忆流程](docs/dev-continuum-reflex-integration/apus-reflex-loop-working-architecture.en.html#memory) · [中文记忆流程](docs/dev-continuum-reflex-integration/apus-reflex-loop-working-architecture.html#memory) · [Continuum 语义](packages/context/continuum/README.zh.md) · [可选 Jev 选择器](packages/experimental/continuum-jev/README.zh.md)
 
 **Continuum** 将任务历史与单次推理请求的有限上下文分开。一个事实即使不在当前 prompt 中，仍可保留在持久历史里。检索和可选的 Reflex 选择将有界的工作信息重新带入下一次请求。
 

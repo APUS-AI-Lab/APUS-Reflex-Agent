@@ -13,7 +13,7 @@ import {
 describe('plugin-market-check', () => {
   beforeEach(() => clearManifestCache())
   it('remembers a failed lookup only for the window the caller asks for', async () => {
-    const fetchFn = vi.fn(async () => { throw new Error('offline') }) as unknown as typeof fetch
+    const fetchFn = vi.fn<typeof fetch>(async () => { throw new Error('offline') })
     const check = (failureTtlMs?: number) => evaluatePluginMarketCompatibility({
       packageName: 'offline-plugin',
       installedVersion: '1.0.0',
@@ -122,7 +122,7 @@ describe('plugin-market-check', () => {
       installedVersion: '1.0.0',
       currentRuntimeVersion: '0.1.2',
       hasLocalIssue: true,
-      fetchFn: mockFetch as unknown as typeof fetch,
+      fetchFn: mockFetch,
       locale: 'zh'
     })
 

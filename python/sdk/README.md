@@ -63,7 +63,7 @@ The shipped `sdk-minimal` profile is a standalone explicit tree rather than an o
 
 ## Results and notifications
 
-`Session.run()` owns an activity interval from its prompt's durable inbox receipt through the next whole-agent idle and returns `RunResult(session_id, final_response, finish_reason, events, notifications)`. `final_response` is the last committed root-session assistant text in the interval. `finish_reason` is the `kind` of the last root-session `turn/end`, such as `completed`, `max-tokens`, or `error`, and is `None` when no turn ended. A `turn/end` without a string `data.reason.kind` violates the protocol and raises `SdkProtocolError`.
+`Session.run()` owns an activity interval from its prompt's logged inbox receipt through the next whole-agent idle and returns `RunResult(session_id, final_response, finish_reason, events, notifications)`. `final_response` is the last committed root-session assistant text in the interval. `finish_reason` is the `kind` of the last root-session `turn/end`, such as `completed`, `max-tokens`, or `error`, and is `None` when no turn ended. A `turn/end` without a string `data.reason.kind` violates the protocol and raises `SdkProtocolError`.
 
 `HarnessClient` retains discovered subagent ancestry for the runtime process lifetime. During `Session.run()`, `RunResult.notifications` and `on_notification` receive the root session and known descendants in wire order. `RunResult.events` contains root-session events only, so descendant output cannot replace the root response. The low-level `session_prompt()` returns the queued message id immediately; callers that bypass `Session.run()` own the later activity boundary.
 

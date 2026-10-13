@@ -109,7 +109,7 @@ describe('LAN mobile bridge pairing surface', () => {
     bridges.push(bridge)
     const snapshot = await bridge.start()
     let tunnelStopped = false
-    Object.assign(bridge as unknown as Record<string, unknown>, {
+    Object.assign(bridge, {
       tunnelActive: true,
       tunnelInstance: {
         url: 'https://active-mobile.trycloudflare.com',
@@ -162,7 +162,7 @@ describe('LAN mobile bridge pairing surface', () => {
     })
     bridges.push(bridge)
     const snapshot = await bridge.start()
-    Object.assign(bridge as unknown as Record<string, unknown>, {
+    Object.assign(bridge, {
       tunnelActive: true,
       tunnelInstance: {
         provider: 'pinggy',
@@ -187,7 +187,7 @@ describe('LAN mobile bridge pairing surface', () => {
     bridges.push(bridge)
     const snapshot = await bridge.start()
     let tunnelStopped = false
-    Object.assign(bridge as unknown as Record<string, unknown>, {
+    Object.assign(bridge, {
       tunnelActive: true,
       tunnelInstance: {
         url: 'https://active-mobile.trycloudflare.com',
@@ -1206,7 +1206,7 @@ describe('snapshot keeps tunnel state after the pairing token is consumed', () =
 
     // Simulate the post-approval state: the single-use pairing token is gone,
     // no phone session is active, but a tunnel keeps running.
-    Object.assign(bridge as unknown as Record<string, unknown>, {
+    Object.assign(bridge, {
       pairingToken: undefined,
       pairingExpiresAt: undefined,
       tunnelActive: true,
@@ -1350,7 +1350,7 @@ function armFakeTunnel(
       return process
     }
   }
-  Object.assign(bridge as unknown as Record<string, unknown>, {
+  Object.assign(bridge, {
     tunnelActive: true,
     tunnelInstance: {
       provider,
@@ -1626,9 +1626,7 @@ describe('LAN vs tunnel pairing authorization', () => {
     bridges.push(bridge)
     const snapshot = await bridge.start()
     const armed = armFakeTunnel(bridge)
-    ;(bridge as unknown as { armTunnelProcess: (instance: unknown) => void }).armTunnelProcess(
-      (bridge as unknown as { tunnelInstance: unknown }).tunnelInstance
-    )
+    bridge['armTunnelProcess'](bridge['tunnelInstance'])
     await fetch(`http://127.0.0.1:${snapshot.port}/pair/verify`, {
       method: 'POST',
       headers: {

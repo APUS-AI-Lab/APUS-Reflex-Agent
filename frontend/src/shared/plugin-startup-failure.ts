@@ -16,21 +16,25 @@ export function parsePluginStartupFailures(line: string): PluginStartupFailure[]
   const object = (value: unknown): value is Record<string, unknown> =>
     value !== null && typeof value === 'object' && !Array.isArray(value)
   const optionalString = (value: unknown) => value === undefined || typeof value === 'string'
+  const isFailure = (value: unknown): value is PluginStartupFailure => {
+    if (!object(value) || typeof value.stage !== 'string' ||
+      typeof value.packageName !== 'string' || typeof value.message !== 'string' ||
+      !optionalString(value.entryId) || !Array.isArray(value.chain)) return false
+    if (value.owner !== undefined && (!object(value.owner) ||
+      typeof value.owner.packageName !== 'string' || !optionalString(value.owner.version) ||
+      !optionalString(value.owner.packageDir))) return false
+    if (!value.chain.every((row: unknown) => object(row) &&
+      typeof row.packageName === 'string' && optionalString(row.entryId) &&
+      optionalString(row.baseUrl))) return false
+    return true
+  }
   try {
     const report: unknown = JSON.parse(line.slice(PLUGIN_FAILURE_PREFIX.length))
     if (!object(report) || report.version !== 1 || !Array.isArray(report.failures)) return undefined
     const failures: PluginStartupFailure[] = []
     for (const value of report.failures) {
-      if (!object(value) || typeof value.stage !== 'string' ||
-        typeof value.packageName !== 'string' || typeof value.message !== 'string' ||
-        !optionalString(value.entryId) || !Array.isArray(value.chain)) return undefined
-      if (value.owner !== undefined && (!object(value.owner) ||
-        typeof value.owner.packageName !== 'string' || !optionalString(value.owner.version) ||
-        !optionalString(value.owner.packageDir))) return undefined
-      if (!value.chain.every((row: unknown) => object(row) &&
-        typeof row.packageName === 'string' && optionalString(row.entryId) &&
-        optionalString(row.baseUrl))) return undefined
-      failures.push(value as unknown as PluginStartupFailure)
+      if (!isFailure(value)) return undefined
+      failures.push(value)
     }
     return failures.length ? failures : undefined
   } catch {

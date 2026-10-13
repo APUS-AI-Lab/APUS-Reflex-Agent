@@ -81,24 +81,24 @@ describe('fetchAvailableReleases', () => {
     ]
   }
   const ok = () =>
-    Promise.resolve({ ok: true, json: () => Promise.resolve(index) } as Response)
+    Promise.resolve(Response.json(index))
 
   it('drops the current version and sorts descending', async () => {
-    const releases = await fetchAvailableReleases('1.1.0', ok as unknown as typeof fetch)
+    const releases = await fetchAvailableReleases('1.1.0', ok)
     expect(releases.map((r) => r.version)).toEqual(['1.2.0', '1.0.0'])
   })
 
   it('throws when the request fails', async () => {
-    const bad = () => Promise.resolve({ ok: false, status: 503 } as Response)
+    const bad = () => Promise.resolve(new Response(null, { status: 503 }))
     await expect(
-      fetchAvailableReleases('1.1.0', bad as unknown as typeof fetch)
+      fetchAvailableReleases('1.1.0', bad)
     ).rejects.toThrow()
   })
 
   it('throws when the network rejects', async () => {
     const boom = () => Promise.reject(new Error('offline'))
     await expect(
-      fetchAvailableReleases('1.1.0', boom as unknown as typeof fetch)
+      fetchAvailableReleases('1.1.0', boom)
     ).rejects.toThrow('offline')
   })
 })

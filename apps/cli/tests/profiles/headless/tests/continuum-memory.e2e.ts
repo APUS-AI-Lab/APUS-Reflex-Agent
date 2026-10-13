@@ -20,6 +20,9 @@ const PROCESS_TIMEOUT_MS = 60_000
 const fact = 'The release candidate has the unique release code MERIDIAN-731.'
 const recallQuery = 'What release code was recorded earlier?'
 const canary = 'MERIDIAN-731'
+const tailFact = `背景资料。🌿${'无关的历史背景。'.repeat(400)} Quartzlaunch release code ${canary}.`
+const tailAnswer = `Quartzlaunch release code ${canary}.`
+const recallBudgetBytes = 8192
 type RecordedMessage = { source?: { kind?: string; recordIds?: string[] }; content?: Array<{ text?: string }> }
 
 function patchForMode(template: string, mode: 'src' | 'lib'): string {
@@ -79,11 +82,13 @@ async function persistedSeed(cwd: string, sessionId: string, expectedFact = fact
 
 describe('shipped headless Continuum profile', () => {
   it.each([
-    { mode: 'src', language: 'English', seedFact: fact, query: recallQuery },
-    { mode: 'lib', language: 'English', seedFact: fact, query: recallQuery },
-    { mode: 'src', language: 'Chinese', seedFact: '迁移安排在周五。', query: '迁移' },
-    { mode: 'lib', language: 'Chinese', seedFact: '迁移安排在周五。', query: '迁移' },
-  ] as const)('admits, persists, resumes, and injects $language memory in $mode mode', { timeout: 120_000, retry: 0 }, async ({ mode, seedFact, query }) => {
+    { mode: 'src', language: 'English', seedFact: fact, query: recallQuery, expectedExcerpt: fact },
+    { mode: 'lib', language: 'English', seedFact: fact, query: recallQuery, expectedExcerpt: fact },
+    { mode: 'src', language: 'Chinese', seedFact: '迁移安排在周五。', query: '迁移', expectedExcerpt: '迁移安排在周五。' },
+    { mode: 'lib', language: 'Chinese', seedFact: '迁移安排在周五。', query: '迁移', expectedExcerpt: '迁移安排在周五。' },
+    { mode: 'src', language: 'long Unicode tail', seedFact: tailFact, query: 'Quartzlaunch', expectedExcerpt: tailAnswer },
+    { mode: 'lib', language: 'long Unicode tail', seedFact: tailFact, query: 'Quartzlaunch', expectedExcerpt: tailAnswer },
+  ] as const)('admits, persists, resumes, and injects $language memory in $mode mode', { timeout: 120_000, retry: 0 }, async ({ mode, seedFact, query, expectedExcerpt }) => {
     const cwd = await mkdtemp(join(tmpdir(), `continuum-headless-${mode}-`))
     try {
       const patchPath = join(cwd, 'continuum-memory.patch.yml')
@@ -107,7 +112,16 @@ describe('shipped headless Continuum profile', () => {
       expect(requests.length).toBeGreaterThan(0)
       const recall = requests.flat().find(message => message.source?.kind === 'continuum-memory')
       expect(recall, `resumed process requests: ${JSON.stringify(requests)}; stderr: ${resumed.stderr}`).toBeDefined()
-      expect(recall === undefined ? '' : messageText(recall)).toContain(seedFact)
+      const recalledText = recall === undefined ? '' : messageText(recall)
+      expect(recalledText).toContain(expectedExcerpt)
+      expect(Buffer.byteLength(recalledText, 'utf8')).toBeLessThanOrEqual(recallBudgetBytes)
+      expect(recalledText).toContain(`revision:${admitted.revision}`)
+      expect(recalledText).toContain(`sources:${JSON.stringify(admitted.sourceRefs)}`)
+      if (seedFact === tailFact) {
+        expect(recalledText).not.toContain('背景资料。🌿')
+        expect(recalledText).toContain('omitted:before')
+        expect(recalledText).not.toContain('\uFFFD')
+      }
       expect(recall?.source?.recordIds).toEqual(expect.arrayContaining([admitted.id]))
     } finally {
       await rm(cwd, { recursive: true, force: true })

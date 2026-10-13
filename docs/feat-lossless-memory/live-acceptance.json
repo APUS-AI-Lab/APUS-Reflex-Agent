@@ -1,0 +1,146 @@
+{
+  "version": 1,
+  "status": "passed",
+  "scope": "same-session real Flash and Reflex after native compaction and cold restart",
+  "entry": "apps/cli/tests/profiles/acp/tests/continuum-live.e2e.ts",
+  "arms": [
+    "off",
+    "baseline",
+    "reflex"
+  ],
+  "requirements": [
+    "strict source preservation",
+    "ordinary context contains no selected answer",
+    "exact source references in recalled evidence",
+    "real Reflex noul request and persisted prepared/settled receipts",
+    "actual Flash input reconstructs from Session",
+    "exact persisted Flash answer matches independent oracle",
+    "all three arms use the same frozen seed and query",
+    "failures and timeouts remain failures",
+    "actual Flash recall order equals persisted Reflex selectedIds",
+    "actual Reflex response model matches requested model"
+  ],
+  "excludedClaims": [
+    "actual model window saturation",
+    "cross-session task recovery",
+    "all-input processing coverage",
+    "unlimited scale",
+    "measured Reflex efficacy gain"
+  ],
+  "result": {
+    "accepted": true,
+    "model": "deepseek-flash",
+    "jevModel": "APUS-OpenJev-v1-9B-5949",
+    "arms": [
+      {
+        "arm": "off",
+        "accepted": true,
+        "answer": {
+          "ALPHA4D501DABE2005": "UNKNOWN",
+          "BRAVOFE20D9BEDC004": "UNKNOWN"
+        },
+        "resultSha256": "a1ecf90ec84efc94892d805cde891d559ea6790f224da58d122f1947eef8efab"
+      },
+      {
+        "arm": "baseline",
+        "accepted": true,
+        "answer": {
+          "ALPHA4D501DABE2005": "f7fb33c35142bd3808de9bc01325b447",
+          "BRAVOFE20D9BEDC004": "9e959d4e0f499688c980c16c83ce8ada"
+        },
+        "resultSha256": "008894bd84c839cfac3a42e63f52bbeac2405437b9bec114b404a1245f636e4d"
+      },
+      {
+        "arm": "reflex",
+        "accepted": true,
+        "answer": {
+          "ALPHA4D501DABE2005": "f7fb33c35142bd3808de9bc01325b447",
+          "BRAVOFE20D9BEDC004": "9e959d4e0f499688c980c16c83ce8ada"
+        },
+        "resultSha256": "dc0e9a769954e87d38b1f613dc84390ce7aa27a60da529d08318c77a20d19bde"
+      }
+    ],
+    "facts": 2,
+    "scope": "same-session-cold-restart-native-compaction-dual-model-recall",
+    "actualModelWindowSaturation": false,
+    "independentSessionRecall": false,
+    "infiniteScaleProved": false,
+    "attempt": "attempt-MezRyz",
+    "seedEventsSha256": "8698f0efb63401c5a64c3f51910e1cc50b9cf8e25ac9d74960c50271ba7c392e",
+    "querySha256": "14dda94687751d660f482769b0aaee21de46a16dec005f4d4202aec8f65c448a",
+    "corpusRows": 384,
+    "selectedFacts": [
+      {
+        "id": "ALPHA4D501DABE2005",
+        "value": "f7fb33c35142bd3808de9bc01325b447",
+        "sourceSeq": 8,
+        "recordId": "a1d1b1bd-f2c6-4628-a5d3-053b6430b32a:8"
+      },
+      {
+        "id": "BRAVOFE20D9BEDC004",
+        "value": "9e959d4e0f499688c980c16c83ce8ada",
+        "sourceSeq": 24,
+        "recordId": "a1d1b1bd-f2c6-4628-a5d3-053b6430b32a:24"
+      }
+    ],
+    "flashMainRequests": 5,
+    "flashCompactionRequests": 1,
+    "reflexBatchRequests": 1,
+    "distinctApplicationProcesses": 4,
+    "relevanceProbabilities": {
+      "m0": 0.9909096123911114,
+      "m1": 0.8902942261220291
+    },
+    "reflexOrderChanged": false,
+    "efficacyGainMeasured": false,
+    "checks": {
+      "builtAcpColdResumeSmoke": "passed",
+      "liveThreeArmScenario": "passed",
+      "postReviewStricterArtifactVerification": "passed"
+    }
+  },
+  "date": "2026-10-13",
+  "execution": {
+    "command": "node node_modules/vitest/vitest.mjs run --config vitest.e2e.config.ts apps/cli/tests/profiles/acp/tests/continuum-live.e2e.ts",
+    "requiredEnvironment": [
+      "DSH_EXAMPLE_MODE=lib",
+      "APUS_CONTINUUM_LIVE=1",
+      "DEEPSEEK_API_KEY",
+      "JEV_API_KEY",
+      "CONTINUUM_JEV_ENDPOINT",
+      "CONTINUUM_JEV_MODEL"
+    ],
+    "testsPassed": 2,
+    "testsFailed": 0,
+    "testsSkipped": 0,
+    "durationSeconds": 33.93,
+    "requestObservation": "provider-neutral llm/stream input reconstructed from Session; not HTTP wire",
+    "rawArtifacts": "Retained locally under ignored tasks/feat-lossless-memory/live-runs/attempt-MezRyz; not included in the repository."
+  },
+  "attemptHistory": [
+    {
+      "attempt": "attempt-CjZ66B",
+      "status": "failed",
+      "reason": "SDK does not support persisted same-session recovery after process restart; duplicate session rejected. Retained failure; not counted as success."
+    },
+    {
+      "attempt": "attempt-MezRyz",
+      "status": "passed",
+      "change": "Use supported ACP newSession/resumeSession. Real providers, native compaction, source preservation and strict oracles retained."
+    }
+  ],
+  "verification": [
+    {
+      "command": "pnpm exec vitest run apps/cli/tests/profiles/acp/tests/continuum-live-verifier.spec.ts",
+      "passed": 20,
+      "failed": 0,
+      "scope": "Independent oracle, including swapped recall order and wrong response model rejection."
+    },
+    {
+      "command": "pnpm exec vitest run scripts/continuum-evaluation.spec.ts",
+      "passed": 11,
+      "failed": 0,
+      "scope": "Authorized candidate retention and actual disclosure rejection."
+    }
+  ]
+}

@@ -67,7 +67,7 @@ The decision service is configurable. A replacement must implement the supported
 
 <img src="docs/dev-continuum-reflex-integration/apus-continuum-memory-flow.en.svg" alt="Continuum memory flow: admitted Session facts, durable storage, scoped retrieval, optional Reflex selection and bounded model context." />
 
-[English memory flow](docs/dev-continuum-reflex-integration/apus-reflex-loop-working-architecture.en.html#memory) · [中文记忆流程](docs/dev-continuum-reflex-integration/apus-reflex-loop-working-architecture.html#memory) · [Continuum semantics](packages/context/continuum/README.md) · [Optional Jev selector](packages/experimental/continuum-jev/README.md)
+[Continuum architecture and acceptance design (中文)](docs/feat-lossless-memory/design.html) · [English memory flow](docs/dev-continuum-reflex-integration/apus-reflex-loop-working-architecture.en.html#memory) · [中文记忆流程](docs/dev-continuum-reflex-integration/apus-reflex-loop-working-architecture.html#memory) · [Continuum semantics](packages/context/continuum/README.md) · [Optional Jev selector](packages/experimental/continuum-jev/README.md)
 
 **Continuum** separates task history from the limited context of a single inference request. A fact can remain in persisted history even when it is absent from the current prompt. Retrieval and optional Reflex selection bring a bounded working set back into the next request.
 

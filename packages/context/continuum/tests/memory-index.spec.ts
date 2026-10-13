@@ -25,7 +25,7 @@ function partialRecords(): MemoryRecordStore {
   return store
 }
 
-const config = { maxCandidates: 5, maxExcerptBytes: 200, maxTotalBytes: 500 }
+const config = { maxCandidates: 5, maxExcerptBytes: 200, maxTotalBytes: 2000 }
 
 describe('Continuum memory index', () => {
   it('rebuilds deterministic postings and preserves retrieval results', () => {

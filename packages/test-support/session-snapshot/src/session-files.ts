@@ -47,7 +47,7 @@ export function sessionFixtureName(index: number, version: number): string {
 }
 
 /**
- * Name the native-writer oracle for a retained historical replay role.
+ * Name the native-writer oracle for a preserved replay role.
  * This expected output never participates in replay generation selection.
  * @param index - Parent `0` or a positive child/ordinal slot.
  * @returns The expected-output JSONL basename.

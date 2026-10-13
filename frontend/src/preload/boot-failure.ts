@@ -25,8 +25,18 @@ export function extractBootFailureText(root: BootFailureElement | null): string 
     .join('\n')
 }
 
-export function findBootFailureText(document: Document): string | undefined {
+/** Document capability used to read the dedicated boot failure root. */
+export interface BootFailureDocument {
+  /**
+   * Read the selected boot root without accessing unrelated document text.
+   * @param selector - Dedicated boot page selector.
+   * @returns Matching diagnostic element, or null when absent.
+   */
+  querySelector(selector: string): BootFailureElement | null
+}
+
+export function findBootFailureText(document: BootFailureDocument): string | undefined {
   return extractBootFailureText(
-    document.querySelector<HTMLElement>(BOOT_FAILURE_ROOT_SELECTOR)
+    document.querySelector(BOOT_FAILURE_ROOT_SELECTOR)
   )
 }
