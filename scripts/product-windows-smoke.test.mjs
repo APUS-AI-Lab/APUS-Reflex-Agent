@@ -1,7 +1,6 @@
 /** Keyless checks for the Windows installed-app qualification harness. */
 import assert from 'node:assert/strict'
 import { once } from 'node:events'
-import { createServer } from 'node:net'
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -96,43 +95,64 @@ test('cleanup observation failures remain independently reportable beside an ear
 })
 
 
-test('an observed exit retains its numeric failure while inherited output is still open', async t => {
-  const server = createServer()
-  let keeper
-  t.after(async () => {
-    keeper?.destroy()
-    await new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve()))
+for (const ready of [true, false]) {
+  test(ready ? 'an observed exit retains its numeric failure before output closes'
+    : 'missing output readiness aborts and closes the owned process', async t => {
+    const controller = new AbortController()
+    const signal = AbortSignal.any([controller.signal, t.signal])
+    const deadline = setTimeout(() => controller.abort(), 5000)
+    let child
+    let exited
+    let outputReady
+    let closed = false
+    const holdOutput = () => {}
+    // A readable listener keeps output in pull mode until the observer releases it.
+    // stdin releases exit only after the observer has acquired unread stdout.
+    const script = `${ready ? "process.stdout.write('pending output');" : ''}
+process.stdin.resume(); process.stdin.once('end', () => process.exit(7));`
+    try {
+      await assert.rejects(runTrackedProcess(process.execPath, ['-e', script],
+        { timeout: 5000 }, command => {
+          child = command
+          command.stdout.pause()
+          command.stdout.on('readable', holdOutput)
+          exited = once(command, 'exit', { signal })
+          outputReady = once(command.stdout, 'readable', { signal })
+          // Both waits are owned before the child can fail or cancellation can settle them.
+          void exited.catch(() => {})
+          void outputReady.catch(() => {})
+          command.once('close', () => { closed = true })
+          if (!ready) command.once('spawn', () => controller.abort())
+        }, async () => {
+          try {
+            await outputReady
+            assert.ok(child.stdout.readableLength > 0)
+            child.stdin.end()
+            const [code, termination] = await exited
+            assert.equal(code, 7)
+            assert.equal(termination, null)
+            assert.equal(closed, false)
+          } finally { child.stdout.off('readable', holdOutput); child.stdout.resume() }
+          throw new Error('Observation unavailable; API_KEY=private')
+        }), error => {
+        if (!ready) { assert.equal(error.name, 'AbortError'); return true }
+        const diagnostic = failureDiagnostic(error)
+        assert.equal(diagnostic.code, 7)
+        assert.equal(diagnostic.killed, false)
+        assert.equal(diagnostic.observationFailure.message, 'Observation unavailable; API_KEY=[redacted]')
+        return true
+      })
+      assert.equal(closed, true)
+      assert.ok(child.pid > 0)
+      assert.throws(() => process.kill(child.pid, 0), error => error.code === 'ESRCH')
+    } finally {
+      clearTimeout(deadline)
+      controller.abort()
+      child?.stdout.off('readable', holdOutput)
+      child?.stdout.resume()
+    }
   })
-  server.listen(0, '127.0.0.1')
-  await once(server, 'listening')
-  const connected = once(server, 'connection').then(([socket]) => { keeper = socket; return socket })
-  const port = server.address().port
-  // A connected descendant holds stdout until the observer releases it, separating exit from close.
-  const keepOutput = `const socket = require('node:net').connect(${port}, '127.0.0.1'); socket.on('close', () => process.exit(0));`
-  const script = `require('node:child_process').spawn(process.execPath, ['-e', ${JSON.stringify(keepOutput)}], { stdio: ['ignore', 1, 2] }).unref(); process.exit(7);`
-  let exited
-  let closed = false
-  await assert.rejects(runTrackedProcess(process.execPath, ['-e', script],
-    { timeout: 5000 }, child => {
-      exited = once(child, 'exit')
-      child.once('close', () => { closed = true })
-    }, async () => {
-      const [[code, signal], socket] = await Promise.all([exited, connected])
-      try {
-        assert.equal(code, 7)
-        assert.equal(signal, null)
-        assert.equal(closed, false)
-      } finally { socket.end() }
-      throw new Error('Observation unavailable; API_KEY=private')
-    }), error => {
-    const diagnostic = failureDiagnostic(error)
-    assert.equal(diagnostic.code, 7)
-    assert.equal(diagnostic.killed, false)
-    assert.equal(diagnostic.observationFailure.message, 'Observation unavailable; API_KEY=[redacted]')
-    return true
-  })
-  assert.equal(closed, true)
-})
+}
 
 test('Full and Lite installed runtime identities cannot be mixed', () => {
   const runtime = { mode: 'deployed', platform: 'win32', arch: 'x64', sourceRevision: 'same', sourceDirty: false, edition: 'lite' }
