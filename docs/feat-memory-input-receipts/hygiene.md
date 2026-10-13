@@ -1,5 +1,7 @@
 # Frontend integration hygiene repair
 
+English | [中文](hygiene.zh.md)
+
 This follow-up removes 34 historical assertions to unknown without increasing the baseline and corrects vendor-rescope false positives for runtime identifiers. All affected frontend files matched origin/main before editing. The input receipt behavior is unchanged.
 
 The rescope pass preserves only registered exact file/literal occurrences with expected counts; imports and dependencies in those same files remain checked. Built-in preset IDs, executable names and scoped-package path segments retain their values. Parser results retain extra fields and their existing acceptance rules. Tests use structurally typed fetch/DOM dependencies and direct fixtures, with no replacement assertions to any.

@@ -76,6 +76,8 @@ The consumer appends a bounded recall message, so the existing request prefix re
 - The service has no full text index and does not automatically attach the summary tree to lifecycle retrieval. Summary navigation is rebuilt from Session events after restart; it is not a persisted model-summary snapshot. The tree and cache helpers are deterministic, local instrumentation; they do not report provider cache accounting. Records remain source-backed; admission is caller-owned by default and can be enabled for human messages explicitly.
 - Automatic user-message admission is deliberately opt-in, uses the first configured scope, and stores message text as a source-backed fact. Deployments handling private or sensitive conversations should keep `admission: explicit` and provide a domain-specific admission caller.
 
+No invariant companion is published because this package exposes no independently owned runtime observation to reconcile with its Session-backed projection.
+
 <a id="dev-note"></a>
 ### Dev Note
 

@@ -1,0 +1,7 @@
+# Bilingual-pair consistency record for hygiene.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-memory-input-receipts/hygiene.md
+/frontend-integration-hygiene-repair:
+  en: 46e251751257e086
+  zh: d86c80a2fe4a02ea

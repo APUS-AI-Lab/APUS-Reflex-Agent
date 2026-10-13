@@ -54,6 +54,8 @@ Active reordering can change the main-model prompt suffix. Off and shadow preser
 - Real Jev quality and latency require a reachable configured gateway; fake-provider tests do not establish model effectiveness.
 - Only the first sixteen candidates are scored; others remain unscored and retained. Semantic indexing, query expansion, and per-record classification are separate work. Declared session data classes cover supplied candidates and the query; no content classifier detects embedded secrets.
 
+No invariant companion is published because the request and receipt adapter owns no independent persistent projection.
+
 <a id="dev-note"></a>
 ### Dev Note
 

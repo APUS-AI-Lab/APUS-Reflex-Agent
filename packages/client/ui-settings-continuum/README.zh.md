@@ -76,6 +76,8 @@ Host 半侧是空的 `apply`；浏览器半侧通过 `ctx.configForms.whileServe
 - **Reflex 依赖**——开启后仍受 Continuum 服务的 Reflex/Jev 开关约束，不提供无 Reflex 的无限记忆模式。
 - **后续产品界面**——摘要树浏览、运行中活动投影和缓存计费属于独立的 P4/P5 工作。
 
+不发布运行时不变式伴生模块：设置行读取 Host 的 ConfigForms namespace，不维护独立的持久状态。
+
 <a id="dev-note"></a>
 ### 开发备注
 

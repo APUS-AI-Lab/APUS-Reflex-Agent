@@ -64766,7 +64766,7 @@
         "packages/workflow/workflow/src/types.ts#WorkflowRunId"
       ],
       "sources": [
-        "packages/api/session-controller/src/types.ts:427",
+        "packages/api/session-controller/src/types.ts:434",
         "packages/attachment/attachment/src/brand.ts:6",
         "packages/compaction/compaction/src/brand.ts:4",
         "packages/context/continuum/src/records.ts:6",
@@ -76943,7 +76943,7 @@
       },
       "names": [],
       "sources": [
-        "packages/api/session-controller/src/types.ts:432"
+        "packages/api/session-controller/src/types.ts:439"
       ]
     },
     {
@@ -115066,7 +115066,7 @@
         "packages/experimental/continuum-jev/src/index.ts#ContinuumMemoryEvaluation"
       ],
       "sources": [
-        "packages/experimental/continuum-jev/src/index.ts:55"
+        "packages/experimental/continuum-jev/src/index.ts:57"
       ]
     },
     {
@@ -125216,7 +125216,7 @@
         "packages/experimental/continuum-jev/src/index.ts#ContinuumMemoryDecisionReceipt"
       ],
       "sources": [
-        "packages/experimental/continuum-jev/src/index.ts:82"
+        "packages/experimental/continuum-jev/src/index.ts:84"
       ]
     },
     {

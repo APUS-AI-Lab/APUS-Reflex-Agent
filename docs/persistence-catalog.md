@@ -505,7 +505,7 @@ Source: [`packages/compaction/compaction/src/types.ts:34`](../packages/compactio
 'continuum/memory-decision': ContinuumMemoryDecisionReceipt
 ```
 
-Source: [`packages/experimental/continuum-jev/src/index.ts:97`](../packages/experimental/continuum-jev/src/index.ts)
+Source: [`packages/experimental/continuum-jev/src/index.ts:99`](../packages/experimental/continuum-jev/src/index.ts)
 
 <a id="continuummemory-record--log-only"></a>
 
@@ -4722,7 +4722,7 @@ One of:
 
 SHA-256: `f81713b4e54e147d3c110e83e23801c9d679271407f70bc7644395769f990cf2`
 
-Sources: [`packages/experimental/continuum-jev/src/index.ts:82`](../packages/experimental/continuum-jev/src/index.ts)
+Sources: [`packages/experimental/continuum-jev/src/index.ts:84`](../packages/experimental/continuum-jev/src/index.ts)
 
 | Property | Presence | Type |
 |---|---|---|
@@ -4745,7 +4745,7 @@ Sources: [`packages/experimental/continuum-jev/src/index.ts:82`](../packages/exp
 
 SHA-256: `d633839707c8714e1273e5aa96e28bcb68477853528a41cab43f5b0f0c717b1d`
 
-Sources: [`packages/experimental/continuum-jev/src/index.ts:55`](../packages/experimental/continuum-jev/src/index.ts)
+Sources: [`packages/experimental/continuum-jev/src/index.ts:57`](../packages/experimental/continuum-jev/src/index.ts)
 
 | Property | Presence | Type |
 |---|---|---|
@@ -8076,7 +8076,7 @@ Array of `number`.
 
 SHA-256: `4cd48f3e5108bd6ebedf7301c3638839b8b2b9db8dbd493974177fbdeb91a01b`
 
-Sources: [`packages/api/session-controller/src/types.ts:427`](../packages/api/session-controller/src/types.ts) · [`packages/attachment/attachment/src/brand.ts:6`](../packages/attachment/attachment/src/brand.ts) · [`packages/compaction/compaction/src/brand.ts:4`](../packages/compaction/compaction/src/brand.ts) · [`packages/context/continuum/src/records.ts:6`](../packages/context/continuum/src/records.ts) · [`packages/core/session/src/types.ts:20`](../packages/core/session/src/types.ts) · [`packages/experimental/agent-team/src/types.ts:20`](../packages/experimental/agent-team/src/types.ts) · [`packages/experimental/agent-team/src/types.ts:32`](../packages/experimental/agent-team/src/types.ts) · [`packages/experimental/agent-team/src/types.ts:8`](../packages/experimental/agent-team/src/types.ts) · [`packages/experimental/system3/src/decisions.ts:11`](../packages/experimental/system3/src/decisions.ts) · [`packages/feedback/message-feedback/src/types.ts:14`](../packages/feedback/message-feedback/src/types.ts) · [`packages/goal/goal/src/types.ts:17`](../packages/goal/goal/src/types.ts) · [`packages/interaction/commands/src/brand.ts:31`](../packages/interaction/commands/src/brand.ts) · [`packages/interaction/user-approval/src/types.ts:17`](../packages/interaction/user-approval/src/types.ts) · [`packages/llm/llm-retry/src/brand.ts:4`](../packages/llm/llm-retry/src/brand.ts) · [`packages/llm/llm/src/brand.ts:16`](../packages/llm/llm/src/brand.ts) · [`packages/llm/llm/src/brand.ts:31`](../packages/llm/llm/src/brand.ts) · [`packages/llm/llm/src/brand.ts:43`](../packages/llm/llm/src/brand.ts) · [`packages/llm/llm/src/brand.ts:67`](../packages/llm/llm/src/brand.ts) · [`packages/schedule/schedule/src/types.ts:14`](../packages/schedule/schedule/src/types.ts) · [`packages/session/session-title/src/index.ts:42`](../packages/session/session-title/src/index.ts) · [`packages/session/session-title/src/types.ts:17`](../packages/session/session-title/src/types.ts) · [`packages/subagent/subagent/src/recovery.ts:6`](../packages/subagent/subagent/src/recovery.ts) · [`packages/subagent/subagent/src/types.ts:160`](../packages/subagent/subagent/src/types.ts) · [`packages/subagent/subagent/src/types.ts:163`](../packages/subagent/subagent/src/types.ts) · [`packages/subagent/subagent/src/types.ts:20`](../packages/subagent/subagent/src/types.ts) · [`packages/webhook/webhook/src/brand.ts:12`](../packages/webhook/webhook/src/brand.ts) · [`packages/webhook/webhook/src/brand.ts:6`](../packages/webhook/webhook/src/brand.ts) · [`packages/webhook/webhook/src/brand.ts:9`](../packages/webhook/webhook/src/brand.ts) · [`packages/workflow/workflow/src/types.ts:13`](../packages/workflow/workflow/src/types.ts)
+Sources: [`packages/api/session-controller/src/types.ts:434`](../packages/api/session-controller/src/types.ts) · [`packages/attachment/attachment/src/brand.ts:6`](../packages/attachment/attachment/src/brand.ts) · [`packages/compaction/compaction/src/brand.ts:4`](../packages/compaction/compaction/src/brand.ts) · [`packages/context/continuum/src/records.ts:6`](../packages/context/continuum/src/records.ts) · [`packages/core/session/src/types.ts:20`](../packages/core/session/src/types.ts) · [`packages/experimental/agent-team/src/types.ts:20`](../packages/experimental/agent-team/src/types.ts) · [`packages/experimental/agent-team/src/types.ts:32`](../packages/experimental/agent-team/src/types.ts) · [`packages/experimental/agent-team/src/types.ts:8`](../packages/experimental/agent-team/src/types.ts) · [`packages/experimental/system3/src/decisions.ts:11`](../packages/experimental/system3/src/decisions.ts) · [`packages/feedback/message-feedback/src/types.ts:14`](../packages/feedback/message-feedback/src/types.ts) · [`packages/goal/goal/src/types.ts:17`](../packages/goal/goal/src/types.ts) · [`packages/interaction/commands/src/brand.ts:31`](../packages/interaction/commands/src/brand.ts) · [`packages/interaction/user-approval/src/types.ts:17`](../packages/interaction/user-approval/src/types.ts) · [`packages/llm/llm-retry/src/brand.ts:4`](../packages/llm/llm-retry/src/brand.ts) · [`packages/llm/llm/src/brand.ts:16`](../packages/llm/llm/src/brand.ts) · [`packages/llm/llm/src/brand.ts:31`](../packages/llm/llm/src/brand.ts) · [`packages/llm/llm/src/brand.ts:43`](../packages/llm/llm/src/brand.ts) · [`packages/llm/llm/src/brand.ts:67`](../packages/llm/llm/src/brand.ts) · [`packages/schedule/schedule/src/types.ts:14`](../packages/schedule/schedule/src/types.ts) · [`packages/session/session-title/src/index.ts:42`](../packages/session/session-title/src/index.ts) · [`packages/session/session-title/src/types.ts:17`](../packages/session/session-title/src/types.ts) · [`packages/subagent/subagent/src/recovery.ts:6`](../packages/subagent/subagent/src/recovery.ts) · [`packages/subagent/subagent/src/types.ts:160`](../packages/subagent/subagent/src/types.ts) · [`packages/subagent/subagent/src/types.ts:163`](../packages/subagent/subagent/src/types.ts) · [`packages/subagent/subagent/src/types.ts:20`](../packages/subagent/subagent/src/types.ts) · [`packages/webhook/webhook/src/brand.ts:12`](../packages/webhook/webhook/src/brand.ts) · [`packages/webhook/webhook/src/brand.ts:6`](../packages/webhook/webhook/src/brand.ts) · [`packages/webhook/webhook/src/brand.ts:9`](../packages/webhook/webhook/src/brand.ts) · [`packages/workflow/workflow/src/types.ts:13`](../packages/workflow/workflow/src/types.ts)
 
 `string`
 
@@ -10560,7 +10560,7 @@ Sources: [`packages/experimental/system3/src/decisions.ts:24`](../packages/exper
 
 SHA-256: `6a4f72e2e179e17b922f2a9392c0e1c8f8c707f32494372454850a3eb184a6e7`
 
-Sources: [`packages/api/session-controller/src/types.ts:432`](../packages/api/session-controller/src/types.ts)
+Sources: [`packages/api/session-controller/src/types.ts:439`](../packages/api/session-controller/src/types.ts)
 
 | Property | Presence | Type |
 |---|---|---|

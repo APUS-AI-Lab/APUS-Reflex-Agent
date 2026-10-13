@@ -1,0 +1,173 @@
+{
+  "version": 1,
+  "date": "2026-10-13",
+  "status": "behavior_verified",
+  "architecture_entry": "design.html",
+  "scope": "Source fidelity, authorized paging, coverage-preserving ranking and pure-text saved acknowledgments; not complete unlimited-context acceptance.",
+  "batches": [
+    {
+      "name": "B0 recall rendering",
+      "status": "verified_and_pushed",
+      "evidence": "b0-acceptance.json"
+    },
+    {
+      "name": "B1 exact source pages",
+      "status": "behavior_verified",
+      "evidence": "../feat-memory-source-flow/design.html",
+      "checks": {
+        "source_page_unit_tests": 112,
+        "headless_round_trip_cases": 3,
+        "sdk_source_page_case": 1
+      },
+      "oracles": [
+        "Exact original text reassembly with event digest bound continuations.",
+        "Foreign workspace and changed digest rejected.",
+        "Actual model requests and persisted tool results agree."
+      ]
+    },
+    {
+      "name": "Jev coverage-preserving ranking",
+      "status": "behavior_verified",
+      "evidence": "../feat-memory-relevance/acceptance.json",
+      "oracles": [
+        "One batch scores independent relevance and retains every bounded candidate.",
+        "Durable prepared request precedes dispatch; privacy denial and failed durability produce no HTTP call.",
+        "Selector unload prevents pending dispatch and discards late ranking while retaining baseline candidates."
+      ]
+    },
+    {
+      "name": "Pure-text saved receipt",
+      "status": "behavior_verified",
+      "evidence": "../feat-memory-input-receipts/implementation.html",
+      "oracles": [
+        "The exact original inbox event is durably read back before saved is returned.",
+        "SIGKILL after saved and process restart preserve exact text and request identity.",
+        "Retry does not re-enqueue claimed or canceled input; changed text with the same request identity conflicts.",
+        "Composer whitespace survives transmission and storage."
+      ]
+    }
+  ],
+  "remaining": [
+    "Scoped cross-session task and correction chains.",
+    "Index coverage watermarks and resumable full-input processing ledger.",
+    "Complete request admission on the actual generation route.",
+    "Attachment original-byte acknowledgment and product saved/processed status.",
+    "Live Jev plus main-model quality and actual-window scale acceptance."
+  ],
+  "architecture_scenarios": "68 designed_not_run; supporting regression evidence is not execution of their full oracles.",
+  "release_status": "Feature branch; not merged into main or included in a published client release.",
+  "integration_checks": [
+    {
+      "command": "pnpm exec vitest run packages/context/continuum/tests packages/experimental/continuum-jev/tests packages/session-query/tool-session-query/tests packages/core/agent-loop/tests/continuum-admission.spec.ts --coverage --coverage.include='packages/context/continuum/src/retrieval.ts' --coverage.include='packages/context/continuum/src/memory-index.ts' --coverage.include='packages/context/continuum/src/context.ts' --coverage.include='packages/context/continuum/src/policy.ts' --coverage.include='packages/experimental/continuum-jev/src/index.ts' --coverage.include='packages/session-query/tool-session-query/src/**/*.ts'",
+      "passed": 291,
+      "failed": 0,
+      "coverage": {
+        "statements": "891/891",
+        "branches": "601/601",
+        "functions": "183/183",
+        "lines": "768/768"
+      },
+      "note": "Before the final selector-unload fix; the affected selector/context tests were rerun below."
+    },
+    {
+      "command": "pnpm exec vitest run packages/experimental/continuum-jev/tests packages/context/continuum/tests/context.spec.ts packages/context/continuum/tests/live-config.spec.ts --coverage --coverage.include='packages/experimental/continuum-jev/src/index.ts' --coverage.include='packages/context/continuum/src/context.ts'",
+      "passed": 83,
+      "failed": 0,
+      "coverage": {
+        "statements": "198/198",
+        "branches": "121/121",
+        "functions": "41/41",
+        "lines": "154/154"
+      }
+    },
+    {
+      "command": "pnpm exec vitest run packages/api/session-controller/tests/prompt-receipt.host.spec.ts packages/api/session-controller/tests/commands-upload-file.host.spec.ts packages/client/ui-conversation/tests/input-reference-submit.client.spec.ts --coverage --coverage.include='packages/api/session-controller/src/prompt-receipt.ts'",
+      "passed": 39,
+      "failed": 0,
+      "coverage": {
+        "statements": "29/29",
+        "branches": "24/24",
+        "functions": "4/4",
+        "lines": "26/26"
+      }
+    },
+    {
+      "command": "pnpm run test:e2e apps/cli/tests/profiles/headless/tests/continuum-memory.e2e.ts apps/cli/tests/profiles/headless/tests/continuum-source-read.e2e.ts apps/cli/tests/profiles/web/tests/input-receipt.e2e.ts",
+      "passed": 13,
+      "failed": 0,
+      "scope": "Actual source/built profiles, recording LLM boundary, real persistence/tools/RPC/process restart; includes SIGKILL after saved."
+    },
+    {
+      "command": "pnpm run build",
+      "status": "passed"
+    },
+    {
+      "command": "pnpm run lint",
+      "status": "passed"
+    },
+    {
+      "command": "pnpm run test:docs",
+      "passed": 20,
+      "failed": 0
+    },
+    {
+      "command": "pnpm run test:snapshot snapshots/sdk/sdk.snapshot.ts snapshots/session/headless.snapshot.ts -t 'continuum-(partial|tail)-recall|continuum-source-pages|continuum-relevance|session-query-spill'",
+      "passed": 5,
+      "failed": 0,
+      "filtered_out": 167,
+      "scope": "Four memory SDK scenarios and the existing full-event spill scenario; Session and SDK notification/result comparison."
+    },
+    {
+      "command": "pnpm exec vitest run --config vitest.snapshot.config.ts scripts/session-snapshot-corpus.corpus.ts",
+      "passed": 3,
+      "failed": 0
+    },
+    {
+      "command": "DSH_GATE_CONCURRENCY=2 pnpm run hygiene",
+      "passed": 18,
+      "failed": 0,
+      "note": "Initial failures were repaired without increasing the unknown-cast baseline or excluding entire compatibility files."
+    },
+    {
+      "command": "DSH_GATE_CONCURRENCY=2 pnpm run doc-sync",
+      "passed": 41,
+      "failed": 1,
+      "failure": "New hygiene maintenance note lacked its bilingual pair.",
+      "resolution": "Added and confirmed both language files and switcher links. The subsequent complete test:docs run, including corpus-wide translation pairing, passed 20/20. The other 41 doc-sync gates passed; the full 42-gate aggregate was not rerun after this documentation-only repair."
+    },
+    {
+      "command": "ruff check . && ruff format --check .",
+      "status": "passed",
+      "python_files": 110
+    }
+  ],
+  "counting_note": "Checks overlap and run on successive integration states. Counts must not be summed as unique architecture scenarios.",
+  "retained_inputs": [
+    {
+      "path": "../../snapshots/sdk/continuum-partial-recall/session.v4.jsonl",
+      "sha256": "92a607cdbacdb42c9765506caca9f6a0f3da16bbd0b766777116a4fdafdef56a"
+    },
+    {
+      "path": "../../snapshots/session/session-query-spill/session.v4.jsonl",
+      "sha256": "99482fb6db753adc8eac3ff3262f7e991e9247970ca73c14991d3648c9fa81f8"
+    }
+  ],
+  "additional_isolated_checks": [
+    {
+      "scope": "Input receipt worktree; changes integrated without runtime conflict",
+      "checks": [
+        "43 files / 922 input-controller and composer tests; receipt helper coverage 100%.",
+        "Browser queue-actions read-only replay: 5 passed.",
+        "LAN mobile page tests: 17 passed."
+      ]
+    },
+    {
+      "scope": "Frontend hygiene follow-up; same committed files integrated",
+      "checks": [
+        "15 frontend files / 215 tests passed.",
+        "Frontend npm run typecheck passed.",
+        "16 rescope script tests passed, including invalid new import, wrong owner and duplicated exception controls."
+      ]
+    }
+  ]
+}
