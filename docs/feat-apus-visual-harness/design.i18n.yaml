@@ -1,0 +1,19 @@
+# Bilingual-pair consistency record for design.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-apus-visual-harness/design.md
+/apus-reflex-bird-identity-and-shared-theme:
+  en: f3b7dcec622f27e5
+  zh: 478e1bb30dec6da5
+/apus-reflex-bird-identity-and-shared-theme/scope:
+  en: 0e17ca5c861d711c
+  zh: a92afc65d702b6f5
+/apus-reflex-bird-identity-and-shared-theme/architecture:
+  en: a7e56472b11bd3c8
+  zh: 6150d900a0920ce9
+/apus-reflex-bird-identity-and-shared-theme/ownership-and-compatibility:
+  en: 842a786842570133
+  zh: 44aa967a16905edb
+/apus-reflex-bird-identity-and-shared-theme/acceptance:
+  en: 3d064a68067aaf83
+  zh: 1288065cd66fb120

@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-This package gives an `official` client build the APUS Reflex Harness mark and name in the sidebar. Other build profiles keep the shell's APUS letter mark and product name, while the conversation hero always uses the static APUS letter mark. Choose it for deployments branded as APUS Reflex Harness; deployments with another identity should provide a replacement brand package. It has no runtime state and does not affect model requests.
+This package gives an `official` client build the APUS Reflex Harness mark and name in the sidebar. Other build profiles keep the shell's APUS bird mark and product name, while the conversation hero always uses the static APUS bird mark. Choose it for deployments branded as APUS Reflex Harness; deployments with another identity should provide a replacement brand package. It has no runtime state and does not affect model requests.
 
 ## Table of Contents
 
@@ -29,7 +29,7 @@ Mount this plugin in the browser roster of a deployment whose identity is APUS R
 
 ### Choosing the profile
 
-`DSH_CLIENT_BUILD_PROFILE` selects which brand renders. An `official` build shows the official mark and name in the sidebar; any other value leaves the shell fallbacks — the APUS letter mark and the product name — in place. The conversation hero shows the static APUS letter mark from `dsh-client-ui-conversation` regardless of profile, because that fallback is already the official mark. The plugin still loads and validates in both cases; only the registration is profile-gated.
+`DSH_CLIENT_BUILD_PROFILE` selects which brand renders. An `official` build shows the official mark and name in the sidebar; any other value leaves the shell fallbacks — the APUS bird mark and the product name — in place. The conversation hero shows the static APUS bird mark from `dsh-client-ui-conversation` regardless of profile, because that fallback is already the official mark. The plugin still loads and validates in both cases; only the registration is profile-gated.
 
 ### Replacing the brand
 

@@ -12,7 +12,8 @@ const resources = new URL('../resources/', import.meta.url)
 const source = await readFile(new URL('brand-source.webp', web))
 const image = await sharp(source).png().toBuffer()
 const dataUrl = `data:image/png;base64,${image.toString('base64')}`
-const mark = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="APUS Reflex Harness"><image width="64" height="64" href="${dataUrl}"/></svg>\n`
+const mark = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="APUS Reflex"><image width="64" height="64" href="${dataUrl}"/></svg>\n`
+await writeFile(new URL('../../../website/public/favicon.svg', import.meta.url), mark)
 const appIcon = mark.replace('viewBox=', 'width="1024" height="1024" viewBox=')
 for (const name of ['brand-mark.svg', 'favicon.svg', 'favicon-dark.svg']) {
   await writeFile(new URL(name, web), mark)
@@ -34,11 +35,11 @@ await writeFile(new URL('brand-icon.ico', web), packIco(entries))
 const tray = await renderTrayIconEntries(Buffer.from(appIcon))
 await writeFile(new URL('tray-windows.ico', resources), packIco(tray))
 
-const wordmark = '<svg xmlns="http://www.w3.org/2000/svg" width="384" height="44" viewBox="0 0 384 44">'
+const wordmark = '<svg xmlns="http://www.w3.org/2000/svg" width="330" height="44" viewBox="0 0 330 44">'
   + `<image width="44" height="44" href="${dataUrl}"/>`
-  + '<text x="54" y="33" font-family="Arial, sans-serif" font-size="32" font-weight="500" fill="currentColor">APUS / REFLEX</text></svg>\n'
+  + '<text x="54" y="33" font-family="Arial, sans-serif" font-size="28" font-weight="500" fill="currentColor">APUS / REFLEX</text></svg>\n'
 await writeFile(new URL('../renderer/assets/welcome-brand.svg', import.meta.url), wordmark)
-for (const [name, color] of [['brand', '#183c66'], ['brand-dark', '#ffffff']] as const) {
+for (const [name, color] of [['brand', '#4058c8'], ['brand-dark', '#ffffff']] as const) {
   for (const scale of [1, 2]) {
     const target = new URL(`../installer/assets/${name}${scale === 2 ? '-2x' : ''}.png`, import.meta.url)
     const dimensions = await sharp(await readFile(target)).metadata()
@@ -48,7 +49,7 @@ for (const [name, color] of [['brand', '#183c66'], ['brand-dark', '#ffffff']] as
 }
 
 const sidebar = '<svg xmlns="http://www.w3.org/2000/svg" width="164" height="314" viewBox="0 0 164 314">'
-  + '<rect width="164" height="314" fill="#183c66"/>'
+  + '<rect width="164" height="314" fill="#151721"/>'
   + mark.replace('<svg ', '<svg x="50" y="64" width="64" height="64" ')
   + '<text x="82" y="164" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#fff">APUS</text>'
   + '<text x="82" y="190" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#fff">REFLEX</text></svg>'

@@ -49,7 +49,7 @@ describe('sign-windows-unpacked', () => {
       '--tsretrywait',
       '10',
       '--name',
-      'APUS Reflex Harness',
+      'APUS Reflex',
       '--url',
       'https://www.dshdesktop.com',
       'C:\\test\\app.exe'
@@ -57,7 +57,7 @@ describe('sign-windows-unpacked', () => {
   })
 
   it('finds every PE by content, including nested and extensionless binaries', async () => {
-    writeFileSync(join(tempDir, 'APUS Reflex Harness.exe'), minimalPe())
+    writeFileSync(join(tempDir, 'APUS Reflex.exe'), minimalPe())
     writeFileSync(join(tempDir, 'ffmpeg.dll'), minimalPe())
     writeFileSync(join(tempDir, 'LICENSE.electron.txt'), 'ignore me')
 
@@ -81,7 +81,7 @@ describe('sign-windows-unpacked', () => {
 
     const binaries = await findSignableBinaries(tempDir)
 
-    expect(binaries).toContain(join(tempDir, 'APUS Reflex Harness.exe'))
+    expect(binaries).toContain(join(tempDir, 'APUS Reflex.exe'))
     expect(binaries).toContain(join(tempDir, 'ffmpeg.dll'))
     expect(binaries).toContain(join(nodeBinDir, 'node.exe'))
     expect(binaries).toContain(join(koffiDir, 'koffi.node'))
@@ -91,7 +91,7 @@ describe('sign-windows-unpacked', () => {
   })
 
   it('fails on damaged PE content instead of skipping it', async () => {
-    writeFileSync(join(tempDir, 'APUS Reflex Harness.exe'), minimalPe())
+    writeFileSync(join(tempDir, 'APUS Reflex.exe'), minimalPe())
     writeFileSync(join(tempDir, 'bad.exe'), Buffer.from('MZbroken'))
     await expect(findSignableBinaries(tempDir)).rejects.toThrow('Invalid PE header')
   })

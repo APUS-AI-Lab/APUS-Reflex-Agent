@@ -1,6 +1,7 @@
 import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
+import { BRAND } from './prepare-brand.mjs'
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const source = path.join(projectRoot, '.build/brand/brand-icon.png')
@@ -38,7 +39,7 @@ function replaceIconLink(contents, file) {
     && matches.some((link) => link.includes('media="(prefers-color-scheme: light)"'))
   if (matches.length !== 1 && !themedLinks) {
     throw new Error(
-      `Could not update APUS Reflex Harness branding in ${file}: expected one icon link or a light/dark pair, found ${String(matches.length)}`
+      `Could not update APUS Reflex branding in ${file}: expected one icon link or a light/dark pair, found ${String(matches.length)}`
     )
   }
   return themedLinks
@@ -58,13 +59,13 @@ function replaceIconLink(contents, file) {
  */
 function replaceManifestIcon(contents, file) {
   const manifest = JSON.parse(contents)
-  manifest.name = 'APUS Reflex Harness'
-  manifest.short_name = 'APUS / REFLEX'
+  manifest.name = BRAND.fullName
+  manifest.short_name = BRAND.shortName
   const icons = Array.isArray(manifest.icons) ? manifest.icons : []
   const target = icons.find((icon) => icon?.src === '/dsh-desktop-logo.png')
     ?? icons.find((icon) => typeof icon?.src === 'string' && icon.src.endsWith('favicon.svg'))
   if (target === undefined) {
-    throw new Error(`Could not update APUS Reflex Harness branding in ${file}: no icon entry to replace`)
+    throw new Error(`Could not update APUS Reflex branding in ${file}: no icon entry to replace`)
   }
   target.src = '/dsh-desktop-logo.png'
   target.sizes = '1024x1024'
@@ -78,7 +79,7 @@ await copyFile(lightSource, lightDestination)
 await copyFile(darkSource, darkDestination)
 
 const index = await readFile(indexPath, 'utf8')
-await writeFile(indexPath, replaceIconLink(index, path.relative(projectRoot, indexPath)).replace(/<title>[^<]*<\/title>/u, '<title>APUS Reflex Harness</title>'))
+await writeFile(indexPath, replaceIconLink(index, path.relative(projectRoot, indexPath)).replace(/<title>[^<]*<\/title>/u, `<title>${BRAND.fullName}</title>`))
 
 const manifest = await readFile(manifestPath, 'utf8')
 await writeFile(
@@ -86,7 +87,7 @@ await writeFile(
   replaceManifestIcon(manifest, path.relative(projectRoot, manifestPath))
 )
 
-console.log(`Installed APUS Reflex Harness brand assets: ${[
+console.log(`Installed APUS Reflex brand assets: ${[
   destination,
   lightDestination,
   darkDestination

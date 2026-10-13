@@ -75,7 +75,7 @@
   white-space: nowrap;
 }
 
-/* The APUS letter mark stays static under all motion preferences. */
+/* The APUS bird mark stays static under all motion preferences. */
 .brandMark {
   display: inline-flex;
   flex: none;

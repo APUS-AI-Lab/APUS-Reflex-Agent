@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { en, zh } from '../../packages/client/ui-settings-models/src/client/locales.ts'
 import { adaptCss, adaptBrandContext } from '../scripts/patch-system3-runtime.mjs'
 
 const publishedRegion = String.raw`\0dsh-css:/home/runner/harness/packages/client/ui-conversation/Panel.module.css.mjs`
@@ -46,7 +47,7 @@ describe('APUS model settings patch context', () => {
   const configured = 'if (configured.welcomeNotice && !("dshDesktop" in globalThis)) ctx.slots.inject("settings.onboarding"'
   it('retains the brand context and reviewed configurable welcome removal', () => {
     const patch = ` welcomeBody: "DeepSeek Harness",\n-${original}\n+onboardingDescription: "DSH will enable models"`
-    expect(adaptBrandContext(patch, target, configured)).toBe(` welcomeBody: "APUS Reflex Harness",\n-${configured}\n+onboardingDescription: "APUS Reflex Harness will enable models"`)
+    expect(adaptBrandContext(patch, target, configured)).toBe(` welcomeBody: "APUS Reflex",\n-${configured}\n+onboardingDescription: "APUS Reflex will enable models"`)
   })
   it('rejects an unreviewed welcome implementation', () => {
     expect(() => adaptBrandContext(original, target, original)).toThrow('reviewed welcomeNotice')
@@ -84,10 +85,10 @@ describe('APUS neutral provider patch context', () => {
       '+onboardingDescription: "Choose a provider. DSH will enable its models."'
     ].join('\n')
     expect(adaptBrandContext(patch, models, configured)).toBe([
-      ' welcomeBody: "APUS Reflex Harness APUS Reflex Harness plugin ecosystem / APUS Reflex Harness 插件生态",',
-      '-onboardingDescription: "Configure this model provider to get started.",',
-      '-onboardingDescription: "配置模型服务，即可开始使用。",',
-      '+onboardingDescription: "Choose a provider. APUS Reflex Harness will enable its models."'
+      ' welcomeBody: "APUS Reflex APUS Reflex plugin ecosystem / APUS Reflex 插件生态",',
+      '-onboardingDescription: "Connect DeepSeek with an API Key here, or skip this step and configure another provider in Settings → Models.",',
+      '-onboardingDescription: "在此填写 API Key 连接 DeepSeek；也可跳过，在设置 → 模型中配置其他提供方。",',
+      '+onboardingDescription: "Choose a provider. APUS Reflex will enable its models."'
     ].join('\n'))
   })
 
@@ -95,4 +96,19 @@ describe('APUS neutral provider patch context', () => {
     const changed = ' "message.failure.accountSignedOut": "A different account failure",\n existingBusinessRule();'
     expect(adaptBrandContext(changed, chat, '')).toBe(changed)
   })
+})
+
+
+it('matches the actual shared model form descriptions used as patch preimages', () => {
+  const target = 'node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.js'
+  const configured = 'if (configured.welcomeNotice && !("dshDesktop" in globalThis)) ctx.slots.inject("settings.onboarding"'
+  for (const [before, actual] of [
+    ['Configure the official DeepSeek provider to start building.', en.onboardingDescription],
+    ['配置 DeepSeek 官方模型，即可开始使用。', zh.onboardingDescription]
+  ]) {
+    expect(adaptBrandContext(`-onboardingDescription: ${JSON.stringify(before)},`, target, configured))
+      .toBe(`-onboardingDescription: ${JSON.stringify(actual)},`)
+  }
+  expect(adaptBrandContext('+onboardingDescription: "APUS Reflex Harness will enable models"', target, configured))
+    .toBe('+onboardingDescription: "APUS Reflex will enable models"')
 })

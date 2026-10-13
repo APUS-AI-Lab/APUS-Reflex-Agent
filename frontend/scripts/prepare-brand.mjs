@@ -4,8 +4,8 @@ import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 export const BRAND = Object.freeze({
-  fullName: 'APUS Reflex Harness', shortName: 'APUS / REFLEX', zhName: '瞬策',
-  tagline: '瞬时执行，深度思考', modelAsHarness: 'Model-as-a-Harness',
+  fullName: 'APUS Reflex', shortName: 'APUS / REFLEX', zhName: '瞬策',
+  tagline: '瞬时执行，深度思考', modelAsHarness: 'Model as Harness',
   mark: 'brand-mark.svg', icon: 'brand-icon.png'
 })
 

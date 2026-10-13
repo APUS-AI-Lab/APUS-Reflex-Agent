@@ -199,7 +199,7 @@ function createCtx(overrides: Partial<CtxHarness> = {}): { ctx: CtxHarness; regi
   return { ctx, registrations }
 }
 
-describe('APUS Reflex Harness onboarding wizard', () => {
+describe('APUS Reflex onboarding wizard', () => {
   it('shows a single notice modal that links straight to the models settings', () => {
     const source = readFileSync(
       path.join(projectRoot, 'packages', 'dsh-desktop-onboarding', 'client.js'),
@@ -255,8 +255,8 @@ describe('APUS Reflex Harness onboarding wizard', () => {
     const en = dictsRecord.en ?? {}
     expect(Object.keys(zh).sort()).toEqual(Object.keys(en).sort())
     expect(zh.step0Title).toBe('开始第一个任务')
-    expect(zh.brandBy).toBe('Model-as-a-Harness')
-    expect(en.brandBy).toBe('Model-as-a-Harness')
+    expect(zh.brandBy).toBe('Model as Harness')
+    expect(en.brandBy).toBe('Model as Harness')
     expect(zh.configureModel).toBe('去配置模型')
     expect(en.configureModel).toBeTruthy()
     expect(en.later).toBeTruthy()
@@ -309,7 +309,7 @@ describe('APUS Reflex Harness onboarding wizard', () => {
   })
 })
 
-describe('APUS Reflex Harness onboarding composition', () => {
+describe('APUS Reflex onboarding composition', () => {
   it('shows the first-run notice at launch rather than only on a blank conversation', async () => {
     const [patch, installed] = await Promise.all([
       readFile(patchPath('@deepseek-ai/dsh-client-ui-settings-general'), 'utf8'),
@@ -354,7 +354,7 @@ describe('APUS Reflex Harness onboarding composition', () => {
   })
 })
 
-describe('APUS Reflex Harness onboarding host eligibility', () => {
+describe('APUS Reflex onboarding host eligibility', () => {
   function createHostHarness() {
     const configure = vi.fn(() => () => undefined)
     const fiber = { uid: 1 }

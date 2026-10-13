@@ -1,5 +1,5 @@
-APUS Reflex Harness is unavailable
+APUS Reflex is unavailable
 The application could not start or stopped unexpectedly.
-Another APUS Reflex Harness instance (such as dsh web or the desktop app) is running. They cannot start at the same time. Quit the other running APUS Reflex Harness instance, then restart.
+Another APUS Reflex instance (such as dsh web or the desktop app) is running. They cannot start at the same time. Quit the other running APUS Reflex instance, then restart.
 Exit
 Restart

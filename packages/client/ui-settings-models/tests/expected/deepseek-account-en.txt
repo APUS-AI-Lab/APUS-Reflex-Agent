@@ -1,1 +1,1 @@
-Model provider accountdeepseek-accountModelsUsing the adapter defaultsAdd modelCancelApply
+DeepSeek Accountdeepseek-accountModelsUsing the adapter defaultsAdd modelCancelApply

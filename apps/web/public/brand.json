@@ -1,9 +1,14 @@
 {
-  "fullName": "APUS Reflex Harness",
+  "fullName": "APUS Reflex",
   "shortName": "APUS / REFLEX",
   "zhName": "瞬策",
   "tagline": "瞬时执行，深度思考",
-  "modelAsHarness": "Model-as-a-Harness",
+  "modelAsHarness": "Model as Harness",
+  "source": "brand-source.webp",
+  "accentLight": "#4058c8",
+  "accentDark": "#9daeff",
+  "cyan": "#42cae3",
+  "purple": "#8b68ec",
   "mark": "brand-mark.svg",
   "icon": "brand-icon.png"
 }

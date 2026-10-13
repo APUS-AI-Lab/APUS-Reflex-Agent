@@ -123,14 +123,15 @@ describe('product icon set', () => {
 })
 
 describe('FishLogo', () => {
-  it('renders the original multicolor bird at the square source ratio', () => {
+  it('renders the original bird pixels without depending on a network image', () => {
     const { container } = render(<primitives.FishLogo />)
     const svg = container.querySelector('svg')!
     expect(svg.getAttribute('width')).toBe('24')
     expect(svg.getAttribute('height')).toBe('24')
     expect(svg.getAttribute('viewBox')).toBe('0 0 64 64')
-    expect(container.querySelector('image')?.getAttribute('href')).toMatch(/^data:image\/png;base64,/)
-    expect(container.querySelector('path')).toBeNull()
+    expect(container.querySelectorAll('path')).toHaveLength(0)
+    expect(container.querySelector('image')?.getAttribute('href')).toBe(primitives.BRAND_IMAGE_DATA_URL)
+    expect(primitives.BRAND_IMAGE_DATA_URL).toMatch(/^data:image\/png;base64,/)
     expect(svg.getAttribute('aria-hidden')).toBe('true')
   })
 })
@@ -141,12 +142,12 @@ describe('BrandWordmark', () => {
     const svg = view.container.querySelector('svg')!
     expect(svg.getAttribute('width')).toBe('182')
     expect(svg.getAttribute('viewBox')).toBe('0 0 182 24')
-    expect(svg.getAttribute('aria-label')).toBe('APUS Reflex Harness')
-    expect(svg.querySelector('image')).not.toBeNull()
 
+    expect(svg.querySelector('image')?.getAttribute('href')).toBe(primitives.BRAND_IMAGE_DATA_URL)
+    expect(svg.getAttribute('aria-label')).toBe('APUS Reflex')
     view.rerender(<primitives.BrandWordmark includeMark={false} />)
+    expect(svg.querySelector('image')).toBeNull()
     expect(svg.getAttribute('width')).toBe('156')
     expect(svg.getAttribute('viewBox')).toBe('26 0 156 24')
-    expect(svg.querySelector('image')).toBeNull()
   })
 })

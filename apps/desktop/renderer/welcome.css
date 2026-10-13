@@ -1,14 +1,14 @@
 @import url('./assets/window-material.css');
 
-/* Figma 2121:39336 / 2138:44626, Platform modes. Native material supplies the blur. */
+/* APUS palette; native material supplies the window blur. */
 body {
   color-scheme: light dark;
-  --dsw-alias-label-primary: #0f1115;
-  --dsw-alias-label-secondary: #61666b;
-  --dsw-alias-label-tertiary: #81858c;
+  --dsw-alias-label-primary: #191d2c;
+  --dsw-alias-label-secondary: #666d80;
+  --dsw-alias-label-tertiary: #666d80;
   --dsw-alias-label-primary-inverted: #fff;
-  --dsw-alias-brand-primary: var(--dsw-alias-label-primary);
-  --dsw-alias-button-primary-hover: #43454a;
+  --dsw-alias-brand-primary: #4058c8;
+  --dsw-alias-button-primary-hover: #3446a7;
   --dsw-alias-button-elevated-fill: #fff;
   --dsw-alias-button-floating-hover: #f1f3f5;
   --dsw-alias-border-l2: #0000001a;
@@ -24,16 +24,17 @@ body {
 
 @media (prefers-color-scheme: dark) {
   body {
-    --dsw-alias-label-primary: #f9fafb;
-    --dsw-alias-label-secondary: #cfd3d6;
+    --dsw-alias-brand-primary: #9daeff;
+    --dsw-alias-label-primary: #f1f3fa;
+    --dsw-alias-label-secondary: #aeb7cc;
     --dsw-alias-label-tertiary: #adb2b8;
-    --dsw-alias-label-primary-inverted: #353638;
-    --dsw-alias-button-primary-hover: #ebeef2;
+    --dsw-alias-label-primary-inverted: #151721;
+    --dsw-alias-button-primary-hover: #b8c4ff;
     --dsw-alias-button-elevated-fill: #43454a;
     --dsw-alias-button-floating-hover: #353638;
     --dsw-alias-border-l2: #ffffff1f;
     --dsw-alias-border-l4: #ffffff33;
-    --dsw-alias-label-caption: #81858c;
+    --dsw-alias-label-caption: #666d80;
   }
 }
 

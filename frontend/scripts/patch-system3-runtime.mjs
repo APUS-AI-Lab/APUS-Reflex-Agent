@@ -86,17 +86,17 @@ export function adaptBrandContext(chunk, target, own) {
   }
   if (!target.endsWith('/dsh-client-ui-settings-models/lib/client.js')) return chunk
   chunk = chunk.replace(/^ (.*welcomeBody:.*)$/gm, (_, line) => ` ${line
-    .replaceAll('DeepSeek Harness', 'APUS Reflex Harness')
-    .replaceAll('DSH plugin ecosystem', 'APUS Reflex Harness plugin ecosystem')
-    .replaceAll('DSH 插件生态', 'APUS Reflex Harness 插件生态')}`)
+    .replaceAll('DeepSeek Harness', 'APUS Reflex')
+    .replaceAll('DSH plugin ecosystem', 'APUS Reflex plugin ecosystem')
+    .replaceAll('DSH 插件生态', 'APUS Reflex 插件生态')}`)
   chunk = chunk.replace(/^-(.*onboardingDescription:.*)$/gm, (_, line) => `-${line
-    .replace('Configure the official DeepSeek provider to start building.', 'Configure this model provider to get started.')
-    .replace('配置 DeepSeek 官方模型，即可开始使用。', '配置模型服务，即可开始使用。')}`)
+    .replace('Configure the official DeepSeek provider to start building.', 'Connect DeepSeek with an API Key here, or skip this step and configure another provider in Settings → Models.')
+    .replace('配置 DeepSeek 官方模型，即可开始使用。', '在此填写 API Key 连接 DeepSeek；也可跳过，在设置 → 模型中配置其他提供方。')}`)
   const published = 'if (!("dshDesktop" in globalThis)) ctx.slots.inject("settings.onboarding"'
   const configured = 'if (configured.welcomeNotice && !("dshDesktop" in globalThis)) ctx.slots.inject("settings.onboarding"'
   if (!own.includes(configured)) throw new Error('Own model settings must expose the reviewed welcomeNotice option')
   chunk = chunk.replace(published, configured)
-  return chunk.replaceAll('DSH will enable', 'APUS Reflex Harness will enable').replaceAll('DSH 会自动启用', 'APUS Reflex Harness 会自动启用')
+  return chunk.replaceAll('APUS Reflex Harness', 'APUS Reflex').replaceAll('DSH will enable', 'APUS Reflex will enable').replaceAll('DSH 会自动启用', 'APUS Reflex 会自动启用')
 }
 
 /** Apply all runtime-JavaScript hunks; declarations stay those emitted by the own build. */

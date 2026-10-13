@@ -390,3 +390,72 @@ html[data-platform='darwin'] body {
 html[data-platform='darwin'] body[data-ds-dark-theme] {
   --dsw-specific-menu: rgba(48, 49, 54, 0.94);
 }
+/* APUS semantic palette. Legacy token names remain the plugin styling API. */
+body,
+body[data-ds-dark-theme] {
+  --apus-accent: #4058c8;
+  --apus-accent-hover: #3446a7;
+  --apus-on-accent: #ffffff;
+  --apus-cyan: #42cae3;
+  --apus-purple: #8b68ec;
+  --apus-canvas: #ffffff;
+  --apus-sidebar: #f6f7fb;
+  --apus-surface: #ffffff;
+  --apus-surface-raised: #f6f7fb;
+  --apus-text: #191d2c;
+  --apus-muted: #666d80;
+  --apus-border: #dce0eb;
+  --apus-selection: #ebeeff;
+  /* Older plugins read the original palette names directly. */
+  --dsw-static-deepseek-50: #f1f3ff;
+  --dsw-static-deepseek-100: #e8ecff;
+  --dsw-static-deepseek-200: #d9dfff;
+  --dsw-static-deepseek-300: #bdc9ff;
+  --dsw-static-deepseek-400: #9daeff;
+  --dsw-static-deepseek-450: #7c91ef;
+  --dsw-static-deepseek-500: #4058c8;
+  --dsw-static-deepseek-600: #3446a7;
+  --dsw-static-deepseek-700-delete: #293985;
+  --dsw-static-deepseek-800: #30364a;
+  --dsw-static-deepseek-900: #242837;
+  --dsw-alias-bg-base: var(--apus-canvas);
+  --dsw-alias-bg-layer-1: var(--apus-canvas);
+  --dsw-alias-bg-layer-2: var(--apus-surface);
+  --dsw-alias-bg-layer-3: var(--apus-surface-raised);
+  --dsw-alias-brand-primary: var(--apus-accent);
+  --dsw-alias-brand-primary-new-colorprimary-new-color: var(--apus-accent);
+  --dsw-alias-brand-text: var(--apus-text);
+  --dsw-alias-button-primary-fill: var(--apus-accent);
+  --dsw-alias-button-primary-hover: var(--apus-accent-hover);
+  --dsw-alias-button-info-fill: var(--apus-accent);
+  --dsw-alias-button-info-hover: var(--apus-accent-hover);
+  --dsw-alias-label-primary-foreground: var(--apus-on-accent);
+  --dsw-alias-label-primary: var(--apus-text);
+  --dsw-alias-label-secondary: var(--apus-muted);
+  --dsw-alias-label-tertiary: var(--apus-muted);
+  --dsw-alias-link: var(--apus-accent);
+  --dsw-alias-state-business-primary: var(--apus-accent);
+  --dsw-alias-state-business-tertiary: var(--apus-selection);
+  --dsw-alias-border-l3: var(--apus-border);
+  --dsw-focus-ring-color: var(--apus-accent);
+  --dsw-specific-sidebar-fill: var(--apus-sidebar);
+  --dsw-specific-sidebar-nav-item-active-accent: var(--apus-selection);
+  --dsw-specific-sidebar-nav-item-active: var(--apus-selection);
+  --dsw-specific-bubble: var(--apus-selection);
+  --dsw-specific-input-major: var(--apus-surface);
+  --dsw-specific-tip: var(--apus-surface-raised);
+}
+
+body[data-ds-dark-theme] {
+  --apus-accent: #9daeff;
+  --apus-accent-hover: #b8c4ff;
+  --apus-on-accent: #151721;
+  --apus-canvas: #151721;
+  --apus-sidebar: #1b1e29;
+  --apus-surface: #242837;
+  --apus-surface-raised: #30364a;
+  --apus-text: #f1f3fa;
+  --apus-muted: #aeb7cc;
+  --apus-border: #3d4356;
+  --apus-selection: #2c3355;
+}

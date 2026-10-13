@@ -63,7 +63,7 @@ it('boots the built plugin graph and renders a fixture session end to end', asyn
   const tree = await screen.findByRole('tree', { name: 'Sessions' }, { timeout: 10_000 })
   if (clientBuildValue('DSH_CLIENT_BUILD_PROFILE') === 'official') {
     expect(document.querySelector('svg[viewBox="0 0 64 64"]')).not.toBeNull()
-    expect(screen.getAllByLabelText('APUS Reflex Harness').length).toBeGreaterThan(0)
+    expect(screen.getAllByLabelText('APUS Reflex').length).toBeGreaterThan(0)
   } else {
     expect(document.querySelector('svg[viewBox="0 0 64 64"]')).not.toBeNull()
     const version = clientBuildValue('DSH_CLIENT_PRODUCT_VERSION') ?? clientBuildValue('DSH_CLIENT_VERSION')
@@ -72,7 +72,7 @@ it('boots the built plugin graph and renders a fixture session end to end', asyn
     const buildVersion = version
       + (commit === undefined ? '' : `-${commit}`)
       + (clientBuildValue('DSH_CLIENT_GIT_DIRTY') === 'true' ? '-dirty' : '')
-    screen.getByText('APUS Reflex Harness')
+    screen.getByText('APUS Reflex')
     screen.getByText(buildVersion)
   }
   // The compact layout dropped group session counts; the fixture workspace

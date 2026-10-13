@@ -147,4 +147,4 @@ pnpm run start:desktop
 
 ## 许可证与归属
 
-APUS 基于 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)、DataElement 的 DSH Desktop、[Cordis](https://github.com/cordiverse/cordis) 及其贡献者的工作。原始 MIT 声明完整保留在 [LICENSE](LICENSE) 与 [frontend/LICENSE](frontend/LICENSE)，依赖许可见 [Harness 声明](THIRD_PARTY_NOTICES.md)与[桌面声明](frontend/THIRD_PARTY_NOTICES.md)。APUS 品牌不替代上游作者归属，也不表示获得其背书。参见[品牌与组装说明](docs/feat-apus-brand/branding.zh.md)。
+APUS 基于 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)、DataElement 的 DSH Desktop、[Cordis](https://github.com/cordiverse/cordis) 及其贡献者的工作。原始 MIT 声明完整保留在 [LICENSE](LICENSE) 与 [frontend/LICENSE](frontend/LICENSE)，依赖许可见 [Harness 声明](THIRD_PARTY_NOTICES.md)与[桌面声明](frontend/THIRD_PARTY_NOTICES.md)。APUS 品牌不替代上游作者归属，也不表示获得其背书。参见[品牌与组装说明](docs/feat-apus-visual-harness/implementation.zh.md)。

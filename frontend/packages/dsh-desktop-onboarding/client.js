@@ -60,8 +60,8 @@ window.__ModuleLoader__.load({
     // ---------- locale dictionaries ----------
 
     const en = {
-      brandName: 'APUS Reflex Harness',
-      brandBy: 'Model-as-a-Harness',
+      brandName: 'APUS Reflex',
+      brandBy: 'Model as Harness',
       step0Title: 'Start your first task',
       declarationBody: '1. Open Settings → Models and add your provider, API key and model. For a custom provider, enter its Base URL.\n\n2. Choose a workspace folder and select the configured model in a new conversation.\n\n3. Send a small task to check that the model responds.',
       desktopIntroTitle: 'Your model, your configuration',
@@ -74,8 +74,8 @@ window.__ModuleLoader__.load({
     }
 
     const zh = {
-      brandName: 'APUS Reflex Harness',
-      brandBy: 'Model-as-a-Harness',
+      brandName: 'APUS Reflex',
+      brandBy: 'Model as Harness',
       step0Title: '开始第一个任务',
       declarationBody: '1. 打开设置 → 模型，添加服务商、API Key 和模型；自定义服务商还需填写 Base URL。\n\n2. 选择工作目录，在新对话中选用已配置的模型。\n\n3. 发送一个简单任务，确认模型能够正常回复。',
       desktopIntroTitle: '使用你自己的模型配置',

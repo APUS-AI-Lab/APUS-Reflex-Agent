@@ -2,7 +2,7 @@
   "darwin:en-US": {
     "menu": [
       {
-        "label": "About APUS Reflex Harness",
+        "label": "About APUS Reflex",
         "role": "about"
       },
       {
@@ -10,7 +10,7 @@
       }
     ],
     "options": {
-      "applicationName": "APUS Reflex Harness",
+      "applicationName": "APUS Reflex",
       "applicationVersion": "1.0.0",
       "version": "",
       "copyright": "",
@@ -21,7 +21,7 @@
   "darwin:zh-CN": {
     "menu": [
       {
-        "label": "关于 APUS Reflex Harness",
+        "label": "关于 APUS Reflex",
         "role": "about"
       },
       {
@@ -29,7 +29,7 @@
       }
     ],
     "options": {
-      "applicationName": "APUS Reflex Harness",
+      "applicationName": "APUS Reflex",
       "applicationVersion": "1.0.0",
       "version": "",
       "copyright": "",
@@ -40,14 +40,14 @@
   "win32:zh-CN": {
     "menu": [
       {
-        "label": "关于 APUS Reflex Harness"
+        "label": "关于 APUS Reflex"
       },
       {
         "type": "separator"
       }
     ],
     "options": {
-      "applicationName": "APUS Reflex Harness",
+      "applicationName": "APUS Reflex",
       "applicationVersion": "1.0.0",
       "version": "",
       "copyright": "",
@@ -58,14 +58,14 @@
   "win32:en-US": {
     "menu": [
       {
-        "label": "About APUS Reflex Harness"
+        "label": "About APUS Reflex"
       },
       {
         "type": "separator"
       }
     ],
     "options": {
-      "applicationName": "APUS Reflex Harness",
+      "applicationName": "APUS Reflex",
       "applicationVersion": "1.0.0",
       "version": "",
       "copyright": "",

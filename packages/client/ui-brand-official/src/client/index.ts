@@ -1,4 +1,4 @@
-/** Official APUS Reflex Harness occupants for the generic browser-brand slots. */
+/** Official APUS Reflex occupants for the generic browser-brand slots. */
 import type { Context as ClientContext } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
 import type {} from '@deepseek-ai/dsh-client-ui-sidebar/client'
@@ -9,7 +9,7 @@ export const inject = ['slots']
 
 /**
  * Fill the sidebar brand slots as one declaration-aware registration set. The
- * conversation hero stays on its declaring package's static APUS letter mark fallback,
+ * conversation hero stays on its declaring package's static APUS bird mark fallback,
  * so the official build registers nothing there.
  * @param ctx - Client root context.
  */

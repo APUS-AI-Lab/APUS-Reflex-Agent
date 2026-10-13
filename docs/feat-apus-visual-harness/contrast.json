@@ -1,0 +1,114 @@
+[
+  {
+    "theme": "light",
+    "foreground": "text",
+    "background": "canvas",
+    "ratio": 16.75,
+    "minimum": 4.5
+  },
+  {
+    "theme": "light",
+    "foreground": "muted",
+    "background": "canvas",
+    "ratio": 5.17,
+    "minimum": 4.5
+  },
+  {
+    "theme": "light",
+    "foreground": "muted",
+    "background": "surface",
+    "ratio": 5.17,
+    "minimum": 4.5
+  },
+  {
+    "theme": "light",
+    "foreground": "accent",
+    "background": "canvas",
+    "ratio": 6.09,
+    "minimum": 4.5
+  },
+  {
+    "theme": "light",
+    "foreground": "on-accent",
+    "background": "accent",
+    "ratio": 6.09,
+    "minimum": 4.5
+  },
+  {
+    "theme": "light",
+    "foreground": "on-accent",
+    "background": "accent-hover",
+    "ratio": 8.14,
+    "minimum": 4.5
+  },
+  {
+    "theme": "light",
+    "foreground": "accent",
+    "background": "surface",
+    "ratio": 6.09,
+    "minimum": 3
+  },
+  {
+    "theme": "light",
+    "foreground": "accent",
+    "background": "sidebar",
+    "ratio": 5.69,
+    "minimum": 3
+  },
+  {
+    "theme": "dark",
+    "foreground": "text",
+    "background": "canvas",
+    "ratio": 16.1,
+    "minimum": 4.5
+  },
+  {
+    "theme": "dark",
+    "foreground": "muted",
+    "background": "canvas",
+    "ratio": 8.88,
+    "minimum": 4.5
+  },
+  {
+    "theme": "dark",
+    "foreground": "muted",
+    "background": "surface",
+    "ratio": 7.29,
+    "minimum": 4.5
+  },
+  {
+    "theme": "dark",
+    "foreground": "accent",
+    "background": "canvas",
+    "ratio": 8.44,
+    "minimum": 4.5
+  },
+  {
+    "theme": "dark",
+    "foreground": "on-accent",
+    "background": "accent",
+    "ratio": 8.44,
+    "minimum": 4.5
+  },
+  {
+    "theme": "dark",
+    "foreground": "on-accent",
+    "background": "accent-hover",
+    "ratio": 10.52,
+    "minimum": 4.5
+  },
+  {
+    "theme": "dark",
+    "foreground": "accent",
+    "background": "surface",
+    "ratio": 6.93,
+    "minimum": 3
+  },
+  {
+    "theme": "dark",
+    "foreground": "accent",
+    "background": "sidebar",
+    "ratio": 7.86,
+    "minimum": 3
+  }
+]

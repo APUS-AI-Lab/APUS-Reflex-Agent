@@ -47,7 +47,7 @@ function Install-At([string]$directory) {
   # on the runner's local volume, so this also exercises custom directory input.
   $exitCode = Invoke-Installer $directory 'Install'
   if ($exitCode -ne 0) { throw "Installer exited with $exitCode at $directory" }
-  $executable = Join-Path $directory 'APUS Reflex Harness.exe'
+  $executable = Join-Path $directory 'APUS Reflex.exe'
   if (-not (Test-Path $executable)) { throw "Installed executable missing: $executable" }
   Assert-Signature $executable $true
   return $executable
