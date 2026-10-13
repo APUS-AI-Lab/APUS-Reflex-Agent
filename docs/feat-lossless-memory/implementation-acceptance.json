@@ -45,6 +45,20 @@
         "Retry does not re-enqueue claimed or canceled input; changed text with the same request identity conflicts.",
         "Composer whitespace survives transmission and storage."
       ]
+    },
+    {
+      "name": "Real Reflex + Flash same-session recovery",
+      "status": "live_functional_verified",
+      "evidence": "live-acceptance.json",
+      "oracles": [
+        "Native real-model compaction, durable close and distinct-process ACP resume.",
+        "Identical seed and query: memory-off returns UNKNOWN; baseline and Reflex recover both source facts.",
+        "Actual model request reconstructs from Session; prepared/settled scores and injected recall order agree."
+      ],
+      "limits": [
+        "One synthetic scenario; no measured quality gain over baseline.",
+        "No actual window saturation, independent-session recall or unlimited-scale evidence."
+      ]
     }
   ],
   "remaining": [
@@ -52,7 +66,7 @@
     "Index coverage watermarks and resumable full-input processing ledger.",
     "Complete request admission on the actual generation route.",
     "Attachment original-byte acknowledgment and product saved/processed status.",
-    "Live Jev plus main-model quality and actual-window scale acceptance."
+    "Broader live-model quality, actual-window scale and long-running pressure acceptance."
   ],
   "architecture_scenarios": "68 designed_not_run; supporting regression evidence is not execution of their full oracles.",
   "release_status": "Feature branch; not merged into main or included in a published client release.",

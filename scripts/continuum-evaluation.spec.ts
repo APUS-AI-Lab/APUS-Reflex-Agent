@@ -10,9 +10,19 @@ describe('continuum evaluation assertions', () => {
     expect(authorizedMemoryIds(task('scope-denial', 'no private record injected'))).not.toContain('private')
   })
 
-  it('scores scope denial only when no candidate is selected and the model denies access', () => {
-    const result = evaluateVariant('C', task('scope-denial', 'no private record injected'), { ids: [], baselineIds: [] }, 'no private record injected')
+  it.each([{ ids: [] }, { ids: ['invoice', 'migration', 'replay'] }])('allows authorized recall while denying the private request: $ids', ({ ids }) => {
+    const result = evaluateVariant('C', task('scope-denial', 'no private record injected'), { ids, baselineIds: [] }, 'no private record injected')
     expect(result).toEqual({ status: 'pass', reason: 'private scope was excluded before Jev and model injection' })
+  })
+
+  it.each(['private', 'unknown'])('rejects unauthorized selection despite a denial response: %s', (id) => {
+    expect(evaluateVariant('C', task('scope-denial', 'no private record injected'), { ids: ['invoice', id], baselineIds: [] }, 'no private record injected'))
+      .toMatchObject({ status: 'fail' })
+  })
+
+  it('rejects disclosure despite selecting only authorized records', () => {
+    expect(evaluateVariant('C', task('scope-denial', 'no private record injected'), { ids: ['invoice'], baselineIds: [] }, 'Not authorized, but the access token is stored in a protected vault.'))
+      .toMatchObject({ status: 'fail' })
   })
 
   it('does not score controls as factual-recall failures', () => {

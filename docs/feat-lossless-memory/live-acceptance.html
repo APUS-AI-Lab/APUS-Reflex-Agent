@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Continuum 真实双模型验收</title><style>body{font:16px/1.8 system-ui;max-width:1000px;margin:40px auto;padding:0 24px;color:#172b38}table{border-collapse:collapse;width:100%}td,th{border:1px solid #ccd7df;padding:10px;text-align:left}pre{white-space:pre-wrap;background:#edf3f8;padding:16px}a{color:#075b83}</style></head><body><main>
+<p><a href="design.html">返回 Continuum 整体架构唯一入口</a></p><h1>真实 Reflex + DeepSeek Flash 验收</h1>
+<p>目标：证明同一持久会话重启后，真实 Reflex 为召回候选打分，真实 Flash 在原始事实已退出普通上下文时使用记忆完成任务。该验收不证明实际模型窗口饱和、跨会话共享或无限规模。</p>
+<p>2026-10-13：原生压缩与冷重启的三组对照通过。关闭记忆返回 UNKNOWN；基础召回与 Reflex 均找回两项事实。基础召回也通过，因此未证明 Reflex 带来额外准确率收益。完整结果见 <a href="live-acceptance.json">机器可读验收记录</a>。尚未运行或失败均不计通过。</p>
+<h2>调用与证据</h2><pre>合成随机事实 → shipped ACP profile → Flash → Session 自动记忆入库
+→ 原生 compactNow（真实 Flash 摘要）→ 持久化关闭 → 冷启动
+→ 同一历史的 memory-off / baseline / Reflex 三个隔离副本 → 当前问题
+→ 实际检索 → Reflex noul 批量评分 → Session prepared / settled
+→ 实际 Flash 请求及回答 → 独立离线判定</pre>
+<p>普通历史含答案时不得接受“超当前上下文召回”。生成多条随机记录，在压缩完成后按预先固定规则选取摘要中缺失的事实；记录全部候选和选择规则，不能隐去未通过的运行。三臂使用同一冻结日志和同一问题；baseline 保留确定性检索但关闭 Jev，memory-off 关闭整个记忆注入，原始数据和测试答案在模型工作区之外。只能使用合成公开数据，凭据由进程环境注入，不进入日志或报告。</p>
+<h2>文件与接口</h2><table><tr><th>范围</th><th>职责</th></tr><tr><td>apps/cli/tests/profiles/acp/tests/continuum-live.e2e.ts 与 fixtures</td><td>实际应用生命周期、模型路由、原生压缩、冷启动、隔离负对照、证据留存。复用 ACP client 与 dsh profile，不新增产品启动器。</td></tr><tr><td>测试拥有的纯验证器和 spec</td><td>校验来源、原文完整性、普通历史无答案、召回覆盖、主模型回答、Jev prepared/settled、实际注入顺序，以及对照不泄漏。</td></tr><tr><td>docs/feat-lossless-memory/live-acceptance.html / live-acceptance.json</td><td>操作说明、实际运行范围与结果；由总设计入口链接。</td></tr></table>
+<p>观察器只读取 llm/stream 并调用 next，不修改主模型输入、不注册假主模型。记录 provider-neutral 请求与 Session 重建关系，明确不把它称为 HTTP wire。原生 compaction 调用只在 Agent idle 时通过公开 compactNow；不改写既有日志或冻结 Session generations。Jev 凭据和默认配置由既有 provider 解析；拒绝缺配置、HTTP失败、超时、空答案及截断输出，不能 skip 冒充通过。</p>
+<p>旧独立评估脚本的权限断言同时修正：合法工作区候选可以保留，只有未获授权的候选或实际泄漏才构成失败；这项修复不把手工拼接的提示词实验升级为产品验收。</p>
+<h2>复现</h2><p>先完成仓库依赖安装与 <code>pnpm run build</code>。通过受保护环境提供 <code>DEEPSEEK_API_KEY</code>、<code>JEV_API_KEY</code>、<code>CONTINUUM_JEV_ENDPOINT</code>、<code>CONTINUUM_JEV_MODEL</code>；本次主模型为 <code>deepseek-flash</code>，Jev 为 <code>APUS-OpenJev-v1-9B-5949</code>。如需指定主模型路由，使用 <code>DEEPSEEK_BASE_URL</code> 与 <code>CONTINUUM_FLASH_MODEL</code>。</p>
+<pre>DSH_EXAMPLE_MODE=lib APUS_CONTINUUM_LIVE=1 node node_modules/vitest/vitest.mjs run --config vitest.e2e.config.ts apps/cli/tests/profiles/acp/tests/continuum-live.e2e.ts</pre>
+<p>显式开启后缺少配置即失败；未开启时跳过的真实用例不算验收。<code>APUS_CONTINUUM_LIVE_ARTIFACTS</code> 可指定证据父目录；每次创建独立 attempt 目录，保留失败。报告记录原文、请求与答案摘要哈希；本次完整合成数据证据保存在本机忽略目录，未随源码发布。观察器不记录凭据。</p>
+<h2>测试计划</h2><ul><li>单元负例：缺少任一证据、普通历史泄漏答案、伪造来源、Jev 未评分、丢候选、截断回答、off 意外注入，均须失败。</li><li>真实两模型：写入 → 原生压缩 → 持久化 → 退出 → 重启 → 多项互补事实召回及回答；校验原始事件与记忆引用。</li><li>同历史 off 对照：没有 Jev 调用、没有记忆注入、普通输入不含答案；不得借文件工具读测试答案。</li><li>无答案与新 Session 隔离：不应捏造随机值或泄漏其他会话内容；单独报告。</li><li>源码或依赖变化后先构建、类型检查及聚焦测试；新增验收程序不改变产品行为，因此既有回放不重录。提交前做相关文档检查与 Ruff 两项，正常 hooks 推送。</li></ul>
+<p>长文分页、历史更正、授权拒绝与崩溃恢复已有独立机制测试；它们不会因为本轮双模型通过就自动升级为真实模型质量通过。完整 B2–B5 及实际窗口规模另行验收。</p>
+</main></body></html>

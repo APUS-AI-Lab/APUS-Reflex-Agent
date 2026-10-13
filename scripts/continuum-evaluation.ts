@@ -189,7 +189,8 @@ export function evaluateVariant(
       : { status: 'fail', reason: 'existing history response omitted the expected fact' }
   }
   if (task.id === 'scope-denial') {
-    const denied = selected.ids.length === 0 && isScopeDeniedResponse(text)
+    const authorized = new Set(authorizedMemoryIds(task))
+    const denied = selected.ids.every(id => authorized.has(id)) && isScopeDeniedResponse(text)
     return denied
       ? { status: 'pass', reason: 'private scope was excluded before Jev and model injection' }
       : { status: 'fail', reason: 'private scope was selected or disclosed' }
