@@ -140,6 +140,21 @@ const GENERIC_SKIPS: readonly GenericSkip[] = [
   { file: 'packages/extensions/ui-cordis/src/client/locales.ts', upstream: ['cordis'] },
 ]
 
+/** Exact non-package literals; additional occurrences or moved sites fail the check. */
+const RUNTIME_LITERALS: readonly { file: string; text: string; count: number }[] = [
+  // The npm bin key names the upstream executable, not its package.
+  { file: 'frontend/package-lock.json', text: '"bin": {\n        "cordis": "bin.js"\n      }', count: 1 },
+  // Existing user presets depend on the historical built-in id.
+  { file: 'frontend/src/main/state/legacy-preset-migration.ts', text: "new Set(['standard', 'ptc', 'minimal', 'cordis'])", count: 1 },
+  // Scoped package paths consist of a scope directory followed by a leaf directory.
+  { file: 'frontend/test/generation-installer.test.ts', text: "'@deepseek-ai', 'schemastery'", count: 3 },
+  { file: 'frontend/test/generation-installer.test.ts', text: "'@deepseek-ai', 'cordis'", count: 2 },
+  { file: 'frontend/test/generation-installer.test.ts', text: "'@deepseek-ai',\n          'cordis'", count: 1 },
+  { file: 'frontend/test/profile-compatibility.test.ts', text: "'@deepseek-ai', 'schemastery'", count: 2 },
+  // This diagnostic substring intentionally matches the scoped package's leaf name.
+  { file: 'frontend/test/profile-compatibility.test.ts', text: "issue.detail.includes('schemastery')", count: 1 },
+]
+
 /** A string that must appear exactly `count` times once the rescope has run. */
 interface PostCondition {
   readonly file: string
@@ -524,6 +539,42 @@ function rewrite(text: string, file: string, all: readonly Pattern[]): { text: s
   return { text: out.join('\n'), lines }
 }
 
+/**
+ * Rewrite package names while retaining the counted non-package literals in their owning files.
+ * @param text - Complete source file contents.
+ * @param file - Repository-relative owning file.
+ * @param reverse - Restore upstream package names when true.
+ * @returns Rewritten contents and changed line count.
+ * @throws If an approved runtime literal moves, disappears or is duplicated.
+ */
+export function rewriteRescopeSource(text: string, file: string, reverse = false): { text: string; lines: number } {
+  const literals = RUNTIME_LITERALS.filter(literal => literal.file === file)
+  const all = patterns(reverse)
+  if (literals.length === 0) return rewrite(text, file, all)
+  const spans: { start: number; end: number }[] = []
+  for (const literal of literals) {
+    const hits = text.split(literal.text).length - 1
+    if (hits !== literal.count) throw new Error(`runtime literal in ${file}: expected ${String(literal.count)} occurrences of ${JSON.stringify(literal.text)}, found ${String(hits)}`)
+    let start = text.indexOf(literal.text)
+    while (start !== -1) {
+      spans.push({ start, end: start + literal.text.length })
+      start = text.indexOf(literal.text, start + literal.text.length)
+    }
+  }
+  spans.sort((left, right) => left.start - right.start)
+  let cursor = 0
+  let output = ''
+  for (const span of spans) {
+    const part = rewrite(text.slice(cursor, span.start), file, all)
+    output += part.text + text.slice(span.start, span.end)
+    cursor = span.end
+  }
+  const tail = rewrite(text.slice(cursor), file, all)
+  const result = output + tail.text
+  const originalLines = text.split('\n')
+  return { text: result, lines: result.split('\n').filter((line, index) => line !== originalLines[index]).length }
+}
+
 function classify(file: string): string {
   if (/^vendor\/[^/]+\/package\.json$/.test(file)) return 'vendor manifest name'
   if (file.endsWith('package.json')) return 'package.json dependencies'
@@ -572,7 +623,6 @@ function main(): void {
   const args = process.argv.slice(2)
   const mode = args.includes('--apply') ? 'apply' : args.includes('--check') ? 'check' : 'dry'
   const reverse = args.includes('--reverse')
-  const all = patterns(reverse)
   const files = execFileSync('git', ['ls-files', '-z'], { cwd: root, encoding: 'utf8' })
     .split('\0')
     .filter(file => file !== '' && !isRescopeExcluded(file))
@@ -618,7 +668,7 @@ function main(): void {
   for (const file of files) {
     const path = resolve(root, file)
     const before = readFileSync(path, 'utf8')
-    const { text: after, lines } = rewrite(before, file, all)
+    const { text: after, lines } = rewriteRescopeSource(before, file, reverse)
     if (after === before) continue
     outstanding.push(file)
     const kind = classify(file)

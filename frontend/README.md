@@ -20,6 +20,8 @@ Published installers and platform validation appear on [Releases](https://github
 
 Run the setup and desktop commands from the repository root. The [development guide](../docs/feat-integrated-product/development.md) covers this single-checkout workflow. See the [release procedure](../docs/feat-integrated-product/releases.md) for packaging and validation.
 
+Compatibility migrations preserve legacy preset IDs and existing configuration data. Runtime identifiers and scoped-package directory names remain distinct from npm package specifiers during repository checks.
+
 ## License
 
 The original DataElement MIT notice remains in [LICENSE](LICENSE); dependency licenses remain in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Product acknowledgments are in the [root README](../README.md).

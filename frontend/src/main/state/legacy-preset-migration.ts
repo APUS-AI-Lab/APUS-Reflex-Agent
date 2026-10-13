@@ -47,7 +47,7 @@ export async function migrateLegacyAgentPresets(dshHome: string, note: (line: st
       const document = parseDocument(composition.replace(/^\uFEFF/u, ''))
       if (document.errors.length || !isSeq(document.contents)) throw new Error('agent.cordis.yml must contain a YAML plugin list')
       const metadata = await readFile(join(sourceRoot, entry.name, 'preset.yml'), 'utf8')
-        .then((text) => parse(text) as unknown)
+        .then((text): unknown => parse(text))
         .catch((error: unknown) => {
           if ((error as NodeJS.ErrnoException).code === 'ENOENT') return {}
           throw error

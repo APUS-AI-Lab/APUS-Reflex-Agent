@@ -59,7 +59,7 @@ describe('boot failure page detection', () => {
         queriedSelector = selector
         return { innerText: 'Failed to load plugins' }
       }
-    } as unknown as Document)
+    })
 
     expect(queriedSelector).toBe(BOOT_FAILURE_ROOT_SELECTOR)
     expect(bootFailure).toBe(
@@ -70,7 +70,7 @@ describe('boot failure page detection', () => {
         innerText:
           'Failed to load plugins\n@deepseek-ai/dsh-client-ui-example\nweb boot: 1 entry did not activate'
       })
-    } as unknown as Document)).toBe(
+    })).toBe(
       'Failed to load plugins\n@deepseek-ai/dsh-client-ui-example\nweb boot: 1 entry did not activate'
     )
   })
@@ -81,6 +81,6 @@ describe('boot failure page detection', () => {
       querySelector: () => null
     }
 
-    expect(findBootFailureText(conversationOnlyDocument as unknown as Document)).toBeUndefined()
+    expect(findBootFailureText(conversationOnlyDocument)).toBeUndefined()
   })
 })

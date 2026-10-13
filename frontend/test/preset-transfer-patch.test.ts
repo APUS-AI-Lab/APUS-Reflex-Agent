@@ -87,7 +87,7 @@ function presetTransferApi(root: string) {
         return routes.get(IMPORT_PATH)!.fetch(new Request(url, {
           method: 'POST',
           headers: { 'content-type': 'application/vnd.dsh.preset+zip' },
-          body: data as unknown as BodyInit,
+          body: new Uint8Array(data),
           ...(signal === undefined ? {} : { signal })
         }))
       }
@@ -178,7 +178,7 @@ describe('agent preset package transfer', () => {
             'content-type': 'application/vnd.dsh.preset+zip',
             'content-length': String(17 * 1024 * 1024)
           },
-          body: new Uint8Array([80, 75, 3, 4]) as unknown as BodyInit
+          body: new Uint8Array([80, 75, 3, 4])
         })
       )
       expect(tooLarge.status).toBe(413)
@@ -479,7 +479,7 @@ describe('agent preset package transfer', () => {
     const root = await mkdtemp(path.join(tmpdir(), 'dsh-preset-persona-edge-'))
     const signal = new AbortController().signal
     const api = presetTransferApi(root)
-    const validate = Config as unknown as (value: unknown) => { prefix: string }
+    const validate = Config
     const packageWith = (id: string, body: string) => zipSync({
       'manifest.json': strToU8(JSON.stringify({
         format: 'dsh-preset',

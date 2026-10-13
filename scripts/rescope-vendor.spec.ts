@@ -1,7 +1,8 @@
 /** Recorded npm evidence stays intact while authored files and exact edits remain checked. */
 
+import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { exactEditState, isRescopeExcluded } from './rescope-vendor.ts'
+import { exactEditState, isRescopeExcluded, rewriteRescopeSource } from './rescope-vendor.ts'
 
 const ANCHOR = '\n## Sync procedure'
 const INSERTED = `\n15. **rescope**: one log entry.\n${ANCHOR}`
@@ -49,5 +50,35 @@ describe('exactEditState', () => {
     // A moved or partially applied site: neither state is complete.
     expect(exactEditState('a = 1\nb = 2\n', 'a = 1', 'b = 2', 1)).toBe('invalid')
     expect(exactEditState('x\n', 'a = 1', 'b = 2', 1)).toBe('invalid')
+  })
+})
+
+describe('runtime identifier literals', () => {
+  const file = 'frontend/src/main/state/legacy-preset-migration.ts'
+  const source = readFileSync(new URL(`../${file}`, import.meta.url), 'utf8')
+  const upstream = '@deepseek-ai/cordis'.split('/')[1]!
+
+  it.each([
+    'frontend/package-lock.json',
+    file,
+    'frontend/test/generation-installer.test.ts',
+    'frontend/test/profile-compatibility.test.ts',
+  ])('preserves counted runtime identifiers in %s', (owner) => {
+    const text = readFileSync(new URL(`../${owner}`, import.meta.url), 'utf8')
+    expect(rewriteRescopeSource(text, owner).text).toBe(text)
+  })
+
+  it('still rewrites a new import in the same owning file', () => {
+    const input = `${source}\nimport '${upstream}'\n`
+    expect(rewriteRescopeSource(input, file).text).toBe(`${source}\nimport '@deepseek-ai/cordis'\n`)
+  })
+
+  it('does not exempt the same literal in another file', () => {
+    expect(rewriteRescopeSource(source, 'frontend/another.ts').text).not.toBe(source)
+  })
+
+  it('rejects duplicated and missing compatibility literals', () => {
+    expect(() => rewriteRescopeSource(source + source, file)).toThrow(/expected 1 occurrences/)
+    expect(() => rewriteRescopeSource('', file)).toThrow(/expected 1 occurrences/)
   })
 })
