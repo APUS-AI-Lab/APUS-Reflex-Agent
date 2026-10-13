@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-This package owns Continuum’s durable record/profile service: immutable source-backed records with revision checks, superseding, deactivation, replayable Session events, exact source reads, bounded retrieval, a rebuildable derived index, optional Jev selection, same-step lifecycle consumption, and an explicit switch. It never invents records or enables unlimited memory without Reflex.
+Save original text with exact source references, retrieve bounded excerpts, and retain explicit corrections for audit. The optional task plugin lets a new Session recover inputs from the same persistent task; the memory-record plugin separately supports Reflex selection. Continued work uses a finite model window; complete processing coverage and scale acceptance remain unfinished.
 
 Session events use the existing persistence backend and become durable after `ctx.sessions.flush(session)`. Admission is explicit by default; opt-in `admission: 'user-message'` records committed human messages with exact Session references when the Reflex-only switch is enabled. The companion `continuum-jev` service adds shadow/active selection and receipts.
 
@@ -29,6 +29,16 @@ Session events use the existing persistence backend and become durable after `ct
 ## Use this package
 
 Import `MemoryRecordStore` for deterministic revision semantics. Use `appendMemoryRecordEvent` after a store transition, `foldMemoryRecordEvents` when rebuilding from a Session log, `readMemorySourceEvents` for exact source readback, and `retrieveMemoryWorkingSet` for bounded candidates. A successful append is not a durability promise until the caller completes `ctx.sessions.flush(session)`.
+
+-----
+
+The optional `@deepseek-ai/dsh-continuum/tasks` plugin attaches distinct Sessions to one host-configured task. Its separate JSONL journal has a single writer, durable revision checks, exact request deduplication and complete original text; the business Session list excludes that journal. Configuration fixes `root`, `workspace`, `domainId`, `principalId` and `taskId`. `maxContextBytes` and `maxPageBytes` default to 8192. The host grants one local principal access to the exact canonical workspace; this is not a multi-user authentication service.
+
+Human text is admitted without trimming, item-count eviction or length truncation. Live sources are flushed through their owning Session; cold sources require temporary exclusive write ownership before flush and exact readback. An externally owned source is refused. Domain commits publish only after append, flush and exact readback; uncertain persistence stops further reads and writes until recovery. Task revisions are serialized with model requests through stream settlement, including downstream middleware, so an in-flight request delays corrections and other admissions. Auxiliary compaction calls retain authority and retirement checks while using their own selected message ranges.
+
+`read_continuum_task` returns byte-bounded JSON pages with source event/block references, SHA-256, task revision and a continuation cursor. A stale cursor must restart from the current first page. `pending` means more active text remains to read; neither reading nor saving means processing or completion. The context snapshot reflects its assembly revision; the current human message is saved before provider dispatch and may advance that revision. Explicit host corrections retire a named predecessor but retain its original text. Shipped profiles retain a lightweight task guard: a bound Session without its matching authority refuses model dispatch. Already-bound Sessions also refuse dispatch after retirement because previous summaries or outputs may contain stale content; a fresh Session uses the current task. Automatic history repair, assistant/tool progress capture, input processing receipts, Reflex ranking of this task projection, and measured window-scale acceptance remain separate work.
+
+See the [cross-session design and acceptance](../../../docs/feat-cross-session-memory/design.html) and [optional profile overlay](../../../apps/cli/config/examples/continuum-task.patch.yml). The task store is durable; its complete in-memory projection is not a claim of constant-memory or unlimited-scale operation.
 
 -----
 

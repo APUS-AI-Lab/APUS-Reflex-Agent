@@ -64,6 +64,58 @@ Types: [Agent](core.zh.md)
 
 Source: [`packages/context/continuum/src/service.ts`](../../packages/context/continuum/src/service.ts)
 
+<a id="ctxcontinuumtaskguard--continuumtaskguard"></a>
+
+### `ctx.continuumTaskGuard` — `ContinuumTaskGuard`
+
+Owns task-binding recovery in every shipped profile. Unbound Sessions need no task service. Bound Sessions must retain a ready, matching authority; removing the optional task plugin cannot silently reactivate stale history or summaries.
+
+Source: [`packages/context/continuum/src/task-guard.ts`](../../packages/context/continuum/src/task-guard.ts)
+
+<a id="ctxcontinuumtasks--continuumtasks"></a>
+
+### `ctx.continuumTasks` — `ContinuumTasks`
+
+Durable tasks with complete text admission and bounded model context. One host identity and exact workspace are authorized by configuration. Sources stay in business Sessions; the leased authority log uses a separate storage root. Retiring an entry refuses already-bound Sessions because their prior model outputs or summaries may still contain it; a fresh Session can use the new state.
+
+```ts cordis-catalog
+/**
+ * Read the current authorized task without marking its entries processed.
+ * @param agent - Live caller in the configured workspace.
+ * @returns Immutable complete task or undefined before its first input.
+ */
+async snapshot(agent: Agent): Promise<TaskSnapshot | undefined>
+
+/**
+ * Verify a recovered binding synchronously for the always-mounted dispatch guard.
+ * This does not replace source authorization or the request's revision lease.
+ * @param session - Exact live Session about to send model context.
+ * @param binding - Its immutable recovered task authority and retirement set.
+ */
+assertAuthority(session: Session, binding: TaskBinding): void
+
+/**
+ * Read a bounded page of current task inputs. Retired sources remain in the journal.
+ * @param agent - Live caller in the configured workspace.
+ * @param options - Revision-bound page position; deployment owns the byte budget.
+ * @returns JSON with exact text, source references and a continuation cursor.
+ */
+async read(agent: Agent, options: Omit<TaskPageOptions, 'maxBytes'> = {}): Promise<string>
+
+/**
+ * Apply an explicit host-authorized correction using exact durable human text.
+ * Already-bound Sessions refuse subsequent dispatch until opened anew.
+ * @param agent - Caller authorized by the mounted host configuration.
+ * @param request - Stable request identity, observed domain revision and source-backed replacement.
+ * @returns A receipt after durable commit and exact readback.
+ */
+async supersede(agent: Agent, request: { readonly requestId: string readonly expectedRevision: number readonly predecessor: MemoryId readonly source: TaskSourceInput }): Promise<TaskReceipt>
+```
+
+Types: [Agent](core.zh.md) · [Session](session.zh.md)
+
+Source: [`packages/context/continuum/src/task-service.ts`](../../packages/context/continuum/src/task-service.ts)
+
 <a id="ctxcordisinspect--cordisinspectregistryservice"></a>
 
 ### `ctx.cordisInspect` — `CordisInspectRegistryService`

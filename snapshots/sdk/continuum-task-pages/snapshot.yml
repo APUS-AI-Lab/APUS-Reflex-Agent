@@ -1,0 +1,8 @@
+version: 1
+scenario: continuum-task-pages
+profile: sdk
+composition: sdk-continuum-task-pages
+recording: authored
+header:
+  class: sdk-continuum-task-pages
+  pin: true
