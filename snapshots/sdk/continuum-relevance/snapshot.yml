@@ -1,0 +1,8 @@
+version: 1
+scenario: continuum-relevance
+profile: sdk
+composition: sdk-continuum-relevance
+recording: authored
+header:
+  class: sdk-continuum-relevance
+  pin: true

@@ -22,7 +22,7 @@ function ledgerPath(dshHome: string): string {
 
 export async function readComponentLedger(dshHome: string): Promise<ComponentLedger> {
   try {
-    const parsed = JSON.parse(await readFile(ledgerPath(dshHome), 'utf8')) as unknown
+    const parsed: unknown = JSON.parse(await readFile(ledgerPath(dshHome), 'utf8'))
     if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return {}
     return parsed as ComponentLedger
   } catch {

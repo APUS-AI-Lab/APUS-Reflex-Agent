@@ -33,6 +33,18 @@ function chip(shell: SessionInputShell): void {
 }
 
 describe('reference submission', () => {
+  it('preserves whitespace in submitted text while rejecting whitespace-only drafts', async () => {
+    const sink = vi.fn(() => Promise.resolve<SubmitOutcome>({ kind: 'success' }))
+    const shell = new SessionInputShell({ actx: {} as Context, defaultSink: sink, commandAttachments })
+    shell.setDraft('  \n  ')
+    shell.submit()
+    expect(sink).not.toHaveBeenCalled()
+    const text = '  exact\n输入 😀\r\n  '
+    shell.setDraft(text)
+    shell.submit()
+    await vi.waitFor(() => { expect(sink).toHaveBeenCalledWith(text, [], 'queue', expect.any(AbortSignal)) })
+  })
+
   it('mirrors canonical reference text so a persisted draft remains resolvable after remount', async () => {
     const mirror = vi.fn()
     const first = new SessionInputShell({
@@ -67,7 +79,7 @@ describe('reference submission', () => {
     restored.setDraft(mirror.mock.calls.at(-1)?.[0] as string)
     restored.submit()
     await vi.waitFor(() => {
-      expect(sink).toHaveBeenCalledWith(spacedMention, [], 'queue', expect.any(AbortSignal))
+      expect(sink).toHaveBeenCalledWith(`${spacedMention} `, [], 'queue', expect.any(AbortSignal))
     })
   })
 
@@ -106,7 +118,7 @@ describe('reference submission', () => {
     await vi.waitFor(() => {
       expect(shell.snapshot.draft).toBe(`${mention} `)
     })
-    expect(sink).toHaveBeenNthCalledWith(1, mention, [], 'queue', expect.any(AbortSignal))
+    expect(sink).toHaveBeenNthCalledWith(1, `${mention} `, [], 'queue', expect.any(AbortSignal))
     expect(shell.snapshot).toMatchObject({
       draft: `${mention} `,
       occurrences: [{ source: 'reference', ref: mention, label: 'Research', offset: 0, length: mention.length }],
@@ -119,7 +131,7 @@ describe('reference submission', () => {
     shell.submit('queue')
     expect(shell.snapshot.draft).toBe('')
     await vi.waitFor(() => {
-      expect(sink).toHaveBeenNthCalledWith(2, mention, [], 'queue', expect.any(AbortSignal))
+      expect(sink).toHaveBeenNthCalledWith(2, `${mention} `, [], 'queue', expect.any(AbortSignal))
     })
     expect(shell.snapshot.occurrences).toEqual([])
     expect(serializeReference).toHaveBeenCalledTimes(2)

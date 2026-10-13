@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "scope": "coverage-preserving Continuum Reflex batch ranking",
+  "date": "2026-10-13",
+  "status": "local behavior and build passed; final lint/docs and integration snapshot pending",
+  "checks": [
+    {
+      "name": "unit and real HTTP composition plus context lifecycle",
+      "tests": 81,
+      "passed": 81,
+      "coverage": {
+        "statements": "191/191",
+        "branches": "117/117",
+        "functions": "39/39",
+        "lines": "150/150"
+      },
+      "files": [
+        "packages/experimental/continuum-jev/tests/index.spec.ts",
+        "packages/experimental/continuum-jev/tests/composition.spec.ts",
+        "packages/context/continuum/tests/context.spec.ts",
+        "packages/context/continuum/tests/live-config.spec.ts"
+      ]
+    },
+    {
+      "name": "neighboring provider service/context regression",
+      "tests": 55,
+      "passed": 55
+    },
+    {
+      "name": "independent concurrent HTTP composition processes",
+      "processes": 2,
+      "testsPerProcess": 6,
+      "passedPerProcess": 6
+    },
+    {
+      "name": "pnpm run build",
+      "passed": true
+    },
+    {
+      "name": "persistence acknowledgement",
+      "result": "same-version optional-property-added",
+      "root": "event:continuum/memory-decision.data.evaluation"
+    },
+    {
+      "name": "pnpm run lint:contracts-ready",
+      "passed": true
+    }
+  ],
+  "limitations": [
+    "No real remote model relevance quality or latency measurement in this batch.",
+    "Scoring reorders only the first 16 already-budgeted candidates; all others remain unscored and retained.",
+    "No semantic candidate expansion or per-record automatic data classification.",
+    "SDK keyless batch receipt snapshot is assigned to the integration agent."
+  ]
+}

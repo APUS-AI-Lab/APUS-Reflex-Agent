@@ -15,6 +15,11 @@ export { JevProtocolError, MAX_JEV_CHOICES, MAX_JEV_QUESTIONS, parseJevResponse,
 export { JevProviderError, SystemOneProvider } from './client.ts'
 export type { JevFetch, SystemOneProviderOptions } from './client.ts'
 
+/** A selected Jev provider is missing its deployment configuration or registration. */
+export class JevConfigurationError extends Error {
+  override name = 'JevConfigurationError'
+}
+
 export const name = 'apus-dsh-jev-plugin'
 
 declare module '@deepseek-ai/cordis' {
@@ -175,8 +180,8 @@ export default class Jev extends TypertRemoteService {
   private provider(id: string): JevProvider {
     const provider = id === this.defaultProviderId ? this.configuredProvider() : this.providers.get(id)
     if (provider === undefined) {
-      if (id === this.defaultProviderId) throw new Error('Jev is not configured; set an endpoint and model in Reflex settings')
-      throw new Error(`jev provider "${id}" is not registered`)
+      if (id === this.defaultProviderId) throw new JevConfigurationError('Jev is not configured; set an endpoint and model in Reflex settings')
+      throw new JevConfigurationError(`jev provider "${id}" is not registered`)
     }
     return provider
   }

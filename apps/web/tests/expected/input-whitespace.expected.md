@@ -1,0 +1,5 @@
+- list:
+  - listitem:
+    - textbox "Edit queued message": exact input second line
+    - button "Save queued message"
+    - button "Cancel editing"

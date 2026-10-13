@@ -283,7 +283,7 @@ export class HarnessClient {
   }
 
   /**
-   * Queue one prompt and return its durable inbox identity.
+   * Queue one prompt and return its inbox identity without waiting for a storage flush.
    * @param sessionId - target session; an unknown id creates it.
    * @param contentBlocks - the user message, sent verbatim.
    * @returns the queued message id.

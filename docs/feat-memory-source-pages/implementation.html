@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>Authorized Session source pages</title><body>
+<p><a href="../feat-lossless-memory/design.html">Continuum architecture — sole overall entry</a></p>
+<pre># Authorized Session source pages
+
+This B1a implementation follows the [Continuum architecture](../feat-lossless-memory/design.html). It adds bounded exact source pages to `session_event_read`; it does not enable cross-session tools in production or change workspace authorization.
+
+- Preserve legacy full-event and neighbor output only when it fits `maxReadBytes` (default 8192).
+- Explicit `view` (`event-json` or `text-block`), `offset`, `block`, or `expected_sha256` selects paging. Reject nonzero `before`/`after` together with paging.
+- Oversized legacy output becomes an event-json first page; report omitted neighbor context explicitly.
+- Pages bind to SHA-256 of `JSON.stringify(event, null, 2)`, contain exact selected text, UTF-16 offsets without splitting surrogate pairs, total length, and `next_offset`.
+- Count the complete serialized output including escaping and metadata. Reject budgets that cannot fit metadata and progress. Continuations require the event digest.
+- Reuse existing pre-read and observed-header authorization. Existing tool-result logging needs no new Session event schema.
+
+Files: tool-session-query source, focused tests, bilingual README and generated catalog owners. Verification: exact reconstruction, Unicode/budgets, invalid continuations, same/different workspace authorization, real SQLite/JSONL restart, focused coverage. Production mounting, outbound route controls and product saved acknowledgements remain separate milestones.
+</pre>
+</body></html>

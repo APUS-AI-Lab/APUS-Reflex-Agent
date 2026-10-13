@@ -1,0 +1,28 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-memory-source-flow/README.md
+/read-complete-continuum-source-text:
+  en: 3bcb2d371265a3be
+  zh: 1a6396ffe045e752
+/read-complete-continuum-source-text/summary:
+  en: 4ff8d7a3ab30cd69
+  zh: 747f6066a7c29a8c
+/read-complete-continuum-source-text/table-of-contents:
+  en: 7d82da9e69b336d3
+  zh: 6695e53f29416fb7
+/read-complete-continuum-source-text/enable-source-reads:
+  en: 4474f06e86de48fd
+  zh: 955ec6c085fc623f
+/read-complete-continuum-source-text/read-and-continue:
+  en: e03249ee47b92b13
+  zh: cd1c61f8572e2002
+/read-complete-continuum-source-text/verification:
+  en: 7b4410a047d3c9cd
+  zh: 1f386a539828f537
+/read-complete-continuum-source-text/limits:
+  en: b5eb32f9499c508e
+  zh: 2b30baaff2588af9
+/read-complete-continuum-source-text/dev-note:
+  en: ecc20ef5e582c2e6
+  zh: f409c072779ee16d

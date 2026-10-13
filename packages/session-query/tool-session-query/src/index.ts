@@ -28,17 +28,21 @@ export const DEFAULT_SEARCH_TIMEOUT_MS = 30_000
 export interface Config {
   /** Maximum authorized hits returned by one search call. Defaults to 100. */
   maxSearchResults?: number
+  /** Maximum UTF-8 bytes in an event read result, including page metadata; at least 256. Defaults to 8192. */
+  maxReadBytes?: number
   /** Cooperative full-text search deadline in milliseconds. Defaults to 30000. */
   searchTimeoutMs?: number
 }
 
 /** Schemastery config for Loader defaults and generated configuration docs. */
 export const Config: z<Config> = z.object({
+  maxReadBytes: z.number().step(1).min(256).default(8192),
   maxSearchResults: z.number().step(1).min(1).default(DEFAULT_MAX_SEARCH_RESULTS),
   searchTimeoutMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).default(DEFAULT_SEARCH_TIMEOUT_MS),
 })
 
 interface ResolvedConfig {
+  readonly maxReadBytes: number
   readonly maxSearchResults: number
   readonly searchTimeoutMs: number
 }
@@ -107,21 +111,29 @@ export function apply(ctx: Context, config: Config): void {
 
   ctx.tools.register(defineTool({
     name: 'session_event_read',
-    description: 'Read one full unabridged event and optional neighboring raw-event summaries from an authorized session.',
+    description: 'Read exact event data from an authorized session. Large results return a source page with a continuation offset and event digest.',
     parameters: {
       ...toolInput.targetSessionParameter,
       seq: { type: 'integer', required: true, description: 'Target event sequence number.' },
-      before: { type: 'integer', description: 'Number of preceding raw events to summarize. Omit for none.' },
-      after: { type: 'integer', description: 'Number of following raw events to summarize. Omit for none.' },
+      view: { type: 'string', enum: ['event-json', 'text-block'], description: 'Select event JSON or one original text block. Omit for a complete read when it fits the output budget.' },
+      block: { type: 'integer', description: 'Required content-array index for text-block; omit for event-json.' },
+      offset: { type: 'integer', description: 'UTF-16 offset from next_offset. Omit to start at 0; cannot split a Unicode character.' },
+      expected_sha256: { type: 'string', description: 'Event digest from the first page; required when offset is greater than 0.' },
+      before: { type: 'integer', description: 'Number of preceding raw events to summarize. Omit for none; unavailable with explicit paging.' },
+      after: { type: 'integer', description: 'Number of following raw events to summarize. Omit for none; unavailable with explicit paging.' },
     },
     output: TEXT_OUTPUT,
     isConcurrencySafe: () => true,
-    execute: (args, exec) => operations.executeEventRead(ctx, args, exec),
+    execute: (args, exec) => operations.executeEventRead(ctx, args, exec, resolved.maxReadBytes),
     presentCall: args => presentation.presentEventTargetCall('Read event', args),
   }))
 }
 
 function resolveConfig(config: Config): ResolvedConfig {
+  const maxReadBytes = config.maxReadBytes ?? 8192
+  if (!Number.isSafeInteger(maxReadBytes) || maxReadBytes < 256) {
+    throw new TypeError('tool-session-query: maxReadBytes must be a safe integer of at least 256')
+  }
   const maxSearchResults = config.maxSearchResults ?? DEFAULT_MAX_SEARCH_RESULTS
   const searchTimeoutMs = config.searchTimeoutMs ?? DEFAULT_SEARCH_TIMEOUT_MS
   if (!Number.isSafeInteger(maxSearchResults) || maxSearchResults < 1) {
@@ -132,5 +144,5 @@ function resolveConfig(config: Config): ResolvedConfig {
       `tool-session-query: searchTimeoutMs must be a positive integer no greater than ${MAX_TIMER_DELAY_MS}`,
     )
   }
-  return { maxSearchResults, searchTimeoutMs }
+  return { maxSearchResults, searchTimeoutMs, maxReadBytes }
 }

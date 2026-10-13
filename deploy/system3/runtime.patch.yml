@@ -51,7 +51,8 @@
       name: ../../packages/experimental/continuum-jev/lib/index.js
       config:
         mode: !!js 'process.env.CONTINUUM_MEMORY_MODE || "off"'
-        minConfidence: 0.8
+        privacyPolicy:
+          mode: local-only
     - id: continuum-memory
       name: ../../packages/context/continuum/lib/index.js
       config:

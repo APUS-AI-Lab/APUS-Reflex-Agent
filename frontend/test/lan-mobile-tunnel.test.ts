@@ -567,7 +567,7 @@ describe('LanMobileBridge toggle concurrency', () => {
     await bridge.start()
 
     let launches = 0
-    Object.assign(bridge as unknown as Record<string, unknown>, {
+    Object.assign(bridge, {
       launchTunnel: async () => {
         launches += 1
         await new Promise((resolve) => setTimeout(resolve, 30))
@@ -598,11 +598,11 @@ describe('LanMobileBridge launch lifecycle', () => {
 
     const stopped: string[] = []
     let releaseLaunch: (() => void) | undefined
-    Object.assign(bridge as unknown as Record<string, unknown>, {
+    Object.assign(bridge, {
       launchTunnel: () =>
         new Promise<void>((resolve) => {
           releaseLaunch = () => {
-            Object.assign(bridge as unknown as Record<string, unknown>, {
+            Object.assign(bridge, {
               tunnelInstance: {
                 url: 'https://raced.trycloudflare.com',
                 process: {},
@@ -638,11 +638,11 @@ describe('LanMobileBridge launch lifecycle', () => {
     await bridge.start()
 
     let launches = 0
-    Object.assign(bridge as unknown as Record<string, unknown>, {
+    Object.assign(bridge, {
       launchTunnel: async () => {
         launches += 1
         if (launches === 1) throw new Error('binary download failed')
-        Object.assign(bridge as unknown as Record<string, unknown>, {
+        Object.assign(bridge, {
           tunnelInstance: {
             url: 'https://second.trycloudflare.com',
             process: {},
@@ -673,11 +673,11 @@ describe('LanMobileBridge launch lifecycle', () => {
 
     const stopped: string[] = []
     let releaseLaunch: (() => void) | undefined
-    Object.assign(bridge as unknown as Record<string, unknown>, {
+    Object.assign(bridge, {
       launchTunnel: () =>
         new Promise<void>((resolve) => {
           releaseLaunch = () => {
-            Object.assign(bridge as unknown as Record<string, unknown>, {
+            Object.assign(bridge, {
               tunnelInstance: {
                 url: 'https://late.trycloudflare.com',
                 process: {},
@@ -712,7 +712,7 @@ describe('LanMobileBridge launch lifecycle', () => {
     const cookie = await authorizeDesktop(bridge)
 
     let releaseLaunch: (() => void) | undefined
-    Object.assign(bridge as unknown as Record<string, unknown>, {
+    Object.assign(bridge, {
       launchTunnel: () =>
         new Promise<void>((resolve) => {
           releaseLaunch = resolve

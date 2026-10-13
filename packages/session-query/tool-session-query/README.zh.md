@@ -9,7 +9,7 @@ kind: "package-reference"
 
 ## 概述
 
-使用 `dsh-tool-session-query` 可让模型搜索既往会话、检查事件匹配、追踪会话或事件关系，并读取精确事件数据。它的五个只读工具返回无游标文本；只有目标会话的 `cwd` 与调用方完全匹配时才允许跨会话访问，没有 `cwd` 的调用方只能检查自己。搜索会排除调用方会话，并在达到部署结果上限时要求模型缩小查询。本包是 opt-in；启用后，每次模型请求都会增加固定指引与五个工具 schema。
+使用 `dsh-tool-session-query` 让模型搜索早期会话、查看事件命中、追踪关系，并通过有界分页读取精确事件数据。五个只读工具仅在目标与调用方的 `cwd` 完全相同时授权跨会话访问；没有 `cwd` 的调用方只能读取自身。搜索排除调用会话，达到部署结果上限后请模型缩小查询。本包按需启用，会为每次模型请求增加固定指导和五个工具 schema。
 
 ## 目录
 
@@ -37,6 +37,7 @@ kind: "package-reference"
 |---|---|---|
 | `maxSearchResults` | `100` | 一次搜索调用返回的最大已授权命中数 |
 | `searchTimeoutMs` | `30000` | 附加到两个全文搜索工具的协作式截止时间 |
+| `maxReadBytes` | `8192` | 完整事件读取输出的 UTF-8 字节预算，至少 `256` |
 
 生成的[配置目录](../../../docs/config-catalog.zh.md#deepseek-aidsh-tool-session-query)是每个受支持字段及其 JSDoc 的穷尽式真源。
 
@@ -48,13 +49,15 @@ kind: "package-reference"
 | `session_event_search` | 一个已授权会话内匹配字面查询的事件；针对当前会话时，在调用它的步骤之前停止 |
 | `session_trace` | 一个会话的已授权祖先链与后代树；未授权边界以不含隐藏 id 的标记出现 |
 | `session_event_trace` | 一个事件的位置替换与被引用源事件关系 |
-| `session_event_read` | 一个完整未删节事件（JSON），以及可选的相邻事件摘要 |
+| `session_event_read` | 预算内返回完整事件 JSON 与可选邻接摘要；否则返回带续读偏移和事件摘要的有界精确页 |
 
 工作区授权是保守的：跨会话访问要求目标与调用方会话的 `cwd` 严格相等，没有 `cwd` 的调用方只能检查自己。请求的父 id 会在搜索前去重并按权限检查；缺失与跨工作区猜测行为完全相同。搜索结果无游标：结果达到上限时请模型缩小查询，绝不暴露提供方游标、偏移、分页大小或模型可控上限。工具边界的时间戳是带时区限定的 ISO 8601，并转换为包含端点的 epoch 毫秒过滤器。
 
+显式 `view: event-json` 返回 `JSON.stringify(event, null, 2)` 的分页，不是底层 JSONL 字节。`view: text-block` 配合 `block` 返回对应原始消息文本，不裁剪空白。页包含 `sha256`、UTF-16 `offset`/`end`/`total`、`content` 和 `next_offset`（末页为 null）；位置不会切开有效代理对。续读沿用视图与块，将 `next_offset` 作为 `offset`，并把返回摘要传入 `expected_sha256`；事件改变会拒绝读取。显式分页不能与非零 `before`/`after` 混用。超预算的旧读取自动返回事件 JSON 首页，并标记请求的邻接内容已省略。
+
 ### 失败与恢复
 
-每个可信查询服务调用都经过一个错误净化器：调用方取消被精确保留，语料库与提供方诊断进入内部日志，不安全或不可打印的失败回退到固定 `SESSION_QUERY_TOOL_FAILED` 代码与消息。本地参数校验与授权错误保留精确的工具自有消息（目标在调用方工作区之外时为 `SESSION_QUERY_TOOL_UNAUTHORIZED`）。本包不执行字节或字符截断，也不导入 spill 后端；需要限制内联输出的部署应挂载 `@deepseek-ai/dsh-spill-policy`，它可以在保留完整结果的同时替换过大的已渲染文本。
+每次可信查询调用均经过错误净化：保留调用方取消，提供方诊断留在内部日志，不安全失败转换为 `SESSION_QUERY_TOOL_FAILED`。本地校验与授权保留工具自有错误。事件读取对完整输出字符串执行 `maxReadBytes` 限制；元数据也无法容纳时返回不含源内容的 `SESSION_QUERY_TOOL_READ_BUDGET_TOO_SMALL`。其他工具仍依赖可选的通用 spill 策略限制过大的内联结果。
 
 -----
 
@@ -70,10 +73,10 @@ kind: "package-reference"
 
 本消费方建立在一个分离与三项承诺之上：
 
-- **窄而只读的工具。** 五个带扁平 snake-case schema 的工具，每个都引导一个后续步骤；游标、偏移、分页大小或模型可控上限永远不会到达模型。
+- **窄而只读的工具。** 五个扁平 snake-case schema 将搜索分页留在内部，只在需要时暴露原文续读。
 - **授权来自调用方，绝不由模型提供。** 调用方身份来自 `ToolExecution.exec.agent`；工作区是字符串精确 `cwd` 相等，并对照每次结果观察到的 header 重新校验。
 - **一个模型边界净化器。** 每个可信 `ctx.sessionQuery` 调用都经过服务边界，它保留取消，并将诊断与分类失败限制在边界内。
-- **不引入第二种截断格式。** 结果保持完整；通用 spill 策略负责有界内联输出。
+- **精确原文页。** 各页内容拼接还原选定的原字符串；每页通过摘要绑定完整事件。
 
 设计历史记录在[面向模型的会话查询工具笔记](../../../.agents/notes/archived/feature/2026-07-24-model-facing-session-query-tools.md)与 [session-search-not-shipped-default 笔记](../../../.agents/notes/archived/feature/2026-08-02-session-search-not-shipped-default.md)中。
 
@@ -136,7 +139,7 @@ Use session_search to find relevant work from prior sessions, or session_event_s
 
 #### 模型看到什么
 
-模型会看到生成的 [`session_search`、`session_event_search`、`session_trace`、`session_event_trace` 与 `session_event_read` schema](../../../docs/tool-catalog.zh.md#deepseek-aidsh-tool-session-query)。搜索过滤器会增加固定 schema token，而游标、工作区路径、输出分页与模型可控结果上限仍不存在。
+模型看到生成的 [`session_search`、`session_event_search`、`session_trace`、`session_event_trace` 和 `session_event_read` schema](../../../docs/tool-catalog.zh.md#deepseek-aidsh-tool-session-query)。搜索游标与模型自定结果上限仍不暴露；事件读取暴露视图、块下标、偏移和预期摘要。
 
 #### Token 影响
 
@@ -150,7 +153,7 @@ Use session_search to find relevant work from prior sessions, or session_event_s
 
 #### 模型看到什么
 
-每次成功调用都会发出一个纯文本块。搜索结果包含标题与最佳匹配摘录；追踪包含全部已授权关系；事件读取包含未经删节的目标 JSON。通用 spill 策略可以用其预览、不透明定位信息与取回指引替换过大的内联文本。
+每次成功调用输出一个文本块。搜索结果包含标题和摘录，追踪结果包含已授权关系。事件读取保留完整小结果，对大结果分页；通用 spill 策略仍可能进一步缩短工具的内联输出。
 
 #### Token 影响
 
@@ -169,7 +172,7 @@ Use session_search to find relevant work from prior sessions, or session_event_s
 
 - **搜索有上限且无延续**——搜索最多返回部署上限，匹配更多时会请模型缩小查询；不提供延续 token。
 - **保守的工作区身份**——工作区身份是字符串精确 `cwd` 相等，因此符号链接等价的路径不共享权限。
-- **无 spill 策略时内联载荷**——未挂载通用 spill 策略的自定义组合会以内联方式接收完整追踪与事件载荷。
+- **原文读取仍加载完整事件**——分页限制模型输出，不限制后端内存；追踪结果仍需 spill 策略限制内联输出。
 
 <a id="dev-note"></a>
 ### 开发备注

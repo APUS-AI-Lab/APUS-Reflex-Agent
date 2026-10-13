@@ -2,6 +2,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Config } from '@deepseek-ai/dsh-persona'
+import Schema from '@deepseek-ai/schemastery'
 import { isMap, isSeq, parseDocument } from 'yaml'
 import { describe, expect, it } from 'vitest'
 import { migratePersonaPrefix as migratePersonaPrefixJs } from '../packages/dsh-desktop-preset-transfer/persona-prefix.js'
@@ -352,7 +353,7 @@ describe('persona prefix rewrite', () => {
   })
 
   it('makes a legacy persona config pass the real prefix schema and fail before that', () => {
-    const validate = Config as unknown as (value: unknown) => { prefix: string }
+    const validate = (value: unknown): Config => Schema.resolve(value, Config, {})[0]
     expect(() => validate({ text: 'You are a coding agent.' })).toThrow(/prefix/)
     const rewritten = migratePersonaPrefix(legacy)
     const configs = personaConfigs(rewritten.text)

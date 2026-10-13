@@ -38,7 +38,7 @@ Both wire ends share one method set: three client-to-server requests and four se
 | Direction | Method | Payload types |
 |---|---|---|
 | client→server | `initialize` | `InitializeParams` → `InitializeResult` |
-| client→server | `session/prompt` | `SessionPromptParams` → `SessionPromptResult` (durable enqueue receipt) |
+| client→server | `session/prompt` | `SessionPromptParams` → `SessionPromptResult` (enqueue receipt; no persistence flush confirmation) |
 | client→server | `shutdown` | no params → `{}` |
 | server→client | `session.event` | `SessionEventNotification` (every session in the runtime, unfiltered) |
 | server→client | `session.status` | `SessionStatusNotification` (whole-agent `running`/`idle` transition) |

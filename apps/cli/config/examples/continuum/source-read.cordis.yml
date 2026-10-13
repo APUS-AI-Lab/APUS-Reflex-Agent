@@ -1,0 +1,9 @@
+# Explicit source-read tools for a profile that already provides sessionQuery.
+# This opt-in is independent of the Continuum live switch. Remove the overlay
+# and restart the profile to remove these model-facing tools.
+# Exact source reads work while the full-text index stays disabled.
+- insert:
+    - id: continuum-source-read
+      name: ../../../../../packages/session-query/tool-session-query/lib/index.js
+      config:
+        maxReadBytes: 8192

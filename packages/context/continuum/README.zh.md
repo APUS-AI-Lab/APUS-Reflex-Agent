@@ -44,14 +44,14 @@ Session 事件使用现有 persistence backend；完成 `ctx.sessions.flush(sess
 <a id="further-exploration"></a>
 ## 进一步阅读
 
-参阅[Continuum 提案](../../../docs/feat-continuum-memory/continuum-memory-proposal.html)了解分阶段产品设计。
+参阅[Continuum 整体架构与验收设计](../../../docs/feat-lossless-memory/design.html)了解总体目标与分批验收计划。
 
 -----
 
 <a id="lifecycle-and-evaluation"></a>
 ## 生命周期与评测
 
-`ContinuumMemoryController` 负责 Reflex 专属开关、精确作用域授权和在途读取的 generation token。已提交的启用状态或模式变更会使待处理投影失效，包括关闭后重新开启的情况。Jev 服务卸载也会使在途读取失效，即使选择返回前已重新挂载；其他 Cordis 隔离域内的 Jev 绑定变化不会使本服务的读取失效。作用域变更会重新挂载服务，并使之前的投影失效。释放任一上下文 consumer 或其所属 Context 后，待完成的 pre-step hook 与 selector 结果均不能注入召回。Agent 释放时移除其控制器；服务释放时使全部控制器失效并解除引用。被拒绝的配置编辑不会影响当前投影。这些变更会保留持久记录；停用记录同样会使待处理投影失效。未接入 Reflex 时，`resolveContinuumMemorySwitch` 回到原版路径。挂载配套 selector 后，active 模式通过 Jev 过滤有界工作集并写入 `continuum/memory-decision`；shadow 模式调用 Jev 但保留 baseline。`summary` 从当前由 Session 支持的记录投影构建可丢弃的授权导航视图，`zoom` 返回节点的精确来源引用；两者都不创建第二套事实日志。`buildContinuumSummaryTree` 提供确定性的 scope/kind 导航，`measureContinuumStableCacheLayouts` 报告本地稳定前缀复用。本地摘要树/缓存实验生成在 `docs/feat-continuum-memory/continuum-ablation.json`，分别测量检索覆盖率与布局复用，不声称 provider 账单或服务端缓存命中。
+`ContinuumMemoryController` 负责 Reflex 专属开关、精确作用域授权和在途读取的 generation token。已提交的启用状态或模式变更会使待处理投影失效，包括关闭后重新开启的情况。Jev 服务卸载也会使在途读取失效，即使选择返回前已重新挂载；其他 Cordis 隔离域内的 Jev 绑定变化不会使本服务的读取失效。作用域变更会重新挂载服务，并使之前的投影失效。释放任一上下文 consumer 或其所属 Context 后，待完成的 pre-step hook 与 selector 结果均不能注入召回。Agent 释放时移除其控制器；服务释放时使全部控制器失效并解除引用。被拒绝的配置编辑不会影响当前投影。这些变更会保留持久记录；停用记录同样会使待处理投影失效。未接入 Reflex 时，`resolveContinuumMemorySwitch` 回到原版路径。挂载配套 selector 后，active 模式通过 Jev 对完整有界工作集排序并写入 `continuum/memory-decision`；shadow 模式调用 Jev 但保留 baseline 顺序。consumer 保留 selector 顺序、去重 ID、忽略未知 ID，并提供生命周期检查，阻止持久化屏障期间失效的请求继续外发。`summary` 从当前由 Session 支持的记录投影构建可丢弃的授权导航视图，`zoom` 返回节点的精确来源引用；两者都不创建第二套事实日志。`buildContinuumSummaryTree` 提供确定性的 scope/kind 导航，`measureContinuumStableCacheLayouts` 报告本地稳定前缀复用。本地摘要树/缓存实验生成在 `docs/feat-continuum-memory/continuum-ablation.json`，分别测量检索覆盖率与布局复用，不声称 provider 账单或服务端缓存命中。
 
 <a id="model-experience"></a>
 ## Model Experience
@@ -60,11 +60,11 @@ Session 事件使用现有 persistence backend；完成 `ctx.sessions.flush(sess
 
 #### 模型看到的内容
 
-挂载 `installContinuumMemoryContext` 后，模型看到由 active 记录和当前用户文本生成的有界 `continuum-memory` recall 消息。
+挂载 `installContinuumMemoryContext` 后，模型看到由 active 记录和当前用户文本生成的有界 `continuum-memory` recall 消息。 每条摘录保留记录正文中首个命中词附近的原样窗口；仅 kind 或 scope 命中时使用前缀。摘录包含记录 ID、revision、来源事件引用、记录正文内的 UTF-16 区间和省略方向标记；该区间不表示来源事件内的位置。selector 筛选保留相同元数据。
 
 #### Token effect
 
-recall 消息消耗配置的字节预算并进入同一个模型请求；不会额外调用模型。
+`maxExcerptBytes` 限制每条摘录；`maxTotalBytes` 限制包含标题、元数据和分隔符的完整召回正文。检索会缩短摘录以满足预算；连元数据和一个字符都放不下时省略该候选。上下文消费者不会额外调用模型；可选 Jev selector 的请求成本单独计算。
 
 #### KV Cache effect
 
@@ -75,6 +75,8 @@ recall 消息消耗配置的字节预算并进入同一个模型请求；不会�
 - 当前记录投影是进程内的；重启恢复必须读取并折叠 Session 事件日志。`MemoryRecordIndex` 是 controller 维护的可丢弃派生状态；仍可从投影重建，或用有界积压预算逐步处理排队快照。
 - service 不包含完整全文索引，也不会自动把摘要树接入生命周期检索。重启后摘要导航从 Session 事件重建，不是持久化的模型摘要快照。摘要树和缓存 helper 是确定性的本地计量，不报告 provider 缓存账单；记录必须带来源，准入默认由调用方负责，也可以显式开启人类消息准入。
 - 自动用户消息准入必须显式 opt-in，使用第一个配置作用域，并将消息文本保存为带来源的 fact。处理私密或敏感对话的部署应保持 `admission: explicit`，改用领域专属的准入调用方。
+
+不发布运行时不变式伴生模块：本包没有由独立所有者维护、需要与 Session 派生投影核对的运行时观测。
 
 <a id="dev-note"></a>
 ### 开发备注

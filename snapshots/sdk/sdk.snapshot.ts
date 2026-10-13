@@ -101,6 +101,10 @@ function dirOf(url: string): string {
 }
 
 interface SdkAssertions {
+  /** Exact auxiliary source written through public persistence and checked independently of the active Session. */
+  sourceSeed?: string
+  /** Keep committed replay input immutable; compare new behavior with a separate writer oracle. */
+  preserveReplayInput?: boolean
   /** Additional profile patches applied after the shared composition. */
   patches?: readonly string[]
   /** Final response required from a completed turn before updating goldens. */
@@ -125,7 +129,10 @@ interface SdkAssertions {
 }
 
 const SDK_ASSERTIONS: Readonly<Record<string, SdkAssertions>> = {
-  'continuum-partial-recall': { expectedFinalResponse: '迁移安排在周五。' },
+  'continuum-partial-recall': { expectedFinalResponse: '迁移安排在周五。', preserveReplayInput: true },
+  'continuum-tail-recall': { expectedFinalResponse: 'Quartzlaunch release code MERIDIAN-731.' },
+  'continuum-relevance': { expectedFinalResponse: 'PIN 7319; Friday.' },
+  'continuum-source-pages': { expectedFinalResponse: 'SOURCE_RECONSTRUCTED', sourceSeed: 'source.seed.json' },
   'system3-shadow': { expectedFinalResponse: 'SDK snapshot OK' },
   'reflex-supervision': { expectedFinalResponse: 'SDK snapshot OK' },
   'reflex-semantic-supervision': { expectedFinalResponse: 'SDK snapshot OK' },
@@ -608,6 +615,7 @@ async function runScenario(scenario: CorpusScenario): Promise<{
       : {},
     ...scenario.manifest.environment,
     ...assertions.environment,
+    ...assertions.sourceSeed === undefined ? {} : { DSH_SNAPSHOT_SOURCE_CWD: cwd },
     ...childEnvironment,
   }
 
@@ -680,6 +688,17 @@ async function runScenario(scenario: CorpusScenario): Promise<{
       persistedLogs(sessionsRoot),
       ...(childSessionsRoot === undefined ? [] : [persistedLogs(childSessionsRoot)]),
     ])).flat()
+    if (assertions.sourceSeed !== undefined) {
+      const source = JSON.parse(await readFile(join(scenario.dir, assertions.sourceSeed), 'utf8')) as {
+        header: { id: string; cwd: string }; events: JsonObject[]
+      }
+      const index = logs.findIndex(log => log.header.id === source.header.id)
+      expect(index, `persisted auxiliary source exists: ${JSON.stringify(results.flatMap(result => result.events.filter(event => event.type === 'agent/error' || event.type === 'turn/end')))}`).toBeGreaterThanOrEqual(0)
+      const log = logs[index]!
+      expect(log.header).toMatchObject({ ...source.header, cwd })
+      expect(records(log.content).slice(1), 'source events retain exact fields and text').toEqual(source.events)
+      logs.splice(index, 1)
+    }
     const finalWorkspace = await captureWorkspaceSnapshot(cwd, {
       ignoredRootEntries: RUNTIME_WORKSPACE_ENTRIES,
     })
@@ -834,12 +853,12 @@ describe('TypeScript SDK snapshots over the jsonrpc runtime', () => {
       : it
     scenarioTest(`${mode}s ${scenario.name} through dsh --profile sdk`, async () => {
       const scenarioDir = scenario.dir
-      const retained = scenario.manifest.sessionFormat !== undefined
+      const assertions = SDK_ASSERTIONS[scenario.name] ?? {}
+      const retained = scenario.manifest.sessionFormat !== undefined || assertions.preserveReplayInput === true
       const notificationsExpectedPath = join(scenarioDir, retained ? 'notifications.current.expected.jsonl' : 'notifications.expected.jsonl')
       const resultExpectedPath = join(scenarioDir, 'result.expected.json')
       const hasWireGoldens = scenario.name === 'reflex-semantic-supervision'
         || existsSync(notificationsExpectedPath) || existsSync(resultExpectedPath)
-      const assertions = SDK_ASSERTIONS[scenario.name] ?? {}
       const writesSessionFixtures = writesCurrentSessionFixtures(scenario.manifest, sessionWriteMode)
 
       let files = await fixtureFiles(scenario)
@@ -985,7 +1004,7 @@ describe('TypeScript SDK snapshots over the jsonrpc runtime', () => {
           return event !== undefined && typeof event.type === 'string' && types.has(event.type) ? [event] : []
         })).toEqual(selected)
       }
-      if (scenario.name === 'continuum-partial-recall') {
+      if (scenario.name === 'continuum-partial-recall' || scenario.name === 'continuum-tail-recall') {
         const events = results.flatMap(result => result.events)
         const memoryRecords = events.filter(event => event.type === 'continuum/memory-record')
         const recalled = events.filter(event => event.type === 'user/message'
@@ -995,14 +1014,28 @@ describe('TypeScript SDK snapshots over the jsonrpc runtime', () => {
           && (event.data['source'] as { kind: string }).kind === 'continuum-memory') ?? []
         expect(secondTurnRecall).toHaveLength(1)
         const original = memoryRecords[0]?.data['record'] as { id: string; content: string }
-        expect(original.content).toBe('迁移安排在周五。')
+        const tail = scenario.name === 'continuum-tail-recall'
+        const expectedExcerpt = tail ? 'Quartzlaunch release code MERIDIAN-731.' : '迁移安排在周五。'
+        expect(original.content).toContain(expectedExcerpt)
+        if (tail) expect(Buffer.byteLength(original.content, 'utf8')).toBeGreaterThan(2048)
+        else expect(original.content).toBe(expectedExcerpt)
         const fact = events.find(event => event.type === 'user/message'
           && (event.data['source'] as { kind: string }).kind === 'user')
         expect(original).toMatchObject({ sourceRefs: [{ sessionId: results[0]?.sessionId, eventSeq: fact?.seq }] })
         expect(secondTurnRecall[0]?.data).toMatchObject({
           source: { kind: 'continuum-memory', recordIds: expect.arrayContaining([original.id]) },
-          content: [{ type: 'text', text: expect.stringContaining(`[memory:${original.id}] 迁移安排在周五。`) }],
+          content: [{ type: 'text', text: expect.stringContaining(expectedExcerpt) }],
         })
+        const recall = secondTurnRecall[0]?.data as { content: Array<{ text: string }> }
+        const recallText = recall.content.map(block => block.text).join('\n')
+        expect(recallText).toContain(`[memory:${JSON.stringify(original.id)} revision:1`)
+        expect(recallText).toContain(`sources:${JSON.stringify([{ sessionId: results[0]?.sessionId, eventSeq: fact?.seq }])}`)
+        expect(Buffer.byteLength(recallText, 'utf8')).toBeLessThanOrEqual(8192)
+        if (tail) {
+          expect(recallText).toContain('omitted:before')
+          expect(recallText).not.toContain('背景资料。🌿')
+          expect(recallText).not.toContain('\uFFFD')
+        }
         const selected = [...memoryRecords, ...recalled].sort((a, b) => a.seq - b.seq)
         const selectedSeqs = new Set(selected.map(event => event.seq))
         expect(records(ordered[0]!.content).filter(event => selectedSeqs.has(event.seq as number))).toEqual(selected)
@@ -1109,7 +1142,7 @@ describe('TypeScript SDK snapshots over the jsonrpc runtime', () => {
         }
       }
       if (assertions.expectedFinalResponse !== undefined) {
-        expect(results.at(-1)?.finalResponse, `${scenario.name}: final response`).toBe(assertions.expectedFinalResponse)
+        expect(results.at(-1)?.finalResponse, `${scenario.name}: final response; ${JSON.stringify(results.at(-1)?.events.filter(event => event.type === 'turn/end'))}`).toBe(assertions.expectedFinalResponse)
         const parent = ordered[0]
         if (parent === undefined) throw new Error(`${scenario.name}: no primary session log`)
         const turnEnds = records(parent.content).filter(record => record.type === 'turn/end')

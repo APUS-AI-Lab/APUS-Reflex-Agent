@@ -212,7 +212,7 @@ async function writeAtomically(path: string, text: string): Promise<void> {
 async function readMarketState(profileDirectory: string): Promise<{ state: Record<string, unknown>; disabled: string[] }> {
   const text = await readTextIfPresent(join(profileDirectory, MARKET_STATE))
   if (text === undefined) return { state: {}, disabled: [] }
-  const state = JSON.parse(text) as unknown
+  const state: unknown = JSON.parse(text)
   if (state === null || typeof state !== 'object' || Array.isArray(state)) {
     throw new Error('market state is not a JSON object')
   }

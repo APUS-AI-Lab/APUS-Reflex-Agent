@@ -52,7 +52,7 @@ export interface SdkEncodedImageBlock {
 /** SDK prompt input: ordinary durable blocks plus inline images awaiting admission. */
 export type SdkPromptContentBlock = ContentBlock | SdkEncodedImageBlock
 
-/** Durable enqueue receipt for one prompt. */
+/** Enqueue receipt for one prompt; it does not confirm a storage flush. */
 export interface SessionPromptResult {
   /** Identity of the queued user message. */
   messageId: string

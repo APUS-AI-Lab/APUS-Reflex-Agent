@@ -337,8 +337,10 @@ describe('Session file uploads', () => {
     const { controller, agent, followup } = await uploadHarness()
     const request = promptRequest([{ type: 'text', text: 'once' }])
     await controller.prompt(request)
-    agent.inbox.append('next-turn', followup.mock.calls[0]?.[0] as UserMessage)
-    await expect(controller.prompt(request)).resolves.toEqual({ accepted: true })
+    const message = followup.mock.calls[0]?.[0] as UserMessage
+    agent.inbox.append('next-turn', message)
+    agent.session.append('agent/inbox/spliced', { target: 'next-turn', start: 0, inserted: [message] })
+    await expect(controller.prompt(request)).resolves.toMatchObject({ accepted: true, storage: { state: 'unavailable', messageId: message.id } })
     expect(followup).toHaveBeenCalledOnce()
   })
 
@@ -351,11 +353,11 @@ describe('Session file uploads', () => {
       source: { kind: 'user' },
     }), { surfaceOp: 'append' })
     agent.session.append('user/message', createUserMessage({
-      content: [{ type: 'text', text: 'accepted' }],
+      content: request.content.filter(part => part.type === 'text'),
       source: { kind: 'user', rpcId: request.requestId },
     }), { surfaceOp: 'append' })
 
-    await expect(controller.prompt(request)).resolves.toEqual({ accepted: true })
+    await expect(controller.prompt(request)).resolves.toMatchObject({ accepted: true, storage: { state: 'unavailable' } })
     expect(followup).not.toHaveBeenCalled()
   })
 
