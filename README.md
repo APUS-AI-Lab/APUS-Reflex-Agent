@@ -14,9 +14,9 @@ APUS separates model reasoning from execution, permissions and durable Session h
 
 The repository is currently private: Release downloads require repository access until an administrator makes it public.
 
-The latest preview, [v0.1.2](https://github.com/APUS-AI-Lab/APUS-Reflex-Agent/releases/tag/v0.1.2), provides Apple Silicon Full/Lite DMG and ZIP packages, Intel Full/Lite DMG and ZIP packages, and Linux x64 Full/Lite Web archives. Linux desktop DEB and Windows packages for this version remain pending qualification. Download only assets actually listed on the release page.
+The latest preview, [v0.1.3](https://github.com/APUS-AI-Lab/APUS-Reflex-Agent/releases/tag/v0.1.3), has Full and Lite editions. Installers are published as each platform completes qualification; see the release page for available targets and download files.
 
-macOS requires **15.0 or later**. The v0.1.2 Mac bundles pass strict signature-integrity checks but use ad-hoc signatures without Apple Developer ID signing or notarization. Installation qualification does not establish real-model task completion or recall quality; see the [release qualification](https://github.com/APUS-AI-Lab/APUS-Reflex-Agent/releases/tag/v0.1.2) for tested environments and limitations.
+macOS requires **15.0 or later**. Mac preview bundles undergo strict signature-integrity checks but use ad-hoc signatures without Apple Developer ID signing or notarization. Installation qualification does not establish real-model task completion or recall quality; see the [release qualification](https://github.com/APUS-AI-Lab/APUS-Reflex-Agent/releases/tag/v0.1.3) for tested environments and limitations.
 
 GitHub's “Source code” archives are source files, not installers. The Linux Web archive bundles Node and the backend, listens on localhost and needs no Electron; see the [Web guide](docs/release-web-runtime/README.md).
 
