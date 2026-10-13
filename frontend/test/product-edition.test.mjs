@@ -198,7 +198,7 @@ describe('pinned electron-builder production file matching', () => {
     for (const relative of ['src/main/index.ts', 'test/runtime.test.ts', 'docs/architecture.md', '.npmrc', '.build/licenses/CHROMIUM-LICENSES.html']) {
       expect(accepted(root, application, relative), relative).toBe(false)
     }
-    expect(main.some(item => item.to.endsWith('node_modules/dsh-ppt'))).toBe(true)
+    expect(main.some(item => item.to === join(root, 'packed', 'node_modules', 'dsh-ppt'))).toBe(true)
     expect(accepted(root, dependencies, 'node_modules/ws/index.js')).toBe(true)
     expect(accepted(root, dependencies, 'node_modules/ws/index.js.map')).toBe(false)
     for (const relative of ['node_modules/@deepseek-ai/libreoffice-kit/lib/index.js', 'node_modules/@deepseek-ai/libreoffice-kit-wasm/engine.wasm', `node_modules/@deepseek-ai/libreoffice-kit-${platform}-${arch}/engine`]) {

@@ -8,6 +8,7 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
 import productEdition from '../frontend/scripts/product-edition.cjs'
+import { verifyReflexExecution, verifyReflexSettings } from './product-reflex-smoke.mjs'
 import { webAssetNames, digest, linuxNativePackage, payloadFiles, verifyWebRuntime } from './product-web-package.mjs'
 
 const execute = promisify(execFile)
@@ -202,6 +203,8 @@ export async function qualify(archive, reports, edition = process.env.APUS_PRODU
     }
     let page = await start()
     await verifyWorkspace(page)
+    report.reflexCapabilities = { initial: await verifyReflexExecution(page) }
+    report.stages.push('reflex-input-judgment-and-skill-selection-loaded')
     await writeFile(join(workspace, 'qualification.txt'), 'workspace-retained', { flag: 'wx' })
     report.stages.push('default-workspace-created-and-composer-editable')
     await page.getByText(`${build.version}-${build.sourceRevision.slice(0, 7)}`, { exact: true }).waitFor()
@@ -216,21 +219,8 @@ export async function qualify(archive, reports, edition = process.env.APUS_PRODU
     await dialog.getByRole('button', { name: 'Add model provider', exact: true }).waitFor()
     await page.screenshot({ path: join(reports, 'models.png') })
     await dialog.getByRole('button', { name: 'Reflex configuration', exact: true }).click()
-    const mode = dialog.locator('#reflex-mode')
-    await mode.waitFor({ state: 'visible' })
-    const options = await mode.getByRole('option').allTextContents()
-    if (JSON.stringify(options) !== JSON.stringify(['APUS Reflex limited-time free endpoint', 'Custom parameters'])) {
-      throw new Error('Reflex connection choices differ from the supported trial and custom modes.')
-    }
-    await mode.selectOption('trial')
-    await dialog.getByText('Service protocol: Reflex', { exact: true }).waitFor()
-    await dialog.locator('#reflex-endpoint').waitFor({ state: 'detached' })
-    if (await dialog.locator('#reflex-api-key, #reflex-protocol').count() !== 0) {
-      throw new Error('The trial mode exposes a credential field or protocol selector.')
-    }
-    await dialog.getByRole('switch', { name: 'Continuum memory', exact: true, disabled: false }).waitFor()
+    await verifyReflexSettings(dialog)
     report.stages.push('reflex-trial-custom-choices-and-memory-control')
-    await mode.selectOption('custom')
     await dialog.locator('#reflex-endpoint').fill('https://qualification.invalid')
     await dialog.locator('#reflex-model').fill('qualification-only')
     await dialog.getByRole('button', { name: 'Save', exact: true }).click()
@@ -240,6 +230,8 @@ export async function qualify(archive, reports, edition = process.env.APUS_PRODU
       if (Date.now() > savedDeadline) throw new Error('Reflex settings did not finish saving.')
       await pause(100)
     }
+    report.reflexCapabilities.saved = await verifyReflexExecution(page)
+    report.stages.push('reflex-execution-retained-after-settings-save')
     await page.screenshot({ path: join(reports, 'reflex.png') })
     report.stages.push('fresh-profile-http-models-and-reflex-save')
     await page.close()
@@ -257,6 +249,8 @@ export async function qualify(archive, reports, edition = process.env.APUS_PRODU
       || await dialog.locator('#reflex-model').inputValue() !== 'qualification-only'
       || await dialog.locator('#reflex-mode').inputValue() !== 'custom') throw new Error('Web profile settings did not survive restart.')
     await dialog.getByText('Service protocol: Reflex', { exact: true }).waitFor()
+    report.reflexCapabilities.restarted = await verifyReflexExecution(page)
+    report.stages.push('reflex-execution-retained-after-restart')
     await page.screenshot({ path: join(reports, 'restart.png') })
     await page.close()
     await stop()

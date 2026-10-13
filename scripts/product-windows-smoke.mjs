@@ -9,6 +9,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import { parseArgs, promisify } from 'node:util'
 import { basename } from 'node:path'
 import { readInstallerBuild, verifyInstalledEdition, verifyInstalledEditionFiles } from './product-installer-metadata.mjs'
+import { verifyReflexExecution, verifyReflexSettings } from './product-reflex-smoke.mjs'
 
 const execute = promisify(execFile)
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -80,7 +81,14 @@ export function failureDiagnostic(error) {
     ...(error.observationFailure ? { observationFailure: error.observationFailure } : {}) }
 }
 
-/** Wait for an acquired process while sampling its owned descendants; always await its exit. */
+/** Sample a child until completion; observation failure terminates a live child, but preserves an already observed failed exit.
+ * @param {string} command Executable path.
+ * @param {string[]} args Executable arguments.
+ * @param {import('node:child_process').ExecFileOptions} options execFile options, including the command timeout.
+ * @param {(child: import('node:child_process').ChildProcess) => void} acquired Receives the owned process immediately after creation.
+ * @param {() => Promise<void>} sample Observes descendants while the command is pending.
+ * @returns {Promise<{stdout: string | Buffer, stderr: string | Buffer}>} Output after the process and output streams have closed.
+ */
 export async function runTrackedProcess(command, args, options, acquired, sample) {
   const pending = execute(command, args, options)
   let settled = false
@@ -88,18 +96,19 @@ export async function runTrackedProcess(command, args, options, acquired, sample
   let result
   const completed = pending.then(value => { result = value }, error => { failure = error }).finally(() => { settled = true })
   try {
-    acquired(pending.child.pid)
+    acquired(pending.child)
     while (!settled) {
       await sample()
       if (!settled) await Promise.race([completed, pause(500)])
     }
   } catch (error) {
-    const commandFailure = settled && failure
-    if (commandFailure) {
-      commandFailure.observationFailure = failureDiagnostic(error)
-      throw commandFailure
+    const exited = settled || pending.child.exitCode !== null || pending.child.signalCode !== null
+    if (!exited) pending.child.kill('SIGKILL')
+    await completed
+    if (exited && failure) {
+      failure.observationFailure = failureDiagnostic(error)
+      throw failure
     }
-    if (!settled) pending.child.kill('SIGKILL')
     throw error
   } finally { await completed }
   if (failure) throw failure
@@ -171,7 +180,7 @@ async function run(installer, reportDirectory, expectedSource = process.env.GITH
   const sample = async () => {
     known = ownedProcessIds(await observe(), known)
   }
-  const tracked = (command, args, options) => runTrackedProcess(command, args, options, pid => {
+  const tracked = (command, args, options) => runTrackedProcess(command, args, options, ({ pid }) => {
     if (pid) known = [...new Set([...known, pid])]
     if (command === installer && report.installation) report.installation.rootPid = pid
   }, async () => {
@@ -258,6 +267,8 @@ async function run(installer, reportDirectory, expectedSource = process.env.GITH
     let page = await launch()
     await page.screenshot({ path: join(reportDirectory, 'home.png') })
     report.stages.push('fresh-profile-home')
+    report.reflexCapabilities = { initial: await verifyReflexExecution(page) }
+    report.stages.push('reflex-execution-modules-ready')
     await page.getByText(/^(设置|Settings)$/).last().click()
     const escapedVersion = build.version.replaceAll('.', '\\.')
     const versionLabel = page.getByText(new RegExp(`^(当前版本：|Current version: )${escapedVersion}$`))
@@ -265,10 +276,16 @@ async function run(installer, reportDirectory, expectedSource = process.env.GITH
     await versionLabel.scrollIntoViewIfNeeded()
     await page.screenshot({ path: join(reportDirectory, 'version.png') })
     report.stages.push('product-version-visible')
+    await page.getByRole('button', { name: /^(Reflex 配置|Reflex configuration)$/u, exact: true }).click()
+    await verifyReflexSettings(page.getByRole('dialog'))
+    await page.screenshot({ path: join(reportDirectory, 'reflex-settings.png') })
+    report.stages.push('reflex-settings-verified')
     await close()
     report.stages.push('first-exit-quiescent')
     page = await launch()
     await page.screenshot({ path: join(reportDirectory, 'restart.png') })
+    report.reflexCapabilities.restarted = await verifyReflexExecution(page)
+    report.stages.push('reflex-execution-modules-ready-after-restart')
     await close()
     report.stages.push('restart-home-and-exit-quiescent')
     const uninstaller = (await readdir(installation)).find(name => /^Uninstall .*\.exe$/i.test(name))

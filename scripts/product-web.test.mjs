@@ -2,6 +2,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { createServer } from 'node:http'
+import { createRequire } from 'node:module'
 import { execFileSync } from 'node:child_process'
 import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -9,6 +10,7 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { digest, webAssetNames, linuxNativePackage, payloadFiles, verifyWebRuntime, verifyProductClientBuild, webProfilePatch } from './product-web-package.mjs'
 import { launchOptions } from './product-web-launch.mjs'
+import { verifyReflexExecution, verifyReflexExecutionResponse } from './product-reflex-smoke.mjs'
 import { readinessUrl, redact, smokeEnvironment, verifyPayload, verifyPublishedInventory, verifyHttpAuthentication, verifySandboxExecution } from './product-web-smoke.mjs'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
@@ -239,4 +241,53 @@ test('Web edition names cannot collide and a runtime cannot qualify as the other
   const runtime = { edition: 'lite', mode: 'deployed', sourceDirty: false, sourceRevision: 'revision', platform: 'linux', arch: 'x64', entry: 'node_modules/@deepseek-ai/dsh/lib/bin.js' }
   verifyWebRuntime(runtime, 'revision', 'lite')
   assert.throws(() => verifyWebRuntime(runtime, 'revision', 'full'), /same-commit/)
+})
+
+
+test('Web qualification requires live Skill execution and leaves other System3 capabilities inactive', () => {
+  const capabilities = ['entryRouting', 'codexSupervision', 'contextMemory', 'skillSelection']
+    .map(id => ({ id, implemented: true, enabled: id === 'skillSelection' }))
+  const envelope = value => ({ type: 'server-response', rpcId: 'fixture', result: { ok: true, value: { capabilities: value } } })
+  assert.deepEqual(verifyReflexExecutionResponse(envelope(capabilities), 'fixture'), capabilities)
+  for (const response of [undefined, { ...envelope(capabilities), type: 'client-request' },
+    { ...envelope(capabilities), rpcId: 'other' }, { ...envelope(capabilities), result: { ok: false } }, envelope(undefined)]) {
+    assert.throws(() => verifyReflexExecutionResponse(response, 'fixture'), /RPC did not succeed/)
+  }
+  for (const invalid of [[], capabilities.filter(value => value.id !== 'skillSelection'),
+    [...capabilities, capabilities.at(-1)],
+    capabilities.map(value => ({ ...value, implemented: false, enabled: false })),
+    capabilities.map(value => ({ ...value, enabled: false })),
+    capabilities.map(value => ({ ...value, enabled: true }))]) {
+    assert.throws(() => verifyReflexExecutionResponse(envelope(invalid), 'fixture'), /differs from the product profile/)
+  }
+})
+
+
+test('Reflex execution qualification sends an authenticated read-only Host request', async t => {
+  const requests = []
+  const capabilities = ['entryRouting', 'codexSupervision', 'contextMemory', 'skillSelection']
+    .map(id => ({ id, implemented: true, enabled: id === 'skillSelection' }))
+  const server = createServer(async (request, response) => {
+    const chunks = []
+    for await (const chunk of request) chunks.push(chunk)
+    const body = JSON.parse(Buffer.concat(chunks).toString())
+    requests.push({ path: request.url, method: request.method, cookie: request.headers.cookie, body })
+    response.writeHead(200, { 'content-type': 'application/json' })
+    response.end(JSON.stringify({ type: 'server-response', rpcId: body.rpcId, result: { ok: true, value: { capabilities } } }))
+  })
+  t.after(async () => {
+    server.closeAllConnections()
+    await new Promise((done, reject) => server.close(error => error ? reject(error) : done()))
+  })
+  await new Promise(done => server.listen(0, '127.0.0.1', done))
+  const { request } = createRequire(join(root, 'apps/web/package.json'))('playwright')
+  const context = await request.newContext({ storageState: { cookies: [{ name: 'dsh', value: 'fixture',
+    domain: '127.0.0.1', path: '/', expires: -1, httpOnly: true, secure: false, sameSite: 'Lax' }], origins: [] } })
+  t.after(() => context.dispose())
+  const page = { request: context, url: () => `http://127.0.0.1:${server.address().port}/` }
+  assert.deepEqual(await verifyReflexExecution(page), capabilities)
+  assert.equal(requests.length, 1)
+  assert.deepEqual(requests[0], { path: '/api/reflex/readStatus', method: 'POST', cookie: 'dsh=fixture',
+    body: { type: 'client-request', rpcId: requests[0].body.rpcId, method: 'reflex/readStatus', payload: { args: {} } } })
+  assert.match(requests[0].body.rpcId, /^[0-9a-f-]{36}$/)
 })

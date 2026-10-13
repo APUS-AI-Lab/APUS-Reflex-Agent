@@ -3,6 +3,7 @@ import { readFile, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import productEdition from './product-edition.cjs'
+import { system3ProductPatch } from './system3-product-profile.mjs'
 
 const appRoot = join(dirname(fileURLToPath(import.meta.url)), '..')
 
@@ -22,26 +23,7 @@ export async function generateSystem3Patch(stage, { sourceRoot = join(appRoot, '
   const desktop = await readFile(join(appRoot, 'build/dsh-desktop.patch.yml'), 'utf8')
   await writeFile(join(stage, 'desktop.patch.yml'), `${desktop.trimEnd()}
 
-# Skill advice uses the configured Reflex provider; unavailable decisions preserve native execution.
-- insert:
-    - id: ui-system3
-      name: ${JSON.stringify(system3Ui)}
-    - id: system3
-      name: ${JSON.stringify(system3)}
-      config:
-        privacyMode: controlled
-        approvedRemoteIds: [jev]
-        approvedRemoteDataClasses: [workspace]
-        jevRouteId: jev
-        jevExecutionDomain: network
-        skillSelection:
-          sessionDataClasses: [workspace]
-          minConfidence: 0.5
-          maxInputBytes: 16000
-          maxContentBytes: 12000
-          maxCandidates: 15
-          deadlineMs: 3000
-
+${system3ProductPatch({ system3Ui, system3 }).trimEnd()}
 # Remote session export is opt-in for the APUS desktop product.
 - id: session-log-deepseek
   config:

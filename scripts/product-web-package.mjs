@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url'
 import dependencyInventory from '../frontend/scripts/runtime-dependency-inventory.cjs'
 import productEdition from '../frontend/scripts/product-edition.cjs'
 import { checkRelease } from './product-release.mjs'
+import { system3ProductPatch } from '../frontend/scripts/system3-product-profile.mjs'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
 const json = file => JSON.parse(readFileSync(file, 'utf8'))
@@ -20,10 +21,7 @@ export function webAssetNames(edition = 'full') {
 export const linuxNativePackage = 'node_modules/@deepseek-ai/node-addon-system-linux-x64'
 
 /** Product-only profile additions; the launcher supplies an absolute persistent DSH_HOME. */
-export const webProfilePatch = `- insert:
-    - id: ui-system3
-      name: "@deepseek-ai/dsh-experimental-client-ui-system3"
-- id: session-log-deepseek
+export const webProfilePatch = `${system3ProductPatch()}- id: session-log-deepseek
   config:
     enabled: false
 - id: ui-settings-account
@@ -92,6 +90,7 @@ export function packageWeb(base = root, edition = process.env.APUS_PRODUCT_EDITI
   for (const path of [runtime.entry, 'product-edition.patch.yml', 'node_modules/@deepseek-ai/dsh-web-app/lib/index.js',
     'node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html',
     'node_modules/@deepseek-ai/dsh-experimental-client-ui-system3/lib/client.js',
+    'node_modules/@deepseek-ai/dsh-experimental-system3/lib/index.js',
     'node_modules/@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin/lib/index.js',
     `${linuxNativePackage}/bin/landlock-run`, `${linuxNativePackage}/bin/glibc/system.node`,
     `${linuxNativePackage}/bin/musl/system.node`]) {

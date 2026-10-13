@@ -9,6 +9,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import { parseArgs, promisify } from 'node:util'
 import { basename } from 'node:path'
 import { readInstallerBuild, verifyInstalledEdition, verifyInstalledEditionFiles } from './product-installer-metadata.mjs'
+import { verifyReflexExecution, verifyReflexSettings } from './product-reflex-smoke.mjs'
 
 const execute = promisify(execFile)
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -272,16 +273,24 @@ async function run(installer, reportDirectory, expectedSource = process.env.GITH
     let page = await launch()
     await page.screenshot({ path: join(reportDirectory, 'home.png') })
     report.stages.push('fresh-profile-home-with-renderer-sandbox')
+    report.reflexCapabilities = { initial: await verifyReflexExecution(page) }
+    report.stages.push('reflex-execution-modules-ready')
     await page.getByText(/^(设置|Settings)$/).last().click()
     const versionLabel = page.getByText(new RegExp(`^(当前版本：|Current version: )${build.version.replaceAll('.', '\\.')}$`))
     await versionLabel.waitFor({ timeout: 20_000 })
     await versionLabel.scrollIntoViewIfNeeded()
     await page.screenshot({ path: join(reportDirectory, 'version.png') })
     report.stages.push('product-version-visible')
+    await page.getByRole('button', { name: /^(Reflex 配置|Reflex configuration)$/u, exact: true }).click()
+    await verifyReflexSettings(page.getByRole('dialog'))
+    await page.screenshot({ path: join(reportDirectory, 'reflex-settings.png') })
+    report.stages.push('reflex-settings-verified')
     await close()
     report.stages.push('first-exit-quiescent')
     page = await launch()
     await page.screenshot({ path: join(reportDirectory, 'restart.png') })
+    report.reflexCapabilities.restarted = await verifyReflexExecution(page)
+    report.stages.push('reflex-execution-modules-ready-after-restart')
     await close()
     report.stages.push('restart-home-and-exit-quiescent')
     await sudo(['apt-get', 'purge', '-y', packageName])

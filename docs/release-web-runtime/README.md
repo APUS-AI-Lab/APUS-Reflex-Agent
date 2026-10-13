@@ -19,7 +19,7 @@ Choose `full` or `lite` for `{edition}`. Full includes the Office conversion eng
 
 Data defaults to `$XDG_DATA_HOME/apus-reflex-web`, or `~/.local/share/apus-reflex-web` when `XDG_DATA_HOME` is unset. Set `DSH_HOME` or use `./start.sh --data-dir /absolute/path` to select another directory. Restarting with that same directory restores the profile, settings, credentials, and sessions. Keep a backup before upgrading. Replace the extracted application directory to upgrade; do not delete your data directory.
 
-**Settings → Reflex model configuration** configures the optional Jev decision service. Choose OpenJev for APUS Reflex or Typesafe for a Typesafe service, then enter the endpoint and model supplied by your provider. Saving configuration does not test connectivity; use the connection-test action explicitly. Connecting Jev does not automatically enable advanced routing, supervision, or memory policies.
+**Settings → Reflex configuration** offers the APUS Reflex limited-time free endpoint and custom parameters, using the Reflex protocol. The preset needs deployment-provided credentials; installers contain no shared key. This page also contains the Continuum memory switch. Test the connection explicitly before saving; see the [configuration guide](../feat-integrated-product/configuration.md). Advanced routing, supervision and memory policies have separate configuration.
 
 The server can start before any provider credentials are configured. A model task cannot succeed until a usable provider is configured. Installing additional plugins or invoking development tools may require software beyond this archive.
 
