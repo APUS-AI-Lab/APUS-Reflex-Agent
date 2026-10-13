@@ -60,11 +60,11 @@ Session 事件使用现有 persistence backend；完成 `ctx.sessions.flush(sess
 
 #### 模型看到的内容
 
-挂载 `installContinuumMemoryContext` 后，模型看到由 active 记录和当前用户文本生成的有界 `continuum-memory` recall 消息。
+挂载 `installContinuumMemoryContext` 后，模型看到由 active 记录和当前用户文本生成的有界 `continuum-memory` recall 消息。 每条摘录保留记录正文中首个命中词附近的原样窗口；仅 kind 或 scope 命中时使用前缀。摘录包含记录 ID、revision、来源事件引用、记录正文内的 UTF-16 区间和省略方向标记；该区间不表示来源事件内的位置。selector 筛选保留相同元数据。
 
 #### Token effect
 
-recall 消息消耗配置的字节预算并进入同一个模型请求；不会额外调用模型。
+`maxExcerptBytes` 限制每条摘录；`maxTotalBytes` 限制包含标题、元数据和分隔符的完整召回正文。检索会缩短摘录以满足预算；连元数据和一个字符都放不下时省略该候选。上下文消费者不会额外调用模型；可选 Jev selector 的请求成本单独计算。
 
 #### KV Cache effect
 

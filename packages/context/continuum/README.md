@@ -58,11 +58,11 @@ Read the [Continuum architecture and acceptance design](../../../docs/feat-lossl
 
 #### What the model sees
 
-When `installContinuumMemoryContext` is mounted, the model sees a bounded `continuum-memory` recall message built from active records and the current user text.
+When `installContinuumMemoryContext` is mounted, the model sees a bounded `continuum-memory` recall message built from active records and the current user text. Each excerpt is an unchanged window around the first matching term in the record content, or a prefix when only the kind or scope matches. It includes the record ID, revision, source event references, UTF-16 range within the record content, and omitted-side markers. These offsets do not identify positions within the source event. Selector filtering preserves the same metadata.
 
 #### Token effect
 
-The recall message consumes the configured byte budget in the same model request; no separate model call is made.
+`maxExcerptBytes` bounds each excerpt; `maxTotalBytes` bounds the complete recall text, including its heading, metadata and separators. Retrieval shortens excerpts to fit or omits a candidate when its metadata and a character cannot fit. The context consumer adds no model call; an optional Jev selector has its own request cost.
 
 #### KV Cache effect
 

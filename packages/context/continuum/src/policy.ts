@@ -1,6 +1,6 @@
 import type { MemoryRetrievalConfig, MemoryWorkingSet } from './retrieval.ts'
 import { retrieveMemoryWorkingSet } from './retrieval.ts'
-import { MemoryRecordStore, type MemoryId, type MemoryRecord } from './records.ts'
+import type { MemoryRecordStore, MemoryId, MemoryRecord } from './records.ts'
 import { MemoryRecordIndex } from './memory-index.ts'
 import { buildContinuumSummaryView, zoomContinuumSummaryView, type ContinuumSummarySource } from './summary-view.ts'
 import type { ContinuumSummaryTreeConfig, ContinuumSummaryTreeNode } from './summary-tree.ts'
@@ -97,11 +97,7 @@ export class ContinuumMemoryController {
   read(ticket: ContinuumMemoryReadTicket, config: MemoryRetrievalConfig, query: string): MemoryWorkingSet | undefined {
     if (!this.isCurrent(ticket)) return undefined
     const authorized = new Set(ticket.principal.scopes)
-    const visible = new MemoryRecordStore()
-    for (const record of this.store.snapshot()) {
-      if (record.status !== 'active' || !authorized.has(record.scope)) continue
-      copyRecord(visible, record)
-    }
+    const visible = { snapshot: () => this.store.snapshot().filter(record => authorized.has(record.scope)) }
     return retrieveMemoryWorkingSet(visible, { ...config, index: this.index }, query)
   }
 
@@ -171,8 +167,4 @@ export class ContinuumMemoryController {
     this.generation += 1
     return record
   }
-}
-
-function copyRecord(target: MemoryRecordStore, record: MemoryRecord): void {
-  target.create({ id: record.id, kind: record.kind, scope: record.scope, content: record.content, sourceRefs: record.sourceRefs })
 }

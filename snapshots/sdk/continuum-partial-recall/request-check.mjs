@@ -20,7 +20,9 @@ export function apply(ctx) {
       assert.ok(memory)
       assert.ok(memory.source.recordIds.includes(originalId))
       assert.ok(memory.content.some(block => block.type === 'text'
-        && block.text.split('\n').includes(`[memory:${originalId}] 迁移安排在周五。`)))
+        && block.text.includes(`[memory:${JSON.stringify(originalId)} revision:1`)
+        && block.text.includes('迁移安排在周五。')
+        && Buffer.byteLength(block.text, 'utf8') <= 8192))
     }
     return next()
   })

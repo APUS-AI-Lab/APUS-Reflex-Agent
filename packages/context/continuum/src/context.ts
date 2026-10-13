@@ -3,7 +3,7 @@ import type { Agent, PreStepDecision } from '@deepseek-ai/dsh-agent'
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import type { ContentBlock, UserMessage } from '@deepseek-ai/dsh-llm'
 import type { MemoryRecordStore } from './records.ts'
-import { retrieveMemoryWorkingSet, type MemoryRetrievalConfig } from './retrieval.ts'
+import { renderMemoryWorkingSet, retrieveMemoryWorkingSet, type MemoryRetrievalConfig } from './retrieval.ts'
 import type { ContinuumMemoryController, ContinuumMemoryPrincipal } from './policy.ts'
 
 /** Model-visible source for one bounded Continuum memory snapshot. */
@@ -90,11 +90,7 @@ export function installContinuumMemoryContext(
     signal.throwIfAborted()
     const workingSet = retrieveMemoryWorkingSet(store, config, query)
     if (workingSet.candidates.length === 0) return decision
-    const message = createUserMessage({
-      source: { kind: 'continuum-memory', form: 'recall', version: 1, recordIds: workingSet.candidates.map(candidate => String(candidate.id)) },
-      content: [{ type: 'text', text: `## Continuum memory\n${workingSet.text}` }],
-    })
-    return { ...decision, messages: [...decision.messages, message] }
+    return { ...decision, messages: [...decision.messages, recallMessage(workingSet)] }
   })
   const dispose = ctx.effect(() => () => {
     active = false
@@ -146,16 +142,11 @@ export function installContinuumMemoryControllerContext(
         score: candidate.score,
       })),
     }, signal)
+    signal.throwIfAborted()
     if (!isActive() || !controller.isCurrent(ticket)) return decision
     const selected = new Set(selection.selectedIds)
     const candidates = workingSet.candidates.filter(candidate => selected.has(String(candidate.id)))
-    const text = candidates.map(candidate => `[memory:${candidate.id}] ${candidate.excerpt}`).join('\n')
-    const filtered = {
-      ...workingSet,
-      candidates,
-      text,
-      bytes: new TextEncoder().encode(text).byteLength,
-    }
+    const filtered = renderMemoryWorkingSet(workingSet.query, candidates)
     if (filtered.candidates.length === 0) return decision
     return { ...decision, messages: [...decision.messages, recallMessage(filtered)] }
   })
@@ -169,7 +160,7 @@ export function installContinuumMemoryControllerContext(
 function recallMessage(workingSet: ReturnType<typeof retrieveMemoryWorkingSet>): UserMessage {
   return createUserMessage({
     source: { kind: 'continuum-memory', form: 'recall', version: 1, recordIds: workingSet.candidates.map(candidate => String(candidate.id)) },
-    content: [{ type: 'text', text: `## Continuum memory\n${workingSet.text}` }],
+    content: [{ type: 'text', text: workingSet.text }],
   })
 }
 

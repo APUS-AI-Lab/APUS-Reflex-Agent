@@ -16,7 +16,7 @@ describe('Continuum same-step context consumer', () => {
   it('appends bounded memory context to the pre-step decision with a typed source', async () => {
     const ctx = new Context()
     const store = records()
-    installContinuumMemoryContext(ctx, () => store, { maxCandidates: 2, maxExcerptBytes: 100, maxTotalBytes: 200 })
+    installContinuumMemoryContext(ctx, () => store, { maxCandidates: 2, maxExcerptBytes: 100, maxTotalBytes: 512 })
     const user = createUserMessage({ source: { kind: 'user' }, content: [{ type: 'text', text: 'When is the migration scheduled?' }] })
     const result = await agentEvents(ctx, {} as Agent).waterfall('agent/pre-step', {
       messages: [user], turn: 1, step: 1, signal: new AbortController().signal,
@@ -25,13 +25,58 @@ describe('Continuum same-step context consumer', () => {
     if (result.kind !== 'enter') return
     expect(result.messages).toHaveLength(2)
     expect(result.messages[1]?.source).toMatchObject({ kind: 'continuum-memory', form: 'recall', recordIds: ['migration'] })
-    expect(result.messages[1]?.content).toEqual([{ type: 'text', text: '## Continuum memory\n[memory:migration] Migration is scheduled Friday.' }])
+    expect(result.messages[1]?.content).toEqual([{ type: 'text', text: '## Continuum memory\n[memory:"migration" revision:1 sources:[{"sessionId":"source","eventSeq":0}] record-content-utf16:[0,30) omitted:none]\nMigration is scheduled Friday.' }])
     await ctx.fiber.dispose()
+  })
+
+  it.each(['baseline', 'controller', 'selector'] as const)('includes source metadata and header within the %s recall budget', async (kind) => {
+    const ctx = new Context()
+    onTestFinished(() => ctx.fiber.dispose())
+    const store = records()
+    store.create({ id: MemoryId('other'), kind: 'fact', scope: 'workspace', content: 'Migration checks are pending.', sourceRefs: [{ sessionId: SessionId('source'), eventSeq: SessionSeq(1) }] })
+    const controller = new ContinuumMemoryController(store, { enabled: true, mode: 'active', reflexMounted: true })
+    const bounds = { maxCandidates: 2, maxExcerptBytes: 100, maxTotalBytes: 512 }
+    if (kind === 'baseline') installContinuumMemoryContext(ctx, () => store, bounds)
+    else installContinuumMemoryControllerContext(ctx, () => controller, () => ({ scopes: ['workspace'] }), bounds,
+      kind === 'selector' ? () => ({ select: async () => ({ mode: 'active', selectedIds: ['other'], baselineIds: ['migration', 'other'], outcome: 'jev' }) }) : undefined)
+    const user = createUserMessage({ source: { kind: 'user' }, content: [{ type: 'text', text: 'Migration' }] })
+    const result = await agentEvents(ctx, {} as Agent).waterfall('agent/pre-step', {
+      messages: [user], turn: 1, step: 1, signal: new AbortController().signal,
+    }, async () => ({ kind: 'enter' as const, messages: [user] }))
+    expect(result.kind).toBe('enter')
+    if (result.kind !== 'enter') return
+    const block = result.messages[1]?.content[0]
+    expect(block?.type).toBe('text')
+    if (block?.type !== 'text') return
+    expect(new TextEncoder().encode(block.text).byteLength).toBeLessThanOrEqual(bounds.maxTotalBytes)
+    expect(block.text.match(/## Continuum memory/g)).toHaveLength(1)
+    expect(block.text).toContain('sources:[{"sessionId":"source","eventSeq":1}]')
+    expect(block.text).toContain('revision:1')
+    expect(block.text).toContain('omitted:none')
+    if (kind === 'selector') {
+      expect(block.text).not.toContain('Migration is scheduled Friday.')
+      expect(result.messages[1]?.source).toMatchObject({ recordIds: ['other'] })
+    }
+  })
+
+  it.each(['baseline', 'controller'] as const)('omits %s recall when its source metadata cannot fit', async (kind) => {
+    const ctx = new Context()
+    onTestFinished(() => ctx.fiber.dispose())
+    const store = records()
+    const bounds = { maxCandidates: 2, maxExcerptBytes: 100, maxTotalBytes: 32 }
+    const controller = new ContinuumMemoryController(store, { enabled: true, mode: 'active', reflexMounted: true })
+    if (kind === 'baseline') installContinuumMemoryContext(ctx, () => store, bounds)
+    else installContinuumMemoryControllerContext(ctx, () => controller, () => ({ scopes: ['workspace'] }), bounds)
+    const user = createUserMessage({ source: { kind: 'user' }, content: [{ type: 'text', text: 'Migration' }] })
+    const result = await agentEvents(ctx, {} as Agent).waterfall('agent/pre-step', {
+      messages: [user], turn: 1, step: 1, signal: new AbortController().signal,
+    }, async () => ({ kind: 'enter' as const, messages: [user] }))
+    expect(result.kind === 'enter' ? result.messages : []).toEqual([user])
   })
 
   it('does not inject when no per-agent store is available', async () => {
     const ctx = new Context()
-    installContinuumMemoryContext(ctx, () => undefined, { maxCandidates: 2, maxExcerptBytes: 100, maxTotalBytes: 200 })
+    installContinuumMemoryContext(ctx, () => undefined, { maxCandidates: 2, maxExcerptBytes: 100, maxTotalBytes: 512 })
     const user = createUserMessage({ source: { kind: 'user' }, content: [{ type: 'text', text: 'Recall anything.' }] })
     const result = await agentEvents(ctx, {} as Agent).waterfall('agent/pre-step', {
       messages: [user], turn: 1, step: 1, signal: new AbortController().signal,
@@ -43,7 +88,7 @@ describe('Continuum same-step context consumer', () => {
   it('keeps permission and switch checks on the same-step consumer', async () => {
     const ctx = new Context()
     const controller = new ContinuumMemoryController(records(), { enabled: true, mode: 'shadow', reflexMounted: true })
-    installContinuumMemoryControllerContext(ctx, () => controller, () => ({ scopes: ['workspace'] }), { maxCandidates: 2, maxExcerptBytes: 100, maxTotalBytes: 200 })
+    installContinuumMemoryControllerContext(ctx, () => controller, () => ({ scopes: ['workspace'] }), { maxCandidates: 2, maxExcerptBytes: 100, maxTotalBytes: 512 })
     const user = createUserMessage({ source: { kind: 'user' }, content: [{ type: 'text', text: 'When is the migration scheduled?' }] })
     const result = await agentEvents(ctx, {} as Agent).waterfall('agent/pre-step', {
       messages: [user], turn: 1, step: 1, signal: new AbortController().signal,
@@ -65,7 +110,7 @@ describe('Continuum same-step context consumer', () => {
       ctx,
       () => controller,
       () => ({ scopes: ['workspace'] }),
-      { maxCandidates: 2, maxExcerptBytes: 100, maxTotalBytes: 200 },
+      { maxCandidates: 2, maxExcerptBytes: 100, maxTotalBytes: 512 },
       () => ({
         select: async (_agent, input) => ({
           mode: 'active',
@@ -96,12 +141,12 @@ describe('Continuum same-step context consumer', () => {
     const dispose = stage === 'baseline' ? installContinuumMemoryContext(
       ctx,
       () => { resolvedControllers += 1; return records() },
-      { maxCandidates: 2, maxExcerptBytes: 100, maxTotalBytes: 200 },
+      { maxCandidates: 2, maxExcerptBytes: 100, maxTotalBytes: 512 },
     ) : installContinuumMemoryControllerContext(
       ctx,
       () => { resolvedControllers += 1; return controller },
       () => ({ scopes: ['workspace'] }),
-      { maxCandidates: 2, maxExcerptBytes: 100, maxTotalBytes: 200 },
+      { maxCandidates: 2, maxExcerptBytes: 100, maxTotalBytes: 512 },
       stage === 'next' ? undefined : () => ({ select: async () => {
         entered.resolve(undefined)
         await released.promise
@@ -144,7 +189,7 @@ describe('Continuum same-step context consumer', () => {
     const ctx = new Context()
     onTestFinished(() => ctx.fiber.dispose())
     const unexpected = (): never => { throw new Error('Rejected pre-step resolved memory') }
-    const bounds = { maxCandidates: 2, maxExcerptBytes: 100, maxTotalBytes: 200 }
+    const bounds = { maxCandidates: 2, maxExcerptBytes: 100, maxTotalBytes: 512 }
     if (kind === 'baseline') installContinuumMemoryContext(ctx, unexpected, bounds)
     else installContinuumMemoryControllerContext(ctx, unexpected, () => ({ scopes: ['workspace'] }), bounds)
     const rejection = { kind: 'reject' as const }
@@ -158,7 +203,7 @@ describe('Continuum same-step context consumer', () => {
     const ctx = new Context()
     onTestFinished(() => ctx.fiber.dispose())
     const store = records()
-    const bounds = { maxCandidates: 2, maxExcerptBytes: 100, maxTotalBytes: 200 }
+    const bounds = { maxCandidates: 2, maxExcerptBytes: 100, maxTotalBytes: 512 }
     if (kind === 'baseline') installContinuumMemoryContext(ctx, () => store, bounds)
     else installContinuumMemoryControllerContext(ctx,
       () => new ContinuumMemoryController(store, { enabled: true, mode: 'active', reflexMounted: true }),
@@ -177,7 +222,7 @@ describe('Continuum same-step context consumer', () => {
     const ctx = new Context()
     onTestFinished(() => ctx.fiber.dispose())
     const store = records()
-    const bounds = { maxCandidates: 2, maxExcerptBytes: 100, maxTotalBytes: 200 }
+    const bounds = { maxCandidates: 2, maxExcerptBytes: 100, maxTotalBytes: 512 }
     if (kind === 'baseline') installContinuumMemoryContext(ctx, () => store, bounds)
     else installContinuumMemoryControllerContext(ctx,
       () => new ContinuumMemoryController(store, { enabled: true, mode: 'active', reflexMounted: true }),
@@ -192,7 +237,7 @@ describe('Continuum same-step context consumer', () => {
   it('leaves input unchanged when the Agent has no controller', async () => {
     const ctx = new Context()
     onTestFinished(() => ctx.fiber.dispose())
-    installContinuumMemoryControllerContext(ctx, () => undefined, () => ({ scopes: ['workspace'] }), { maxCandidates: 2, maxExcerptBytes: 100, maxTotalBytes: 200 })
+    installContinuumMemoryControllerContext(ctx, () => undefined, () => ({ scopes: ['workspace'] }), { maxCandidates: 2, maxExcerptBytes: 100, maxTotalBytes: 512 })
     const user = createUserMessage({ source: { kind: 'user' }, content: [{ type: 'text', text: 'Migration' }] })
     const result = await agentEvents(ctx, {} as Agent).waterfall('agent/pre-step', {
       messages: [user], turn: 1, step: 1, signal: new AbortController().signal,
@@ -205,13 +250,30 @@ describe('Continuum same-step context consumer', () => {
     onTestFinished(() => ctx.fiber.dispose())
     const controller = new ContinuumMemoryController(records(), { enabled: true, mode: 'active', reflexMounted: true })
     installContinuumMemoryControllerContext(ctx, () => controller, () => ({ scopes: ['workspace'] }),
-      { maxCandidates: 2, maxExcerptBytes: 100, maxTotalBytes: 200 },
+      { maxCandidates: 2, maxExcerptBytes: 100, maxTotalBytes: 512 },
       () => ({ select: async () => ({ mode: 'active', selectedIds, baselineIds: ['migration'], outcome: 'jev' }) }))
     const user = createUserMessage({ source: { kind: 'user' }, content: [{ type: 'text', text: 'Migration' }] })
     const result = await agentEvents(ctx, {} as Agent).waterfall('agent/pre-step', {
       messages: [user], turn: 1, step: 1, signal: new AbortController().signal,
     }, async () => ({ kind: 'enter' as const, messages: [user] }))
     expect(result.kind === 'enter' ? result.messages : []).toEqual([user])
+  })
+
+  it('rejects recall when a selector returns after cancellation', async () => {
+    const ctx = new Context()
+    onTestFinished(() => ctx.fiber.dispose())
+    const controller = new ContinuumMemoryController(records(), { enabled: true, mode: 'active', reflexMounted: true })
+    const abort = new AbortController()
+    installContinuumMemoryControllerContext(ctx, () => controller, () => ({ scopes: ['workspace'] }),
+      { maxCandidates: 2, maxExcerptBytes: 100, maxTotalBytes: 512 },
+      () => ({ select: async () => {
+        abort.abort(new Error('memory request cancelled'))
+        return { mode: 'active', selectedIds: ['migration'], baselineIds: ['migration'], outcome: 'jev' }
+      } }))
+    const user = createUserMessage({ source: { kind: 'user' }, content: [{ type: 'text', text: 'Migration' }] })
+    await expect(agentEvents(ctx, {} as Agent).waterfall('agent/pre-step', {
+      messages: [user], turn: 1, step: 1, signal: abort.signal,
+    }, async () => ({ kind: 'enter' as const, messages: [user] }))).rejects.toThrow('memory request cancelled')
   })
 
   it('drops a late Jev selection after the controller is disabled', async () => {
@@ -222,7 +284,7 @@ describe('Continuum same-step context consumer', () => {
       ctx,
       () => controller,
       () => ({ scopes: ['workspace'] }),
-      { maxCandidates: 2, maxExcerptBytes: 100, maxTotalBytes: 200 },
+      { maxCandidates: 2, maxExcerptBytes: 100, maxTotalBytes: 512 },
       () => ({ select: async () => late.promise }),
     )
     const user = createUserMessage({ source: { kind: 'user' }, content: [{ type: 'text', text: 'When is the migration scheduled?' }] })
