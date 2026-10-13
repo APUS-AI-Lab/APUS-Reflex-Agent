@@ -42,7 +42,7 @@ function fixture() {
     mkdirSync(directory, { recursive: true })
     for (const license of licenses) writeFileSync(join(directory, license), 'original license')
   }
-  const context = { packager: { projectDir: project, appInfo: { productFilename: 'APUS' } }, electronPlatformName: 'darwin', arch: 3, appOutDir }
+  const context = { packager: { projectDir: project, appInfo: { productFilename: 'APUS' }, config: { extraMetadata: { apusProductEdition: manifest.edition } } }, electronPlatformName: 'darwin', arch: 3, appOutDir }
   return { project, root, manifest, context }
 }
 

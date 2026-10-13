@@ -215,10 +215,24 @@ export async function qualify(archive, reports, edition = process.env.APUS_PRODU
     await dialog.getByRole('button', { name: 'Models', exact: true }).click()
     await dialog.getByRole('button', { name: 'Add model provider', exact: true }).waitFor()
     await page.screenshot({ path: join(reports, 'models.png') })
-    await dialog.getByRole('button', { name: 'Reflex model configuration', exact: true }).click()
+    await dialog.getByRole('button', { name: 'Reflex configuration', exact: true }).click()
+    const mode = dialog.locator('#reflex-mode')
+    await mode.waitFor({ state: 'visible' })
+    const options = await mode.getByRole('option').allTextContents()
+    if (JSON.stringify(options) !== JSON.stringify(['APUS Reflex limited-time free endpoint', 'Custom parameters'])) {
+      throw new Error('Reflex connection choices differ from the supported trial and custom modes.')
+    }
+    await mode.selectOption('trial')
+    await dialog.getByText('Service protocol: Reflex', { exact: true }).waitFor()
+    await dialog.locator('#reflex-endpoint').waitFor({ state: 'detached' })
+    if (await dialog.locator('#reflex-api-key, #reflex-protocol').count() !== 0) {
+      throw new Error('The trial mode exposes a credential field or protocol selector.')
+    }
+    await dialog.getByRole('switch', { name: 'Continuum memory', exact: true, disabled: false }).waitFor()
+    report.stages.push('reflex-trial-custom-choices-and-memory-control')
+    await mode.selectOption('custom')
     await dialog.locator('#reflex-endpoint').fill('https://qualification.invalid')
     await dialog.locator('#reflex-model').fill('qualification-only')
-    await dialog.locator('#reflex-protocol').selectOption('typesafe')
     await dialog.getByRole('button', { name: 'Save', exact: true }).click()
     const save = dialog.getByRole('button', { name: 'Save', exact: true })
     const savedDeadline = Date.now() + 30_000
@@ -238,10 +252,11 @@ export async function qualify(archive, reports, edition = process.env.APUS_PRODU
     }
     report.stages.push('default-workspace-retained-after-restart')
     dialog = await settings(page)
-    await dialog.getByRole('button', { name: 'Reflex model configuration', exact: true }).click()
+    await dialog.getByRole('button', { name: 'Reflex configuration', exact: true }).click()
     if (await dialog.locator('#reflex-endpoint').inputValue() !== 'https://qualification.invalid'
       || await dialog.locator('#reflex-model').inputValue() !== 'qualification-only'
-      || await dialog.locator('#reflex-protocol').inputValue() !== 'typesafe') throw new Error('Web profile settings did not survive restart.')
+      || await dialog.locator('#reflex-mode').inputValue() !== 'custom') throw new Error('Web profile settings did not survive restart.')
+    await dialog.getByText('Service protocol: Reflex', { exact: true }).waitFor()
     await page.screenshot({ path: join(reports, 'restart.png') })
     await page.close()
     await stop()

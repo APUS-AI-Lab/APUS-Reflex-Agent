@@ -217,6 +217,7 @@ async function run(installer, reportDirectory, expectedSource = process.env.GITH
       name: /^Continuum (无限记忆|memory)$/u, checked, disabled: false,
     })
     if (qualifyMemorySetting) {
+      await page.getByRole('button', { name: /^(Reflex 配置|Reflex configuration)$/u, exact: true }).click()
       await continuumSwitch(page, false).waitFor({ state: 'visible', timeout: 20_000 })
       await continuumSwitch(page, false).click()
       await continuumSwitch(page, true).waitFor({ state: 'visible', timeout: 20_000 })
@@ -231,6 +232,7 @@ async function run(installer, reportDirectory, expectedSource = process.env.GITH
     if (qualifyMemorySetting) {
       await page.getByText(/^(设置|Settings)$/).last().click()
       await page.getByText(new RegExp(`^(当前版本：|Current version: )${build.version.replaceAll('.', '\\.')}$`)).waitFor({ timeout: 20_000 })
+      await page.getByRole('button', { name: /^(Reflex 配置|Reflex configuration)$/u, exact: true }).click()
       await continuumSwitch(page, true).waitFor({ state: 'visible', timeout: 20_000 })
       await page.screenshot({ path: join(reportDirectory, 'continuum-restart.png') })
       report.memorySetting.persistedAfterRestart = true
