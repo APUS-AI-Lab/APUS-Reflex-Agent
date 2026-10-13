@@ -8,11 +8,13 @@ English | [中文](README.zh.md)
 
 APUS Reflex Harness is a Personal Agent desktop app for working with models on local projects: choose a workspace, configure a model, and carry out tasks in a persistent conversation. The optional Reflex/Jev decision service is configured in Settings → Reflex model configuration. Connecting the service does not automatically enable routing, supervision or memory. The desktop client and Harness runtime ship from this repository. See the [product README](../README.md) for the architecture and current capability limits.
 
-This integration brings the desktop client into `frontend/` of the existing Harness repository, merging frontend and backend configuration, builds and packaging. The installer bundles the backend; no separate backend installation or startup is needed. The integrated release is still being prepared.
+This integration brings the desktop client into `frontend/` of the existing Harness repository, merging frontend and backend configuration, builds and packaging. The installer bundles the backend; no separate backend installation or startup is needed.
 
 ## Download and configure
 
-Published installers and platform validation appear on [Releases](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/releases). The integrated preview is being prepared; source archives are not installers. Follow [installation](../docs/feat-integrated-product/installation.md) and [model configuration](../docs/feat-integrated-product/configuration.md).
+The repository is currently private: Release downloads require repository access until an administrator makes it public.
+
+Published installers and platform validation appear on [Releases](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/releases). Version `0.1.0` uses the same reviewed source commit across its desktop and Web targets; macOS Apple Silicon and Intel passed native installation, startup and restart checks. Windows and Ubuntu desktop downloads are experimental: installation acceptance is incomplete. The [platform status](../docs/feat-integrated-product/installation.md) records failures and the qualified Web package. These unsigned preview installers bundle the backend and need no Git or Node.js; macOS is not notarized. Model configuration is required, and the first real-model task has not been validated. Source archives are not installers. The complete Linux x64 Web package includes its own runtime; platform requirements and first-use steps belong to the installation guide. Follow [installation](../docs/feat-integrated-product/installation.md) and [model configuration](../docs/feat-integrated-product/configuration.md).
 
 ## Develop
 

@@ -1,0 +1,19 @@
+# Bilingual-pair consistency record for design.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-model-endpoints/design.md
+/model-and-decision-service-configuration:
+  en: d105394e8c68fcc1
+  zh: 1709a1394159291a
+/model-and-decision-service-configuration/goal:
+  en: f09002c4efa01eb6
+  zh: 78e3d1ab2b7d6edf
+/model-and-decision-service-configuration/structure:
+  en: 71a991828a7d42a2
+  zh: 03b9c60d48639458
+/model-and-decision-service-configuration/files-and-api-behavior:
+  en: bc2f18bdb8da9193
+  zh: 528fb424bab1d081
+/model-and-decision-service-configuration/validation:
+  en: 9fd93aa5d0b04066
+  zh: 618a7e09c1ba5ed5

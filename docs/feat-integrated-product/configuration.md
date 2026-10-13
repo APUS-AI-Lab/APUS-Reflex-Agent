@@ -2,15 +2,19 @@
 
 English | [中文](configuration.zh.md)
 
-The desktop starts in ordinary model mode. Configure a provider you can access, choose a workspace, and verify one response before running a larger task. You do not need Jev credentials for this mode.
+The desktop starts in ordinary model mode. Configure a provider you can access, choose a workspace, and verify one response before running a larger task. You do not need Jev credentials for this mode. Generation models handle conversation, reasoning and tool calls; Reflex/Jev services answer structured decisions. Configure their endpoints, model IDs and credentials separately; a chat-completions endpoint is not a decision service.
 
 ## Configure a provider
 
 1. Open **Settings → Models**. Add a listed provider or a custom provider appropriate for your service.
-2. Enter the provider's API key and select a model. A custom provider also needs a Provider ID, display name, API protocol, Base URL, and exact model ID. Use the service's API address, not its website URL.
-3. Save the configuration. Select the configured model when starting a conversation.
+2. Enter an API key if your service requires one, then select a model. A custom provider requires a unique Provider ID, API protocol, Base URL and at least one exact model ID; display name is optional. Start the Provider ID with a lowercase letter and use lowercase letters, digits and dashes. Match the generation service's protocol, such as OpenAI Chat Completions, OpenAI Responses or Anthropic Messages. Use its documented API base address, not a website or Reflex decision endpoint; anonymous services need no invented key.
+3. Save, then explicitly select the configured provider and model in a new conversation. Adding a provider does not change the current selection or global default; check the provider and model ID in the picker before sending.
 
-Use credentials from your own provider account. APUS does not supply a model subscription or shared API key. A saved configuration does not prove the credentials work; the first response below checks actual model access.
+Use credentials from your own provider account. APUS does not supply a model subscription or shared API key. Saving configuration or fetching a model list does not verify inference; the first response below checks actual model access.
+
+The official DeepSeek adapter uses the Messages protocol and defaults to `https://api.deepseek.com/anthropic`. For an OpenAI-compatible service, add a custom provider and select **OpenAI Chat Completions** or **OpenAI Responses**, matching the service, then enter its Base URL and model ID. Changing only the official DeepSeek card’s Base URL does not change its protocol.
+
+Built-in providers return model lists from the installed catalog; this does not validate the current key, remote model availability or generation requests. Even successful remote model discovery for a custom provider still requires a real conversation test.
 
 ## Verify a task
 
@@ -35,14 +39,17 @@ Open **Settings → Reflex model configuration** to connect your own Reflex/Jev 
 
 | Field | What to enter |
 | --- | --- |
-| Service endpoint and decision model | A direct API address and the actual decision model ID; do not include credentials, user information, query parameters or fragments in the address |
-| Decision effort | `high` or `low`, as supported by your service |
+| Service endpoint and decision model | The decision service API root or `/v1` base address and actual model ID; do not enter a complete `/v1/systemone` or chat-completions path, credentials, user information, query parameters or fragments |
+| Decision protocol | Choose OpenJev or Typesafe to match the service implementation; this differs from the generation API protocol on the Models page |
+| Decision effort | OpenJev uses `high` or `low`; Typesafe requests omit this extension |
 | Request timeout (ms) | Maximum wait for connection tests and decision requests |
 | Credential reference and API key | A dedicated reference such as `REFLEX_API_KEY` and your service key; anonymous services need no key |
 
+For first use, supply the endpoint and model and confirm the protocol; keep the current timeout and applicable effort defaults unless your service requires otherwise. Use the endpoint and protocol confirmed by your service provider.
+
 Leave API key blank to retain the stored key. A new or replacement key requires a new dedicated reference; configured references cannot be overwritten. Deployment environment credentials are read-only. The Host credential service stores keys separately from ordinary settings and source code.
 
-Click **Test connection and real decision**. The test uses the current draft without saving it; test again after changing fields. The page reports authentication failures, timeouts, missing models or the real decision result separately. “Real decision passed” validates this decision-service test only; it does not verify that routing, supervision, memory or task execution is enabled or accepted.
+Click **Test connection and real decision**. The test uses the current draft’s selected protocol without saving it; test again after changing fields. OpenJev probes check `/health`, the model list and a fixed decision; Typesafe skips `/health` and checks the model list and fixed decision. The page reports authentication failures, timeouts, missing models or the real decision result separately. “Real decision passed” validates this decision-service test only; it does not verify that routing, supervision, memory or task execution is enabled or accepted.
 
 Review the result, then click **Save**. Saved settings apply to new requests; running requests retain their configuration. If the page reports a failed or partial save, reopen it and check settings and credential status before retrying.
 

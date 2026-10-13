@@ -2,15 +2,17 @@
 
 [English](releases.md) | 中文
 
-本文规定一体化仓库桌面版本发布所需的验收证据，不代表某个构建已经发布。普通用户请从[安装教程](installation.zh.md)开始。
+本文规定一体化仓库桌面或 Web 版本发布所需的验收证据，不代表某个构建已经发布。普通用户请从[安装教程](installation.zh.md)开始。
 
 ## 版本与源码
 
 首个 APUS 桌面产品版本为 `0.1.0`，Release tag 为 `v0.1.0`。该版本由产品定义，不继承上游运行时版本序列；内置 Harness 版本在“关于”和构建信息中独立显示。GitHub 的 prerelease 标志独立于版本字符串：首版使用预发布标志，并明确标为未签名预览版，不能仅因版本不含 beta/rc 就宣称稳定。
 
-各平台使用同一个经过审查的提交及已提交的依赖锁进行构建。发行记录包括源码版本、产品及 Harness 版本、平台、架构和锁文件摘要，不获取另一份前端仓库，也不替换为上游 npm 运行时。
+所有桌面及 Web 目标均从同一经过审查的干净源码提交及已提交的依赖锁构建，各平台构建记录与发行元数据必须指向该提交。冻结版本后不得追加来自不同源码提交的附件。发行记录包括源码版本、产品及 Harness 版本、平台、架构和锁文件摘要，不获取另一份前端仓库，也不替换为上游 npm 运行时。
 
 已部署运行时会解析动态合成的 workspace 依赖集合。两份已提交锁文件的摘要标识源码输入，不能冻结部署时解析的每个依赖。链接实体化和补丁完成后，`runtime-dependencies.json` 记录每个实际安装包 manifest 的相对路径、名称、版本及 SHA-256，包括嵌套依赖。运行时 manifest 和安装包构建记录绑定该清单摘要；打包时用实际 package manifest 校验清单，Release 将它纳入 `build-info.json` 和 `SHA256SUMS`。这记录了实际组装的依赖，不证明后续部署会解析到相同依赖版本，也不对包内每个文件求摘要。
+
+macOS Apple Silicon 使用 `build-info.json`、`LICENSES.zip`、`runtime-dependencies.json` 和 `SHA256SUMS`。Intel Mac 使用 `build-info-darwin-x64.json`、`LICENSES-darwin-x64.zip`、`runtime-dependencies-darwin-x64.json` 和 `SHA256SUMS-darwin-x64`。Windows 使用 `build-info-win32-x64.json`、`LICENSES-win32-x64.zip`、`runtime-dependencies-win32-x64.json` 和 `SHA256SUMS-win32-x64`。Linux 桌面配套文件使用同名加 `-linux-x64` 后缀。Web 使用 `build-info-web-linux-x64.json`、`runtime-dependencies-web-linux-x64.json` 和 `SHA256SUMS-web-linux-x64`，许可声明包含在压缩包中。按各平台的校验文件核对附件，并核对共同的源码提交。
 
 ## 打包与平台验收
 
@@ -21,23 +23,25 @@
 | macOS Apple Silicon | 在 Apple Silicon Mac 安装 DMG 并验证包内运行时 |
 | macOS Intel | 独立的 Intel 构建与安装后应用验收 |
 | Windows x64 | Windows 原生构建、安装器验收与包内运行时检查 |
+| Ubuntu 24.04 x64 桌面 | 原生 `.deb` 安装、渲染进程沙箱、受限命令执行、重启及卸载 |
+| Linux x64 Web | 解压完整包，验证包内 Node、localhost 认证访问、模型配置持久化、受限执行及重启 |
 | 其他目标 | 明确的构建支持及原生安装验收通过后再宣传可用 |
 
-首个预览版面向 macOS Apple Silicon；签名尚未配置，首版 `v0.1.0` 仍须显式标记为未签名预发布。未签名预览版必须明确说明缺少签名与公证。签名发行需要相应平台身份及验证，不能用构建成功暗示这些保证已经具备。
+`v0.1.0` 目标为 macOS Apple Silicon、macOS Intel、Windows x64、Ubuntu 24.04 x64 桌面和 Linux x64 Web，[安装状态](installation.zh.md)区分已验收下载与实验性的 Windows、Ubuntu 桌面附件。这些均按未签名预发布处理；macOS 未公证，Windows 无代码签名。已验收平台必须通过原生安装、启动、重启和包内后端检查。明确获准发布的 `0.1.0` 实验性 Windows 与 Ubuntu 桌面下载属于暂不发布未验收附件这一规则的例外，必须保留其验收失败或受阻状态。真实模型首个任务尚未验证，发行说明须保留这一限制。签名发行需要相应平台身份及验证，不能用构建成功暗示这些保证已经具备。
 
 ## 验收清单
 
 - 在没有开发依赖的干净环境中安装即将发布的实际附件。
 - 打开应用，确认内置后端和 UI 正常加载，无需额外服务。
-- 在界面配置真实服务商，收到模型响应并完成一个小文件任务。
+- 记录模型任务验收状态：在界面配置真实服务商、获取响应并完成小文件任务属于独立验收；当前尚未完成，不能宣称通过。
 - 重启，检查设置持久化和会话访问，并测试支持的升级路径。
 - 核对 SHA-256 校验值、版本信息、架构、签名状态与包内许可证通知。
-- 记录平台问题和已知限制，不发布失败或未经验证的平台附件。
+- 记录平台问题和已知限制；除非明确获准作为实验性下载并披露验收未完成，否则不发布失败或未经验证的附件。
 
 发行维护者负责这些人工验收。自动 CI 和本地源码测试提供补充证据，不能替代安装后应用的验收。
 
 ## 发布与更新
 
-在[产品 Releases](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/releases) 准备草稿，附上经过验证的安装包、校验值、简明变更、支持平台、签名状态、已知限制和[配置教程](configuration.zh.md)链接。公开前审查源码与产物中的凭证和私有部署信息。
+在[产品 Releases](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/releases) 准备草稿，附上安装包及其逐平台验收状态、校验值、简明变更、支持平台、签名状态、已知限制和[配置教程](configuration.zh.md)链接。公开前审查源码与产物中的凭证和私有部署信息。
 
-上述检查通过后再发布，并确认没有仓库权限的用户可以下载目标附件。同步更新根 README 的可用性说明，使其与已发布版本一致。在 APUS 更新服务完成独立配置和验收之前，应用继续采用手动更新。
+只有必需的原生检查通过，才能将下载标为已验收；获准发布的 `0.1.0` 实验性 Windows 与 Ubuntu 桌面附件须明确区分，所有平台均须披露真实模型任务尚未验收。仓库当前为私有，具有发布权限的维护者可以发布 GitHub 预发布；管理员改为公开之前，下载需要仓库访问权限。缺少公开权限不阻止已获授权的产品预发布，但不能宣传匿名可下载。管理员公开仓库后再验证匿名下载。在 APUS 更新服务完成独立配置和验收之前，应用继续采用手动更新。

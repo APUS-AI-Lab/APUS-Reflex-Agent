@@ -1,0 +1,13 @@
+# Bilingual-pair consistency record for path-compatibility.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/release-windows-product/path-compatibility.md
+/windows-canonical-paths:
+  en: b4e9f2abd069db5b
+  zh: bfbb9eaa16f6c688
+/windows-canonical-paths/implementation:
+  en: b6fdc6f01a45545b
+  zh: 432660495bd404a7
+/windows-canonical-paths/files-and-validation:
+  en: 53388c543b9dd623
+  zh: 22e58e96dbd4e078

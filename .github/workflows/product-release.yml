@@ -4,77 +4,306 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Existing product tag matching release/manifest.json
+        description: Product version label matching the manifest (no existing tag required)
         required: true
+        default: v0.1.0
+        type: string
+      target:
+        description: Native installer targets to build and review
+        required: true
+        default: windows
+        type: choice
+        options:
+          - windows
+          - mac
+          - mac-intel
+          - linux
+          - all
+
+      qualification_run_id:
+        description: Existing product build run to requalify without rebuilding (one native target; leave empty to build)
+        required: false
+        type: string
+      qualification_source:
+        description: Full 40-character product source SHA required with qualification_run_id
+        required: false
         type: string
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
-  group: apus-preview-${{ inputs.tag }}
+  group: apus-preview-${{ github.ref }}-${{ inputs.target }}
   cancel-in-progress: false
 
 jobs:
   build:
-    runs-on: macos-15
-    timeout-minutes: 90
+    if: ${{ inputs.qualification_run_id == '' && inputs.qualification_source == '' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(inputs.target == 'all' && '[{"runner":"windows-latest","target":"win32-x64"},{"runner":"macos-15","target":"darwin-arm64"},{"runner":"macos-15-intel","target":"darwin-x64"},{"runner":"ubuntu-24.04","target":"linux-x64"}]' || inputs.target == 'linux' && '[{"runner":"ubuntu-24.04","target":"linux-x64"}]' || inputs.target == 'mac-intel' && '[{"runner":"macos-15-intel","target":"darwin-x64"}]' || inputs.target == 'mac' && '[{"runner":"macos-15","target":"darwin-arm64"}]' || '[{"runner":"windows-latest","target":"win32-x64"}]') }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 120
     env:
       DSH_TELEMETRY_DISABLED: '1'
       CSC_IDENTITY_AUTO_DISCOVERY: 'false'
     steps:
+      - name: Prepare native Windows checkout and patch utility
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          git config --global core.longpaths true
+          if ($LASTEXITCODE -ne 0) { throw "Could not enable Git long paths" }
+          git config --global core.autocrlf false
+          if ($LASTEXITCODE -ne 0) { throw "Could not disable Git newline conversion" }
+          $gitRoot = Split-Path (Split-Path (Get-Command git).Source -Parent) -Parent
+          $patch = Join-Path $gitRoot 'usr/bin/patch.exe'
+          if (!(Test-Path -LiteralPath $patch)) { throw "GNU patch is missing from the Git installation" }
+          & $patch --version
+          if ($LASTEXITCODE -ne 0) { throw "GNU patch failed to start" }
+          "SYSTEM3_PATCH_COMMAND=$patch" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
       - uses: actions/checkout@v6
         with:
-          ref: refs/tags/${{ inputs.tag }}
+          ref: ${{ github.sha }}
           persist-credentials: false
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
           cache: pnpm
-      - name: Validate selected tag
+      - name: Validate source commit, version label, and native target
         env:
           PRODUCT_TAG: ${{ inputs.tag }}
-        run: node --input-type=module -e 'import { checkRelease } from "./scripts/product-release.mjs"; checkRelease(process.cwd(), process.env.PRODUCT_TAG)'
-      - name: Prepare integrated product
-        run: pnpm run setup
-      - name: Validate desktop behavior
-        working-directory: frontend
+          PRODUCT_TARGET: ${{ matrix.target }}
+        run: node --input-type=module -e "import { checkRelease } from './scripts/product-release.mjs'; import { execFileSync } from 'node:child_process'; checkRelease(process.cwd(), process.env.PRODUCT_TAG); if (execFileSync('git', ['rev-parse', 'HEAD'], { encoding:'utf8' }).trim() !== process.env.GITHUB_SHA) throw new Error('Checkout differs from workflow commit'); if (process.platform + '-' + process.arch !== process.env.PRODUCT_TARGET) throw new Error('Runner does not match native target')"
+      - name: Prepare native Linux build and desktop acceptance
+        if: runner.os == 'Linux'
         run: |
-          npm run typecheck
-          npm test -- --no-file-parallelism
+          sudo apt-get update
+          sudo apt-get install -y build-essential musl-tools python3 patch xvfb xauth dbus-x11 apparmor apparmor-utils desktop-file-utils xdg-utils libgtk-3-0t64 libnss3 libasound2t64 libgbm1
+          sudo aa-status --enabled
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=1
+      - name: Install locked Harness dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Install locked desktop dependencies
+        working-directory: frontend
+        run: npm ci
       - name: Build unsigned preview installers and checksums
+        id: installers
         run: pnpm run package:product --unsigned
-      - name: Upload reviewable installers
+      - name: Typecheck desktop behavior
+        working-directory: frontend
+        run: npm run typecheck
+      - name: Test desktop behavior
+        working-directory: frontend
+        run: npm test -- --no-file-parallelism
+      - name: Validate Windows smoke checks
+        id: windows_smoke_checks
+        if: ${{ !cancelled() && runner.os == 'Windows' && steps.installers.outcome == 'success' }}
+        shell: pwsh
+        run: node --test scripts/product-windows-smoke.test.mjs
+      - name: Install and verify the Windows product
+        if: ${{ !cancelled() && steps.windows_smoke_checks.outcome == 'success' }}
+        shell: pwsh
+        run: |
+          $version = (Get-Content -Raw release/manifest.json | ConvertFrom-Json).version
+          $installer = Join-Path $PWD ".artifacts/product-release/$version/win32-x64/apus-reflex-harness-windows-x64-setup.exe"
+          $reports = Join-Path $PWD '.artifacts/product-windows-smoke'
+          node scripts/product-windows-smoke.mjs --installer $installer --report-dir $reports
+      - name: Validate macOS smoke checks
+        id: macos_smoke_checks
+        if: ${{ !cancelled() && runner.os == 'macOS' && steps.installers.outcome == 'success' }}
+        run: node --test scripts/product-macos-smoke.test.mjs
+      - name: Install and verify the macOS product
+        if: ${{ !cancelled() && steps.macos_smoke_checks.outcome == 'success' }}
+        env:
+          PRODUCT_TARGET: ${{ matrix.target }}
+        run: |
+          version=$(node -p "JSON.parse(require('fs').readFileSync('release/manifest.json')).version")
+          arch="${PRODUCT_TARGET#darwin-}"
+          node scripts/product-macos-smoke.mjs --installer "$PWD/.artifacts/product-release/$version/$PRODUCT_TARGET/apus-reflex-harness-mac-$arch.dmg" --report-dir "$PWD/.artifacts/product-macos-smoke"
+      - name: Validate Linux smoke checks
+        id: linux_smoke_checks
+        if: ${{ !cancelled() && runner.os == 'Linux' && steps.installers.outcome == 'success' }}
+        run: node --test scripts/product-linux-smoke.test.mjs
+      - name: Install and verify the Linux product with Chromium sandbox enabled
+        if: ${{ !cancelled() && steps.linux_smoke_checks.outcome == 'success' }}
+        run: |
+          version=$(node -p "JSON.parse(require('fs').readFileSync('release/manifest.json')).version")
+          xvfb-run -a dbus-run-session -- node scripts/product-linux-smoke.mjs --installer "$PWD/.artifacts/product-release/$version/linux-x64/apus-reflex-harness-linux-x64.deb" --report-dir "$PWD/.artifacts/product-linux-smoke"
+      - name: Upload installers for manual review
+        if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: apus-preview-mac-arm64
+          name: apus-preview-${{ matrix.target }}-${{ github.run_id }}
           path: .artifacts/product-release/
           include-hidden-files: true
-          if-no-files-found: error
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Upload installation reports and build receipt
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: apus-review-${{ matrix.target }}-${{ github.run_id }}
+          path: |
+            .artifacts/product-windows-smoke/
+            .artifacts/product-macos-smoke/
+            .artifacts/product-linux-smoke/
+            .artifacts/product-build-receipt.json
+          include-hidden-files: true
+          if-no-files-found: warn
           retention-days: 14
 
-  draft:
-    needs: build
-    runs-on: ubuntu-24.04
-    permissions:
-      contents: write
+  windows_requalification:
+    if: ${{ inputs.target == 'windows' && (inputs.qualification_run_id != '' || inputs.qualification_source != '') }}
+    runs-on: windows-latest
+    timeout-minutes: 35
+    env:
+      DSH_TELEMETRY_DISABLED: '1'
+      QUALIFICATION_RUN_ID: ${{ inputs.qualification_run_id }}
+      QUALIFICATION_SOURCE: ${{ inputs.qualification_source }}
+      QUALIFICATION_TARGET: ${{ inputs.target }}
+    steps:
+      - name: Prepare Windows checkout
+        shell: pwsh
+        run: |
+          git config --global core.longpaths true
+          if ($LASTEXITCODE -ne 0) { throw "Could not enable Git long paths" }
+          git config --global core.autocrlf false
+          if ($LASTEXITCODE -ne 0) { throw "Could not disable Git newline conversion" }
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Validate source run and select the exact Windows artifact
+        id: source
+        uses: actions/github-script@v7
+        with:
+          script: |
+            if (process.env.QUALIFICATION_TARGET !== 'windows') throw new Error('Requalification requires target=windows');
+            const runId = process.env.QUALIFICATION_RUN_ID;
+            const source = process.env.QUALIFICATION_SOURCE;
+            if (!/^[1-9][0-9]*$/.test(runId) || !/^[0-9a-f]{40}$/.test(source)) throw new Error('Provide a build run ID and full source SHA');
+            const { pathToFileURL } = await import('node:url');
+            const { validateRequalification } = await import(pathToFileURL(`${process.env.GITHUB_WORKSPACE}/scripts/product-qualification-source.mjs`).href);
+            const { data: run } = await github.rest.actions.getWorkflowRun({ ...context.repo, run_id: Number(runId) });
+            const artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts, { ...context.repo, run_id: Number(runId), per_page: 100 });
+            const id = validateRequalification(run, artifacts, `${context.repo.owner}/${context.repo.repo}`, runId, source, 'win32-x64');
+            core.setOutput('artifact_id', String(id));
+      - name: Download the selected immutable installer and support files
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ steps.source.outputs.artifact_id }}
+          run-id: ${{ inputs.qualification_run_id }}
+          github-token: ${{ github.token }}
+          path: .artifacts/requalification-source
+          merge-multiple: true
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: pnpm
+      - name: Install locked qualification dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Validate Windows qualification helpers
+        run: node --test scripts/product-windows-smoke.test.mjs scripts/product-qualification-source.test.mjs
+      - name: Requalify the original installed Windows product
+        shell: pwsh
+        run: |
+          $installers = @(Get-ChildItem -Path .artifacts/requalification-source -Recurse -File -Filter 'apus-reflex-harness-windows-x64-setup.exe')
+          if ($installers.Count -ne 1) { throw "Expected exactly one downloaded Windows installer" }
+          node scripts/product-windows-smoke.mjs --installer $installers[0].FullName --report-dir "$PWD/.artifacts/product-windows-requalification" --expected-source $env:QUALIFICATION_SOURCE --build-run-id $env:QUALIFICATION_RUN_ID
+          if ($LASTEXITCODE -ne 0) { throw "Installed Windows requalification failed" }
+      - name: Upload requalification report and screenshots
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: apus-windows-requalification-${{ inputs.qualification_run_id }}-${{ github.run_id }}
+          path: .artifacts/product-windows-requalification/
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 14
+
+  unix_requalification:
+    if: ${{ inputs.target != 'windows' && (inputs.qualification_run_id != '' || inputs.qualification_source != '') }}
+    runs-on: ${{ inputs.target == 'linux' && 'ubuntu-24.04' || inputs.target == 'mac' && 'macos-15' || 'macos-15-intel' }}
+    timeout-minutes: 45
+    env:
+      DSH_TELEMETRY_DISABLED: '1'
+      QUALIFICATION_RUN_ID: ${{ inputs.qualification_run_id }}
+      QUALIFICATION_SOURCE: ${{ inputs.qualification_source }}
+      QUALIFICATION_TARGET: ${{ inputs.target }}
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: refs/tags/${{ inputs.tag }}
+          ref: ${{ github.sha }}
           persist-credentials: false
-      - uses: actions/download-artifact@v4
+      - name: Validate source run and select the exact native artifact
+        id: source
+        uses: actions/github-script@v7
         with:
-          name: apus-preview-mac-arm64
-          path: release-inputs
-      - name: Create a draft for installation review
-        env:
-          GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ inputs.tag }}
-          GH_REPO: ${{ github.repository }}
+          script: |
+            const target = { mac: 'darwin-arm64', 'mac-intel': 'darwin-x64', linux: 'linux-x64' }[process.env.QUALIFICATION_TARGET];
+            if (!target || target !== `${process.platform}-${process.arch}`) throw new Error('Choose one matching native qualification target');
+            const runId = process.env.QUALIFICATION_RUN_ID;
+            const source = process.env.QUALIFICATION_SOURCE;
+            if (!/^[1-9][0-9]*$/.test(runId) || !/^[0-9a-f]{40}$/.test(source)) throw new Error('Provide a build run ID and full source SHA');
+            const { pathToFileURL } = await import('node:url');
+            const { validateRequalification } = await import(pathToFileURL(`${process.env.GITHUB_WORKSPACE}/scripts/product-qualification-source.mjs`).href);
+            const { data: run } = await github.rest.actions.getWorkflowRun({ ...context.repo, run_id: Number(runId) });
+            const artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts, { ...context.repo, run_id: Number(runId), per_page: 100 });
+            const id = validateRequalification(run, artifacts, `${context.repo.owner}/${context.repo.repo}`, runId, source, target);
+            core.setOutput('artifact_id', String(id));
+      - name: Download the selected immutable installer and support files
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ steps.source.outputs.artifact_id }}
+          run-id: ${{ inputs.qualification_run_id }}
+          github-token: ${{ github.token }}
+          path: .artifacts/requalification-source
+          merge-multiple: true
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: pnpm
+      - name: Prepare Linux installed desktop acceptance
+        if: runner.os == 'Linux'
         run: |
-          version=$(node -p 'JSON.parse(require("node:fs").readFileSync("release/manifest.json", "utf8")).version')
-          directory="release-inputs/$version/darwin-arm64"
-          (cd "$directory" && sha256sum -c SHA256SUMS)
-          gh release create "$RELEASE_TAG" "$directory"/* --verify-tag --draft --prerelease --title "APUS Reflex Harness $version" --notes-file release/notes.md
+          sudo apt-get update
+          sudo apt-get install -y xvfb xauth dbus-x11 apparmor apparmor-utils desktop-file-utils xdg-utils libgtk-3-0t64 libnss3 libasound2t64 libgbm1
+          sudo aa-status --enabled
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=1
+      - name: Install locked qualification dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Validate native qualification helpers
+        run: node --test scripts/product-qualification-source.test.mjs scripts/product-macos-smoke.test.mjs scripts/product-linux-smoke.test.mjs
+      - name: Requalify the original installed native product
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import { readdir } from 'node:fs/promises';
+          import { resolve } from 'node:path';
+          import { spawnSync } from 'node:child_process';
+          const linux = process.platform === 'linux';
+          const name = linux ? 'apus-reflex-harness-linux-x64.deb' : `apus-reflex-harness-mac-${process.arch}.dmg`;
+          const directory = resolve('.artifacts/requalification-source');
+          const found = (await readdir(directory, { recursive: true })).filter(file => file.split('/').at(-1) === name);
+          if (found.length !== 1) throw new Error('Expected exactly one downloaded native installer');
+          const script = `scripts/product-${linux ? 'linux' : 'macos'}-smoke.mjs`;
+          const args = [script, '--installer', resolve(directory, found[0]), '--report-dir', resolve('.artifacts/product-unix-requalification'), '--expected-source', process.env.QUALIFICATION_SOURCE, '--build-run-id', process.env.QUALIFICATION_RUN_ID];
+          const result = linux ? spawnSync('xvfb-run', ['-a', 'dbus-run-session', '--', process.execPath, ...args], { stdio: 'inherit' }) : spawnSync(process.execPath, args, { stdio: 'inherit' });
+          if (result.error) throw result.error;
+          if (result.status !== 0) throw new Error(`Native qualification failed: ${result.status ?? result.signal}`);
+          NODE
+      - name: Upload requalification report and screenshots
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: apus-${{ inputs.target }}-requalification-${{ inputs.qualification_run_id }}-${{ github.run_id }}
+          path: .artifacts/product-unix-requalification/
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 14

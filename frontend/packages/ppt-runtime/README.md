@@ -62,7 +62,7 @@ The build keeps the 192 reference JPGs only in the core skill directory. Both br
 
 `pptd_check` is read-only and returns every diagnostic, including file, page and element ID. `pptd_render` returns `status: needs_revision` with the full `check` when blocked by validation, without publishing or consuming delivery capacity; only `status: exported` includes delivery metadata. Warning-only checks remain exportable. Filesystem, authorization and runtime faults still fail normally. Existing sessions refresh their automatic authoring instructions to this workflow.
 
-The CLI resolves npm `.bin` symlinks before detecting its entry point. `check --json` retains its complete checker output and conventional nonzero exit code for failed validation; blocked `render --json` also prints complete diagnostics and `exported: false`. Neither bypasses the compiler checks.
+The CLI compares canonical paths for both its module and invocation, supporting npm `.bin` symlinks and Windows 8.3 paths without running on import. `check --json` retains its complete checker output and conventional nonzero exit code for failed validation; blocked `render --json` also prints complete diagnostics and `exported: false`. Neither bypasses the compiler checks.
 
 Authoring diagnostics group misplaced text-style fields by page while retaining per-field issues. Layout estimates wait until an element has a valid field structure. Tool diagnostics include confined absolute paths and `pptd_read_file` arguments. New files accept an omitted or empty `expected_sha256`; replacements still require the current hash. The bundled CLI and tool compiler apply the same structural checks.
 

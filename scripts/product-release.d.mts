@@ -28,3 +28,16 @@ export function recordBuild(directory: string, base?: string): void
 export function verifyReceipt(receipt: BuildReceipt, manifest: ReleaseManifest, revision: string, target: string, hashFile: (file: string) => string, base?: string): string
 /** Collect verified preview assets without uploading them. */
 export function collectRelease(unsigned: boolean, base?: string): Promise<void>
+
+/** Inputs already verified by release collection; output contains the copied installers. */
+export interface ReleaseSupportAssetsInput {
+  base: string
+  output: string
+  manifest: ReleaseManifest
+  runtime: { version: string; dependencyInventory: { path: string; sha256: string } }
+  revision: string
+  target: string
+  assets: string[]
+}
+/** Write platform-specific metadata, notices, dependency inventory, and checksums. */
+export function writeReleaseSupportAssets(input: ReleaseSupportAssetsInput): Promise<{ info: string; licenses: string; inventory: string; checksums: string }>

@@ -1,5 +1,6 @@
 // This child receives image bytes only. The Host wraps it with its configured
 // OS sandbox; filesystem confinement remains effective during path-swap races.
+import { realpath } from 'node:fs/promises'
 import { materialize } from './storage.js'
 import { MAX_IMAGE_BYTES } from './provider.js'
 const chunks = []; let length = 0
@@ -10,4 +11,4 @@ for await (const chunk of process.stdin) {
 }
 const data = Buffer.from(Buffer.concat(chunks).toString('utf8'), 'base64')
 if (!data.length || data.length > MAX_IMAGE_BYTES) throw new Error('Invalid image input')
-process.stdout.write(JSON.stringify(await materialize(process.cwd(), data)))
+process.stdout.write(JSON.stringify(await materialize(await realpath(process.cwd()), data)))

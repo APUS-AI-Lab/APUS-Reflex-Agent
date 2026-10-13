@@ -50,7 +50,8 @@ Set `JEV_ENDPOINT` and `JEV_MODEL` to your serving endpoint and model. Values ar
 |---|---|---|
 | `endpoint` | empty | HTTP gateway root or `/v1` URL; required with `model` before decisions |
 | `model` | empty | Model id sent to the gateway; required with `endpoint` before decisions |
-| `effort` | `low` | System One inference effort: `low` or `high` |
+| `protocol` | `openjev` | Decision protocol: OpenJev (`openjev`) or Typesafe (`typesafe`) |
+| `effort` | `low` | OpenJev inference effort: `low` or `high`; Typesafe omits this extension |
 | `timeoutMs` | `30000` | Request deadline in milliseconds |
 | `apiKeyEnv` | absent | Credential reference resolved for each request |
 | `keepAliveMs` | absent | Idle time a dedicated direct connection stays open for reuse; omission uses the process-wide transport. Requests routed through a configured HTTP proxy always use the proxy's transport |
@@ -128,9 +129,9 @@ The package also supplies a standard profile bundle with editable Reflex default
 
 The form schema contains only serializable data. The service validates endpoints on initial load and in its own `internal/config` update hook; invalid endpoints are rejected before the profile is written.
 
-The `jev` Loader entry exposes its endpoint, model, effort, deadline, protocol and credential reference as volatile settings. The dedicated **Reflex model configuration** page edits this entry through ConfigForms and writes API keys through Credentials; new requests read the committed values while requests already in flight retain their resolved provider. Pool parameters remain deployment-owned.
+The `jev` Loader entry exposes its endpoint, model, effort, deadline, protocol and credential reference as volatile settings. The dedicated **Reflex model configuration** page offers an OpenJev/Typesafe selector and edits this entry through ConfigForms and writes API keys through Credentials; new requests read the committed values while requests already in flight retain their resolved provider. Pool parameters remain deployment-owned.
 
-The `reflex` Remote namespace exposes `readStatus` and `testConnection`. An OpenJev connection test checks `/health`, authenticates `/v1/models`, confirms the selected model, and submits a fixed non-user yes/no proposition to `/v1/systemone`. It accepts unsaved values and an optional transient key without storing them, returns only sanitized failure classes and elapsed time, and never marks task capabilities verified. Runtime owners register capability readers through `registerCapability` and own their disposers.
+The `reflex` Remote namespace exposes `readStatus` and `testConnection`. An OpenJev connection test checks `/health`, authenticates `/v1/models`, confirms the selected model, and submits a fixed non-user yes/no proposition to `/v1/systemone`. Typesafe skips `/health` and checks the model list before submitting the same decision without the effort extension. The test uses the draft’s selected protocol, accepts unsaved values and an optional transient key without storing them, returns only sanitized failure classes and elapsed time, and never marks task capabilities verified. Runtime owners register capability readers through `registerCapability` and own their disposers.
 
 `ReflexCapabilityId` names the three capability owners; `ReflexCapabilityState` carries installation, enablement, observed outcomes and read-only deployment limits. `ReflexStatus` combines those states with the configured provider; its `provider` is `null` before configuration and after both fields are cleared. `ReflexConnectionInput` describes the unsaved candidate and optional transient key; `ReflexConnectionResult` reports the tested stage, sanitized status and duration.
 

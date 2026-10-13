@@ -16,7 +16,7 @@ export function validateRelease(manifest, desktop, lock) {
   const channels = manifest.version.includes('-beta.') ? ['beta'] : manifest.version.includes('-rc.') ? ['rc'] : ['stable', 'preview']
   if (!channels.includes(manifest.channel)) throw new Error('Product version and release channel differ.')
   if (desktop.version !== manifest.version || lock.version !== manifest.version || lock.packages['']?.version !== manifest.version) throw new Error('Update frontend/package.json and its lockfile to the release manifest version.')
-  if (!Array.isArray(manifest.targets) || !manifest.targets.length || manifest.targets.some(target => !['darwin-arm64', 'darwin-x64', 'win32-x64'].includes(target))) throw new Error('Release targets must name qualified desktop platforms.')
+  if (!Array.isArray(manifest.targets) || !manifest.targets.length || manifest.targets.some(target => !['darwin-arm64', 'darwin-x64', 'win32-x64', 'linux-x64'].includes(target))) throw new Error('Release targets must name qualified desktop platforms.')
   if (manifest.repository !== 'APUS-AI-Lab/APUS-Reflex-Harness') throw new Error('Release repository must be the APUS product repository.')
   return manifest
 }
@@ -32,6 +32,7 @@ export function checkRelease(base = root, tag = process.env.GITHUB_REF_TYPE === 
 export function releaseAssetNames(platform, arch) {
   if (platform === 'darwin' && ['arm64', 'x64'].includes(arch)) return [`apus-reflex-harness-mac-${arch}.dmg`, `apus-reflex-harness-mac-${arch}.zip`]
   if (platform === 'win32' && arch === 'x64') return ['apus-reflex-harness-windows-x64-setup.exe']
+  if (platform === 'linux' && arch === 'x64') return ['apus-reflex-harness-linux-x64.deb']
   throw new Error(`Unsupported installer target ${platform}-${arch}.`)
 }
 
@@ -65,6 +66,23 @@ export function verifyReceipt(receipt, manifest, revision, target, hashFile, bas
   return directory
 }
 
+/** Write supporting release files after the collector has verified the runtime and installers. */
+export async function writeReleaseSupportAssets({ base, output, manifest, runtime, revision, target, assets }) {
+  const [platform, arch] = target.split('-')
+  releaseAssetNames(platform, arch)
+  const suffix = target === 'darwin-arm64' ? '' : `-${target}`
+  const names = { info: `build-info${suffix}.json`, licenses: `LICENSES${suffix}.zip`, inventory: `runtime-dependencies${suffix}.json`, checksums: `SHA256SUMS${suffix}` }
+  const inventory = { ...runtime.dependencyInventory, path: names.inventory }
+  copyFileSync(join(base, 'frontend/.build/system3-runtime', runtime.dependencyInventory.path), join(output, names.inventory))
+  const licenseRoot = join(base, 'frontend/.build/licenses')
+  const { zipSync } = await import('fflate')
+  writeFileSync(join(output, names.licenses), zipSync(Object.fromEntries(readdirSync(licenseRoot).map(name => [name, readFileSync(join(licenseRoot, name))]))))
+  writeFileSync(join(output, names.info), `${JSON.stringify({ ...manifest, sourceRevision: revision, target, harnessVersion: runtime.version, runtimeDependencyInventory: inventory, signing: 'unsigned-preview', lockfiles: { pnpm: digest(join(base, 'pnpm-lock.yaml')), npm: digest(join(base, 'frontend/package-lock.json')) }, assets: assets.map(name => ({ name, sha256: digest(join(output, name)) })) }, null, 2)}\n`)
+  const files = [...assets, names.info, names.licenses, names.inventory]
+  writeFileSync(join(output, names.checksums), `${files.map(name => `${digest(join(output, name))}  ${name}`).join('\n')}\n`)
+  return names
+}
+
 /** Collect only clean, same-commit runtime artifacts; never upload from this script. */
 export async function collectRelease(unsigned, base = root) {
   const manifest = checkRelease(base)
@@ -77,7 +95,7 @@ export async function collectRelease(unsigned, base = root) {
   const runtime = json(join(base, 'frontend/.build/system3-runtime/runtime-manifest.json'))
   if (runtime.sourceRevision !== revision || runtime.sourceDirty || runtime.mode !== 'deployed' || runtime.platform !== process.platform || runtime.arch !== process.arch) throw new Error('Rebuild the deployed runtime from this clean commit and platform before collecting.')
   const runtimeRoot = join(base, 'frontend/.build/system3-runtime')
-  const inventory = dependencyInventory.verifyDependencyInventory(runtimeRoot, runtime)
+  dependencyInventory.verifyDependencyInventory(runtimeRoot, runtime)
   const receipt = json(join(base, '.artifacts/product-build-receipt.json'))
   const directory = verifyReceipt(receipt, manifest, revision, target, digest, base)
   const output = join(base, '.artifacts/product-release', manifest.version, target)
@@ -90,13 +108,7 @@ export async function collectRelease(unsigned, base = root) {
   }
   mkdirSync(output, { recursive: true })
   for (const name of assets) copyFileSync(join(directory, name), join(output, name))
-  copyFileSync(join(runtimeRoot, inventory.path), join(output, inventory.path))
-  const licenseRoot = join(base, 'frontend/.build/licenses')
-  const { zipSync } = await import('fflate')
-  writeFileSync(join(output, 'LICENSES.zip'), zipSync(Object.fromEntries(readdirSync(licenseRoot).map(name => [name, readFileSync(join(licenseRoot, name))]))))
-  writeFileSync(join(output, 'build-info.json'), `${JSON.stringify({ ...manifest, sourceRevision: revision, target, harnessVersion: runtime.version, runtimeDependencyInventory: inventory, signing: 'unsigned-preview', lockfiles: { pnpm: digest(join(base, 'pnpm-lock.yaml')), npm: digest(join(base, 'frontend/package-lock.json')) }, assets: assets.map(name => ({ name, sha256: digest(join(output, name)) })) }, null, 2)}\n`)
-  const names = [...assets, 'build-info.json', 'LICENSES.zip', inventory.path]
-  writeFileSync(join(output, 'SHA256SUMS'), `${names.map(name => `${digest(join(output, name))}  ${name}`).join('\n')}\n`)
+  await writeReleaseSupportAssets({ base, output, manifest, runtime, revision, target, assets })
   console.log(`Release inputs collected: ${output}. Install and verify before publishing.`)
 }
 

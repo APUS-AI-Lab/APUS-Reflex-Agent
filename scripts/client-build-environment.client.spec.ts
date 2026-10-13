@@ -13,6 +13,7 @@ import {
   repositoryClientBuildEnvironment,
   repositoryCommitHash,
   repositoryGitDirty,
+  repositoryProductVersion,
   repositoryVersion,
   resolveClientBuildEnvironment,
   writeClientBuildRecord,
@@ -151,6 +152,7 @@ describe('client build environment', () => {
       DSH_CLIENT_EXTRA: 'preserved',
       DSH_CLIENT_GIT_DIRTY: 'true',
       DSH_CLIENT_VERSION: 'spoofed',
+      DSH_CLIENT_PRODUCT_VERSION: '9.9.9',
     })).toEqual({
       DSH_CLIENT_COMMIT_HASH: COMMIT_HASH.slice(0, 7),
       DSH_CLIENT_EXTRA: 'preserved',
@@ -198,6 +200,42 @@ describe('client build environment', () => {
     expect(repositoryGitDirty(fixtureRoot)).toBe(false)
     write(join(fixtureRoot, 'submodule/tracked.txt'), 'modified submodule\n')
     expect(repositoryGitDirty(fixtureRoot)).toBe(true)
+  })
+
+  it('owns product versions in default and official builds while retaining the Harness version', () => {
+    const fixtureRoot = repositoryFixture()
+    write(join(fixtureRoot, 'release/manifest.json'), '{"version":"0.1.0"}\n')
+    git(fixtureRoot, ['add', 'release/manifest.json'])
+    git(fixtureRoot, ['commit', '-m', 'product fixture'])
+    const parent = { DSH_CLIENT_PRODUCT_VERSION: '9.9.9', DSH_CLIENT_COMMIT_HASH: COMMIT_HASH }
+    const repository = repositoryClientBuildEnvironment(fixtureRoot, parent)
+    expect(repositoryProductVersion(fixtureRoot)).toBe('0.1.0')
+    expect(repository).toMatchObject({ DSH_CLIENT_PRODUCT_VERSION: '0.1.0', DSH_CLIENT_VERSION: '1.2.3-rc.4' })
+    const official = officialClientBuildEnvironment(fixtureRoot, parent)
+    expect(resolveClientBuildEnvironment(repository, 'official')).toEqual(official)
+    expect(official).toMatchObject({ DSH_CLIENT_PRODUCT_VERSION: '0.1.0', DSH_CLIENT_VERSION: '1.2.3-rc.4' })
+    const processEnvironment = clientBuildProcessEnvironment(parent, official)
+    expect(clientBuildEnvironmentDefines(processEnvironment)['process.env.DSH_CLIENT_PRODUCT_VERSION']).toBe('"0.1.0"')
+    expect(readClientBuildRecord(buildFixture(repository)).environment).toEqual(repository)
+  })
+
+  it.each(['{}', '{"version":1}', '{"version":"invalid"}', '{'])('rejects an invalid existing product manifest: %s', (source) => {
+    const fixtureRoot = repositoryFixture()
+    write(join(fixtureRoot, 'release/manifest.json'), source)
+    expect(() => repositoryClientBuildEnvironment(fixtureRoot, { DSH_CLIENT_PRODUCT_VERSION: '0.1.0' })).toThrow()
+    expect(() => officialClientBuildEnvironment(fixtureRoot)).toThrow()
+  })
+
+  it('does not let ambient product metadata populate a checkout without a product manifest', () => {
+    const fixtureRoot = repositoryFixture()
+    const parent = { DSH_CLIENT_PRODUCT_VERSION: '9.9.9' }
+    expect(repositoryProductVersion(fixtureRoot)).toBeUndefined()
+    expect(repositoryClientBuildEnvironment(fixtureRoot, parent).DSH_CLIENT_PRODUCT_VERSION).toBeUndefined()
+    expect(officialClientBuildEnvironment(fixtureRoot, parent).DSH_CLIENT_PRODUCT_VERSION).toBeUndefined()
+    const repository = repositoryClientBuildEnvironment(fixtureRoot, parent)
+    expect(resolveClientBuildEnvironment(repository, 'official').DSH_CLIENT_PRODUCT_VERSION).toBeUndefined()
+    expect(() => resolveClientBuildEnvironment({ ...repository, DSH_CLIENT_PRODUCT_VERSION: 'invalid' }, 'official'))
+      .toThrow(/DSH_CLIENT_PRODUCT_VERSION/)
   })
 
   it('omits dirty metadata when repository metadata is unavailable', () => {

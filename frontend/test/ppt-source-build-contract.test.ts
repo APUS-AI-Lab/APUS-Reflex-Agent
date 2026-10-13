@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process'
 import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { projectRoot } from './patch-path'
 
@@ -45,6 +46,11 @@ describe('PPT source build contract', () => {
       }).trim()
       const manifest = JSON.parse(await readFile(path.join(snapshot, seeds[0], 'package.json'), 'utf8'))
       expect(version).toBe(manifest.version)
+      const wrapper = path.join(snapshot, 'import-compiler.mjs')
+      await writeFile(wrapper, `await import(${JSON.stringify(pathToFileURL(compiler).href)})\n`)
+      expect(execFileSync(process.execPath, [wrapper, '--version'], {
+        cwd: snapshot, encoding: 'utf8', timeout: 30_000
+      })).toBe('')
       for (const kind of ['core', 'adapter']) {
         const client = await readFile(path.join(snapshot, `packages/ppt-runtime/${kind}/lib/client.js`), 'utf8')
         expect(client).toContain('/* PERSONAL_TEMPLATE_MANAGER */')

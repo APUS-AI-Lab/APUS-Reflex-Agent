@@ -37,9 +37,21 @@ export function ReflexSettings(props: ReflexSettingsProps) {
     <p>{t('description')}</p>
     {state.runtime?.provider === null ? <p role="status">{t('unconfigured')}</p> : null}
     <SettingsForm labels={{ ...formLabels(t), ...state.credentialSaveError ? { saveFailed: t(state.credentialSaveError === 'configured' ? 'newCredentialReference' : 'credentialCheckFailed') } : state.partialSave ? { saveFailed: t('partialSave') } : {} }} state={state} onSave={props.save} onDiscard={props.discard}>
-      {fields.map(field => <SettingsValueField key={field} id={`reflex-${field}`} label={t(field)} hint={t(`${field}Hint`)}
+      <div className={css.protocol}>
+        <label htmlFor="reflex-protocol">{t('protocol')}</label>
+        <select id="reflex-protocol" value={state.protocol.text} aria-describedby="reflex-protocol-hint"
+          aria-invalid={state.protocol.invalid || undefined} disabled={!state.writable || state.saving}
+          onChange={(event) => { props.edit('protocol', event.target.value) }}>
+          <option value="openjev">{t('protocolOpenjev')}</option>
+          <option value="typesafe">{t('protocolTypesafe')}</option>
+        </select>
+        <p id="reflex-protocol-hint">{state.protocol.invalid ? t('invalidProtocol') : t('protocolHint')}</p>
+        {state.protocol.overridden && <Button disabled={!state.writable || state.saving}
+          onClick={() => { props.resetField('protocol') }}>{t('reset')}</Button>}
+      </div>
+      {fields.map(field => <SettingsValueField key={field} id={`reflex-${field}`} label={t(field)} hint={t(field === 'effort' && state.protocol.text === 'typesafe' ? 'effortNotApplicable' : `${field}Hint`)}
         overriddenLabel={t('overridden')} resetLabel={t('reset')} invalidLabel={t('invalidNumber')}
-        disabled={!state.writable || state.saving} numeric={field === 'timeoutMs'} {...state[field]}
+        disabled={!state.writable || state.saving || (field === 'effort' && state.protocol.text === 'typesafe')} numeric={field === 'timeoutMs'} {...state[field]}
         onEdit={(text) =>{  props.edit(field, text) }} onReset={() =>{  props.resetField(field) }} />)}
       <SettingsSecretField id="reflex-api-key" label={t('apiKey')} hint={t('apiKeyHint')}
         disabled={!state.writable || state.saving || !state.apiKeyWritable} text={state.apiKey.text}

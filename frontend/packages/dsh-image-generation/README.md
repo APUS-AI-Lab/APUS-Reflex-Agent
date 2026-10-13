@@ -62,7 +62,7 @@ npm pack ./packages/dsh-image-generation --pack-destination /absolute/output/dir
 
 服务商、模型、地址和 Key 在 `ctx.credentials` 的 `dsh-image-generation/configuration` 私有记录中一次提交。凭据服务的跨进程锁和修订检查防止并发保存覆盖；失败保存保持整个旧记录。使用同一记录使一次工具调用读到一致的配置。通用 settings 仅注册卡片命名空间。Agent 参数、图片、日志和工作区均不携带 Key。
 
-生图通过标准工具执行和审计流程，使用已保存配置直接调用；部署级工具策略继续生效。请求前及落盘前读取当前会话的 sandboxPolicy，要求工作区写权限；输出目录和目标文件拒绝符号链接。实际写入由 `ctx.sandbox` 包装的 `ctx.subprocess` 子进程执行，使用工作区写权限；仅通过 stdin 接收图片字节，清除继承环境，Key 留在 Host。PNG 使用临时文件、原子创建和内容哈希校验，避免并发生图产生半个文件。HTTP 禁止重定向，只接受 HTTPS 地址（本机回环开发服务允许 HTTP），约束超时、响应大小和解码像素；不下载厂商返回的任意远程 URL。系统沙箱的跨平台执行能力以部署环境为准，本期本地验收环境为 macOS arm64。
+生图通过标准工具执行和审计流程，使用已保存配置直接调用；部署级工具策略继续生效。请求前及落盘前读取当前会话的 sandboxPolicy，要求工作区写权限；输出目录和目标文件拒绝符号链接。实际写入由 `ctx.sandbox` 包装的 `ctx.subprocess` 子进程执行，使用工作区写权限；仅通过 stdin 接收图片字节，清除继承环境，Key 留在 Host。写入子进程先规范化工作目录，兼容 Windows 临时目录的短路径；输出目录和文件的链接检查仍然生效。PNG 使用临时文件、原子创建和内容哈希校验，避免并发生图产生半个文件。HTTP 禁止重定向，只接受 HTTPS 地址（本机回环开发服务允许 HTTP），约束超时、响应大小和解码像素；不下载厂商返回的任意远程 URL。系统沙箱的跨平台执行能力以部署环境为准，本期本地验收环境为 macOS arm64。
 
 macOS Desktop 的 Host 运行在 Electron utility process 中；写图子进程显式设置 `ELECTRON_RUN_AS_NODE=1`，使同一可执行文件执行 Node 脚本。该启动常量与 Windows 的 SystemRoot 按需保留，凭据和 NODE_OPTIONS 继续清除。回归同时覆盖普通 Node 和真实 Electron utility process。
 

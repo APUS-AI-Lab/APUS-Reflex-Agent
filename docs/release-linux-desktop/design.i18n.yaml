@@ -1,0 +1,16 @@
+# Bilingual-pair consistency record for design.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/release-linux-desktop/design.md
+/linux-desktop-release:
+  en: 07d32cf60d248174
+  zh: 46c9e0e12b43f633
+/linux-desktop-release/packaging:
+  en: e184a96c348a1e2e
+  zh: 4d840689b65963c0
+/linux-desktop-release/installation-acceptance:
+  en: 7ce70be6ea9dcbb8
+  zh: ac424410f3e8804f
+/linux-desktop-release/files-and-verification:
+  en: c357c4bf20312d47
+  zh: af921c9fe553e6e2

@@ -487,6 +487,40 @@
       "createStartMenuShortcut": true
     },
     "afterPack": "scripts/package-system3-runtime.cjs",
-    "beforePack": "scripts/verify-system3-runtime.cjs"
+    "beforePack": "scripts/verify-system3-runtime.cjs",
+    "linux": {
+      "target": [
+        {
+          "target": "deb",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "executableName": "apus-reflex-harness",
+      "icon": ".build/brand/brand-icon.png",
+      "category": "Development",
+      "maintainer": "APUS-AI-Lab"
+    },
+    "deb": {
+      "artifactName": "apus-reflex-harness-linux-x64.deb",
+      "packageName": "apus-reflex-harness",
+      "priority": "optional",
+      "depends": [
+        "libgtk-3-0t64",
+        "libnotify4",
+        "libnss3",
+        "libxss1",
+        "libxtst6",
+        "xdg-utils",
+        "libatspi2.0-0t64",
+        "libuuid1",
+        "libsecret-1-0",
+        "libasound2t64",
+        "libgbm1",
+        "libdrm2",
+        "libstdc++6"
+      ]
+    }
   }
 }

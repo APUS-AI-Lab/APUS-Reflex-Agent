@@ -228,13 +228,16 @@ it('reports a failed developer-tool write and allows retry', async () => {
 
 describe('current version', () => {
   it.each([
-    ['Current version: 1.2.3-rc.4', en, undefined],
-    ['当前版本：1.2.3-rc.4', zh, undefined],
-    ['Current version: 0.1.0', en, { productVersion: '0.1.0' }],
-    ['当前版本：0.1.0', zh, { productVersion: '0.1.0' }],
-  ])('renders the localized product or Web release label %s', (expected, dictionary, carrier) => {
+    ['Current version: 1.2.3-rc.4', en, undefined, undefined],
+    ['当前版本：1.2.3-rc.4', zh, undefined, undefined],
+    ['Current version: 0.1.0', en, undefined, '0.1.0'],
+    ['当前版本：0.1.0', zh, undefined, '0.1.0'],
+    ['Current version: 0.1.0', en, { productVersion: '0.1.0' }, '0.0.9'],
+    ['当前版本：0.1.0', zh, { productVersion: '0.1.0' }, '0.0.9'],
+  ])('renders the localized product or Web release label %s', (expected, dictionary, carrier, productVersion) => {
     vi.stubGlobal('dshDesktop', carrier)
     vi.stubEnv('DSH_CLIENT_VERSION', '1.2.3-rc.4')
+    vi.stubEnv('DSH_CLIENT_PRODUCT_VERSION', productVersion)
     const translate: TriggerContentProps['t'] = (key, params) => {
       let text = (dictionary as Record<string, string>)[key] ?? key
       for (const [name, value] of Object.entries(params ?? {})) text = text.replace(`{${name}}`, String(value))
@@ -248,6 +251,7 @@ describe('current version', () => {
   it('omits the row when a partial build has no version metadata', () => {
     vi.stubGlobal('dshDesktop', undefined)
     vi.stubEnv('DSH_CLIENT_VERSION', undefined)
+    vi.stubEnv('DSH_CLIENT_PRODUCT_VERSION', undefined)
     const view = render(<CurrentVersionRow {...kit} t={t} />)
     expect(view.container.textContent).toBe('')
   })
