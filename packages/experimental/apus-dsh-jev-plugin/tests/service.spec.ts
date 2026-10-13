@@ -1,7 +1,7 @@
 import { Context } from '@deepseek-ai/cordis'
 import { describe, expect, it, vi } from 'vitest'
 import { z } from 'zod'
-import Jev from '../src/index.ts'
+import Jev, { JevConfigurationError } from '../src/index.ts'
 import { JevProviderError, resolveJevApiKey } from '../src/client.ts'
 import { CredentialProvider } from '@deepseek-ai/dsh-credentials'
 import { createLaunchEnvironmentSnapshot } from '@deepseek-ai/dsh-launch-environment'
@@ -31,7 +31,7 @@ describe('apus-dsh-jev-plugin service', () => {
       expect(outcome.kind).toBe('unknown')
       expect(JSON.stringify(outcome)).not.toContain('secret upstream credential')
       dispose()
-      expect(() => service.resolve(request)).toThrow('not registered')
+      expect(() => service.resolve(request)).toThrow(JevConfigurationError)
     } finally { dispose(); await ctx.fiber.dispose() }
   })
 
@@ -222,7 +222,7 @@ it('allows an explicit unsaved probe before first configuration without enabling
     const plugin = await ctx.plugin(Jev, {})
     expect(ctx.jev.readStatus().provider).toBeNull()
     expect(ctx.jev.listProviders()).toEqual([])
-    await expect(ctx.jev.decide({ model: 'override', state: null, questions: { q: { type: 'noul' } } })).rejects.toThrow('Jev is not configured')
+    await expect(ctx.jev.decide({ model: 'override', state: null, questions: { q: { type: 'noul' } } })).rejects.toThrow(JevConfigurationError)
     expect(await ctx.jev.warm()).toBe(false)
     expect(fetcher).not.toHaveBeenCalled()
     expect(await ctx.jev.testConnection({ endpoint: 'https://candidate.test', model: 'candidate',

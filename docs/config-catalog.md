@@ -887,7 +887,7 @@ export interface Config {
 ## `@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin`
 
 - `refs`: `Volatile` (`@deepseek-ai/cordis`)
-- `source`: [`packages/experimental/apus-dsh-jev-plugin/src/index.ts:28`](../packages/experimental/apus-dsh-jev-plugin/src/index.ts)
+- `source`: [`packages/experimental/apus-dsh-jev-plugin/src/index.ts:33`](../packages/experimental/apus-dsh-jev-plugin/src/index.ts)
 
 ```ts config-catalog
 /** Plugin configuration for the built-in System One provider. */
@@ -1020,22 +1020,32 @@ export interface Config {
 
 ## `@deepseek-ai/dsh-experimental-continuum-jev`
 
-- `source`: [`packages/experimental/continuum-jev/src/index.ts:76`](../packages/experimental/continuum-jev/src/index.ts)
+- `refs`: [`System3DataClass`](../packages/experimental/system3-policy/src/index.ts) · [`System3PrivacyPolicy`](../packages/experimental/system3-policy/src/index.ts)
+- `source`: [`packages/experimental/continuum-jev/src/index.ts:107`](../packages/experimental/continuum-jev/src/index.ts)
 
 ```ts config-catalog
-/** Profile configuration for the optional automatic Continuum selector. */
-export interface ContinuumJevProfileConfig {
-  /** Selector mode; off leaves the deterministic baseline in place. */
+/** Profile settings resolve the same explicit configuration used by direct consumers. */
+export type ContinuumJevProfileConfig = ContinuumJevConfig
+
+/** Resolved settings for a bounded relevance batch; privacy admission precedes network dispatch. */
+export interface ContinuumJevConfig {
+  /** Off skips scoring, shadow records advice, and active applies the relevance order. */
   readonly mode: ContinuumJevMode
-  /** Minimum Jev confidence required to accept a selected candidate. */
-  readonly minConfidence: number
-  /** Maximum provider wait in milliseconds; omitted means no adapter timeout. */
-  readonly timeoutMs?: number
-  /** Maximum number of sequential candidate selections; defaults to one. */
+  /** Provider dispatch deadline in milliseconds; Session durability uses its own I/O barrier. */
+  readonly timeoutMs: number
+  /** Complete resolved Jev request JSON limit, including question text and metadata. */
+  readonly maxRequestBytes: number
+  /** Every Jev transport is treated as network and requires explicit approval. */
+  readonly privacyPolicy: System3PrivacyPolicy
+  /** Deployment classification of the query and every candidate; null or empty denies dispatch. */
+  readonly sessionDataClasses: readonly System3DataClass[] | null
+  /** Rejected legacy setting: relevance ranking does not filter candidates by confidence. */
+  readonly minConfidence?: number
+  /** Rejected legacy setting: relevance ranking retains every bounded candidate. */
   readonly maxSelections?: number
 }
 
-/** Controller mode; only active mode lets Jev replace the deterministic choice. */
+/** Only active mode applies the relevance order; every mode retains all supplied candidates. */
 export type ContinuumJevMode = 'off' | 'shadow' | 'active'
 ```
 <!-- END GENERATED config-catalog:@deepseek-ai/dsh-experimental-continuum-jev -->

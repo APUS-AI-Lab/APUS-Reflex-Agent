@@ -96,7 +96,7 @@ const outcome = await ctx.jev.decide({
 <details>
 <summary>实现内部细节——点击展开</summary>
 
-`ctx.jev` 是服务定义和 provider registry。`SystemOneProvider` 是首个 provider 实现，会根据请求中的完整问题集合校验响应，包括候选 key、概率总和、confidence、score 期望值和 usage 计数。网络 I/O 之前会解析 provider，并在返回的 `JevSpec` 中固定生效模型。
+`ctx.jev` 是服务定义和 provider registry。`SystemOneProvider` 是首个 provider 实现，会根据请求中的完整问题集合校验响应，包括候选 key、概率总和、confidence、score 期望值和 usage 计数。网络 I/O 之前会解析 provider，并在返回的 `JevSpec` 中固定生效模型。 缺少部署配置或 provider 未注册时抛出 `JevConfigurationError`；调用方不能将配置错误当成模型不确定性。
 
 本包不拥有 AgentLoop，不选择 LLM 生成路由，不编辑 prompt，不授权 tool，也不持久化 Session receipt。System3 consumer 必须决定调用时机，应用隐私策略并持久化可重放的 receipt。这样 Jev 请求保持显式，provider 也可以替换。
 

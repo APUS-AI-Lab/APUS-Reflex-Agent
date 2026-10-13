@@ -1,10 +1,27 @@
 {
   "extends": "../../../tsconfig.base.json",
-  "compilerOptions": { "rootDir": "src", "outDir": "lib/types" },
-  "include": ["src"],
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "lib/types"
+  },
+  "include": [
+    "src"
+  ],
   "references": [
-    { "path": "../../context/continuum/tsconfig.json" },
-    { "path": "../apus-dsh-jev-plugin" },
-    { "path": "../../core/session" }
+    {
+      "path": "../../context/continuum/tsconfig.json"
+    },
+    {
+      "path": "../apus-dsh-jev-plugin"
+    },
+    {
+      "path": "../../core/session"
+    },
+    {
+      "path": "../system3-policy"
+    },
+    {
+      "path": "../../session/session-persistence"
+    }
   ]
 }
