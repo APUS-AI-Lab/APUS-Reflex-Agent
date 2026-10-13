@@ -38,6 +38,9 @@
     - id: session-projection
       name: '@deepseek-ai/dsh-session-projection'
 
+    - id: continuum-task-guard
+      name: '@deepseek-ai/dsh-continuum/task-guard'
+
     - id: sandbox-policy
       name: '@deepseek-ai/dsh-sandbox-policy'
       config:

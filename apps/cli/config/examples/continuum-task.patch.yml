@@ -1,0 +1,13 @@
+# Explicit single-host task attachment. See docs/feat-cross-session-memory/design.html.
+# A new Session with the same task id uses the saved task; other workspaces are refused.
+- insert:
+    - id: continuum-tasks
+      name: '@deepseek-ai/dsh-continuum/tasks'
+      config:
+        root: !!js process.env.APUS_TASK_ROOT
+        workspace: !!js process.cwd()
+        domainId: !!js process.env.APUS_TASK_DOMAIN
+        principalId: !!js process.env.APUS_TASK_PRINCIPAL
+        taskId: !!js process.env.APUS_TASK_ID
+        maxContextBytes: 8192
+        maxPageBytes: 8192

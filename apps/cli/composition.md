@@ -66,6 +66,8 @@ flowchart LR
   cfg --> plugin_dsh_base_session_query_sqlite
   plugin_dsh_base_session_projection["session-projection<br/>@deepseek-ai/dsh-session-projection"]
   cfg --> plugin_dsh_base_session_projection
+  plugin_dsh_base_continuum_task_guard["continuum-task-guard<br/>@deepseek-ai/dsh-continuum/task-guard"]
+  cfg --> plugin_dsh_base_continuum_task_guard
   plugin_dsh_base_storage["storage<br/>@deepseek-ai/dsh-storage"]
   cfg --> plugin_dsh_base_storage
   plugin_dsh_base_storage_json["storage-json<br/>@deepseek-ai/dsh-storage-json"]
@@ -227,6 +229,7 @@ flowchart LR
 | `attachment-local` | `@deepseek-ai/dsh-attachment-local` |
 | `session-query-sqlite` | `@deepseek-ai/dsh-session-query-sqlite` |
 | `session-projection` | `@deepseek-ai/dsh-session-projection` |
+| `continuum-task-guard` | `@deepseek-ai/dsh-continuum/task-guard` |
 | `storage` | `@deepseek-ai/dsh-storage` |
 | `storage-json` | `@deepseek-ai/dsh-storage-json` |
 | `storage-domain` | `@deepseek-ai/dsh-storage-domain` |

@@ -1,0 +1,10 @@
+{
+  "seed_response": "TASK_INPUT_STORED",
+  "continued_response": "TASK_ARTIFACT_WRITTEN",
+  "task_id": "python-task",
+  "domain_id": "python-domain",
+  "principal_id": "python-principal",
+  "workspace_matches": true,
+  "last_tool": "write",
+  "revision": 2
+}

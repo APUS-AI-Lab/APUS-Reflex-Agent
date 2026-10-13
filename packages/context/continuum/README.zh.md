@@ -9,7 +9,7 @@ kind: package-reference
 
 ## 概述
 
-本包提供 APUS Continuum 的持久记录与 profile service：带 Session 事件来源的不可变记忆记录、revision 校验、明确更正、停用、可从日志重建投影的仅日志 Session 事件、精确来源回读、确定性的有界检索、可重建的派生检索索引、可选的 Jev selector、生命周期感知的同一步消费者和显式产品开关。服务不会静默创建记录，也不会在没有 Reflex 时提供无限记忆模式。
+保存带精确来源引用的原文、按预算检索片段，并保留明确纠正供审计。可选任务插件使新 Session 恢复同一持久任务的输入；记忆记录插件另行支持 Reflex 选择。持续工作使用有限模型窗口；完整处理覆盖与规模验收尚未完成。
 
 Session 事件使用现有 persistence backend；完成 `ctx.sessions.flush(session)` 后才具备持久化保证。准入默认显式执行；opt-in 的 `admission: 'user-message'` 在 Reflex 专属开关生效时记录带精确 Session 引用的人类消息。配套 `continuum-jev` service 提供 shadow/active 选择和回执。
 
@@ -31,6 +31,16 @@ Session 事件使用现有 persistence backend；完成 `ctx.sessions.flush(sess
 ## 使用本包
 
 使用 `MemoryRecordStore` 保存确定性的 revision 语义；用 `appendMemoryRecordEvent` 把变更追加到现有 Session 日志，用 `foldMemoryRecordEvents` 从日志重建，用 `readMemorySourceEvents` 精确回读来源，用 `retrieveMemoryWorkingSet` 生成有界候选。只有 `ctx.sessions.flush(session)` 成功后，调用方才能报告已经持久化。
+
+-----
+
+可选插件 `@deepseek-ai/dsh-continuum/tasks` 将不同 Session 接入宿主配置的同一任务。独立 JSONL 日志提供单写者、持久版本检查、精确请求去重和完整原文；内部日志不进入普通会话列表。配置固定 `root`、`workspace`、`domainId`、`principalId` 和 `taskId`；`maxContextBytes` 与 `maxPageBytes` 默认都是 8192。宿主向一个本地主体授权精确 canonical 工作区；这不是多用户认证服务。
+
+人类文本不 trim、不按数量淘汰、不按长度截断。live 来源通过所属 Session flush；cold 来源先临时取得独占写权限，再 flush 与精确回读。其他进程持写的来源拒绝确认。域操作在 append、flush 和精确回读后才发布；持久状态不确定时停止后续读写，等待恢复。任务修改与模型请求串行，租约覆盖下游中间件直到流结束，因此运行中的请求会延后纠正和其他输入准入。辅助压缩请求保留授权与停用检查，使用各自选定的消息区间。
+
+`read_continuum_task` 返回严格字节预算的 JSON 页，包含来源事件与文本块、SHA-256、任务版本和续页游标；游标过期时从当前首页重新读取。`pending` 仅表示还有有效原文未读取，读取或保存都不等于处理完成。上下文快照对应其装配版本，当前人类消息在模型派发前保存，可能推进该版本。宿主显式纠正会停用指定前驱，同时保留旧原文。正式 profile 常驻轻量任务检查：已绑定的 Session 缺少匹配任务服务时拒绝模型派发。已有绑定 Session 在停用后也拒绝继续派发模型请求，避免沿用旧摘要或输出；新 Session 使用当前任务。自动修复旧历史、assistant/tool 进度收录、输入处理回执、对此任务投影的 Reflex 排序及实际窗口规模验收仍需分别完成。
+
+参见[跨会话设计与验收](../../../docs/feat-cross-session-memory/design.html)和[可选 profile 配置](../../../apps/cli/config/examples/continuum-task.patch.yml)。任务日志是持久的，当前完整内存投影不代表常量内存或无限规模已实现。
 
 -----
 

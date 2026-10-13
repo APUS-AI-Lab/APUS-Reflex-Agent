@@ -17,6 +17,8 @@ flowchart LR
   svc_continuumMemory["ctx.continuumMemory<br/>Source-backed Continuum memory"]
   pkg_agent_loop["agent-loop"]
   pkg_experimental_continuum_jev["experimental-continuum-jev"]
+  svc_continuumTasks["ctx.continuumTasks<br/>Durable cross-session task inputs"]
+  svc_continuumTaskGuard["ctx.continuumTaskGuard<br/>Task-bound request authorization"]
   pkg_hmr["hmr"]
   svc_hmr["ctx.hmr<br/>Serialized module and configuration reloads"]
   pkg_app_boot["app-boot"]
@@ -314,6 +316,8 @@ flowchart LR
   pkg_computer_use --> svc_computerUse
   pkg_config_editor --> svc_configEditor
   pkg_continuum --> svc_continuumMemory
+  pkg_continuum --> svc_continuumTaskGuard
+  pkg_continuum --> svc_continuumTasks
   pkg_cordis_host_runner --> svc_cordisInspect
   pkg_cordis_host_runner --> svc_dynamicCordisRunner
   pkg_credentials --> svc_credentials
@@ -458,6 +462,9 @@ flowchart LR
   svc_connection --> pkg_host_frontend_static
   svc_continuumMemory --> pkg_agent_loop
   svc_continuumMemory --> pkg_experimental_continuum_jev
+  svc_continuumTaskGuard --> pkg_agent_loop
+  svc_continuumTaskGuard --> pkg_continuum
+  svc_continuumTasks --> pkg_agent_loop
   svc_cordisInspect --> pkg_tool_cordis
   svc_credentials --> pkg_api_settings_controller
   svc_credentials --> pkg_llm_deepseek
@@ -585,6 +592,8 @@ flowchart LR
 | `ctx.jev` | `seam` | [`experimental-apus-dsh-jev-plugin`](../packages/experimental/apus-dsh-jev-plugin) | [`experimental-apus-dsh-jev-plugin`](../packages/experimental/apus-dsh-jev-plugin) | [`experimental-system3`](../packages/experimental/system3) | - | 解析已注册的决策 provider 并验证类型化答案；System3 负责隐私准入与持久化建议记录。 |
 | `ctx.system3` | `service` | [`experimental-system3`](../packages/experimental/system3) | - | - | - | 组合路由、证据与监督策略；显式启用的 API 输入路由分别记录 Jev 建议与实际采用的模型选择。 |
 | `ctx.continuumMemory` | `service` | [`continuum`](../packages/context/continuum) | - | [`agent-loop`](../packages/core/agent-loop), [`experimental-continuum-jev`](../packages/experimental/continuum-jev) | - | 拥有带来源的版本化记忆记录、有界 recall 和显式启用的用户消息准入路径；Reflex 插件提供 Jev 选择，原版 profile 保持服务关闭。 |
+| `ctx.continuumTasks` | `service` | [`continuum`](../packages/context/continuum) | - | [`agent-loop`](../packages/core/agent-loop) | - | 拥有独占租约的任务日志、来源回读、显式修订和跨业务 Session 的有界任务分页。 |
+| `ctx.continuumTaskGuard` | `service` | [`continuum`](../packages/context/continuum) | - | [`agent-loop`](../packages/core/agent-loop), [`continuum`](../packages/context/continuum) | - | 正式 profile 在可选任务服务缺失或卸载后仍保留任务绑定检查。 |
 | `ctx.hmr` | `core` | [`hmr`](../packages/boot/hmr) | - | [`app-boot`](../packages/boot/app-boot) | - | 负责模块和精确配置监听；应用修改共用其队列，自动重载等待应用文件锁。 |
 | `ctx.pluginRegistryProbe` | `core` | [`client-ui-plugin-manager`](../packages/client/ui-plugin-manager) | - | [`client-ui-plugin-manager`](../packages/client/ui-plugin-manager) | - | 在 Host 上并发比较公共安装源响应；初始安装源推荐由 Client 负责。 |
 | `ctx.pluginManager` | `core` | [`plugin-manager`](../packages/boot/plugin-manager) | - | [`plugin-manager`](../packages/boot/plugin-manager), `ui-settings-plugin-inventory` | - | 与 CLI 共享 profile 包操作，并向 Web 和 Agent 调用方分别报告持久状态与运行状态。 |

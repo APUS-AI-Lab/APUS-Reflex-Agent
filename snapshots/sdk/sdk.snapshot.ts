@@ -129,6 +129,7 @@ interface SdkAssertions {
 }
 
 const SDK_ASSERTIONS: Readonly<Record<string, SdkAssertions>> = {
+  'continuum-task-pages': { expectedFinalResponse: 'TASK_READ_COMPLETE' },
   'continuum-partial-recall': { expectedFinalResponse: '迁移安排在周五。', preserveReplayInput: true },
   'continuum-tail-recall': { expectedFinalResponse: 'Quartzlaunch release code MERIDIAN-731.' },
   'continuum-relevance': { expectedFinalResponse: 'PIN 7319; Friday.' },
@@ -1002,6 +1003,25 @@ describe('TypeScript SDK snapshots over the jsonrpc runtime', () => {
         expect(notifications.flatMap(notification => {
           const event = notificationEvent(notification)
           return event !== undefined && typeof event.type === 'string' && types.has(event.type) ? [event] : []
+        })).toEqual(selected)
+      }
+      if (scenario.name === 'continuum-task-pages') {
+        const events = results.flatMap(result => result.events)
+        const bindings = events.filter(event => event.type === 'continuum/task-binding')
+        expect(bindings).toHaveLength(1)
+        expect(bindings[0]).toMatchObject({ data: {
+          domainId: 'snapshot-domain', principalId: 'snapshot-principal', taskId: 'snapshot-task',
+        } })
+        const calls = events.filter(event => event.type === 'tool/call')
+        expect(calls, JSON.stringify(events.filter(event => event.type === 'turn/end' || event.type === 'agent/error')))
+          .toMatchObject([{ data: { name: 'read_continuum_task', arguments: '{}' } }])
+        expect(calls).toHaveLength(1)
+        const selected = events.filter(event => event.type === 'continuum/task-binding' || event.type === 'tool/result')
+        const selectedSeqs = new Set(selected.map(event => event.seq))
+        expect(records(ordered[0]!.content).filter(event => selectedSeqs.has(event.seq as number))).toEqual(selected)
+        expect(notifications.flatMap(notification => {
+          const event = notificationEvent(notification)
+          return event !== undefined && selectedSeqs.has(event.seq as number) ? [event] : []
         })).toEqual(selected)
       }
       if (scenario.name === 'continuum-partial-recall' || scenario.name === 'continuum-tail-recall') {

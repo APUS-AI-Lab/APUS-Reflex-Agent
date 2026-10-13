@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Continuum B2 · 跨会话任务记忆</title>
+<style>body{font:17px/1.75 system-ui;max-width:1080px;margin:40px auto;padding:0 24px;color:#142333;background:#f6f8fb}h1,h2{line-height:1.3}section{background:white;padding:24px;margin:20px 0;border:1px solid #dce3ea;border-radius:12px}code,pre{background:#edf2f7}table{border-collapse:collapse;width:100%}td,th{border:1px solid #dce3ea;padding:10px;text-align:left}</style>
+<body><a href="../feat-lossless-memory/design.html">返回唯一总设计入口</a><h1>跨会话任务记忆与持续执行</h1>
+<p>目标：新 Session 显式连接同一持久任务后，保留全部输入及要求，使用最新纠正并继续执行。原文保存、处理覆盖和任务完成是三个独立状态。本设计沿用已批准的无限记忆、无限上下文总方案。</p>
+<section><h2>架构</h2><pre>宿主显式授权：持久 principal + 精确 canonical workspace + domainId
+  ├─ 业务 Session A / B / C：不可变输入、实际采用上下文、工具结果
+  ├─ 独立目录的域日志：单写者 lease → source readback → CAS → append/flush → 发布
+  │    └─ TaskId → 原始输入/要求 + 显式 supersedes + 单调 revision
+  └─ 有界任务上下文/分页工具 → 可选 Reflex 覆盖优先排序 → 主 LLM → 实际产物验证
+       └─ 本次分页未覆盖原文标记 pending；不自动声称理解或完成</pre>
+<p>复用 SessionPersistence 的单写所有权和不可变日志，但独立隔离服务与存储目录，内部域日志不出现在业务 Session 列表。域打开时恢复一次，之后增量更新；不在每轮扫描全部 Session。首批单宿主显式配置授权，不宣称已有多用户认证或分布式一致性。</p></section>
+<section><h2>API 与数据约束</h2><table><tr><th>对象</th><th>约束</th></tr><tr><td>域</td><td>domainId、宿主 principal、canonical workspace 固定。模型不能修改授权主体或工作区。</td></tr><tr><td>TaskId</td><td>跨 Session 稳定；显式绑定，任务之间默认隔离。原生 Goal 仍是会话内执行状态。</td></tr><tr><td>原始输入</td><td>SessionId、eventSeq、text block、SHA-256、完整文本；先源 flush/readback，再域提交。长输入和早期要求不因显示预算淘汰。</td></tr><tr><td>修改</td><td>requestId + 完整请求摘要用于幂等；expectedRevision 用于 CAS。明确指定 predecessor 才替换，含糊纠正不自动删除旧要求。</td></tr><tr><td>持久失败</td><td>不发布新投影、不回执成功。提交状态不确定后停止写入，重启恢复后依靠 requestId 对账。</td></tr><tr><td>模型上下文</td><td>实际采用的 revision、来源与文本进入 Session；分页输出明确 pending 与续页游标。旧派生上下文和摘要未经失效处理不得继续发送。</td></tr></table></section>
+<section><h2>文件范围</h2><ul><li><code>packages/context/continuum/src/task-*.ts</code>：独立任务日志、来源检查、任务服务与有界消费者。</li><li><code>packages/context/continuum/tests/task-*.spec.ts</code>：状态、持久、越权、失败与重启。</li><li><code>apps/cli/config/examples/</code> 与 profile tests：正式启动配置和跨会话验收。</li><li>持久类型声明、生成目录和快照随实际改变同步；已有历史世代不改写。</li></ul></section>
+<section><h2>验收计划</h2><ol><li>A 保存早期要求、超过旧 maxItems 的要求、长输入尾部随机值，关闭进程；不同 ID 的 B 恢复同一任务，逐字核对来源。</li><li>B 显式纠正后 C 读取新版本；旧版本仍可审计。两个并发 CAS 只允许一个提交，重复请求返回原回执，变更内容复用 requestId 拒绝。</li><li>其他 principal、工作区、任务不可越权；源读取失败、域 flush 失败不产生 saved/完成回执。</li><li>上下文超限明确 pending，不静默丢失；已撤销的旧 recall 或摘要不能进入下一请求。</li><li>正式 profile 的新 Session 产生实际文件，独立程序验证产物，而非采信模型说完成。</li><li>确定性通过后再运行真实 Flash + Reflex，保存原始请求与回执；完整全文账本和实际窗口压力另行验收。</li></ol><p>当前：已实现跨会话任务日志、来源确认、分页读取、显式纠正和有界上下文。源码/编译 headless 双进程、Python SDK 双进程已实际写出并校验完整原文产物；TypeScript SDK 新快照已回放。常驻任务授权检查、连续两次原生压缩后的续做及编译版复验均通过。PR #8 已合并，其既有真实验收不计为本批跨会话通过。<a href="acceptance.json">本批验收记录</a>：125 项任务测试与任务源码 100% 覆盖、256 项既有回归、源码/编译 headless 2 项、TypeScript SDK 3 项、Python SDK 3 项；模型均为受控适配器，未调用真实 Reflex/Flash。</p></section>
+<section><h2>配置教程</h2><p>在仓库安装依赖并构建后，进入实际任务工作区。两个运行使用同一工作区和以下四项稳定配置，第二次启动会创建不同 Session 并连接同一任务。主模型沿用现有 provider 配置；此页不保存凭据。</p><pre>export APUS_TASK_ROOT="$HOME/.apus/task-memory"
+export APUS_TASK_DOMAIN="local-work"
+export APUS_TASK_PRINCIPAL="local-owner"
+export APUS_TASK_ID="my-task"
+# 从仓库启动时，workspace 为当前目录：
+pnpm dsh --profile headless --patch apps/cli/config/examples/continuum-task.patch.yml "保存并执行我的任务要求"
+pnpm dsh --profile headless --patch apps/cli/config/examples/continuum-task.patch.yml "继续这个任务，按需读取保存的原文"</pre><p>同一域首批只支持一个运行中的宿主。已有域不能换 principal 或工作区后继续使用。正式 profile 保留轻量任务检查；缺失权威服务、身份不匹配或已撤销旧要求的 Session 均拒绝请求，纠正后的续做使用新 Session。显式宿主 supersede API 尚未做成客户端交互。</p></section>
+<section><h2>距离总体目标的剩余工作</h2><ul><li>B1/B3：源已保存但域尚未提交时的崩溃补录、区间处理账本和操作版本；saved/read/processed/completed 分开记录。</li><li>B2：助手与工具的可信进度、自动修复旧 Session 派生历史、客户端任务选择；任务投影尚未接入 Reflex 相关性排序。</li><li>B4：最终实际模型路由、系统提示词、工具和输出预留共同计量，超窗输入先分段处理再继续。</li><li>B5：真实 Flash + Reflex 的新会话任务验收、超过实际窗口的压力、多个随机种子的对照与成本统计。</li></ul><p>完整原文日志不等于模型已理解全部输入；分页可续读不等于无限规模。当前任务投影仍完整驻留内存，不能宣称常量内存。总方案以这些场景严格通过为准。</p></section></body></html>

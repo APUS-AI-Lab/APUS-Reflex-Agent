@@ -7383,6 +7383,470 @@
       }
     },
     {
+      "key": "event:continuum/task-binding",
+      "kind": "event",
+      "event": "continuum/task-binding",
+      "surface": false,
+      "digest": "a7f4ecd9f59ad6b3bf422e50f046b234701a59499580ab11671a42aaf8865de8",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "data",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "ignorable",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "seq",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "time",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 5,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "domainId",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "principalId",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "retirementDigest",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "taskId",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "workspace",
+                "type": 2,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "literal",
+            "value": true
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "literal",
+            "value": "continuum/task-binding"
+          }
+        ]
+      }
+    },
+    {
+      "key": "event:continuum/task-operation",
+      "kind": "event",
+      "event": "continuum/task-operation",
+      "surface": false,
+      "digest": "a58e387cc30b034ac55f2cb8ffa9a2d6b00e908e4937320f8b6c0f787a1b1913",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "data",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "ignorable",
+                "type": 26,
+                "optional": true
+              },
+              {
+                "name": "seq",
+                "type": 10,
+                "optional": false
+              },
+              {
+                "name": "time",
+                "type": 10,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 27,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "union",
+            "types": [
+              2,
+              7
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "identity",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "kind",
+                "type": 5,
+                "optional": false
+              },
+              {
+                "name": "version",
+                "type": 6,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "domainId",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "principalId",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "workspace",
+                "type": 4,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "literal",
+            "value": "init"
+          },
+          {
+            "kind": "literal",
+            "value": 1
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "digest",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "kind",
+                "type": 8,
+                "optional": false
+              },
+              {
+                "name": "receipt",
+                "type": 9,
+                "optional": false
+              },
+              {
+                "name": "request",
+                "type": 11,
+                "optional": false
+              },
+              {
+                "name": "version",
+                "type": 6,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "commit"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "requestId",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "revision",
+                "type": 10,
+                "optional": false
+              },
+              {
+                "name": "taskId",
+                "type": 4,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "command",
+                "type": 12,
+                "optional": false
+              },
+              {
+                "name": "expectedRevision",
+                "type": 10,
+                "optional": false
+              },
+              {
+                "name": "requestId",
+                "type": 4,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "union",
+            "types": [
+              13,
+              20,
+              22,
+              24
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "entry",
+                "type": 14,
+                "optional": false
+              },
+              {
+                "name": "kind",
+                "type": 19,
+                "optional": false
+              },
+              {
+                "name": "taskId",
+                "type": 4,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "id",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "role",
+                "type": 15,
+                "optional": false
+              },
+              {
+                "name": "source",
+                "type": 18,
+                "optional": false
+              },
+              {
+                "name": "text",
+                "type": 4,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "union",
+            "types": [
+              16,
+              17
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "input"
+          },
+          {
+            "kind": "literal",
+            "value": "progress"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "blockIndex",
+                "type": 10,
+                "optional": false
+              },
+              {
+                "name": "digest",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "eventSeq",
+                "type": 10,
+                "optional": false
+              },
+              {
+                "name": "sessionId",
+                "type": 4,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "create"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "entryId",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "kind",
+                "type": 21,
+                "optional": false
+              },
+              {
+                "name": "taskId",
+                "type": 4,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "deactivate"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "entry",
+                "type": 14,
+                "optional": false
+              },
+              {
+                "name": "kind",
+                "type": 23,
+                "optional": false
+              },
+              {
+                "name": "predecessor",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "taskId",
+                "type": 4,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "supersede"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "entry",
+                "type": 14,
+                "optional": false
+              },
+              {
+                "name": "kind",
+                "type": 25,
+                "optional": false
+              },
+              {
+                "name": "taskId",
+                "type": 4,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "append"
+          },
+          {
+            "kind": "literal",
+            "value": true
+          },
+          {
+            "kind": "literal",
+            "value": "continuum/task-operation"
+          }
+        ]
+      }
+    },
+    {
       "key": "event:deliverables/presented",
       "kind": "event",
       "event": "deliverables/presented",
@@ -32132,6 +32596,20 @@
       "sources": []
     },
     {
+      "digest": "0508943b55d92caab6481407d00c453300c967089380af5afe2c4c103f2a809f",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "input"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "0567e7c1a0bf98119cc762cf96aaea77dadbdca9b817898d85a9801b8f485e76",
       "schema": {
         "root": 0,
@@ -44381,6 +44859,118 @@
       "sources": []
     },
     {
+      "digest": "2268fd272d4cd68dee7f5e206acf638766d805502eca2bf4d0ce499df25bd3c2",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "entry",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "kind",
+                "type": 8,
+                "optional": false
+              },
+              {
+                "name": "taskId",
+                "type": 2,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "id",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "role",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "source",
+                "type": 6,
+                "optional": false
+              },
+              {
+                "name": "text",
+                "type": 2,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "union",
+            "types": [
+              4,
+              5
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "input"
+          },
+          {
+            "kind": "literal",
+            "value": "progress"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "blockIndex",
+                "type": 7,
+                "optional": false
+              },
+              {
+                "name": "digest",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "eventSeq",
+                "type": 7,
+                "optional": false
+              },
+              {
+                "name": "sessionId",
+                "type": 2,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "literal",
+            "value": "append"
+          }
+        ]
+      },
+      "names": [],
+      "sources": [
+        "packages/context/continuum/src/task-types.ts:72"
+      ]
+    },
+    {
       "digest": "229669c953c776861d1f8dd4e6f2e99eb572237979a2fd4ffc8a5c0fab7b2569",
       "schema": {
         "root": 0,
@@ -55962,6 +56552,55 @@
       "sources": []
     },
     {
+      "digest": "3424714fc834292b9a1b5ebd652f3dd908d57c5dad505df2e2b2a0a3e8f20f1f",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "domainId",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "principalId",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "retirementDigest",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "taskId",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "workspace",
+                "type": 1,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          }
+        ]
+      },
+      "names": [
+        "packages/context/continuum/src/task-binding.ts#TaskBinding"
+      ],
+      "sources": [
+        "packages/context/continuum/src/task-binding.ts:7"
+      ]
+    },
+    {
       "digest": "34d1ab5c5df378186d6054b1a1beea9a41e41965d6f336f0bc0025c441a82e66",
       "schema": {
         "root": 0,
@@ -58576,6 +59215,20 @@
           {
             "kind": "literal",
             "value": "tool-workflow/run-end"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "42fe9c70a5baadf33facdfa4f5a93650ea39837b2beed0ef266b29955a7342d9",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "progress"
           }
         ]
       },
@@ -61455,6 +62108,230 @@
       ]
     },
     {
+      "digest": "43bbbd5851c99f1da9318f253b1db1f99192d1a535e47ad463f61055211e5dfa",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "command",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "expectedRevision",
+                "type": 9,
+                "optional": false
+              },
+              {
+                "name": "requestId",
+                "type": 4,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "union",
+            "types": [
+              2,
+              11,
+              13,
+              15
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "entry",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "kind",
+                "type": 10,
+                "optional": false
+              },
+              {
+                "name": "predecessor",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "taskId",
+                "type": 4,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "id",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "role",
+                "type": 5,
+                "optional": false
+              },
+              {
+                "name": "source",
+                "type": 8,
+                "optional": false
+              },
+              {
+                "name": "text",
+                "type": 4,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "union",
+            "types": [
+              6,
+              7
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "progress"
+          },
+          {
+            "kind": "literal",
+            "value": "input"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "blockIndex",
+                "type": 9,
+                "optional": false
+              },
+              {
+                "name": "digest",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "eventSeq",
+                "type": 9,
+                "optional": false
+              },
+              {
+                "name": "sessionId",
+                "type": 4,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "literal",
+            "value": "supersede"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "entry",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "kind",
+                "type": 12,
+                "optional": false
+              },
+              {
+                "name": "taskId",
+                "type": 4,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "append"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "entry",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "kind",
+                "type": 14,
+                "optional": false
+              },
+              {
+                "name": "taskId",
+                "type": 4,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "create"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "entryId",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "kind",
+                "type": 16,
+                "optional": false
+              },
+              {
+                "name": "taskId",
+                "type": 4,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "deactivate"
+          }
+        ]
+      },
+      "names": [
+        "packages/context/continuum/src/task-types.ts#TaskCommitRequest"
+      ],
+      "sources": [
+        "packages/context/continuum/src/task-types.ts:77"
+      ]
+    },
+    {
       "digest": "43e311235aa537df1bacdd92d144df8a952337a76e9ac892cdf670f1a797bad8",
       "schema": {
         "root": 0,
@@ -61521,6 +62398,20 @@
       "sources": []
     },
     {
+      "digest": "44adbdc8eee81946a24a316ff0b9c7862bcfca7904f80f8a6f62ebe2d526b480",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "continuum/task-operation"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "44b144fad08c3486cc9996ff1c45ecebaa22a7bd0db5bba58cdd18f4642db126",
       "schema": {
         "root": 0,
@@ -61557,6 +62448,45 @@
       ],
       "sources": [
         "packages/experimental/system3/src/task-frame.ts:58"
+      ]
+    },
+    {
+      "digest": "44ba781b303075da5e03e6fb0ce47ec41ef54ed3db7ebb05f92c82bc3c5c1415",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "domainId",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "principalId",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "workspace",
+                "type": 1,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          }
+        ]
+      },
+      "names": [
+        "packages/context/continuum/src/task-types.ts#TaskDomainIdentity"
+      ],
+      "sources": [
+        "packages/context/continuum/src/task-types.ts:41"
       ]
     },
     {
@@ -64739,6 +65669,9 @@
         "packages/attachment/attachment/src/brand.ts#AttachmentId",
         "packages/compaction/compaction/src/brand.ts#CompactionId",
         "packages/context/continuum/src/records.ts#MemoryId",
+        "packages/context/continuum/src/task-types.ts#MemoryDomainId",
+        "packages/context/continuum/src/task-types.ts#MemoryPrincipalId",
+        "packages/context/continuum/src/task-types.ts#MemoryTaskId",
         "packages/core/session/src/types.ts#SessionId",
         "packages/experimental/agent-team/src/types.ts#TeamId",
         "packages/experimental/agent-team/src/types.ts#TeamMessageId",
@@ -64770,6 +65703,9 @@
         "packages/attachment/attachment/src/brand.ts:6",
         "packages/compaction/compaction/src/brand.ts:4",
         "packages/context/continuum/src/records.ts:6",
+        "packages/context/continuum/src/task-types.ts:11",
+        "packages/context/continuum/src/task-types.ts:7",
+        "packages/context/continuum/src/task-types.ts:9",
         "packages/core/session/src/types.ts:20",
         "packages/experimental/agent-team/src/types.ts:20",
         "packages/experimental/agent-team/src/types.ts:32",
@@ -64836,6 +65772,31 @@
           {
             "kind": "literal",
             "value": "started"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "4d65d970be0d1606f565e19eb7866aaba7916453a8438b0d3527e794c8531411",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "union",
+            "types": [
+              1,
+              2
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "input"
+          },
+          {
+            "kind": "literal",
+            "value": "progress"
           }
         ]
       },
@@ -69245,6 +70206,49 @@
       },
       "names": [],
       "sources": []
+    },
+    {
+      "digest": "54e3241f0e4bf95661d0f13f00717cb1271b7f9922b9bf0c79ce9c41727e7b22",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "requestId",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "revision",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "taskId",
+                "type": 1,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          }
+        ]
+      },
+      "names": [
+        "packages/context/continuum/src/task-types.ts#TaskReceipt"
+      ],
+      "sources": [
+        "packages/context/continuum/src/task-types.ts:84"
+      ]
     },
     {
       "digest": "54f9276a1617d7c12594722c89cfe864bcbe4517e9a6f9c98bab14f199a135e0",
@@ -74078,6 +75082,123 @@
       "sources": []
     },
     {
+      "digest": "57fe988da4db08b92ad4fe02378b38ef6de671c4c5a568cae73dec994810fd87",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "entry",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "kind",
+                "type": 8,
+                "optional": false
+              },
+              {
+                "name": "predecessor",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "taskId",
+                "type": 2,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "id",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "role",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "source",
+                "type": 6,
+                "optional": false
+              },
+              {
+                "name": "text",
+                "type": 2,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "union",
+            "types": [
+              4,
+              5
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "input"
+          },
+          {
+            "kind": "literal",
+            "value": "progress"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "blockIndex",
+                "type": 7,
+                "optional": false
+              },
+              {
+                "name": "digest",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "eventSeq",
+                "type": 7,
+                "optional": false
+              },
+              {
+                "name": "sessionId",
+                "type": 2,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "literal",
+            "value": "supersede"
+          }
+        ]
+      },
+      "names": [],
+      "sources": [
+        "packages/context/continuum/src/task-types.ts:73"
+      ]
+    },
+    {
       "digest": "58015da1c1950a66daf66ae24913d6a1fc6d1d9ac441b155f8847f7f8584ba8e",
       "schema": {
         "root": 0,
@@ -77773,6 +78894,20 @@
           {
             "kind": "literal",
             "value": "compact-checkpoint"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "6b77739df1575a5deaf13f3a92b15ec7a494c41b7f3b0325826f2659fa3b9f91",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "continuum/task-binding"
           }
         ]
       },
@@ -84904,6 +86039,54 @@
       "sources": []
     },
     {
+      "digest": "7e53924020ca5bd9f100efbf4458ee0006ef7b85ae93e0f0cd33290882f1cc80",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "blockIndex",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "digest",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "eventSeq",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "sessionId",
+                "type": 2,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          }
+        ]
+      },
+      "names": [
+        "packages/context/continuum/src/task-types.ts#TaskEntrySource"
+      ],
+      "sources": [
+        "packages/context/continuum/src/task-types.ts:48"
+      ]
+    },
+    {
       "digest": "7eaef7a763ba5b949b8464bc8add8980a3a5ab566014b69787aeba71e5dfe07b",
       "schema": {
         "root": 0,
@@ -89320,6 +90503,47 @@
       },
       "names": [],
       "sources": []
+    },
+    {
+      "digest": "82eeabc741e3d24f2c887e1dc89ca28000b0f27aeb4b79e384dde1d0b8a96c5a",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "entryId",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "kind",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "taskId",
+                "type": 1,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "literal",
+            "value": "deactivate"
+          }
+        ]
+      },
+      "names": [],
+      "sources": [
+        "packages/context/continuum/src/task-types.ts:74"
+      ]
     },
     {
       "digest": "83079c8a3f733ac3fa603eefa0fbb4737ca4d8b69e7e2e7298b60f9ac4098693",
@@ -96049,6 +97273,118 @@
       ]
     },
     {
+      "digest": "9831022fd44e9a121f54b7fe3f3f851766e61ba82c4179fec2d943c347f91797",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "entry",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "kind",
+                "type": 8,
+                "optional": false
+              },
+              {
+                "name": "taskId",
+                "type": 2,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "id",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "role",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "source",
+                "type": 6,
+                "optional": false
+              },
+              {
+                "name": "text",
+                "type": 2,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "union",
+            "types": [
+              4,
+              5
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "input"
+          },
+          {
+            "kind": "literal",
+            "value": "progress"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "blockIndex",
+                "type": 7,
+                "optional": false
+              },
+              {
+                "name": "digest",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "eventSeq",
+                "type": 7,
+                "optional": false
+              },
+              {
+                "name": "sessionId",
+                "type": 2,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "literal",
+            "value": "create"
+          }
+        ]
+      },
+      "names": [],
+      "sources": [
+        "packages/context/continuum/src/task-types.ts:71"
+      ]
+    },
+    {
       "digest": "9890113e97dd3541787bfe6704f2b223d3a890b5325ca0acae2b0398909b413e",
       "schema": {
         "root": 0,
@@ -102553,6 +103889,378 @@
       ]
     },
     {
+      "digest": "a58e387cc30b034ac55f2cb8ffa9a2d6b00e908e4937320f8b6c0f787a1b1913",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "data",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "ignorable",
+                "type": 26,
+                "optional": true
+              },
+              {
+                "name": "seq",
+                "type": 10,
+                "optional": false
+              },
+              {
+                "name": "time",
+                "type": 10,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 27,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "union",
+            "types": [
+              2,
+              7
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "identity",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "kind",
+                "type": 5,
+                "optional": false
+              },
+              {
+                "name": "version",
+                "type": 6,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "domainId",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "principalId",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "workspace",
+                "type": 4,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "literal",
+            "value": "init"
+          },
+          {
+            "kind": "literal",
+            "value": 1
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "digest",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "kind",
+                "type": 8,
+                "optional": false
+              },
+              {
+                "name": "receipt",
+                "type": 9,
+                "optional": false
+              },
+              {
+                "name": "request",
+                "type": 11,
+                "optional": false
+              },
+              {
+                "name": "version",
+                "type": 6,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "commit"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "requestId",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "revision",
+                "type": 10,
+                "optional": false
+              },
+              {
+                "name": "taskId",
+                "type": 4,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "command",
+                "type": 12,
+                "optional": false
+              },
+              {
+                "name": "expectedRevision",
+                "type": 10,
+                "optional": false
+              },
+              {
+                "name": "requestId",
+                "type": 4,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "union",
+            "types": [
+              13,
+              20,
+              22,
+              24
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "entry",
+                "type": 14,
+                "optional": false
+              },
+              {
+                "name": "kind",
+                "type": 19,
+                "optional": false
+              },
+              {
+                "name": "taskId",
+                "type": 4,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "id",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "role",
+                "type": 15,
+                "optional": false
+              },
+              {
+                "name": "source",
+                "type": 18,
+                "optional": false
+              },
+              {
+                "name": "text",
+                "type": 4,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "union",
+            "types": [
+              16,
+              17
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "input"
+          },
+          {
+            "kind": "literal",
+            "value": "progress"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "blockIndex",
+                "type": 10,
+                "optional": false
+              },
+              {
+                "name": "digest",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "eventSeq",
+                "type": 10,
+                "optional": false
+              },
+              {
+                "name": "sessionId",
+                "type": 4,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "create"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "entryId",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "kind",
+                "type": 21,
+                "optional": false
+              },
+              {
+                "name": "taskId",
+                "type": 4,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "deactivate"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "entry",
+                "type": 14,
+                "optional": false
+              },
+              {
+                "name": "kind",
+                "type": 23,
+                "optional": false
+              },
+              {
+                "name": "predecessor",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "taskId",
+                "type": 4,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "supersede"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "entry",
+                "type": 14,
+                "optional": false
+              },
+              {
+                "name": "kind",
+                "type": 25,
+                "optional": false
+              },
+              {
+                "name": "taskId",
+                "type": 4,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "append"
+          },
+          {
+            "kind": "literal",
+            "value": true
+          },
+          {
+            "kind": "literal",
+            "value": "continuum/task-operation"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "a6567ccb2e530606b775371eb4fa31468d72084339968e8b0440a516a23b39dc",
       "schema": {
         "root": 0,
@@ -102875,6 +104583,94 @@
           {
             "kind": "literal",
             "value": "plan/mode"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "a7f4ecd9f59ad6b3bf422e50f046b234701a59499580ab11671a42aaf8865de8",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "data",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "ignorable",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "seq",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "time",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 5,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "domainId",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "principalId",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "retirementDigest",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "taskId",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "workspace",
+                "type": 2,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "literal",
+            "value": true
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "literal",
+            "value": "continuum/task-binding"
           }
         ]
       },
@@ -111244,6 +113040,343 @@
       "sources": []
     },
     {
+      "digest": "c138f306bb158097d1da2d0f441008b253f1d32c613d3bd9149db2b0efcc5c5a",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "union",
+            "types": [
+              1,
+              6
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "identity",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "kind",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "version",
+                "type": 5,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "domainId",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "principalId",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "workspace",
+                "type": 3,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "literal",
+            "value": "init"
+          },
+          {
+            "kind": "literal",
+            "value": 1
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "digest",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "kind",
+                "type": 7,
+                "optional": false
+              },
+              {
+                "name": "receipt",
+                "type": 8,
+                "optional": false
+              },
+              {
+                "name": "request",
+                "type": 10,
+                "optional": false
+              },
+              {
+                "name": "version",
+                "type": 5,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "commit"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "requestId",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "revision",
+                "type": 9,
+                "optional": false
+              },
+              {
+                "name": "taskId",
+                "type": 3,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "command",
+                "type": 11,
+                "optional": false
+              },
+              {
+                "name": "expectedRevision",
+                "type": 9,
+                "optional": false
+              },
+              {
+                "name": "requestId",
+                "type": 3,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "union",
+            "types": [
+              12,
+              19,
+              21,
+              23
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "entry",
+                "type": 13,
+                "optional": false
+              },
+              {
+                "name": "kind",
+                "type": 18,
+                "optional": false
+              },
+              {
+                "name": "predecessor",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "taskId",
+                "type": 3,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "id",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "role",
+                "type": 14,
+                "optional": false
+              },
+              {
+                "name": "source",
+                "type": 17,
+                "optional": false
+              },
+              {
+                "name": "text",
+                "type": 3,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "union",
+            "types": [
+              15,
+              16
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "input"
+          },
+          {
+            "kind": "literal",
+            "value": "progress"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "blockIndex",
+                "type": 9,
+                "optional": false
+              },
+              {
+                "name": "digest",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "eventSeq",
+                "type": 9,
+                "optional": false
+              },
+              {
+                "name": "sessionId",
+                "type": 3,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "supersede"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "entry",
+                "type": 13,
+                "optional": false
+              },
+              {
+                "name": "kind",
+                "type": 20,
+                "optional": false
+              },
+              {
+                "name": "taskId",
+                "type": 3,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "append"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "entry",
+                "type": 13,
+                "optional": false
+              },
+              {
+                "name": "kind",
+                "type": 22,
+                "optional": false
+              },
+              {
+                "name": "taskId",
+                "type": 3,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "create"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "entryId",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "kind",
+                "type": 24,
+                "optional": false
+              },
+              {
+                "name": "taskId",
+                "type": 3,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "deactivate"
+          }
+        ]
+      },
+      "names": [
+        "packages/context/continuum/src/task-types.ts#TaskOperationData"
+      ],
+      "sources": [
+        "packages/context/continuum/src/task-types.ts:101"
+      ]
+    },
+    {
       "digest": "c170da8ab7c37635b10867b2571811d9e317ac3ec394e8ff8efe53f902fc41c1",
       "schema": {
         "root": 0,
@@ -111422,6 +113555,20 @@
       "sources": [
         "packages/llm/llm-retry/src/types.ts:16"
       ]
+    },
+    {
+      "digest": "c1c048838e93aa8432d03055450b30da25505c2cfaba1a2569e58c3aa15fea7c",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "commit"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
     },
     {
       "digest": "c1c3b4dd47bf8ef78de34d80f32a7843806e55868b1cf291e503d45a755c9c58",
@@ -113988,6 +116135,288 @@
       "sources": []
     },
     {
+      "digest": "d3cffb3b99a4fa6f4ed4417ebe9339e0caabd3ee31e2d46fafe9a3346268f19c",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "digest",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "kind",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "receipt",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "request",
+                "type": 5,
+                "optional": false
+              },
+              {
+                "name": "version",
+                "type": 20,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "literal",
+            "value": "commit"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "requestId",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "revision",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "taskId",
+                "type": 1,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "command",
+                "type": 6,
+                "optional": false
+              },
+              {
+                "name": "expectedRevision",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "requestId",
+                "type": 1,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "union",
+            "types": [
+              7,
+              14,
+              16,
+              18
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "entry",
+                "type": 8,
+                "optional": false
+              },
+              {
+                "name": "kind",
+                "type": 13,
+                "optional": false
+              },
+              {
+                "name": "predecessor",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "taskId",
+                "type": 1,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "id",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "role",
+                "type": 9,
+                "optional": false
+              },
+              {
+                "name": "source",
+                "type": 12,
+                "optional": false
+              },
+              {
+                "name": "text",
+                "type": 1,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "union",
+            "types": [
+              10,
+              11
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "input"
+          },
+          {
+            "kind": "literal",
+            "value": "progress"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "blockIndex",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "digest",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "eventSeq",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "sessionId",
+                "type": 1,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "supersede"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "entry",
+                "type": 8,
+                "optional": false
+              },
+              {
+                "name": "kind",
+                "type": 15,
+                "optional": false
+              },
+              {
+                "name": "taskId",
+                "type": 1,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "append"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "entry",
+                "type": 8,
+                "optional": false
+              },
+              {
+                "name": "kind",
+                "type": 17,
+                "optional": false
+              },
+              {
+                "name": "taskId",
+                "type": 1,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "create"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "entryId",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "kind",
+                "type": 19,
+                "optional": false
+              },
+              {
+                "name": "taskId",
+                "type": 1,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "deactivate"
+          },
+          {
+            "kind": "literal",
+            "value": 1
+          }
+        ]
+      },
+      "names": [],
+      "sources": [
+        "packages/context/continuum/src/task-types.ts:103"
+      ]
+    },
+    {
       "digest": "d3d3a6b6e9a6d77bd850aad825bb1bfd7dd61e9073da5832bf5a99ec9dade1da",
       "schema": {
         "root": 0,
@@ -115162,6 +117591,95 @@
       "sources": []
     },
     {
+      "digest": "d6b0a66264677fb318f8e6530ddb8e19cdffda352c6027431e758da094933908",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "id",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "role",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "source",
+                "type": 5,
+                "optional": false
+              },
+              {
+                "name": "text",
+                "type": 1,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "union",
+            "types": [
+              3,
+              4
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "input"
+          },
+          {
+            "kind": "literal",
+            "value": "progress"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "blockIndex",
+                "type": 6,
+                "optional": false
+              },
+              {
+                "name": "digest",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "eventSeq",
+                "type": 6,
+                "optional": false
+              },
+              {
+                "name": "sessionId",
+                "type": 1,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          }
+        ]
+      },
+      "names": [
+        "packages/context/continuum/src/task-types.ts#TaskEntry"
+      ],
+      "sources": [
+        "packages/context/continuum/src/task-types.ts:56"
+      ]
+    },
+    {
       "digest": "d6e654b88b584fcdf290a56802b1730bc7b9847ae86baa4265ab7769eb48990c",
       "schema": {
         "root": 0,
@@ -115639,6 +118157,20 @@
           {
             "kind": "literal",
             "value": true
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "dae1aef613def37f38e9bd4228ef1c8cdf840cb26c0b42455bfcf215088df3c8",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "init"
           }
         ]
       },
@@ -122480,6 +125012,72 @@
       ]
     },
     {
+      "digest": "eaafc690272ffa4963270954a982d893f2ffe07c64fd776153afa23ef1af5343",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "identity",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "kind",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "version",
+                "type": 4,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "domainId",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "principalId",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "workspace",
+                "type": 2,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "literal",
+            "value": "init"
+          },
+          {
+            "kind": "literal",
+            "value": 1
+          }
+        ]
+      },
+      "names": [],
+      "sources": [
+        "packages/context/continuum/src/task-types.ts:102"
+      ]
+    },
+    {
       "digest": "eacebfa7807a6a4687b00c21e29a44f7ae1f90c9c0f98521bac02480e29462cc",
       "schema": {
         "root": 0,
@@ -122646,6 +125244,209 @@
       ],
       "sources": [
         "packages/experimental/apus-dsh-jev-plugin/src/types.ts:26"
+      ]
+    },
+    {
+      "digest": "eb504fbf987291d4ea736b7194e773c2a809f941a2854debd2f5e9f813fa982e",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "union",
+            "types": [
+              1,
+              10,
+              12,
+              14
+            ]
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "entry",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "kind",
+                "type": 9,
+                "optional": false
+              },
+              {
+                "name": "predecessor",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "taskId",
+                "type": 3,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "id",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "role",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "source",
+                "type": 7,
+                "optional": false
+              },
+              {
+                "name": "text",
+                "type": 3,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "union",
+            "types": [
+              5,
+              6
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "input"
+          },
+          {
+            "kind": "literal",
+            "value": "progress"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "blockIndex",
+                "type": 8,
+                "optional": false
+              },
+              {
+                "name": "digest",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "eventSeq",
+                "type": 8,
+                "optional": false
+              },
+              {
+                "name": "sessionId",
+                "type": 3,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "literal",
+            "value": "supersede"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "entry",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "kind",
+                "type": 11,
+                "optional": false
+              },
+              {
+                "name": "taskId",
+                "type": 3,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "append"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "entry",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "kind",
+                "type": 13,
+                "optional": false
+              },
+              {
+                "name": "taskId",
+                "type": 3,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "create"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "entryId",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "kind",
+                "type": 15,
+                "optional": false
+              },
+              {
+                "name": "taskId",
+                "type": 3,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "literal",
+            "value": "deactivate"
+          }
+        ]
+      },
+      "names": [
+        "packages/context/continuum/src/task-types.ts#TaskCommand"
+      ],
+      "sources": [
+        "packages/context/continuum/src/task-types.ts:70"
       ]
     },
     {
