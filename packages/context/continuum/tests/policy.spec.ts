@@ -13,6 +13,7 @@ describe('Continuum switch, permission, and stop lifecycle', () => {
   it('keeps the original path when disabled or Reflex is absent', () => {
     expect(resolveContinuumMemorySwitch({ enabled: false, mode: 'active', reflexMounted: true })).toEqual({ enabled: false, mode: 'off', reason: 'disabled' })
     expect(resolveContinuumMemorySwitch({ enabled: true, mode: 'active', reflexMounted: false })).toEqual({ enabled: false, mode: 'off', reason: 'reflex-required' })
+    expect(resolveContinuumMemorySwitch({ enabled: true, mode: 'off', reflexMounted: true })).toEqual({ enabled: false, mode: 'off', reason: 'disabled' })
   })
 
   it('filters records by exact authorized scope', () => {
@@ -21,6 +22,20 @@ describe('Continuum switch, permission, and stop lifecycle', () => {
     expect(ticket).toBeDefined()
     const working = controller.read(ticket!, { maxCandidates: 5, maxExcerptBytes: 100, maxTotalBytes: 500 }, 'migration')
     expect(working?.candidates.map(candidate => candidate.id)).toEqual([MemoryId('workspace-fact')])
+  })
+
+  it('retains the immutable correction record and its predecessor during authorized retrieval', () => {
+    const records = store()
+    const next = records.supersede(MemoryId('workspace-fact'), 1, {
+      id: MemoryId('corrected'), kind: 'fact', scope: 'workspace', content: 'The migration moved to Monday.',
+      sourceRefs: [{ sessionId: SessionId('s'), eventSeq: SessionSeq(2) }],
+    })
+    const controller = new ContinuumMemoryController(records, { enabled: true, mode: 'active', reflexMounted: true })
+    const ticket = controller.beginRead({ scopes: ['workspace'] })!
+    const result = controller.read(ticket, { maxCandidates: 4, maxExcerptBytes: 100, maxTotalBytes: 512 }, 'migration')
+    expect(result?.candidates).toHaveLength(1)
+    expect(result?.candidates[0]?.record).toBe(next)
+    expect(result?.candidates[0]?.record.supersedes).toBe(MemoryId('workspace-fact'))
   })
 
   it('builds an authorized summary view and resolves source references on zoom', () => {
@@ -57,6 +72,8 @@ describe('Continuum switch, permission, and stop lifecycle', () => {
     const ticket = controller.beginRead({ scopes: ['workspace'] })!
     controller.setSwitch({ enabled: false, mode: 'off', reflexMounted: true })
     expect(controller.isCurrent(ticket)).toBe(false)
+    expect(controller.read(ticket, { maxCandidates: 2, maxExcerptBytes: 100, maxTotalBytes: 512 }, 'migration')).toBeUndefined()
+    expect(controller.zoom(ticket, 'workspace/fact')).toBeUndefined()
     const next = controller.setSwitch({ enabled: true, mode: 'active', reflexMounted: true })
     expect(next.reason).toBe('ready')
     const second = controller.beginRead({ scopes: ['workspace'] })!

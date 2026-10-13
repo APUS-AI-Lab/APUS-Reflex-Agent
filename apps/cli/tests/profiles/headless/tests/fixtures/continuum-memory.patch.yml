@@ -19,3 +19,5 @@
         mode: active
         admission: user-message
         scopes: [workspace]
+        maxExcerptBytes: 2048
+        maxTotalBytes: 8192

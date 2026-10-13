@@ -5947,7 +5947,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'MemoryCandidate',
-    declaration: 'export interface MemoryCandidate {\n    readonly id: MemoryId;\n    readonly record: MemoryRecord;\n    readonly score: number;\n    readonly excerpt: string;\n}',
+    declaration: 'export interface MemoryCandidate {\n    readonly id: MemoryId;\n    readonly record: MemoryRecord;\n    readonly score: number;\n    readonly excerpt: string;\n    readonly excerptStart: number;\n    readonly excerptEnd: number;\n}',
   },
   {
     name: 'MemoryId',

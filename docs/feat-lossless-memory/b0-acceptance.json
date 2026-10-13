@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "batch": "B0",
+  "date": "2026-10-13",
+  "status": "behavior_verified",
+  "scope": "Exact hit-centered record excerpts and complete rendered recall byte limits; not full Continuum acceptance.",
+  "checks": [
+    {
+      "command": "pnpm exec vitest run packages/context/continuum/tests packages/experimental/continuum-jev/tests/index.spec.ts packages/core/agent-loop/tests/continuum-admission.spec.ts --coverage --coverage.include='packages/context/continuum/src/retrieval.ts' --coverage.include='packages/context/continuum/src/memory-index.ts' --coverage.include='packages/context/continuum/src/context.ts' --coverage.include='packages/context/continuum/src/policy.ts'",
+      "passed": 150,
+      "failed": 0,
+      "files": 14,
+      "coverage": {
+        "statements": "270/270",
+        "branches": "131/131",
+        "functions": "62/62",
+        "lines": "220/220"
+      }
+    },
+    {
+      "command": "pnpm run test:e2e apps/cli/tests/profiles/headless/tests/continuum-memory.e2e.ts",
+      "passed": 9,
+      "failed": 0,
+      "scope": "Source and built Loader, JSONL persistence, process restart, Unicode tail, disabled and separate-session controls; recording LLM."
+    },
+    {
+      "command": "pnpm run test:snapshot snapshots/sdk/sdk.snapshot.ts -t 'continuum-(partial|tail)-recall'",
+      "passed": 2,
+      "failed": 0,
+      "filtered_out": 34,
+      "scope": "Actual provider-request assertions and read-only SDK/session replay; recorded provider."
+    },
+    {
+      "command": "pnpm exec vitest run --config vitest.snapshot.config.ts scripts/session-snapshot-corpus.corpus.ts",
+      "passed": 3,
+      "failed": 0,
+      "scope": "Recorded Session corpus consistency."
+    }
+  ],
+  "oracles": [
+    "Tail fact reaches the provider request after persistence and restart.",
+    "Excerpt equals record.content.slice(excerptStart, excerptEnd); UTF-16 ranges do not claim source event offsets.",
+    "Heading, escaped IDs, source refs, revision, omission markers, separators and excerpt count toward maxTotalBytes.",
+    "Controller authorization preserves the original revision and supersedes metadata.",
+    "Cancellation and invalidation prevent delayed selector output from being injected.",
+    "Existing committed replay input is unchanged; current writer output has a separate oracle."
+  ],
+  "retained_input": {
+    "path": "snapshots/sdk/continuum-partial-recall/session.v4.jsonl",
+    "sha256": "92a607cdbacdb42c9765506caca9f6a0f3da16bbd0b766777116a4fdafdef56a"
+  },
+  "limitations": [
+    "One hit-centered excerpt per record; not every occurrence or all related records.",
+    "Lexical retrieval still lacks semantic or task-reference expansion.",
+    "Jev active batch scoring and source paging require later batches.",
+    "No live-model quality, actual-window scale, reliable input ACK, task continuation or full-request admission acceptance is implied."
+  ],
+  "architecture_scenario_status": "The 68 architecture scenarios remain designed_not_run; these focused regressions do not complete their full oracles."
+}
