@@ -19,7 +19,7 @@
 
 数据默认保存到 `$XDG_DATA_HOME/apus-reflex-web`；未设置 `XDG_DATA_HOME` 时使用 `~/.local/share/apus-reflex-web`。可设置 `DSH_HOME`，或使用 `./start.sh --data-dir /absolute/path` 选择其他目录。重启时使用同一目录即可恢复 profile、设置、凭据和会话。升级前请备份数据。升级时替换解压后的应用目录，不要删除数据目录。
 
-**设置 → Reflex 模型配置** 用于配置可选的 Jev 决策服务。APUS Reflex 选择 OpenJev；Typesafe 服务选择 Typesafe，然后填写服务商提供的地址和模型。保存配置不会测试连接，请显式执行连接测试。连接 Jev 不会自动启用高级路由、监督或记忆策略。
+**设置 → Reflex 配置** 提供 APUS Reflex 限时免费端点与自定义参数，服务协议为 Reflex。预置服务需要部署提供凭据，安装包不包含共享密钥；Continuum 无限记忆开关也在此页。保存前请显式测试连接，详见[配置教程](../feat-integrated-product/configuration.zh.md)。高级路由、监督和记忆策略分别配置。
 
 未配置服务商凭据时服务端也能启动；成功执行模型任务之前，需要配置可用的服务商。安装额外插件或执行开发工具可能需要压缩包以外的软件。
 

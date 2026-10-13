@@ -1,6 +1,6 @@
-/** Desktop-generated Skill selection exercised through the actual profile Loader. */
+/** Desktop and Web product Skill selection exercised through the actual profile Loader. */
 import { execFile } from 'node:child_process'
-import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { promisify } from 'node:util'
@@ -17,15 +17,24 @@ import Jev from '../../apus-dsh-jev-plugin/src/index.ts'
 import System3 from '../src/index.ts'
 import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 
-it.each([false, true])('loads generated Desktop Skill advice through a profile, provider configured=%s', async (configured) => {
+it.each(['Desktop', 'Web'].flatMap(surface => [false, true].map(configured => ({ surface, configured }))))('loads $surface Skill advice through a profile, provider configured=$configured', async ({ surface, configured }) => {
   const home = realpathSync(mkdtempSync(join(tmpdir(), 'desktop-skill-profile-')))
   onTestFinished(() => { rmSync(home, { recursive: true, force: true }) })
-  const generator = pathToFileURL(resolve('frontend/scripts/generate-system3-patch.mjs')).href
-  await promisify(execFile)(process.execPath, ['--input-type=module', '-e',
-    `import { generateSystem3Patch } from ${JSON.stringify(generator)}; await generateSystem3Patch(${JSON.stringify(home)});`])
-  const operations = loadOverlayPatches('test', join(home, 'desktop.patch.yml'))
+  const patch = join(home, 'product.patch.yml')
+  if (surface === 'Desktop') {
+    const generator = pathToFileURL(resolve('frontend/scripts/generate-system3-patch.mjs')).href
+    await promisify(execFile)(process.execPath, ['--input-type=module', '-e',
+      `import { generateSystem3Patch } from ${JSON.stringify(generator)}; await generateSystem3Patch(${JSON.stringify(home)});`])
+    writeFileSync(patch, readFileSync(join(home, 'desktop.patch.yml')))
+  } else {
+    const collector = pathToFileURL(resolve('scripts/product-web-package.mjs')).href
+    const { stdout } = await promisify(execFile)(process.execPath, ['--input-type=module', '-e',
+      `import { webProfilePatch } from ${JSON.stringify(collector)}; process.stdout.write(webProfilePatch);`])
+    writeFileSync(patch, stdout)
+  }
+  const operations = loadOverlayPatches('test', patch)
   const selector = operations.flatMap(operation => operation.insert ?? []).find(plugin => plugin.id === 'system3')
-  if (selector === undefined) throw new Error('Desktop did not include Skill selection')
+  if (selector === undefined) throw new Error(`${surface} did not include Skill selection`)
   const dir = join(home, 'profiles', 'test')
   initProfile(dir, ['test-bundle'])
   const bundle = join(dir, 'node_modules', 'test-bundle')

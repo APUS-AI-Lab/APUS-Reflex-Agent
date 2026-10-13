@@ -9,6 +9,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import { parseArgs, promisify } from 'node:util'
 import { basename } from 'node:path'
 import { readInstallerBuild, verifyInstalledEdition, verifyInstalledEditionFiles } from './product-installer-metadata.mjs'
+import { verifyReflexExecution, verifyReflexSettings } from './product-reflex-smoke.mjs'
 
 const execute = promisify(execFile)
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -206,18 +207,23 @@ async function run(installer, reportDirectory, expectedSource = process.env.GITH
     let page = await launch()
     await page.screenshot({ path: join(reportDirectory, 'home.png') })
     report.stages.push('fresh-profile-home')
+    report.reflexCapabilities = { initial: await verifyReflexExecution(page) }
+    report.stages.push('reflex-execution-modules-ready')
     await page.getByText(/^(设置|Settings)$/).last().click()
     const versionLabel = page.getByText(new RegExp(`^(当前版本：|Current version: )${build.version.replaceAll('.', '\\.')}$`))
     await versionLabel.waitFor({ timeout: 20_000 })
     await versionLabel.scrollIntoViewIfNeeded()
     await page.screenshot({ path: join(reportDirectory, 'version.png') })
     report.stages.push('product-version-visible')
+    await page.getByRole('button', { name: /^(Reflex 配置|Reflex configuration)$/u, exact: true }).click()
+    await verifyReflexSettings(page.getByRole('dialog'))
+    await page.screenshot({ path: join(reportDirectory, 'reflex-settings.png') })
+    report.stages.push('reflex-settings-verified')
     const qualifyMemorySetting = build.edition === 'full' || build.edition === 'lite'
     const continuumSwitch = (page, checked) => page.getByRole('switch', {
       name: /^Continuum (无限记忆|memory)$/u, checked, disabled: false,
     })
     if (qualifyMemorySetting) {
-      await page.getByRole('button', { name: /^(Reflex 配置|Reflex configuration)$/u, exact: true }).click()
       await continuumSwitch(page, false).waitFor({ state: 'visible', timeout: 20_000 })
       await continuumSwitch(page, false).click()
       await continuumSwitch(page, true).waitFor({ state: 'visible', timeout: 20_000 })
@@ -229,6 +235,8 @@ async function run(installer, reportDirectory, expectedSource = process.env.GITH
     report.stages.push('first-exit-quiescent')
     page = await launch()
     await page.screenshot({ path: join(reportDirectory, 'restart.png') })
+    report.reflexCapabilities.restarted = await verifyReflexExecution(page)
+    report.stages.push('reflex-execution-modules-ready-after-restart')
     if (qualifyMemorySetting) {
       await page.getByText(/^(设置|Settings)$/).last().click()
       await page.getByText(new RegExp(`^(当前版本：|Current version: )${build.version.replaceAll('.', '\\.')}$`)).waitFor({ timeout: 20_000 })

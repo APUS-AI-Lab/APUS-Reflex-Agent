@@ -16,7 +16,7 @@ Frontend and backend now ship from one repository. Desktop and Web downloads inc
 
 预览版，未签名；Windows/Linux 桌面安装验证尚未通过。Unsigned preview; Windows/Linux desktop installation validation has not passed.
 
-首次使用请配置自己的模型服务和 API Key；可选 Reflex/Jev 接入支持 OpenJev、Typesafe。Configure your own model provider and API key; optional Reflex/Jev endpoints support OpenJev and Typesafe.
+首次使用请配置自己的模型服务和 API Key；Reflex 决策服务的接入方式见配置教程。Configure your own model provider and API key; see the configuration guide for the Reflex decision service.
 
 [中文安装与配置教程](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/blob/main/docs/feat-integrated-product/installation.zh.md) · [Installation and configuration](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/blob/main/docs/feat-integrated-product/installation.md)
 

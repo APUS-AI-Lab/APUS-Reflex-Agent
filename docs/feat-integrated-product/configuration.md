@@ -35,28 +35,21 @@ Keep the original error for diagnosis, but redact keys before sharing it. Creden
 
 ## Optional Reflex decision service
 
-Open **Settings → Reflex model configuration** to connect your own Reflex/Jev decision service. Ordinary model tasks do not require this service; generation models remain configured under **Settings → Models**. On first use, the page may report an unconfigured decision service; endpoint and model fields remain editable, and testing the draft does not save it.
+Open **Settings → Reflex configuration**. Choose **APUS Reflex limited-time free endpoint** for the preset service, or **Custom parameters** for your own service. Both use the Reflex protocol. The preset hides the endpoint, model and key fields; it requires deployment-provided credentials, and installers do not contain a shared API key. If the preset is unavailable, use a custom service. Generation models remain configured under **Settings → Models**.
 
-| Field | What to enter |
+| Custom field | What to enter |
 | --- | --- |
-| Service endpoint and decision model | The decision service API root or `/v1` base address and actual model ID; do not enter a complete `/v1/systemone` or chat-completions path, credentials, user information, query parameters or fragments |
-| Decision protocol | Choose OpenJev or Typesafe to match the service implementation; this differs from the generation API protocol on the Models page |
-| Decision effort | OpenJev uses `high` or `low`; Typesafe requests omit this extension |
-| Request timeout (ms) | Maximum wait for connection tests and decision requests |
-| Credential reference and API key | A dedicated reference such as `REFLEX_API_KEY` and your service key; anonymous services need no key |
+| Service endpoint and decision model | The decision API root or `/v1` base address and actual model ID; omit the complete `/v1/systemone` path, credentials, query parameters and fragments |
+| Decision effort | `high` or `low` |
+| Request timeout (ms) | Maximum wait for service requests and connection tests; input preparation also has a separate total budget |
+| Credential reference and API key | A dedicated reference such as `REFLEX_CUSTOM_API_KEY` and your service key; anonymous services need no key |
 
-For first use, supply the endpoint and model and confirm the protocol; keep the current timeout and applicable effort defaults unless your service requires otherwise. Use the endpoint and protocol confirmed by your service provider.
+Leave API key blank to retain the stored key. A replacement key requires a new dedicated reference; deployment credentials are read-only. Keys remain in the Host credential store, separate from ordinary settings and source code. Switching to custom parameters does not copy preset credentials.
 
-Leave API key blank to retain the stored key. A new or replacement key requires a new dedicated reference; configured references cannot be overwritten. Deployment environment credentials are read-only. The Host credential service stores keys separately from ordinary settings and source code.
-
-Click **Test connection and real decision**. The test uses the current draft’s selected protocol without saving it; test again after changing fields. OpenJev probes check `/health`, the model list and a fixed decision; Typesafe skips `/health` and checks the model list and fixed decision. The page reports authentication failures, timeouts, missing models or the real decision result separately. “Real decision passed” validates this decision-service test only; it does not verify that routing, supervision, memory or task execution is enabled or accepted.
-
-Review the result, then click **Save**. Saved settings apply to new requests; running requests retain their configuration. If the page reports a failed or partial save, reopen it and check settings and credential status before retrying.
+Click **Test connection and real decision**, then **Save**. Testing checks health, model availability and a fixed decision using the current draft; it does not save settings. Test again after editing. Saved settings apply to new requests; running requests retain their configuration. A successful probe does not establish task completion or recall quality.
 
 ## Check which capabilities are enabled
 
-The Reflex page reports capability status separately for user entry routing, Codex long-running Goal correction, and dynamic context and recoverable memory. Click **Refresh capability status** to read the current runtime status, distinguishing modules not loaded, disabled capabilities, enabled capabilities and execution verification records.
+The product profile loads input judgment and Skill selection. With a configured service, Reflex records its actual decision before the main model continues; missing configuration or failed preparation leaves ordinary model execution available. Advanced entry routing, Goal correction and Session context recovery require their own configuration. **Refresh capability status** reads module and configuration status; conversation records show what actually ran.
 
-A successful connection or saved endpoint does not automatically enable these capabilities. Advanced routing candidates, data classification and remote authorization require separate profile configuration. Continuum also needs memory admission and scope settings. See the [public provider guide](../dev-continuum-reflex-integration/public-provider-configuration.md), [System3 configuration reference](../../packages/experimental/system3/README.md) and [Continuum guide](../../packages/context/continuum/README.md). These settings can permit task content to reach decision services and generation models; review endpoints and authorization before enabling them.
-
-After enabling a capability, use a small task to inspect its runtime records and actual result. Displayed advice does not establish adoption; an enabled capability does not establish task acceptance. Model-as-a-Harness describes the product direction; individual capabilities depend on configuration and execution evidence.
+The **Continuum memory** switch is also on the Reflex page and is off by default. It controls Continuum independently of System3 Session context recovery. Enabling either feature is not evidence of complete recall or task acceptance. See the [public provider guide](../dev-continuum-reflex-integration/public-provider-configuration.md), [System3 reference](../../packages/experimental/system3/README.md) and [Continuum guide](../../packages/context/continuum/README.md) for scope and remote-data settings.

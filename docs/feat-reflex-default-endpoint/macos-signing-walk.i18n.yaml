@@ -1,0 +1,13 @@
+# Bilingual-pair consistency record for macos-signing-walk.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-reflex-default-endpoint/macos-signing-walk.md
+/macos-signing-traversal-patch:
+  en: ffbfea93f9505304
+  zh: b9b99a55806a4adc
+/macos-signing-traversal-patch/ownership-and-removal:
+  en: a6e43cdf2701b697
+  zh: eb5103b5cb7259e3
+/macos-signing-traversal-patch/local-verification:
+  en: e16934acd833c6ea
+  zh: 102b0c56062dd88f

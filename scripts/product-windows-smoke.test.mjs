@@ -1,7 +1,8 @@
 /** Keyless checks for the Windows installed-app qualification harness. */
 import assert from 'node:assert/strict'
+import { once } from 'node:events'
+import { createServer } from 'node:net'
 import { test } from 'node:test'
-import { setImmediate, setTimeout } from 'node:timers/promises'
 import { ownedProcessIds, redactDiagnostic, smokeEnvironment, verifyInstalledIdentity, failureDiagnostic, runTrackedProcess, terminateOwnedProcesses } from './product-windows-smoke.mjs'
 
 test('installed application cannot inherit developer Node, credentials or runtime overrides', () => {
@@ -55,7 +56,7 @@ test('tracked process preserves the acquired PID and waits for timed-out executi
   let pid
   let observations = 0
   await assert.rejects(runTrackedProcess(process.execPath, ['-e', 'setInterval(() => {}, 1000)'],
-    { timeout: 100, killSignal: 'SIGKILL' }, value => { pid = value }, async () => { observations++ }),
+    { timeout: 100, killSignal: 'SIGKILL' }, child => { pid = child.pid }, async () => { observations++ }),
   error => error.killed === true && error.signal === 'SIGKILL')
   assert.ok(pid > 0)
   assert.ok(observations > 0)
@@ -65,7 +66,7 @@ test('tracked process preserves the acquired PID and waits for timed-out executi
 test('failed process observation kills and awaits the acquired command rather than abandoning it', async () => {
   let pid
   await assert.rejects(runTrackedProcess(process.execPath, ['-e', 'setInterval(() => {}, 1000)'],
-    { timeout: 5000 }, value => { pid = value }, async () => { throw new Error('Observation unavailable') }), /Observation unavailable/)
+    { timeout: 5000 }, child => { pid = child.pid }, async () => { throw new Error('Observation unavailable') }), /Observation unavailable/)
   assert.throws(() => process.kill(pid, 0), error => error.code === 'ESRCH')
 })
 
@@ -92,18 +93,33 @@ test('cleanup observation failures remain independently reportable beside an ear
 })
 
 
-test('an exit already observed during sampling keeps its numeric failure and separate observation diagnostic', async () => {
-  let pid
-  await assert.rejects(runTrackedProcess(process.execPath, ['-e', 'process.exit(7)'],
-    { timeout: 5000 }, value => { pid = value }, async () => {
-      const deadline = Date.now() + 5000
-      while (true) {
-        try { process.kill(pid, 0) }
-        catch (error) { if (error.code === 'ESRCH') break; throw error }
-        assert.ok(Date.now() < deadline, 'Child must exit before the observer fails')
-        await setTimeout(10)
-      }
-      await setImmediate()
+test('an observed exit retains its numeric failure while inherited output is still open', async t => {
+  const server = createServer()
+  let keeper
+  t.after(async () => {
+    keeper?.destroy()
+    await new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve()))
+  })
+  server.listen(0, '127.0.0.1')
+  await once(server, 'listening')
+  const connected = once(server, 'connection').then(([socket]) => { keeper = socket; return socket })
+  const port = server.address().port
+  // A connected descendant holds stdout until the observer releases it, separating exit from close.
+  const keepOutput = `const socket = require('node:net').connect(${port}, '127.0.0.1'); socket.on('close', () => process.exit(0));`
+  const script = `require('node:child_process').spawn(process.execPath, ['-e', ${JSON.stringify(keepOutput)}], { stdio: ['ignore', 1, 2] }).unref(); process.exit(7);`
+  let exited
+  let closed = false
+  await assert.rejects(runTrackedProcess(process.execPath, ['-e', script],
+    { timeout: 5000 }, child => {
+      exited = once(child, 'exit')
+      child.once('close', () => { closed = true })
+    }, async () => {
+      const [[code, signal], socket] = await Promise.all([exited, connected])
+      try {
+        assert.equal(code, 7)
+        assert.equal(signal, null)
+        assert.equal(closed, false)
+      } finally { socket.end() }
       throw new Error('Observation unavailable; API_KEY=private')
     }), error => {
     const diagnostic = failureDiagnostic(error)
@@ -112,6 +128,7 @@ test('an exit already observed during sampling keeps its numeric failure and sep
     assert.equal(diagnostic.observationFailure.message, 'Observation unavailable; API_KEY=[redacted]')
     return true
   })
+  assert.equal(closed, true)
 })
 
 test('Full and Lite installed runtime identities cannot be mixed', () => {
