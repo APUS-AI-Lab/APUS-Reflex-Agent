@@ -57,6 +57,7 @@ import * as ToolSchedule from '@deepseek-ai/dsh-schedule'
 import Lsp from '@deepseek-ai/dsh-lsp'
 import * as ToolLsp from '@deepseek-ai/dsh-tool-lsp'
 import * as ToolSkill from '@deepseek-ai/dsh-tool-skill'
+import * as ToolHistoryRecall from '@deepseek-ai/dsh-tool-history-recall'
 import * as ToolSessionQuery from '@deepseek-ai/dsh-tool-session-query'
 import * as ToolJobs from '@deepseek-ai/dsh-tool-jobs'
 import BrowserUseRegistry from '@deepseek-ai/dsh-browser-use'
@@ -511,6 +512,20 @@ const TOOL_PACKAGES: ToolPackage[] = [
       })
       await ctx.plugin(ToolSkill)
     },
+  },
+  {
+    pkg: '@deepseek-ai/dsh-tool-history-recall',
+    dir: 'tool-history-recall',
+    source: 'packages/session-query/tool-history-recall/src/index.ts',
+    requires: ['ctx.tools', 'ctx.systemPrompt', 'ctx.sessionQuery', 'a calling Agent whose session is read'],
+    writes: ['tool/call', 'tool/result'],
+    async mount(ctx) {
+      await ctx.plugin(SessionStore)
+      await ctx.plugin(SqliteSessionQueryEngine, { path: ':memory:' })
+      await ctx.plugin(ToolHistoryRecall)
+    },
+    note:
+      'The two read-only tools render the original conversation behind compaction checkpoints of the calling session. Checkpoint ids come from the footer that dsh-compaction-basic writes with recallFooter: true.',
   },
   {
     pkg: '@deepseek-ai/dsh-tool-session-query',

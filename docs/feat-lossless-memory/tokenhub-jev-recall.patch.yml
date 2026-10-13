@@ -1,0 +1,57 @@
+# Source-checkout overlay: TokenHub DeepSeek Flash generation, the RunPod Jev gateway, and lossless compaction recall.
+# Credentials come from TOKENHUB_API_KEY and APUS_JEV_API_KEY in the launch environment or the root .env.
+- id: llm-deepseek
+  disabled: true
+
+- id: llm-pi-ai
+  config:
+    providers:
+      tokenhub:
+        displayName: Tencent TokenHub
+        apiKeyEnv: TOKENHUB_API_KEY
+        api: openai-completions
+        baseURL: https://tokenhub.tencentmaas.com/v1
+        compat:
+          thinkingFormat: deepseek
+        models:
+          - id: deepseek/deepseek-flash
+            name: DeepSeek Flash (TokenHub)
+            contextWindow: 131072
+            maxTokens: 8192
+            input: [text]
+            reasoningEfforts: {off: null, low: low, medium: medium, high: high}
+
+- id: agent-default-model
+  config:
+    provider: tokenhub
+    model: deepseek/deepseek-flash
+    reasoningEffort: low
+
+# Every checkpoint names its summary seq so the recall tools can read the originals back.
+- id: compaction-basic
+  config:
+    recallFooter: true
+
+- insert:
+    - id: tool-history-recall
+      name: ../../packages/session-query/tool-history-recall/src/index.ts
+
+    - id: jev
+      name: ../../packages/experimental/apus-dsh-jev-plugin/src/index.ts
+      config:
+        endpoint: https://ac2n5m38jjciqg-8086.proxy.runpod.net
+        model: APUS-OpenJev-v1-9B-5949
+        effort: low
+        timeoutMs: 15000
+        apiKeyEnv: APUS_JEV_API_KEY
+
+    - id: system3
+      name: ../../packages/experimental/system3/src/index.ts
+      config:
+        privacyMode: controlled
+        approvedRemoteIds: [jev]
+        approvedRemoteDataClasses: [public]
+        observeAgentLoop: true
+        jevRouteId: jev
+        jevExecutionDomain: network
+        jevEffort: low

@@ -321,6 +321,7 @@ describe('compact configuration and defaults', () => {
       maxOverflowRetries: 1,
       modelPolicies: [],
       auto: true,
+      recallFooter: false,
     })
     expect(Object.isFrozen(resolved)).toBe(true)
   })
@@ -513,6 +514,7 @@ describe('compact configuration and defaults', () => {
       [{ compactionRetries: -1 }, /compactionRetries/],
       [{ maxOverflowRetries: -1 }, /maxOverflowRetries/],
       [{ auto: 'yes' }, /auto must be a boolean/],
+      [{ recallFooter: 'yes' }, /recallFooter must be a boolean/],
       [{ summarizationProvider: 1 }, /summarizationProvider must be a string/],
       [{ summarizationModel: 1 }, /summarizationModel must be a string/],
       [{ summarizationProvider: MODEL }, /must be set together/],
@@ -1059,6 +1061,23 @@ describe('compaction region transaction', () => {
     expect(head.content[0]?.type === 'text' ? head.content[0].text : '').toContain('<compacted-summary>')
     expect(head.content.at(-1)).toEqual({ type: 'text', text: '</compacted-summary>' })
 
+    const replay = Session.create(SessionId('replay'), session.snapshotEvents())
+    expect(replay.deriveMessages()).toEqual(session.deriveMessages())
+  })
+
+  it('ends an opted-in checkpoint with a footer naming its summary seq and shadowed range', async () => {
+    const compact = service({ auto: false, recallFooter: true })
+    const session = conversation(3)
+    const before = [...session.surface.nodes]
+    const result = await compact.compactRegion(before[0]!, before[3]!, agent(session, MODEL), SIGNAL)
+
+    const head = session.deriveMessages()[0]!
+    expect(head.content.at(-2)).toEqual({ type: 'text', text: '</compacted-summary>' })
+    expect(head.content.at(-1)).toEqual({
+      type: 'text',
+      text: `[checkpoint c${result.summarySeq}: shadows conversation events #${before[0]}–#${before[3]}; `
+        + `originals retrievable via history_read with checkpoint ${result.summarySeq}]`,
+    })
     const replay = Session.create(SessionId('replay'), session.snapshotEvents())
     expect(replay.deriveMessages()).toEqual(session.deriveMessages())
   })

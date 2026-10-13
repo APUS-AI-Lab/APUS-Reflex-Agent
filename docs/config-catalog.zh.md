@@ -670,6 +670,11 @@ export interface BasicCompactionConfig extends CompactionPolicyConfig {
   modelPolicies?: ModelCompactPolicyConfig[]
   /** Enable automatic step-boundary pressure and overflow-recovery listeners. Defaults to `true`. */
   auto?: boolean
+  /**
+   * End every checkpoint with a code-composed footer naming its `compaction/summary` seq and shadowed range,
+   * so a mounted history-recall tool can read the originals back. Defaults to `false`.
+   */
+  recallFooter?: boolean
 }
 
 /** Policy fields shared by the default policy and exact model overrides. */
@@ -3666,7 +3671,7 @@ export interface Config {
 
 ## `@deepseek-ai/dsh-system-prompt`
 
-- `source`: [`packages/core/system-prompt/src/index.ts:248`](../packages/core/system-prompt/src/index.ts)
+- `source`: [`packages/core/system-prompt/src/index.ts:249`](../packages/core/system-prompt/src/index.ts)
 
 ```ts config-catalog
 /** Plugin config: the deployment-authored fragment of the system prompt (see {@link Config.personaPrefix} for its contract). */
@@ -3924,6 +3929,27 @@ export interface Config {
 }
 ```
 <!-- END GENERATED config-catalog:@deepseek-ai/dsh-tool-goal -->
+
+<!-- BEGIN GENERATED config-catalog:@deepseek-ai/dsh-tool-history-recall -->
+<a id="deepseek-aidsh-tool-history-recall"></a>
+
+## `@deepseek-ai/dsh-tool-history-recall`
+
+- `inject`: `tools` · `systemPrompt` · `sessionQuery`
+- `source`: [`packages/session-query/tool-history-recall/src/index.ts:30`](../packages/session-query/tool-history-recall/src/index.ts)
+
+```ts config-catalog
+/** Deployment-owned page and result bounds. */
+export interface Config {
+  /** Characters returned by one `history_read` page. Defaults to 24000. */
+  pageChars?: number
+  /** Maximum matches returned by one `history_search` call. Defaults to 20. */
+  maxMatches?: number
+  /** Characters of context shown on each side of a match. Defaults to 160. */
+  snippetRadius?: number
+}
+```
+<!-- END GENERATED config-catalog:@deepseek-ai/dsh-tool-history-recall -->
 
 <!-- BEGIN GENERATED config-catalog:@deepseek-ai/dsh-tool-jobs -->
 <a id="deepseek-aidsh-tool-jobs"></a>

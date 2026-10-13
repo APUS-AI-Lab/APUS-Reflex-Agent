@@ -1,0 +1,25 @@
+# Stress overlay applied after tokenhub-jev-recall.patch.yml: a small declared window forces repeated compaction.
+- id: llm-pi-ai
+  config:
+    providers:
+      tokenhub:
+        displayName: Tencent TokenHub
+        apiKeyEnv: TOKENHUB_API_KEY
+        api: openai-completions
+        baseURL: https://tokenhub.tencentmaas.com/v1
+        compat:
+          thinkingFormat: deepseek
+        models:
+          - id: deepseek/deepseek-flash
+            name: DeepSeek Flash (TokenHub, 24K stress window)
+            contextWindow: 24576
+            maxTokens: 4096
+            input: [text]
+            reasoningEfforts: {off: null, low: low, medium: medium, high: high}
+
+- id: compaction-basic
+  config:
+    recallFooter: true
+    headroomTokens: 2048
+    thresholdRatio: 0.7
+    retainRatio: 0.2

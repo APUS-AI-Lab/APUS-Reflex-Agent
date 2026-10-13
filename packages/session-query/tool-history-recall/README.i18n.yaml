@@ -1,0 +1,91 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/session-query/tool-history-recall/README.md
+/:
+  en: 683f2a6d4eb6fc3a
+  zh: 07056b4f7154b0aa
+/deepseek-ai-dsh-tool-history-recall:
+  en: 252c0e643563152e
+  zh: 75cf6ed3e90077d2
+/deepseek-ai-dsh-tool-history-recall/summary:
+  en: 71695e1738ea9bb4
+  zh: 56e7074072a789a9
+/deepseek-ai-dsh-tool-history-recall/table-of-contents:
+  en: d152484eb41ac6b4
+  zh: 09388d293f9be9cb
+/deepseek-ai-dsh-tool-history-recall/use-this-package:
+  en: 6b33f1c15bcbd39f
+  zh: 0561d875496ce4b6
+/deepseek-ai-dsh-tool-history-recall/use-this-package/when-to-choose-it:
+  en: 2bd66a6ac1d2c3a9
+  zh: 2f5cebd3fadab437
+/deepseek-ai-dsh-tool-history-recall/use-this-package/configuration:
+  en: 0d4556782d985542
+  zh: c666b0166e0ea642
+/deepseek-ai-dsh-tool-history-recall/use-this-package/what-the-model-can-do:
+  en: 8197db3004f4dace
+  zh: 7f107697381d5be9
+/deepseek-ai-dsh-tool-history-recall/use-this-package/failures-and-recovery:
+  en: bb6de7cc161018a5
+  zh: 87fa7d1c0a0d5e1c
+/deepseek-ai-dsh-tool-history-recall/understand-the-implementation:
+  en: 42b15ac6321706aa
+  zh: 4ed0861911abaf5d
+/deepseek-ai-dsh-tool-history-recall/understand-the-implementation/design:
+  en: 2dcdd1908faa3d75
+  zh: be46475954fdd443
+/deepseek-ai-dsh-tool-history-recall/understand-the-implementation/source-map:
+  en: 2e3cd1e9be289d0a
+  zh: 6c33e1b9921e15c8
+/deepseek-ai-dsh-tool-history-recall/further-exploration:
+  en: a5d3ab196eaf68ae
+  zh: dac2afc8660c6be7
+/deepseek-ai-dsh-tool-history-recall/model-experience:
+  en: 215e7ba838619b7b
+  zh: a311da3843709f90
+/deepseek-ai-dsh-tool-history-recall/model-experience/system-prompt:
+  en: cf78b9dd5596495f
+  zh: bd44560f8c2435e8
+/deepseek-ai-dsh-tool-history-recall/model-experience/system-prompt/what-the-model-sees:
+  en: b71fb7aa48929508
+  zh: 71795477cee8de8e
+/deepseek-ai-dsh-tool-history-recall/model-experience/system-prompt/what-the-model-sees/recall-guidance:
+  en: ce790c0cf6f9d928
+  zh: 57aee35d3eddacf4
+/deepseek-ai-dsh-tool-history-recall/model-experience/system-prompt/token-effect:
+  en: 6ee4d42e6b3b56c1
+  zh: 0681522d0d093f32
+/deepseek-ai-dsh-tool-history-recall/model-experience/system-prompt/kv-cache-effect:
+  en: 3bca5cdc9c4f1ad8
+  zh: 9bc9f6d445b0ef64
+/deepseek-ai-dsh-tool-history-recall/model-experience/tool-schemas:
+  en: 3039bc5e7a796b21
+  zh: 6b7a9eaf69c9ea53
+/deepseek-ai-dsh-tool-history-recall/model-experience/tool-schemas/what-the-model-sees:
+  en: 8ebcccdd67818374
+  zh: 4ac16ba1edb3ceb3
+/deepseek-ai-dsh-tool-history-recall/model-experience/tool-schemas/token-effect:
+  en: 77b70eed15abfe6b
+  zh: cb5980fc9d1f38de
+/deepseek-ai-dsh-tool-history-recall/model-experience/tool-schemas/kv-cache-effect:
+  en: c8cbbef533bdb90f
+  zh: d2924e0872e0bc42
+/deepseek-ai-dsh-tool-history-recall/model-experience/tool-results:
+  en: beaabb79f229692a
+  zh: 8573891441963be4
+/deepseek-ai-dsh-tool-history-recall/model-experience/tool-results/what-the-model-sees:
+  en: 400e3481ace5cf56
+  zh: 62477a9c3bbb68d9
+/deepseek-ai-dsh-tool-history-recall/model-experience/tool-results/token-effect:
+  en: c7ce8fdc200cae9e
+  zh: 91e2e01ff8e4e075
+/deepseek-ai-dsh-tool-history-recall/model-experience/tool-results/kv-cache-effect:
+  en: d83d93c17f84d6ab
+  zh: 82349da9a70622db
+/deepseek-ai-dsh-tool-history-recall/known-limitations-and-deferred-work:
+  en: 64aaa722020f9e0d
+  zh: bea7c220ecf4f175
+/deepseek-ai-dsh-tool-history-recall/known-limitations-and-deferred-work/dev-note:
+  en: 82c77511f95f82f9
+  zh: 08e813c29a413608
