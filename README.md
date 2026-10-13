@@ -1,6 +1,6 @@
-# APUS Reflex Harness
+# APUS Reflex Agent
 
-![APUS Reflex Harness](apps/web/public/brand-source.webp)
+![APUS Reflex Agent](apps/web/public/brand-source.webp)
 
 English | [中文](README.zh.md)
 
@@ -16,7 +16,7 @@ This integration merges frontend and backend delivery into the existing Harness 
 
 The repository is currently private: Release downloads require repository access until an administrator makes it public.
 
-Visit [Releases](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/releases) for installers, supported platforms and validation results. `0.1.0` (`v0.1.0`) targets macOS Apple Silicon (arm64), macOS Intel (x64), Windows x64, Ubuntu 24.04 x64 desktop and a complete Linux x64 Web archive from the same reviewed clean source commit. The macOS editions passed automated copying, direct process startup and restart checks; Finder/Gatekeeper installation acceptance remains incomplete, and an invalid bundle seal was found in a checked `0.1.0` DMG. Linux x64 Web passed extraction, startup and restart checks. Windows x64 and Ubuntu 24.04 x64 desktop are experimental downloads with incomplete installation acceptance; see the [platform status](docs/feat-integrated-product/installation.md). This is an unsigned preview; macOS is not notarized. The first task with a real model has not been validated; configure your own model using the guide. GitHub’s “Source code” archives contain source files, not installable applications. The Web archive bundles Node and the backend, listens on localhost, and needs no Electron; see the [Web guide](docs/release-web-runtime/README.md).
+Visit [Releases](https://github.com/APUS-AI-Lab/APUS-Reflex-Agent/releases) for installers, supported platforms and validation results. `0.1.0` (`v0.1.0`) targets macOS Apple Silicon (arm64), macOS Intel (x64), Windows x64, Ubuntu 24.04 x64 desktop and a complete Linux x64 Web archive from the same reviewed clean source commit. The macOS editions passed automated copying, direct process startup and restart checks; Finder/Gatekeeper installation acceptance remains incomplete, and an invalid bundle seal was found in a checked `0.1.0` DMG. Linux x64 Web passed extraction, startup and restart checks. Windows x64 and Ubuntu 24.04 x64 desktop are experimental downloads with incomplete installation acceptance; see the [platform status](docs/feat-integrated-product/installation.md). This is an unsigned preview; macOS is not notarized. The first task with a real model has not been validated; configure your own model using the guide. GitHub’s “Source code” archives contain source files, not installable applications. The Web archive bundles Node and the backend, listens on localhost, and needs no Electron; see the [Web guide](docs/release-web-runtime/README.md).
 
 The desktop distribution bundles its runtime: users do not need Git, Node.js or a separate backend. Follow [installation](docs/feat-integrated-product/installation.md) and [model configuration](docs/feat-integrated-product/configuration.md) using your own provider credentials. Preview builds can break compatibility. Read [SAFETY.md](SAFETY.md) before granting file access.
 
@@ -123,8 +123,8 @@ Install Git, Node.js 24 and the pnpm version declared by the root `packageManage
 <a id="run-from-source"></a>
 
 ```sh
-git clone https://github.com/APUS-AI-Lab/APUS-Reflex-Harness.git
-cd APUS-Reflex-Harness
+git clone https://github.com/APUS-AI-Lab/APUS-Reflex-Agent.git
+cd APUS-Reflex-Agent
 pnpm run setup
 pnpm run start:desktop
 ```
@@ -143,7 +143,7 @@ The [development guide](docs/feat-integrated-product/development.md) covers the 
 
 - Start with [CONTRIBUTING.md](CONTRIBUTING.md) and the [development guide](docs/development.md).
 - New contributors can use the [architecture task list](docs/dev-continuum-reflex-integration/architecture-followups.md), with focused tasks and acceptance criteria.
-- Report bugs through [GitHub Issues](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/issues).
+- Report bugs through [GitHub Issues](https://github.com/APUS-AI-Lab/APUS-Reflex-Agent/issues).
 - Read [SAFETY.md](SAFETY.md) before running the project; report vulnerabilities through [SECURITY.md](SECURITY.md), never a public issue.
 - Agent contributors should follow [AGENTS.md](AGENTS.md). Public APIs remain pre-stable and may change incompatibly.
 
