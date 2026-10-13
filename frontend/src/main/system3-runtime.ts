@@ -72,6 +72,10 @@ export function resolveSystem3Runtime(appPath: string, resourcesPath: string, is
     : artifactRoot
   if (!root) throw new Error('APUS Reflex Harness workspace manifest has no explicit source root')
   const required = new Set(['@deepseek-ai/dsh', '@deepseek-ai/dsh-experimental-system3', '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin', '@deepseek-ai/dsh-experimental-system3-policy', '@deepseek-ai/dsh-experimental-system3-evidence', '@deepseek-ai/dsh-experimental-system3-supervisor', '@deepseek-ai/dsh-experimental-client-ui-system3'])
+  if (manifest.edition !== undefined) {
+    required.add('@deepseek-ai/dsh-continuum')
+    required.add('@deepseek-ai/dsh-experimental-continuum-jev')
+  }
   for (const item of manifest.packages) {
     if (!record(item) || typeof item.name !== 'string' || typeof item.path !== 'string') throw new Error('Invalid APUS Reflex Harness package identity')
     const pkg: unknown = JSON.parse(readFileSync(contained(root, item.path), 'utf8'))

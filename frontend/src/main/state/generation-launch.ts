@@ -55,9 +55,10 @@ export async function prepareGenerationsForLaunch(dshHome: string, note: Note): 
   }
   const manifest = readProfileManifest('APUS Reflex Harness', profileDir)
   const bundles = manifest.dsh?.profile?.bundles ?? []
-  const reflexBundle = '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
-  if (!bundles.includes(reflexBundle)) {
-    writeProfileBundles(profileDir, manifest, [...bundles, reflexBundle])
+  const missingBundles = ['@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin', '@deepseek-ai/dsh-experimental-continuum-jev']
+    .filter(bundle => !bundles.includes(bundle))
+  if (missingBundles.length > 0) {
+    writeProfileBundles(profileDir, manifest, [...bundles, ...missingBundles])
   }
   try {
     const projection = await projectGenerations(dshHome)

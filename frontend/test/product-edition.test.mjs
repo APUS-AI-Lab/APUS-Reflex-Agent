@@ -10,7 +10,9 @@ import beforePack from '../scripts/verify-system3-runtime.cjs'
 
 const require = createRequire(import.meta.url)
 const { doMergeConfigs } = require('app-builder-lib/out/util/config/config.js')
-const { getMainFileMatchers, getNodeModuleFileMatcher } = require('app-builder-lib/out/fileMatcher.js')
+const { getFileMatchers, getMainFileMatchers, getNodeModuleFileMatcher } = require('app-builder-lib/out/fileMatcher.js')
+const { AsarPackager } = require('app-builder-lib/out/asar/asarUtil.js')
+const { listPackage } = require('@electron/asar')
 const base = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).build
 const roots = []
 function fixture() {
@@ -153,6 +155,39 @@ describe('Full / Lite product editions', () => {
 })
 
 describe('pinned electron-builder production file matching', () => {
+  it.each(['full', 'lite'].flatMap(edition => [
+    [edition, 'darwin', 'arm64'], [edition, 'darwin', 'x64'],
+    [edition, 'win32', 'x64'], [edition, 'linux', 'x64'],
+  ]))('unpacks generated PPT mappings without a duplicate staging tree for %s %s-%s', async (edition, platform, arch) => {
+    const root = fixture()
+    const destination = join(root, 'packed')
+    const resources = join(root, 'resources')
+    mkdirSync(resources)
+    const config = doMergeConfigs([productEdition.createBuilderConfig(base, edition, platform, arch)])
+    const { main } = matchers(root, edition, platform, arch)
+    const application = main.find(item => item.from === root)
+    const fileSets = ['dsh-ppt', 'dsh-ppt-composer'].map(name => {
+      const file = fileAt(root, `.build/ppt-runtime/packages/${name}/lib/index.js`, 'export const available = true;\n')
+      const mapping = main.find(item => item.to === join(destination, 'node_modules', name))
+      const stat = lstatSync(file)
+      expect(application.createFilter()(file, stat)).toBe(false)
+      expect(mapping.createFilter()(file, stat)).toBe(true)
+      return { src: mapping.from, destination: mapping.to, files: [file], metadata: new Map([[file, stat]]) }
+    })
+    const unpack = getFileMatchers(config, 'asarUnpack', destination, {
+      defaultSrc: root, globalOutDir: resources, macroExpander: value => value,
+      customBuildOptions: config[platform === 'darwin' ? 'mac' : platform === 'win32' ? 'win' : 'linux'],
+    })[0]
+    await new AsarPackager({ info: { getWorkspaceRoot: async () => root } }, {
+      defaultDestination: destination, resourcePath: resources,
+      options: { smartUnpack: false }, unpackPattern: unpack.createFilter(),
+    }).pack(fileSets)
+    for (const name of ['dsh-ppt', 'dsh-ppt-composer']) {
+      expect(readFileSync(join(resources, 'app.asar.unpacked', 'node_modules', name, 'lib/index.js'), 'utf8')).toBe('export const available = true;\n')
+    }
+    expect(listPackage(join(resources, 'app.asar')).some(file => file.includes('.build/ppt-runtime'))).toBe(false)
+  })
+
   it.each([['darwin', 'arm64'], ['win32', 'x64'], ['linux', 'x64']])('rejects checkout files and selects native dependencies for %s-%s Lite', (platform, arch) => {
     const root = fixture()
     const { main, dependencies } = matchers(root, 'lite', platform, arch)

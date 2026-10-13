@@ -1,0 +1,18 @@
+# Editable memory defaults; enabling local recall never grants remote access.
+- insert:
+    - id: continuum-jev
+      name: ./lib/index.js
+      config:
+        mode: off
+        privacyPolicy:
+          mode: local-only
+    - id: continuum-memory
+      name: ./lib/product-memory.js
+      config:
+        enabled: false
+        mode: active
+        admission: user-message
+        scopes: [workspace]
+        maxCandidates: 8
+        maxExcerptBytes: 2048
+        maxTotalBytes: 8192

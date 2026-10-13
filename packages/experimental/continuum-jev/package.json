@@ -13,16 +13,27 @@
   "type": "module",
   "main": "lib/index.js",
   "types": "lib/types/index.d.ts",
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
   "exports": {
     ".": {
       "types": "./lib/types/index.d.ts",
       "default": "./lib/index.js"
     },
     "./src/*": "./src/*",
+    "./product-memory": {
+      "types": "./lib/types/product-memory.d.ts",
+      "default": "./lib/product-memory.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
+    "cordis.patch.yml",
     "lib/index.js",
+    "lib/product-memory.js",
     "lib/types/**/*.d.ts"
   ],
   "license": "MIT",
@@ -43,6 +54,8 @@
     "@deepseek-ai/dsh-continuum": "workspace:*",
     "@deepseek-ai/dsh-session": "workspace:*",
     "@deepseek-ai/dsh-app-boot": "workspace:*",
+    "@deepseek-ai/dsh-config-editor": "workspace:*",
+    "@deepseek-ai/dsh-settings": "workspace:*",
     "@deepseek-ai/dsh-agent": "workspace:*",
     "@deepseek-ai/dsh-agent-loop": "workspace:*",
     "@deepseek-ai/dsh-llm": "workspace:*",

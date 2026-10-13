@@ -24,7 +24,7 @@ module.exports = async function packageSystem3Runtime(context) {
   const target = path.join(resources, 'system3-runtime')
   await fs.cp(source, target, { recursive: true, force: true, dereference: false })
   const manifest = JSON.parse(await fs.readFile(path.join(target, 'runtime-manifest.json'), 'utf8'))
-  if (manifest.mode !== 'deployed' || manifest.packages.length !== 7) throw new Error('Packaged System3 runtime is incomplete')
+  if (manifest.mode !== 'deployed' || manifest.packages.length !== 9) throw new Error('Packaged System3 runtime is incomplete')
   verifyDependencyInventory(target, manifest)
   verifyPackagedMetadata(resources)
   const edition = resolveEdition(context.packager.config?.extraMetadata?.apusProductEdition ?? process.env.APUS_PRODUCT_EDITION ?? 'full')

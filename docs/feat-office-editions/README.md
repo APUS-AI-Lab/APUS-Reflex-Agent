@@ -15,6 +15,11 @@ Choose Full for integrated DOC/DOCX/PPT/PPTX page rendering and Office conversio
 
 Additional custom Office skills on Lite must explicitly set `cli: false` when they do not need the engine. An explicitly enabled conversion provider fails when its engine is absent. Lite's final product overlay disables the shipped conversion provider on startup and configuration reload.
 
+## Memory settings
+
+Both editions prepare editable memory defaults in normal Desktop and Web profiles. Open Settings → General → Continuum memory to opt in; it starts off. The [memory profile layer](../../packages/experimental/continuum-jev/README.md) owns Session recall and separate Jev outbound approval. Existing settings and records survive restart and edition changes. Enabling this switch does not grant network access or automatically share unrelated Sessions.
+
+<a id="macos-compatibility"></a>
 ## macOS compatibility
 
 Full and Lite require macOS 15 or later. The prepared Harness native loader declares 15.0 in its actual Mach-O load commands; Node 24.9.0 requires 13.5 and Electron 43 requires 12.0. The complete application follows the highest required component version. This requirement does not certify execution on every supported macOS version; installation results belong to each release's qualification records.

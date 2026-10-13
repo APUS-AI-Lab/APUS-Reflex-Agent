@@ -12,7 +12,7 @@ function fixture(mode: 'workspace' | 'deployed' = 'workspace') {
   mkdirSync(runtime, { recursive: true })
   const source = mode === 'workspace' ? join(root, 'source') : runtime
   mkdirSync(source, { recursive: true })
-  const names = ['@deepseek-ai/dsh', '@deepseek-ai/dsh-experimental-system3', '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin', '@deepseek-ai/dsh-experimental-system3-policy', '@deepseek-ai/dsh-experimental-system3-evidence', '@deepseek-ai/dsh-experimental-system3-supervisor', '@deepseek-ai/dsh-experimental-client-ui-system3']
+  const names = ['@deepseek-ai/dsh', '@deepseek-ai/dsh-experimental-system3', '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin', '@deepseek-ai/dsh-experimental-system3-policy', '@deepseek-ai/dsh-experimental-system3-evidence', '@deepseek-ai/dsh-experimental-system3-supervisor', '@deepseek-ai/dsh-experimental-client-ui-system3', '@deepseek-ai/dsh-continuum', '@deepseek-ai/dsh-experimental-continuum-jev']
   const packages = names.map((name, index) => {
     const path = `package-${index}.json`
     writeFileSync(join(source, path), JSON.stringify({ name, version: '0.1.7-rc.2' }))
@@ -27,6 +27,13 @@ function fixture(mode: 'workspace' | 'deployed' = 'workspace') {
 afterEach(() => { for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true }) })
 
 describe('own System3 runtime identity', () => {
+  it.each(['@deepseek-ai/dsh-continuum', '@deepseek-ai/dsh-experimental-continuum-jev'])('rejects a current edition missing %s', (name) => {
+    const f = fixture()
+    writeFileSync(join(f.runtime, 'product-edition.patch.yml'), '[]\n')
+    writeFileSync(join(f.runtime, 'runtime-manifest.json'), JSON.stringify({ ...f.manifest,
+      edition: 'full', editionPatch: 'product-edition.patch.yml', packages: f.manifest.packages.filter(item => item.name !== name) }))
+    expect(() => resolveSystem3Runtime(f.root, '/unused', false)).toThrow(name)
+  })
   it('launches the explicitly prepared rc.2 checkout', () => {
     const f = fixture()
     expect(resolveSystem3Runtime(f.root, '/unused', false)).toMatchObject({ entry: realpathSync(join(f.source, 'entry.js')), version: '0.1.7-rc.2', mode: 'workspace' })

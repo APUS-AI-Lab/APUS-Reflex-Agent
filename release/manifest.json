@@ -1,6 +1,6 @@
 {
   "product": "APUS Reflex Agent",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "channel": "preview",
   "repository": "APUS-AI-Lab/APUS-Reflex-Harness",
   "targets": [

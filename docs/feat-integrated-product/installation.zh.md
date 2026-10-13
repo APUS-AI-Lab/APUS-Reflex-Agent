@@ -19,7 +19,7 @@
 | Windows x64 | 实验性；安装包构建通过，但安装验收失败，原因尚未确定。 |
 | Ubuntu 24.04 x64 桌面 | 实验性；安装包构建通过，但验收在应用启动前因运行时文件清单输出缓冲溢出而中止。 |
 
-已检查的已发布 `0.1.0` macOS DMG 与公布的 SHA-256 一致，但其应用未通过严格 bundle 签名验证，错误为 `code has no resources but signature indicates they must be present`。按正常 DMG → Applications 流程安装后，Finder 可能提示应用已损坏。此前自动检查直接调用可执行文件，未验收该 Finder/Gatekeeper 流程。下载校验一致只确认文件字节，不代表应用 seal 有效。修复后的 `0.1.1` Mac 包尚未完成验收或发布；可[从源码开发](development.zh.md)，或等待经过验收的替代包。
+已检查的已发布 `0.1.0` macOS DMG 与公布的 SHA-256 一致，但其应用未通过严格 bundle 签名验证，错误为 `code has no resources but signature indicates they must be present`。按正常 DMG → Applications 流程安装后，Finder 可能提示应用已损坏。此前自动检查直接调用可执行文件，未验收该 Finder/Gatekeeper 流程。下载校验一致只确认文件字节，不代表应用 seal 有效。下载替代版本前请查看该次发布的安装验收结果与[签名策略](../feat-office-editions/README.zh.md#macos-compatibility)；也可[从源码开发](development.zh.md)。
 
 Windows 和 Ubuntu 桌面再验收因 GitHub Actions 计费/支出额度限制未能启动。Linux 验收脚本已修复，但这不代表安装、界面或沙箱验收通过。全部下载包保留构建元数据记录的同一产品源码；后续验收脚本修改不代表重新构建产品。
 

@@ -6,7 +6,7 @@ on:
       tag:
         description: Product version label matching the manifest (no existing tag required)
         required: true
-        default: v0.1.1
+        default: v0.1.2
         type: string
       target:
         description: Native installer targets to build and review

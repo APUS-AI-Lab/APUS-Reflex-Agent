@@ -1,6 +1,6 @@
 {
   "name": "apus-reflex-agent",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "APUS Reflex Harness — Model-as-a-Harness. 瞬策：瞬时执行，深度思考。",
   "private": true,
   "type": "module",
@@ -316,6 +316,7 @@
     "asar": true,
     "asarUnpack": [
       "node_modules/**/*",
+      ".build/ppt-runtime/packages/**/*",
       "!node_modules/debug/.coveralls.yml",
       "!node_modules/compression/node_modules/debug/.coveralls.yml"
     ],

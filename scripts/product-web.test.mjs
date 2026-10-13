@@ -62,11 +62,11 @@ test('qualification accepts only completed loopback readiness and redacts auth U
   assert.deepEqual(Object.keys(env).sort(), ['DSH_HOME', 'DSH_TELEMETRY_DISABLED', 'HOME', 'LANG', 'LC_ALL', 'PATH', 'TMPDIR'])
 })
 
-test('extracted launcher invokes its own CLI and keeps an existing profile on restart', { skip: process.platform === 'win32' && 'Web tar launcher is POSIX-only' }, t => {
+for (const edition of ['full', 'lite']) test(`extracted ${edition} launcher keeps existing settings and restores built-in memory on restart`, { skip: process.platform === 'win32' && 'Web tar launcher is POSIX-only' }, t => {
   const directory = fixture(t)
   const installation = join(directory, 'package')
   mkdirSync(join(installation, 'runtime'), { recursive: true })
-  writeFileSync(join(installation, 'runtime/runtime-manifest.json'), JSON.stringify({ edition: 'lite' }))
+  writeFileSync(join(installation, 'runtime/runtime-manifest.json'), JSON.stringify({ edition }))
   writeFileSync(join(installation, 'runtime/product-edition.patch.yml'), '[]\n')
   mkdirSync(join(installation, 'bin'), { recursive: true })
   symlinkSync(process.execPath, join(installation, 'bin/node'))
@@ -75,10 +75,12 @@ test('extracted launcher invokes its own CLI and keeps an existing profile on re
   const boot = join(modules, 'dsh-app-boot')
   mkdirSync(boot, { recursive: true })
   writeFileSync(join(boot, 'package.json'), JSON.stringify({ type: 'module', main: 'index.js' }))
-  writeFileSync(join(boot, 'index.js'), `import { mkdirSync, writeFileSync } from 'node:fs';
+  writeFileSync(join(boot, 'index.js'), `import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 export const PROFILE_TEMPLATES = { web: { bundles: ['base', 'web'] } };
 export const resolveProfileDir = (profile, home) => home + '/profiles/' + profile;
-export function initProfile(dir, bundles) { mkdirSync(dir, {recursive:true}); writeFileSync(dir + '/package.json', JSON.stringify({bundles})); }
+export function initProfile(dir, bundles) { mkdirSync(dir, {recursive:true}); writeFileSync(dir + '/package.json', JSON.stringify({dsh:{profile:{bundles}}})); }
+export function readProfileManifest(name, dir) { return JSON.parse(readFileSync(dir + '/package.json', 'utf8')); }
+export function writeProfileBundles(dir, manifest, bundles) { writeFileSync(dir + '/package.json', JSON.stringify({...manifest, dsh:{...manifest.dsh,profile:{...manifest.dsh?.profile,bundles}}})); }
 `)
   mkdirSync(join(modules, 'dsh/lib'), { recursive: true })
   writeFileSync(join(modules, 'dsh/package.json'), JSON.stringify({ type: 'module' }))
@@ -90,16 +92,25 @@ writeFileSync(process.env.DSH_HOME + '/observed.json', JSON.stringify({args:proc
   execFileSync(process.execPath, [join(installation, 'launch.mjs'), '--port', '0'], { env })
   const observed = JSON.parse(readFileSync(join(home, 'observed.json'), 'utf8'))
   assert.equal(observed.cwd, home)
-  assert.equal(observed.edition, 'lite')
+  assert.equal(observed.edition, edition)
   assert.deepEqual(observed.args, ['--profile', 'web', '--patch', join(installation, 'web.patch.yml'), '--patch', join(installation, 'runtime/product-edition.patch.yml'), '--host', '127.0.0.1', '--port', '0', '--no-open'])
   const profile = join(home, 'profiles/web/package.json')
-  assert.deepEqual(JSON.parse(readFileSync(profile, 'utf8')).bundles, ['base', 'web', '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'])
-  writeFileSync(profile, '{"user":"retained"}')
+  const expectedBundles = ['base', 'web', '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin', '@deepseek-ai/dsh-experimental-continuum-jev']
+  assert.deepEqual(JSON.parse(readFileSync(profile, 'utf8')).dsh.profile.bundles, expectedBundles)
+  writeFileSync(profile, JSON.stringify({ user: 'retained', dsh: { profile: { bundles: ['base', 'web', 'user-plugin'] } } }))
+  const userPatch = join(home, 'profiles/web/cordis.patch.yml')
+  writeFileSync(userPatch, '- id: continuum-memory\n  config:\n    enabled: true\n')
   execFileSync(process.execPath, [join(installation, 'launch.mjs')], { env })
-  assert.equal(readFileSync(profile, 'utf8'), '{"user":"retained"}')
+  const retained = JSON.parse(readFileSync(profile, 'utf8'))
+  assert.equal(retained.user, 'retained')
+  assert.deepEqual(retained.dsh.profile.bundles, ['base', 'web', 'user-plugin', ...expectedBundles.slice(2)])
+  assert.equal(readFileSync(userPatch, 'utf8'), '- id: continuum-memory\n  config:\n    enabled: true\n')
+  const savedManifest = readFileSync(profile, 'utf8')
+  execFileSync(process.execPath, [join(installation, 'launch.mjs')], { env })
+  assert.equal(readFileSync(profile, 'utf8'), savedManifest)
   writeFileSync(join(installation, 'runtime/runtime-manifest.json'), JSON.stringify({ edition: 'unknown' }))
   assert.throws(() => execFileSync(process.execPath, [join(installation, 'launch.mjs')], { env, stdio: 'pipe' }), /declare Full or Lite/)
-  assert.equal(readFileSync(profile, 'utf8'), '{"user":"retained"}')
+  assert.equal(readFileSync(profile, 'utf8'), savedManifest)
 })
 
 for (const mode of ['authenticated', 'unprotected', 'missing-cookie']) {

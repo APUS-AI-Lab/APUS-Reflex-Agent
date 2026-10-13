@@ -30,6 +30,8 @@ Session events use the existing persistence backend and become durable after `ct
 
 Import `MemoryRecordStore` for deterministic revision semantics. Use `appendMemoryRecordEvent` after a store transition, `foldMemoryRecordEvents` when rebuilding from a Session log, `readMemorySourceEvents` for exact source readback, and `retrieveMemoryWorkingSet` for bounded candidates. A successful append is not a durability promise until the caller completes `ctx.sessions.flush(session)`.
 
+`ContinuumConfigFields` exposes the validated schema fields for profile providers that define their own defaults. Core still defaults to `enabled: false`, `mode: off`, `admission: explicit` and empty scopes.
+
 -----
 
 The optional `@deepseek-ai/dsh-continuum/tasks` plugin attaches distinct Sessions to one host-configured task. Its separate JSONL journal has a single writer, durable revision checks, exact request deduplication and complete original text; the business Session list excludes that journal. Configuration fixes `root`, `workspace`, `domainId`, `principalId` and `taskId`. `maxContextBytes` and `maxPageBytes` default to 8192. The host grants one local principal access to the exact canonical workspace; this is not a multi-user authentication service.

@@ -27,8 +27,9 @@ if (!/^[0-9a-f]{40}$/.test(sourceRevision)) throw new Error('Harness source revi
 const sourceDirty = execFileSync('git', ['status', '--porcelain'], { cwd: sourceRoot, encoding: 'utf8' }).trim().length > 0
 if (deployed && sourceDirty && !args.includes('--allow-dirty')) throw new Error('Production preparation requires committed Harness source; --allow-dirty is for local acceptance only')
 const version = '0.1.7-rc.2'
-const names = ['system3-policy', 'system3', 'system3-evidence', 'system3-supervisor', 'apus-dsh-jev-plugin', 'client-ui-system3']
-const sourceDefinitions = [['@deepseek-ai/dsh', 'apps/cli/package.json'], ...names.map(name => [`@deepseek-ai/dsh-experimental-${name}`, `packages/experimental/${name}/package.json`])]
+const names = ['system3-policy', 'system3', 'system3-evidence', 'system3-supervisor', 'apus-dsh-jev-plugin', 'client-ui-system3', 'continuum-jev']
+const sourceDefinitions = [['@deepseek-ai/dsh', 'apps/cli/package.json'], ...names.map(name => [`@deepseek-ai/dsh-experimental-${name}`, `packages/experimental/${name}/package.json`]),
+  ['@deepseek-ai/dsh-continuum', 'packages/context/continuum/package.json']]
 async function checkPackages(root, definitions) {
   for (const [name, path] of definitions) {
     const actual = await realpath(join(root, path))
@@ -138,8 +139,10 @@ try {
     execFileSync(process.execPath, [join(appRoot, 'scripts/install-brand-assets.mjs'), root], { cwd: appRoot, stdio: 'pipe' })
     const deployedCli = JSON.parse(await readFile(join(root, 'node_modules/@deepseek-ai/dsh/package.json'), 'utf8'))
     if (sourceDefinitions.slice(1).some(([name]) => !deployedCli.dependencies[name])) throw new Error('Own CLI resolver manifest omits a System3 package')
+    await access(join(root, 'node_modules/@deepseek-ai/dsh-experimental-continuum-jev/cordis.patch.yml'))
     const smokeImports = ['dsh-ppt/lib/preview-manifest.js', 'dsh-ppt/lib/index.js', 'dsh-ppt-composer/lib/index.js',
-      ...names.map(name => `@deepseek-ai/dsh-experimental-${name}/lib/index.js`)]
+      '@deepseek-ai/dsh-experimental-continuum-jev/lib/product-memory.js',
+      ...sourceDefinitions.slice(1).map(([name]) => `${name}/lib/index.js`)]
     const smoke = smokeImports.map(name => `await import(${JSON.stringify(pathToFileURL(join(root, 'node_modules', name)).href)});`).join('\n')
     execFileSync(process.execPath, ['--input-type=module', '-e', smoke], { cwd: root, stdio: 'pipe', timeout: 60_000 })
   } else await mkdir(stage)

@@ -20,7 +20,7 @@ Visit [Releases](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/releases) fo
 
 The desktop distribution bundles its runtime: users do not need Git, Node.js or a separate backend. Follow [installation](docs/feat-integrated-product/installation.md) and [model configuration](docs/feat-integrated-product/configuration.md) using your own provider credentials. Preview builds can break compatibility. Read [SAFETY.md](SAFETY.md) before granting file access.
 
-Product builds provide Full and Lite editions: Full bundles the Office engine; Lite keeps the core Agent, Reflex, memory, Codex and PPT workbench while excluding that engine. `0.1.1` is not released or installation-qualified yet. See [edition selection](docs/feat-office-editions/README.md) for preview limitations and upgrade behavior.
+Product builds provide Full and Lite editions: Full bundles the Office engine; Lite keeps the core Agent, Reflex, memory, Codex and PPT workbench while excluding that engine. See [edition selection](docs/feat-office-editions/README.md) for preview limitations and upgrade behavior; each release reports its own installation qualification.
 
 ## A Personal Agent for ongoing projects
 

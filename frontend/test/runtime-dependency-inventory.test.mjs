@@ -21,7 +21,7 @@ function fixture() {
   const project = mkdtempSync(join(tmpdir(), 'runtime-inventory-'))
   roots.push(project)
   const root = join(project, '.build/system3-runtime')
-  const names = ['@deepseek-ai/dsh', ...['system3', 'system3-policy', 'system3-evidence', 'system3-supervisor', 'apus-dsh-jev-plugin', 'client-ui-system3'].map(name => `@deepseek-ai/dsh-experimental-${name}`)]
+  const names = ['@deepseek-ai/dsh', '@deepseek-ai/dsh-continuum', ...['system3', 'system3-policy', 'system3-evidence', 'system3-supervisor', 'apus-dsh-jev-plugin', 'client-ui-system3', 'continuum-jev'].map(name => `@deepseek-ai/dsh-experimental-${name}`)]
   const packages = names.map(name => {
     packageAt(root, `node_modules/${name}`, name, '0.1.7-rc.2')
     return { name, path: `node_modules/${name}/package.json` }
@@ -53,7 +53,7 @@ describe('deployed runtime dependency inventory', () => {
     const { root, manifest, context } = fixture()
     const first = readFileSync(join(root, inventory.inventoryFileName), 'utf8')
     const actual = JSON.parse(first)
-    expect(actual.packages).toHaveLength(10)
+    expect(actual.packages).toHaveLength(12)
     expect(actual.packages.map(item => item.path)).toEqual(actual.packages.map(item => item.path).sort())
     expect(actual.packages).toContainEqual(expect.objectContaining({ path: 'node_modules/extra/node_modules/@nested/child/node_modules/deep/package.json', name: 'deep', version: '3.0.0', packageJsonSha256: expect.stringMatching(/^[a-f0-9]{64}$/) }))
     expect(inventory.writeDependencyInventory(root)).toEqual(manifest.dependencyInventory)

@@ -212,10 +212,30 @@ async function run(installer, reportDirectory, expectedSource = process.env.GITH
     await versionLabel.scrollIntoViewIfNeeded()
     await page.screenshot({ path: join(reportDirectory, 'version.png') })
     report.stages.push('product-version-visible')
+    const qualifyMemorySetting = build.edition === 'full' || build.edition === 'lite'
+    const continuumSwitch = (page, checked) => page.getByRole('switch', {
+      name: /^Continuum (无限记忆|memory)$/u, checked, disabled: false,
+    })
+    if (qualifyMemorySetting) {
+      await continuumSwitch(page, false).waitFor({ state: 'visible', timeout: 20_000 })
+      await continuumSwitch(page, false).click()
+      await continuumSwitch(page, true).waitFor({ state: 'visible', timeout: 20_000 })
+      await page.screenshot({ path: join(reportDirectory, 'continuum-enabled.png') })
+      report.memorySetting = { initialEnabled: false, writeAccepted: true, modelRecallExercised: false }
+      report.stages.push('continuum-setting-enabled')
+    }
     await close()
     report.stages.push('first-exit-quiescent')
     page = await launch()
     await page.screenshot({ path: join(reportDirectory, 'restart.png') })
+    if (qualifyMemorySetting) {
+      await page.getByText(/^(设置|Settings)$/).last().click()
+      await page.getByText(new RegExp(`^(当前版本：|Current version: )${build.version.replaceAll('.', '\\.')}$`)).waitFor({ timeout: 20_000 })
+      await continuumSwitch(page, true).waitFor({ state: 'visible', timeout: 20_000 })
+      await page.screenshot({ path: join(reportDirectory, 'continuum-restart.png') })
+      report.memorySetting.persistedAfterRestart = true
+      report.stages.push('continuum-setting-persisted-after-restart')
+    }
     await close()
     report.stages.push('restart-home-and-exit-quiescent')
     report.passed = true

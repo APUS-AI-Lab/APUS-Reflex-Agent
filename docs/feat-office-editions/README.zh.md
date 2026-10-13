@@ -15,6 +15,11 @@ Full 与 Lite 使用相同的 Agent 运行时和应用身份，两版区别是�
 
 Lite 上额外启用的自定义 Office 技能，在不需要引擎时必须显式设置 `cli: false`。明确启用转换提供方却缺少引擎时会报错。Lite 最后加载的产品配置覆盖层会在启动和配置重读时禁用内置转换提供方。
 
+## 记忆设置
+
+两版都为普通 Desktop 和 Web 配置方案准备可编辑的记忆默认值。打开“设置 → 通用设置 → Continuum 无限记忆”主动启用，默认关闭。[记忆配置方案层](../../packages/experimental/continuum-jev/README.zh.md)定义 Session 召回与独立的 Jev 出站授权。已有设置和记录在重启及切换版本后保留。打开此开关不授予网络访问，也不自动共享无关 Session。
+
+<a id="macos-compatibility"></a>
 ## macOS 兼容性
 
 Full 和 Lite 要求 macOS 15 或更新版本。准备后的 Harness 原生加载器在实际 Mach-O 加载指令中声明最低版本为 15.0；Node 24.9.0 要求 13.5，Electron 43 要求 12.0。完整应用采用必须组件中的最高版本要求。这项要求不代表所有支持的 macOS 版本都已完成实测，安装结果以每次发行的验收记录为准。

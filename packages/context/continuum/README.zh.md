@@ -32,6 +32,8 @@ Session 事件使用现有 persistence backend；完成 `ctx.sessions.flush(sess
 
 使用 `MemoryRecordStore` 保存确定性的 revision 语义；用 `appendMemoryRecordEvent` 把变更追加到现有 Session 日志，用 `foldMemoryRecordEvents` 从日志重建，用 `readMemorySourceEvents` 精确回读来源，用 `retrieveMemoryWorkingSet` 生成有界候选。只有 `ctx.sessions.flush(session)` 成功后，调用方才能报告已经持久化。
 
+`ContinuumConfigFields` 导出经过校验的 schema 字段，供 profile provider 定义自己的默认值。Core 默认仍为 `enabled: false`、`mode: off`、`admission: explicit` 和空作用域。
+
 -----
 
 可选插件 `@deepseek-ai/dsh-continuum/tasks` 将不同 Session 接入宿主配置的同一任务。独立 JSONL 日志提供单写者、持久版本检查、精确请求去重和完整原文；内部日志不进入普通会话列表。配置固定 `root`、`workspace`、`domainId`、`principalId` 和 `taskId`；`maxContextBytes` 与 `maxPageBytes` 默认都是 8192。宿主向一个本地主体授权精确 canonical 工作区；这不是多用户认证服务。

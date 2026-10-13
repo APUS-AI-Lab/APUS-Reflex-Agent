@@ -34,8 +34,8 @@ interface MemoryProjection {
   readonly store: MemoryRecordStore
 }
 
-/** Schemastery validation for {@link ContinuumConfig}. */
-export const ContinuumConfig = z.object({
+/** Typed schema fields reusable by profile providers with their own defaults. */
+export const ContinuumConfigFields = {
   enabled: z.boolean().default(false).volatile(),
   mode: z.union([z.const('off'), z.const('shadow'), z.const('active')]).default('off').volatile(),
   scopes: z.array(z.string()).default([]),
@@ -43,7 +43,10 @@ export const ContinuumConfig = z.object({
   maxCandidates: z.number().step(1).min(1).default(8),
   maxExcerptBytes: z.number().step(1).min(1).default(2048),
   maxTotalBytes: z.number().step(1).min(1).default(8192),
-})
+}
+
+/** Schemastery validation for {@link ContinuumConfig}. */
+export const ContinuumConfig = z.object(ContinuumConfigFields)
 
 /** Public service seam used by profile consumers and tests. */
 export interface ContinuumMemoryService {

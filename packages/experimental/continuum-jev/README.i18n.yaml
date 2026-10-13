@@ -3,23 +3,29 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/experimental/continuum-jev/README.md
 /:
-  en: b20da2656117b2ba
-  zh: 034a9f8379ebc46c
+  en: 30a35536b7eabda5
+  zh: c832640d02cfb257
 /deepseek-ai-dsh-experimental-continuum-jev:
   en: 5b603eb6cfc91865
   zh: 06dbc176c2b1bfbd
 /deepseek-ai-dsh-experimental-continuum-jev/summary:
-  en: 15916e240636f0b2
-  zh: 22bc0066b9ad88e4
+  en: 799caa3d51c1f757
+  zh: 72ed80470c20b0da
 /deepseek-ai-dsh-experimental-continuum-jev/table-of-contents:
   en: 122f0d41696980b1
   zh: f3d226c50f80fae7
 /deepseek-ai-dsh-experimental-continuum-jev/use-this-package:
-  en: 4347eaee7cc52bcd
-  zh: 0403eaf723ae6eb8
+  en: bbff250eba0f1b89
+  zh: 0a618f05cc88ee2b
+/deepseek-ai-dsh-experimental-continuum-jev/use-this-package/select-the-profile-layer:
+  en: 0728b31c0e337e6d
+  zh: 618358f27c4d5124
+/deepseek-ai-dsh-experimental-continuum-jev/use-this-package/configure-relevance-ranking:
+  en: 500422d60cbf5bf2
+  zh: d49e0cbf499c107d
 /deepseek-ai-dsh-experimental-continuum-jev/understand-the-implementation:
-  en: 61eae489ed68c2ab
-  zh: 1e8b256477a13651
+  en: 86bf1bd16d132833
+  zh: 2b2a9f43def56ac4
 /deepseek-ai-dsh-experimental-continuum-jev/model-experience:
   en: 215e7ba838619b7b
   zh: 215e7ba838619b7b
@@ -27,8 +33,8 @@
   en: b56b6e6160f9b6ad
   zh: a1f3066900d2f423
 /deepseek-ai-dsh-experimental-continuum-jev/model-experience/bounded-memory-relevance/what-the-model-sees:
-  en: 7d7535a093317461
-  zh: b833468e63b833a7
+  en: bab7c346657ae1dd
+  zh: fbf389093a84bba8
 /deepseek-ai-dsh-experimental-continuum-jev/model-experience/bounded-memory-relevance/token-effect:
   en: c43e5fa3f5e1dae3
   zh: 9168f79d6d6378d2
@@ -36,8 +42,8 @@
   en: 668dc16138a1b8df
   zh: e3d4456b4d23a957
 /deepseek-ai-dsh-experimental-continuum-jev/known-limitations-and-deferred-work:
-  en: f889819c32058b7d
-  zh: 3dc3f72c3e25f7a7
+  en: e1329d9e87547b91
+  zh: d9b84b2b9b9e1f33
 /deepseek-ai-dsh-experimental-continuum-jev/known-limitations-and-deferred-work/dev-note:
-  en: 1af509bec28a8e4d
-  zh: ffbe64df70051566
+  en: 1a45fcf17f281c6d
+  zh: 5113ab751acd701b

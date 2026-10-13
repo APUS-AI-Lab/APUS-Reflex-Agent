@@ -20,7 +20,7 @@ APUS 将模型推理与执行、权限及持久 Session 历史分开管理。项
 
 桌面安装包内置运行时，使用者无需另装 Git、Node.js 或后端。按[安装教程](docs/feat-integrated-product/installation.zh.md)安装，再按[模型配置教程](docs/feat-integrated-product/configuration.zh.md)接入自己的服务商。预览版可能存在兼容性变化，授予文件访问权限前请阅读 [SAFETY.zh.md](SAFETY.zh.md)。
 
-产品构建提供 Full 与 Lite 两版：Full 内置 Office 引擎；Lite 排除该引擎，保留核心 Agent、Reflex、记忆、Codex 和 PPT 工作台。`0.1.1` 尚未发布，也未完成安装验收。预览限制与升级方式见[版本选择](docs/feat-office-editions/README.zh.md)。
+产品构建提供 Full 与 Lite 两版：Full 内置 Office 引擎；Lite 排除该引擎，保留核心 Agent、Reflex、记忆、Codex 和 PPT 工作台。预览限制与升级方式见[版本选择](docs/feat-office-editions/README.zh.md)；各次发布分别报告实际安装验收结果。
 
 ## 为持续的个人项目打造 Personal Agent
 

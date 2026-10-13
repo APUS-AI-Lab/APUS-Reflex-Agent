@@ -8845,6 +8845,9 @@ importers:
       '@deepseek-ai/dsh-app-boot':
         specifier: workspace:*
         version: link:../../boot/app-boot
+      '@deepseek-ai/dsh-config-editor':
+        specifier: workspace:*
+        version: link:../../boot/config-editor
       '@deepseek-ai/dsh-llm':
         specifier: workspace:*
         version: link:../../llm/llm
@@ -8854,6 +8857,9 @@ importers:
       '@deepseek-ai/dsh-session-projection':
         specifier: workspace:*
         version: link:../../session/session-projection
+      '@deepseek-ai/dsh-settings':
+        specifier: workspace:*
+        version: link:../../settings/settings
       '@deepseek-ai/dsh-system-prompt':
         specifier: workspace:*
         version: link:../../core/system-prompt

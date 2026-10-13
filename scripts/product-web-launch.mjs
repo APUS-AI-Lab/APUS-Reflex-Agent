@@ -35,7 +35,14 @@ export async function launch(args = process.argv.slice(2)) {
   const boot = await import(pathToFileURL(require.resolve('@deepseek-ai/dsh-app-boot')).href)
   const profile = boot.resolveProfileDir('web', options.data)
   if (!existsSync(join(profile, 'package.json'))) {
-    boot.initProfile(profile, [...boot.PROFILE_TEMPLATES.web.bundles, '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'])
+    boot.initProfile(profile, boot.PROFILE_TEMPLATES.web.bundles)
+  }
+  const profileManifest = boot.readProfileManifest('APUS Reflex Agent', profile)
+  const bundles = profileManifest.dsh?.profile?.bundles ?? []
+  const missing = ['@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin', '@deepseek-ai/dsh-experimental-continuum-jev']
+    .filter(bundle => !bundles.includes(bundle))
+  if (missing.length > 0) {
+    boot.writeProfileBundles(profile, profileManifest, [...bundles, ...missing])
   }
   const child = spawn(join(root, 'bin/node'), [join(runtime, 'node_modules/@deepseek-ai/dsh/lib/bin.js'),
     '--profile', 'web', '--patch', join(root, 'web.patch.yml'), '--patch', join(runtime, 'product-edition.patch.yml'), ...options.args.slice(1)], {
