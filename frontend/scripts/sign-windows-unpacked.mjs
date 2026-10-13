@@ -62,7 +62,7 @@ export function buildJsignArgs({
   pinFile,
   targetFile,
   tsaUrl = 'http://timestamp.digicert.com',
-  name = 'APUS Reflex Harness',
+  name = 'APUS Reflex',
   url = 'https://www.dshdesktop.com'
 }) {
   return [

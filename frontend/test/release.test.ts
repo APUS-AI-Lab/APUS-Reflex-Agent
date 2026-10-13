@@ -303,7 +303,7 @@ describe('GitHub release contract', () => {
     expect(packageJson.scripts['package:dev:win']).toContain('electron-builder.dev.cjs')
     expect(packageJson.scripts['package:dev:win']).toContain('--publish never')
     expect(developmentConfig.appId).toBe('ai.xdan.system3.dev')
-    expect(developmentConfig.productName).toBe('APUS Reflex Harness Dev')
+    expect(developmentConfig.productName).toBe('APUS Reflex Dev')
     expect(developmentConfig.directories.output).toBe('dist-dev')
     expect(developmentConfig.extraMetadata.dshDesktopChannel).toBe('development')
     expect(developmentConfig.artifactName).toBe('apus-reflex-harness-dev-${os}-${arch}.${ext}')

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>APUS Reflex Harness</title>
+    <title>APUS Reflex</title>
     <script>
       const splashTheme = new URLSearchParams(location.search).get('theme')
       document.documentElement.dataset.theme = splashTheme === 'dark' ? 'dark' : 'light'
@@ -61,14 +61,14 @@
         <img class="mark markLight" src="../.build/brand/brand-icon.png" alt="" />
         <img class="mark markDark" src="../.build/brand/brand-icon.png" alt="" />
       </div>
-      <h1 class="title" id="title">Starting APUS Reflex Harness</h1>
-      <p class="status">瞬策 · 瞬时执行，深度思考 · Model-as-a-Harness</p>
+      <h1 class="title" id="title">Starting APUS Reflex</h1>
+      <p class="status">瞬策 · 瞬时执行，深度思考 · Model as Harness</p>
       <p class="status" id="status">First launch may take a moment.</p>
     </main>
     <script>
       document.querySelectorAll('.mark').forEach(mark => { mark.src = new URLSearchParams(location.search).get('icon') || '../.build/brand/brand-icon.png' })
       if (navigator.language.toLowerCase().startsWith('zh')) {
-        document.getElementById('title').textContent = '正在启动 APUS Reflex Harness'
+        document.getElementById('title').textContent = '正在启动 APUS Reflex'
         document.getElementById('status').textContent = '首次启动可能需要一点时间。'
       }
     </script>

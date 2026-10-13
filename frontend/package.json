@@ -1,7 +1,7 @@
 {
   "name": "xdan-system3-frontend",
   "version": "0.1.0",
-  "description": "APUS Reflex Harness — Model-as-a-Harness. 瞬策：瞬时执行，深度思考。",
+  "description": "APUS Reflex — Model as Harness. 瞬策：瞬时执行，深度思考。",
   "private": true,
   "type": "module",
   "main": "./out/main/index.js",
@@ -312,7 +312,7 @@
   },
   "build": {
     "appId": "ai.xdan.system3",
-    "productName": "APUS Reflex Harness",
+    "productName": "APUS Reflex",
     "asar": true,
     "asarUnpack": [
       "node_modules/**/*",
