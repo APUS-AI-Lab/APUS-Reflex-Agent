@@ -29,7 +29,7 @@ kind: "package-bundle"
 
 正式 System3 服务在启动 web profile 前运行 [prepare-profile.mjs](../../../deploy/system3/prepare-profile.mjs)。准备步骤只加入一次此 bundle，并保留既有用户补丁。[cordis.patch.yml](cordis.patch.yml) 提供 `jev` 行；profile 编辑覆盖这些默认值，无需改动 bundle。密钥保存在 Harness 凭据存储或 `apiKeyEnv` 引用的启动环境中。
 
-传输使用 `@typesafe-ai/sdk` 0.6.0，禁用自动重试及 SDK 日志。`protocol: openjev` 发送配置的 effort，`protocol: typesafe` 不发送该扩展。端点可使用 API 根地址或 `/v1` 前缀。超时覆盖凭据解析与响应接收；取消后迟到的凭据不会触发网络调用。state 接受文本、对象、数组和 null。
+传输使用 `@typesafe-ai/sdk` 0.6.0，禁用自动重试及 SDK 日志。`protocol: openjev` 发送配置的 effort，`protocol: typesafe` 不发送该扩展。端点可使用 API 根地址或 `/v1` 前缀。超时覆盖凭据解析与响应接收；取消后迟到的凭据不会触发网络调用。网络响应体在交给 SDK 前完整读取，取消保持当前调用的失败，不产生脱离请求的拒绝。state 接受文本、对象、数组和 null。
 
 <a id="configure-the-gateway"></a>
 ### 配置 gateway
@@ -124,13 +124,13 @@ const outcome = await ctx.jev.decide({
 
 -----
 
-## Reflex 模型配置
+## Reflex 配置
 
 本包也提供标准 profile bundle，承载可编辑的 Reflex 默认值。APUS 部署将该 bundle 放在用户 profile 之下；命令行 overlay 不得重复声明 `jev` 条目，否则配置覆盖机制会按设计拒绝持久化编辑。
 
 表单 schema 只包含可序列化的数据；服务在初次加载和所属 `internal/config` 更新流程中校验地址。非法地址在 profile 写入前被拒绝。
 
-`jev` Loader 条目将服务地址、模型、决策强度、超时、协议和凭据引用作为 volatile 设置提供。“Reflex 模型配置”专用页面提供 OpenJev/Typesafe 选择，通过 ConfigForms 编辑条目，通过 Credentials 保存 API Key；新请求读取已提交的值，执行中的请求保留已解析的提供方配置。连接池参数由部署管理。
+`jev` Loader 条目将服务地址、模型、决策强度、超时、协议和凭据引用作为 volatile 设置提供。“Reflex 配置”专用页面将服务显示为 Reflex，提供 APUS Reflex 限时免费端点或自定义参数，通过 ConfigForms 编辑条目，通过 Credentials 保存 API Key；新请求读取已提交的值，执行中的请求保留已解析的提供方配置。连接池参数由部署管理。
 
 `reflex` Remote 命名空间提供 `readStatus` 和 `testConnection`。OpenJev 连接测试先检查 `/health`，再鉴权访问 `/v1/models` 并确认所选模型，再向 `/v1/systemone` 发送不含用户内容的固定是非判断。Typesafe 跳过 `/health`，检查模型列表后发送不带 effort 扩展的相同判断。测试使用草稿所选协议，接受未保存的配置和可选临时密钥，不持久化它们，只返回脱敏错误类别与耗时，也不会把任务能力标记为已验收。运行时模块通过 `registerCapability` 注册能力状态读取器，并负责释放注册。
 

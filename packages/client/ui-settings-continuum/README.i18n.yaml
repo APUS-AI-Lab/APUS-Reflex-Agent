@@ -3,26 +3,26 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/client/ui-settings-continuum/README.md
 /:
-  en: 4b6329645dc73629
-  zh: 62e82dc3c6559e3a
+  en: 509ffecbb38ae589
+  zh: 1839105cb00f5f22
 /deepseek-ai-dsh-client-ui-settings-continuum:
   en: 1fb235e118ec071b
   zh: 83461730c1159d00
 /deepseek-ai-dsh-client-ui-settings-continuum/summary:
-  en: 27433f29b5145f11
-  zh: a86c94bb2548bcc8
+  en: 2fd6e90a0426f61f
+  zh: 197f45d9198994a3
 /deepseek-ai-dsh-client-ui-settings-continuum/table-of-contents:
   en: d152484eb41ac6b4
   zh: 1e999a6205f4986c
 /deepseek-ai-dsh-client-ui-settings-continuum/use-this-package:
-  en: 94707ee5d9180c50
-  zh: 72d110da068a75fd
+  en: d948e3fef187359d
+  zh: aa0cd11e3ce124e6
 /deepseek-ai-dsh-client-ui-settings-continuum/understand-the-implementation:
-  en: 974b4cbd25dda7cc
-  zh: a20e0f2364a75651
+  en: 56f36c9e18d38f94
+  zh: f3ad6e2989f7e16c
 /deepseek-ai-dsh-client-ui-settings-continuum/further-exploration:
-  en: dad1abb18b792fa8
-  zh: 443407e2cda27f94
+  en: 956964e14ea7224f
+  zh: a405d4e3a41c9264
 /deepseek-ai-dsh-client-ui-settings-continuum/model-experience:
   en: 215e7ba838619b7b
   zh: a311da3843709f90

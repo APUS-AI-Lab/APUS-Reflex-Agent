@@ -163,6 +163,7 @@ describe('GitHub release contract', () => {
         extraResources: Array<{ from: string; to: string }>
         win: { target: Array<{ target: string; arch: string[] }>; requestedExecutionLevel?: string }
         nsis: { artifactName: string; include: string }
+        deb: { artifactName: string }
         portable?: unknown
       }
     }
@@ -175,7 +176,7 @@ describe('GitHub release contract', () => {
       'utf8'
     )
 
-    expect(packageJson.build.artifactName).toBe('apus-reflex-harness-${os}-${arch}.${ext}')
+    expect(packageJson.build.artifactName).toBe('apus-reflex-agent-full-${os}-${arch}.${ext}')
     expect(packageJson.build.asar).toBe(true)
     expect(packageJson.build.asarUnpack).toContain('node_modules/**/*')
     expect(packageJson.build.extraResources).toContainEqual({
@@ -224,8 +225,9 @@ describe('GitHub release contract', () => {
       to: 'web-import.html'
     })
     expect(packageJson.build.nsis.artifactName).toBe(
-      'apus-reflex-harness-windows-${arch}-setup.${ext}'
+      'apus-reflex-agent-full-windows-${arch}-setup.${ext}'
     )
+    expect(packageJson.build.deb.artifactName).toBe('apus-reflex-agent-full-linux-x64.deb')
     expect(packageJson.build.nsis.include).toBe('build/installer.nsh')
     expect(packageJson.build.win.target).toEqual([{ target: 'nsis', arch: ['x64'] }])
     expect(packageJson.build.win.requestedExecutionLevel).toBe('asInvoker')

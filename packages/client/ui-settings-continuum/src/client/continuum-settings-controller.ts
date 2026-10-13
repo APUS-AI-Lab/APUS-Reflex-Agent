@@ -5,7 +5,7 @@ import type { SettingsFormScope } from '@deepseek-ai/dsh-client-ui-primitives'
 /** Host settings namespace owned by the Continuum profile service. */
 export const CONTINUUM_NS = 'continuum-memory'
 
-/** Snapshot consumed by the General settings row. */
+/** Snapshot consumed by the Reflex settings row. */
 export interface ContinuumSettingsState {
   readonly available: boolean
   readonly writable: boolean
@@ -14,7 +14,7 @@ export interface ContinuumSettingsState {
   readonly failed: boolean
 }
 
-/** Registration-side face for the Continuum General row. */
+/** Registration-side face for the Continuum Reflex row. */
 export interface ContinuumSettingsFace {
   hooks: { continuumSettings: SnapshotStore<ContinuumSettingsState> }
   setEnabled: (enabled: boolean) => Promise<void>

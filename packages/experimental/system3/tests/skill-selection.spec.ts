@@ -21,6 +21,8 @@ async function setup(options: {
   modelInvocable?: boolean
   networkJev?: boolean
   maxInputBytes?: number
+  unconfiguredJev?: boolean
+  missingCredential?: boolean
 } = {}) {
   const ctx = new Context()
   contexts.push(ctx)
@@ -31,9 +33,10 @@ async function setup(options: {
   ctx.effect(() => ctx.skills.register({ name, description: 'Reconcile public CSV rows and report discrepancies.',
     source: 'runtime', content: 'Read every CSV row and independently verify aggregate totals.',
     invocation: { modelInvocable: options.modelInvocable ?? true, userInvocable: true } }))
-  await ctx.plugin(Jev, { endpoint: 'http://localhost:1', model: 'jev-test' })
+  await ctx.plugin(Jev, options.unconfiguredJev ? {} : { endpoint: 'http://localhost:1', model: 'jev-test',
+    ...options.missingCredential ? { apiKeyEnv: 'APUS_SKILL_TEST_UNSET_CREDENTIAL' } : {} })
   const decide = vi.spyOn(ctx.jev, 'decide').mockImplementation(async query => ({ kind: 'ok', spec: ctx.jev.resolve(query),
-    response: { model: 'jev-test', answers: { skill: { type: 'choice', choice: 'skill-0', confidence: 1,
+    response: { model: 'jev-test', answers: { intent: { type: 'choice', choice: 'action', confidence: 1, probabilities: { action: 1 } }, skill: { type: 'choice', choice: 'skill-0', confidence: 1,
       probabilities: { 'skill-0': 1, abstain: 0 } } } } }))
   const adapter = new MockAdapter([textResponse('verified')])
   ctx.effect(() => ctx.llm.registerAdapter(['mock'], adapter))
@@ -98,8 +101,9 @@ it('leaves the original input intact when the bounded catalog is exceeded', asyn
   const result = await h.dispatch.waterfall('agent/pre-step', { messages: [h.message], turn: 1, step: 0, signal: new AbortController().signal },
     () => Promise.resolve({ kind: 'enter', messages: [h.message] }))
   expect(result).toEqual({ kind: 'enter', messages: [h.message] })
-  expect(h.decide).not.toHaveBeenCalled()
-  expect(h.ctx.sessionProjections.stateOf(h.agent.session, 'system3Runtime')?.skill).toMatchObject({ outcome: 'too-many-candidates', injected: false })
+  expect(h.decide).toHaveBeenCalledTimes(1)
+  expect(h.decide.mock.calls[0]?.[0].questions.skill).toBeUndefined()
+  expect(h.ctx.sessionProjections.stateOf(h.agent.session, 'system3Runtime')?.skill).toMatchObject({ outcome: 'too-many-candidates', intent: 'action', injected: false })
 })
 
 it('never truncates an oversized Skill body into the generation request', async () => {
@@ -132,7 +136,7 @@ it('does not send input to a denied network Jev or load model-disabled Skills', 
     const h = await setup(options)
     h.agent.followup(h.message)
     await h.agent.whenIdle()
-    expect(h.decide).not.toHaveBeenCalled()
+    expect(h.decide).toHaveBeenCalledTimes(options.networkJev ? 0 : 1)
     expect(h.ctx.sessionProjections.stateOf(h.agent.session, 'system3Runtime')?.skill?.injected).toBe(false)
   }
 })
@@ -204,7 +208,8 @@ it('skips incomplete discovery and a full resolved request exceeding its byte bu
   vi.spyOn(incomplete.ctx.skills, 'snapshot').mockResolvedValue({ skills: [], complete: false })
   incomplete.agent.followup(incomplete.message)
   await incomplete.agent.whenIdle()
-  expect(incomplete.decide).not.toHaveBeenCalled()
+  expect(incomplete.decide).toHaveBeenCalledTimes(1)
+  expect(incomplete.decide.mock.calls[0]?.[0].questions.skill).toBeUndefined()
   expect(incomplete.ctx.sessionProjections.stateOf(incomplete.agent.session, 'system3Runtime')?.skill?.outcome).toBe('incomplete-catalog')
   const oversized = await setup({ maxInputBytes: 1 })
   oversized.agent.followup(oversized.message)
@@ -274,4 +279,58 @@ it('preserves native input when either optional Skill or Jev service is unavaila
     expect(result).toEqual({ kind: 'enter', messages: [message] })
     expect(agent.session.snapshotEvents().at(-1)?.data).toMatchObject({ outcome: 'provider-unavailable', request: null })
   }
+})
+
+
+it.each([
+  { unconfiguredJev: true, expected: 'provider-unavailable' },
+  { missingCredential: true, expected: 'missing-credential' },
+])('continues native generation when Reflex is unavailable: $expected', async (options) => {
+  const h = await setup(options)
+  h.decide.mockRestore()
+  h.agent.followup(h.message)
+  await h.agent.whenIdle()
+  expect(h.ctx.sessionProjections.stateOf(h.agent.session, 'system3Runtime')?.skill).toMatchObject({
+    outcome: options.expected, injected: false,
+  })
+  expect(h.agent.session.snapshotEvents().some(event => event.type === 'assistant/message')).toBe(true)
+  expect(h.agent.session.snapshotEvents().filter(event => event.type === 'user/message' && event.data.source.kind === 'skill-invocation')).toHaveLength(0)
+})
+
+it('reports Skill installation independently of routing, supervision and memory, and clears it on unload', async () => {
+  const h = await setup()
+  expect(h.ctx.jev.readStatus().capabilities).toEqual([
+    { id: 'entryRouting', implemented: true, enabled: false },
+    { id: 'codexSupervision', implemented: true, enabled: false, semanticSupervision: { enabled: false } },
+    { id: 'contextMemory', implemented: true, enabled: false },
+    { id: 'skillSelection', implemented: true, enabled: true },
+  ])
+  await h.system3.dispose()
+  expect(h.ctx.jev.readStatus().capabilities.every(capability => !capability.implemented && !capability.enabled)).toBe(true)
+})
+
+
+it('classifies ordinary conversation without any applicable Skills or instruction injection', async () => {
+  const h = await setup({ modelInvocable: false })
+  h.decide.mockImplementation(async query => ({ kind: 'ok', spec: h.ctx.jev.resolve(query), response: {
+    model: 'jev-test', answers: { intent: { type: 'choice', choice: 'conversation', confidence: 1, probabilities: { conversation: 1 } } },
+  } }))
+  h.agent.followup(h.message)
+  await h.agent.whenIdle()
+  expect(Object.keys(h.decide.mock.calls[0]?.[0].questions ?? {})).toEqual(['intent'])
+  expect(h.ctx.sessionProjections.stateOf(h.agent.session, 'system3Runtime')?.skill).toMatchObject({
+    intent: 'conversation', outcome: 'no-candidates', injected: false,
+  })
+})
+
+it.each(['untrusted-free-text', 'low-confidence'] as const)('never publishes unsupported or unreliable input labels: %s', async (kind) => {
+  const h = await setup({ modelInvocable: false })
+  h.decide.mockImplementation(async query => ({ kind: 'ok', spec: h.ctx.jev.resolve(query), response: {
+    model: 'jev-test', answers: { intent: { type: 'choice', choice: kind === 'low-confidence' ? 'action' : 'I executed your command',
+      confidence: kind === 'low-confidence' ? 0.1 : 1, probabilities: {} } },
+  } }))
+  h.agent.followup(h.message)
+  await h.agent.whenIdle()
+  expect(h.ctx.sessionProjections.stateOf(h.agent.session, 'system3Runtime')?.skill?.intent).toBeUndefined()
+  expect(h.agent.session.snapshotEvents().some(event => event.type === 'assistant/message')).toBe(true)
 })

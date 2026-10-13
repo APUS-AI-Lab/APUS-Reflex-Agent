@@ -29,8 +29,13 @@ export interface System3EntryView {
   } | null
 }
 
+/** Bounded input classification; it never asserts that an action has executed. */
+export type System3InputIntent = 'conversation' | 'retrieval' | 'research' | 'creation' | 'action' | 'uncertain'
+
 /** One automatic Skill recommendation; injection is confirmed by its durable user message. */
 export interface System3SkillView {
+  /** Model-selected input category, absent on legacy receipts or failed classification. */
+  readonly intent?: System3InputIntent
   readonly requestId: SessionRequestId | null
   readonly turn: number
   readonly step: number

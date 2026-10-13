@@ -12,7 +12,7 @@ import type {} from '../src/client/reflex-settings.ts'
 afterEach(cleanup)
 const field = (text: string) => ({ text, invalid: false, overridden: false })
 const state: ReflexCardState = {
-  available: true, writable: true, dirty: false, invalid: false, saving: false, failed: false,
+  mode: 'custom', available: true, writable: true, dirty: false, invalid: false, saving: false, failed: false,
   endpoint: field('https://reflex.test'), model: field('decision'), protocol: field('openjev'), effort: field('high'),
   timeoutMs: field('1000'), apiKeyEnv: field('REFLEX_API_KEY'), apiKey: field(''),
   apiKeyConfigured: true, apiKeyWritable: true, credentialFailed: false, credentialSaveError: undefined,
@@ -25,8 +25,9 @@ function props(snapshot = state): ReflexSettingsProps {
     usePanelInfo: unused, useSessions: unused, useSessionStatus: unused,
     useSessionRetainInfo: unused, useResource: unused, useWorkspaces: unused,
   }
-  return { ...globals, close: vi.fn(), useReflexCard: select => select(snapshot), t: makeTranslate(zh, commonZh),
-    edit: vi.fn(), resetField: vi.fn(), save: vi.fn(), discard: vi.fn(),
+  return { ...globals, renderSlot: vi.fn(() => null), close: vi.fn(),
+    useReflexCard: select => select(snapshot), t: makeTranslate(zh, commonZh),
+    selectMode: vi.fn(), edit: vi.fn(), resetField: vi.fn(), save: vi.fn(), discard: vi.fn(),
     testConnection: vi.fn(async () => {}), clearCredential: vi.fn(async () => {}), refresh: vi.fn(async () => {}),
   }
 }
@@ -34,7 +35,7 @@ function props(snapshot = state): ReflexSettingsProps {
 it('renders the dedicated page and separates successful connectivity from missing capability', () => {
   const p = props({ ...state, probe: { pending: false, failed: false, result: { kind: 'ok', stage: 'decision', model: 'decision', effort: 'high', latencyMs: 10 } } })
   render(<ReflexSettings {...p} />)
-  expect(screen.getByRole('region', { name: 'Reflex 模型配置' })).toBeTruthy()
+  expect(screen.getByRole('region', { name: 'Reflex 配置' })).toBeTruthy()
   expect(screen.getByText(/真实判断通过/)).toBeTruthy()
   expect(screen.getByText('模块未加载')).toBeTruthy()
   expect(screen.queryByText('已启用')).toBeNull()
@@ -111,7 +112,7 @@ it.each([true, false])('shows Goal-relevance activation independently of fingerp
   } })} />)
   expect(screen.getByText('已启用', { exact: true })).toBeTruthy()
   expect(screen.getByText(enabled ? '目标相关性判断：已启用' : '目标相关性判断：未启用')).toBeTruthy()
-  expect(screen.getByText('尚无执行验收记录')).toBeTruthy()
+  expect(screen.getByText('执行结果请查看会话记录')).toBeTruthy()
 })
 
 it('explains partial settings persistence after a conflicting credential compensation', () => {
@@ -133,40 +134,43 @@ it('keeps first-run configuration editable and distinguishes a draft probe from 
   const initial = { ...state, endpoint: field(''), model: field(''),
     runtime: { provider: null, capabilities: state.runtime!.capabilities } }
   const view = render(<ReflexSettings {...props(initial)} />)
-  expect(screen.getByText('尚未配置决策服务；填写服务地址和模型后保存')).toBeTruthy()
+  expect(screen.getByText('尚未配置决策服务；选择接入方式后保存')).toBeTruthy()
   expect(screen.getByLabelText('服务地址').hasAttribute('disabled')).toBe(false)
   expect(screen.getByLabelText('决策模型').hasAttribute('disabled')).toBe(false)
   expect(screen.queryByText('无法读取运行状态')).toBeNull()
   view.rerender(<ReflexSettings {...props({ ...initial, endpoint: field('https://reflex.test'), model: field('decision'),
     probe: { pending: false, failed: false, result: { kind: 'ok', stage: 'decision', model: 'decision', effort: 'high', latencyMs: 10 } } })} />)
-  expect(screen.getByText('尚未配置决策服务；填写服务地址和模型后保存')).toBeTruthy()
+  expect(screen.getByText('尚未配置决策服务；选择接入方式后保存')).toBeTruthy()
   expect(screen.getByText(/真实判断通过/)).toBeTruthy()
   expect(screen.queryByText('已启用')).toBeNull()
 })
 
-it('selects the decision protocol and restores its deployment value', () => {
-  const p = props({ ...state, protocol: { ...state.protocol, text: 'typesafe', overridden: true } })
+it('offers only the two Reflex connection modes and hides preset connection fields', () => {
+  const p = props({ ...state, mode: 'trial' })
   render(<ReflexSettings {...p} />)
-  const select = screen.getByRole('combobox', { name: zh.protocol }) as HTMLSelectElement
-  expect(select.value).toBe('typesafe')
-  const effort = screen.getByLabelText(zh.effort) as HTMLInputElement
-  expect(effort.disabled).toBe(true)
-  expect(effort.value).toBe('high')
-  expect(screen.getByText(zh.effortNotApplicable)).toBeTruthy()
-  fireEvent.change(select, { target: { value: 'openjev' } })
-  expect(p.edit).toHaveBeenCalledWith('protocol', 'openjev')
-  fireEvent.click(screen.getByRole('button', { name: zh.reset }))
-  expect(p.resetField).toHaveBeenCalledWith('protocol')
+  const select = screen.getByRole('combobox', { name: zh.connectionMode }) as HTMLSelectElement
+  expect([...select.options].map(option => option.text)).toEqual([zh.trialMode, zh.customMode])
+  expect(select.value).toBe('trial')
+  expect(screen.getByText('服务协议: Reflex')).toBeTruthy()
+  expect(screen.queryByLabelText(zh.endpoint)).toBeNull()
+  expect(screen.queryByLabelText(zh.model)).toBeNull()
+  expect(screen.queryByLabelText(zh.apiKey)).toBeNull()
+  expect(screen.queryByRole('button', { name: zh.clear })).toBeNull()
+  expect(screen.queryByText(/OpenJev|Typesafe/)).toBeNull()
+  fireEvent.change(select, { target: { value: 'custom' } })
+  expect(p.selectMode).toHaveBeenCalledWith('custom')
 })
 
-it.each(['read-only', 'saving'] as const)('locks the protocol selector while %s', (reason) => {
+it.each(['read-only', 'saving'] as const)('locks the connection mode while %s', (reason) => {
   render(<ReflexSettings {...props({ ...state, writable: reason !== 'read-only', saving: reason === 'saving' })} />)
-  expect(screen.getByRole('combobox', { name: zh.protocol }).hasAttribute('disabled')).toBe(true)
+  expect(screen.getByRole('combobox', { name: zh.connectionMode }).hasAttribute('disabled')).toBe(true)
 })
 
-it('explains an invalid protocol with protocol-specific guidance', () => {
-  render(<ReflexSettings {...props({ ...state, protocol: { ...state.protocol, text: 'invalid', invalid: true } })} />)
-  expect(screen.getByText(zh.invalidProtocol)).toBeTruthy()
-  expect(screen.queryByText(zh.invalidNumber)).toBeNull()
-  expect(screen.getByRole('combobox', { name: zh.protocol }).getAttribute('aria-invalid')).toBe('true')
+
+it('explains a missing preset credential without offering a hidden key control', () => {
+  render(<ReflexSettings {...props({ ...state, mode: 'trial', probe: { pending: false, failed: false,
+    result: { kind: 'failed', stage: 'decision', model: 'decision', effort: 'high', latencyMs: 2, code: 'missing-credential' } } })} />)
+  expect(screen.getByText(zh.trialAuthFailed, { exact: false })).toBeTruthy()
+  expect(screen.queryByText(zh.authFailed, { exact: false })).toBeNull()
+  expect(screen.getByText(zh.trialHint)).toBeTruthy()
 })

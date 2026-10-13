@@ -15,7 +15,7 @@ export async function apply(ctx) {
     let body = ''
     for await (const chunk of request) body += chunk
     const query = JSON.parse(body)
-    if (request.url === '/v1/systemone' && query.model === 'jev-snapshot' && query.questions.skill?.type === 'choice') {
+    if (request.url === '/v1/systemone' && query.model === 'jev-snapshot' && query.questions.skill?.type === 'choice' && query.questions.intent?.type === 'choice') {
       const choice = Object.entries(query.questions.skill.criteria).find(([, value]) => value.startsWith('snapshot-response:'))?.[0]
       if (!['Reply with exactly: SDK snapshot OK', 'reply with the smoke text'].includes(query.state.input) || choice === undefined) {
         response.writeHead(400).end('unexpected Skill request')
@@ -23,7 +23,9 @@ export async function apply(ctx) {
       }
       skillRequests += 1
       response.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({
-        model: 'jev-snapshot', answers: { skill: {
+        model: 'jev-snapshot', answers: { intent: {
+          type: 'choice', choice: 'conversation', probabilities: Object.fromEntries(Object.keys(query.questions.intent.criteria).map(id => [id, id === 'conversation' ? 1 : 0])), confidence: 1,
+        }, skill: {
           type: 'choice', choice, probabilities: Object.fromEntries(Object.keys(query.questions.skill.criteria).map(id => [id, id === choice ? 1 : 0])), confidence: 1,
         } }, usage: { input_tokens: 9, output_tokens: 1 },
       }))
@@ -87,7 +89,8 @@ export async function apply(ctx) {
     const skill = ctx.sessionProjections.stateOf(agent.session, 'system3Runtime')?.skill
     const skillReceipt = agent.session.snapshotEvents().find(event => event.type === 'system3/skill-decision')
     const injection = agent.session.snapshotEvents().find(event => event.type === 'user/message' && event.data.id === skillReceipt?.data.injectionMessageId)
-    if (skillRequests !== 1 || skill?.selected !== 'snapshot-response' || skill.injected !== true
+    if (skillReceipt?.data.intent !== 'conversation' || skill?.intent !== 'conversation'
+      || skillRequests !== 1 || skill?.selected !== 'snapshot-response' || skill.injected !== true
       || injection?.data.source.kind !== 'skill-invocation' || !JSON.stringify(injection.data.content).includes('Preserve the exact response text')) {
       throw new Error('System3 Skill advice did not enter the actual generation request')
     }

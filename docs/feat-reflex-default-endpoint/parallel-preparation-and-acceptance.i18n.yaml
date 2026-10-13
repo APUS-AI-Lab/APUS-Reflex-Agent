@@ -1,0 +1,52 @@
+# Bilingual-pair consistency record for parallel-preparation-and-acceptance.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-reflex-default-endpoint/parallel-preparation-and-acceptance.md
+/reflex-parallel-preparation-and-acceptance:
+  en: b6ed6dcf0e4c9628
+  zh: 1d4c38da3ee6aa52
+/reflex-parallel-preparation-and-acceptance/verified-implementation-and-evidence:
+  en: fb228dac6943f9e6
+  zh: 22afb24072280f9a
+/reflex-parallel-preparation-and-acceptance/proposed-dependency-graph:
+  en: b65c4b6c706aa2cf
+  zh: dcf534cdfadd37c2
+/reflex-parallel-preparation-and-acceptance/lifetimes-receipts-budgets-and-ui:
+  en: 34fa619510387d30
+  zh: 05311a362ea4d88f
+/reflex-parallel-preparation-and-acceptance/six-scenarios-using-existing-skills-and-memory:
+  en: 3b62530cd1648e78
+  zh: 732cdb23ea452b17
+/reflex-parallel-preparation-and-acceptance/six-scenarios-using-existing-skills-and-memory/1-rewrite-the-product-introduction-mvp-1:
+  en: 4cfe9ebcef037c92
+  zh: 94f3663df2c6119a
+/reflex-parallel-preparation-and-acceptance/six-scenarios-using-existing-skills-and-memory/2-resume-the-memory-architecture-work-mvp-2:
+  en: 799ff10ccb629178
+  zh: 506da271b0f29e23
+/reflex-parallel-preparation-and-acceptance/six-scenarios-using-existing-skills-and-memory/3-reuse-a-previous-startup-failure-diagnosis-mvp-3:
+  en: 150077178a2ff530
+  zh: 676af7a4f15dd1dd
+/reflex-parallel-preparation-and-acceptance/six-scenarios-using-existing-skills-and-memory/4-explain-the-existing-speed-evidence:
+  en: 9b07b4d730a9fadf
+  zh: f3688c64befe9f90
+/reflex-parallel-preparation-and-acceptance/six-scenarios-using-existing-skills-and-memory/5-recover-merge-and-release-acceptance-requirements:
+  en: 82e28c3c502c77a6
+  zh: 9c386bd410462bc6
+/reflex-parallel-preparation-and-acceptance/six-scenarios-using-existing-skills-and-memory/6-recover-ui-feedback-decisions:
+  en: e1de710ed818b5fe
+  zh: 3b752b9d0eda7bf0
+/reflex-parallel-preparation-and-acceptance/six-scenarios-using-existing-skills-and-memory/large-catalog-acceptance:
+  en: af99fd8ab7c48a2a
+  zh: 0ebefae8f9b457d0
+/reflex-parallel-preparation-and-acceptance/7-search-actual-local-project-documentation:
+  en: 48b434694c7e5a6b
+  zh: a09e83cbc2d36dd8
+/reflex-parallel-preparation-and-acceptance/negative-controls-and-adversarial-acceptance:
+  en: 0690662e8d94c9ff
+  zh: 20a6af9092d5978e
+/reflex-parallel-preparation-and-acceptance/a-b-timing-and-quality-standard:
+  en: e2235c224ce04c57
+  zh: f6a619405463e48a
+/reflex-parallel-preparation-and-acceptance/three-mvps-and-implementation-checkpoints:
+  en: 8434c2e118f6ad75
+  zh: b36bd1d4465a9daf

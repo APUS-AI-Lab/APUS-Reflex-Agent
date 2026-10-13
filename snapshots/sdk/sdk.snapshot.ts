@@ -1091,13 +1091,16 @@ describe('TypeScript SDK snapshots over the jsonrpc runtime', () => {
       }
       if (scenario.name === 'system3-entry-route') {
         const events = results.flatMap(result => result.events)
+        const skillDecisions = events.filter(event => event.type === 'system3/skill-decision')
+        expect(skillDecisions).toHaveLength(1)
+        expect(skillDecisions[0]).toMatchObject({ data: { intent: 'conversation', selected: 'snapshot-response', outcome: 'selected' } })
         const recommendations = events.filter(event => event.type === 'system3/entry-decision')
         const adopted = events.filter(event => event.type === 'model/automatic-selection')
         expect(recommendations).toHaveLength(1)
         expect(adopted).toHaveLength(1)
         expect(recommendations[0]).toMatchObject({ data: { outcome: 'selected', requestId: 'snapshot-entry-request' } })
         expect(adopted[0]).toMatchObject({ data: { requestId: 'snapshot-entry-request' } })
-        for (const event of [...recommendations, ...adopted]) {
+        for (const event of [...skillDecisions, ...recommendations, ...adopted]) {
           expect(event).not.toHaveProperty('surfaceOp')
           const persisted = records(ordered[0]!.content).filter(record => record.type === event.type)
           expect(persisted).toHaveLength(1)

@@ -1,5 +1,5 @@
 ---
-description: "dsh Web 客户端 General 设置中的 Reflex 专属 Continuum 无限记忆开关。"
+description: "Web 客户端 Reflex 配置页面中的 Reflex 专属 Continuum 无限记忆开关。"
 kind: "package-reference"
 ---
 
@@ -9,7 +9,7 @@ kind: "package-reference"
 
 ## 概述
 
-Host 提供 `continuum-memory` 命名空间时，General 设置显示 Reflex 专属的 APUS Continuum 无限记忆开关。未组合 Continuum 时该行不会出现。
+Host 提供 `continuum-memory` 命名空间时，Reflex 配置页面显示 Reflex 专属的 APUS Continuum 无限记忆开关。未组合 Continuum 或 Reflex 页面时该行不会出现。
 
 ## 目录
 
@@ -25,7 +25,7 @@ Host 提供 `continuum-memory` 命名空间时，General 设置显示 Reflex 专
 <a id="use-this-package"></a>
 ## 使用本包
 
-把本浏览器伴生包和 Web 设置外壳一起组合。该行通过共享的带 revision ConfigForms 队列写入已接受的 `enabled` 值。未提供 `continuum-memory` 的部署不会显示该行，Harness 保持原版行为。
+把本浏览器伴生包、Web 设置外壳和 Reflex 配置页面一起组合。该行通过共享的带 revision ConfigForms 队列写入已接受的 `enabled` 值。未提供 `continuum-memory` 的部署不会显示该行，Harness 保持原版行为。
 
 -----
 
@@ -35,7 +35,7 @@ Host 提供 `continuum-memory` 命名空间时，General 设置显示 Reflex 专
 <details>
 <summary>实现细节——点击展开</summary>
 
-Host 半侧是空的 `apply`；浏览器半侧通过 `ctx.configForms.whileServed` 监听 `continuum-memory`。`ContinuumSettingsController` 管理已接受值快照、忙碌状态、写入失败和释放；`ContinuumRow` 把本地化 Switch 注册进 `settings.general.item`。开关不授予权限，也不绕过 Jev 可用性；Session 事件仍是记忆事实来源。
+Host 半侧是空的 `apply`；浏览器半侧通过 `ctx.configForms.whileServed` 监听 `continuum-memory`。`ContinuumSettingsController` 管理已接受值快照、忙碌状态、写入失败和释放；`ContinuumRow` 把本地化 Switch 注册进 `settings.reflex.item`。开关不授予权限，也不绕过 Jev 可用性；Session 事件仍是记忆事实来源。
 
 </details>
 
@@ -45,7 +45,7 @@ Host 半侧是空的 `apply`；浏览器半侧通过 `ctx.configForms.whileServe
 ## 进一步探索
 
 - [ui-settings](../ui-settings/README.zh.md)——设置镜像与带 revision 写入队列。
-- [ui-settings-general](../ui-settings-general/README.zh.md)——General 分区与 item slot。
+- [client-ui-system3](../../experimental/client-ui-system3/README.zh.md)——Reflex 配置页面及其 item slot。
 - [ui-primitives](../ui-primitives/README.zh.md)——Switch 控件。
 - [continuum](../../context/continuum/README.zh.md)——基于 Session 的记忆记录与 Reflex 策略。
 
