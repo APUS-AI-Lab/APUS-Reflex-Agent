@@ -27,7 +27,7 @@ kind: package-reference
 <a id="understand-the-implementation"></a>
 ## 理解实现
 
-适配器将问题及前十六个候选放在一次有界请求中。独立 noul 答案估计相关性，不表示事实真伪或已校准准确率。active 对已评分前缀稳定排序，其余候选保持原位，低概率候选同样保留。profile 先追加 prepared unknown receipt，flush 所属 Session，再通过持久化后端读回该 receipt，之后才发送请求。settled receipt 关联 prepared 事件序号，保留完整请求和校验后响应。取消保留 prepared 状态，不伪造成功；缺少持久化能力或屏障 I/O 失败时禁止发送并保留 baseline。只有 prepared 在发送前保证持久化；settled 随 Session 常规 flush 保存。历史 version-one receipt 继续可读，回放不会调用 Jev。拥有 Session 的 `selectContinuumMemory` 使用方必须提供持久化 beforeDispatch checkpoint；仅无 Session 消费者可省略该参数并自行记录输入。checkpoint 挂起期间失效的生命周期不能继续发送请求。
+适配器将问题及前十六个候选放在一次有界请求中。独立 noul 答案估计相关性，不表示事实真伪或已校准准确率。active 对已评分前缀稳定排序，其余候选保持原位，低概率候选同样保留。profile 先追加 prepared unknown receipt，flush 所属 Session，再通过持久化后端读回该 receipt，之后才发送请求。settled receipt 关联 prepared 事件序号，保留完整请求和校验后响应。取消保留 prepared 状态，不伪造成功；缺少持久化能力或屏障 I/O 失败时禁止发送并保留 baseline。只有 prepared 在发送前保证持久化；settled 随 Session 常规 flush 保存。历史 version-one receipt 继续可读，回放不会调用 Jev。拥有 Session 的 `selectContinuumMemory` 使用方必须提供持久化 beforeDispatch checkpoint；仅无 Session 消费者可省略该参数并自行记录输入。checkpoint 挂起期间失效的生命周期或卸载的 selector 不能继续发送请求。已发送后卸载不会撤回请求；迟到的排序不再采用，主模型继续使用完整 baseline。
 
 <a id="model-experience"></a>
 ## Model Experience

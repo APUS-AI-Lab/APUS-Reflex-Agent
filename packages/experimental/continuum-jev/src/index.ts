@@ -129,11 +129,13 @@ class ContinuumJevPlugin extends Service {
   constructor(ctx: Context, config: ContinuumJevProfileConfig) {
     super(ctx, 'continuumJev')
     assertConfig(config)
+    let active = true
+    ctx.effect(() => () => { active = false })
     const selector: ContinuumMemorySelector = {
       select: async (agent, input, signal): Promise<ContinuumMemorySelection> => {
         const result = await selectContinuumMemory(ctx.get('jev'), config, {
           query: input.query,
-          isCurrent: input.isCurrent,
+          isCurrent: () => active && input.isCurrent(),
           candidates: input.candidates.map(candidate => ({ ...candidate, id: MemoryId(candidate.id) })),
         }, signal, async (prepared) => {
           const event = recordContinuumMemoryDecision(agent.session, prepared)
@@ -238,6 +240,7 @@ export async function selectContinuumMemory(
     return fallback('provider-error', error instanceof ContinuumJevTimeoutError ? 'timeout' : 'provider-error', request)
   }
   signal?.throwIfAborted()
+  if (input.isCurrent?.() === false) return fallback('invalidated', 'invalidated', request)
   if (outcome.kind !== 'ok') return fallback('provider-error', outcome.failure.code, request)
   const scored: { id: MemoryId; index: number; relevance: number }[] = []
   for (const [index, candidate] of candidates.entries()) {

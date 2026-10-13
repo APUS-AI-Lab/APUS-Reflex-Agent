@@ -21,8 +21,11 @@ import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-a
 import ContinuumJev from '../src/index.ts'
 import { expect, it, vi } from 'vitest'
 
-it.each([['openjev', 'rank'], ['typesafe', 'rank'], ['openjev', 'invalidate'], ['openjev', 'missing'], ['openjev', 'mismatch'], ['openjev', 'read-error'], ['openjev', 'flush-error']] as const)('prepares %s evidence durably with %s', async (protocol, scenario) => {
+it.each([['openjev', 'rank'], ['typesafe', 'rank'], ['openjev', 'invalidate'], ['openjev', 'missing'], ['openjev', 'mismatch'], ['openjev', 'read-error'], ['openjev', 'flush-error'], ['openjev', 'unload-prepared'], ['openjev', 'unload-inflight']] as const)('prepares %s evidence durably with %s', async (protocol, scenario) => {
   const invalidate = scenario === 'invalidate'
+  const pendingInvalidation = invalidate || scenario === 'unload-prepared'
+  const httpEntered = Promise.withResolvers<undefined>()
+  const releaseHttp = Promise.withResolvers<undefined>()
   const root = await mkdtemp(join(tmpdir(), 'continuum-relevance-profile-'))
   let ctx: Context | undefined
   const requests: JevRequest[] = []
@@ -46,6 +49,10 @@ it.each([['openjev', 'rank'], ['typesafe', 'rank'], ['openjev', 'invalidate'], [
       expect(prepared).toMatchObject({ data: { outcome: 'unknown', evaluation: {
         phase: 'prepared', request: { providerId: 'fixture-provider', model: 'fixture-model', effort: 'high' },
       } } })
+      if (scenario === 'unload-inflight') {
+        httpEntered.resolve(undefined)
+        await releaseHttp.promise
+      }
       response.setHeader('content-type', 'application/json')
       response.end(JSON.stringify({ model: 'fixture-model', answers: {
         m0: { type: 'noul', noul: 0.05 }, m1: { type: 'noul', noul: 0.95 },
@@ -112,19 +119,28 @@ it.each([['openjev', 'rank'], ['typesafe', 'rank'], ['openjev', 'invalidate'], [
     const entered = Promise.withResolvers<undefined>()
     const release = Promise.withResolvers<undefined>()
     const originalFlush = ctx.sessions.flush.bind(ctx.sessions)
-    const flush = invalidate || scenario === 'flush-error' ? vi.spyOn(ctx.sessions, 'flush').mockImplementation(async (session) => {
+    const flush = pendingInvalidation || scenario === 'flush-error' ? vi.spyOn(ctx.sessions, 'flush').mockImplementation(async (session) => {
       if (scenario === 'flush-error') throw new Error('durable flush failed')
       entered.resolve(undefined)
       await release.promise
       return originalFlush(session)
     }) : undefined
     agent.followup(createUserMessage({ source: { kind: 'user' }, content: [{ type: 'text', text: 'What are the release PIN and date?' }] }))
-    if (invalidate) {
+    if (pendingInvalidation) {
       try {
         await entered.promise
-        ctx.continuumMemory.controller(agent).setSwitch({ enabled: false, mode: 'off', reflexMounted: true })
+        if (invalidate) ctx.continuumMemory.controller(agent).setSwitch({ enabled: false, mode: 'off', reflexMounted: true })
+        else await [...ctx.loader.entries()].find(entry => entry.options.id === 'continuum-jev')!.fiber!.dispose()
       } finally {
         release.resolve(undefined)
+      }
+    }
+    if (scenario === 'unload-inflight') {
+      try {
+        await httpEntered.promise
+        await [...ctx.loader.entries()].find(entry => entry.options.id === 'continuum-jev')!.fiber!.dispose()
+      } finally {
+        releaseHttp.resolve(undefined)
       }
     }
     await agent.whenIdle()
@@ -132,13 +148,13 @@ it.each([['openjev', 'rank'], ['typesafe', 'rank'], ['openjev', 'invalidate'], [
     open?.mockRestore()
     expect(failures).toEqual([])
     if (scenario !== 'rank') {
-      expect(requests).toEqual([])
+      expect(requests).toHaveLength(scenario === 'unload-inflight' ? 1 : 0)
       const recalls = adapter.requests[1]?.messages.filter(message => message.source?.kind === 'continuum-memory') ?? []
       if (invalidate) expect(recalls).toEqual([])
       else expect(recalls[0]?.source).toMatchObject({ recordIds: ['a', 'b'] })
       const receipts = agent.session.snapshotEvents().filter(event => event.type === 'continuum/memory-decision')
       expect(receipts.map(event => event.data.evaluation?.phase)).toEqual(['prepared', 'settled'])
-      expect(receipts[1]?.data).toMatchObject({ failure: invalidate ? 'invalidated' : 'persistence-unavailable', selectedIds: ['a', 'b'] })
+      expect(receipts[1]?.data).toMatchObject({ failure: pendingInvalidation || scenario === 'unload-inflight' ? 'invalidated' : 'persistence-unavailable', selectedIds: ['a', 'b'] })
       return
     }
     const diagnostics = agent.session.snapshotEvents().slice(-5)
@@ -161,6 +177,7 @@ it.each([['openjev', 'rank'], ['typesafe', 'rank'], ['openjev', 'invalidate'], [
     expect(replay.events.filter(event => event.type === 'continuum/memory-decision')).toEqual(receipts)
     expect(requests).toHaveLength(1)
   } finally {
+    releaseHttp.resolve(undefined)
     await ctx?.fiber.dispose()
     await new Promise<void>((resolve, reject) => {
       server.close((error) => {
