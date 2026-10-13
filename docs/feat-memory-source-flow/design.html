@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>Continuum source-read integration design</title><style>body{max-width:1000px;margin:40px auto;font:17px/1.6 system-ui;padding:20px}pre{white-space:pre-wrap}</style><body><h1>Continuum source-read integration</h1><pre># Continuum source-read integration
+
+The approved B1a slice connects recalled source references to the existing workspace-authorized `session_event_read` tool through a separately enabled profile overlay. The default profile and Continuum live switch do not mount or revoke this independent tool opt-in.
+
+```mermaid
+flowchart LR
+  A[Persisted user input] --&gt; B[Continuum recall with source references]
+  B --&gt; C[Model requests session_event_read]
+  C --&gt; D[Existing workspace authorization]
+  D --&gt; E[Bounded exact text-block pages and event digest]
+  E --&gt; F[Persisted tool results]
+  F --&gt; G[Next model request]
+  G --&gt; C
+```
+
+The tool&#x27;s existing parameters own the read protocol: `session_id`, `seq`, `view`, `block`, `offset`, and `expected_sha256`. Every result stays within `maxReadBytes`; `next_offset` and the whole-event digest bind continuation. No new source reader or authorization path is introduced.
+
+Deliverables: the explicit overlay under `apps/cli/config/examples/continuum/`; an executable Headless fixture and test; a new SDK Session scenario; and configuration guidance beside this design. Verification checks actual provider requests, complete text reconstruction, persisted tool outputs, invalid digest rejection, and cross-workspace denial. Snapshot replay remains keyless and preserves committed Session generations.
+
+Desktop default composition and a single live Continuum switch that also revokes source-read tools remain B5 integration work. Full-text search stays disabled unless separately configured; exact source reads do not require an index.
+</pre></body></html>

@@ -101,6 +101,8 @@ function dirOf(url: string): string {
 }
 
 interface SdkAssertions {
+  /** Exact auxiliary source written through public persistence and checked independently of the active Session. */
+  sourceSeed?: string
   /** Keep committed replay input immutable; compare new behavior with a separate writer oracle. */
   preserveReplayInput?: boolean
   /** Additional profile patches applied after the shared composition. */
@@ -129,6 +131,7 @@ interface SdkAssertions {
 const SDK_ASSERTIONS: Readonly<Record<string, SdkAssertions>> = {
   'continuum-partial-recall': { expectedFinalResponse: '迁移安排在周五。', preserveReplayInput: true },
   'continuum-tail-recall': { expectedFinalResponse: 'Quartzlaunch release code MERIDIAN-731.' },
+  'continuum-source-pages': { expectedFinalResponse: 'SOURCE_RECONSTRUCTED', sourceSeed: 'source.seed.json' },
   'system3-shadow': { expectedFinalResponse: 'SDK snapshot OK' },
   'reflex-supervision': { expectedFinalResponse: 'SDK snapshot OK' },
   'reflex-semantic-supervision': { expectedFinalResponse: 'SDK snapshot OK' },
@@ -611,6 +614,7 @@ async function runScenario(scenario: CorpusScenario): Promise<{
       : {},
     ...scenario.manifest.environment,
     ...assertions.environment,
+    ...assertions.sourceSeed === undefined ? {} : { DSH_SNAPSHOT_SOURCE_CWD: cwd },
     ...childEnvironment,
   }
 
@@ -683,6 +687,17 @@ async function runScenario(scenario: CorpusScenario): Promise<{
       persistedLogs(sessionsRoot),
       ...(childSessionsRoot === undefined ? [] : [persistedLogs(childSessionsRoot)]),
     ])).flat()
+    if (assertions.sourceSeed !== undefined) {
+      const source = JSON.parse(await readFile(join(scenario.dir, assertions.sourceSeed), 'utf8')) as {
+        header: { id: string; cwd: string }; events: JsonObject[]
+      }
+      const index = logs.findIndex(log => log.header.id === source.header.id)
+      expect(index, `persisted auxiliary source exists: ${JSON.stringify(results.flatMap(result => result.events.filter(event => event.type === 'agent/error' || event.type === 'turn/end')))}`).toBeGreaterThanOrEqual(0)
+      const log = logs[index]!
+      expect(log.header).toMatchObject({ ...source.header, cwd })
+      expect(records(log.content).slice(1), 'source events retain exact fields and text').toEqual(source.events)
+      logs.splice(index, 1)
+    }
     const finalWorkspace = await captureWorkspaceSnapshot(cwd, {
       ignoredRootEntries: RUNTIME_WORKSPACE_ENTRIES,
     })
@@ -1126,7 +1141,7 @@ describe('TypeScript SDK snapshots over the jsonrpc runtime', () => {
         }
       }
       if (assertions.expectedFinalResponse !== undefined) {
-        expect(results.at(-1)?.finalResponse, `${scenario.name}: final response`).toBe(assertions.expectedFinalResponse)
+        expect(results.at(-1)?.finalResponse, `${scenario.name}: final response; ${JSON.stringify(results.at(-1)?.events.filter(event => event.type === 'turn/end'))}`).toBe(assertions.expectedFinalResponse)
         const parent = ordered[0]
         if (parent === undefined) throw new Error(`${scenario.name}: no primary session log`)
         const turnEnds = records(parent.content).filter(record => record.type === 'turn/end')
