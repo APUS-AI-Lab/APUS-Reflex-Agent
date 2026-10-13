@@ -95,7 +95,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential musl-tools python3 patch xvfb xauth dbus-x11 apparmor apparmor-utils desktop-file-utils xdg-utils libgtk-3-0t64 libnss3 libasound2t64 libgbm1
+          sudo apt-get install -y build-essential musl-tools python3 patch xvfb xauth dbus-x11 apparmor apparmor-utils desktop-file-utils xdg-utils xdg-user-dirs libgtk-3-0t64 libnss3 libasound2t64 libgbm1
           sudo aa-status --enabled
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=1
       - name: Install locked Harness dependencies
@@ -297,7 +297,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y xvfb xauth dbus-x11 apparmor apparmor-utils desktop-file-utils xdg-utils libgtk-3-0t64 libnss3 libasound2t64 libgbm1
+          sudo apt-get install -y xvfb xauth dbus-x11 apparmor apparmor-utils desktop-file-utils xdg-utils xdg-user-dirs libgtk-3-0t64 libnss3 libasound2t64 libgbm1
           sudo aa-status --enabled
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=1
       - name: Install locked qualification dependencies

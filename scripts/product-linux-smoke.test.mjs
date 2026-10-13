@@ -6,7 +6,7 @@ import { test } from 'node:test'
 import { readFile, mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { installedExecutable, verifyExpectedSource, smokeEnvironment, verifyInstalledIdentity, verifyRendererSandbox, verifyRemovedInstallation, verifySandboxExecution, redactDiagnostic } from './product-linux-smoke.mjs'
+import { installedExecutable, verifyExpectedSource, smokeEnvironment, prepareDesktopDocuments, verifyDefaultWorkspace, verifyInstalledIdentity, verifyRendererSandbox, verifyRemovedInstallation, verifySandboxExecution, redactDiagnostic } from './product-linux-smoke.mjs'
 
 test('installed application has isolated state without credentials or developer PATH', () => {
   const source = { HOME: '/existing', PATH: '/usr/bin:/developer', GH_TOKEN: 'private', JEV_API_KEY: 'private', NODE_OPTIONS: '--require=developer.js', ELECTRON_RUN_AS_NODE: '1', DSH_HOME: '/existing-state', DISPLAY: ':99', DBUS_SESSION_BUS_ADDRESS: 'unix:path=/private-bus', USER: 'runner' }
@@ -19,6 +19,66 @@ test('installed application has isolated state without credentials or developer 
   assert.equal(env.DBUS_SESSION_BUS_ADDRESS, source.DBUS_SESSION_BUS_ADDRESS)
   for (const key of ['GH_TOKEN', 'JEV_API_KEY', 'NODE_OPTIONS', 'ELECTRON_RUN_AS_NODE']) assert.equal(env[key], undefined)
   assert.equal(source.HOME, '/existing')
+})
+
+test('desktop fixture configures Documents only inside its isolated account', async t => {
+  const temporary = await mkdtemp(join(tmpdir(), 'apus-linux-documents-unit-'))
+  t.after(() => rm(temporary, { recursive: true, force: true }))
+  const env = smokeEnvironment({}, temporary, join(temporary, 'bin'))
+  const documents = join(env.HOME, 'Documents')
+  assert.equal(await prepareDesktopDocuments(env, async (command, args, options) => {
+    assert.equal(command, 'xdg-user-dir')
+    assert.deepEqual(args, ['DOCUMENTS'])
+    assert.equal(options.env, env)
+    assert.equal(await readFile(join(env.XDG_CONFIG_HOME, 'user-dirs.dirs'), 'utf8'), 'XDG_DOCUMENTS_DIR="$HOME/Documents"\n')
+    await writeFile(join(documents, 'writable.txt'), 'desktop')
+    return { stdout: documents + '\n' }
+  }), documents)
+  assert.equal(await readFile(join(documents, 'writable.txt'), 'utf8'), 'desktop')
+})
+
+test('desktop fixture rejects disabled Documents and propagates missing system lookup tools', async t => {
+  const temporary = await mkdtemp(join(tmpdir(), 'apus-linux-documents-rejected-'))
+  t.after(() => rm(temporary, { recursive: true, force: true }))
+  const disabled = smokeEnvironment({}, join(temporary, 'disabled'), join(temporary, 'bin'))
+  await assert.rejects(prepareDesktopDocuments(disabled, async () => ({ stdout: disabled.HOME + '\n' })), /Documents lookup differs/)
+  const missing = smokeEnvironment({}, join(temporary, 'missing'), join(temporary, 'bin'))
+  const error = Object.assign(new Error('spawn xdg-user-dir ENOENT'), { code: 'ENOENT' })
+  await assert.rejects(prepareDesktopDocuments(missing, async () => { throw error }), error)
+})
+
+test('real Linux desktop directory lookup works without exposing Node or Git',
+  { skip: process.platform !== 'linux' }, async t => {
+    const temporary = await mkdtemp(join(tmpdir(), 'apus-linux-xdg-unit-'))
+    t.after(() => rm(temporary, { recursive: true, force: true }))
+    const bin = join(temporary, 'bin')
+    await mkdir(bin)
+    await symlink('/usr/bin/xdg-user-dir', join(bin, 'xdg-user-dir'))
+    const env = smokeEnvironment({}, temporary, bin)
+    assert.equal(await prepareDesktopDocuments(env), join(env.HOME, 'Documents'))
+    const execute = promisify(execFile)
+    for (const command of ['node', 'git']) {
+      await assert.rejects(execute('/bin/sh', ['-c', `command -v ${command}`], { env }), error => error.code === 1 || error.code === 127)
+    }
+  })
+
+test('default Workspace acceptance rejects a missing selection, directory or editable input', async t => {
+  const directory = await mkdtemp(join(tmpdir(), 'apus-linux-workspace-unit-'))
+  t.after(() => rm(directory, { recursive: true, force: true }))
+  const page = (selected, editable = true) => {
+    let text = ''
+    return {
+      getByRole: () => ({ textContent: async () => selected, filter: () => ({ waitFor: async () => {} }) }),
+      locator: () => ({ waitFor: async () => {}, textContent: async () => text,
+        fill: async value => { if (editable) text = value } }),
+    }
+  }
+  const ready = page('Default workspace')
+  await verifyDefaultWorkspace(ready, directory)
+  assert.equal(await ready.locator().textContent(), '')
+  await assert.rejects(verifyDefaultWorkspace(page('Choose workspace'), directory), /did not select/)
+  await assert.rejects(verifyDefaultWorkspace(page('Default workspace'), join(directory, 'absent')), { code: 'ENOENT' })
+  await assert.rejects(verifyDefaultWorkspace(page('Default workspace', false), directory), /not editable/)
 })
 
 test('the system shell distinguishes missing tools from executables on an isolated PATH',
