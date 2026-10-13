@@ -9,7 +9,7 @@ kind: package-bundle
 
 ## 概述
 
-APUS Reflex Agent Full 和 Lite 包含此配置方案层，用户可从通用设置开启基于 Session 的记忆。记忆默认关闭；开启后采纳后续用户输入，并在同一 Session 中投影有界召回。Jev 相关性排序默认关闭，需要单独批准出站。active 排序保留所有通过本地预算的候选；提供方失败时保留 baseline。
+APUS Reflex Agent Full 和 Lite 包含此配置方案层，用户可从 Reflex 配置开启基于 Session 的记忆。记忆默认关闭；开启后采纳后续用户输入，并在同一 Session 中投影有界召回。Jev 相关性排序默认关闭，需要单独批准出站。active 排序保留所有通过本地预算的候选；提供方失败时保留 baseline。
 
 ## 目录
 
@@ -26,7 +26,7 @@ APUS Reflex Agent Full 和 Lite 包含此配置方案层，用户可从通用设
 
 APUS Desktop 和 Web 启动器为新建和已有普通配置方案选择已安装的此 bundle。其他配置方案通过[配置方案组合参考](../../boot/app-boot/README.zh.md)在 `dsh.profile.bundles` 中选择本包名称。[bundle 补丁](cordis.patch.yml) 在用户配置方案补丁下方挂载 `continuum-memory` 和可选的 `continuum-jev` 选择器。记忆运行需要单独挂载的 Reflex 提供方；Safe Mode 保留独立恢复配置方案。
 
-打开**设置 → 通用设置 → Continuum 无限记忆**启用记忆，或保存以下配置方案补丁：
+打开**设置 → Reflex 配置 → Continuum 无限记忆**启用记忆，或保存以下配置方案补丁：
 
 ```yaml
 - id: continuum-memory

@@ -6,7 +6,7 @@
 
 **瞬策 · 瞬时执行，深度思考 · Model-as-a-Harness**
 
-APUS Reflex Harness é um aplicativo desktop Personal Agent para trabalhar com modelos em projetos locais. Escolha uma pasta de trabalho, configure um modelo e execute tarefas em uma conversa persistente. O serviço opcional de decisões Reflex/Jev é configurado em Settings → Reflex model configuration. Conectar o serviço não ativa automaticamente o roteamento, a supervisão ou a memória. O cliente e o ambiente Harness são distribuídos a partir deste repositório. Veja a arquitetura e os limites atuais no [README do produto](../README.md).
+APUS Reflex Harness é um aplicativo desktop Personal Agent para trabalhar com modelos em projetos locais. Escolha uma pasta de trabalho, configure um modelo e execute tarefas em uma conversa persistente. O serviço opcional de decisões Reflex/Jev é configurado em Settings → Reflex configuration. Conectar o serviço não ativa automaticamente o roteamento, a supervisão ou a memória. O cliente e o ambiente Harness são distribuídos a partir deste repositório. Veja a arquitetura e os limites atuais no [README do produto](../README.md).
 
 Esta integração incorpora o cliente em `frontend/` do repositório principal existente do Harness e unifica a configuração, compilação e empacotamento do frontend e do backend. O instalador inclui o backend; não é necessário instalar ou iniciar outro serviço. A versão integrada continua em preparação.
 

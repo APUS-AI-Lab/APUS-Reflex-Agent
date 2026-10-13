@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-client-ui-settings-continuum",
-  "description": "Reflex-only Continuum memory switch in the dsh web client's General settings",
+  "description": "Reflex-only Continuum memory switch in the dsh web client's Reflex settings",
   "version": "0.1.7-rc.2",
   "publishConfig": { "access": "public" },
   "repository": { "type": "git", "url": "git+https://github.com/deepseek-ai/deepseek-harness.git", "directory": "packages/client/ui-settings-continuum" },

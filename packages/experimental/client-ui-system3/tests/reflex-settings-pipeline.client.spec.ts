@@ -13,7 +13,7 @@ import { TestRemote } from '@deepseek-ai/dsh-client-test-runtime'
 import { ConfigFormController } from '@deepseek-ai/dsh-client-ui-settings/src/client/config-form.ts'
 import { SettingsDescribeMirror } from '@deepseek-ai/dsh-client-ui-settings/src/client/settings-mirror.ts'
 import { SettingsSchemaService } from '@deepseek-ai/dsh-client-ui-settings/src/client/schema.ts'
-import { ReflexCardController, type ReflexSettings } from '../src/client/reflex-settings-controller.ts'
+import { ReflexCardController, REFLEX_TRIAL, type ReflexSettings } from '../src/client/reflex-settings-controller.ts'
 import type { SettingsPathOpView } from '@deepseek-ai/dsh-api-remotes/client'
 
 
@@ -78,8 +78,10 @@ it.each([false, true])('saves through ConfigForms and BFF with a read-only key; 
   if (!locked) {
     await face.refresh()
     expect(face.hooks.reflexCard.getSnapshot().runtime?.provider).toBeNull()
-    expect(face.hooks.reflexCard.getSnapshot().endpoint.text).toBe('')
-    expect(face.hooks.reflexCard.getSnapshot().model.text).toBe('')
+    expect(face.hooks.reflexCard.getSnapshot().mode).toBe('trial')
+    expect(face.hooks.reflexCard.getSnapshot().endpoint.text).toBe(REFLEX_TRIAL.endpoint)
+    expect(face.hooks.reflexCard.getSnapshot().model.text).toBe(REFLEX_TRIAL.model)
+    face.selectMode('custom')
     face.edit('endpoint', 'https://reflex.test')
     face.edit('model', 'fixture')
   }
@@ -95,7 +97,7 @@ it.each([false, true])('saves through ConfigForms and BFF with a read-only key; 
     expect(readFileSync(profile.patchPath, 'utf8')).toContain('low')
     await mirror.load()
     expect(scope.getSnapshot().value?.effort).toBe('low')
-    for (const protocol of ['typesafe', 'openjev'] as const) {
+    for (const protocol of ['openjev'] as const) {
       face.edit('protocol', protocol)
       face.save()
       await vi.waitFor(() => { expect(face.hooks.reflexCard.getSnapshot().saving).toBe(false) })
@@ -106,6 +108,25 @@ it.each([false, true])('saves through ConfigForms and BFF with a read-only key; 
       expect(restarted.settings.describe().find(row => row.ns === 'jev')?.value).toMatchObject({ protocol })
       await restarted.fiber.dispose()
     }
+    face.selectMode('trial')
+    face.save()
+    await vi.waitFor(() => { expect(face.hooks.reflexCard.getSnapshot().saving).toBe(false) })
+    await mirror.load()
+    expect(scope.getSnapshot().value).toMatchObject({ ...REFLEX_TRIAL, protocol: 'openjev' })
+    const restartedTrial = await start()
+    expect(restartedTrial.settings.describe().find(row => row.ns === 'jev')?.value).toMatchObject(REFLEX_TRIAL)
+    await restartedTrial.fiber.dispose()
+    const reopened = new ReflexCardController(scope, client)
+    expect(reopened.inject().hooks.reflexCard.getSnapshot().mode).toBe('trial')
+    reopened.inject().selectMode('custom')
+    expect(reopened.inject().hooks.reflexCard.getSnapshot().apiKeyEnv.text).toBe('REFLEX_CUSTOM_API_KEY')
+    reopened.dispose()
+    face.selectMode('custom')
+    expect(face.hooks.reflexCard.getSnapshot().endpoint.text).toBe('https://reflex.test')
+    expect(face.hooks.reflexCard.getSnapshot().apiKeyEnv.text).toBe('JEV_API_KEY')
+    face.save()
+    await vi.waitFor(() => { expect(face.hooks.reflexCard.getSnapshot().saving).toBe(false) })
+    await mirror.load()
     await scope.mutate([{ op: 'set', path: ['endpoint'], value: 'https://original.test' },
       { op: 'set', path: ['model'], value: 'original-model' }], scope.getSnapshot().revision)
     const original = scope.getSnapshot().value

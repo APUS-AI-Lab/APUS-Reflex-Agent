@@ -1,0 +1,16 @@
+# Bilingual-pair consistency record for live-intent-diagnostic.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-reflex-default-endpoint/live-intent-diagnostic.md
+/reflex-input-classification-live-api-diagnostic:
+  en: fa8dd2d36f901486
+  zh: 0477d6df95c85468
+/reflex-input-classification-live-api-diagnostic/three-second-budget-all-30-requests-retained:
+  en: c91293f2d466f425
+  zh: 009ca01a2c6d9ec2
+/reflex-input-classification-live-api-diagnostic/cancellation-defect-and-fix:
+  en: 9b3f28c22071770f
+  zh: d9e2616df87803da
+/reflex-input-classification-live-api-diagnostic/product-configuration-and-remaining-acceptance:
+  en: 8813ba7e94b5e411
+  zh: e90ff236065a536d

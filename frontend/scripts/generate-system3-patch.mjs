@@ -1,4 +1,4 @@
-/** Compose the Desktop profile without enabling remote System3 services. */
+/** Compose Desktop Skill selection with user-configured Reflex credentials. */
 import { readFile, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -8,7 +8,7 @@ const appRoot = join(dirname(fileURLToPath(import.meta.url)), '..')
 
 /**
  * Write the default Desktop profile. Models and credentials are configured in
- * Settings; advanced System3 routing requires explicit profile configuration.
+ * Settings; model routing, supervision and memory require explicit configuration.
  * Editable Jev defaults come from the profile bundle, never this CLI overlay.
  * The historical function name is retained for the runtime assembly script.
  * @param {string} stage Directory receiving desktop.patch.yml.
@@ -17,13 +17,30 @@ export async function generateSystem3Patch(stage, { sourceRoot = join(appRoot, '
   const selected = productEdition.resolveEdition(edition)
   const system3Ui = mode === 'deployed' ? '@deepseek-ai/dsh-experimental-client-ui-system3'
     : join(sourceRoot, 'packages/experimental/client-ui-system3/lib/index.js')
+  const system3 = mode === 'deployed' ? '@deepseek-ai/dsh-experimental-system3'
+    : join(sourceRoot, 'packages/experimental/system3/lib/index.js')
   const desktop = await readFile(join(appRoot, 'build/dsh-desktop.patch.yml'), 'utf8')
   await writeFile(join(stage, 'desktop.patch.yml'), `${desktop.trimEnd()}
 
-# System3 cards render recorded decisions; this UI does not enable remote services.
+# Skill advice uses the configured Reflex provider; unavailable decisions preserve native execution.
 - insert:
     - id: ui-system3
       name: ${JSON.stringify(system3Ui)}
+    - id: system3
+      name: ${JSON.stringify(system3)}
+      config:
+        privacyMode: controlled
+        approvedRemoteIds: [jev]
+        approvedRemoteDataClasses: [workspace]
+        jevRouteId: jev
+        jevExecutionDomain: network
+        skillSelection:
+          sessionDataClasses: [workspace]
+          minConfidence: 0.5
+          maxInputBytes: 16000
+          maxContentBytes: 12000
+          maxCandidates: 15
+          deadlineMs: 3000
 
 # Remote session export is opt-in for the APUS desktop product.
 - id: session-log-deepseek

@@ -3,8 +3,8 @@ import type { InjectFace, PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-cli
 import type { ContinuumSettingsFace, ContinuumSettingsState } from './continuum-settings-controller.ts'
 import type { ContinuumSettingsLocaleKey } from './locales.ts'
 
-/** Props for the Reflex-only General settings preference. */
-export type ContinuumRowProps = PropsRuntime<'settings.general.item'>
+/** Props for the memory preference in Reflex settings. */
+export type ContinuumRowProps = PropsRuntime<'settings.reflex.item'>
   & PropsLocale<'settings.continuum'>
   & InjectFace<ContinuumSettingsFace>
 

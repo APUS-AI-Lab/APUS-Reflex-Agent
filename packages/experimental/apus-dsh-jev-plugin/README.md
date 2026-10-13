@@ -97,7 +97,7 @@ Resolving or executing a request with an unconfigured default provider throws a 
 
 The package does not own an AgentLoop, select an LLM generation route, edit prompts, authorize tools, or persist Session receipts. A System3 consumer must decide when to call Jev, apply privacy policy, and persist a replayable receipt. This keeps the Jev request visible and makes the provider replaceable.
 
-The transport uses `@typesafe-ai/sdk` 0.6.0 with automatic retries and SDK logging disabled. `protocol: openjev` sends the configured effort; `protocol: typesafe` omits that extension. Endpoints may name the API root or its `/v1` prefix. The timeout includes credential resolution and response delivery; cancellation prevents late network dispatch. State accepts text, objects, arrays and null.
+The transport uses `@typesafe-ai/sdk` 0.6.0 with automatic retries and SDK logging disabled. `protocol: openjev` sends the configured effort; `protocol: typesafe` omits that extension. Endpoints may name the API root or its `/v1` prefix. The timeout includes credential resolution and response delivery; cancellation prevents late network dispatch. The transport drains the network body before SDK handoff, keeping cancellation attached to the request rather than leaving a detached rejection. State accepts text, objects, arrays and null.
 
 ### Source map
 
@@ -123,13 +123,13 @@ These pages cover the consumer and deployment responsibilities.
 
 -----
 
-## Reflex model configuration
+## Reflex configuration
 
 The package also supplies a standard profile bundle with editable Reflex defaults. APUS deployment prepares that bundle below the user profile; command-line overlays must not repeat the `jev` row, because such overrides intentionally prevent persisted edits.
 
 The form schema contains only serializable data. The service validates endpoints on initial load and in its own `internal/config` update hook; invalid endpoints are rejected before the profile is written.
 
-The `jev` Loader entry exposes its endpoint, model, effort, deadline, protocol and credential reference as volatile settings. The dedicated **Reflex model configuration** page offers an OpenJev/Typesafe selector and edits this entry through ConfigForms and writes API keys through Credentials; new requests read the committed values while requests already in flight retain their resolved provider. Pool parameters remain deployment-owned.
+The `jev` Loader entry exposes its endpoint, model, effort, deadline, protocol and credential reference as volatile settings. The dedicated **Reflex configuration** page presents the service as Reflex and offers the APUS Reflex limited-time free endpoint or custom parameters; it edits this entry through ConfigForms and writes API keys through Credentials; new requests read the committed values while requests already in flight retain their resolved provider. Pool parameters remain deployment-owned.
 
 The `reflex` Remote namespace exposes `readStatus` and `testConnection`. An OpenJev connection test checks `/health`, authenticates `/v1/models`, confirms the selected model, and submits a fixed non-user yes/no proposition to `/v1/systemone`. Typesafe skips `/health` and checks the model list before submitting the same decision without the effort extension. The test uses the draft’s selected protocol, accepts unsaved values and an optional transient key without storing them, returns only sanitized failure classes and elapsed time, and never marks task capabilities verified. Runtime owners register capability readers through `registerCapability` and own their disposers.
 

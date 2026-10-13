@@ -6487,7 +6487,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'ReflexCapabilityId',
-    declaration: 'export type ReflexCapabilityId = \'entryRouting\' | \'codexSupervision\' | \'contextMemory\';',
+    declaration: 'export type ReflexCapabilityId = \'entryRouting\' | \'codexSupervision\' | \'contextMemory\' | \'skillSelection\';',
   },
   {
     name: 'ReflexCapabilityState',

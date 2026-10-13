@@ -1,6 +1,13 @@
 import type {} from '@deepseek-ai/dsh-client-ui-slots'
 /** Product-owned labels for observed System3 states. */
 export const zh = {
+  judgmentResult: 'Reflex · {judgment} · {ms} 毫秒',
+  judgmentConversation: '日常交流', judgmentRetrieval: '建议检索历史记忆', judgmentResearch: '需要查找资料',
+  judgmentCreation: '内容创作', judgmentAction: '需要执行操作', judgmentUncertain: '意图尚不明确，由主模型进一步判断',
+  judgmentSkillSelected: '已选择「{skill}」Skill', judgmentSkillLoaded: '已加载「{skill}」Skill',
+  judgmentTimeout: 'Reflex 判断超时，由主模型继续', judgmentNotConfigured: 'Reflex 尚未配置，由主模型继续',
+  judgmentInputTooLarge: '本次输入交由主模型完整处理', judgmentUnavailable: 'Reflex 未形成有效判断，由主模型继续',
+  judgmentTiming: '从决策准备开始计时，包含判断与 Skill 加载；不是回答首字时间',
   title: 'APUS Reflex Harness', auto: '自动调度', fixed: '固定模型', reset: '恢复自动', resetting: '正在切换…',
   ready: '准备就绪', received: '已接收，正在准备', deciding: '正在选择处理方式',
   adopted: '已选择，等待模型响应', used: '模型已响应', running: '正在执行', settled: '本轮已结束',
@@ -42,6 +49,13 @@ export const zh = {
 export type System3Key = keyof typeof zh
 /** English product dictionary. */
 export const en = {
+  judgmentResult: 'Reflex · {judgment} · {ms} ms',
+  judgmentConversation: 'Conversation', judgmentRetrieval: 'Memory lookup suggested', judgmentResearch: 'Research needed',
+  judgmentCreation: 'Content creation', judgmentAction: 'Action needed', judgmentUncertain: 'Intent unclear; the main model will assess it',
+  judgmentSkillSelected: 'Skill selected: {skill}', judgmentSkillLoaded: 'Skill loaded: {skill}',
+  judgmentTimeout: 'Reflex timed out; the main model continues', judgmentNotConfigured: 'Reflex is not configured; the main model continues',
+  judgmentInputTooLarge: 'The main model will process the complete input', judgmentUnavailable: 'No usable Reflex judgment; the main model continues',
+  judgmentTiming: 'Measured from decision preparation, including judgment and Skill loading; not time to first answer text',
   title: 'APUS Reflex Harness', auto: 'Automatic routing', fixed: 'Fixed model', reset: 'Use automatic', resetting: 'Switching…',
   ready: 'Ready', received: 'Received, preparing', deciding: 'Choosing how to proceed',
   adopted: 'Selected, awaiting model response', used: 'Model responded', running: 'Working', settled: 'Turn ended',
