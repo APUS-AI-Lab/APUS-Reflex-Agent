@@ -1,7 +1,7 @@
 /** Qualify the installed Windows preview with a fresh profile and no external Node on PATH. */
 import { execFile } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { access, lstat, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises'
+import { access, copyFile, lstat, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve, win32 } from 'node:path'
@@ -159,6 +159,38 @@ async function installationSummary(temporary, installation) {
   return summary
 }
 
+/** Run the installed NSIS uninstaller synchronously from the private qualification directory.
+ * @param {string} installation Owned installed application directory.
+ * @param {string} temporary Owned qualification directory outside the installation.
+ * @param {NodeJS.ProcessEnv} env Isolated application environment.
+ * @param {(command: string, args: string[], options: import('node:child_process').ExecFileOptions, receipt: object) => Promise<object>} run Tracked shell-free executor.
+ * @param {object} receipt Mutable diagnostics retained even when execution fails.
+ * @returns {Promise<void>} Resolves when the copied uninstaller exits successfully.
+ */
+export async function runInstalledUninstaller(installation, temporary, env, run, receipt) {
+  const started = performance.now()
+  receipt.timeoutMs = 120_000
+  try {
+    const uninstaller = (await readdir(installation)).find(name => /^Uninstall .*\.exe$/i.test(name))
+    if (!uninstaller) throw new Error('Installed uninstaller is missing')
+    const command = join(temporary, 'qualification-uninstaller.exe')
+    await copyFile(join(installation, uninstaller), command)
+    // NSIS installUtil.nsh uses a copied uninstaller and final _?= argument so ExecWait observes removal itself.
+    await run(command, ['/S', `_?=${installation}`], {
+      timeout: receipt.timeoutMs, windowsVerbatimArguments: true, windowsHide: true, cwd: temporary, env,
+    }, receipt)
+    receipt.exitCode = 0
+  } catch (error) {
+    receipt.failure = failureDiagnostic(error)
+    receipt.exitCode = typeof error.code === 'number' ? error.code : null
+    throw error
+  } finally {
+    receipt.durationMs = performance.now() - started
+    try { receipt.summary = await installationSummary(temporary, installation) }
+    catch (error) { receipt.summaryFailure = failureDiagnostic(error) }
+  }
+}
+
 async function run(installer, reportDirectory, expectedSource = process.env.GITHUB_SHA, buildRunId) {
   if (process.platform !== 'win32' || process.arch !== 'x64') throw new Error('Run installed qualification on native Windows x64')
   await mkdir(reportDirectory, { recursive: true })
@@ -167,7 +199,7 @@ async function run(installer, reportDirectory, expectedSource = process.env.GITH
   const profile = join(temporary, 'profile')
   const env = smokeEnvironment(process.env, profile)
   const powershell = join(env.SystemRoot ?? env.SYSTEMROOT ?? process.env.SystemRoot, 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe')
-  const report = { passed: false, stages: [], helperSourceRevision: process.env.GITHUB_SHA, buildRunId, cleanupErrors: [], limitations: ['Unsigned preview; Authenticode and SmartScreen trust are not qualified.', 'No provider credentials or real model API task is exercised.'] }
+  const report = { passed: false, stages: [], helperSourceRevision: process.env.GITHUB_SHA, buildRunId, cleanupErrors: [], uninstallations: [], limitations: ['Unsigned preview; Authenticode and SmartScreen trust are not qualified.', 'No provider credentials or real model API task is exercised.'] }
   let app
   let known = []
   const psQuote = value => "'" + value.replaceAll("'", "''") + "'"
@@ -180,14 +212,12 @@ async function run(installer, reportDirectory, expectedSource = process.env.GITH
   const sample = async () => {
     known = ownedProcessIds(await observe(), known)
   }
-  const tracked = (command, args, options) => runTrackedProcess(command, args, options, ({ pid }) => {
+  const tracked = (command, args, options, receipt) => runTrackedProcess(command, args, options, ({ pid }) => {
     if (pid) known = [...new Set([...known, pid])]
-    if (command === installer && report.installation) report.installation.rootPid = pid
+    if (receipt) receipt.rootPid = pid
   }, async () => {
     await sample()
-    if (command === installer && report.installation) {
-      report.installation.observedPids = [...new Set([...(report.installation.observedPids ?? []), ...known])]
-    }
+    if (receipt) receipt.observedPids = [...new Set([...(receipt.observedPids ?? []), ...known])]
   })
   const quiescent = async () => {
     const deadline = Date.now() + 20_000
@@ -207,6 +237,19 @@ async function run(installer, reportDirectory, expectedSource = process.env.GITH
     await closing.close()
     await quiescent()
   }
+  const uninstall = async phase => {
+    const receipt = { phase }
+    report.uninstallations.push(receipt)
+    try { await runInstalledUninstaller(installation, temporary, env, tracked, receipt) }
+    finally {
+      try {
+        const processes = await observe()
+        const owned = ownedProcessIds(processes, known)
+        receipt.remainingProcesses = processes.filter(process => owned.includes(process.pid))
+      } catch (error) { receipt.observationFailure = failureDiagnostic(error) }
+    }
+    return receipt
+  }
   try {
     const build = await readInstallerBuild(installer, 'win32-x64')
     const asset = build.assets.find(asset => asset.name === basename(installer))
@@ -224,7 +267,7 @@ async function run(installer, reportDirectory, expectedSource = process.env.GITH
     const installationStarted = Date.now()
     report.installation = { timeoutMs: 600_000 }
     try {
-      await tracked(installer, ['/S', `/D=${installation}`], { timeout: 600_000, windowsVerbatimArguments: true, windowsHide: true, env })
+      await tracked(installer, ['/S', `/D=${installation}`], { timeout: 600_000, windowsVerbatimArguments: true, windowsHide: true, env }, report.installation)
       report.installation.exitCode = 0
     } catch (error) {
       report.installation.failure = failureDiagnostic(error)
@@ -288,9 +331,8 @@ async function run(installer, reportDirectory, expectedSource = process.env.GITH
     report.stages.push('reflex-execution-modules-ready-after-restart')
     await close()
     report.stages.push('restart-home-and-exit-quiescent')
-    const uninstaller = (await readdir(installation)).find(name => /^Uninstall .*\.exe$/i.test(name))
-    if (!uninstaller) throw new Error('Installed uninstaller is missing')
-    await tracked(join(installation, uninstaller), ['/S'], { timeout: 120_000, windowsHide: true, env })
+    report.stages.push('silent-uninstall-started')
+    const uninstallation = await uninstall('qualification')
     const removalDeadline = Date.now() + 30_000
     let removed = false
     do {
@@ -303,6 +345,7 @@ async function run(installer, reportDirectory, expectedSource = process.env.GITH
     } while (Date.now() < removalDeadline)
     if (!removed) throw new Error('Silent uninstall left the installed application executable')
     await quiescent()
+    uninstallation.removalVerified = true
     report.stages.push('silent-uninstall')
     report.passed = true
   } catch (error) {
@@ -321,7 +364,7 @@ async function run(installer, reportDirectory, expectedSource = process.env.GITH
         const entries = await readdir(installation).catch(error => { if (error.code === 'ENOENT') return []; throw error })
         const uninstaller = entries.find(name => /^Uninstall .*\.exe$/i.test(name))
         if (uninstaller) {
-          await tracked(join(installation, uninstaller), ['/S'], { timeout: 120_000, windowsHide: true, env })
+          await uninstall('cleanup')
           await quiescent()
         }
       } catch (error) {

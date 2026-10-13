@@ -2,8 +2,11 @@
 import assert from 'node:assert/strict'
 import { once } from 'node:events'
 import { createServer } from 'node:net'
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { test } from 'node:test'
-import { ownedProcessIds, redactDiagnostic, smokeEnvironment, verifyInstalledIdentity, failureDiagnostic, runTrackedProcess, terminateOwnedProcesses } from './product-windows-smoke.mjs'
+import { ownedProcessIds, redactDiagnostic, smokeEnvironment, verifyInstalledIdentity, failureDiagnostic, runTrackedProcess, runInstalledUninstaller, terminateOwnedProcesses } from './product-windows-smoke.mjs'
 
 test('installed application cannot inherit developer Node, credentials or runtime overrides', () => {
   const source = { SystemRoot: 'C:\\Windows', Path: 'C:\\node;C:\\tools', APPDATA: 'C:\\Users\\runner\\AppData', GH_TOKEN: 'secret', DEEPSEEK_API_KEY: 'secret', JEV_API_KEY: 'secret', ELECTRON_RUN_AS_NODE: '1', NODE_OPTIONS: '--require=developer.js', DSH_HOME: 'C:\\existing' }
@@ -137,3 +140,58 @@ test('Full and Lite installed runtime identities cannot be mixed', () => {
   verifyInstalledIdentity(runtime, build)
   assert.throws(() => verifyInstalledIdentity({ ...runtime, edition: 'full' }, build), /does not match/)
 })
+
+for (const synchronous of [true, false]) {
+  test(`copied uninstaller ${synchronous ? 'removes the owned installation synchronously' : 'rejects the missing synchronous directory argument'}`, async t => {
+    const temporary = await mkdtemp(join(tmpdir(), 'apus uninstall fixture '))
+    t.after(() => rm(temporary, { recursive: true, force: true }))
+    const installation = join(temporary, 'application')
+    await mkdir(installation)
+    await writeFile(join(installation, 'APUS Reflex Harness.exe'), 'owned application')
+    const script = `const fs = require('node:fs');
+const path = require('node:path');
+const args = process.argv.slice(2);
+if (args.length !== 2 || args[0] !== '/S' || !args[1].startsWith('_?=') || args[1].includes('"')) {
+  process.stderr.write('Synchronous uninstall requires its final directory argument'); process.exit(86);
+}
+const installation = args[1].slice(3);
+if (path.dirname(__filename) === installation) process.exit(87);
+fs.writeFileSync(path.join(process.cwd(), 'uninstall-arguments.json'), JSON.stringify(args));
+fs.rmSync(installation, { recursive: true });
+`
+    await writeFile(join(installation, 'Uninstall APUS Reflex Harness.exe'), script)
+    const receipt = {}
+    const run = async (command, args, options, observed) => {
+      assert.equal(await readFile(command, 'utf8'), script)
+      assert.equal(command, join(temporary, 'qualification-uninstaller.exe'))
+      assert.deepEqual(args, ['/S', `_?=${installation}`])
+      assert.equal(options.timeout, 120_000)
+      assert.equal(options.windowsVerbatimArguments, true)
+      assert.equal(options.windowsHide, true)
+      assert.equal(options.cwd, temporary)
+      assert.equal(options.shell, undefined)
+      // This Node fixture uses ordinary argv; only native NSIS consumes the verbatim _?= remainder.
+      return runTrackedProcess(process.execPath, [command, ...(synchronous ? args : ['/S'])], {
+        ...options, windowsVerbatimArguments: false,
+      }, child => { observed.rootPid = child.pid }, async () => { observed.observedPids = [observed.rootPid] })
+    }
+    const pending = runInstalledUninstaller(installation, temporary, process.env, run, receipt)
+    if (synchronous) {
+      await pending
+      assert.equal(receipt.exitCode, 0)
+      assert.equal(receipt.summary.executableExists, false)
+      assert.equal(receipt.summary.directoryExists, false)
+      assert.deepEqual(JSON.parse(await readFile(join(temporary, 'uninstall-arguments.json'), 'utf8')), ['/S', `_?=${installation}`])
+    } else {
+      await assert.rejects(pending, error => error.code === 86)
+      assert.equal(receipt.exitCode, 86)
+      assert.equal(receipt.failure.code, 86)
+      assert.equal(receipt.summary.executableExists, true)
+      assert.match(receipt.failure.stderr, /requires its final directory argument/)
+    }
+    assert.ok(receipt.rootPid > 0)
+    assert.deepEqual(receipt.observedPids, [receipt.rootPid])
+    assert.ok(Number.isFinite(receipt.durationMs) && receipt.durationMs >= 0)
+    assert.throws(() => process.kill(receipt.rootPid, 0), error => error.code === 'ESRCH')
+  })
+}
