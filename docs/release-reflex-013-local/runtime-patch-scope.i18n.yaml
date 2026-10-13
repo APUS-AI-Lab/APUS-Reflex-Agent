@@ -1,0 +1,16 @@
+# Bilingual-pair consistency record for runtime-patch-scope.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/release-reflex-013-local/runtime-patch-scope.md
+/desktop-runtime-patch-scope:
+  en: 69c0a4333e017b14
+  zh: 109def06f01460d7
+/desktop-runtime-patch-scope/goal-and-design:
+  en: 22a845fcf8764770
+  zh: 3a0b2e2f4256bc7d
+/desktop-runtime-patch-scope/files-and-api:
+  en: ee2354a36573334f
+  zh: c82c863ac81d46b9
+/desktop-runtime-patch-scope/validation:
+  en: 9d07817d279722ae
+  zh: e7766f8a4b6a2adb

@@ -1,0 +1,60 @@
+import { afterEach, describe, expect, it } from 'vitest'
+import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { dirname, join } from 'node:path'
+import { patchSystem3Runtime } from '../scripts/patch-system3-runtime.mjs'
+
+const directories = []
+const runtimeTarget = 'node_modules/runtime-fixture/lib/index.js'
+const runtimePatch = `diff --git a/${runtimeTarget} b/${runtimeTarget}
+--- a/${runtimeTarget}
++++ b/${runtimeTarget}
+@@ -1 +1 @@
+-module.exports = 'original'
++module.exports = 'patched'
+`
+
+async function fixture() {
+  const root = await mkdtemp(join(tmpdir(), 'apus-runtime-patch-scope-'))
+  directories.push(root)
+  const app = join(root, 'app')
+  const stage = join(root, 'stage')
+  await mkdir(join(app, 'patches'), { recursive: true })
+  await mkdir(stage)
+  return { app, stage }
+}
+
+afterEach(async () => {
+  for (const directory of directories.splice(0)) await rm(directory, { recursive: true, force: true })
+})
+
+describe('desktop runtime patch scope', () => {
+  it('excludes the real build-only signer patch without requiring the signer in production', async () => {
+    const { app, stage } = await fixture()
+    await cp(new URL('../patches/@electron+osx-sign+1.3.3.patch', import.meta.url),
+      join(app, 'patches/@electron+osx-sign+1.3.3.patch'))
+    await patchSystem3Runtime(stage, app)
+    expect(JSON.parse(await readFile(join(stage, 'desktop-patch-receipt.json'), 'utf8'))).toEqual([])
+  })
+
+  it('applies ordinary runtime patches and records the changed runtime target', async () => {
+    const { app, stage } = await fixture()
+    await writeFile(join(app, 'patches/runtime-fixture+1.0.0.patch'), runtimePatch)
+    for (const root of [app, stage]) {
+      await mkdir(dirname(join(root, runtimeTarget)), { recursive: true })
+      await writeFile(join(root, runtimeTarget), "module.exports = 'original'\n")
+    }
+    await patchSystem3Runtime(stage, app)
+    expect(await readFile(join(stage, runtimeTarget), 'utf8')).toBe("module.exports = 'patched'\n")
+    const receipts = JSON.parse(await readFile(join(stage, 'desktop-patch-receipt.json'), 'utf8'))
+    expect(receipts).toHaveLength(1)
+    expect(receipts[0]).toMatchObject({ name: 'runtime-fixture+1.0.0.patch', targets: [{ path: runtimeTarget }] })
+  })
+
+  it('rejects missing runtime dependencies instead of treating every absent patch target as build-only', async () => {
+    const { app, stage } = await fixture()
+    await writeFile(join(app, 'patches/runtime-fixture+1.0.0.patch'), runtimePatch)
+    await expect(patchSystem3Runtime(stage, app)).rejects.toMatchObject({ code: 'ENOENT', path: join(stage, runtimeTarget) })
+    await expect(readFile(join(stage, 'desktop-patch-receipt.json'))).rejects.toMatchObject({ code: 'ENOENT' })
+  })
+})
