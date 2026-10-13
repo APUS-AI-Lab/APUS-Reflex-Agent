@@ -2,42 +2,42 @@
 # section, a hash of its English and Chinese blocks outside code blocks and generated regions.
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write README.md
-/apus-reflex-harness:
-  en: 4475c23ad05e0d32
-  zh: 6daaa01fefe0b530
-/apus-reflex-harness/download-the-desktop-app:
-  en: 9d866f8e4dd1dcfa
-  zh: a4d697b295db4332
-/apus-reflex-harness/a-personal-agent-for-ongoing-projects:
+/apus-reflex-agent:
+  en: b8fb85b4cf848bd1
+  zh: 3911afee18a5654e
+/apus-reflex-agent/download-the-desktop-app:
+  en: e9a2003db213c496
+  zh: c9916a29f3754587
+/apus-reflex-agent/a-personal-agent-for-ongoing-projects:
   en: 40536b86550bc094
   zh: 5698a3d057316b70
-/apus-reflex-harness/loop-working-a-goal-actions-and-feedback:
+/apus-reflex-agent/loop-working-a-goal-actions-and-feedback:
   en: f0a9b3ae4bd2424f
   zh: 88db8ec666629b13
-/apus-reflex-harness/the-models-decide-the-harness-executes:
+/apus-reflex-agent/the-models-decide-the-harness-executes:
   en: d3ad8343aa97d634
   zh: 23aba7b6121c99f7
-/apus-reflex-harness/persistent-memory-finite-context:
+/apus-reflex-agent/persistent-memory-finite-context:
   en: db09e874418e5b2c
   zh: 8dc26a9ba849b2ed
-/apus-reflex-harness/continuity-with-control:
+/apus-reflex-agent/continuity-with-control:
   en: 2bfee0e6af02df21
   zh: 8d5ef336bbab2720
-/apus-reflex-harness/use-reflex-or-start-with-a-general-model:
+/apus-reflex-agent/use-reflex-or-start-with-a-general-model:
   en: 7ca8574d1877b405
   zh: a4b5927381a74171
-/apus-reflex-harness/evidence-not-a-release-claim:
+/apus-reflex-agent/evidence-not-a-release-claim:
   en: 8f6a83c553985220
   zh: 73bf91d2732989b4
-/apus-reflex-harness/run-from-source:
+/apus-reflex-agent/run-from-source:
   en: 30ebeaafb350b8d0
   zh: 096313f23de8616a
-/apus-reflex-harness/integrated-repository-and-releases:
+/apus-reflex-agent/integrated-repository-and-releases:
   en: 01a60d69397a85fe
   zh: be2ac2e5edbc8580
-/apus-reflex-harness/contribute-and-get-support:
-  en: c75b077a7344d5f8
-  zh: a64586d3a673fb61
-/apus-reflex-harness/license-and-attribution:
+/apus-reflex-agent/contribute-and-get-support:
+  en: 12597953cff8d9f6
+  zh: ca866c1f91e10e3f
+/apus-reflex-agent/license-and-attribution:
   en: 8bf1c0f6aab54669
   zh: 0870049fca35c845

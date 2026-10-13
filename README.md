@@ -8,15 +8,17 @@ English | [中文](README.zh.md)
 
 APUS turns a sequence of model calls into work that can continue around a goal: understand the request, choose an action, execute, inspect the evidence, recover relevant context and continue. You choose the general model for planning and generation; optionally connect your own Reflex/Jev decision service for structured decisions along the way.
 
-APUS separates model reasoning from execution, permissions and durable Session history. It is a **developer preview**. The [release readiness review](docs/dev-continuum-reflex-integration/release-readiness.md) records what has been tested and what still needs acceptance.
-
-This integration merges frontend and backend delivery into the existing Harness repository: the desktop client lives in `frontend/`, with configuration, builds and packaging managed together. Desktop installers bundle the backend, so users do not start or install a separate service.
+APUS separates model reasoning from execution, permissions and durable Session history. It is a **developer preview**.
 
 ## Download the desktop app
 
 The repository is currently private: Release downloads require repository access until an administrator makes it public.
 
-Visit [Releases](https://github.com/APUS-AI-Lab/APUS-Reflex-Agent/releases) for installers, supported platforms and validation results. `0.1.0` (`v0.1.0`) targets macOS Apple Silicon (arm64), macOS Intel (x64), Windows x64, Ubuntu 24.04 x64 desktop and a complete Linux x64 Web archive from the same reviewed clean source commit. The macOS editions passed automated copying, direct process startup and restart checks; Finder/Gatekeeper installation acceptance remains incomplete, and an invalid bundle seal was found in a checked `0.1.0` DMG. Linux x64 Web passed extraction, startup and restart checks. Windows x64 and Ubuntu 24.04 x64 desktop are experimental downloads with incomplete installation acceptance; see the [platform status](docs/feat-integrated-product/installation.md). This is an unsigned preview; macOS is not notarized. The first task with a real model has not been validated; configure your own model using the guide. GitHub’s “Source code” archives contain source files, not installable applications. The Web archive bundles Node and the backend, listens on localhost, and needs no Electron; see the [Web guide](docs/release-web-runtime/README.md).
+The latest preview, [v0.1.2](https://github.com/APUS-AI-Lab/APUS-Reflex-Agent/releases/tag/v0.1.2), provides Apple Silicon Full/Lite DMG and ZIP packages, Intel Full/Lite DMG and ZIP packages, and Linux x64 Full/Lite Web archives. Linux desktop DEB and Windows packages for this version remain pending qualification. Download only assets actually listed on the release page.
+
+macOS requires **15.0 or later**. The v0.1.2 Mac bundles pass strict signature-integrity checks but use ad-hoc signatures without Apple Developer ID signing or notarization. Installation qualification does not establish real-model task completion or recall quality; see the [release qualification](https://github.com/APUS-AI-Lab/APUS-Reflex-Agent/releases/tag/v0.1.2) for tested environments and limitations.
+
+GitHub's “Source code” archives are source files, not installers. The Linux Web archive bundles Node and the backend, listens on localhost and needs no Electron; see the [Web guide](docs/release-web-runtime/README.md).
 
 The desktop distribution bundles its runtime: users do not need Git, Node.js or a separate backend. Follow [installation](docs/feat-integrated-product/installation.md) and [model configuration](docs/feat-integrated-product/configuration.md) using your own provider credentials. Preview builds can break compatibility. Read [SAFETY.md](SAFETY.md) before granting file access.
 

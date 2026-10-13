@@ -10,12 +10,15 @@ APUS 将连续的模型调用组织成围绕目标持续推进的工作：理解
 
 APUS 将模型推理与执行、权限及持久 Session 历史分开管理。项目处于 **开发者预览阶段**。
 
-
 ## 下载桌面客户端
 
 仓库当前为私有，Release 下载需要仓库访问权限；管理员公开后才能匿名下载。
 
-前往 [Releases](https://github.com/APUS-AI-Lab/APUS-Reflex-Agent/releases) 查看安装包、支持平台与验收情况。`0.1.0`（`v0.1.0`）目标为 macOS Apple Silicon（arm64）、macOS Intel（x64）、Windows x64、Ubuntu 24.04 x64 桌面及完整 Linux x64 Web 包，均从同一经过审查的干净源码提交构建。macOS 两个架构已通过自动复制、直接启动进程与重启检查；Finder/Gatekeeper 安装验收仍未完成，已检查的 `0.1.0` DMG 存在无效 bundle seal。Linux x64 Web 已通过解压、启动与重启检查。Windows x64 和 Ubuntu 24.04 x64 桌面作为实验性下载提供，安装验收尚未完成；详见[平台状态](docs/feat-integrated-product/installation.zh.md)。这是未签名预览版，macOS 未公证。真实模型首个任务尚未验证；请按教程自行配置模型。GitHub 的“Source code”压缩包是源码，不是可安装应用；Web 包内置 Node 和后端，监听 localhost，不需要 Electron；参见 [Web 教程](docs/release-web-runtime/README.zh.md)。
+最新预览版 [v0.1.2](https://github.com/APUS-AI-Lab/APUS-Reflex-Agent/releases/tag/v0.1.2) 已提供 Apple Silicon Full/Lite DMG 和 ZIP、Intel Full/Lite DMG 和 ZIP，以及 Linux x64 Full/Lite Web 包。本版本的 Linux 桌面 DEB 和 Windows 安装包仍待验收；请只下载发布页实际列出的附件。
+
+macOS 最低要求为 **15.0**。v0.1.2 Mac 应用已通过严格签名完整性检查，但采用 ad-hoc 签名，尚无 Apple Developer ID 签名或公证。安装验收不能证明真实模型任务完成或召回质量；测试环境和限制见[发布验收说明](https://github.com/APUS-AI-Lab/APUS-Reflex-Agent/releases/tag/v0.1.2)。
+
+GitHub 的“Source code”压缩包是源码，不是安装包。Linux Web 包内置 Node 和后端，监听 localhost，不需要 Electron；参见 [Web 教程](docs/release-web-runtime/README.zh.md)。
 
 桌面安装包内置运行时，使用者无需另装 Git、Node.js 或后端。按[安装教程](docs/feat-integrated-product/installation.zh.md)安装，再按[模型配置教程](docs/feat-integrated-product/configuration.zh.md)接入自己的服务商。预览版可能存在兼容性变化，授予文件访问权限前请阅读 [SAFETY.zh.md](SAFETY.zh.md)。
 
