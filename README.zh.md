@@ -1,6 +1,6 @@
-# APUS Reflex Harness
+# APUS Reflex Agent
 
-![APUS Reflex Harness](apps/web/public/brand-source.webp)
+![APUS Reflex Agent](apps/web/public/brand-source.webp)
 
 [English](README.md) | 中文
 
@@ -8,15 +8,14 @@
 
 APUS 将连续的模型调用组织成围绕目标持续推进的工作：理解需求、选择行动、执行、检查证据、恢复相关上下文，再继续。你选择通用模型负责规划与生成，也可以接入自己的 Reflex/Jev 决策服务，在关键节点进行结构化判断。
 
-APUS 将模型推理与执行、权限及持久 Session 历史分开管理。项目处于 **开发者预览阶段**。[发布准备评审](docs/dev-continuum-reflex-integration/release-readiness.zh.md) 记录了已验证行为和仍需完成的验收。
+APUS 将模型推理与执行、权限及持久 Session 历史分开管理。项目处于 **开发者预览阶段**。
 
-本次以前后端合并的一体化仓库交付：保留原 Harness 为主仓，桌面客户端纳入 `frontend/`，统一管理配置、构建与打包。下载安装包后无需另外安装或启动后端。
 
 ## 下载桌面客户端
 
 仓库当前为私有，Release 下载需要仓库访问权限；管理员公开后才能匿名下载。
 
-前往 [Releases](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/releases) 查看安装包、支持平台与验收情况。`0.1.0`（`v0.1.0`）目标为 macOS Apple Silicon（arm64）、macOS Intel（x64）、Windows x64、Ubuntu 24.04 x64 桌面及完整 Linux x64 Web 包，均从同一经过审查的干净源码提交构建。macOS 两个架构已通过自动复制、直接启动进程与重启检查；Finder/Gatekeeper 安装验收仍未完成，已检查的 `0.1.0` DMG 存在无效 bundle seal。Linux x64 Web 已通过解压、启动与重启检查。Windows x64 和 Ubuntu 24.04 x64 桌面作为实验性下载提供，安装验收尚未完成；详见[平台状态](docs/feat-integrated-product/installation.zh.md)。这是未签名预览版，macOS 未公证。真实模型首个任务尚未验证；请按教程自行配置模型。GitHub 的“Source code”压缩包是源码，不是可安装应用；Web 包内置 Node 和后端，监听 localhost，不需要 Electron；参见 [Web 教程](docs/release-web-runtime/README.zh.md)。
+前往 [Releases](https://github.com/APUS-AI-Lab/APUS-Reflex-Agent/releases) 查看安装包、支持平台与验收情况。`0.1.0`（`v0.1.0`）目标为 macOS Apple Silicon（arm64）、macOS Intel（x64）、Windows x64、Ubuntu 24.04 x64 桌面及完整 Linux x64 Web 包，均从同一经过审查的干净源码提交构建。macOS 两个架构已通过自动复制、直接启动进程与重启检查；Finder/Gatekeeper 安装验收仍未完成，已检查的 `0.1.0` DMG 存在无效 bundle seal。Linux x64 Web 已通过解压、启动与重启检查。Windows x64 和 Ubuntu 24.04 x64 桌面作为实验性下载提供，安装验收尚未完成；详见[平台状态](docs/feat-integrated-product/installation.zh.md)。这是未签名预览版，macOS 未公证。真实模型首个任务尚未验证；请按教程自行配置模型。GitHub 的“Source code”压缩包是源码，不是可安装应用；Web 包内置 Node 和后端，监听 localhost，不需要 Electron；参见 [Web 教程](docs/release-web-runtime/README.zh.md)。
 
 桌面安装包内置运行时，使用者无需另装 Git、Node.js 或后端。按[安装教程](docs/feat-integrated-product/installation.zh.md)安装，再按[模型配置教程](docs/feat-integrated-product/configuration.zh.md)接入自己的服务商。预览版可能存在兼容性变化，授予文件访问权限前请阅读 [SAFETY.zh.md](SAFETY.zh.md)。
 
@@ -123,8 +122,8 @@ APUS 将模型推理与执行、权限及持久 Session 历史分开管理。项
 <a id="run-from-source"></a>
 
 ```sh
-git clone https://github.com/APUS-AI-Lab/APUS-Reflex-Harness.git
-cd APUS-Reflex-Harness
+git clone https://github.com/APUS-AI-Lab/APUS-Reflex-Agent.git
+cd APUS-Reflex-Agent
 pnpm run setup
 pnpm run start:desktop
 ```
@@ -143,7 +142,7 @@ pnpm run start:desktop
 
 - 先阅读 [CONTRIBUTING.zh.md](CONTRIBUTING.zh.md) 和 [开发指南](docs/development.zh.md)。
 - 新贡献者可从 [架构任务清单](docs/dev-continuum-reflex-integration/architecture-followups.zh.md) 选择有明确验收标准的小任务。
-- 通过 [GitHub Issues](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/issues) 反馈缺陷。
+- 通过 [GitHub Issues](https://github.com/APUS-AI-Lab/APUS-Reflex-Agent/issues) 反馈缺陷。
 - 运行前阅读 [SAFETY.zh.md](SAFETY.zh.md)；安全漏洞请通过 [SECURITY.md](SECURITY.md) 报告，不要提交公开 issue。
 - Agent 贡献者应遵循 [AGENTS.md](AGENTS.md)。公共 API 尚未稳定，可能出现不兼容变更。
 
