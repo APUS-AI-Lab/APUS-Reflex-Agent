@@ -31,7 +31,8 @@
     "@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin": "workspace:*",
     "@deepseek-ai/dsh-continuum": "workspace:*",
     "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-experimental-system3-policy": "workspace:*"
+    "@deepseek-ai/dsh-experimental-system3-policy": "workspace:*",
+    "@deepseek-ai/dsh-session-persistence": "workspace:*"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "workspace:~"
@@ -40,6 +41,14 @@
     "@deepseek-ai/cordis": "workspace:~",
     "@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin": "workspace:*",
     "@deepseek-ai/dsh-continuum": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*"
+    "@deepseek-ai/dsh-session": "workspace:*",
+    "@deepseek-ai/dsh-app-boot": "workspace:*",
+    "@deepseek-ai/dsh-agent": "workspace:*",
+    "@deepseek-ai/dsh-agent-loop": "workspace:*",
+    "@deepseek-ai/dsh-llm": "workspace:*",
+    "@deepseek-ai/dsh-session-persistence-jsonl": "workspace:*",
+    "@deepseek-ai/dsh-session-projection": "workspace:*",
+    "@deepseek-ai/dsh-system-prompt": "workspace:*",
+    "@deepseek-ai/dsh-tools": "workspace:*"
   }
 }

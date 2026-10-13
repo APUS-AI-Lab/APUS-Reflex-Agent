@@ -21,19 +21,20 @@ async function main(): Promise<void> {
       apiKeyEnv: 'CONTINUUM_JEV_API_KEY',
     })
     const startedAt = performance.now()
-    const result = await selectContinuumMemory(context.jev, { mode: 'active', minConfidence: 0.5 }, {
+    const result = await selectContinuumMemory(context.jev, { mode: 'active', timeoutMs: 30_000, maxRequestBytes: 32_768, sessionDataClasses: ['workspace'],
+      privacyPolicy: { mode: 'controlled', approvedRemoteIds: ['system-one'], approvedRemoteDataClasses: ['workspace'] } }, {
       query: 'Choose the migration schedule memory.',
       candidates: [
         { id: MemoryId('migration'), label: 'Migration schedule', excerpt: 'The migration is scheduled for Friday.', score: 0.8 },
         { id: MemoryId('unrelated'), label: 'Unrelated note', excerpt: 'The office is closed on Monday.', score: 0.2 },
       ],
     })
-    if (result.outcome !== 'jev' || result.selectedIds.length !== 1) {
-      throw new Error(`live Jev did not make one active selection: ${result.outcome}`)
+    if (result.outcome !== 'jev' || result.selectedIds.length !== 2) {
+      throw new Error(`live Jev did not retain both candidates: ${result.outcome}`)
     }
-    if (result.request?.model !== model) throw new Error(`live Jev model was not pinned: ${result.request?.model ?? 'missing'}`)
+    if (result.evaluation.request?.model !== model) throw new Error(`live Jev model was not pinned: ${result.evaluation.request?.model ?? 'missing'}`)
     console.log(JSON.stringify({
-      outcome: result.outcome, selectedIds: result.selectedIds, confidence: result.confidence, model: result.request.model,
+      outcome: result.outcome, selectedIds: result.selectedIds, model: result.evaluation.request.model,
       latencyMs: Math.round(performance.now() - startedAt),
     }))
   } finally {

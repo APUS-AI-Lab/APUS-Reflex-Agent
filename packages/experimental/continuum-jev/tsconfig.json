@@ -19,6 +19,9 @@
     },
     {
       "path": "../system3-policy"
+    },
+    {
+      "path": "../../session/session-persistence"
     }
   ]
 }

@@ -133,7 +133,8 @@ export async function selectionFor(
   const baselineIds = first === undefined ? [] : [first.id]
   if (variant !== 'C') return { ids: variant === 'A0' ? [] : baselineIds, baselineIds, authorizedIds: authorized.map(memory => memory.id) }
   const context = activeJevContext
-  const result = await selectContinuumMemory(context.jev, { mode: 'active', minConfidence: 0.5 }, {
+  const result = await selectContinuumMemory(context.jev, { mode: 'active', timeoutMs: 30_000, maxRequestBytes: 32_768, sessionDataClasses: ['workspace'],
+    privacyPolicy: { mode: 'controlled', approvedRemoteIds: ['system-one'], approvedRemoteDataClasses: ['workspace'] } }, {
     query: task.input,
     candidates: authorized.map(memory => ({
       id: MemoryId(memory.id), label: memory.label, excerpt: memory.content,

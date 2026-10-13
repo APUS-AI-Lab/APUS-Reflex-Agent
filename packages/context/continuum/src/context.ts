@@ -48,7 +48,7 @@ export interface ContinuumMemorySelection {
 export interface ContinuumMemorySelector {
   select(
     agent: Agent,
-    input: { readonly query: string; readonly candidates: readonly ContinuumMemorySelectionCandidate[] },
+    input: { readonly query: string; readonly candidates: readonly ContinuumMemorySelectionCandidate[]; readonly isCurrent: () => boolean },
     signal: AbortSignal,
   ): Promise<ContinuumMemorySelection>
 }
@@ -135,6 +135,7 @@ export function installContinuumMemoryControllerContext(
     if (selector === undefined) return { ...decision, messages: [...decision.messages, recallMessage(workingSet)] }
     const selection = await selector.select(agent, {
       query,
+      isCurrent: () => isActive() && controller.isCurrent(ticket),
       candidates: workingSet.candidates.map(candidate => ({
         id: String(candidate.id),
         label: candidate.record.kind,
@@ -144,8 +145,11 @@ export function installContinuumMemoryControllerContext(
     }, signal)
     signal.throwIfAborted()
     if (!isActive() || !controller.isCurrent(ticket)) return decision
-    const selected = new Set(selection.selectedIds)
-    const candidates = workingSet.candidates.filter(candidate => selected.has(String(candidate.id)))
+    const byId = new Map(workingSet.candidates.map(candidate => [String(candidate.id), candidate]))
+    const candidates = [...new Set(selection.selectedIds)].flatMap((id) => {
+      const candidate = byId.get(id)
+      return candidate === undefined ? [] : [candidate]
+    })
     const filtered = renderMemoryWorkingSet(workingSet.query, candidates)
     if (filtered.candidates.length === 0) return decision
     return { ...decision, messages: [...decision.messages, recallMessage(filtered)] }

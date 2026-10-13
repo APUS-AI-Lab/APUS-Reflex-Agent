@@ -29,7 +29,7 @@ describe('Continuum same-step context consumer', () => {
     await ctx.fiber.dispose()
   })
 
-  it.each(['baseline', 'controller', 'selector'] as const)('includes source metadata and header within the %s recall budget', async (kind) => {
+  it.each(['baseline', 'controller', 'selector', 'ordered-selector'] as const)('includes source metadata and header within the %s recall budget', async (kind) => {
     const ctx = new Context()
     onTestFinished(() => ctx.fiber.dispose())
     const store = records()
@@ -38,7 +38,9 @@ describe('Continuum same-step context consumer', () => {
     const bounds = { maxCandidates: 2, maxExcerptBytes: 100, maxTotalBytes: 512 }
     if (kind === 'baseline') installContinuumMemoryContext(ctx, () => store, bounds)
     else installContinuumMemoryControllerContext(ctx, () => controller, () => ({ scopes: ['workspace'] }), bounds,
-      kind === 'selector' ? () => ({ select: async () => ({ mode: 'active', selectedIds: ['other'], baselineIds: ['migration', 'other'], outcome: 'jev' }) }) : undefined)
+      kind === 'selector' || kind === 'ordered-selector' ? () => ({ select: async () => ({ mode: 'active',
+        selectedIds: kind === 'selector' ? ['other'] : ['other', 'other', 'unknown', 'migration', 'other'],
+        baselineIds: ['migration', 'other'], outcome: 'jev' }) }) : undefined)
     const user = createUserMessage({ source: { kind: 'user' }, content: [{ type: 'text', text: 'Migration' }] })
     const result = await agentEvents(ctx, {} as Agent).waterfall('agent/pre-step', {
       messages: [user], turn: 1, step: 1, signal: new AbortController().signal,
@@ -53,6 +55,11 @@ describe('Continuum same-step context consumer', () => {
     expect(block.text).toContain('sources:[{"sessionId":"source","eventSeq":1}]')
     expect(block.text).toContain('revision:1')
     expect(block.text).toContain('omitted:none')
+    if (kind === 'ordered-selector') {
+      expect(result.messages[1]?.source).toMatchObject({ recordIds: ['other', 'migration'] })
+      expect(block.text.match(/\[memory:/g)).toHaveLength(2)
+      expect(block.text.indexOf('Migration checks')).toBeLessThan(block.text.indexOf('Migration is scheduled'))
+    }
     if (kind === 'selector') {
       expect(block.text).not.toContain('Migration is scheduled Friday.')
       expect(result.messages[1]?.source).toMatchObject({ recordIds: ['other'] })
