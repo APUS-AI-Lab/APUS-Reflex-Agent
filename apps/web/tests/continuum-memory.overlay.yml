@@ -13,7 +13,8 @@
       name: '@deepseek-ai/dsh-experimental-continuum-jev'
       config:
         mode: off
-        minConfidence: 0.8
+        privacyPolicy:
+          mode: local-only
     - id: continuum-memory
       name: '@deepseek-ai/dsh-continuum'
       config:
