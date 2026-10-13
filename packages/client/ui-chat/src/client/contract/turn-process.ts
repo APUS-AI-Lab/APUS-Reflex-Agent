@@ -17,8 +17,10 @@ export interface TurnProcessSpec {
   readonly subagentCount: number
 }
 
+// A compaction marker reports where the model stopped seeing history; it stays visible outside the work fold.
 const TURN_PROCESS_INDEPENDENT_KIND_LIST = [
   'system-prompt',
+  'compaction',
   'user',
   'steering',
   'turn-trigger',

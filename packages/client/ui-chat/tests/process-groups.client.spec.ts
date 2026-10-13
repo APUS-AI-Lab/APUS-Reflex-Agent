@@ -117,6 +117,17 @@ describe('Definition-owned Chat process groups', () => {
     expect(source.getSnapshot()?.data.summary).toEqual({ counts: [{ kind, count: 1 }], running: undefined, runningDetail: '' })
   })
 
+  it('keeps a compaction marker outside the surrounding step group', () => {
+    const marker: ChatNode<'compaction'> = {
+      key: 'compaction', id: 'compaction', kind: 'compaction', target: 'chat', anchorSeq: 3,
+      location: { kind: 'turn', turn }, visibility: 'visible',
+      data: { kind: 'compaction', seq: 3, time: 3, summary: null, summaryEventSeq: null, shadowedItemCount: null,
+        shadowedTokenCount: null, recallCheckpoint: 2 },
+    }
+    const h = harness([tool('before', 2), marker, tool('after', 4)])
+    expect(h.store.entries.map(entry => entry.kind === 'node' ? entry.key : 'group')).toEqual(['group', 'compaction', 'group'])
+  })
+
   it('retains a group through repeated prepends and a later append', () => {
     const b = tool('b', 4)
     const c = tool('c', 6)

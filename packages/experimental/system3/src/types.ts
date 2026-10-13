@@ -81,6 +81,18 @@ export interface System3RuntimeView {
   readonly taskFrame: System3TaskFrameView | null
   /** The latest queued message System3 moved into the running turn; cleared when that turn ends. */
   readonly interjection: { readonly messageId: string } | null
+  /** Compacted messages of the person that memory scoring kept, oldest first, with the checkpoint that replaced each. */
+  readonly memory: readonly System3MemoryView[]
+}
+
+/** One kept message as the Client shows it; the text is the person's own message. */
+export interface System3MemoryView {
+  /** Seq of the `compaction/summary` event whose span contained the message. */
+  readonly checkpoint: number
+  readonly seq: number
+  readonly messageId: string
+  readonly text: string
+  readonly probability: number
 }
 
 /** The task frame as the Client shows it; texts are the person's own messages. */

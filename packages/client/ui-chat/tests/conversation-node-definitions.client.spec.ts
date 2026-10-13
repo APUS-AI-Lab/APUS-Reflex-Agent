@@ -2489,6 +2489,39 @@ describe('built-in conversation node Definitions', () => {
     expect(snapshot(compactions).nodes.values().filter(candidate => candidate.kind === 'compaction')).toHaveLength(1)
   })
 
+  it('names the recall checkpoint only when the checkpoint ends with the recall footer', () => {
+    const footer = '[checkpoint c21: shadows conversation events #3–#4; originals retrievable via history_read with checkpoint 21]'
+    const value = assembler([
+      at(20, 'compaction/start', { compactionId: 'recall-1', turn: null }),
+      at(21, 'compaction/summary', {
+        compactionId: 'recall-1',
+        summary: [{ type: 'text', text: 'summary' }],
+        shadowedSeqs: [3, 4],
+        shadowedTokenCount: 50,
+      }),
+      at(22, 'user/message', {
+        ...textMessage('recall-checkpoint', 'checkpoint'),
+        content: [{ type: 'text', text: '<compacted-summary>summary</compacted-summary>' }, { type: 'text', text: footer }],
+        source: { kind: 'compact-checkpoint', compactionId: 'recall-1' },
+      }, { surfaceOp: { op: 'replace', startSeq: 3, endSeq: 4 } }),
+      at(23, 'compaction/end', { compactionId: 'recall-1', turn: null }),
+      at(30, 'compaction/start', { compactionId: 'plain-1', turn: null }),
+      at(31, 'compaction/summary', {
+        compactionId: 'plain-1',
+        summary: [{ type: 'text', text: 'plain' }],
+        shadowedSeqs: [5],
+        shadowedTokenCount: 10,
+      }),
+      at(32, 'user/message', {
+        ...textMessage('plain-checkpoint', 'checkpoint mentioning [checkpoint c31: shadows nothing]'),
+        source: { kind: 'compact-checkpoint', compactionId: 'plain-1' },
+      }, { surfaceOp: { op: 'replace', startSeq: 5, endSeq: 5 } }),
+      at(33, 'compaction/end', { compactionId: 'plain-1', turn: null }),
+    ])
+    const markers = [...snapshot(value).nodes.values()].filter(candidate => candidate.kind === 'compaction')
+    expect(markers.map(marker => (marker.data as { recallCheckpoint?: number }).recallCheckpoint)).toEqual([21, undefined])
+  })
+
   it('fills a landed compaction marker when an older page supplies its summary', () => {
     const value = assembler([
       at(13, 'user/message', {

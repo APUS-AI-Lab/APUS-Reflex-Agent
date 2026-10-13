@@ -10,7 +10,8 @@ import { hasAssistantReplyContent } from '../contract/assistant-content.ts'
 import { isVisibleChatNode } from '../contract/chat-visibility.ts'
 import { processActivity } from './process-activity.ts'
 
-const INDEPENDENT = new Set(['user', 'steering', 'turn-trigger', 'model-retry', 'turn-error', 'turn-max-tokens', 'turn-tail'])
+// Compaction markers report the model's context boundary, so no step group folds them away.
+const INDEPENDENT = new Set(['user', 'steering', 'turn-trigger', 'model-retry', 'turn-error', 'turn-max-tokens', 'turn-tail', 'compaction'])
 type ProcessInput = ConversationGroupInput<ChatConversationViewNode>
 
 function turnOf(node: ChatNode): number | undefined {

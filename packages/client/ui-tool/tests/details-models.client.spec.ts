@@ -215,3 +215,33 @@ describe('detailsCardModel fallback contract', () => {
     expect(trace?.items[0]?.fields).toContainEqual({ label: 'Time', value: '1970-01-01T00:00:00.000Z' })
   })
 })
+
+describe('compacted history recall', () => {
+  it('shows a recalled page with its checkpoint, event range, and continuation', () => {
+    const page = 'Checkpoint c27 originals (events #4–#19), characters 0–120 of 300:\n\n#4 User: keep port 8443\n\n'
+      + '[continue with history_read checkpoint 27 offset 120]'
+    const model = details('history_read', page)
+    expect(model?.summary).toBe('Checkpoint 27')
+    expect(model?.items[0]).toMatchObject({ title: 'Checkpoint 27', description: '#4 User: keep port 8443' })
+    expect(model?.items[0]?.fields).toEqual([
+      { label: 'Original events', value: '#4–#19' }, { label: 'Characters', value: '0–120 of 300' },
+    ])
+    expect(model?.caption).toBe('More follows from offset 120')
+    const last = details('history_read', 'Checkpoint c27 originals (events #4–#19), characters 120–300 of 300:\n\nrest\n\n[end of checkpoint]')
+    expect(last?.caption).toBe(t('detail.recordedResult'))
+    expect(details('history_read', 'Checkpoint 27')).toBeNull()
+  })
+
+  it('lists search matches by checkpoint and offset and reports truncation or no match', () => {
+    const found = details('history_search', '- c27 offset 40: …port 8443…\n- c31 offset 0: …8443 again…\n\n'
+      + '(scanned 2 checkpoint(s), matched 2, truncated). Read more around a match with history_read at its offset.')
+    expect(found?.summary).toBe('2 matches')
+    expect(found?.items.map(item => [item.title, item.subtitle])).toEqual([
+      ['port 8443', 'Checkpoint 27 · offset 40'], ['8443 again', 'Checkpoint 31 · offset 0'],
+    ])
+    expect(found?.caption).toBe('Result limit reached; narrow the search for more')
+    expect(details('history_search', 'No match (scanned 1 checkpoint(s), matched 0). The search is literal; try a shorter '
+      + 'exact fragment, or read a plausible checkpoint directly with history_read.')?.summary).toBe('0 matches')
+    expect(details('history_search', 'unexpected text')).toBeNull()
+  })
+})

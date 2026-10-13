@@ -1,0 +1,125 @@
+{
+  "formatVersion": 2,
+  "roots": [
+    {
+      "key": "event:system3/memory-score",
+      "kind": "event",
+      "event": "system3/memory-score",
+      "surface": false,
+      "digest": "7432947d80eb37a0c3ad872e726a41b90c752cd14eb78aef8a0a684e8509f62d",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "data",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "ignorable",
+                "type": 7,
+                "optional": true
+              },
+              {
+                "name": "seq",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "time",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 8,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "checkpoint",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "items",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "scanned",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "version",
+                "type": 6,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "array",
+            "element": 4
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "messageId",
+                "type": 5,
+                "optional": false
+              },
+              {
+                "name": "probability",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "seq",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "text",
+                "type": 5,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "literal",
+            "value": 1
+          },
+          {
+            "kind": "literal",
+            "value": true
+          },
+          {
+            "kind": "literal",
+            "value": "system3/memory-score"
+          }
+        ]
+      }
+    }
+  ],
+  "types": []
+}

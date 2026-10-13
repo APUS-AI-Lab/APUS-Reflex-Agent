@@ -73,6 +73,7 @@ export const KNOWN_SESSION_EVENT_TYPES: ReadonlySet<string> = new Set([
   'system3/handoff-pack',
   'system3/interjection',
   'system3/judgement',
+  'system3/memory-score',
   'system3/output-fold',
   'system3/process-notice',
   'system3/skill-decision',

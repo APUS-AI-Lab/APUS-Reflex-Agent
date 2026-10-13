@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { PropsLocale, PropsRuntime, TranslateNS } from '@deepseek-ai/dsh-client-ui-slots'
 import type { ModelSelection, ModelSelectionProjection, SessionRequestId } from '@deepseek-ai/dsh-api-session-controller/types'
-import type { System3ProcessNoticeView, System3RuntimeView, System3SubagentRunView, System3TaskFrameView } from '@deepseek-ai/dsh-experimental-system3/types'
+import type { System3MemoryView, System3ProcessNoticeView, System3RuntimeView, System3SubagentRunView, System3TaskFrameView } from '@deepseek-ai/dsh-experimental-system3/types'
 import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
 import type {} from '@deepseek-ai/dsh-client-ui-session/client'
 import { Input } from '@deepseek-ai/dsh-client-ui-primitives'
@@ -212,6 +212,19 @@ export function TaskFrame({ frame, t }: { readonly frame: System3TaskFrameView; 
     {frame.items.map(item => <p key={item.messageId} className={css.note}>{t('taskItem', { text: item.text })}</p>)}
   </details>
 }
+/** Compacted messages of the person that memory scoring kept, collapsed to one line until opened.
+ * @param props - The projected kept messages and the translator.
+ * @returns The count line and, when opened, each message verbatim with its checkpoint and score.
+ */
+export function MemoryCard({ memory, t }: { readonly memory: readonly System3MemoryView[]; readonly t: TranslateNS<'system3'> }) {
+  return <details className={css.details} data-system3-memory={memory.length}>
+    <summary>{t('memoryCard', { count: String(memory.length) })}</summary>
+    <p className={css.muted}>{t('memoryHint')}</p>
+    {memory.map(item => <p key={`${String(item.checkpoint)}:${String(item.seq)}`} className={css.note}>
+      {t('memoryItem', { text: item.text, checkpoint: String(item.checkpoint), score: String(Math.round(item.probability * 100)) })}
+    </p>)}
+  </details>
+}
 /** Render observed progress and allow a fixed Session to return to automatic mode.
  * @param props - Persisted facts and live Session status.
  * @returns Compact, expandable execution feedback.
@@ -246,6 +259,7 @@ export function System3Feedback(props: System3FeedbackProps) {
     {facts?.notices.map((notice, index) => <ProcessNotice key={`${String(index)}:${notice.rule}`} notice={notice} t={t} />)}
     {facts?.interjection && <p className={css.note} role="status">{t('interjectionSteered')}</p>}
     {facts?.taskFrame && facts.taskFrame.items.length > 0 && <TaskFrame frame={facts.taskFrame} t={t} />}
+    {facts?.memory !== undefined && facts.memory.length > 0 && <MemoryCard memory={facts.memory} t={t} />}
     {/* From the injected instruction until the delegated run's first snapshot, including the tool call's startup. */}
     {!facts?.subagentRun && facts?.entry?.route?.delegation?.injected === true
       && props.running && <p className={css.run} role="status" aria-live="polite">{t('delegationPreparing')}</p>}

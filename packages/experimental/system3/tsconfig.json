@@ -6,6 +6,9 @@
     },
     {
       "path": "./tsconfig.client.json"
+    },
+    {
+      "path": "../../compaction/compaction"
     }
   ]
 }

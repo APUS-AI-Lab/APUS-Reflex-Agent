@@ -149,6 +149,41 @@ function traceDetails(name: string, text: string, t: DetailTranslate, locale: st
   return detailList(items, match[2], t)
 }
 
+function historyReadDetails(text: string, t: DetailTranslate): ToolDetailsModel | null {
+  const match = new RegExp(String.raw`^Checkpoint c(\d+) originals \(events #(\d+)–#(\d+)\), characters (\d+)–(\d+) of (\d+):`
+    + String.raw`\n\n([\s\S]*)\n\n\[(end of checkpoint|continue with history_read checkpoint \d+ offset (\d+))\]$`, 'u').exec(text)
+  if (match === null) return null
+  const [, checkpoint, start, end, from, to, total, body, , next] = match
+  if (checkpoint === undefined || start === undefined || end === undefined || from === undefined || to === undefined
+    || total === undefined || body === undefined) return null
+  const title = t('detail.recall.checkpoint', { checkpoint })
+  const fields = [
+    { label: t('detail.recall.events'), value: `#${start}–#${end}` },
+    { label: t('detail.recall.characters'), value: t('detail.recall.range', { from, to, total }) },
+  ]
+  return {
+    ...detailList([{ title, fields, description: body }], title, t),
+    ...next === undefined ? {} : { caption: t('detail.recall.more', { offset: next }) },
+  }
+}
+
+function historySearchDetails(text: string, t: DetailTranslate): ToolDetailsModel | null {
+  if (text.startsWith('No match (')) return detailList([], t('detail.matches.count', { count: 0 }), t)
+  const items: DetailItem[] = []
+  for (const line of text.split('\n')) {
+    const match = /^- c(\d+) offset (\d+): …([\s\S]*)…$/u.exec(line)
+    if (match === null) continue
+    const [, checkpoint, offset, snippet] = match
+    if (checkpoint === undefined || offset === undefined || snippet === undefined) return null
+    items.push({ title: snippet, subtitle: t('detail.recall.location', { checkpoint, offset }), fields: [] })
+  }
+  if (items.length === 0) return null
+  return {
+    ...detailList(items, t('detail.matches.count', { count: items.length }), t),
+    ...text.includes(', truncated).') ? { caption: t('detail.matches.capped') } : {},
+  }
+}
+
 /**
  * Present successful inspection, query, and workflow text as named records.
  * @param name - Wire tool name.
@@ -172,6 +207,8 @@ export function inspectionDetails(
     case 'session_search':
     case 'session_event_search': return searchDetails(name, text, t, locale)
     case 'session_event_read': return eventReadDetails(text, t, locale)
+    case 'history_read': return historyReadDetails(text, t)
+    case 'history_search': return historySearchDetails(text, t)
     case 'session_trace':
     case 'session_event_trace': return traceDetails(name, text, t, locale)
     default: return null

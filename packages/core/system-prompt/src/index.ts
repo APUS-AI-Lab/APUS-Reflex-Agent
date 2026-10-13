@@ -167,6 +167,7 @@ const CONTEXT_ORDERS = {
   APPROVAL_POLICY: 115,
   SUBAGENT_DELEGATION: 120,
   SYSTEM3_TASK_FRAME: 130,
+  SYSTEM3_MEMORY: 135,
 } as const
 
 /** Name of a centrally allocated runtime-context position. */

@@ -9,8 +9,8 @@
   en: e7c80d1de4d328b4
   zh: d9f368c27fd9f998
 /session-persistence-event-catalog/persistence-type-fingerprints:
-  en: 3f499bff5698a1ca
-  zh: 6dfcd4a93b13e9b2
+  en: 95133ecba7e2c78b
+  zh: 34d07215f1d635cb
 /session-persistence-event-catalog/event-envelope:
   en: 7ebb1a2e0dd1f916
   zh: 8946f415dda5c1b8
@@ -249,8 +249,11 @@
   en: c880067f6c8df38f
   zh: fb9286ea486ae57c
 /session-persistence-event-catalog/events/system3/system3-judgement-log-only:
-  en: c5d2180b419f6345
-  zh: 350d07902128d721
+  en: d62b174b7b8550bf
+  zh: de950165b526eb00
+/session-persistence-event-catalog/events/system3/system3-memory-score-log-only:
+  en: 631745100eaee11e
+  zh: 42131d90c435a9f2
 /session-persistence-event-catalog/events/system3/system3-output-fold-log-only:
   en: dec139ffa19baaa2
   zh: d6874a9b534394a1
@@ -1029,8 +1032,11 @@
   en: 26e2073cfee0aa72
   zh: 26e2073cfee0aa72
 /session-persistence-event-catalog/resolved-persistence-types/system3-judgement:
-  en: 8111db0a9e6a3301
-  zh: 8111db0a9e6a3301
+  en: 56f750f32f15c4a6
+  zh: 56f750f32f15c4a6
+/session-persistence-event-catalog/resolved-persistence-types/system3-memory-score:
+  en: 13284b21a5cff2f5
+  zh: 13284b21a5cff2f5
 /session-persistence-event-catalog/resolved-persistence-types/system3-output-fold:
   en: 4ae119e38eb49745
   zh: 4ae119e38eb49745
@@ -1566,8 +1572,17 @@
   en: 0ad378134bf45b55
   zh: 469935efdd1d10e6
 /session-persistence-event-catalog/resolved-persistence-types/system3judgementreason:
-  en: eb9797d31c171c54
-  zh: b3dcf0c781774160
+  en: 87512404e80c97c3
+  zh: ef722c1d05cc32d5
+/session-persistence-event-catalog/resolved-persistence-types/system3memoryitem:
+  en: 55dff12a13164694
+  zh: e3c13e2dc47de380
+/session-persistence-event-catalog/resolved-persistence-types/system3memoryitem~2:
+  en: d48f3c2608674b5d
+  zh: 8b2e88b6376efd0c
+/session-persistence-event-catalog/resolved-persistence-types/system3memoryscore:
+  en: 27a106c9ee9111fa
+  zh: ef8c1053a0f4defb
 /session-persistence-event-catalog/resolved-persistence-types/system3outputfold:
   en: 4e119012ce9a8d03
   zh: 607712805a1715a8
@@ -2517,8 +2532,11 @@
   en: ab45daecfe5f83bc
   zh: 17ce45703a660e5c
 /session-persistence-event-catalog/resolved-persistence-types/type-system3-judgement:
-  en: 7ec39d1c232d7355
-  zh: e26b1b605f62b00f
+  en: 5b4942645919bd7f
+  zh: 5d09586290004084
+/session-persistence-event-catalog/resolved-persistence-types/type-system3-memory-score:
+  en: 74c2d7cd3f6083d0
+  zh: e7fe290d486c33da
 /session-persistence-event-catalog/resolved-persistence-types/type-system3-output-fold:
   en: d93e8759ebee8234
   zh: 189b00ead2f83c2c

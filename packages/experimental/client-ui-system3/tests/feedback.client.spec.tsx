@@ -5,7 +5,7 @@ import { brandString } from '@deepseek-ai/dsh-brand'
 import type { SessionRequestId } from '@deepseek-ai/dsh-api-session-controller/types'
 import { makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
 import { zh as commonZh } from '@deepseek-ai/dsh-client-locale/src/locales/zh.ts'
-import { DelegationRun, routeNotice, System3Feedback, type System3FeedbackProps } from '../src/client/System3Dock.tsx'
+import { DelegationRun, MemoryCard, routeNotice, System3Feedback, type System3FeedbackProps } from '../src/client/System3Dock.tsx'
 import { System3TurnHead } from '../src/client/TurnHead.tsx'
 import { System3ComposerDelegation } from '../src/client/ComposerDelegation.tsx'
 import { zh } from '../src/client/locales.ts'
@@ -15,7 +15,7 @@ const noStop = async (): Promise<void> => {}
 const noSteer = async (): Promise<void> => {}
 const model = { provider: 'fidoo', model: 'generation', reasoningEffort: 'low' }
 /** Runtime facts this suite does not exercise. */
-const EMPTY = { notices: [], taskFrame: null, interjection: null } as const
+const EMPTY = { notices: [], taskFrame: null, interjection: null, memory: [] } as const
 function inputs(overrides: Partial<System3FeedbackProps> = {}): System3FeedbackProps {
   return { facts: { subagentRun: null, ...EMPTY, history: [], entry: null, skill: null }, selection: { mode: 'auto', lastUsed: null, next: null, automatic: false },
     pending: false, pendingRequestId: null, running: false, opening: false, failed: false, available: true,
@@ -254,10 +254,10 @@ it('lists the turn supervision findings and says when the model was asked to cha
 it('shows the kept requirements as one line that opens to the task and each requirement verbatim', () => {
   const goal = { messageId: 'm1', text: '加一个汇总命令' }
   const { rerender } = render(<System3Feedback {...inputs({ facts: { entry: null, skill: null, subagentRun: null, history: [], notices: [],
-    interjection: null, taskFrame: { goal, items: [] } } })} />)
+    interjection: null, memory: [], taskFrame: { goal, items: [] } } })} />)
   expect(screen.queryByText(/任务卡/u)).toBeNull()
   rerender(<System3Feedback {...inputs({ facts: { entry: null, skill: null, subagentRun: null, history: [], notices: [],
-    interjection: null, taskFrame: { goal, items: [{ messageId: 'm2', text: '别动 README.md' }, { messageId: 'm3', text: '测试必须全部通过' }] } } })} />)
+    interjection: null, memory: [], taskFrame: { goal, items: [{ messageId: 'm2', text: '别动 README.md' }, { messageId: 'm3', text: '测试必须全部通过' }] } } })} />)
   expect(screen.getByText('任务卡 · 已记下 2 条要求')).toBeTruthy()
   expect(screen.getByText('任务：加一个汇总命令')).toBeTruthy()
   expect(screen.getByText('· 别动 README.md')).toBeTruthy()
@@ -265,7 +265,7 @@ it('shows the kept requirements as one line that opens to the task and each requ
 })
 it('says when a queued requirement was moved into the current step', () => {
   render(<System3Feedback {...inputs({ running: true, facts: { entry: null, skill: null, subagentRun: null, history: [], notices: [],
-    taskFrame: null, interjection: { messageId: 'm2' } } })} />)
+    taskFrame: null, memory: [], interjection: { messageId: 'm2' } } })} />)
   expect(screen.getByText('已把你刚才补充的要求插入正在进行的这一轮')).toBeTruthy()
 })
 it('reads a continued route as the suggestion in the details', () => {
@@ -341,4 +341,26 @@ it('opens the steer form from the card when no alert is shown', () => {
   render(<DelegationRun run={run} turnRunning onStop={noStop} onSteer={noSteer} t={t} />)
   fireEvent.click(screen.getByRole('button', { name: '补充说明' }))
   expect(screen.getByRole('textbox', { name: '补充说明' })).toBeTruthy()
+})
+
+it('lists kept memory verbatim with its checkpoint and score, collapsed by default', () => {
+  const t = makeTranslate(zh, commonZh)
+  const { container } = render(<MemoryCard memory={[
+    { checkpoint: 27, seq: 4, messageId: 'm4', text: '别动 README.md', probability: 0.92 },
+    { checkpoint: 31, seq: 9, messageId: 'm9', text: '端口改成 8443', probability: 0.814 },
+  ]} t={t} />)
+  expect(screen.getByText('记忆卡 · 压缩后保留 2 条原话')).toBeTruthy()
+  expect(container.querySelector('details')?.open).toBe(false)
+  expect(screen.getByText('· 别动 README.md（检查点 27 · 评分 92）')).toBeTruthy()
+  expect(screen.getByText('· 端口改成 8443（检查点 31 · 评分 81）')).toBeTruthy()
+})
+
+it('shows the memory card in the dock only once a message is kept', () => {
+  const facts = { entry: null, skill: null, subagentRun: null, history: [], notices: [], interjection: null, taskFrame: null }
+  const { rerender } = render(<System3Feedback {...inputs({ facts: { ...facts, memory: [] } })} />)
+  expect(screen.queryByText(/记忆卡/u)).toBeNull()
+  rerender(<System3Feedback {...inputs({ facts: { ...facts, memory: [
+    { checkpoint: 27, seq: 4, messageId: 'm4', text: '别动 README.md', probability: 0.92 },
+  ] } })} />)
+  expect(screen.getByText('记忆卡 · 压缩后保留 1 条原话')).toBeTruthy()
 })

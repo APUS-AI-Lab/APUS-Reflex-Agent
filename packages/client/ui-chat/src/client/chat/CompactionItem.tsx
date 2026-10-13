@@ -68,6 +68,11 @@ export const CompactionItem = memo(function CompactionItem({
         <span className={css.compactionTitle}>{title ?? t('message.compaction')}</span>
         <span className={css.compactionSep} aria-hidden />
         <span className={css.compactionSummary}>{summary}</span>
+        {node.recallCheckpoint !== undefined && (
+          <span className={css.compactionRecall} data-compaction-recall={node.recallCheckpoint}>
+            {t('message.compaction.recallable', { checkpoint: node.recallCheckpoint })}
+          </span>
+        )}
       </button>
       {open && node.summary !== null
         && <div className={css.compactionBody}><MarkdownText text={node.summary} labels={labels} /></div>}

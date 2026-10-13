@@ -87,8 +87,21 @@ it('restores the same wire facts without leaking effective headers or making mod
   const restored = Session.fromRestore(h.session.id, h.session.snapshotEvents(), h.session.header, SessionLogOffset(0), 'shared-frozen')
   const state = h.ctx.sessionProjections.stateOf(restored, 'system3Runtime')!
   expect(system3RuntimeProjection.wire.view(state))
-    .toEqual({ entry: h.view()?.entry, history: [], skill: null, subagentRun: null, notices: [], taskFrame: null, interjection: null })
-  expect(Object.keys(system3RuntimeProjection.wire.view(state))).toEqual(['entry', 'history', 'skill', 'subagentRun', 'notices', 'taskFrame', 'interjection'])
+    .toEqual({ entry: h.view()?.entry, history: [], skill: null, subagentRun: null, notices: [], taskFrame: null, interjection: null,
+      memory: [] })
+  expect(Object.keys(system3RuntimeProjection.wire.view(state))).toEqual(['entry', 'history', 'skill', 'subagentRun', 'notices', 'taskFrame', 'interjection', 'memory'])
+})
+
+it('keeps scored memory items with their checkpoint across checkpoints, oldest first', async () => {
+  const h = await setup()
+  const item = (seq: number, text: string) => ({ seq, messageId: `m${String(seq)}` as never, text, probability: 0.9 })
+  h.session.append('system3/memory-score', { version: 1, checkpoint: 20, scanned: 3, items: [item(4, '别动 README.md')] })
+  h.session.append('system3/memory-score', { version: 1, checkpoint: 40, scanned: 2, items: [] })
+  h.session.append('system3/memory-score', { version: 1, checkpoint: 60, scanned: 1, items: [item(44, '端口改成 8443')] })
+  expect(h.view()?.memory).toEqual([
+    { checkpoint: 20, seq: 4, messageId: 'm4', text: '别动 README.md', probability: 0.9 },
+    { checkpoint: 60, seq: 44, messageId: 'm44', text: '端口改成 8443', probability: 0.9 },
+  ])
 })
 
 it('shows a delivered interjection until its turn ends', async () => {

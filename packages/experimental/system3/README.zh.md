@@ -75,6 +75,10 @@ const decision = ctx.system3.route(candidates, 'local-9b')
 
 `system3/skill-decision` 记录准确请求、验证后的响应与提供方报告的用量、选择结果，以及拟注入的原生 `injectionMessageId`。加载的正文采用 `skill-invocation` 指令，只有 loop 提交准确的 `user/message` 后才成为模型可见内容，不授予工具权限。`system3Runtime` wire 投影分别呈现 `entry.suggested`、`entry.adopted` 和 `entry.used`，在 `history` 中保留最多 100 条输入已进入轮次的更早决策，并区分 `skill.selected` 与 `skill.injected`。实际使用须由准确输入所属 turn 的模型输出，或含内容增量、完整内容块的流式 attempt 确认。用量、块占位及仅含结束错误或取消的记录不证明已收到响应；真实内容之后发生错误仍保留响应事实。仅准入不代表已发送模型请求。回放会重建这些事实而不调用 Jev，客户端无法从投影取得提供方原始输入或完整概率。
 
+### 记忆评分
+
+`memoryScoring: { mode, yes, no, deadlineMs, sessionDataClasses, maxCandidates, maxMessageChars, maxItems }` 默认为 `false`；所有字段必填，`maxCandidates` 最大为 16，即 Jev 问题上限。System3 在顶层 Agent 的用户纯文本消息（不超过 `maxMessageChars`）提交时记住它们。当 `compaction/summary` 替换了其中一部分时，下一步会发起一次 Jev 请求（决策 `memory.score`），且不等待其结果：区间内最近的至多 `maxCandidates` 条消息各对应一个是非问题，逐条引用原话，询问之后的工作是否仍须逐字遵守或引用它。概率不低于 `yes` 的消息被保留。`active` 模式下，至少保留一条消息的区间写入 `system3/memory-score`，包含检查点 id（`compaction/summary` 的序号）、扫描条数，以及每条保留消息的序号、id、原文与概率；最近的 `maxItems` 条保留消息通过 `system3:memory` 运行时上下文交给模型，内容读取自 `system3Runtime` 投影，因此恢复会话后仍然存在。`shadow` 只记录 `system3/judgement`，`off` 不发起询问。隐私拒绝、Jev 失败与 `deadlineMs` 超时都不保留任何消息。插件启动前提交的消息、委派的子 Agent、附件与超长消息不参与评分。投影以 `memory` 暴露保留的消息，客户端在 dock 中显示为记忆卡。检查点 id 即 `dsh-tool-history-recall` 接受的 id。
+
 ### 完成核验
 
 `completionReview: { mode, yes, no, deadlineMs, sessionDataClasses, maxRefusals, evidenceCalls, resultChars }` 默认为 `false`，且依赖 `taskFrame`；没有任务卡时启用会在加载时失败。`active` 或 `shadow` 核验要求 `taskFrame.mode` 为 `active` 或 `shadow`；`off` 核验可以搭配 `off` 任务卡。所有字段都必填。顶层 Agent 对任务卡所跟随的 DSH 目标调用 `update_goal` 且 action 为 `complete` 时，工具运行前发一次 Jev 请求（决策 `completion.review`），为目标和任务卡中的每条要求各问一道是非题（`goal`、`r1`…`rN`）。Jev 只读取最近 `evidenceCalls` 次工具调用的摘要：每次调用的主要参数（命令、路径、action、查询或 URL），以及结果开头和结尾各 `resultChars` 个字符；模型自己的文字和它的 `update_goal` 调用不进入摘要。概率不高于 `no` 是有把握的“未满足”，不低于 `yes` 是“已满足”。`active` 模式下，目标或任一要求被有把握地判为未满足时拒绝这次调用，模型收到的工具结果就是拒绝说明；同一目标被拒绝 `maxRefusals` 次后，该目标之后的完成不再被拒绝。`shadow` 只记录核验、不拒绝，`off` 不发请求。插件卸载会取消在途核验，将调用交给其余工具策略，不拒绝，也不新增核验记录。用户取消仍阻止执行。决策调用在进入时已被取消则不发请求；取消后收到的提供方答复不写判断记录。每次核验先写入 `system3/judgement`，包含完整请求和响应，再写入 `system3/completion-review`，包含 `goalId`、`decision`（`complete`、`incomplete` 或 `unsure`）、未满足要求的消息 id（`unmet`）、`goalUnmet` 和 `refused`。隐私拒绝、Jev 失败和超过 `deadlineMs` 时按 `unsure` 放行。委派出的子 Agent、嵌套调用、其他目标操作，以及任务卡未跟随的目标都不核验。问法和阈值依据在已部署 Jev 上运行的标注集确定（[测试](tests/completion-review.e2e.ts)）。 拒绝额度按 Session 和目标隔离，独立 root fork 不共享。等待成功 Jev 答复期间任务卡改变时，旧答案记录为 `unsure`；active 使用同一额度拒绝过期申请，并引用当前任务卡原话要求重新核验。
@@ -118,6 +122,13 @@ const decision = ctx.system3.route(candidates, 'local-9b')
 [System3 任务卡] 用户在当前任务中提出了以下要求（均为原话）。在整个任务中遵守它们，宣布完成前逐条核对：
 任务：<the message that started the task, verbatim>
 - <later requirement, verbatim>
+```
+
+##### 记忆
+
+```markdown
+[System3 记忆] 以下用户原话所在的对话已被压缩，经评分判断之后仍须遵守或引用（均为原话）。需要上下文时，用 history_read 读取对应检查点的原文：
+- 检查点 <checkpoint id>，#<seq>：<kept message, verbatim>
 ```
 
 ##### 完成核验的拒绝说明

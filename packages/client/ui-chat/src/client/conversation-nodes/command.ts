@@ -119,6 +119,7 @@ function compactSummary(match: ConversationMatch | undefined, checkpoint: Conver
       ? data.shadowedTokenCount
       : null
   }
+  const recallCheckpoint = recallFooterCheckpoint(checkpoint.event)
   return {
     kind: 'compaction',
     seq: checkpoint.event.seq,
@@ -127,7 +128,23 @@ function compactSummary(match: ConversationMatch | undefined, checkpoint: Conver
     summaryEventSeq: match?.event.seq ?? null,
     shadowedItemCount,
     shadowedTokenCount,
+    ...recallCheckpoint === undefined ? {} : { recallCheckpoint },
   }
+}
+
+/** The code-composed footer `compaction-basic` appends when `recallFooter` is on. */
+const RECALL_FOOTER = /^\[checkpoint c(\d+): shadows conversation events #\d+–#\d+; originals retrievable via history_read/u
+
+/**
+ * Read the checkpoint id from a replacement checkpoint's recall footer.
+ * @param event - the replacement checkpoint event.
+ * @returns the id the recall tools accept, or undefined without a footer.
+ */
+function recallFooterCheckpoint(event: ConversationMatch['event']): number | undefined {
+  if (event.type !== 'user/message') return undefined
+  const last = event.data.content.at(-1)
+  const id = last?.type === 'text' ? RECALL_FOOTER.exec(last.text)?.[1] : undefined
+  return id === undefined ? undefined : Number(id)
 }
 
 function fallbackState(context: ConversationNodeContext<CommandState>): CommandState | undefined {

@@ -19615,6 +19615,125 @@
       }
     },
     {
+      "key": "event:system3/memory-score",
+      "kind": "event",
+      "event": "system3/memory-score",
+      "surface": false,
+      "digest": "7432947d80eb37a0c3ad872e726a41b90c752cd14eb78aef8a0a684e8509f62d",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "data",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "ignorable",
+                "type": 7,
+                "optional": true
+              },
+              {
+                "name": "seq",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "time",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 8,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "checkpoint",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "items",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "scanned",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "version",
+                "type": 6,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "array",
+            "element": 4
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "messageId",
+                "type": 5,
+                "optional": false
+              },
+              {
+                "name": "probability",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "seq",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "text",
+                "type": 5,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "literal",
+            "value": 1
+          },
+          {
+            "kind": "literal",
+            "value": true
+          },
+          {
+            "kind": "literal",
+            "value": "system3/memory-score"
+          }
+        ]
+      }
+    },
+    {
       "key": "event:system3/output-fold",
       "kind": "event",
       "event": "system3/output-fold",
@@ -34603,6 +34722,88 @@
       "sources": []
     },
     {
+      "digest": "1e485755039f64c4d9f7baef60619af7225d3c9eaaf720a87cd190a44e96a999",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "checkpoint",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "items",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "scanned",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "version",
+                "type": 5,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "array",
+            "element": 3
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "messageId",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "probability",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "seq",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "text",
+                "type": 4,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "literal",
+            "value": 1
+          }
+        ]
+      },
+      "names": [
+        "packages/experimental/system3/src/memory.ts#System3MemoryScore"
+      ],
+      "sources": [
+        "packages/experimental/system3/src/memory.ts:40"
+      ]
+    },
+    {
       "digest": "1e709346005826eb81809eeb76a3f713cf13ad6c5cec75146d07020ab9adc938",
       "schema": {
         "root": 0,
@@ -38245,6 +38446,54 @@
       },
       "names": [],
       "sources": []
+    },
+    {
+      "digest": "230977d32bb5dbc4650360d7a9330c7196d63ed4b6c6d7d9a782a282072e1cfd",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "messageId",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "probability",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "seq",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "text",
+                "type": 1,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          }
+        ]
+      },
+      "names": [
+        "packages/experimental/system3/src/memory.ts#System3MemoryItem"
+      ],
+      "sources": [
+        "packages/experimental/system3/src/memory.ts:30"
+      ]
     },
     {
       "digest": "234142ee4f996f38cc9fa3b8b3e3de29b03c9aefe5ebf6c224eddd564505aa85",
@@ -55987,6 +56236,20 @@
       "sources": [
         "packages/schedule/schedule/src/types.ts:161"
       ]
+    },
+    {
+      "digest": "40009f030a44f574eca0cc0e9791f5f377c85acef14bccb0aa61ef4ab6064c09",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "system3/memory-score"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
     },
     {
       "digest": "408927267422a7b2beb6df354ff7c1406d929a5646554f48adf85eb8372f811c",
@@ -74794,6 +75057,123 @@
           {
             "kind": "literal",
             "value": "remove"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "7432947d80eb37a0c3ad872e726a41b90c752cd14eb78aef8a0a684e8509f62d",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "data",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "ignorable",
+                "type": 7,
+                "optional": true
+              },
+              {
+                "name": "seq",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "time",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 8,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "checkpoint",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "items",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "scanned",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "version",
+                "type": 6,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "array",
+            "element": 4
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "messageId",
+                "type": 5,
+                "optional": false
+              },
+              {
+                "name": "probability",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "seq",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "text",
+                "type": 5,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "literal",
+            "value": 1
+          },
+          {
+            "kind": "literal",
+            "value": true
+          },
+          {
+            "kind": "literal",
+            "value": "system3/memory-score"
           }
         ]
       },
@@ -99848,6 +100228,54 @@
       "sources": [
         "packages/experimental/agent-team/src/types.ts:71"
       ]
+    },
+    {
+      "digest": "b301e26ce98a387d23daefe09c3d5bfa4278ed755989a4a293a1826a8f1662ec",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "array",
+            "element": 1
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "messageId",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "probability",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "seq",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "text",
+                "type": 2,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
     },
     {
       "digest": "b311bb8040a29889a189533318a6ccbe305b2cc5ed55b926ece0f7e8b5462e99",

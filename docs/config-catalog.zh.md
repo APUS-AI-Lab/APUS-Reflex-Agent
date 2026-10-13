@@ -1242,7 +1242,7 @@ export interface Config {
 ## `@deepseek-ai/dsh-experimental-system3`
 
 - `refs`: [`System3DataClass`](../packages/experimental/system3-policy/src/index.ts) · [`System3ExecutionDomain`](../packages/experimental/system3-policy/src/index.ts) · [`System3PrivacyMode`](../packages/experimental/system3-policy/src/index.ts)
-- `source`: [`packages/experimental/system3/src/index.ts:55`](../packages/experimental/system3/src/index.ts)
+- `source`: [`packages/experimental/system3/src/index.ts:58`](../packages/experimental/system3/src/index.ts)
 
 ```ts config-catalog
 /** Configures the default local-first privacy boundary. */
@@ -1275,6 +1275,8 @@ export interface Config {
   readonly outputFolding?: false | System3OutputFoldingConfig
   /** The person's goal and later requirements, judged by Jev and shown to the main model verbatim; `false` or omission disables it. */
   readonly taskFrame?: false | System3TaskFrameConfig
+  /** Jev scoring of the person's messages in each compacted span; kept messages return to the model verbatim. */
+  readonly memoryScoring?: false | System3MemoryScoringConfig
   /**
    * Jev review of each goal completion; needs `taskFrame`, with mode `shadow` or `active` when the review is not `off`.
    * `false` or omission disables it.
@@ -1398,6 +1400,18 @@ export interface System3TaskFrameConfig extends System3DecisionSettings {
    * the next turn. Moving needs an `active` task frame.
    */
   readonly interjection?: 'shadow' | 'active'
+}
+
+/** Mode, thresholds, and size limits of memory scoring; deployment-owned. */
+export interface System3MemoryScoringConfig extends System3DecisionSettings {
+  /** Data classes of Session text sent to Jev, checked against the privacy policy. */
+  readonly sessionDataClasses: readonly System3DataClass[]
+  /** Most recent person messages of one replaced span that are scored; each becomes one Jev question. */
+  readonly maxCandidates: number
+  /** Messages longer than this many characters are not scored. */
+  readonly maxMessageChars: number
+  /** Most recent kept messages shown to the main model across all checkpoints. */
+  readonly maxItems: number
 }
 
 /** Mode, thresholds, and limits of the completion review; deployment-owned. */
@@ -3671,7 +3685,7 @@ export interface Config {
 
 ## `@deepseek-ai/dsh-system-prompt`
 
-- `source`: [`packages/core/system-prompt/src/index.ts:249`](../packages/core/system-prompt/src/index.ts)
+- `source`: [`packages/core/system-prompt/src/index.ts:250`](../packages/core/system-prompt/src/index.ts)
 
 ```ts config-catalog
 /** Plugin config: the deployment-authored fragment of the system prompt (see {@link Config.personaPrefix} for its contract). */

@@ -75,6 +75,7 @@
 | `event:system3/handoff-pack` | event | `c4519065a7d2c21ca6154ac2cfe65e97587ad8e210623c01371fee5f959d35d3` | [`{ type: "system3/handoff-pack" }`](#persistence-type-sha256-c4519065a7d2c21ca6154ac2cfe65e97587ad8e210623c01371fee5f959d35d3) |
 | `event:system3/interjection` | event | `9780e6c61638f34589fadb53836173b40d7c8a18ab51dc805ad9c7ffd15cbbd0` | [`{ type: "system3/interjection" }`](#persistence-type-sha256-9780e6c61638f34589fadb53836173b40d7c8a18ab51dc805ad9c7ffd15cbbd0) |
 | `event:system3/judgement` | event | `a916521e7d79713dffb82460a2790977991d333ee61739f4c3c768964e0afcb4` | [`{ type: "system3/judgement" }`](#persistence-type-sha256-a916521e7d79713dffb82460a2790977991d333ee61739f4c3c768964e0afcb4) |
+| `event:system3/memory-score` | event | `7432947d80eb37a0c3ad872e726a41b90c752cd14eb78aef8a0a684e8509f62d` | [`{ type: "system3/memory-score" }`](#persistence-type-sha256-7432947d80eb37a0c3ad872e726a41b90c752cd14eb78aef8a0a684e8509f62d) |
 | `event:system3/output-fold` | event | `a08b64e63b930ddf31679dc4de8424786c7f497169323a50ab043b260545e26f` | [`{ type: "system3/output-fold" }`](#persistence-type-sha256-a08b64e63b930ddf31679dc4de8424786c7f497169323a50ab043b260545e26f) |
 | `event:system3/process-notice` | event | `310a36ad49580b64f5f22ee000de5d58ec37334a253610f83bb3cf9102023108` | [`{ type: "system3/process-notice" }`](#persistence-type-sha256-310a36ad49580b64f5f22ee000de5d58ec37334a253610f83bb3cf9102023108) |
 | `event:system3/skill-decision` | event | `2da260ec5f7fe67028206d4c6254ff01a52dfe9a7f9aa67dedf72324ac4748ce` | [`{ type: "system3/skill-decision" }`](#persistence-type-sha256-2da260ec5f7fe67028206d4c6254ff01a52dfe9a7f9aa67dedf72324ac4748ce) |
@@ -1125,6 +1126,17 @@ export type SessionEvent<T extends SessionEventType = SessionEventType> = {
 ```
 
 来源：[`packages/experimental/system3/src/decision-kernel.ts:50`](../packages/experimental/system3/src/decision-kernel.ts)
+
+<a id="system3memory-score--log-only"></a>
+
+#### `system3/memory-score` — log-only
+
+```ts persistence-catalog
+/** A compacted span was scored; kept messages reach the main model through the `system3:memory` runtime context. */
+'system3/memory-score': System3MemoryScore
+```
+
+来源：[`packages/experimental/system3/src/memory.ts:53`](../packages/experimental/system3/src/memory.ts)
 
 <a id="system3output-fold--log-only"></a>
 
@@ -3330,6 +3342,14 @@ SHA-256: `9e4e6b726e20377a8e3c7d87aaa831103d40ed723c37eb4d1f00719ba33d0a15`
 SHA-256: `444ec7d381e06b98b38638c755e3d84414ae5c7120ba50c6e2c6efc3db2f1853`
 
 `"system3/judgement"`
+
+<a id="persistence-type-sha256-40009f030a44f574eca0cc0e9791f5f377c85acef14bccb0aa61ef4ab6064c09"></a>
+
+### `"system3/memory-score"`
+
+SHA-256: `40009f030a44f574eca0cc0e9791f5f377c85acef14bccb0aa61ef4ab6064c09`
+
+`"system3/memory-score"`
 
 <a id="persistence-type-sha256-1b600946d1ee3fc843b24fb0e79a2e5c6ca8b24a971619366a46f9730728661f"></a>
 
@@ -6151,6 +6171,52 @@ SHA-256: `dc8f53947b4c903618525b4d5bd2243bfa89a5bd8fae167e1a052a09344a6ac8`
 - `"provider-unavailable"`
 - `"rate-limited"`
 - `"timeout"`
+
+<a id="persistence-type-sha256-230977d32bb5dbc4650360d7a9330c7196d63ed4b6c6d7d9a782a282072e1cfd"></a>
+
+<a id="persistence-type-packagesexperimentalsystem3srcmemorytssystem3memoryitem"></a>
+
+<a id="persistence-type-system3memoryitem"></a>
+
+### `System3MemoryItem`
+
+SHA-256: `230977d32bb5dbc4650360d7a9330c7196d63ed4b6c6d7d9a782a282072e1cfd`
+
+来源：[`packages/experimental/system3/src/memory.ts:30`](../packages/experimental/system3/src/memory.ts)
+
+| 属性 | 存在性 | 类型 |
+|---|---|---|
+| `messageId` | 必需 | `string` |
+| `probability` | 必需 | `number` |
+| `seq` | 必需 | `number` |
+| `text` | 必需 | `string` |
+
+<a id="persistence-type-sha256-b301e26ce98a387d23daefe09c3d5bfa4278ed755989a4a293a1826a8f1662ec"></a>
+
+### `System3MemoryItem[]`
+
+SHA-256: `b301e26ce98a387d23daefe09c3d5bfa4278ed755989a4a293a1826a8f1662ec`
+
+[`System3MemoryItem`](#persistence-type-sha256-230977d32bb5dbc4650360d7a9330c7196d63ed4b6c6d7d9a782a282072e1cfd) 的数组。
+
+<a id="persistence-type-sha256-1e485755039f64c4d9f7baef60619af7225d3c9eaaf720a87cd190a44e96a999"></a>
+
+<a id="persistence-type-packagesexperimentalsystem3srcmemorytssystem3memoryscore"></a>
+
+<a id="persistence-type-system3memoryscore"></a>
+
+### `System3MemoryScore`
+
+SHA-256: `1e485755039f64c4d9f7baef60619af7225d3c9eaaf720a87cd190a44e96a999`
+
+来源：[`packages/experimental/system3/src/memory.ts:40`](../packages/experimental/system3/src/memory.ts)
+
+| 属性 | 存在性 | 类型 |
+|---|---|---|
+| `checkpoint` | 必需 | `number` |
+| `items` | 必需 | [`System3MemoryItem[]`](#persistence-type-sha256-b301e26ce98a387d23daefe09c3d5bfa4278ed755989a4a293a1826a8f1662ec) |
+| `scanned` | 必需 | `number` |
+| `version` | 必需 | `1` |
 
 <a id="persistence-type-sha256-6ebb9b2d43fb0085b4264add7d76a8f4915c01a8aa9fc39b3f78c078928ed10e"></a>
 
@@ -10604,6 +10670,22 @@ SHA-256: `a916521e7d79713dffb82460a2790977991d333ee61739f4c3c768964e0afcb4`
 | `seq` | 必需 | `number` |
 | `time` | 必需 | `number` |
 | `type` | 必需 | `"system3/judgement"` |
+
+<a id="persistence-type-sha256-7432947d80eb37a0c3ad872e726a41b90c752cd14eb78aef8a0a684e8509f62d"></a>
+
+<a id="persistence-type-eventsystem3memory-score"></a>
+
+### `{ type: "system3/memory-score" }`
+
+SHA-256: `7432947d80eb37a0c3ad872e726a41b90c752cd14eb78aef8a0a684e8509f62d`
+
+| 属性 | 存在性 | 类型 |
+|---|---|---|
+| `data` | 必需 | [`System3MemoryScore`](#persistence-type-sha256-1e485755039f64c4d9f7baef60619af7225d3c9eaaf720a87cd190a44e96a999) |
+| `ignorable` | 可选 | `true` |
+| `seq` | 必需 | `number` |
+| `time` | 必需 | `number` |
+| `type` | 必需 | `"system3/memory-score"` |
 
 <a id="persistence-type-sha256-a08b64e63b930ddf31679dc4de8424786c7f497169323a50ab043b260545e26f"></a>
 

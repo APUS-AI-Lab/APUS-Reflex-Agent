@@ -94,6 +94,8 @@ const TOOL_TITLE_KEYS: Record<string, ToolTitleKey> = {
   workflow: 'tool.title.workflow',
   ralph: 'tool.title.ralph',
   session_event_read: 'tool.title.readEvent',
+  history_read: 'tool.title.recallHistory',
+  history_search: 'tool.title.searchHistory',
   session_event_search: 'tool.title.searchEvents',
   session_event_trace: 'tool.title.traceEvent',
   session_search: 'tool.title.searchSessions',

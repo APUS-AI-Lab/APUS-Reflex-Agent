@@ -194,6 +194,8 @@ export interface CompactionSummaryNode {
   shadowedItemCount: number | null
   /** Estimated token price of the replaced items, or null when the summary event is unavailable or malformed. */
   shadowedTokenCount: number | null
+  /** Checkpoint id named by the recall footer that `compaction-basic` writes with `recallFooter`; absent without one. */
+  recallCheckpoint?: number
 }
 
 /**

@@ -109,6 +109,7 @@
     "apps/web/tests/composer-draft-scroll.e2e.ts",
     "apps/web/tests/composer-placeholder.e2e.ts",
     "apps/web/tests/context-meter.e2e.ts",
+    "apps/web/tests/history-memory.e2e.ts",
     "apps/web/tests/cordis-tool-round.e2e.ts",
     "apps/web/tests/web-search-round.e2e.ts",
     "apps/web/tests/file-upload-round.e2e.ts",

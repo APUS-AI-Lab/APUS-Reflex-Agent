@@ -23,6 +23,9 @@
 /deepseek-ai-dsh-experimental-system3/use-this-package/session-api-entry-routing:
   en: 0886761f4da56ee5
   zh: 9aff0bc9dd343c2b
+/deepseek-ai-dsh-experimental-system3/use-this-package/memory-scoring:
+  en: 93c16022018528d0
+  zh: e131a4d8b8179596
 /deepseek-ai-dsh-experimental-system3/use-this-package/completion-review:
   en: 826ab3549179a131
   zh: 82935e584d2cfe95
@@ -50,6 +53,9 @@
 /deepseek-ai-dsh-experimental-system3/model-experience/unified-system3-seam/what-the-model-sees/task-frame:
   en: ea96da212282eb61
   zh: 68c76eba6b92ef97
+/deepseek-ai-dsh-experimental-system3/model-experience/unified-system3-seam/what-the-model-sees/memory:
+  en: 0815ef92caa54433
+  zh: 28ecc43324a686a5
 /deepseek-ai-dsh-experimental-system3/model-experience/unified-system3-seam/what-the-model-sees/completion-refusal:
   en: 688d55c49157a8a0
   zh: 5771e6ff2e845f89

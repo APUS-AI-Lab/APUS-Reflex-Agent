@@ -183,6 +183,14 @@
   white-space: nowrap;
 }
 
+.compactionRecall {
+  flex: 0 0 auto;
+  color: var(--dsw-alias-label-secondary);
+  font-size: var(--dsh-content-font-size-secondary, 13px);
+  line-height: calc(24px + var(--dsh-content-font-delta, 0px));
+  white-space: nowrap;
+}
+
 .compactionBody {
   /* Indent under the title, which starts at leading (16 + delta) + gap 6. */
   padding: 4px 0 4px calc(22px + var(--dsh-content-font-delta, 0px));

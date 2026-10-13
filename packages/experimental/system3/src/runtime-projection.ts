@@ -11,6 +11,7 @@ import type {} from './delegation.ts'
 import type {} from './delegation-progress.ts'
 import type {} from './process-supervision.ts'
 import type {} from './task-frame.ts'
+import type {} from './memory.ts'
 import type {} from '@deepseek-ai/dsh-subagent'
 
 /** Host fold keeps request metadata private and exposes only the two public facts. */
@@ -61,11 +62,13 @@ const viewSchema = z.object({
   notices: z.array(z.object({ rule: z.string(), subject: z.string().nullable(), count: z.number(), advised: z.boolean() })),
   taskFrame: z.object({ goal: taskGoal, items: z.array(z.object({ messageId: z.string(), text: z.string() })) }).nullable(),
   interjection: z.object({ messageId: z.string() }).nullable(),
+  memory: z.array(z.object({ checkpoint: z.number(), seq: z.number(), messageId: z.string(), text: z.string(),
+    probability: z.number() })),
 })
 const stateSchema: ZodType<System3RuntimeState> = z.object({ entry: viewSchema.shape.entry, history: viewSchema.shape.history,
   skill: viewSchema.shape.skill,
   subagentRun: viewSchema.shape.subagentRun, notices: viewSchema.shape.notices, taskFrame: viewSchema.shape.taskFrame,
-  interjection: viewSchema.shape.interjection,
+  interjection: viewSchema.shape.interjection, memory: viewSchema.shape.memory,
   header: selection.nullable(), currentTurn: z.number().nullable(), currentStep: z.number().nullable(),
   entryTurn: z.number().nullable(), startRequestId: requestId.nullable(),
   skillMessageId: z.string().transform(value => brandString<MessageId>(value)).nullable(),
@@ -75,6 +78,8 @@ const stateSchema: ZodType<System3RuntimeState> = z.object({ entry: viewSchema.s
 const STEERS_KEPT = 3
 /** Most recent supervision findings kept per turn for display. */
 const NOTICES_KEPT = 5
+/** Most recent kept memory items held for display and the runtime context, which may show fewer. */
+const MEMORY_KEPT = 50
 /** Most recent earlier entry decisions kept so their turns keep a route line. */
 const HISTORY_KEPT = 100
 
@@ -87,12 +92,13 @@ function hasResponseContent(stream: readonly AssistantStreamRecord[]): boolean {
 
 /** Fold advice and adoption; confirm request use from output or a streamed attempt in the exact input turn. */
 export const system3RuntimeProjection = {
-  key: 'system3Runtime', stateVersion: 13, stateSchema,
-  init: () => ({ entry: null, history: [], skill: null, subagentRun: null, notices: [], taskFrame: null, interjection: null, header: null,
+  key: 'system3Runtime', stateVersion: 14, stateSchema,
+  init: () => ({ entry: null, history: [], skill: null, subagentRun: null, notices: [], taskFrame: null, interjection: null, memory: [],
+    header: null,
     currentTurn: null, currentStep: null, entryTurn: null, startRequestId: null, skillMessageId: null, imageInSession: false,
     route: null }),
   wire: { viewSchema, view: state => ({ entry: state.entry, history: state.history, skill: state.skill, subagentRun: state.subagentRun,
-    notices: state.notices, taskFrame: state.taskFrame, interjection: state.interjection }) },
+    notices: state.notices, taskFrame: state.taskFrame, interjection: state.interjection, memory: state.memory }) },
   apply(state, event) {
     if (!state.imageInSession && (event.type === 'user/message' || event.type === 'tool/result')) {
       const content = event.type === 'user/message' ? event.data.content : event.data.message.content
@@ -103,6 +109,10 @@ export const system3RuntimeProjection = {
     if (event.type === 'system3/process-notice') {
       const { rule, subject = null, count, advised } = event.data
       return { ...state, notices: [...state.notices, { rule, subject, count, advised }].slice(-NOTICES_KEPT) }
+    }
+    if (event.type === 'system3/memory-score') {
+      const kept = event.data.items.map(item => ({ checkpoint: event.data.checkpoint, ...item }))
+      return kept.length === 0 ? state : { ...state, memory: [...state.memory, ...kept].slice(-MEMORY_KEPT) }
     }
     if (event.type === 'system3/task-frame') return { ...state, taskFrame: { goal: event.data.goal, items: event.data.items } }
     if (event.type === 'step/start') return { ...state, currentTurn: event.data.turn, currentStep: event.data.step }
