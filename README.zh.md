@@ -14,9 +14,9 @@ APUS 将模型推理与执行、权限及持久 Session 历史分开管理。项
 
 仓库当前为私有，Release 下载需要仓库访问权限；管理员公开后才能匿名下载。
 
-最新预览版 [v0.1.2](https://github.com/APUS-AI-Lab/APUS-Reflex-Agent/releases/tag/v0.1.2) 已提供 Apple Silicon Full/Lite DMG 和 ZIP、Intel Full/Lite DMG 和 ZIP，以及 Linux x64 Full/Lite Web 包。本版本的 Linux 桌面 DEB 和 Windows 安装包仍待验收；请只下载发布页实际列出的附件。
+最新预览版 [v0.1.3](https://github.com/APUS-AI-Lab/APUS-Reflex-Agent/releases/tag/v0.1.3) 提供 Full 与 Lite 两版。安装包按平台完成验收后陆续发布；可用平台和下载附件以发布页为准。
 
-macOS 最低要求为 **15.0**。v0.1.2 Mac 应用已通过严格签名完整性检查，但采用 ad-hoc 签名，尚无 Apple Developer ID 签名或公证。安装验收不能证明真实模型任务完成或召回质量；测试环境和限制见[发布验收说明](https://github.com/APUS-AI-Lab/APUS-Reflex-Agent/releases/tag/v0.1.2)。
+macOS 最低要求为 **15.0**。Mac 预览安装包接受严格签名完整性检查，但采用 ad-hoc 签名，尚无 Apple Developer ID 签名或公证。安装验收不能证明真实模型任务完成或召回质量；测试环境和限制见[发布验收说明](https://github.com/APUS-AI-Lab/APUS-Reflex-Agent/releases/tag/v0.1.3)。
 
 GitHub 的“Source code”压缩包是源码，不是安装包。Linux Web 包内置 Node 和后端，监听 localhost，不需要 Electron；参见 [Web 教程](docs/release-web-runtime/README.zh.md)。
 
