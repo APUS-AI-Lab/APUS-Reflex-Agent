@@ -173,7 +173,7 @@ export class HarnessSdkJsonRpcServer {
   /**
    * Queue one identified prompt without assigning later activity to it.
    * @param params - target session and user content.
-   * @returns the durable message identity.
+   * @returns the queued message identity; no storage flush is awaited.
    */
   async prompt(params: SessionPromptParams): Promise<SessionPromptResult> {
     if (!this.initialized) throw new Error('SDK server is not initialized')

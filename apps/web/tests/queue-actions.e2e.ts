@@ -425,6 +425,40 @@ describe('web e2e: queue row actions', () => {
     expect(tripwire.warnings).toEqual([])
   }, 120_000)
 
+  it.skipIf(MODE === 'record')('preserves exact composer whitespace through saved queue admission and editing', async () => {
+    overrideDir = await mkdtemp(join(tmpdir(), 'dsh-web-input-whitespace-'))
+    const readyFile = join(overrideDir, '.hang-ready')
+    const overridePath = join(overrideDir, 'replay.override.json')
+    await writeFile(overridePath, JSON.stringify([{ kind: 'hang', readyFile } satisfies ReplayEntry]))
+    const events: SessionEvent[] = []
+    scaffold = await launchWebScaffold({ replayFixture: FIXTURE, replayOverride: overridePath, compareReplaySession: false })
+    scaffold.ctx.on('session/event', (_session, event: SessionEvent) => { events.push(event) })
+    browser = await chromium.launch()
+    page = await newEnglishPage(browser)
+    await page.goto(scaffold.authenticatedUrl, { waitUntil: 'load' })
+    await page.waitForSelector('[class*="frame"]', { timeout: 30_000 })
+    await connectFreshWorkspace(page, scaffold.workspaceCwd)
+    const input = page.locator('[data-composer-input]').first()
+    await input.fill(ACTIVE_PROMPT)
+    await input.press('Enter')
+    await expect.poll(() => existsSync(readyFile), { timeout: 15_000 }).toBe(true)
+    const text = '  exact input\nsecond line  '
+    const response = page.waitForResponse('**/api/session/prompt')
+    await input.fill(text)
+    await input.press('Enter')
+    const accepted = await response
+    expect(accepted.request().postDataJSON()).toMatchObject({ payload: { args: { request: { content: [{ type: 'text', text }] } } } })
+    expect(await accepted.json()).toMatchObject({ result: { ok: true, value: { storage: { state: 'saved' } } } })
+    expect(events.some(event => event.type === 'agent/inbox/spliced' && event.data.inserted.some(message => message.content.some(block => block.type === 'text' && block.text === text)))).toBe(true)
+    const edit = page.getByRole('button', { name: 'Edit queued message' })
+    await expect.poll(() => edit.isEnabled()).toBe(true)
+    await edit.click()
+    const editor = page.locator('[data-queue-dock] textarea')
+    expect(await editor.inputValue()).toBe(text)
+    const aria = await captureStableAria(page, '[data-queue-dock]', scaffold.workspaceCwd)
+    await compareOrRefreshGolden(fileURLToPath(new URL('./expected/input-whitespace.expected.md', import.meta.url)), aria, MODE)
+  }, 120_000)
+
   it.skipIf(MODE === 'record')('keeps its snapshot inventory closed', async () => {
     await assertFixtureInventory(
       SNAPSHOT_DIR,

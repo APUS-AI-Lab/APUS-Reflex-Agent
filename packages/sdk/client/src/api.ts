@@ -285,7 +285,7 @@ function validatedSessionEvent(value: unknown): SessionEvent {
   return value as SessionEvent
 }
 
-/** Whether a raw session event is the durable enqueue receipt for `messageId`. */
+/** Whether a raw session event is the logged enqueue receipt for `messageId`. */
 function isInboxReceipt(value: unknown, messageId: string): boolean {
   if (!isRecord(value) || value.type !== 'agent/inbox/spliced' || !isRecord(value.data)) return false
   const inserted = value.data.inserted

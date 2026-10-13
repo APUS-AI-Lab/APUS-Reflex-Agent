@@ -195,6 +195,7 @@ class HarnessClient:
         on_notification: Callable[[Notification], None] | None = None,
         notification_subscription: "NotificationSubscription | None" = None,
     ) -> str:
+        """Return the queued message id without confirming a persistence flush."""
         payload: JsonObject = {"sessionId": session_id, "contentBlocks": content_blocks}
         response = self.request(
             "session/prompt",

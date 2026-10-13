@@ -7,7 +7,7 @@ import type {
 import type { Branded } from '@deepseek-ai/dsh-brand'
 import type { LlmAttemptId, MessageId } from '@deepseek-ai/dsh-llm/brand'
 import type { TextBlock } from '@deepseek-ai/dsh-llm'
-import type { SessionId, SessionSeqCursor } from '@deepseek-ai/dsh-session/types'
+import type { SessionId, SessionSeq, SessionSeqCursor } from '@deepseek-ai/dsh-session/types'
 import type { SessionProjectionMap } from '@deepseek-ai/dsh-session-projection/types'
 import type { JsonValue } from '@deepseek-ai/dsh-util-values'
 import type { WorkspaceId } from '@deepseek-ai/dsh-workspace/types'
@@ -228,6 +228,7 @@ declare module '@deepseek-ai/dsh-typert-protocol' {
     'session/provider-models-unavailable': { readonly provider: string }
     'session/model-unavailable': { readonly provider: string; readonly model: string }
     'session/route-denied': Record<string, never>
+    'session/request-conflict': { readonly requestId: SessionRequestId }
     'session/conflict': {
       readonly sessionId: SessionId
       readonly requestedCwd: string
@@ -372,6 +373,12 @@ export interface SessionPromptRequest {
 /** Receipt after one prompt enters the target Agent inbox. */
 export interface SessionPromptValue {
   readonly accepted: true
+  /** Text-only persistence result; absent for attachment prompts and older hosts. Saved does not imply processing. */
+  readonly storage?: {
+    readonly state: 'saved' | 'unavailable' | 'failed'
+    readonly messageId: MessageId
+    readonly source?: { readonly sessionId: SessionId; readonly eventSeq: SessionSeq }
+  }
 }
 
 /** Durable image read request. */

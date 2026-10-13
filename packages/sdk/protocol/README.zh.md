@@ -38,7 +38,7 @@ kind: "package-library"
 | 方向 | 方法 | 载荷类型 |
 |---|---|---|
 | client→server | `initialize` | `InitializeParams` → `InitializeResult` |
-| client→server | `session/prompt` | `SessionPromptParams` → `SessionPromptResult`（持久入队回执） |
+| client→server | `session/prompt` | `SessionPromptParams` → `SessionPromptResult`（入队回执；不确认持久化 flush） |
 | client→server | `shutdown` | 无参数 → `{}` |
 | server→client | `session.event` | `SessionEventNotification`（运行时内每个会话，不过滤） |
 | server→client | `session.status` | `SessionStatusNotification`（整个 agent（智能体）的 `running`/`idle` 转换） |

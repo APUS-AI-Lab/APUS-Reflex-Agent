@@ -7059,7 +7059,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'SessionPromptValue',
-    declaration: 'export interface SessionPromptValue {\n    readonly accepted: true;\n}',
+    declaration: 'export interface SessionPromptValue {\n    readonly accepted: true;\n    readonly storage?: {\n        readonly state: \'saved\' | \'unavailable\' | \'failed\';\n        readonly messageId: MessageId;\n        readonly source?: {\n            readonly sessionId: SessionId;\n            readonly eventSeq: SessionSeq;\n        };\n    };\n}',
   },
   {
     name: 'SessionRecord',
