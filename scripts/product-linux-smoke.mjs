@@ -1,7 +1,7 @@
 /** Install and qualify the Ubuntu desktop package with the real Chromium sandbox enabled. */
 import { execFile } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { access, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises'
+import { access, mkdir, mkdtemp, readFile, rm, stat, symlink, writeFile } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
@@ -28,6 +28,40 @@ export function smokeEnvironment(source, profile, bin) {
     HOME: join(profile, 'home'), PATH: bin, TMPDIR: join(profile, 'tmp'),
     XDG_CONFIG_HOME: join(profile, 'config'), XDG_CACHE_HOME: join(profile, 'cache'), XDG_DATA_HOME: join(profile, 'data'),
     SYSTEM3_DESKTOP_USER_DATA_DIR: profile, DSH_HOME: join(profile, 'harness-home'), DSH_TELEMETRY_DISABLED: '1' }
+}
+
+/** Configure the isolated account's desktop Documents directory and verify the system lookup.
+ * @param {NodeJS.ProcessEnv} env Isolated desktop account environment.
+ * @param {typeof execute} query System command executor.
+ * @returns {Promise<string>} Documents directory resolved by xdg-user-dir.
+ */
+export async function prepareDesktopDocuments(env, query = execute) {
+  const documents = join(env.HOME, 'Documents')
+  await mkdir(documents, { recursive: true })
+  await mkdir(env.XDG_CONFIG_HOME, { recursive: true })
+  await writeFile(join(env.XDG_CONFIG_HOME, 'user-dirs.dirs'), 'XDG_DOCUMENTS_DIR="$HOME/Documents"\n', { flag: 'wx', mode: 0o600 })
+  const { stdout } = await query('xdg-user-dir', ['DOCUMENTS'], { env, timeout: 10_000 })
+  if (stdout.trim() !== documents) throw new Error('Isolated desktop Documents lookup differs from its configured directory')
+  return documents
+}
+
+/** Require a selected default Workspace, its real directory and an editable composer.
+ * @param {import('playwright').Page} page Installed home page.
+ * @param {string} directory Expected default Workspace directory.
+ * @returns {Promise<void>}
+ */
+export async function verifyDefaultWorkspace(page, directory) {
+  const composer = page.locator('[data-composer-input][contenteditable="true"]')
+  await composer.waitFor({ timeout: 30_000 })
+  const picker = page.getByRole('button', { name: /^(选择工作区|Choose workspace)$/u })
+  await picker.filter({ hasText: /^(默认工作区|Default workspace)$/u }).waitFor({ timeout: 30_000 })
+  const selected = await picker.textContent()
+  if (!/^(默认工作区|Default workspace)$/u.test(selected?.trim() ?? '')) throw new Error('Installed application did not select its default Workspace')
+  if (!(await stat(directory)).isDirectory()) throw new Error('Default Workspace directory is missing')
+  const input = 'Desktop qualification input'
+  await composer.fill(input)
+  if ((await composer.textContent())?.trim() !== input) throw new Error('Default Workspace composer is not editable')
+  await composer.fill('')
 }
 
 /** Reject an installed runtime from another source revision or target.
@@ -188,11 +222,14 @@ async function run(installer, reportDirectory, expectedSource = process.env.GITH
   }
   try {
     for (const directory of [bin, env.HOME, env.TMPDIR]) await mkdir(directory, { recursive: true })
-    for (const name of ['bash', 'sh', 'env', 'uname', 'readlink', 'dirname', 'basename', 'mkdir', 'ln', 'rm', 'chmod', 'cat', 'ps', 'kill', 'sed', 'awk', 'grep', 'true', 'xdg-open']) {
+    for (const name of ['bash', 'sh', 'env', 'uname', 'readlink', 'dirname', 'basename', 'mkdir', 'ln', 'rm', 'chmod', 'cat', 'ps', 'kill', 'sed', 'awk', 'grep', 'true', 'xdg-open', 'xdg-user-dir']) {
       const source = `/usr/bin/${name}`
       await access(source)
       await symlink(source, join(bin, name))
     }
+    const documents = await prepareDesktopDocuments(env)
+    const workspace = join(documents, 'deepseek-harness', 'default-workspace')
+    report.stages.push('isolated-desktop-documents-configured')
     const osRelease = await readFile('/etc/os-release', 'utf8')
     if (!/^ID=ubuntu$/m.test(osRelease) || !/^VERSION_ID="24\.04"$/m.test(osRelease)) throw new Error('Linux qualification requires Ubuntu 24.04')
     const installed = await execute('/usr/bin/dpkg-query', ['-W', '-f=${db:Status-Status}', packageName]).then(() => true, error => {
@@ -271,6 +308,9 @@ async function run(installer, reportDirectory, expectedSource = process.env.GITH
       throw new Error('Installed application did not reach its home screen')
     }
     let page = await launch()
+    await verifyDefaultWorkspace(page, workspace)
+    await writeFile(join(workspace, 'qualification.txt'), 'workspace-retained', { flag: 'wx', mode: 0o600 })
+    report.stages.push('default-workspace-created-and-composer-editable')
     await page.screenshot({ path: join(reportDirectory, 'home.png') })
     report.stages.push('fresh-profile-home-with-renderer-sandbox')
     report.reflexCapabilities = { initial: await verifyReflexExecution(page) }
@@ -288,6 +328,9 @@ async function run(installer, reportDirectory, expectedSource = process.env.GITH
     await close()
     report.stages.push('first-exit-quiescent')
     page = await launch()
+    await verifyDefaultWorkspace(page, workspace)
+    if (await readFile(join(workspace, 'qualification.txt'), 'utf8') !== 'workspace-retained') throw new Error('Default Workspace content was not retained after restart')
+    report.stages.push('default-workspace-retained-after-restart')
     await page.screenshot({ path: join(reportDirectory, 'restart.png') })
     report.reflexCapabilities.restarted = await verifyReflexExecution(page)
     report.stages.push('reflex-execution-modules-ready-after-restart')
