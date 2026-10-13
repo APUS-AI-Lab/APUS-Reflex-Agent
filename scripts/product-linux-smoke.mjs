@@ -233,7 +233,7 @@ async function run(installer, reportDirectory, expectedSource = process.env.GITH
     report.stages.push('installed-identity-and-apparmor-verified')
     for (const command of ['node', 'git']) {
       const { stdout } = await execute('/bin/sh', ['-c', `command -v ${command}`], { env }).catch(error => {
-        if (error.code === 1) return { stdout: '' }
+        if (error.code === 1 || error.code === 127) return { stdout: '' }
         throw error
       })
       if (stdout.trim()) throw new Error(`External ${command} unexpectedly available on application PATH`)

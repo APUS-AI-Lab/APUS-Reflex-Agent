@@ -21,6 +21,26 @@ test('installed application has isolated state without credentials or developer 
   assert.equal(source.HOME, '/existing')
 })
 
+test('the system shell distinguishes missing tools from executables on an isolated PATH',
+  { skip: process.platform === 'win32' }, async t => {
+    const temporary = await mkdtemp(join(tmpdir(), 'apus-linux-path-unit-'))
+    t.after(() => rm(temporary, { recursive: true, force: true }))
+    const execute = promisify(execFile)
+    const env = { PATH: temporary, HOME: temporary }
+    for (const command of ['node', 'git']) {
+      await assert.rejects(execute('/bin/sh', ['-c', `command -v ${command}`], { env }), error => {
+        assert.equal(error.signal, null)
+        assert.equal(error.killed, false)
+        assert.equal(error.stdout, '')
+        assert.ok(error.code === 1 || error.code === 127)
+        return true
+      })
+    }
+    await symlink(process.execPath, join(temporary, 'node'))
+    const { stdout } = await execute('/bin/sh', ['-c', 'command -v node'], { env })
+    assert.equal(stdout.trim(), join(temporary, 'node'))
+  })
+
 test('installed runtime must match the clean collected Linux revision', () => {
   const runtime = { mode: 'deployed', platform: 'linux', arch: 'x64', sourceRevision: 'same', sourceDirty: false }
   const build = { version: '0.1.0', target: 'linux-x64', sourceRevision: 'same' }
