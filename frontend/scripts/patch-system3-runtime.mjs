@@ -99,10 +99,12 @@ export function adaptBrandContext(chunk, target, own) {
   return chunk.replaceAll('DSH will enable', 'APUS Reflex Harness will enable').replaceAll('DSH 会自动启用', 'APUS Reflex Harness 会自动启用')
 }
 
-/** Apply all runtime-JavaScript hunks; declarations stay those emitted by the own build. */
+/** Apply runtime-JavaScript hunks, excluding the build-only signer; retain own declarations and reject missing runtime targets. */
 export async function patchSystem3Runtime(stage, appRoot) {
   const receipts = []
   for (const name of (await readdir(join(appRoot, 'patches'))).filter(name => name.endsWith('.patch')).sort()) {
+    // npm ci patches the signer in the build tools; production dependencies do not contain it.
+    if (name === '@electron+osx-sign+1.3.3.patch') continue
     const original = await readFile(join(appRoot, 'patches', name), 'utf8')
     const chunks = original.split(/(?=^diff --git )/m)
     const patches = []
