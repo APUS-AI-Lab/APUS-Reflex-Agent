@@ -16,6 +16,7 @@ import {
   type SessionSearchCursor,
 } from '@deepseek-ai/dsh-session-query'
 import type { ToolRunContext } from '@deepseek-ai/dsh-tools'
+import { renderEventPage, requestsEventPage, validateEventPageArgs, type EventPageArgs } from './event-page.ts'
 import { toolInput } from './input.ts'
 import { presentation } from './presentation.ts'
 import { serviceBoundary } from './service-boundary.ts'
@@ -42,7 +43,7 @@ interface EventTargetArgs extends SessionTargetArgs {
   seq: number
 }
 
-interface EventReadArgs extends EventTargetArgs {
+interface EventReadArgs extends EventTargetArgs, EventPageArgs {
   before?: number
   after?: number
 }
@@ -221,7 +222,9 @@ async function executeEventRead(
   ctx: Context,
   args: EventReadArgs,
   exec: ToolRunContext,
+  maxReadBytes: number,
 ): Promise<string> {
+  validateEventPageArgs(args)
   toolInput.assertNonNegativeSafeInteger('seq', args.seq)
   const seq = SessionSeq(args.seq)
   if (args.before !== undefined) toolInput.assertNonNegativeSafeInteger('before', args.before)
@@ -237,8 +240,11 @@ async function executeEventRead(
       ...args.after === undefined ? {} : { after: args.after },
     }, exec.signal))
   workspaceAccess.assertObservedTargetAuthorized(caller, sessionId, window.session)
+  if (requestsEventPage(args)) return renderEventPage(sessionId, window.target, args, maxReadBytes)
   const title = await workspaceAccess.readTitle(ctx, caller, sessionId, exec.signal)
-  return presentation.formatEventRead(sessionId, title, window)
+  const complete = presentation.formatEventRead(sessionId, title, window)
+  if (Buffer.byteLength(complete) <= maxReadBytes) return complete
+  return renderEventPage(sessionId, window.target, {}, maxReadBytes, (args.before ?? 0) > 0 || (args.after ?? 0) > 0)
 }
 
 async function collectPages<T>(

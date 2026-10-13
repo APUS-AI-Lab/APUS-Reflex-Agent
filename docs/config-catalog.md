@@ -4197,6 +4197,8 @@ export interface Config {
 export interface Config {
   /** Maximum authorized hits returned by one search call. Defaults to 100. */
   maxSearchResults?: number
+  /** Maximum UTF-8 bytes in an event read result, including page metadata; at least 256. Defaults to 8192. */
+  maxReadBytes?: number
   /** Cooperative full-text search deadline in milliseconds. Defaults to 30000. */
   searchTimeoutMs?: number
 }
