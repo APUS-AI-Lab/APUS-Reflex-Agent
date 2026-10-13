@@ -131,6 +131,7 @@ interface SdkAssertions {
 const SDK_ASSERTIONS: Readonly<Record<string, SdkAssertions>> = {
   'continuum-partial-recall': { expectedFinalResponse: '迁移安排在周五。', preserveReplayInput: true },
   'continuum-tail-recall': { expectedFinalResponse: 'Quartzlaunch release code MERIDIAN-731.' },
+  'continuum-relevance': { expectedFinalResponse: 'PIN 7319; Friday.' },
   'continuum-source-pages': { expectedFinalResponse: 'SOURCE_RECONSTRUCTED', sourceSeed: 'source.seed.json' },
   'system3-shadow': { expectedFinalResponse: 'SDK snapshot OK' },
   'reflex-supervision': { expectedFinalResponse: 'SDK snapshot OK' },

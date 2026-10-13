@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="zh"><meta charset="utf-8"><title>Continuum relevance replay acceptance</title><style>body{max-width:960px;margin:40px auto;font:17px/1.6 system-ui}pre{white-space:pre-wrap}</style><body>
+<h1>相关性排序的模型请求与持久回放验收</h1>
+<p>目标：SDK 真实 profile 使用 Jev 概率分数调整全部候选的顺序，低分的互补证据仍进入生成模型；发送前的 prepared 与响应后的 settled 记录完整请求和响应。</p>
+<pre>原始输入 → public memory.create(a: PIN, b: Friday)
+→ 第二轮查询 → prepared → flush + readback → 本地真实 HTTP
+→ m0=.05 / m1=.95 → settled → recall[b,a] → 生成模型请求
+→ 完整 Session JSONL 与 SDK 通知重放</pre>
+<p>仅新增 snapshots/sdk/continuum-relevance 场景、sdk.snapshot.ts 注册与本设计。使用真实 Jev/Continuum 服务；HTTP fixture 只控制模型分数，主模型回答由既有 keyless replay 控制。旧 Session 日志保持原样，不新增 normalizer。</p>
+<p>配置：active、显式 workspace 分类、controlled 远端审批、最大请求 32768 字节。接口使用稳定 evaluation.phase/request/response/rankedIds/unscoredIds/preparedSeq；模型输入包含完整来源元数据。</p>
+<p>验证：HTTP handler 读取已落盘 prepared；第二个模型请求检查 b,a 顺序与 PIN/Friday 均存在；双 receipt 与原始 HTTP 请求/响应相等；刷新新快照后执行只读 replay、旧记忆场景回归、corpus 与 lint。真实外部模型质量由独立评估负责，本场景验证执行与证据完整性。</p>
+</body></html>
