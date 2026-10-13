@@ -44,7 +44,7 @@ it('registers and disposes the native dock and calls the live Session reset RPC'
   expect(ctx.slots.entries('conversation.input.right')).toHaveLength(1)
   expect(ctx.slots.entries('settings.section').map(entry => entry.options.id)).toEqual(['reflex-model'])
   const settings = ctx.slots.entries('settings.section')[0]!
-  expect(typeof settings.options.label === 'function' ? settings.options.label() : settings.options.label).toBe('Reflex model configuration')
+  expect(typeof settings.options.label === 'function' ? settings.options.label() : settings.options.label).toBe('Reflex configuration')
   expect(settings.inject!()).toHaveProperty('refresh')
   remote.emit('credentials/reference-updated', ['REFLEX_API_KEY'])
   const actions = entry.inject!('root' as never)

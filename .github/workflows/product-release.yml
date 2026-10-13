@@ -105,7 +105,17 @@ jobs:
         run: npm ci
       - name: Build unsigned preview installers and checksums
         id: installers
-        run: pnpm run package:product --unsigned --edition ${{ matrix.edition }}
+        shell: bash
+        run: |
+          if [[ "$RUNNER_OS" == "macOS" ]]; then
+            echo "macOS signing file limit: soft=$(ulimit -Sn), hard=$(ulimit -Hn)"
+            current_limit=$(ulimit -Sn)
+            if [[ "$current_limit" != "unlimited" && "$current_limit" -lt 32768 ]]; then
+              ulimit -Sn 32768
+            fi
+            echo "macOS signing effective file limit: $(ulimit -Sn)"
+          fi
+          pnpm run package:product --unsigned --edition ${{ matrix.edition }}
       - name: Typecheck desktop behavior
         working-directory: frontend
         run: npm run typecheck

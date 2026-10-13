@@ -47,7 +47,7 @@ it('routes an API prompt through Loader-mounted Jev and records the actual HTTP 
   vi.stubEnv('SYSTEM3_COMPOSITION_LLM_KEY', 'external-http-fixture')
   const requests: { path: string; body: Record<string, unknown> }[] = []
   let jevRequests = 0
-  let skillRequests = 0
+  const skillRequests: { questions: { skill?: object; intent?: object } }[] = []
   let warmRequests = 0
   server = createServer((request, response) => {
     let body = ''
@@ -62,11 +62,15 @@ it('routes an API prompt through Loader-mounted Jev and records the actual HTTP 
       }
       requests.push({ path, body: JSON.parse(body) as Record<string, unknown> })
       if (path === '/v1/systemone') {
-        const query = JSON.parse(body) as { questions: { skill?: object } }
+        const query = JSON.parse(body) as { questions: { skill?: object; intent?: object } }
         if (query.questions.skill !== undefined) {
-          skillRequests += 1
+          skillRequests.push(query)
           response.writeHead(200, { 'content-type': 'application/json' })
-          response.end(JSON.stringify({ model: 'APUS-OpenJev-fixture', answers: { skill: { type: 'choice', choice: 'skill-0', confidence: 1, probabilities: { 'skill-0': 1, abstain: 0 } } } }))
+          response.end(JSON.stringify({ model: 'APUS-OpenJev-fixture', answers: {
+            intent: { type: 'choice', choice: 'research', confidence: 1,
+              probabilities: { conversation: 0, retrieval: 0, research: 1, creation: 0, action: 0, uncertain: 0 } },
+            skill: { type: 'choice', choice: 'skill-0', confidence: 1, probabilities: { 'skill-0': 1, abstain: 0 } },
+          } }))
           return
         }
         jevRequests += 1
@@ -191,16 +195,27 @@ it('routes an API prompt through Loader-mounted Jev and records the actual HTTP 
   const generation = requests.filter(request => request.path === '/v1/chat/completions')
   expect(generation.map(request => request.body.model)).toEqual(['expert-fixture', 'deepseek-v4-flash'])
   expect(jevRequests).toBe(2)
-  expect(skillRequests).toBe(2)
+  expect(skillRequests).toHaveLength(2)
+  for (const request of skillRequests) {
+    expect(Object.keys(request.questions).sort()).toEqual(['intent', 'skill'])
+    expect(request.questions.intent).toMatchObject({ type: 'choice' })
+    for (const intent of ['conversation', 'retrieval', 'research', 'creation', 'action', 'uncertain']) {
+      expect(request.questions.intent).toHaveProperty(`criteria.${intent}`)
+    }
+  }
   // keepWarm sends one warm-up request at plugin start; its 60 s interval does not elapse during the test.
   expect(warmRequests).toBeGreaterThanOrEqual(1)
   expect(generation.every(request => JSON.stringify(request.body.messages).includes('Compare all public API inputs against outputs'))).toBe(true)
   const events = agent.session.snapshotEvents()
   const recommendations = events.flatMap(event => event.type === 'system3/entry-decision' ? [event.data] : [])
   expect(recommendations).toHaveLength(2)
-  expect(events.filter(event => event.type === 'system3/skill-decision').map(event => event.data.outcome)).toEqual(['selected', 'selected'])
+  const skillDecisions = events.flatMap(event => event.type === 'system3/skill-decision' ? [event.data] : [])
+  expect(skillDecisions.map(({ requestId, outcome, intent }) => ({ requestId, outcome, intent }))).toEqual([
+    { requestId: 'entry-first', outcome: 'selected', intent: 'research' },
+    { requestId: 'entry-second', outcome: 'selected', intent: 'research' },
+  ])
   expect(events.filter(event => event.type === 'user/message' && event.data.source.kind === 'skill-invocation')).toHaveLength(2)
-  expect(ctx.sessionProjections.stateOf(agent.session, 'system3Runtime')?.skill).toMatchObject({ selected: 'public-api-review', injected: true })
+  expect(ctx.sessionProjections.stateOf(agent.session, 'system3Runtime')?.skill).toMatchObject({ selected: 'public-api-review', injected: true, intent: 'research' })
   expect(ctx.sessionProjections.stateOf(agent.session, 'system3Runtime')?.entry).toMatchObject({ requestId: 'entry-second', adopted: { model: 'deepseek-v4-flash' }, used: { model: 'deepseek-v4-flash' } })
   expect(events.filter(event => event.type === 'model/automatic-selection').map(event => event.data)).toMatchObject([
     { requestId: 'entry-first', selection: { model: 'expert-fixture' }, baseline: { model: 'deepseek-v4-flash' } },
@@ -216,6 +231,7 @@ it('routes an API prompt through Loader-mounted Jev and records the actual HTTP 
   const count = requests.length
   expect(restored.deriveMessages()).toEqual(agent.session.deriveMessages())
   expect(persisted.events.filter(event => event.type === 'system3/entry-decision').map(event => event.data)).toEqual(recommendations)
+  expect(persisted.events.filter(event => event.type === 'system3/skill-decision').map(event => event.data)).toEqual(skillDecisions)
   expect(ctx.sessionProjections.stateOf(restored, 'modelSelection')?.automaticBaseline?.model).toBe('deepseek-v4-flash')
   expect(ctx.sessionProjections.stateOf(restored, 'system3Runtime')).toEqual(ctx.sessionProjections.stateOf(agent.session, 'system3Runtime'))
   expect(requests).toHaveLength(count)
