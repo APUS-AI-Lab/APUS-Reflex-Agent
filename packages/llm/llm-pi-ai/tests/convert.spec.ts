@@ -928,6 +928,42 @@ describe('mapStopReason / mapUsage', () => {
       .toMatchObject({ kind: 'error', failure: { code: 'TRANSPORT' } })
   })
 
+  it('classifies an in-stream server_error without an HTTP status as SERVER', () => {
+    const errorMessage = 'server_error: An error occurred while processing your request. You can retry your request.'
+    expect(mapStopReason(assistant({ stopReason: 'error', errorMessage }))).toEqual({
+      kind: 'error', failure: { message: errorMessage, code: 'SERVER' },
+    })
+    expect(mapStopReason(assistant({ stopReason: 'error', errorMessage: 'HTTP 429: insufficient_quota; server_error' })))
+      .toMatchObject({ kind: 'error', failure: { code: 'QUOTA' } })
+  })
+
+  it('classifies a WebSocket close before its terminal event without changing the message', () => {
+    const errorMessage = 'websocket closed before terminal event (code1000)'
+    expect(mapStopReason(assistant({ stopReason: 'error', errorMessage }))).toEqual({
+      kind: 'error', failure: { message: errorMessage, code: 'TRANSPORT' },
+    })
+  })
+
+  it.each([
+    ['HTTP 401: websocket closed before terminal event (code1000)', 'AUTH'],
+    ['HTTP 429: insufficient_quota; websocket closed before terminal event (code1000)', 'QUOTA'],
+    ['HTTP 400: invalid_prompt; websocket closed before terminal event (code1000)', 'INVALID_REQUEST'],
+    ['HTTP 503: websocket closed before terminal event (code1000)', 'SERVER'],
+    ['invalid_prompt', 'PI_AI_ERROR'],
+    ['websocket closed after terminal event (code1000)', 'PI_AI_ERROR'],
+    ['websocket closed (code1000)', 'PI_AI_ERROR'],
+  ])('preserves classification priority for %j', (errorMessage, code) => {
+    expect(mapStopReason(assistant({ stopReason: 'error', errorMessage }))).toEqual({
+      kind: 'error', failure: { message: errorMessage, code },
+    })
+  })
+
+  it('keeps a token-limit stop despite terminal-close wording', () => {
+    expect(mapStopReason(assistant({
+      stopReason: 'length', errorMessage: 'websocket closed before terminal event (code1000)',
+    }))).toEqual({ kind: 'max-tokens' })
+  })
+
   it('uses pi-ai provider-specific overflow classification without losing rate-limit exclusions', () => {
     expect(mapStopReason(assistant({
       stopReason: 'error',
