@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-13",
+  "branch": "feat-cross-session-memory",
+  "scope": "B2 partial: durable cross-session task inputs and bounded continuation",
+  "modelMode": "controlled-keyless; no new live Reflex/Flash acceptance in this batch",
+  "hostPlatform": "macOS arm64",
+  "overallUnlimitedMemoryAccepted": false,
+  "checks": [
+    {
+      "name": "task-unit-and-coverage",
+      "passed": 125,
+      "coveragePercent": 100,
+      "source": "packages/context/continuum/src/task-*.ts",
+      "log": "tasks/feat-cross-session-memory/task-coverage.log"
+    },
+    {
+      "name": "existing-continuum-regression",
+      "passed": 256,
+      "log": "tasks/feat-cross-session-memory/continuum-regression.log"
+    },
+    {
+      "name": "headless-source-and-built",
+      "passed": 2,
+      "scope": "Independent writer/reader processes and distinct Sessions; exact full text/source/SHA/revision, real write tool artifact; third-process cold resume without task authority refuses before model dispatch.",
+      "log": "tasks/feat-cross-session-memory/task-profile-final-pass.log"
+    },
+    {
+      "name": "typescript-sdk-snapshot",
+      "passed": 3,
+      "scope": "New task binding/context/page snapshot and two neighboring Continuum snapshots; keyless replay.",
+      "log": "tasks/feat-cross-session-memory/task-snapshot-final-replay.log"
+    },
+    {
+      "name": "python-sdk",
+      "passed": 3,
+      "scope": "Independent SDK subprocesses create distinct Sessions, recover long source into a real file and compare expected binding receipt; two existing receipt replay regressions.",
+      "log": "tasks/feat-cross-session-memory/python-task-final.log"
+    },
+    {
+      "name": "build",
+      "result": "passed",
+      "log": "tasks/feat-cross-session-memory/build-final.log"
+    },
+    {
+      "name": "hygiene",
+      "passed": 18,
+      "log": "tasks/feat-cross-session-memory/hygiene-final.log"
+    },
+    {
+      "name": "documentation",
+      "passed": 42,
+      "scope": "doc-sync passed 41 gates; README Summary length was corrected and the remaining gate passed separately. Translation pairing was rechecked successfully.",
+      "log": "tasks/feat-cross-session-memory/doc-sync-final.log"
+    },
+    {
+      "name": "lint",
+      "result": "passed",
+      "scope": "Repository lint plus focused checks for the final fixture changes."
+    }
+  ],
+  "remaining": [
+    "Crash reconciliation between a durable source and uncommitted domain admission",
+    "Full input processing ledger and operation-version coverage",
+    "Trusted assistant/tool progress and client task selection",
+    "Reflex ranking for the task projection",
+    "Final resolved-route request budgeting",
+    "Live model and actual over-window stress acceptance",
+    "Bounded-memory storage/index scaling"
+  ]
+}

@@ -132,6 +132,22 @@ const SERVICE_ROLES: ServiceRole[] = [
     note: 'Owns revisioned memory records, bounded recall, and the opt-in user-message admission path; the Reflex plugin supplies Jev selection while the original profile keeps the service disabled.',
   },
   {
+    key: 'continuumTasks',
+    pkg: 'continuum',
+    title: 'Durable cross-session task inputs',
+    mode: 'service',
+    consumers: ['agent-loop'],
+    note: 'Owns the leased task journal, source readback, explicit revisions and bounded task pages across business Sessions.',
+  },
+  {
+    key: 'continuumTaskGuard',
+    pkg: 'continuum',
+    title: 'Task-bound request authorization',
+    mode: 'service',
+    consumers: ['agent-loop', 'continuum'],
+    note: 'Retains task-binding checks in shipped profiles when the optional task authority is absent or unloaded.',
+  },
+  {
     key: 'hmr',
     pkg: 'hmr',
     title: 'Serialized module and configuration reloads',

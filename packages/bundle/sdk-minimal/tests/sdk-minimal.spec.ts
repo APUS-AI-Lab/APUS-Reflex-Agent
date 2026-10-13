@@ -34,6 +34,7 @@ describe('dsh-sdk-minimal bundle', () => {
       ['llm-deepseek', '@deepseek-ai/dsh-llm-deepseek-api-key'],
       ['sandbox', '@deepseek-ai/dsh-sandbox-local'],
       ['session-projection', '@deepseek-ai/dsh-session-projection'],
+      ['continuum-task-guard', '@deepseek-ai/dsh-continuum/task-guard'],
       ['sandbox-policy', '@deepseek-ai/dsh-sandbox-policy'],
       ['subprocess', '@deepseek-ai/dsh-subprocess-local'],
       ['pty', '@deepseek-ai/dsh-terminal'],

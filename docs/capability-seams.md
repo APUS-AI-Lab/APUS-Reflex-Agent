@@ -15,6 +15,8 @@ flowchart LR
   svc_continuumMemory["ctx.continuumMemory<br/>Source-backed Continuum memory"]
   pkg_agent_loop["agent-loop"]
   pkg_experimental_continuum_jev["experimental-continuum-jev"]
+  svc_continuumTasks["ctx.continuumTasks<br/>Durable cross-session task inputs"]
+  svc_continuumTaskGuard["ctx.continuumTaskGuard<br/>Task-bound request authorization"]
   pkg_hmr["hmr"]
   svc_hmr["ctx.hmr<br/>Serialized module and configuration reloads"]
   pkg_app_boot["app-boot"]
@@ -312,6 +314,8 @@ flowchart LR
   pkg_computer_use --> svc_computerUse
   pkg_config_editor --> svc_configEditor
   pkg_continuum --> svc_continuumMemory
+  pkg_continuum --> svc_continuumTaskGuard
+  pkg_continuum --> svc_continuumTasks
   pkg_cordis_host_runner --> svc_cordisInspect
   pkg_cordis_host_runner --> svc_dynamicCordisRunner
   pkg_credentials --> svc_credentials
@@ -456,6 +460,9 @@ flowchart LR
   svc_connection --> pkg_host_frontend_static
   svc_continuumMemory --> pkg_agent_loop
   svc_continuumMemory --> pkg_experimental_continuum_jev
+  svc_continuumTaskGuard --> pkg_agent_loop
+  svc_continuumTaskGuard --> pkg_continuum
+  svc_continuumTasks --> pkg_agent_loop
   svc_cordisInspect --> pkg_tool_cordis
   svc_credentials --> pkg_api_settings_controller
   svc_credentials --> pkg_llm_deepseek
@@ -583,6 +590,8 @@ flowchart LR
 | `ctx.jev` | `seam` | [`experimental-apus-dsh-jev-plugin`](../packages/experimental/apus-dsh-jev-plugin) | [`experimental-apus-dsh-jev-plugin`](../packages/experimental/apus-dsh-jev-plugin) | [`experimental-system3`](../packages/experimental/system3) | - | Resolves registered decision providers and validates typed answers; System3 owns privacy admission and durable recommendation receipts. |
 | `ctx.system3` | `service` | [`experimental-system3`](../packages/experimental/system3) | - | - | - | Composes routing, evidence and supervision policies; opt-in API input routing records Jev recommendations separately from adopted model selections. |
 | `ctx.continuumMemory` | `service` | [`continuum`](../packages/context/continuum) | - | [`agent-loop`](../packages/core/agent-loop), [`experimental-continuum-jev`](../packages/experimental/continuum-jev) | - | Owns revisioned memory records, bounded recall, and the opt-in user-message admission path; the Reflex plugin supplies Jev selection while the original profile keeps the service disabled. |
+| `ctx.continuumTasks` | `service` | [`continuum`](../packages/context/continuum) | - | [`agent-loop`](../packages/core/agent-loop) | - | Owns the leased task journal, source readback, explicit revisions and bounded task pages across business Sessions. |
+| `ctx.continuumTaskGuard` | `service` | [`continuum`](../packages/context/continuum) | - | [`agent-loop`](../packages/core/agent-loop), [`continuum`](../packages/context/continuum) | - | Retains task-binding checks in shipped profiles when the optional task authority is absent or unloaded. |
 | `ctx.hmr` | `core` | [`hmr`](../packages/boot/hmr) | - | [`app-boot`](../packages/boot/app-boot) | - | Owns module and exact configuration watchers; application mutations share its queue and automatic reloads await the application file lock. |
 | `ctx.pluginRegistryProbe` | `core` | [`client-ui-plugin-manager`](../packages/client/ui-plugin-manager) | - | [`client-ui-plugin-manager`](../packages/client/ui-plugin-manager) | - | Races public registry responses on the Host; the Client owns the initial registry recommendation. |
 | `ctx.pluginManager` | `core` | [`plugin-manager`](../packages/boot/plugin-manager) | - | [`plugin-manager`](../packages/boot/plugin-manager), `ui-settings-plugin-inventory` | - | Shares profile package operations with the CLI and reports persisted and running state to Web and agent callers. |

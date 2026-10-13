@@ -796,6 +796,42 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
+    key: 'continuumTaskGuard',
+    summary: 'Owns task-binding recovery in every shipped profile.',
+    description: 'Owns task-binding recovery in every shipped profile. Unbound Sessions need no task service. Bound Sessions must retain a ready, matching authority; removing the optional task plugin cannot silently reactivate stale history or summaries.',
+    methods: [],
+  },
+  {
+    key: 'continuumTasks',
+    summary: 'Durable tasks with complete text admission and bounded model context.',
+    description: 'Durable tasks with complete text admission and bounded model context. One host identity and exact workspace are authorized by configuration. Sources stay in business Sessions; the leased authority log uses a separate storage root. Retiring an entry refuses already-bound Sessions because their prior model outputs or summaries may still contain it; a fresh Session can use the new state.',
+    methods: [
+      {
+        signature: 'async snapshot(agent: Agent): Promise<TaskSnapshot | undefined>',
+        description: 'Read the current authorized task without marking its entries processed.',
+        parameters: [{ name: 'agent', description: 'Live caller in the configured workspace.' }],
+        returns: 'Immutable complete task or undefined before its first input.',
+      },
+      {
+        signature: 'assertAuthority(session: Session, binding: TaskBinding): void',
+        description: 'Verify a recovered binding synchronously for the always-mounted dispatch guard. This does not replace source authorization or the request\'s revision lease.',
+        parameters: [{ name: 'session', description: 'Exact live Session about to send model context.' }, { name: 'binding', description: 'Its immutable recovered task authority and retirement set.' }],
+      },
+      {
+        signature: 'async read(agent: Agent, options: Omit<TaskPageOptions, \'maxBytes\'> = {}): Promise<string>',
+        description: 'Read a bounded page of current task inputs. Retired sources remain in the journal.',
+        parameters: [{ name: 'agent', description: 'Live caller in the configured workspace.' }, { name: 'options', description: 'Revision-bound page position; deployment owns the byte budget.' }],
+        returns: 'JSON with exact text, source references and a continuation cursor.',
+      },
+      {
+        signature: 'async supersede(agent: Agent, request: { readonly requestId: string readonly expectedRevision: number readonly predecessor: MemoryId readonly source: TaskSourceInput }): Promise<TaskReceipt>',
+        description: 'Apply an explicit host-authorized correction using exact durable human text. Already-bound Sessions refuse subsequent dispatch until opened anew.',
+        parameters: [{ name: 'agent', description: 'Caller authorized by the mounted host configuration.' }, { name: 'request', description: 'Stable request identity, observed domain revision and source-backed replacement.' }],
+        returns: 'A receipt after durable commit and exact readback.',
+      },
+    ],
+  },
+  {
     key: 'credentials',
     summary: 'Abstract credential service over two key spaces that answer two questions.',
     description: 'Abstract credential service over two key spaces that answer two questions.\n\nA CredentialRef answers "what is behind this environment-variable name", layered over the process environment, the provider-managed store, and `.env` files. One seam-wide rule binds that half: an empty stored value is absent everywhere — `resolve` skips it, `describe` reports it unconfigured — so a blank never masquerades as a configured secret.\n\nA CredentialKey answers "what credential does this plugin hold for this id". Nothing can layer here — an authorization grant has no environment to be read from — so presence of the record is the whole fact, and modifyRecord is the only write path because a correct write depends on the current value (a token refresh is read-decide-replace under one lock).',
@@ -5950,12 +5986,20 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface MemoryCandidate {\n    readonly id: MemoryId;\n    readonly record: MemoryRecord;\n    readonly score: number;\n    readonly excerpt: string;\n    readonly excerptStart: number;\n    readonly excerptEnd: number;\n}',
   },
   {
+    name: 'MemoryDomainId',
+    declaration: 'export type MemoryDomainId = Branded<\'MemoryDomainId\'>;',
+  },
+  {
     name: 'MemoryId',
     declaration: 'export type MemoryId = Branded<\'MemoryId\'>;',
   },
   {
     name: 'MemoryIndexRebuildResult',
     declaration: 'export interface MemoryIndexRebuildResult {\n    readonly indexedRecords: number;\n    readonly pendingRecords: number;\n}',
+  },
+  {
+    name: 'MemoryPrincipalId',
+    declaration: 'export type MemoryPrincipalId = Branded<\'MemoryPrincipalId\'>;',
   },
   {
     name: 'MemoryRecord',
@@ -5980,6 +6024,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'MemoryStatus',
     declaration: 'export type MemoryStatus = \'active\' | \'superseded\' | \'deactivated\';',
+  },
+  {
+    name: 'MemoryTaskId',
+    declaration: 'export type MemoryTaskId = Branded<\'MemoryTaskId\'>;',
   },
   {
     name: 'MemoryWorkingSet',
@@ -7868,6 +7916,38 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'TableValueOf',
     declaration: 'export type TableValueOf<S extends DomainSpec, N extends keyof S[\'tables\']> = S[\'tables\'][N] extends DomainTableSpec<string, infer V> ? V : never;',
+  },
+  {
+    name: 'TaskBinding',
+    declaration: 'export interface TaskBinding {\n    readonly domainId: MemoryDomainId;\n    readonly principalId: MemoryPrincipalId;\n    readonly taskId: MemoryTaskId;\n    readonly workspace: string;\n    readonly retirementDigest: string;\n}',
+  },
+  {
+    name: 'TaskEntry',
+    declaration: 'export interface TaskEntry {\n    readonly id: MemoryId;\n    readonly role: \'input\' | \'progress\';\n    readonly text: string;\n    readonly source: TaskEntrySource;\n}',
+  },
+  {
+    name: 'TaskEntrySource',
+    declaration: 'export interface TaskEntrySource {\n    readonly sessionId: SessionId;\n    readonly eventSeq: SessionSeq;\n    readonly blockIndex: number;\n    readonly digest: string;\n}',
+  },
+  {
+    name: 'TaskPageOptions',
+    declaration: 'export interface TaskPageOptions {\n    readonly maxBytes: number;\n    readonly entryIndex?: number;\n    readonly textOffset?: number;\n    readonly expectedRevision?: number;\n}',
+  },
+  {
+    name: 'TaskReceipt',
+    declaration: 'export interface TaskReceipt {\n    readonly revision: number;\n    readonly taskId: MemoryTaskId;\n    readonly requestId: string;\n}',
+  },
+  {
+    name: 'TaskSnapshot',
+    declaration: 'export interface TaskSnapshot {\n    readonly id: MemoryTaskId;\n    readonly revision: number;\n    readonly entries: readonly TaskStoredEntry[];\n}',
+  },
+  {
+    name: 'TaskSourceInput',
+    declaration: 'export interface TaskSourceInput {\n    readonly sessionId: SessionId;\n    readonly eventSeq: SessionSeq;\n    readonly blockIndex: number;\n}',
+  },
+  {
+    name: 'TaskStoredEntry',
+    declaration: 'export interface TaskStoredEntry extends TaskEntry {\n    readonly status: \'active\' | \'superseded\' | \'deactivated\';\n    readonly supersedes?: MemoryId;\n}',
   },
   {
     name: 'TeamId',
