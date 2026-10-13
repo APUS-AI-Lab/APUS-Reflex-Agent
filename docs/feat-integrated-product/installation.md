@@ -2,22 +2,31 @@
 
 English | [中文](installation.zh.md)
 
-Use this guide to choose a desktop download, install it, and update it. Available platforms are those with qualified installers attached to the selected Release.
+Use this guide to choose a desktop download, install it, and update it. Read the acceptance status before choosing an attached download; experimental assets have not completed installation acceptance.
 
 ## Download
 
 The repository is currently private. Viewing and downloading a Release requires repository access; prerelease status does not enable anonymous access.
 
-Open the [product Releases](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/releases) and read the selected version's supported platform, architecture, signing status, and known limitations. Choose an application asset rather than GitHub's automatically generated source archive. Only platforms with an attached, validated installer are supported by that release.
+Open the [product Releases](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/releases) and read the selected version's supported platform, architecture, signing status, and known limitations. Choose an application asset rather than GitHub's automatically generated source archive. An attached asset does not by itself establish installation acceptance.
 
-The `0.1.0` targets are macOS Apple Silicon (arm64), macOS Intel (x64), Windows x64, Ubuntu 24.04 x64 desktop and a complete Linux x64 Web archive, built from the same reviewed clean source commit. Choose the asset matching your operating system and architecture: macOS uses a DMG/application ZIP; Windows uses an NSIS `.exe` installer. These are unsigned previews, and macOS is not notarized. Each platform requires native installation, launch and restart validation before publication. The first task with a real model has not been validated.
+The `0.1.0` targets are macOS Apple Silicon (arm64), macOS Intel (x64), Windows x64, Ubuntu 24.04 x64 desktop and a complete Linux x64 Web archive, built from the same reviewed clean source commit. Choose the asset matching your operating system and architecture: macOS uses a DMG/application ZIP; Windows uses an NSIS `.exe` installer. These are unsigned previews, and macOS is not notarized. Windows and Ubuntu desktop are explicitly experimental in this prerelease. The first task with a real model has not been validated.
+
+| Platform | `0.1.0` installation acceptance |
+| --- | --- |
+| macOS Apple Silicon / Intel | Passed native installation, startup and restart. |
+| Linux x64 Web (Ubuntu 24.04) | Passed extraction, startup, default workspace, configuration persistence, sandbox and restart. |
+| Windows x64 | Experimental; installer built, but installation acceptance failed with cause unresolved. |
+| Ubuntu 24.04 x64 desktop | Experimental; installer built, but acceptance stopped on a runtime file-list output buffer overflow before application launch. |
+
+Windows and Ubuntu desktop rechecks could not start because GitHub Actions billing/spending limits blocked their runners. The Linux helper has been corrected, but this does not establish installation, UI or sandbox acceptance. All downloads retain the same product source recorded in their build metadata; later acceptance-helper changes do not rebuild the product.
 
 ## Install and open
 
 1. Download the installer and the release checksum file. Compare the downloaded file's SHA-256 digest with the listed value before opening it.
-2. Windows: download the x64 NSIS `.exe`, run the installer, and launch APUS Reflex Harness from the Start menu or installation directory. Use `SHA256SUMS-win32-x64` to verify Windows files.
+2. Windows (experimental; installation acceptance incomplete): download the x64 NSIS `.exe`, run the installer, and launch APUS Reflex Harness from the Start menu or installation directory. Use `SHA256SUMS-win32-x64` to verify Windows files.
 3. macOS: choose the Apple Silicon or Intel DMG, drag APUS Reflex Harness into Applications, and launch that copy. Verify Apple Silicon files with `SHA256SUMS` and Intel files with `SHA256SUMS-darwin-x64`.
-4. Ubuntu 24.04 x64: verify `SHA256SUMS-linux-x64`, then install the downloaded package with `sudo apt install ./apus-reflex-harness-linux-x64.deb` and open APUS Reflex Harness from the application menu. Other Linux distributions are not qualified.
+4. Ubuntu 24.04 x64 (experimental; installation acceptance incomplete): verify `SHA256SUMS-linux-x64`, then install the downloaded package with `sudo apt install ./apus-reflex-harness-linux-x64.deb` and open APUS Reflex Harness from the application menu. Other Linux distributions are not qualified.
 5. Linux x64 Web: verify `SHA256SUMS-web-linux-x64`, extract `apus-reflex-harness-web-linux-x64.tar.gz` and run `./start.sh` in its directory. Open the authenticated localhost URL printed by the launcher; do not share that URL. See the [Web guide](../release-web-runtime/README.md) for port and data-directory settings.
 6. Follow [model configuration](configuration.md), choose a workspace, and send a small task. The application starts its bundled backend automatically.
 

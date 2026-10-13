@@ -16,7 +16,7 @@ APUS 将模型推理与执行、权限及持久 Session 历史分开管理。项
 
 仓库当前为私有，Release 下载需要仓库访问权限；管理员公开后才能匿名下载。
 
-前往 [Releases](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/releases) 查看安装包、支持平台与验收情况。`0.1.0`（`v0.1.0`）目标为 macOS Apple Silicon（arm64）、macOS Intel（x64）、Windows x64、Ubuntu 24.04 x64 桌面及完整 Linux x64 Web 包，均从同一经过审查的干净源码提交构建。可用平台以 Release 实际附上的已验收安装包为准。这是未签名预览版，macOS 未公证。真实模型首个任务尚未验证；请按教程自行配置模型。GitHub 的“Source code”压缩包是源码，不是可安装应用；Web 包内置 Node 和后端，监听 localhost，不需要 Electron；参见 [Web 教程](docs/release-web-runtime/README.zh.md)。
+前往 [Releases](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/releases) 查看安装包、支持平台与验收情况。`0.1.0`（`v0.1.0`）目标为 macOS Apple Silicon（arm64）、macOS Intel（x64）、Windows x64、Ubuntu 24.04 x64 桌面及完整 Linux x64 Web 包，均从同一经过审查的干净源码提交构建。macOS Apple Silicon、macOS Intel 和 Linux x64 Web 已通过原生安装/启动与重启检查。Windows x64 和 Ubuntu 24.04 x64 桌面作为实验性下载提供，安装验收尚未完成；详见[平台状态](docs/feat-integrated-product/installation.zh.md)。这是未签名预览版，macOS 未公证。真实模型首个任务尚未验证；请按教程自行配置模型。GitHub 的“Source code”压缩包是源码，不是可安装应用；Web 包内置 Node 和后端，监听 localhost，不需要 Electron；参见 [Web 教程](docs/release-web-runtime/README.zh.md)。
 
 桌面安装包内置运行时，使用者无需另装 Git、Node.js 或后端。按[安装教程](docs/feat-integrated-product/installation.zh.md)安装，再按[模型配置教程](docs/feat-integrated-product/configuration.zh.md)接入自己的服务商。预览版可能存在兼容性变化，授予文件访问权限前请阅读 [SAFETY.zh.md](SAFETY.zh.md)。
 

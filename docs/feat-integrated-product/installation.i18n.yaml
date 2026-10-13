@@ -3,14 +3,14 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/feat-integrated-product/installation.md
 /install-apus-reflex-harness:
-  en: 09ef6c015338b329
-  zh: ed8667fd1d6acd24
+  en: 81f54e7e236134a5
+  zh: 3f7c4db2f56ca446
 /install-apus-reflex-harness/download:
-  en: 007170679e8cad9c
-  zh: 498c15267c024de6
+  en: d20d54cf98aeea2d
+  zh: a8c7594a7d0925f8
 /install-apus-reflex-harness/install-and-open:
-  en: 23a260b1c02a2de7
-  zh: a5b5cdb568cb75cf
+  en: 6b2380bfad0bbac2
+  zh: 79f32d5e7262ab8b
 /install-apus-reflex-harness/update:
   en: 276efdcb10212bd5
   zh: 4da11f4eb3708e52

@@ -2,22 +2,31 @@
 
 [English](installation.md) | 中文
 
-本教程介绍如何选择桌面安装包、安装及更新。可用平台以所选 Release 实际附上的已验收安装包为准。
+本教程介绍如何选择桌面安装包、安装及更新。下载前请阅读验收状态；实验性附件尚未完成安装验收。
 
 ## 下载
 
 仓库当前为私有，查看与下载 Release 需要仓库访问权限；预发布状态本身不会开放匿名访问。
 
-打开[产品 Releases](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/releases)，阅读所选版本支持的平台、架构、签名状态和已知限制。选择客户端附件，不要下载 GitHub 自动生成的源码压缩包作为安装包。该版本仅支持附有安装包并通过验收的平台。
+打开[产品 Releases](https://github.com/APUS-AI-Lab/APUS-Reflex-Harness/releases)，阅读所选版本支持的平台、架构、签名状态和已知限制。选择客户端附件，不要下载 GitHub 自动生成的源码压缩包作为安装包。附有下载包本身不代表安装验收通过。
 
-`0.1.0` 的目标为 macOS Apple Silicon（arm64）、macOS Intel（x64）、Windows x64、Ubuntu 24.04 x64 桌面及完整 Linux x64 Web 包，均从同一经过审查的干净源码提交构建。选择与操作系统及架构匹配的附件：macOS 使用 DMG/应用 ZIP，Windows 使用 NSIS `.exe` 安装包。这些都是未签名预览版，macOS 未公证。各平台发布前须通过原生安装、启动与重启验收；真实模型首个任务尚未验证。
+`0.1.0` 的目标为 macOS Apple Silicon（arm64）、macOS Intel（x64）、Windows x64、Ubuntu 24.04 x64 桌面及完整 Linux x64 Web 包，均从同一经过审查的干净源码提交构建。选择与操作系统及架构匹配的附件：macOS 使用 DMG/应用 ZIP，Windows 使用 NSIS `.exe` 安装包。这些都是未签名预览版，macOS 未公证。本次预发布明确将 Windows 和 Ubuntu 桌面标为实验性附件；真实模型首个任务尚未验证。
+
+| 平台 | `0.1.0` 安装验收 |
+| --- | --- |
+| macOS Apple Silicon / Intel | 原生安装、启动与重启通过。 |
+| Linux x64 Web（Ubuntu 24.04） | 解压、启动、默认工作区、配置持久化、沙箱与重启通过。 |
+| Windows x64 | 实验性；安装包构建通过，但安装验收失败，原因尚未确定。 |
+| Ubuntu 24.04 x64 桌面 | 实验性；安装包构建通过，但验收在应用启动前因运行时文件清单输出缓冲溢出而中止。 |
+
+Windows 和 Ubuntu 桌面再验收因 GitHub Actions 计费/支出额度限制未能启动。Linux 验收脚本已修复，但这不代表安装、界面或沙箱验收通过。全部下载包保留构建元数据记录的同一产品源码；后续验收脚本修改不代表重新构建产品。
 
 ## 安装与打开
 
 1. 下载安装包和发行校验文件。打开之前，将下载文件的 SHA-256 摘要与公布值进行比较。
-2. Windows：下载 x64 NSIS `.exe` 安装包，运行安装向导，再从开始菜单或安装目录启动 APUS Reflex Harness。校验文件使用 `SHA256SUMS-win32-x64`。
+2. Windows（实验性，安装验收未完成）：下载 x64 NSIS `.exe` 安装包，运行安装向导，再从开始菜单或安装目录启动 APUS Reflex Harness。校验文件使用 `SHA256SUMS-win32-x64`。
 3. macOS：选择 Apple Silicon 或 Intel DMG，将 APUS Reflex Harness 拖入 Applications，再从 Applications 启动；Apple Silicon 附件使用 `SHA256SUMS` 校验，Intel 附件使用 `SHA256SUMS-darwin-x64`。
-4. Ubuntu 24.04 x64：使用 `SHA256SUMS-linux-x64` 校验，再运行 `sudo apt install ./apus-reflex-harness-linux-x64.deb` 安装，从应用菜单打开 APUS Reflex Harness；其他 Linux 发行版尚未验收。
+4. Ubuntu 24.04 x64（实验性，安装验收未完成）：使用 `SHA256SUMS-linux-x64` 校验，再运行 `sudo apt install ./apus-reflex-harness-linux-x64.deb` 安装，从应用菜单打开 APUS Reflex Harness；其他 Linux 发行版尚未验收。
 5. Linux x64 Web：使用 `SHA256SUMS-web-linux-x64` 校验，解压 `apus-reflex-harness-web-linux-x64.tar.gz` 后在其目录运行 `./start.sh`，打开启动器输出的带认证信息的 localhost 链接，不要分享该链接。端口及数据目录配置见 [Web 教程](../release-web-runtime/README.zh.md)。
 6. 按[模型配置教程](configuration.zh.md)操作，选择工作区并发送一个小任务。应用会自动启动自带的后端。
 
