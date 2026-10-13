@@ -1,0 +1,13 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-office-editions/README.md
+/apus-reflex-agent-editions:
+  en: 95f0e68d45d6a9c3
+  zh: 48b8769c4fec2f9e
+/apus-reflex-agent-editions/macos-compatibility:
+  en: dd51cfc62011347d
+  zh: 0ea4839d657d805e
+/apus-reflex-agent-editions/installation-and-upgrades:
+  en: 00f92f1532a68f57
+  zh: 836a45aae7a36957

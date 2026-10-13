@@ -1,5 +1,5 @@
 /** Start the extracted Web product with its bundled Node and persistent profile. */
-import { existsSync, mkdirSync, realpathSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, realpathSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { createRequire } from 'node:module'
@@ -26,7 +26,9 @@ export async function launch(args = process.argv.slice(2)) {
   const root = dirname(fileURLToPath(import.meta.url))
   const options = launchOptions(args)
   const runtime = join(root, 'runtime')
-  const environment = { ...process.env, DSH_HOME: options.data }
+  const manifest = JSON.parse(readFileSync(join(runtime, 'runtime-manifest.json'), 'utf8'))
+  if (!['full', 'lite'].includes(manifest.edition)) throw new Error('Web runtime must declare Full or Lite.')
+  const environment = { ...process.env, DSH_HOME: options.data, APUS_PRODUCT_EDITION: manifest.edition }
   for (const name of ['NODE_OPTIONS', 'NODE_PATH', 'ELECTRON_RUN_AS_NODE']) delete environment[name]
   mkdirSync(options.data, { recursive: true, mode: 0o700 })
   const require = createRequire(join(runtime, 'package.json'))
@@ -36,7 +38,7 @@ export async function launch(args = process.argv.slice(2)) {
     boot.initProfile(profile, [...boot.PROFILE_TEMPLATES.web.bundles, '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'])
   }
   const child = spawn(join(root, 'bin/node'), [join(runtime, 'node_modules/@deepseek-ai/dsh/lib/bin.js'),
-    '--profile', 'web', '--patch', join(root, 'web.patch.yml'), ...options.args.slice(1)], {
+    '--profile', 'web', '--patch', join(root, 'web.patch.yml'), '--patch', join(runtime, 'product-edition.patch.yml'), ...options.args.slice(1)], {
     cwd: options.data, env: environment, stdio: 'inherit',
   })
   const interrupt = () => child.kill('SIGINT')

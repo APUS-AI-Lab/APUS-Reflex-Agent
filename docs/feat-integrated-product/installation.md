@@ -14,10 +14,12 @@ The `0.1.0` targets are macOS Apple Silicon (arm64), macOS Intel (x64), Windows 
 
 | Platform | `0.1.0` installation acceptance |
 | --- | --- |
-| macOS Apple Silicon / Intel | Passed native installation, startup and restart. |
+| macOS Apple Silicon / Intel | Automated copying, direct process startup and restart passed; Finder/Gatekeeper acceptance is incomplete. The application in a checked DMG has an invalid bundle seal. |
 | Linux x64 Web (Ubuntu 24.04) | Passed extraction, startup, default workspace, configuration persistence, sandbox and restart. |
 | Windows x64 | Experimental; installer built, but installation acceptance failed with cause unresolved. |
 | Ubuntu 24.04 x64 desktop | Experimental; installer built, but acceptance stopped on a runtime file-list output buffer overflow before application launch. |
+
+The checked published `0.1.0` macOS DMG matches its published SHA-256, but its application fails strict bundle-signature verification with `code has no resources but signature indicates they must be present`. Finder can report the copied app as damaged after the normal DMG → Applications installation flow. The previous automated checks invoked the executable directly and did not qualify that Finder/Gatekeeper flow. A matching download checksum confirms the bytes, not a valid application seal. A corrected `0.1.1` Mac package has not yet completed qualification or publication; use [source development](development.md) or wait for a qualified replacement.
 
 Windows and Ubuntu desktop rechecks could not start because GitHub Actions billing/spending limits blocked their runners. The Linux helper has been corrected, but this does not establish installation, UI or sandbox acceptance. All downloads retain the same product source recorded in their build metadata; later acceptance-helper changes do not rebuild the product.
 
@@ -25,12 +27,12 @@ Windows and Ubuntu desktop rechecks could not start because GitHub Actions billi
 
 1. Download the installer and the release checksum file. Compare the downloaded file's SHA-256 digest with the listed value before opening it.
 2. Windows (experimental; installation acceptance incomplete): download the x64 NSIS `.exe`, run the installer, and launch APUS Reflex Harness from the Start menu or installation directory. Use `SHA256SUMS-win32-x64` to verify Windows files.
-3. macOS: choose the Apple Silicon or Intel DMG, drag APUS Reflex Harness into Applications, and launch that copy. Verify Apple Silicon files with `SHA256SUMS` and Intel files with `SHA256SUMS-darwin-x64`.
+3. macOS (`0.1.0` bundle-seal defect; Finder/Gatekeeper acceptance incomplete): use [source development](development.md) or wait for a qualified replacement. The existing `0.1.0` Apple Silicon files use `SHA256SUMS` and Intel files use `SHA256SUMS-darwin-x64`; checksum verification does not repair this defect.
 4. Ubuntu 24.04 x64 (experimental; installation acceptance incomplete): verify `SHA256SUMS-linux-x64`, then install the downloaded package with `sudo apt install ./apus-reflex-harness-linux-x64.deb` and open APUS Reflex Harness from the application menu. Other Linux distributions are not qualified.
 5. Linux x64 Web: verify `SHA256SUMS-web-linux-x64`, extract `apus-reflex-harness-web-linux-x64.tar.gz` and run `./start.sh` in its directory. Open the authenticated localhost URL printed by the launcher; do not share that URL. See the [Web guide](../release-web-runtime/README.md) for port and data-directory settings.
 6. Follow [model configuration](configuration.md), choose a workspace, and send a small task. The application starts its bundled backend automatically.
 
-The Windows installer has no code signature, so SmartScreen may report an unknown publisher. The macOS preview has no Apple signing or notarization assurance and may also be blocked. After confirming the source and checksum, use the operating system's per-application approval flow if you choose to proceed. Do not disable system protection globally. Signing status belongs to the specific release; it cannot be inferred from a successful build.
+The Windows installer has no code signature, so SmartScreen may report an unknown publisher. After confirming its source and checksum, use the operating system's per-application approval flow if you choose to proceed. The macOS preview has no Developer ID signing or notarization assurance; ordinary approval does not repair the confirmed `0.1.0` bundle-seal defect. Do not disable system protection globally. Signing status belongs to the specific release; it cannot be inferred from a successful build.
 
 The application includes its runtime, so Git, Node.js, and pnpm are unnecessary. Model providers still require network access and your own credentials; optional tools may have additional requirements.
 

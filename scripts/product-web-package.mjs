@@ -5,13 +5,18 @@ import { chmodSync, copyFileSync, cpSync, existsSync, lstatSync, mkdirSync, mkdt
 import { join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import dependencyInventory from '../frontend/scripts/runtime-dependency-inventory.cjs'
+import productEdition from '../frontend/scripts/product-edition.cjs'
 import { checkRelease } from './product-release.mjs'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
 const json = file => JSON.parse(readFileSync(file, 'utf8'))
 export const digest = file => createHash('sha256').update(readFileSync(file)).digest('hex')
-export const archiveName = 'apus-reflex-harness-web-linux-x64.tar.gz'
-export const inventoryName = 'runtime-dependencies-web-linux-x64.json'
+/** Filename and extracted directory names for one independently collected edition. */
+export function webAssetNames(edition = 'full') {
+  edition = productEdition.resolveEdition(edition)
+  return { archive: `apus-reflex-agent-${edition}-web-linux-x64.tar.gz`, payload: `apus-reflex-agent-${edition}-web-linux-x64`,
+    inventory: `runtime-dependencies-${edition}-web-linux-x64.json`, info: `build-info-${edition}-web-linux-x64.json`, checksums: `SHA256SUMS-${edition}-web-linux-x64` }
+}
 export const linuxNativePackage = 'node_modules/@deepseek-ai/node-addon-system-linux-x64'
 
 /** Product-only profile additions; the launcher supplies an absolute persistent DSH_HOME. */
@@ -46,9 +51,10 @@ export function payloadFiles(directory) {
 }
 
 /** Reject stale, workspace-backed, or cross-platform deployment inputs. */
-export function verifyWebRuntime(runtime, revision) {
+export function verifyWebRuntime(runtime, revision, edition = 'full') {
+  edition = productEdition.resolveEdition(edition)
   if (runtime.mode !== 'deployed' || runtime.sourceDirty || runtime.sourceRevision !== revision
-    || runtime.platform !== 'linux' || runtime.arch !== 'x64'
+    || runtime.edition !== edition || runtime.platform !== 'linux' || runtime.arch !== 'x64'
     || runtime.entry !== 'node_modules/@deepseek-ai/dsh/lib/bin.js') {
     throw new Error('Web packaging requires a clean same-commit deployed Linux x64 runtime.')
   }
@@ -69,7 +75,9 @@ if (environment.DSH_CLIENT_PRODUCT_VERSION !== process.argv[2]
 }
 
 /** Create the tarball and independent Web release metadata; never publish it. */
-export function packageWeb(base = root) {
+export function packageWeb(base = root, edition = process.env.APUS_PRODUCT_EDITION) {
+  edition = productEdition.resolveEdition(edition)
+  const names = webAssetNames(edition)
   if (process.platform !== 'linux' || process.arch !== 'x64') throw new Error('Build Web archives on a native Linux x64 runner.')
   const manifest = checkRelease(base)
   const git = args => execFileSync('git', args, { cwd: base, encoding: 'utf8' }).trim()
@@ -77,10 +85,11 @@ export function packageWeb(base = root) {
   const revision = git(['rev-parse', 'HEAD'])
   verifyProductClientBuild(base, manifest.version, revision)
   const prepared = join(base, 'frontend/.build/system3-runtime')
-  const runtime = json(join(prepared, 'runtime-manifest.json'))
-  verifyWebRuntime(runtime, revision)
+  const runtime = productEdition.verifyEditionRuntime(prepared, edition)
+  if (edition === 'full') productEdition.verifyOfficeEngine(prepared, 'linux', 'x64')
+  verifyWebRuntime(runtime, revision, edition)
   dependencyInventory.verifyDependencyInventory(prepared, runtime)
-  for (const path of [runtime.entry, 'node_modules/@deepseek-ai/dsh-web-app/lib/index.js',
+  for (const path of [runtime.entry, 'product-edition.patch.yml', 'node_modules/@deepseek-ai/dsh-web-app/lib/index.js',
     'node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html',
     'node_modules/@deepseek-ai/dsh-experimental-client-ui-system3/lib/client.js',
     'node_modules/@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin/lib/index.js',
@@ -96,11 +105,11 @@ export function packageWeb(base = root) {
   if (probe.version !== pin || probe.platform !== 'linux' || probe.arch !== 'x64') throw new Error('Bundled Node differs from the locked native version.')
   const nodePackage = join(nodeRoot, 'node_modules/node-linux-x64')
   if (json(join(nodePackage, 'package.json')).version.replace(/^v/, '') !== pin) throw new Error('Bundled Node license package version differs.')
-  const output = join(base, '.artifacts/product-release', manifest.version, 'web-linux-x64')
+  const output = join(base, '.artifacts/product-release', manifest.version, edition, 'web-linux-x64')
   if (existsSync(output)) throw new Error('Web release output already exists; use a fresh build.')
   mkdirSync(output, { recursive: true })
   const stage = mkdtempSync(join(output, '.stage-'))
-  const payload = join(stage, 'apus-reflex-harness-web')
+  const payload = join(stage, names.payload)
   mkdirSync(join(payload, 'bin'), { recursive: true })
   try {
     cpSync(prepared, join(payload, 'runtime'), { recursive: true, dereference: false })
@@ -118,25 +127,29 @@ export function packageWeb(base = root) {
     for (const name of ['README.md', 'README.zh.md']) copyFileSync(join(base, 'docs/release-web-runtime', name), join(payload, name))
     const files = payloadFiles(payload)
     writeFileSync(join(payload, 'files.json'), `${JSON.stringify(files, null, 2)}\n`)
-    const archive = join(output, archiveName)
-    execFileSync('tar', ['-czf', archive, '-C', stage, 'apus-reflex-harness-web'])
+    const archive = join(output, names.archive)
+    execFileSync('tar', ['-czf', archive, '-C', stage, names.payload])
     const sourceArchive = execFileSync('git', ['archive', '--format=tar', 'HEAD'], { cwd: base, maxBuffer: 512 * 1024 * 1024 })
-    const info = { product: manifest.product, version: manifest.version, channel: manifest.channel, target: 'web-linux-x64', harnessVersion: runtime.version,
+    const info = { product: manifest.product, edition, version: manifest.version, channel: manifest.channel, target: 'web-linux-x64', harnessVersion: runtime.version,
       sourceRevision: revision, sourceArchiveSha256: createHash('sha256').update(sourceArchive).digest('hex'),
       bundledNode: { version: pin, sha256: digest(node) },
       lockfiles: { pnpm: digest(join(base, 'pnpm-lock.yaml')), npm: digest(join(base, 'frontend/package-lock.json')) },
-      payloadManifestSha256: digest(join(payload, 'files.json')), runtimeDependencyInventory: { ...runtime.dependencyInventory, path: inventoryName },
-      assets: [{ name: archiveName, sha256: digest(archive) }] }
-    writeFileSync(join(output, 'build-info-web-linux-x64.json'), `${JSON.stringify(info, null, 2)}\n`)
-    copyFileSync(join(prepared, runtime.dependencyInventory.path), join(output, inventoryName))
-    const names = [archiveName, 'build-info-web-linux-x64.json', inventoryName]
-    writeFileSync(join(output, 'SHA256SUMS-web-linux-x64'), `${names.map(name => `${digest(join(output, name))}  ${name}`).join('\n')}\n`)
+      payloadManifestSha256: digest(join(payload, 'files.json')), runtimeDependencyInventory: { ...runtime.dependencyInventory, path: names.inventory },
+      assets: [{ name: names.archive, sha256: digest(archive) }] }
+    writeFileSync(join(output, names.info), `${JSON.stringify(info, null, 2)}\n`)
+    copyFileSync(join(prepared, runtime.dependencyInventory.path), join(output, names.inventory))
+    const supportFiles = [names.archive, names.info, names.inventory]
+    writeFileSync(join(output, names.checksums), `${supportFiles.map(name => `${digest(join(output, name))}  ${name}`).join('\n')}\n`)
     console.log(`Collected ${archive}. Native extracted-archive qualification is required before publishing.`)
     return output
   } finally { rmSync(stage, { recursive: true, force: true }) }
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  try { packageWeb() }
+  try {
+    const args = process.argv.slice(2)
+    if (args.length && (args.length !== 2 || args[0] !== '--edition')) throw new Error('Usage: node scripts/product-web-package.mjs [--edition full|lite]')
+    packageWeb(root, args.length ? productEdition.resolveEdition(args[1]) : process.env.APUS_PRODUCT_EDITION)
+  }
   catch (error) { console.error(error.message); process.exitCode = 1 }
 }

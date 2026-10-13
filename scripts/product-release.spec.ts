@@ -1,11 +1,13 @@
 import { createHash } from 'node:crypto'
 import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { unzipSync, strFromU8 } from 'fflate'
 import { load } from 'js-yaml'
 import { expect, it, onTestFinished } from 'vitest'
-import { releaseAssetNames, writeReleaseSupportAssets } from './product-release.mjs'
+import { releaseAssetNames, releaseSupportNames, verifyReceipt, writeReleaseSupportAssets } from './product-release.mjs'
 
 const digest = (bytes: string | Buffer) => createHash('sha256').update(bytes).digest('hex')
 
@@ -20,21 +22,19 @@ it('combines macOS, Windows and Linux support files without replacing either tar
   writeFileSync(join(base, 'frontend/package-lock.json'), 'desktop locked fixture')
   writeFileSync(join(licenseRoot, 'LICENSE.txt'), 'original fixture license')
   writeFileSync(join(licenseRoot, 'THIRD_PARTY_NOTICES.txt'), 'original fixture credit')
-  const manifest = { product: 'APUS Reflex Harness', version: '0.1.0', channel: 'preview', repository: 'APUS-AI-Lab/APUS-Reflex-Harness', targets: ['darwin-arm64', 'darwin-x64', 'win32-x64', 'linux-x64'] }
+  const manifest = { product: 'APUS Reflex Agent', version: '0.1.1', editions: ['full', 'lite'] as ('full' | 'lite')[], channel: 'preview', repository: 'APUS-AI-Lab/APUS-Reflex-Harness', targets: ['darwin-arm64', 'darwin-x64', 'win32-x64', 'linux-x64'] }
   const retained = new Map<string, Buffer>()
-  for (const [platform, arch] of [['darwin', 'arm64'], ['darwin', 'x64'], ['win32', 'x64'], ['linux', 'x64']] as const) {
+  for (const edition of ['full', 'lite'] as const) for (const [platform, arch] of [['darwin', 'arm64'], ['darwin', 'x64'], ['win32', 'x64'], ['linux', 'x64']] as const) {
     const target = `${platform}-${arch}`
-    const inventoryBytes = JSON.stringify({ target, packages: [] })
+    const inventoryBytes = JSON.stringify({ edition, target, packages: [] })
     writeFileSync(join(runtimeRoot, 'runtime-dependencies.json'), inventoryBytes)
-    const assets = releaseAssetNames(platform, arch)
-    for (const asset of assets) writeFileSync(join(output, asset), `${target} installer fixture`)
-    const runtime = { version: '0.1.7-rc.2', dependencyInventory: { path: 'runtime-dependencies.json', sha256: digest(inventoryBytes) } }
-    const names = await writeReleaseSupportAssets({ base, output, manifest, runtime, revision: 'a'.repeat(40), target, assets })
-    expect(names).toEqual(target !== 'darwin-arm64'
-      ? { info: `build-info-${target}.json`, licenses: `LICENSES-${target}.zip`, inventory: `runtime-dependencies-${target}.json`, checksums: `SHA256SUMS-${target}` }
-      : { info: 'build-info.json', licenses: 'LICENSES.zip', inventory: 'runtime-dependencies.json', checksums: 'SHA256SUMS' })
+    const assets = releaseAssetNames(platform, arch, edition)
+    for (const asset of assets) writeFileSync(join(output, asset), `${edition} ${target} installer fixture`)
+    const runtime = { edition, version: '0.1.7-rc.2', dependencyInventory: { path: 'runtime-dependencies.json', sha256: digest(inventoryBytes) } }
+    const names = await writeReleaseSupportAssets({ base, output, manifest, runtime, revision: 'a'.repeat(40), target, assets, edition })
+    expect(names).toEqual({ info: `build-info-${edition}-${target}.json`, licenses: `LICENSES-${edition}-${target}.zip`, inventory: `runtime-dependencies-${edition}-${target}.json`, checksums: `SHA256SUMS-${edition}-${target}` })
     const info: unknown = JSON.parse(readFileSync(join(output, names.info), 'utf8'))
-    expect(info).toMatchObject({ sourceRevision: 'a'.repeat(40), target, harnessVersion: runtime.version,
+    expect(info).toMatchObject({ edition, sourceRevision: 'a'.repeat(40), target, harnessVersion: runtime.version,
       runtimeDependencyInventory: { path: names.inventory, sha256: digest(readFileSync(join(output, names.inventory))) },
       assets: assets.map(name => ({ name, sha256: digest(readFileSync(join(output, name))) })) })
     expect(readFileSync(join(output, names.inventory), 'utf8')).toBe(inventoryBytes)
@@ -50,12 +50,12 @@ it('combines macOS, Windows and Linux support files without replacing either tar
     for (const [name, bytes] of retained) expect(readFileSync(join(output, name))).toEqual(bytes)
     for (const name of readdirSync(output)) retained.set(name, readFileSync(join(output, name)))
   }
-  expect(readdirSync(output)).toHaveLength(22)
+  expect(readdirSync(output)).toHaveLength(44)
 })
 
 it('rejects unsupported support-file targets before writing output', async () => {
-  await expect(writeReleaseSupportAssets({ base: '', output: '', manifest: { product: '', version: '', channel: '', repository: '', targets: [] },
-    runtime: { version: '', dependencyInventory: { path: '', sha256: '' } }, revision: '', target: 'win32-arm64', assets: [] }))
+  await expect(writeReleaseSupportAssets({ base: '', output: '', manifest: { product: '', version: '', channel: '', repository: '', targets: [], editions: [] },
+    runtime: { edition: 'full', version: '', dependencyInventory: { path: '', sha256: '' } }, revision: '', target: 'win32-arm64', assets: [] }))
     .rejects.toThrow('Unsupported installer target')
 })
 
@@ -98,8 +98,60 @@ it('checks out the dispatch commit and retains review evidence without release-w
 
 it('pins the Debian artifact name to the release collector without architecture macro translation', () => {
   const desktop = JSON.parse(readFileSync(new URL('../frontend/package.json', import.meta.url), 'utf8')) as {
-    build: { linux: { target: { target: string; arch: string[] }[] }; deb: { artifactName?: string } }
+    build: {
+      files: string[]
+      directories: { output: string }
+      nsis: Record<string, string>
+      linux: { target: { target: string; arch: string[] }[] }
+      deb: { artifactName?: string }
+    }
   }
   expect(desktop.build.linux.target).toEqual([{ target: 'deb', arch: ['x64'] }])
-  expect([desktop.build.deb.artifactName]).toEqual(releaseAssetNames('linux', 'x64'))
+  const module = new URL('../frontend/scripts/product-edition.cjs', import.meta.url)
+  const { createBuilderConfig } = createRequire(import.meta.url)(fileURLToPath(module)) as {
+    createBuilderConfig: (base: typeof desktop.build, edition: string) => typeof desktop.build
+  }
+  for (const edition of ['full', 'lite']) expect([createBuilderConfig(desktop.build, edition).deb.artifactName]).toEqual(releaseAssetNames('linux', 'x64', edition))
+})
+
+it('binds receipts to one edition and rejects mixed installer names before collection', () => {
+  const manifest = { product: 'APUS Reflex Agent', version: '0.1.1', channel: 'preview', repository: 'APUS-AI-Lab/APUS-Reflex-Harness', targets: ['darwin-arm64'], editions: ['full', 'lite'] as ('full' | 'lite')[] }
+  for (const edition of ['full', 'lite'] as const) {
+    const receipt = { version: manifest.version, edition, sourceRevision: 'current', target: 'darwin-arm64', signing: 'unsigned-preview', runtimeDependencyInventorySha256: 'hash', directory: '.artifacts/product-build/owned', assets: releaseAssetNames('darwin', 'arm64', edition).map(name => ({ name, sha256: 'hash' })) }
+    expect(verifyReceipt(receipt, manifest, 'current', 'darwin-arm64', () => 'hash', undefined, edition)).toContain('owned')
+    const other = edition === 'full' ? 'lite' : 'full'
+    expect(() => verifyReceipt(receipt, manifest, 'current', 'darwin-arm64', () => 'hash', undefined, other)).toThrow('edition differs')
+    expect(() => verifyReceipt({ ...receipt, assets: releaseAssetNames('darwin', 'arm64', other).map(name => ({ name, sha256: 'hash' })) }, manifest, 'current', 'darwin-arm64', () => 'hash', undefined, edition)).toThrow('changed after build')
+  }
+  expect(() => releaseSupportNames('darwin-arm64', 'other')).toThrow()
+})
+
+it('rejects mismatched runtime or installer editions before writing support files', async () => {
+  const manifest = { product: 'APUS Reflex Agent', version: '0.1.1', channel: 'preview', repository: 'APUS-AI-Lab/APUS-Reflex-Harness', targets: ['darwin-arm64'], editions: ['full', 'lite'] as ('full' | 'lite')[] }
+  const input = { base: '', output: '', manifest, runtime: { edition: 'full' as const, version: 'runtime', dependencyInventory: { path: '', sha256: '' } }, revision: '', target: 'darwin-arm64', assets: releaseAssetNames('darwin', 'arm64', 'full'), edition: 'lite' as const }
+  await expect(writeReleaseSupportAssets(input)).rejects.toThrow('Runtime edition')
+  await expect(writeReleaseSupportAssets({ ...input, runtime: { ...input.runtime, edition: 'lite' } })).rejects.toThrow('Release assets differ')
+})
+
+it('builds and qualifies each edition in a separate desktop and Web job with unique artifacts', () => {
+  const desktop = load(readFileSync(new URL('../.github/workflows/product-release.yml', import.meta.url), 'utf8')) as {
+    jobs: Record<string, {
+      strategy: { matrix: { edition: string } }
+      env: Record<string, string>
+      steps: { uses?: string; with?: Record<string, string>; run?: string }[]
+    }>
+  }
+  const web = load(readFileSync(new URL('../.github/workflows/product-web-release.yml', import.meta.url), 'utf8')) as typeof desktop
+  for (const job of [desktop.jobs['build']!, web.jobs['linux-web']!]) {
+    expect(job.strategy.matrix.edition).toContain('["full","lite"]')
+    expect(job.env['APUS_PRODUCT_EDITION']).toBe('${{ matrix.edition }}')
+    const artifacts = job.steps.filter(step => step.uses?.startsWith('actions/upload-artifact@'))
+    expect(artifacts.every(step => step.with?.['name']?.includes('${{ matrix.edition }}'))).toBe(true)
+  }
+  expect(desktop.jobs['build']!.steps.some(step => step.run?.includes('--edition ${{ matrix.edition }}'))).toBe(true)
+  expect(web.jobs['linux-web']!.steps.some(step => step.run?.includes('/$APUS_PRODUCT_EDITION/web-linux-x64/apus-reflex-agent-$APUS_PRODUCT_EDITION-'))).toBe(true)
+  for (const job of [desktop.jobs['windows_requalification']!, desktop.jobs['unix_requalification']!]) {
+    expect(job.env['QUALIFICATION_EDITION']).toBe('${{ matrix.edition }}')
+    expect(job.steps.some(step => step.with?.['script']?.includes('process.env.QUALIFICATION_EDITION'))).toBe(true)
+  }
 })

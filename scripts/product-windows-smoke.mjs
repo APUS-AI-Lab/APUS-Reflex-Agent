@@ -7,6 +7,8 @@ import { tmpdir } from 'node:os'
 import { dirname, join, resolve, win32 } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { parseArgs, promisify } from 'node:util'
+import { basename } from 'node:path'
+import { readInstallerBuild, verifyInstalledEdition, verifyInstalledEditionFiles } from './product-installer-metadata.mjs'
 
 const execute = promisify(execFile)
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -46,11 +48,12 @@ export function ownedProcessIds(processes, roots) {
 }
 
 /** Reject an installed runtime belonging to a different build or platform.
- * @param {{mode:string,platform:string,arch:string,sourceRevision:string,sourceDirty:boolean}} runtime Installed manifest.
- * @param {{sourceRevision:string,target:string}} build Collected build receipt.
+ * @param {{mode:string,platform:string,arch:string,sourceRevision:string,sourceDirty:boolean,edition?:'full'|'lite'}} runtime Installed manifest.
+ * @param {{sourceRevision:string,target:string,edition?:'full'|'lite',version?:string}} build Collected build receipt.
  * @returns {void}
  */
 export function verifyInstalledIdentity(runtime, build) {
+  verifyInstalledEdition(runtime, build)
   if (build.target !== 'win32-x64' || runtime.mode !== 'deployed' || runtime.platform !== 'win32' || runtime.arch !== 'x64' || runtime.sourceDirty || runtime.sourceRevision !== build.sourceRevision) {
     throw new Error('Installed runtime does not match the collected Windows build')
   }
@@ -196,8 +199,8 @@ async function run(installer, reportDirectory, expectedSource = process.env.GITH
     await quiescent()
   }
   try {
-    const build = JSON.parse(await readFile(join(dirname(installer), 'build-info-win32-x64.json'), 'utf8'))
-    const asset = build.assets.find(asset => asset.name === 'apus-reflex-harness-windows-x64-setup.exe')
+    const build = await readInstallerBuild(installer, 'win32-x64')
+    const asset = build.assets.find(asset => asset.name === basename(installer))
     const digest = createHash('sha256').update(await readFile(installer)).digest('hex')
     if (!asset || digest !== asset.sha256) throw new Error('Installer differs from collected build receipt')
     if (!expectedSource || !/^[0-9a-f]{40}$/.test(expectedSource) || build.sourceRevision !== expectedSource) {
@@ -206,6 +209,7 @@ async function run(installer, reportDirectory, expectedSource = process.env.GITH
     report.sourceRevision = build.sourceRevision
     report.installerSha256 = digest
     report.version = build.version
+    report.edition = build.edition ?? 'full'
     report.stages.push('installer-receipt-verified')
     // NSIS consumes the unquoted remainder after /D= as the destination, including spaces.
     const installationStarted = Date.now()
@@ -226,6 +230,7 @@ async function run(installer, reportDirectory, expectedSource = process.env.GITH
     await access(executable)
     const runtime = JSON.parse(await readFile(join(installation, 'resources', 'system3-runtime', 'runtime-manifest.json'), 'utf8'))
     verifyInstalledIdentity(runtime, build)
+    verifyInstalledEditionFiles(join(installation, 'resources/system3-runtime'), build)
     report.stages.push('installed-runtime-identity-verified')
     const { stdout } = await execute(join(env.SystemRoot ?? env.SYSTEMROOT ?? process.env.SystemRoot, 'System32', 'where.exe'), ['node.exe'], { env, windowsHide: true }).catch(error => {
       if (error.code === 1) return { stdout: '' }

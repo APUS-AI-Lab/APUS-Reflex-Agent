@@ -6,12 +6,14 @@
 
 此 Linux x64 下载包包含 Web 服务端、浏览器应用和 Node.js 运行时。你需要受支持的 Linux 系统和浏览器；启动应用无需 Git、pnpm、外部 Node 或 Electron。原生验收任务使用 Ubuntu 24.04 x64，其他 Linux 发行版尚未验收。受限 shell 执行要求内核支持 Landlock；压缩包内置对应原生启动器。
 
-1. 从同一 Release 下载 `apus-reflex-harness-web-linux-x64.tar.gz` 和匹配的 `SHA256SUMS-web-linux-x64`，将压缩包的 SHA-256 与清单中的值核对。
-2. 解压并进入 `apus-reflex-harness-web` 目录。
+1. 从同一 Release 下载 `apus-reflex-agent-{edition}-web-linux-x64.tar.gz` 和匹配的 `SHA256SUMS-{edition}-web-linux-x64`，将压缩包的 SHA-256 与清单中的值核对。
+2. 解压并进入 `apus-reflex-agent-{edition}-web-linux-x64` 目录。
 3. 运行 `./start.sh`，打开终端输出的带认证信息的 localhost URL。保持终端运行；按 Ctrl+C 停止服务。
 4. 打开 **设置 → 模型**，配置服务商、API 密钥和模型。模型请求需要对应服务商凭据和网络访问能力。
 
 服务监听 `127.0.0.1:3080`。可用 `./start.sh --port 8080` 选择其他端口。启动器不提供对外网络监听参数。请勿分享终端输出的带认证信息的 URL。
+
+将 `{edition}` 替换为 `full` 或 `lite`。Full 内置 Office 转换引擎；Lite 排除该引擎，保留浏览器表格预览及普通 PDF、图片、文本预览。DOC/PPT 页面渲染需要 Full 或显式配置的 Host 服务。两版的核心 Agent、Reflex、记忆及 PPT 工作台使用相同代码，参见[版本选择](../feat-office-editions/README.zh.md)。
 
 ## 配置和数据
 

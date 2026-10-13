@@ -7,6 +7,8 @@ import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { parseArgs, promisify } from 'node:util'
+import { basename } from 'node:path'
+import { readInstallerBuild, verifyInstalledEdition, verifyInstalledEditionFiles } from './product-installer-metadata.mjs'
 
 const execute = promisify(execFile)
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -28,11 +30,12 @@ export function smokeEnvironment(source, profile, bin) {
 }
 
 /** Reject an installed runtime from another source revision or target.
- * @param {{mode:string,platform:string,arch:string,sourceRevision:string,sourceDirty:boolean}} runtime Installed runtime manifest.
- * @param {{sourceRevision:string,target:string}} build Collected metadata.
+ * @param {{mode:string,platform:string,arch:string,sourceRevision:string,sourceDirty:boolean,edition?:'full'|'lite'}} runtime Installed runtime manifest.
+ * @param {{sourceRevision:string,target:string,edition?:'full'|'lite',version?:string}} build Collected metadata.
  * @returns {void}
  */
 export function verifyInstalledIdentity(runtime, build) {
+  verifyInstalledEdition(runtime, build)
   if (build.target !== 'linux-x64' || runtime.mode !== 'deployed' || runtime.platform !== 'linux' || runtime.arch !== 'x64' || runtime.sourceDirty || runtime.sourceRevision !== build.sourceRevision) {
     throw new Error('Installed runtime does not match the collected Linux build')
   }
@@ -196,8 +199,8 @@ async function run(installer, reportDirectory, expectedSource = process.env.GITH
       throw error
     })
     if (installed) throw new Error('Refusing to replace an existing product installation')
-    const build = JSON.parse(await readFile(join(dirname(installer), 'build-info-linux-x64.json'), 'utf8'))
-    const asset = build.assets.find(asset => asset.name === 'apus-reflex-harness-linux-x64.deb')
+    const build = await readInstallerBuild(installer, 'linux-x64')
+    const asset = build.assets.find(asset => asset.name === basename(installer))
     const digest = createHash('sha256').update(await readFile(installer)).digest('hex')
     if (!asset || digest !== asset.sha256) throw new Error('Debian package differs from collected build receipt')
     verifyExpectedSource(build.sourceRevision, expectedSource)
@@ -208,6 +211,7 @@ async function run(installer, reportDirectory, expectedSource = process.env.GITH
     report.sourceRevision = build.sourceRevision
     report.installerSha256 = digest
     report.version = build.version
+    report.edition = build.edition ?? 'full'
     report.stages.push('installer-receipt-verified')
     acquired = true
     await sudo(['apt-get', 'install', '-y', installer])
@@ -217,6 +221,7 @@ async function run(installer, reportDirectory, expectedSource = process.env.GITH
     installation = dirname(executable)
     const runtime = JSON.parse(await readFile(join(installation, 'resources/system3-runtime/runtime-manifest.json'), 'utf8'))
     verifyInstalledIdentity(runtime, build)
+    verifyInstalledEditionFiles(join(installation, 'resources/system3-runtime'), build)
     const desktop = `/usr/share/applications/${packageName}.desktop`
     await execute('/usr/bin/desktop-file-validate', [desktop])
     if ((await readFile(desktop, 'utf8')).includes('--no-sandbox')) throw new Error('Installed desktop entry bypasses the Chromium sandbox')

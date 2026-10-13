@@ -10,23 +10,38 @@ on:
       tag:
         description: Product version label matching the manifest
         required: true
-        default: v0.1.0
+        default: v0.1.1
         type: string
+
+      edition:
+        description: Independently build and qualify Full/Lite Web archives
+        required: true
+        default: both
+        type: choice
+        options:
+          - both
+          - full
+          - lite
 
 permissions:
   contents: read
 
 concurrency:
-  group: apus-web-preview-${{ github.ref }}
+  group: apus-web-preview-${{ github.ref }}-${{ inputs.edition }}
   cancel-in-progress: false
 
 jobs:
   linux-web:
+    strategy:
+      fail-fast: false
+      matrix:
+        edition: ${{ fromJSON((inputs.edition == 'both' || inputs.edition == '') && '["full","lite"]' || format('["{0}"]', inputs.edition)) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 120
     env:
       DSH_TELEMETRY_DISABLED: '1'
       npm_config_audit: 'false'
+      APUS_PRODUCT_EDITION: ${{ matrix.edition }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -58,7 +73,7 @@ jobs:
           node native/system/scripts/verify-launcher-binary.mjs packages/linux-x64
       - name: Deploy the closed runtime
         run: node frontend/scripts/prepare-system3-runtime.mjs --deploy
-      - name: Collect full Web archive and checksums
+      - name: Collect selected Web archive and checksums
         run: node scripts/product-web-package.mjs
       - name: Install qualification browser
         working-directory: apps/web
@@ -66,12 +81,12 @@ jobs:
       - name: Qualify extracted Web archive without external developer tools
         run: |
           version=$(node -p "JSON.parse(require('fs').readFileSync('release/manifest.json')).version")
-          node scripts/product-web-smoke.mjs --archive "$PWD/.artifacts/product-release/$version/web-linux-x64/apus-reflex-harness-web-linux-x64.tar.gz" --report-dir "$PWD/.artifacts/product-web-smoke"
+          node scripts/product-web-smoke.mjs --archive "$PWD/.artifacts/product-release/$version/$APUS_PRODUCT_EDITION/web-linux-x64/apus-reflex-agent-$APUS_PRODUCT_EDITION-web-linux-x64.tar.gz" --report-dir "$PWD/.artifacts/product-web-smoke"
       - name: Upload Web archive for review
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: apus-web-preview-linux-x64-${{ github.run_id }}
+          name: apus-web-preview-${{ matrix.edition }}-linux-x64-${{ github.run_id }}
           path: .artifacts/product-release/
           include-hidden-files: true
           if-no-files-found: warn
@@ -80,7 +95,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: apus-web-review-linux-x64-${{ github.run_id }}
+          name: apus-web-review-${{ matrix.edition }}-linux-x64-${{ github.run_id }}
           path: .artifacts/product-web-smoke/
           include-hidden-files: true
           if-no-files-found: warn

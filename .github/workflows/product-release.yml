@@ -6,7 +6,7 @@ on:
       tag:
         description: Product version label matching the manifest (no existing tag required)
         required: true
-        default: v0.1.0
+        default: v0.1.1
         type: string
       target:
         description: Native installer targets to build and review
@@ -19,6 +19,17 @@ on:
           - mac-intel
           - linux
           - all
+
+      edition:
+        description: Full/Lite editions; legacy only requalifies v0.1.0 artifact names
+        required: true
+        default: both
+        type: choice
+        options:
+          - both
+          - full
+          - lite
+          - legacy
 
       qualification_run_id:
         description: Existing product build run to requalify without rebuilding (one native target; leave empty to build)
@@ -34,7 +45,7 @@ permissions:
   actions: read
 
 concurrency:
-  group: apus-preview-${{ github.ref }}-${{ inputs.target }}
+  group: apus-preview-${{ github.ref }}-${{ inputs.target }}-${{ inputs.edition }}
   cancel-in-progress: false
 
 jobs:
@@ -43,12 +54,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJSON(inputs.target == 'all' && '[{"runner":"windows-latest","target":"win32-x64"},{"runner":"macos-15","target":"darwin-arm64"},{"runner":"macos-15-intel","target":"darwin-x64"},{"runner":"ubuntu-24.04","target":"linux-x64"}]' || inputs.target == 'linux' && '[{"runner":"ubuntu-24.04","target":"linux-x64"}]' || inputs.target == 'mac-intel' && '[{"runner":"macos-15-intel","target":"darwin-x64"}]' || inputs.target == 'mac' && '[{"runner":"macos-15","target":"darwin-arm64"}]' || '[{"runner":"windows-latest","target":"win32-x64"}]') }}
-    runs-on: ${{ matrix.runner }}
+        edition: ${{ fromJSON(inputs.edition == 'both' && '["full","lite"]' || format('["{0}"]', inputs.edition)) }}
+        platform: ${{ fromJSON(inputs.target == 'all' && '[{"runner":"windows-latest","target":"win32-x64"},{"runner":"macos-15","target":"darwin-arm64"},{"runner":"macos-15-intel","target":"darwin-x64"},{"runner":"ubuntu-24.04","target":"linux-x64"}]' || inputs.target == 'linux' && '[{"runner":"ubuntu-24.04","target":"linux-x64"}]' || inputs.target == 'mac-intel' && '[{"runner":"macos-15-intel","target":"darwin-x64"}]' || inputs.target == 'mac' && '[{"runner":"macos-15","target":"darwin-arm64"}]' || '[{"runner":"windows-latest","target":"win32-x64"}]') }}
+    runs-on: ${{ matrix.platform.runner }}
     timeout-minutes: 120
     env:
       DSH_TELEMETRY_DISABLED: '1'
       CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      APUS_PRODUCT_EDITION: ${{ matrix.edition }}
     steps:
       - name: Prepare native Windows checkout and patch utility
         if: runner.os == 'Windows'
@@ -76,8 +89,8 @@ jobs:
       - name: Validate source commit, version label, and native target
         env:
           PRODUCT_TAG: ${{ inputs.tag }}
-          PRODUCT_TARGET: ${{ matrix.target }}
-        run: node --input-type=module -e "import { checkRelease } from './scripts/product-release.mjs'; import { execFileSync } from 'node:child_process'; checkRelease(process.cwd(), process.env.PRODUCT_TAG); if (execFileSync('git', ['rev-parse', 'HEAD'], { encoding:'utf8' }).trim() !== process.env.GITHUB_SHA) throw new Error('Checkout differs from workflow commit'); if (process.platform + '-' + process.arch !== process.env.PRODUCT_TARGET) throw new Error('Runner does not match native target')"
+          PRODUCT_TARGET: ${{ matrix.platform.target }}
+        run: node --input-type=module -e "import { checkRelease } from './scripts/product-release.mjs'; import { execFileSync } from 'node:child_process'; checkRelease(process.cwd(), process.env.PRODUCT_TAG); if (!['full','lite'].includes(process.env.APUS_PRODUCT_EDITION)) throw new Error('Build edition must be full or lite'); if (execFileSync('git', ['rev-parse', 'HEAD'], { encoding:'utf8' }).trim() !== process.env.GITHUB_SHA) throw new Error('Checkout differs from workflow commit'); if (process.platform + '-' + process.arch !== process.env.PRODUCT_TARGET) throw new Error('Runner does not match native target')"
       - name: Prepare native Linux build and desktop acceptance
         if: runner.os == 'Linux'
         run: |
@@ -92,7 +105,7 @@ jobs:
         run: npm ci
       - name: Build unsigned preview installers and checksums
         id: installers
-        run: pnpm run package:product --unsigned
+        run: pnpm run package:product --unsigned --edition ${{ matrix.edition }}
       - name: Typecheck desktop behavior
         working-directory: frontend
         run: npm run typecheck
@@ -109,7 +122,7 @@ jobs:
         shell: pwsh
         run: |
           $version = (Get-Content -Raw release/manifest.json | ConvertFrom-Json).version
-          $installer = Join-Path $PWD ".artifacts/product-release/$version/win32-x64/apus-reflex-harness-windows-x64-setup.exe"
+          $installer = Join-Path $PWD ".artifacts/product-release/$version/${env:APUS_PRODUCT_EDITION}/win32-x64/apus-reflex-agent-${env:APUS_PRODUCT_EDITION}-windows-x64-setup.exe"
           $reports = Join-Path $PWD '.artifacts/product-windows-smoke'
           node scripts/product-windows-smoke.mjs --installer $installer --report-dir $reports
       - name: Validate macOS smoke checks
@@ -119,11 +132,11 @@ jobs:
       - name: Install and verify the macOS product
         if: ${{ !cancelled() && steps.macos_smoke_checks.outcome == 'success' }}
         env:
-          PRODUCT_TARGET: ${{ matrix.target }}
+          PRODUCT_TARGET: ${{ matrix.platform.target }}
         run: |
           version=$(node -p "JSON.parse(require('fs').readFileSync('release/manifest.json')).version")
           arch="${PRODUCT_TARGET#darwin-}"
-          node scripts/product-macos-smoke.mjs --installer "$PWD/.artifacts/product-release/$version/$PRODUCT_TARGET/apus-reflex-harness-mac-$arch.dmg" --report-dir "$PWD/.artifacts/product-macos-smoke"
+          node scripts/product-macos-smoke.mjs --installer "$PWD/.artifacts/product-release/$version/$APUS_PRODUCT_EDITION/$PRODUCT_TARGET/apus-reflex-agent-$APUS_PRODUCT_EDITION-mac-$arch.dmg" --report-dir "$PWD/.artifacts/product-macos-smoke"
       - name: Validate Linux smoke checks
         id: linux_smoke_checks
         if: ${{ !cancelled() && runner.os == 'Linux' && steps.installers.outcome == 'success' }}
@@ -132,12 +145,12 @@ jobs:
         if: ${{ !cancelled() && steps.linux_smoke_checks.outcome == 'success' }}
         run: |
           version=$(node -p "JSON.parse(require('fs').readFileSync('release/manifest.json')).version")
-          xvfb-run -a dbus-run-session -- node scripts/product-linux-smoke.mjs --installer "$PWD/.artifacts/product-release/$version/linux-x64/apus-reflex-harness-linux-x64.deb" --report-dir "$PWD/.artifacts/product-linux-smoke"
+          xvfb-run -a dbus-run-session -- node scripts/product-linux-smoke.mjs --installer "$PWD/.artifacts/product-release/$version/$APUS_PRODUCT_EDITION/linux-x64/apus-reflex-agent-$APUS_PRODUCT_EDITION-linux-x64.deb" --report-dir "$PWD/.artifacts/product-linux-smoke"
       - name: Upload installers for manual review
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: apus-preview-${{ matrix.target }}-${{ github.run_id }}
+          name: apus-preview-${{ matrix.edition }}-${{ matrix.platform.target }}-${{ github.run_id }}
           path: .artifacts/product-release/
           include-hidden-files: true
           if-no-files-found: warn
@@ -146,7 +159,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: apus-review-${{ matrix.target }}-${{ github.run_id }}
+          name: apus-review-${{ matrix.edition }}-${{ matrix.platform.target }}-${{ github.run_id }}
           path: |
             .artifacts/product-windows-smoke/
             .artifacts/product-macos-smoke/
@@ -158,6 +171,10 @@ jobs:
 
   windows_requalification:
     if: ${{ inputs.target == 'windows' && (inputs.qualification_run_id != '' || inputs.qualification_source != '') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        edition: ${{ fromJSON(inputs.edition == 'both' && '["full","lite"]' || format('["{0}"]', inputs.edition)) }}
     runs-on: windows-latest
     timeout-minutes: 35
     env:
@@ -165,6 +182,7 @@ jobs:
       QUALIFICATION_RUN_ID: ${{ inputs.qualification_run_id }}
       QUALIFICATION_SOURCE: ${{ inputs.qualification_source }}
       QUALIFICATION_TARGET: ${{ inputs.target }}
+      QUALIFICATION_EDITION: ${{ matrix.edition }}
     steps:
       - name: Prepare Windows checkout
         shell: pwsh
@@ -190,7 +208,7 @@ jobs:
             const { validateRequalification } = await import(pathToFileURL(`${process.env.GITHUB_WORKSPACE}/scripts/product-qualification-source.mjs`).href);
             const { data: run } = await github.rest.actions.getWorkflowRun({ ...context.repo, run_id: Number(runId) });
             const artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts, { ...context.repo, run_id: Number(runId), per_page: 100 });
-            const id = validateRequalification(run, artifacts, `${context.repo.owner}/${context.repo.repo}`, runId, source, 'win32-x64');
+            const id = validateRequalification(run, artifacts, `${context.repo.owner}/${context.repo.repo}`, runId, source, 'win32-x64', process.env.QUALIFICATION_EDITION);
             core.setOutput('artifact_id', String(id));
       - name: Download the selected immutable installer and support files
         uses: actions/download-artifact@v4
@@ -212,7 +230,8 @@ jobs:
       - name: Requalify the original installed Windows product
         shell: pwsh
         run: |
-          $installers = @(Get-ChildItem -Path .artifacts/requalification-source -Recurse -File -Filter 'apus-reflex-harness-windows-x64-setup.exe')
+          $name = if ($env:QUALIFICATION_EDITION -eq 'legacy') { 'apus-reflex-harness-windows-x64-setup.exe' } else { "apus-reflex-agent-${env:QUALIFICATION_EDITION}-windows-x64-setup.exe" }
+          $installers = @(Get-ChildItem -Path .artifacts/requalification-source -Recurse -File -Filter $name)
           if ($installers.Count -ne 1) { throw "Expected exactly one downloaded Windows installer" }
           node scripts/product-windows-smoke.mjs --installer $installers[0].FullName --report-dir "$PWD/.artifacts/product-windows-requalification" --expected-source $env:QUALIFICATION_SOURCE --build-run-id $env:QUALIFICATION_RUN_ID
           if ($LASTEXITCODE -ne 0) { throw "Installed Windows requalification failed" }
@@ -220,7 +239,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: apus-windows-requalification-${{ inputs.qualification_run_id }}-${{ github.run_id }}
+          name: apus-windows-requalification-${{ matrix.edition }}-${{ inputs.qualification_run_id }}-${{ github.run_id }}
           path: .artifacts/product-windows-requalification/
           include-hidden-files: true
           if-no-files-found: warn
@@ -228,6 +247,10 @@ jobs:
 
   unix_requalification:
     if: ${{ inputs.target != 'windows' && (inputs.qualification_run_id != '' || inputs.qualification_source != '') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        edition: ${{ fromJSON(inputs.edition == 'both' && '["full","lite"]' || format('["{0}"]', inputs.edition)) }}
     runs-on: ${{ inputs.target == 'linux' && 'ubuntu-24.04' || inputs.target == 'mac' && 'macos-15' || 'macos-15-intel' }}
     timeout-minutes: 45
     env:
@@ -235,6 +258,7 @@ jobs:
       QUALIFICATION_RUN_ID: ${{ inputs.qualification_run_id }}
       QUALIFICATION_SOURCE: ${{ inputs.qualification_source }}
       QUALIFICATION_TARGET: ${{ inputs.target }}
+      QUALIFICATION_EDITION: ${{ matrix.edition }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -254,7 +278,7 @@ jobs:
             const { validateRequalification } = await import(pathToFileURL(`${process.env.GITHUB_WORKSPACE}/scripts/product-qualification-source.mjs`).href);
             const { data: run } = await github.rest.actions.getWorkflowRun({ ...context.repo, run_id: Number(runId) });
             const artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts, { ...context.repo, run_id: Number(runId), per_page: 100 });
-            const id = validateRequalification(run, artifacts, `${context.repo.owner}/${context.repo.repo}`, runId, source, target);
+            const id = validateRequalification(run, artifacts, `${context.repo.owner}/${context.repo.repo}`, runId, source, target, process.env.QUALIFICATION_EDITION);
             core.setOutput('artifact_id', String(id));
       - name: Download the selected immutable installer and support files
         uses: actions/download-artifact@v4
@@ -288,7 +312,8 @@ jobs:
           import { resolve } from 'node:path';
           import { spawnSync } from 'node:child_process';
           const linux = process.platform === 'linux';
-          const name = linux ? 'apus-reflex-harness-linux-x64.deb' : `apus-reflex-harness-mac-${process.arch}.dmg`;
+          const prefix = process.env.QUALIFICATION_EDITION === 'legacy' ? 'apus-reflex-harness' : `apus-reflex-agent-${process.env.QUALIFICATION_EDITION}`;
+          const name = linux ? `${prefix}-linux-x64.deb` : `${prefix}-mac-${process.arch}.dmg`;
           const directory = resolve('.artifacts/requalification-source');
           const found = (await readdir(directory, { recursive: true })).filter(file => file.split('/').at(-1) === name);
           if (found.length !== 1) throw new Error('Expected exactly one downloaded native installer');
@@ -302,7 +327,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: apus-${{ inputs.target }}-requalification-${{ inputs.qualification_run_id }}-${{ github.run_id }}
+          name: apus-${{ inputs.target }}-requalification-${{ matrix.edition }}-${{ inputs.qualification_run_id }}-${{ github.run_id }}
           path: .artifacts/product-unix-requalification/
           include-hidden-files: true
           if-no-files-found: warn

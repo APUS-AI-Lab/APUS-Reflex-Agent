@@ -3248,6 +3248,7 @@ async function bootstrap(): Promise<void> {
     nodeExecutablePath: bundledNodePath(),
     nodeEntryPath: harnessNodeEntryPath(),
     dshPatchPath: system3DesktopPatchPath(),
+    dshEditionPatchPath: preparedSystem3Runtime?.editionPatchPath,
     dshSafePatchPath: desktopResourcePath('dsh-desktop-safe.patch.yml'),
     dshMarketPatchPath: desktopResourcePath('dsh-desktop-market.patch.yml'),
     dshHome: join(app.getPath('userData'), 'harness'),

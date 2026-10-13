@@ -7,6 +7,8 @@ import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { parseArgs, promisify } from 'node:util'
+import { basename } from 'node:path'
+import { readInstallerBuild, verifyInstalledEdition, verifyInstalledEditionFiles } from './product-installer-metadata.mjs'
 
 const execute = promisify(execFile)
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -25,12 +27,13 @@ export function smokeEnvironment(source, profile) {
 }
 
 /** Reject an installed runtime from another source revision or architecture.
- * @param {{mode:string,platform:string,arch:string,sourceRevision:string,sourceDirty:boolean}} runtime Installed runtime manifest.
- * @param {{sourceRevision:string,target:string}} build Collected build metadata.
+ * @param {{mode:string,platform:string,arch:string,sourceRevision:string,sourceDirty:boolean,edition?:'full'|'lite'}} runtime Installed runtime manifest.
+ * @param {{sourceRevision:string,target:string,edition?:'full'|'lite',version?:string}} build Collected build metadata.
  * @param {string} arch Native runner architecture.
  * @returns {void}
  */
 export function verifyInstalledIdentity(runtime, build, arch) {
+  verifyInstalledEdition(runtime, build)
   if (!['arm64', 'x64'].includes(arch) || build.target !== `darwin-${arch}` || runtime.mode !== 'deployed' || runtime.platform !== 'darwin' || runtime.arch !== arch || runtime.sourceDirty || runtime.sourceRevision !== build.sourceRevision) {
     throw new Error('Installed runtime does not match the collected native macOS build')
   }
@@ -146,15 +149,15 @@ async function run(installer, reportDirectory, expectedSource = process.env.GITH
     await quiescent()
   }
   try {
-    const suffix = process.arch === 'arm64' ? '' : '-darwin-x64'
-    const build = JSON.parse(await readFile(join(dirname(installer), `build-info${suffix}.json`), 'utf8'))
-    const asset = build.assets.find(asset => asset.name === `apus-reflex-harness-mac-${process.arch}.dmg`)
+    const build = await readInstallerBuild(installer, `darwin-${process.arch}`)
+    const asset = build.assets.find(asset => asset.name === basename(installer))
     const digest = createHash('sha256').update(await readFile(installer)).digest('hex')
     if (!asset || digest !== asset.sha256) throw new Error('DMG differs from collected build receipt')
     verifyExpectedSource(build.sourceRevision, expectedSource)
     report.sourceRevision = build.sourceRevision
     report.installerSha256 = digest
     report.version = build.version
+    report.edition = build.edition ?? 'full'
     report.target = build.target
     report.stages.push('installer-receipt-verified')
     report.stages.push('dmg-attach-started')
@@ -168,8 +171,13 @@ async function run(installer, reportDirectory, expectedSource = process.env.GITH
     await access(executable)
     const runtime = JSON.parse(await readFile(join(installation, 'Contents/Resources/system3-runtime/runtime-manifest.json'), 'utf8'))
     verifyInstalledIdentity(runtime, build, process.arch)
+    verifyInstalledEditionFiles(join(installation, 'Contents/Resources/system3-runtime'), build)
     const { stdout: version } = await execute('/usr/bin/plutil', ['-extract', 'CFBundleShortVersionString', 'raw', '-o', '-', join(installation, 'Contents/Info.plist')])
     if (version.trim() !== build.version) throw new Error('Installed bundle version differs from collected build')
+    await command('installed-code-signature', '/usr/bin/codesign', ['--verify', '--deep', '--strict', '--verbose=2', installation], 120_000)
+    report.codeSignature = { verified: true, developerIdOrNotarizationVerified: false }
+    const { stdout: minimum } = await execute('/usr/bin/plutil', ['-extract', 'LSMinimumSystemVersion', 'raw', '-o', '-', join(installation, 'Contents/Info.plist')])
+    report.minimumSystemVersion = minimum.trim()
     report.stages.push('copied-runtime-identity-verified-and-image-detached')
     const { stdout } = await execute('/bin/sh', ['-c', 'command -v node'], { env }).catch(error => {
       if (error.code === 1) return { stdout: '' }

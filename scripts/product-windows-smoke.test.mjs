@@ -30,7 +30,7 @@ test('teardown follows descendants and detached installed processes without clai
 
 test('installed runtime must come from the collected clean Windows revision', () => {
   const runtime = { mode: 'deployed', platform: 'win32', arch: 'x64', sourceRevision: 'same', sourceDirty: false }
-  const build = { target: 'win32-x64', sourceRevision: 'same' }
+  const build = { version: '0.1.0', target: 'win32-x64', sourceRevision: 'same' }
   verifyInstalledIdentity(runtime, build)
   for (const override of [{ sourceRevision: 'stale' }, { sourceDirty: true }, { mode: 'workspace' }, { platform: 'darwin' }, { arch: 'arm64' }]) {
     assert.throws(() => verifyInstalledIdentity({ ...runtime, ...override }, build), /does not match/)
@@ -112,4 +112,11 @@ test('an exit already observed during sampling keeps its numeric failure and sep
     assert.equal(diagnostic.observationFailure.message, 'Observation unavailable; API_KEY=[redacted]')
     return true
   })
+})
+
+test('Full and Lite installed runtime identities cannot be mixed', () => {
+  const runtime = { mode: 'deployed', platform: 'win32', arch: 'x64', sourceRevision: 'same', sourceDirty: false, edition: 'lite' }
+  const build = { version: '0.1.1', target: 'win32-x64', sourceRevision: 'same', edition: 'lite' }
+  verifyInstalledIdentity(runtime, build)
+  assert.throws(() => verifyInstalledIdentity({ ...runtime, edition: 'full' }, build), /does not match/)
 })

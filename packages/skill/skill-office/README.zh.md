@@ -41,7 +41,7 @@ Agent（智能体）可以加载 Word、PowerPoint 和 Excel 工作流，默认�
 
 相对路径、资源缺失或 skill 文件的 YAML frontmatter 缺少描述都会导致激活失败。卸载插件会移除其候选项。项目和用户 skill 的优先级仍由 skill 注册表负责。
 
-加载的技能在 `Installed LibreOffice Kit` 段落中提供 `libreofficeKit.node` 和 `libreofficeKit.cli` 的绝对路径。除非用户明确要求不用内置二进制，Agent 将内置 CLI 作为 Node 的第一个参数运行，无需依赖工作目录或搜索 PATH。内置 CLI 失败时报告错误，不替换为系统可执行文件。激活时检查两个路径是否为实际文件。npm 部署默认使用已安装的 kit；Desktop 提供独立 Node 和 ASAR 外的完整 Office 依赖；Python SDK 提供独立 Node 和可执行文件旁的 Office 目录。仅有 Python 的自定义部署必须配置 `cli: false`，或提供独立 Node。
+加载的技能在 `Installed LibreOffice Kit` 段落中提供 `libreofficeKit.node` 和 `libreofficeKit.cli` 的绝对路径。除非用户明确要求不用内置二进制，Agent 将内置 CLI 作为 Node 的第一个参数运行，无需依赖工作目录或搜索 PATH。内置 CLI 失败时报告错误，不替换为系统可执行文件。激活时检查两个路径是否为实际文件。npm 部署默认使用已安装的 kit；启用 CLI 的 Desktop 部署提供独立 Node 和 ASAR 外的 Office 依赖；Python SDK 提供独立 Node 和可执行文件旁的 Office 目录。仅有 Python 的自定义部署必须配置 `cli: false`，或提供独立 Node。APUS Reflex Agent Lite 不包含 kit；自定义 profile 启用这些技能时必须设置 `cli: false`，以保留不依赖渲染的文档编写与结构检查。省略此配置会要求已安装的 kit，缺失时在激活阶段报错。
 
 ### 结构检查
 

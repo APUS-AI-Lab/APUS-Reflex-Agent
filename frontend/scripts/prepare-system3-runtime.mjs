@@ -1,4 +1,4 @@
-/** Stage the own built Harness as a closed production tree or an explicit checkout identity. */
+/** Stage the own built Harness with explicit product edition exclusions or a checkout identity. */
 import { access, cp, mkdir, mkdtemp, readFile, realpath, rename, rm, writeFile, readdir, lstat } from 'node:fs/promises'
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
@@ -8,11 +8,13 @@ import { patchSystem3Runtime } from './patch-system3-runtime.mjs'
 import { generateSystem3Patch } from './generate-system3-patch.mjs'
 import dependencyInventory from './runtime-dependency-inventory.cjs'
 import packageMetadata from './package-metadata-policy.cjs'
+import productEdition from './product-edition.cjs'
 import { existsSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 
 const appRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const args = process.argv.slice(2)
+const edition = productEdition.resolveEditionFromArgs(args)
 const sourceIndex = args.indexOf('--source')
 const source = sourceIndex >= 0 ? args[sourceIndex + 1] : (process.env.SYSTEM3_HARNESS_ROOT || join(appRoot, '..'))
 if (!source) throw new Error('--source requires a Harness checkout path')
@@ -127,6 +129,9 @@ try {
       }
     }
     await materialize(join(root, 'node_modules'))
+    productEdition.pruneRuntimeFiles(root, { edition, platform: process.platform, arch: process.arch })
+    productEdition.verifyEditionFiles(root, edition)
+    if (edition === 'full') productEdition.verifyOfficeEngine(root, process.platform, process.arch)
     packageMetadata.removeExcludedMetadata(root)
     packageMetadata.verifyExcludedMetadata(root)
     await patchSystem3Runtime(root, appRoot)
@@ -142,10 +147,11 @@ try {
   await checkPackages(root, definitions)
   const entry = deployed ? 'node_modules/@deepseek-ai/dsh/lib/bin.js' : 'apps/cli/lib/bin.js'
   await access(join(root, entry))
-  const manifest = { formatVersion: 1, product: 'xdan-system3', version, sourceRevision, sourceDirty,
+  const manifest = { formatVersion: 1, product: 'xdan-system3', version, edition, editionPatch: 'product-edition.patch.yml', sourceRevision, sourceDirty,
     platform: process.platform, arch: process.arch, mode: deployed ? 'deployed' : 'workspace',
     ...(deployed ? { dependencyInventory: dependencyInventory.writeDependencyInventory(root) } : { sourceRoot }), entry, packages: definitions.map(([name, path]) => ({ name, path })) }
-  await generateSystem3Patch(stage, { sourceRoot, mode: manifest.mode })
+  await generateSystem3Patch(stage, { sourceRoot, mode: manifest.mode, edition })
+  await writeFile(join(stage, manifest.editionPatch), productEdition.editionPatch(edition))
   await writeFile(join(stage, 'runtime-manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`)
   const previous = `${artifactRoot}.previous-${process.pid}`
   let hadPrevious = false
@@ -154,7 +160,7 @@ try {
   try { await rename(stage, artifactRoot) }
   catch (error) { if (hadPrevious) await rename(previous, artifactRoot); throw error }
   if (hadPrevious) await rm(previous, { recursive: true, force: true })
-  console.log(`Prepared System3 ${version} ${manifest.mode}: ${sourceRevision}${sourceDirty ? ' (dirty local acceptance)' : ''}`)
+  console.log(`Prepared APUS Reflex Agent ${edition} runtime ${version} ${manifest.mode}: ${sourceRevision}${sourceDirty ? ' (dirty local acceptance)' : ''}`)
 } finally {
   await rm(stage, { recursive: true, force: true })
   if (buildSource) await rm(buildSource, { recursive: true, force: true })

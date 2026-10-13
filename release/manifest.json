@@ -1,6 +1,6 @@
 {
-  "product": "APUS Reflex Harness",
-  "version": "0.1.0",
+  "product": "APUS Reflex Agent",
+  "version": "0.1.1",
   "channel": "preview",
   "repository": "APUS-AI-Lab/APUS-Reflex-Harness",
   "targets": [
@@ -8,5 +8,9 @@
     "win32-x64",
     "darwin-x64",
     "linux-x64"
+  ],
+  "editions": [
+    "full",
+    "lite"
   ]
 }

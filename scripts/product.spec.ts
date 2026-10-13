@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { checkNode, desktopBuilderFlag, productStages } from './product.mjs'
+import { checkNode, desktopBuilderFlag, productOptions, productStages } from './product.mjs'
 import { releaseAssetNames, validateRelease, verifyReceipt } from './product-release.mjs'
+import type { BuildReceipt, ReleaseManifest } from './product-release.mjs'
 
 describe('integrated product preparation', () => {
   it('installs both lockfiles before building and stages runtime before desktop assets', () => {
@@ -30,7 +31,7 @@ describe('integrated product preparation', () => {
 })
 
 describe('product release identity', () => {
-  const manifest = { product: 'APUS Reflex Harness', version: '0.1.0', channel: 'preview', repository: 'APUS-AI-Lab/APUS-Reflex-Harness', targets: ['darwin-arm64'] }
+  const manifest: ReleaseManifest = { product: 'APUS Reflex Agent', version: '0.1.1', channel: 'preview', repository: 'APUS-AI-Lab/APUS-Reflex-Harness', targets: ['darwin-arm64'], editions: ['full', 'lite'] }
   const desktop = { version: manifest.version }
   const lock = { version: manifest.version, packages: { '': { version: manifest.version } } }
 
@@ -43,16 +44,16 @@ describe('product release identity', () => {
   })
 
   it('collects only installers for the selected target', () => {
-    expect(releaseAssetNames('darwin', 'arm64')).toEqual(['apus-reflex-harness-mac-arm64.dmg', 'apus-reflex-harness-mac-arm64.zip'])
-    expect(releaseAssetNames('linux', 'x64')).toEqual(['apus-reflex-harness-linux-x64.deb'])
+    expect(releaseAssetNames('darwin', 'arm64')).toEqual(['apus-reflex-agent-full-mac-arm64.dmg', 'apus-reflex-agent-full-mac-arm64.zip'])
+    expect(releaseAssetNames('linux', 'x64')).toEqual(['apus-reflex-agent-full-linux-x64.deb'])
     expect(() => releaseAssetNames('linux', 'arm64')).toThrow('Unsupported')
-    expect(releaseAssetNames('win32', 'x64')).toEqual(['apus-reflex-harness-windows-x64-setup.exe'])
+    expect(releaseAssetNames('win32', 'x64')).toEqual(['apus-reflex-agent-full-windows-x64-setup.exe'])
     expect(() => releaseAssetNames('win32', 'arm64')).toThrow('Unsupported')
   })
 
   it('rejects old, replaced or unowned installers before publishing current metadata', () => {
     const target = 'darwin-arm64'
-    const receipt = { version: manifest.version, sourceRevision: 'current', target, signing: 'unsigned-preview', runtimeDependencyInventorySha256: 'original', directory: '.artifacts/product-build/run-unique', assets: releaseAssetNames('darwin', 'arm64').map(name => ({ name, sha256: 'original' })) }
+    const receipt: BuildReceipt = { version: manifest.version, edition: 'full', sourceRevision: 'current', target, signing: 'unsigned-preview', runtimeDependencyInventorySha256: 'original', directory: '.artifacts/product-build/run-unique', assets: releaseAssetNames('darwin', 'arm64').map(name => ({ name, sha256: 'original' })) }
     expect(() => verifyReceipt(receipt, manifest, 'current', target, () => 'original')).not.toThrow()
     expect(() => verifyReceipt(receipt, manifest, 'newer', target, () => 'original')).toThrow('commit')
     expect(() => verifyReceipt(receipt, manifest, 'current', target, file => file.endsWith('runtime-dependencies.json') ? 'original' : 'replaced')).toThrow('changed after build')
@@ -67,4 +68,13 @@ it('selects the native desktop builder flag and refuses an unsupported host', ()
   expect(desktopBuilderFlag('win32')).toBe('--win')
   expect(desktopBuilderFlag('linux')).toBe('--linux')
   expect(() => desktopBuilderFlag('freebsd')).toThrow('Unsupported desktop platform')
+})
+
+it('validates edition options before starting a product action', () => {
+  expect(productOptions('package', [], {})).toEqual({ edition: 'full', unsigned: false })
+  expect(productOptions('package', ['--edition', 'lite', '--unsigned'], { APUS_PRODUCT_EDITION: 'full' })).toEqual({ edition: 'lite', unsigned: true })
+  expect(productOptions('setup', [], { APUS_PRODUCT_EDITION: 'lite' })).toEqual({ edition: 'lite', unsigned: false })
+  expect(() => productOptions('package', ['--edition', 'mini'], {})).toThrow()
+  expect(() => productOptions('package', ['--unknown'], {})).toThrow()
+  expect(() => productOptions('start', ['--unsigned'], {})).toThrow('Only package')
 })

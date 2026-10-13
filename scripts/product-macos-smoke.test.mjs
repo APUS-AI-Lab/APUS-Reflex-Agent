@@ -18,7 +18,7 @@ test('installed application excludes developer credentials, Node options and exi
 test('both native Mac architectures reject a stale or mismatched installed runtime', () => {
   for (const arch of ['arm64', 'x64']) {
     const runtime = { mode: 'deployed', platform: 'darwin', arch, sourceRevision: 'same', sourceDirty: false }
-    const build = { target: `darwin-${arch}`, sourceRevision: 'same' }
+    const build = { version: '0.1.0', target: `darwin-${arch}`, sourceRevision: 'same' }
     verifyInstalledIdentity(runtime, build, arch)
     for (const override of [{ sourceRevision: 'stale' }, { sourceDirty: true }, { mode: 'workspace' }, { platform: 'win32' }, { arch: 'invalid' }]) {
       assert.throws(() => verifyInstalledIdentity({ ...runtime, ...override }, build, arch), /does not match/)
@@ -83,4 +83,11 @@ test('completed commands retain success and elapsed time', async () => {
   assert.equal(result.stdout, 'ready')
   assert.equal(commands[0].exitCode, 0)
   assert.ok(commands[0].durationMs >= 0)
+})
+
+test('Full and Lite installed runtime identities cannot be mixed', () => {
+  const runtime = { mode: 'deployed', platform: 'darwin', arch: 'arm64', sourceRevision: 'same', sourceDirty: false, edition: 'lite' }
+  const build = { version: '0.1.1', target: 'darwin-arm64', sourceRevision: 'same', edition: 'lite' }
+  verifyInstalledIdentity(runtime, build, 'arm64')
+  assert.throws(() => verifyInstalledIdentity({ ...runtime, edition: 'full' }, build, 'arm64'), /does not match/)
 })

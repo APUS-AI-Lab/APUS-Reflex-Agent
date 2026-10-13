@@ -18,6 +18,8 @@ export interface HarnessRuntimeOptions {
   nodeEntryPath: string
   dshPatchPath: string
   dshSafePatchPath: string
+  /** Packaged edition policy, applied after every ordinary Desktop overlay. */
+  dshEditionPatchPath?: string
   /** Overlay for dshmarket's entry, passed only when the profile declares the market. */
   dshMarketPatchPath?: string
   dshHome: string
@@ -493,6 +495,14 @@ export class HarnessRuntime {
     if (profile !== SAFE_MODE_PROFILE) {
       const disabledPatch = await prepareHostDisabledPluginsPatch(this.options.dshHome, sourcePatchPath)
       if (disabledPatch) patchPaths.push(disabledPatch)
+      const editionPatch = this.options.dshEditionPatchPath
+      if (editionPatch !== undefined) {
+        if (!existsSync(editionPatch)) {
+          this.setState('failed', `APUS Reflex Agent edition patch was not found: ${editionPatch}`)
+          return
+        }
+        patchPaths.push(editionPatch)
+      }
     }
 
     await mkdir(this.options.dshHome, { recursive: true })

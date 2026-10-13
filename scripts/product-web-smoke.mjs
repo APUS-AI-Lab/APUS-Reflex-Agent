@@ -7,7 +7,8 @@ import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
-import { archiveName, digest, inventoryName, linuxNativePackage, payloadFiles, verifyWebRuntime } from './product-web-package.mjs'
+import productEdition from '../frontend/scripts/product-edition.cjs'
+import { webAssetNames, digest, linuxNativePackage, payloadFiles, verifyWebRuntime } from './product-web-package.mjs'
 
 const execute = promisify(execFile)
 const root = fileURLToPath(new URL('..', import.meta.url))
@@ -45,8 +46,10 @@ export function verifyPayload(directory, build) {
 
 /** Bind the adjacent release inventory to its published filename and extracted runtime metadata. */
 export function verifyPublishedInventory(directory, build, runtime) {
+  if (!['full', 'lite'].includes(build.edition) || build.edition !== runtime.edition) throw new Error('Published Web inventory metadata differs from the extracted runtime.')
+  const names = webAssetNames(build.edition)
   const inventory = build.runtimeDependencyInventory
-  if (inventory?.path !== inventoryName || inventory.sha256 !== runtime.dependencyInventory?.sha256
+  if (inventory?.path !== names.inventory || inventory.sha256 !== runtime.dependencyInventory?.sha256
     || build.harnessVersion !== runtime.version) throw new Error('Published Web inventory metadata differs from the extracted runtime.')
   if (digest(join(directory, inventory.path)) !== inventory.sha256) throw new Error('Published Web inventory file differs from its recorded hash.')
 }
@@ -99,13 +102,14 @@ process.stdout.write('node-confined');`
 }
 
 /** Extract, visit configuration pages, save a keyless setting, and verify it after restart. */
-export async function qualify(archive, reports) {
+export async function qualify(archive, reports, edition = process.env.APUS_PRODUCT_EDITION ?? 'full') {
+  const names = webAssetNames(edition)
   if (process.platform !== 'linux' || process.arch !== 'x64') throw new Error('Web qualification requires native Linux x64.')
   await mkdir(reports, { recursive: true })
   const temporary = await mkdtemp(join(tmpdir(), 'apus-web-installed-'))
   const toolPath = join(temporary, 'tools')
   const env = smokeEnvironment(temporary, toolPath)
-  const installed = join(temporary, 'apus-reflex-harness-web')
+  const installed = join(temporary, names.payload)
   const report = { passed: false, stages: [], limitations: ['No provider credentials or external model task is exercised.', 'This archive qualifies Linux x64 on the native CI distribution.'] }
   let browser
   let child
@@ -132,18 +136,21 @@ export async function qualify(archive, reports) {
     await mkdir(toolPath)
     for (const name of ['sh', 'dirname', 'bash', 'env']) await symlink(`/usr/bin/${name}`, join(toolPath, name))
     await mkdir(env.HOME)
-    const build = JSON.parse(await readFile(join(dirname(archive), 'build-info-web-linux-x64.json'), 'utf8'))
-    const asset = build.assets.find(item => item.name === archiveName)
-    if (build.target !== 'web-linux-x64' || asset?.sha256 !== digest(archive)) throw new Error('Web archive differs from collected build metadata.')
+    const build = JSON.parse(await readFile(join(dirname(archive), names.info), 'utf8'))
+    const asset = build.assets.find(item => item.name === names.archive)
+    if (build.edition !== edition || build.target !== 'web-linux-x64' || asset?.sha256 !== digest(archive)) throw new Error('Web archive differs from collected build metadata.')
     if (process.env.GITHUB_SHA && build.sourceRevision !== process.env.GITHUB_SHA) throw new Error('Web archive differs from the workflow commit.')
     report.sourceRevision = build.sourceRevision
     report.archiveSha256 = asset.sha256
     report.version = build.version
+    report.edition = edition
     report.stages.push('archive-receipt-verified')
     await execute('/bin/tar', ['-xzf', archive, '-C', temporary], { timeout: 600_000 })
     verifyPayload(installed, build)
     const runtime = JSON.parse(await readFile(join(installed, 'runtime/runtime-manifest.json'), 'utf8'))
-    verifyWebRuntime(runtime, build.sourceRevision)
+    verifyWebRuntime(runtime, build.sourceRevision, edition)
+    productEdition.verifyEditionRuntime(join(installed, 'runtime'), edition)
+    if (edition === 'full') productEdition.verifyOfficeEngine(join(installed, 'runtime'), 'linux', 'x64')
     verifyPublishedInventory(dirname(archive), build, runtime)
     const { stdout: tools } = await execute('/bin/sh', ['-c', 'command -v node || command -v git || command -v pnpm || true'], { env })
     if (tools.trim()) throw new Error('External developer tools are unexpectedly available.')
@@ -270,8 +277,8 @@ export async function qualify(archive, reports) {
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const args = process.argv.slice(2)
-  if (args.length !== 4 || args[0] !== '--archive' || args[2] !== '--report-dir') {
-    console.error('Usage: node scripts/product-web-smoke.mjs --archive <tar.gz> --report-dir <directory>')
+  if (![4, 6].includes(args.length) || args[0] !== '--archive' || args[2] !== '--report-dir' || (args.length === 6 && args[4] !== '--edition')) {
+    console.error('Usage: node scripts/product-web-smoke.mjs --archive <tar.gz> --report-dir <directory> [--edition full|lite]')
     process.exitCode = 1
-  } else await qualify(resolve(args[1]), resolve(args[3])).catch(error => { console.error(error.message); process.exitCode = 1 })
+  } else await qualify(resolve(args[1]), resolve(args[3]), args.length === 6 ? args[5] : process.env.APUS_PRODUCT_EDITION).catch(error => { console.error(error.message); process.exitCode = 1 })
 }

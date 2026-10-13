@@ -23,7 +23,7 @@ test('installed application has isolated state without credentials or developer 
 
 test('installed runtime must match the clean collected Linux revision', () => {
   const runtime = { mode: 'deployed', platform: 'linux', arch: 'x64', sourceRevision: 'same', sourceDirty: false }
-  const build = { target: 'linux-x64', sourceRevision: 'same' }
+  const build = { version: '0.1.0', target: 'linux-x64', sourceRevision: 'same' }
   verifyInstalledIdentity(runtime, build)
   for (const override of [{ sourceRevision: 'stale' }, { sourceDirty: true }, { mode: 'workspace' }, { platform: 'darwin' }, { arch: 'arm64' }]) {
     assert.throws(() => verifyInstalledIdentity({ ...runtime, ...override }, build), /does not match/)
@@ -106,4 +106,11 @@ else process.exitCode = 2;
   for (const stdout of ['', 'other-package: ' + executable, 'apus-reflex-harness: /opt/other', `apus-reflex-harness: ${executable}\nother-package: ${executable}`]) {
     await assert.rejects(installedExecutable(async () => ({ stdout })), /not owned exclusively/)
   }
+})
+
+test('Full and Lite installed runtime identities cannot be mixed', () => {
+  const runtime = { mode: 'deployed', platform: 'linux', arch: 'x64', sourceRevision: 'same', sourceDirty: false, edition: 'lite' }
+  const build = { version: '0.1.1', target: 'linux-x64', sourceRevision: 'same', edition: 'lite' }
+  verifyInstalledIdentity(runtime, build)
+  assert.throws(() => verifyInstalledIdentity({ ...runtime, edition: 'full' }, build), /does not match/)
 })

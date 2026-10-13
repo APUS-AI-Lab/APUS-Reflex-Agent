@@ -34,3 +34,18 @@ test('native targets require their own exact artifact and reject unsupported tar
   }
   assert.throws(() => validateRequalification(run, [], repository, '123', source, 'all'), /Unsupported/)
 })
+
+test('edition selection rejects another edition and keeps legacy artifacts explicit', () => {
+  const source = 'a'.repeat(40)
+  const repository = 'APUS-AI-Lab/APUS-Reflex-Harness'
+  const run = { id: 123, repository: { full_name: repository }, head_repository: { full_name: repository }, head_sha: source, path: '.github/workflows/product-release.yml', status: 'completed' }
+  const legacy = { id: 1, name: 'apus-preview-win32-x64-123', expired: false, workflow_run: { id: 123, head_sha: source } }
+  const full = { ...legacy, id: 2, name: 'apus-preview-full-win32-x64-123' }
+  const lite = { ...legacy, id: 3, name: 'apus-preview-lite-win32-x64-123' }
+  for (const [edition, expected] of [['legacy', 1], ['full', 2], ['lite', 3]]) {
+    assert.equal(validateRequalification(run, [legacy, full, lite], repository, 123, source, 'win32-x64', edition), expected)
+  }
+  assert.throws(() => validateRequalification(run, [legacy, full], repository, 123, source, 'win32-x64', 'lite'), /exactly one/)
+  assert.throws(() => validateRequalification(run, [legacy], repository, 123, source, 'win32-x64', 'full'), /exactly one/)
+  assert.throws(() => validateRequalification(run, [full, lite], repository, 123, source, 'win32-x64', 'both'), /Unsupported qualification edition/)
+})

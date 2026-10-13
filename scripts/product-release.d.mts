@@ -1,3 +1,6 @@
+/** Product distribution with or without the Office engine. */
+export type ProductEdition = 'full' | 'lite'
+
 /** Version and platform declaration owned by the integrated product. */
 export interface ReleaseManifest {
   product: string
@@ -5,10 +8,12 @@ export interface ReleaseManifest {
   channel: string
   repository: string
   targets: string[]
+  editions: ProductEdition[]
 }
 /** Receipt created only after a successful installer build. */
 export interface BuildReceipt {
   version: string
+  edition: ProductEdition
   sourceRevision: string
   target: string
   signing: string
@@ -21,23 +26,26 @@ export function validateRelease(manifest: ReleaseManifest, desktop: { version: s
 /** Check the selected checkout and optional tag. */
 export function checkRelease(base?: string, tag?: string): ReleaseManifest
 /** Installer names for one qualified platform. */
-export function releaseAssetNames(platform: string, arch: string): string[]
+export function releaseAssetNames(platform: string, arch: string, edition?: string): string[]
 /** Bind the successful builder's files to the current product commit. */
-export function recordBuild(directory: string, base?: string): void
+export function recordBuild(directory: string, base?: string, edition?: string): void
 /** Verify source identity, owned output location and installer digests. */
-export function verifyReceipt(receipt: BuildReceipt, manifest: ReleaseManifest, revision: string, target: string, hashFile: (file: string) => string, base?: string): string
+export function verifyReceipt(receipt: BuildReceipt, manifest: ReleaseManifest, revision: string, target: string, hashFile: (file: string) => string, base?: string, edition?: string): string
 /** Collect verified preview assets without uploading them. */
-export function collectRelease(unsigned: boolean, base?: string): Promise<void>
+export function collectRelease(unsigned: boolean, base?: string, edition?: string): Promise<void>
 
 /** Inputs already verified by release collection; output contains the copied installers. */
 export interface ReleaseSupportAssetsInput {
   base: string
   output: string
   manifest: ReleaseManifest
-  runtime: { version: string; dependencyInventory: { path: string; sha256: string } }
+  runtime: { edition: ProductEdition; version: string; dependencyInventory: { path: string; sha256: string } }
   revision: string
   target: string
   assets: string[]
+  edition?: string
 }
 /** Write platform-specific metadata, notices, dependency inventory, and checksums. */
 export function writeReleaseSupportAssets(input: ReleaseSupportAssetsInput): Promise<{ info: string; licenses: string; inventory: string; checksums: string }>
+/** Unique supporting filenames for one edition and native target. */
+export function releaseSupportNames(target: string, edition?: string): { info: string; licenses: string; inventory: string; checksums: string }

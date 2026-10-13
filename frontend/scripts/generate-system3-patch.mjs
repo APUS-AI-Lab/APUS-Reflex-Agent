@@ -2,6 +2,7 @@
 import { readFile, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import productEdition from './product-edition.cjs'
 
 const appRoot = join(dirname(fileURLToPath(import.meta.url)), '..')
 
@@ -12,7 +13,8 @@ const appRoot = join(dirname(fileURLToPath(import.meta.url)), '..')
  * The historical function name is retained for the runtime assembly script.
  * @param {string} stage Directory receiving desktop.patch.yml.
  */
-export async function generateSystem3Patch(stage, { sourceRoot = join(appRoot, '..'), mode = 'deployed' } = {}) {
+export async function generateSystem3Patch(stage, { sourceRoot = join(appRoot, '..'), mode = 'deployed', edition = 'full' } = {}) {
+  const selected = productEdition.resolveEdition(edition)
   const system3Ui = mode === 'deployed' ? '@deepseek-ai/dsh-experimental-client-ui-system3'
     : join(sourceRoot, 'packages/experimental/client-ui-system3/lib/index.js')
   const desktop = await readFile(join(appRoot, 'build/dsh-desktop.patch.yml'), 'utf8')
@@ -27,5 +29,6 @@ export async function generateSystem3Patch(stage, { sourceRoot = join(appRoot, '
 - id: session-log-deepseek
   config:
     enabled: false
+${selected === 'lite' ? '\n# This product does not bundle an Office conversion engine.\n' + productEdition.editionPatch(selected) : ''}
 `)
 }

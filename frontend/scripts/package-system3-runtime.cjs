@@ -3,6 +3,7 @@ const fs = require('node:fs/promises')
 const path = require('node:path')
 const { verifyDependencyInventory } = require('./runtime-dependency-inventory.cjs')
 const { verifyPackagedMetadata } = require('./package-metadata-policy.cjs')
+const { resolveEdition, verifyEditionRuntime, verifyEditionFiles, verifyOfficeEngine, excludedProductionPath } = require('./product-edition.cjs')
 const { pathToFileURL } = require('node:url')
 const { createHash } = require('node:crypto')
 const { execFile } = require('node:child_process')
@@ -26,6 +27,23 @@ module.exports = async function packageSystem3Runtime(context) {
   if (manifest.mode !== 'deployed' || manifest.packages.length !== 7) throw new Error('Packaged System3 runtime is incomplete')
   verifyDependencyInventory(target, manifest)
   verifyPackagedMetadata(resources)
+  const edition = resolveEdition(context.packager.config?.extraMetadata?.apusProductEdition ?? process.env.APUS_PRODUCT_EDITION ?? 'full')
+  verifyEditionRuntime(target, edition)
+  const shell = path.join(resources, 'app.asar.unpacked')
+  verifyEditionFiles(shell, edition, { platform: manifest.platform, arch: manifest.arch })
+  const asar = require('@electron/asar')
+  const entries = asar.listPackage(path.join(resources, 'app.asar')).map(file => file.replaceAll('\\', '/').replace(/^\//, ''))
+  for (const file of entries) {
+    const reason = excludedProductionPath(file, { edition, platform: manifest.platform, arch: manifest.arch })
+    if (reason) throw new Error('Packaged ASAR contains excluded ' + reason + ': ' + file)
+    if (/^(?:src|test|docs|scripts|packages|patches|\.build|\.claude|\.upstream-workflows)(?:\/|$)/.test(file) || file === '.npmrc') {
+      throw new Error('Packaged ASAR contains development input: ' + file)
+    }
+  }
+  if (edition === 'full') {
+    verifyOfficeEngine(target, manifest.platform, manifest.arch)
+    verifyOfficeEngine(shell, manifest.platform, manifest.arch)
+  }
   const physicalRoot = await fs.realpath(target)
   async function requireContained(relative) {
     const file = await fs.realpath(path.join(target, relative))

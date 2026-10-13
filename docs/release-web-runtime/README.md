@@ -6,12 +6,14 @@ English | [中文](README.zh.md)
 
 This Linux x64 download includes the Web server, browser application, and Node.js runtime. You need a supported Linux system and a browser; starting the application does not require Git, pnpm, an external Node installation, or Electron. The native qualification job uses Ubuntu 24.04 x64. Other Linux distributions are not yet qualified. Confined shell execution requires kernel Landlock support; the archive includes its native launcher.
 
-1. Download `apus-reflex-harness-web-linux-x64.tar.gz` and the matching `SHA256SUMS-web-linux-x64` from the same release. Check the archive's SHA-256 against its listed value.
-2. Extract the archive and enter `apus-reflex-harness-web`.
+1. Download `apus-reflex-agent-{edition}-web-linux-x64.tar.gz` and the matching `SHA256SUMS-{edition}-web-linux-x64` from the same release. Check the archive's SHA-256 against its listed value.
+2. Extract the archive and enter `apus-reflex-agent-{edition}-web-linux-x64`.
 3. Run `./start.sh`. Open the authenticated localhost URL printed in the terminal. Keep that terminal running; press Ctrl+C to stop the server.
 4. Open **Settings → Models** to configure your provider, API key, and model. Model requests require your provider's credentials and network access.
 
 The listener uses `127.0.0.1:3080`. Choose another port with `./start.sh --port 8080`. The launcher does not expose a network binding option. Keep the printed authenticated URL private.
+
+Choose `full` or `lite` for `{edition}`. Full includes the Office conversion engine; Lite excludes it and keeps browser spreadsheet and ordinary PDF/image/text previews. DOC/PPT page rendering requires Full or an explicitly configured Host service. Core Agent, Reflex, memory and PPT workbench capabilities use the same code in both editions. See [edition selection](../feat-office-editions/README.md).
 
 ## Configuration and data
 

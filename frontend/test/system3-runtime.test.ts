@@ -1,4 +1,4 @@
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync, realpathSync } from 'node:fs'
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, realpathSync, symlinkSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -30,6 +30,33 @@ describe('own System3 runtime identity', () => {
   it('launches the explicitly prepared rc.2 checkout', () => {
     const f = fixture()
     expect(resolveSystem3Runtime(f.root, '/unused', false)).toMatchObject({ entry: realpathSync(join(f.source, 'entry.js')), version: '0.1.7-rc.2', mode: 'workspace' })
+  })
+  it.each(['full', 'lite'] as const)('requires the final %s edition policy under the artifact root', (edition) => {
+    const f = fixture()
+    const manifest = { ...f.manifest, edition, editionPatch: 'product-edition.patch.yml' }
+    writeFileSync(join(f.runtime, 'runtime-manifest.json'), JSON.stringify(manifest))
+    expect(() => resolveSystem3Runtime(f.root, '/unused', false)).toThrow('edition policy is missing or invalid')
+    const patch = join(f.runtime, 'product-edition.patch.yml')
+    writeFileSync(patch, '[]\n')
+    expect(resolveSystem3Runtime(f.root, '/unused', false)).toMatchObject({ edition, editionPatchPath: realpathSync(patch) })
+    rmSync(patch)
+    mkdirSync(patch)
+    expect(() => resolveSystem3Runtime(f.root, '/unused', false)).toThrow('edition policy is missing or invalid')
+    rmSync(patch, { recursive: true })
+    const external = join(f.root, 'outside.patch.yml')
+    writeFileSync(external, '[]\n')
+    symlinkSync(external, patch)
+    expect(() => resolveSystem3Runtime(f.root, '/unused', false)).toThrow('edition policy is missing or invalid')
+  })
+  it('keeps legacy Full manifests compatible and rejects an unknown edition', () => {
+    const f = fixture()
+    expect(resolveSystem3Runtime(f.root, '/unused', false)).toMatchObject({ edition: 'full', editionPatchPath: undefined })
+    writeFileSync(join(f.runtime, 'runtime-manifest.json'), JSON.stringify({ ...f.manifest, edition: 'unexpected' }))
+    expect(() => resolveSystem3Runtime(f.root, '/unused', false)).toThrow('incompatible')
+    for (const manifest of [{ ...f.manifest, edition: 'lite' }, { ...f.manifest, editionPatch: 'product-edition.patch.yml' }, { ...f.manifest, edition: 'lite', editionPatch: '../outside.patch.yml' }]) {
+      writeFileSync(join(f.runtime, 'runtime-manifest.json'), JSON.stringify(manifest))
+      expect(() => resolveSystem3Runtime(f.root, '/unused', false)).toThrow('incompatible')
+    }
   })
   it('fails without a prepared runtime even when a stock install exists', () => {
     const f = fixture()

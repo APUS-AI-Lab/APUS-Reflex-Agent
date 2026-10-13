@@ -9,3 +9,6 @@ export function main(args?: string[]): Promise<void>
 
 /** Select the native desktop builder platform or reject an unsupported host. */
 export function desktopBuilderFlag(platform: string): string
+
+/** Resolve explicit edition and signing options before starting build stages. */
+export function productOptions(action: string, args: string[], environment?: NodeJS.ProcessEnv): { edition: 'full' | 'lite', unsigned: boolean }

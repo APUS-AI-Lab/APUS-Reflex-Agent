@@ -7,6 +7,7 @@ import beforePack from '../scripts/verify-system3-runtime.cjs'
 import afterPack from '../scripts/package-system3-runtime.cjs'
 import metadata from '../scripts/package-metadata-policy.cjs'
 import asar from '@electron/asar'
+import productEdition from '../scripts/product-edition.cjs'
 
 const roots = []
 const licenses = ['LICENSE.txt', 'THIRD_PARTY_NOTICES.txt', 'HARNESS-LICENSE.txt', 'HARNESS-THIRD_PARTY_NOTICES.txt', 'ELECTRON-LICENSE.txt', 'CHROMIUM-LICENSES.html']
@@ -31,7 +32,8 @@ function fixture() {
   const entry = 'node_modules/@deepseek-ai/dsh/lib/bin.js'
   mkdirSync(join(root, 'node_modules/@deepseek-ai/dsh/lib'))
   writeFileSync(join(root, entry), '')
-  const manifest = { product: 'xdan-system3', version: '0.1.7-rc.2', mode: 'deployed', sourceRevision: 'a'.repeat(40), sourceDirty: false, platform: 'darwin', arch: 'arm64', packages, entry, dependencyInventory: inventory.writeDependencyInventory(root) }
+  const manifest = { product: 'xdan-system3', version: '0.1.7-rc.2', mode: 'deployed', edition: 'full', editionPatch: 'product-edition.patch.yml', sourceRevision: 'a'.repeat(40), sourceDirty: false, platform: 'darwin', arch: 'arm64', packages, entry, dependencyInventory: inventory.writeDependencyInventory(root) }
+  writeFileSync(join(root, manifest.editionPatch), productEdition.editionPatch(manifest.edition))
   writeFileSync(join(root, 'runtime-manifest.json'), JSON.stringify(manifest))
   writeFileSync(join(root, 'desktop-patch-receipt.json'), JSON.stringify(Array.from({ length: 27 }, () => ({ targets: [] }))))
   const appOutDir = join(project, 'output')

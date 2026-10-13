@@ -1,6 +1,6 @@
 {
-  "name": "xdan-system3-frontend",
-  "version": "0.1.0",
+  "name": "apus-reflex-agent",
+  "version": "0.1.1",
   "description": "APUS Reflex Harness — Model-as-a-Harness. 瞬策：瞬时执行，深度思考。",
   "private": true,
   "type": "module",
@@ -32,15 +32,15 @@
     "typecheck": "tsc --noEmit -p tsconfig.node.json",
     "test": "vitest run",
     "test:watch": "vitest",
-    "package:dir": "npm run build && electron-builder --dir",
+    "package:dir": "npm run build && electron-builder --config electron-builder.product.cjs --dir",
     "package:dev:dir": "npm run build && electron-builder --dir --config electron-builder.dev.cjs",
     "package:dev:mac:arm64": "node scripts/verify-target.mjs darwin arm64 && npm run build && electron-builder --mac --arm64 --publish never --config electron-builder.dev.cjs",
     "package:dev:mac:x64": "node scripts/verify-target.mjs darwin x64 && npm run build && electron-builder --mac --x64 --publish never --config electron-builder.dev.cjs",
     "package:dev:win": "node scripts/verify-target.mjs win32 x64 && npm run build && node scripts/electron-builder-windows.mjs --win --x64 --publish never --config electron-builder.dev.cjs",
-    "package:mac": "npm run build && electron-builder --mac --publish never",
-    "package:mac:arm64": "node scripts/verify-target.mjs darwin arm64 && npm run build && electron-builder --mac --arm64 --publish never",
-    "package:mac:x64": "node scripts/verify-target.mjs darwin x64 && npm run build && electron-builder --mac --x64 --publish never",
-    "package:win": "node scripts/verify-target.mjs win32 x64 && npm run build && node scripts/electron-builder-windows.mjs --win --x64 --publish never",
+    "package:mac": "npm run build && electron-builder --config electron-builder.product.cjs --mac --publish never",
+    "package:mac:arm64": "node scripts/verify-target.mjs darwin arm64 && npm run build && electron-builder --config electron-builder.product.cjs --mac --arm64 --publish never",
+    "package:mac:x64": "node scripts/verify-target.mjs darwin x64 && npm run build && electron-builder --config electron-builder.product.cjs --mac --x64 --publish never",
+    "package:win": "node scripts/verify-target.mjs win32 x64 && npm run build && node scripts/electron-builder-windows.mjs --config electron-builder.product.cjs --win --x64 --publish never",
     "ppt:build": "node scripts/prepare-ppt-runtime.mjs",
     "pretest": "npm run ppt:build",
     "pretest:watch": "npm run ppt:build",
@@ -317,8 +317,7 @@
     "asarUnpack": [
       "node_modules/**/*",
       "!node_modules/debug/.coveralls.yml",
-      "!node_modules/compression/node_modules/debug/.coveralls.yml",
-      ".build/ppt-runtime/packages/**/*"
+      "!node_modules/compression/node_modules/debug/.coveralls.yml"
     ],
     "npmRebuild": false,
     "compression": "maximum",
@@ -448,9 +447,13 @@
     ],
     "publish": null,
     "detectUpdateChannel": false,
-    "artifactName": "apus-reflex-harness-${os}-${arch}.${ext}",
+    "artifactName": "apus-reflex-agent-full-${os}-${arch}.${ext}",
     "mac": {
       "category": "public.app-category.developer-tools",
+      "minimumSystemVersion": "15.0",
+      "identity": "-",
+      "notarize": false,
+      "strictVerify": true,
       "icon": ".build/brand/brand-icon.icns",
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
@@ -465,6 +468,8 @@
     "win": {
       "icon": ".build/brand/brand-icon.ico",
       "files": [
+        "out/**/*",
+        "package.json",
         "!node_modules/node/**/*"
       ],
       "verifyUpdateCodeSignature": true,
@@ -479,7 +484,7 @@
       ]
     },
     "nsis": {
-      "artifactName": "apus-reflex-harness-windows-${arch}-setup.${ext}",
+      "artifactName": "apus-reflex-agent-full-windows-${arch}-setup.${ext}",
       "include": "build/installer.nsh",
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
@@ -487,6 +492,7 @@
       "createStartMenuShortcut": true
     },
     "afterPack": "scripts/package-system3-runtime.cjs",
+    "afterSign": "scripts/verify-macos-signature.cjs",
     "beforePack": "scripts/verify-system3-runtime.cjs",
     "linux": {
       "target": [
@@ -503,7 +509,7 @@
       "maintainer": "APUS-AI-Lab"
     },
     "deb": {
-      "artifactName": "apus-reflex-harness-linux-x64.deb",
+      "artifactName": "apus-reflex-agent-full-linux-x64.deb",
       "packageName": "apus-reflex-harness",
       "priority": "optional",
       "depends": [

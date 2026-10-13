@@ -6,13 +6,13 @@
 
 ## 版本与源码
 
-首个 APUS 桌面产品版本为 `0.1.0`，Release tag 为 `v0.1.0`。该版本由产品定义，不继承上游运行时版本序列；内置 Harness 版本在“关于”和构建信息中独立显示。GitHub 的 prerelease 标志独立于版本字符串：首版使用预发布标志，并明确标为未签名预览版，不能仅因版本不含 beta/rc 就宣称稳定。
+产品发行版本由 `release/manifest.json` 管理；内置 Harness 版本在“关于”和构建信息中独立显示。GitHub 的 Latest 与 prerelease 标志独立于产品版本和签名状态；不能仅因版本不含 beta/rc 就宣称稳定。
 
 所有桌面及 Web 目标均从同一经过审查的干净源码提交及已提交的依赖锁构建，各平台构建记录与发行元数据必须指向该提交。冻结版本后不得追加来自不同源码提交的附件。发行记录包括源码版本、产品及 Harness 版本、平台、架构和锁文件摘要，不获取另一份前端仓库，也不替换为上游 npm 运行时。
 
 已部署运行时会解析动态合成的 workspace 依赖集合。两份已提交锁文件的摘要标识源码输入，不能冻结部署时解析的每个依赖。链接实体化和补丁完成后，`runtime-dependencies.json` 记录每个实际安装包 manifest 的相对路径、名称、版本及 SHA-256，包括嵌套依赖。运行时 manifest 和安装包构建记录绑定该清单摘要；打包时用实际 package manifest 校验清单，Release 将它纳入 `build-info.json` 和 `SHA256SUMS`。这记录了实际组装的依赖，不证明后续部署会解析到相同依赖版本，也不对包内每个文件求摘要。
 
-macOS Apple Silicon 使用 `build-info.json`、`LICENSES.zip`、`runtime-dependencies.json` 和 `SHA256SUMS`。Intel Mac 使用 `build-info-darwin-x64.json`、`LICENSES-darwin-x64.zip`、`runtime-dependencies-darwin-x64.json` 和 `SHA256SUMS-darwin-x64`。Windows 使用 `build-info-win32-x64.json`、`LICENSES-win32-x64.zip`、`runtime-dependencies-win32-x64.json` 和 `SHA256SUMS-win32-x64`。Linux 桌面配套文件使用同名加 `-linux-x64` 后缀。Web 使用 `build-info-web-linux-x64.json`、`runtime-dependencies-web-linux-x64.json` 和 `SHA256SUMS-web-linux-x64`，许可声明包含在压缩包中。按各平台的校验文件核对附件，并核对共同的源码提交。
+Full 与 Lite 独立收集，配套文件名包含版型和目标：`build-info-full-darwin-arm64.json`、`LICENSES-full-darwin-arm64.zip`、`runtime-dependencies-full-darwin-arm64.json` 和 `SHA256SUMS-full-darwin-arm64`。Lite 将 `full` 换为 `lite`；其他平台将目标换为 `darwin-x64`、`win32-x64` 或 `linux-x64`。Web 使用 `web-linux-x64` 目标，许可文件保存在压缩包内。元数据、运行时清单和安装包构建记录的版型与源码版本必须一致，参见[版本选择](../feat-office-editions/README.zh.md)。历史 `0.1.0` 附件保留原名。
 
 ## 打包与平台验收
 

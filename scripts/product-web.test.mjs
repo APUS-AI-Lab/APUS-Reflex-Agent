@@ -7,7 +7,7 @@ import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSyn
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { digest, inventoryName, linuxNativePackage, payloadFiles, verifyWebRuntime, verifyProductClientBuild, webProfilePatch } from './product-web-package.mjs'
+import { digest, webAssetNames, linuxNativePackage, payloadFiles, verifyWebRuntime, verifyProductClientBuild, webProfilePatch } from './product-web-package.mjs'
 import { launchOptions } from './product-web-launch.mjs'
 import { readinessUrl, redact, smokeEnvironment, verifyPayload, verifyPublishedInventory, verifyHttpAuthentication, verifySandboxExecution } from './product-web-smoke.mjs'
 
@@ -29,9 +29,9 @@ test('launcher keeps loopback binding and persistent data separate from the pack
 })
 
 test('collector rejects source and native target mismatches', () => {
-  const runtime = { mode: 'deployed', sourceDirty: false, sourceRevision: 'revision', platform: 'linux', arch: 'x64', entry: 'node_modules/@deepseek-ai/dsh/lib/bin.js' }
+  const runtime = { edition: 'full', mode: 'deployed', sourceDirty: false, sourceRevision: 'revision', platform: 'linux', arch: 'x64', entry: 'node_modules/@deepseek-ai/dsh/lib/bin.js' }
   verifyWebRuntime(runtime, 'revision')
-  for (const change of [{ mode: 'workspace' }, { sourceDirty: true }, { sourceRevision: 'other' }, { platform: 'darwin' }, { arch: 'arm64' }, { entry: '/checkout/bin.js' }]) {
+  for (const change of [{ edition: 'lite' }, { edition: undefined }, { mode: 'workspace' }, { sourceDirty: true }, { sourceRevision: 'other' }, { platform: 'darwin' }, { arch: 'arm64' }, { entry: '/checkout/bin.js' }]) {
     assert.throws(() => verifyWebRuntime({ ...runtime, ...change }, 'revision'), /same-commit/)
   }
 })
@@ -65,6 +65,9 @@ test('qualification accepts only completed loopback readiness and redacts auth U
 test('extracted launcher invokes its own CLI and keeps an existing profile on restart', { skip: process.platform === 'win32' && 'Web tar launcher is POSIX-only' }, t => {
   const directory = fixture(t)
   const installation = join(directory, 'package')
+  mkdirSync(join(installation, 'runtime'), { recursive: true })
+  writeFileSync(join(installation, 'runtime/runtime-manifest.json'), JSON.stringify({ edition: 'lite' }))
+  writeFileSync(join(installation, 'runtime/product-edition.patch.yml'), '[]\n')
   mkdirSync(join(installation, 'bin'), { recursive: true })
   symlinkSync(process.execPath, join(installation, 'bin/node'))
   copyFileSync(join(root, 'scripts/product-web-launch.mjs'), join(installation, 'launch.mjs'))
@@ -80,18 +83,22 @@ export function initProfile(dir, bundles) { mkdirSync(dir, {recursive:true}); wr
   mkdirSync(join(modules, 'dsh/lib'), { recursive: true })
   writeFileSync(join(modules, 'dsh/package.json'), JSON.stringify({ type: 'module' }))
   writeFileSync(join(modules, 'dsh/lib/bin.js'), `import { writeFileSync } from 'node:fs';
-writeFileSync(process.env.DSH_HOME + '/observed.json', JSON.stringify({args:process.argv.slice(2),cwd:process.cwd(),node:process.execPath,options:process.env.NODE_OPTIONS}));
+writeFileSync(process.env.DSH_HOME + '/observed.json', JSON.stringify({args:process.argv.slice(2),cwd:process.cwd(),node:process.execPath,options:process.env.NODE_OPTIONS,edition:process.env.APUS_PRODUCT_EDITION}));
 `)
   const home = join(directory, 'persistent')
-  const env = { ...process.env, DSH_HOME: home }
+  const env = { ...process.env, DSH_HOME: home, APUS_PRODUCT_EDITION: 'full' }
   execFileSync(process.execPath, [join(installation, 'launch.mjs'), '--port', '0'], { env })
   const observed = JSON.parse(readFileSync(join(home, 'observed.json'), 'utf8'))
   assert.equal(observed.cwd, home)
-  assert.deepEqual(observed.args, ['--profile', 'web', '--patch', join(installation, 'web.patch.yml'), '--host', '127.0.0.1', '--port', '0', '--no-open'])
+  assert.equal(observed.edition, 'lite')
+  assert.deepEqual(observed.args, ['--profile', 'web', '--patch', join(installation, 'web.patch.yml'), '--patch', join(installation, 'runtime/product-edition.patch.yml'), '--host', '127.0.0.1', '--port', '0', '--no-open'])
   const profile = join(home, 'profiles/web/package.json')
   assert.deepEqual(JSON.parse(readFileSync(profile, 'utf8')).bundles, ['base', 'web', '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'])
   writeFileSync(profile, '{"user":"retained"}')
   execFileSync(process.execPath, [join(installation, 'launch.mjs')], { env })
+  assert.equal(readFileSync(profile, 'utf8'), '{"user":"retained"}')
+  writeFileSync(join(installation, 'runtime/runtime-manifest.json'), JSON.stringify({ edition: 'unknown' }))
+  assert.throws(() => execFileSync(process.execPath, [join(installation, 'launch.mjs')], { env, stdio: 'pipe' }), /declare Full or Lite/)
   assert.equal(readFileSync(profile, 'utf8'), '{"user":"retained"}')
 })
 
@@ -149,11 +156,15 @@ exec "$@"
 
 test('published inventory references the named release file and the extracted runtime hash and version', t => {
   const directory = fixture(t)
+  const inventoryName = webAssetNames('full').inventory
   const file = join(directory, inventoryName)
   writeFileSync(file, '{"packages":[]}\n')
-  const runtime = { version: 'fixture-runtime', dependencyInventory: { path: 'runtime-dependencies.json', sha256: digest(file) } }
-  const build = { harnessVersion: runtime.version, runtimeDependencyInventory: { ...runtime.dependencyInventory, path: inventoryName } }
+  const runtime = { edition: 'full', version: 'fixture-runtime', dependencyInventory: { path: 'runtime-dependencies.json', sha256: digest(file) } }
+  const build = { edition: 'full', harnessVersion: runtime.version, runtimeDependencyInventory: { ...runtime.dependencyInventory, path: inventoryName } }
   verifyPublishedInventory(directory, build, runtime)
+  assert.throws(() => verifyPublishedInventory(directory, { ...build, edition: 'lite' }, runtime), /metadata differs/)
+  assert.throws(() => verifyPublishedInventory(directory, { ...build, edition: undefined }, { ...runtime, edition: undefined }), /metadata differs/)
+  assert.throws(() => verifyPublishedInventory(directory, build, { ...runtime, edition: 'lite' }), /metadata differs/)
   assert.throws(() => verifyPublishedInventory(directory, { ...build, runtimeDependencyInventory: runtime.dependencyInventory }, runtime), /metadata differs/)
   assert.throws(() => verifyPublishedInventory(directory, { ...build, runtimeDependencyInventory: { ...build.runtimeDependencyInventory, path: '../elsewhere.json' } }, runtime), /metadata differs/)
   assert.throws(() => verifyPublishedInventory(directory, { ...build, harnessVersion: 'another-runtime' }, runtime), /metadata differs/)
@@ -205,4 +216,16 @@ process.stdout.write(workspace);`;
   const output = execFileSync(process.execPath, ['--import', fileURLToPath(import.meta.resolve('tsx/esm')), '--input-type=module', '-e', script, patch, home],
     { cwd: root, encoding: 'utf8', timeout: 30_000 });
   assert.equal(output, join(home, 'Documents', 'deepseek-harness', 'default-workspace'))
+})
+
+test('Web edition names cannot collide and a runtime cannot qualify as the other edition', () => {
+  const full = webAssetNames('full')
+  const lite = webAssetNames('lite')
+  assert.equal(lite.archive, 'apus-reflex-agent-lite-web-linux-x64.tar.gz')
+  assert.equal(full.archive, 'apus-reflex-agent-full-web-linux-x64.tar.gz')
+  for (const key of Object.keys(full)) assert.notEqual(full[key], lite[key])
+  assert.throws(() => webAssetNames('small'), /edition/i)
+  const runtime = { edition: 'lite', mode: 'deployed', sourceDirty: false, sourceRevision: 'revision', platform: 'linux', arch: 'x64', entry: 'node_modules/@deepseek-ai/dsh/lib/bin.js' }
+  verifyWebRuntime(runtime, 'revision', 'lite')
+  assert.throws(() => verifyWebRuntime(runtime, 'revision', 'full'), /same-commit/)
 })
