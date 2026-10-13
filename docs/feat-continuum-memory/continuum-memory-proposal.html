@@ -11,6 +11,7 @@
 <body><main>
 <div class="eyebrow">APUS REFLEX / DESIGN PROPOSAL / 2026-10-10</div>
 <h1>APUS Continuum · 连续记忆</h1>
+<p class="status"><strong>历史提案。</strong>当前整体目标、Reflex 召回职责、实现批次与验收以 <a href="../feat-lossless-memory/design.html">Continuum 整体架构总入口</a>为准。以下内容保留早期设计背景；P0–P5 状态不代表新设计 B0–B5 的完成情况。</p>
 <p class="lead">Reflex 专属的“无限记忆”开关：由即时决策模型管理长期记忆，让每次推理只携带当前所需的信息。关闭开关或不接 Reflex 时，保持原版 Harness 行为。</p>
 <p class="status"><strong>状态：已授权在同名 worktree 分模块实施；完整产品仍未实现或验收。</strong> 当前 worktree 已完成 P0.4、P1.1–P1.7 与 P2，以及 P3 的超时、弃权、fallback 和有界顺序多选切片；P3 效果对照、P4/P5 仍未完成。main 已有自动摘要压缩、原始 Session 日志和可选历史查询；默认全文检索关闭。工程检查、真实模型链路与效果验收分别记账。命名为候选，尚未做重名核验。</p>
 <nav aria-label="提案目录"><a href="#goal">目标与命名</a><a href="#architecture">架构</a><a href="#comparison">UniiChat 横向对比</a><a href="#compatibility">专属开关与兼容</a><a href="#memory">记忆组织</a><a href="#control">运行与决策</a><a href="#engineering">原生接入</a><a href="#decomposition">模块与小批次</a><a href="#adoption">摘要树与缓存取舍</a><a href="#acceptance">真实验收门禁</a><a href="#challenge">取舍</a></nav>

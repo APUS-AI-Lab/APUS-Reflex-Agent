@@ -42,7 +42,7 @@ Import `MemoryRecordStore` for deterministic revision semantics. Use `appendMemo
 <a id="further-exploration"></a>
 ## Further Exploration
 
-Read the [Continuum proposal](../../../docs/feat-continuum-memory/continuum-memory-proposal.html) for the staged product design.
+Read the [Continuum architecture and acceptance design](../../../docs/feat-lossless-memory/design.html) for the overall target design and staged acceptance plan.
 
 -----
 

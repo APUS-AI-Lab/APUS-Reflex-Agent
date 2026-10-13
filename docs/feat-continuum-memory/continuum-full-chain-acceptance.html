@@ -4,6 +4,7 @@
 </style></head><body><main>
 <div class="meta">APUS REFLEX · FEAT/CONTINUUM-MEMORY · 2026-10-11</div>
 <h1>APUS Continuum：无限记忆全链路验收</h1>
+<p class="banner"><strong>阶段验收记录。</strong>本页数据只对应记录所述版本和范围；当前整体设计与验收入口见 <a href="../feat-lossless-memory/design.html">Continuum 整体架构</a>。历史 PASS 不代表新三目标场景已通过。</p>
 <p class="lead">这份报告定义“打通”和“验收通过”的可复核证据：从 Reflex 专属开关，到 Session 权威记录、冷启动恢复、索引/摘要/缓存、同回合注入、Jev 决策、主模型响应、回放和故障降级。</p>
 <div class="banner"><strong>当前结论：工程链路已有可重复通过的关键证据，但本报告当前不能宣称整项产品最终验收通过。</strong> 必须补齐性能/成本实测、全 Web 基线失败项、视觉真实模型 E2E，以及生产级批处理/服务端缓存证据后，状态才可改为“全项通过”。</div>
 <h2>1. 验收定义</h2><p>“无限”只表示存储和检索不被模型单次窗口硬截断；不表示无限磁盘、零延迟、零成本或每次都能正确召回。完整链路必须满足：事实有来源、记录可持久化、重启可重建、读取受 scope/预算约束、实际发给模型的内容可从 Session 重放、关闭 Reflex 后原版行为仍可用。</p>

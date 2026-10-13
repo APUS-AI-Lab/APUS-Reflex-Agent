@@ -44,7 +44,7 @@ Session 事件使用现有 persistence backend；完成 `ctx.sessions.flush(sess
 <a id="further-exploration"></a>
 ## 进一步阅读
 
-参阅[Continuum 提案](../../../docs/feat-continuum-memory/continuum-memory-proposal.html)了解分阶段产品设计。
+参阅[Continuum 整体架构与验收设计](../../../docs/feat-lossless-memory/design.html)了解总体目标与分批验收计划。
 
 -----
 
