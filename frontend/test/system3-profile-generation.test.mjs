@@ -6,7 +6,7 @@ import { parse } from 'yaml'
 import { generateSystem3Patch } from '../scripts/generate-system3-patch.mjs'
 
 describe('Desktop default profile', () => {
-  it.each(['deployed', 'workspace'])('starts with user model settings and no production services in %s mode', async mode => {
+  it.each(['deployed', 'workspace'])('installs bounded Skill advice without changing model routes in %s mode', async mode => {
     const root = await mkdtemp(join(tmpdir(), 'apus-profile-'))
     try {
       await mkdir(join(root, 'deploy/system3'), { recursive: true })
@@ -17,9 +17,20 @@ describe('Desktop default profile', () => {
       expect(operations.find(operation => operation.id === 'session-log-deepseek')).toEqual({ id: 'session-log-deepseek', config: { enabled: false } })
       expect(operations.flatMap(operation => operation.insert ?? []).map(plugin => plugin.id)).toContain('dsh-desktop-onboarding')
       expect(operations.filter(operation => /^(llm-|agent-default-model)/.test(operation.id ?? ''))).toEqual([])
-      expect(output).not.toMatch(/private\.example|JEV_API_KEY|SYSTEM3_LITELLM_API_KEY|jev|fidoo|proxy\.runpod\.net/i)
-      expect(operations.flatMap(operation => operation.insert ?? []).map(plugin => plugin.id)).not.toContain('system3')
+      expect(output).not.toMatch(/private\.example|JEV_API_KEY|SYSTEM3_LITELLM_API_KEY|fidoo|proxy\.runpod\.net/i)
+      const system3 = operations.flatMap(operation => operation.insert ?? []).find(plugin => plugin.id === 'system3')
+      expect(system3.name).toBe(mode === 'deployed' ? '@deepseek-ai/dsh-experimental-system3' : join(root, 'packages/experimental/system3/lib/index.js'))
+      expect(system3.config).toEqual({ privacyMode: 'controlled', approvedRemoteIds: ['jev'], approvedRemoteDataClasses: ['workspace'],
+        jevRouteId: 'jev', jevExecutionDomain: 'network', skillSelection: {
+          sessionDataClasses: ['workspace'], minConfidence: 0.5, maxInputBytes: 16000, maxContentBytes: 12000,
+          maxCandidates: 15, deadlineMs: 3000,
+        } })
     } finally { await rm(root, { recursive: true, force: true }) }
+  })
+
+  it('keeps Skill selection out of the safe-mode overlay', async () => {
+    const safe = await readFile(new URL('../build/dsh-desktop-safe.patch.yml', import.meta.url), 'utf8')
+    expect(safe).not.toMatch(/experimental-system3|id: system3|skillSelection/)
   })
 
   it('does not require a server deployment file to prepare a desktop runtime', async () => {

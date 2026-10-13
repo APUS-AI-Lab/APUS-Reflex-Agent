@@ -18,7 +18,20 @@ import {
 export const REFLEX_NS = 'jev'
 
 /** Managed reference assigned when the user supplies a first key. */
-const DEFAULT_API_KEY_REF = 'REFLEX_API_KEY'
+const DEFAULT_API_KEY_REF = 'REFLEX_CUSTOM_API_KEY'
+
+/** Public service preset; credentials are provisioned independently on the Host. */
+export const REFLEX_TRIAL = {
+  endpoint: 'https://ac2n5m38jjciqg-8086.proxy.runpod.net',
+  model: 'APUS-OpenJev-v1-9B-5949',
+  apiKeyEnv: 'APUS_REFLEX_TRIAL_API_KEY',
+} as const
+
+/** The two connection choices offered by the product. */
+export type ReflexConnectionMode = 'trial' | 'custom'
+
+const CONNECTION_FIELDS = ['endpoint', 'model', 'effort', 'timeoutMs', 'apiKeyEnv', 'protocol'] as const
+type ConnectionDraft = Record<typeof CONNECTION_FIELDS[number], string>
 
 /** Form field the credential control stages under. */
 const API_KEY_FIELD = 'apiKey'
@@ -48,6 +61,8 @@ interface CredentialState {
 
 /** What the Reflex page renders. */
 export interface ReflexCardState extends SettingsFormShell {
+  /** Selected service preset or editable connection. */
+  mode: ReflexConnectionMode
   /** Provider endpoint. */
   endpoint: SettingsFieldState
   model: SettingsFieldState
@@ -73,6 +88,8 @@ export interface ReflexCardState extends SettingsFormShell {
 
 /** The registration-side face the Reflex page's slot entry injects. */
 export interface ReflexCardFace extends SettingsFormActions {
+  /** Stage another connection mode without saving or testing it. */
+  selectMode: (mode: ReflexConnectionMode) => void
   testConnection: () => Promise<void>
   clearCredential: () => Promise<void>
   refresh: () => Promise<void>
@@ -87,6 +104,9 @@ export class ReflexCardController {
   private readonly form: SettingsFormModel<ReflexSettings>
   private readonly store: SnapshotStore<ReflexCardState>
   private readonly unsubscribe: () => void
+  private mode: ReflexConnectionMode = 'custom'
+  private initialized = false
+  private customDraft: ConnectionDraft | undefined
   private probe: ReflexCardState['probe'] = { pending: false, failed: false }
   private runtime: ReflexStatus | undefined
   private saveKeyRef = DEFAULT_API_KEY_REF
@@ -136,7 +156,7 @@ export class ReflexCardController {
       },
       [validatedText('endpoint', validEndpoint), validatedText('model', text => text.length > 0 && text.length <= 256),
         validatedText('effort', text => text === 'low' || text === 'high'),
-        { ...validatedText('protocol', text => text === 'openjev' || text === 'typesafe'),
+        { ...validatedText('protocol', text => text === 'openjev'),
           format: value => typeof value === 'string' ? value : 'openjev' },
         { ...settingsNumberField('timeoutMs'), parse: (text) => {
           const value = Number(text)
@@ -147,15 +167,19 @@ export class ReflexCardController {
     )
     this.store = this.form.bind(() => this.projection())
     this.unsubscribe = scope.subscribe(() => {
+      this.initializeMode()
+      if (!this.form.shell().dirty && !this.form.shell().saving) this.mode = this.savedMode()
       this.invalidateProbe()
       void this.readCredential(); this.store.set(this.projection())
     })
+    this.initializeMode()
     void this.readCredential()
   }
 
   private projection(): ReflexCardState {
     return {
       ...this.form.shell(),
+      mode: this.mode,
       saving: this.checkingCredential || this.form.shell().saving,
       failed: this.credentialSaveError !== undefined || this.form.shell().failed,
       endpoint: this.form.field('endpoint'), model: this.form.field('model'), effort: this.form.field('effort'),
@@ -177,7 +201,7 @@ export class ReflexCardController {
    * reference in force.
    */
   private async readCredential(): Promise<void> {
-    const ref = this.form.field('apiKeyEnv').text.trim() || DEFAULT_API_KEY_REF
+    const ref = this.keyReference()
     const epoch = ++this.credentialEpoch
     if (ref !== this.credential.ref) {
       // A new reference knows nothing yet; keeping the old answer would claim
@@ -220,28 +244,83 @@ export class ReflexCardController {
   inject(): ReflexCardFace {
     const actions = this.form.actions()
     return { hooks: { reflexCard: this.store }, ...actions,
+      selectMode: (mode) => { this.selectMode(mode) },
       save: () => { void this.save() },
       edit: (field, text) => {
-        if (this.checkingCredential) return
+        if (this.checkingCredential || this.form.shell().saving || !this.form.shell().writable || this.mode === 'trial') return
+        if (field === 'apiKeyEnv' && text.trim() === REFLEX_TRIAL.apiKeyEnv) return
         this.credentialSaveError = undefined
         this.invalidateProbe()
         if (field === API_KEY_FIELD && !this.form.field('apiKeyEnv').text.trim()) actions.edit('apiKeyEnv', DEFAULT_API_KEY_REF)
+        if (field === 'endpoint' && this.form.field('endpoint').text.trim() === REFLEX_TRIAL.endpoint
+          && this.form.field('apiKeyEnv').text.trim() === 'REFLEX_API_KEY') actions.edit('apiKeyEnv', DEFAULT_API_KEY_REF)
         actions.edit(field, text)
         if (field === 'apiKeyEnv') void this.readCredential()
       },
       resetField: (field) => {
-        if (this.checkingCredential) return
+        if (this.checkingCredential || this.mode === 'trial') return
         this.credentialSaveError = undefined
-        this.invalidateProbe(); actions.resetField(field); void this.readCredential()
+        this.invalidateProbe(); actions.resetField(field)
+        if (this.form.field('apiKeyEnv').text.trim() === REFLEX_TRIAL.apiKeyEnv) actions.edit('apiKeyEnv', DEFAULT_API_KEY_REF)
+        void this.readCredential()
       },
       discard: () => {
         if (this.checkingCredential) return
         this.credentialSaveError = undefined
         this.invalidateProbe(); this.partialSave = false; this.recoveredRevision = undefined
-        actions.discard(); void this.readCredential()
+        actions.discard(); this.mode = this.savedMode(); this.customDraft = undefined
+        this.store.set(this.projection()); void this.readCredential()
       },
       testConnection: () => this.testConnection(), clearCredential: () => this.clearCredential(), refresh: () => this.refresh(),
     }
+  }
+
+  private keyReference(): string {
+    const ref = this.form.field('apiKeyEnv').text.trim() || DEFAULT_API_KEY_REF
+    return ref === REFLEX_TRIAL.apiKeyEnv && (this.mode !== 'trial'
+      || this.form.field('endpoint').text.trim() !== REFLEX_TRIAL.endpoint) ? DEFAULT_API_KEY_REF : ref
+  }
+
+  private savedMode(): ReflexConnectionMode {
+    const value = this.scope.getSnapshot().value
+    return value?.endpoint === REFLEX_TRIAL.endpoint && value.model === REFLEX_TRIAL.model
+      && value.apiKeyEnv === REFLEX_TRIAL.apiKeyEnv ? 'trial' : 'custom'
+  }
+
+  private initializeMode(): void {
+    if (this.initialized || this.scope.getSnapshot().status !== 'ready') return
+    this.initialized = true
+    this.mode = this.savedMode()
+    const value = this.scope.getSnapshot().value
+    if (this.scope.getSnapshot().writable) {
+      if (!value?.endpoint && !value?.model) this.selectMode('trial')
+      if (value?.protocol === 'typesafe') this.form.actions().edit('protocol', 'openjev')
+      if (this.mode === 'custom' && value?.apiKeyEnv === REFLEX_TRIAL.apiKeyEnv) this.form.actions().edit('apiKeyEnv', DEFAULT_API_KEY_REF)
+    }
+    this.store.set(this.projection())
+  }
+
+  private selectMode(mode: ReflexConnectionMode): void {
+    if (this.checkingCredential || this.form.shell().saving || !this.form.shell().writable || mode === this.mode) return
+    const actions = this.form.actions()
+    if (this.mode === 'custom') {
+      this.customDraft = Object.fromEntries(CONNECTION_FIELDS.map(field => [field, this.form.field(field).text])) as ConnectionDraft
+    }
+    this.mode = mode
+    this.invalidateProbe()
+    this.credentialSaveError = undefined
+    actions.edit(API_KEY_FIELD, '')
+    const draft: ConnectionDraft = mode === 'trial' ? {
+      ...REFLEX_TRIAL, protocol: 'openjev', effort: 'high', timeoutMs: '30000',
+    } : this.customDraft ?? {
+      endpoint: '', model: '', protocol: 'openjev', effort: 'high', timeoutMs: '30000', apiKeyEnv: DEFAULT_API_KEY_REF,
+    }
+    const trialReference = draft.apiKeyEnv === REFLEX_TRIAL.apiKeyEnv
+      || (draft.endpoint === REFLEX_TRIAL.endpoint && draft.model === REFLEX_TRIAL.model && draft.apiKeyEnv === 'REFLEX_API_KEY')
+    for (const field of CONNECTION_FIELDS) actions.edit(field, field === 'protocol' ? 'openjev'
+      : field === 'apiKeyEnv' && mode === 'custom' && trialReference ? DEFAULT_API_KEY_REF : draft[field])
+    void this.readCredential()
+    this.store.set(this.projection())
   }
 
   /** Read lifecycle state afresh after asynchronous work can dispose this controller. */
@@ -252,7 +331,8 @@ export class ReflexCardController {
     const shell = this.form.shell()
     if (this.isDisposed() || this.checkingCredential || shell.saving || !shell.writable || shell.invalid || !shell.dirty) return
     this.savedSettings = undefined
-    this.saveKeyRef = this.form.field('apiKeyEnv').text.trim() || DEFAULT_API_KEY_REF
+    this.saveKeyRef = this.keyReference()
+    if (this.form.field('apiKeyEnv').text.trim() !== this.saveKeyRef) this.form.actions().edit('apiKeyEnv', this.saveKeyRef)
     this.partialSave = false
     this.credentialSaveError = undefined
     if (this.form.field(API_KEY_FIELD).text.trim()) {
@@ -334,7 +414,7 @@ export class ReflexCardController {
     this.store.set(this.projection())
     try {
       const apiKey = this.form.field(API_KEY_FIELD).text.trim()
-      const apiKeyEnv = this.form.field('apiKeyEnv').text.trim()
+      const apiKeyEnv = this.keyReference()
       const response = await this.ctx.remote.reflex.testConnection({
         endpoint: this.form.field('endpoint').text.trim(), model: this.form.field('model').text.trim(),
         effort: this.form.field('effort').text.trim() as 'high' | 'low',
@@ -354,7 +434,7 @@ export class ReflexCardController {
 
   /** Remove only the currently stored credential; environment-owned values remain read-only. */
   async clearCredential(): Promise<void> {
-    if (!this.credential.writable) return
+    if (this.mode === 'trial' || !this.credential.writable) return
     const response = await this.ctx.remote.credentials.unset(this.credential.ref)
     if (this.disposed) return
     this.credentialFailed = !response.ok

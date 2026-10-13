@@ -61,15 +61,15 @@
         <img class="mark markLight" src="../.build/brand/brand-icon.png" alt="" />
         <img class="mark markDark" src="../.build/brand/brand-icon.png" alt="" />
       </div>
-      <h1 class="title" id="title">Starting APUS Reflex Harness</h1>
-      <p class="status">瞬策 · 瞬时执行，深度思考 · Model-as-a-Harness</p>
-      <p class="status" id="status">First launch may take a moment.</p>
+      <h1 class="title" id="title">Starting</h1>
+      <p class="status" id="status">Instant decisions · Act instantly, think deeply</p>
     </main>
     <script>
       document.querySelectorAll('.mark').forEach(mark => { mark.src = new URLSearchParams(location.search).get('icon') || '../.build/brand/brand-icon.png' })
       if (navigator.language.toLowerCase().startsWith('zh')) {
-        document.getElementById('title').textContent = '正在启动 APUS Reflex Harness'
-        document.getElementById('status').textContent = '首次启动可能需要一点时间。'
+        document.documentElement.lang = 'zh'
+        document.getElementById('title').textContent = '正在启动'
+        document.getElementById('status').textContent = '瞬策 · 瞬时执行，深度思考'
       }
     </script>
   </body>

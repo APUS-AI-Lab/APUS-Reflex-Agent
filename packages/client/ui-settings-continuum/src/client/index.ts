@@ -16,8 +16,8 @@ export function apply(ctx: ClientContext): void {
   ctx.effect(() => ctx.locale.register('settings.continuum', { zh, en }), 'ui-settings-continuum: dictionaries')
   ctx.effect(() => ctx.configForms.whileServed([CONTINUUM_NS], () => {
     const controller = new ContinuumSettingsController(ctx.configForms.get(CONTINUUM_NS))
-    const dispose = ctx.slots.inject('settings.general.item', () => ctx.slots.register({
-      name: 'settings.general.item', id: 'continuum-memory', order: 30, locale: 'settings.continuum', inject: () => controller.inject(),
+    const dispose = ctx.slots.inject('settings.reflex.item', () => ctx.slots.register({
+      name: 'settings.reflex.item', id: 'continuum-memory', order: 30, locale: 'settings.continuum', inject: () => controller.inject(),
     }, ContinuumRow))
     return () => { dispose(); controller.dispose() }
   }), 'ui-settings-continuum: settings row')

@@ -64,7 +64,9 @@ const viewSchema = z.object({
   entry: entrySchema.nullable(),
   history: z.array(entrySchema),
   skill: z.object({ requestId: requestId.nullable(), turn: z.number(), step: z.number(), outcome: z.string(),
-    selected: z.string().nullable(), injected: z.boolean(), elapsedMs: z.number() }).nullable(),
+    intent: z.enum(['conversation', 'retrieval', 'research', 'creation', 'action', 'uncertain']).optional(),
+    selected: z.string().nullable(), injected: z.boolean(), elapsedMs: z.number() })
+    .transform(({ intent, ...required }) => ({ ...required, ...intent === undefined ? {} : { intent } })).nullable(),
   subagentRun: z.object({ runId: z.string(), provider: z.string(), state: z.string(), startedAt: z.number(), elapsedMs: z.number(),
     completed: z.record(z.string(), z.number()), current: z.string().nullable(), lastStepAt: z.number().nullable(),
     note: z.string().nullable(), alert: z.object({ kind: z.string(), elapsedMs: z.number() }).nullable(),
@@ -98,7 +100,7 @@ function hasResponseContent(stream: readonly AssistantStreamRecord[]): boolean {
 
 /** Fold advice and adoption; confirm request use from output or a streamed attempt in the exact input turn. */
 export const system3RuntimeProjection = {
-  key: 'system3Runtime', stateVersion: 16, stateSchema,
+  key: 'system3Runtime', stateVersion: 17, stateSchema,
   init: () => ({ entry: null, history: [], skill: null, subagentRun: null, notices: [], taskFrame: null, interjection: null, header: null,
     currentTurn: null, currentStep: null, entryTurn: null, startRequestId: null, skillMessageId: null, imageInSession: false,
     route: null }),
@@ -145,7 +147,7 @@ export const system3RuntimeProjection = {
       const content = event.type === 'user/message' ? event.data.content : event.data.message.content
       if (content.some(block => block.type === 'image')) state = { ...state, imageInSession: true }
     }
-    if (event.type === 'turn/start' && (state.notices.length > 0 || state.interjection !== null)) state = { ...state, notices: [], interjection: null }
+    if (event.type === 'turn/start') state = { ...state, notices: [], interjection: null, skill: null, skillMessageId: null }
     if (event.type === 'system3/interjection') return event.data.delivered ? { ...state, interjection: { messageId: event.data.messageId } } : state
     if (event.type === 'system3/process-notice') {
       const { rule, subject = null, count, advised } = event.data
@@ -235,6 +237,7 @@ export const system3RuntimeProjection = {
     }
     if (event.type === 'system3/skill-decision') return { ...state, skillMessageId: event.data.injectionMessageId ?? null, skill: { requestId: event.data.requestId,
       turn: event.data.turn, step: event.data.step, outcome: event.data.outcome,
+      ...event.data.intent === undefined ? {} : { intent: event.data.intent },
       selected: event.data.selected ?? null, injected: false, elapsedMs: event.data.elapsedMs } }
     if (event.type === 'user/message' && event.data.source.kind === 'skill-invocation' && event.data.id === state.skillMessageId
       && state.skill?.selected === event.data.source.name && state.currentTurn === state.skill.turn

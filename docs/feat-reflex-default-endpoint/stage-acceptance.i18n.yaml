@@ -1,0 +1,16 @@
+# Bilingual-pair consistency record for stage-acceptance.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-reflex-default-endpoint/stage-acceptance.md
+/reflex-preparation-stages-acceptance-inventory:
+  en: fa22886dd7b7d219
+  zh: b32166123868b5a4
+/reflex-preparation-stages-acceptance-inventory/implementation-and-evidence:
+  en: 8e54ec19fe137fea
+  zh: a4942fcdca9c9c99
+/reflex-preparation-stages-acceptance-inventory/small-existing-test-batches:
+  en: 73fab0875fd647f2
+  zh: 1d783a9018fbb094
+/reflex-preparation-stages-acceptance-inventory/evidence-required-for-the-user-facing-claim:
+  en: d040240de832f4d3
+  zh: 96da5599f5865443

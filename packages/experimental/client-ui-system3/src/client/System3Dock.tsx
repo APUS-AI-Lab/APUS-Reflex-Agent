@@ -8,6 +8,7 @@ import type {} from '@deepseek-ai/dsh-client-ui-session/client'
 import { Input } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { System3Key } from './locales.ts'
 import css from './System3Dock.module.css'
+import { reflexJudgmentText } from './reflex-judgment.ts'
 
 /** Mutations injected by the Conversation slot registrant. */
 export interface System3Actions {
@@ -275,6 +276,9 @@ export function System3Feedback(props: System3FeedbackProps) {
     catch { setFailed(true) }
     finally { pending.current = false; setSwitching(false) }
   }
+  const currentSkill = props.pending && (props.pendingRequestId === null || facts?.skill?.requestId !== props.pendingRequestId)
+    ? null : facts?.skill
+  const judgment = props.opening ? undefined : reflexJudgmentText(currentSkill, t)
   const fixed = selection?.mode === 'fixed'
   const route = facts?.entry?.route
   const suggestion = route?.retained === true ? t('continued')
@@ -282,7 +286,7 @@ export function System3Feedback(props: System3FeedbackProps) {
   return <section className={css.dock} aria-label={t('title')}>
     <div className={css.bar}>
       <span className={css.dot} data-active={props.running || props.pending} aria-hidden="true" />
-      <span role="status" aria-live="polite">{t(labelOf(props))}</span>
+      <span role="status" aria-live="polite">{judgment ?? t(labelOf(props))}</span>
       <span className={css.mode}>{t(fixed ? 'fixed' : 'auto')}</span>
       {fixed && props.available && <button className={css.button} disabled={switching || props.opening} onClick={() => { void change() }}>
         {t(switching ? 'resetting' : 'reset')}

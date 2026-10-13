@@ -344,8 +344,8 @@ export default class System3 extends Service implements System3Service {
       ...(config.approvedRemoteDataClasses === undefined ? {} : { approvedRemoteDataClasses: [...config.approvedRemoteDataClasses] }),
       ...(config.cloudApproval === undefined ? {} : { cloudApproval: config.cloudApproval }),
     }
-    const installed = new Set<'entryRouting' | 'goalRouting' | 'contextMemory' | 'codexSupervision'>()
-    const markInstalled = (scope: Context, capability: 'entryRouting' | 'goalRouting' | 'contextMemory' | 'codexSupervision'): void => {
+    const installed = new Set<'entryRouting' | 'goalRouting' | 'contextMemory' | 'codexSupervision' | 'skillSelection'>()
+    const markInstalled = (scope: Context, capability: 'entryRouting' | 'goalRouting' | 'contextMemory' | 'codexSupervision' | 'skillSelection'): void => {
       scope.effect(() => {
         installed.add(capability)
         return () => { installed.delete(capability) }
@@ -406,6 +406,7 @@ export default class System3 extends Service implements System3Service {
     }
     ctx.inject(['jev'], (ctx) => {
       const enabled = (value: false | { readonly mode: string } | undefined): boolean => value !== undefined && value !== false && value.mode === 'active'
+      ctx.effect(() => ctx.jev.registerCapability('skillSelection', () => ({ implemented: true, enabled: installed.has('skillSelection') })))
       ctx.effect(() => ctx.jev.registerCapability('entryRouting', () => ({ implemented: true,
         enabled: installed.has('entryRouting') || installed.has('goalRouting') })))
       ctx.effect(() => ctx.jev.registerCapability('codexSupervision', () => ({ implemented: true, enabled: enabled(config.reflexSupervision) && installed.has('codexSupervision'),
@@ -447,7 +448,10 @@ export default class System3 extends Service implements System3Service {
     if (config.observeAgentLoop === true) this.observeAgentLoop()
     if (config.skillSelection !== undefined && config.skillSelection !== false) {
       const skillConfig = config.skillSelection
-      ctx.inject(['skills', 'jev', 'agents'], (ctx) => { installSystem3SkillSelection(ctx, skillConfig, this.privacyPolicy, this.jevOptions) })
+      ctx.inject(['skills', 'jev', 'agents'], (ctx) => {
+        installSystem3SkillSelection(ctx, skillConfig, this.privacyPolicy, this.jevOptions)
+        markInstalled(ctx, 'skillSelection')
+      })
     }
   }
 

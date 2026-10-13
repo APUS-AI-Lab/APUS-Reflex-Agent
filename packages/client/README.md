@@ -77,7 +77,7 @@ The kernel packages boot and serve the page; the UI feature packages present it.
 | [`ui-settings-models/`](ui-settings-models/README.md) | Provides model-provider configuration and DeepSeek onboarding | — |
 | [`ui-settings-shell/`](ui-settings-shell/README.md) | Provides the shell settings page on the Plugins page | — |
 | [`ui-settings-agent-loop/`](ui-settings-agent-loop/README.md) | Provides the agent-loop settings page on the Plugins page | — |
-| [`ui-settings-continuum/`](ui-settings-continuum/README.md) | Provides the Reflex-only Continuum memory switch in General settings | — |
+| [`ui-settings-continuum/`](ui-settings-continuum/README.md) | Provides the Reflex-only Continuum memory switch on the Reflex configuration page | — |
 | [`ui-settings-subagent/`](ui-settings-subagent/README.md) | Provides the Subagent settings page on the Plugins page | — |
 | [`ui-settings-web-search/`](ui-settings-web-search/README.md) | Provides the web-search settings page on the Plugins page | — |
 | [`ui-plugin-manager/`](ui-plugin-manager/README.md) | Contributes the sidebar Plugins panel: install, enable, disable, retry, and compose installed packages | — |

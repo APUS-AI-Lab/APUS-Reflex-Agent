@@ -722,7 +722,12 @@ describe('ModelsSection', () => {
     fireEvent.change(screen.getByLabelText(en.baseUrl), { target: { value: 'https://messages.example/anthropic' } })
     fireEvent.change(screen.getByLabelText(`${en.modelName} 1`), { target: { value: 'Messages Flash' } })
     fireEvent.click(screen.getByText(en.apply))
-    await waitFor(() => { expect(set).toHaveBeenCalledWith('DEEPSEEK_API_KEY', 'sk-messages-test') })
+    await waitFor(() => { expect(mutate).toHaveBeenCalledOnce() })
+    const replacementRef: unknown = set.mock.calls[0]?.[0]
+    expect(replacementRef).toMatch(/^MODEL_API_KEY_[a-f0-9_]+$/)
+    expect(set.mock.calls).toEqual([[replacementRef, 'sk-messages-test']])
+    expect(set).not.toHaveBeenCalledWith('DEEPSEEK_API_KEY', expect.anything())
+    expect(set.mock.invocationCallOrder[0]).toBeLessThan(mutate.mock.invocationCallOrder[0]!)
     expect(mutate.mock.calls).toEqual([[
       'llm-deepseek',
       [
@@ -731,6 +736,7 @@ describe('ModelsSection', () => {
           { ...DEFAULT_DEEPSEEK_MODELS[0], name: 'Messages Flash' },
           DEFAULT_DEEPSEEK_MODELS[1],
         ] },
+        { op: 'set', path: ['apiKeyEnv'], value: replacementRef },
       ],
       0,
     ]])

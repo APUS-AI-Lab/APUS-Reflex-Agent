@@ -1,3 +1,4 @@
+import { deepStrictEqual } from 'node:assert'
 import { request } from 'node:http'
 import { gunzipSync } from 'node:zlib'
 import { Context } from '@deepseek-ai/cordis'
@@ -58,7 +59,8 @@ describe('Connection binary RPC', () => {
         req.once('error', reject)
         req.end(init.body as string)
       }))
-      expect(await rpc.call('/api', 'fixture/read', {})).toEqual({ ok: true, value: { data, bytes: data.length } })
+      // Native typed-array comparison checks every byte without enumerating a million numeric properties.
+      deepStrictEqual(await rpc.call('/api', 'fixture/read', {}), { ok: true, value: { data, bytes: data.length } })
       if (compression === 'gzip') {
         expect(encoding).toBe('gzip')
         expect(transferred).toBeLessThan(data.length / 10)

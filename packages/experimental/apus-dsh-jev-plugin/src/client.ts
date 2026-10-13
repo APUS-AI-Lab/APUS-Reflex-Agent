@@ -144,10 +144,13 @@ export class SystemOneProvider implements JevProvider {
         timeout: this.options.timeoutMs,
         retry: { maxRetries: 0 },
         logLevel: 'off',
-        fetch: (input, init) => {
+        fetch: async (input, init) => {
           const headers = new Headers(init?.headers)
           if (key === undefined) headers.delete('authorization')
-          return this.fetcher(input, { ...init, headers })
+          const response = await this.fetcher(input, { ...init, headers })
+          // Keep the network body locked until drained; cloning it in the SDK races Node's abort cleanup.
+          const body = response.body === null ? null : await response.arrayBuffer()
+          return new Response(body, { status: response.status, statusText: response.statusText, headers: response.headers })
         },
       })
       const body = {

@@ -90,7 +90,14 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
      * layer and every registrant already depends on it for `ctx.configForms`.
      */
     'settings.general.item': { kind: 'list'; scope: 'root'; owner: SettingsGeneralItemOwnerProps }
+    /** Preference rows hosted by the Reflex settings section when that page is composed. */
+    'settings.reflex.item': { kind: 'list'; scope: 'root'; owner: SettingsReflexItemOwnerProps }
   }
+}
+/** Owner share of a Reflex preference row; each contribution supplies its own state and copy. */
+export interface SettingsReflexItemOwnerProps {
+  /** Marker field: item owner props are intentionally empty. */
+  children?: never
 }
 /** Owner share of a General preference row (the section supplies nothing). */
 export interface SettingsGeneralItemOwnerProps {

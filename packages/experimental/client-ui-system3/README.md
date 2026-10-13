@@ -14,7 +14,7 @@ This optional Client plugin adds a compact native Conversation dock. It displays
 ## Table of Contents
 
 - [Configuration](#configuration)
-- [Reflex model configuration](#reflex-model-configuration)
+- [Reflex configuration](#reflex-configuration)
 - [Behavior](#behavior)
 - [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
 - [Model Experience](#model-experience)
@@ -30,15 +30,19 @@ The product title is APUS Reflex Harness; the `system3` plugin and locale identi
 
 Earlier Turns keep their own route line from the projection's `history`. While the running Turn has handed its work to a subagent, an entry in the composer's `conversation.input.right` seat names the delegate beside the model selector, which keeps showing the coordinating model. The dock observes native Session and projection subscriptions. Local submission appears before routing completes. Execution state follows the live Session, independently of historical entry advice; detailed decisions remain available after history replay. Ending a turn does not claim artifact verification. Unconfirmed supervision delivery says the acknowledgement is missing and guidance was not resent; it does not claim Reflex made no decision. The fixed-model action calls the native reset API and waits for the persisted mode to change; failed mutations preserve the displayed mode. Addressed subagents cannot mutate root model selection. While a delegated run accepts mid-run input, the dock offers a steer form that sends the person's text through the native `subagents.steerByParent` Remote; a refused send keeps the text and shows a notice, and accepted texts appear under the run once the Host records them.
 
-## Reflex model configuration
+The current Turn header and the visible dock status show the recorded Reflex input category or selected Skill and preparation duration before the main answer. Judgment, Skill loading and task completion remain distinct; timeouts and unavailable decisions show a fallback instead of a fabricated result. A new local submission hides the previous judgment; Turn headers only display a judgment for their own Turn.
+
+## Reflex configuration
 
 This experimental client mounts its own typed Reflex Remote; the shared API Remotes package does not depend on the experimental provider. Disposal withdraws the UI before the Remote.
 
-The shared Web/Electron client registers **Settings → Reflex model configuration** as a dedicated top-level section. It stages the endpoint, model, OpenJev/Typesafe protocol, effort, deadline and credential reference, saves through ConfigForms/Credentials, and tests an unsaved candidate with its selected protocol through the authenticated `reflex` Remote namespace. The protocol persists as `openjev` or `typesafe`; changing it invalidates old probe results. Typesafe neither sends the effort extension nor requires `/health`. Credential literals are never read back or written to browser storage. Deployment-owned environment credentials remain read-only; a separate managed reference can hold a replacement.
+The shared Web/Electron client registers **Settings → Reflex configuration** and hosts the root-scoped `settings.reflex.item` list for independently mounted controls, including the Continuum memory switch when its companion and Host namespace are available. Its connection selector offers **APUS Reflex limited-time free endpoint** and **Custom parameters**, both presented as Reflex. The preset stages its public endpoint and model with the dedicated `APUS_REFLEX_TRIAL_API_KEY` reference; it hides connection and credential fields. The Host must provision that credential separately; the client contains no shared key and does not enforce trial expiry or quotas. Custom mode exposes the endpoint, model, effort, deadline and credential reference. Settings save through ConfigForms/Credentials and unsaved tests use the authenticated `reflex` Remote namespace. Credential literals are never read back or written to browser storage; deployment-owned environment credentials remain read-only.
+
+Mode changes invalidate pending probes and clear unsaved key text. The page retains the custom connection draft while its controller remains loaded, excludes the trial credential reference from custom settings and never clears the trial credential. Saving persists only the active connection; reopening infers preset mode from its endpoint, model and credential reference. Discard restores the saved connection. Existing custom connections remain selected on opening; unconfigured connections start with a preset draft that requires saving.
 
 Before saving a new API key, the page checks its credential reference. An already configured reference is rejected without changing configuration or credentials; key rotation requires a new dedicated reference.
 
-On first use, endpoint and model fields remain editable while the decision service is unconfigured. A passing draft test does not change saved configuration status; a successful save refreshes it. A failed runtime-status query is reported separately and does not turn a successful save into a save failure.
+A passing draft test does not change saved configuration status; a successful save refreshes it. A failed runtime-status query is reported separately and does not turn a successful save into a save failure.
 
 Connection results and capability states are independent. Changing a draft invalidates its old probe result; an in-flight result for a previous draft is ignored. A failed credential write remains a failed save even when an older key exists. Capability labels report runtime module/activation state and do not infer verification from connectivity.
 

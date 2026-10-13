@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-APUS Reflex Agent Full and Lite include this profile layer so users can enable Session-backed memory from General settings. Memory starts disabled; enabling it admits subsequent human input and projects bounded recall within that Session. Jev relevance ranking starts off and requires separate outbound approval. Active ranking preserves every locally budgeted candidate; provider failures retain the baseline.
+APUS Reflex Agent Full and Lite include this profile layer so users can enable Session-backed memory from Reflex configuration. Memory starts disabled; enabling it admits subsequent human input and projects bounded recall within that Session. Jev relevance ranking starts off and requires separate outbound approval. Active ranking preserves every locally budgeted candidate; provider failures retain the baseline.
 
 ## Table of Contents
 
@@ -26,7 +26,7 @@ APUS Reflex Agent Full and Lite include this profile layer so users can enable S
 
 The APUS Desktop and Web launchers select this installed bundle for new and existing normal profiles. Other profiles select its package name in `dsh.profile.bundles` through the [profile composition reference](../../boot/app-boot/README.md). The [bundle patch](cordis.patch.yml) mounts `continuum-memory` and the optional `continuum-jev` selector below the user's profile patch. It requires a separately mounted Reflex provider for memory to operate; Safe Mode retains its independent recovery profile.
 
-Open **Settings → General → Continuum memory** to enable memory, or save this profile patch:
+Open **Settings → Reflex configuration → Continuum memory** to enable memory, or save this profile patch:
 
 ```yaml
 - id: continuum-memory

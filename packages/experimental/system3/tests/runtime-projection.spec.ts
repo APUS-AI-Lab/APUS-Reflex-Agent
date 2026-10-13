@@ -374,3 +374,24 @@ it('keeps earlier decisions whose input reached a turn, so earlier turns keep th
   expect(h.view()?.history).toHaveLength(100)
   expect(h.view()?.history[0]?.requestId).toBe('r3')
 })
+
+
+it('replays bounded input intent, keeps the finished-turn result and clears it for the next turn', async () => {
+  const h = await setup()
+  h.session.append('turn/start', { turn: 1 })
+  h.session.append('system3/skill-decision', { version: 1, requestId: null, turn: 1, step: 0, request: null,
+    candidateNames: [], intent: 'retrieval', outcome: 'too-many-candidates', elapsedMs: 42 })
+  expect(system3RuntimeProjection.wire.viewSchema.parse(system3RuntimeProjection.wire.view(h.view()!)).skill).toMatchObject({
+    intent: 'retrieval', turn: 1, selected: null, injected: false,
+  })
+  h.session.append('turn/end', { turn: 1, reason: { kind: 'completed' } })
+  expect(h.view()?.skill?.intent).toBe('retrieval')
+  h.session.append('turn/start', { turn: 2 })
+  expect(h.view()?.skill).toBeNull()
+  expect(h.view()?.skillMessageId).toBeNull()
+  h.session.append('system3/skill-decision', { version: 1, requestId: null, turn: 2, step: 0, request: null,
+    candidateNames: [], outcome: 'timeout', elapsedMs: 1000 })
+  expect(h.view()?.skill?.intent).toBeUndefined()
+  const decoded = system3RuntimeProjection.wire.viewSchema.parse(system3RuntimeProjection.wire.view(h.view()!))
+  expect(Object.hasOwn(decoded.skill ?? {}, 'intent')).toBe(false)
+})

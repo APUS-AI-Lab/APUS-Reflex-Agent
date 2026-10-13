@@ -24,5 +24,6 @@ export function installReflexSettings(ctx: Context): void {
   const face = controller.inject()
   ctx.slots.inject('settings.section', () => ctx.slots.register({
     name: 'settings.section', id: 'reflex-model', order: 12, label: () => t('title'), locale: 'settings.reflex', inject: () => face,
+    children: { 'settings.reflex.item': { kind: 'list', scope: 'root' } },
   }, ReflexSettings))
 }

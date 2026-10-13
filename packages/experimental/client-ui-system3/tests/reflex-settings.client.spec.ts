@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { ReflexStatus } from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
 import { stubConfigForm } from '@deepseek-ai/dsh-client-test-runtime'
-import { ReflexCardController, type ReflexSettings } from '../src/client/reflex-settings-controller.ts'
+import { ReflexCardController, REFLEX_TRIAL, type ReflexSettings } from '../src/client/reflex-settings-controller.ts'
 
 function fixture(configured = true) {
   const host = stubConfigForm<ReflexSettings>()
@@ -109,7 +109,7 @@ describe('Reflex dedicated settings controller', () => {
       f.face.edit('apiKeyEnv', '')
       f.face.save()
       await vi.waitFor(() => { expect(f.state().saving).toBe(false) })
-      expect(f.credentials.set).toHaveBeenCalledWith('REFLEX_API_KEY', 'replacement')
+      expect(f.credentials.set).toHaveBeenCalledWith('REFLEX_CUSTOM_API_KEY', 'replacement')
     } finally { f.controller.dispose() }
   })
 
@@ -168,7 +168,8 @@ it('drops stale credential reads after changing references', async () => {
     expect(f.state().apiKeyConfigured).toBe(false)
     expect(f.state().apiKeyWritable).toBe(true)
     f.face.resetField('apiKeyEnv')
-    await vi.waitFor(() => { expect(f.state().apiKeyConfigured).toBe(true) })
+    await vi.waitFor(() => { expect(f.credentials.describe).toHaveBeenLastCalledWith(['REFLEX_CUSTOM_API_KEY']) })
+    expect(f.state().apiKeyConfigured).toBe(false)
   } finally { f.controller.dispose() }
 })
 
@@ -219,9 +220,9 @@ it('invalidates probes after Host settings change and assigns the first managed 
     f.face.edit('timeoutMs', '2000')
     expect(f.state().invalid).toBe(false)
     f.face.edit('apiKey', 'first-secret')
-    expect(f.state().apiKeyEnv.text).toBe('REFLEX_API_KEY')
+    expect(f.state().apiKeyEnv.text).toBe('REFLEX_CUSTOM_API_KEY')
     f.face.save()
-    await vi.waitFor(() => { expect(f.credentials.set).toHaveBeenCalledWith('REFLEX_API_KEY', 'first-secret') })
+    await vi.waitFor(() => { expect(f.credentials.set).toHaveBeenCalledWith('REFLEX_CUSTOM_API_KEY', 'first-secret') })
   } finally { f.controller.dispose() }
 })
 
@@ -353,7 +354,7 @@ it('refreshes unconfigured runtime status after saving the first connection', as
   } finally { f.controller.dispose() }
 })
 
-it.each(['openjev', 'typesafe'] as const)('probes and saves the draft protocol %s without saving during a probe', async (protocol) => {
+it.each(['openjev'] as const)('probes and saves the draft protocol %s without saving during a probe', async (protocol) => {
   const f = fixture()
   try {
     expect(f.state().protocol.text).toBe('openjev')
@@ -365,5 +366,73 @@ it.each(['openjev', 'typesafe'] as const)('probes and saves the draft protocol %
     f.face.save()
     await vi.waitFor(() => { expect(f.state().saving).toBe(false) })
     expect(f.host.mutate).toHaveBeenCalledWith(expect.arrayContaining([{ op: 'set', path: ['protocol'], value: protocol }]), undefined)
+  } finally { f.controller.dispose() }
+})
+
+
+it('stages the preset without sharing either custom secrets or its credential reference', async () => {
+  const f = fixture()
+  try {
+    f.face.edit('endpoint', 'https://my-custom.test')
+    f.face.edit('apiKey', 'custom-draft-secret')
+    f.face.selectMode('trial')
+    expect(f.state().mode).toBe('trial')
+    expect(f.state().endpoint.text).toBe(REFLEX_TRIAL.endpoint)
+    expect(f.state().apiKey.text).toBe('')
+    await f.face.testConnection()
+    expect(f.reflex.testConnection).toHaveBeenLastCalledWith(expect.objectContaining({ ...REFLEX_TRIAL, protocol: 'openjev' }), expect.any(AbortSignal))
+    expect(f.reflex.testConnection.mock.calls.at(-1)?.[0]).not.toHaveProperty('apiKey')
+    f.face.edit('endpoint', 'https://attacker.test')
+    expect(f.state().endpoint.text).toBe(REFLEX_TRIAL.endpoint)
+    await f.face.clearCredential()
+    expect(f.credentials.unset).not.toHaveBeenCalled()
+    f.face.selectMode('custom')
+    expect(f.state().endpoint.text).toBe('https://my-custom.test')
+    expect(f.state().apiKeyEnv.text).toBe('REFLEX_API_KEY')
+    expect(f.state().apiKey.text).toBe('')
+    f.face.edit('apiKeyEnv', REFLEX_TRIAL.apiKeyEnv)
+    expect(f.state().apiKeyEnv.text).toBe('REFLEX_API_KEY')
+    await f.face.testConnection()
+    expect(f.reflex.testConnection).toHaveBeenLastCalledWith(expect.objectContaining({ endpoint: 'https://my-custom.test', apiKeyEnv: 'REFLEX_API_KEY' }), expect.any(AbortSignal))
+    f.face.selectMode('trial')
+    f.face.discard()
+    expect(f.state().mode).toBe('custom')
+    expect(f.state().endpoint.text).toBe('https://reflex.test')
+    expect(f.state().dirty).toBe(false)
+    expect(f.host.mutate).not.toHaveBeenCalled()
+  } finally { f.controller.dispose() }
+})
+
+
+it('cancels a pending custom probe when selecting the preset and discards its late answer', async () => {
+  const f = fixture()
+  try {
+    const pending = Promise.withResolvers<Awaited<ReturnType<typeof f.reflex.testConnection>>>()
+    f.reflex.testConnection.mockReturnValueOnce(pending.promise)
+    const probe = f.face.testConnection()
+    const signal = f.reflex.testConnection.mock.calls[0]?.[1]
+    f.face.selectMode('trial')
+    expect(signal?.aborted).toBe(true)
+    pending.resolve({ ok: true, value: { kind: 'ok', stage: 'decision', model: 'decision', effort: 'high', latencyMs: 4 } })
+    await probe
+    expect(f.state().probe.result).toBeUndefined()
+    expect(f.state().mode).toBe('trial')
+  } finally { f.controller.dispose() }
+})
+
+it('does not probe a changed Host endpoint with the trial credential', async () => {
+  const f = fixture()
+  try {
+    f.host.publish({ status: 'ready', writable: true, value: { ...REFLEX_TRIAL, effort: 'high', timeoutMs: 1000 }, user: {} })
+    expect(f.state().mode).toBe('trial')
+    f.host.publish({ status: 'ready', writable: true, value: { ...REFLEX_TRIAL, endpoint: 'https://changed.test', effort: 'high', timeoutMs: 1000 }, user: {} })
+    expect(f.state().mode).toBe('custom')
+    f.face.discard()
+    await f.face.testConnection()
+    expect(f.reflex.testConnection).toHaveBeenLastCalledWith(expect.objectContaining({ endpoint: 'https://changed.test', apiKeyEnv: 'REFLEX_CUSTOM_API_KEY' }), expect.any(AbortSignal))
+    f.face.edit('model', 'updated-model')
+    f.face.save()
+    await vi.waitFor(() => { expect(f.state().saving).toBe(false) })
+    expect(f.host.mutate).toHaveBeenLastCalledWith(expect.arrayContaining([{ op: 'set', path: ['apiKeyEnv'], value: 'REFLEX_CUSTOM_API_KEY' }]), undefined)
   } finally { f.controller.dispose() }
 })
