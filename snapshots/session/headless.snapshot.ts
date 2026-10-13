@@ -86,6 +86,8 @@ interface JsonObject {
 interface HeadlessScenario {
   readonly name: string
   readonly dir: string
+  /** Keep canonical replay input unchanged and compare a separate current-writer oracle. */
+  readonly preserveReplayInput?: boolean
   readonly manifest: SnapshotManifest & {
     composition: string
     recording: 'live' | 'authored'
@@ -234,7 +236,7 @@ async function writeSessionFixtures(
   existing: readonly string[],
   ctx: NormalizeContext,
 ): Promise<string[]> {
-  const names = actualLogs.map((log, index) => scenario.manifest.sessionFormat === undefined
+  const names = actualLogs.map((log, index) => scenario.manifest.sessionFormat === undefined && scenario.preserveReplayInput !== true
     ? sessionFixtureName(index, sessionHeaderVersion(log.content, `harvested Session ${index}`))
     : writerSnapshotName(index))
   const prior = names.map((_, index) => existing[index] ?? '')
@@ -531,6 +533,7 @@ async function collectScenarios(): Promise<HeadlessScenario[]> {
       name: entry.name,
       dir,
       manifest: { ...manifest, composition: manifest.composition, recording: manifest.recording, header: manifest.header },
+      ...(entry.name === 'session-query-spill' ? { preserveReplayInput: true } : {}),
     })
   }
   return scenarios.sort((left, right) => left.name.localeCompare(right.name))
@@ -1072,10 +1075,11 @@ describe('headless recorded-session snapshots', () => {
       ? [{ scenario, retainedToolInput: 'session.v3.jsonl' }] : [],
   ])
   for (const { scenario, retainedToolInput } of runs) {
+    const retained = scenario.manifest.sessionFormat !== undefined || scenario.preserveReplayInput === true
     const skipped = scenario.manifest.platform === 'posix' && process.platform === 'win32'
       || scenario.manifest.platform === 'pwsh' && !hasPwsh
       || mode === 'record' && scenario.manifest.recording === 'authored'
-      || mode === 'record' && scenario.manifest.sessionFormat !== undefined
+      || mode === 'record' && retained
     const scenarioTest = skipped ? it.skip : mode === 'replay' ? it.concurrent : it
     const inputLabel = retainedToolInput === undefined ? '' : ' from retained V3 input'
     scenarioTest(`${mode}s ${scenario.name}${inputLabel} through dsh --profile headless`, async () => {
@@ -1221,7 +1225,7 @@ describe('headless recorded-session snapshots', () => {
       const expectedStderr = stderrFromSession(stderrLog)
       const actualContext = contextOf(actualLogs.map(log => log.content))
 
-      if (writesCurrentSessionFixtures(scenario.manifest, mode)) {
+      if (!retained && writesCurrentSessionFixtures(scenario.manifest, mode)) {
         fixtures = await writeSessionFixtures(
           scenario,
           actualLogs,
@@ -1240,11 +1244,11 @@ describe('headless recorded-session snapshots', () => {
       expect(actualLogs, `${scenario.name}: persisted session count`).toHaveLength(fixtures.length)
       const writerFiles = (await readdir(scenario.dir)).filter(name => /^writer(?:\.[1-9]\d*)?\.expected\.jsonl$/u.test(name)).sort()
       if (mode === 'replay') {
-        expect(writerFiles, 'native writer oracle inventory').toEqual(scenario.manifest.sessionFormat === undefined
-          ? [] : fixtures.map((_, index) => writerSnapshotName(index)).sort())
+        expect(writerFiles, 'native writer oracle inventory').toEqual(retained
+          ? fixtures.map((_, index) => writerSnapshotName(index)).sort() : [])
       }
       let expected = fixtures
-      if (scenario.manifest.sessionFormat !== undefined) {
+      if (retained) {
         if (mode === 'refresh') await writeSessionFixtures(scenario, actualLogs, fixtures, actualContext)
         expected = await Promise.all(fixtures.map((_, index) => readFile(join(scenario.dir, writerSnapshotName(index)), 'utf8')))
         for (const [index, content] of expected.entries()) {
