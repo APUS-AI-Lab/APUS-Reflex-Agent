@@ -180,7 +180,7 @@ describe('Continuum threshold selection', () => {
     await selectContinuumMemory(provider, { ...threshold, maxQueryChars: 30 }, { query, candidates: [candidate('a', 0, 'Full excerpt.')] })
     const request = provider.calls[0]!
     expect(Object.values(request.questions)[0]?.instructions).toContain(`Query: «${'长'.repeat(30)}…[input continues]». Candidate m0: «Full excerpt.».`)
-    expect(request.state).toEqual({ query: `${'长'.repeat(30)}…[input continues]` })
+    expect(request.state).toEqual({ query: `${'长'.repeat(30)}…[input continues]`, candidates: [{ question: 'm0' }] })
     await expect(selectContinuumMemory(fake(), { ...threshold, maxQueryChars: 0 }, { query, candidates: [] })).rejects.toThrow('maxQueryChars')
     const emoji = fake([0.9])
     await selectContinuumMemory(emoji, { ...threshold, maxQueryChars: 2 }, { query: 'a😀b', candidates: [candidate('a', 0)] })

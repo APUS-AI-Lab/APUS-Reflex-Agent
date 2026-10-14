@@ -414,8 +414,9 @@ export async function selectContinuumMemory(
   const candidates = input.candidates.slice(0, MAX_JEV_QUESTIONS)
   const query = quotedQuery(input.query, config.maxQueryChars ?? 500)
   const unresolved: JevRequest = {
-    // Candidate metadata in the shared state measurably lowers Reflex judgements; each question quotes what it needs.
-    state: { query },
+    // Measured on the deployed model: listing the question keys raises relevance judgements, while candidate IDs or
+    // metadata in the state lower them. Each question quotes the query and its own excerpt.
+    state: { query, candidates: candidates.map((_candidate, index) => ({ question: `m${String(index)}` })) },
     questions: Object.fromEntries(candidates.map((candidate, index) => [`m${index}`, {
       type: 'noul' as const,
       instructions: relevanceInstructions(index, query, candidate.excerpt),
@@ -483,7 +484,8 @@ export async function admitContinuumMemory(
   if (jev === undefined) return fallback('provider-unavailable')
   const key = (candidate: number, tag: number): string => `m${String(candidate)}t${String(tag)}`
   const unresolved: JevRequest = {
-    // Candidate IDs in the shared state measurably lower Reflex tag probabilities; each question is self-contained.
+    // Measured on the deployed model: any shared state, even the question keys, lowers tag probabilities; each question
+    // quotes its message.
     state: {},
     questions: Object.fromEntries(input.candidates.flatMap((candidate, index) => tags.map((tag, position) => [key(index, position), {
       type: 'noul' as const,

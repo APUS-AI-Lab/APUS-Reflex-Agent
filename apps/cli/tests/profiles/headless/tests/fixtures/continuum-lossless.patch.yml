@@ -19,6 +19,7 @@
       name: ../../../../../../../packages/experimental/apus-dsh-jev-plugin/lib/index.js
       disabled: !!js "process.env.LOSSLESS_NO_JEV === '1'"
       config:
+        enabled: !!js process.env.LOSSLESS_JEV_ENABLED !== '0'
         endpoint: !!js process.env.LOSSLESS_JEV_ENDPOINT
         model: lossless-gateway
         timeoutMs: 5000

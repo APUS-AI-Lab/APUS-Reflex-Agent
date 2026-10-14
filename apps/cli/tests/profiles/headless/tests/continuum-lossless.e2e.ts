@@ -197,6 +197,20 @@ describe('Continuum lossless memory through the shipped headless CLI', () => {
     expect(answers[QUESTION + 2]).toBe('I do not know the code.')
   }, SCENARIO_TIMEOUT_MS)
 
+  it('indexes and recalls nothing while Reflex is turned off in settings', async () => {
+    const { events, answers, questions } = await run('reflex-switched-off', 'src', { LOSSLESS_JEV_ENABLED: '0' })
+    expect(ofType(events, 'compaction/summary').length).toBeGreaterThan(0)
+    expect(questions).toEqual([])
+    expect(records(events)).toEqual([])
+    expect(recalls(events)).toEqual([])
+    const admissions = settled(events)
+    expect(admissions.length).toBeGreaterThan(0)
+    expect(admissions.every(event => event.data.reason === 'provider-unavailable' && event.data.failure === 'reflex-disabled'
+      && event.data.admittedIds.length === 0)).toBe(true)
+    // The history tools stay mounted while the Jev service is mounted; they read the log, not the index.
+    expect(answers[QUESTION]).toBe('From history: the code is ALPHA-7731.')
+  }, SCENARIO_TIMEOUT_MS)
+
   it('keeps every compacted input and recalls by shared terms when the Reflex gateway fails', async () => {
     const { events, answers } = await run('jev-down', 'src', {}, true)
     const admissions = settled(events)
