@@ -1026,7 +1026,7 @@ export interface Config {
 ## `@deepseek-ai/dsh-experimental-continuum-jev`
 
 - `refs`: [`System3DataClass`](../packages/experimental/system3-policy/src/index.ts) · [`System3PrivacyPolicy`](../packages/experimental/system3-policy/src/index.ts)
-- `source`: [`packages/experimental/continuum-jev/src/index.ts:126`](../packages/experimental/continuum-jev/src/index.ts)
+- `source`: [`packages/experimental/continuum-jev/src/index.ts:153`](../packages/experimental/continuum-jev/src/index.ts)
 
 ```ts config-catalog
 /** Profile settings resolve the same explicit configuration used by direct consumers. */
@@ -1048,8 +1048,15 @@ export interface ContinuumJevConfig {
   readonly selection?: ContinuumJevSelection
   /** Lowest relevance probability `threshold` selection keeps, from 0 to 1. Omitted means 0.7. */
   readonly minRelevance?: number
-  /** Lowest importance probability compaction admission keeps, from 0 to 1. Omitted means 0.5. */
-  readonly minImportance?: number
+  /** Index tags compaction admission judges each message against. Omitted means {@link DEFAULT_MEMORY_TAGS}. */
+  readonly tags?: readonly ContinuumMemoryTag[]
+  /** Lowest tag probability, from 0 to 1, that assigns a tag; a message with no assigned tag is not indexed. Omitted means 0.5. */
+  readonly minTagProbability?: number
+  /**
+   * UTF-16 code units of a compacted message each tag question quotes; a longer message is quoted as its head and tail
+   * around an omission marker. Omitted means 600. The indexed original in L2 is never cut.
+   */
+  readonly maxQuotedChars?: number
   /**
    * Leading UTF-16 code units of the user input that each relevance question quotes; longer input is cut with a marker.
    * Omitted means 500. Memory records and excerpts are never cut by this setting.
@@ -1069,6 +1076,14 @@ export type ContinuumJevMode = 'off' | 'shadow' | 'active'
  * `minRelevance`; without a Reflex answer it keeps only candidates that share a query term.
  */
 export type ContinuumJevSelection = 'rank' | 'threshold'
+
+/** One L1 index tag: a stable ID and the subject a message must state a fact about to carry it. */
+export interface ContinuumMemoryTag {
+  /** Stable tag ID written to L1 index entries. */
+  readonly id: string
+  /** English noun phrase completing "states a fact about the user or someone in their life concerning …". */
+  readonly description: string
+}
 ```
 <!-- END GENERATED config-catalog:@deepseek-ai/dsh-experimental-continuum-jev -->
 

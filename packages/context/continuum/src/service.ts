@@ -2,13 +2,17 @@ import { Context, Service, type Volatile } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/cordis-plugin-loader'
 import type {} from '@deepseek-ai/dsh-compaction'
 import type { Agent } from '@deepseek-ai/dsh-agent'
-import type { ContentBlock } from '@deepseek-ai/dsh-llm'
 import type { Session, SessionEvent, SessionId } from '@deepseek-ai/dsh-session'
 import z from '@deepseek-ai/schemastery'
 import { ContinuumMemoryController, resolveContinuumMemorySwitch, type ContinuumMemorySwitch } from './policy.ts'
-import { appendMemoryRecordEvent, foldMemoryRecordEvents } from './persistence.ts'
+import { appendMemoryIndexEvent, appendMemoryRecordEvent, foldMemoryRecordEvents, memorySourceText } from './persistence.ts'
 import { MemoryId as createMemoryId, MemoryRecordStore, type MemoryId, type MemoryRecord, type NewMemoryRecord } from './records.ts'
-import { installContinuumMemoryControllerContext, type ContinuumAdmissionCandidate, type ContinuumMemoryContextConfig } from './context.ts'
+import {
+  installContinuumMemoryControllerContext,
+  type ContinuumAdmissionCandidate,
+  type ContinuumAdmittedMemory,
+  type ContinuumMemoryContextConfig,
+} from './context.ts'
 import type { MemoryCandidatePool } from './retrieval.ts'
 
 declare module '@deepseek-ai/cordis' {
@@ -25,8 +29,8 @@ export interface ContinuumConfig extends ContinuumMemoryContextConfig {
   readonly scopes: string[]
   /**
    * `explicit` admits only caller-created records. `user-message` admits every committed human message.
-   * `compaction` admits the human messages a compaction checkpoint replaces, filtered by the mounted Reflex admitter;
-   * without that admitter it neither admits nor recalls, so the Session behaves as without Continuum.
+   * `compaction` indexes the human messages a compaction checkpoint replaces, as selected and tagged by the mounted
+   * Reflex admitter; without that admitter it neither indexes nor recalls, so the Session behaves as without Continuum.
    */
   readonly admission?: ContinuumAdmissionMode
   readonly candidatePool?: MemoryCandidatePool
@@ -250,17 +254,21 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
     const candidates: (ContinuumAdmissionCandidate & { readonly seq: SessionEvent['seq'] })[] = agent.session.snapshotEvents()
       .filter(source => shadowed.has(source.seq))
       .flatMap((source) => {
-        const content = humanText(source)
+        const content = memorySourceText(source)
         const id = `${String(agent.session.id)}:${String(source.seq)}`
         return content.length === 0 || store.get(createMemoryId(id)) !== undefined ? [] : [{ id, content, seq: source.seq }]
       })
     if (candidates.length === 0) return
-    const admitted = new Set(await this.admittedIds(agent, candidates, signal))
+    const admitted = new Map((await this.admitted(agent, candidates, signal)).map(memory => [memory.id, memory.tags]))
     if (!this.state().enabled) return
     for (const candidate of candidates) {
       const id = createMemoryId(candidate.id)
-      if (!admitted.has(candidate.id) || store.get(id) !== undefined) continue
-      this.create(agent, { id, kind: 'fact', scope, content: candidate.content, sourceRefs: [{ sessionId: agent.session.id, eventSeq: candidate.seq }] })
+      const tags = admitted.get(candidate.id)
+      if (tags === undefined || store.get(id) !== undefined) continue
+      const source = { sessionId: agent.session.id, eventSeq: candidate.seq }
+      // The L1 index keeps only tags and the pointer; the in-memory record caches the L2 text for retrieval.
+      appendMemoryIndexEvent(agent.session, { id, scope, tags: [...tags], source })
+      this.controller(agent).observe(store.create({ id, kind: 'fact', scope, content: candidate.content, sourceRefs: [source] }))
     }
   }
 
@@ -269,11 +277,11 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
     return this.config.admission !== 'compaction' || this.ctx.get('continuumMemoryAdmitter') !== undefined
   }
 
-  /** IDs the mounted admitter keeps; every candidate when the admitter fails, none when it was removed. */
-  private async admittedIds(
+  /** Candidates the mounted admitter keeps, with tags; every candidate untagged when it fails, none when it was removed. */
+  private async admitted(
     agent: Agent, candidates: readonly ContinuumAdmissionCandidate[], signal: AbortSignal,
-  ): Promise<readonly string[]> {
-    const all = candidates.map(candidate => candidate.id)
+  ): Promise<readonly ContinuumAdmittedMemory[]> {
+    const all = candidates.map(candidate => ({ id: candidate.id, tags: [] }))
     const admitter = this.ctx.get('continuumMemoryAdmitter')
     if (admitter === undefined) return []
     try {
@@ -281,7 +289,7 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
         candidates: candidates.map(({ id, content }) => ({ id, content })),
         isCurrent: () => !signal.aborted && this.state().enabled,
       }, signal)
-      return admission.admittedIds
+      return admission.admitted
     } catch (error: unknown) {
       signal.throwIfAborted()
       // Losing a compacted message is worse than keeping one that is not needed.
@@ -295,7 +303,7 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
   /** Admit one committed human message when the protected automatic mode is enabled. */
   private admitUserMessage(session: Session, event: SessionEvent): void {
     if ((this.config.admission ?? 'explicit') !== 'user-message' || !this.state().enabled || event.type !== 'user/message') return
-    const content = humanText(event)
+    const content = memorySourceText(event)
     const scope = this.config.scopes[0]
     if (content.length === 0 || scope === undefined) return
     const agent = this.agentsBySession.get(session.id) ?? this.ctx.get('agents')?.currentInitiator()
@@ -311,14 +319,6 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
       sourceRefs: [{ sessionId: session.id, eventSeq: event.seq }],
     })
   }
-}
-
-/** Text of a human message; empty for other sources and for messages without text. */
-function humanText(event: SessionEvent): string {
-  if (event.type !== 'user/message' || event.data.source.kind !== 'user') return ''
-  return event.data.content
-    .filter((block): block is ContentBlock & { type: 'text' } => block.type === 'text')
-    .map(block => block.text).join('\n').trim()
 }
 
 function readSetting<T extends boolean | 'off' | 'shadow' | 'active'>(value: T | Volatile<T>): T {

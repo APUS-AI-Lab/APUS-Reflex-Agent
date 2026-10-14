@@ -14,6 +14,7 @@ import ToolRuntime from '@deepseek-ai/dsh-tools'
 import Jev from '../../../experimental/apus-dsh-jev-plugin/src/index.ts'
 import ContinuumMemory, { type ContinuumConfig } from '../src/service.ts'
 import type { ContinuumMemoryAdmitter } from '../src/context.ts'
+import { ContinuumMemoryController } from '../src/policy.ts'
 
 const contexts: Context[] = []
 const SIGNAL = new AbortController().signal
@@ -94,12 +95,19 @@ async function seed(agent: Agent): Promise<void> {
   await agent.whenIdle()
 }
 
+/** L1 index entries the Session log holds; an entry carries tags and a pointer, never the message text. */
 const records = (agent: Agent) => agent.session.snapshotEvents().flatMap(event =>
-  event.type === 'continuum/memory-record' ? [event.data.record] : [])
+  event.type === 'continuum/memory-index' ? [event.data.entry] : [])
+
+/** Text of the L2 event an index entry points at. */
+const sourceText = (agent: Agent, entry: ReturnType<typeof records>[number]) => {
+  const source = agent.session.snapshotEvents().find(event => event.seq === entry.source.eventSeq)
+  return source?.type === 'user/message' ? source.data.content.map(block => block.type === 'text' ? block.text : '').join('') : ''
+}
 
 /** Admitter that keeps every compacted message. */
 const keepAll: ContinuumMemoryAdmitter = {
-  admit: (_agent, input) => Promise.resolve({ admittedIds: input.candidates.map(candidate => candidate.id) }),
+  admit: (_agent, input) => Promise.resolve({ admitted: input.candidates.map(candidate => ({ id: candidate.id, tags: ['people'] })) }),
 }
 
 const recalled = (adapter: RecordingAdapter) => (adapter.requests.at(-1) ?? []).filter(message => message.source?.kind === 'continuum-memory')
@@ -119,7 +127,8 @@ describe('Continuum compaction admission', () => {
   it('admits only the compacted human messages the admitter keeps, and the next read waits for them', async () => {
     const admit = vi.fn<ContinuumMemoryAdmitter['admit']>(async (_agent, input) => {
       await new Promise(resolve => setTimeout(resolve, 20))
-      return { admittedIds: [...input.candidates.filter(candidate => candidate.content.includes('X-Orbit-Key')).map(candidate => candidate.id), 'unknown'] }
+      const kept = input.candidates.filter(candidate => candidate.content.includes('X-Orbit-Key'))
+      return { admitted: [...kept.map(candidate => ({ id: candidate.id, tags: ['work', 'places'] })), { id: 'unknown', tags: ['work'] }] }
     })
     const h = await harness({ admitter: { admit } })
     await seed(h.agent)
@@ -134,10 +143,14 @@ describe('Continuum compaction admission', () => {
     expect(admit.mock.calls[0]?.[1].isCurrent()).toBe(true)
     const admitted = records(h.agent)
     expect(admitted).toHaveLength(1)
-    expect(admitted[0]?.content).toContain('X-Orbit-Key')
+    expect(admitted[0]).not.toHaveProperty('content')
+    expect(sourceText(h.agent, admitted[0]!)).toContain('X-Orbit-Key')
     const source = h.agent.session.snapshotEvents().find(event => event.type === 'user/message' && event.data.source.kind === 'user')
-    expect(admitted[0]).toMatchObject({ id: `${String(h.agent.session.id)}:${String(source?.seq)}`, kind: 'fact', scope: 'workspace' })
-    expect(admitted[0]?.sourceRefs).toEqual([{ sessionId: h.agent.session.id, eventSeq: source?.seq }])
+    expect(admitted[0]).toEqual({
+      id: `${String(h.agent.session.id)}:${String(source?.seq)}`, scope: 'workspace', tags: ['work', 'places'],
+      source: { sessionId: h.agent.session.id, eventSeq: source?.seq },
+    })
+    expect(h.agent.session.snapshotEvents().some(event => event.type === 'continuum/memory-record')).toBe(false)
     expect(recalled(h.adapter).join('\n')).toContain('X-Orbit-Key')
 
     // A second compaction of the same span admits nothing twice.
@@ -160,7 +173,7 @@ describe('Continuum compaction admission', () => {
   })
 
   it('admits nothing when the admitter is removed before its judgement starts', async () => {
-    const admit = vi.fn<ContinuumMemoryAdmitter['admit']>(() => Promise.resolve({ admittedIds: [] }))
+    const admit = vi.fn<ContinuumMemoryAdmitter['admit']>(() => Promise.resolve({ admitted: [] }))
     const h = await harness({ admitter: { admit } })
     await seed(h.agent)
     h.ctx.on('session/event', (_session, event) => {
@@ -176,7 +189,7 @@ describe('Continuum compaction admission', () => {
 
   it('stops a pending admission without a warning when the Agent is disposed', async () => {
     const warn = vi.fn()
-    const gate = Promise.withResolvers<{ admittedIds: string[] }>()
+    const gate = Promise.withResolvers<{ admitted: { id: string; tags: string[] }[] }>()
     const h = await harness({ admitter: { admit: () => gate.promise } })
     h.ctx.logger.warn = warn
     await seed(h.agent)
@@ -184,7 +197,7 @@ describe('Continuum compaction admission', () => {
     await new Promise(resolve => setTimeout(resolve, 0))
     const events = h.agent.session.snapshotEvents().length
     await h.handle.dispose()
-    gate.resolve({ admittedIds: ['anything'] })
+    gate.resolve({ admitted: [{ id: 'anything', tags: [] }] })
     await new Promise(resolve => setTimeout(resolve, 0))
     expect(h.agent.session.snapshotEvents()).toHaveLength(events)
     expect(warn).not.toHaveBeenCalled()
@@ -198,7 +211,7 @@ describe('Continuum compaction admission', () => {
     await late.agent.whenIdle()
     expect(records(late.agent).length).toBeGreaterThan(0)
 
-    const admit = vi.fn<ContinuumMemoryAdmitter['admit']>(() => Promise.resolve({ admittedIds: [] }))
+    const admit = vi.fn<ContinuumMemoryAdmitter['admit']>(() => Promise.resolve({ admitted: [] }))
     const unscoped = await harness({ admitter: { admit }, scopes: [] })
     await seed(unscoped.agent)
     await unscoped.compaction.compactNow(unscoped.agent, SIGNAL)
@@ -206,7 +219,7 @@ describe('Continuum compaction admission', () => {
   })
 
   it('offers nothing when the replaced span holds no human text', async () => {
-    const admit = vi.fn<ContinuumMemoryAdmitter['admit']>(() => Promise.resolve({ admittedIds: [] }))
+    const admit = vi.fn<ContinuumMemoryAdmitter['admit']>(() => Promise.resolve({ admitted: [] }))
     const h = await harness({ admitter: { admit } })
     for (let turn = 0; turn < 3; turn += 1) {
       h.agent.followup(user('   '))
@@ -219,28 +232,28 @@ describe('Continuum compaction admission', () => {
   })
 
   it('discards a judgement that settles after Reflex was removed, and warns when admission itself fails', async () => {
-    const gate = Promise.withResolvers<{ admittedIds: string[] }>()
+    const gate = Promise.withResolvers<{ admitted: { id: string; tags: string[] }[] }>()
     const h = await harness({ admitter: { admit: () => gate.promise } })
     await seed(h.agent)
     await h.compaction.compactNow(h.agent, SIGNAL)
     await new Promise(resolve => setTimeout(resolve, 0))
     await h.jev.dispose()
-    gate.resolve({ admittedIds: [`${String(h.agent.session.id)}:1`] })
+    gate.resolve({ admitted: [{ id: `${String(h.agent.session.id)}:1`, tags: [] }] })
     await new Promise(resolve => setTimeout(resolve, 10))
     expect(records(h.agent)).toEqual([])
 
     const warn = vi.fn()
     const failing = await harness({ admitter: keepAll })
     failing.ctx.logger.warn = warn
-    vi.spyOn(ContinuumMemory.prototype, 'create').mockImplementation(() => { throw new Error('append failed') })
     await seed(failing.agent)
+    vi.spyOn(ContinuumMemoryController.prototype, 'observe').mockImplementation(() => { throw new Error('append failed') })
     await failing.compaction.compactNow(failing.agent, SIGNAL)
     await new Promise(resolve => setTimeout(resolve, 10))
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('continuum compaction admission failed: Error: append failed'))
   })
 
   it('ignores checkpoints in the other admission modes', async () => {
-    const admit = vi.fn<ContinuumMemoryAdmitter['admit']>(() => Promise.resolve({ admittedIds: [] }))
+    const admit = vi.fn<ContinuumMemoryAdmitter['admit']>(() => Promise.resolve({ admitted: [] }))
     const h = await harness({ admitter: { admit }, admission: 'explicit' })
     await seed(h.agent)
     await h.compaction.compactNow(h.agent, SIGNAL)

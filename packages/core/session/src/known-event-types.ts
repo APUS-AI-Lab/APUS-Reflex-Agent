@@ -35,6 +35,7 @@ export const KNOWN_SESSION_EVENT_TYPES: ReadonlySet<string> = new Set([
   'compaction/summary',
   'continuum/memory-admission',
   'continuum/memory-decision',
+  'continuum/memory-index',
   'continuum/memory-record',
   'continuum/task-binding',
   'continuum/task-operation',

@@ -60,13 +60,20 @@ export interface ContinuumAdmissionCandidate {
   readonly content: string
 }
 
-/** Replayable outcome returned by a mounted Reflex admitter. */
-export interface ContinuumMemoryAdmission {
-  /** Candidate IDs to admit; IDs absent from the request are ignored. */
-  readonly admittedIds: readonly string[]
+/** One kept candidate and the tags Reflex assigned it. */
+export interface ContinuumAdmittedMemory {
+  readonly id: string
+  /** Index tags; empty when the candidate was kept without a Reflex judgement. */
+  readonly tags: readonly string[]
 }
 
-/** Optional Jev-backed admitter that keeps the compacted messages later work still needs. */
+/** Replayable outcome returned by a mounted Reflex admitter. */
+export interface ContinuumMemoryAdmission {
+  /** Candidates to index; IDs absent from the request are ignored. */
+  readonly admitted: readonly ContinuumAdmittedMemory[]
+}
+
+/** Optional Jev-backed admitter that selects and tags the compacted messages worth indexing. */
 export interface ContinuumMemoryAdmitter {
   admit(
     agent: Agent,

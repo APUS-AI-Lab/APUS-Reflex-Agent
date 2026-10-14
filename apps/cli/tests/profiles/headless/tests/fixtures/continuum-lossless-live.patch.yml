@@ -40,7 +40,7 @@
     - id: continuum-jev
       name: ../../../../../../../packages/experimental/continuum-jev/src/index.ts
       config:
-        mode: active
+        mode: !!js process.env.CONTINUUM_LIVE_JEV_MODE ?? 'active'
         selection: threshold
         minRelevance: 0.7
         minImportance: 0.5

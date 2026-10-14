@@ -119,7 +119,12 @@ async function run(label: string, mode: Mode, env: Record<string, string>, down 
 
 const ofType = <T extends SessionEvent['type']>(events: readonly SessionEvent[], type: T) =>
   events.filter((event): event is SessionEvent<T> => event.type === type)
-const records = (events: readonly SessionEvent[]) => ofType(events, 'continuum/memory-record').map(event => event.data.record)
+/** L1 index entries with the text of the L2 event each one points at; the entries themselves hold no text. */
+const records = (events: readonly SessionEvent[]) => ofType(events, 'continuum/memory-index').map(({ data: { entry } }) => {
+  const source = events.find(event => event.seq === entry.source.eventSeq)
+  const content = source?.type === 'user/message' ? source.data.content.map(block => block.type === 'text' ? block.text : '').join('') : ''
+  return { ...entry, content }
+})
 const settled = (events: readonly SessionEvent[]) => ofType(events, 'continuum/memory-admission').filter(event => event.data.phase === 'settled')
 const decisions = (events: readonly SessionEvent[]) => ofType(events, 'continuum/memory-decision')
   .filter(event => event.data.evaluation?.phase !== 'prepared')
@@ -154,7 +159,9 @@ describe('Continuum lossless memory through the shipped headless CLI', () => {
     // Every compacted human input was judged, although each turn ran in its own process.
     expect(new Set(admissions.flatMap(event => event.data.candidateIds).map(id => Number(id.split(':').at(-1)))))
       .toEqual(new Set(compactedHumanSeqs(events)))
-    expect(records(events)[0]?.sourceRefs.map(ref => ref.eventSeq)).toEqual([sourceSeq(events)])
+    expect(records(events)[0]?.source.eventSeq).toBe(sourceSeq(events))
+    expect(records(events)[0]?.tags.length).toBeGreaterThan(0)
+    expect(events.some(event => event.type === 'continuum/memory-record')).toBe(false)
 
     const shown = turnRecalls(events, QUESTION)
     expect(shown).toHaveLength(1)
@@ -172,7 +179,7 @@ describe('Continuum lossless memory through the shipped headless CLI', () => {
       .some(block => block.type === 'text' && block.text.includes(`#${String(sourceSeq(events))} User: ${CODE_INPUT}`)))
     expect(original).toBeDefined()
     expect(answers[QUESTION + 2]).toBe('From history: the code is ALPHA-7731.')
-    expect(questions.some(batch => batch.some(question => question.includes('Compaction removed this user message')))).toBe(true)
+    expect(questions.some(batch => batch.some(question => question.includes('Judge whether it states a fact about the user')))).toBe(true)
     expect(questions.some(batch => batch.some(question => question.includes('Query: «What was the access code?»')))).toBe(true)
   }, SCENARIO_TIMEOUT_MS)
 

@@ -33,8 +33,9 @@ The [format references](persistence-changes/historical-formats/README.md) cover 
 | `event:compaction/prune` | event | `7f7fd5a6b0064f597534b29ff62ef26e786dffccf5e14f654a7d4fcea2c35f04` | [`{ type: "compaction/prune" }`](#persistence-type-sha256-7f7fd5a6b0064f597534b29ff62ef26e786dffccf5e14f654a7d4fcea2c35f04) |
 | `event:compaction/start` | event | `db874d463b0fdec77e9da1c4568f37cb70bd6596781eb93800db44fb8a116965` | [`{ type: "compaction/start" }`](#persistence-type-sha256-db874d463b0fdec77e9da1c4568f37cb70bd6596781eb93800db44fb8a116965) |
 | `event:compaction/summary` | event | `e2f9a41e0989f54ed8cee80f8db2bcf9d60a5c810dc9d45b83fa050b9dce7602` | [`{ type: "compaction/summary" }`](#persistence-type-sha256-e2f9a41e0989f54ed8cee80f8db2bcf9d60a5c810dc9d45b83fa050b9dce7602) |
-| `event:continuum/memory-admission` | event | `c85c189b80b451a3ad4e24fbc5af77a470329f90f33cfdb00a4e5b9ded830b28` | [`{ type: "continuum/memory-admission" }`](#persistence-type-sha256-c85c189b80b451a3ad4e24fbc5af77a470329f90f33cfdb00a4e5b9ded830b28) |
+| `event:continuum/memory-admission` | event | `ebb630c555c99590587ad1ba0e4d02ee6f0d60f83c1673b7a1bb8e7c2c2ca0fe` | [`{ type: "continuum/memory-admission" }`](#persistence-type-sha256-ebb630c555c99590587ad1ba0e4d02ee6f0d60f83c1673b7a1bb8e7c2c2ca0fe) |
 | `event:continuum/memory-decision` | event | `24a0ed8247a7e53928a16190a4db75daac26f27c02f705a4d36dc0daee5ba804` | [`{ type: "continuum/memory-decision" }`](#persistence-type-sha256-24a0ed8247a7e53928a16190a4db75daac26f27c02f705a4d36dc0daee5ba804) |
+| `event:continuum/memory-index` | event | `09503da0d57aee064fcb4a8d523dc35879c3042ce1a4be9d9f8afb6f1c4ea077` | [`{ type: "continuum/memory-index" }`](#persistence-type-sha256-09503da0d57aee064fcb4a8d523dc35879c3042ce1a4be9d9f8afb6f1c4ea077) |
 | `event:continuum/memory-record` | event | `229669c953c776861d1f8dd4e6f2e99eb572237979a2fd4ffc8a5c0fab7b2569` | [`{ type: "continuum/memory-record" }`](#persistence-type-sha256-229669c953c776861d1f8dd4e6f2e99eb572237979a2fd4ffc8a5c0fab7b2569) |
 | `event:continuum/task-binding` | event | `a7f4ecd9f59ad6b3bf422e50f046b234701a59499580ab11671a42aaf8865de8` | [`{ type: "continuum/task-binding" }`](#persistence-type-sha256-a7f4ecd9f59ad6b3bf422e50f046b234701a59499580ab11671a42aaf8865de8) |
 | `event:continuum/task-operation` | event | `a58e387cc30b034ac55f2cb8ffa9a2d6b00e908e4937320f8b6c0f787a1b1913` | [`{ type: "continuum/task-operation" }`](#persistence-type-sha256-a58e387cc30b034ac55f2cb8ffa9a2d6b00e908e4937320f8b6c0f787a1b1913) |
@@ -508,7 +509,7 @@ Source: [`packages/compaction/compaction/src/types.ts:34`](../packages/compactio
 'continuum/memory-admission': ContinuumMemoryAdmissionReceipt
 ```
 
-Source: [`packages/experimental/continuum-jev/src/index.ts:171`](../packages/experimental/continuum-jev/src/index.ts)
+Source: [`packages/experimental/continuum-jev/src/index.ts:195`](../packages/experimental/continuum-jev/src/index.ts)
 
 <a id="continuummemory-decision--log-only"></a>
 
@@ -519,7 +520,18 @@ Source: [`packages/experimental/continuum-jev/src/index.ts:171`](../packages/exp
 'continuum/memory-decision': ContinuumMemoryDecisionReceipt
 ```
 
-Source: [`packages/experimental/continuum-jev/src/index.ts:118`](../packages/experimental/continuum-jev/src/index.ts)
+Source: [`packages/experimental/continuum-jev/src/index.ts:139`](../packages/experimental/continuum-jev/src/index.ts)
+
+<a id="continuummemory-index--log-only"></a>
+
+#### `continuum/memory-index` — log-only
+
+```ts persistence-catalog
+/** An L1 index entry pointing at an original human message; log-only and never model-visible. */
+'continuum/memory-index': MemoryIndexEventData
+```
+
+Source: [`packages/context/continuum/src/persistence.ts:44`](../packages/context/continuum/src/persistence.ts)
 
 <a id="continuummemory-record--log-only"></a>
 
@@ -530,7 +542,7 @@ Source: [`packages/experimental/continuum-jev/src/index.ts:118`](../packages/exp
 'continuum/memory-record': MemoryRecordEventData
 ```
 
-Source: [`packages/context/continuum/src/persistence.ts:25`](../packages/context/continuum/src/persistence.ts)
+Source: [`packages/context/continuum/src/persistence.ts:42`](../packages/context/continuum/src/persistence.ts)
 
 <a id="continuumtask-binding--log-only"></a>
 
@@ -1702,6 +1714,14 @@ SHA-256: `c8e6f48878cc2a2f0dc59682280d81f407943fb503f32c64bf9ff3d9393c3eff`
 
 `"active"`
 
+<a id="persistence-type-sha256-295a4c41eb49e7179994bb48d60703706cc11015c77fd19c3dda63af69556f32"></a>
+
+### `"add"`
+
+SHA-256: `295a4c41eb49e7179994bb48d60703706cc11015c77fd19c3dda63af69556f32`
+
+`"add"`
+
 <a id="persistence-type-sha256-5b232a9b9bfcc0fc6794dab7865bcf203a65785c5de5aa647a51228bff628413"></a>
 
 ### `"after"`
@@ -2101,6 +2121,14 @@ SHA-256: `02b1b999201f9607c601c432ff0ef57115bbf97d22a887f3898ccf85d216eeef`
 SHA-256: `e886003a0fa18e93bafd29ec4d32d690e0e0b5ce3242c43f56611ed764a933b8`
 
 `"continuum/memory-decision"`
+
+<a id="persistence-type-sha256-185f2381b16b7252d16095236d487e10b48746d028a3237a865126d190bc1358"></a>
+
+### `"continuum/memory-index"`
+
+SHA-256: `185f2381b16b7252d16095236d487e10b48746d028a3237a865126d190bc1358`
+
+`"continuum/memory-index"`
 
 <a id="persistence-type-sha256-63b6bc2b12071469f8ec38f38a420edee5b573f50cfd6ee0d4a63ea012005050"></a>
 
@@ -4852,7 +4880,7 @@ One of:
 - `"off"`
 - `"shadow"`
 
-<a id="persistence-type-sha256-b38a65cdb2a1a001205f4109e36481e422f19ac1a39c75f050a4dcd5967ba3b0"></a>
+<a id="persistence-type-sha256-4ac72d42ea4e29e360f66b147d5c4a5eead9cc88a3292a2dd2e0ac2a2de2f64d"></a>
 
 <a id="persistence-type-continuummemoryadmissionreceipt"></a>
 
@@ -4860,13 +4888,14 @@ One of:
 
 ### `ContinuumMemoryAdmissionReceipt`
 
-SHA-256: `b38a65cdb2a1a001205f4109e36481e422f19ac1a39c75f050a4dcd5967ba3b0`
+SHA-256: `4ac72d42ea4e29e360f66b147d5c4a5eead9cc88a3292a2dd2e0ac2a2de2f64d`
 
-Sources: [`packages/experimental/continuum-jev/src/index.ts:149`](../packages/experimental/continuum-jev/src/index.ts)
+Sources: [`packages/experimental/continuum-jev/src/index.ts:171`](../packages/experimental/continuum-jev/src/index.ts)
 
 | Property | Presence | Type |
 |---|---|---|
 | `admittedIds` | required | [`string[]`](#persistence-type-sha256-93c33d9687613293f8c95d46c4d922fe9ceae83b84c384beff5c3315abe005f2) |
+| `admittedTags` | required | [`string[][]`](#persistence-type-sha256-061155fac4d87c6f2546c9728aeefb634d10aba43483256714323d72afe35d0e) |
 | `candidateIds` | required | [`string[]`](#persistence-type-sha256-93c33d9687613293f8c95d46c4d922fe9ceae83b84c384beff5c3315abe005f2) |
 | `failure` | optional | `string` |
 | `mode` | required | [`ContinuumJevMode`](#persistence-type-sha256-8e864843108a0d21cd2301ab5d0f30774ce699b393eab6ce4574bf9bd2675acb) |
@@ -4888,7 +4917,7 @@ Sources: [`packages/experimental/continuum-jev/src/index.ts:149`](../packages/ex
 
 SHA-256: `f81713b4e54e147d3c110e83e23801c9d679271407f70bc7644395769f990cf2`
 
-Sources: [`packages/experimental/continuum-jev/src/index.ts:103`](../packages/experimental/continuum-jev/src/index.ts)
+Sources: [`packages/experimental/continuum-jev/src/index.ts:124`](../packages/experimental/continuum-jev/src/index.ts)
 
 | Property | Presence | Type |
 |---|---|---|
@@ -4911,7 +4940,7 @@ Sources: [`packages/experimental/continuum-jev/src/index.ts:103`](../packages/ex
 
 SHA-256: `d633839707c8714e1273e5aa96e28bcb68477853528a41cab43f5b0f0c717b1d`
 
-Sources: [`packages/experimental/continuum-jev/src/index.ts:76`](../packages/experimental/continuum-jev/src/index.ts)
+Sources: [`packages/experimental/continuum-jev/src/index.ts:97`](../packages/experimental/continuum-jev/src/index.ts)
 
 | Property | Presence | Type |
 |---|---|---|
@@ -5822,6 +5851,42 @@ Sources: [`packages/llm/llm-retry/src/types.ts:43`](../packages/llm/llm-retry/sr
 | `step` | required | `number` |
 | `turn` | required | `number` |
 
+<a id="persistence-type-sha256-4b453d1459e3d596bc3f138d2a9f493c3612fc99935bcb79bbc41a7398b6b27f"></a>
+
+<a id="persistence-type-memoryindexentry"></a>
+
+<a id="persistence-type-packagescontextcontinuumsrcpersistencetsmemoryindexentry"></a>
+
+### `MemoryIndexEntry`
+
+SHA-256: `4b453d1459e3d596bc3f138d2a9f493c3612fc99935bcb79bbc41a7398b6b27f`
+
+Sources: [`packages/context/continuum/src/persistence.ts:24`](../packages/context/continuum/src/persistence.ts)
+
+| Property | Presence | Type |
+|---|---|---|
+| `id` | required | `string` |
+| `scope` | required | `string` |
+| `source` | required | [`MemorySourceRef`](#persistence-type-sha256-eacebfa7807a6a4687b00c21e29a44f7ae1f90c9c0f98521bac02480e29462cc) |
+| `tags` | required | [`string[]`](#persistence-type-sha256-93c33d9687613293f8c95d46c4d922fe9ceae83b84c384beff5c3315abe005f2) |
+
+<a id="persistence-type-sha256-97cc951634a43ac215f14c860e5ea4b2baa9b1664dd24dd724f56df45fe1067e"></a>
+
+<a id="persistence-type-memoryindexeventdata"></a>
+
+<a id="persistence-type-packagescontextcontinuumsrcpersistencetsmemoryindexeventdata"></a>
+
+### `MemoryIndexEventData`
+
+SHA-256: `97cc951634a43ac215f14c860e5ea4b2baa9b1664dd24dd724f56df45fe1067e`
+
+Sources: [`packages/context/continuum/src/persistence.ts:34`](../packages/context/continuum/src/persistence.ts)
+
+| Property | Presence | Type |
+|---|---|---|
+| `entry` | required | [`MemoryIndexEntry`](#persistence-type-sha256-4b453d1459e3d596bc3f138d2a9f493c3612fc99935bcb79bbc41a7398b6b27f) |
+| `operation` | required | `"add"` |
+
 <a id="persistence-type-sha256-f6795ea17a5802c4000465504fb509ae3e9e006eb9ce3803a810f22f4b8cfee3"></a>
 
 <a id="persistence-type-memoryrecord"></a>
@@ -5855,7 +5920,7 @@ Sources: [`packages/context/continuum/src/records.ts:28`](../packages/context/co
 
 SHA-256: `8250366677f10e3496ca8a64aa0aa4487a702cc01bd1f89c12ee7be0004a515e`
 
-Sources: [`packages/context/continuum/src/persistence.ts:9`](../packages/context/continuum/src/persistence.ts)
+Sources: [`packages/context/continuum/src/persistence.ts:10`](../packages/context/continuum/src/persistence.ts)
 
 | Property | Presence | Type |
 |---|---|---|
@@ -5872,7 +5937,7 @@ Sources: [`packages/context/continuum/src/persistence.ts:9`](../packages/context
 
 SHA-256: `d16fe532a6a0d3d64f4ec8d940b462e5af5c203ce35c90a0af3e29a05c349f85`
 
-Sources: [`packages/context/continuum/src/persistence.ts:6`](../packages/context/continuum/src/persistence.ts)
+Sources: [`packages/context/continuum/src/persistence.ts:7`](../packages/context/continuum/src/persistence.ts)
 
 One of:
 
@@ -8414,6 +8479,14 @@ Sources: [`packages/api/session-controller/src/types.ts:434`](../packages/api/se
 SHA-256: `93c33d9687613293f8c95d46c4d922fe9ceae83b84c384beff5c3315abe005f2`
 
 Array of `string`.
+
+<a id="persistence-type-sha256-061155fac4d87c6f2546c9728aeefb634d10aba43483256714323d72afe35d0e"></a>
+
+### `string[][]`
+
+SHA-256: `061155fac4d87c6f2546c9728aeefb634d10aba43483256714323d72afe35d0e`
+
+Array of [`string[]`](#persistence-type-sha256-93c33d9687613293f8c95d46c4d922fe9ceae83b84c384beff5c3315abe005f2).
 
 <a id="persistence-type-sha256-dacf3d5f3e4ff619c1320e64a48dec5e7ecd7870bece65fbd449a0e63adfa521"></a>
 
@@ -11679,17 +11752,17 @@ SHA-256: `e2f9a41e0989f54ed8cee80f8db2bcf9d60a5c810dc9d45b83fa050b9dce7602`
 | `time` | required | `number` |
 | `type` | required | `"compaction/summary"` |
 
-<a id="persistence-type-sha256-c85c189b80b451a3ad4e24fbc5af77a470329f90f33cfdb00a4e5b9ded830b28"></a>
+<a id="persistence-type-sha256-ebb630c555c99590587ad1ba0e4d02ee6f0d60f83c1673b7a1bb8e7c2c2ca0fe"></a>
 
 <a id="persistence-type-eventcontinuummemory-admission"></a>
 
 ### `{ type: "continuum/memory-admission" }`
 
-SHA-256: `c85c189b80b451a3ad4e24fbc5af77a470329f90f33cfdb00a4e5b9ded830b28`
+SHA-256: `ebb630c555c99590587ad1ba0e4d02ee6f0d60f83c1673b7a1bb8e7c2c2ca0fe`
 
 | Property | Presence | Type |
 |---|---|---|
-| `data` | required | [`ContinuumMemoryAdmissionReceipt`](#persistence-type-sha256-b38a65cdb2a1a001205f4109e36481e422f19ac1a39c75f050a4dcd5967ba3b0) |
+| `data` | required | [`ContinuumMemoryAdmissionReceipt`](#persistence-type-sha256-4ac72d42ea4e29e360f66b147d5c4a5eead9cc88a3292a2dd2e0ac2a2de2f64d) |
 | `ignorable` | optional | `true` |
 | `seq` | required | `number` |
 | `time` | required | `number` |
@@ -11710,6 +11783,22 @@ SHA-256: `24a0ed8247a7e53928a16190a4db75daac26f27c02f705a4d36dc0daee5ba804`
 | `seq` | required | `number` |
 | `time` | required | `number` |
 | `type` | required | `"continuum/memory-decision"` |
+
+<a id="persistence-type-sha256-09503da0d57aee064fcb4a8d523dc35879c3042ce1a4be9d9f8afb6f1c4ea077"></a>
+
+<a id="persistence-type-eventcontinuummemory-index"></a>
+
+### `{ type: "continuum/memory-index" }`
+
+SHA-256: `09503da0d57aee064fcb4a8d523dc35879c3042ce1a4be9d9f8afb6f1c4ea077`
+
+| Property | Presence | Type |
+|---|---|---|
+| `data` | required | [`MemoryIndexEventData`](#persistence-type-sha256-97cc951634a43ac215f14c860e5ea4b2baa9b1664dd24dd724f56df45fe1067e) |
+| `ignorable` | optional | `true` |
+| `seq` | required | `number` |
+| `time` | required | `number` |
+| `type` | required | `"continuum/memory-index"` |
 
 <a id="persistence-type-sha256-229669c953c776861d1f8dd4e6f2e99eb572237979a2fd4ffc8a5c0fab7b2569"></a>
 

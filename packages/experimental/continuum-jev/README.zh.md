@@ -38,7 +38,7 @@ APUS Desktop 和 Web 启动器为新建和已有普通配置方案选择已安�
 
 ### 配置 Reflex 判断
 
-服务默认 `off`，隐私策略默认 `privacyPolicy: { mode: local-only }`。配置 `mode`、`selection`（默认 `rank`，bundle 设为 `threshold`）、`minRelevance`（默认 0.7）、`minImportance`（默认 0.5）、`maxQueryChars`（默认 500）、`timeoutMs`（默认 2000）、`maxRequestBytes`（默认 32768，bundle 设为 65536）、`privacyPolicy` 及 `sessionDataClasses`（默认 null，拒绝出站）。`rank` 对所有召回候选重新排序；`threshold` 只保留相关性达到 `minRelevance` 的候选，没有 Reflex 答案时只保留与问题有共同词的候选。写入只保留重要性达到 `minImportance` 的被压缩原话；`shadow` 记录两种判断，但采纳全部被压缩原话，并按共同词召回。所有 Jev 路由均保守归为 network。授权时使用 controlled 或 cloud-approved 策略，将实际 provider ID 加入 `approvedRemoteIds`，并在 `approvedRemoteDataClasses` 中批准每个显式声明的 Session 数据分类；cloud-approved 还需要 `cloudApproval: true`。部署时对完整问题和候选分类，例如 `sessionDataClasses: [workspace]`；分类不能由模型提供。配置 endpoint 或打开记忆开关不代表批准出站。移除旧 `minConfidence` 和 `maxSelections`：启动时明确拒绝单选配置，不会静默缩小召回。已有完整组合的部署仍可直接挂载默认 `ContinuumJevPlugin` 服务。
+服务默认 `off`，隐私策略默认 `privacyPolicy: { mode: local-only }`。配置 `mode`、`selection`（默认 `rank`，bundle 设为 `threshold`）、`minRelevance`（默认 0.7）、`tags`（默认 8 个 personal agent 标签）、`minTagProbability`（默认 0.5）、`maxQuotedChars`（默认 600，打标问题引用长原话的开头和结尾）、`maxQueryChars`（默认 500）、`timeoutMs`（默认 2000）、`maxRequestBytes`（默认 32768，bundle 设为 65536）、`privacyPolicy` 及 `sessionDataClasses`（默认 null，拒绝出站）。`rank` 对所有召回候选重新排序；`threshold` 只保留相关性达到 `minRelevance` 的候选，没有 Reflex 答案时只保留与问题有共同词的候选。写入时对每条被压缩原话逐个标签提问，概率达到 `minTagProbability` 的标签都会被打上，只有至少有一个标签的原话才进入索引；默认标签为 `people`、`health`、`plans`、`dates`、`money`、`places`、`work` 和 `preferences`。`shadow` 记录两种判断，但索引全部被压缩原话，并按共同词召回。所有 Jev 路由均保守归为 network。授权时使用 controlled 或 cloud-approved 策略，将实际 provider ID 加入 `approvedRemoteIds`，并在 `approvedRemoteDataClasses` 中批准每个显式声明的 Session 数据分类；cloud-approved 还需要 `cloudApproval: true`。部署时对完整问题和候选分类，例如 `sessionDataClasses: [workspace]`；分类不能由模型提供。配置 endpoint 或打开记忆开关不代表批准出站。移除旧 `minConfidence` 和 `maxSelections`：启动时明确拒绝单选配置，不会静默缩小召回。已有完整组合的部署仍可直接挂载默认 `ContinuumJevPlugin` 服务。
 
 <a id="understand-the-implementation"></a>
 ## 理解实现
@@ -48,7 +48,7 @@ APUS Desktop 和 Web 启动器为新建和已有普通配置方案选择已安�
 
 [产品记忆提供方](src/product-memory.ts) 继承 [Core 记忆实现](../../context/continuum/README.zh.md)，仅调整四个 schema 默认值，不改动 Core 默认值。Loader 组合和 ConfigForms 使用同一份经过校验的提供方配置。[Reflex 服务](src/index.ts) 在一次有界 Jev 请求中对前十六个召回候选评分；每个问题引用输入的前 `maxQueryChars` 个字符和候选摘录。独立 noul 答案估计相关性，不表示事实真伪或已校准准确率。`rank` 稳定排序已评分前缀并保留其余候选；`threshold` 保留达到 `minRelevance` 的已评分候选，以及与问题有共同词的未评分候选。
 
-只有在 `shadow` 或 `active` 模式且挂载了 Jev 提供方时，服务才提供 `continuumMemoryAdmitter`，并在同一作用域挂载 [`dsh-tool-history-recall`](../../session-query/tool-history-recall/README.zh.md)，因此 admitter 和历史工具同时出现、同时消失。admitter 以每批最多十六条判断被压缩的用户原话，每个问题引用一条完整原话，并把每批记录为 `continuum/memory-admission`。off、shadow 模式及任何失败都采纳整批原话；Core 不会因为 Reflex 失败而丢弃被压缩的原话。
+只有在 `shadow` 或 `active` 模式且挂载了 Jev 提供方时，服务才提供 `continuumMemoryAdmitter`，并在同一作用域挂载 [`dsh-tool-history-recall`](../../session-query/tool-history-recall/README.zh.md)，因此 admitter 和历史工具同时出现、同时消失。admitter 为 L1 索引挑选并标记被压缩的用户原话：每条原话按每个标签各提一个逐字引用该原话的 Noul 问题，因此一次请求容纳 `floor(16 / 标签数)` 条原话（默认标签下为两条），每批记录为 `continuum/memory-admission`，包含被索引的 ID 及其标签。off、shadow 模式及任何失败都把整批原话以无标签方式索引；Core 不会因为 Reflex 失败而丢弃被压缩的原话。
 
 两种判断都由 profile 先追加 prepared receipt，flush 所属 Session，再通过持久化后端确认读回的数据完全一致，之后才发送请求。settled receipt 关联 prepared 事件序号，保留完整请求和校验后响应。取消保留 prepared 状态，不伪造成功；缺少持久化能力或屏障 I/O 失败时禁止发送并保留 baseline。只有 prepared 在发送前保证持久化；settled 随 Session 常规 flush 保存。历史 version-one receipt 继续可读，回放不会调用 Jev。拥有 Session 的 `selectContinuumMemory` 使用方必须提供持久化 beforeDispatch checkpoint；仅无 Session 消费者可省略该参数并自行记录输入。checkpoint 挂起期间失效的生命周期或卸载的 selector 不能继续发送请求。已发送后卸载不会撤回请求；迟到的排序不再采用，主模型继续使用完整 baseline。
 
@@ -76,7 +76,7 @@ APUS Desktop 和 Web 启动器为新建和已有普通配置方案选择已安�
 <a id="known-limitations-and-deferred-work"></a>
 
 - 服务不负责检索或记录。Core 负责 bundle 中基于 Session 的记录和生命周期；Reflex 判断不表示事实成立。
-- 真实 Jev 质量和延迟必须在 gateway 可达且配置完整时测试；fake provider 不能证明模型效果。真实 headless 验收覆盖一个约束召回场景，`minRelevance` 和 `minImportance` 尚未用标注集校准。相关性请求位于每轮的关键路径上。
+- 真实 Jev 质量和延迟必须在 gateway 可达且配置完整时测试；fake provider 不能证明模型效果。真实 headless 验收覆盖一个约束召回场景，`minRelevance` 和 `minTagProbability` 尚未用标注集校准。相关性请求位于每轮的关键路径上。
 - 仅对前十六个候选评分；`rank` 保留其余候选，`threshold` 只保留其中与问题有共同词的候选。语义索引、查询扩展和逐条数据分类属于后续工作。声明的 Session 数据分类覆盖候选及问题；本包没有检测其中密钥的数据分类器。
 
 不发布运行时不变式伴生模块：请求与回执适配器不维护独立的持久投影。

@@ -1,16 +1,8 @@
-import { mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
-import { join, sep } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { runLoaderSmoke } from '@deepseek-ai/dsh-loader-smoke'
-import type { SessionEvent } from '@deepseek-ai/dsh-session'
+import {
+  compactedHuman, converse, indexedMemories, lifePadding, live, ofType, turnAnswer, turnRecall,
+} from './fixtures/continuum-live-conversation.ts'
 
-const binScript = fileURLToPath(new URL('../../../../src/bin.ts', import.meta.url))
-const patchTemplatePath = fileURLToPath(new URL('./fixtures/continuum-lossless-live.patch.yml', import.meta.url))
-const packagesRoot = fileURLToPath(new URL('../../../../../../packages/', import.meta.url))
-const tsconfigPath = fileURLToPath(new URL('../../../../../../tsconfig.json', import.meta.url))
-const live = process.env.DEEPSEEK_API_KEY !== undefined && process.env.APUS_JEV_API_KEY !== undefined
 const THRESHOLD = '请记住这条要求：订单统计只算已支付订单，金额阈值是 100 美元。只回复“已记住”。'
 const REGION = '另外记一下：部署区域是 us-east-1。只回复“好”。'
 
@@ -26,78 +18,93 @@ const TURNS = [THRESHOLD, REGION, ...Array.from({ length: 6 }, (_, index) => pad
   '上次说的金额阈值是多少？只用一句话回答。', '部署区域是哪里？只用一句话回答。', '用一句话说说你最喜欢的季节，不要调用任何工具。']
 const ASK_THRESHOLD = 8
 
-const ofType = <T extends SessionEvent['type']>(events: readonly SessionEvent[], type: T) =>
-  events.filter((event): event is SessionEvent<T> => event.type === type)
-const textOf = (event: SessionEvent<'user/message'>) => event.data.content.map(block => block.type === 'text' ? block.text : '').join('')
+/** Everyday facts that later questions combine; the budget is stated and then corrected. */
+const LIFE = {
+  allergy: '我女儿小米对花生过敏，吃的东西一定要避开花生。',
+  spicy: '我老婆不吃辣，一点辣都不行。',
+  budget: '这次全家去杭州玩，预算先定 5000 元。',
+  son: '我儿子叫乐乐，今年 6 岁，最喜欢恐龙。',
+  budgetChange: '杭州旅行预算改一下，提高到 8000 元。',
+}
+const CHAT = ['今天加班到十点，累死了。', '哈哈，谢谢你啊。']
 
-function turnEvents(events: readonly SessionEvent[], turn: number): SessionEvent[] {
-  const starts = events.flatMap((event, index) => event.type === 'turn/start' ? [index] : [])
-  return events.slice(starts[turn], starts[turn + 1])
-}
-const turnRecall = (events: readonly SessionEvent[], turn: number): string => ofType(turnEvents(events, turn), 'user/message')
-  .filter(event => event.data.source.kind === 'continuum-memory').map(textOf).join('\n')
-const turnAnswer = (events: readonly SessionEvent[], turn: number): string => {
-  const message = ofType(turnEvents(events, turn), 'assistant/message').at(-1)
-  return message?.data.message.content.map(block => block.type === 'text' ? block.text : '').join('') ?? ''
-}
+/** A personal-assistant conversation: facts arrive between small talk and pasted articles, then questions combine them. */
+const LIFE_TURNS = [LIFE.allergy, CHAT[0]!, lifePadding(1), lifePadding(2), LIFE.spicy, lifePadding(3), LIFE.budget, CHAT[1]!,
+  lifePadding(4), LIFE.son, lifePadding(5), LIFE.budgetChange, lifePadding(6), lifePadding(7), lifePadding(8), lifePadding(9),
+  '周六想带全家出去吃饭，点菜要注意什么？用两三句话回答。', '这次杭州旅行预算现在是多少？一句话回答。',
+  '我儿子快过生日了，送什么礼物好？一句话回答。', '帮我简单规划一下这次杭州家庭行程，要照顾到家里每个人，三四句话。',
+  '用一句话说说你最喜欢的季节，不要调用任何工具。']
+const ASK_DINNER = LIFE_TURNS.length - 5
 
 describe.skipIf(!live)('Continuum lossless memory on DeepSeek and the deployed APUS Reflex endpoint', () => {
   it('keeps the constraints compaction removed and recalls each only for the question that needs it', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'continuum-lossless-live-'))
-    try {
-      const patchPath = join(cwd, 'continuum-lossless-live.patch.yml')
-      await writeFile(patchPath, (await readFile(patchTemplatePath, 'utf8')).replaceAll('../../../../../../../packages/', packagesRoot))
-      let sessionId: string | undefined
-      const elapsed: number[] = []
-      for (const task of TURNS) {
-        const started = Date.now()
-        const result = await runLoaderSmoke({
-          processTimeoutMs: 300_000, label: 'Continuum lossless live', mode: 'src', sourceImport: 'tsx/esm',
-          cwd, binScript, tsconfigPath, configPath: patchPath,
-          binArgs: ['--profile', 'headless', '--patch', patchPath, '--json', ...(sessionId === undefined ? [] : ['--session-id', sessionId]), task],
-          env: { DSH_TELEMETRY_DISABLED: '1' },
-        })
-        elapsed.push(Date.now() - started)
-        sessionId ??= (JSON.parse(result.stdout.split('\n')[0] ?? '{}') as { sessionId: string }).sessionId
-      }
-      const sessionsDir = join(cwd, '.dsh', 'sessions')
-      const file = (await readdir(sessionsDir, { recursive: true })).find(path => path.split(sep).includes(sessionId!) && path.endsWith('.jsonl'))!
-      const events = (await readFile(join(sessionsDir, file), 'utf8')).trim().split('\n')
-        .map(line => JSON.parse(line) as SessionEvent | { type: 'session' }).filter((event): event is SessionEvent => event.type !== 'session')
+    const { events, elapsed } = await converse(TURNS)
+    const compacted = compactedHuman(events)
+    const records = indexedMemories(events).map(memory => memory.text)
+    const admissions = ofType(events, 'continuum/memory-admission').filter(event => event.data.phase === 'settled')
+    const decisions = ofType(events, 'continuum/memory-decision').filter(event => event.data.evaluation?.phase === 'settled')
+    process.stdout.write(`LIVE ${JSON.stringify({
+      elapsed, compacted: compacted.map(text => text.slice(0, 24)), records: records.map(text => text.slice(0, 24)),
+      admissions: admissions.map(({ data }) => ({
+        reason: data.reason, candidates: data.candidateIds.length, admitted: data.admittedIds.length,
+      })),
+      decisions: decisions.map(({ data }) => ({
+        reason: data.evaluation?.reason, selected: data.selectedIds.length, baseline: data.baselineIds.length,
+      })),
+      answers: [ASK_THRESHOLD, ASK_THRESHOLD + 1, ASK_THRESHOLD + 2].map(turn => turnAnswer(events, turn)),
+    })}\n`)
 
-      const human = ofType(events, 'user/message').filter(event => event.data.source.kind === 'user')
-      const shadowed = new Set(ofType(events, 'compaction/summary').flatMap(event => event.data.shadowedSeqs.map(Number)))
-      const compacted = human.filter(event => shadowed.has(Number(event.seq))).map(textOf)
-      const records = ofType(events, 'continuum/memory-record').map(event => event.data.record.content)
-      const admissions = ofType(events, 'continuum/memory-admission').filter(event => event.data.phase === 'settled')
-      const decisions = ofType(events, 'continuum/memory-decision').filter(event => event.data.evaluation?.phase === 'settled')
-      process.stdout.write(`LIVE ${JSON.stringify({
-        elapsed, compacted: compacted.map(text => text.slice(0, 24)), records: records.map(text => text.slice(0, 24)),
-        admissions: admissions.map(({ data }) => ({
-          reason: data.reason, candidates: data.candidateIds.length, admitted: data.admittedIds.length,
-        })),
-        decisions: decisions.map(({ data }) => ({
-          reason: data.evaluation?.reason, selected: data.selectedIds.length, baseline: data.baselineIds.length,
-        })),
-        answers: [ASK_THRESHOLD, ASK_THRESHOLD + 1, ASK_THRESHOLD + 2].map(turn => turnAnswer(events, turn)),
-      })}\n`)
+    expect(compacted).toEqual(expect.arrayContaining([THRESHOLD, REGION]))
+    expect(admissions.length).toBeGreaterThan(0)
+    expect(admissions.every(event => event.data.outcome === 'jev')).toBe(true)
+    expect(records).toEqual(expect.arrayContaining([THRESHOLD, REGION]))
+    expect(records.filter(text => text.startsWith('以下是一段背景资料'))).toEqual([])
 
-      expect(compacted).toEqual(expect.arrayContaining([THRESHOLD, REGION]))
-      expect(admissions.length).toBeGreaterThan(0)
-      expect(admissions.every(event => event.data.outcome === 'jev')).toBe(true)
-      expect(records).toEqual(expect.arrayContaining([THRESHOLD, REGION]))
-      expect(records.filter(text => text.startsWith('以下是一段背景资料'))).toEqual([])
-
-      expect(turnRecall(events, ASK_THRESHOLD)).toContain('100 美元')
-      expect(turnRecall(events, ASK_THRESHOLD)).not.toContain('us-east-1')
-      expect(turnAnswer(events, ASK_THRESHOLD)).toContain('100')
-      expect(turnRecall(events, ASK_THRESHOLD + 1)).toContain('us-east-1')
-      expect(turnRecall(events, ASK_THRESHOLD + 1)).not.toContain('100 美元')
-      expect(turnAnswer(events, ASK_THRESHOLD + 1)).toContain('us-east-1')
-      expect(turnRecall(events, ASK_THRESHOLD + 2)).toBe('')
-      expect(decisions.every(event => event.data.outcome === 'jev')).toBe(true)
-    } finally {
-      await rm(cwd, { recursive: true, force: true })
-    }
+    expect(turnRecall(events, ASK_THRESHOLD)).toContain('100 美元')
+    expect(turnRecall(events, ASK_THRESHOLD)).not.toContain('us-east-1')
+    expect(turnAnswer(events, ASK_THRESHOLD)).toContain('100')
+    expect(turnRecall(events, ASK_THRESHOLD + 1)).toContain('us-east-1')
+    expect(turnRecall(events, ASK_THRESHOLD + 1)).not.toContain('100 美元')
+    expect(turnAnswer(events, ASK_THRESHOLD + 1)).toContain('us-east-1')
+    expect(turnRecall(events, ASK_THRESHOLD + 2)).toBe('')
+    expect(decisions.every(event => event.data.outcome === 'jev')).toBe(true)
   }, 1_800_000)
+
+  it('accumulates everyday facts across compactions and combines them for later questions', async () => {
+    const { events, elapsed } = await converse(LIFE_TURNS)
+    const compacted = compactedHuman(events)
+    const records = indexedMemories(events).map(memory => memory.text)
+    const admissions = ofType(events, 'continuum/memory-admission').filter(event => event.data.phase === 'settled')
+    const answers = [0, 1, 2, 3, 4].map(offset => turnAnswer(events, ASK_DINNER + offset))
+    process.stdout.write(`LIFE ${JSON.stringify({
+      elapsed, compactions: ofType(events, 'compaction/summary').length, compacted: compacted.map(text => text.slice(0, 16)),
+      records, batches: admissions.map(({ data }) => `${String(data.admittedIds.length)}/${String(data.candidateIds.length)}`),
+      recalls: [0, 1, 2, 3, 4].map(offset => turnRecall(events, ASK_DINNER + offset).split('\n').filter(line => line.startsWith('[memory:')).length),
+      answers,
+    })}\n`)
+
+    const facts = Object.values(LIFE)
+    // Every compacted fact became a verbatim record; small talk and pasted articles did not.
+    expect(compacted).toEqual(expect.arrayContaining(Object.values(LIFE)))
+    expect(records).toEqual(facts.filter(fact => compacted.includes(fact)))
+    expect(records.some(text => CHAT.includes(text) || text.startsWith('转给你一篇文章'))).toBe(false)
+    // Memory accumulated over several compactions rather than one.
+    expect(admissions.filter(event => event.data.admittedIds.length > 0).length).toBeGreaterThanOrEqual(2)
+
+    const dinner = turnRecall(events, ASK_DINNER)
+    expect(dinner).toContain('花生')
+    expect(dinner).toContain('不吃辣')
+    expect(answers[0]).toContain('花生')
+    expect(answers[0]).toContain('辣')
+    // Both budget originals are recalled verbatim; the model resolves the later correction.
+    expect(turnRecall(events, ASK_DINNER + 1)).toContain('5000')
+    expect(turnRecall(events, ASK_DINNER + 1)).toContain('8000')
+    expect(answers[1]).toContain('8000')
+    expect(turnRecall(events, ASK_DINNER + 2)).toContain('恐龙')
+    expect(answers[2]).toContain('恐龙')
+    // One planning request draws on facts kept by different compactions.
+    const plan = turnRecall(events, ASK_DINNER + 3)
+    expect(['花生', '不吃辣', '恐龙', '8000'].filter(fact => plan.includes(fact)).length).toBeGreaterThanOrEqual(3)
+    expect(turnRecall(events, ASK_DINNER + 4)).toBe('')
+  }, 2_400_000)
 })
