@@ -917,6 +917,12 @@ export interface Config {
   readonly http2?: boolean
   /** Consecutive requests without a response after which the dedicated pool reopens; requires `keepAliveMs`. Omission never reopens it. */
   readonly resetAfterFailures?: number
+  /**
+   * Most questions one gateway request carries. A decision with more questions is sent as consecutive groups of this
+   * size in parallel requests with the same state, and their answers are merged into one response; gateway time grows
+   * with the question count, so parallel groups answer sooner. Omission sends every decision as one request.
+   */
+  readonly questionsPerRequest?: number
 }
 ```
 <!-- END GENERATED config-catalog:@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin -->

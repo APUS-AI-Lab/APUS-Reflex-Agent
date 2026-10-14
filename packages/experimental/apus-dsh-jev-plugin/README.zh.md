@@ -60,6 +60,7 @@ kind: "package-bundle"
 | `keepAliveMs` | 无 | 专用直连连接空闲后保留复用的时长；省略时使用进程级传输。经已配置 HTTP 代理的请求始终使用代理的传输 |
 | `http2` | `false` | 在专用连接上协商 HTTP/2；需要 `keepAliveMs` |
 | `resetAfterFailures` | 无 | 连续这么多次请求没有响应后销毁专用连接池，下一次请求打开新连接；HTTP/2 下所有请求共用一条连接，否则一条卡住的连接会让之后的每次判定都失败。需要 `keepAliveMs`；省略时从不重建连接池 |
+| `questionsPerRequest` | 无 | 一次网关请求最多携带的问题数（1–16）。问题更多的判定按此大小分成连续的组，以相同 state 并行发送，答复合并成一个响应，用量计数相加；任一组失败会取消其他组，整次判定失败。网关耗时随问题数增长：在已部署的网关上，7 个问题作为一个请求约 340 ms，复用连接时拆成 7 个并行请求约 260 ms。省略时每次判定作为一个请求发送 |
 | `providerId` | `system-one` | 内置 provider 的 registry id |
 
 endpoint 可以是本地 SSH tunnel 或受控服务 URL。配置 URL 不以 `/v1` 结尾时，provider 会补上 `/v1/systemone`；只有 `apiKeyEnv` 解析出值时才会发送 Bearer credential。

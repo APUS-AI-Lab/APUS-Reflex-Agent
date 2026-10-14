@@ -36,6 +36,52 @@ describe('apus-dsh-jev-plugin service', () => {
   })
 
 
+  it('splits a decision into parallel requests of questionsPerRequest questions and merges their answers', async () => {
+    const ctx = new Context()
+    await ctx.plugin(Jev, { endpoint: 'http://localhost', model: 'default', questionsPerRequest: 2 })
+    const service = ctx.get('jev')!
+    const sent: string[][] = []
+    let inFlight = 0
+    let peak = 0
+    const dispose = service.register({ info: { id: 'split', model: 'm', endpoint: 'http://localhost' }, decide: async (request) => {
+      const keys = Object.keys(request.questions)
+      sent.push(keys)
+      inFlight += 1
+      peak = Math.max(peak, inFlight)
+      await new Promise(resolve => setTimeout(resolve, 5))
+      inFlight -= 1
+      return { model: 'm', answers: Object.fromEntries(keys.map(key => [key, { type: 'noul' as const, noul: 0.5 }])), usage: { input_tokens: keys.length } }
+    } })
+    const questions = Object.fromEntries(['a', 'b', 'c', 'd', 'e'].map(key => [key, { type: 'noul' as const }]))
+    try {
+      const outcome = await service.decide({ providerId: 'split', state: { s: 1 }, questions })
+      expect(sent).toEqual([['a', 'b'], ['c', 'd'], ['e']])
+      expect(peak).toBe(3)
+      expect(outcome).toMatchObject({ kind: 'ok', spec: { questions }, response: { model: 'm', usage: { input_tokens: 5 } } })
+      expect(outcome.kind === 'ok' ? Object.keys(outcome.response.answers) : []).toEqual(['a', 'b', 'c', 'd', 'e'])
+      sent.length = 0
+      await service.decide({ providerId: 'split', state: null, questions: { a: { type: 'noul' }, b: { type: 'noul' } } })
+      expect(sent).toEqual([['a', 'b']])
+    } finally { dispose(); await ctx.fiber.dispose() }
+  })
+
+  it('fails the whole split decision and cancels the other groups when one group fails', async () => {
+    const ctx = new Context()
+    await ctx.plugin(Jev, { endpoint: 'http://localhost', model: 'default', questionsPerRequest: 1 })
+    const service = ctx.get('jev')!
+    const cancelled: string[] = []
+    const dispose = service.register({ info: { id: 'split', model: 'm', endpoint: 'http://localhost' }, decide: (request, signal) => {
+      const [key] = Object.keys(request.questions)
+      if (key === 'bad') return Promise.reject(new JevProviderError({ code: 'invalid-response', message: 'bad answer' }))
+      return new Promise((_resolve, reject) => { signal?.addEventListener('abort', () => { cancelled.push(key!); reject(new Error('aborted')) }, { once: true }) })
+    } })
+    try {
+      const outcome = await service.decide({ providerId: 'split', state: null, questions: { ok: { type: 'noul' }, bad: { type: 'noul' } } })
+      expect(outcome).toMatchObject({ kind: 'unknown', failure: { code: 'invalid-response' } })
+      expect(cancelled).toEqual(['ok'])
+    } finally { dispose(); await ctx.fiber.dispose() }
+  })
+
   it('warms the default provider and reports providers without a transport or with a failure', async () => {
     const ctx = new Context()
     await ctx.plugin(Jev, { endpoint: 'http://localhost', model: 'default' })
