@@ -1358,7 +1358,7 @@ export interface System3SkillSelectionConfig {
   readonly maxInputBytes: number
   /** UTF-8 limit for the complete rendered Skill instructions; overflow skips injection. */
   readonly maxContentBytes: number
-  /** Maximum complete catalog size considered automatically; overflow uses native Skill discovery. */
+  /** Most Skills one Jev question lists; a larger catalog is first narrowed to the Skills sharing the most terms with the input. */
   readonly maxCandidates: number
   /** Total catalog, Jev and body-loading deadline, within the Node timer range. */
   readonly deadlineMs: number

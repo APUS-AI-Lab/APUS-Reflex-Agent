@@ -8,7 +8,7 @@ import Skills from '@deepseek-ai/dsh-skill'
 import { afterEach, expect, it, vi } from 'vitest'
 import Jev from '../../apus-dsh-jev-plugin/src/index.ts'
 import System3 from '../src/index.ts'
-import { installSystem3SkillSelection, type System3SkillSelectionConfig } from '../src/skill-selection.ts'
+import { installSystem3SkillSelection, prefilterSkills, type System3SkillSelectionConfig } from '../src/skill-selection.ts'
 import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 
 const contexts: Context[] = []
@@ -95,15 +95,34 @@ it('uses stable choice ids when a legitimate Skill is named abstain', async () =
   expect(h.ctx.sessionProjections.stateOf(h.agent.session, 'system3Runtime')?.skill).toMatchObject({ selected: 'abstain', injected: true })
 })
 
-it('leaves the original input intact when the bounded catalog is exceeded', async () => {
+it('narrows an oversized catalog to the Skills sharing terms with the input before asking Jev', async () => {
   const h = await setup({ maxCandidates: 1 })
   h.ctx.effect(() => h.ctx.skills.register({ name: 'another-skill', description: 'Another task.', source: 'runtime', content: 'Other instructions.' }))
-  const result = await h.dispatch.waterfall('agent/pre-step', { messages: [h.message], turn: 1, step: 0, signal: new AbortController().signal },
-    () => Promise.resolve({ kind: 'enter', messages: [h.message] }))
-  expect(result).toEqual({ kind: 'enter', messages: [h.message] })
+  h.agent.followup(h.message)
+  await h.agent.whenIdle()
+  const criteria = Object.entries(h.decide.mock.calls[0]?.[0].questions.skill?.criteria ?? {})
+  expect(criteria.map(([key]) => key)).toEqual(['skill-0', 'abstain'])
+  expect(String(criteria[0]?.[1])).toMatch(/^csv-reconciliation: /u)
+})
+
+it('leaves the original input intact when no Skill of an oversized catalog shares a term with the input', async () => {
+  const h = await setup({ maxCandidates: 1 })
+  h.ctx.effect(() => h.ctx.skills.register({ name: 'another-skill', description: 'Another task.', source: 'runtime', content: 'Other instructions.' }))
+  const message = createUserMessage({ content: [{ type: 'text', text: 'Say hello.' }], source: { kind: 'user' } })
+  const result = await h.dispatch.waterfall('agent/pre-step', { messages: [message], turn: 1, step: 0, signal: new AbortController().signal },
+    () => Promise.resolve({ kind: 'enter', messages: [message] }))
+  expect(result).toEqual({ kind: 'enter', messages: [message] })
   expect(h.decide).toHaveBeenCalledTimes(1)
   expect(h.decide.mock.calls[0]?.[0].questions.skill).toBeUndefined()
   expect(h.ctx.sessionProjections.stateOf(h.agent.session, 'system3Runtime')?.skill).toMatchObject({ outcome: 'too-many-candidates', intent: 'action', injected: false })
+})
+
+it('prefilters by shared words and CJK character pairs, earlier entries first on ties, in catalog order', () => {
+  const catalog = [{ name: 'cron-schedule', description: 'Write cron expressions.' }, { name: 'sql-style', description: 'Write SQL queries.' },
+    { name: 'release-notes', description: '撰写版本发布说明。' }, { name: 'sql-review', description: 'Review SQL queries for style.' }]
+  expect(prefilterSkills('Review this SQL query style', catalog, 2).map(skill => skill.name)).toEqual(['sql-style', 'sql-review'])
+  expect(prefilterSkills('帮我写发布说明', catalog, 2).map(skill => skill.name)).toEqual(['release-notes'])
+  expect(prefilterSkills('Say hello to the team', catalog, 2)).toEqual([])
 })
 
 it('never truncates an oversized Skill body into the generation request', async () => {
