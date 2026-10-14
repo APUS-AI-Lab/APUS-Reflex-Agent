@@ -53,10 +53,41 @@ export interface ContinuumMemorySelector {
   ): Promise<ContinuumMemorySelection>
 }
 
+/** One compacted human message offered for admission as a memory record. */
+export interface ContinuumAdmissionCandidate {
+  readonly id: string
+  /** Complete original text of the message. */
+  readonly content: string
+}
+
+/** One kept candidate and the tags Reflex assigned it. */
+export interface ContinuumAdmittedMemory {
+  readonly id: string
+  /** Index tags; empty when the candidate was kept without a Reflex judgement. */
+  readonly tags: readonly string[]
+}
+
+/** Replayable outcome returned by a mounted Reflex admitter. */
+export interface ContinuumMemoryAdmission {
+  /** Candidates to index; IDs absent from the request are ignored. */
+  readonly admitted: readonly ContinuumAdmittedMemory[]
+}
+
+/** Optional Jev-backed admitter that selects and tags the compacted messages worth indexing. */
+export interface ContinuumMemoryAdmitter {
+  admit(
+    agent: Agent,
+    input: { readonly candidates: readonly ContinuumAdmissionCandidate[]; readonly isCurrent: () => boolean },
+    signal: AbortSignal,
+  ): Promise<ContinuumMemoryAdmission>
+}
+
 declare module '@deepseek-ai/cordis' {
   interface Context {
     /** Optional Reflex selector; absent keeps deterministic original behavior. */
     continuumMemorySelector?: ContinuumMemorySelector
+    /** Optional Reflex admitter for compaction admission; absent admits every compacted human message. */
+    continuumMemoryAdmitter?: ContinuumMemoryAdmitter
   }
 }
 
@@ -107,7 +138,9 @@ export function installContinuumMemoryContext(
  * @param controllerOf - per-agent Continuum controller resolver.
  * @param principalOf - exact scope resolver for the current agent.
  * @param config - retrieval and byte limits.
- * @param selectorOf - Reads the optional Jev selector at request time.
+ * @param selectorOf - Reads the optional Jev selector at request time. Without one, only candidates that share a
+ * query term are injected.
+ * @param pendingOf - Admissions the read waits for, so records from a just-completed compaction are visible.
  * @returns idempotent synchronous disposer for the listener.
  */
 export function installContinuumMemoryControllerContext(
@@ -116,6 +149,7 @@ export function installContinuumMemoryControllerContext(
   principalOf: ContinuumMemoryPrincipalOf,
   config: ContinuumMemoryContextConfig,
   selectorOf: () => ContinuumMemorySelector | undefined = () => undefined,
+  pendingOf: (agent: Agent) => Promise<void> | undefined = () => undefined,
 ): () => void {
   let active = true
   const isActive = (): boolean => active
@@ -127,12 +161,18 @@ export function installContinuumMemoryControllerContext(
     const query = latestUserText(messages)
     if (query === undefined) return decision
     signal.throwIfAborted()
+    const pending = pendingOf(agent)
+    if (pending !== undefined) await abortable(pending, signal)
+    if (!isActive()) return decision
     const ticket = controller.beginRead(principalOf(agent))
     if (ticket === undefined) return decision
     const workingSet = controller.read(ticket, config, query)
     if (workingSet === undefined || !controller.isCurrent(ticket) || workingSet.candidates.length === 0) return decision
     const selector = selectorOf()
-    if (selector === undefined) return { ...decision, messages: [...decision.messages, recallMessage(workingSet)] }
+    if (selector === undefined) {
+      const matched = renderMemoryWorkingSet(workingSet.query, workingSet.candidates.filter(candidate => candidate.score > 0))
+      return matched.candidates.length === 0 ? decision : { ...decision, messages: [...decision.messages, recallMessage(matched)] }
+    }
     const selection = await selector.select(agent, {
       query,
       isCurrent: () => isActive() && controller.isCurrent(ticket),
@@ -159,6 +199,18 @@ export function installContinuumMemoryControllerContext(
     stop()
   })
   return () => { void dispose() }
+}
+
+/** Wait for a promise that never rejects, or reject with the turn's cancellation. */
+async function abortable(promise: Promise<void>, signal: AbortSignal): Promise<void> {
+  const aborted = Promise.withResolvers<never>()
+  const reject = (): void => { aborted.reject(signal.reason) }
+  signal.addEventListener('abort', reject, { once: true })
+  try {
+    await Promise.race([promise, aborted.promise])
+  } finally {
+    signal.removeEventListener('abort', reject)
+  }
 }
 
 function recallMessage(workingSet: ReturnType<typeof retrieveMemoryWorkingSet>): UserMessage {

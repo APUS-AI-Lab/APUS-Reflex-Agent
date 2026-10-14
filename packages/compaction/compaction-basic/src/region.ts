@@ -21,10 +21,12 @@ import type { Message, UserMessage } from '@deepseek-ai/dsh-llm'
 import type { TokenMeasurement, TokenMeter } from '@deepseek-ai/dsh-token-meter'
 import { SessionSeq, type Session, type SessionEvent } from '@deepseek-ai/dsh-session'
 import type { Agent } from '@deepseek-ai/dsh-agent'
-import { frameSummary } from './summarizer.ts'
+import { frameSummary, recallFooter } from './summarizer.ts'
 import type { SummarizationInput, SummaryResult } from './summarizer.ts'
 interface RegionDependencies {
   readonly meter: TokenMeter
+  /** Append the deterministic recall footer to every committed checkpoint. */
+  readonly recallFooter: boolean
   summarize(input: SummarizationInput, agent: Agent, signal?: AbortSignal): Promise<SummaryResult>
   recover(error: unknown, agent: Agent, sourceEventSeqs: readonly SessionSeq[], signal?: AbortSignal): boolean
 }
@@ -232,7 +234,7 @@ export async function compactSurfaceRegion(
     if (options.owner === null) signal?.throwIfAborted()
     assertStable(dependencies, session, summarized)
     stage = 'commit'
-    const pending = commitCompactionBody(session, startEvent, summarized)
+    const pending = commitCompactionBody(session, startEvent, summarized, dependencies.recallFooter)
     closing = true
     const endEvent = session.append('compaction/end', lifecycle)
     closed = true
@@ -414,7 +416,11 @@ async function summarizeCompaction(
   // The checkpoint is text-only, so its fixed-heuristic price IS its route
   // price; comparing it against the span's route price asks the real
   // question — does the replacement lower the next request's pressure.
-  const framedSummaryTokenCount = dependencies.meter.estimateMessage(checkpointMessage)
+  // The footer's final summary seq is assigned at commit; the current log
+  // length prices it with the same digit count in all but boundary cases.
+  const framedSummaryTokenCount = dependencies.meter.estimateMessage(dependencies.recallFooter
+    ? withRecallFooter(checkpointMessage, agent.session.seq, prepared.start, prepared.end)
+    : checkpointMessage)
   if (framedSummaryTokenCount >= prepared.shadowedRouteTokenCount) {
     throw new Error(
       `summary is not smaller than the shadowed content (${framedSummaryTokenCount} estimated framed tokens >= ${prepared.shadowedRouteTokenCount})`,
@@ -467,11 +473,20 @@ function assertSelectedSpanStable(
   }
 }
 
+/** Copy a framed checkpoint with its recall footer appended, keeping its source. */
+function withRecallFooter(message: UserMessage, summarySeq: number, start: SessionSeq, end: SessionSeq): UserMessage {
+  return createUserMessage({
+    content: [...message.content, recallFooter(summarySeq, start, end)],
+    source: message.source,
+  })
+}
+
 /** Append one completed summary record and replacement body without yielding. */
 function commitCompactionBody(
   session: Session,
   startEvent: SessionEvent<'compaction/start'>,
   summarized: SummarizedCompaction,
+  footer: boolean,
 ): Omit<CompactionResult, 'endSeq'> {
   const {
     start,
@@ -503,7 +518,9 @@ function commitCompactionBody(
     ...maxTokens === undefined ? {} : { maxTokens },
     ...usage === undefined ? {} : { usage },
   })
-  session.append('user/message', checkpointMessage, {
+  session.append('user/message', footer
+    ? withRecallFooter(checkpointMessage, summaryEvent.seq, start, end)
+    : checkpointMessage, {
     surfaceOp: { op: 'replace', startSeq: start, endSeq: end },
     sourceEventSeqs: [startEvent.seq, summaryEvent.seq, ...shadowedSeqs],
   })

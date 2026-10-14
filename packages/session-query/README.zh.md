@@ -30,6 +30,7 @@ kind: "package-group"
 | [`session-query-sqlite/`](session-query-sqlite/README.zh.md) | 基于 SQLite FTS5 索引的会话历史全文搜索 | 注册到 `ctx.sessionQuery` |
 | [`session-log-export/`](session-log-export/README.zh.md) | Web `/export` 命令与浏览器下载会话 ZIP | `ctx.sessionLogDownload`（浏览器） |
 | [`tool-session-query/`](tool-session-query/README.zh.md) | 面向模型的搜索、追踪与读取会话历史工具 | 注册到 `ctx.tools` |
+| [`tool-history-recall/`](tool-history-recall/README.zh.md) | 面向模型的工具：读回并搜索被压缩检查点替换的对话 | 注册到 `ctx.tools` |
 
 -----
 

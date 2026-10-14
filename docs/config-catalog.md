@@ -668,6 +668,11 @@ export interface BasicCompactionConfig extends CompactionPolicyConfig {
   modelPolicies?: ModelCompactPolicyConfig[]
   /** Enable automatic step-boundary pressure and overflow-recovery listeners. Defaults to `true`. */
   auto?: boolean
+  /**
+   * End every checkpoint with a code-composed footer naming its `compaction/summary` seq and shadowed range,
+   * so a mounted history-recall tool can read the originals back. Defaults to `false`.
+   */
+  recallFooter?: boolean
 }
 
 /** Policy fields shared by the default policy and exact model overrides. */
@@ -1033,7 +1038,7 @@ export interface Config {
 ## `@deepseek-ai/dsh-experimental-continuum-jev`
 
 - `refs`: [`System3DataClass`](../packages/experimental/system3-policy/src/index.ts) · [`System3PrivacyPolicy`](../packages/experimental/system3-policy/src/index.ts)
-- `source`: [`packages/experimental/continuum-jev/src/index.ts:107`](../packages/experimental/continuum-jev/src/index.ts)
+- `source`: [`packages/experimental/continuum-jev/src/index.ts:153`](../packages/experimental/continuum-jev/src/index.ts)
 
 ```ts config-catalog
 /** Profile settings resolve the same explicit configuration used by direct consumers. */
@@ -1051,14 +1056,46 @@ export interface ContinuumJevConfig {
   readonly privacyPolicy: System3PrivacyPolicy
   /** Deployment classification of the query and every candidate; null or empty denies dispatch. */
   readonly sessionDataClasses: readonly System3DataClass[] | null
+  /** How Reflex relevance applies to the candidates. Omitted means `rank`. */
+  readonly selection?: ContinuumJevSelection
+  /** Lowest relevance probability `threshold` selection keeps, from 0 to 1. Omitted means 0.7. */
+  readonly minRelevance?: number
+  /** Index tags compaction admission judges each message against. Omitted means {@link DEFAULT_MEMORY_TAGS}. */
+  readonly tags?: readonly ContinuumMemoryTag[]
+  /** Lowest tag probability, from 0 to 1, that assigns a tag; a message with no assigned tag is not indexed. Omitted means 0.5. */
+  readonly minTagProbability?: number
+  /**
+   * UTF-16 code units of a compacted message each tag question quotes; a longer message is quoted as its head and tail
+   * around an omission marker. Omitted means 600. The indexed original in L2 is never cut.
+   */
+  readonly maxQuotedChars?: number
+  /**
+   * Leading UTF-16 code units of the user input that each relevance question quotes; longer input is cut with a marker.
+   * Omitted means 500. Memory records and excerpts are never cut by this setting.
+   */
+  readonly maxQueryChars?: number
   /** Rejected legacy setting: relevance ranking does not filter candidates by confidence. */
   readonly minConfidence?: number
   /** Rejected legacy setting: relevance ranking retains every bounded candidate. */
   readonly maxSelections?: number
 }
 
-/** Only active mode applies the relevance order; every mode retains all supplied candidates. */
+/** Only active mode applies Reflex advice; off and shadow keep the deterministic result. */
 export type ContinuumJevMode = 'off' | 'shadow' | 'active'
+
+/**
+ * `rank` orders every supplied candidate by relevance. `threshold` keeps only candidates whose relevance reaches
+ * `minRelevance`; without a Reflex answer it keeps only candidates that share a query term.
+ */
+export type ContinuumJevSelection = 'rank' | 'threshold'
+
+/** One L1 index tag: a stable ID and the subject a message must state a fact about to carry it. */
+export interface ContinuumMemoryTag {
+  /** Stable tag ID written to L1 index entries. */
+  readonly id: string
+  /** English noun phrase completing "states a fact about the user or someone in their life concerning …". */
+  readonly description: string
+}
 ```
 <!-- END GENERATED config-catalog:@deepseek-ai/dsh-experimental-continuum-jev -->
 
@@ -3820,7 +3857,7 @@ export interface Config {
 
 ## `@deepseek-ai/dsh-system-prompt`
 
-- `source`: [`packages/core/system-prompt/src/index.ts:248`](../packages/core/system-prompt/src/index.ts)
+- `source`: [`packages/core/system-prompt/src/index.ts:249`](../packages/core/system-prompt/src/index.ts)
 
 ```ts config-catalog
 /** Plugin config: the deployment-authored fragment of the system prompt (see {@link Config.personaPrefix} for its contract). */
@@ -4078,6 +4115,30 @@ export interface Config {
 }
 ```
 <!-- END GENERATED config-catalog:@deepseek-ai/dsh-tool-goal -->
+
+<!-- BEGIN GENERATED config-catalog:@deepseek-ai/dsh-tool-history-recall -->
+<a id="deepseek-aidsh-tool-history-recall"></a>
+
+## `@deepseek-ai/dsh-tool-history-recall`
+
+- `inject`: `tools` · `systemPrompt` · `sessionQuery`
+- `source`: [`packages/session-query/tool-history-recall/src/index.ts:40`](../packages/session-query/tool-history-recall/src/index.ts)
+
+```ts config-catalog
+/** Bounds with every default applied. */
+export type ResolvedConfig = Required<Config>
+
+/** Deployment-owned page and result bounds. */
+export interface Config {
+  /** Characters returned by one `history_read` page. Defaults to 24000. */
+  pageChars?: number
+  /** Maximum matches returned by one `history_search` call. Defaults to 20. */
+  maxMatches?: number
+  /** Characters of context shown on each side of a match. Defaults to 160. */
+  snippetRadius?: number
+}
+```
+<!-- END GENERATED config-catalog:@deepseek-ai/dsh-tool-history-recall -->
 
 <!-- BEGIN GENERATED config-catalog:@deepseek-ai/dsh-tool-jobs -->
 <a id="deepseek-aidsh-tool-jobs"></a>

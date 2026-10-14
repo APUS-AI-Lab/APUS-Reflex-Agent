@@ -5986,6 +5986,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface MemoryCandidate {\n    readonly id: MemoryId;\n    readonly record: MemoryRecord;\n    readonly score: number;\n    readonly excerpt: string;\n    readonly excerptStart: number;\n    readonly excerptEnd: number;\n}',
   },
   {
+    name: 'MemoryCandidatePool',
+    declaration: 'export type MemoryCandidatePool = \'lexical\' | \'all\';',
+  },
+  {
     name: 'MemoryDomainId',
     declaration: 'export type MemoryDomainId = Branded<\'MemoryDomainId\'>;',
   },
@@ -6015,7 +6019,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'MemoryRetrievalConfig',
-    declaration: 'export interface MemoryRetrievalConfig {\n    readonly maxCandidates: number;\n    readonly maxExcerptBytes: number;\n    readonly maxTotalBytes: number;\n    readonly index?: MemoryRecordIndex;\n}',
+    declaration: 'export interface MemoryRetrievalConfig {\n    readonly maxCandidates: number;\n    readonly maxExcerptBytes: number;\n    readonly maxTotalBytes: number;\n    readonly candidatePool?: MemoryCandidatePool | undefined;\n    readonly index?: MemoryRecordIndex;\n}',
   },
   {
     name: 'MemorySourceRef',

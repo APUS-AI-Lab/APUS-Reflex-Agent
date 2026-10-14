@@ -11,7 +11,7 @@ kind: package-reference
 
 保存带精确来源引用的原文、按预算检索片段，并保留明确纠正供审计。可选任务插件使新 Session 恢复同一持久任务的输入；记忆记录插件另行支持 Reflex 选择。持续工作使用有限模型窗口；完整处理覆盖与规模验收尚未完成。
 
-Session 事件使用现有 persistence backend；完成 `ctx.sessions.flush(session)` 后才具备持久化保证。准入默认显式执行；opt-in 的 `admission: 'user-message'` 在 Reflex 专属开关生效时记录带精确 Session 引用的人类消息。配套 `continuum-jev` service 提供 shadow/active 选择和回执。
+Session 事件使用现有 persistence backend；完成 `ctx.sessions.flush(session)` 后才具备持久化保证。准入默认显式执行；opt-in 的 `user-message` 和 `compaction` 模式记录带精确 Session 引用的人类消息。配套 `continuum-jev` service 提供 Reflex 选择、准入和回执。
 
 ## 目录
 
@@ -32,7 +32,7 @@ Session 事件使用现有 persistence backend；完成 `ctx.sessions.flush(sess
 
 使用 `MemoryRecordStore` 保存确定性的 revision 语义；用 `appendMemoryRecordEvent` 把变更追加到现有 Session 日志，用 `foldMemoryRecordEvents` 从日志重建，用 `readMemorySourceEvents` 精确回读来源，用 `retrieveMemoryWorkingSet` 生成有界候选。只有 `ctx.sessions.flush(session)` 成功后，调用方才能报告已经持久化。
 
-`ContinuumConfigFields` 导出经过校验的 schema 字段，供 profile provider 定义自己的默认值。Core 默认仍为 `enabled: false`、`mode: off`、`admission: explicit` 和空作用域。
+`ContinuumConfigFields` 导出经过校验的 schema 字段，供 profile provider 定义自己的默认值。Core 默认仍为 `enabled: false`、`mode: off`、`admission: explicit`、`candidatePool: lexical` 和空作用域。Reflex 专属开关生效时，`admission: 'user-message'` 记录每条已提交的人类消息，`admission: 'compaction'` 在挂载的 Reflex admitter 选中后，为压缩检查点替换掉的人类消息建立索引。`candidatePool: all` 还会在所有字面命中之后按从新到旧提供与输入没有共同词的记录，供挂载的 selector 判断；没有 selector 时只注入有共同词的记录。
 
 -----
 
@@ -49,7 +49,7 @@ Session 事件使用现有 persistence backend；完成 `ctx.sessions.flush(sess
 <a id="understand-the-implementation"></a>
 ## 理解实现
 
-`MemoryRecordStore` 要求调用方提供已观察到的 revision，并返回不可变快照。`ContinuumMemory` 在每个 Agent 的同一所属投影中保存 controller 和记录 store，从 Agent Session 恢复该投影，并把显式的 create/supersede/deactivate 调用持久化为 `continuum/memory-record`。在 `user-message` 准入模式下，已提交的人类 `user/message` 会在 Session append 完成后转换为记录；生成的 recall 消息和其他来源会被忽略。服务在 Agent 创建后挂载时，仅使用属于同一 Session 的当前发起操作的 Agent；没有所属 Agent 的输入及其他 Session 的输入不会被准入。controller 会在提交变更后维护可丢弃的派生索引，索引候选保留与直接检索相同的词法子串匹配；折叠事件不会调用模型，也不会创建第二套持久化事实源。
+`MemoryRecordStore` 要求调用方提供已观察到的 revision，并返回不可变快照。`ContinuumMemory` 在每个 Agent 的同一所属投影中保存 controller 和记录 store，从 Agent Session 恢复该投影，并把显式的 create/supersede/deactivate 调用持久化为 `continuum/memory-record`。在 `user-message` 准入模式下，已提交的人类 `user/message` 会在 Session append 完成后转换为记录；生成的 recall 消息和其他来源会被忽略。服务在 Agent 创建后挂载时，仅使用属于同一 Session 的当前发起操作的 Agent；没有所属 Agent 的输入及其他 Session 的输入不会被准入。在 `compaction` 准入模式下，每个已提交的 `compaction/summary` 会把它遮蔽的、有文本且尚无记录的人类消息加入队列；可选的 `continuumMemoryAdmitter` 返回要索引的 ID 及其标签，admitter 失败时把全部候选以无标签方式索引，admitter 在运行前被移除时一条都不索引。每条保留的原话成为一个 `continuum/memory-index` 事件：一条 L1 索引项，只含标签和指向来源事件的指针，从不含原文。折叠日志时从该来源事件解析原文，放入内存中的记录 store，因此检索读取的是原文，而日志中只有一份副本。没有挂载 admitter 时，此模式既不准入也不召回。下一次同 step 读取会等待排队中的准入，因此请求之前发生的压缩所产生的记录对该请求可见。controller 会在提交变更后维护可丢弃的派生索引，索引候选保留与直接检索相同的词法子串匹配；折叠事件不会调用模型，也不会创建第二套持久化事实源。
 
 -----
 
@@ -72,7 +72,7 @@ Session 事件使用现有 persistence backend；完成 `ctx.sessions.flush(sess
 
 #### 模型看到的内容
 
-挂载 `installContinuumMemoryContext` 后，模型看到由 active 记录和当前用户文本生成的有界 `continuum-memory` recall 消息。 每条摘录保留记录正文中首个命中词附近的原样窗口；仅 kind 或 scope 命中时使用前缀。摘录包含记录 ID、revision、来源事件引用、记录正文内的 UTF-16 区间和省略方向标记；该区间不表示来源事件内的位置。selector 筛选保留相同元数据。
+挂载 `installContinuumMemoryContext` 后，模型看到由 active 记录和当前用户文本生成的有界 `continuum-memory` recall 消息。 每条摘录保留记录正文中首个命中词附近的原样窗口；仅 kind 或 scope 命中时使用前缀。摘录包含记录 ID、revision、来源事件引用、记录正文内的 UTF-16 区间和省略方向标记；该区间不表示来源事件内的位置。selector 筛选保留相同元数据。来源事件引用即 `history_read` 的 `event` 参数所接受的事件。
 
 #### Token effect
 
@@ -87,6 +87,7 @@ Session 事件使用现有 persistence backend；完成 `ctx.sessions.flush(sess
 - 当前记录投影是进程内的；重启恢复必须读取并折叠 Session 事件日志。`MemoryRecordIndex` 是 controller 维护的可丢弃派生状态；仍可从投影重建，或用有界积压预算逐步处理排队快照。
 - service 不包含完整全文索引，也不会自动把摘要树接入生命周期检索。重启后摘要导航从 Session 事件重建，不是持久化的模型摘要快照。摘要树和缓存 helper 是确定性的本地计量，不报告 provider 缓存账单；记录必须带来源，准入默认由调用方负责，也可以显式开启人类消息准入。
 - 自动用户消息准入必须显式 opt-in，使用第一个配置作用域，并将消息文本保存为带来源的 fact。处理私密或敏感对话的部署应保持 `admission: explicit`，改用领域专属的准入调用方。
+- 压缩准入只覆盖人类消息；助手回答和工具结果仍可通过 `history_read` 读取，但不会成为记录。准入在队列中时进程退出，会丢失这次判断，重启后该检查点不会再次提交判断。
 
 不发布运行时不变式伴生模块：本包没有由独立所有者维护、需要与 Session 派生投影核对的运行时观测。
 

@@ -216,7 +216,25 @@ describe('Continuum retrieval working set', () => {
     expect(result.stdout).toContain('PROJECTQUARTZ PIN 7319')
   })
 
+  it('offers records without a shared term after the lexical hits, newest first, in the all pool', () => {
+    const records = store()
+    records.create({ id: MemoryId('budget'), kind: 'fact', scope: 'workspace', content: 'Budget cap is 400 dollars.', sourceRefs: [{ sessionId: SessionId('s'), eventSeq: SessionSeq(2) }] })
+    const index = new MemoryRecordIndex()
+    index.rebuild(records.snapshot())
+    const bounds = { maxCandidates: 4, maxExcerptBytes: 200, maxTotalBytes: 1000, index }
+    expect(retrieveMemoryWorkingSet(records, bounds, 'migration').candidates.map(candidate => candidate.id)).toEqual([MemoryId('migration')])
+    const all = retrieveMemoryWorkingSet(records, { ...bounds, candidatePool: 'all' }, 'migration')
+    expect(all.candidates.map(candidate => [candidate.id, candidate.score])).toEqual([
+      [MemoryId('migration'), 1], [MemoryId('budget'), 0], [MemoryId('office'), 0],
+    ])
+    expect(all.candidates[1]?.excerpt).toBe('Budget cap is 400 dollars.')
+    expect(retrieveMemoryWorkingSet(records, { ...bounds, candidatePool: 'lexical' }, 'migration').candidates).toHaveLength(1)
+  })
+
   it('rejects invalid limits', () => {
     expect(() => retrieveMemoryWorkingSet(store(), { maxCandidates: 0, maxExcerptBytes: 10, maxTotalBytes: 10 }, 'migration')).toThrow('maxCandidates')
+    // @ts-expect-error -- JSON configuration can carry an unknown pool name.
+    expect(() => retrieveMemoryWorkingSet(store(), { maxCandidates: 1, maxExcerptBytes: 10, maxTotalBytes: 10, candidatePool: 'semantic' }, 'migration'))
+      .toThrow('candidatePool')
   })
 })

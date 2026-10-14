@@ -3,14 +3,14 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/experimental/continuum-jev/README.md
 /:
-  en: 30a35536b7eabda5
-  zh: c832640d02cfb257
+  en: 42bf5f0cccc87cbb
+  zh: cfc0b5bf990c3831
 /deepseek-ai-dsh-experimental-continuum-jev:
   en: 5b603eb6cfc91865
   zh: 06dbc176c2b1bfbd
 /deepseek-ai-dsh-experimental-continuum-jev/summary:
-  en: 8005eaa4d967056e
-  zh: 5b1fb3ad1d279df2
+  en: b569f0461fefd7e8
+  zh: b8c135857fc9c067
 /deepseek-ai-dsh-experimental-continuum-jev/table-of-contents:
   en: 122f0d41696980b1
   zh: f3d226c50f80fae7
@@ -18,14 +18,14 @@
   en: bbff250eba0f1b89
   zh: 0a618f05cc88ee2b
 /deepseek-ai-dsh-experimental-continuum-jev/use-this-package/select-the-profile-layer:
-  en: 20a840cee7fbcc3a
-  zh: 00690c52e26acfce
-/deepseek-ai-dsh-experimental-continuum-jev/use-this-package/configure-relevance-ranking:
-  en: 500422d60cbf5bf2
-  zh: d49e0cbf499c107d
+  en: b64ddf940742f18d
+  zh: a82275dcbb94a554
+/deepseek-ai-dsh-experimental-continuum-jev/use-this-package/configure-reflex-judgement:
+  en: f1993dab437f1cd4
+  zh: 3eb5e5f3b5e7d0cc
 /deepseek-ai-dsh-experimental-continuum-jev/understand-the-implementation:
-  en: 1f5569fbe7bde7ad
-  zh: 792bcbd06f4b33a1
+  en: faaa5c462331008e
+  zh: c13b61bd0a2ba5b0
 /deepseek-ai-dsh-experimental-continuum-jev/model-experience:
   en: 215e7ba838619b7b
   zh: 215e7ba838619b7b
@@ -33,17 +33,17 @@
   en: b56b6e6160f9b6ad
   zh: a1f3066900d2f423
 /deepseek-ai-dsh-experimental-continuum-jev/model-experience/bounded-memory-relevance/what-the-model-sees:
-  en: bab7c346657ae1dd
-  zh: fbf389093a84bba8
+  en: 8bfbe65bd8f2768e
+  zh: 749010b5fab363c8
 /deepseek-ai-dsh-experimental-continuum-jev/model-experience/bounded-memory-relevance/token-effect:
-  en: c43e5fa3f5e1dae3
-  zh: 9168f79d6d6378d2
+  en: 5279ceefffd0d4e9
+  zh: 059a2860a6a8b4bc
 /deepseek-ai-dsh-experimental-continuum-jev/model-experience/bounded-memory-relevance/kv-cache-effect:
-  en: 668dc16138a1b8df
-  zh: e3d4456b4d23a957
+  en: 558d09ca17f2afaf
+  zh: 0fa6ea20ea0919a3
 /deepseek-ai-dsh-experimental-continuum-jev/known-limitations-and-deferred-work:
-  en: e1329d9e87547b91
-  zh: d9b84b2b9b9e1f33
+  en: 30eec8d3af9de10b
+  zh: ffe541e3636b13ed
 /deepseek-ai-dsh-experimental-continuum-jev/known-limitations-and-deferred-work/dev-note:
-  en: 1a45fcf17f281c6d
-  zh: 5113ab751acd701b
+  en: 351f4fedc66f9056
+  zh: cd073e35a5f126fd
