@@ -9,14 +9,23 @@ export interface MemoryRetrievalConfig {
   readonly maxExcerptBytes: number
   /** UTF-8 byte limit including the recall heading, metadata and separators. */
   readonly maxTotalBytes: number
+  /**
+   * `lexical` offers only records that share a term with the query. `all` also offers the remaining active records,
+   * newest first after every lexical hit, for a selector that judges relevance without shared terms. Omitted means `lexical`.
+   */
+  readonly candidatePool?: MemoryCandidatePool | undefined
   /** Optional disposable inverted index; the record store remains authoritative. */
   readonly index?: MemoryRecordIndex
 }
+
+/** Which active records retrieval may offer as candidates. */
+export type MemoryCandidatePool = 'lexical' | 'all'
 
 /** One deterministic candidate produced from an active record. */
 export interface MemoryCandidate {
   readonly id: MemoryId
   readonly record: MemoryRecord
+  /** Number of query terms the record contains; zero only in the `all` pool. */
   readonly score: number
   readonly excerpt: string
   /** Inclusive UTF-16 offset in record.content, not in its source events. */
@@ -43,7 +52,7 @@ const encoder = new TextEncoder()
  * @param store - read-only record projection containing active and retired snapshots.
  * @param config - candidate and byte limits; metadata is never partially emitted.
  * @param query - user request terms; content hits anchor exact Unicode-safe excerpts.
- * @returns a bounded working set sorted by score and stable ID.
+ * @returns a bounded working set sorted by score and stable ID; records without a matching term follow, newest first.
  */
 export function retrieveMemoryWorkingSet(
   store: Pick<MemoryRecordStore, 'snapshot'>,
@@ -52,13 +61,17 @@ export function retrieveMemoryWorkingSet(
 ): MemoryWorkingSet {
   assertConfig(config)
   const terms = memorySearchTerms(query)
-  const indexedIds = config.index === undefined ? undefined : new Set(config.index.idsForTerms(terms))
+  const all = config.candidatePool === 'all'
+  const indexedIds = all || config.index === undefined ? undefined : new Set(config.index.idsForTerms(terms))
   const ranked = store.snapshot()
-    .filter(record => record.status === 'active')
-    .filter(record => indexedIds === undefined || indexedIds.has(record.id))
-    .map(record => ({ record, score: scoreRecord(record, terms) }))
-    .filter(item => item.score > 0)
-    .sort((a, b) => b.score - a.score || Number(a.record.id > b.record.id) - Number(a.record.id < b.record.id))
+    .map((record, order) => ({ record, order }))
+    .filter(({ record }) => record.status === 'active')
+    .filter(({ record }) => indexedIds === undefined || indexedIds.has(record.id))
+    .map(({ record, order }) => ({ record, order, score: scoreRecord(record, terms) }))
+    .filter(item => all || item.score > 0)
+    .sort((a, b) => b.score - a.score || (a.score === 0
+      ? b.order - a.order
+      : Number(a.record.id > b.record.id) - Number(a.record.id < b.record.id)))
   const candidates: MemoryCandidate[] = []
   let bytes = utf8Bytes(heading)
   for (const item of ranked) {
@@ -188,6 +201,10 @@ function utf8Bytes(value: string): number {
 function assertConfig(config: MemoryRetrievalConfig): void {
   for (const [name, value] of Object.entries(config)) {
     if (name === 'index') continue
+    if (name === 'candidatePool') {
+      if (value !== undefined && value !== 'lexical' && value !== 'all') throw new TypeError('candidatePool must be lexical or all')
+      continue
+    }
     if (!Number.isSafeInteger(value) || value < 1) throw new TypeError(`${name} must be a positive safe integer`)
   }
 }

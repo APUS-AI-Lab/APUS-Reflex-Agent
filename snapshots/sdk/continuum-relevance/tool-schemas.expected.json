@@ -176,6 +176,47 @@
       }
     },
     {
+      "name": "history_read",
+      "description": "Read the original conversation that a compaction checkpoint replaced, one page at a time. Name the checkpoint, or the source event of a recalled memory to start at that message.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "checkpoint": {
+            "type": "integer",
+            "description": "Checkpoint id from a checkpoint footer."
+          },
+          "event": {
+            "type": "integer",
+            "description": "Source event seq of a recalled memory; reads the checkpoint that replaced it, from that message."
+          },
+          "offset": {
+            "type": "integer",
+            "description": "Character offset to continue from. Omit to start at the beginning, or at the event."
+          }
+        }
+      }
+    },
+    {
+      "name": "history_search",
+      "description": "Find a literal, case-insensitive string in the original conversation behind every compaction checkpoint.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Exact text to find, such as an error, value, or path."
+          },
+          "checkpoint": {
+            "type": "integer",
+            "description": "Limit the search to one checkpoint id. Omit to search all."
+          }
+        },
+        "required": [
+          "query"
+        ]
+      }
+    },
+    {
       "name": "interrupt_agent",
       "description": "Ask a subagent to stop its current work. This call returns without waiting for it to stop. You can continue a direct child's conversation later with send_message. Subagents it started will keep running.",
       "parameters": {

@@ -33,6 +33,7 @@ The [format references](persistence-changes/historical-formats/README.md) cover 
 | `event:compaction/prune` | event | `7f7fd5a6b0064f597534b29ff62ef26e786dffccf5e14f654a7d4fcea2c35f04` | [`{ type: "compaction/prune" }`](#persistence-type-sha256-7f7fd5a6b0064f597534b29ff62ef26e786dffccf5e14f654a7d4fcea2c35f04) |
 | `event:compaction/start` | event | `db874d463b0fdec77e9da1c4568f37cb70bd6596781eb93800db44fb8a116965` | [`{ type: "compaction/start" }`](#persistence-type-sha256-db874d463b0fdec77e9da1c4568f37cb70bd6596781eb93800db44fb8a116965) |
 | `event:compaction/summary` | event | `e2f9a41e0989f54ed8cee80f8db2bcf9d60a5c810dc9d45b83fa050b9dce7602` | [`{ type: "compaction/summary" }`](#persistence-type-sha256-e2f9a41e0989f54ed8cee80f8db2bcf9d60a5c810dc9d45b83fa050b9dce7602) |
+| `event:continuum/memory-admission` | event | `c85c189b80b451a3ad4e24fbc5af77a470329f90f33cfdb00a4e5b9ded830b28` | [`{ type: "continuum/memory-admission" }`](#persistence-type-sha256-c85c189b80b451a3ad4e24fbc5af77a470329f90f33cfdb00a4e5b9ded830b28) |
 | `event:continuum/memory-decision` | event | `24a0ed8247a7e53928a16190a4db75daac26f27c02f705a4d36dc0daee5ba804` | [`{ type: "continuum/memory-decision" }`](#persistence-type-sha256-24a0ed8247a7e53928a16190a4db75daac26f27c02f705a4d36dc0daee5ba804) |
 | `event:continuum/memory-record` | event | `229669c953c776861d1f8dd4e6f2e99eb572237979a2fd4ffc8a5c0fab7b2569` | [`{ type: "continuum/memory-record" }`](#persistence-type-sha256-229669c953c776861d1f8dd4e6f2e99eb572237979a2fd4ffc8a5c0fab7b2569) |
 | `event:continuum/task-binding` | event | `a7f4ecd9f59ad6b3bf422e50f046b234701a59499580ab11671a42aaf8865de8` | [`{ type: "continuum/task-binding" }`](#persistence-type-sha256-a7f4ecd9f59ad6b3bf422e50f046b234701a59499580ab11671a42aaf8865de8) |
@@ -498,6 +499,17 @@ Source: [`packages/compaction/compaction/src/types.ts:34`](../packages/compactio
 
 ### `continuum/*`
 
+<a id="continuummemory-admission--log-only"></a>
+
+#### `continuum/memory-admission` — log-only
+
+```ts persistence-catalog
+/** Replayable Continuum compaction-admission receipt; never re-calls Jev during replay. */
+'continuum/memory-admission': ContinuumMemoryAdmissionReceipt
+```
+
+Source: [`packages/experimental/continuum-jev/src/index.ts:171`](../packages/experimental/continuum-jev/src/index.ts)
+
 <a id="continuummemory-decision--log-only"></a>
 
 #### `continuum/memory-decision` — log-only
@@ -507,7 +519,7 @@ Source: [`packages/compaction/compaction/src/types.ts:34`](../packages/compactio
 'continuum/memory-decision': ContinuumMemoryDecisionReceipt
 ```
 
-Source: [`packages/experimental/continuum-jev/src/index.ts:99`](../packages/experimental/continuum-jev/src/index.ts)
+Source: [`packages/experimental/continuum-jev/src/index.ts:118`](../packages/experimental/continuum-jev/src/index.ts)
 
 <a id="continuummemory-record--log-only"></a>
 
@@ -2073,6 +2085,14 @@ SHA-256: `373fbc8dbd800a84b5031415d74839b0eacf3356a65535afe7fedcd002d5bc20`
 SHA-256: `88121dddae81a9b61c380bab2017ab29abdf1f0e2f7daf0ba556128c958225f3`
 
 `"continuum-memory"`
+
+<a id="persistence-type-sha256-02b1b999201f9607c601c432ff0ef57115bbf97d22a887f3898ccf85d216eeef"></a>
+
+### `"continuum/memory-admission"`
+
+SHA-256: `02b1b999201f9607c601c432ff0ef57115bbf97d22a887f3898ccf85d216eeef`
+
+`"continuum/memory-admission"`
 
 <a id="persistence-type-sha256-e886003a0fa18e93bafd29ec4d32d690e0e0b5ce3242c43f56611ed764a933b8"></a>
 
@@ -4824,13 +4844,39 @@ Sources: [`packages/subagent/subagent/src/descriptor.ts:72`](../packages/subagen
 
 SHA-256: `8e864843108a0d21cd2301ab5d0f30774ce699b393eab6ce4574bf9bd2675acb`
 
-Sources: [`packages/experimental/continuum-jev/src/index.ts:12`](../packages/experimental/continuum-jev/src/index.ts) · [`packages/experimental/system3/src/decision-kernel.ts:11`](../packages/experimental/system3/src/decision-kernel.ts)
+Sources: [`packages/experimental/continuum-jev/src/index.ts:14`](../packages/experimental/continuum-jev/src/index.ts) · [`packages/experimental/system3/src/decision-kernel.ts:11`](../packages/experimental/system3/src/decision-kernel.ts)
 
 One of:
 
 - `"active"`
 - `"off"`
 - `"shadow"`
+
+<a id="persistence-type-sha256-b38a65cdb2a1a001205f4109e36481e422f19ac1a39c75f050a4dcd5967ba3b0"></a>
+
+<a id="persistence-type-continuummemoryadmissionreceipt"></a>
+
+<a id="persistence-type-packagesexperimentalcontinuum-jevsrcindextscontinuummemoryadmissionreceipt"></a>
+
+### `ContinuumMemoryAdmissionReceipt`
+
+SHA-256: `b38a65cdb2a1a001205f4109e36481e422f19ac1a39c75f050a4dcd5967ba3b0`
+
+Sources: [`packages/experimental/continuum-jev/src/index.ts:149`](../packages/experimental/continuum-jev/src/index.ts)
+
+| Property | Presence | Type |
+|---|---|---|
+| `admittedIds` | required | [`string[]`](#persistence-type-sha256-93c33d9687613293f8c95d46c4d922fe9ceae83b84c384beff5c3315abe005f2) |
+| `candidateIds` | required | [`string[]`](#persistence-type-sha256-93c33d9687613293f8c95d46c4d922fe9ceae83b84c384beff5c3315abe005f2) |
+| `failure` | optional | `string` |
+| `mode` | required | [`ContinuumJevMode`](#persistence-type-sha256-8e864843108a0d21cd2301ab5d0f30774ce699b393eab6ce4574bf9bd2675acb) |
+| `outcome` | required | [`union (4 variants)`](#persistence-type-sha256-47a686785a2a30964410c730b866f930c198a8a85d3a8b41e1732d64a7d0751b) |
+| `phase` | required | [`union (2 variants)`](#persistence-type-sha256-7706f63dbf208412aeef964367a6b5cb69eea5853caddcc3559d684b9b3eca11) |
+| `preparedSeq` | optional | `number` |
+| `reason` | required | [`union (9 variants)`](#persistence-type-sha256-0208dc6bae0f621817b700b02dc5e8b120f80f6543a7504e753c592e9dd6ddd8) |
+| `request` | required | [`union (2 variants)`](#persistence-type-sha256-7ee064a4547ab8ee2673099ef72df06ab2a1f8795c7ad295ac42125289713156) |
+| `response` | optional | [`JevResponse`](#persistence-type-sha256-693f3aa30e2f5006d86aef1dbf1459d83bf5a0820f8c82a11c64d99a24556eb8) |
+| `version` | required | `1` |
 
 <a id="persistence-type-sha256-f81713b4e54e147d3c110e83e23801c9d679271407f70bc7644395769f990cf2"></a>
 
@@ -4842,7 +4888,7 @@ One of:
 
 SHA-256: `f81713b4e54e147d3c110e83e23801c9d679271407f70bc7644395769f990cf2`
 
-Sources: [`packages/experimental/continuum-jev/src/index.ts:84`](../packages/experimental/continuum-jev/src/index.ts)
+Sources: [`packages/experimental/continuum-jev/src/index.ts:103`](../packages/experimental/continuum-jev/src/index.ts)
 
 | Property | Presence | Type |
 |---|---|---|
@@ -4865,7 +4911,7 @@ Sources: [`packages/experimental/continuum-jev/src/index.ts:84`](../packages/exp
 
 SHA-256: `d633839707c8714e1273e5aa96e28bcb68477853528a41cab43f5b0f0c717b1d`
 
-Sources: [`packages/experimental/continuum-jev/src/index.ts:57`](../packages/experimental/continuum-jev/src/index.ts)
+Sources: [`packages/experimental/continuum-jev/src/index.ts:76`](../packages/experimental/continuum-jev/src/index.ts)
 
 | Property | Presence | Type |
 |---|---|---|
@@ -8850,6 +8896,24 @@ One of:
 - `"web-search"`
 - `null`
 
+<a id="persistence-type-sha256-0208dc6bae0f621817b700b02dc5e8b120f80f6543a7504e753c592e9dd6ddd8"></a>
+
+### `union (9 variants)`
+
+SHA-256: `0208dc6bae0f621817b700b02dc5e8b120f80f6543a7504e753c592e9dd6ddd8`
+
+One of:
+
+- `"invalidated"`
+- `"judged"`
+- `"off"`
+- `"persistence-unavailable"`
+- `"prepared"`
+- `"privacy-denied"`
+- `"provider-error"`
+- `"provider-unavailable"`
+- `"request-budget"`
+
 <a id="persistence-type-sha256-5735a078c45c17326d364f5c682da35cf32bd9b6ce031d996216e581e6364c21"></a>
 
 ### `union (9 variants)`
@@ -11614,6 +11678,22 @@ SHA-256: `e2f9a41e0989f54ed8cee80f8db2bcf9d60a5c810dc9d45b83fa050b9dce7602`
 | `seq` | required | `number` |
 | `time` | required | `number` |
 | `type` | required | `"compaction/summary"` |
+
+<a id="persistence-type-sha256-c85c189b80b451a3ad4e24fbc5af77a470329f90f33cfdb00a4e5b9ded830b28"></a>
+
+<a id="persistence-type-eventcontinuummemory-admission"></a>
+
+### `{ type: "continuum/memory-admission" }`
+
+SHA-256: `c85c189b80b451a3ad4e24fbc5af77a470329f90f33cfdb00a4e5b9ded830b28`
+
+| Property | Presence | Type |
+|---|---|---|
+| `data` | required | [`ContinuumMemoryAdmissionReceipt`](#persistence-type-sha256-b38a65cdb2a1a001205f4109e36481e422f19ac1a39c75f050a4dcd5967ba3b0) |
+| `ignorable` | optional | `true` |
+| `seq` | required | `number` |
+| `time` | required | `number` |
+| `type` | required | `"continuum/memory-admission"` |
 
 <a id="persistence-type-sha256-24a0ed8247a7e53928a16190a4db75daac26f27c02f705a4d36dc0daee5ba804"></a>
 

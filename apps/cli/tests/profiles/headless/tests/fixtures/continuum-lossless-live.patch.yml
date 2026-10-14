@@ -1,0 +1,58 @@
+# Live overlay over the shipped headless profile: DeepSeek's official API answers, the deployed APUS Reflex (Jev)
+# endpoint judges admission and relevance, and a declared 24K window forces compaction.
+# Credentials come only from DEEPSEEK_API_KEY and APUS_JEV_API_KEY in the environment.
+- id: llm-deepseek
+  config:
+    apiKeyEnv: DEEPSEEK_API_KEY
+    models:
+      - id: deepseek-flash
+        name: DeepSeek Flash (24K live window)
+        contextWindow: 24576
+        maxTokens: 4096
+        inputModalities: [text]
+        systemPromptUpdate: in-history
+        toolUpdate: addition-only
+
+- id: agent-default-model
+  config:
+    provider: deepseek-official
+    model: deepseek-flash
+
+- id: compaction-basic
+  config:
+    headroomTokens: 2048
+    thresholdRatio: 0.7
+    retainRatio: 0.2
+
+- id: session-persistence-jsonl
+  config:
+    root: !!js dshHomePath('sessions')
+    compression: none
+
+- insert:
+    - id: jev
+      name: ../../../../../../../packages/experimental/apus-dsh-jev-plugin/src/index.ts
+      config:
+        endpoint: https://ac2n5m38jjciqg-8086.proxy.runpod.net
+        model: APUS-OpenJev-v1-9B-5949
+        apiKeyEnv: APUS_JEV_API_KEY
+        timeoutMs: 15000
+    - id: continuum-jev
+      name: ../../../../../../../packages/experimental/continuum-jev/src/index.ts
+      config:
+        mode: active
+        selection: threshold
+        minRelevance: 0.7
+        minImportance: 0.5
+        maxQueryChars: 500
+        maxRequestBytes: 65536
+        timeoutMs: 15000
+        sessionDataClasses: [workspace]
+        privacyPolicy:
+          mode: controlled
+          approvedRemoteIds: [system-one]
+          approvedRemoteDataClasses: [workspace]
+    - id: continuum-memory
+      name: ../../../../../../../packages/experimental/continuum-jev/src/product-memory.ts
+      config:
+        enabled: true

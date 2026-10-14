@@ -7,7 +7,8 @@ export default class ProductContinuumMemory extends ContinuumMemory {
   static override Config = z.object({
     ...ContinuumConfigFields,
     mode: z.union([z.const('off'), z.const('shadow'), z.const('active')]).default('active').volatile(),
-    admission: z.union([z.const('explicit'), z.const('user-message')]).default('user-message'),
+    admission: z.union([z.const('explicit'), z.const('user-message'), z.const('compaction')]).default('compaction'),
+    candidatePool: z.union([z.const('lexical'), z.const('all')]).default('all'),
     scopes: z.array(z.string()).default(['workspace']),
   })
 }
