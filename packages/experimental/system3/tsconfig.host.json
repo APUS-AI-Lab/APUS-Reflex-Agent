@@ -68,6 +68,9 @@
     },
     {
       "path": "../../llm/token-meter"
+    },
+    {
+      "path": "../../shell/shell"
     }
   ]
 }

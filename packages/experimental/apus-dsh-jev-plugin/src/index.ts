@@ -7,8 +7,8 @@ import type { ReflexCapabilityId, ReflexCapabilityState, ReflexConnectionInput, 
 import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
 import { JevProviderError, SystemOneProvider, resolveJevApiKey, normalizeJevEndpoint } from './client.ts'
 import { createPooledFetch } from './pool.ts'
-import { validateJevRequest } from './protocol.ts'
-import type { JevFailure, JevOutcome, JevProvider, JevProviderInfo, JevRequest, JevSpec } from './types.ts'
+import { MAX_JEV_QUESTIONS, validateJevRequest } from './protocol.ts'
+import type { JevFailure, JevOutcome, JevProvider, JevProviderInfo, JevRequest, JevResponse, JevSpec } from './types.ts'
 
 export type * from './types.ts'
 export { JevProtocolError, MAX_JEV_CHOICES, MAX_JEV_QUESTIONS, parseJevResponse, validateJevRequest } from './protocol.ts'
@@ -54,6 +54,12 @@ export interface Config {
   readonly http2?: boolean
   /** Consecutive requests without a response after which the dedicated pool reopens; requires `keepAliveMs`. Omission never reopens it. */
   readonly resetAfterFailures?: number
+  /**
+   * Most questions one gateway request carries. A decision with more questions is sent as consecutive groups of this
+   * size in parallel requests with the same state, and their answers are merged into one response; gateway time grows
+   * with the question count, so parallel groups answer sooner. Omission sends every decision as one request.
+   */
+  readonly questionsPerRequest?: number
 }
 
 const DEFAULT_TIMEOUT_MS = 30_000
@@ -81,6 +87,7 @@ export default class Jev extends TypertRemoteService {
     keepAliveMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS),
     http2: z.boolean().default(false),
     resetAfterFailures: z.number().step(1).min(1),
+    questionsPerRequest: z.number().step(1).min(1).max(MAX_JEV_QUESTIONS),
   })
 
   private readonly providers = new Map<string, JevProvider>()
@@ -88,12 +95,14 @@ export default class Jev extends TypertRemoteService {
   private readonly defaultEffort: () => 'low' | 'high'
   private readonly configuredProvider: () => SystemOneProvider | undefined
   private readonly capabilityReaders = new Map<ReflexCapabilityId, () => ReflexCapabilityState>()
+  private readonly questionsPerRequest: number | undefined
 
   constructor(ctx: Context, config: Config) {
     super(ctx, 'jev', { namespace: 'reflex' })
     const providerId = config.providerId ?? DEFAULT_PROVIDER_ID
     this.defaultProviderId = providerId
     this.defaultEffort = () => config.effort.get()
+    this.questionsPerRequest = config.questionsPerRequest
     if (config.http2 === true && config.keepAliveMs === undefined) throw new Error('jev http2 requires keepAliveMs')
     if (config.resetAfterFailures !== undefined && config.keepAliveMs === undefined) throw new Error('jev resetAfterFailures requires keepAliveMs')
     const fetcher = config.keepAliveMs === undefined ? undefined
@@ -221,6 +230,39 @@ export default class Jev extends TypertRemoteService {
   }
 
   /**
+   * Send one resolved decision, split into parallel requests of at most `questionsPerRequest` questions when configured.
+   * The first failing group cancels the others and its error is the decision's error.
+   * @param provider - Provider pinned by the spec.
+   * @param spec - Resolved decision.
+   * @param signal - Caller cancellation.
+   * @returns One response holding every question's answer, with usage counters summed across groups.
+   */
+  private async send(provider: JevProvider, spec: JevSpec, signal: AbortSignal | undefined): Promise<JevResponse> {
+    const keys = Object.keys(spec.questions)
+    const size = this.questionsPerRequest
+    if (size === undefined || keys.length <= size) return await provider.decide(spec, signal)
+    const groups = Array.from({ length: Math.ceil(keys.length / size) }, (_, index) => keys.slice(index * size, (index + 1) * size))
+    const sibling = new AbortController()
+    const groupSignal = signal === undefined ? sibling.signal : AbortSignal.any([signal, sibling.signal])
+    const responses = await Promise.all(groups.map(async (group) => {
+      try {
+        const questions = Object.fromEntries(Object.entries(spec.questions).filter(([key]) => group.includes(key)))
+        return await provider.decide({ ...spec, questions }, groupSignal)
+      } catch (error) {
+        sibling.abort(error)
+        throw error
+      }
+    }))
+    const usage: Record<string, number> = {}
+    for (const response of responses) {
+      for (const [name, value] of Object.entries(response.usage ?? {})) usage[name] = (usage[name] ?? 0) + value
+    }
+    const [first] = responses
+    const answers = Object.fromEntries(responses.flatMap(response => Object.entries(response.answers)))
+    return { model: first?.model ?? spec.model, answers, ...Object.keys(usage).length === 0 ? {} : { usage } }
+  }
+
+  /**
    * Execute a typed decision, returning unknown when the provider is unavailable or invalid.
    * @param request - Host state and typed questions.
    * @param signal - Cancellation propagated to the caller.
@@ -232,7 +274,7 @@ export default class Jev extends TypertRemoteService {
     const spec = this.resolve(request)
     const provider = this.provider(spec.providerId)
     try {
-      const response = await provider.decide(spec, signal)
+      const response = await this.send(provider, spec, signal)
       return { kind: 'ok', spec, response }
     } catch (error) {
       if (signal?.aborted) throw error
