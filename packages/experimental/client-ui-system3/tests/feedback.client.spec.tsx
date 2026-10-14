@@ -15,7 +15,7 @@ const noStop = async (): Promise<void> => {}
 const noSteer = async (): Promise<void> => {}
 const model = { provider: 'fidoo', model: 'generation', reasoningEffort: 'low' }
 /** Runtime facts this suite does not exercise. */
-const EMPTY = { notices: [], taskFrame: null, interjection: null, memory: [] } as const
+const EMPTY = { notices: [], taskFrame: null, interjection: null, memory: [], recall: null } as const
 function inputs(overrides: Partial<System3FeedbackProps> = {}): System3FeedbackProps {
   return { facts: { subagentRun: null, ...EMPTY, history: [], entry: null, skill: null }, selection: { mode: 'auto', lastUsed: null, next: null, automatic: false },
     pending: false, pendingRequestId: null, running: false, opening: false, failed: false, available: true,
@@ -254,10 +254,10 @@ it('lists the turn supervision findings and says when the model was asked to cha
 it('shows the kept requirements as one line that opens to the task and each requirement verbatim', () => {
   const goal = { messageId: 'm1', text: '加一个汇总命令' }
   const { rerender } = render(<System3Feedback {...inputs({ facts: { entry: null, skill: null, subagentRun: null, history: [], notices: [],
-    interjection: null, memory: [], taskFrame: { goal, items: [] } } })} />)
+    interjection: null, memory: [], recall: null, taskFrame: { goal, items: [] } } })} />)
   expect(screen.queryByText(/任务卡/u)).toBeNull()
   rerender(<System3Feedback {...inputs({ facts: { entry: null, skill: null, subagentRun: null, history: [], notices: [],
-    interjection: null, memory: [], taskFrame: { goal, items: [{ messageId: 'm2', text: '别动 README.md' }, { messageId: 'm3', text: '测试必须全部通过' }] } } })} />)
+    interjection: null, memory: [], recall: null, taskFrame: { goal, items: [{ messageId: 'm2', text: '别动 README.md' }, { messageId: 'm3', text: '测试必须全部通过' }] } } })} />)
   expect(screen.getByText('任务卡 · 已记下 2 条要求')).toBeTruthy()
   expect(screen.getByText('任务：加一个汇总命令')).toBeTruthy()
   expect(screen.getByText('· 别动 README.md')).toBeTruthy()
@@ -265,7 +265,7 @@ it('shows the kept requirements as one line that opens to the task and each requ
 })
 it('says when a queued requirement was moved into the current step', () => {
   render(<System3Feedback {...inputs({ running: true, facts: { entry: null, skill: null, subagentRun: null, history: [], notices: [],
-    taskFrame: null, memory: [], interjection: { messageId: 'm2' } } })} />)
+    taskFrame: null, memory: [], recall: null, interjection: { messageId: 'm2' } } })} />)
   expect(screen.getByText('已把你刚才补充的要求插入正在进行的这一轮')).toBeTruthy()
 })
 it('reads a continued route as the suggestion in the details', () => {
@@ -348,7 +348,7 @@ it('lists kept memory verbatim with its checkpoint and score, collapsed by defau
   const { container } = render(<MemoryCard memory={[
     { checkpoint: 27, seq: 4, messageId: 'm4', text: '别动 README.md', probability: 0.92 },
     { checkpoint: 31, seq: 9, messageId: 'm9', text: '端口改成 8443', probability: 0.814 },
-  ]} t={t} />)
+  ]} kind="kept" t={t} />)
   expect(screen.getByText('记忆卡 · 压缩后保留 2 条原话')).toBeTruthy()
   expect(container.querySelector('details')?.open).toBe(false)
   expect(screen.getByText('· 别动 README.md（检查点 27 · 评分 92）')).toBeTruthy()
@@ -356,11 +356,21 @@ it('lists kept memory verbatim with its checkpoint and score, collapsed by defau
 })
 
 it('shows the memory card in the dock only once a message is kept', () => {
-  const facts = { entry: null, skill: null, subagentRun: null, history: [], notices: [], interjection: null, taskFrame: null }
+  const facts = { entry: null, skill: null, subagentRun: null, history: [], notices: [], interjection: null, taskFrame: null, recall: null }
   const { rerender } = render(<System3Feedback {...inputs({ facts: { ...facts, memory: [] } })} />)
   expect(screen.queryByText(/记忆卡/u)).toBeNull()
   rerender(<System3Feedback {...inputs({ facts: { ...facts, memory: [
     { checkpoint: 27, seq: 4, messageId: 'm4', text: '别动 README.md', probability: 0.92 },
   ] } })} />)
   expect(screen.getByText('记忆卡 · 压缩后保留 1 条原话')).toBeTruthy()
+})
+
+it('shows the recall card above the memory card while the latest input recalled something', () => {
+  const facts = { entry: null, skill: null, subagentRun: null, history: [], notices: [], interjection: null, taskFrame: null, memory: [] }
+  const item = { checkpoint: 27, seq: 4, messageId: 'm4', text: '部署在 us-east-1', probability: 0.89 }
+  const { rerender } = render(<System3Feedback {...inputs({ facts: { ...facts, recall: { messageId: 'q1', items: [] } } })} />)
+  expect(screen.queryByText(/本轮召回/u)).toBeNull()
+  rerender(<System3Feedback {...inputs({ facts: { ...facts, recall: { messageId: 'q2', items: [item] } } })} />)
+  expect(screen.getByText('本轮召回 · 1 条已压缩的原话')).toBeTruthy()
+  expect(screen.getByText('· 部署在 us-east-1（检查点 27 · 评分 89）')).toBeTruthy()
 })

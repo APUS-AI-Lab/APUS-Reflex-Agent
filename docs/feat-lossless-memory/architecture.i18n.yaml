@@ -1,0 +1,37 @@
+# Bilingual-pair consistency record for architecture.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-lossless-memory/architecture.md
+/:
+  en: 52ecfcc5e5cda79b
+  zh: eee9090f7a951322
+/apus-reflex-agent-infinity-memory-framework-capabilities-and-acceptance:
+  en: f9c906e7c77b6ce7
+  zh: 455cee31aa50190e
+/apus-reflex-agent-infinity-memory-framework-capabilities-and-acceptance/summary:
+  en: 852be97883130820
+  zh: 0602985911d85b9f
+/apus-reflex-agent-infinity-memory-framework-capabilities-and-acceptance/target-capabilities:
+  en: 0fa1d53cf53d2aa6
+  zh: 3d0d5894e13a4351
+/apus-reflex-agent-infinity-memory-framework-capabilities-and-acceptance/end-to-end-mechanism:
+  en: fd8487cd0e872ffc
+  zh: bfca6702b4d2f577
+/apus-reflex-agent-infinity-memory-framework-capabilities-and-acceptance/mapping-to-the-existing-basis:
+  en: 2a15f08c329e98aa
+  zh: cda2fed633500edc
+/apus-reflex-agent-infinity-memory-framework-capabilities-and-acceptance/main-compared-with-feat-recallable-memory:
+  en: 65f2fc9975d48554
+  zh: 03487c5312ddb80a
+/apus-reflex-agent-infinity-memory-framework-capabilities-and-acceptance/architecture-constraints:
+  en: d02d5d908a1fea20
+  zh: 32f994ab72c2f600
+/apus-reflex-agent-infinity-memory-framework-capabilities-and-acceptance/iteration-items:
+  en: aae81372163ebe83
+  zh: 64b1e1329006d279
+/apus-reflex-agent-infinity-memory-framework-capabilities-and-acceptance/acceptance-criteria:
+  en: f8b302a490912e6b
+  zh: 7e2ee938ad1cdc78
+/apus-reflex-agent-infinity-memory-framework-capabilities-and-acceptance/risks-and-open-questions:
+  en: 58c71cd1bab49a58
+  zh: ea46defd31cad00d

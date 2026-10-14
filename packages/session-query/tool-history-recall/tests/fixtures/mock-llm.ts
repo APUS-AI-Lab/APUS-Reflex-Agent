@@ -21,7 +21,7 @@ function messageText(message: RequestMessage): string {
 function lastText(messages: readonly RequestMessage[]): string {
   for (let index = messages.length - 1; index >= 0; index -= 1) {
     const text = messageText(messages[index]!)
-    if (!text.includes('<compacted-summary>') && !text.includes('[System3 记忆]') && MARKERS.some(marker => text.includes(marker))) return text
+    if (!text.includes('<compacted-summary>') && !/\[System3 记忆(?:召回)?\]/u.test(text) && MARKERS.some(marker => text.includes(marker))) return text
   }
   return ''
 }
@@ -75,7 +75,7 @@ class RecallMockAdapter extends LlmAdapter {
       return
     }
     if (latest.includes('What was the access code')) {
-      const remembered = /\[System3 记忆\][\s\S]*?(ALPHA-\d+)/u.exec(allText(options.messages))?.[1]
+      const remembered = /\[System3 记忆(?:召回)?\][\s\S]*?(ALPHA-\d+)/u.exec(allText(options.messages))?.[1]
       if (remembered !== undefined) {
         yield * text(`From memory: the code is ${remembered}.`)
         return

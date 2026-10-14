@@ -1,0 +1,130 @@
+{
+  "formatVersion": 2,
+  "roots": [
+    {
+      "key": "event:system3/memory-recall",
+      "kind": "event",
+      "event": "system3/memory-recall",
+      "surface": false,
+      "digest": "e467cf9bf8c7f6c3ea3843bd6df1ceae8107078a893b7deb386af8e26f8d30b7",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "data",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "ignorable",
+                "type": 7,
+                "optional": true
+              },
+              {
+                "name": "seq",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "time",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 8,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "items",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "messageId",
+                "type": 5,
+                "optional": false
+              },
+              {
+                "name": "scanned",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "version",
+                "type": 6,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "array",
+            "element": 3
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "checkpoint",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "messageId",
+                "type": 5,
+                "optional": false
+              },
+              {
+                "name": "probability",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "seq",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "text",
+                "type": 5,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "literal",
+            "value": 1
+          },
+          {
+            "kind": "literal",
+            "value": true
+          },
+          {
+            "kind": "literal",
+            "value": "system3/memory-recall"
+          }
+        ]
+      }
+    }
+  ],
+  "types": []
+}

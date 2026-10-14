@@ -1,0 +1,63 @@
+# Test-only patch over the shipped headless profile: compaction, recall, System3 memory scoring, and per-turn memory recall in shadow mode against a local Jev.
+- id: headless-startup
+  disabled: true
+
+- id: headless-runner
+  disabled: true
+
+- id: agent-loop
+  config:
+    agents:
+      - id: main
+        provider: recall-mock
+        model: recall-mock
+        cwd: !!js process.cwd()
+
+- id: compaction-basic
+  config:
+    recallFooter: true
+    thresholdRatio: 0.5
+    headroomTokens: 0
+    retainRatio: 0.1
+    maxTokens: 512
+
+- insert:
+    - id: history-recall-mock-llm
+      name: '../../../../../session-query/tool-history-recall/tests/fixtures/mock-llm.ts'
+
+    - id: tool-history-recall
+      name: '@deepseek-ai/dsh-tool-history-recall'
+
+    - id: jev
+      name: '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
+      config:
+        endpoint: !!js process.env.MEMORY_E2E_JEV_ENDPOINT
+        model: APUS-OpenJev-v1-9B-5949
+        timeoutMs: 5000
+
+    - id: system3
+      name: '@deepseek-ai/dsh-experimental-system3'
+      config:
+        privacyMode: controlled
+        approvedRemoteIds: [jev]
+        approvedRemoteDataClasses: [public]
+        jevRouteId: jev
+        jevExecutionDomain: network
+        memoryScoring:
+          mode: active
+          yes: 0.5
+          no: 0.3
+          deadlineMs: 5000
+          sessionDataClasses: [public]
+          maxCandidates: 8
+          maxMessageChars: 400
+          maxItems: 5
+        memoryRecall:
+          mode: shadow
+          yes: 0.7
+          no: 0.3
+          deadlineMs: 5000
+          sessionDataClasses: [public]
+          maxCandidates: 15
+          maxInputChars: 400
+          maxMessageChars: 400

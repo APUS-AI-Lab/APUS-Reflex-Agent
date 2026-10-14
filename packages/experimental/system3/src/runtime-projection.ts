@@ -2,7 +2,8 @@
 import { z, type ZodType } from 'zod'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import type { SessionRequestId, ModelSelection } from '@deepseek-ai/dsh-api-session-controller/types'
-import { assistantStreamFirstTokenTime, isVisibleChunk, type AssistantStreamRecord, type MessageId } from '@deepseek-ai/dsh-llm'
+import { assistantStreamFirstTokenTime, isVisibleChunk, type AssistantStreamRecord, type MessageId,
+  type UserMessage } from '@deepseek-ai/dsh-llm'
 import type { ProjectionDefinition } from '@deepseek-ai/dsh-session-projection'
 import type { System3RuntimeView } from './types.ts'
 import type {} from './entry-routing.ts'
@@ -26,6 +27,24 @@ interface System3RuntimeState extends System3RuntimeView {
   readonly imageInSession: boolean
   /** Route chosen or retained by the latest entry decision; null when that decision left the baseline. */
   readonly route: { readonly requestId: SessionRequestId; readonly selection: ModelSelection } | null
+  /** The person's text inputs still in the conversation, oldest first; compaction moves them to `archive`. */
+  readonly inputs: readonly System3PersonInput[]
+  /** The person's text inputs that compaction moved out of the context (L2), oldest first, verbatim and complete. */
+  readonly archive: readonly System3ArchivedInput[]
+}
+
+/** One text input of the person, verbatim. */
+export interface System3PersonInput {
+  /** Seq of the person's `user/message` event. */
+  readonly seq: number
+  readonly messageId: MessageId
+  readonly text: string
+}
+
+/** One input of the person that left the context, with the checkpoint that `history_read` reads it back through. */
+export interface System3ArchivedInput extends System3PersonInput {
+  /** Seq of the first `compaction/summary` event whose span contained the input. */
+  readonly checkpoint: number
 }
 
 declare module '@deepseek-ai/dsh-session-projection/types' {
@@ -50,6 +69,9 @@ const entrySchema = z.object({ requestId, phase: z.enum(['deciding', 'decided'])
 const taskGoal = z.object({ text: z.string(), messageId: z.string().optional(), goalId: z.string().optional() })
   .transform(({ text, messageId, goalId }) => ({ text, ...messageId === undefined ? {} : { messageId },
     ...goalId === undefined ? {} : { goalId } }))
+const messageId = z.string().transform(value => brandString<MessageId>(value))
+const personInput = z.object({ seq: z.number(), messageId, text: z.string() })
+const memoryItem = z.object({ checkpoint: z.number(), seq: z.number(), messageId: z.string(), text: z.string(), probability: z.number() })
 const viewSchema = z.object({
   entry: entrySchema.nullable(),
   history: z.array(entrySchema),
@@ -62,17 +84,18 @@ const viewSchema = z.object({
   notices: z.array(z.object({ rule: z.string(), subject: z.string().nullable(), count: z.number(), advised: z.boolean() })),
   taskFrame: z.object({ goal: taskGoal, items: z.array(z.object({ messageId: z.string(), text: z.string() })) }).nullable(),
   interjection: z.object({ messageId: z.string() }).nullable(),
-  memory: z.array(z.object({ checkpoint: z.number(), seq: z.number(), messageId: z.string(), text: z.string(),
-    probability: z.number() })),
+  memory: z.array(memoryItem),
+  recall: z.object({ messageId: z.string(), items: z.array(memoryItem) }).nullable(),
 })
 const stateSchema: ZodType<System3RuntimeState> = z.object({ entry: viewSchema.shape.entry, history: viewSchema.shape.history,
   skill: viewSchema.shape.skill,
   subagentRun: viewSchema.shape.subagentRun, notices: viewSchema.shape.notices, taskFrame: viewSchema.shape.taskFrame,
-  interjection: viewSchema.shape.interjection, memory: viewSchema.shape.memory,
+  interjection: viewSchema.shape.interjection, memory: viewSchema.shape.memory, recall: viewSchema.shape.recall,
   header: selection.nullable(), currentTurn: z.number().nullable(), currentStep: z.number().nullable(),
   entryTurn: z.number().nullable(), startRequestId: requestId.nullable(),
-  skillMessageId: z.string().transform(value => brandString<MessageId>(value)).nullable(),
-  imageInSession: z.boolean(), route: z.object({ requestId, selection }).nullable() })
+  skillMessageId: messageId.nullable(),
+  imageInSession: z.boolean(), route: z.object({ requestId, selection }).nullable(),
+  inputs: z.array(personInput), archive: z.array(personInput.extend({ checkpoint: z.number() })) })
 
 /** Most recent accepted mid-run inputs kept per run for display. */
 const STEERS_KEPT = 3
@@ -83,6 +106,12 @@ const MEMORY_KEPT = 50
 /** Most recent earlier entry decisions kept so their turns keep a route line. */
 const HISTORY_KEPT = 100
 
+/** Text of a person's message, its text blocks joined; undefined when it has none. */
+function personText(content: UserMessage['content']): string | undefined {
+  const text = content.flatMap(block => block.type === 'text' ? [block.text] : []).join('\n').trim()
+  return text === '' ? undefined : text
+}
+
 /** Content deltas and completed content blocks prove response; protocol-only records do not. */
 function hasResponseContent(stream: readonly AssistantStreamRecord[]): boolean {
   return assistantStreamFirstTokenTime(stream) !== undefined
@@ -92,17 +121,31 @@ function hasResponseContent(stream: readonly AssistantStreamRecord[]): boolean {
 
 /** Fold advice and adoption; confirm request use from output or a streamed attempt in the exact input turn. */
 export const system3RuntimeProjection = {
-  key: 'system3Runtime', stateVersion: 14, stateSchema,
+  key: 'system3Runtime', stateVersion: 16, stateSchema,
   init: () => ({ entry: null, history: [], skill: null, subagentRun: null, notices: [], taskFrame: null, interjection: null, memory: [],
+    recall: null,
     header: null,
     currentTurn: null, currentStep: null, entryTurn: null, startRequestId: null, skillMessageId: null, imageInSession: false,
-    route: null }),
+    route: null, inputs: [], archive: [] }),
   wire: { viewSchema, view: state => ({ entry: state.entry, history: state.history, skill: state.skill, subagentRun: state.subagentRun,
-    notices: state.notices, taskFrame: state.taskFrame, interjection: state.interjection, memory: state.memory }) },
+    notices: state.notices, taskFrame: state.taskFrame, interjection: state.interjection, memory: state.memory,
+    recall: state.recall }) },
   apply(state, event) {
     if (!state.imageInSession && (event.type === 'user/message' || event.type === 'tool/result')) {
       const content = event.type === 'user/message' ? event.data.content : event.data.message.content
       if (content.some(block => block.type === 'image')) state = { ...state, imageInSession: true }
+    }
+    if (event.type === 'user/message' && event.data.source.kind === 'user') {
+      const text = personText(event.data.content)
+      if (text !== undefined) state = { ...state, inputs: [...state.inputs, { seq: event.seq, messageId: event.data.id, text }] }
+    }
+    if (event.type === 'compaction/summary' && state.inputs.length > 0) {
+      const shadowed = new Set<number>(event.data.shadowedSeqs)
+      const moved = state.inputs.filter(input => shadowed.has(input.seq))
+      if (moved.length > 0) {
+        state = { ...state, inputs: state.inputs.filter(input => !shadowed.has(input.seq)),
+          archive: [...state.archive, ...moved.map(input => ({ ...input, checkpoint: event.seq }))] }
+      }
     }
     if (event.type === 'turn/start' && (state.notices.length > 0 || state.interjection !== null)) state = { ...state, notices: [], interjection: null }
     if (event.type === 'system3/interjection') return event.data.delivered ? { ...state, interjection: { messageId: event.data.messageId } } : state
@@ -113,6 +156,9 @@ export const system3RuntimeProjection = {
     if (event.type === 'system3/memory-score') {
       const kept = event.data.items.map(item => ({ checkpoint: event.data.checkpoint, ...item }))
       return kept.length === 0 ? state : { ...state, memory: [...state.memory, ...kept].slice(-MEMORY_KEPT) }
+    }
+    if (event.type === 'system3/memory-recall') {
+      return { ...state, recall: { messageId: event.data.messageId, items: event.data.items.map(item => ({ ...item })) } }
     }
     if (event.type === 'system3/task-frame') return { ...state, taskFrame: { goal: event.data.goal, items: event.data.items } }
     if (event.type === 'step/start') return { ...state, currentTurn: event.data.turn, currentStep: event.data.step }

@@ -1240,7 +1240,7 @@ export interface Config {
 ## `@deepseek-ai/dsh-experimental-system3`
 
 - `refs`: [`System3DataClass`](../packages/experimental/system3-policy/src/index.ts) · [`System3ExecutionDomain`](../packages/experimental/system3-policy/src/index.ts) · [`System3PrivacyMode`](../packages/experimental/system3-policy/src/index.ts)
-- `source`: [`packages/experimental/system3/src/index.ts:58`](../packages/experimental/system3/src/index.ts)
+- `source`: [`packages/experimental/system3/src/index.ts:60`](../packages/experimental/system3/src/index.ts)
 
 ```ts config-catalog
 /** Configures the default local-first privacy boundary. */
@@ -1275,6 +1275,8 @@ export interface Config {
   readonly taskFrame?: false | System3TaskFrameConfig
   /** Jev scoring of the person's messages in each compacted span; kept messages return to the model verbatim. */
   readonly memoryScoring?: false | System3MemoryScoringConfig
+  /** Per-turn recall of the person's compacted inputs against each new input. Defaults to `false`. */
+  readonly memoryRecall?: false | System3MemoryRecallConfig
   /**
    * Jev review of each goal completion; needs `taskFrame`, with mode `shadow` or `active` when the review is not `off`.
    * `false` or omission disables it.
@@ -1410,6 +1412,18 @@ export interface System3MemoryScoringConfig extends System3DecisionSettings {
   readonly maxMessageChars: number
   /** Most recent kept messages shown to the main model across all checkpoints. */
   readonly maxItems: number
+}
+
+/** Mode, thresholds, and size limits of per-turn memory recall; deployment-owned. */
+export interface System3MemoryRecallConfig extends System3DecisionSettings {
+  /** Data classes of Session text sent to Jev, checked against the privacy policy. */
+  readonly sessionDataClasses: readonly System3DataClass[]
+  /** Compacted inputs judged for one input; each becomes one Jev question, so at most 16. */
+  readonly maxCandidates: number
+  /** Characters of the person's current input quoted to Jev; a longer input is judged by its beginning. */
+  readonly maxInputChars: number
+  /** Characters of each compacted input quoted to Jev and shown to the main model; a longer one is shown as an excerpt. */
+  readonly maxMessageChars: number
 }
 
 /** Mode, thresholds, and limits of the completion review; deployment-owned. */

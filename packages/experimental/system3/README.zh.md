@@ -79,6 +79,10 @@ const decision = ctx.system3.route(candidates, 'local-9b')
 
 `memoryScoring: { mode, yes, no, deadlineMs, sessionDataClasses, maxCandidates, maxMessageChars, maxItems }` 默认为 `false`；所有字段必填，`maxCandidates` 最大为 16，即 Jev 问题上限。System3 在顶层 Agent 的用户纯文本消息（不超过 `maxMessageChars`）提交时记住它们。当 `compaction/summary` 替换了其中一部分时，下一步会发起一次 Jev 请求（决策 `memory.score`），且不等待其结果：区间内最近的至多 `maxCandidates` 条消息各对应一个是非问题，逐条引用原话，询问之后的工作是否仍须逐字遵守或引用它。概率不低于 `yes` 的消息被保留。`active` 模式下，至少保留一条消息的区间写入 `system3/memory-score`，包含检查点 id（`compaction/summary` 的序号）、扫描条数，以及每条保留消息的序号、id、原文与概率；最近的 `maxItems` 条保留消息通过 `system3:memory` 运行时上下文交给模型，内容读取自 `system3Runtime` 投影，因此恢复会话后仍然存在。`shadow` 只记录 `system3/judgement`，`off` 不发起询问。隐私拒绝、Jev 失败与 `deadlineMs` 超时都不保留任何消息。插件启动前提交的消息、委派的子 Agent、附件与超长消息不参与评分。投影以 `memory` 暴露保留的消息，客户端在 dock 中显示为记忆卡。检查点 id 即 `dsh-tool-history-recall` 接受的 id。
 
+### 记忆召回
+
+`memoryRecall: { mode, yes, no, deadlineMs, sessionDataClasses, maxCandidates, maxInputChars, maxMessageChars }` 默认为 `false`，可以单独启用，也可以与 `memoryScoring` 同时启用。所有字段必填，`maxCandidates` 最大为 16，即 Jev 问题上限。`system3Runtime` 投影逐字、完整地记录会话里用户的每条纯文本输入；某条输入被 `compaction/summary` 遮蔽后，连同该检查点移入归档（L2）。在此之前没有可召回的内容，也不发起 Jev 请求。当循环领取顶层 Agent 的用户纯文本输入时，下一次请求组装会在请求发出前等待一次 Jev 请求（决策 `memory.recall`）：每条归档输入对应一个是非问题，引用当前输入的前 `maxInputChars` 个字符与归档输入的前 `maxMessageChars` 个字符，询问主模型处理当前输入时是否需要看到它。归档输入多于 `maxCandidates` 条时，先取与输入共享字符对最多的，其次取记忆评分保留的（L1），再取较新的。概率不低于 `yes` 的输入被召回。`active` 模式下，召回的原文成为该次请求的 `system3:memory` 运行时上下文，超过 `maxMessageChars` 的输入显示开头部分，并注明原文长度和供 `history_read` 读取的检查点；同时写入 `system3/memory-recall`，包含输入的消息 id、判断条数，以及每条召回输入的检查点、序号、id、完整原文与概率；某条输入什么都没有召回而之前显示过召回时，写入一次空召回，使后续步骤不再显示旧内容。`active` 召回独占 `system3:memory` 上下文，因此 `memoryScoring` 保留的消息只通过召回交给模型。`shadow` 只记录 `system3/judgement`，`off` 不发起询问。隐私拒绝、Jev 失败与 `deadlineMs` 超时时，该输入不召回任何内容。Jev 只挑选原文，从不改写、提炼或删减。投影以 `recall` 暴露最近一次召回。
+
 ### 完成核验
 
 `completionReview: { mode, yes, no, deadlineMs, sessionDataClasses, maxRefusals, evidenceCalls, resultChars }` 默认为 `false`，且依赖 `taskFrame`；没有任务卡时启用会在加载时失败。`active` 或 `shadow` 核验要求 `taskFrame.mode` 为 `active` 或 `shadow`；`off` 核验可以搭配 `off` 任务卡。所有字段都必填。顶层 Agent 对任务卡所跟随的 DSH 目标调用 `update_goal` 且 action 为 `complete` 时，工具运行前发一次 Jev 请求（决策 `completion.review`），为目标和任务卡中的每条要求各问一道是非题（`goal`、`r1`…`rN`）。Jev 只读取最近 `evidenceCalls` 次工具调用的摘要：每次调用的主要参数（命令、路径、action、查询或 URL），以及结果开头和结尾各 `resultChars` 个字符；模型自己的文字和它的 `update_goal` 调用不进入摘要。概率不高于 `no` 是有把握的“未满足”，不低于 `yes` 是“已满足”。`active` 模式下，目标或任一要求被有把握地判为未满足时拒绝这次调用，模型收到的工具结果就是拒绝说明；同一目标被拒绝 `maxRefusals` 次后，该目标之后的完成不再被拒绝。`shadow` 只记录核验、不拒绝，`off` 不发请求。插件卸载会取消在途核验，将调用交给其余工具策略，不拒绝，也不新增核验记录。用户取消仍阻止执行。决策调用在进入时已被取消则不发请求；取消后收到的提供方答复不写判断记录。每次核验先写入 `system3/judgement`，包含完整请求和响应，再写入 `system3/completion-review`，包含 `goalId`、`decision`（`complete`、`incomplete` 或 `unsure`）、未满足要求的消息 id（`unmet`）、`goalUnmet` 和 `refused`。隐私拒绝、Jev 失败和超过 `deadlineMs` 时按 `unsure` 放行。委派出的子 Agent、嵌套调用、其他目标操作，以及任务卡未跟随的目标都不核验。问法和阈值依据在已部署 Jev 上运行的标注集确定（[测试](tests/completion-review.e2e.ts)）。 拒绝额度按 Session 和目标隔离，独立 root fork 不共享。等待成功 Jev 答复期间任务卡改变时，旧答案记录为 `unsure`；active 使用同一额度拒绝过期申请，并引用当前任务卡原话要求重新核验。
@@ -131,6 +135,13 @@ const decision = ctx.system3.route(candidates, 'local-9b')
 - 检查点 <checkpoint id>，#<seq>：<kept message, verbatim>
 ```
 
+##### 记忆召回
+
+```markdown
+[System3 记忆召回] 以下用户原话所在的对话已被压缩，经评分判断与当前输入相关（均为原话）。需要上下文时，用 history_read 读取对应检查点的原文：
+- 检查点 <checkpoint id>，#<seq>：<recalled message, verbatim>
+```
+
 ##### 完成核验的拒绝说明
 
 ```markdown
@@ -150,11 +161,11 @@ const decision = ctx.system3.route(candidates, 'local-9b')
 
 #### Token effect
 
-在隐私和大小检查允许时，入口路由为每个符合条件的准入输入增加一次 Jev 调用；保留 provider 实际报告的 usage。evidence 方法限制调用方投影，usage 记录区分 provider 计数与估算。每条监督建议增加 50 到 100 个输入 token，交接包增加被转交消息本身、约 60 个 token 和一次 Jev 请求；`advise` 模式下 `missing-evidence` 每个轮次最多增加一个模型步骤。输出折叠不调用模型，并从工具结果中去掉被折叠的字符。任务卡为之后的每条消息增加一次 Jev 请求，与步骤并行；每次变化追加一条包含目标和已记要求的运行时上下文快照。完成核验为每次被核验的完成增加一次 Jev 请求，`update_goal` 调用最多等待 `deadlineMs`；一次拒绝增加约 80 个 token，外加引用的目标和要求。 任务卡忽略基于已替换卡的判断；仍排队的消息保留到下一轮，已送入步骤的消息最多补判一次。
+在隐私和大小检查允许时，入口路由为每个符合条件的准入输入增加一次 Jev 调用；保留 provider 实际报告的 usage。evidence 方法限制调用方投影，usage 记录区分 provider 计数与估算。每条监督建议增加 50 到 100 个输入 token，交接包增加被转交消息本身、约 60 个 token 和一次 Jev 请求；`advise` 模式下 `missing-evidence` 每个轮次最多增加一个模型步骤。输出折叠不调用模型，并从工具结果中去掉被折叠的字符。任务卡为之后的每条消息增加一次 Jev 请求，与步骤并行；每次变化追加一条包含目标和已记要求的运行时上下文快照。完成核验为每次被核验的完成增加一次 Jev 请求，`update_goal` 调用最多等待 `deadlineMs`；一次拒绝增加约 80 个 token，外加引用的目标和要求。 任务卡忽略基于已替换卡的判断；仍排队的消息保留到下一轮，已送入步骤的消息最多补判一次。保留了记忆时，记忆召回会在每条符合条件的输入的首次请求前增加一次 Jev 请求，并把记忆上下文换成只包含被召回的消息。
 
 #### KV Cache effect
 
-观测与 shadow receipt 不改变生成请求前缀。监督建议追加在最新工具结果之后，缓存前缀不变。工具结果在进入历史前就已折叠，之后的请求原样复用。任务卡变化时在最新消息之后追加新的运行时上下文快照，缓存前缀不变。完成核验的拒绝说明是追加在最新消息之后的工具结果，缓存前缀不变。采纳生成模型切换可能失去 provider 缓存复用；工具 schema 不变。
+观测与 shadow receipt 不改变生成请求前缀。监督建议追加在最新工具结果之后，缓存前缀不变。工具结果在进入历史前就已折叠，之后的请求原样复用。任务卡变化时在最新消息之后追加新的运行时上下文快照，缓存前缀不变。完成核验的拒绝说明是追加在最新消息之后的工具结果，缓存前缀不变。采纳生成模型切换可能失去 provider 缓存复用；工具 schema 不变。一次召回只改变追加在最新消息之后的运行时上下文快照，缓存前缀不变。
 
 ## 已知限制与后续工作
 
@@ -164,6 +175,7 @@ const decision = ctx.system3.route(candidates, 'local-9b')
 - 服务不执行操作系统级隐私隔离。workspace、环境变量、子进程出网和导出授权仍 由 Host 负责。
 - 入口决策不含会话历史；新文本依赖历史时应弃权。数据类别与候选描述由部署声明；本包无法验证其准确性，也不证明路由质量或成本收益。
 - 完成核验依赖 9B 的 Jev 模型阅读有界摘要：它可能拒绝已完成的工作，也可能放过未完成的工作；它只看到摘要保留的内容，并在失败时放行。同一目标的 `maxRefusals` 次拒绝用完后，该目标之后的完成即使被判为未满足也会执行。
+- 记忆召回每条输入最多用 9B Jev 模型判断 16 条保留的记忆；保留的记忆更多时，字符对预筛可能漏掉相关记忆，且这次判断的耗时会加在该输入的首次请求上。
 
 <a id="dev-note"></a>
 ### 开发备注

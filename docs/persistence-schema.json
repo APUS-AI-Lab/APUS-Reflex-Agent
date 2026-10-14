@@ -19615,6 +19615,130 @@
       }
     },
     {
+      "key": "event:system3/memory-recall",
+      "kind": "event",
+      "event": "system3/memory-recall",
+      "surface": false,
+      "digest": "e467cf9bf8c7f6c3ea3843bd6df1ceae8107078a893b7deb386af8e26f8d30b7",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "data",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "ignorable",
+                "type": 7,
+                "optional": true
+              },
+              {
+                "name": "seq",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "time",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 8,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "items",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "messageId",
+                "type": 5,
+                "optional": false
+              },
+              {
+                "name": "scanned",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "version",
+                "type": 6,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "array",
+            "element": 3
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "checkpoint",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "messageId",
+                "type": 5,
+                "optional": false
+              },
+              {
+                "name": "probability",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "seq",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "text",
+                "type": 5,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "literal",
+            "value": 1
+          },
+          {
+            "kind": "literal",
+            "value": true
+          },
+          {
+            "kind": "literal",
+            "value": "system3/memory-recall"
+          }
+        ]
+      }
+    },
+    {
       "key": "event:system3/memory-score",
       "kind": "event",
       "event": "system3/memory-score",
@@ -34800,7 +34924,7 @@
         "packages/experimental/system3/src/memory.ts#System3MemoryScore"
       ],
       "sources": [
-        "packages/experimental/system3/src/memory.ts:40"
+        "packages/experimental/system3/src/memory.ts:42"
       ]
     },
     {
@@ -35020,6 +35144,93 @@
       },
       "names": [],
       "sources": []
+    },
+    {
+      "digest": "20514d56edff78523c46388a64e7d1b6fd800cdb8837887c387851e9441d07f1",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "items",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "messageId",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "scanned",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "version",
+                "type": 5,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "array",
+            "element": 2
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "checkpoint",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "messageId",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "probability",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "seq",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "text",
+                "type": 4,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "literal",
+            "value": 1
+          }
+        ]
+      },
+      "names": [
+        "packages/experimental/system3/src/memory.ts#System3MemoryRecall"
+      ],
+      "sources": [
+        "packages/experimental/system3/src/memory.ts:71"
+      ]
     },
     {
       "digest": "20a57544bbf204dacd1ae6beb2ab29444365c3c869f2afdf489dcdcbc3d9c8c5",
@@ -38492,7 +38703,7 @@
         "packages/experimental/system3/src/memory.ts#System3MemoryItem"
       ],
       "sources": [
-        "packages/experimental/system3/src/memory.ts:30"
+        "packages/experimental/system3/src/memory.ts:32"
       ]
     },
     {
@@ -97122,6 +97333,20 @@
       "sources": []
     },
     {
+      "digest": "a2e891e00014d65b268909f56c750666c02a17d1ae119ec5462d7d6a619557e7",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "system3/memory-recall"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "a3a259a1aa5401af786ce08c4a8419681d3000d73467991b5fc563389bc4ebd2",
       "schema": {
         "root": 0,
@@ -99547,6 +99772,59 @@
       "sources": []
     },
     {
+      "digest": "ae2254def49c26bfcede6b999a55f6d0d73c36a7b85135e75d4cdd02f731d3e0",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "checkpoint",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "messageId",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "probability",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "seq",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "text",
+                "type": 2,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          }
+        ]
+      },
+      "names": [
+        "packages/experimental/system3/src/memory.ts#System3RecalledItem"
+      ],
+      "sources": [
+        "packages/experimental/system3/src/memory.ts:65"
+      ]
+    },
+    {
       "digest": "ae63d9d1080ed8945031594d93f8d96651d7101b848719cc3e1475875cd3d649",
       "schema": {
         "root": 0,
@@ -99582,6 +99860,59 @@
           {
             "kind": "literal",
             "value": "todo/write"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "af3e98153a4b2af8fe412192b05316361db8ec609de715ec836c92b22376380a",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "array",
+            "element": 1
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "checkpoint",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "messageId",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "probability",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "seq",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "text",
+                "type": 3,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
           }
         ]
       },
@@ -111577,6 +111908,128 @@
           {
             "kind": "literal",
             "value": "append"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "e467cf9bf8c7f6c3ea3843bd6df1ceae8107078a893b7deb386af8e26f8d30b7",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "data",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "ignorable",
+                "type": 7,
+                "optional": true
+              },
+              {
+                "name": "seq",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "time",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 8,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "items",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "messageId",
+                "type": 5,
+                "optional": false
+              },
+              {
+                "name": "scanned",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "version",
+                "type": 6,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "array",
+            "element": 3
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "checkpoint",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "messageId",
+                "type": 5,
+                "optional": false
+              },
+              {
+                "name": "probability",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "seq",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "text",
+                "type": 5,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "literal",
+            "value": 1
+          },
+          {
+            "kind": "literal",
+            "value": true
+          },
+          {
+            "kind": "literal",
+            "value": "system3/memory-recall"
           }
         ]
       },

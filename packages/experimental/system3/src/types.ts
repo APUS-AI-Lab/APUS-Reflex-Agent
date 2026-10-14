@@ -83,6 +83,15 @@ export interface System3RuntimeView {
   readonly interjection: { readonly messageId: string } | null
   /** Compacted messages of the person that memory scoring kept, oldest first, with the checkpoint that replaced each. */
   readonly memory: readonly System3MemoryView[]
+  /** Memories recalled for the person's latest recalled input; null before the first recall. */
+  readonly recall: System3RecallView | null
+}
+
+/** The memories recalled for one person input as the Client shows them. */
+export interface System3RecallView {
+  /** Id of the person's message the recall answers. */
+  readonly messageId: string
+  readonly items: readonly System3MemoryView[]
 }
 
 /** One kept message as the Client shows it; the text is the person's own message. */

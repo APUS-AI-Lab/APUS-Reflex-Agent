@@ -37,7 +37,7 @@ function standardPresetWithRecall(): string {
   return path
 }
 
-/** A System One gateway that keeps only messages carrying a literal access code. */
+/** A System One gateway that keeps messages carrying a literal access code and recalls them only for a question about the code. */
 async function startGateway(): Promise<{ readonly endpoint: string; readonly requests: number[]; close(): void }> {
   const requests: number[] = []
   const server = createServer((request, response) => {
@@ -46,8 +46,12 @@ async function startGateway(): Promise<{ readonly endpoint: string; readonly req
     request.on('end', () => {
       const parsed = JSON.parse(body) as { model: string; questions: Record<string, { instructions?: string }> }
       requests.push(Object.keys(parsed.questions).length)
-      const answers = Object.fromEntries(Object.entries(parsed.questions).map(([key, question]) =>
-        [key, { type: 'noul', noul: /ALPHA-\d+/u.test(question.instructions ?? '') ? 0.93 : 0.04 }]))
+      const answers = Object.fromEntries(Object.entries(parsed.questions).map(([key, question]) => {
+        const instructions = question.instructions ?? ''
+        const input = /用户当前输入：「(.*?)」/u.exec(instructions)?.[1]
+        const relevant = /ALPHA-\d+/u.test(instructions) && (input === undefined || input.includes('access code?'))
+        return [key, { type: 'noul', noul: relevant ? 0.93 : 0.04 }]
+      }))
       response.setHeader('content-type', 'application/json')
       response.end(JSON.stringify({ model: parsed.model, answers }))
     })
@@ -120,7 +124,11 @@ describe.skipIf(webSnapshotMode() === 'record')('web e2e: compacted history reca
         const memory = page.getByText('Memory card · originals kept after compaction: 1')
         await memory.waitFor({ timeout: 15_000 })
         await memory.click()
-        await page.getByText(/^· Remember the access code ALPHA-7731 for later\. \(checkpoint \d+ · score 93\)$/u).waitFor()
+        await page.locator('[data-system3-memory="kept"]').getByText(/^· Remember the access code ALPHA-7731 for later\. \(checkpoint \d+ · score 93\)$/u).waitFor()
+        const recalled = page.getByText('Recalled this turn · compacted originals: 1')
+        await recalled.waitFor({ timeout: 15_000 })
+        await recalled.click()
+        await page.locator('[data-system3-memory="recalled"]').getByText(/^· Remember the access code ALPHA-7731 for later\. \(checkpoint \d+ · score 93\)$/u).waitFor()
         await page.getByText('From memory: the code is ALPHA-7731.').waitFor()
         expect(gateway.requests.length).toBeGreaterThan(0)
         if (SHOT_DIR !== undefined) await page.screenshot({ path: `${SHOT_DIR}/history-memory.png`, fullPage: true })

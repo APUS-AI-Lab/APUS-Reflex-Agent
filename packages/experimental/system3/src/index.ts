@@ -17,7 +17,8 @@ import { installSystem3ProcessSupervision, type System3ProcessSupervisionConfig 
 import { installSystem3RouteHealth } from './route-health.ts'
 import { installSystem3OutputFolding, type System3OutputFoldingConfig } from './output-folding.ts'
 import { installSystem3TaskFrame, type System3TaskFrameConfig } from './task-frame.ts'
-import { installSystem3MemoryScoring, type System3MemoryScoringConfig } from './memory.ts'
+import { installSystem3MemoryRecall, installSystem3MemoryScoring, type System3MemoryRecallConfig,
+  type System3MemoryScoringConfig } from './memory.ts'
 import { installSystem3CompletionReview, type System3CompletionReviewConfig } from './completion-review.ts'
 import type { Session } from '@deepseek-ai/dsh-session'
 import { recordSystem3Decision, type System3DecisionRequest, type System3DecisionReceipt, type System3JevOptions } from './decisions.ts'
@@ -26,7 +27,8 @@ export type { System3DecisionId, System3DecisionRequest, System3DecisionReceipt,
 export type { System3JevOptions } from './decisions.ts'
 export type { System3SkillSelectionConfig, System3SkillDecisionReceipt } from './skill-selection.ts'
 export type { System3EntryView, System3MemoryView, System3SkillView, System3RuntimeView, System3TaskFrameView } from './types.ts'
-export type { System3MemoryItem, System3MemoryScore, System3MemoryScoringConfig } from './memory.ts'
+export type { System3MemoryItem, System3MemoryRecall, System3MemoryRecallConfig, System3MemoryScore, System3MemoryScoringConfig,
+  System3RecalledItem } from './memory.ts'
 export { memoryText } from './memory.ts'
 export { createSystem3EntryRouter } from './entry-routing.ts'
 export type { System3DelegationSource } from './delegation.ts'
@@ -86,6 +88,8 @@ export interface Config {
   readonly taskFrame?: false | System3TaskFrameConfig
   /** Jev scoring of the person's messages in each compacted span; kept messages return to the model verbatim. */
   readonly memoryScoring?: false | System3MemoryScoringConfig
+  /** Per-turn recall of the person's compacted inputs against each new input. Defaults to `false`. */
+  readonly memoryRecall?: false | System3MemoryRecallConfig
   /**
    * Jev review of each goal completion; needs `taskFrame`, with mode `shadow` or `active` when the review is not `off`.
    * `false` or omission disables it.
@@ -289,6 +293,16 @@ export default class System3 extends Service implements System3Service {
       maxMessageChars: z.number().step(1).min(1).required(),
       maxItems: z.number().step(1).min(1).required(),
     })]).default(false),
+    memoryRecall: z.union([z.const(false), z.object({
+      mode: z.union([z.const('off'), z.const('shadow'), z.const('active')]).required(),
+      yes: z.number().min(0).max(1).required(),
+      no: z.number().min(0).max(1).required(),
+      deadlineMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).required(),
+      sessionDataClasses: z.array(z.union([z.const('public'), z.const('workspace'), z.const('sensitive'), z.const('secret')])).required(),
+      maxCandidates: z.number().step(1).min(1).max(16).required(),
+      maxInputChars: z.number().step(1).min(1).required(),
+      maxMessageChars: z.number().step(1).min(1).required(),
+    })]).default(false),
     completionReview: z.union([z.const(false), z.object({
       mode: z.union([z.const('off'), z.const('shadow'), z.const('active')]).required(),
       yes: z.number().min(0).max(1).required(),
@@ -362,9 +376,15 @@ export default class System3 extends Service implements System3Service {
     } else if (config.completionReview !== undefined && config.completionReview !== false) {
       throw new Error('completionReview needs taskFrame')
     }
+    const recall = config.memoryRecall === undefined || config.memoryRecall === false ? undefined : config.memoryRecall
     if (config.memoryScoring !== undefined && config.memoryScoring !== false) {
-      const memory = { config: config.memoryScoring, policy: this.privacyPolicy, options: this.jevOptions }
+      const memory = { config: config.memoryScoring, policy: this.privacyPolicy, options: this.jevOptions,
+        recallActive: recall?.mode === 'active' }
       ctx.inject(['systemPrompt'], (ctx) => { installSystem3MemoryScoring(ctx, memory) })
+    }
+    if (recall !== undefined) {
+      const settings = { config: recall, policy: this.privacyPolicy, options: this.jevOptions }
+      ctx.inject(['systemPrompt'], (ctx) => { installSystem3MemoryRecall(ctx, settings) })
     }
     if (config.observeAgentLoop === true) this.observeAgentLoop()
     if (config.skillSelection !== undefined && config.skillSelection !== false) {

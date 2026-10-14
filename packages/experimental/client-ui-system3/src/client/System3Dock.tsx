@@ -212,14 +212,19 @@ export function TaskFrame({ frame, t }: { readonly frame: System3TaskFrameView; 
     {frame.items.map(item => <p key={item.messageId} className={css.note}>{t('taskItem', { text: item.text })}</p>)}
   </details>
 }
-/** Compacted messages of the person that memory scoring kept, collapsed to one line until opened.
- * @param props - The projected kept messages and the translator.
+/** Compacted messages of the person, collapsed to one line until opened: the ones memory scoring kept, or the ones
+ * recalled for the latest input.
+ * @param props - The projected messages, which list they are, and the translator.
  * @returns The count line and, when opened, each message verbatim with its checkpoint and score.
  */
-export function MemoryCard({ memory, t }: { readonly memory: readonly System3MemoryView[]; readonly t: TranslateNS<'system3'> }) {
-  return <details className={css.details} data-system3-memory={memory.length}>
-    <summary>{t('memoryCard', { count: String(memory.length) })}</summary>
-    <p className={css.muted}>{t('memoryHint')}</p>
+export function MemoryCard({ memory, kind, t }: {
+  readonly memory: readonly System3MemoryView[]
+  readonly kind: 'kept' | 'recalled'
+  readonly t: TranslateNS<'system3'>
+}) {
+  return <details className={css.details} data-system3-memory={kind}>
+    <summary>{t(kind === 'kept' ? 'memoryCard' : 'recallCard', { count: String(memory.length) })}</summary>
+    <p className={css.muted}>{t(kind === 'kept' ? 'memoryHint' : 'recallHint')}</p>
     {memory.map(item => <p key={`${String(item.checkpoint)}:${String(item.seq)}`} className={css.note}>
       {t('memoryItem', { text: item.text, checkpoint: String(item.checkpoint), score: String(Math.round(item.probability * 100)) })}
     </p>)}
@@ -259,7 +264,8 @@ export function System3Feedback(props: System3FeedbackProps) {
     {facts?.notices.map((notice, index) => <ProcessNotice key={`${String(index)}:${notice.rule}`} notice={notice} t={t} />)}
     {facts?.interjection && <p className={css.note} role="status">{t('interjectionSteered')}</p>}
     {facts?.taskFrame && facts.taskFrame.items.length > 0 && <TaskFrame frame={facts.taskFrame} t={t} />}
-    {facts?.memory !== undefined && facts.memory.length > 0 && <MemoryCard memory={facts.memory} t={t} />}
+    {facts?.recall != null && facts.recall.items.length > 0 && <MemoryCard memory={facts.recall.items} kind="recalled" t={t} />}
+    {facts?.memory !== undefined && facts.memory.length > 0 && <MemoryCard memory={facts.memory} kind="kept" t={t} />}
     {/* From the injected instruction until the delegated run's first snapshot, including the tool call's startup. */}
     {!facts?.subagentRun && facts?.entry?.route?.delegation?.injected === true
       && props.running && <p className={css.run} role="status" aria-live="polite">{t('delegationPreparing')}</p>}

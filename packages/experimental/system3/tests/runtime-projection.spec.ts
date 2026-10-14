@@ -7,6 +7,7 @@ import { Session, SessionId, SessionLogOffset, type SessionEvent } from '@deepse
 import Projections from '@deepseek-ai/dsh-session-projection'
 import { afterEach, expect, it } from 'vitest'
 import { SubagentRunId } from '@deepseek-ai/dsh-subagent'
+import { CompactionId } from '@deepseek-ai/dsh-compaction'
 import { system3RuntimeProjection } from '../src/runtime-projection.ts'
 
 const contexts: Context[] = []
@@ -88,8 +89,8 @@ it('restores the same wire facts without leaking effective headers or making mod
   const state = h.ctx.sessionProjections.stateOf(restored, 'system3Runtime')!
   expect(system3RuntimeProjection.wire.view(state))
     .toEqual({ entry: h.view()?.entry, history: [], skill: null, subagentRun: null, notices: [], taskFrame: null, interjection: null,
-      memory: [] })
-  expect(Object.keys(system3RuntimeProjection.wire.view(state))).toEqual(['entry', 'history', 'skill', 'subagentRun', 'notices', 'taskFrame', 'interjection', 'memory'])
+      memory: [], recall: null })
+  expect(Object.keys(system3RuntimeProjection.wire.view(state))).toEqual(['entry', 'history', 'skill', 'subagentRun', 'notices', 'taskFrame', 'interjection', 'memory', 'recall'])
 })
 
 it('keeps scored memory items with their checkpoint across checkpoints, oldest first', async () => {
@@ -102,6 +103,34 @@ it('keeps scored memory items with their checkpoint across checkpoints, oldest f
     { checkpoint: 20, seq: 4, messageId: 'm4', text: '别动 README.md', probability: 0.9 },
     { checkpoint: 60, seq: 44, messageId: 'm44', text: '端口改成 8443', probability: 0.9 },
   ])
+})
+
+it('moves the person\'s text inputs a compaction shadows into the archive with that checkpoint, verbatim and complete', async () => {
+  const h = await setup()
+  const say = (text: string, kind: 'user' | 'runtime-context' = 'user') =>
+    h.session.append('user/message', createUserMessage({ content: [{ type: 'text', text }], source: { kind } as never }), { surfaceOp: 'append' }).seq
+  const long = '金额阈值 100 美元。'.repeat(100)
+  const first = say(long)
+  say('当前时间', 'runtime-context')
+  const second = say('部署在 us-east-1')
+  const live = say('继续')
+  const checkpoint = h.session.append('compaction/summary', { compactionId: CompactionId('c1'), summary: [{ type: 'text', text: 's' }],
+    shadowedRange: { start: first, end: second }, shadowedSeqs: [first, second], shadowedTokenCount: 10, provider: 'p', model: 'm' }).seq
+  const state = h.view()
+  expect(state?.archive.map(entry => [entry.seq, entry.checkpoint, entry.text])).toEqual([[first, checkpoint, long],
+    [second, checkpoint, '部署在 us-east-1']])
+  expect(state?.inputs.map(entry => entry.seq)).toEqual([live])
+  expect(Object.keys(system3RuntimeProjection.wire.view(state!))).not.toContain('archive')
+})
+
+it('replaces the recall with the latest recorded one and clears it with an empty recall', async () => {
+  const h = await setup()
+  expect(h.view()?.recall).toBeNull()
+  const item = { checkpoint: 20, seq: 4, messageId: 'm4' as never, text: '别动 README.md', probability: 0.88 }
+  h.session.append('system3/memory-recall', { version: 1, messageId: 'q1' as never, scanned: 2, items: [item] })
+  expect(h.view()?.recall).toEqual({ messageId: 'q1', items: [{ checkpoint: 20, seq: 4, messageId: 'm4', text: '别动 README.md', probability: 0.88 }] })
+  h.session.append('system3/memory-recall', { version: 1, messageId: 'q2' as never, scanned: 2, items: [] })
+  expect(h.view()?.recall).toEqual({ messageId: 'q2', items: [] })
 })
 
 it('shows a delivered interjection until its turn ends', async () => {
