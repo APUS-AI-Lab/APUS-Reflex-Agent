@@ -20,6 +20,11 @@ export class JevConfigurationError extends Error {
   override name = 'JevConfigurationError'
 }
 
+/** Reflex is turned off in settings; callers that treat a missing provider as fatal can keep their native path instead. */
+export class JevDisabledError extends JevConfigurationError {
+  override name = 'JevDisabledError'
+}
+
 export const name = 'apus-dsh-jev-plugin'
 
 declare module '@deepseek-ai/cordis' {
@@ -31,6 +36,12 @@ declare module '@deepseek-ai/cordis' {
 
 /** Plugin configuration for the built-in System One provider. */
 export interface Config {
+  /**
+   * Whether Reflex decisions run. When false, resolving or sending a decision throws {@link JevDisabledError}, a
+   * {@link JevConfigurationError} like an unconfigured provider's, and nothing reaches the gateway, so each caller keeps
+   * its native path; provider metadata stays listed. Changes apply to the next decision. @default true
+   */
+  readonly enabled: Volatile<boolean>
   /** System One gateway URL; empty with model leaves the provider unconfigured. Credentials use apiKeyEnv. */
   readonly endpoint: Volatile<string>
   /** Wire protocol; the official API does not receive the OpenJev effort extension. @default 'openjev' */
@@ -77,6 +88,7 @@ function providerIdentity(config: Config): { endpoint: string; model: string } |
 /** Cordis service that resolves one pinned Jev provider per request. */
 export default class Jev extends TypertRemoteService {
   static Config = z.object({
+    enabled: z.boolean().default(true).volatile(),
     endpoint: z.string().default('').volatile(),
     protocol: z.union([z.const('openjev'), z.const('typesafe')]).default('openjev').volatile(),
     model: z.string().max(256).default('').volatile(),
@@ -96,6 +108,7 @@ export default class Jev extends TypertRemoteService {
   private readonly configuredProvider: () => SystemOneProvider | undefined
   private readonly capabilityReaders = new Map<ReflexCapabilityId, () => ReflexCapabilityState>()
   private readonly questionsPerRequest: number | undefined
+  private readonly enabled: () => boolean
 
   constructor(ctx: Context, config: Config) {
     super(ctx, 'jev', { namespace: 'reflex' })
@@ -103,6 +116,7 @@ export default class Jev extends TypertRemoteService {
     this.defaultProviderId = providerId
     this.defaultEffort = () => config.effort.get()
     this.questionsPerRequest = config.questionsPerRequest
+    this.enabled = () => config.enabled.get()
     if (config.http2 === true && config.keepAliveMs === undefined) throw new Error('jev http2 requires keepAliveMs')
     if (config.resetAfterFailures !== undefined && config.keepAliveMs === undefined) throw new Error('jev resetAfterFailures requires keepAliveMs')
     const fetcher = config.keepAliveMs === undefined ? undefined
@@ -187,6 +201,7 @@ export default class Jev extends TypertRemoteService {
   }
 
   private provider(id: string): JevProvider {
+    if (!this.enabled()) throw new JevDisabledError('Reflex is turned off in settings')
     const provider = id === this.defaultProviderId ? this.configuredProvider() : this.providers.get(id)
     if (provider === undefined) {
       if (id === this.defaultProviderId) throw new JevConfigurationError('Jev is not configured; set an endpoint and model in Reflex settings')
@@ -214,9 +229,10 @@ export default class Jev extends TypertRemoteService {
    * Open or keep alive a provider's transport; failures are reported, never thrown.
    * @param providerId - Provider to warm; the default provider when omitted.
    * @param signal - Caller cancellation.
-   * @returns Whether the provider answered; false when it has no transport to warm or the request failed.
+   * @returns Whether the provider answered; false when Reflex is off, the provider has no transport to warm, or the request failed.
    */
   async warm(providerId?: string, signal?: AbortSignal): Promise<boolean> {
+    if (!this.enabled()) return false
     const id = providerId ?? this.defaultProviderId
     const provider = id === this.defaultProviderId ? this.configuredProvider() : this.providers.get(id)
     if (provider?.warm === undefined) return false

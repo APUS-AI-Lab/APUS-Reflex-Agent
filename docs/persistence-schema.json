@@ -31082,7 +31082,7 @@
         "packages/experimental/system3/src/decision-kernel.ts#System3Judgement"
       ],
       "sources": [
-        "packages/experimental/system3/src/decision-kernel.ts:29"
+        "packages/experimental/system3/src/decision-kernel.ts:30"
       ]
     },
     {
@@ -47056,7 +47056,7 @@
       },
       "names": [],
       "sources": [
-        "packages/experimental/system3/src/decisions.ts:23"
+        "packages/experimental/system3/src/decisions.ts:24"
       ]
     },
     {
@@ -47233,7 +47233,7 @@
       },
       "names": [],
       "sources": [
-        "packages/experimental/system3/src/decisions.ts:24"
+        "packages/experimental/system3/src/decisions.ts:25"
       ]
     },
     {
@@ -63852,7 +63852,7 @@
         "packages/experimental/agent-team/src/types.ts:20",
         "packages/experimental/agent-team/src/types.ts:32",
         "packages/experimental/agent-team/src/types.ts:8",
-        "packages/experimental/system3/src/decisions.ts:11",
+        "packages/experimental/system3/src/decisions.ts:12",
         "packages/feedback/message-feedback/src/types.ts:14",
         "packages/goal/goal/src/types.ts:17",
         "packages/interaction/commands/src/brand.ts:31",
@@ -77034,7 +77034,7 @@
         "packages/experimental/system3/src/decisions.ts#System3DecisionReceipt"
       ],
       "sources": [
-        "packages/experimental/system3/src/decisions.ts:27"
+        "packages/experimental/system3/src/decisions.ts:28"
       ]
     },
     {
@@ -84524,7 +84524,7 @@
         "packages/experimental/system3/src/decisions.ts#System3DecisionOutcome"
       ],
       "sources": [
-        "packages/experimental/system3/src/decisions.ts:22"
+        "packages/experimental/system3/src/decisions.ts:23"
       ]
     },
     {
@@ -97415,7 +97415,7 @@
       ],
       "sources": [
         "packages/experimental/continuum-jev/src/index.ts:14",
-        "packages/experimental/system3/src/decision-kernel.ts:11"
+        "packages/experimental/system3/src/decision-kernel.ts:12"
       ]
     },
     {
@@ -110453,7 +110453,7 @@
       },
       "names": [],
       "sources": [
-        "packages/experimental/system3/src/reflex-context.ts:48"
+        "packages/experimental/system3/src/reflex-context.ts:64"
       ]
     },
     {
@@ -121611,7 +121611,7 @@
         "packages/experimental/system3/src/decision-kernel.ts#System3JudgementReason"
       ],
       "sources": [
-        "packages/experimental/system3/src/decision-kernel.ts:26"
+        "packages/experimental/system3/src/decision-kernel.ts:27"
       ]
     },
     {

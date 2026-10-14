@@ -48,6 +48,7 @@ Set `JEV_ENDPOINT` and `JEV_MODEL` to your serving endpoint and model. Values ar
 
 | Field | Default | Meaning |
 |---|---|---|
+| `enabled` | `true` | Whether Reflex decisions run. When `false`, resolving or sending a decision throws `JevDisabledError`, a `JevConfigurationError` like an unconfigured provider's, and nothing reaches the gateway; System3 decisions record `provider-unavailable` and keep their native path, and Continuum ranking keeps the baseline order in every mode. Provider metadata stays listed. **Settings → Reflex configuration** shows it as a switch that saves at once; changes apply to the next decision |
 | `endpoint` | empty | HTTP gateway root or `/v1` URL; required with `model` before decisions |
 | `model` | empty | Model id sent to the gateway; required with `endpoint` before decisions |
 | `protocol` | `openjev` | Decision protocol: OpenJev (`openjev`) or Typesafe (`typesafe`) |

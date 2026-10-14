@@ -46,7 +46,7 @@ APUS Desktop 和 Web 启动器为新建和已有普通配置方案选择已安�
 <details>
 <summary>实现内部细节 — 点击展开</summary>
 
-[产品记忆提供方](src/product-memory.ts) 继承 [Core 记忆实现](../../context/continuum/README.zh.md)，仅调整四个 schema 默认值，不改动 Core 默认值。Loader 组合和 ConfigForms 使用同一份经过校验的提供方配置。[Reflex 服务](src/index.ts) 在一次有界 Jev 请求中对前十六个召回候选评分；每个问题引用输入的前 `maxQueryChars` 个字符和候选摘录。独立 noul 答案估计相关性，不表示事实真伪或已校准准确率。`rank` 稳定排序已评分前缀并保留其余候选；`threshold` 保留达到 `minRelevance` 的已评分候选，以及与问题有共同词的未评分候选。
+[产品记忆提供方](src/product-memory.ts) 继承 [Core 记忆实现](../../context/continuum/README.zh.md)，仅调整四个 schema 默认值，不改动 Core 默认值。Loader 组合和 ConfigForms 使用同一份经过校验的提供方配置。[Reflex 服务](src/index.ts) 在一次有界 Jev 请求中对前十六个召回候选评分；每个问题引用输入的前 `maxQueryChars` 个字符和候选摘录。独立 noul 答案估计相关性，不表示事实真伪或已校准准确率。`rank` 稳定排序已评分前缀并保留其余候选；`threshold` 保留达到 `minRelevance` 的已评分候选，以及与问题有共同词的未评分候选。在设置中关闭 Reflex 期间，选择和写入都记录 `provider-unavailable`，失败原因为 `reflex-disabled`：`rank` 保持基线顺序，`threshold` 不召回任何内容，写入不建立任何索引，行为与没有 Continuum 时一致；其他 Jev 配置错误和协议错误仍然失败。
 
 只有在 `shadow` 或 `active` 模式且挂载了 Jev 提供方时，服务才提供 `continuumMemoryAdmitter`，并在同一作用域挂载 [`dsh-tool-history-recall`](../../session-query/tool-history-recall/README.zh.md)，因此 admitter 和历史工具同时出现、同时消失。admitter 为 L1 索引挑选并标记被压缩的用户原话：每条原话按每个标签各提一个逐字引用该原话的 Noul 问题，因此一次请求容纳 `floor(16 / 标签数)` 条原话（默认标签下为两条），每批记录为 `continuum/memory-admission`，包含被索引的 ID 及其标签。off、shadow 模式及任何失败都把整批原话以无标签方式索引；Core 不会因为 Reflex 失败而丢弃被压缩的原话。
 
@@ -75,6 +75,7 @@ APUS Desktop 和 Web 启动器为新建和已有普通配置方案选择已安�
 
 <a id="known-limitations-and-deferred-work"></a>
 
+- 在设置中关闭 Reflex 期间，Jev 服务仍然挂载，因此 `history_read` 和 `history_search` 仍会提供给模型，写入仍会记录 `provider-unavailable` 回执；不会产生索引项或召回。
 - 服务不负责检索或记录。Core 负责 bundle 中基于 Session 的记录和生命周期；Reflex 判断不表示事实成立。
 - 真实 Jev 质量和延迟必须在 gateway 可达且配置完整时测试；fake provider 不能证明模型效果。真实 headless 验收覆盖一个约束召回场景，`minRelevance` 和 `minTagProbability` 尚未用标注集校准。相关性请求位于每轮的关键路径上。
 - 仅对前十六个候选评分；`rank` 保留其余候选，`threshold` 只保留其中与问题有共同词的候选。语义索引、查询扩展和逐条数据分类属于后续工作。声明的 Session 数据分类覆盖候选及问题；本包没有检测其中密钥的数据分类器。

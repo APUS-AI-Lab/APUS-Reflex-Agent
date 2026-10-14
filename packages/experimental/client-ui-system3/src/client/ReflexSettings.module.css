@@ -8,6 +8,8 @@
 .section p { margin: 0; }
 .section h3 { font-size: 14px; font-weight: 500; margin: 8px 0 0; }
 .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.master { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.master > div { display: flex; flex-direction: column; gap: 4px; }
 .capabilities { display: flex; flex-direction: column; gap: 12px; padding: 0; list-style: none; }
 .capabilities li { display: flex; flex-wrap: wrap; gap: 8px; }
 .capabilities small { flex-basis: 100%; font-size: inherit; }

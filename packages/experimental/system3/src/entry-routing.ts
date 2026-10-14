@@ -8,7 +8,7 @@ import { ReasoningEffortId, type ModelModality } from '@deepseek-ai/dsh-llm'
 import { RemoteError } from '@deepseek-ai/dsh-typert-protocol'
 import type {} from '@deepseek-ai/dsh-subagent'
 import type {} from '@deepseek-ai/dsh-tools'
-import { MAX_JEV_CHOICES, type JevErrorCode, type JevRequest, type JevResponse, type JevChoiceQuestion } from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
+import { JevConfigurationError, MAX_JEV_CHOICES, type JevErrorCode, type JevRequest, type JevResponse, type JevChoiceQuestion } from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
 import { admitSystem3Routes, type System3DataClass, type System3ExecutionDomain, type System3PrivacyPolicy } from '@deepseek-ai/dsh-experimental-system3-policy'
 import type { System3JevOptions } from './decisions.ts'
 import type { System3HandoffPackConfig } from './handoff-pack.ts'
@@ -362,6 +362,8 @@ export function createSystem3EntryRouter(
         selected = selectionOf(candidate)
         return selected
       } catch (error) {
+        // An unconfigured or switched-off provider keeps the baseline, like a missing one.
+        if (!signal.aborted && error instanceof JevConfigurationError) { outcome = 'provider-unavailable'; return undefined }
         if (signal.aborted) outcome = signal.reason instanceof DOMException && signal.reason.name === 'TimeoutError' ? 'timeout' : 'cancelled'
         throw error
       } finally {

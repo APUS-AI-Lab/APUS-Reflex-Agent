@@ -38,6 +38,8 @@ const API_KEY_FIELD = 'apiKey'
 
 /** The decision-provider fields this page edits. */
 export interface ReflexSettings {
+  /** Whether Reflex decisions run; absence means on. */
+  enabled?: boolean
   /** Credential reference naming the environment key. */
   apiKeyEnv?: string
   /** Decision endpoint. */
@@ -61,6 +63,12 @@ interface CredentialState {
 
 /** What the Reflex page renders. */
 export interface ReflexCardState extends SettingsFormShell {
+  /** Saved state of the Reflex switch. */
+  enabled: boolean
+  /** A switch change is being saved. */
+  toggling: boolean
+  /** The last switch change was not saved. */
+  toggleFailed: boolean
   /** Selected service preset or editable connection. */
   mode: ReflexConnectionMode
   /** Provider endpoint. */
@@ -90,6 +98,8 @@ export interface ReflexCardState extends SettingsFormShell {
 export interface ReflexCardFace extends SettingsFormActions {
   /** Stage another connection mode without saving or testing it. */
   selectMode: (mode: ReflexConnectionMode) => void
+  /** Save the Reflex switch at once, independently of the staged connection form. */
+  setEnabled: (enabled: boolean) => Promise<void>
   testConnection: () => Promise<void>
   clearCredential: () => Promise<void>
   refresh: () => Promise<void>
@@ -114,6 +124,8 @@ export class ReflexCardController {
   private savedSettings: { inverse: SettingsFormPathOp[]; revision: number | undefined; originalRevision: number | undefined } | undefined
   private recoveredRevision: { from: number | undefined; to: number } | undefined
   private credentialFailed = false
+  private toggling = false
+  private toggleFailed = false
   private checkingCredential = false
   private credentialSaveError: ReflexCardState['credentialSaveError']
   private disposed = false
@@ -179,6 +191,7 @@ export class ReflexCardController {
   private projection(): ReflexCardState {
     return {
       ...this.form.shell(),
+      enabled: this.scope.getSnapshot().value?.enabled !== false, toggling: this.toggling, toggleFailed: this.toggleFailed,
       mode: this.mode,
       saving: this.checkingCredential || this.form.shell().saving,
       failed: this.credentialSaveError !== undefined || this.form.shell().failed,
@@ -245,6 +258,7 @@ export class ReflexCardController {
     const actions = this.form.actions()
     return { hooks: { reflexCard: this.store }, ...actions,
       selectMode: (mode) => { this.selectMode(mode) },
+      setEnabled: enabled => this.setEnabled(enabled),
       save: () => { void this.save() },
       edit: (field, text) => {
         if (this.checkingCredential || this.form.shell().saving || !this.form.shell().writable || this.mode === 'trial') return
@@ -272,6 +286,23 @@ export class ReflexCardController {
         this.store.set(this.projection()); void this.readCredential()
       },
       testConnection: () => this.testConnection(), clearCredential: () => this.clearCredential(), refresh: () => this.refresh(),
+    }
+  }
+
+  private async setEnabled(enabled: boolean): Promise<void> {
+    const current = this.scope.getSnapshot()
+    if (this.toggling || this.form.shell().saving || !current.writable || current.status !== 'ready') return
+    this.toggling = true
+    this.toggleFailed = false
+    this.store.set(this.projection())
+    try {
+      this.toggleFailed = !await this.scope.mutate([{ op: 'set', path: ['enabled'], value: enabled }], current.revision)
+    } catch (_error) {
+      // A rejected write leaves the saved switch unchanged; the page reports it and the user can retry.
+      this.toggleFailed = true
+    } finally {
+      this.toggling = false
+      if (!this.disposed) this.store.set(this.projection())
     }
   }
 

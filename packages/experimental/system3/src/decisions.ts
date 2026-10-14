@@ -3,7 +3,8 @@ import { createHash, randomUUID } from 'node:crypto'
 import { brandString, type Branded } from '@deepseek-ai/dsh-brand'
 import type { Context } from '@deepseek-ai/cordis'
 import type { Session } from '@deepseek-ai/dsh-session'
-import type { JevFailure, JevRequest, JevResponse } from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
+import { JevConfigurationError, type JevFailure, type JevRequest, type JevResponse,
+  type JevSpec } from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
 import { selectSystem3Route, type System3DataClass, type System3ExecutionDomain, type System3PrivacyPolicy } from '@deepseek-ai/dsh-experimental-system3-policy'
 import { compareSystem3Advice, superviseSystem3Advice, type System3AdviceAction, type System3ShadowComparison, type System3SupervisorRequest, type System3SupervisorResult } from '@deepseek-ai/dsh-experimental-system3-supervisor'
 
@@ -80,6 +81,21 @@ function adviceOf(response: JevResponse): System3AdviceAction {
 }
 
 /**
+ * Resolve a decision, or report that the provider is unconfigured or switched off.
+ * @param jev - The Jev service.
+ * @param query - The decision to resolve.
+ * @returns The resolved spec, or undefined when the provider cannot take decisions now.
+ */
+function configured(jev: { resolve(request: JevRequest): JevSpec }, query: JevRequest): JevSpec | undefined {
+  try {
+    return jev.resolve(query)
+  } catch (error) {
+    if (error instanceof JevConfigurationError) return undefined
+    throw error
+  }
+}
+
+/**
  * Record one non-authoritative Jev decision after privacy admission.
  * @param ctx - Context providing the optional Jev capability.
  * @param session - Session that owns the durable receipt.
@@ -120,22 +136,28 @@ export async function recordSystem3Decision(
   } else if (admission.selected === undefined) {
     outcome = { kind: 'unknown', code: 'privacy-denied' }
   } else if (jev !== undefined) {
-    const spec = jev.resolve(query)
-    providerId = spec.providerId
-    requestedModel = spec.model
-    query = { ...query, model: spec.model, ...spec.effort === undefined ? {} : { effort: spec.effort } }
-    try {
-      const result = await jev.decide(query, signal)
-      if (result.kind === 'ok') {
-        outcome = { kind: 'ok', response: result.response }
-        advice = adviceOf(result.response)
-      } else {
-        outcome = { kind: 'unknown', code: result.failure.code, ...result.failure.status === undefined ? {} : { status: result.failure.status } }
+    const spec = configured(jev, query)
+    if (spec !== undefined) {
+      providerId = spec.providerId
+      requestedModel = spec.model
+      query = { ...query, model: spec.model, ...spec.effort === undefined ? {} : { effort: spec.effort } }
+      try {
+        const result = await jev.decide(query, signal)
+        if (result.kind === 'ok') {
+          outcome = { kind: 'ok', response: result.response }
+          advice = adviceOf(result.response)
+        } else {
+          outcome = { kind: 'unknown', code: result.failure.code, ...result.failure.status === undefined ? {} : { status: result.failure.status } }
+        }
+      } catch (error) {
+        if (!signal?.aborted && error instanceof JevConfigurationError) {
+          outcome = { kind: 'unknown', code: 'provider-unavailable' }
+        } else {
+          if (!signal?.aborted) throw error
+          outcome = { kind: 'unknown', code: 'cancelled' }
+          cancellation = error instanceof Error ? error : new DOMException('Jev shadow request cancelled', 'AbortError')
+        }
       }
-    } catch (error) {
-      if (!signal?.aborted) throw error
-      outcome = { kind: 'unknown', code: 'cancelled' }
-      cancellation = error instanceof Error ? error : new DOMException('Jev shadow request cancelled', 'AbortError')
     }
   }
   const receipt: System3DecisionReceipt = {

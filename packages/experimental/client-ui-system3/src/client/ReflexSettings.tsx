@@ -1,7 +1,7 @@
 /** Dedicated settings section for Reflex decision service configuration. */
 import { useEffect } from 'react'
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
-import { Button, SettingsForm, SettingsSecretField, SettingsValueField } from '@deepseek-ai/dsh-client-ui-primitives'
+import { Button, SettingsForm, SettingsSecretField, SettingsValueField, Switch } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { InjectFace, PropsLocale, PropsRenderSlots, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 import { formLabels, type ReflexSettingsKey } from './reflex-settings-locales.ts'
 import type { ReflexCardFace, ReflexCardState } from './reflex-settings-controller.ts'
@@ -35,6 +35,15 @@ export function ReflexSettings(props: ReflexSettingsProps) {
   const limits = ['stallMs', 'cooldownMs', 'maxInterventions', 'feedbackMs', 'nativeSilenceMs', 'recoveryReassessmentMs', 'retryLimit', 'interruptGraceMs', 'recoveryCooldownMs', 'maxRecoveries', 'maxCandidates', 'maxFragmentChars', 'maxRestoredChars', 'maxRequestChars'] as const
   const fields = ['endpoint', 'model', 'effort', 'timeoutMs', 'apiKeyEnv'] as const
   return <section className={css.section} aria-label={t('title')}>
+    <div className={css.master}>
+      <div>
+        <strong>{t('switchTitle')}</strong>
+        <p>{t(state.enabled ? 'switchOn' : 'switchOff')}</p>
+        {state.toggleFailed && <p role="alert">{t('switchFailed')}</p>}
+      </div>
+      <Switch checked={state.enabled} label={t('switchTitle')} disabled={!state.writable || state.toggling || state.saving}
+        onChange={(next) => { void props.setEnabled(next) }} />
+    </div>
     <p>{t('description')}</p>
     {state.runtime?.provider === null ? <p role="status">{t('unconfigured')}</p> : null}
     <SettingsForm labels={{ ...formLabels(t), ...state.credentialSaveError ? { saveFailed: t(state.credentialSaveError === 'configured' ? 'newCredentialReference' : 'credentialCheckFailed') } : state.partialSave ? { saveFailed: t('partialSave') } : {} }} state={state} onSave={props.save} onDiscard={props.discard}>

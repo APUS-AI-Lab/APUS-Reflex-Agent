@@ -65,7 +65,7 @@ it('rejects configurations that cannot work', () => {
 
 /** A read-only workspace served by a fake shell: discovery reports git with a README, and each command echoes its file. */
 async function setup(answers: (request: JevRequest) => Record<string, ReturnType<typeof noul>>, config: Partial<System3PrefetchConfig> = {},
-  shell = true) {
+  shell = true, reflexEnabled = true) {
   const ctx = new Context()
   contexts.push(ctx)
   await mountAgentLoopTestDependencies(ctx)
@@ -84,7 +84,7 @@ async function setup(answers: (request: JevRequest) => Record<string, ReturnType
       },
     })
   }
-  await ctx.plugin(Jev, { endpoint: 'http://localhost:1', model: 'jev-test' })
+  await ctx.plugin(Jev, { endpoint: 'http://localhost:1', model: 'jev-test', enabled: reflexEnabled })
   const decide = vi.spyOn(ctx.jev, 'decide').mockImplementation(async request => ({ kind: 'ok', spec: ctx.jev.resolve(request),
     response: { model: 'jev-test', answers: answers(request) } }))
   const adapter = new MockAdapter([textResponse('Above 2500 EUR.')])
@@ -121,7 +121,7 @@ it('runs every candidate in the read-only sandbox and shows the needed outputs t
   expect(h.agent.session.snapshotEvents().some(event => event.type === 'system3/judgement' && event.data.decision === 'prefetch')).toBe(true)
 })
 
-it('leaves the step unchanged when nothing is needed, in shadow mode, without a shell, and on a Jev failure', async () => {
+it('leaves the step unchanged when nothing is needed, in shadow mode, without a shell, with Reflex turned off, and on a Jev failure', async () => {
   const none = await setup(() => ({}))
   none.decide.mockImplementation(async request => ({ kind: 'ok', spec: none.ctx.jev.resolve(request), response: { model: 'jev-test',
     answers: Object.fromEntries(Object.keys(request.questions).map(key => [key, noul(0.01)])) } }))
@@ -137,6 +137,13 @@ it('leaves the step unchanged when nothing is needed, in shadow mode, without a 
   await shellless.say('Above which amount does an order need approval?')
   expect(shellless.decide).not.toHaveBeenCalled()
   expect(shellless.adapter.requests).toHaveLength(1)
+
+  const off = await setup(readmeOnly, {}, true, false)
+  await off.say('Above which amount does an order need approval?')
+  expect(off.shown(off.adapter.requests[0])).toBe('')
+  expect(off.adapter.requests).toHaveLength(1)
+  expect(off.agent.session.snapshotEvents().find(event => event.type === 'system3/judgement')?.data)
+    .toMatchObject({ decision: 'prefetch', reason: 'provider-unavailable', applied: false, request: null })
 
   const failing = await setup(readmeOnly)
   failing.decide.mockResolvedValue({ kind: 'unknown', failure: { code: 'transport', message: 'down' } } as never)

@@ -1384,7 +1384,7 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         signature: 'async warm(providerId?: string, signal?: AbortSignal): Promise<boolean>',
         description: 'Open or keep alive a provider\'s transport; failures are reported, never thrown.',
         parameters: [{ name: 'providerId', description: 'Provider to warm; the default provider when omitted.' }, { name: 'signal', description: 'Caller cancellation.' }],
-        returns: 'Whether the provider answered; false when it has no transport to warm or the request failed.',
+        returns: 'Whether the provider answered; false when Reflex is off, the provider has no transport to warm, or the request failed.',
       },
       {
         signature: 'async decide(request: JevRequest, signal?: AbortSignal): Promise<JevOutcome>',

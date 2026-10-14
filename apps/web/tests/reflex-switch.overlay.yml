@@ -1,0 +1,5 @@
+# Reflex switch acceptance composition: the Reflex settings page. The Jev plugin is installed as a profile bundle, as in
+# the product, so Reflex settings own its configuration.
+- insert:
+    - id: ui-system3
+      name: '@deepseek-ai/dsh-experimental-client-ui-system3'

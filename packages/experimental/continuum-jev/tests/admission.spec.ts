@@ -14,7 +14,7 @@ import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import ToolRuntime from '@deepseek-ai/dsh-tools'
 import { MockAdapter } from '../../../core/agent-loop/tests/mock-adapter.ts'
-import type { JevRequest } from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
+import { JevDisabledError, type JevRequest } from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
 import ContinuumJevPlugin, {
   admissionBatchSize, admitContinuumMemory, DEFAULT_MEMORY_TAGS, selectContinuumMemory, type ContinuumJev, type ContinuumJevConfig,
 } from '../src/index.ts'
@@ -127,6 +127,19 @@ describe('Continuum compaction admission judgement', () => {
       .toMatchObject({ reason: 'invalidated', admittedIds: ['a'] })
     const empty: ContinuumJev = { ...fake(), decide: request => Promise.resolve({ kind: 'ok', spec: { ...request, providerId: 'fake', model: 'm' }, response: { model: 'm', answers: {} } }) }
     expect(await admitContinuumMemory(empty, tagged, input)).toMatchObject({ failure: 'invalid-response', admittedIds: ['a'] })
+  })
+
+  it('indexes nothing and recalls nothing while Reflex is turned off in settings', async () => {
+    const disabledAtResolve: ContinuumJev = { ...fake(), resolve: () => { throw new JevDisabledError('Reflex is turned off in settings') } }
+    const disabledAtDecide: ContinuumJev = { ...fake(), decide: () => Promise.reject(new JevDisabledError('Reflex is turned off in settings')) }
+    for (const jev of [disabledAtResolve, disabledAtDecide]) {
+      expect(await admitContinuumMemory(jev, tagged, { candidates: [memory('a')] })).toMatchObject({
+        reason: 'provider-unavailable', failure: 'reflex-disabled', admittedIds: [], admittedTags: [],
+      })
+      const input = { query: 'q', candidates: [candidate('a', 1), candidate('b', 0)] }
+      expect(await selectContinuumMemory(jev, { ...config, selection: 'threshold' }, input)).toMatchObject({ failure: 'reflex-disabled', selectedIds: [] })
+      expect(await selectContinuumMemory(jev, config, input)).toMatchObject({ failure: 'reflex-disabled', selectedIds: ['a', 'b'] })
+    }
   })
 
   it('rejects oversized batches, invalid tags, and invalid thresholds', async () => {

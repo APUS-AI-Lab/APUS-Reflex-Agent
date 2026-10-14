@@ -12,6 +12,7 @@ import type {} from '../src/client/reflex-settings.ts'
 afterEach(cleanup)
 const field = (text: string) => ({ text, invalid: false, overridden: false })
 const state: ReflexCardState = {
+  enabled: true, toggling: false, toggleFailed: false,
   mode: 'custom', available: true, writable: true, dirty: false, invalid: false, saving: false, failed: false,
   endpoint: field('https://reflex.test'), model: field('decision'), protocol: field('openjev'), effort: field('high'),
   timeoutMs: field('1000'), apiKeyEnv: field('REFLEX_API_KEY'), apiKey: field(''),
@@ -27,7 +28,7 @@ function props(snapshot = state): ReflexSettingsProps {
   }
   return { ...globals, renderSlot: vi.fn(() => null), close: vi.fn(),
     useReflexCard: select => select(snapshot), t: makeTranslate(zh, commonZh),
-    selectMode: vi.fn(), edit: vi.fn(), resetField: vi.fn(), save: vi.fn(), discard: vi.fn(),
+    selectMode: vi.fn(), setEnabled: vi.fn(async () => {}), edit: vi.fn(), resetField: vi.fn(), save: vi.fn(), discard: vi.fn(),
     testConnection: vi.fn(async () => {}), clearCredential: vi.fn(async () => {}), refresh: vi.fn(async () => {}),
   }
 }
@@ -42,6 +43,19 @@ it('renders the dedicated page and separates successful connectivity from missin
   fireEvent.click(screen.getByRole('button', { name: '测试连接与真实判断' }))
   expect(p.testConnection).toHaveBeenCalledOnce()
   expect(screen.getByLabelText('API Key').getAttribute('type')).toBe('password')
+})
+
+it('shows the Reflex switch with its state and saves a change at once', () => {
+  const p = props()
+  const { rerender } = render(<ReflexSettings {...p} />)
+  expect(screen.getByText('已开启：输入判断、Skill 选择、工作区预取等由 Reflex 在主模型之前完成')).toBeTruthy()
+  fireEvent.click(screen.getByRole('switch', { name: '启用 Reflex 决策' }))
+  expect(p.setEnabled).toHaveBeenCalledWith(false)
+  rerender(<ReflexSettings {...props({ ...state, enabled: false, toggleFailed: true })} />)
+  expect(screen.getByText('已关闭：所有请求按原生流程执行，不调用决策服务')).toBeTruthy()
+  expect(screen.getByRole('alert').textContent).toBe('开关状态未保存，请重试')
+  rerender(<ReflexSettings {...props({ ...state, toggling: true })} />)
+  expect(screen.getByRole('switch', { name: '启用 Reflex 决策' }).hasAttribute('disabled')).toBe(true)
 })
 
 it('shows authentication failure rather than connected for a rejected key', () => {

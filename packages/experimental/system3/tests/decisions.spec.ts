@@ -90,7 +90,7 @@ it('records and restores the actual configured effort on each new decision', asy
   const ctx = new Context()
   await ctx.plugin(Projections)
   let effort: 'low' | 'high' = 'high'
-  new Jev(ctx, { endpoint: { get: () => 'https://reflex.test' }, model: { get: () => 'reflex-test' },
+  new Jev(ctx, { enabled: { get: () => true }, endpoint: { get: () => 'https://reflex.test' }, model: { get: () => 'reflex-test' },
     effort: { get: () => effort }, protocol: { get: () => 'openjev' },
     timeoutMs: { get: () => 1000 }, apiKeyEnv: { get: () => undefined } })
   await ctx.plugin(System3, { jevExecutionDomain: 'local' })

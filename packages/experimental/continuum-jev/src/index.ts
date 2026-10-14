@@ -1,6 +1,6 @@
 /** Coverage-preserving, bounded Reflex relevance ranking and replayable receipts. */
 import type Jev from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
-import { MAX_JEV_QUESTIONS, JevConfigurationError, JevProtocolError, type JevSpec, type JevOutcome, type JevRequest, type JevResponse } from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
+import { MAX_JEV_QUESTIONS, JevConfigurationError, JevDisabledError, JevProtocolError, type JevSpec, type JevOutcome, type JevRequest, type JevResponse } from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
 import { admitSystem3Routes, type System3PrivacyPolicy, type System3DataClass } from '@deepseek-ai/dsh-experimental-system3-policy'
 import { MemoryId, type ContinuumAdmittedMemory, type ContinuumMemoryAdmission, type ContinuumMemoryAdmitter, type ContinuumMemorySelection, type ContinuumMemorySelector } from '@deepseek-ai/dsh-continuum'
 import type { Agent } from '@deepseek-ai/dsh-agent'
@@ -306,7 +306,10 @@ type BatchOutcome =
     readonly preparedSeq?: SessionSeq
   }
 
-type FallbackReason = 'privacy-denied' | 'request-budget' | 'provider-error' | 'persistence-unavailable' | 'invalidated'
+type FallbackReason = 'provider-unavailable' | 'privacy-denied' | 'request-budget' | 'provider-error' | 'persistence-unavailable' | 'invalidated'
+
+/** Failure recorded when Reflex is turned off in settings; Continuum then behaves as without Reflex. */
+const REFLEX_DISABLED = 'reflex-disabled'
 
 /**
  * Resolve, admit, budget, durably prepare and dispatch one batch of Noul questions.
@@ -327,6 +330,8 @@ async function askBatch(
   try {
     request = jev.resolve(unresolved)
   } catch (error) {
+    // Reflex turned off in settings is not a failure: callers keep their native path. Other configuration errors stay loud.
+    if (error instanceof JevDisabledError) return { kind: 'fallback', reason: 'provider-unavailable', failure: REFLEX_DISABLED, request: null }
     if (error instanceof JevConfigurationError || error instanceof JevProtocolError) throw error
     return { kind: 'fallback', reason: 'provider-error', failure: 'resolve-error', request: null }
   }
@@ -350,6 +355,7 @@ async function askBatch(
     outcome = await decideWithTimeout(jev, request, signal, config.timeoutMs)
   } catch (error) {
     signal?.throwIfAborted()
+    if (error instanceof JevDisabledError) return { kind: 'fallback', reason: 'provider-unavailable', failure: REFLEX_DISABLED, request, ...prepared }
     const failure = error instanceof ContinuumJevTimeoutError ? 'timeout' : 'provider-error'
     return { kind: 'fallback', reason: 'provider-error', failure, request, ...prepared }
   }
@@ -392,7 +398,8 @@ export async function selectContinuumMemory(
   const fallback = (
     reason: ContinuumMemoryEvaluation['reason'], failure?: string, request: JevRequest | null = null, preparedSeq?: SessionSeq,
   ): MemorySelectionResult => ({
-    mode: config.mode, selectedIds: matched, baselineIds: baseline,
+    // With Reflex turned off in settings, threshold selection recalls nothing, as without Continuum.
+    mode: config.mode, selectedIds: threshold && failure === REFLEX_DISABLED ? [] : matched, baselineIds: baseline,
     outcome: reason === 'off' ? 'off' : reason === 'empty' || reason === 'provider-unavailable' ? 'baseline' : 'unknown',
     ...(failure === undefined ? {} : { failure }),
     evaluation: { version: 1, strategy: 'batch-relevance', phase: reason === 'prepared' ? 'prepared' : 'settled',
@@ -465,7 +472,10 @@ export async function admitContinuumMemory(
   ): ContinuumMemoryAdmissionReceipt => ({
     version: 1, mode: config.mode, phase: reason === 'prepared' ? 'prepared' : 'settled',
     ...(preparedSeq === undefined ? {} : { preparedSeq }),
-    candidateIds, admittedIds: candidateIds, admittedTags: candidateIds.map(() => []),
+    // Reflex turned off in settings indexes nothing; every other fallback indexes the whole batch untagged.
+    candidateIds, ...failure === REFLEX_DISABLED ? { admittedIds: [], admittedTags: [] } : {
+      admittedIds: candidateIds, admittedTags: candidateIds.map(() => []),
+    },
     outcome: reason === 'off' ? 'off' : reason === 'provider-unavailable' ? 'baseline' : 'unknown',
     ...(failure === undefined ? {} : { failure }), request, reason,
   })
