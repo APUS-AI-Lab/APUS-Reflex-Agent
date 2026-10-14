@@ -37,7 +37,10 @@
     - id: continuum-memory
       name: ../../../packages/experimental/continuum-jev/lib/product-memory.js
       config:
-        # Exercise editable product defaults with only the explicit opt-in.
+        # Exercise the product provider's remaining defaults with user-message admission; its default
+        # compaction admission needs an enabled Reflex service, which this scenario does not mount.
         enabled: true
+        admission: user-message
+        candidatePool: lexical
     - id: continuum-request-check
       name: ./request-check.mjs

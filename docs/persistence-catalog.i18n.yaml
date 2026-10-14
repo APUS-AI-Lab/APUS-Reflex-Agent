@@ -9,8 +9,8 @@
   en: e7c80d1de4d328b4
   zh: d9f368c27fd9f998
 /session-persistence-event-catalog/persistence-type-fingerprints:
-  en: 21439eb0f7683217
-  zh: af665065463ded5b
+  en: 2ce6fbe5bc8fe16f
+  zh: eb2ef33b1277a733
 /session-persistence-event-catalog/event-envelope:
   en: 7ebb1a2e0dd1f916
   zh: 8946f415dda5c1b8
@@ -75,14 +75,20 @@
   en: ed9405189dc8c5e6
   zh: f078e8d2cae4d0ca
 /session-persistence-event-catalog/events/continuum:
-  en: b28e57939a223746
-  zh: b28e57939a223746
+  en: 330b7f36f325e2de
+  zh: 330b7f36f325e2de
+/session-persistence-event-catalog/events/continuum/continuum-memory-admission-log-only:
+  en: c45aa3859e971968
+  zh: b65bc6c0f89524ff
 /session-persistence-event-catalog/events/continuum/continuum-memory-decision-log-only:
-  en: 8b580beee3bb32f9
-  zh: 00a47ee3d524a313
+  en: 00ef96a95c4f8ef9
+  zh: 11e43d36efcd9f03
+/session-persistence-event-catalog/events/continuum/continuum-memory-index-log-only:
+  en: 12fe1992122883f0
+  zh: 20115c96a35cdd39
 /session-persistence-event-catalog/events/continuum/continuum-memory-record-log-only:
-  en: 306b41e6872b4cff
-  zh: 68ffe0904696bdb6
+  en: 921f5de6dfc66ff9
+  zh: d3b962847a9885f7
 /session-persistence-event-catalog/events/continuum/continuum-task-binding-log-only:
   en: 1c463f1cdb92e047
   zh: 2f608a06a3d903a5
@@ -402,8 +408,11 @@
   en: ddf8dbbb007e439a
   zh: ddf8dbbb007e439a
 /session-persistence-event-catalog/resolved-persistence-types/active:
-  en: 6b343e390ae7d7a7
-  zh: 6b343e390ae7d7a7
+  en: 7e2e3fac77687894
+  zh: 7e2e3fac77687894
+/session-persistence-event-catalog/resolved-persistence-types/add:
+  en: 7cc22ac01dfb9c3e
+  zh: 7cc22ac01dfb9c3e
 /session-persistence-event-catalog/resolved-persistence-types/after:
   en: 5bb3dfb05cb37efb
   zh: 5bb3dfb05cb37efb
@@ -546,11 +555,17 @@
   en: a88dd61bd005a3e7
   zh: a88dd61bd005a3e7
 /session-persistence-event-catalog/resolved-persistence-types/continuum-memory:
-  en: 22cb6b6f59e9db75
-  zh: 22cb6b6f59e9db75
+  en: 363bd1580f56b942
+  zh: 363bd1580f56b942
+/session-persistence-event-catalog/resolved-persistence-types/continuum-memory-admission:
+  en: 7b35213c6a725f31
+  zh: 7b35213c6a725f31
 /session-persistence-event-catalog/resolved-persistence-types/continuum-memory-decision:
-  en: c3525d73bd88e732
-  zh: c3525d73bd88e732
+  en: 21a44386bcbafadf
+  zh: 21a44386bcbafadf
+/session-persistence-event-catalog/resolved-persistence-types/continuum-memory-index:
+  en: 967c01ada35f56ef
+  zh: 967c01ada35f56ef
 /session-persistence-event-catalog/resolved-persistence-types/continuum-memory-record:
   en: 90f0fc62f5c37266
   zh: 90f0fc62f5c37266
@@ -1521,14 +1536,17 @@
   en: 4fb849e3fc193c6b
   zh: 8e1f12e81ff94d1f
 /session-persistence-event-catalog/resolved-persistence-types/continuumjevmode:
-  en: ff058fe797289dab
-  zh: 1e9d445e2d01e40a
+  en: 5267bc8a2b0ff454
+  zh: d5c7fafbe4233cac
+/session-persistence-event-catalog/resolved-persistence-types/continuummemoryadmissionreceipt:
+  en: 9c5281fe906d5261
+  zh: f4abe4f0e5ae0228
 /session-persistence-event-catalog/resolved-persistence-types/continuummemorydecisionreceipt:
-  en: 425255ed0b651aa9
-  zh: 28689c1a06b69fa8
+  en: 3fbbde283b387dc4
+  zh: 269ebde03a60e042
 /session-persistence-event-catalog/resolved-persistence-types/continuummemoryevaluation:
-  en: e8dbf28999201ae2
-  zh: 436890e30c6bd227
+  en: 79c0911bfa23e4a3
+  zh: 7ee88c6683902fe5
 /session-persistence-event-catalog/resolved-persistence-types/continuummemorysource:
   en: 2d1df44ce6eaa36f
   zh: 514758829f140f56
@@ -1671,17 +1689,23 @@
   en: 6dbe099c62f7c226
   zh: 6fd788f63c038c91
 /session-persistence-event-catalog/resolved-persistence-types/llmretrystartedeventdata:
-  en: fb6ad1b8fcc995c4
-  zh: 585076eccd450006
+  en: a0129a95e973e011
+  zh: 6a8c87dcd247def0
+/session-persistence-event-catalog/resolved-persistence-types/memoryindexentry:
+  en: f3dfa293e4002c03
+  zh: 17c534c40e452527
+/session-persistence-event-catalog/resolved-persistence-types/memoryindexeventdata:
+  en: f5d5385c651f9889
+  zh: a299481a350a1ce2
 /session-persistence-event-catalog/resolved-persistence-types/memoryrecord:
   en: 1505b50862faac7f
   zh: 108cb6568803524d
 /session-persistence-event-catalog/resolved-persistence-types/memoryrecordeventdata:
-  en: e6e45c76e55b60eb
-  zh: 2c17c82165909445
+  en: 9ce4598905043b57
+  zh: b210f3ca623eb4ca
 /session-persistence-event-catalog/resolved-persistence-types/memoryrecordoperation:
-  en: 779d54d35d30f039
-  zh: 3b71255ed1d0b6ae
+  en: bdd35408491ff929
+  zh: 86499ce223ecb80b
 /session-persistence-event-catalog/resolved-persistence-types/memorysourceref:
   en: f1ca9957561bab0d
   zh: e6d85038f8405025
@@ -2058,8 +2082,11 @@
   en: a2b75b6bad65a1f8
   zh: ba070503d42cfe69
 /session-persistence-event-catalog/resolved-persistence-types/string~2:
-  en: 0089620bf4638263
-  zh: 1922bef1713094bb
+  en: 194872ef08750c8d
+  zh: 7927d04ba9135b23
+/session-persistence-event-catalog/resolved-persistence-types/string~3:
+  en: 8560aec23fc38492
+  zh: 47f0779dc542c3e2
 /session-persistence-event-catalog/resolved-persistence-types/true:
   en: 56221be1d4f4a6a6
   zh: 56221be1d4f4a6a6
@@ -2172,9 +2199,12 @@
   en: ec5cd1af07c72f85
   zh: 6344fcc8ba8bd11d
 /session-persistence-event-catalog/resolved-persistence-types/union-8-variants~2:
-  en: b69f87ba01db832a
-  zh: e9485602d22b36d1
+  en: bc705c26c6443575
+  zh: bc00fdb252ea42f1
 /session-persistence-event-catalog/resolved-persistence-types/union-9-variants:
+  en: 86aa7d371c7c59e3
+  zh: 8714f5839f20835d
+/session-persistence-event-catalog/resolved-persistence-types/union-9-variants~2:
   en: fe825f97c9be9e72
   zh: a227a3a15a0712a6
 /session-persistence-event-catalog/resolved-persistence-types/unknown~2:
@@ -2826,11 +2856,17 @@
   en: 184ea1eef46cb0cc
   zh: ad2a7b77040a0448
 /session-persistence-event-catalog/resolved-persistence-types/type-compaction-summary:
-  en: eb1cda610588a19d
-  zh: ebcf480f45188850
+  en: ed984179f129595d
+  zh: 49aa91b04a05a802
+/session-persistence-event-catalog/resolved-persistence-types/type-continuum-memory-admission:
+  en: 78fab8a434af759b
+  zh: e54d2495a5bc58e2
 /session-persistence-event-catalog/resolved-persistence-types/type-continuum-memory-decision:
-  en: a0c637869ea5e2d6
-  zh: 35507a0a45e2e17e
+  en: e57806bea4b305a1
+  zh: 633dedc650e735dc
+/session-persistence-event-catalog/resolved-persistence-types/type-continuum-memory-index:
+  en: 9fb9edcbfaaefc84
+  zh: c16dcab457670b0c
 /session-persistence-event-catalog/resolved-persistence-types/type-continuum-memory-record:
   en: 4e4969ff8296894f
   zh: e344660d8c75c057

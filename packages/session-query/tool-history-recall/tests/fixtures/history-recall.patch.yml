@@ -1,0 +1,34 @@
+# Test-only patch over the shipped headless profile: a small mock window forces compaction before recall.
+- id: headless-startup
+  disabled: true
+
+- id: headless-runner
+  disabled: true
+
+- id: agent-loop
+  config:
+    agents:
+      - id: main
+        provider: recall-mock
+        model: recall-mock
+        cwd: !!js process.cwd()
+
+- id: session-persistence-jsonl
+  config:
+    root: './.sessions'
+    compression: none
+
+- id: compaction-basic
+  config:
+    recallFooter: true
+    thresholdRatio: 0.5
+    headroomTokens: 0
+    retainRatio: 0.1
+    maxTokens: 512
+
+- insert:
+    - id: history-recall-mock-llm
+      name: './mock-llm.ts'
+
+    - id: tool-history-recall
+      name: '@deepseek-ai/dsh-tool-history-recall'

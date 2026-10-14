@@ -1,6 +1,7 @@
 import type { Session, SessionEvent, SessionId } from '@deepseek-ai/dsh-session'
 import type { SessionPersistence } from '@deepseek-ai/dsh-session-persistence'
-import type { MemoryRecord, MemoryRecordStore, MemorySourceRef, NewMemoryRecord } from './records.ts'
+import type { ContentBlock } from '@deepseek-ai/dsh-llm'
+import type { MemoryId, MemoryRecord, MemoryRecordStore, MemorySourceRef, NewMemoryRecord } from './records.ts'
 
 /** Durable operation written to the existing Session event log. */
 export type MemoryRecordOperation = 'create' | 'supersede' | 'deactivate'
@@ -19,11 +20,51 @@ export interface MemorySourceEvent {
   readonly event: SessionEvent
 }
 
+/** One L1 index entry: Reflex tags and a pointer to the original human message in L2, never the message text. */
+export interface MemoryIndexEntry {
+  readonly id: MemoryId
+  readonly scope: string
+  /** Tags Reflex assigned; empty when the message was kept without a Reflex judgement. */
+  readonly tags: readonly string[]
+  /** The human `user/message` event whose text the entry indexes. */
+  readonly source: MemorySourceRef
+}
+
+/** Event payload that adds one entry to the L1 index. */
+export interface MemoryIndexEventData {
+  readonly operation: 'add'
+  readonly entry: MemoryIndexEntry
+}
+
 declare module '@deepseek-ai/dsh-session/types' {
   interface SessionEventMap {
     /** A source-backed Continuum record transition; log-only and never model-visible. */
     'continuum/memory-record': MemoryRecordEventData
+    /** An L1 index entry pointing at an original human message; log-only and never model-visible. */
+    'continuum/memory-index': MemoryIndexEventData
   }
+}
+
+/**
+ * Text of a human message, as an index entry resolves it.
+ * @param event - any Session event.
+ * @returns the joined, trimmed text blocks of a human `user/message`; empty for every other event.
+ */
+export function memorySourceText(event: SessionEvent): string {
+  if (event.type !== 'user/message' || event.data.source.kind !== 'user') return ''
+  return event.data.content
+    .filter((block): block is ContentBlock & { type: 'text' } => block.type === 'text')
+    .map(block => block.text).join('\n').trim()
+}
+
+/**
+ * Append one L1 index entry to the Session log.
+ * @param session - live Session that owns the durable event log.
+ * @param entry - entry whose source is a human message of the same Session.
+ * @returns the appended event with its assigned sequence number.
+ */
+export function appendMemoryIndexEvent(session: Session, entry: MemoryIndexEntry): SessionEvent<'continuum/memory-index'> {
+  return session.append('continuum/memory-index', { operation: 'add', entry })
 }
 
 /**
@@ -79,16 +120,28 @@ export async function readMemorySourceEvents(
 }
 
 /**
- * Rebuild Continuum records from durable log events without model calls or I/O.
+ * Rebuild Continuum records from durable log events without model calls or I/O. An L1 index entry becomes an
+ * in-memory record whose content is resolved from its source event in the same stream; the log never holds a copy.
  * @param events - complete Session event stream in sequence order.
  * @param store - empty or partially rebuilt record store.
  * @returns the supplied store after applying every Continuum transition.
+ * @throws when an index entry's source is not a human message with text in this stream.
  */
 export function foldMemoryRecordEvents(
   events: readonly SessionEvent[],
   store: MemoryRecordStore,
 ): MemoryRecordStore {
+  let bySeq: Map<number, SessionEvent> | undefined
   for (const event of events) {
+    if (event.type === 'continuum/memory-index') {
+      bySeq ??= new Map(events.map(candidate => [Number(candidate.seq), candidate]))
+      const { entry } = event.data
+      const source = bySeq.get(Number(entry.source.eventSeq))
+      const content = source === undefined ? '' : memorySourceText(source)
+      if (content.length === 0) throw new Error(`memory ${entry.id} index source ${String(entry.source.eventSeq)} has no human text`)
+      store.create({ id: entry.id, kind: 'fact', scope: entry.scope, content, sourceRefs: [entry.source] })
+      continue
+    }
     if (event.type !== 'continuum/memory-record') continue
     const { operation, record } = event.data
     if (operation === 'create') {

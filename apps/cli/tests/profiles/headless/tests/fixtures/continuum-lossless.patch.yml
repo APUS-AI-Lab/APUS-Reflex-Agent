@@ -1,0 +1,42 @@
+# Test overlay over the shipped headless profile: a small scripted window forces compaction, and Continuum admits
+# and recalls compacted human input through the local Reflex gateway the test starts.
+- id: agent-default-model
+  config:
+    provider: lossless-mock
+    model: lossless-mock
+
+- id: compaction-basic
+  config:
+    thresholdRatio: 0.5
+    headroomTokens: 0
+    retainRatio: 0.1
+    maxTokens: 512
+
+- insert:
+    - id: continuum-lossless-llm
+      name: ./continuum-lossless-llm.ts
+    - id: jev
+      name: ../../../../../../../packages/experimental/apus-dsh-jev-plugin/lib/index.js
+      disabled: !!js "process.env.LOSSLESS_NO_JEV === '1'"
+      config:
+        enabled: !!js process.env.LOSSLESS_JEV_ENABLED !== '0'
+        endpoint: !!js process.env.LOSSLESS_JEV_ENDPOINT
+        model: lossless-gateway
+        timeoutMs: 5000
+    - id: continuum-jev
+      name: ../../../../../../../packages/experimental/continuum-jev/lib/index.js
+      config:
+        mode: !!js process.env.LOSSLESS_JEV_MODE ?? 'active'
+        selection: threshold
+        minRelevance: 0.7
+        minImportance: 0.5
+        timeoutMs: 5000
+        sessionDataClasses: [workspace]
+        privacyPolicy:
+          mode: controlled
+          approvedRemoteIds: [system-one]
+          approvedRemoteDataClasses: [workspace]
+    - id: continuum-memory
+      name: ../../../../../../../packages/experimental/continuum-jev/lib/product-memory.js
+      config:
+        enabled: true

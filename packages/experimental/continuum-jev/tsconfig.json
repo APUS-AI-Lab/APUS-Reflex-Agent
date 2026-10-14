@@ -22,6 +22,12 @@
     },
     {
       "path": "../../session/session-persistence"
+    },
+    {
+      "path": "../../core/agent"
+    },
+    {
+      "path": "../../session-query/tool-history-recall"
     }
   ]
 }
