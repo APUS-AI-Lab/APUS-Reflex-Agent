@@ -156,8 +156,7 @@ export const SCENARIOS: readonly EvalScenario[] = [
   },
   {
     id: 's8-casual-dense',
-    title: '随口提到的大量事实（摘要预算 384）',
-    summaryTokens: 384,
+    title: '随口提到的大量事实，经多次再压缩',
     history: [
       '早上送小米上学，她说下周三学校开运动会，要穿白色运动鞋。对了豆包昨天打了狂犬疫苗，下次是 11 月 20 日。',
       chat('今天天气不错'),
@@ -172,6 +171,7 @@ export const SCENARIOS: readonly EvalScenario[] = [
       '我爸下个月 12 号要去北京开会，住在国贸附近。家里洗衣机保修到明年 3 月。',
       chat('有点困了'),
       ...pad(2),
+      ...pad(6),
     ],
     questions: [
       { ask: '豆包下次打疫苗是哪天？一句话。', expect: [['11 月 20', '11月20']], recallHint: '11 月 20' },
@@ -186,8 +186,7 @@ export const SCENARIOS: readonly EvalScenario[] = [
   },
   {
     id: 's9-identifiers',
-    title: '精确标识：长串字符（摘要预算 384）',
-    summaryTokens: 384,
+    title: '精确标识：长串字符，经多次再压缩',
     history: [
       '我网购的空气净化器快递单号是 SF1428830957263，顺丰的。',
       '下个月去成都的机票：CA4112，座位 32K，订单号 7731-0294-5582。',
@@ -197,6 +196,7 @@ export const SCENARIOS: readonly EvalScenario[] = [
       ...pad(2),
       '公司报销单号 BX-2026-10-0473，金额 2316.50 元。',
       ...pad(2),
+      ...pad(6),
     ],
     questions: [
       { ask: '空气净化器的快递单号是多少？只回答单号。', expect: [['SF1428830957263']], recallHint: 'SF1428830957263' },
@@ -209,8 +209,7 @@ export const SCENARIOS: readonly EvalScenario[] = [
   },
   {
     id: 's10-evolving',
-    title: '多次演变：跨多次压缩改了四次（摘要预算 384）',
-    summaryTokens: 384,
+    title: '多次演变：跨多次压缩改了四次',
     history: [
       '小米的钢琴课定在每周六上午 9 点。',
       ...pad(2),
@@ -220,6 +219,7 @@ export const SCENARIOS: readonly EvalScenario[] = [
       ...pad(2),
       '最后定下来了：钢琴课每周三晚上 7 点，不再改了。',
       ...pad(2),
+      ...pad(6),
     ],
     questions: [
       { ask: '小米的钢琴课现在是什么时间？一句话。', expect: [['周三', '星期三'], ['7 点', '7点', '19']], recallHint: '周三晚上 7 点' },

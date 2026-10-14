@@ -39,7 +39,8 @@ interface RunResult {
 }
 
 function grade(question: EvalQuestion, answer: string): { matched: number; pass: boolean } {
-  const text = answer.toLowerCase()
+  // Thousands separators are formatting: 28,500 matches 28500.
+  const text = answer.toLowerCase().replace(/(\d),(?=\d{3})/gu, '$1')
   const matched = question.expect.filter(group => group.some(option => text.includes(option.toLowerCase()))).length
   return { matched, pass: matched >= (question.minGroups ?? question.expect.length) }
 }
