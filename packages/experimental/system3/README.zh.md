@@ -79,6 +79,10 @@ const decision = ctx.system3.route(candidates, 'local-9b')
 
 `completionReview: { mode, yes, no, deadlineMs, sessionDataClasses, maxRefusals, evidenceCalls, resultChars }` 默认为 `false`，且依赖 `taskFrame`；没有任务卡时启用会在加载时失败。`active` 或 `shadow` 核验要求 `taskFrame.mode` 为 `active` 或 `shadow`；`off` 核验可以搭配 `off` 任务卡。所有字段都必填。顶层 Agent 对任务卡所跟随的 DSH 目标调用 `update_goal` 且 action 为 `complete` 时，工具运行前发一次 Jev 请求（决策 `completion.review`），为目标和任务卡中的每条要求各问一道是非题（`goal`、`r1`…`rN`）。Jev 只读取最近 `evidenceCalls` 次工具调用的摘要：每次调用的主要参数（命令、路径、action、查询或 URL），以及结果开头和结尾各 `resultChars` 个字符；模型自己的文字和它的 `update_goal` 调用不进入摘要。概率不高于 `no` 是有把握的“未满足”，不低于 `yes` 是“已满足”。`active` 模式下，目标或任一要求被有把握地判为未满足时拒绝这次调用，模型收到的工具结果就是拒绝说明；同一目标被拒绝 `maxRefusals` 次后，该目标之后的完成不再被拒绝。`shadow` 只记录核验、不拒绝，`off` 不发请求。插件卸载会取消在途核验，将调用交给其余工具策略，不拒绝，也不新增核验记录。用户取消仍阻止执行。决策调用在进入时已被取消则不发请求；取消后收到的提供方答复不写判断记录。每次核验先写入 `system3/judgement`，包含完整请求和响应，再写入 `system3/completion-review`，包含 `goalId`、`decision`（`complete`、`incomplete` 或 `unsure`）、未满足要求的消息 id（`unmet`）、`goalUnmet` 和 `refused`。隐私拒绝、Jev 失败和超过 `deadlineMs` 时按 `unsure` 放行。委派出的子 Agent、嵌套调用、其他目标操作，以及任务卡未跟随的目标都不核验。问法和阈值依据在已部署 Jev 上运行的标注集确定（[测试](tests/completion-review.e2e.ts)）。 拒绝额度按 Session 和目标隔离，独立 root fork 不共享。等待成功 Jev 答复期间任务卡改变时，旧答案记录为 `unsure`；active 使用同一额度拒绝过期申请，并引用当前任务卡原话要求重新核验。
 
+### Reflex 预取
+
+`prefetch: { mode, yes, no, deadlineMs, sessionDataClasses, maxItemBytes, maxTotalBytes, maxSourceFiles, maxSearchTerms, commandTimeoutMs }` 默认为 `false`；所有字段必填。在携带顶层 Agent 用户纯文本输入的 `agent/pre-step`，一条发现命令在会话工作区中列出这条输入可能需要的只读信息：未提交的改动（`git status` 以及暂存区和工作区的 diff）、受版本管理的文件列表、README、项目清单、输入以相对路径提到的文件、包含输入中至多 `maxSearchTerms` 个词的行，以及受版本管理的文件不超过 `maxSourceFiles` 个时的全部文本文件。所有候选命令立即通过 `shell` 服务以 `read-only` 沙箱策略和 `commandTimeoutMs` 期限启动；同时一次 Jev 请求（决策 `prefetch`）为每个候选问一道是非题，之后的 pre-step 监听器（例如 Skill 选择）也照常运行。Git 不运行钩子和 fsmonitor，diff 不使用外部驱动和文本转换。`active` 模式下，概率不低于 `yes` 的候选的输出各截到 `maxItemBytes`、合计不超过 `maxTotalBytes`，作为一条 `system3-prefetch` 消息在输入之后进入同一步；超过合计上限的候选只列出名称。`shadow` 只记录 `system3/judgement`，`off` 不发起询问。隐私拒绝、Jev 失败、`deadlineMs` 超时、缺少 shell 服务或会话工作区、命令失败时，这一步保持不变。委派的子 Agent、`/name` 调用和非文本输入不预取。真实端点测速（`tests/fixtures/prefetch-bench`）在同一组工作区任务上分别运行原生流程和开启预取的流程。
+
 ### Reflex Goal 监督与上下文记忆
 
 能力状态仅在所需运行时服务及注册实际存在时报告已启用；依赖移除会同步禁用该状态。
@@ -137,6 +141,15 @@ const decision = ctx.system3.route(candidates, 'local-9b')
 - <later requirement, verbatim>
 ```
 
+##### 预取的工作区信息
+
+```markdown
+[System3 预取] 以下是为这条输入预先读取的工作区信息（只读命令，在沙箱中执行，结果为本次请求时的状态）。可以直接据此回答；信息不够时再调用工具。
+
+$ <command label>
+<output, cut to maxItemBytes>
+```
+
 ##### 完成核验的拒绝说明
 
 ```markdown
@@ -156,11 +169,11 @@ const decision = ctx.system3.route(candidates, 'local-9b')
 
 #### Token effect
 
-在隐私和大小检查允许时，入口路由为每个符合条件的准入输入增加一次 Jev 调用；保留 provider 实际报告的 usage。evidence 方法限制调用方投影，usage 记录区分 provider 计数与估算。每条监督建议增加 50 到 100 个输入 token，交接包增加被转交消息本身、约 60 个 token 和一次 Jev 请求；`advise` 模式下 `missing-evidence` 每个轮次最多增加一个模型步骤。输出折叠不调用模型，并从工具结果中去掉被折叠的字符。任务卡为之后的每条消息增加一次 Jev 请求，与步骤并行；启用 Reflex 上下文审查时，审查先等待本步骤已取走消息的任务卡判断。每次变化追加一条包含目标和已记要求的运行时上下文快照。完成核验为每次被核验的完成增加一次 Jev 请求，`update_goal` 调用最多等待 `deadlineMs`；一次拒绝增加约 80 个 token，外加引用的目标和要求。 任务卡忽略基于已替换卡的判断；仍排队的消息保留到下一轮，已送入步骤的消息最多补判一次。
+在隐私和大小检查允许时，入口路由为每个符合条件的准入输入增加一次 Jev 调用；保留 provider 实际报告的 usage。evidence 方法限制调用方投影，usage 记录区分 provider 计数与估算。每条监督建议增加 50 到 100 个输入 token，交接包增加被转交消息本身、约 60 个 token 和一次 Jev 请求；`advise` 模式下 `missing-evidence` 每个轮次最多增加一个模型步骤。输出折叠不调用模型，并从工具结果中去掉被折叠的字符。任务卡为之后的每条消息增加一次 Jev 请求，与步骤并行；启用 Reflex 上下文审查时，审查先等待本步骤已取走消息的任务卡判断。每次变化追加一条包含目标和已记要求的运行时上下文快照。完成核验为每次被核验的完成增加一次 Jev 请求，`update_goal` 调用最多等待 `deadlineMs`；一次拒绝增加约 80 个 token，外加引用的目标和要求。 任务卡忽略基于已替换卡的判断；仍排队的消息保留到下一轮，已送入步骤的消息最多补判一次。 预取为每条用户输入增加一次 Jev 请求，这一步最多等待 `deadlineMs`；另外增加至多 `maxTotalBytes` 的预取输出和约 60 个 token，同时省去原本通过工具调用收集这些信息的模型步骤。
 
 #### KV Cache effect
 
-观测与 shadow receipt 不改变生成请求前缀。监督建议追加在最新工具结果之后，缓存前缀不变。工具结果在进入历史前就已折叠，之后的请求原样复用。任务卡变化时在最新消息之后追加新的运行时上下文快照，缓存前缀不变。完成核验的拒绝说明是追加在最新消息之后的工具结果，缓存前缀不变。采纳生成模型切换可能失去 provider 缓存复用；工具 schema 不变。
+观测与 shadow receipt 不改变生成请求前缀。监督建议追加在最新工具结果之后，缓存前缀不变。工具结果在进入历史前就已折叠，之后的请求原样复用。任务卡变化时在最新消息之后追加新的运行时上下文快照，缓存前缀不变。完成核验的拒绝说明是追加在最新消息之后的工具结果，缓存前缀不变。预取的信息是追加在输入之后的一条消息，缓存前缀不变。采纳生成模型切换可能失去 provider 缓存复用；工具 schema 不变。
 
 ## 已知限制与后续工作
 

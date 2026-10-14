@@ -26,6 +26,9 @@
 /deepseek-ai-dsh-experimental-system3/use-this-package/completion-review:
   en: cdcaae530ffd6372
   zh: 302c2eff352ae35b
+/deepseek-ai-dsh-experimental-system3/use-this-package/reflex-prefetch:
+  en: 4a908835ac91416b
+  zh: 5273520adc1a9d12
 /deepseek-ai-dsh-experimental-system3/use-this-package/reflex-goal-supervision-and-context-memory:
   en: 71dac8083a71daee
   zh: 7b47f57ec758b15f
@@ -53,6 +56,9 @@
 /deepseek-ai-dsh-experimental-system3/model-experience/unified-system3-seam/what-the-model-sees/task-frame:
   en: ea96da212282eb61
   zh: 68c76eba6b92ef97
+/deepseek-ai-dsh-experimental-system3/model-experience/unified-system3-seam/what-the-model-sees/prefetched-workspace-facts:
+  en: 054036948f922d1b
+  zh: ecfb207e5a8222e1
 /deepseek-ai-dsh-experimental-system3/model-experience/unified-system3-seam/what-the-model-sees/completion-refusal:
   en: 688d55c49157a8a0
   zh: 5771e6ff2e845f89
@@ -60,11 +66,11 @@
   en: 930765e6b86968b3
   zh: 905dcef49d254e45
 /deepseek-ai-dsh-experimental-system3/model-experience/unified-system3-seam/token-effect:
-  en: a741f7a74e7c3797
-  zh: 46773ab736a2a683
+  en: d81fdcfc56b4d579
+  zh: a8faf5bf3ade5ed4
 /deepseek-ai-dsh-experimental-system3/model-experience/unified-system3-seam/kv-cache-effect:
-  en: 0c28b2339754fdf6
-  zh: 0070624383ca063c
+  en: 6c0638f8c136549d
+  zh: cf22637e0e90c2be
 /deepseek-ai-dsh-experimental-system3/known-limitations-and-deferred-work:
   en: 1cd091af03adb2db
   zh: f58dd4287b47a664

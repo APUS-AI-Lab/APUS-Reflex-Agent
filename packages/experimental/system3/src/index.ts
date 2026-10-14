@@ -20,6 +20,7 @@ import { installSystem3ProcessSupervision, type System3ProcessSupervisionConfig 
 import { installSystem3RouteHealth } from './route-health.ts'
 import { installSystem3OutputFolding, type System3OutputFoldingConfig } from './output-folding.ts'
 import { installSystem3TaskFrame, type System3TaskFrameConfig } from './task-frame.ts'
+import { installSystem3Prefetch, type System3PrefetchConfig } from './prefetch.ts'
 import { installSystem3CompletionReview, type System3CompletionReviewConfig } from './completion-review.ts'
 import type { Session } from '@deepseek-ai/dsh-session'
 import { recordSystem3Decision, type System3DecisionRequest, type System3DecisionReceipt, type System3JevOptions } from './decisions.ts'
@@ -37,6 +38,7 @@ export type { System3HandoffOutcome, System3HandoffPack, System3HandoffPackConfi
 export type { ReflexSupervisionConfig } from './reflex-supervision.ts'
 export type { System3ProcessNotice, System3ProcessRule, System3ProcessSupervisionConfig, System3SupervisionSource } from './process-supervision.ts'
 export type { System3CompletionReview, System3CompletionReviewConfig } from './completion-review.ts'
+export type { System3PrefetchCandidate, System3PrefetchConfig, System3PrefetchSource } from './prefetch.ts'
 export type { System3Interjection, System3TaskFrame, System3TaskFrameConfig, System3TaskGoal, System3TaskMessage } from './task-frame.ts'
 export type { System3DecisionMode, System3DecisionSettings, System3Judgement, System3JudgementReason } from './decision-kernel.ts'
 export type { System3RouteHealth, System3RouteHealthConfig, System3RouteHealthReason, System3RouteHealthStatus } from './route-health.ts'
@@ -94,6 +96,11 @@ export interface Config {
    * `false` or omission disables it.
    */
   readonly completionReview?: false | System3CompletionReviewConfig
+  /**
+   * Read-only workspace facts prefetched in the read-only sandbox for each person input while Jev judges which ones the
+   * input needs; `false` or omission disables it.
+   */
+  readonly prefetch?: false | System3PrefetchConfig
 }
 
 /** Small operational counters, intentionally free of user data. */
@@ -328,6 +335,18 @@ export default class System3 extends Service implements System3Service {
       evidenceCalls: z.number().step(1).min(1).required(),
       resultChars: z.number().step(1).min(1).required(),
     })]).default(false),
+    prefetch: z.union([z.const(false), z.object({
+      mode: z.union([z.const('off'), z.const('shadow'), z.const('active')]).required(),
+      yes: z.number().min(0).max(1).required(),
+      no: z.number().min(0).max(1).required(),
+      deadlineMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).required(),
+      sessionDataClasses: z.array(z.union([z.const('public'), z.const('workspace'), z.const('sensitive'), z.const('secret')])).required(),
+      maxItemBytes: z.number().step(1).min(1).required(),
+      maxTotalBytes: z.number().step(1).min(1).required(),
+      maxSourceFiles: z.number().step(1).min(1).required(),
+      maxSearchTerms: z.number().step(1).min(1).required(),
+      commandTimeoutMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).required(),
+    })]).default(false),
   })
 
   readonly privacyPolicy: System3PrivacyPolicy
@@ -446,6 +465,10 @@ export default class System3 extends Service implements System3Service {
       throw new Error('completionReview needs taskFrame')
     }
     if (config.observeAgentLoop === true) this.observeAgentLoop()
+    // Registered before Skill selection so its commands and Jev request overlap that listener's own Jev request.
+    if (config.prefetch !== undefined && config.prefetch !== false) {
+      installSystem3Prefetch(ctx, { config: config.prefetch, policy: this.privacyPolicy, options: this.jevOptions })
+    }
     if (config.skillSelection !== undefined && config.skillSelection !== false) {
       const skillConfig = config.skillSelection
       ctx.inject(['skills', 'jev', 'agents'], (ctx) => {
