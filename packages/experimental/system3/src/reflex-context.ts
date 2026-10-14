@@ -9,7 +9,23 @@ import { defineTool } from '@deepseek-ai/dsh-tools'
 import { reflexContextMessageProjection, projectReflexText, type ReflexContextTarget, type ReflexTextRange } from '@deepseek-ai/dsh-compaction/reflex-context-projection'
 import type { System3DataClass } from '@deepseek-ai/dsh-experimental-system3-policy'
 import { runSystem3Decision, validateSystem3DecisionSettings, type System3DecisionSettings, type System3DecisionContext, type System3DecisionSpec } from './decision-kernel.ts'
+import { JevConfigurationError, type JevRequest, type JevSpec } from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
 import { reflexContextStateProjection, type ReflexContextState } from './reflex-context-state.ts'
+
+/**
+ * Resolve a decision for comparison, or undefined when the provider is missing, unconfigured, or switched off.
+ * @param jev - The Jev service, when loaded.
+ * @param request - The decision to resolve.
+ * @returns The resolved spec, or undefined.
+ */
+function resolvedOrUndefined(jev: { resolve(request: JevRequest): JevSpec } | undefined, request: JevRequest): JevSpec | undefined {
+  try {
+    return jev?.resolve(request)
+  } catch (error) {
+    if (error instanceof JevConfigurationError) return undefined
+    throw error
+  }
+}
 
 /** Deployment-owned judgement and retrieval budgets. */
 export interface ReflexContextConfig extends System3DecisionSettings {
@@ -255,7 +271,7 @@ export function installReflexContext(ctx: Context, config: ReflexContextConfig, 
     const jev = ctx.get('jev')
     const base = JSON.stringify({ request, config, shared, provider: jev?.readStatus().provider })
     const previous = emptySelections.get(agent.session)
-    if (previous?.base === base && JSON.stringify(jev?.resolve(request)) === previous.request) return decision
+    if (previous?.base === base && JSON.stringify(resolvedOrUndefined(jev, request)) === previous.request) return decision
     emptySelections.delete(agent.session)
     const result = await runSystem3Decision(ctx, shared, review, config, agent, input, reviewSignal)
     if (JSON.stringify(ctx.get('goals')?.get(agent)) !== goalVersion

@@ -1151,7 +1151,7 @@ export type SessionEvent<T extends SessionEventType = SessionEventType> = {
 'system3/decision': System3DecisionReceipt
 ```
 
-来源：[`packages/experimental/system3/src/decisions.ts:54`](../packages/experimental/system3/src/decisions.ts)
+来源：[`packages/experimental/system3/src/decisions.ts:55`](../packages/experimental/system3/src/decisions.ts)
 
 <a id="system3delegation-alert--log-only"></a>
 
@@ -1242,7 +1242,7 @@ export type SessionEvent<T extends SessionEventType = SessionEventType> = {
 'system3/judgement': System3Judgement
 ```
 
-来源：[`packages/experimental/system3/src/decision-kernel.ts:50`](../packages/experimental/system3/src/decision-kernel.ts)
+来源：[`packages/experimental/system3/src/decision-kernel.ts:51`](../packages/experimental/system3/src/decision-kernel.ts)
 
 <a id="system3output-fold--log-only"></a>
 
@@ -4834,7 +4834,7 @@ SHA-256: `6487b10ba7542f3c447b1e41a1c6a590b7bfafe0b9b66b49f34028da85bb970f`
 
 SHA-256: `8e864843108a0d21cd2301ab5d0f30774ce699b393eab6ce4574bf9bd2675acb`
 
-来源：[`packages/experimental/continuum-jev/src/index.ts:12`](../packages/experimental/continuum-jev/src/index.ts) · [`packages/experimental/system3/src/decision-kernel.ts:11`](../packages/experimental/system3/src/decision-kernel.ts)
+来源：[`packages/experimental/continuum-jev/src/index.ts:12`](../packages/experimental/continuum-jev/src/index.ts) · [`packages/experimental/system3/src/decision-kernel.ts:12`](../packages/experimental/system3/src/decision-kernel.ts)
 
 以下类型之一：
 
@@ -6950,7 +6950,7 @@ SHA-256: `7a07d713ef0579a8fcde543599e60247a372bd88e1d134ac198f4a39275a195b`
 
 SHA-256: `7d58975098638ae4586e006b75edbcac6346a06952658a54b6589078cb3be68d`
 
-来源：[`packages/experimental/system3/src/decisions.ts:22`](../packages/experimental/system3/src/decisions.ts)
+来源：[`packages/experimental/system3/src/decisions.ts:23`](../packages/experimental/system3/src/decisions.ts)
 
 | kind | form 属性 | 其他必需字段 | 完整定义 |
 |---|---|---|---|
@@ -6967,7 +6967,7 @@ SHA-256: `7d58975098638ae4586e006b75edbcac6346a06952658a54b6589078cb3be68d`
 
 SHA-256: `6ae169f55c5508e32ba0c7a9fcd92ccf1753a99280978a27a84e8ba650bfe9dd`
 
-来源：[`packages/experimental/system3/src/decisions.ts:27`](../packages/experimental/system3/src/decisions.ts)
+来源：[`packages/experimental/system3/src/decisions.ts:28`](../packages/experimental/system3/src/decisions.ts)
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|
@@ -7214,7 +7214,7 @@ SHA-256: `f43af9c46ec9ca37135e4a51b4732f4158164fbcd3cf69a6ee34dcc9115666a2`
 
 SHA-256: `0706ba841bb293c71cafc55db58407c79655c69a069f0c8697e6f293bcffcc87`
 
-来源：[`packages/experimental/system3/src/decision-kernel.ts:29`](../packages/experimental/system3/src/decision-kernel.ts)
+来源：[`packages/experimental/system3/src/decision-kernel.ts:30`](../packages/experimental/system3/src/decision-kernel.ts)
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|
@@ -7239,7 +7239,7 @@ SHA-256: `0706ba841bb293c71cafc55db58407c79655c69a069f0c8697e6f293bcffcc87`
 
 SHA-256: `dc8f53947b4c903618525b4d5bd2243bfa89a5bd8fae167e1a052a09344a6ac8`
 
-来源：[`packages/experimental/system3/src/decision-kernel.ts:26`](../packages/experimental/system3/src/decision-kernel.ts)
+来源：[`packages/experimental/system3/src/decision-kernel.ts:27`](../packages/experimental/system3/src/decision-kernel.ts)
 
 以下类型之一：
 
@@ -8385,7 +8385,7 @@ SHA-256: `5d03ba38734809bcbd2a55221bd938b3b3fc34b49bb686c6113e9e4931e3aa78`
 
 SHA-256: `4cd48f3e5108bd6ebedf7301c3638839b8b2b9db8dbd493974177fbdeb91a01b`
 
-来源：[`packages/api/session-controller/src/types.ts:434`](../packages/api/session-controller/src/types.ts) · [`packages/attachment/attachment/src/brand.ts:6`](../packages/attachment/attachment/src/brand.ts) · [`packages/compaction/compaction/src/brand.ts:4`](../packages/compaction/compaction/src/brand.ts) · [`packages/context/continuum/src/records.ts:6`](../packages/context/continuum/src/records.ts) · [`packages/context/continuum/src/task-types.ts:11`](../packages/context/continuum/src/task-types.ts) · [`packages/context/continuum/src/task-types.ts:7`](../packages/context/continuum/src/task-types.ts) · [`packages/context/continuum/src/task-types.ts:9`](../packages/context/continuum/src/task-types.ts) · [`packages/core/session/src/types.ts:20`](../packages/core/session/src/types.ts) · [`packages/experimental/agent-team/src/types.ts:20`](../packages/experimental/agent-team/src/types.ts) · [`packages/experimental/agent-team/src/types.ts:32`](../packages/experimental/agent-team/src/types.ts) · [`packages/experimental/agent-team/src/types.ts:8`](../packages/experimental/agent-team/src/types.ts) · [`packages/experimental/system3/src/decisions.ts:11`](../packages/experimental/system3/src/decisions.ts) · [`packages/feedback/message-feedback/src/types.ts:14`](../packages/feedback/message-feedback/src/types.ts) · [`packages/goal/goal/src/types.ts:17`](../packages/goal/goal/src/types.ts) · [`packages/interaction/commands/src/brand.ts:31`](../packages/interaction/commands/src/brand.ts) · [`packages/interaction/user-approval/src/types.ts:17`](../packages/interaction/user-approval/src/types.ts) · [`packages/llm/llm-retry/src/brand.ts:4`](../packages/llm/llm-retry/src/brand.ts) · [`packages/llm/llm/src/brand.ts:16`](../packages/llm/llm/src/brand.ts) · [`packages/llm/llm/src/brand.ts:31`](../packages/llm/llm/src/brand.ts) · [`packages/llm/llm/src/brand.ts:43`](../packages/llm/llm/src/brand.ts) · [`packages/llm/llm/src/brand.ts:67`](../packages/llm/llm/src/brand.ts) · [`packages/schedule/schedule/src/types.ts:14`](../packages/schedule/schedule/src/types.ts) · [`packages/session/session-title/src/index.ts:42`](../packages/session/session-title/src/index.ts) · [`packages/session/session-title/src/types.ts:17`](../packages/session/session-title/src/types.ts) · [`packages/subagent/subagent/src/recovery.ts:6`](../packages/subagent/subagent/src/recovery.ts) · [`packages/subagent/subagent/src/types.ts:160`](../packages/subagent/subagent/src/types.ts) · [`packages/subagent/subagent/src/types.ts:163`](../packages/subagent/subagent/src/types.ts) · [`packages/subagent/subagent/src/types.ts:20`](../packages/subagent/subagent/src/types.ts) · [`packages/webhook/webhook/src/brand.ts:12`](../packages/webhook/webhook/src/brand.ts) · [`packages/webhook/webhook/src/brand.ts:6`](../packages/webhook/webhook/src/brand.ts) · [`packages/webhook/webhook/src/brand.ts:9`](../packages/webhook/webhook/src/brand.ts) · [`packages/workflow/workflow/src/types.ts:13`](../packages/workflow/workflow/src/types.ts)
+来源：[`packages/api/session-controller/src/types.ts:434`](../packages/api/session-controller/src/types.ts) · [`packages/attachment/attachment/src/brand.ts:6`](../packages/attachment/attachment/src/brand.ts) · [`packages/compaction/compaction/src/brand.ts:4`](../packages/compaction/compaction/src/brand.ts) · [`packages/context/continuum/src/records.ts:6`](../packages/context/continuum/src/records.ts) · [`packages/context/continuum/src/task-types.ts:11`](../packages/context/continuum/src/task-types.ts) · [`packages/context/continuum/src/task-types.ts:7`](../packages/context/continuum/src/task-types.ts) · [`packages/context/continuum/src/task-types.ts:9`](../packages/context/continuum/src/task-types.ts) · [`packages/core/session/src/types.ts:20`](../packages/core/session/src/types.ts) · [`packages/experimental/agent-team/src/types.ts:20`](../packages/experimental/agent-team/src/types.ts) · [`packages/experimental/agent-team/src/types.ts:32`](../packages/experimental/agent-team/src/types.ts) · [`packages/experimental/agent-team/src/types.ts:8`](../packages/experimental/agent-team/src/types.ts) · [`packages/experimental/system3/src/decisions.ts:12`](../packages/experimental/system3/src/decisions.ts) · [`packages/feedback/message-feedback/src/types.ts:14`](../packages/feedback/message-feedback/src/types.ts) · [`packages/goal/goal/src/types.ts:17`](../packages/goal/goal/src/types.ts) · [`packages/interaction/commands/src/brand.ts:31`](../packages/interaction/commands/src/brand.ts) · [`packages/interaction/user-approval/src/types.ts:17`](../packages/interaction/user-approval/src/types.ts) · [`packages/llm/llm-retry/src/brand.ts:4`](../packages/llm/llm-retry/src/brand.ts) · [`packages/llm/llm/src/brand.ts:16`](../packages/llm/llm/src/brand.ts) · [`packages/llm/llm/src/brand.ts:31`](../packages/llm/llm/src/brand.ts) · [`packages/llm/llm/src/brand.ts:43`](../packages/llm/llm/src/brand.ts) · [`packages/llm/llm/src/brand.ts:67`](../packages/llm/llm/src/brand.ts) · [`packages/schedule/schedule/src/types.ts:14`](../packages/schedule/schedule/src/types.ts) · [`packages/session/session-title/src/index.ts:42`](../packages/session/session-title/src/index.ts) · [`packages/session/session-title/src/types.ts:17`](../packages/session/session-title/src/types.ts) · [`packages/subagent/subagent/src/recovery.ts:6`](../packages/subagent/subagent/src/recovery.ts) · [`packages/subagent/subagent/src/types.ts:160`](../packages/subagent/subagent/src/types.ts) · [`packages/subagent/subagent/src/types.ts:163`](../packages/subagent/subagent/src/types.ts) · [`packages/subagent/subagent/src/types.ts:20`](../packages/subagent/subagent/src/types.ts) · [`packages/webhook/webhook/src/brand.ts:12`](../packages/webhook/webhook/src/brand.ts) · [`packages/webhook/webhook/src/brand.ts:6`](../packages/webhook/webhook/src/brand.ts) · [`packages/webhook/webhook/src/brand.ts:9`](../packages/webhook/webhook/src/brand.ts) · [`packages/workflow/workflow/src/types.ts:13`](../packages/workflow/workflow/src/types.ts)
 
 `string`
 
@@ -10218,7 +10218,7 @@ SHA-256: `52c6113cb0e53f345324bf84f01928bea5d5df57ee80bc0dd65407b8bc5a3734`
 
 SHA-256: `311bcb135220924e0da8a03ac548e6baf8d733c94c4aa07b3ddfdad56147b4fb`
 
-来源：[`packages/experimental/system3/src/decisions.ts:23`](../packages/experimental/system3/src/decisions.ts)
+来源：[`packages/experimental/system3/src/decisions.ts:24`](../packages/experimental/system3/src/decisions.ts)
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|
@@ -10347,7 +10347,7 @@ SHA-256: `dba54c09c6e7aafc9acbed7792ecc920d99f92d0784aeeed10af55f7fe0bc8cd`
 
 SHA-256: `b59c92c0d69971ac2c1fa0e1572a01f215ecbaa076ec431c27ca2b4ab4d005c9`
 
-来源：[`packages/experimental/system3/src/reflex-context.ts:48`](../packages/experimental/system3/src/reflex-context.ts)
+来源：[`packages/experimental/system3/src/reflex-context.ts:64`](../packages/experimental/system3/src/reflex-context.ts)
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|
@@ -10968,7 +10968,7 @@ SHA-256: `8fcb0b44a575e998665c053643d1ab04c82f39253ebd190ac0c975b78e40b543`
 
 SHA-256: `3246a7a4b705b83c748eddec40ec1b1c82c8374b14cb32249045e9690e8dec96`
 
-来源：[`packages/experimental/system3/src/decisions.ts:24`](../packages/experimental/system3/src/decisions.ts)
+来源：[`packages/experimental/system3/src/decisions.ts:25`](../packages/experimental/system3/src/decisions.ts)
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|

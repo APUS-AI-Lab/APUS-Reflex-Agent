@@ -887,11 +887,17 @@ export interface Config {
 ## `@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin`
 
 - `refs`: `Volatile` (`@deepseek-ai/cordis`)
-- `source`: [`packages/experimental/apus-dsh-jev-plugin/src/index.ts:33`](../packages/experimental/apus-dsh-jev-plugin/src/index.ts)
+- `source`: [`packages/experimental/apus-dsh-jev-plugin/src/index.ts:38`](../packages/experimental/apus-dsh-jev-plugin/src/index.ts)
 
 ```ts config-catalog
 /** Plugin configuration for the built-in System One provider. */
 export interface Config {
+  /**
+   * Whether Reflex decisions run. When false, resolving or sending a decision throws {@link JevDisabledError}, a
+   * {@link JevConfigurationError} like an unconfigured provider's, and nothing reaches the gateway, so each caller keeps
+   * its native path; provider metadata stays listed. Changes apply to the next decision. @default true
+   */
+  readonly enabled: Volatile<boolean>
   /** System One gateway URL; empty with model leaves the provider unconfigured. Credentials use apiKeyEnv. */
   readonly endpoint: Volatile<string>
   /** Wire protocol; the official API does not receive the OpenJev effort extension. @default 'openjev' */
