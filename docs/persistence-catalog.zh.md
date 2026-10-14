@@ -1308,7 +1308,7 @@ export type SessionEvent<T extends SessionEventType = SessionEventType> = {
 'system3/skill-decision': System3SkillDecisionReceipt
 ```
 
-来源：[`packages/experimental/system3/src/skill-selection.ts:96`](../packages/experimental/system3/src/skill-selection.ts)
+来源：[`packages/experimental/system3/src/skill-selection.ts:106`](../packages/experimental/system3/src/skill-selection.ts)
 
 <a id="system3task-frame--log-only"></a>
 
@@ -7354,7 +7354,7 @@ SHA-256: `1d2809cee52a4308806a6b05848e53b5666fc166d82f41ddd96cc289aeba3b64`
 
 SHA-256: `732a21dbf5a389ed7c4291ade6c75ced7e565c998da496bd65fb7f32c14df4f7`
 
-来源：[`packages/experimental/system3/src/skill-selection.ts:76`](../packages/experimental/system3/src/skill-selection.ts)
+来源：[`packages/experimental/system3/src/skill-selection.ts:86`](../packages/experimental/system3/src/skill-selection.ts)
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|
