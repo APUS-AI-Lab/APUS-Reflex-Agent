@@ -572,9 +572,11 @@ async function throwGuardedCreateFailure(
 
 /**
  * Atomically replace a file through a private, synced staging file in the same directory.
- * POSIX protects the staging directory and file with `0o700` and `0o600`. A new Windows file
- * inherits the destination directory's DACL; a replacement copies the existing target's DACL
- * onto the empty temp before writing and preserves the target descriptor at publication.
+ * POSIX protects the staging directory and file with `0o700` and `0o600` while content is written; a
+ * new POSIX file then publishes with the mode a `0o666` creation receives under the process umask,
+ * matching other file creators. A new Windows file inherits the destination directory's DACL; a
+ * replacement copies the existing target's DACL onto the empty temp before writing and preserves the
+ * target descriptor at publication.
  * @param absolutePath - destination; missing parent directories are created.
  * @param content - the full UTF-8 text to write.
  * @param mode - existing destination's POSIX mode to preserve, or `undefined` for a new file;
@@ -617,7 +619,9 @@ export async function writeFileAtomic(
     stagingCreated = true
     await chmod(stagingDir, 0o700)
 
-    handle = await open(tempPath, 'wx', 0o600)
+    handle = await open(tempPath, 'wx', 0o666)
+    // The kernel applied the process umask at creation; a new file publishes with that mode.
+    const publishedMode = mode ?? (await handle.stat()).mode & 0o777
     await handle.chmod(0o600)
     if (platform === 'win32' && mode !== undefined) {
       await copyFileDacl(absolutePath, tempPath)
@@ -625,7 +629,7 @@ export async function writeFileAtomic(
     await handle.writeFile(content, { encoding: 'utf8', ...signal ? { signal } : {} })
     await handle.sync()
     await internals.inspectTemp?.({ stagingDir, tempPath })
-    if (mode !== undefined) await handle.chmod(mode)
+    await handle.chmod(publishedMode)
     await handle.close()
     handle = undefined
 
