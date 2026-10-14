@@ -35,6 +35,28 @@ describe('Reflex dedicated settings controller', () => {
     } finally { f.controller.dispose() }
   })
 
+  it('saves the Reflex switch at once without the staged connection draft, and reports a refused write', async () => {
+    const f = fixture()
+    try {
+      expect(f.state().enabled).toBe(true)
+      f.face.edit('model', 'staged-model')
+      const pending = f.face.setEnabled(false)
+      expect(f.state().toggling).toBe(true)
+      await pending
+      expect(f.host.mutate).toHaveBeenCalledWith([{ op: 'set', path: ['enabled'], value: false }], undefined)
+      expect(f.state()).toMatchObject({ toggling: false, toggleFailed: false, dirty: true })
+      f.host.publish({ status: 'ready', writable: true, value: { endpoint: 'https://reflex.test', model: 'decision', enabled: false }, user: { enabled: false } })
+      expect(f.state().enabled).toBe(false)
+      f.host.mutate.mockResolvedValueOnce(false)
+      await f.face.setEnabled(true)
+      expect(f.state()).toMatchObject({ enabled: false, toggleFailed: true })
+      f.host.publish({ status: 'ready', writable: false, value: { enabled: false }, user: {} })
+      f.host.mutate.mockClear()
+      await f.face.setEnabled(true)
+      expect(f.host.mutate).not.toHaveBeenCalled()
+    } finally { f.controller.dispose() }
+  })
+
   it('keeps capability state independent from a successful connection probe', async () => {
     const f = fixture()
     try {

@@ -32,6 +32,8 @@ export const zh = {
   skillSelection: '输入判断与 Skill 选择', entryRouting: '用户入口路由', codexSupervision: 'Codex 长时 Goal 自动纠偏', contextMemory: '会话上下文恢复',
   notImplemented: '模块未加载', enabled: '已启用', disabled: '未启用', unverified: '执行结果请查看会话记录',
   runtimeUnavailable: '无法读取运行状态', refresh: '刷新能力状态',
+  switchTitle: '启用 Reflex 决策', switchOn: '已开启：输入判断、Skill 选择、工作区预取等由 Reflex 在主模型之前完成',
+  switchOff: '已关闭：所有请求按原生流程执行，不调用决策服务', switchFailed: '开关状态未保存，请重试',
 } satisfies Record<string, string>
 /** Settings dictionary keys. */
 export type ReflexSettingsKey = keyof typeof zh
@@ -63,6 +65,8 @@ export const en: Record<ReflexSettingsKey, string> = {
   draft: 'Testing uses the current draft without saving it. Test again after editing.', effective: 'Saved settings apply to new requests; running requests retain their configuration.',
   capabilities: 'Feature configuration', skillSelection: 'Input judgment and Skill selection', entryRouting: 'User entry routing', codexSupervision: 'Codex long-running Goal correction', contextMemory: 'Session context recovery',
   notImplemented: 'Module not loaded', enabled: 'Enabled', disabled: 'Disabled', unverified: 'See the conversation for execution results', runtimeUnavailable: 'Runtime status is unavailable.', refresh: 'Refresh capability status',
+  switchTitle: 'Enable Reflex decisions', switchOn: 'On: input judgment, Skill selection and workspace prefetch run in Reflex before the main model',
+  switchOff: 'Off: every request runs the native path without contacting the decision service', switchFailed: 'The switch was not saved. Try again.',
 }
 /** Form shell labels from the owning dictionary.
  * @param t - Typed settings dictionary reader.
