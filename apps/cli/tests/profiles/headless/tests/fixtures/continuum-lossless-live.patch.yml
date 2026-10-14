@@ -23,6 +23,8 @@
     headroomTokens: 2048
     thresholdRatio: 0.7
     retainRatio: 0.2
+    # Long-term use repeatedly summarizes summaries; a smaller summary budget reproduces that pressure.
+    maxTokens: !!js Number(process.env.CONTINUUM_LIVE_SUMMARY_TOKENS ?? '2048')
 
 - id: session-persistence-jsonl
   config:

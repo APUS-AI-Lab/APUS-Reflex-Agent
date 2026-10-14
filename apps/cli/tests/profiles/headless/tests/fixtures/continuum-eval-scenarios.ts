@@ -18,6 +18,8 @@ export interface EvalQuestion {
 export interface EvalScenario {
   readonly id: string
   readonly title: string
+  /** Summary output budget for both modes; omitted keeps the overlay default of 2048 tokens. */
+  readonly summaryTokens?: number
   readonly history: readonly string[]
   readonly questions: readonly EvalQuestion[]
 }
@@ -150,6 +152,78 @@ export const SCENARIOS: readonly EvalScenario[] = [
       { ask: '周末带孩子去哪玩比较好？一句话建议。', expect: [['恐龙']], recallHint: '恐龙' },
       { ask: '想给家里添个宠物，你有什么建议？一句话。', expect: [['猫毛', '过敏']], recallHint: '猫毛' },
       { ask: '这周五我能开车去公司吗？一句话。', expect: [['限行']], recallHint: '限行' },
+    ],
+  },
+  {
+    id: 's8-casual-dense',
+    title: '随口提到的大量事实（摘要预算 384）',
+    summaryTokens: 384,
+    history: [
+      '早上送小米上学，她说下周三学校开运动会，要穿白色运动鞋。对了豆包昨天打了狂犬疫苗，下次是 11 月 20 日。',
+      chat('今天天气不错'),
+      '中午跟同事老周吃饭，他说他女儿也在育才小学。我顺便把体检预约改到了 10 月 30 号上午八点，在市一医院东院。',
+      ...pad(2),
+      '晚上我妈打电话说她血压有点高，医生让她把缬沙坦从一片加到一片半。家里燃气费这个月 186 元，记得 25 号前交。',
+      '老婆说她想报个瑜伽课，周二周四晚上七点，一次 120 元。乐乐的乐高课换老师了，新老师姓陈。',
+      ...pad(2),
+      '周末想去舅舅家，他住在滨江区江南大道 1088 号，停车要停 B2。小米最近迷上了画画，最喜欢紫色。',
+      '我车的机油上次是 4 月换的，里程 23500 公里，下次 28500 公里要换。乐乐幼儿园班主任是刘老师，电话尾号 6621。',
+      ...pad(2),
+      '我爸下个月 12 号要去北京开会，住在国贸附近。家里洗衣机保修到明年 3 月。',
+      chat('有点困了'),
+      ...pad(2),
+    ],
+    questions: [
+      { ask: '豆包下次打疫苗是哪天？一句话。', expect: [['11 月 20', '11月20']], recallHint: '11 月 20' },
+      { ask: '我体检约在什么时候、哪家医院？一句话。', expect: [['10 月 30', '10月30'], ['东院']], recallHint: '东院' },
+      { ask: '我妈现在缬沙坦吃多少？一句话。', expect: [['一片半', '1.5']], recallHint: '一片半' },
+      { ask: '这个月燃气费多少、几号前交？一句话。', expect: [['186'], ['25']], recallHint: '186' },
+      { ask: '去舅舅家车停哪一层？一句话。', expect: [['B2']], recallHint: 'B2' },
+      { ask: '我的车下次多少公里换机油？一句话。', expect: [['28500']], recallHint: '28500' },
+      { ask: '乐乐幼儿园班主任电话尾号是多少？一句话。', expect: [['6621']], recallHint: '6621' },
+      { ask: '小米运动会那天要穿什么鞋？一句话。', expect: [['白色']], recallHint: '白色运动鞋' },
+    ],
+  },
+  {
+    id: 's9-identifiers',
+    title: '精确标识：长串字符（摘要预算 384）',
+    summaryTokens: 384,
+    history: [
+      '我网购的空气净化器快递单号是 SF1428830957263，顺丰的。',
+      '下个月去成都的机票：CA4112，座位 32K，订单号 7731-0294-5582。',
+      ...pad(2),
+      '酒店确认号是 HZ88K2Q7，入住人写的是我老婆。',
+      '家里新门锁的临时密码是 905127，记得周日前改掉。',
+      ...pad(2),
+      '公司报销单号 BX-2026-10-0473，金额 2316.50 元。',
+      ...pad(2),
+    ],
+    questions: [
+      { ask: '空气净化器的快递单号是多少？只回答单号。', expect: [['SF1428830957263']], recallHint: 'SF1428830957263' },
+      { ask: '去成都的航班号和座位？一句话。', expect: [['CA4112'], ['32K']], recallHint: '32K' },
+      { ask: '机票订单号是多少？只回答订单号。', expect: [['7731-0294-5582']], recallHint: '7731-0294-5582' },
+      { ask: '酒店确认号是多少？只回答确认号。', expect: [['HZ88K2Q7']], recallHint: 'HZ88K2Q7' },
+      { ask: '门锁临时密码是多少？只回答密码。', expect: [['905127']], recallHint: '905127' },
+      { ask: '报销单号和金额？一句话。', expect: [['BX-2026-10-0473'], ['2316.5']], recallHint: 'BX-2026-10-0473' },
+    ],
+  },
+  {
+    id: 's10-evolving',
+    title: '多次演变：跨多次压缩改了四次（摘要预算 384）',
+    summaryTokens: 384,
+    history: [
+      '小米的钢琴课定在每周六上午 9 点。',
+      ...pad(2),
+      '钢琴课改了，改到周六下午 2 点。',
+      ...pad(2),
+      '钢琴老师那边又调整了，改到周日上午 10 点。',
+      ...pad(2),
+      '最后定下来了：钢琴课每周三晚上 7 点，不再改了。',
+      ...pad(2),
+    ],
+    questions: [
+      { ask: '小米的钢琴课现在是什么时间？一句话。', expect: [['周三', '星期三'], ['7 点', '7点', '19']], recallHint: '周三晚上 7 点' },
+      { ask: '钢琴课时间前后改过哪几次？按顺序列出来。', expect: [['周六上午'], ['周六下午'], ['周日'], ['周三']], recallHint: '周六上午 9 点' },
     ],
   },
 ]

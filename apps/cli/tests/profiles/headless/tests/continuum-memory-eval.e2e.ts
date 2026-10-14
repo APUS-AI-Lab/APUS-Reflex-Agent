@@ -46,7 +46,10 @@ function grade(question: EvalQuestion, answer: string): { matched: number; pass:
 
 async function run(scenario: EvalScenario, mode: Mode, rep: number): Promise<RunResult> {
   const turns = [...scenario.history, ...scenario.questions.map(question => question.ask)]
-  const { events, elapsed } = await converse(turns, { CONTINUUM_LIVE_JEV_MODE: mode === 'memory' ? 'active' : 'off' })
+  const { events, elapsed } = await converse(turns, {
+    CONTINUUM_LIVE_JEV_MODE: mode === 'memory' ? 'active' : 'off',
+    ...scenario.summaryTokens === undefined ? {} : { CONTINUUM_LIVE_SUMMARY_TOKENS: String(scenario.summaryTokens) },
+  })
   const questions = scenario.questions.map((question, index) => {
     const turn = scenario.history.length + index
     const answer = turnAnswer(events, turn)
@@ -99,10 +102,18 @@ describe.skipIf(!enabled)('Continuum personal-agent memory A/B on real endpoints
         meanQuestionMs: Math.round(questions.reduce((sum, question) => sum + question.ms, 0) / Math.max(1, questions.length)),
       }
     })
-    const report = { generatedAt: new Date().toISOString(), reps, summary, results }
+    const byScenario = scenarios.map(scenario => ({
+      scenario: scenario.id,
+      ...Object.fromEntries((['memory', 'baseline'] as const).map((mode) => {
+        const questions = results.filter(result => result.scenario === scenario.id && result.mode === mode)
+          .flatMap(result => result.questions)
+        return [mode, `${String(questions.filter(question => question.pass).length)}/${String(questions.length)}`]
+      })),
+    }))
+    const report = { generatedAt: new Date().toISOString(), reps, summary, byScenario, results }
     const path = process.env.CONTINUUM_EVAL_REPORT
     if (path !== undefined) await writeFile(path, `${JSON.stringify(report, null, 2)}\n`)
-    process.stdout.write(`EVAL ${JSON.stringify(summary)}\n`)
+    process.stdout.write(`EVAL ${JSON.stringify(summary)}\nBY_SCENARIO ${JSON.stringify(byScenario)}\n`)
     expect(results).toHaveLength(tasks.length)
   }, 7_200_000)
 })
