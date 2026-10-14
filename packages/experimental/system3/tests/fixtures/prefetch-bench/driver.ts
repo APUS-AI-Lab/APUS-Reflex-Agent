@@ -98,12 +98,14 @@ for (let round = 0; round < repeats; round += 1) {
       const tools = events.flatMap(event => event.type === 'assistant/message'
         ? event.data.message.content.flatMap(block => block.type === 'tool-call' ? [block.name] : []) : [])
       const judgement = events.find(event => event.type === 'system3/judgement' && event.data.decision === 'prefetch')
+      const skillDecision = events.find(event => event.type === 'system3/skill-decision')
       const injected = events.flatMap(event => event.type === 'user/message' && event.data.source.kind === 'system3-prefetch'
         ? [event.data.source.items] : [])
       results.push({ round, id: entry.id, ms, steps: events.filter(event => event.type === 'assistant/message').length, tools,
         reflex: judgement?.type === 'system3/judgement'
           ? { outcome: judgement.data.outcome, reason: judgement.data.reason, elapsedMs: judgement.data.elapsedMs,
-            items: injected[0] ?? [] }
+            items: injected[0] ?? [],
+            skillMs: skillDecision?.type === 'system3/skill-decision' ? Math.round(skillDecision.data.elapsedMs) : null }
           : null,
         correct: entry.expect.test(result.output), output: result.output.trim().slice(0, 80) })
     } finally {

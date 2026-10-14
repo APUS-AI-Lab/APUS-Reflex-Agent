@@ -26,6 +26,7 @@
         model: !!js process.env.JEV_MODEL
         apiKeyEnv: JEV_API_KEY
         timeoutMs: 15000
+        questionsPerRequest: !!js Number(process.env.JEV_QUESTIONS_PER_REQUEST ?? '16')
 
     - id: system3
       name: '../../../src/index.ts'
