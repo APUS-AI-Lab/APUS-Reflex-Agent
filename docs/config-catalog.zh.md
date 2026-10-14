@@ -922,6 +922,12 @@ export interface Config {
   readonly http2?: boolean
   /** Consecutive requests without a response after which the dedicated pool reopens; requires `keepAliveMs`. Omission never reopens it. */
   readonly resetAfterFailures?: number
+  /**
+   * Most questions one gateway request carries. A decision with more questions is sent as consecutive groups of this
+   * size in parallel requests with the same state, and their answers are merged into one response; gateway time grows
+   * with the question count, so parallel groups answer sooner. Omission sends every decision as one request.
+   */
+  readonly questionsPerRequest?: number
 }
 ```
 <!-- END GENERATED config-catalog:@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin -->
@@ -1310,7 +1316,7 @@ export interface Config {
 ## `@deepseek-ai/dsh-experimental-system3`
 
 - `refs`: [`System3DataClass`](../packages/experimental/system3-policy/src/index.ts) · [`System3ExecutionDomain`](../packages/experimental/system3-policy/src/index.ts) · [`System3PrivacyMode`](../packages/experimental/system3-policy/src/index.ts)
-- `source`: [`packages/experimental/system3/src/index.ts:59`](../packages/experimental/system3/src/index.ts)
+- `source`: [`packages/experimental/system3/src/index.ts:61`](../packages/experimental/system3/src/index.ts)
 
 ```ts config-catalog
 /** Configures the default local-first privacy boundary. */
@@ -1352,6 +1358,11 @@ export interface Config {
    * `false` or omission disables it.
    */
   readonly completionReview?: false | System3CompletionReviewConfig
+  /**
+   * Read-only workspace facts prefetched in the read-only sandbox for each person input while Jev judges which ones the
+   * input needs; `false` or omission disables it.
+   */
+  readonly prefetch?: false | System3PrefetchConfig
 }
 
 /** Explicit controls for entry recommendations; omission leaves entry routing disabled. */
@@ -1397,7 +1408,10 @@ export interface System3SkillSelectionConfig {
   readonly maxInputBytes: number
   /** UTF-8 limit for the complete rendered Skill instructions; overflow skips injection. */
   readonly maxContentBytes: number
-  /** Maximum complete catalog size considered automatically; overflow uses native Skill discovery. */
+  /**
+   * Most Skills one Jev choice question lists. A larger catalog is split into consecutive groups of this size, each its
+   * own question in the same request, up to 15 groups; a catalog beyond that is first narrowed by shared terms.
+   */
   readonly maxCandidates: number
   /** Total catalog, Jev and body-loading deadline, within the Node timer range. */
   readonly deadlineMs: number
@@ -1527,6 +1541,22 @@ export interface System3CompletionReviewConfig extends System3DecisionSettings {
   readonly evidenceCalls: number
   /** Characters kept from the start and from the end of each tool result. */
   readonly resultChars: number
+}
+
+/** Mode, thresholds, and size limits of Reflex prefetch; deployment-owned. */
+export interface System3PrefetchConfig extends System3DecisionSettings {
+  /** Data classes of the input and workspace names sent to Jev, checked against the privacy policy. */
+  readonly sessionDataClasses: readonly System3DataClass[]
+  /** Bytes of one prefetched output shown to the model; a longer output is cut and marked. */
+  readonly maxItemBytes: number
+  /** Bytes of all prefetched outputs of one input together; later outputs past it are left out and named. */
+  readonly maxTotalBytes: number
+  /** A project with at most this many tracked files offers its complete sources as one prefetch. */
+  readonly maxSourceFiles: number
+  /** Most input words searched for in the project. */
+  readonly maxSearchTerms: number
+  /** Deadline of each read-only command, in milliseconds. */
+  readonly commandTimeoutMs: number
 }
 
 /** One entry route Jev may choose. */

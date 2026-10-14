@@ -1,0 +1,49 @@
+# Live-only patch: the native setup plus Reflex prefetch. Credentials come only from DEEPSEEK_API_KEY and JEV_API_KEY;
+# the endpoint and model come from JEV_ENDPOINT and JEV_MODEL.
+- id: headless-startup
+  disabled: true
+
+- id: headless-runner
+  disabled: true
+
+- id: llm-deepseek
+  config:
+    apiKeyEnv: DEEPSEEK_API_KEY
+
+- id: agent-loop
+  config:
+    agents:
+      - id: main
+        provider: deepseek-official
+        model: deepseek-flash
+        cwd: !!js process.cwd()
+
+- insert:
+    - id: jev
+      name: '../../../../apus-dsh-jev-plugin/src/index.ts'
+      config:
+        endpoint: !!js process.env.JEV_ENDPOINT
+        model: !!js process.env.JEV_MODEL
+        apiKeyEnv: JEV_API_KEY
+        timeoutMs: 15000
+        questionsPerRequest: !!js Number(process.env.JEV_QUESTIONS_PER_REQUEST ?? '16')
+
+    - id: system3
+      name: '../../../src/index.ts'
+      config:
+        privacyMode: controlled
+        approvedRemoteIds: [jev]
+        approvedRemoteDataClasses: [workspace]
+        jevRouteId: jev
+        jevExecutionDomain: network
+        prefetch:
+          mode: active
+          yes: 0.5
+          no: 0.3
+          deadlineMs: 3000
+          sessionDataClasses: [workspace]
+          maxItemBytes: 8000
+          maxTotalBytes: 24000
+          maxSourceFiles: 30
+          maxSearchTerms: 4
+          commandTimeoutMs: 3000

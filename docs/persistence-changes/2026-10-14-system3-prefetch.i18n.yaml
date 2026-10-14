@@ -1,0 +1,28 @@
+# Bilingual-pair consistency record for 2026-10-14-system3-prefetch.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/persistence-changes/2026-10-14-system3-prefetch.md
+/:
+  en: 3d5a424ae7d7e46b
+  zh: c22a8e4a62d8cc1a
+/2026-10-14-system3-prefetch:
+  en: ee90f09af5ee1e3d
+  zh: b8acd879bdaed50f
+/2026-10-14-system3-prefetch/summary:
+  en: f65e46dd183950fa
+  zh: 76f0ca77efb2e2b3
+/2026-10-14-system3-prefetch/table-of-contents:
+  en: 6cf314a069ceb451
+  zh: 9adff678e9ecab3b
+/2026-10-14-system3-prefetch/declaration:
+  en: 6907136f28e48c90
+  zh: 02f8298485f3d8e7
+/2026-10-14-system3-prefetch/compatibility:
+  en: d53fd71cfb0edf34
+  zh: 8a93c3a18ab17bd5
+/2026-10-14-system3-prefetch/verification:
+  en: 3ce2235dd3b33c85
+  zh: b349941a249809cb
+/2026-10-14-system3-prefetch/dev-note:
+  en: b75c8458928b72b9
+  zh: 003ba4e17b4b5269

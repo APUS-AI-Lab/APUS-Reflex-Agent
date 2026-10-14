@@ -8,7 +8,7 @@ import Skills from '@deepseek-ai/dsh-skill'
 import { afterEach, expect, it, vi } from 'vitest'
 import Jev from '../../apus-dsh-jev-plugin/src/index.ts'
 import System3 from '../src/index.ts'
-import { installSystem3SkillSelection, type System3SkillSelectionConfig } from '../src/skill-selection.ts'
+import { installSystem3SkillSelection, prefilterSkills, type System3SkillSelectionConfig } from '../src/skill-selection.ts'
 import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 
 const contexts: Context[] = []
@@ -95,15 +95,48 @@ it('uses stable choice ids when a legitimate Skill is named abstain', async () =
   expect(h.ctx.sessionProjections.stateOf(h.agent.session, 'system3Runtime')?.skill).toMatchObject({ selected: 'abstain', injected: true })
 })
 
-it('leaves the original input intact when the bounded catalog is exceeded', async () => {
+it('asks one Skill question per group of an oversized catalog in the same request and keeps the most confident choice', async () => {
   const h = await setup({ maxCandidates: 1 })
   h.ctx.effect(() => h.ctx.skills.register({ name: 'another-skill', description: 'Another task.', source: 'runtime', content: 'Other instructions.' }))
-  const result = await h.dispatch.waterfall('agent/pre-step', { messages: [h.message], turn: 1, step: 0, signal: new AbortController().signal },
-    () => Promise.resolve({ kind: 'enter', messages: [h.message] }))
-  expect(result).toEqual({ kind: 'enter', messages: [h.message] })
+  h.decide.mockImplementation(async query => ({ kind: 'ok', spec: h.ctx.jev.resolve(query), response: { model: 'jev-test', answers: {
+    intent: { type: 'choice', choice: 'action', confidence: 1, probabilities: { action: 1 } },
+    skill: { type: 'choice', choice: 'skill-0', confidence: 0.6, probabilities: { 'skill-0': 0.6, abstain: 0.4 } },
+    skill2: { type: 'choice', choice: 'skill-1', confidence: 0.9, probabilities: { 'skill-1': 0.9, abstain: 0.1 } } } } }))
+  h.agent.followup(h.message)
+  await h.agent.whenIdle()
   expect(h.decide).toHaveBeenCalledTimes(1)
-  expect(h.decide.mock.calls[0]?.[0].questions.skill).toBeUndefined()
-  expect(h.ctx.sessionProjections.stateOf(h.agent.session, 'system3Runtime')?.skill).toMatchObject({ outcome: 'too-many-candidates', intent: 'action', injected: false })
+  const questions = h.decide.mock.calls[0]?.[0].questions ?? {}
+  expect(Object.keys(questions)).toEqual(['intent', 'skill', 'skill2'])
+  expect(Object.keys(questions.skill?.criteria ?? {})).toEqual(['skill-0', 'abstain'])
+  expect(questions.skill2?.criteria).toEqual({ 'skill-1': 'csv-reconciliation: Reconcile public CSV rows and report discrepancies.',
+    abstain: 'No clearly applicable skill.' })
+  expect(h.ctx.sessionProjections.stateOf(h.agent.session, 'system3Runtime')?.skill).toMatchObject({ outcome: 'selected', selected: 'csv-reconciliation', injected: true })
+})
+
+it('abstains only when every group abstains, and reports low confidence when a group chose below the threshold', async () => {
+  const run = async (skill2: { choice: string; confidence: number }) => {
+    const h = await setup({ maxCandidates: 1 })
+    h.ctx.effect(() => h.ctx.skills.register({ name: 'another-skill', description: 'Another task.', source: 'runtime', content: 'Other instructions.' }))
+    h.decide.mockImplementation(async query => ({ kind: 'ok', spec: h.ctx.jev.resolve(query), response: { model: 'jev-test', answers: {
+      intent: { type: 'choice', choice: 'action', confidence: 1, probabilities: { action: 1 } },
+      skill: { type: 'choice', choice: 'abstain', confidence: 0.9, probabilities: { 'skill-0': 0.1, abstain: 0.9 } },
+      skill2: { type: 'choice', ...skill2, probabilities: { [skill2.choice]: skill2.confidence } } } } }))
+    h.agent.followup(h.message)
+    await h.agent.whenIdle()
+    return h.ctx.sessionProjections.stateOf(h.agent.session, 'system3Runtime')?.skill
+  }
+  expect(await run({ choice: 'abstain', confidence: 0.8 })).toMatchObject({ outcome: 'abstain', injected: false })
+  expect(await run({ choice: 'skill-1', confidence: 0.2 })).toMatchObject({ outcome: 'low-confidence', injected: false })
+  expect(await run({ choice: 'skill-0', confidence: 0.9 })).toMatchObject({ outcome: 'invalid-response', injected: false })
+})
+
+it('narrows a catalog beyond every group by shared words and CJK character pairs, then fills in catalog order', () => {
+  const catalog = [{ name: 'cron-schedule', description: 'Write cron expressions.' }, { name: 'sql-style', description: 'Write SQL queries.' },
+    { name: 'release-notes', description: '撰写版本发布说明。' }, { name: 'sql-review', description: 'Review SQL queries for style.' }]
+  expect(prefilterSkills('Review this SQL query style', catalog, 2).map(skill => skill.name)).toEqual(['sql-style', 'sql-review'])
+  expect(prefilterSkills('帮我写发布说明', catalog, 2).map(skill => skill.name)).toEqual(['cron-schedule', 'release-notes'])
+  expect(prefilterSkills('Say hello to the team', catalog, 2).map(skill => skill.name)).toEqual(['cron-schedule', 'sql-style'])
+  expect(prefilterSkills('anything', catalog, 4)).toEqual(catalog)
 })
 
 it('never truncates an oversized Skill body into the generation request', async () => {

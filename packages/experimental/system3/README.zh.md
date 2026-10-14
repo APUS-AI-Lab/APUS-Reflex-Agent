@@ -71,13 +71,17 @@ const decision = ctx.system3.route(candidates, 'local-9b')
 
 `taskFrame: { mode, yes, no, deadlineMs, sessionDataClasses, maxItems, maxMessageChars, interjection? }` 为每个顶层 Agent 记住用户的目标和之后提出的要求。创建 DSH 目标时以目标的 objective 建立任务卡，修改 objective 时更新任务并保留已记的要求；目标未完成也未清除期间，任何消息都不会替换它。没有进行中的目标时，Session 的第一条纯文本消息建立任务卡。之后每条不超过 `maxMessageChars` 的消息在所在步骤取走后再判断，除启用 Reflex 上下文审查外，步骤不必等待：一次 Jev 请求引用当前任务和这条消息，问一道选择题（`continue`、`side`、`switch`、`unclear`），以及几道是非题：是否要求做具体工作，是否提出要求或完成标准，是否让 AI 停下或改做正在进行的操作，是否纠正之前的做法。要求、完成标准、纠正任一回答为是（概率不低于 `yes`），或在选择为 `continue` 时“停下或改做”回答为是，消息原文追加进任务卡，只保留最近 `maxItems` 条；选 `switch`、要求做具体工作且不是纠正时，以这条消息开始新的任务卡；其他情况不变。每次判断写入 `system3/judgement`，包含完整请求和响应；失败、超过 `deadlineMs` 和隐私拒绝都不改变任务卡。`active` 模式下每次变化写入 `system3/task-frame`，任务卡里有要求后通过 `system3:task-frame` 运行时上下文进入模型；`shadow` 模式下任务卡只在内存中，只记录判断；`off` 不发请求。配置 `interjection` 时，用户在运行中的轮次之后排队的纯文本消息在到达时就判断，之后该消息被取走时复用这次判断：`active` 模式下，属于当前任务的要求、完成标准或纠正，会通过会话控制器的队列 `steer` 操作移入正在运行的轮次，这与用户自己点击插入按钮是同一操作；如果该 Agent 有正在运行且接受输入的委派，还会通过 `subagents.steerByParent`（dock 补充说明表单走的同一通道）把文本发给它；旁支问题、新任务和闲聊保持排队；`shadow` 只记录判断。每条这样的消息写入 `system3/interjection`，包含判断、是否已移入，以及也接收了它的委派 provider（`forwardedTo`）；轮次已结束，或用户已编辑、删除该条目时，消息留在原处。移入需要 `active` 的任务卡。委派出的子 Agent、带附件的消息和更长的消息都跳过。运行时投影以 `taskFrame` 暴露任务卡，客户端在 dock 中显示为一行计数，点开可见任务和每条要求；以 `interjection` 暴露正在运行的轮次最近一条已移入的消息，dock 用一行提示，直到该轮结束。问法依据在已部署 Jev 上运行的标注集确定（[报告](../../../docs/feat-jev-decision-kernel/task-frame-report.json)）。
 
-`skillSelection` 在原生 `agent/pre-step` 扩展点为下游保留的普通文本输入分类，并可选择至多一个允许模型调用的 Skill。配置包含 `sessionDataClasses`、`minConfidence`、`maxInputBytes`、`maxContentBytes`、`maxCandidates`（1–254）和 `deadlineMs`。Jev 接收完整的当前文本及固定意图选项：`conversation`、`retrieval`、`research`、`creation`、`action`、`uncertain`。标签描述请求，绝不代表动作已执行或授予工具权限。仅当目录完整且未超限时，同一请求才附带 Skill 名称与描述。目录不完整、为空或超限时仍可分类意图，不截断目录，也不声称已自动选择 Skill。仅支持的且达到置信度阈值的意图值进入回执及客户端视图。提供方或凭据未配置、隐私拒绝、超时、请求预算超限时保留原生生成流程。显式 `/name` 调用和非文本输入保留原生路径。桌面配置安装该选择器，总准备期限为 3,000 ms，至多 15 个 Skill 加一个弃权项，使用已配置提供方的 effort 与凭据，并保持模型路由、监督及记忆关闭。配置 Reflex 后，用户文本和符合条件的 Skill 描述会发送至该接入点；三秒期限是回退预算，一秒仅为体验目标，并非响应时间保证。`skillSelection` 状态记录安装情况，`system3/skill-decision.intent` 记录分类，精确的指令消息记录 Skill 采用情况。`elapsedMs` 包含目录查找、远程决策及可选的 Skill 正文加载。运行时视图保留已结束轮次的结果，在新轮次开始时清除。
+`skillSelection` 在原生 `agent/pre-step` 扩展点为下游保留的普通文本输入分类，并可选择至多一个允许模型调用的 Skill。配置包含 `sessionDataClasses`、`minConfidence`、`maxInputBytes`、`maxContentBytes`、`maxCandidates`（1–254）和 `deadlineMs`。Jev 接收完整的当前文本及固定意图选项：`conversation`、`retrieval`、`research`、`creation`、`action`、`uncertain`。标签描述请求，绝不代表动作已执行或授予工具权限。目录完整时，同一请求按目录顺序把 Skill 名称与描述分成每组至多 `maxCandidates` 个，每组一道选择题（`skill`、`skill2`……，与意图题合计最多 15 组），各组都有自己的弃权选项。各组达到 `minConfidence` 的选择中取置信度最高者，相同时取靠前的组；没有被接受的选择而有组的选择低于阈值时记录 `low-confidence`，所有组都弃权时记录 `abstain`。目录超过 15 组容量时，先按名称和描述与输入共享的单词或汉字二元组数量选出该容量的 Skill，不足部分按目录顺序补齐。回执的 `candidateNames` 恰好列出 Jev 看到的 Skill。目录不完整或为空时仍可分类意图，但不声称已自动选择 Skill。仅支持的且达到置信度阈值的意图值进入回执及客户端视图。提供方或凭据未配置、隐私拒绝、超时、请求预算超限时保留原生生成流程。显式 `/name` 调用和非文本输入保留原生路径。桌面配置安装该选择器，总准备期限为 3,000 ms，至多 15 个 Skill 加一个弃权项，使用已配置提供方的 effort 与凭据，并保持模型路由、监督及记忆关闭。配置 Reflex 后，用户文本和符合条件的 Skill 描述会发送至该接入点；三秒期限是回退预算，一秒仅为体验目标，并非响应时间保证。`skillSelection` 状态记录安装情况，`system3/skill-decision.intent` 记录分类，精确的指令消息记录 Skill 采用情况。`elapsedMs` 包含目录查找、远程决策及可选的 Skill 正文加载。运行时视图保留已结束轮次的结果，在新轮次开始时清除。
 
 `system3/skill-decision` 记录准确请求、验证后的响应与提供方报告的用量、选择结果，以及拟注入的原生 `injectionMessageId`。加载的正文采用 `skill-invocation` 指令，只有 loop 提交准确的 `user/message` 后才成为模型可见内容，不授予工具权限。`system3Runtime` wire 投影分别呈现 `entry.suggested`、`entry.adopted` 和 `entry.used`，在 `history` 中保留最多 100 条输入已进入轮次的更早决策，并区分 `skill.selected` 与 `skill.injected`。实际使用须由准确输入所属 turn 的模型输出，或含内容增量、完整内容块的流式 attempt 确认。用量、块占位及仅含结束错误或取消的记录不证明已收到响应；真实内容之后发生错误仍保留响应事实。仅准入不代表已发送模型请求。回放会重建这些事实而不调用 Jev，客户端无法从投影取得提供方原始输入或完整概率。
 
 ### 完成核验
 
 `completionReview: { mode, yes, no, deadlineMs, sessionDataClasses, maxRefusals, evidenceCalls, resultChars }` 默认为 `false`，且依赖 `taskFrame`；没有任务卡时启用会在加载时失败。`active` 或 `shadow` 核验要求 `taskFrame.mode` 为 `active` 或 `shadow`；`off` 核验可以搭配 `off` 任务卡。所有字段都必填。顶层 Agent 对任务卡所跟随的 DSH 目标调用 `update_goal` 且 action 为 `complete` 时，工具运行前发一次 Jev 请求（决策 `completion.review`），为目标和任务卡中的每条要求各问一道是非题（`goal`、`r1`…`rN`）。Jev 只读取最近 `evidenceCalls` 次工具调用的摘要：每次调用的主要参数（命令、路径、action、查询或 URL），以及结果开头和结尾各 `resultChars` 个字符；模型自己的文字和它的 `update_goal` 调用不进入摘要。概率不高于 `no` 是有把握的“未满足”，不低于 `yes` 是“已满足”。`active` 模式下，目标或任一要求被有把握地判为未满足时拒绝这次调用，模型收到的工具结果就是拒绝说明；同一目标被拒绝 `maxRefusals` 次后，该目标之后的完成不再被拒绝。`shadow` 只记录核验、不拒绝，`off` 不发请求。插件卸载会取消在途核验，将调用交给其余工具策略，不拒绝，也不新增核验记录。用户取消仍阻止执行。决策调用在进入时已被取消则不发请求；取消后收到的提供方答复不写判断记录。每次核验先写入 `system3/judgement`，包含完整请求和响应，再写入 `system3/completion-review`，包含 `goalId`、`decision`（`complete`、`incomplete` 或 `unsure`）、未满足要求的消息 id（`unmet`）、`goalUnmet` 和 `refused`。隐私拒绝、Jev 失败和超过 `deadlineMs` 时按 `unsure` 放行。委派出的子 Agent、嵌套调用、其他目标操作，以及任务卡未跟随的目标都不核验。问法和阈值依据在已部署 Jev 上运行的标注集确定（[测试](tests/completion-review.e2e.ts)）。 拒绝额度按 Session 和目标隔离，独立 root fork 不共享。等待成功 Jev 答复期间任务卡改变时，旧答案记录为 `unsure`；active 使用同一额度拒绝过期申请，并引用当前任务卡原话要求重新核验。
+
+### Reflex 预取
+
+`prefetch: { mode, yes, no, deadlineMs, sessionDataClasses, maxItemBytes, maxTotalBytes, maxSourceFiles, maxSearchTerms, commandTimeoutMs }` 默认为 `false`；所有字段必填。在携带顶层 Agent 用户纯文本输入的 `agent/pre-step`，一条发现命令在会话工作区中列出这条输入可能需要的只读信息：未提交的改动（`git status` 以及暂存区和工作区的 diff）、受版本管理的文件列表、README、项目清单、输入以相对路径提到的文件、包含输入中至多 `maxSearchTerms` 个词的行，以及受版本管理的文件不超过 `maxSourceFiles` 个时的全部文本文件。所有候选命令立即通过 `shell` 服务以 `read-only` 沙箱策略和 `commandTimeoutMs` 期限启动；同时一次 Jev 请求（决策 `prefetch`）为每个候选问一道是非题，之后的 pre-step 监听器（例如 Skill 选择）也照常运行。Git 不运行钩子和 fsmonitor，diff 不使用外部驱动和文本转换。`active` 模式下，概率不低于 `yes` 的候选的输出各截到 `maxItemBytes`、合计不超过 `maxTotalBytes`，作为一条 `system3-prefetch` 消息在输入之后进入同一步；超过合计上限的候选只列出名称。`shadow` 只记录 `system3/judgement`，`off` 不发起询问。隐私拒绝、Jev 失败、`deadlineMs` 超时、缺少 shell 服务或会话工作区、命令失败时，这一步保持不变。委派的子 Agent、`/name` 调用和非文本输入不预取。真实端点测速（`tests/fixtures/prefetch-bench`）在同一组工作区任务上分别运行原生流程和开启预取的流程。
 
 ### Reflex Goal 监督与上下文记忆
 
@@ -137,6 +141,15 @@ const decision = ctx.system3.route(candidates, 'local-9b')
 - <later requirement, verbatim>
 ```
 
+##### 预取的工作区信息
+
+```markdown
+[System3 预取] 以下是为这条输入预先读取的工作区信息（只读命令，在沙箱中执行，结果为本次请求时的状态）。可以直接据此回答；信息不够时再调用工具。
+
+$ <command label>
+<output, cut to maxItemBytes>
+```
+
 ##### 完成核验的拒绝说明
 
 ```markdown
@@ -156,11 +169,11 @@ const decision = ctx.system3.route(candidates, 'local-9b')
 
 #### Token effect
 
-在隐私和大小检查允许时，入口路由为每个符合条件的准入输入增加一次 Jev 调用；保留 provider 实际报告的 usage。evidence 方法限制调用方投影，usage 记录区分 provider 计数与估算。每条监督建议增加 50 到 100 个输入 token，交接包增加被转交消息本身、约 60 个 token 和一次 Jev 请求；`advise` 模式下 `missing-evidence` 每个轮次最多增加一个模型步骤。输出折叠不调用模型，并从工具结果中去掉被折叠的字符。任务卡为之后的每条消息增加一次 Jev 请求，与步骤并行；启用 Reflex 上下文审查时，审查先等待本步骤已取走消息的任务卡判断。每次变化追加一条包含目标和已记要求的运行时上下文快照。完成核验为每次被核验的完成增加一次 Jev 请求，`update_goal` 调用最多等待 `deadlineMs`；一次拒绝增加约 80 个 token，外加引用的目标和要求。 任务卡忽略基于已替换卡的判断；仍排队的消息保留到下一轮，已送入步骤的消息最多补判一次。
+在隐私和大小检查允许时，入口路由为每个符合条件的准入输入增加一次 Jev 调用；保留 provider 实际报告的 usage。evidence 方法限制调用方投影，usage 记录区分 provider 计数与估算。每条监督建议增加 50 到 100 个输入 token，交接包增加被转交消息本身、约 60 个 token 和一次 Jev 请求；`advise` 模式下 `missing-evidence` 每个轮次最多增加一个模型步骤。输出折叠不调用模型，并从工具结果中去掉被折叠的字符。任务卡为之后的每条消息增加一次 Jev 请求，与步骤并行；启用 Reflex 上下文审查时，审查先等待本步骤已取走消息的任务卡判断。每次变化追加一条包含目标和已记要求的运行时上下文快照。完成核验为每次被核验的完成增加一次 Jev 请求，`update_goal` 调用最多等待 `deadlineMs`；一次拒绝增加约 80 个 token，外加引用的目标和要求。 任务卡忽略基于已替换卡的判断；仍排队的消息保留到下一轮，已送入步骤的消息最多补判一次。 预取为每条用户输入增加一次 Jev 请求，这一步最多等待 `deadlineMs`；另外增加至多 `maxTotalBytes` 的预取输出和约 60 个 token，同时省去原本通过工具调用收集这些信息的模型步骤。
 
 #### KV Cache effect
 
-观测与 shadow receipt 不改变生成请求前缀。监督建议追加在最新工具结果之后，缓存前缀不变。工具结果在进入历史前就已折叠，之后的请求原样复用。任务卡变化时在最新消息之后追加新的运行时上下文快照，缓存前缀不变。完成核验的拒绝说明是追加在最新消息之后的工具结果，缓存前缀不变。采纳生成模型切换可能失去 provider 缓存复用；工具 schema 不变。
+观测与 shadow receipt 不改变生成请求前缀。监督建议追加在最新工具结果之后，缓存前缀不变。工具结果在进入历史前就已折叠，之后的请求原样复用。任务卡变化时在最新消息之后追加新的运行时上下文快照，缓存前缀不变。完成核验的拒绝说明是追加在最新消息之后的工具结果，缓存前缀不变。预取的信息是追加在输入之后的一条消息，缓存前缀不变。采纳生成模型切换可能失去 provider 缓存复用；工具 schema 不变。
 
 ## 已知限制与后续工作
 

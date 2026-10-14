@@ -6019,7 +6019,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'MemoryRetrievalConfig',
-    declaration: 'export interface MemoryRetrievalConfig {\n    readonly maxCandidates: number;\n    readonly maxExcerptBytes: number;\n    readonly maxTotalBytes: number;\n    readonly candidatePool?: MemoryCandidatePool;\n    readonly index?: MemoryRecordIndex;\n}',
+    declaration: 'export interface MemoryRetrievalConfig {\n    readonly maxCandidates: number;\n    readonly maxExcerptBytes: number;\n    readonly maxTotalBytes: number;\n    readonly candidatePool?: MemoryCandidatePool | undefined;\n    readonly index?: MemoryRecordIndex;\n}',
   },
   {
     name: 'MemorySourceRef',

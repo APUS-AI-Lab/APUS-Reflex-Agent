@@ -1,0 +1,19 @@
+# Live-only patch over the shipped headless profile: DeepSeek's official API generates with native Skill discovery and
+# no Reflex. Credentials come only from DEEPSEEK_API_KEY.
+- id: headless-startup
+  disabled: true
+
+- id: headless-runner
+  disabled: true
+
+- id: llm-deepseek
+  config:
+    apiKeyEnv: DEEPSEEK_API_KEY
+
+- id: agent-loop
+  config:
+    agents:
+      - id: main
+        provider: deepseek-official
+        model: deepseek-flash
+        cwd: !!js process.cwd()
