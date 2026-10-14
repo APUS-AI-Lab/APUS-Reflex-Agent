@@ -110,7 +110,8 @@ export default class ContinuumTasks extends Service {
     ctx.on('session/event', (session, event) => {
       if (event.type !== 'user/message' || event.data.source.kind !== 'user') return
       const agent = this.agents.get(session.id)
-      if (agent === undefined) return
+      // A delegated child's input is its parent model's prompt, not a task requirement.
+      if (agent === undefined || (agent.session.header.delegationDepth ?? 0) !== 0) return
       this.enqueueAdmission(agent, event)
     })
     ctx.on('system-prompt/assemble', async (_assembly, context, next) => {
