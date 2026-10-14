@@ -1,0 +1,59 @@
+# Live-only layer: DeepSeek's official API generates, the deployed APUS Reflex (Jev) endpoint scores and recalls memory,
+# and a declared 24K window forces compaction. Credentials come only from DEEPSEEK_API_KEY and APUS_JEV_API_KEY.
+- id: llm-deepseek
+  config:
+    apiKeyEnv: DEEPSEEK_API_KEY
+    models:
+      - id: deepseek-flash
+        name: DeepSeek-V41-Flash (24K live window)
+        contextWindow: 24576
+        maxTokens: 4096
+        inputModalities: [text, image]
+        systemPromptUpdate: in-history
+        toolUpdate: addition-only
+
+- id: agent-default-model
+  config:
+    provider: deepseek-official
+    model: deepseek-flash
+
+- insert:
+    - id: jev
+      name: '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
+      config:
+        endpoint: https://ac2n5m38jjciqg-8086.proxy.runpod.net
+        model: APUS-OpenJev-v1-9B-5949
+        effort: low
+        timeoutMs: 15000
+        apiKeyEnv: APUS_JEV_API_KEY
+
+    - id: system3
+      name: '@deepseek-ai/dsh-experimental-system3'
+      config:
+        privacyMode: controlled
+        approvedRemoteIds: [jev]
+        approvedRemoteDataClasses: [public]
+        jevRouteId: jev
+        jevExecutionDomain: network
+        jevEffort: low
+        memoryScoring:
+          mode: active
+          yes: 0.5
+          no: 0.3
+          deadlineMs: 15000
+          sessionDataClasses: [public]
+          maxCandidates: 8
+          maxMessageChars: 400
+          maxItems: 5
+        memoryRecall:
+          mode: active
+          yes: 0.7
+          no: 0.3
+          deadlineMs: 5000
+          sessionDataClasses: [public]
+          maxCandidates: 15
+          maxInputChars: 400
+          maxMessageChars: 400
+
+    - id: ui-system3
+      name: '@deepseek-ai/dsh-experimental-client-ui-system3'

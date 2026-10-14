@@ -118,6 +118,7 @@
     "tests/composer-placeholder.e2e.ts",
     "tests/context-meter.e2e.ts",
     "tests/history-memory.e2e.ts",
+    "tests/history-memory-live.e2e.ts",
     "tests/cordis-tool-round.e2e.ts",
     "tests/web-search-round.e2e.ts",
     "tests/file-upload-round.e2e.ts",
