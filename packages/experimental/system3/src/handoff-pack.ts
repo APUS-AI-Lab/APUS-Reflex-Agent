@@ -3,7 +3,7 @@ import type { Context } from '@deepseek-ai/cordis'
 import type { Agent } from '@deepseek-ai/dsh-agent'
 import type { SessionRequestId } from '@deepseek-ai/dsh-api-session-controller/types'
 import type { MessageId } from '@deepseek-ai/dsh-llm'
-import { MAX_JEV_QUESTIONS, type JevErrorCode, type JevRequest, type JevResponse } from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
+import { JevConfigurationError, MAX_JEV_QUESTIONS, type JevErrorCode, type JevRequest, type JevResponse } from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
 import { admitSystem3Routes, type System3DataClass, type System3PrivacyPolicy } from '@deepseek-ai/dsh-experimental-system3-policy'
 import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
 import type { System3JevOptions } from './decisions.ts'
@@ -110,7 +110,7 @@ export async function prepareSystem3HandoffPack(ctx: Context, agent: Agent, requ
       executionDomain: settings.options.executionDomain, dataClasses: settings.dataClasses }])
     if (admission.allowed.length === 0) { outcome = 'privacy-denied'; return [] }
     if (jev === undefined) return []
-    request = jev.resolve({
+    const unresolved: JevRequest = {
       state: { task },
       ...settings.options.effort === undefined ? {} : { effort: settings.options.effort },
       questions: Object.fromEntries(earlier.map((message, index) => [`m${String(index + 1)}`, {
@@ -118,13 +118,16 @@ export async function prepareSystem3HandoffPack(ctx: Context, agent: Agent, requ
         instructions: `用户在本会话更早时说过：「${message.text}」。state.task 是现在要交给另一个执行者的任务。判断这句话是否是用户定下的、执行这个任务时仍然有效的工作要求或约束，例如命名规范、不许改动的文件或目录、提交前必须通过的检查、文件放置约定、需要同步更新的文档、输出语言或安全规定。闲聊、提问、感谢、对已完成工作的评价、与这个项目无关的请求都不算。`,
         criteria: { true: '是仍然有效的工作要求或约束', false: '不是' },
       }])),
-    })
+    }
     const deadline = AbortSignal.timeout(config.deadlineMs)
     try {
+      // An unconfigured or switched-off provider throws a configuration error, which leaves the instruction unpacked.
+      request = jev.resolve(unresolved)
       const result = await jev.decide(request, AbortSignal.any([signal, deadline]))
       if (result.kind === 'unknown') { outcome = result.failure.code; return [] }
       response = result.response
     } catch (error) {
+      if (!signal.aborted && error instanceof JevConfigurationError) return []
       if (signal.aborted || !deadline.aborted) throw error
       outcome = 'timeout'
       return []

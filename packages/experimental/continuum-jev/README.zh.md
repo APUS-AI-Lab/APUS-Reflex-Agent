@@ -46,7 +46,7 @@ APUS Desktop 和 Web 启动器为新建和已有普通配置方案选择已安�
 <details>
 <summary>实现内部细节 — 点击展开</summary>
 
-[产品记忆提供方](src/product-memory.ts) 继承 [Core 记忆实现](../../context/continuum/README.zh.md)，仅调整三个 schema 默认值，不改动 Core 默认值。Loader 组合和 ConfigForms 使用同一份经过校验的提供方配置。[排序服务](src/index.ts) 在一次有界 Jev 请求中对前十六个候选评分。独立 noul 答案估计相关性，不表示事实真伪或已校准准确率。active 稳定排序已评分前缀，并保留其余候选，包括低概率候选。
+[产品记忆提供方](src/product-memory.ts) 继承 [Core 记忆实现](../../context/continuum/README.zh.md)，仅调整三个 schema 默认值，不改动 Core 默认值。Loader 组合和 ConfigForms 使用同一份经过校验的提供方配置。[排序服务](src/index.ts) 在一次有界 Jev 请求中对前十六个候选评分。独立 noul 答案估计相关性，不表示事实真伪或已校准准确率。active 稳定排序已评分前缀，并保留其余候选，包括低概率候选。在设置中关闭 Reflex 期间，各模式都保持基线顺序并记录 `provider-unavailable`；其他 Jev 配置错误和协议错误仍使选择失败。
 
 profile 先追加 prepared unknown receipt，flush 所属 Session，再通过持久化后端读回该 receipt，之后才发送请求。settled receipt 关联 prepared 事件序号，保留完整请求和校验后响应。取消保留 prepared 状态，不伪造成功；缺少持久化能力或屏障 I/O 失败时禁止发送并保留 baseline。只有 prepared 在发送前保证持久化；settled 随 Session 常规 flush 保存。历史 version-one receipt 继续可读，回放不会调用 Jev。拥有 Session 的 `selectContinuumMemory` 使用方必须提供持久化 beforeDispatch checkpoint；仅无 Session 消费者可省略该参数并自行记录输入。checkpoint 挂起期间失效的生命周期或卸载的 selector 不能继续发送请求。已发送后卸载不会撤回请求；迟到的排序不再采用，主模型继续使用完整 baseline。
 

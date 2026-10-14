@@ -1,7 +1,7 @@
 import { Context } from '@deepseek-ai/cordis'
 import { describe, expect, it, vi } from 'vitest'
 import { z } from 'zod'
-import Jev, { JevConfigurationError } from '../src/index.ts'
+import Jev, { JevConfigurationError, JevDisabledError } from '../src/index.ts'
 import { JevProviderError, resolveJevApiKey } from '../src/client.ts'
 import { CredentialProvider } from '@deepseek-ai/dsh-credentials'
 import { createLaunchEnvironmentSnapshot } from '@deepseek-ai/dsh-launch-environment'
@@ -35,6 +35,30 @@ describe('apus-dsh-jev-plugin service', () => {
     } finally { dispose(); await ctx.fiber.dispose() }
   })
 
+
+  it('treats every provider as unconfigured while Reflex is turned off, and resumes when turned on', async () => {
+    const ctx = new Context()
+    let enabled = false
+    new Jev(ctx, { enabled: { get: () => enabled }, endpoint: { get: () => 'http://localhost' }, model: { get: () => 'fixture' },
+      effort: { get: () => 'low' }, protocol: { get: () => 'openjev' }, timeoutMs: { get: () => 1000 }, apiKeyEnv: { get: () => undefined } })
+    const service = ctx.get('jev')!
+    const decide = vi.fn(async () => ({ model: 'm', answers: { q: { type: 'noul' as const, noul: 1 } } }))
+    const warm = vi.fn(async () => undefined)
+    const dispose = service.register({ info: { id: 'switch', model: 'm', endpoint: 'http://localhost' }, decide, warm })
+    const request = { providerId: 'switch', state: null, questions: { q: { type: 'noul' as const } } }
+    try {
+      expect(() => service.resolve(request)).toThrow(JevDisabledError)
+      expect(() => service.resolve(request)).toThrow(JevConfigurationError)
+      await expect(service.decide(request)).rejects.toThrow(JevConfigurationError)
+      expect(service.listProviders().map(provider => provider.id)).toContain('switch')
+      expect(await service.warm('switch')).toBe(false)
+      expect(decide).not.toHaveBeenCalled()
+      expect(warm).not.toHaveBeenCalled()
+      enabled = true
+      expect(await service.decide(request)).toMatchObject({ kind: 'ok' })
+      expect(await service.warm('switch')).toBe(true)
+    } finally { dispose(); await ctx.fiber.dispose() }
+  })
 
   it('splits a decision into parallel requests of questionsPerRequest questions and merges their answers', async () => {
     const ctx = new Context()
@@ -151,7 +175,8 @@ it('pins an in-flight decision while subsequent requests read updated volatile c
     if (requests.length === 1) { reached.resolve(undefined); await release.promise }
     return new Response(JSON.stringify({ model: body.model, answers: { q: { type: 'noul', noul: 1 } } }), { headers: { 'content-type': 'application/json' } })
   })
-  new Jev(ctx, { endpoint: { get: () => endpoint }, model: { get: () => model }, effort: { get: () => effort },
+  new Jev(ctx, { enabled: { get: () => true }, endpoint: { get: () => endpoint }, model: { get: () => model },
+    effort: { get: () => effort },
     protocol: { get: () => 'openjev' }, timeoutMs: { get: () => 1000 }, apiKeyEnv: { get: () => undefined } })
   try {
     const request = { state: 'safe fixture', questions: { q: { type: 'noul' as const } } }
@@ -251,7 +276,7 @@ it('preserves structured provider failures and caller cancellation without expos
 
 it.each([undefined, false, true])('constructs the pooled service with HTTP/2 selection %s', async (http2) => {
   const ctx = new Context()
-  new Jev(ctx, { endpoint: { get: () => 'http://localhost' }, model: { get: () => 'fixture' }, effort: { get: () => 'low' },
+  new Jev(ctx, { enabled: { get: () => true }, endpoint: { get: () => 'http://localhost' }, model: { get: () => 'fixture' }, effort: { get: () => 'low' },
     protocol: { get: () => 'openjev' }, timeoutMs: { get: () => 1000 }, apiKeyEnv: { get: () => undefined }, keepAliveMs: 1000, ...http2 === undefined ? {} : { http2 } })
   try { expect(ctx.jev.readStatus().provider?.model).toBe('fixture') } finally { await ctx.fiber.dispose() }
 })

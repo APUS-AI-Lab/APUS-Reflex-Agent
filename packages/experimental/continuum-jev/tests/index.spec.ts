@@ -6,7 +6,7 @@ import ContinuumJevPlugin, {
   ContinuumJevUnavailableError, selectContinuumMemory, recordContinuumMemoryDecision, latestContinuumMemoryDecision,
   type ContinuumJev, type ContinuumJevConfig,
 } from '../src/index.ts'
-import { JevConfigurationError, JevProtocolError, type JevRequest } from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
+import { JevConfigurationError, JevDisabledError, JevProtocolError, type JevRequest } from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
 import { Context } from '@deepseek-ai/cordis'
 import type { Agent } from '@deepseek-ai/dsh-agent'
 
@@ -143,6 +143,16 @@ describe('Continuum coverage-preserving relevance', () => {
     for (const error of [new JevConfigurationError('missing endpoint'), new JevProtocolError('invalid request')]) {
       await expect(selectContinuumMemory({ ...provider, resolve: () => { throw error } }, config, input)).rejects.toBe(error)
     }
+  })
+
+  it('keeps the baseline order in every mode while Reflex is turned off in settings', async () => {
+    const provider = fake()
+    const off = new JevDisabledError('Reflex is turned off in settings')
+    const active = { ...config, mode: 'active' as const }
+    expect(await selectContinuumMemory({ ...provider, resolve: () => { throw off } }, active, input))
+      .toMatchObject({ outcome: 'baseline', selectedIds: ['a', 'b'], evaluation: { reason: 'provider-unavailable' } })
+    expect(await selectContinuumMemory({ ...provider, decide: () => Promise.reject(off) }, active, input))
+      .toMatchObject({ outcome: 'baseline', selectedIds: ['a', 'b'], evaluation: { reason: 'provider-unavailable' } })
   })
 
   it('returns the full baseline after the batch deadline', async () => {

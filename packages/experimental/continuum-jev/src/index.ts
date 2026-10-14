@@ -1,6 +1,6 @@
 /** Coverage-preserving, bounded Reflex relevance ranking and replayable receipts. */
 import type Jev from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
-import { MAX_JEV_QUESTIONS, JevConfigurationError, JevProtocolError, type JevSpec, type JevOutcome, type JevRequest, type JevResponse } from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
+import { MAX_JEV_QUESTIONS, JevConfigurationError, JevDisabledError, JevProtocolError, type JevSpec, type JevOutcome, type JevRequest, type JevResponse } from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
 import { admitSystem3Routes, type System3PrivacyPolicy, type System3DataClass } from '@deepseek-ai/dsh-experimental-system3-policy'
 import { MemoryId, type ContinuumMemorySelection, type ContinuumMemorySelector } from '@deepseek-ai/dsh-continuum'
 import type { SessionPersistence } from '@deepseek-ai/dsh-session-persistence'
@@ -218,6 +218,8 @@ export async function selectContinuumMemory(
   try {
     request = jev.resolve(unresolved)
   } catch (error) {
+    // Reflex turned off in settings keeps the baseline order in every mode; other configuration errors stay loud.
+    if (error instanceof JevDisabledError) return fallback('provider-unavailable')
     if (error instanceof JevConfigurationError || error instanceof JevProtocolError) throw error
     return fallback('provider-error', 'resolve-error')
   }
@@ -237,6 +239,7 @@ export async function selectContinuumMemory(
     outcome = await decideWithTimeout(jev, request, signal, config.timeoutMs)
   } catch (error) {
     signal?.throwIfAborted()
+    if (error instanceof JevDisabledError) return fallback('provider-unavailable', undefined, request)
     return fallback('provider-error', error instanceof ContinuumJevTimeoutError ? 'timeout' : 'provider-error', request)
   }
   signal?.throwIfAborted()

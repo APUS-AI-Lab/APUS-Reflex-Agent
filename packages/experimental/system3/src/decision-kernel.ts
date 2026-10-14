@@ -1,7 +1,8 @@
 /** One way to ask Jev a bounded question, apply thresholds, fall back on failure, and record the judgement. */
 import type { Context } from '@deepseek-ai/cordis'
 import type { Agent } from '@deepseek-ai/dsh-agent'
-import type { JevAnswer, JevErrorCode, JevQuestion, JevRequest, JevResponse } from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
+import { JevConfigurationError, type JevAnswer, type JevErrorCode, type JevQuestion, type JevRequest,
+  type JevResponse } from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
 import { admitSystem3Routes, type System3DataClass, type System3PrivacyPolicy } from '@deepseek-ai/dsh-experimental-system3-policy'
 import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
 import type { JsonValue } from '@deepseek-ai/dsh-util-values'
@@ -141,14 +142,21 @@ export async function runSystem3Decision<Input, Outcome extends string>(ctx: Con
   if (admission.allowed.length === 0) { reason = 'privacy-denied'; return finish() }
   const jev = ctx.get('jev')
   if (jev === undefined) return finish()
-  request = jev.resolve({ state: spec.state(input),
-    ...shared.options.effort === undefined ? {} : { effort: shared.options.effort }, questions: spec.questions(input) })
+  try {
+    request = jev.resolve({ state: spec.state(input),
+      ...shared.options.effort === undefined ? {} : { effort: shared.options.effort }, questions: spec.questions(input) })
+  } catch (error) {
+    // An unconfigured or switched-off provider answers like a missing one.
+    if (error instanceof JevConfigurationError) return finish()
+    throw error
+  }
   const deadline = AbortSignal.timeout(settings.deadlineMs)
   try {
     const result = await jev.decide(request, AbortSignal.any([signal, deadline]))
     if (result.kind === 'unknown') { reason = result.failure.code; return finish() }
     response = result.response
   } catch (error) {
+    if (!signal.aborted && error instanceof JevConfigurationError) return finish()
     // Caller cancellation and unexpected failures propagate without a record; only the deadline falls back.
     if (signal.aborted || !deadline.aborted) throw error
     reason = 'deadline'
