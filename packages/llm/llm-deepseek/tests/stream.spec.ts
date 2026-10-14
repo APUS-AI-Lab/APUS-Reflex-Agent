@@ -58,6 +58,22 @@ describe('Messages stream', () => {
     expect(result.message.source.replayState).toMatchObject({ blocks: [{ type: 'reasoning', signature: 'opaque' }] })
   })
 
+  it('tolerates thinking_delta on a text block and text_delta on a reasoning block', async () => {
+    const result = await assemble(translate(events([start,
+      { type: 'content_block_start', index: 0, content_block: { type: 'text', text: '' } },
+      { type: 'content_block_delta', index: 0, delta: { type: 'thinking_delta', thinking: 'thought as text' } },
+      { type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text: ' followed by text' } },
+      { type: 'content_block_stop', index: 0 },
+      { type: 'content_block_start', index: 1, content_block: { type: 'thinking', thinking: '' } },
+      { type: 'content_block_delta', index: 1, delta: { type: 'text_delta', text: 'text as thought' } },
+      { type: 'content_block_stop', index: 1 },
+      ...end()]), MODEL))
+    expect(result.message.content).toEqual([
+      { type: 'text', text: 'thought as text followed by text' },
+      { type: 'reasoning', text: 'text as thought' },
+    ])
+  })
+
   it.each([
     [start, start],
     [textEvents[1]],
@@ -66,7 +82,7 @@ describe('Messages stream', () => {
     [start, { type: 'content_block_stop', index: 0 }],
     [start, textEvents[1], textEvents[3], textEvents[3]],
     [start, { ...textEvents[1], content_block: { type: 'text', text: 2 } }],
-    [start, textEvents[1], { type: 'content_block_delta', index: 0, delta: { type: 'thinking_delta', thinking: 'bad' } }],
+    [start, textEvents[1], { type: 'content_block_delta', index: 0, delta: { type: 'input_json_delta', partial_json: 'bad' } }],
     [start, { type: 'message_delta', delta: { stop_reason: 'mystery' } }],
     [start, { type: 'message_stop' }],
     [start, textEvents[1], ...end()],
