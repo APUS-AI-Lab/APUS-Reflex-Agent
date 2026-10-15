@@ -1,5 +1,5 @@
 import { constants, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
-import { execFileSync } from 'node:child_process'
+import { execFileSync, spawnSync } from 'node:child_process'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { createRequire } from 'node:module'
@@ -75,14 +75,27 @@ describe.skipIf(process.platform !== 'darwin')('macOS preview application sealin
 })
 
 describe.skipIf(process.platform !== 'darwin')('macOS local Reflex runner signing', () => {
-  it('rejects a hardened runner that cannot load its ad-hoc signed sibling library', async () => {
+  it('reports an absent runner and starts a present one', async () => {
     const root = mkdtempSync(join(tmpdir(), 'apus-mac-runner-'))
     roots.push(root)
     const resources = join(root, 'Resources')
     await expect(signature.verifySignedReflexRunner(resources)).resolves.toBe(false)
-    const { runner, library } = compiledReflexRunner(join(root, 'sources'), resources)
+    compiledReflexRunner(join(root, 'sources'), resources)
     await expect(signature.verifySignedReflexRunner(resources)).resolves.toBe(true)
+  }, 60_000)
+
+  it('rejects a hardened runner that cannot load its ad-hoc signed sibling library', async (context) => {
+    const root = mkdtempSync(join(tmpdir(), 'apus-mac-runner-'))
+    roots.push(root)
+    const resources = join(root, 'Resources')
+    const { runner, library } = compiledReflexRunner(join(root, 'sources'), resources)
     for (const file of [library, runner]) execFileSync('/usr/bin/codesign', ['--force', '--sign', '-', '--options', 'runtime', file], { stdio: 'ignore' })
+    // Whether hardened runtime rejects an ad-hoc sibling library depends on the macOS release
+    // (macOS 15 loads it, macOS 26 rejects it), so the fixture itself decides whether a load failure exists to report.
+    if (spawnSync(runner, ['--version'], { timeout: 30_000 }).status === 0) {
+      const release = execFileSync('/usr/bin/sw_vers', ['-productVersion'], { encoding: 'utf8' }).trim()
+      context.skip(`macOS ${release} does not enforce library validation for hardened ad-hoc signatures`)
+    }
     await expect(signature.verifySignedReflexRunner(resources)).rejects.toThrow()
   }, 60_000)
 })
