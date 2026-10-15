@@ -1,0 +1,9 @@
+version: 1
+scenario: provider-terminal-close-retry
+profile: sdk
+composition: retry
+recording: authored
+header:
+  class: retry
+workspace:
+  final: true

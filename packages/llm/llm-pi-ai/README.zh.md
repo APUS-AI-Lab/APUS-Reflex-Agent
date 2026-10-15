@@ -158,6 +158,8 @@ Config 更新严格验证发生变化的 provider。初始加载将已存储的�
 
 成功 assistant 响应会存储带版本的、无损 JSON 回放状态，与产生它们的提供方和模型放在一起——响应级事实加每个流式块一条逐块条目。请求时，`LlmRuntime` 仅当同一适配器实例拥有两条路由时才传递回放状态；适配器校验它并恢复原生响应 id、提供方签名与可选的 `providerThinkingLevel` effort 元数据，缺失的 effort 元数据仍保持缺失。回放会对照 assistant 来源校验请求模型身份，并在提供方解析别名或回退时单独恢复 Anthropic 响应模型。回放状态缺失或无法使用时会降级为提供方无关内容，并保留 assistant 来源中必需的提供方和模型。pi-ai 工具调用参数是解析后的对象，因此适配器解析输入并重新字符串化输出，以符合 harness 原始 JSON 约定；pi-ai 流内错误事件映射为终止 `finish` 分片。
 
+明确的 `websocket closed before terminal event` 错误会映射为 `TRANSPORT`，不带 HTTP 状态的流内 `server_error` 会映射为 `SERVER`；两者的原错误消息都保持不变。认证、配额和无效请求的分类仍优先。是否允许再次尝试由现有提供方重试策略决定；token 上限终止和未识别的提供方拒绝不会因此变为传输错误。
+
 </details>
 
 -----

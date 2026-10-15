@@ -130,6 +130,7 @@ interface SdkAssertions {
 
 const SDK_ASSERTIONS: Readonly<Record<string, SdkAssertions>> = {
   'continuum-task-pages': { expectedFinalResponse: 'TASK_READ_COMPLETE' },
+  'provider-terminal-close-retry': { expectedFinalResponse: 'Recovered.', preserveReplayInput: true },
   'continuum-partial-recall': { expectedFinalResponse: '迁移安排在周五。', preserveReplayInput: true },
   'continuum-tail-recall': { expectedFinalResponse: 'Quartzlaunch release code MERIDIAN-731.' },
   'continuum-relevance': { expectedFinalResponse: 'PIN 7319; Friday.' },
@@ -877,6 +878,17 @@ describe('TypeScript SDK snapshots over the jsonrpc runtime', () => {
       )
       reconcileCatalogCreationTimes(ordered.map(log => log.content), 'validate')
       const actualContext = contextOf(ordered, cwd)
+      if (scenario.name === 'provider-terminal-close-retry') {
+        const events = results.flatMap(result => result.events)
+        expect(events.filter(event => event.type === 'llm/retry').map(event => event.data)).toEqual([
+          expect.objectContaining({ retry: 1, maxRetries: 2, failure: {
+            code: 'TRANSPORT', message: 'websocket closed before terminal event (code1000)',
+          } }),
+        ])
+        expect(events.filter(event => event.type === 'assistant/attempt')).toHaveLength(1)
+        expect(events.filter(event => event.type === 'assistant/message')).toHaveLength(1)
+        expect(events.some(event => event.type === 'tool/call' || event.type === 'tool/result')).toBe(false)
+      }
       if (scenario.name === 'system3-completion-review' || scenario.name === 'system3-completion-review-stale') {
         const stale = scenario.name === 'system3-completion-review-stale'
         const updatedObjective = 'Read completion-evidence.txt and verify COMPLETION_EVIDENCE_OK for the updated goal before completing.'

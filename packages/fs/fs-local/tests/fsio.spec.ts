@@ -892,10 +892,12 @@ describe('writeFileAtomic — temp-file safety', () => {
     expect(await readFile(file, 'utf8')).toBe('ours')
   })
 
-  it.skipIf(!posixModes)('creates new files owner-only by default', async () => {
+  it.skipIf(!posixModes)('creates new files with the process umask applied to 0o666', async () => {
     const file = join(dir, 'a.txt')
+    const reference = join(dir, 'reference.txt')
+    await writeFile(reference, '', { mode: 0o666, flag: 'wx' })
     await writeFileAtomic(file, 'hello', undefined, undefined)
-    expect((await stat(file)).mode & 0o777).toBe(0o600)
+    expect((await stat(file)).mode & 0o777).toBe((await stat(reference)).mode & 0o777)
   })
 
   it('opens staging paths exclusively — a pre-existing path is never clobbered', async () => {

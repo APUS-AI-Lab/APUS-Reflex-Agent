@@ -367,6 +367,27 @@ it('leaves unowned Session events and non-text input outside task text admission
   await expect(h.ctx.continuumTasks.snapshot(a)).rejects.toThrow('authorized task workspace')
 })
 
+it('keeps a delegated child prompt out of task requirements so the parent revision stays current', async () => {
+  const { root, workspace } = await locations()
+  const h = await runtime(root, workspace)
+  const parent = await h.create('A')
+  parent.followup(user('Human task requirement.'))
+  await parent.whenIdle()
+  const before = await h.ctx.continuumTasks.snapshot(parent)
+  const child = await h.ctx.agents.create({ sessionId: SessionId('A-child'),
+    agentOptions: { provider: 'recording', model: 'recording' },
+    meta: { cwd: workspace, parentSession: parent.session.id, origin: 'subagent', delegationDepth: 1 } })
+  child.agent.followup(user('Parent model delegation prompt.'))
+  await child.agent.whenIdle()
+  const after = await h.ctx.continuumTasks.snapshot(parent)
+  expect(after?.revision).toBe(before?.revision)
+  expect(after?.entries.map(entry => entry.text)).toEqual(['Human task requirement.'])
+  expect(child.agent.session.snapshotEvents().filter(event => event.type === 'turn/end'))
+    .toMatchObject([{ data: { reason: { kind: 'completed' } } }])
+  expect(h.adapter.requests).toHaveLength(2)
+  await child.dispose()
+})
+
 it('refuses mismatched source readback and keeps the failed Agent from acknowledging later input', async () => {
   const { root, workspace } = await locations()
   const h = await runtime(root, workspace)

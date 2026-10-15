@@ -11023,6 +11023,9 @@ importers:
       '@deepseek-ai/dsh-llm-mock-server':
         specifier: workspace:*
         version: link:../../test-support/llm-mock-server
+      '@deepseek-ai/dsh-llm-pi-ai':
+        specifier: workspace:*
+        version: link:../llm-pi-ai
       '@deepseek-ai/dsh-session':
         specifier: workspace:*
         version: link:../../core/session
