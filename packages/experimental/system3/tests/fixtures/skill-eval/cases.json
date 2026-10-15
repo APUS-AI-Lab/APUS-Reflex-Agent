@@ -1,0 +1,312 @@
+{
+  "skills": [
+    {
+      "name": "commit-message",
+      "description": "Write git commit messages in this project's format.",
+      "whenToUse": "The user asks for a commit message or asks to commit. Not for editing code, fixing bugs or reviewing changes."
+    },
+    {
+      "name": "changelog",
+      "description": "Write CHANGELOG entries for a release.",
+      "whenToUse": "The user asks for release notes or a changelog entry for a version."
+    },
+    {
+      "name": "code-review",
+      "description": "Review a code change for bugs, risks and style.",
+      "whenToUse": "The user asks to review, check or critique a diff, pull request or staged change."
+    },
+    {
+      "name": "test-writer",
+      "description": "Write unit tests for existing code.",
+      "whenToUse": "The user asks to add, write or extend tests, not merely to run them."
+    },
+    {
+      "name": "sql-style",
+      "description": "Write or review SQL queries following the project's SQL style.",
+      "whenToUse": "The user asks for a SQL query or to change one."
+    },
+    {
+      "name": "api-error-format",
+      "description": "Design HTTP API error responses following the project's error schema.",
+      "whenToUse": "The user designs or changes the error body of an HTTP endpoint."
+    },
+    {
+      "name": "regex-helper",
+      "description": "Write and explain regular expressions.",
+      "whenToUse": "The user asks for a regular expression or what one matches."
+    },
+    {
+      "name": "cron-schedule",
+      "description": "Write cron schedule expressions for jobs.",
+      "whenToUse": "The user asks when a job should run on a schedule or for a cron expression."
+    },
+    {
+      "name": "docker-setup",
+      "description": "Write Dockerfiles and docker-compose files.",
+      "whenToUse": "The user asks to containerize a service or edit Docker files."
+    },
+    {
+      "name": "pdf",
+      "description": "Read, extract, merge or fill PDF files.",
+      "whenToUse": "A PDF file is the input or the output of the request."
+    },
+    {
+      "name": "xlsx",
+      "description": "Create and edit spreadsheets.",
+      "whenToUse": "A spreadsheet such as .xlsx or .csv is the input or the output of the request."
+    },
+    {
+      "name": "email-writer",
+      "description": "Draft, reply to and polish emails.",
+      "whenToUse": "The user asks to write or reply to an email."
+    },
+    {
+      "name": "meeting-notes",
+      "description": "Turn meeting transcripts or notes into minutes with decisions and action items.",
+      "whenToUse": "The user provides or refers to a meeting and wants minutes, decisions or action items."
+    },
+    {
+      "name": "travel-planner",
+      "description": "Plan trips, itineraries and bookings.",
+      "whenToUse": "The user plans a trip or asks for an itinerary."
+    },
+    {
+      "name": "expense-report",
+      "description": "Summarize spending and prepare expense reports.",
+      "whenToUse": "The user asks how much was spent or wants an expense report."
+    },
+    {
+      "name": "translate",
+      "description": "Translate text between Chinese and English.",
+      "whenToUse": "The user asks to translate text."
+    },
+    {
+      "name": "calendar-assistant",
+      "description": "Read and update the user's calendar and schedule.",
+      "whenToUse": "The user asks about appointments, free time or adding an event."
+    },
+    {
+      "name": "recipe",
+      "description": "Suggest recipes and cooking steps.",
+      "whenToUse": "The user asks what to cook or how to cook a dish."
+    },
+    {
+      "name": "fitness-coach",
+      "description": "Plan workouts and track exercise.",
+      "whenToUse": "The user asks for a training plan or about exercise."
+    },
+    {
+      "name": "slides",
+      "description": "Create presentation slide decks.",
+      "whenToUse": "The user asks for slides, a deck or a presentation."
+    }
+  ],
+  "inputs": [
+    {
+      "text": "Write a commit message for the fix that stops double-charging coupons.",
+      "expect": "commit-message"
+    },
+    {
+      "text": "帮我写一条提交说明：修复了登录页的空指针。",
+      "expect": "commit-message"
+    },
+    {
+      "text": "Change the default page size of the orders list to 50, then run the tests.",
+      "expect": null
+    },
+    {
+      "text": "Customers should now get refunds for 28 days. Update the code and its tests, then run the tests.",
+      "expect": [
+        null,
+        "test-writer"
+      ]
+    },
+    {
+      "text": "Fix the failing login test.",
+      "expect": null
+    },
+    {
+      "text": "Review my staged change in two sentences: what behaviour does it change?",
+      "expect": "code-review"
+    },
+    {
+      "text": "帮我看看这个 PR 有没有问题。",
+      "expect": "code-review"
+    },
+    {
+      "text": "Draft release notes for 2.4.0: added dark mode, fixed a crash on startup.",
+      "expect": "changelog"
+    },
+    {
+      "text": "Write unit tests for calculateRefund.",
+      "expect": "test-writer"
+    },
+    {
+      "text": "Run the tests and tell me what fails.",
+      "expect": null
+    },
+    {
+      "text": "Write a SQL query that lists the ten most recent orders with their customer name.",
+      "expect": "sql-style"
+    },
+    {
+      "text": "Design the error response for a 404 when an order id does not exist.",
+      "expect": "api-error-format"
+    },
+    {
+      "text": "Write a regular expression that matches an ISO date like 2026-10-14.",
+      "expect": "regex-helper"
+    },
+    {
+      "text": "Run the backup job at 02:30 every Sunday.",
+      "expect": "cron-schedule"
+    },
+    {
+      "text": "Containerize this service with a Dockerfile.",
+      "expect": "docker-setup"
+    },
+    {
+      "text": "Extract the tables from report.pdf.",
+      "expect": "pdf"
+    },
+    {
+      "text": "把这几个 PDF 合并成一个。",
+      "expect": "pdf"
+    },
+    {
+      "text": "Make a spreadsheet of my monthly budget.",
+      "expect": "xlsx"
+    },
+    {
+      "text": "帮我起草一封回复 Alice 的邮件，告诉她季度报告周五前发给她。",
+      "expect": "email-writer"
+    },
+    {
+      "text": "Summarize the decisions from last week's project meeting notes.",
+      "expect": "meeting-notes"
+    },
+    {
+      "text": "上周的项目会议定了哪些决定？",
+      "expect": [
+        null,
+        "meeting-notes"
+      ]
+    },
+    {
+      "text": "Plan a three-day trip to Kyoto in November.",
+      "expect": "travel-planner"
+    },
+    {
+      "text": "我去上海的航班几点起飞？",
+      "expect": [
+        null,
+        "calendar-assistant"
+      ]
+    },
+    {
+      "text": "九月我在餐饮上一共花了多少钱？",
+      "expect": [
+        null,
+        "expense-report"
+      ]
+    },
+    {
+      "text": "Translate this paragraph into English: 我们下周发布新版本。",
+      "expect": "translate"
+    },
+    {
+      "text": "我周四下午有什么安排？",
+      "expect": "calendar-assistant"
+    },
+    {
+      "text": "把周四下午三点看牙医加到日程里。",
+      "expect": "calendar-assistant"
+    },
+    {
+      "text": "今晚吃什么？冰箱里有鸡蛋和西红柿。",
+      "expect": "recipe"
+    },
+    {
+      "text": "Give me a 20-minute workout I can do at home.",
+      "expect": "fitness-coach"
+    },
+    {
+      "text": "Make a 5-slide deck about our Q3 results.",
+      "expect": "slides"
+    },
+    {
+      "text": "In one sentence, what is the capital of Japan?",
+      "expect": null
+    },
+    {
+      "text": "早上好，给我一句鼓励的话。",
+      "expect": null
+    },
+    {
+      "text": "Tell me a one-line joke about coffee.",
+      "expect": null
+    },
+    {
+      "text": "What version is this service at?",
+      "expect": [
+        null
+      ]
+    },
+    {
+      "text": "Which file defines calculateRefund?",
+      "expect": null
+    },
+    {
+      "text": "What does this regex do: ^\\d{4}$ ?",
+      "expect": "regex-helper"
+    },
+    {
+      "text": "Explain what the orders module does.",
+      "expect": null
+    },
+    {
+      "text": "Rename the variable total to grandTotal across the payments module.",
+      "expect": null
+    },
+    {
+      "text": "我的护照什么时候过期？",
+      "expect": null
+    },
+    {
+      "text": "Alice 的邮箱是多少？",
+      "expect": null
+    },
+    {
+      "text": "截至今天，我有哪些待办已经过期了？",
+      "expect": null
+    },
+    {
+      "text": "Commit my changes with a good message.",
+      "expect": "commit-message"
+    },
+    {
+      "text": "Is there anything risky in the diff I staged?",
+      "expect": "code-review"
+    },
+    {
+      "text": "Add a column for tax to the expenses CSV.",
+      "expect": "xlsx"
+    },
+    {
+      "text": "How do I say thank you in Japanese?",
+      "expect": null
+    },
+    {
+      "text": "Update the Dockerfile to use Node 22.",
+      "expect": "docker-setup"
+    },
+    {
+      "text": "Fix the typo in the README title.",
+      "expect": null
+    },
+    {
+      "text": "帮我把这段话翻译成中文：The release is delayed.",
+      "expect": "translate"
+    }
+  ]
+}

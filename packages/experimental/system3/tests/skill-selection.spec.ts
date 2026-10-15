@@ -35,9 +35,12 @@ async function setup(options: {
     invocation: { modelInvocable: options.modelInvocable ?? true, userInvocable: true } }))
   await ctx.plugin(Jev, options.unconfiguredJev ? {} : { endpoint: 'http://localhost:1', model: 'jev-test',
     ...options.missingCredential ? { apiKeyEnv: 'APUS_SKILL_TEST_UNSET_CREDENTIAL' } : {} })
+  // Intent is action; the first Skill is needed, as a yes/no answer or as the choice of its group.
   const decide = vi.spyOn(ctx.jev, 'decide').mockImplementation(async query => ({ kind: 'ok', spec: ctx.jev.resolve(query),
-    response: { model: 'jev-test', answers: { intent: { type: 'choice', choice: 'action', confidence: 1, probabilities: { action: 1 } }, skill: { type: 'choice', choice: 'skill-0', confidence: 1,
-      probabilities: { 'skill-0': 1, abstain: 0 } } } } }))
+    response: { model: 'jev-test', answers: Object.fromEntries(Object.entries(query.questions).map(([key, question]) => [key,
+      key === 'intent' ? { type: 'choice' as const, choice: 'action', confidence: 1, probabilities: { action: 1 } }
+        : question.type === 'noul' ? { type: 'noul' as const, noul: key === 'skill-0' ? 1 : 0 }
+          : { type: 'choice' as const, choice: 'skill-0', confidence: 1, probabilities: { 'skill-0': 1, abstain: 0 } }])) } }))
   const adapter = new MockAdapter([textResponse('verified')])
   ctx.effect(() => ctx.llm.registerAdapter(['mock'], adapter))
   const system3 = await ctx.plugin(System3, { jevExecutionDomain: options.networkJev ? 'network' : 'local', skillSelection: { sessionDataClasses: ['public'],
@@ -87,12 +90,45 @@ it('keeps a downstream rejected step rejected without Jev or Skill injection', a
   expect(h.decide).not.toHaveBeenCalled()
 })
 
-it('uses stable choice ids when a legitimate Skill is named abstain', async () => {
+it('asks one yes/no question per Skill of a small catalog with stable ids, even for a Skill named abstain', async () => {
   const h = await setup({ name: 'abstain' })
   h.agent.followup(h.message)
   await h.agent.whenIdle()
-  expect(h.decide.mock.calls[0]?.[0].questions.skill).toMatchObject({ criteria: { 'skill-0': 'abstain: Reconcile public CSV rows and report discrepancies.', abstain: 'No clearly applicable skill.' } })
+  const questions = h.decide.mock.calls[0]?.[0].questions ?? {}
+  expect(Object.keys(questions)).toEqual(['intent', 'skill-0', 'skill'])
+  expect(questions['skill-0']).toMatchObject({ type: 'noul', criteria: { true: '应该使用', false: '不应使用' } })
+  expect(questions['skill-0']?.instructions).toContain('Skill「abstain」：Reconcile public CSV rows and report discrepancies.')
+  expect(questions.skill).toMatchObject({ type: 'choice', criteria: { 'skill-0': 'abstain: Reconcile public CSV rows and report discrepancies.',
+    abstain: 'No clearly applicable skill.' } })
   expect(h.ctx.sessionProjections.stateOf(h.agent.session, 'system3Runtime')?.skill).toMatchObject({ selected: 'abstain', injected: true })
+})
+
+it.each([
+  ['the choice without a yes', 'skill-0', 0.1, 'low-confidence'],
+  ['a yes without the choice', 'abstain', 0.95, 'abstain'],
+] as const)('injects nothing in a small catalog for %s', async (_case, choice, noul, outcome) => {
+  const h = await setup()
+  h.decide.mockImplementation(async query => ({ kind: 'ok', spec: h.ctx.jev.resolve(query), response: { model: 'jev-test', answers: {
+    skill: { type: 'choice', choice, confidence: 1, probabilities: {} }, 'skill-0': { type: 'noul', noul } } } }))
+  h.agent.followup(h.message)
+  await h.agent.whenIdle()
+  expect(h.ctx.sessionProjections.stateOf(h.agent.session, 'system3Runtime')?.skill).toMatchObject({ outcome, injected: false, selected: null })
+})
+
+it('shows Jev when to use each Skill and keeps choice groups within the gateway option limit', async () => {
+  const h = await setup({ maxCandidates: 40 })
+  h.ctx.effect(() => h.ctx.skills.register({ name: 'csv-export', description: 'Export rows as CSV.', whenToUse: 'The user asks for a CSV file.',
+    source: 'runtime', content: 'Export.' }))
+  for (let index = 0; index < 15; index += 1) {
+    h.ctx.effect(() => h.ctx.skills.register({ name: `filler-${String(index)}`, description: `Filler ${String(index)}.`, source: 'runtime', content: 'x' }))
+  }
+  h.agent.followup(h.message)
+  await h.agent.whenIdle()
+  const questions = h.decide.mock.calls[0]?.[0].questions ?? {}
+  const groups = Object.entries(questions).filter(([key]) => key !== 'intent')
+  expect(groups.every(([, question]) => question.type === 'choice' && Object.keys(question.criteria ?? {}).length <= 16)).toBe(true)
+  expect(groups.flatMap(([, question]) => Object.values(question.type === 'choice' ? question.criteria ?? {} : {})))
+    .toContain('csv-export: Export rows as CSV. Use when: The user asks for a CSV file.')
 })
 
 it('asks one Skill question per group of an oversized catalog in the same request and keeps the most confident choice', async () => {
@@ -177,8 +213,8 @@ it('does not send input to a denied network Jev or load model-disabled Skills', 
 it.each(['abstain', 'low-confidence'] as const)('keeps native input without injection for %s', async (outcome) => {
   const h = await setup()
   h.decide.mockImplementation(async query => ({ kind: 'ok', spec: h.ctx.jev.resolve(query), response: {
-    model: 'jev-test', answers: { skill: { type: 'choice', choice: outcome === 'abstain' ? 'abstain' : 'skill-0',
-      confidence: outcome === 'abstain' ? 1 : 0.1, probabilities: { 'skill-0': 0.1, abstain: 0.9 } } } } }))
+    model: 'jev-test', answers: { skill: { type: 'choice', choice: outcome === 'abstain' ? 'abstain' : 'skill-0', confidence: 1,
+      probabilities: {} }, 'skill-0': { type: 'noul', noul: 0.6 } } } }))
   h.agent.followup(h.message)
   await h.agent.whenIdle()
   expect(h.ctx.sessionProjections.stateOf(h.agent.session, 'system3Runtime')?.skill).toMatchObject({ outcome, injected: false, selected: null })
