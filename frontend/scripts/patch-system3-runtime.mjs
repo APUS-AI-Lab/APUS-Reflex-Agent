@@ -101,13 +101,17 @@ export function adaptBrandContext(chunk, target, own) {
 
 /**
  * Drop hunks the own build already contains: its post-image is present and its pre-image is gone, as when a reviewed fix
- * was made both in source and in the published-package patch. Any other mismatch is left for patch to reject.
+ * was made both in source and in the published-package patch. Both images are compared without whitespace, braces, and
+ * semicolons, because the bundler may print a one-statement block without braces. Any other mismatch is left for patch
+ * to reject.
  */
 export function dropAppliedHunks(chunk, own) {
   const [header, ...hunks] = chunk.split(/(?=^@@ )/m)
-  const image = (hunk, sign) => hunk.split('\n').slice(1)
-    .filter(line => line.startsWith(' ') || line.startsWith(sign)).map(line => line.slice(1)).join('\n')
-  const remaining = hunks.filter(hunk => !(own.includes(image(hunk, '+')) && !own.includes(image(hunk, '-'))))
+  const normalize = text => text.replace(/[\s{};]/g, '')
+  const built = normalize(own)
+  const image = (hunk, sign) => normalize(hunk.split('\n').slice(1)
+    .filter(line => line.startsWith(' ') || line.startsWith(sign)).map(line => line.slice(1)).join('\n'))
+  const remaining = hunks.filter(hunk => !(built.includes(image(hunk, '+')) && !built.includes(image(hunk, '-'))))
   return { chunk: remaining.length === 0 ? '' : header + remaining.join(''), dropped: hunks.length - remaining.length }
 }
 

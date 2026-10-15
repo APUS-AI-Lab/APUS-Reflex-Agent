@@ -81,6 +81,28 @@ describe('desktop runtime patch scope', () => {
     expect(receipts[0]).toMatchObject({ alreadyAppliedHunks: 1 })
   })
 
+  it('recognizes an applied hunk the bundler printed without braces', async () => {
+    const { app, stage } = await fixture()
+    const braced = `diff --git a/${runtimeTarget} b/${runtimeTarget}
+--- a/${runtimeTarget}
++++ b/${runtimeTarget}
+@@ -1,3 +1,5 @@
+ export function f(x) {
+-  return 'original'
++  if (x) {
++    return 'patched'
++  }
+ }
+`
+    await writeFile(join(app, 'patches/runtime-fixture+1.0.0.patch'), braced)
+    await mkdir(dirname(join(app, runtimeTarget)), { recursive: true })
+    await writeFile(join(app, runtimeTarget), "export function f(x) {\n  return 'original'\n}\n")
+    await mkdir(dirname(join(stage, runtimeTarget)), { recursive: true })
+    await writeFile(join(stage, runtimeTarget), "export function f(x) {\n  if (x) return 'patched';\n}\n")
+    await patchSystem3Runtime(stage, app)
+    expect(await readFile(join(stage, runtimeTarget), 'utf8')).toBe("export function f(x) {\n  if (x) return 'patched';\n}\n")
+  })
+
   it('still rejects a hunk whose context matches neither the original nor the patched own build', async () => {
     const { app, stage } = await fixture()
     await writeFile(join(app, 'patches/runtime-fixture+1.0.0.patch'), runtimePatch)
