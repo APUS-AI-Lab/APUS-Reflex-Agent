@@ -9,6 +9,7 @@ import type { Context } from '@deepseek-ai/cordis'
 import type { Agent, PreStepDecision } from '@deepseek-ai/dsh-agent'
 import { createUserMessage, type UserMessage } from '@deepseek-ai/dsh-llm'
 import type { ShellExecutor } from '@deepseek-ai/dsh-shell'
+import type {} from '@deepseek-ai/dsh-fs'
 import type { System3DataClass, System3PrivacyPolicy } from '@deepseek-ai/dsh-experimental-system3-policy'
 import { noulVerdict, runSystem3Decision, validateSystem3DecisionSettings, type System3DecisionContext,
   type System3DecisionSettings, type System3DecisionSpec } from './decision-kernel.ts'
@@ -26,6 +27,8 @@ export interface System3PrefetchConfig extends System3DecisionSettings {
   readonly maxSourceFiles: number
   /** Most input words searched for in the project. */
   readonly maxSearchTerms: number
+  /** Most files with search hits offered for a complete read, those with the most matching lines first. */
+  readonly maxHitFiles: number
   /** Deadline of each read-only command, in milliseconds. */
   readonly commandTimeoutMs: number
 }
@@ -55,8 +58,21 @@ export interface System3PrefetchCandidate {
   readonly description: string
   /** The command shown to the main model above the output. */
   readonly label: string
-  /** Shell command run in the read-only sandbox. */
+  /** Shell command run in the read-only sandbox; for a candidate with `files`, the fallback without a filesystem service. */
   readonly command: string
+  /**
+   * Workspace-relative files read through the filesystem service instead of the command. A file shown in full counts
+   * as read by the Agent, so a later edit of it needs no separate read while the file is unchanged.
+   */
+  readonly files?: readonly string[]
+}
+
+/** One section of a prefetched output: a label line, its text, and, for a file read through the filesystem, its read record. */
+export interface System3PrefetchPart {
+  readonly label: string
+  readonly text: string
+  /** Records the read for the Agent; called only when the whole text reaches the model. */
+  readonly observe?: () => void
 }
 
 /** What the workspace offers, found by one discovery command. */
@@ -87,7 +103,8 @@ const CHINESE_QUESTION_WORDS = new Set(['我的', '我在', '我有', '你的', 
 /** Words that name no project fact, so searching for them finds nothing useful. */
 const QUESTION_WORDS = new Set(['what', 'which', 'where', 'when', 'does', 'this', 'that', 'with', 'from', 'have', 'many', 'much', 'most',
   'answer', 'sentence', 'only', 'project', 'please', 'tell', 'show', 'list', 'write', 'line', 'lines', 'file', 'files', 'code', 'need',
-  'there', 'their', 'about', 'into', 'than', 'then', 'them', 'they', 'will', 'would', 'could', 'should', 'nothing', 'else', 'mine'])
+  'there', 'their', 'about', 'into', 'than', 'then', 'them', 'they', 'will', 'would', 'could', 'should', 'nothing', 'else', 'mine',
+  'check', 'change', 'update', 'explain', 'give', 'make', 'find'])
 
 /**
  * Quote a value as one POSIX shell word.
@@ -119,7 +136,9 @@ export function mentionedPaths(input: string): string[] {
  * @returns Distinct search words.
  */
 export function searchTerms(input: string, limit: number): string[] {
+  // A plural matches less than its singular (refunds misses calculateRefund), so a trailing s is dropped from plain words.
   const latin = (input.match(/[A-Za-z_][A-Za-z0-9_]{3,}/gu) ?? []).filter(word => !QUESTION_WORDS.has(word.toLowerCase()))
+    .map(word => /^[A-Za-z]{3,}[^sS]s$/u.test(word) ? word.slice(0, -1) : word)
   const chinese = [...new Intl.Segmenter('zh', { granularity: 'word' }).segment(input)]
     .map(part => part.segment).filter(word => /^\p{Script=Han}{2,}$/u.test(word) && !CHINESE_QUESTION_WORDS.has(word))
   return [...new Set([...latin, ...chinese])].sort((a, b) => b.length - a.length).slice(0, limit)
@@ -180,14 +199,16 @@ export function prefetchCandidates(input: string, facts: System3WorkspaceFacts,
       command: cut(`${FIND_FILES} -print | sed 's|^\\./||' | LC_ALL=C sort`) })
   }
   if (facts.readme !== undefined) {
-    candidates.push({ id: 'readme', description: `项目说明文件 ${facts.readme}`, label: `cat ${facts.readme}`, command: cut(`cat -- ${shellWord(facts.readme)}`) })
+    candidates.push({ id: 'readme', description: `项目说明文件 ${facts.readme}`, label: `cat ${facts.readme}`, command: cut(`cat -- ${shellWord(facts.readme)}`),
+      files: [facts.readme] })
   }
   if (facts.manifest !== undefined) {
     candidates.push({ id: 'manifest', description: `项目清单 ${facts.manifest}（名称、版本、脚本、依赖）`, label: `cat ${facts.manifest}`,
-      command: cut(`cat -- ${shellWord(facts.manifest)}`) })
+      command: cut(`cat -- ${shellWord(facts.manifest)}`), files: [facts.manifest] })
   }
   for (const path of facts.mentioned.slice(0, 6)) {
-    candidates.push({ id: `file:${path}`, description: `用户输入中提到的文件 ${path} 的内容`, label: `cat ${path}`, command: cut(`cat -- ${shellWord(path)}`) })
+    candidates.push({ id: `file:${path}`, description: `用户输入中提到的文件 ${path} 的内容`, label: `cat ${path}`, command: cut(`cat -- ${shellWord(path)}`),
+      files: [path] })
   }
   const terms = searchTerms(input, config.maxSearchTerms)
   const patterns = terms.map(term => `-e ${shellWord(term)}`).join(' ')
@@ -202,6 +223,51 @@ export function prefetchCandidates(input: string, facts: System3WorkspaceFacts,
       command: cut(`${listing} | xargs -0 grep -I -l '' -- 2>/dev/null | while IFS= read -r f; do printf '==> %s <==\\n' "\${f#./}"; cat -- "$f"; echo; done`) })
   }
   return candidates.slice(0, 16)
+}
+
+/**
+ * Files of a search output (`path:line:text` lines) ranked by how many different search words they contain, then by
+ * matching lines, so one widespread word does not crowd out the file that contains several.
+ * @param output - Output of the search candidate.
+ * @param terms - The words searched for.
+ * @param limit - Most files returned.
+ * @param exclude - Files already offered by another candidate.
+ * @returns Paths with the words each contains, best first, earlier first on ties.
+ */
+export function hitFiles(output: string, terms: readonly string[], limit: number,
+  exclude: ReadonlySet<string>): Array<{ readonly path: string; readonly terms: string[] }> {
+  const files = new Map<string, { lines: number; terms: Set<string> }>()
+  for (const line of output.split('\n')) {
+    const [, path, rest] = /^(.+?):\d+:(.*)$/u.exec(line) ?? []
+    if (path === undefined || rest === undefined || exclude.has(path)) continue
+    const entry = files.get(path) ?? { lines: 0, terms: new Set<string>() }
+    files.set(path, entry)
+    entry.lines += 1
+    const text = rest.toLowerCase()
+    for (const term of terms) if (text.includes(term.toLowerCase())) entry.terms.add(term)
+  }
+  return [...files].sort((a, b) => b[1].terms.size - a[1].terms.size || b[1].lines - a[1].lines).slice(0, limit)
+    .map(([path, entry]) => ({ path, terms: terms.filter(term => entry.terms.has(term)) }))
+}
+
+/**
+ * Complete the candidates once the file list and the search output are known: the small-folder candidate reads the
+ * listed files, and the files with the most search hits become candidates of their own.
+ * @param candidates - Candidates from {@link prefetchCandidates}.
+ * @param listed - Output of the file-list candidate, one path per line, when it ran.
+ * @param found - Output of the search candidate, when it ran.
+ * @param terms - The words the search looked for.
+ * @param config - Size limits of prefetch.
+ * @returns At most 16 candidates.
+ */
+export function withFileReads(candidates: readonly System3PrefetchCandidate[], listed: string | undefined, found: string | undefined,
+  terms: readonly string[], config: Pick<System3PrefetchConfig, 'maxHitFiles'>): System3PrefetchCandidate[] {
+  const files = (listed ?? '').split('\n').map(line => line.trim()).filter(line => line !== '')
+  const offered = new Set(candidates.flatMap(candidate => candidate.files ?? []))
+  const hits = found === undefined ? [] : hitFiles(found, terms, config.maxHitFiles, offered)
+  return [...candidates.map(candidate => candidate.id === 'sources' && files.length > 0 ? { ...candidate, files } : candidate),
+    ...hits.map(hit => ({ id: `hit:${hit.path}`, description: `文件 ${hit.path} 的完整内容（其中包含 ${hit.terms.join('、')}）`,
+      label: `cat ${hit.path}`, command: `head -c 1000000 -- ${shellWord(hit.path)}`, files: [hit.path] }))].slice(0, 16)
 }
 
 const questionKey = (index: number): string => `p${String(index)}`
@@ -229,34 +295,44 @@ export const system3PrefetchDecision: System3DecisionSpec<PrefetchInput, 'prefet
 }
 
 /**
- * Render prefetched outputs as the main model sees them.
- * @param outputs - Candidates with their command output, in order.
+ * Render prefetched outputs as the main model sees them. A section longer than `maxItemBytes` is cut and marked;
+ * sections past `maxTotalBytes` are left out and named. Only sections shown whole record their read.
+ * @param outputs - Candidates with their output sections, in order.
  * @param config - Size limits of prefetch.
- * @returns Model-visible text and the ids it carries, or undefined when nothing fits.
+ * @returns Model-visible text, the ids it carries, and the read records of the files it shows whole; undefined when
+ *   nothing fits.
  */
-export function prefetchText(outputs: ReadonlyArray<{ readonly candidate: System3PrefetchCandidate; readonly output: string }>,
-  config: Pick<System3PrefetchConfig, 'maxItemBytes' | 'maxTotalBytes'>): { readonly text: string; readonly items: string[] } | undefined {
-  const parts: string[] = []
+export function prefetchText(
+  outputs: ReadonlyArray<{ readonly candidate: System3PrefetchCandidate; readonly parts: readonly System3PrefetchPart[] }>,
+  config: Pick<System3PrefetchConfig, 'maxItemBytes' | 'maxTotalBytes'>):
+  { readonly text: string; readonly items: string[]; readonly observe: Array<() => void> } | undefined {
+  const sections: string[] = []
   const items: string[] = []
   const omitted: string[] = []
+  const observe: Array<() => void> = []
   let total = 0
-  for (const { candidate, output } of outputs) {
-    const bytes = Buffer.from(output, 'utf8')
-    const body = bytes.byteLength > config.maxItemBytes
-      ? `${bytes.subarray(0, config.maxItemBytes).toString('utf8').replace(/�$/u, '')}\n[输出超过 ${String(config.maxItemBytes)} 字节，已截断]`
-      : output.trimEnd()
-    const part = `$ ${candidate.label}\n${body === '' ? '[无输出]' : body}`
-    if (total + Buffer.byteLength(part, 'utf8') > config.maxTotalBytes) { omitted.push(candidate.label); continue }
-    total += Buffer.byteLength(part, 'utf8')
-    parts.push(part)
-    items.push(candidate.id)
+  for (const { candidate, parts } of outputs) {
+    let shown = false
+    for (const part of parts) {
+      const bytes = Buffer.from(part.text, 'utf8')
+      const whole = bytes.byteLength <= config.maxItemBytes
+      const body = whole ? part.text.trimEnd()
+        : `${bytes.subarray(0, config.maxItemBytes).toString('utf8').replace(/\uFFFD$/u, '')}\n[输出超过 ${String(config.maxItemBytes)} 字节，已截断]`
+      const section = `$ ${part.label}\n${body === '' ? '[无输出]' : body}`
+      if (total + Buffer.byteLength(section, 'utf8') > config.maxTotalBytes) { omitted.push(part.label); continue }
+      total += Buffer.byteLength(section, 'utf8')
+      sections.push(section)
+      shown = true
+      if (whole && part.observe !== undefined) observe.push(part.observe)
+    }
+    if (shown) items.push(candidate.id)
   }
-  if (parts.length === 0) return undefined
+  if (sections.length === 0) return undefined
   return {
-    text: ['[System3 预取] 以下是为这条输入预先读取的工作区信息（只读命令，在沙箱中执行，结果为本次请求时的状态）。'
-      + '可以直接据此回答；信息不够时再调用工具。', ...parts,
+    text: ['[System3 预取] 以下是为这条输入预先读取的工作区信息（只读，结果为本次请求时的状态）。'
+      + '可以直接据此回答；完整显示的文件已算作读过，可以直接修改；信息不够时再调用工具。', ...sections,
     ...omitted.length === 0 ? [] : [`[超过总大小上限未附上：${omitted.join('；')}]`]].join('\n\n'),
-    items,
+    items, observe,
   }
 }
 
@@ -273,7 +349,7 @@ export interface System3PrefetchSettings {
  */
 export function validateSystem3Prefetch(config: System3PrefetchConfig): void {
   validateSystem3DecisionSettings('prefetch', config)
-  for (const key of ['maxItemBytes', 'maxTotalBytes', 'maxSourceFiles', 'maxSearchTerms', 'commandTimeoutMs'] as const) {
+  for (const key of ['maxItemBytes', 'maxTotalBytes', 'maxSourceFiles', 'maxSearchTerms', 'maxHitFiles', 'commandTimeoutMs'] as const) {
     if (!Number.isSafeInteger(config[key]) || config[key] < 1) throw new Error(`prefetch ${key} must be a positive integer`)
   }
 }
@@ -316,26 +392,68 @@ export function installSystem3Prefetch(ctx: Context, settings: System3PrefetchSe
     }
   }
 
+  /**
+   * Read workspace files through the filesystem service, inside the session workspace only. Each file shown whole
+   * later records a present observation at the version read, so the Agent may edit it while it stays unchanged.
+   */
+  const readFiles = async (agent: Agent, cwd: string, paths: readonly string[],
+    signal: AbortSignal): Promise<System3PrefetchPart[] | undefined> => {
+    const fs = ctx.get('fs')
+    if (fs === undefined) return undefined
+    const root = await fs.resolve('.', { cwd, signal })
+    const parts: System3PrefetchPart[] = []
+    for (const path of paths) {
+      try {
+        const target = await fs.resolve(path, { cwd, signal })
+        const info = fs.contains(root, target) ? await fs.stat(target, signal) : undefined
+        if (info?.type !== 'file' || (info.size ?? 0) > config.maxTotalBytes) continue
+        const text = await fs.readText(target, signal)
+        if (text.includes('\u0000')) continue
+        parts.push({ label: `cat ${path}`, text,
+          observe: () => { ctx.emit('fs/observed', target, { kind: 'present', version: info.version }, { agent }) } })
+      } catch (error) {
+        if (signal.aborted) throw error
+        // An unreadable file is only left out of the prefetch; the Agent can still read it with its own tools.
+      }
+    }
+    return parts
+  }
+
   const prepare = async (agent: Agent, input: string, signal: AbortSignal): Promise<UserMessage | undefined> => {
     const shell = ctx.get('shell')
     const cwd = agent.session.header.cwd
     if (shell === undefined || cwd === undefined) return undefined
     const discovered = await run(shell, agent, cwd, discoveryCommand(mentionedPaths(input)), signal)
     if (discovered === undefined) return undefined
-    const candidates = prefetchCandidates(input, parseWorkspaceFacts(discovered), config)
-    if (candidates.length === 0) return undefined
-    const outputs = candidates.map(candidate => run(shell, agent, cwd, candidate.command, signal))
+    const base = prefetchCandidates(input, parseWorkspaceFacts(discovered), config)
+    if (base.length === 0) return undefined
+    // The file list and the search output decide which files to offer whole, so they run before the decision.
+    const shellOf = (id: string): Promise<string | undefined> => {
+      const candidate = base.find(entry => entry.id === id)
+      return candidate === undefined ? Promise.resolve(undefined) : run(shell, agent, cwd, candidate.command, signal)
+    }
+    const [listed, found] = await Promise.all([shellOf('files'), shellOf('search')])
+    const candidates = withFileReads(base, listed, found, searchTerms(input, config.maxSearchTerms), config)
+    const outputs = candidates.map(async (candidate): Promise<System3PrefetchPart[] | undefined> => {
+      const ran = candidate.id === 'files' ? listed : candidate.id === 'search' ? found : undefined
+      if (ran !== undefined) return [{ label: candidate.label, text: ran }]
+      const read = candidate.files === undefined ? undefined : await readFiles(agent, cwd, candidate.files, signal)
+      if (read !== undefined) return read
+      const output = await run(shell, agent, cwd, candidate.command, signal)
+      return output === undefined ? undefined : [{ label: candidate.label, text: output }]
+    })
     const result = await runSystem3Decision(ctx, shared, system3PrefetchDecision, config, agent, { input, candidates }, signal)
     if (result.outcome !== 'prefetch') return undefined
     const answers = result.judgement.response?.answers ?? {}
     const needed = (await Promise.all(candidates.map(async (candidate, index) => {
       const answer = answers[questionKey(index)]
       if (answer?.type !== 'noul' || noulVerdict(answer.noul, config) !== 'yes') return []
-      const output = await outputs[index]
-      return output === undefined ? [] : [{ candidate, output }]
+      const parts = await outputs[index]
+      return parts === undefined ? [] : [{ candidate, parts }]
     }))).flat()
     const rendered = prefetchText(needed, config)
     if (rendered === undefined) return undefined
+    for (const observe of rendered.observe) observe()
     return createUserMessage({ content: [{ type: 'text', text: rendered.text }], source: { kind: 'system3-prefetch', items: rendered.items } })
   }
 

@@ -1522,6 +1522,8 @@ export interface System3PrefetchConfig extends System3DecisionSettings {
   readonly maxSourceFiles: number
   /** Most input words searched for in the project. */
   readonly maxSearchTerms: number
+  /** Most files with search hits offered for a complete read, those with the most matching lines first. */
+  readonly maxHitFiles: number
   /** Deadline of each read-only command, in milliseconds. */
   readonly commandTimeoutMs: number
 }

@@ -1306,7 +1306,7 @@ Source: [`packages/experimental/system3/src/reflex-supervision.ts:72`](../packag
 'system3/skill-decision': System3SkillDecisionReceipt
 ```
 
-Source: [`packages/experimental/system3/src/skill-selection.ts:106`](../packages/experimental/system3/src/skill-selection.ts)
+Source: [`packages/experimental/system3/src/skill-selection.ts:135`](../packages/experimental/system3/src/skill-selection.ts)
 
 <a id="system3task-frame--log-only"></a>
 
@@ -7284,7 +7284,7 @@ Sources: [`packages/experimental/system3/src/output-folding.ts:29`](../packages/
 
 SHA-256: `248c5015d60b9d1d490e438357f51b768ffbce334bff77de076a9505bddba9a4`
 
-Sources: [`packages/experimental/system3/src/prefetch.ts:34`](../packages/experimental/system3/src/prefetch.ts)
+Sources: [`packages/experimental/system3/src/prefetch.ts:37`](../packages/experimental/system3/src/prefetch.ts)
 
 | Property | Presence | Type |
 |---|---|---|
@@ -7378,7 +7378,7 @@ Sources: [`packages/experimental/system3-supervisor/src/index.ts:48`](../package
 
 SHA-256: `732a21dbf5a389ed7c4291ade6c75ced7e565c998da496bd65fb7f32c14df4f7`
 
-Sources: [`packages/experimental/system3/src/skill-selection.ts:86`](../packages/experimental/system3/src/skill-selection.ts)
+Sources: [`packages/experimental/system3/src/skill-selection.ts:115`](../packages/experimental/system3/src/skill-selection.ts)
 
 | Property | Presence | Type |
 |---|---|---|

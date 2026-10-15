@@ -71,6 +71,9 @@
     },
     {
       "path": "../../shell/shell"
+    },
+    {
+      "path": "../../fs/fs"
     }
   ]
 }

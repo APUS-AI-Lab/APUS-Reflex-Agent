@@ -1308,7 +1308,7 @@ export type SessionEvent<T extends SessionEventType = SessionEventType> = {
 'system3/skill-decision': System3SkillDecisionReceipt
 ```
 
-来源：[`packages/experimental/system3/src/skill-selection.ts:106`](../packages/experimental/system3/src/skill-selection.ts)
+来源：[`packages/experimental/system3/src/skill-selection.ts:135`](../packages/experimental/system3/src/skill-selection.ts)
 
 <a id="system3task-frame--log-only"></a>
 
@@ -7286,7 +7286,7 @@ SHA-256: `6ebb9b2d43fb0085b4264add7d76a8f4915c01a8aa9fc39b3f78c078928ed10e`
 
 SHA-256: `248c5015d60b9d1d490e438357f51b768ffbce334bff77de076a9505bddba9a4`
 
-来源：[`packages/experimental/system3/src/prefetch.ts:34`](../packages/experimental/system3/src/prefetch.ts)
+来源：[`packages/experimental/system3/src/prefetch.ts:37`](../packages/experimental/system3/src/prefetch.ts)
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|
@@ -7380,7 +7380,7 @@ SHA-256: `1d2809cee52a4308806a6b05848e53b5666fc166d82f41ddd96cc289aeba3b64`
 
 SHA-256: `732a21dbf5a389ed7c4291ade6c75ced7e565c998da496bd65fb7f32c14df4f7`
 
-来源：[`packages/experimental/system3/src/skill-selection.ts:86`](../packages/experimental/system3/src/skill-selection.ts)
+来源：[`packages/experimental/system3/src/skill-selection.ts:115`](../packages/experimental/system3/src/skill-selection.ts)
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|
