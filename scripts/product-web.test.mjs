@@ -262,6 +262,13 @@ test('Web qualification requires live Skill execution and leaves other System3 c
     capabilities.map(value => ({ ...value, enabled: true }))]) {
     assert.throws(() => verifyReflexExecutionResponse(envelope(invalid), 'fixture'), /differs from the product profile/)
   }
+  const paused = capabilities.map(value => value.id === 'skillSelection' ? { ...value, enabled: false, suspended: true } : value)
+  assert.deepEqual(verifyReflexExecutionResponse(envelope(paused), 'fixture', { frontLoaded: false }), paused)
+  for (const [invalid, frontLoaded] of [[capabilities, false], [paused, true],
+    [paused.map(value => ({ ...value, suspended: true })), false],
+    [paused.map(value => value.id === 'skillSelection' ? { ...value, suspended: false } : value), false]]) {
+    assert.throws(() => verifyReflexExecutionResponse(envelope(invalid), 'fixture', { frontLoaded }), /differs from the product profile/)
+  }
 })
 
 

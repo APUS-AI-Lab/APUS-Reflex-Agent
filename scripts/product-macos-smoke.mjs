@@ -250,7 +250,7 @@ async function run(installer, reportDirectory, expectedSource = process.env.GITH
     report.stages.push('first-exit-quiescent')
     page = await launch()
     await page.screenshot({ path: join(reportDirectory, 'restart.png') })
-    report.reflexCapabilities.restarted = await verifyReflexExecution(page)
+    report.reflexCapabilities.restarted = await verifyReflexExecution(page, { frontLoaded: false })
     report.stages.push('reflex-execution-modules-ready-after-restart')
     await page.getByText(/^(设置|Settings)$/).last().click()
     await page.getByText(new RegExp(`^(当前版本：|Current version: )${build.version.replaceAll('.', '\\.')}$`)).waitFor({ timeout: 20_000 })

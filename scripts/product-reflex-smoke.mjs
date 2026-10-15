@@ -1,30 +1,44 @@
 /** Shared installed-product Reflex execution and settings acceptance. */
 import { randomUUID } from 'node:crypto'
 
-/** Reject a missing execution plugin or unexpectedly active routing, supervision, or context recovery. */
-export function verifyReflexExecutionResponse(response, rpcId) {
+/**
+ * Reject a missing execution plugin or unexpectedly active routing, supervision, or context recovery.
+ * @param {unknown} response Host `reflex/readStatus` response envelope.
+ * @param {string} rpcId Request id the envelope must answer.
+ * @param {{ frontLoaded?: boolean }} [expected] Saved 决策前置 state; while off, Skill selection reports suspended.
+ * @returns {{ id: string, implemented: boolean, enabled: boolean, suspended?: boolean }[]} The checked capability rows.
+ */
+export function verifyReflexExecutionResponse(response, rpcId, { frontLoaded = true } = {}) {
   if (response?.type !== 'server-response' || response.rpcId !== rpcId || response.result?.ok !== true
     || !Array.isArray(response.result.value?.capabilities)) throw new Error('Reflex capability status RPC did not succeed.')
   const capabilities = response.result.value.capabilities
   return ['entryRouting', 'codexSupervision', 'contextMemory', 'skillSelection'].map(id => {
     const matches = capabilities.filter(capability => capability?.id === id)
     const capability = matches[0]
-    if (matches.length !== 1 || capability.implemented !== true || capability.enabled !== (id === 'skillSelection')) {
+    const installed = id === 'skillSelection'
+    if (matches.length !== 1 || capability.implemented !== true || capability.enabled !== (installed && frontLoaded)
+      || (capability.suspended === true) !== (installed && !frontLoaded)) {
       throw new Error(`Reflex execution capability differs from the product profile: ${id}`)
     }
-    return { id, implemented: capability.implemented, enabled: capability.enabled }
+    return { id, implemented: capability.implemented, enabled: capability.enabled,
+      ...capability.suspended === true ? { suspended: true } : {} }
   })
 }
 
-/** Read the running Host through the browser's authenticated, read-only Remote endpoint. */
-export async function verifyReflexExecution(page) {
+/**
+ * Read the running Host through the browser's authenticated, read-only Remote endpoint.
+ * @param {import('playwright').Page} page Page served by the installed product.
+ * @param {{ frontLoaded?: boolean }} [expected] Saved 决策前置 state.
+ * @returns {Promise<{ id: string, implemented: boolean, enabled: boolean, suspended?: boolean }[]>} The checked capability rows.
+ */
+export async function verifyReflexExecution(page, expected) {
   const rpcId = randomUUID()
   const response = await page.request.post(new URL('/api/reflex/readStatus', page.url()).href, {
     data: { type: 'client-request', rpcId, method: 'reflex/readStatus', payload: { args: {} } }, timeout: 30_000,
   })
   try {
     if (!response.ok()) throw new Error('Reflex capability status request failed.')
-    return verifyReflexExecutionResponse(await response.json(), rpcId)
+    return verifyReflexExecutionResponse(await response.json(), rpcId, expected)
   } finally { await response.dispose() }
 }
 
