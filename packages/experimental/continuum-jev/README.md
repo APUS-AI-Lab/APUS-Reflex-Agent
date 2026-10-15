@@ -75,7 +75,7 @@ Recall is a new message appended after the existing history, so the existing req
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- While Reflex is turned off in settings, the Jev service stays mounted, so `history_read` and `history_search` remain offered and admission still records `provider-unavailable` receipts; no index entry or recall is produced.
+- While Reflex is turned off in settings, admission still records `provider-unavailable` receipts; no index entry, recall, `history_read`, or `history_search` is offered, and turning Reflex back on restores the tools at the next request.
 - The service does not implement retrieval or records. Core owns the bundle's Session-backed records and their lifecycle; Reflex judgements do not establish facts.
 - Real Jev quality and latency require a reachable configured gateway; fake-provider tests do not establish model effectiveness. The live headless acceptance covers one constraint-recall scenario, and `minRelevance` and `minTagProbability` are not yet calibrated on a labeled set. The relevance request sits on the turn's critical path.
 - Only the first sixteen candidates are scored; `rank` retains the rest and `threshold` keeps only those that share a query term. Semantic indexing, query expansion, and per-record classification are separate work. Declared session data classes cover supplied candidates and the query; no content classifier detects embedded secrets.

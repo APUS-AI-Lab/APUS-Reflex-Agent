@@ -54,7 +54,15 @@ describe('apus-dsh-jev-plugin service', () => {
       expect(await service.warm('switch')).toBe(false)
       expect(decide).not.toHaveBeenCalled()
       expect(warm).not.toHaveBeenCalled()
+      const announced: boolean[] = []
+      ctx.on('jev/enabled', (value) => { announced.push(value) })
+      ctx.emit('loader/volatile-update', [['endpoint']])
+      expect(service.isEnabled()).toBe(false)
       enabled = true
+      ctx.emit('loader/volatile-update', [['enabled']])
+      ctx.emit('loader/volatile-update', [['model']])
+      expect(announced).toEqual([true])
+      expect(service.isEnabled()).toBe(true)
       expect(await service.decide(request)).toMatchObject({ kind: 'ok' })
       expect(await service.warm('switch')).toBe(true)
     } finally { dispose(); await ctx.fiber.dispose() }
