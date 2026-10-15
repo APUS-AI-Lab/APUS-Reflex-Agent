@@ -209,10 +209,18 @@ for (let round = 0; round < repeats; round += 1) {
         ? event.data.source.items : [])
       const skill = events.flatMap(event => event.type === 'system3/skill-decision'
         ? [{ outcome: event.data.outcome, selected: event.data.selected ?? null, ms: Math.round(event.data.elapsedMs) }] : [])[0]
+      // Per step: main-model time from step start to its message, then tool time until the next step starts.
+      const stepTimes = events.flatMap((event, index) => {
+        if (event.type !== 'step/start') return []
+        const message = events.slice(index).find(next => next.type === 'assistant/message')
+        const next = events.slice(index + 1).find(later => later.type === 'step/start') ?? events.at(-1)
+        if (message === undefined || next === undefined) return []
+        return [{ llm: message.time - event.time, tools: Math.max(0, next.time - message.time) }]
+      })
       const success = error === undefined && await scenario.check(answer, root)
       process.stdout.write(`RUN ${JSON.stringify({ round, id: scenario.id, suite: scenario.suite, category: scenario.category, ms, success,
         steps: events.filter(event => event.type === 'assistant/message').length, tools, reflex: reflex ?? null, prefetched,
-        skill: skill ?? null, error: error ?? null, answer: answer.trim().slice(0, 100) })}\n`)
+        skill: skill ?? null, stepTimes, error: error ?? null, answer: answer.trim().slice(0, 100) })}\n`)
     } finally {
       await ctx.fiber.dispose()
       process.chdir(originalCwd)

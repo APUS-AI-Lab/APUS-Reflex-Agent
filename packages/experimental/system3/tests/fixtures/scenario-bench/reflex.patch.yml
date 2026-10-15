@@ -28,6 +28,7 @@
         timeoutMs: 15000
         questionsPerRequest: 1
         keepAliveMs: 120000
+        http2: true
 
     - id: system3
       name: '../../../src/index.ts'
@@ -39,7 +40,7 @@
         jevExecutionDomain: network
         prefetch:
           mode: active
-          yes: 0.5
+          yes: !!js Number(process.env.PREFETCH_YES ?? '0.5')
           no: 0.3
           deadlineMs: 3000
           sessionDataClasses: [workspace]
