@@ -59,7 +59,8 @@ Set `JEV_ENDPOINT` and `JEV_MODEL` to your serving endpoint and model. Values ar
 | `http2` | `false` | Negotiate HTTP/2 on the dedicated connection; requires `keepAliveMs` |
 | `resetAfterFailures` | absent | Consecutive requests without a response after which the dedicated pool is destroyed and the next request opens a fresh connection; on HTTP/2 every request shares one connection, so a stalled one otherwise fails every later decision. Requires `keepAliveMs`; omission never reopens the pool |
 | `questionsPerRequest` | absent | Most questions one gateway request carries (1–16). A decision with more questions is sent as consecutive groups of this size in parallel requests with the same state, and their answers are merged into one response with usage counters summed; the first failing group cancels the others and fails the decision. Gateway time grows with the question count: on the deployed gateway, seven questions answered in about 340 ms as one request and about 260 ms as seven parallel requests over kept-alive connections. Omission sends every decision as one request |
-| `providerId` | `system-one` | Built-in provider registry id |
+| `providerId` | `system-one` | Built-in provider registry id; selected when a request omits one and `defaultProviderId` is unset |
+| `defaultProviderId` | absent | Provider selected when a request omits one, such as the local Reflex engine (`@deepseek-ai/dsh-experimental-reflex-local`) registered by another plugin. Changing it switches the next decision without renaming or reloading the built-in provider; `enabled: false` still stops every provider |
 
 The endpoint may be a local SSH tunnel or a controlled service URL. The provider appends `/v1/systemone` when the configured URL does not already end in `/v1`; it sends a Bearer credential only when `apiKeyEnv` resolves to a value.
 
