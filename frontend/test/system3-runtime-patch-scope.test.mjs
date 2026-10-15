@@ -101,6 +101,10 @@ describe('desktop runtime patch scope', () => {
     await writeFile(join(stage, runtimeTarget), "export function f(x) {\n  if (x) return 'patched';\n}\n")
     await patchSystem3Runtime(stage, app)
     expect(await readFile(join(stage, runtimeTarget), 'utf8')).toBe("export function f(x) {\n  if (x) return 'patched';\n}\n")
+    // A fully contained patch keeps its receipt and still pins the target it covers.
+    const receipts = JSON.parse(await readFile(join(stage, 'desktop-patch-receipt.json'), 'utf8'))
+    expect(receipts).toEqual([expect.objectContaining({ name: 'runtime-fixture+1.0.0.patch', alreadyAppliedHunks: 1,
+      targets: [expect.objectContaining({ path: runtimeTarget })] })])
   })
 
   it('still rejects a hunk whose context matches neither the original nor the patched own build', async () => {

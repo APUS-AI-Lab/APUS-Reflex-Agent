@@ -134,20 +134,22 @@ export async function patchSystem3Runtime(stage, appRoot) {
       chunk = adaptBrandContext(adaptApiContext(adaptCss(chunk, installed, own), target), target, own)
       const applied = dropAppliedHunks(chunk, own)
       alreadyApplied += applied.dropped
-      if (applied.chunk === '') continue
-      patches.push(applied.chunk)
       targets.push(target)
+      if (applied.chunk !== '') patches.push(applied.chunk)
     }
-    if (!patches.length) continue
-    const patchPath = join(stage, '.desktop-compatibility.patch')
+    if (!targets.length) continue
     const patch = patches.join('')
-    await writeFile(patchPath, patch)
-    try {
-      execFileSync(patchCommand, ['--dry-run', '--batch', '--forward', '--fuzz=0', '-p1', '-i', '.desktop-compatibility.patch'], { cwd: stage, stdio: 'pipe' })
-      execFileSync(patchCommand, ['--batch', '--forward', '--fuzz=0', '-p1', '-i', '.desktop-compatibility.patch'], { cwd: stage, stdio: 'pipe' })
-    } catch (error) {
-      throw new Error(`Desktop compatibility patch ${name} requires review: ${String(error.stdout ?? error.message)}`, { cause: error })
-    } finally { await unlink(patchPath) }
+    // A patch whose every hunk the own build already contains still gets a receipt, so each maintained patch stays accounted for.
+    if (patch !== '') {
+      const patchPath = join(stage, '.desktop-compatibility.patch')
+      await writeFile(patchPath, patch)
+      try {
+        execFileSync(patchCommand, ['--dry-run', '--batch', '--forward', '--fuzz=0', '-p1', '-i', '.desktop-compatibility.patch'], { cwd: stage, stdio: 'pipe' })
+        execFileSync(patchCommand, ['--batch', '--forward', '--fuzz=0', '-p1', '-i', '.desktop-compatibility.patch'], { cwd: stage, stdio: 'pipe' })
+      } catch (error) {
+        throw new Error(`Desktop compatibility patch ${name} requires review: ${String(error.stdout ?? error.message)}`, { cause: error })
+      } finally { await unlink(patchPath) }
+    }
     for (const target of targets) execFileSync(process.execPath, ['--check', join(stage, target)], { stdio: 'pipe' })
     receipts.push({ name, sourceSha256: createHash('sha256').update(original).digest('hex'),
       runtimePatchSha256: createHash('sha256').update(patch).digest('hex'),
