@@ -1,0 +1,57 @@
+# Live-only patch: the native setup plus Reflex prefetch and Skill selection, with parallel single-question Jev requests.
+# the endpoint and model come from JEV_ENDPOINT and JEV_MODEL.
+- id: headless-startup
+  disabled: true
+
+- id: headless-runner
+  disabled: true
+
+- id: llm-deepseek
+  config:
+    apiKeyEnv: DEEPSEEK_API_KEY
+
+- id: agent-loop
+  config:
+    agents:
+      - id: main
+        provider: deepseek-official
+        model: deepseek-flash
+        cwd: !!js process.cwd()
+
+- insert:
+    - id: jev
+      name: '../../../../apus-dsh-jev-plugin/src/index.ts'
+      config:
+        endpoint: !!js process.env.JEV_ENDPOINT
+        model: !!js process.env.JEV_MODEL
+        apiKeyEnv: JEV_API_KEY
+        timeoutMs: 15000
+        questionsPerRequest: 1
+        keepAliveMs: 120000
+
+    - id: system3
+      name: '../../../src/index.ts'
+      config:
+        privacyMode: controlled
+        approvedRemoteIds: [jev]
+        approvedRemoteDataClasses: [workspace]
+        jevRouteId: jev
+        jevExecutionDomain: network
+        prefetch:
+          mode: active
+          yes: 0.5
+          no: 0.3
+          deadlineMs: 3000
+          sessionDataClasses: [workspace]
+          maxItemBytes: 8000
+          maxTotalBytes: 24000
+          maxSourceFiles: 30
+          maxSearchTerms: 4
+          commandTimeoutMs: 3000
+        skillSelection:
+          sessionDataClasses: [workspace]
+          minConfidence: 0.5
+          maxInputBytes: 16000
+          maxContentBytes: 12000
+          maxCandidates: 15
+          deadlineMs: 3000
