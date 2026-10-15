@@ -269,6 +269,16 @@ export default class System3 extends Service implements System3Service {
       protectRecentMessages: z.number().step(1).min(1).required(),
       maxRestoredChars: z.number().step(1).min(1).required(),
       maxSearchResults: z.number().step(1).min(1).required(),
+      compactionSweep: z.union([z.const(false), z.object({
+        mode: z.union([z.const('off'), z.const('shadow'), z.const('active')]).required(),
+        yes: z.number().min(0).max(1).required(),
+        no: z.number().min(0).max(1).required(),
+        deadlineMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).required(),
+        fragmentChars: z.number().step(1).min(1).required(),
+        maxFragments: z.number().step(1).min(1).required(),
+        fragmentsPerRequest: z.number().step(1).min(1).max(5).required(),
+        concurrency: z.number().step(1).min(1).required(),
+      })]).default(false),
     })]).default(false),
     reflexSupervision: z.union([z.const(false), z.object({
       mode: z.union([z.const('off'), z.const('shadow'), z.const('active')]).required(),

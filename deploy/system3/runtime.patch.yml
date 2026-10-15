@@ -100,6 +100,16 @@
           protectRecentMessages: 4
           maxRestoredChars: 8192
           maxSearchResults: 8
+          # Hides tool-output passages before a summary; every one of three questions must answer at or below `no`.
+          compactionSweep:
+            mode: active
+            yes: 0.9
+            no: 0.05
+            deadlineMs: 8000
+            fragmentChars: 1000
+            maxFragments: 240
+            fragmentsPerRequest: 5
+            concurrency: 8
         reflexSupervision:
           mode: active
           yes: 0.8

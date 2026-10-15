@@ -90,6 +90,8 @@ With `dsh-command-compact` mounted, type `/compact` in a chat UI to condense imm
 
 Mount `dsh-compaction-tool-result-pruner` before this package to trim oversized tool results as part of condensation. Trimming makes no model call and can remove the need to summarize at all: when the trimmed conversation fits within the threshold, condensation skips the summary. Trimming only runs after a condensation trigger qualifies — a below-pressure conversation is never touched.
 
+Automatic condensation also emits `compaction/prepare` after trimming, so a mounted listener such as the System3 Reflex compaction sweep can hide tool output the current task no longer needs. When the prepared conversation fits within the threshold, condensation skips the summary. `/compact` does not emit it.
+
 -----
 
 <a id="understand-the-implementation"></a>

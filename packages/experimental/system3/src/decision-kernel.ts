@@ -128,7 +128,7 @@ export function validateSystem3DecisionSettings(id: string, settings: System3Dec
  * @returns The outcome to act on and its record.
  */
 export async function runSystem3Decision<Input, Outcome extends string>(ctx: Context, shared: System3DecisionContext,
-  spec: System3DecisionSpec<Input, Outcome>, settings: System3DecisionSettings, agent: Agent, input: Input,
+  spec: System3DecisionSpec<Input, Outcome>, settings: System3DecisionSettings, agent: Pick<Agent, 'session'>, input: Input,
   signal: AbortSignal): Promise<System3DecisionResult<Outcome>> {
   signal.throwIfAborted()
   const started = Date.now()

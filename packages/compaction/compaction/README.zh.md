@@ -83,6 +83,8 @@ kind: "package-reference"
 
 同步的 `compaction/summary-error` waterfall 让后端为失败的摘要及明确选区请求持久输入恢复。监听器只有在记录实际进展后才返回 true，否则调用 `next()` 委派后续处理。后端在触发事件前检查取消和选区稳定性，重试前重新派生输入并计价。事件声明说明其载荷；图片策略由 `dsh-compaction-image-offload` 负责。
 
+并行的 Cordis 事件 `compaction/prepare` 在自动触发条件满足后、后端选择摘要范围之前运行。监听器只能追加持久、可重放、保留全部表面节点和工具配对的消息投影；后端随后重新计量，只有表面仍然需要时才生成摘要。监听器失败会使本次压缩失败，取消保留其原始原因。手动压缩不触发该事件，因为它的锁需要同步获取。
+
 预期手动失败会抛出 `ManualCompactionError`，携带来自小型封闭集合的稳定 `code`；只有 `compaction/start` 标记之后发生的失败才会被记录——以携带错误的 `compaction/end` 形式——而 `busy` 拒绝或 start 之前的取消不会留下记录。每个错误码的语义见[压缩子系统参考](../../../docs/subsystems/compaction.zh.md)。
 
 <a id="tool-pairing-boundaries"></a>
