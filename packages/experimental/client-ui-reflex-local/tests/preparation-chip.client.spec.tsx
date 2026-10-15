@@ -8,7 +8,7 @@ import { afterEach, expect, it, vi } from 'vitest'
 import { PreparationChip, type PreparationChipProps } from '../src/client/PreparationChip.tsx'
 import type { ReflexReadiness } from '../src/client/readiness.ts'
 import { zh } from '../src/client/locales.ts'
-import { FAST, SIZES, snapshotOf } from './snapshot-fixture.client.ts'
+import { FAST, Q4, Q8, SIZES, snapshotOf } from './snapshot-fixture.client.ts'
 
 afterEach(cleanup)
 
@@ -24,7 +24,7 @@ function fixture(snapshot: ReflexSnapshot | null, connected = true) {
 }
 const openMenu = (name: string) => { fireEvent.click(screen.getByRole('button', { name })) }
 const row = (name: string) => screen.getByRole<HTMLButtonElement>('menuitem', { name })
-const downloading = snapshotOf({ phase: 'downloading', variant: 'q8_0', completedBytes: 1.7e9, totalBytes: SIZES.q8_0, source: 'https://huggingface.co' })
+const downloading = snapshotOf({ phase: 'downloading', variant: Q8, completedBytes: 1.7e9, totalBytes: SIZES.q8_0, source: 'https://huggingface.co' })
 
 it.each([
   ['before the first snapshot', null],
@@ -32,8 +32,8 @@ it.each([
   ['checking', snapshotOf({ phase: 'checking' })],
   ['nothing downloaded', snapshotOf({ phase: 'absent' })],
   ['a failure', snapshotOf({ phase: 'failed', failure: { kind: 'runner', message: 'exit' } })],
-  ['a fast ready engine', snapshotOf({ phase: 'ready', variant: 'q8_0', selfTest: FAST })],
-  ['a slow engine already on', snapshotOf({ phase: 'ready', variant: 'q8_0', selfTest: { ...FAST, slow: true } }, { enabled: true })],
+  ['a fast ready engine', snapshotOf({ phase: 'ready', variant: Q8, selfTest: FAST })],
+  ['a slow engine already on', snapshotOf({ phase: 'ready', variant: Q8, selfTest: { ...FAST, slow: true } }, { enabled: true })],
 ])('leaves the dock empty for %s', (_name, snapshot) => {
   const b = fixture(snapshot)
   expect(b.view.container.innerHTML).toBe('')
@@ -54,16 +54,16 @@ it('shows download progress and pauses, cancels, or opens the details from its m
 })
 
 it('resumes a paused download with its variant and reports a rejected command', async () => {
-  const b = fixture(snapshotOf({ phase: 'paused', variant: 'q4_k_m', completedBytes: 1, totalBytes: 2 }))
+  const b = fixture(snapshotOf({ phase: 'paused', variant: Q4, completedBytes: 1, totalBytes: 2 }))
   vi.mocked(b.prepare).mockRejectedValueOnce(new Error('offline'))
   openMenu(zh['chip.paused'])
   fireEvent.click(row(zh.resume))
-  expect(b.prepare).toHaveBeenCalledWith({ variant: 'q4_k_m' })
+  expect(b.prepare).toHaveBeenCalledWith({ variant: Q4 })
   await waitFor(() => { expect(b.reportFailure).toHaveBeenCalledWith(new Error('offline')) })
 })
 
 it.each(['verifying', 'testing'] as const)('shows %s with only the details action', (phase) => {
-  const b = fixture(snapshotOf({ phase, variant: 'q8_0' }))
+  const b = fixture(snapshotOf({ phase, variant: Q8 }))
   openMenu(zh['chip.checking'])
   expect(screen.getAllByRole('menuitem').map(item => item.textContent)).toEqual([zh['chip.details']])
   expect(screen.queryByRole('menuitem', { name: zh['chip.notNow'] })).toBeNull()
@@ -73,23 +73,23 @@ it.each(['verifying', 'testing'] as const)('shows %s with only the details actio
 })
 
 it('offers enabling a slow Mac anyway and disables Host commands while disconnected', () => {
-  const b = fixture(snapshotOf({ phase: 'ready', variant: 'q8_0', selfTest: { ...FAST, slow: true } }), false)
+  const b = fixture(snapshotOf({ phase: 'ready', variant: Q8, selfTest: { ...FAST, slow: true } }), false)
   openMenu(zh['chip.slow'])
   expect(row(zh.enableAnyway).disabled).toBe(true)
   expect(row(zh['chip.details']).disabled).toBe(false)
-  b.publish(snapshotOf({ phase: 'ready', variant: 'q8_0', selfTest: { ...FAST, slow: true } }))
+  b.publish(snapshotOf({ phase: 'ready', variant: Q8, selfTest: { ...FAST, slow: true } }))
   fireEvent.click(row(zh.enableAnyway))
   expect(b.enable).toHaveBeenCalledOnce()
 })
 
 it('hides the slow-Mac chip for the page after Not now without a Host command', () => {
-  const b = fixture(snapshotOf({ phase: 'ready', variant: 'q8_0', selfTest: { ...FAST, slow: true } }))
+  const b = fixture(snapshotOf({ phase: 'ready', variant: Q8, selfTest: { ...FAST, slow: true } }))
   openMenu(zh['chip.slow'])
   expect(screen.getAllByRole('menuitem').map(item => item.textContent)).toEqual([zh.enableAnyway, zh['chip.notNow'], zh['chip.details']])
   fireEvent.click(row(zh['chip.notNow']))
   expect(b.dismissSlowChip).toHaveBeenCalledOnce()
   expect(b.enable).not.toHaveBeenCalled()
   expect(b.view.container.innerHTML).toBe('')
-  b.publish(snapshotOf({ phase: 'downloading', variant: 'q8_0', completedBytes: 1, totalBytes: 2, source: 'https://huggingface.co' }))
+  b.publish(snapshotOf({ phase: 'downloading', variant: Q8, completedBytes: 1, totalBytes: 2, source: 'https://huggingface.co' }))
   expect(screen.getByRole('button', { name: '正在准备本机判断 50%' })).toBeTruthy()
 })

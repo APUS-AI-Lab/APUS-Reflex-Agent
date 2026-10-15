@@ -4,12 +4,12 @@ import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 import { Button, SettingsForm, SettingsSecretField, SettingsValueField, Switch } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { InjectFace, PropsLocale, PropsRenderSlots, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 import { formLabels, type ReflexSettingsKey } from './reflex-settings-locales.ts'
-import type { ReflexCardFace, ReflexCardState } from './reflex-settings-controller.ts'
+import type { ReflexCardFace, ReflexCardState, ReflexConnectionMode } from './reflex-settings-controller.ts'
 import css from './ReflexSettings.module.css'
 
 /** Renderer-bound Reflex configuration page properties. */
 export type ReflexSettingsProps = PropsRuntime<'settings.section'> & PropsLocale<'settings.reflex'> & InjectFace<ReflexCardFace>
-  & PropsRenderSlots<'settings.reflex.item'>
+  & PropsRenderSlots<'settings.reflex.item' | 'settings.reflex.local'>
 
 function probeKey(state: ReflexCardState): ReflexSettingsKey {
   if (state.probe.pending) return 'testing'
@@ -50,13 +50,16 @@ export function ReflexSettings(props: ReflexSettingsProps) {
       <div className={css.protocol}>
         <label htmlFor="reflex-mode">{t('connectionMode')}</label>
         <select id="reflex-mode" value={state.mode} disabled={!state.writable || state.saving}
-          onChange={(event) => { props.selectMode(event.target.value as 'trial' | 'custom') }}>
+          onChange={(event) => { props.selectMode(event.target.value as ReflexConnectionMode) }}>
           <option value="trial">{t('trialMode')}</option>
           <option value="custom">{t('customMode')}</option>
+          <option value="local">{t('localMode')}</option>
         </select>
-        <p>{t('protocol')}: {t('protocolReflex')}</p>
+        {state.mode !== 'local' && <p>{t('protocol')}: {t('protocolReflex')}</p>}
         {state.mode === 'trial' && <p>{t('trialHint')}</p>}
+        {state.mode === 'local' && <p>{t('localHint')}</p>}
       </div>
+      {state.mode === 'local' && props.renderSlot('settings.reflex.local', {}, { fallback: <p role="status" data-reflex-local="unavailable">{t('localUnavailable')}</p> })}
       {state.mode === 'custom' && <>
         {fields.map(field => <SettingsValueField key={field} id={`reflex-${field}`} label={t(field)} hint={t(`${field}Hint`)}
           overriddenLabel={t('overridden')} resetLabel={t('reset')} invalidLabel={t('invalidNumber')}
@@ -67,15 +70,18 @@ export function ReflexSettings(props: ReflexSettingsProps) {
           configured={state.apiKeyConfigured} stateLabel={t(state.apiKeyConfigured ? 'apiKeySet' : 'apiKeyUnset')}
           onEdit={(text) =>{  props.edit('apiKey', text) }} />
       </>}
-      <div className={css.actions}>
-        {state.mode === 'custom' && <Button onClick={() => { void props.clearCredential() }} disabled={!state.apiKeyConfigured || !state.apiKeyWritable || state.saving}>{t('clear')}</Button>}
-        <Button onClick={() => { void props.testConnection() }} disabled={state.probe.pending || state.invalid || state.saving}>{t(state.probe.pending ? 'testing' : 'test')}</Button>
-      </div>
-      <div role="status" aria-live="polite">
-        <p>{t(probeKey(state))}{state.probe.result ? ` · ${t('latency', { ms: String(Math.round(state.probe.result.latencyMs)) })}` : ''}</p>
-        {state.credentialFailed ? <p>{t('clearFailed')}</p> : null}
-      </div>
-      <p>{t('draft')}</p><p>{t('effective')}</p>
+      {state.mode !== 'local' && <>
+        <div className={css.actions}>
+          {state.mode === 'custom' && <Button onClick={() => { void props.clearCredential() }} disabled={!state.apiKeyConfigured || !state.apiKeyWritable || state.saving}>{t('clear')}</Button>}
+          <Button onClick={() => { void props.testConnection() }} disabled={state.probe.pending || state.invalid || state.saving}>{t(state.probe.pending ? 'testing' : 'test')}</Button>
+        </div>
+        <div role="status" aria-live="polite">
+          <p>{t(probeKey(state))}{state.probe.result ? ` · ${t('latency', { ms: String(Math.round(state.probe.result.latencyMs)) })}` : ''}</p>
+          {state.credentialFailed ? <p>{t('clearFailed')}</p> : null}
+        </div>
+        <p>{t('draft')}</p>
+      </>}
+      <p>{t('effective')}</p>
     </SettingsForm>
     {props.renderSlot('settings.reflex.item', {})}
     <h3>{t('capabilities')}</h3>

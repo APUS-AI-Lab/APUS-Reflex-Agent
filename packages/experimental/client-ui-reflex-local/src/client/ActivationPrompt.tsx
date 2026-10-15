@@ -5,7 +5,7 @@ import type { InjectFace, PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-cli
 import type {} from '@deepseek-ai/dsh-client-ui-plugin-manager/client'
 import type { ReflexLocalInjected } from './injected.ts'
 import type { NS } from './locales.ts'
-import { modelBytes, sizeText } from './size.ts'
+import { optionOf, sizeText } from './size.ts'
 import css from './ReflexLocal.module.css'
 
 /** Registration shares for the bundle's activation guidance. */
@@ -27,9 +27,9 @@ export function ActivationPrompt({ useReflexReadiness, prepare, onDismiss, onOpe
     if (phase !== undefined && phase !== 'checking' && !offered) onDismiss()
   }, [phase, offered, onDismiss])
   if (snapshot === null || !snapshot.device.supported) return null
-  const need = modelBytes(snapshot, snapshot.device.recommended), free = snapshot.availableDiskBytes
-  const short = need !== undefined && free !== undefined && free < need
-    ? t('prompt.diskShort', { need: sizeText(need, t), free: sizeText(free, t) }) : undefined
+  const option = optionOf(snapshot, snapshot.recommended), need = option?.bytes, free = snapshot.availableDiskBytes
+  const short = option !== undefined && !option.fits && free !== undefined
+    ? t('prompt.diskShort', { need: sizeText(option.bytes, t), free: sizeText(free, t) }) : undefined
   const start = async (): Promise<void> => {
     setBusy(true); setError('')
     try {

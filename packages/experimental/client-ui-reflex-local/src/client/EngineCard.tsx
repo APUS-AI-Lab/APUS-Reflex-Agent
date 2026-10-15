@@ -1,4 +1,4 @@
-/** The local decision engine card on its bundle page: one primary action at a time, driven by the Host snapshot. */
+/** The local decision engine card in the Reflex page's local mode and on its bundle page: one primary action at a time. */
 import { useState } from 'react'
 import { Button, Modal, StateDot, type StateDotState } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { InjectFace, PropsLocale } from '@deepseek-ai/dsh-client-ui-slots'
@@ -6,16 +6,16 @@ import { assertNever } from '@deepseek-ai/dsh-util-values'
 import type { ReflexFailure, ReflexPrepareOptions, ReflexSnapshot, ReflexVariant } from '@deepseek-ai/dsh-experimental-api-reflex-local/types'
 import type { ReflexLocalInjected } from './injected.ts'
 import type { NS, ReflexLocalKey } from './locales.ts'
-import { modelBytes, sizeText } from './size.ts'
+import { ModelChooser } from './ModelChooser.tsx'
+import { optionOf, sizeText, variantName } from './size.ts'
 import css from './ReflexLocal.module.css'
 
-/** Registration shares for the bundle configuration entry. */
+/** Registration shares for the Reflex local-mode body and the bundle configuration entry. */
 export type EngineCardProps = PropsLocale<typeof NS>
   & Pick<InjectFace<ReflexLocalInjected>, 'useReflexReadiness' | 'prepare' | 'pause' | 'cancel' | 'enable' | 'disable' | 'remove'>
 
 type Translate = EngineCardProps['t']
 type ButtonVariant = 'primary' | 'outline' | 'ghost'
-const LITE: ReflexVariant = 'q4_k_m'
 
 /** The Host phase as the card names it; `ready` splits by the persisted enable choice. */
 type CardState = Exclude<ReflexSnapshot['preparation']['phase'], 'ready'> | 'enabled' | 'disabled'
@@ -62,27 +62,24 @@ function failureText(failure: ReflexFailure, t: Translate): string {
   }
 }
 
-function absentContent(snapshot: ReflexSnapshot, recommended: ReflexVariant, run: CardCommands, t: Translate): CardContent {
-  const need = modelBytes(snapshot, recommended), lite = modelBytes(snapshot, LITE), free = snapshot.availableDiskBytes
-  if (need === undefined) return { state: 'absent', lines: [], buttons: [{ key: 'downloadPlain', variant: 'primary', onClick: () => { run.prepare() } }] }
-  const lines = [t('cost', { size: sizeText(need, t) })]
-  if (free === undefined || free >= need) {
-    return { state: 'absent', lines, buttons: [{ key: 'download', params: { size: sizeText(need, t) }, variant: 'primary', onClick: () => { run.prepare() } }] }
-  }
-  const short = { key: 'diskShort', params: { need: sizeText(need, t), free: sizeText(free, t) }, variant: 'primary' } as const
-  return { state: 'absent', lines, buttons: recommended !== LITE && lite !== undefined && free >= lite
-    ? [short, { key: 'useLite', params: { size: sizeText(lite, t) }, variant: 'outline', onClick: () => { run.prepare(LITE) } }]
-    : [short] }
+function absentContent(snapshot: ReflexSnapshot, run: CardCommands, t: Translate): CardContent {
+  const option = optionOf(snapshot, snapshot.recommended)
+  if (option === undefined) return { state: 'absent', lines: [t('noFit')], buttons: [] }
+  const size = sizeText(option.bytes, t), free = snapshot.availableDiskBytes
+  const lines = [t('cost', { size, memory: sizeText(option.minMemoryBytes, t) })]
+  return { state: 'absent', lines, buttons: [option.fits || free === undefined
+    ? { key: 'download', params: { size }, variant: 'primary', onClick: () => { run.prepare() } }
+    : { key: 'diskShort', params: { need: size, free: sizeText(free, t) }, variant: 'primary' }] }
 }
 
 function cardContent(snapshot: ReflexSnapshot, run: CardCommands, t: Translate): CardContent {
-  const elsewhere = t(snapshot.cloudProviderId === undefined ? 'elsewhere.default' : 'elsewhere.cloud')
+  const elsewhere = t('elsewhere')
   const { device, preparation } = snapshot
   if (!device.supported) return { state: 'unsupported', lines: [t(`unsupported.${device.reason}`), elsewhere], buttons: [] }
   switch (preparation.phase) {
     case 'unsupported': return { state: 'unsupported', lines: [elsewhere], buttons: [] }
     case 'checking': return { state: 'checking', lines: [t('checking')], buttons: [] }
-    case 'absent': return absentContent(snapshot, device.recommended, run, t)
+    case 'absent': return absentContent(snapshot, run, t)
     case 'downloading': {
       const { completedBytes, totalBytes } = preparation
       return { state: 'downloading', progress: preparation, buttons: [
@@ -103,7 +100,7 @@ function cardContent(snapshot: ReflexSnapshot, run: CardCommands, t: Translate):
       }
       const slow = preparation.selfTest.slow
       return { state: 'disabled', buttons: [{ key: slow ? 'enableAnyway' : 'enable', variant: 'primary', onClick: run.enable }, remove],
-        lines: [slow ? t(snapshot.cloudProviderId === undefined ? 'slow.default' : 'slow.cloud', { seconds }) : t('readyDetail')] }
+        lines: [slow ? t('slow', { seconds }) : t('readyDetail')] }
     }
     case 'failed': return { state: 'failed', buttons: [{ key: 'retry', variant: 'primary', onClick: () => { run.prepare(preparation.variant) } }],
       lines: preparation.failure.kind === 'download' ? [failureText(preparation.failure, t)] : [failureText(preparation.failure, t), elsewhere] }
@@ -141,29 +138,34 @@ export function EngineCard({ useReflexReadiness, t, ...actions }: EngineCardProp
     try { await action() } catch (failure) { setError(failure instanceof Error ? failure.message : String(failure)) }
     finally { setBusy(false) }
   }
+  const prepareWith = (variant?: ReflexVariant): void => {
+    const options: ReflexPrepareOptions = { ...variant === undefined ? {} : { variant },
+      ...selectedSource === '' ? {} : { downloadSource: selectedSource } }
+    void run(() => actions.prepare(options))
+  }
   const content = cardContent(snapshot, {
-    prepare: (variant) => {
-      const options: ReflexPrepareOptions = { ...variant === undefined ? {} : { variant },
-        ...selectedSource === '' ? {} : { downloadSource: selectedSource } }
-      void run(() => actions.prepare(options))
-    },
+    prepare: prepareWith,
     pause: () => { void run(actions.pause) },
     cancel: () => { void run(actions.cancel) },
     enable: () => { void run(actions.enable) },
     disable: () => { void run(actions.disable) },
     confirmRemoval: () => { setConfirming(true) },
   }, t)
-  const { state } = content
+  const { state } = content, { preparation } = snapshot
+  const current = 'variant' in preparation ? preparation.variant : undefined
+  const masterOff = snapshot.device.supported && !snapshot.reflexEnabled
+  const choosesModel = state === 'absent' || state === 'enabled' || state === 'disabled' || state === 'failed'
   const close = (): void => { setConfirming(false) }
-  return <section className={css.card}>
+  return <section className={css.card} data-reflex-local="engine">
     <header className={css.head}>
-      <strong>{t('model')}</strong>
-      <span className={css.state}><StateDot state={TONES[state]} />{t(`state.${state}`)}</span>
+      <strong>{current === undefined ? t('model') : variantName(current, t)}</strong>
+      <span className={css.state}><StateDot state={TONES[state]} />{t(state === 'enabled' && masterOff ? 'state.masterOff' : `state.${state}`)}</span>
     </header>
     <p className={css.lede}>{t('lede')}</p>
     {content.progress && <progress className={css.progress} aria-label={t('progressLabel')}
       value={content.progress.completedBytes} max={content.progress.totalBytes} />}
     {content.lines.map(line => <p key={line} className={css.detail} role={state === 'failed' ? 'alert' : undefined}>{line}</p>)}
+    {masterOff && <p className={css.detail}>{t('masterOff')}</p>}
     {!readiness.connected && <p className={css.detail} role="status">{t('reconnecting')}</p>}
     {sources.length > 1 && (state === 'absent' || state === 'failed') && <details className={css.source}>
       <summary>{t('sourceChoice')}</summary>
@@ -176,13 +178,15 @@ export function EngineCard({ useReflexReadiness, t, ...actions }: EngineCardProp
       {content.buttons.map(button => <Button key={button.key} variant={button.variant} size="sm"
         disabled={disabled || button.onClick === undefined} onClick={button.onClick}>{t(button.key, button.params)}</Button>)}
     </div>}
+    {choosesModel && <ModelChooser snapshot={snapshot} current={current} disabled={disabled} t={t}
+      choose={(variant) => { prepareWith(variant) }} />}
     {error !== '' && <p className={css.error} role="alert">{t('actionFailed', { message: error })}</p>}
     {(state === 'enabled' || state === 'disabled') && <Modal open={confirming} title={t('removeConfirm.title')}
       closeLabel={t('cancel')} onClose={close} footer={<>
         <Button variant="ghost" onClick={close}>{t('cancel')}</Button>
         <Button variant="primary" data-modal-autofocus onClick={() => { close(); void run(actions.remove) }}>{t('removeConfirm.confirm')}</Button>
       </>}>
-      <p>{t(snapshot.cloudProviderId === undefined ? 'removeConfirm.default' : 'removeConfirm.cloud')}</p>
+      <p>{t('removeConfirm.body')}</p>
     </Modal>}
   </section>
 }

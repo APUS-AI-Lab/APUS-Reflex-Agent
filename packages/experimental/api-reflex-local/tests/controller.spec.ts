@@ -8,9 +8,10 @@ const roots: Context[] = []
 afterEach(async () => { await Promise.all(roots.splice(0).map(root => root.fiber.dispose())) })
 
 const snapshot: ReflexSnapshot = {
-  device: { supported: true, memoryBytes: 24e9, recommended: 'q8_0' },
-  models: [{ variant: 'q8_0', bytes: 4.48e9 }, { variant: 'q4_k_m', bytes: 2.71e9 }],
-  preparation: { phase: 'absent' }, enabled: false, providerId: 'reflex-local', downloadSources: [],
+  device: { supported: true, memoryBytes: 24e9 },
+  options: [{ model: '4b', quant: 'q8_0', bytes: 4.48e9, minMemoryBytes: 16e9, experimental: false, fits: true }],
+  recommended: { model: '4b', quant: 'q8_0' },
+  preparation: { phase: 'absent' }, enabled: false, reflexEnabled: true, providerId: 'reflex-local', downloadSources: [],
 }
 
 function fixture() {
@@ -35,9 +36,9 @@ it('forwards observation and every preparation and enablement command', async ()
   expect(observed).toEqual([snapshot])
   expect(service.follow).toHaveBeenCalledWith(lifetime.signal)
   api.prepare()
-  api.prepare({ variant: 'q4_k_m', downloadSource: 'https://hf-mirror.com' })
+  api.prepare({ variant: { model: '9b', quant: 'q4_k_m' }, downloadSource: 'https://hf-mirror.com' })
   expect(service.prepare).toHaveBeenNthCalledWith(1, undefined)
-  expect(service.prepare).toHaveBeenNthCalledWith(2, { variant: 'q4_k_m', downloadSource: 'https://hf-mirror.com' })
+  expect(service.prepare).toHaveBeenNthCalledWith(2, { variant: { model: '9b', quant: 'q4_k_m' }, downloadSource: 'https://hf-mirror.com' })
   await api.pause(); await api.cancel(); await api.enable(); await api.disable(); await api.deleteModel(); await api.acknowledge()
   for (const method of [service.pause, service.cancel, service.enable, service.disable, service.remove, service.acknowledge]) {
     expect(method).toHaveBeenCalledOnce()
@@ -47,7 +48,7 @@ it('forwards observation and every preparation and enablement command', async ()
 it('propagates Host rejections unchanged', async () => {
   const { api, service } = fixture()
   service.prepare.mockImplementationOnce(() => { throw new Error('variant differs from the active download') })
-  expect(() => { api.prepare({ variant: 'q4_k_m' }) }).toThrow('variant differs')
+  expect(() => { api.prepare({ variant: { model: '9b', quant: 'q4_k_m' } }) }).toThrow('variant differs')
   service.enable.mockRejectedValueOnce(new Error('not ready'))
   await expect(api.enable()).rejects.toThrow('not ready')
 })

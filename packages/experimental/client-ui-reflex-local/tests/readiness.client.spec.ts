@@ -5,7 +5,7 @@ import { RemoteStreamCarrierError } from '@deepseek-ai/dsh-api-gateway/client'
 import type { ReflexSnapshot } from '@deepseek-ai/dsh-experimental-api-reflex-local/types'
 import { expect, it, onTestFinished, vi } from 'vitest'
 import { observeReadiness } from '../src/client/readiness.ts'
-import { FAST, snapshotOf } from './snapshot-fixture.client.ts'
+import { FAST, Q8, snapshotOf } from './snapshot-fixture.client.ts'
 
 /** Gateway-owned transport replaced by a queue the test feeds; the readiness publication stays real. */
 function fixture() {
@@ -36,7 +36,7 @@ function fixture() {
     throw(thrown: unknown) { queue.push({ thrown }); wake?.() } }
 }
 
-const ready = (enabled: boolean) => snapshotOf({ phase: 'ready', variant: 'q8_0', selfTest: FAST }, { enabled })
+const ready = (enabled: boolean) => snapshotOf({ phase: 'ready', variant: Q8, selfTest: FAST }, { enabled })
 
 it('accepts snapshots, opens the Host stream, and keeps the last snapshot through a carrier outage', async () => {
   const b = fixture()

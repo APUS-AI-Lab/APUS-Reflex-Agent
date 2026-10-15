@@ -6,6 +6,7 @@ import type {} from '@deepseek-ai/dsh-client-locale/client'
 import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
 import type {} from '@deepseek-ai/dsh-client-ui-plugin-manager/client'
 import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
+import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
 import type { RemoteResult } from '@deepseek-ai/dsh-typert-protocol'
 import type { TypertRemoteContribution } from '@deepseek-ai/dsh-typert-protocol'
@@ -73,6 +74,10 @@ function registerUi(ctx: Context): void {
   }
   ctx.slots.inject('plugins.bundle.config', () => ctx.slots.register({ name: 'plugins.bundle.config',
     key: BUNDLE, locale: NS, inject: () => actions,
+  }, EngineCard))
+  // The Reflex settings page's local connection mode; the bundle page keeps the same card for plugin-page navigation.
+  ctx.slots.inject('settings.reflex.local', () => ctx.slots.register({ name: 'settings.reflex.local',
+    locale: NS, inject: () => actions,
   }, EngineCard))
   ctx.slots.inject('plugins.bundle.activation', () => ctx.slots.register({ name: 'plugins.bundle.activation',
     key: BUNDLE, locale: NS, inject: () => actions,

@@ -8,7 +8,8 @@ import { afterEach, expect, it, vi } from 'vitest'
 import { ActivationPrompt, type ActivationPromptProps } from '../src/client/ActivationPrompt.tsx'
 import type { ReflexReadiness } from '../src/client/readiness.ts'
 import { zh } from '../src/client/locales.ts'
-import { FAST, snapshotOf } from './snapshot-fixture.client.ts'
+import { FAST, OPTIONS, Q8, snapshotOf } from './snapshot-fixture.client.ts'
+import { sameVariant } from '../src/client/size.ts'
 
 afterEach(cleanup)
 
@@ -38,7 +39,7 @@ it('waits for the Host check, then starts the download in one click and opens th
 
 it('keeps the prompt open with the reason when the Host rejects the download', async () => {
   const b = fixture()
-  b.publish(snapshotOf({ phase: 'absent' }, { models: [] }))
+  b.publish(snapshotOf({ phase: 'absent' }, { recommended: undefined }))
   expect(screen.getByText(zh.lede)).toBeTruthy()
   b.prepare.mockRejectedValueOnce(new Error('offline'))
   fireEvent.click(screen.getByRole('button', { name: zh.downloadPlain }))
@@ -51,8 +52,9 @@ it('keeps the prompt open with the reason when the Host rejects the download', a
 
 it('sends a Mac without enough free space to the details page instead of downloading', () => {
   const b = fixture()
-  b.publish(snapshotOf({ phase: 'absent' }, { availableDiskBytes: 3.1e9 }))
-  expect(screen.getByText('下载需要 4.5 GB，这台 Mac 当前可用 3.1 GB。可以在详情页改用精简版')).toBeTruthy()
+  b.publish(snapshotOf({ phase: 'absent' }, { availableDiskBytes: 3.1e9,
+    options: OPTIONS.map(option => sameVariant(option, Q8) ? { ...option, fits: false, reason: 'disk' } : option) }))
+  expect(screen.getByText('下载需要 4.5 GB，这台 Mac 当前可用 3.1 GB。可以在详情页更换较小的模型')).toBeTruthy()
   fireEvent.click(screen.getByRole('button', { name: zh['prompt.details'] }))
   expect(b.onOpenDetails).toHaveBeenCalledOnce()
   expect(b.prepare).not.toHaveBeenCalled()
@@ -67,9 +69,9 @@ it('lets the user postpone while leaving the bundle on', () => {
 })
 
 it.each([
-  ['an unsupported device', snapshotOf({ phase: 'unsupported' }, { device: { supported: false, reason: 'platform' } })],
-  ['a downloaded model', snapshotOf({ phase: 'ready', variant: 'q8_0', selfTest: FAST })],
-  ['an active download', snapshotOf({ phase: 'downloading', variant: 'q8_0', completedBytes: 1, totalBytes: 2, source: 'https://huggingface.co' })],
+  ['an unsupported device', snapshotOf({ phase: 'unsupported' }, { device: { supported: false, reason: 'platform' }, options: [], recommended: undefined })],
+  ['a downloaded model', snapshotOf({ phase: 'ready', variant: Q8, selfTest: FAST })],
+  ['an active download', snapshotOf({ phase: 'downloading', variant: Q8, completedBytes: 1, totalBytes: 2, source: 'https://huggingface.co' })],
 ])('dismisses itself for %s', (_name, snapshot) => {
   const b = fixture()
   b.publish(snapshot)

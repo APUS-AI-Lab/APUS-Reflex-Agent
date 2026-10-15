@@ -8,7 +8,7 @@ import { afterEach, expect, it, vi } from 'vitest'
 import { EngineCard, type EngineCardProps } from '../src/client/EngineCard.tsx'
 import type { ReflexReadiness } from '../src/client/readiness.ts'
 import { zh } from '../src/client/locales.ts'
-import { FAST, SIZES, snapshotOf } from './snapshot-fixture.client.ts'
+import { FAST, OPTIONS, Q4, Q8, SIZES, snapshotOf } from './snapshot-fixture.client.ts'
 
 afterEach(cleanup)
 const t = makeTranslate(zh)
@@ -32,16 +32,17 @@ it('shows loading and transport failure before the first snapshot', () => {
 it.each([
   ['platform', zh['unsupported.platform']], ['memory', zh['unsupported.memory']], ['runner-missing', zh['unsupported.runner-missing']],
 ] as const)('explains an unsupported %s device without offering an action', (reason, text) => {
-  fixture(snapshotOf({ phase: 'unsupported' }, { device: { supported: false, reason } }))
+  fixture(snapshotOf({ phase: 'unsupported' }, { device: { supported: false, reason }, options: [] }))
   expect(screen.getByText(text)).toBeTruthy()
-  expect(screen.getByText(zh['elsewhere.default'])).toBeTruthy()
+  expect(screen.getByText(zh.elsewhere)).toBeTruthy()
   expect(screen.getByText(zh['state.unsupported'])).toBeTruthy()
+  expect(screen.queryByText(zh.masterOff)).toBeNull()
   expect(screen.queryByRole('button')).toBeNull()
 })
 
-it('names the cloud as the fallback when a cloud provider is restored on disable', () => {
-  fixture(snapshotOf({ phase: 'unsupported' }, { cloudProviderId: 'system-one' }))
-  expect(screen.getByText(zh['elsewhere.cloud'])).toBeTruthy()
+it('names where judgments go when a supported device reports the unsupported phase', () => {
+  fixture(snapshotOf({ phase: 'unsupported' }))
+  expect(screen.getByText(zh.elsewhere)).toBeTruthy()
   expect(screen.queryByRole('button')).toBeNull()
 })
 
@@ -51,35 +52,60 @@ it('shows checking as status only', () => {
   expect(screen.queryByRole('button')).toBeNull()
 })
 
-it('states the cost and downloads the recommended variant in one click', () => {
+it('states the cost of the recommendation and downloads it in one click', () => {
   const b = fixture(snapshotOf({ phase: 'absent' }))
-  expect(screen.getByText('需要 4.5 GB 磁盘，启用后常驻约 4.5 GB 内存。判断内容留在这台 Mac，回答仍由你配置的模型生成')).toBeTruthy()
+  expect(screen.getByText('需要 4.5 GB 磁盘和至少 16.0 GB 内存。判断内容留在这台 Mac，回答仍由你配置的模型生成')).toBeTruthy()
   fireEvent.click(button('下载并启用 · 4.5 GB'))
   expect(b.prepare).toHaveBeenCalledWith({})
-  expect(screen.queryByRole('group')).toBeNull()
+  expect(screen.queryByRole('combobox')).toBeNull()
 })
 
-it('downloads without a size when the Host publishes none, including before the first disk check', async () => {
-  const b = fixture(snapshotOf({ phase: 'absent' }, { models: [], availableDiskBytes: undefined }))
-  fireEvent.click(button(zh.downloadPlain))
-  expect(b.prepare).toHaveBeenCalledWith({})
-  b.publish({ snapshot: snapshotOf({ phase: 'absent' }, { availableDiskBytes: undefined }) })
-  await waitFor(() => { expect(button('下载并启用 · 4.5 GB').disabled).toBe(false) })
+it('offers no download when no option fits this Mac', () => {
+  fixture(snapshotOf({ phase: 'absent' }, { recommended: undefined }))
+  expect(screen.getByText(zh.noFit)).toBeTruthy()
+  expect(screen.queryByRole('button', { name: /下载并启用 ·/ })).toBeNull()
 })
 
-it('states need against free space and offers the compact variant when it fits', () => {
-  const b = fixture(snapshotOf({ phase: 'absent' }, { availableDiskBytes: 3.1e9 }))
-  expect(button('需要 4.5 GB，当前可用 3.1 GB').disabled).toBe(true)
-  fireEvent.click(button('改用精简版 · 2.7 GB'))
-  expect(b.prepare).toHaveBeenCalledWith({ variant: 'q4_k_m' })
-  b.publish({ snapshot: snapshotOf({ phase: 'absent' }, { availableDiskBytes: 1e9 }) })
-  expect(screen.queryByRole('button', { name: '改用精简版 · 2.7 GB' })).toBeNull()
-  b.publish({ snapshot: snapshotOf({ phase: 'absent' }, { availableDiskBytes: 1e9,
-    device: { supported: true, memoryBytes: 8e9, recommended: 'q4_k_m' } }) })
+it('states need against free space when the recommendation does not fit the disk', async () => {
+  const short = { ...Q4, bytes: SIZES.q4_k_m, minMemoryBytes: 8e9, experimental: false, fits: false, reason: 'disk' } as const
+  const b = fixture(snapshotOf({ phase: 'absent' }, { availableDiskBytes: 1e9, recommended: Q4, options: [short] }))
   expect(button('需要 2.7 GB，当前可用 1.0 GB').disabled).toBe(true)
-  expect(screen.getAllByRole('button')).toHaveLength(1)
-  b.publish({ snapshot: snapshotOf({ phase: 'absent' }, { availableDiskBytes: 1e9, models: [{ variant: 'q8_0', bytes: SIZES.q8_0 }] }) })
-  expect(screen.getAllByRole('button')).toHaveLength(1)
+  expect(screen.queryByText(zh.chooseModel)).toBeNull()
+  b.publish({ snapshot: snapshotOf({ phase: 'absent' }, { availableDiskBytes: undefined, recommended: Q4, options: [short] }) })
+  await waitFor(() => { expect(button('下载并启用 · 2.7 GB').disabled).toBe(false) })
+})
+
+it('lists every option with its facts, greys unfit ones with the reason, and downloads a chosen one', () => {
+  const b = fixture(snapshotOf({ phase: 'absent' }))
+  fireEvent.click(screen.getByText(zh.chooseModel))
+  const rows = screen.getAllByRole('listitem')
+  expect(rows.map(row => row.querySelector('strong')?.textContent)).toEqual([
+    'APUS Reflex 4B · Q4_K_M', 'APUS Reflex 4B · Q8_0', 'APUS Reflex 9B · Q8_0', 'APUS Reflex 35B-A3B · Q4_K_M'])
+  expect(rows[1]!.textContent).toContain(zh['tag.recommended'])
+  expect(rows[3]!.textContent).toContain(`${zh['tag.experimental']}下载 21.2 GB · 需要 32.0 GB 内存${zh['unfit.memory']}`)
+  expect(button('下载并使用 APUS Reflex 35B-A3B · Q4_K_M').disabled).toBe(true)
+  fireEvent.click(button('下载并使用 APUS Reflex 9B · Q8_0'))
+  expect(b.prepare).toHaveBeenCalledWith({ variant: { model: '9b', quant: 'q8_0' } })
+})
+
+it('marks the downloaded option as current without offering it again', () => {
+  fixture(snapshotOf({ phase: 'ready', variant: Q8, selfTest: FAST }, { enabled: true }))
+  expect(screen.getByText('APUS Reflex 4B · Q8_0', { selector: 'header strong' })).toBeTruthy()
+  fireEvent.click(screen.getByText(zh.chooseModel))
+  expect(screen.getAllByRole('listitem')[1]!.textContent).toContain(zh['tag.current'])
+  expect(screen.queryByRole('button', { name: '下载并使用 APUS Reflex 4B · Q8_0' })).toBeNull()
+  expect(screen.getAllByRole('button', { name: /^下载并使用/ })).toHaveLength(3)
+})
+
+it('hides the chooser when the Host offers a single option', () => {
+  fixture(snapshotOf({ phase: 'absent' }, { options: [OPTIONS[1]!] }))
+  expect(screen.queryByText(zh.chooseModel)).toBeNull()
+})
+
+it('explains that the Reflex master switch stops local judgments', () => {
+  fixture(snapshotOf({ phase: 'ready', variant: Q8, selfTest: FAST }, { enabled: true, reflexEnabled: false }))
+  expect(screen.getByText(zh['state.masterOff'])).toBeTruthy()
+  expect(screen.getByText(zh.masterOff)).toBeTruthy()
 })
 
 it('sends an explicitly chosen download source and labels known origins', () => {
@@ -93,7 +119,7 @@ it('sends an explicitly chosen download source and labels known origins', () => 
 })
 
 it('shows exact byte progress, pauses, and cancels a download', async () => {
-  const b = fixture(snapshotOf({ phase: 'downloading', variant: 'q8_0', completedBytes: 2.8e9, totalBytes: SIZES.q8_0, source: 'https://huggingface.co' }))
+  const b = fixture(snapshotOf({ phase: 'downloading', variant: Q8, completedBytes: 2.8e9, totalBytes: SIZES.q8_0, source: 'https://huggingface.co' }))
   expect(screen.getByRole('progressbar', { name: zh.progressLabel }).getAttribute('value')).toBe('2800000000')
   expect(screen.getByText('2.8 GB / 4.5 GB · 62%')).toBeTruthy()
   fireEvent.click(button(zh.pause))
@@ -104,56 +130,53 @@ it('shows exact byte progress, pauses, and cancels a download', async () => {
 })
 
 it('resumes a paused download with its variant and offers cancellation', async () => {
-  const b = fixture(snapshotOf({ phase: 'paused', variant: 'q4_k_m', completedBytes: 1.68e9, totalBytes: SIZES.q4_k_m }))
+  const b = fixture(snapshotOf({ phase: 'paused', variant: Q4, completedBytes: 1.68e9, totalBytes: SIZES.q4_k_m }))
   expect(screen.getByText('下载已暂停，已完成 61%，继续会从断点接上')).toBeTruthy()
   expect(screen.getByRole('progressbar')).toBeTruthy()
   fireEvent.click(button(zh.resume))
-  expect(b.prepare).toHaveBeenCalledWith({ variant: 'q4_k_m' })
+  expect(b.prepare).toHaveBeenCalledWith({ variant: Q4 })
   await waitFor(() => { expect(button(zh.cancel).disabled).toBe(false) })
   fireEvent.click(button(zh.cancel))
   expect(b.cancel).toHaveBeenCalledOnce()
 })
 
 it.each(['verifying', 'testing'] as const)('shows %s as status only', (phase) => {
-  fixture(snapshotOf({ phase, variant: 'q8_0' }))
+  fixture(snapshotOf({ phase, variant: Q8 }))
   expect(screen.getByText(zh[phase])).toBeTruthy()
   expect(screen.getByText(zh[`state.${phase}`])).toBeTruthy()
   expect(screen.queryByRole('button')).toBeNull()
 })
 
 it('turns local decisions off and deletes the model only after confirmation', async () => {
-  const b = fixture(snapshotOf({ phase: 'ready', variant: 'q8_0', selfTest: FAST }, { enabled: true, cloudProviderId: 'system-one' }))
+  const b = fixture(snapshotOf({ phase: 'ready', variant: Q8, selfTest: FAST }, { enabled: true }))
   expect(screen.getByText(zh['state.enabled'])).toBeTruthy()
   expect(screen.getByText('自检通过 · 每次判断约 0.4 秒')).toBeTruthy()
   fireEvent.click(button(zh.disable))
   expect(b.disable).toHaveBeenCalledOnce()
   await waitFor(() => { expect(button(zh.remove).disabled).toBe(false) })
   fireEvent.click(button(zh.remove))
-  expect(screen.getByText(zh['removeConfirm.cloud'])).toBeTruthy()
+  expect(screen.getByText(zh['removeConfirm.body'])).toBeTruthy()
   fireEvent.click(screen.getAllByRole('button', { name: zh.cancel }).at(-1)!)
-  await waitFor(() => { expect(screen.queryByText(zh['removeConfirm.cloud'])).toBeNull() })
+  await waitFor(() => { expect(screen.queryByText(zh['removeConfirm.body'])).toBeNull() })
   expect(b.remove).not.toHaveBeenCalled()
   fireEvent.click(button(zh.remove))
   fireEvent.click(button(zh['removeConfirm.confirm']))
   expect(b.remove).toHaveBeenCalledOnce()
 })
 
-it('enables a downloaded model and names the default-rule fallback when deleting', async () => {
-  const b = fixture(snapshotOf({ phase: 'ready', variant: 'q8_0', selfTest: FAST }))
+it('enables a downloaded model and names the fallback when deleting', async () => {
+  const b = fixture(snapshotOf({ phase: 'ready', variant: Q8, selfTest: FAST }))
   expect(screen.getByText(zh.readyDetail)).toBeTruthy()
   fireEvent.click(button(zh.enable))
   expect(b.enable).toHaveBeenCalledOnce()
   await waitFor(() => { expect(button(zh.remove).disabled).toBe(false) })
   fireEvent.click(button(zh.remove))
-  expect(screen.getByText(zh['removeConfirm.default'])).toBeTruthy()
+  expect(screen.getByText(zh['removeConfirm.body'])).toBeTruthy()
 })
 
-it.each([
-  [undefined, '这台 Mac 判断较慢，每次约 1.8 秒'], ['system-one', '这台 Mac 判断较慢，每次约 1.8 秒，建议保留云端'],
-] as const)('leaves a slow Mac off until the user enables it anyway (cloud %s)', (cloudProviderId, text) => {
-  const b = fixture(snapshotOf({ phase: 'ready', variant: 'q8_0', selfTest: { prefillTokensPerSecond: 120, decisionMs: 1800, slow: true } },
-    cloudProviderId === undefined ? {} : { cloudProviderId }))
-  expect(screen.getByText(text)).toBeTruthy()
+it('leaves a slow Mac off until the user enables it anyway', () => {
+  const b = fixture(snapshotOf({ phase: 'ready', variant: Q8, selfTest: { prefillTokensPerSecond: 120, decisionMs: 1800, slow: true } }))
+  expect(screen.getByText('这台 Mac 判断较慢，每次约 1.8 秒，建议使用其他接入方式')).toBeTruthy()
   expect(screen.queryByRole('button', { name: zh.enable })).toBeNull()
   fireEvent.click(button(zh.enableAnyway))
   expect(b.enable).toHaveBeenCalledOnce()
@@ -167,13 +190,13 @@ it.each([
   [{ kind: 'runner', message: 'exit 9' }, zh['failure.runner']],
   [{ kind: 'self-test', message: 'choice mismatch' }, zh['failure.self-test']],
 ] as const)('states one plain reason for a %j failure and retries its variant', (failure, text) => {
-  const b = fixture(snapshotOf({ phase: 'failed', variant: 'q4_k_m', failure }))
+  const b = fixture(snapshotOf({ phase: 'failed', variant: Q4, failure }))
   const alerts = screen.getAllByRole('alert').map(alert => alert.textContent)
   expect(alerts[0]).toBe(text)
-  expect(alerts.slice(1)).toEqual(failure.kind === 'download' ? [] : [zh['elsewhere.default']])
+  expect(alerts.slice(1)).toEqual(failure.kind === 'download' ? [] : [zh.elsewhere])
   expect(screen.getByText(zh['state.failed'])).toBeTruthy()
   fireEvent.click(button(zh.retry))
-  expect(b.prepare).toHaveBeenCalledWith({ variant: 'q4_k_m' })
+  expect(b.prepare).toHaveBeenCalledWith({ variant: Q4 })
 })
 
 it('retries a failure without a variant through the configured choice and source picker', () => {
@@ -185,7 +208,7 @@ it('retries a failure without a variant through the configured choice and source
 })
 
 it('disables commands while reconnecting and reports a rejected command in place', async () => {
-  const b = fixture(snapshotOf({ phase: 'ready', variant: 'q8_0', selfTest: FAST }), false)
+  const b = fixture(snapshotOf({ phase: 'ready', variant: Q8, selfTest: FAST }), false)
   expect(screen.getByText(zh.reconnecting)).toBeTruthy()
   expect(button(zh.enable).disabled).toBe(true)
   b.publish({ connected: true })

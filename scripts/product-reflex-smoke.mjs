@@ -28,17 +28,17 @@ export async function verifyReflexExecution(page) {
   } finally { await response.dispose() }
 }
 
-/** Verify the Reflex page modes and memory control; leave an unsaved custom draft selected. */
+/** Verify the three Reflex page modes and memory control; leave an unsaved custom draft selected. */
 export async function verifyReflexSettings(dialog) {
   const mode = dialog.locator('#reflex-mode')
   await mode.waitFor({ state: 'visible' })
   const options = await mode.getByRole('option').allTextContents()
   const localizedOptions = [
-    ['APUS Reflex limited-time free endpoint', 'Custom parameters'],
-    ['APUS Reflex 限时免费端点', '自定义参数'],
+    ['APUS Reflex limited-time free endpoint', 'Custom parameters', 'This Mac'],
+    ['APUS Reflex 限时免费端点', '自定义参数', '本机'],
   ]
   if (!localizedOptions.some(expected => JSON.stringify(options) === JSON.stringify(expected))) {
-    throw new Error('Reflex connection choices differ from the supported trial and custom modes.')
+    throw new Error('Reflex connection choices differ from the supported trial, custom, and local modes.')
   }
   await mode.selectOption('trial')
   await dialog.getByText(/^(Service protocol|服务协议): Reflex$/).waitFor()
@@ -47,6 +47,12 @@ export async function verifyReflexSettings(dialog) {
     throw new Error('The trial mode exposes a credential field or protocol selector.')
   }
   await dialog.getByRole('switch', { name: /^Continuum (memory|无限记忆)$/, disabled: false }).waitFor()
+  // Local mode shows the engine card when the local engine plugin is mounted, otherwise the page's own fallback.
+  await mode.selectOption('local')
+  await dialog.locator('[data-reflex-local]').first().waitFor({ state: 'visible' })
+  if (await dialog.locator('#reflex-endpoint, #reflex-api-key').count() !== 0) {
+    throw new Error('The local mode exposes remote connection fields.')
+  }
   await mode.selectOption('custom')
   for (const id of ['reflex-endpoint', 'reflex-model', 'reflex-api-key']) {
     await dialog.locator(`#${id}`).waitFor({ state: 'visible' })
