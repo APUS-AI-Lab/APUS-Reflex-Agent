@@ -43,6 +43,8 @@ export const zh = {
   reflexObserving: 'Reflex 正在观察 Codex 执行；只有收到执行证据后才会更新判断', reflexTimeline: 'Reflex 执行时间线 · {count} 条',
   reflexTimelineSupervision: '监督：{state} · {action}', reflexTimelineRecovery: '恢复：{state}',
   reflexTimelineContext: '上下文：{action} {count} 段', reflexRemoveAction: '移出', reflexRestoreAction: '恢复', reflexTimelineEvidence: '收到执行证据',
+  decisionPlace: '判断位置', sourceLocal: '本机', sourceNetwork: '云端',
+  sourceLocalDetail: '判断在这台设备上完成，判断内容没有发往判断服务',
 
 } satisfies Record<string, string>
 /** Typed keys shared by both product locales. */
@@ -91,6 +93,8 @@ export const en = {
   reflexObserving: 'Reflex is observing Codex; judgements change only after execution evidence arrives', reflexTimeline: 'Reflex execution timeline · {count} items',
   reflexTimelineSupervision: 'Supervision: {state} · {action}', reflexTimelineRecovery: 'Recovery: {state}',
   reflexTimelineContext: 'Context: {action}, {count} segments', reflexRemoveAction: 'removed', reflexRestoreAction: 'restored', reflexTimelineEvidence: 'Execution evidence received',
+  decisionPlace: 'Decided on', sourceLocal: 'This device', sourceNetwork: 'Cloud',
+  sourceLocalDetail: 'Decided on this device; the decision content was not sent to a decision service',
 
 } satisfies Record<System3Key, string>
 
