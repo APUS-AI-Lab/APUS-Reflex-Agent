@@ -4260,6 +4260,14 @@ export const EVENT_API: readonly EventApiEntry[] = [
     parameters: [],
   },
   {
+    name: 'compaction/prepare',
+    mode: 'parallel',
+    signature: '\'compaction/prepare\'(agent: CompactionAgentContext, signal: AbortSignal): Promise<void> | void',
+    summary: 'Shrink the surface before automatic or manual compaction selects a summary range.',
+    description: 'Shrink the surface before automatic or manual compaction selects a summary range. Listeners may only append durable, replay-safe message projections that keep every node and tool pairing; the provider re-measures afterwards and summarizes only when the surface still needs it. A listener that fails or is cancelled must leave the surface unchanged.',
+    parameters: [{ name: 'agent', description: 'agent context owning the session surface.' }, { name: 'signal', description: 'cancellation of the compaction that triggered this preparation.' }],
+  },
+  {
     name: 'compaction/summary-error',
     mode: 'waterfall',
     signature: '\'compaction/summary-error\'(payload: { session: Session; sourceEventSeqs: readonly SessionSeq[]; error: unknown; signal?: AbortSignal }, next: () => boolean): boolean',
