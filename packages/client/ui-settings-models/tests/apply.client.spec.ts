@@ -17,6 +17,9 @@ import {
 import { ModelsSection } from '../src/client/ModelsSection.tsx'
 import { DeepSeekOnboardingDialog } from '../src/client/DeepSeekOnboardingDialog.tsx'
 import { WelcomeNotice } from '../src/client/WelcomeNotice.tsx'
+import { ReadinessNotice } from '../src/client/ReadinessNotice.tsx'
+import { ReadinessDeferral } from '../src/client/readiness-deferral.ts'
+import { ModelsSettingsStore } from '../src/client/store.ts'
 import type { IndexInjection } from '@deepseek-ai/dsh-host-webserver'
 import * as hostPlugin from '../src/index.ts'
 import { ONBOARDING_CONFIG_GLOBAL } from '../src/onboarding-config.ts'
@@ -109,6 +112,46 @@ describe('ui-settings-models apply', () => {
       const plugin = ctx.plugin({ inject: [...inject], apply })
       await plugin.await()
       expect(slots.entries('settings.onboarding').map(entry => entry.options.id)).toEqual(['deepseek-official'])
+    } finally {
+      await ctx.fiber.dispose()
+    }
+  })
+
+  it('keeps the automatic readiness step on Desktop and registers the composer notice only after a deferral', async () => {
+    vi.stubGlobal('dshDesktop', { protocolVersion: 1 })
+    const { ctx, slots } = await bench()
+    declare(slots)
+    try {
+      const plugin = ctx.plugin({ inject: [...inject], apply })
+      await plugin.await()
+      // Desktop omits only the Web welcome notice; its account plugin owns the introduction.
+      expect(slots.entries('settings.onboarding').map(entry => entry.options.id)).toEqual(['deepseek-official'])
+      const step = slots.entries('settings.onboarding')[0]!.inject!()
+      const { controller, deferral } = step
+      if (!(deferral instanceof ReadinessDeferral) || !(controller instanceof ModelsSettingsStore)) throw new Error('step dependencies are missing')
+      expect(step.automatic).toBe(true)
+      expect(step.hooks).toEqual({ models: controller.store, deferral: deferral.store })
+      expect(slots.entries('conversation.input.dock')).toHaveLength(0)
+      const dock = slots.register({
+        name: 'root', priority: 1, children: { 'conversation.input.dock': { kind: 'list', scope: 'session' } },
+      } as never, () => null)
+      await Promise.resolve()
+      // The composer notice contributes nothing until the automatic step is deferred.
+      expect(slots.entries('conversation.input.dock')).toHaveLength(0)
+      deferral.defer()
+      deferral.closeNotice()
+      expect(slots.entries('conversation.input.dock')).toHaveLength(1)
+      const entry = slots.entries('conversation.input.dock')[0]!
+      expect(entry.component).toBe(ReadinessNotice)
+      expect(entry.options).toMatchObject({ id: 'models-readiness', order: -10 })
+      const notice = entry.inject!()
+      expect(notice.deferral).toBe(deferral)
+      expect(notice.controller).toBe(controller)
+      expect(notice.hooks).toEqual({ models: controller.store, deferral: deferral.store })
+      dock()
+      expect(slots.entries('conversation.input.dock')).toHaveLength(0)
+      await plugin.dispose()
+      expect(slots.entries('settings.onboarding')).toEqual([])
     } finally {
       await ctx.fiber.dispose()
     }

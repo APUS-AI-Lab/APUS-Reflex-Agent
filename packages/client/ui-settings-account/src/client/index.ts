@@ -13,7 +13,7 @@ import type { OnboardingChange } from './onboarding-contract.ts'
 import type { PlatformBridge } from './PlatformOverlay.tsx'
 import { ContactConfig, CONTACT_CONFIG_GLOBAL } from '../contact-config.ts'
 import { contactUrl } from './contact-url.ts'
-import { AccountOnboarding } from './AccountOnboarding.tsx'
+import { AccountOnboarding, type AccountOnboardingInjected } from './AccountOnboarding.tsx'
 import { AccountPlatformHost, type AccountPlatformHostInjected } from './AccountPlatformHost.tsx'
 import { AccountMenu } from './AccountMenu.tsx'
 import { createPlatformPages, type PlatformPages } from './platform-pages.ts'
@@ -168,7 +168,6 @@ export function apply(ctx: Context): void {
       window.open(url, '_blank', 'noopener,noreferrer')
     },
     showLogin(visible) { publish({ ...snapshot, loginVisible: visible }) },
-    setOnboarding(active) { publish({ ...snapshot, onboarding: active }) },
     bonusNoticeShown(orderId) { notices.shown(orderId) },
     bonusNoticeDismissed(orderId) { notices.dismiss(orderId) },
     hooks: {
@@ -238,10 +237,11 @@ export function apply(ctx: Context): void {
         retry: () => controller.retry(),
       }),
     }, DesktopOnboardingEntry))
+    ctx.slots.inject('settings.models.sign-in', () => ctx.slots.register({
+      name: 'settings.models.sign-in',
+      inject: (): AccountOnboardingInjected => ({ hooks: { account: operations.hooks.account, introduction: controller.state } }),
+    }, AccountOnboarding))
   }
-  ctx.slots.inject('settings.models.sign-in', () => ctx.slots.register({
-    name: 'settings.models.sign-in', locale: 'settings.account', inject: () => operations,
-  }, AccountOnboarding))
   ctx.slots.inject('shell.quota-notice', () => ctx.slots.register({
     name: 'shell.quota-notice', locale: 'settings.account',
     select: owner => owner.code === 'ACCOUNT_QUOTA' ? owner : null,

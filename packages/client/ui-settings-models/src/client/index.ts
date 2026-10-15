@@ -1,7 +1,8 @@
 /**
  * Models settings and product-onboarding plugin, browser half. It registers
- * the Models page plus the ordered internal-testing and official-DeepSeek
- * onboarding dialogs, whose UI shares this package's modal wrapper. The Host
+ * the Models page, the ordered internal-testing and official-DeepSeek
+ * onboarding dialogs, whose UI shares this package's modal wrapper, and the
+ * composer notice left after the credential prompt is deferred. The Host
  * settings and credential contracts stay behind their existing wire APIs.
  * Export discipline:
  * packages/client/AGENTS.md.
@@ -15,11 +16,16 @@ import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
 // Type-only: pulls the ctx.remote merge and the forwarded-event key face
 // (settings/credentials invalidations ride the allowlist) into this program.
 import type {} from '@deepseek-ai/dsh-api-remotes/client'
+// Type-only: pulls the composer dock SlotMap merge ('conversation.input.dock').
+import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
 import { ModelsSection } from './ModelsSection.tsx'
 import type { ModelsSectionInjected } from './ModelsSection.tsx'
 import { DeepSeekOnboardingDialog } from './DeepSeekOnboardingDialog.tsx'
 import type { DeepSeekOnboardingInjected } from './DeepSeekOnboardingDialog.tsx'
 import { WelcomeNotice } from './WelcomeNotice.tsx'
+import { ReadinessNotice } from './ReadinessNotice.tsx'
+import type { ReadinessNoticeInjected } from './ReadinessNotice.tsx'
+import { ReadinessDeferral } from './readiness-deferral.ts'
 import type { WelcomeNoticeInjected } from './WelcomeNotice.tsx'
 import { WelcomeNoticeStore } from './welcome-store.ts'
 import { ModelsSettingsStore } from './store.ts'
@@ -78,7 +84,9 @@ export function apply(ctx: ClientContext): void {
   const page = globalThis as Partial<Record<typeof ONBOARDING_CONFIG_GLOBAL, unknown>>
   const payload = page[ONBOARDING_CONFIG_GLOBAL]
   const configured = Config(payload === undefined ? {} : payload)
-  const credentialOnboarding = configured.credentialOnboarding && !('dshDesktop' in globalThis)
+  // Desktop keeps the step: the native welcome owns signed-out credential entry,
+  // and the account plugin's sign-in seat routes the step accordingly.
+  const credentialOnboarding = configured.credentialOnboarding
   ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'ui-settings-models: copy dictionaries')
 
   const schema = createSettingsSchemaOperations(ctx.settingsSchema)
@@ -96,10 +104,20 @@ export function apply(ctx: ClientContext): void {
     schema,
     t,
   })
+  const deferral = new ReadinessDeferral()
   const deepSeekOnboardingInjected = (): DeepSeekOnboardingInjected => ({
     automatic: credentialOnboarding,
     controller,
-    hooks: { models: controller.store },
+    deferral,
+    hooks: { models: controller.store, deferral: deferral.store },
+    operations,
+    schema,
+    t,
+  })
+  const readinessNoticeInjected = (): ReadinessNoticeInjected => ({
+    controller,
+    deferral,
+    hooks: { models: controller.store, deferral: deferral.store },
     operations,
     schema,
     t,
@@ -133,6 +151,26 @@ export function apply(ctx: ClientContext): void {
     }
   }, 'ui-settings-models: pushed invalidations')
 
+  // The composer notice is registered only once the automatic credential step
+  // was deferred, so a composition without that step never contributes it.
+  ctx.slots.inject('conversation.input.dock', () => {
+    let unregister: (() => void) | undefined
+    const follow = (): void => {
+      if (unregister !== undefined || !deferral.store.getSnapshot().deferred) return
+      unregister = ctx.slots.register({
+        name: 'conversation.input.dock',
+        id: 'models-readiness',
+        order: -10,
+        inject: readinessNoticeInjected,
+      }, ReadinessNotice)
+    }
+    const unsubscribe = deferral.store.subscribe(follow)
+    follow()
+    return () => {
+      unsubscribe()
+      unregister?.()
+    }
+  })
   ctx.slots.inject('settings.section', () => ctx.slots.register({
     name: 'settings.section',
     id: 'models',
