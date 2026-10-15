@@ -64,6 +64,19 @@ it('takes the native path without asking Jev while off, and decides again once s
   expect(h.injected()).toBe(1)
 })
 
+it('treats the Reflex master switch off like the switch off: no Jev request, no record, suspended rows', async () => {
+  const h = await setup({})
+  const master = vi.spyOn(h.ctx.jev, 'isEnabled').mockReturnValue(false)
+  expect(h.capability('skillSelection')).toEqual({ id: 'skillSelection', implemented: true, enabled: false, suspended: true })
+  await h.send('Reconcile the CSV rows.')
+  expect(h.decide).not.toHaveBeenCalled()
+  expect(h.injected()).toBe(0)
+  expect(h.ctx.sessionProjections.stateOf(h.agent.session, 'system3Runtime')?.skill ?? null).toBeNull()
+  master.mockReturnValue(true)
+  await h.send('Reconcile the CSV rows again.')
+  expect(h.decide).toHaveBeenCalledOnce()
+})
+
 it('runs front-loaded decisions when the switch is absent', async () => {
   const h = await setup({})
   expect(h.capability('skillSelection')?.enabled).toBe(true)

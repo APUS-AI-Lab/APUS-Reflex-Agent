@@ -151,8 +151,9 @@ it('leaves the step unchanged when nothing is needed, in shadow mode, without a 
   await off.say('Above which amount does an order need approval?')
   expect(off.shown(off.adapter.requests[0])).toBe('')
   expect(off.adapter.requests).toHaveLength(1)
-  expect(off.agent.session.snapshotEvents().find(event => event.type === 'system3/judgement')?.data)
-    .toMatchObject({ decision: 'prefetch', reason: 'provider-unavailable', applied: false, request: null })
+  // The Reflex master switch off skips the front-loaded decision entirely, so nothing is asked or recorded.
+  expect(off.decide).not.toHaveBeenCalled()
+  expect(off.agent.session.snapshotEvents().some(event => event.type === 'system3/judgement')).toBe(false)
 
   const failing = await setup(readmeOnly)
   failing.decide.mockResolvedValue({ kind: 'unknown', failure: { code: 'transport', message: 'down' } } as never)
