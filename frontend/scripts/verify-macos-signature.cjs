@@ -23,7 +23,8 @@ async function verifyMacBundle(app, { adHoc = false } = {}) {
 async function verifySignedReflexRunner(resources) {
   const runner = path.join(resources, 'system3-runtime', 'dependencies', 'llama-server', 'llama-server')
   if (!fs.existsSync(runner)) return false
-  await execFileAsync(runner, ['--version'], { timeout: 30_000, maxBuffer: 1024 * 1024 })
+  // Skipping Metal device setup keeps this independent of the build host's GPU; dyld still maps every signed library.
+  await execFileAsync(runner, ['--version'], { timeout: 30_000, maxBuffer: 1024 * 1024, env: { ...process.env, GGML_METAL_DEVICES: '0' } })
   return true
 }
 

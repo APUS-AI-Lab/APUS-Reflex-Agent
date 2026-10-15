@@ -10,6 +10,22 @@ const { execFile } = require('node:child_process')
 const { promisify } = require('node:util')
 const execFileAsync = promisify(execFile)
 
+/**
+ * Require the packaged local Reflex runner to start and report its locked llama.cpp release.
+ * GGML_METAL_DEVICES=0 skips the Metal device setup that llama.cpp performs before `--version`, which can stall on a
+ * virtual GPU; dyld still loads and validates every library the runner links.
+ * @returns {Promise<void>} Resolves when the runner reports the release's build number.
+ */
+async function verifyPackagedReflexRunner(runner, release) {
+  const stat = await fs.stat(runner)
+  if (!stat.isFile() || (stat.mode & 0o111) === 0) throw new Error('Packaged local Reflex runner is not an executable file')
+  const version = await execFileAsync(runner, ['--version'], { timeout: 30_000, maxBuffer: 1024 * 1024, env: { ...process.env, GGML_METAL_DEVICES: '0' } })
+    .catch(error => {
+      throw new Error('Packaged local Reflex runner failed (exit ' + error.code + ', signal ' + error.signal + ', killed ' + error.killed + '): ' + error.message, { cause: error })
+    })
+  if (!(version.stdout + version.stderr).includes('(build ' + release.slice(1) + ',')) throw new Error('Packaged local Reflex runner release mismatch')
+}
+
 module.exports = async function packageSystem3Runtime(context) {
   const product = context.packager.appInfo.productFilename
   const resources = context.electronPlatformName === 'darwin'
@@ -69,11 +85,7 @@ module.exports = async function packageSystem3Runtime(context) {
   }
   await verifyPhysicalTree(target)
   if (manifest.llamaServer !== undefined) {
-    const runner = await requireContained('dependencies/llama-server/llama-server')
-    const stat = await fs.stat(runner)
-    if (!stat.isFile() || (stat.mode & 0o111) === 0) throw new Error('Packaged local Reflex runner is not an executable file')
-    const version = await execFileAsync(runner, ['--version'], { timeout: 30_000, maxBuffer: 1024 * 1024 })
-    if (!(version.stdout + version.stderr).includes('(build ' + manifest.llamaServer.slice(1) + ',')) throw new Error('Packaged local Reflex runner release mismatch')
+    await verifyPackagedReflexRunner(await requireContained('dependencies/llama-server/llama-server'), manifest.llamaServer)
   }
   const executable = context.electronPlatformName === 'win32'
     ? path.join(context.appOutDir, product + '.exe')
@@ -92,3 +104,4 @@ module.exports = async function packageSystem3Runtime(context) {
   console.log('System3 packaged resources verified: ' + manifest.packages.length + ' runtime packages, 27 compatibility patches, '
     + (manifest.llamaServer === undefined ? 'no local Reflex runner, ' : 'local Reflex runner ' + manifest.llamaServer + ', ') + manifest.version)
 }
+module.exports.verifyPackagedReflexRunner = verifyPackagedReflexRunner

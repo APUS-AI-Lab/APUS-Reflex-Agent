@@ -168,7 +168,9 @@ export async function prepareLlamaServer(archive: string, release: string, desti
  * @param environment - Subprocess environment.
  */
 export function smokeLlamaServer(executable: string, release: string, environment: NodeJS.ProcessEnv): void {
-  const result = spawnSync(executable, ['--version'], { encoding: 'utf8', timeout: 120_000, env: environment })
+  // llama.cpp creates Metal devices and compiles its embedded shader library before handling `--version`, which can
+  // stall on a virtual GPU. GGML_METAL_DEVICES=0 skips that setup; dyld still loads every library the runner links.
+  const result = spawnSync(executable, ['--version'], { encoding: 'utf8', timeout: 120_000, env: { ...environment, GGML_METAL_DEVICES: '0' } })
   if (result.error !== undefined) throw result.error
   const output = `${result.stdout}${result.stderr}`
   if (result.status !== 0 || !output.includes(`(build ${release.slice(1)},`)) {

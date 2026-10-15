@@ -263,13 +263,14 @@ it('reads dependent libraries and run paths in load-command order', () => {
   })
 })
 
-it.skipIf(process.platform === 'win32')('requires the runner to report its locked build number', async () => {
+it.skipIf(process.platform === 'win32')('requires the runner to report its locked build number without Metal devices', async () => {
   const root = await mkdtemp(join(tmpdir(), 'desktop-llama-smoke-'))
   try {
     const executable = join(root, 'llama-server')
-    await writeFile(executable, '#!/bin/sh\necho "version: 0.4.1-dev (build 11118, commit e6ab7c1a4)" >&2\n')
+    // The fixture fails unless the smoke disables Metal device setup, whatever the caller's environment says.
+    await writeFile(executable, '#!/bin/sh\n[ "$GGML_METAL_DEVICES" = 0 ] || exit 7\necho "version: 0.4.1-dev (build 11118, commit e6ab7c1a4)" >&2\n')
     await chmod(executable, 0o755)
-    smokeLlamaServer(executable, 'b11118', process.env)
+    smokeLlamaServer(executable, 'b11118', { ...process.env, GGML_METAL_DEVICES: '1' })
     expect(() => { smokeLlamaServer(executable, 'b1111', process.env) }).toThrow('did not report release b1111')
     expect(() => { smokeLlamaServer(join(root, 'missing'), 'b11118', process.env) }).toThrow('ENOENT')
   } finally { await rm(root, { recursive: true, force: true }) }

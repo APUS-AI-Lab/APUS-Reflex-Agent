@@ -179,7 +179,9 @@ async function run(installer, reportDirectory, expectedSource = process.env.GITH
     report.codeSignature = { verified: true, developerIdOrNotarizationVerified: false }
     if (runtime.llamaServer !== undefined) {
       // The signed runner must still load its sibling libraries under the installed application's hardened runtime.
-      await command('installed-reflex-runner', join(installation, 'Contents/Resources/system3-runtime/dependencies/llama-server/llama-server'), ['--version'], 30_000)
+      // GGML_METAL_DEVICES=0 skips Metal device setup, which llama.cpp runs before `--version` and which can stall on a virtual GPU.
+      await runCommand('installed-reflex-runner', join(installation, 'Contents/Resources/system3-runtime/dependencies/llama-server/llama-server'), ['--version'],
+        { timeout: 30_000, maxBuffer: 4 * 1024 * 1024, env: { ...env, GGML_METAL_DEVICES: '0' } }, report.commands)
       report.reflexRunner = runtime.llamaServer
     }
     const { stdout: minimum } = await execute('/usr/bin/plutil', ['-extract', 'LSMinimumSystemVersion', 'raw', '-o', '-', join(installation, 'Contents/Info.plist')])
