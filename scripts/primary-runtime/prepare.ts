@@ -179,6 +179,24 @@ export function smokeLlamaServer(executable: string, release: string, environmen
 /** A locked interpreter and wheel target. */
 export type PrimaryRuntimeTarget = keyof typeof lock.targets
 
+/**
+ * Download and stage the target's locked llama.cpp runner; carriers outside the primary runtime reuse this step.
+ * @param target - Runtime target whose lock entry may declare `llamaServer`.
+ * @param destination - Directory replaced with the runner files.
+ * @param cache - SHA-256-addressed archive cache, created when missing.
+ * @returns The staged release tag, or undefined when the target locks no runner.
+ */
+export async function prepareLockedLlamaServer(
+  target: PrimaryRuntimeTarget, destination: string, cache: string,
+): Promise<string | undefined> {
+  const artifact = lock.targets[target]
+  if (!('llamaServer' in artifact)) return undefined
+  const { url, sha256, release } = artifact.llamaServer
+  mkdirSync(cache, { recursive: true })
+  await prepareLlamaServer(await downloadPrimaryRuntimeAsset(url, sha256, cache), release, destination)
+  return release
+}
+
 /** Build-only inputs shared by Desktop and SDK carriers. */
 export interface PreparePrimaryRuntimeOptions {
   /** Target whose archives and wheels are downloaded. */
@@ -230,11 +248,7 @@ export async function preparePrimaryRuntime(options: PreparePrimaryRuntimeOption
       await cp(dirname(pnpmManifest), join(dependencies, 'pnpm'), { recursive: true, dereference: true })
     }
     await extractTar({ file: await pythonArchive(target, paths.downloads), cwd: dependencies })
-    const llamaServer = options.pythonOnly || !('llamaServer' in artifact) ? undefined : artifact.llamaServer
-    if (llamaServer !== undefined) {
-      await prepareLlamaServer(await downloadPrimaryRuntimeAsset(llamaServer.url, llamaServer.sha256, paths.downloads),
-        llamaServer.release, join(dependencies, 'llama-server'))
-    }
+    const llamaServer = options.pythonOnly ? undefined : await prepareLockedLlamaServer(target, join(dependencies, 'llama-server'), paths.downloads)
     const manifest: PrimaryRuntimeManifest = {
       desktopVersion: options.version,
       platform: target === 'win-x64' ? 'win32' : target.startsWith('linux-') ? 'linux' : 'darwin',
@@ -243,7 +257,7 @@ export async function preparePrimaryRuntime(options: PreparePrimaryRuntimeOption
       python: lock.pythonVersion,
       ...(pnpmVersion === undefined ? {} : { node: lock.nodeVersion, pnpm: pnpmVersion }),
       pythonPackages: lock.pythonPackages,
-      ...(llamaServer === undefined ? {} : { llamaServer: llamaServer.release }),
+      ...(llamaServer === undefined ? {} : { llamaServer }),
     }
     const entries = workspaceDependencyPaths(output, manifest)
     for (const wheel of [...artifact.wheels, ...lock.wheels]) {
