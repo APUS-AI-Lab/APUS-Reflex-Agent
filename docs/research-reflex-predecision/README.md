@@ -99,7 +99,7 @@ The benchmarks run the shipped Headless profile on real endpoints; their drivers
 - **Isolation.** Every task runs in a fresh process and Session over a fresh workspace, so each Jev connection starts cold; this overstates d compared with a long-running product.
 - **Interleaving.** Arms alternate within each round to spread provider drift over both.
 - **Measures.** Wall time from input to final answer, main-model steps, tool calls, success by a deterministic check on the answer or the workspace, decision latency, and the facts and Skills chosen.
-- **Suites.** `scenario-bench` covers a 40-file service (facts, code location, staged changes, Skills, edits with tests, Chinese input, small talk) and a personal folder (schedule, expenses, todos, mail, notes, documents, small talk, edits); `prefetch-bench` and `skill-bench` isolate one mechanism each. `skill-eval` measures Skill selection alone on 48 labelled inputs over a 20-Skill catalog, with or without `whenToUse`.
+- **Suites.** `scenario-bench` covers a 40-file service (facts, code location, staged changes, Skills, edits with tests, Chinese input, small talk) and a personal folder (schedule, expenses, todos, mail, notes, documents, small talk, edits); `prefetch-bench` and `skill-bench` isolate one mechanism each. `skill-eval` measures Skill selection alone on 48 labelled inputs over a 20-Skill catalog, with or without `whenToUse`. The [scenario benchmark procedure](../../packages/experimental/system3/tests/fixtures/scenario-bench/README.md) gives the commands, variables and iteration steps.
 
 -----
 
