@@ -44,7 +44,7 @@ async function fixture(fail = false) {
   }
   new Remote()
   const ok = () => vi.fn(async (..._args: unknown[]) => ({ ok: true, value: undefined }))
-  const remote = { prepare: ok(), pause: ok(), cancel: ok(), enable: ok(), disable: ok(), remove: ok(), acknowledge: ok() }
+  const remote = { prepare: ok(), pause: ok(), cancel: ok(), enable: ok(), disable: ok(), deleteModel: ok(), acknowledge: ok() }
   ctx.provide('remote.reflexLocal', remote)
   const openBundle = vi.fn()
   ctx.provide('pluginNavigation', { openBundle })
@@ -91,12 +91,13 @@ it('registers the card, prompt, and notice, forwards commands, and withdraws eve
     await actions.prepare({ variant: 'q4_k_m' })
     expect(b.remote.prepare).toHaveBeenCalledWith({ variant: 'q4_k_m' })
     await actions.pause(); await actions.cancel(); await actions.enable(); await actions.disable(); await actions.remove()
-    for (const method of [b.remote.pause, b.remote.cancel, b.remote.enable, b.remote.disable, b.remote.remove]) {
+    for (const method of [b.remote.pause, b.remote.cancel, b.remote.enable, b.remote.disable, b.remote.deleteModel]) {
       expect(method).toHaveBeenCalledOnce()
     }
     const failure = { ok: false, error: new RemoteError('gateway/internal', 'offline', {}) }
-    for (const name of ['prepare', 'pause', 'cancel', 'enable', 'disable', 'remove'] as const) {
-      b.remote[name].mockResolvedValueOnce(failure as never)
+    for (const [name, method] of [['prepare', 'prepare'], ['pause', 'pause'], ['cancel', 'cancel'], ['enable', 'enable'],
+      ['disable', 'disable'], ['remove', 'deleteModel']] as const) {
+      b.remote[method].mockResolvedValueOnce(failure as never)
       await expect(actions[name]()).rejects.toThrow('offline')
     }
     await fiber.dispose()

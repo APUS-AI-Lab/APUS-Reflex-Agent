@@ -9,7 +9,7 @@ kind: "package-reference"
 
 ## 概述
 
-`reflexLocal` Remote 将浏览器连接至 `ctx.reflexLocal`。它以流的形式提供设备支持、准备与启用快照，并转发准备、暂停、取消、启用、停用与删除命令。
+`reflexLocal` Remote 将浏览器连接至 `ctx.reflexLocal`。它以流的形式提供设备支持、准备与启用快照，并转发准备、暂停、取消、启用、停用与删除模型（`deleteModel`）命令。
 
 ## 目录
 

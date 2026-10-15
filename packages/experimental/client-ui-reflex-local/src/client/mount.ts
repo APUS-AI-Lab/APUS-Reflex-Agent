@@ -58,7 +58,7 @@ function registerUi(ctx: Context): void {
     cancel: () => settled(remote.cancel()),
     enable: () => settled(remote.enable()),
     disable,
-    remove: () => settled(remote.remove()),
+    remove: () => settled(remote.deleteModel()),
     openDetails: () => { ctx.pluginNavigation.openBundle(BUNDLE) },
     dismissSlowChip: () => { slowChipDismissed.set(true) },
     reportFailure: (error) => {

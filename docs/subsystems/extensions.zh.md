@@ -552,7 +552,7 @@ Forwards each call to `ctx.reflexLocal`; a disconnected observer never cancels H
  * Turn local decisions off, stop the runner, and delete downloaded weights and partial files.
  * @returns after deletion.
  */
-@Remote remove(): Promise<void>
+@Remote deleteModel(): Promise<void>
 ```
 
 Source: [`packages/experimental/api-reflex-local/src/index.ts`](../../packages/experimental/api-reflex-local/src/index.ts)

@@ -38,7 +38,7 @@ it('forwards observation and every preparation and enablement command', async ()
   api.prepare({ variant: 'q4_k_m', downloadSource: 'https://hf-mirror.com' })
   expect(service.prepare).toHaveBeenNthCalledWith(1, undefined)
   expect(service.prepare).toHaveBeenNthCalledWith(2, { variant: 'q4_k_m', downloadSource: 'https://hf-mirror.com' })
-  await api.pause(); await api.cancel(); await api.enable(); await api.disable(); await api.remove(); await api.acknowledge()
+  await api.pause(); await api.cancel(); await api.enable(); await api.disable(); await api.deleteModel(); await api.acknowledge()
   for (const method of [service.pause, service.cancel, service.enable, service.disable, service.remove, service.acknowledge]) {
     expect(method).toHaveBeenCalledOnce()
   }
@@ -50,4 +50,12 @@ it('propagates Host rejections unchanged', async () => {
   expect(() => { api.prepare({ variant: 'q4_k_m' }) }).toThrow('variant differs')
   service.enable.mockRejectedValueOnce(new Error('not ready'))
   await expect(api.enable()).rejects.toThrow('not ready')
+})
+
+it('names Remote methods apart from client namespace service members', () => {
+  // The client gateway rejects a namespace whose method shadows a RemoteNamespaceService member or field.
+  const reserved = new Set(['has', 'remove', 'install', 'installDirect', 'installScoped', 'assertMethodAvailable',
+    'ctx', 'empty', 'invokeRemote', 'methods', 'name', 'namespace'])
+  const methods = Object.getOwnPropertyNames(ReflexLocalController.prototype).filter(name => name !== 'constructor')
+  expect(methods.filter(name => reserved.has(name))).toEqual([])
 })

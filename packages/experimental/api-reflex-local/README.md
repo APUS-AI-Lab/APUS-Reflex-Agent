@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-The `reflexLocal` Remote connects the browser to `ctx.reflexLocal`. It streams device support, preparation, and enablement snapshots and forwards the preparation, pause, cancel, enable, disable, and remove commands.
+The `reflexLocal` Remote connects the browser to `ctx.reflexLocal`. It streams device support, preparation, and enablement snapshots and forwards the preparation, pause, cancel, enable, disable, and model deletion (`deleteModel`) commands.
 
 ## Table of Contents
 

@@ -83,5 +83,5 @@ export default class ReflexLocalController extends TypertRemoteService {
    * @returns after deletion.
    */
   @Remote
-  remove(): Promise<void> { return this.ctx.reflexLocal.remove() }
+  deleteModel(): Promise<void> { return this.ctx.reflexLocal.remove() }
 }

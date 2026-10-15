@@ -2003,7 +2003,7 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'after the cleared state is persisted.',
       },
       {
-        signature: '@Remote remove(): Promise<void>',
+        signature: '@Remote deleteModel(): Promise<void>',
         description: 'Turn local decisions off, stop the runner, and delete downloaded weights and partial files.',
         parameters: [],
         returns: 'after deletion.',
