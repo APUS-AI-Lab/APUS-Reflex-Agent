@@ -22,11 +22,25 @@ function probeKey(state: ReflexCardState): ReflexSettingsKey {
   const result = state.probe.result
   if (!result) return 'untested'
   if (result.kind === 'ok') return 'connected'
-  if (result.status === 401 || result.status === 403 || result.code === 'missing-credential') return state.mode === 'trial' ? 'trialAuthFailed' : 'authFailed'
+  // A missing credential stops the test before any request; a 401/403 is the service refusing the credential sent.
+  if (result.code === 'missing-credential') return state.mode === 'trial' ? 'trialNoCredential' : 'noCredential'
+  if (result.status === 401 || result.status === 403) return state.mode === 'trial' ? 'trialAuthFailed' : 'authFailed'
   if (result.code === 'timeout') return 'timeout'
   if (result.code === 'model-missing') return 'modelMissing'
   if (result.code === 'decision-rejected') return 'decisionRejected'
   return 'unavailableService'
+}
+
+/**
+ * The measured duration of the last connection test.
+ * @param state - page snapshot holding the probe result.
+ * @returns whole milliseconds, or undefined when no request was sent or nothing measurable elapsed.
+ */
+function probeLatency(state: ReflexCardState): number | undefined {
+  const result = state.probe.result
+  if (result === undefined || (result.kind === 'failed' && result.code === 'missing-credential')) return undefined
+  const ms = Math.round(result.latencyMs)
+  return ms > 0 ? ms : undefined
 }
 
 /** One titled module; while the master switch is off its title says so and its `dimmable` content dims. */
@@ -55,7 +69,7 @@ function ConnectionForm({ state, paused, t, ...props }: Pick<ReflexSettingsProps
   useEffect(() => () => { discard.current() }, [])
   if (!state.available) return <p className={css.fallback} role="status">{t('unavailable')}</p>
   const locked = !state.writable || state.saving || paused
-  const latency = state.probe.result ? ` · ${t('latency', { ms: String(Math.round(state.probe.result.latencyMs)) })}` : ''
+  const ms = probeLatency(state), latency = ms === undefined ? '' : ` · ${t('latency', { ms: String(ms) })}`
   const failure: ReflexSettingsKey | undefined = state.credentialSaveError === 'configured' ? 'newCredentialReference'
     : state.credentialSaveError === 'unavailable' ? 'credentialCheckFailed' : state.partialSave ? 'partialSave' : state.failed ? 'saveFailed' : undefined
   return <div className={css.dimmable}>

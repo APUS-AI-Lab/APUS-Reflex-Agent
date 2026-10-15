@@ -64,7 +64,7 @@ it('shows authentication failure rather than connected for a rejected key', () =
 it.each([
   ['timeout', '请求超时'], ['model-missing', '服务未提供该模型'],
   ['decision-rejected', '服务回答未通过真实判断检查'], ['transport', '服务不可用或响应无效'],
-  ['missing-credential', '认证失败，请检查 API Key'],
+  ['missing-credential', zh.noCredential],
 ] as const)('explains the failed connection reason %s', (code, message) => {
   render(<ReflexSettings {...props({ ...state, probe: { pending: false, failed: false,
     result: { kind: 'failed', stage: 'decision', model: 'decision', effort: 'high', latencyMs: 12, code } } })} />)
@@ -136,11 +136,26 @@ it.each(['read-only', 'saving'] as const)('locks the connection mode while %s', 
   expect(screen.getByRole('button', { name: zh.connectionMode }).hasAttribute('disabled')).toBe(true)
 })
 
-it('explains a missing preset credential without offering a hidden key control', () => {
+it('explains a missing preset credential without a duration, since no request was sent', () => {
   render(<ReflexSettings {...props({ ...state, mode: 'trial', probe: { pending: false, failed: false,
     result: { kind: 'failed', stage: 'decision', model: 'decision', effort: 'high', latencyMs: 2, code: 'missing-credential' } } })} />)
-  expect(screen.getByText(zh.trialAuthFailed, { exact: false })).toBeTruthy()
-  expect(screen.queryByText(zh.authFailed, { exact: false })).toBeNull()
+  expect(screen.getByText(zh.trialNoCredential).textContent).toBe(zh.trialNoCredential)
+  expect(screen.queryByText(new RegExp(zh.trialAuthFailed))).toBeNull()
+  expect(screen.queryByText(/耗时/)).toBeNull()
+})
+
+it.each([
+  ['trial', 403, zh.trialAuthFailed], ['custom', 401, zh.authFailed],
+] as const)('explains a credential the %s service refused, with its duration', (mode, status, message) => {
+  render(<ReflexSettings {...props({ ...state, mode, probe: { pending: false, failed: false,
+    result: { kind: 'failed', stage: 'models', model: 'decision', effort: 'high', latencyMs: 41.6, code: 'http', status } } })} />)
+  expect(screen.getByText(`${message} · 耗时：42 毫秒`)).toBeTruthy()
+})
+
+it('never shows a zero duration', () => {
+  render(<ReflexSettings {...props({ ...state, probe: { pending: false, failed: false,
+    result: { kind: 'failed', stage: 'decision', model: 'decision', effort: 'high', latencyMs: 0.2, code: 'transport' } } })} />)
+  expect(screen.getByText(zh.unavailableService).textContent).toBe(zh.unavailableService)
 })
 
 it('renders the local engine contribution as the local mode body without a form, probe, or Save', () => {
