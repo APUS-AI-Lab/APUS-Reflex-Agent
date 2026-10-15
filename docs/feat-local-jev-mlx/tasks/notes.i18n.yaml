@@ -1,0 +1,25 @@
+# Bilingual-pair consistency record for notes.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-local-jev-mlx/tasks/notes.md
+/feat-local-jev-mlx-notes:
+  en: fcd17101c2650f41
+  zh: aa74f5a36465701b
+/feat-local-jev-mlx-notes/2026-10-14-local-smoke-measurements-of-the-bundled-llama-server:
+  en: 77db7a5988547566
+  zh: d842f49ffaeb6d10
+/feat-local-jev-mlx-notes/2026-10-14-local-smoke-measurements-of-the-bundled-llama-server/distribution:
+  en: cdcdae5e708cbe1c
+  zh: 96965b394c5bdf64
+/feat-local-jev-mlx-notes/2026-10-14-local-smoke-measurements-of-the-bundled-llama-server/performance:
+  en: eddb73a0c12f4136
+  zh: 075a92f23622907f
+/feat-local-jev-mlx-notes/2026-10-14-local-smoke-measurements-of-the-bundled-llama-server/not-tested:
+  en: b65966e69a9e744b
+  zh: 5adaccda0540ea8d
+/feat-local-jev-mlx-notes/2026-10-14-p0-partial-local-latency-of-real-system3-requests-and-noul-rendering-comparison:
+  en: 372946dd13456fb4
+  zh: c9a53bd4785b489a
+/feat-local-jev-mlx-notes/2026-10-14-delivery-form-adjustment:
+  en: 73520328e7b2793c
+  zh: 9b254ddd84f33b0e

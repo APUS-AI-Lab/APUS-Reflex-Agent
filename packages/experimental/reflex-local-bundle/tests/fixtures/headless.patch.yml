@@ -1,0 +1,5 @@
+# Boot only the composition; no task runs, so no model provider is configured.
+- id: headless-startup
+  disabled: true
+- id: headless-runner
+  disabled: true

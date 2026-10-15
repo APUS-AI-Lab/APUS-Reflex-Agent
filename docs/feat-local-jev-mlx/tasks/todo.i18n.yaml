@@ -1,0 +1,19 @@
+# Bilingual-pair consistency record for todo.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-local-jev-mlx/tasks/todo.md
+/feat-local-jev-mlx-implementation-plan:
+  en: cc185b860905d562
+  zh: 0321a1b027fb4042
+/feat-local-jev-mlx-implementation-plan/design-deviations-found-during-implementation:
+  en: 1b2e0f1adc950c42
+  zh: 3803fdc03b5ee55e
+/feat-local-jev-mlx-implementation-plan/packages-and-changes:
+  en: e8ab378e45317e58
+  zh: e3f0e1cd567d5087
+/feat-local-jev-mlx-implementation-plan/verification:
+  en: 76783436820e7290
+  zh: c0db75cbafc6af90
+/feat-local-jev-mlx-implementation-plan/review:
+  en: 08a2954fc812e274
+  zh: 07c6bc81d59f3237

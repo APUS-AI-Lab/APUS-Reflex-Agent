@@ -1,0 +1,37 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/experimental/reflex-local-bundle/README.md
+/:
+  en: 16ed106d3296baec
+  zh: 0362c4879941c096
+/deepseek-ai-dsh-experimental-reflex-local-bundle:
+  en: 0e076b99a8497e90
+  zh: 11970060126f8bee
+/deepseek-ai-dsh-experimental-reflex-local-bundle/summary:
+  en: 3694c79c8186b876
+  zh: f24ae6fd077ccc9b
+/deepseek-ai-dsh-experimental-reflex-local-bundle/table-of-contents:
+  en: d152484eb41ac6b4
+  zh: 364c80ee00a374ff
+/deepseek-ai-dsh-experimental-reflex-local-bundle/use-this-package:
+  en: 04ff81dd4392cbed
+  zh: 140d33148352334f
+/deepseek-ai-dsh-experimental-reflex-local-bundle/understand-the-implementation:
+  en: e16542cbaa653691
+  zh: 89529c49a8e996f8
+/deepseek-ai-dsh-experimental-reflex-local-bundle/further-exploration:
+  en: ac1fd289569c4701
+  zh: 2309a72c9ae364b0
+/deepseek-ai-dsh-experimental-reflex-local-bundle/model-experience:
+  en: 861b9ab3f6b3847e
+  zh: 77ebe2685fcaaf1f
+/deepseek-ai-dsh-experimental-reflex-local-bundle/model-experience/kv-cache-effect:
+  en: 95d1f3056fd0ec16
+  zh: 469141bc5285d851
+/deepseek-ai-dsh-experimental-reflex-local-bundle/known-limitations-and-deferred-work:
+  en: beaecd01ba560d7f
+  zh: 21ecaf963a9fd58b
+/deepseek-ai-dsh-experimental-reflex-local-bundle/known-limitations-and-deferred-work/dev-note:
+  en: 0225ba087c5266f3
+  zh: 4e706f1b2b984e63

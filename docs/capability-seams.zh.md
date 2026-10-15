@@ -11,6 +11,7 @@
 flowchart LR
   pkg_experimental_apus_dsh_jev_plugin["experimental-apus-dsh-jev-plugin"]
   svc_jev["ctx.jev<br/>Typed model decisions"]
+  pkg_experimental_reflex_local["experimental-reflex-local"]
   pkg_experimental_system3["experimental-system3"]
   svc_system3["ctx.system3<br/>Decision evidence and supervision"]
   pkg_continuum["continuum"]
@@ -79,6 +80,9 @@ flowchart LR
   pkg_message_feedback["message-feedback"]
   pkg_experimental_api_speech_to_text["experimental-api-speech-to-text"]
   svc_speechController["ctx.speechController<br/>Experimental transcription Remote"]
+  svc_reflexLocal["ctx.reflexLocal<br/>Local decision engine"]
+  pkg_experimental_api_reflex_local["experimental-api-reflex-local"]
+  svc_reflexLocalController["ctx.reflexLocalController<br/>Experimental local decision engine Remote"]
   svc_sessionController["ctx.sessionController<br/>Host Session Remote controller"]
   svc_sessionFileReferences["ctx.sessionFileReferences<br/>Session-addressed file-reference Remote adapter"]
   svc_sessionSkillCatalog["ctx.sessionSkillCatalog<br/>Session-addressed skill Remote adapter"]
@@ -326,6 +330,7 @@ flowchart LR
   pkg_deepseek_account_platform --> svc_deepseekAccount
   pkg_deepseek_llm_api_extensions --> svc_deepseekLlmApiExtensions
   pkg_experimental_agent_team --> svc_agentTeams
+  pkg_experimental_api_reflex_local --> svc_reflexLocalController
   pkg_experimental_api_speech_to_text --> svc_speechController
   pkg_experimental_apus_dsh_jev_plugin --> svc_jev
   pkg_experimental_browser_use_chrome_devtools_mcp --> svc_browserUse
@@ -334,6 +339,8 @@ flowchart LR
   pkg_experimental_computer_use_cua_driver_mcp --> svc_computerUse
   pkg_experimental_computer_use_cua_driver_native --> svc_computerUse
   pkg_experimental_ptc_runtime_python --> svc_ptcRuntime
+  pkg_experimental_reflex_local --> svc_jev
+  pkg_experimental_reflex_local --> svc_reflexLocal
   pkg_experimental_speech_to_text --> svc_speechToText
   pkg_experimental_speech_to_text_sensevoice --> svc_speechToText
   pkg_experimental_system3 --> svc_system3
@@ -500,6 +507,7 @@ flowchart LR
   svc_profileContext --> pkg_plugin_manager
   svc_ptcRuntime --> pkg_tools
   svc_ptcRuntime --> pkg_workflow_ptc
+  svc_reflexLocal --> pkg_experimental_api_reflex_local
   svc_sandbox --> pkg_bash_sandbox
   svc_sandbox --> pkg_terminal_bash
   svc_sandboxPolicy --> pkg_bash_sandbox
@@ -589,7 +597,7 @@ flowchart LR
 
 | ctx 键 | 角色 | 所属包 | 实现 | 直接消费方 | 配套插件 | 说明 |
 | --- | --- | --- | --- | --- | --- | --- |
-| `ctx.jev` | `seam` | [`experimental-apus-dsh-jev-plugin`](../packages/experimental/apus-dsh-jev-plugin) | [`experimental-apus-dsh-jev-plugin`](../packages/experimental/apus-dsh-jev-plugin) | [`experimental-system3`](../packages/experimental/system3) | - | 解析已注册的决策 provider 并验证类型化答案；System3 负责隐私准入与持久化建议记录。 |
+| `ctx.jev` | `seam` | [`experimental-apus-dsh-jev-plugin`](../packages/experimental/apus-dsh-jev-plugin) | [`experimental-apus-dsh-jev-plugin`](../packages/experimental/apus-dsh-jev-plugin), [`experimental-reflex-local`](../packages/experimental/reflex-local) | [`experimental-system3`](../packages/experimental/system3) | - | 解析已注册的决策 provider 并验证类型化答案；System3 负责隐私准入与持久化建议记录。 |
 | `ctx.system3` | `service` | [`experimental-system3`](../packages/experimental/system3) | - | - | - | 组合路由、证据与监督策略；显式启用的 API 输入路由分别记录 Jev 建议与实际采用的模型选择。 |
 | `ctx.continuumMemory` | `service` | [`continuum`](../packages/context/continuum) | - | [`agent-loop`](../packages/core/agent-loop), [`experimental-continuum-jev`](../packages/experimental/continuum-jev) | - | 拥有带来源的版本化记忆记录、有界 recall 和显式启用的用户消息准入路径；Reflex 插件提供 Jev 选择，原版 profile 保持服务关闭。 |
 | `ctx.continuumTasks` | `service` | [`continuum`](../packages/context/continuum) | - | [`agent-loop`](../packages/core/agent-loop) | - | 拥有独占租约的任务日志、来源回读、显式修订和跨业务 Session 的有界任务分页。 |
@@ -611,6 +619,8 @@ flowchart LR
 | `ctx.toolResultPruner` | `core` | [`compaction-tool-result-pruner`](../packages/compaction/compaction-tool-result-pruner) | - | [`compaction-basic`](../packages/compaction/compaction-basic) | - | 在摘要压缩前，通过可回放的单节点表层替换来改写过大的当前工具结果。 |
 | `ctx.sessions` | `core` | [`session`](../packages/core/session) | - | [`agent-loop`](../packages/core/agent-loop), [`agent`](../packages/core/agent), [`session-persistence`](../packages/session/session-persistence), [`session-query`](../packages/session-query/session-query), [`session-query-sqlite`](../packages/session-query/session-query-sqlite), [`subagent-in-process-driver`](../packages/subagent/subagent-in-process-driver), [`invariants`](../packages/runtime-diagnostics/invariants), [`message-feedback`](../packages/feedback/message-feedback) | - | 拥有仅追加的 Session 实例，并发出持久的会话事件流。 |
 | `ctx.speechController` | `core` | [`experimental-api-speech-to-text`](../packages/experimental/api-speech-to-text) | - | - | - | 在 Provider 调用前校验受限的浏览器音频。 |
+| `ctx.reflexLocal` | `core` | [`experimental-reflex-local`](../packages/experimental/reflex-local) | - | [`experimental-api-reflex-local`](../packages/experimental/api-reflex-local) | - | 负责权重准备、自检、路由编辑，以及本机 Jev provider 背后的 llama-server runner。 |
+| `ctx.reflexLocalController` | `core` | [`experimental-api-reflex-local`](../packages/experimental/api-reflex-local) | - | - | - | 把就绪状态流与准备命令转发给 Host 持有的本机决策引擎。 |
 | `ctx.sessionController` | `core` | [`api-session-controller`](../packages/api/session-controller) | - | - | - | 负责 Session 命令、冷读取、持久事件跟随、实时控制状态、模型目录、workspace 打开与 Agent 激活策略。 |
 | `ctx.sessionFileReferences` | `core` | [`api-session-controller`](../packages/api/session-controller) | - | - | - | 通过 Session Controller 的既有 Agent lookup 策略委托文件引用发现。 |
 | `ctx.sessionSkillCatalog` | `core` | [`api-session-controller`](../packages/api/session-controller) | - | - | - | 在不激活冷 Agent 的前提下列出 Session 组合中允许用户调用的 skill。 |

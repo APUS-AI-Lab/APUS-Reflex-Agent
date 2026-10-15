@@ -1,0 +1,31 @@
+# Bilingual-pair consistency record for handoff.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-local-jev-mlx/tasks/handoff.md
+/feat-local-jev-mlx-handoff:
+  en: 4c51fe7f334d8502
+  zh: c6a85f0b13e8683c
+/feat-local-jev-mlx-handoff/tl-dr:
+  en: 4c3180dfc9c1e1c4
+  zh: 703fc403d87b1736
+/feat-local-jev-mlx-handoff/deliverables-of-this-round:
+  en: e6e848e405684821
+  zh: f1300838a171fdc8
+/feat-local-jev-mlx-handoff/design-constraints-must-not-be-violated:
+  en: 8049d782e435129d
+  zh: 1f56a78cc1b06bab
+/feat-local-jev-mlx-handoff/verified-real-behavior:
+  en: d74cf0c1a8bea25e
+  zh: 0b0ec3f3ab6580c8
+/feat-local-jev-mlx-handoff/verification-record-this-round:
+  en: 0d48de683fd5d51b
+  zh: c9da51a70bbcbae5
+/feat-local-jev-mlx-handoff/next-milestone-checklist:
+  en: 313c5888e181138c
+  zh: 63bca173dcc48fda
+/feat-local-jev-mlx-handoff/branch-and-state:
+  en: 1424bea1da4da054
+  zh: 37f842186c6c8e8a
+/feat-local-jev-mlx-handoff/cold-start-checklist:
+  en: 55aba97a8f504297
+  zh: ebb353b1f8841f85
