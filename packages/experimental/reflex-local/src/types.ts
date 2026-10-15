@@ -1,17 +1,34 @@
 /** Host-owned readiness of the local APUS Reflex decision engine, safe to send to clients. */
 
-/** Published GGUF quantization of the pinned 4B weights. */
-export type ReflexVariant = 'q8_0' | 'q4_k_m'
+/** Published APUS Reflex model size. */
+export type ReflexModelId = '4b' | '9b' | '35b-a3b'
 
-/** Download and size facts for one variant; sizes are exact pinned byte counts. */
-export interface ReflexModelInfo {
-  readonly variant: ReflexVariant
+/** Published GGUF quantization. */
+export type ReflexQuant = 'q8_0' | 'q4_k_m'
+
+/** Identity of one downloadable weights file. */
+export interface ReflexVariant {
+  readonly model: ReflexModelId
+  readonly quant: ReflexQuant
+}
+
+/** One weights file this deployment offers, judged against this Host. */
+export interface ReflexModelOption extends ReflexVariant {
+  /** Exact pinned file size. */
   readonly bytes: number
+  /** Total memory this option requires on this deployment. */
+  readonly minMemoryBytes: number
+  /** Not yet measured on Mac; never recommended automatically, still selectable when it fits. */
+  readonly experimental: boolean
+  /** Whether memory and, after the first disk check, free space admit this option. */
+  readonly fits: boolean
+  /** First unmet requirement when `fits` is false: total memory, then free disk space for the bytes still missing. */
+  readonly reason?: 'memory' | 'disk'
 }
 
 /** Whether this Host can run the bundled runner, decided once at activation. */
 export type ReflexDeviceSupport =
-  | { readonly supported: true; readonly memoryBytes: number; readonly recommended: ReflexVariant }
+  | { readonly supported: true; readonly memoryBytes: number }
   | { readonly supported: false; readonly reason: 'platform' | 'memory' | 'runner-missing' }
 
 /** Safe download diagnostics; `source` is an origin without credentials, path, or query. */
@@ -50,21 +67,27 @@ export type ReflexPreparation =
   | { readonly phase: 'ready'; readonly variant: ReflexVariant; readonly selfTest: ReflexSelfTest }
   | { readonly phase: 'failed'; readonly variant?: ReflexVariant; readonly failure: ReflexFailure }
 
-/** One consistent observation of device support, preparation, and the persisted enable choice. */
+/** One consistent observation of device support, model options, preparation, and Jev routing. */
 export interface ReflexSnapshot {
   readonly device: ReflexDeviceSupport
-  readonly models: readonly ReflexModelInfo[]
+  /** Every offered option, smallest first; empty on an unsupported device. */
+  readonly options: readonly ReflexModelOption[]
+  /**
+   * Largest non-experimental option that fits memory and free disk space; when free space admits none, the smallest
+   * non-experimental option that fits memory (its `reason` is then `disk`). Absent on an unsupported device.
+   */
+  readonly recommended?: ReflexVariant
   readonly preparation: ReflexPreparation
-  /** Persisted user choice; the provider answers only when this is true and preparation is ready. */
+  /** Whether the Jev entry's effective `defaultProviderId` is `providerId`. */
   readonly enabled: boolean
+  /** The Jev master switch (`jev.enabled`); false stops every provider, including the local one. */
+  readonly reflexEnabled: boolean
   /** Jev registry id of the local provider. */
   readonly providerId: string
   /** Free bytes on the data volume at the last check; absent before the first check. */
   readonly availableDiskBytes?: number
   /** Origins a user may pick for an explicit download; empty when the deployment offers no choice. */
   readonly downloadSources: readonly string[]
-  /** Provider restored by `disable()`; absent when the local provider is the only Jev provider. */
-  readonly cloudProviderId?: string
   /**
    * Epoch milliseconds of an automatic enablement the user has not acknowledged. It persists across restarts so a
    * client that was closed when the self-test finished can still offer undo; `acknowledge()` and `disable()` clear it.
@@ -74,7 +97,7 @@ export interface ReflexSnapshot {
 
 /** Options of one explicit preparation request. */
 export interface ReflexPrepareOptions {
-  /** Variant to prepare; omission uses the device recommendation. */
+  /** Option to prepare; omission keeps the current or failed variant, else uses the recommendation. */
   readonly variant?: ReflexVariant
   /** One advertised origin used without fallback; omission probes the configured origins. */
   readonly downloadSource?: string
@@ -100,9 +123,12 @@ export interface ReflexLocalService {
   pause(): Promise<void>
   /** Stop active work and delete the partial download. @returns after the work settles and the file is removed. */
   cancel(): Promise<void>
-  /** Route Jev decisions to the local provider; requires `ready`. @returns after the profile change is applied. */
+  /** Set the Jev entry's `defaultProviderId` to the local provider; requires `ready`. @returns after the profile change is applied. */
   enable(): Promise<void>
-  /** Stop routing decisions locally and restore `cloudProviderId` when configured. @returns after the change is applied. */
+  /**
+   * Remove the Jev entry's `defaultProviderId`, restoring the built-in default, and clear the automatic-enable notice.
+   * @returns after the change is applied.
+   */
   disable(): Promise<void>
   /** Clear `unacknowledgedAutoEnableAt` after a client showed it. @returns after the cleared state is persisted. */
   acknowledge(): Promise<void>

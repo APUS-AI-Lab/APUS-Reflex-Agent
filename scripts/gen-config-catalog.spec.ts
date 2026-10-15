@@ -75,6 +75,24 @@ describe('shared config schema catalog', () => {
     expect(() => collectConfigCatalog(root)).toThrow("schema validates key 'hidden' but config type 'Config' declares no such member")
   })
 
+  it('matches quoted config members to the schema keys they declare', () => {
+    const { root, write } = fixture()
+    write('packages/test/provider/src/index.ts', `
+import Schema from '@deepseek-ai/schemastery'
+export interface Config {
+  /** Memory tiers keyed by variant. */
+  tiers: {
+    /** Smallest variant. */
+    '4b-q4_k_m': number
+  }
+}
+export const Config = Schema.object({ tiers: Schema.object({ '4b-q4_k_m': Schema.natural() }) })
+export function apply(ctx: unknown, config: Config): void {}
+`)
+    const provider = collectConfigCatalog(root).find(entry => entry.pkg === '@test/provider')
+    expect(provider?.schemaKeys).toEqual(['tiers', 'tiers.4b-q4_k_m'])
+  })
+
   it('follows a local const alias without treating a completed branch as a cycle', () => {
     const { root } = fixture(sharedSchema.replace('export const Shared = Schema.union', 'export const Shared = Base\nconst Base = Schema.union'))
     const provider = collectConfigCatalog(root).find(entry => entry.pkg === '@test/provider')

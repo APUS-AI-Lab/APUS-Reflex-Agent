@@ -1,7 +1,7 @@
 /** Resumable, verified downloads of revision-pinned weights from Hugging Face-compatible origins. */
 import { createHash } from 'node:crypto'
-import { createReadStream, createWriteStream, type Stats } from 'node:fs'
-import { lstat, mkdir, rename, rm, statfs } from 'node:fs/promises'
+import { createReadStream, type Stats } from 'node:fs'
+import { lstat, mkdir, open, rename, rm, statfs } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { pipeline } from 'node:stream/promises'
 import { deadline, idleWatchdog, timeoutOf, TimeoutReason } from '@deepseek-ai/dsh-timeout'
@@ -244,7 +244,9 @@ async function attempt(request: DownloadRequest, url: string): Promise<string> {
           yield next.value
         }
       }
-      await pipeline(chunks, createWriteStream(partial, { flags: offset > 0 ? 'a' : 'w', mode: 0o600 }), { signal: stall.signal })
+      // Opening before streaming means no deferred open can recreate the file after a failed attempt removes it.
+      const output = await open(partial, offset > 0 ? 'a' : 'w', 0o600)
+      await pipeline(chunks, output.createWriteStream(), { signal: stall.signal })
     }
     request.verifying()
     if (completed !== asset.bytes || digest.digest('hex') !== asset.sha256) throw new ReflexDownloadError({ reason: 'integrity', source })

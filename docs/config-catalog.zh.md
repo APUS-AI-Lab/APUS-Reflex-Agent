@@ -917,7 +917,10 @@ export interface Config {
   readonly timeoutMs: Volatile<number>
   /** Credential reference for bearer authentication; omission permits an unauthenticated gateway. */
   readonly apiKeyEnv: Volatile<string | undefined>
-  /** Registry identity of the built-in provider; selected when a request omits providerId and `defaultProviderId` is unset. @default 'system-one' */
+  /**
+   * Registry identity of the built-in provider; selected when a request omits providerId and `defaultProviderId` is
+   * unset. @default 'system-one'
+   */
   readonly providerId?: string
   /**
    * Provider selected when a request omits providerId. Another plugin may register it; changing it switches the next
@@ -1269,8 +1272,6 @@ export interface Config {
   dataRoot: string
   /** Absolute path of the bundled `llama-server`; omission or a non-executable file reports `runner-missing`. */
   runnerPath?: string | undefined
-  /** Quantization to prepare; `auto` follows the device memory recommendation. */
-  variant: 'auto' | ReflexVariant
   /** Explicit Hugging Face-compatible origin; bypasses probing and public fallback. */
   modelOrigin?: string | undefined
   /** Hugging Face-compatible origins compared before each download. */
@@ -1301,16 +1302,24 @@ export interface Config {
    * CPU-only inference (about 100).
    */
   minPrefillTokensPerSecond: number
-  /** Total memory each variant requires. */
-  minMemoryBytes: Record<ReflexVariant, number>
+  /** Total memory each variant requires; options below their tier are greyed and never recommended. */
+  minMemoryBytes: {
+    /** 4B Q4_K_M. */
+    '4b-q4_k_m': number
+    /** 4B Q8_0. */
+    '4b-q8_0': number
+    /** 9B Q4_K_M. */
+    '9b-q4_k_m': number
+    /** 9B Q8_0. */
+    '9b-q8_0': number
+    /** 35B-A3B Q4_K_M; experimental. */
+    '35b-a3b-q4_k_m': number
+    /** 35B-A3B Q8_0; experimental. */
+    '35b-a3b-q8_0': number
+  }
   /** Free bytes left on the data volume after a download completes. */
   diskMarginBytes: number
-  /** Cloud Jev provider restored by `disable()`; omission persists the enable choice in `state.json` instead of editing the profile. */
-  cloudProviderId?: string | undefined
 }
-
-/** Published GGUF quantization of the pinned 4B weights. */
-export type ReflexVariant = 'q8_0' | 'q4_k_m'
 ```
 <!-- END GENERATED config-catalog:@deepseek-ai/dsh-experimental-reflex-local -->
 
@@ -1415,7 +1424,10 @@ export interface Config {
   readonly observeAgentLoop?: boolean
   /** Privacy-policy route identity for explicit Jev calls. */
   readonly jevRouteId?: string
-  /** Actual execution location, including the remote destination of any tunnel. */
+  /**
+   * Execution location of a Jev provider that does not declare its own, including the remote destination of any tunnel.
+   * A provider's declared `executionDomain`, such as the local Reflex engine's `local`, takes precedence.
+   */
   readonly jevExecutionDomain?: 'local' | 'network'
   /** Execution effort sent to the Jev provider. */
   readonly jevEffort?: 'low' | 'high'

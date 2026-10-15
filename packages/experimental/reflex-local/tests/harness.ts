@@ -57,14 +57,17 @@ export function assetOf(name: string, bytes: Buffer, origin = 'https://huggingfa
 }
 
 /**
- * Serve `bytes` with HTTP Range support; `options.ignoreRange` answers 200 to every request.
+ * Serve weights with HTTP Range support; a map selects the body by the request's last path segment.
+ * `options.ignoreRange` answers 200 to every request; `options.wrongStart` shifts every 206 by one byte.
  * @returns the origin and every received Range header (`''` when absent).
  */
 export async function weightsServer(
-  bytes: Buffer, options: { ignoreRange?: boolean; wrongStart?: boolean } = {},
+  files: Buffer | Readonly<Record<string, Buffer>>, options: { ignoreRange?: boolean; wrongStart?: boolean } = {},
 ): Promise<{ origin: string; ranges: string[] }> {
   const ranges: string[] = []
   const origin = await serve((request, response) => {
+    const bytes = Buffer.isBuffer(files) ? files : files[(request.url ?? '').split('/').at(-1) ?? '']
+    if (bytes === undefined) { response.writeHead(404).end(); return }
     if (request.method === 'HEAD') { response.writeHead(200).end(); return }
     const range = request.headers.range ?? ''
     ranges.push(range)

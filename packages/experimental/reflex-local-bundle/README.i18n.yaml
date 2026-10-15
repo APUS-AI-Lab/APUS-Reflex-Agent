@@ -3,23 +3,23 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/experimental/reflex-local-bundle/README.md
 /:
-  en: 16ed106d3296baec
-  zh: 0362c4879941c096
+  en: 6070e481589bed1a
+  zh: 57c83ced545c2d4d
 /deepseek-ai-dsh-experimental-reflex-local-bundle:
   en: 0e076b99a8497e90
   zh: 11970060126f8bee
 /deepseek-ai-dsh-experimental-reflex-local-bundle/summary:
-  en: 3694c79c8186b876
-  zh: f24ae6fd077ccc9b
+  en: 7d5177d9b7b63b19
+  zh: 380f1da9d73f3c67
 /deepseek-ai-dsh-experimental-reflex-local-bundle/table-of-contents:
   en: d152484eb41ac6b4
   zh: 364c80ee00a374ff
 /deepseek-ai-dsh-experimental-reflex-local-bundle/use-this-package:
-  en: 04ff81dd4392cbed
-  zh: 140d33148352334f
+  en: ba0a67376b31d2f2
+  zh: 05aab49cc28c9cd6
 /deepseek-ai-dsh-experimental-reflex-local-bundle/understand-the-implementation:
-  en: e16542cbaa653691
-  zh: 89529c49a8e996f8
+  en: 452dbd6e561b9dcb
+  zh: c34313b89568d030
 /deepseek-ai-dsh-experimental-reflex-local-bundle/further-exploration:
   en: ac1fd289569c4701
   zh: 2309a72c9ae364b0
@@ -30,8 +30,8 @@
   en: 95d1f3056fd0ec16
   zh: 469141bc5285d851
 /deepseek-ai-dsh-experimental-reflex-local-bundle/known-limitations-and-deferred-work:
-  en: beaecd01ba560d7f
-  zh: 21ecaf963a9fd58b
+  en: 1747f5cb52a71c59
+  zh: bfc8a9f0d87ba667
 /deepseek-ai-dsh-experimental-reflex-local-bundle/known-limitations-and-deferred-work/dev-note:
   en: 0225ba087c5266f3
   zh: 4e706f1b2b984e63

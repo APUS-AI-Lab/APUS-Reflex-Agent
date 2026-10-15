@@ -8618,6 +8618,9 @@ importers:
       '@deepseek-ai/dsh-client-ui-renderer':
         specifier: workspace:*
         version: link:../../client/ui-renderer
+      '@deepseek-ai/dsh-client-ui-settings':
+        specifier: workspace:*
+        version: link:../../client/ui-settings
       '@deepseek-ai/dsh-client-ui-slots':
         specifier: workspace:*
         version: link:../../client/ui-slots
@@ -9068,21 +9071,12 @@ importers:
       '@deepseek-ai/dsh-experimental-api-reflex-local':
         specifier: workspace:*
         version: link:../api-reflex-local
-      '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin':
-        specifier: workspace:*
-        version: link:../apus-dsh-jev-plugin
       '@deepseek-ai/dsh-experimental-client-ui-reflex-local':
         specifier: workspace:*
         version: link:../client-ui-reflex-local
-      '@deepseek-ai/dsh-experimental-client-ui-system3':
-        specifier: workspace:*
-        version: link:../client-ui-system3
       '@deepseek-ai/dsh-experimental-reflex-local':
         specifier: workspace:*
         version: link:../reflex-local
-      '@deepseek-ai/dsh-experimental-system3':
-        specifier: workspace:*
-        version: link:../system3
     devDependencies:
       '@deepseek-ai/cordis':
         specifier: workspace:~
@@ -9093,6 +9087,9 @@ importers:
       '@deepseek-ai/dsh-app-boot':
         specifier: workspace:*
         version: link:../../boot/app-boot
+      '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin':
+        specifier: workspace:*
+        version: link:../apus-dsh-jev-plugin
       '@deepseek-ai/dsh-loader-smoke':
         specifier: workspace:*
         version: link:../../test-support/loader-smoke

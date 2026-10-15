@@ -33,12 +33,9 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin": "workspace:*",
     "@deepseek-ai/dsh-experimental-reflex-local": "workspace:*",
     "@deepseek-ai/dsh-experimental-api-reflex-local": "workspace:*",
-    "@deepseek-ai/dsh-experimental-client-ui-reflex-local": "workspace:*",
-    "@deepseek-ai/dsh-experimental-system3": "workspace:*",
-    "@deepseek-ai/dsh-experimental-client-ui-system3": "workspace:*"
+    "@deepseek-ai/dsh-experimental-client-ui-reflex-local": "workspace:*"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "workspace:~"
@@ -48,7 +45,8 @@
     "@deepseek-ai/cordis-plugin-include": "workspace:~",
     "js-yaml": "^4.2.0",
     "@deepseek-ai/dsh-app-boot": "workspace:*",
-    "@deepseek-ai/dsh-loader-smoke": "workspace:*"
+    "@deepseek-ai/dsh-loader-smoke": "workspace:*",
+    "@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin": "workspace:*"
   },
   "dsh": {
     "bundle": {

@@ -418,6 +418,13 @@ register(provider: JevProvider): () => void
 listProviders(): readonly JevProviderInfo[]
 
 /**
+ * Read the metadata of the provider a request would use, without performing I/O.
+ * @param providerId - Requested provider; omission selects the current default provider.
+ * @returns Detached metadata, or undefined when Reflex is off or the provider is unconfigured or not registered.
+ */
+providerInfo(providerId?: string): JevProviderInfo | undefined
+
+/**
  * Resolve a request to a provider and effective model without performing I/O.
  * @param request - Host request and optional provider selection.
  * @returns Validated request with provider and model pinned.
@@ -449,7 +456,7 @@ Source: [`packages/experimental/apus-dsh-jev-plugin/src/index.ts`](../../package
 
 ### `ctx.reflexLocal` — `ReflexLocal`
 
-Host service exposing engine preparation; its Fiber owns the engine and runner. The provider registration lives in a nested `jev` dependency, so a Jev reload caused by `enable()` or `disable()` re-registers it without stopping the engine.
+Host service exposing engine preparation; its Fiber owns the engine and runner. The provider registration lives in a nested `jev` dependency, so a Jev reload re-registers it without stopping the engine.
 
 ```ts cordis-catalog
 /**
