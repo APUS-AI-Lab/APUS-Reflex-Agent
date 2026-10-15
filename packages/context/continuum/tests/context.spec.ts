@@ -198,6 +198,37 @@ describe('Continuum same-step context consumer', () => {
     await ctx.fiber.dispose()
   })
 
+  it('offers the selector the larger pool with tags and keeps the byte budget on what it selects', async () => {
+    const store = new MemoryRecordStore()
+    for (let index = 0; index < 5; index += 1) {
+      store.create({ id: MemoryId(`m${index}`), kind: 'fact', scope: 'workspace', content: `fact number ${index} ${'x'.repeat(60)}`,
+        sourceRefs: [{ sessionId: SessionId('s'), eventSeq: SessionSeq(index) }] })
+    }
+    const ctx = new Context()
+    const controller = new ContinuumMemoryController(store, { enabled: true, mode: 'active', reflexMounted: true })
+    let offered: { id: string; tags: readonly string[] }[] = []
+    installContinuumMemoryControllerContext(ctx, () => controller, () => ({ scopes: ['workspace'] }),
+      { maxCandidates: 2, maxPool: 5, maxExcerptBytes: 200, maxTotalBytes: 390, candidatePool: 'all' },
+      () => ({
+        select: async (_agent, input) => {
+          offered = input.candidates.map(candidate => ({ id: candidate.id, tags: candidate.tags }))
+          const ids = input.candidates.map(candidate => candidate.id)
+          return { mode: 'active', selectedIds: ids, baselineIds: ids, outcome: 'jev' }
+        },
+      }), () => undefined, (_agent, id) => id === 'm4' ? ['people'] : [])
+    const user = createUserMessage({ source: { kind: 'user' }, content: [{ type: 'text', text: 'Unrelated words only' }] })
+    const result = await agentEvents(ctx, {} as Agent).waterfall('agent/pre-step', {
+      messages: [user], turn: 1, step: 1, signal: new AbortController().signal,
+    }, () => Promise.resolve({ kind: 'enter' as const, messages: [user] }))
+    expect(offered.map(candidate => candidate.id)).toEqual(['m4', 'm3', 'm2', 'm1', 'm0'])
+    expect(offered[0]!.tags).toEqual(['people'])
+    const recall = result.kind === 'enter' ? result.messages[1] : undefined
+    const text = recall?.content.map(block => block.type === 'text' ? block.text : '').join('') ?? ''
+    expect(Buffer.byteLength(text, 'utf8')).toBeLessThanOrEqual(390)
+    expect(recall?.source).toMatchObject({ recordIds: ['m4', 'm3'] })
+    await ctx.fiber.dispose()
+  })
+
   it.each([
     ['baseline', 'listener'], ['baseline', 'context'],
     ['next', 'listener'], ['next', 'context'], ['selector', 'listener'], ['selector', 'context'],

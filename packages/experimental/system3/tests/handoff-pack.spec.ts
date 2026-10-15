@@ -8,7 +8,7 @@ import { brandString } from '@deepseek-ai/dsh-brand'
 import { createAssistantMessage, createUserMessage, type UserMessage } from '@deepseek-ai/dsh-llm'
 import { SessionId } from '@deepseek-ai/dsh-session'
 import { afterEach, expect, it, vi } from 'vitest'
-import Jev, { type JevRequest } from '../../apus-dsh-jev-plugin/src/index.ts'
+import Jev, { JevConfigurationError, type JevRequest } from '../../apus-dsh-jev-plugin/src/index.ts'
 import { MockAdapter } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import { delegationInstruction, installSystem3Delegation } from '../src/delegation.ts'
 import { createSystem3EntryRouter, type System3EntryRoutingConfig } from '../src/entry-routing.ts'
@@ -104,6 +104,12 @@ it('does not ask Jev when privacy forbids it or Jev is absent, and records a Jev
   expect(await denied.step()).toBe(delegationInstruction('Codex', 'subagent_codex'))
   expect(denied.pack()).toMatchObject({ outcome: 'privacy-denied', request: null })
 
+  const local = await setup([text('不要改 README')], { options: { routeId: 'jev', executionDomain: 'network', effort: 'low' } })
+  vi.spyOn(local.ctx.jev, 'providerInfo').mockReturnValue({ id: 'system-one', model: 'jev-test', endpoint: 'http://localhost:1', executionDomain: 'local' })
+  local.setNouls([0.9])
+  await local.step()
+  expect(local.pack()).toMatchObject({ outcome: 'packed' })
+
   const absent = await setup([text('不要改 README')])
   vi.spyOn(absent.ctx, 'get').mockImplementation(((name: string) => {
     const value: unknown = name === 'jev' ? undefined : absent.ctx.reflect.get(name)
@@ -116,6 +122,19 @@ it('does not ask Jev when privacy forbids it or Jev is absent, and records a Jev
   failing.decide.mockImplementation(async query => ({ kind: 'unknown', spec: failing.ctx.jev.resolve(query), failure: { code: 'http', message: 'down' } }))
   expect(await failing.step()).toBe(delegationInstruction('Codex', 'subagent_codex'))
   expect(failing.pack()).toMatchObject({ outcome: 'http' })
+
+  const switchedOff = await setup([text('不要改 README')])
+  switchedOff.decide.mockRejectedValue(new JevConfigurationError('switched off'))
+  expect(await switchedOff.step()).toBe(delegationInstruction('Codex', 'subagent_codex'))
+  expect(switchedOff.pack()).toMatchObject({ outcome: 'provider-unavailable' })
+})
+
+it('leaves effort to the provider default when none is configured', async () => {
+  const h = await setup([text('不要改 README')], { options: { routeId: 'jev', executionDomain: 'local' } })
+  h.setNouls([0.9])
+  await h.step()
+  expect(h.pack()).toMatchObject({ outcome: 'packed' })
+  expect(h.handoffCalls()[0]).toMatchObject({ effort: 'low' })
 })
 
 it('gives up at the deadline without blocking the delegation, but rejects when the turn is cancelled', async () => {

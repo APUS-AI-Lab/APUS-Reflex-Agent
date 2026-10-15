@@ -39,7 +39,7 @@ it('acknowledges a local submission before a decision arrives', () => {
 it('keeps suggested and adopted routes distinct from actual model use', () => {
   const props = inputs({ running: true, facts: { subagentRun: null, ...EMPTY, history: [], skill: null, entry: {
     requestId: brandString<SessionRequestId>('request'), phase: 'decided', outcome: 'selected',
-    suggested: model, adopted: model, used: null, elapsedMs: 29, turn: null, avoided: [], route: null,
+    suggested: model, adopted: model, used: null, elapsedMs: 29, executionDomain: null, turn: null, avoided: [], route: null,
   } } })
   const { rerender } = render(<System3Feedback {...props} />)
   expect(screen.getByRole('status').textContent).toBe('正在执行')
@@ -88,7 +88,7 @@ it('does not expose root model mutation for an addressed subagent', () => {
 it('announces active decision and retains ended-turn evidence without claiming verification', () => {
   const props = inputs({ pending: true, facts: { subagentRun: null, ...EMPTY, history: [], skill: null, entry: {
     requestId: brandString<SessionRequestId>('active'), phase: 'deciding', outcome: null,
-    suggested: null, adopted: null, used: null, elapsedMs: null, turn: null, avoided: [], route: null,
+    suggested: null, adopted: null, used: null, elapsedMs: null, executionDomain: null, turn: null, avoided: [], route: null,
   } } })
   const { rerender } = render(<System3Feedback {...props} />)
   expect(screen.getByRole('status').textContent).toBe('正在选择处理方式')
@@ -105,7 +105,7 @@ it('uses live execution state when a fixed-model turn follows an unanswered auto
   render(<System3Feedback {...inputs({ running: true,
     selection: { mode: 'fixed', lastUsed: model, next: model, automatic: false },
     facts: { subagentRun: null, ...EMPTY, history: [], skill: null, entry: { requestId: brandString<SessionRequestId>('previous'), phase: 'decided',
-      outcome: 'selected', suggested: model, adopted: model, used: null, elapsedMs: 10, turn: null, avoided: [], route: null } },
+      outcome: 'selected', suggested: model, adopted: model, used: null, elapsedMs: 10, executionDomain: null, turn: null, avoided: [], route: null } },
   })} />)
   expect(screen.getByRole('status').textContent).toBe('正在执行')
   expect(screen.getByText('实际响应模型').nextSibling?.textContent).toBe('尚无记录')
@@ -114,7 +114,7 @@ it('uses live execution state when a fixed-model turn follows an unanswered auto
 it('names the route, a continued route, or the fallback model, and nothing while deciding or for an earlier input', () => {
   const t = makeTranslate(zh, commonZh)
   const entry = { requestId: brandString<SessionRequestId>('routed'), phase: 'decided' as const, outcome: 'selected',
-    suggested: model, adopted: model, used: null, elapsedMs: 480, turn: 2,
+    suggested: model, adopted: model, used: null, elapsedMs: 480, executionDomain: null, turn: 2,
     avoided: [], route: { id: 'expert', label: '复杂专业任务 · GPT-5.6 Sol', retained: false, delegation: null } }
   expect(routeNotice(entry, null, t)).toBe('已判断：复杂专业任务 · GPT-5.6 Sol')
   expect(routeNotice({ ...entry, route: { ...entry.route, label: null, retained: true } }, null, t)).toBe('延续上一轮：fidoo / generation · low')
@@ -134,7 +134,7 @@ it('names the route, a continued route, or the fallback model, and nothing while
 it('shows the route line only in the Turn header of the Turn that carried the input', () => {
   const t = makeTranslate(zh, commonZh)
   const entry = { requestId: brandString<SessionRequestId>('routed'), phase: 'decided' as const, outcome: 'selected',
-    suggested: model, adopted: model, used: null, elapsedMs: 480, turn: 2,
+    suggested: model, adopted: model, used: null, elapsedMs: 480, executionDomain: null, turn: 2,
     avoided: [], route: { id: 'expert', label: 'Expert', retained: false, delegation: null } }
   const facts = { entry, skill: null, subagentRun: null, ...EMPTY, history: [] }
   const useProjection = (() => facts) as never
@@ -148,7 +148,7 @@ it('shows the route line only in the Turn header of the Turn that carried the in
 it('keeps the route line on earlier Turns after later inputs are routed', () => {
   const t = makeTranslate(zh, commonZh)
   const earlier = { requestId: brandString<SessionRequestId>('one'), phase: 'decided' as const, outcome: 'selected',
-    suggested: model, adopted: model, used: model, elapsedMs: 300, turn: 1,
+    suggested: model, adopted: model, used: model, elapsedMs: 300, executionDomain: null, turn: 1,
     avoided: [], route: { id: 'fast', label: 'Flash', retained: false, delegation: null } }
   const latest = { ...earlier, requestId: brandString<SessionRequestId>('two'), turn: 2, route: { ...earlier.route, id: 'pro', label: 'Pro' } }
   const useProjection = (() => ({ entry: latest, history: [earlier], skill: null, subagentRun: null, ...EMPTY })) as never
@@ -165,7 +165,7 @@ it('names the delegate beside the model selector only while the running turn is 
   const t = makeTranslate(zh, commonZh)
   const delegation = { candidateId: 'codex', tool: 'subagent_codex', injected: true, called: false }
   const entry = { requestId: brandString<SessionRequestId>('d'), phase: 'decided' as const, outcome: 'selected',
-    suggested: null, adopted: null, used: null, elapsedMs: 5, turn: 1, avoided: [], route: { id: 'codex', label: 'Codex', retained: false, delegation } }
+    suggested: null, adopted: null, used: null, elapsedMs: 5, executionDomain: null, turn: 1, avoided: [], route: { id: 'codex', label: 'Codex', retained: false, delegation } }
   const run = { runId: 'r', provider: 'codex', state: 'running', startedAt: 0, elapsedMs: 1000, completed: {}, current: null,
     lastStepAt: null, note: null, alert: null, steerable: true, steers: [] }
   const session = (running: boolean) => ((select: (s: { running: boolean }) => boolean) => select({ running })) as never
@@ -195,7 +195,7 @@ it('names the delegate beside the model selector only while the running turn is 
 it('shows each delegation stage separately: suggested, instruction injected, tool called', () => {
   const delegation = { candidateId: 'codex', tool: 'subagent_codex', injected: false, called: false }
   const entry = { requestId: brandString<SessionRequestId>('delegate'), phase: 'decided' as const, outcome: 'selected',
-    suggested: null, adopted: null, used: null, elapsedMs: 480, turn: null, avoided: [], route: { id: 'codex', label: '工程任务 · 委派 Codex', retained: false, delegation } }
+    suggested: null, adopted: null, used: null, elapsedMs: 480, executionDomain: null, turn: null, avoided: [], route: { id: 'codex', label: '工程任务 · 委派 Codex', retained: false, delegation } }
   const { rerender } = render(<System3Feedback
     {...inputs({ running: true, facts: { subagentRun: null, ...EMPTY, history: [], skill: null, entry } })} />)
   expect(screen.getByText('委派').nextSibling?.textContent).toBe('已建议，等待注入指令')
@@ -212,7 +212,7 @@ it('shows each delegation stage separately: suggested, instruction injected, too
 })
 it('names the delegation tool when the delegation route has no label', () => {
   render(<System3Feedback {...inputs({ facts: { subagentRun: null, ...EMPTY, history: [], skill: null, entry: { requestId: brandString<SessionRequestId>('d'), phase: 'decided', outcome: 'selected',
-    suggested: null, adopted: null, used: null, elapsedMs: 1, turn: null,
+    suggested: null, adopted: null, used: null, elapsedMs: 1, executionDomain: null, turn: null,
     avoided: [], route: { id: 'codex', label: null, retained: false, delegation: { candidateId: 'codex', tool: 'subagent_codex', injected: false, called: false } } } } })} />)
   expect(screen.getByText('建议模型').nextSibling?.textContent).toBe('subagent_codex')
 })
@@ -279,7 +279,7 @@ it('says when a queued requirement was moved into the current step', () => {
 })
 it('reads a continued route as the suggestion in the details', () => {
   render(<System3Feedback {...inputs({ facts: { subagentRun: null, ...EMPTY, history: [], skill: null, entry: { requestId: brandString<SessionRequestId>('c'), phase: 'decided',
-    outcome: 'abstain', suggested: null, adopted: model, used: null, elapsedMs: 1, turn: 3,
+    outcome: 'abstain', suggested: null, adopted: model, used: null, elapsedMs: 1, executionDomain: null, turn: 3,
     avoided: [], route: { id: 'expert', label: 'Expert', retained: true, delegation: null } } } })} />)
   expect(screen.getByText('建议模型').nextSibling?.textContent).toBe('延续上一轮')
 })
@@ -401,4 +401,28 @@ it('explains every durable Reflex timeline kind, recovery reason, and unknown st
   expect(screen.getByText('上下文：移出 2 段')).toBeTruthy()
   expect(screen.getByText('上下文：恢复 0 段')).toBeTruthy()
   expect(screen.getByText('收到执行证据')).toBeTruthy()
+})
+
+it('names where the recorded entry decision ran in the details and the Turn header', async () => {
+  const t = makeTranslate(zh, commonZh)
+  const entry = { requestId: brandString<SessionRequestId>('local'), phase: 'decided' as const, outcome: 'selected',
+    suggested: model, adopted: model, used: null, elapsedMs: 40, executionDomain: 'local' as const, turn: 2,
+    avoided: [], route: { id: 'expert', label: 'Expert', retained: false, delegation: null } }
+  const facts = { entry, skill: null, subagentRun: null, ...EMPTY, history: [] }
+  const dock = render(<System3Feedback {...inputs({ facts })} />)
+  expect(screen.getByText('判断位置').nextSibling?.textContent).toBe('本机 · 判断在这台设备上完成，判断内容没有发往判断服务')
+  dock.rerender(<System3Feedback {...inputs({ facts: { ...facts, entry: { ...entry, executionDomain: 'network' } } })} />)
+  expect(screen.getByText('判断位置').nextSibling?.textContent).toBe('云端')
+  dock.rerender(<System3Feedback {...inputs({ facts: { ...facts, entry: { ...entry, phase: 'deciding', executionDomain: null } } })} />)
+  expect(screen.queryByText('判断位置')).toBeNull()
+  dock.unmount()
+
+  const local = (() => facts) as never
+  const network = (() => ({ ...facts, entry: { ...entry, executionDomain: 'network' } })) as never
+  const head = render(<System3TurnHead turn={{ turn: 2 } as never} useProjection={local} t={t} />)
+  expect(head.container.textContent).toBe('已判断：Expert · 本机')
+  await act(async () => { fireEvent.focus(screen.getByText('本机')) })
+  expect((await screen.findByRole('tooltip')).textContent).toBe('判断在这台设备上完成，判断内容没有发往判断服务')
+  head.rerender(<System3TurnHead turn={{ turn: 2 } as never} useProjection={network} t={t} />)
+  expect(head.container.textContent).toBe('已判断：Expert · 云端')
 })

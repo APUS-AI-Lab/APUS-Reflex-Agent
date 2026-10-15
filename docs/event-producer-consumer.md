@@ -31,6 +31,7 @@ This matrix shows which packages dispatch each harness-owned event and which pac
 | `approval/request` | `waterfall` | [`packages/interaction/user-approval/src/types.ts:87`](../packages/interaction/user-approval/src/types.ts) | [`user-approval`](../packages/interaction/user-approval) (`waterfall`) | [`acp`](../packages/acp/acp), `agui`, `remotes` |
 | `authorization/settled` | `emit` | [`packages/credentials/authorization/src/index.ts:57`](../packages/credentials/authorization/src/index.ts) | [`authorization`](../packages/credentials/authorization) (`events.dispatch`) | [`authorization`](../packages/credentials/authorization) |
 | `commands/change` | `emit` | [`packages/interaction/commands/src/types.ts:89`](../packages/interaction/commands/src/types.ts) | [`commands`](../packages/interaction/commands) (`events.dispatch`) | `remotes` |
+| `compaction/prepare` | `parallel` | [`packages/compaction/compaction/src/index.ts:116`](../packages/compaction/compaction/src/index.ts) | [`compaction-basic`](../packages/compaction/compaction-basic) (`parallel`) | `system3` |
 | `compaction/summary-error` | `waterfall` | [`packages/compaction/compaction/src/index.ts:106`](../packages/compaction/compaction/src/index.ts) | [`compaction-basic`](../packages/compaction/compaction-basic) (`waterfall`) | [`compaction-image-offload`](../packages/compaction/compaction-image-offload) |
 | `connection/request` | `waterfall` | [`packages/client/connection/src/index.ts:67`](../packages/client/connection/src/index.ts) | `connection` (`waterfall`) | - |
 | `cordis/dynamic-package` | `emit` | [`packages/extensions/cordis-host-runner/src/types.ts:380`](../packages/extensions/cordis-host-runner/src/types.ts) | [`cordis-host-runner`](../packages/extensions/cordis-host-runner) (`emit`) | `remotes` |
@@ -53,6 +54,7 @@ This matrix shows which packages dispatch each harness-owned event and which pac
 | `goal/changed` | `emit` | [`packages/goal/goal/src/domain.ts:114`](../packages/goal/goal/src/domain.ts) | [`goal`](../packages/goal/goal) (`emit`) | [`goal-round-driver`](../packages/goal/goal-round-driver), `system3` |
 | `hmr/change` | `emit` | [`packages/boot/hmr/src/index.ts:30`](../packages/boot/hmr/src/index.ts) | [`hmr`](../packages/boot/hmr) (`emit`) | - |
 | `hmr/reload` | `emit` | [`packages/boot/hmr/src/index.ts:35`](../packages/boot/hmr/src/index.ts) | [`hmr`](../packages/boot/hmr) (`emit`) | - |
+| `jev/enabled` | `emit` | [`packages/experimental/apus-dsh-jev-plugin/src/index.ts:42`](../packages/experimental/apus-dsh-jev-plugin/src/index.ts) | `apus-dsh-jev-plugin` (`emit`) | `continuum-jev` |
 | `llm/adapters-updated` | `emit` | [`packages/llm/llm/src/types.ts:23`](../packages/llm/llm/src/types.ts) | [`llm`](../packages/llm/llm) (`events.dispatch`) | [`acp`](../packages/acp/acp), [`llm`](../packages/llm/llm), `remotes` |
 | `llm/stream` | `waterfall` | [`packages/llm/llm/src/index.ts:75`](../packages/llm/llm/src/index.ts) | [`llm`](../packages/llm/llm) (`waterfall`) | [`agent-loop`](../packages/core/agent-loop), [`continuum`](../packages/context/continuum), [`llm`](../packages/llm/llm), [`llm-replay`](../packages/test-support/llm-replay), [`session-checkpoint-policy`](../packages/session/session-checkpoint-policy), [`session-title`](../packages/session/session-title), `system3` |
 | `mcp-client/refresh-tools` | `parallel` | [`packages/mcp/mcp-client/src/index.ts:39`](../packages/mcp/mcp-client/src/index.ts) | `agui` (`parallel`) | [`mcp-client`](../packages/mcp/mcp-client) |
@@ -106,7 +108,7 @@ This matrix shows which packages dispatch each harness-owned event and which pac
 | `internal/service` | - | [`agent-preset-registry`](../packages/preset/agent-preset-registry), [`continuum`](../packages/context/continuum), `gateway` |
 | `internal/status` | - | [`agent`](../packages/core/agent), `inspector`, [`web`](../packages/web/web) |
 | `internal/update` | - | [`app-boot`](../packages/boot/app-boot) |
-| `loader/volatile-update` | - | [`continuum`](../packages/context/continuum), [`llm-deepseek`](../packages/llm/llm-deepseek), [`llm-pi-ai`](../packages/llm/llm-pi-ai), `speech-to-text` |
+| `loader/volatile-update` | - | `apus-dsh-jev-plugin`, [`continuum`](../packages/context/continuum), [`llm-deepseek`](../packages/llm/llm-deepseek), [`llm-pi-ai`](../packages/llm/llm-pi-ai), `speech-to-text` |
 | `slots/changed` | `ui-renderer` (`emit`) | - |
 <!-- END GENERATED event-producer-consumer:undeclared -->
 

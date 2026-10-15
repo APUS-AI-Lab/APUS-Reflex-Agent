@@ -1,0 +1,46 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/experimental/reflex-local/README.md
+/:
+  en: d0ffabe1b50a85f6
+  zh: 171754d6bda2ce20
+/deepseek-ai-dsh-experimental-reflex-local:
+  en: f93d32c89959889c
+  zh: e1858904b0652685
+/deepseek-ai-dsh-experimental-reflex-local/summary:
+  en: 9e05bc6e987de904
+  zh: 1d8fd96f36f32ac7
+/deepseek-ai-dsh-experimental-reflex-local/table-of-contents:
+  en: d152484eb41ac6b4
+  zh: 364c80ee00a374ff
+/deepseek-ai-dsh-experimental-reflex-local/use-this-package:
+  en: 46db266d92d6c801
+  zh: eef29fea8d6115cd
+/deepseek-ai-dsh-experimental-reflex-local/understand-the-implementation:
+  en: ca233f479554a2e8
+  zh: 37e1588a015a2b78
+/deepseek-ai-dsh-experimental-reflex-local/further-exploration:
+  en: eaa64ac8fb056176
+  zh: 82a525ab732bc4eb
+/deepseek-ai-dsh-experimental-reflex-local/model-experience:
+  en: 215e7ba838619b7b
+  zh: a311da3843709f90
+/deepseek-ai-dsh-experimental-reflex-local/model-experience/local-jev-decision-prompt:
+  en: 4a422d489162ef0a
+  zh: 7e5fd9aa8b73c7d7
+/deepseek-ai-dsh-experimental-reflex-local/model-experience/local-jev-decision-prompt/what-the-model-sees:
+  en: 5458a770b8c788e3
+  zh: e8232464cddaea68
+/deepseek-ai-dsh-experimental-reflex-local/model-experience/local-jev-decision-prompt/token-effect:
+  en: 00fc2a08fa31f1d2
+  zh: 5f6c10812b262b7e
+/deepseek-ai-dsh-experimental-reflex-local/model-experience/local-jev-decision-prompt/kv-cache-effect:
+  en: 1d453af37b1c73cf
+  zh: 7503e8a71465ce9b
+/deepseek-ai-dsh-experimental-reflex-local/known-limitations-and-deferred-work:
+  en: e05b64c2cbe954ae
+  zh: cdfe3bcea58cd6ba
+/deepseek-ai-dsh-experimental-reflex-local/known-limitations-and-deferred-work/dev-note:
+  en: e0e3720a277bc103
+  zh: a4915e3f48b59210

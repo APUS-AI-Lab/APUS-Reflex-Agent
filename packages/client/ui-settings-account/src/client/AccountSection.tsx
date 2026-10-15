@@ -23,12 +23,10 @@ export interface AccountSnapshot {
   details: Partial<AccountDetails> | undefined
   /** Whether the state stream failed. */
   failed: boolean
-  /** Explicitly opened account dialog outside onboarding. */
+  /** Explicitly opened account dialog. */
   loginVisible?: boolean
   /** Latest explicit start request failed before a Host state was available. */
   loginFailed?: boolean
-  /** Mounted onboarding owns the dialog while active. */
-  onboarding?: boolean
 }
 
 /** Host operations injected into the Cordis-free account component. */
@@ -62,8 +60,6 @@ export interface AccountSectionInjected {
   contactUs: () => void
   /** Open or dismiss the login dialog. */
   showLogin: (visible: boolean) => void
-  /** Claim dialog ownership for the onboarding step. */
-  setOnboarding: (active: boolean) => void
   /** @param orderId - notice whose card finished a presented frame while visible. */
   bonusNoticeShown: (orderId: BonusNotice['orderId']) => void
   /** @param orderId - notice the user closed. */

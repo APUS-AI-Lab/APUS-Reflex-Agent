@@ -46,6 +46,7 @@
     { "path": "./tsconfig.desktop-keyboard-tests.json" },
     { "path": "./apps/desktop/tsconfig.client.json" },
     { "path": "./packages/experimental/client-ui-voice-input" },
+    { "path": "./packages/experimental/client-ui-reflex-local" },
 
     { "path": "./packages/client/ui-sidebar-terminal" },
     { "path": "./packages/api/terminal-controller/tsconfig.client.json" },

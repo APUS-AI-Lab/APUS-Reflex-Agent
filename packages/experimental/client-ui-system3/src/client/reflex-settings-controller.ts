@@ -27,14 +27,17 @@ export const REFLEX_TRIAL = {
   apiKeyEnv: 'APUS_REFLEX_TRIAL_API_KEY',
 } as const
 
-/** The two connection choices offered by the product. */
-export type ReflexConnectionMode = 'trial' | 'custom'
+/** The connection choices offered by the product; `local` routes decisions to a provider named by `defaultProviderId`. */
+export type ReflexConnectionMode = 'trial' | 'custom' | 'local'
 
 const CONNECTION_FIELDS = ['endpoint', 'model', 'effort', 'timeoutMs', 'apiKeyEnv', 'protocol'] as const
 type ConnectionDraft = Record<typeof CONNECTION_FIELDS[number], string>
 
 /** Form field the credential control stages under. */
 const API_KEY_FIELD = 'apiKey'
+
+/** Jev field naming a non-built-in default provider; only the local engine sets it. */
+const PROVIDER_FIELD = 'defaultProviderId'
 
 /** The decision-provider fields this page edits. */
 export interface ReflexSettings {
@@ -49,6 +52,8 @@ export interface ReflexSettings {
   protocol?: 'openjev' | 'typesafe'
   /** Decision request deadline. */
   timeoutMs?: number
+  /** Registered provider answering instead of the built-in endpoint; set by the local engine, cleared by leaving local mode. */
+  defaultProviderId?: string
 }
 
 /** What the credentials domain last reported, and for which reference. */
@@ -174,7 +179,7 @@ export class ReflexCardController {
           const value = Number(text)
           return Number.isInteger(value) && value > 0 && value <= 2147483647 ? { kind: 'set', value } : undefined
         } },
-        settingsTextField('apiKeyEnv')],
+        settingsTextField('apiKeyEnv'), settingsTextField(PROVIDER_FIELD)],
       [{ field: API_KEY_FIELD, write: text => this.writeKey(text) }],
     )
     this.store = this.form.bind(() => this.projection())
@@ -261,7 +266,7 @@ export class ReflexCardController {
       setEnabled: enabled => this.setEnabled(enabled),
       save: () => { void this.save() },
       edit: (field, text) => {
-        if (this.checkingCredential || this.form.shell().saving || !this.form.shell().writable || this.mode === 'trial') return
+        if (this.checkingCredential || this.form.shell().saving || !this.form.shell().writable || this.mode !== 'custom') return
         if (field === 'apiKeyEnv' && text.trim() === REFLEX_TRIAL.apiKeyEnv) return
         this.credentialSaveError = undefined
         this.invalidateProbe()
@@ -272,7 +277,7 @@ export class ReflexCardController {
         if (field === 'apiKeyEnv') void this.readCredential()
       },
       resetField: (field) => {
-        if (this.checkingCredential || this.mode === 'trial') return
+        if (this.checkingCredential || this.mode !== 'custom') return
         this.credentialSaveError = undefined
         this.invalidateProbe(); actions.resetField(field)
         if (this.form.field('apiKeyEnv').text.trim() === REFLEX_TRIAL.apiKeyEnv) actions.edit('apiKeyEnv', DEFAULT_API_KEY_REF)
@@ -314,6 +319,7 @@ export class ReflexCardController {
 
   private savedMode(): ReflexConnectionMode {
     const value = this.scope.getSnapshot().value
+    if (value?.defaultProviderId) return 'local'
     return value?.endpoint === REFLEX_TRIAL.endpoint && value.model === REFLEX_TRIAL.model
       && value.apiKeyEnv === REFLEX_TRIAL.apiKeyEnv ? 'trial' : 'custom'
   }
@@ -324,7 +330,7 @@ export class ReflexCardController {
     this.mode = this.savedMode()
     const value = this.scope.getSnapshot().value
     if (this.scope.getSnapshot().writable) {
-      if (!value?.endpoint && !value?.model) this.selectMode('trial')
+      if (!value?.endpoint && !value?.model && this.mode !== 'local') this.selectMode('trial')
       if (value?.protocol === 'typesafe') this.form.actions().edit('protocol', 'openjev')
       if (this.mode === 'custom' && value?.apiKeyEnv === REFLEX_TRIAL.apiKeyEnv) this.form.actions().edit('apiKeyEnv', DEFAULT_API_KEY_REF)
     }
@@ -334,12 +340,21 @@ export class ReflexCardController {
   private selectMode(mode: ReflexConnectionMode): void {
     if (this.checkingCredential || this.form.shell().saving || !this.form.shell().writable || mode === this.mode) return
     const actions = this.form.actions()
-    if (this.mode === 'custom') {
+    // Leaving local mode for custom starts from the saved connection, which local mode left untouched.
+    if (this.mode === 'custom' || (this.mode === 'local' && mode === 'custom' && this.customDraft === undefined)) {
       this.customDraft = Object.fromEntries(CONNECTION_FIELDS.map(field => [field, this.form.field(field).text])) as ConnectionDraft
     }
-    this.mode = mode
     this.invalidateProbe()
     this.credentialSaveError = undefined
+    if (mode === 'local') {
+      // The local engine owns enabling; leaving staged connection edits would let Save write a mode the page no longer shows.
+      actions.discard()
+      this.mode = mode
+      this.store.set(this.projection())
+      return
+    }
+    this.mode = mode
+    actions.edit(PROVIDER_FIELD, '')
     actions.edit(API_KEY_FIELD, '')
     const draft: ConnectionDraft = mode === 'trial' ? {
       ...REFLEX_TRIAL, protocol: 'openjev', effort: 'high', timeoutMs: '30000',
@@ -451,7 +466,7 @@ export class ReflexCardController {
         effort: this.form.field('effort').text.trim() as 'high' | 'low',
         protocol: this.form.field('protocol').text.trim() as 'openjev' | 'typesafe',
         timeoutMs: Number(this.form.field('timeoutMs').text),
-        ...apiKeyEnv ? { apiKeyEnv } : {}, ...apiKey ? { apiKey } : {},
+        apiKeyEnv, ...apiKey ? { apiKey } : {},
       }, controller.signal)
       if (this.disposed || epoch !== this.epoch) return
       this.probe = response.ok ? { pending: false, failed: false, result: response.value } : { pending: false, failed: true }
@@ -465,7 +480,7 @@ export class ReflexCardController {
 
   /** Remove only the currently stored credential; environment-owned values remain read-only. */
   async clearCredential(): Promise<void> {
-    if (this.mode === 'trial' || !this.credential.writable) return
+    if (this.mode !== 'custom' || !this.credential.writable) return
     const response = await this.ctx.remote.credentials.unset(this.credential.ref)
     if (this.disposed) return
     this.credentialFailed = !response.ok

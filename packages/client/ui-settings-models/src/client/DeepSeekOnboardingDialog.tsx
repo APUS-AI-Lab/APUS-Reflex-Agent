@@ -3,7 +3,10 @@
  * provider/settings/credential join as the Models page: any provider the user
  * can already talk to ends the step, and only a user with none is offered the
  * official DeepSeek route. The step reuses that page's credential editor in
- * the onboarding plugin's shared modal, so the key is entered once.
+ * the onboarding plugin's shared modal, so the key is entered once. The
+ * automatic prompt appears at most once per page load: Configure later defers
+ * it and the composer readiness notice keeps the editor reachable, while an
+ * explicit request always opens the editor.
  */
 
 import { useEffect, useState } from 'react'
@@ -14,11 +17,10 @@ import type { ModelsSettingsState, ModelsSettingsStore } from './store.ts'
 import { onboardingReadiness } from './store.ts'
 import type { ModelsOperations } from './operations.ts'
 import type { SettingsSchemaOperations } from './schema-operations.ts'
-import { ProviderEditor } from './ProviderEditor.tsx'
+import type { ReadinessDeferral, ReadinessDeferralState } from './readiness-deferral.ts'
 import type {} from './slot-contract.ts'
 import type { en } from './locales.ts'
-import { OnboardingModal } from './OnboardingModal.tsx'
-import styles from './DeepSeekOnboardingDialog.module.css'
+import { CredentialSetupModal } from './CredentialSetupModal.tsx'
 
 /** Registration-side dependencies of {@link DeepSeekOnboardingDialog}. */
 export interface DeepSeekOnboardingInjected {
@@ -27,9 +29,13 @@ export interface DeepSeekOnboardingInjected {
   hooks: {
     /** Shared Models-page join state, bound by the slot renderer. */
     models: SnapshotStore<ModelsSettingsState>
+    /** Page-lifetime deferral shared with the composer readiness notice. */
+    deferral: SnapshotStore<ReadinessDeferralState>
   }
   /** Shared Models-page join controller. */
   controller: ModelsSettingsStore
+  /** Records Configure later for the rest of the page load. */
+  deferral: ReadinessDeferral
   /** The Host operations the reused Models credential editor writes through. */
   operations: ModelsOperations
   /** Settings schema and immutable path callbacks. */
@@ -54,7 +60,9 @@ function assertNever(_value: never): never {
  * @returns the onboarding modal or null when onboarding needs no intervention.
  */
 export function DeepSeekOnboardingDialog(props: DeepSeekOnboardingDialogProps): ReactNode {
-  const { complete, controller, useModels, operations, schema, t, renderSlot, automatic, explicit = false } = props
+  const { complete, controller, deferral, useModels, useDeferral, operations, schema, t, renderSlot, automatic, explicit = false } = props
+  const deferred = useDeferral(snapshot => snapshot.deferred)
+  const prompting = explicit || (automatic && !deferred)
   const [apiKey, setApiKey] = useState(explicit)
   const state = useModels(snapshot => snapshot)
   const readiness = onboardingReadiness(state)
@@ -65,14 +73,14 @@ export function DeepSeekOnboardingDialog(props: DeepSeekOnboardingDialogProps): 
 
   useEffect(() => {
     if (
-      (!automatic && !explicit)
+      !prompting
       || readiness.kind === 'adapter-absent'
       || (!explicit && readiness.kind === 'provider-ready')
       || readiness.kind === 'unavailable'
     ) complete()
-  }, [complete, readiness.kind, explicit, automatic])
+  }, [complete, readiness.kind, explicit, prompting])
 
-  if (!automatic && !explicit) return null
+  if (!prompting) return null
 
   switch (readiness.kind) {
     case 'loading':
@@ -89,46 +97,19 @@ export function DeepSeekOnboardingDialog(props: DeepSeekOnboardingDialogProps): 
       return assertNever(readiness)
   }
 
-  const row = state.rows.find(candidate =>
-    candidate.entry.provider === 'deepseek-official'
-    && candidate.entry.settingsNs === 'llm-deepseek'
-    && candidate.entry.settingsPath.length === 0)
-  const namespace = state.namespaces.get('llm-deepseek')
-  /* v8 ignore next 2 -- credential-missing is derived only from this exact joined row. */
-  if (row === undefined || namespace === undefined) return null
-
+  // The automatic step completes through the deferral effect above.
+  const later = (): void => {
+    if (explicit) complete()
+    else deferral.defer()
+  }
   const finishCredential = (changed: boolean): void => {
     if (!changed) {
-      complete()
+      later()
       return
     }
     void controller.load()
   }
 
-  const editor = (
-    <OnboardingModal title={t('onboardingTitle')}>
-      <p className={styles.description}>{t('onboardingDescription')}</p>
-      <div className={styles.editor}>
-        <ProviderEditor
-          provider={row.entry.provider}
-          displayName={row.entry.displayName}
-          namespace={namespace}
-          schema={schema}
-          settingsPath={row.entry.settingsPath}
-          operations={operations}
-          t={t}
-          readOnly={false}
-          hideTitle
-          credentialOnly
-          credentialRequired
-          autoFocusCredential
-          cancelLabelKey="onboardingLater"
-          submitLabelKey="onboardingSave"
-          submitBusyLabelKey="onboardingSaving"
-          onClose={finishCredential}
-        />
-      </div>
-    </OnboardingModal>
-  )
-  return apiKey ? editor : renderSlot('settings.models.sign-in', { complete, useApiKey: () => { setApiKey(true) } }, { fallback: editor })
+  const editor = <CredentialSetupModal state={state} operations={operations} schema={schema} t={t} onClose={finishCredential} />
+  return apiKey ? editor : renderSlot('settings.models.sign-in', { later, useApiKey: () => { setApiKey(true) } }, { fallback: editor })
 }

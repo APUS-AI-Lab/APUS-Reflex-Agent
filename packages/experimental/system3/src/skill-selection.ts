@@ -7,7 +7,7 @@ import { createUserMessage, type MessageId } from '@deepseek-ai/dsh-llm'
 import { isModelInvocable, renderSkillContent } from '@deepseek-ai/dsh-skill'
 import { JevConfigurationError, MAX_JEV_QUESTIONS, type JevRequest, type JevResponse } from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
 import { admitSystem3Routes, type System3DataClass, type System3PrivacyPolicy } from '@deepseek-ai/dsh-experimental-system3-policy'
-import type { System3JevOptions } from './decisions.ts'
+import { pinSystem3JevRequest, resolveSystem3JevRoute, type System3JevOptions } from './decisions.ts'
 import type { System3InputIntent } from './types.ts'
 
 const INTENT_CRITERIA: Readonly<Record<System3InputIntent, string>> = {
@@ -157,11 +157,12 @@ export function installSystem3SkillSelection(ctx: Context, config: System3SkillS
       'rpcId' in message.source ? message.source.rpcId : null, null)
     try {
       lookupSignal.throwIfAborted()
-      const admission = admitSystem3Routes(policy, [{ id: options.routeId, executionDomain: options.executionDomain,
-        dataClasses: settings.sessionDataClasses }])
-      if (admission.allowed.length === 0) { outcome = 'privacy-denied'; return decision }
       const skills = ctx.get('skills')
       const jev = ctx.get('jev')
+      const route = resolveSystem3JevRoute(jev, options)
+      const admission = admitSystem3Routes(policy, [{ id: options.routeId, executionDomain: route.executionDomain,
+        dataClasses: settings.sessionDataClasses }])
+      if (admission.allowed.length === 0) { outcome = 'privacy-denied'; return decision }
       if (skills === undefined || jev === undefined) return decision
       const snapshot = await bounded(skills.snapshot(lookup), lookupSignal)
       const catalog = snapshot.skills.filter(isModelInvocable)
@@ -182,7 +183,8 @@ export function installSystem3SkillSelection(ctx: Context, config: System3SkillS
           criteria: Object.fromEntries([...group.map(({ skill, id }) => [id, `${skill.name}: ${skill.description}`] as const),
             ['abstain', 'No clearly applicable skill.']]) }])) : {},
       } }
-      const spec = jev.resolve(query)
+      // The catalog lookup awaited after admission; run on the admitted provider even if the default changed meanwhile.
+      const spec = jev.resolve(pinSystem3JevRequest(query, route))
       if (Buffer.byteLength(JSON.stringify(spec), 'utf8') > settings.maxInputBytes) { outcome = 'input-too-large'; return decision }
       request = spec
       const result = await bounded(jev.decide(spec, lookupSignal), lookupSignal)

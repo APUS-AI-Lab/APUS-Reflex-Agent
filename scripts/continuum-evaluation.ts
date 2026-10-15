@@ -138,7 +138,7 @@ export async function selectionFor(
     query: task.input,
     candidates: authorized.map(memory => ({
       id: MemoryId(memory.id), label: memory.label, excerpt: memory.content,
-      score: baseline.some(item => item.id === memory.id) ? 0.9 : 0.1,
+      score: baseline.some(item => item.id === memory.id) ? 0.9 : 0.1, tags: [],
     })),
   })
   return { ids: result.selectedIds.map(String), baselineIds, authorizedIds: authorized.map(memory => memory.id) }

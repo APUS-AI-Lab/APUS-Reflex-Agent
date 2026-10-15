@@ -39,7 +39,7 @@ A page that edits a namespace another plugin owns registers through `ctx.configF
 
 ### Filling the settings slots
 
-A settings surface registers into the slot types this package declares. The shell (`sidebar.settings` occupant, navigation, chrome) lives in ui-settings-general; feature pages register `settings.section` contributions; the Plugins section hosts `settings.plugins.tab` pages; onboarding steps register `settings.onboarding`. The base also declares `settings.reflex.item`, a root-scoped list that the Reflex configuration page hosts for independently mounted controls such as Continuum memory. Cross-namespace surfaces (schema introspection, the served-namespace directory, `hasDocument`) read the same mirror through `ctx.configForms.describe()`.
+A settings surface registers into the slot types this package declares. The shell (`sidebar.settings` occupant, navigation, chrome) lives in ui-settings-general; feature pages register `settings.section` contributions; the Plugins section hosts `settings.plugins.tab` pages; onboarding steps register `settings.onboarding`. The base also declares `settings.reflex.item`, a root-scoped list that the Reflex configuration page hosts for independently mounted controls such as Continuum memory, and `settings.reflex.local`, a single seat that page renders as the body of its local connection mode. Cross-namespace surfaces (schema introspection, the served-namespace directory, `hasDocument`) read the same mirror through `ctx.configForms.describe()`.
 
 ### Observable success and failures
 

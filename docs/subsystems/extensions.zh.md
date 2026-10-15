@@ -418,6 +418,13 @@ register(provider: JevProvider): () => void
 listProviders(): readonly JevProviderInfo[]
 
 /**
+ * Read the metadata of the provider a request would use, without performing I/O.
+ * @param providerId - Requested provider; omission selects the current default provider.
+ * @returns Detached metadata, or undefined when Reflex is off or the provider is unconfigured or not registered.
+ */
+providerInfo(providerId?: string): JevProviderInfo | undefined
+
+/**
  * Resolve a request to a provider and effective model without performing I/O.
  * @param request - Host request and optional provider selection.
  * @returns Validated request with provider and model pinned.
@@ -444,6 +451,118 @@ async decide(request: JevRequest, signal?: AbortSignal): Promise<JevOutcome>
 ```
 
 Source: [`packages/experimental/apus-dsh-jev-plugin/src/index.ts`](../../packages/experimental/apus-dsh-jev-plugin/src/index.ts)
+
+<a id="ctxreflexlocal--reflexlocal"></a>
+
+### `ctx.reflexLocal` — `ReflexLocal`
+
+Host service exposing engine preparation; its Fiber owns the engine and runner. The provider registration lives in a nested `jev` dependency, so a Jev reload re-registers it without stopping the engine.
+
+```ts cordis-catalog
+/**
+ * Read device support, preparation, and routing in one observation.
+ * @returns the latest consistent snapshot.
+ */
+snapshot(): ReflexSnapshot
+
+/**
+ * Observe readiness until the signal aborts or the plugin unloads; changes between reads coalesce.
+ * @param signal - observer lifetime.
+ * @returns the current snapshot followed by each later change.
+ */
+follow(signal: AbortSignal): AsyncIterable<ReflexSnapshot>
+
+/**
+ * Start or join download, verification, and self-test; a passing, fast self-test enables local decisions.
+ * @param options - variant and download source; changing either while work is active throws.
+ */
+prepare(options?: ReflexPrepareOptions): void
+
+/** Stop active preparation and keep the partial download. @returns after the work settles. */
+async pause(): Promise<void>
+
+/** Stop active preparation and delete the partial download. @returns after the work settles and the file is removed. */
+async cancel(): Promise<void>
+
+/** Route Jev decisions to the local provider; requires `ready`. @returns after the state or profile change is applied. */
+async enable(): Promise<void>
+
+/** Stop local routing, restore `cloudProviderId` when configured, and clear the auto-enable notice. @returns after it applies. */
+async disable(): Promise<void>
+
+/** Clear `unacknowledgedAutoEnableAt` after a client showed it. @returns after the cleared state is persisted. */
+async acknowledge(): Promise<void>
+
+/** Stop preparation and the runner, delete weights and partial files, then disable. @returns after deletion. */
+async remove(): Promise<void>
+```
+
+Source: [`packages/experimental/reflex-local/src/index.ts`](../../packages/experimental/reflex-local/src/index.ts)
+
+<a id="ctxreflexlocalcontroller--reflexlocalcontroller"></a>
+
+### `ctx.reflexLocalController` — `ReflexLocalController`
+
+Forwards each call to `ctx.reflexLocal`; a disconnected observer never cancels Host-owned preparation.
+
+```ts cordis-catalog
+/**
+ * Read the current readiness without waiting for a change.
+ * @returns the latest device, preparation, and enablement observation.
+ */
+@Remote snapshot(): ReflexSnapshot
+
+/**
+ * Follow readiness independently of Session and preparation lifetimes.
+ * @param signal - Client observation lifetime.
+ * @returns the current snapshot followed by each later change.
+ */
+@Remote({ mode: 'stream' }) follow(signal: AbortSignal): AsyncIterable<ReflexSnapshot>
+
+/**
+ * Start or join download, verification, and self-test.
+ * @param options - variant and download source; omission uses the device recommendation and configured origins.
+ */
+@Remote prepare(options?: ReflexPrepareOptions): void
+
+/**
+ * Stop active preparation and keep the partial download for a later `prepare()`.
+ * @returns after the work settles.
+ */
+@Remote pause(): Promise<void>
+
+/**
+ * Stop active preparation and delete the partial download.
+ * @returns after the work settles and the file is removed.
+ */
+@Remote cancel(): Promise<void>
+
+/**
+ * Route Jev decisions to the local provider; the engine rejects this unless preparation is ready.
+ * @returns after the change is applied.
+ */
+@Remote enable(): Promise<void>
+
+/**
+ * Stop routing Jev decisions to the local provider.
+ * @returns after the change is applied.
+ */
+@Remote disable(): Promise<void>
+
+/**
+ * Record that a client showed the pending automatic enablement, so later clients do not offer its undo again.
+ * @returns after the cleared state is persisted.
+ */
+@Remote acknowledge(): Promise<void>
+
+/**
+ * Turn local decisions off, stop the runner, and delete downloaded weights and partial files.
+ * @returns after deletion.
+ */
+@Remote deleteModel(): Promise<void>
+```
+
+Source: [`packages/experimental/api-reflex-local/src/index.ts`](../../packages/experimental/api-reflex-local/src/index.ts)
 
 <a id="ctxsystem3--system3service"></a>
 

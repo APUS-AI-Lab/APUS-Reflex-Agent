@@ -124,12 +124,14 @@ export async function readMemorySourceEvents(
  * in-memory record whose content is resolved from its source event in the same stream; the log never holds a copy.
  * @param events - complete Session event stream in sequence order.
  * @param store - empty or partially rebuilt record store.
+ * @param tags - receives each index entry's tags by record ID, when supplied.
  * @returns the supplied store after applying every Continuum transition.
  * @throws when an index entry's source is not a human message with text in this stream.
  */
 export function foldMemoryRecordEvents(
   events: readonly SessionEvent[],
   store: MemoryRecordStore,
+  tags?: Map<MemoryId, readonly string[]>,
 ): MemoryRecordStore {
   let bySeq: Map<number, SessionEvent> | undefined
   for (const event of events) {
@@ -140,6 +142,7 @@ export function foldMemoryRecordEvents(
       const content = source === undefined ? '' : memorySourceText(source)
       if (content.length === 0) throw new Error(`memory ${entry.id} index source ${String(entry.source.eventSeq)} has no human text`)
       store.create({ id: entry.id, kind: 'fact', scope: entry.scope, content, sourceRefs: [entry.source] })
+      tags?.set(entry.id, entry.tags)
       continue
     }
     if (event.type !== 'continuum/memory-record') continue

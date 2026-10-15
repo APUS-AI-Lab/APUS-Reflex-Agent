@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="APUS Reflex 本机决策引擎与推理方式引导：从首次登录到本机判断上线的完整体验设计。">
+<title>本机决策引擎 · 体验设计</title>
+<style>
+:root{
+  --bg:#0e1013; --card:#15181d; --card-2:#1b1f26; --rule:#272c35; --rule-2:#333a45;
+  --ink:#e8eaed; --ink-2:#aab2bd; --ink-3:#7c8694;
+  --accent:#5b9dff; --accent-ink:#0b1220;
+  --ok:#49b36b; --warn:#d99b3c; --bad:#d9594c; --local:#8b7cf0;
+  --r:10px; --r-s:6px;
+}
+:root[data-theme="light"]{
+  --bg:#f7f8fa; --card:#ffffff; --card-2:#f1f3f6; --rule:#e2e5ea; --rule-2:#d3d8e0;
+  --ink:#1b1f26; --ink-2:#4e5663; --ink-3:#7c8694; --accent:#2f6fd0; --accent-ink:#ffffff;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+.page{max-width:1120px;margin:0 auto;padding:28px 16px 80px}
+header.top{display:flex;flex-wrap:wrap;gap:12px;align-items:baseline;justify-content:space-between;border-bottom:1px solid var(--rule);padding-bottom:14px;margin-bottom:26px}
+h1{font-size:22px;font-weight:500;margin:0}
+h2{font-size:17px;font-weight:500;margin:38px 0 10px;padding-top:18px;border-top:1px solid var(--rule)}
+h3{font-size:14px;font-weight:500;margin:22px 0 8px;color:var(--ink)}
+p{margin:8px 0}
+.lede{color:var(--ink-2);margin:0}
+.tag{display:inline-block;font-size:12px;color:var(--ink-3);border:1px solid var(--rule);border-radius:999px;padding:1px 9px}
+button.tog{background:var(--card);color:var(--ink-2);border:1px solid var(--rule);border-radius:var(--r-s);padding:5px 11px;font-size:12px;cursor:pointer}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{color:var(--ink-3);font-weight:500;font-size:12px}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;background:var(--card-2);border:1px solid var(--rule);border-radius:4px;padding:1px 5px}
+.law{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:12px;margin:14px 0}
+.law>div{background:var(--card);border:1px solid var(--rule);border-left:2px solid var(--accent);border-radius:var(--r);padding:13px 15px}
+.law strong{display:block;font-weight:500;margin-bottom:4px}
+.law p{margin:0;color:var(--ink-2);font-size:13px}
+.mermaid{background:var(--card);border:1px solid var(--rule);border-radius:var(--r);padding:14px;margin:12px 0;overflow-x:auto}
+/* wireframes */
+.wf{background:var(--card);border:1px solid var(--rule);border-radius:var(--r);padding:0;margin:14px 0;overflow:hidden}
+.wf-cap{display:flex;gap:10px;align-items:center;padding:9px 14px;border-bottom:1px solid var(--rule);background:var(--card-2);font-size:12px;color:var(--ink-3)}
+.wf-cap b{color:var(--ink-2);font-weight:500}
+.wf-body{padding:18px}
+.modal{max-width:470px;margin:0 auto;background:var(--card-2);border:1px solid var(--rule-2);border-radius:var(--r);padding:20px}
+.modal h4{margin:0 0 6px;font-size:15px;font-weight:500}
+.modal .sub{margin:0 0 16px;color:var(--ink-2);font-size:13px}
+.door{display:flex;gap:11px;align-items:flex-start;border:1px solid var(--rule);border-radius:var(--r-s);padding:12px;margin-bottom:9px;background:var(--card)}
+.door.primary{border-color:var(--accent)}
+.door .ic{width:22px;height:22px;flex:0 0 22px;border-radius:5px;background:var(--rule-2);display:grid;place-items:center;font-size:11px;color:var(--ink-2)}
+.door .tx{flex:1;min-width:0}
+.door .tx b{display:block;font-weight:500;font-size:13px}
+.door .tx small{color:var(--ink-3);font-size:12px}
+.btn{border-radius:var(--r-s);padding:6px 13px;font-size:13px;border:1px solid var(--rule-2);background:var(--card);color:var(--ink);cursor:default;display:inline-block}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.quiet{border-color:transparent;color:var(--ink-3)}
+.row-end{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+/* model cards */
+.mcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px}
+.mcard{background:var(--card-2);border:1px solid var(--rule);border-radius:var(--r);padding:14px}
+.mcard .hd{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:3px}
+.mcard .hd b{font-weight:500;font-size:14px}
+.mcard .why{color:var(--ink-3);font-size:12px;margin:0 0 10px}
+.spec{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:12px;margin:0 0 12px}
+.spec dt{color:var(--ink-3)}
+.spec dd{margin:0;color:var(--ink-2)}
+.pill{font-size:11px;border-radius:999px;padding:1px 8px;border:1px solid var(--rule-2);color:var(--ink-2);white-space:nowrap}
+.pill.ok{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 45%,transparent)}
+.pill.warn{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 45%,transparent)}
+.pill.bad{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 45%,transparent)}
+.pill.local{color:var(--local);border-color:color-mix(in srgb,var(--local) 45%,transparent)}
+.bar{height:4px;border-radius:3px;background:var(--rule);overflow:hidden;margin:9px 0 5px}
+.bar>i{display:block;height:100%;background:var(--accent)}
+.meta{font-size:12px;color:var(--ink-3);display:flex;justify-content:space-between;gap:8px}
+.notice{border:1px solid color-mix(in srgb,var(--bad) 40%,var(--rule));border-radius:var(--r-s);background:color-mix(in srgb,var(--bad) 7%,transparent);padding:9px 11px;font-size:12px;color:var(--ink-2);margin:10px 0 0}
+.notice b{color:var(--ink);font-weight:500}
+.sect-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:4px}
+.sect-head b{font-weight:500;font-size:14px}
+.honest{font-size:12px;color:var(--ink-3);margin:0 0 14px;padding-left:9px;border-left:2px solid var(--rule-2)}
+/* dock */
+.dock{background:var(--card-2);border:1px solid var(--rule);border-radius:var(--r);padding:12px 14px;max-width:560px}
+.dockline{display:flex;align-items:center;gap:8px;font-size:13px;flex-wrap:wrap}
+.evid{margin-top:11px;border-top:1px solid var(--rule);padding-top:10px;display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:12px}
+.evid dt{color:var(--ink-3)}
+.evid dd{margin:0;color:var(--ink-2)}
+.toast{background:var(--card-2);border:1px solid var(--rule-2);border-radius:var(--r-s);padding:9px 12px;font-size:13px;max-width:380px;display:flex;gap:9px;align-items:center;justify-content:space-between}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+ul{margin:8px 0;padding-left:20px;color:var(--ink-2)}
+li{margin:3px 0}
+.gate{background:var(--card);border:1px solid var(--rule);border-left:2px solid var(--warn);border-radius:var(--r);padding:13px 15px;margin:12px 0}
+.gate b{font-weight:500}
+.foot{margin-top:46px;padding-top:14px;border-top:1px solid var(--rule);color:var(--ink-3);font-size:12px}
+</style>
+</head>
+<body>
+<main class="page">
+
+<header class="top">
+  <div>
+    <h1>本机决策引擎 · 完整体验设计</h1>
+    <p class="lede">从首次登录，到判断层在这台 Mac 上跑起来，中间每一步用户看见什么</p>
+  </div>
+  <div>
+    <span class="tag">feat-local-jev-mlx</span>
+    <button class="tog" id="t" type="button">切换浅色</button>
+  </div>
+</header>
+
+<p class="lede"><b>可点击原型：<a href="prototype.html">prototype.html</a></b>（主流程与 7 个异常场景）。本文是设计稿，界面均为线框示意，不是已实现的产品截图。数字取自 Hugging Face 模型卡实测记录，延迟指标待本机资格验证后填入。</p>
+
+<h2>一、三条铁律</h2>
+<p>这三条决定了所有文案和状态的写法。违反任何一条，用户都会产生一个我们无法兑现的预期。</p>
+<div class="law">
+  <div>
+    <strong>决策模型不是聊天模型</strong>
+    <p>APUS Reflex 收「状态 + 指令 + 2–16 个候选」，输出候选上的概率分布。它负责<em>判断</em>，不负责<em>回答</em>。所以「本机」不等于「离线可用」，功能名必须叫<b>本机决策引擎</b>，绝不能叫「本地模型」或「离线模式」。</p>
+  </div>
+  <div>
+    <strong>首次价值路径上不放下载</strong>
+    <p>新用户到第一次成功对话之间，不允许出现数 GB 下载。配置密钥约 30 秒即可用；本机决策引擎是用起来之后的加深项，用渐进披露的方式邀请，不做阻塞门。</p>
+  </div>
+  <div>
+    <strong>本机失败不偷偷换云</strong>
+    <p>延续现有「仅本机策略会阻塞，绝不会悄悄换云」。本机判断超时或崩溃时，沿用既有确定性兜底（<code>fallbackTimeout</code> / <code>fallbackUnavailable</code>）并在界面说明，切云端必须是用户当次的显式动作。</p>
+  </div>
+</div>
+
+<h2>二、用户心智：两个轴，三种档位</h2>
+<p>当前产品把「账号已登录」和「模型已配置」混在一起判断，这是弹窗逻辑出错的根源。正确的模型是两条互不相干的轴。</p>
+<table>
+  <tr><th>轴</th><th>含义</th><th>取值</th><th>缺失后果</th></tr>
+  <tr><td><b>生成</b></td><td>谁来写出回答</td><td>账号 / API 密钥 / 第三方 / 本机端点</td><td><b>应用不可用</b> —— 这才是弹窗的真正触发条件</td></tr>
+  <tr><td><b>决策</b></td><td>谁来做判断</td><td>云端 Jev / 本机 Reflex 4B / 本机 Reflex 9B</td><td>应用仍可用，退回确定性兜底，判断质量下降</td></tr>
+</table>
+<p>两轴组合出三种对用户有意义的档位。设置页按这个顺序呈现，不要让用户自己拼。</p>
+<table>
+  <tr><th>档位</th><th>生成</th><th>决策</th><th>用户得到</th><th>代价</th></tr>
+  <tr><td><b>云端</b>（默认）</td><td>账号或 API 密钥</td><td>云端 Jev</td><td>约 30 秒可用，不占磁盘</td><td>两处都依赖网络</td></tr>
+  <tr><td><b>混合</b>（推荐给 Apple Silicon）</td><td>账号或 API 密钥</td><td>本机 Reflex</td><td>判断不再依赖 Jev 服务可用性；判断不计费；决策状态不再发往第二个服务</td><td>4B 约 2.7–4.5 GB 磁盘；启用时常驻约 4.5 GB 内存，空闲自动回收</td></tr>
+  <tr><td><b>全本机</b>（进阶）</td><td>本机 OpenAI 兼容端点，经现有「自定义模型 API」接入</td><td>本机 Reflex</td><td>完整离线</td><td>需自行运行生成模型</td></tr>
+</table>
+<p class="honest">混合档的隐私表述必须收窄：对话内容依然发往云端生成模型，真正变化的是「判断不再发往第二个服务」。把混合档宣传成隐私方案是不诚实的，只有全本机档才成立。</p>
+
+<h2>三、完整旅程</h2>
+<div class="mermaid">
+flowchart TD
+  A[首次启动] --> B[账号登录]
+  B --> C{就绪检查<br/>生成轴是否可用}
+  C -->|可用| F[直接进入工作区]
+  C -->|不可用| D[就绪弹窗<br/>两道门]
+  D -->|配置 API 密钥| E[内嵌密钥表单 + 连通性探测]
+  D -->|连接本机端点| E2[自定义模型 API]
+  D -->|稍后| N[输入框上方常驻可关闭提示<br/>下次启动再提醒]
+  E --> F
+  E2 --> F
+  N --> F
+  F --> G[第一次成功对话]
+  G --> H{Apple Silicon<br/>且内存达标}
+  H -->|否| Z[保持云端决策<br/>不展示下载入口]
+  H -->|是| I[一次性邀请卡<br/>这台 Mac 可以本机判断]
+  I --> J[设置 · 本机决策引擎]
+  J --> L[下载并启用<br/>按内存自动选量化档]
+  L --> M[下载 · 可暂停续传<br/>sha256 校验] --> O[自检：选择 + 分布 + 测速]
+  O -->|通过| P[自动启用 · Toast 可撤销<br/>dock 决策行显示本机]
+  O -->|失败| Q[保留原因与重试<br/>判断按默认规则处理]
+  P --> R[维护：应用升级后重新自检 / 删除回收空间]
+</div>
+
+<h2>四、关键界面</h2>
+
+<h3>S1 · 登录后就绪弹窗</h3>
+<p>触发条件是<b>生成轴不可用</b>的边沿，而不是「没有 API 密钥」。如果账号登录本身已经提供可用的生成线路，就不该弹——对一个刚登录成功的用户索要密钥是缺陷，不是功能。代码里已经有正确的判据（模型页的就绪判断函数会区分「有可用提供商」「缺密钥」「不可用」三类），而登录成功通常<b>本来就</b>让账号路由变成可用提供商。</p>
+<p>所以真正要修的不是新增一套判断，而是三处既有行为：桌面端把自动缺密钥提示<b>无条件关闭</b>了；桌面引导只在<b>未登录</b>时检查密钥，已登录路径完全不做就绪检查；原生 welcome 窗口的判定是「未登录且无密钥」，登录成功后就不再看。</p>
+<div class="wf">
+  <div class="wf-cap"><b>就绪弹窗</b> · 承载于 <code>shell.overlay</code>，生命周期长于任何面板 · 一次会话只弹一次</div>
+  <div class="wf-body">
+    <div class="modal">
+      <h4>先选一种推理方式</h4>
+      <p class="sub">APUS Reflex 需要一个回答模型才能开始</p>
+      <div class="door primary">
+        <div class="ic">●</div>
+        <div class="tx"><b>配置 API 密钥</b><small>官方或第三方提供商，约 30 秒</small></div>
+        <span class="btn pri">配置</span>
+      </div>
+      <div class="door">
+        <div class="ic">◐</div>
+        <div class="tx"><b>连接本机模型端点</b><small>已在本机运行 LM Studio、Ollama 等服务时选这项</small></div>
+        <span class="btn">连接</span>
+      </div>
+      <div class="row-end"><span class="btn quiet">稍后配置</span></div>
+    </div>
+  </div>
+</div>
+<p>两道门都指向<b>生成</b>轴。本机决策引擎不出现在这里——它不能满足生成轴，放进来会让用户以为下载完就能用。点「配置」在弹窗内嵌现有提供商表单并做连通性探测，成功才关闭；不要把刚登录的用户丢进设置页自己找。</p>
+<div class="wf">
+  <div class="wf-cap"><b>选择「稍后配置」之后</b> · 就地提示，不再二次弹窗打断</div>
+  <div class="wf-body">
+    <div class="toast" style="max-width:520px">
+      <span>还没有可用的回答模型，发送后无法得到回复 · <span style="color:var(--accent)">去配置</span></span>
+      <span class="btn quiet">×</span>
+    </div>
+  </div>
+</div>
+
+<h3>S2 · 设置 · 模型 → 本机决策引擎</h3>
+<p>复用「模型」页既有的提供商卡片版式，作为新的一节追加在提供商列表之后，不新建页面。<b>卡片永远只有一个主按钮</b>；用户不安装任何软件，也不需要理解量化档或模型名。</p>
+<div class="wf">
+  <div class="wf-cap"><b>本机决策引擎</b> · 同一张卡片的四个状态，从左到右推进</div>
+  <div class="wf-body">
+    <div class="mcards">
+      <div class="mcard">
+        <div class="hd"><b>Reflex 4B</b><span class="pill ok">这台 Mac 可以运行</span></div>
+        <p class="why">判断在本机完成；回答仍由你配置的模型生成</p>
+        <dl class="spec">
+          <dt>下载</dt><dd>4.5 GB</dd>
+          <dt>与参考一致</dt><dd>80/80 次判断相同</dd>
+        </dl>
+        <span class="btn pri">下载并启用</span>
+      </div>
+      <div class="mcard">
+        <div class="hd"><b>Reflex 4B</b><span class="pill">正在下载</span></div>
+        <div class="bar"><i style="width:62%"></i></div>
+        <div class="meta"><span>2.8 GB / 4.5 GB</span><span>约 2 分钟</span></div>
+        <div class="row-end"><span class="btn quiet">暂停</span></div>
+      </div>
+      <div class="mcard">
+        <div class="hd"><b>Reflex 4B</b><span class="pill">正在自检</span></div>
+        <div class="bar"><i style="width:100%;background:var(--ok)"></i></div>
+        <div class="meta"><span>文件校验通过</span><span>正在做一次真实判断</span></div>
+      </div>
+      <div class="mcard">
+        <div class="hd"><b>Reflex 4B</b><span class="pill local">判断在本机</span></div>
+        <dl class="spec">
+          <dt>自检</dt><dd>通过 · 每次判断约 0.4 秒</dd>
+          <dt>版本</dt><dd>Q8_0 · 已固定修订号</dd>
+        </dl>
+        <div class="row-end"><span class="btn quiet">停用</span><span class="btn quiet">删除模型</span></div>
+      </div>
+    </div>
+    <div class="notice"><b>下载已暂停</b> —— 已完成 62%，继续会从断点接上</div>
+    <p class="honest">「每次判断约 0.4 秒」取自 M5 上的冒烟实测（同一对话的后续轮次）。新对话的第一次判断要预填充整段状态，约 1 秒 / 1k token；正式数字由 P0 填入。</p>
+  </div>
+</div>
+<p>量化档按统一内存自动决定：≥16 GB 下载 Q8_0（4.5 GB），否则 Q4_K_M（2.7 GB，一致率 77/80，需在卡片上注明）。9B 只在内存 ≥16 GB 时作为次要链接出现。下载前先查可用磁盘，不够就在点击前说明，不让用户下到一半失败。</p>
+<p><b>自检不可省，也不用用户参与。</b>下载校验通过后自动跑一组黄金样例：选择与样例一致、分布在容差内，并测出这台机器的预填充速度。通过后自动启用并弹一条 Toast「判断已在本机进行」带「撤销」；速度过慢则不自动启用，卡片写明「这台 Mac 判断较慢，建议保留云端」。</p>
+
+<h3>S3 · 运行中：用户怎么知道它在本机判断</h3>
+<div class="wf">
+  <div class="wf-cap"><b>System3 dock</b> · 在既有决策行上增加来源标记，复用现有徽标版式</div>
+  <div class="wf-body">
+    <div class="dock">
+      <div class="dockline">
+        <span>已判断：<b>Pro</b></span>
+        <span class="pill local">本机判断</span>
+        <span style="color:var(--ink-3)">决策耗时 待实测 毫秒</span>
+        <span style="color:var(--accent);margin-left:auto">查看执行依据</span>
+      </div>
+      <dl class="evid">
+        <dt>判断位置</dt><dd>本机 · Reflex 4B</dd>
+        <dt>概率分布</dt><dd>完整 · 3 个候选</dd>
+        <dt>运行时</dt><dd>内置推理服务 · 仅本机可访问</dd>
+        <dt>数据范围</dt><dd>判断状态未离开本机</dd>
+      </dl>
+    </div>
+  </div>
+</div>
+<p>「概率分布」一栏如实显示是否完整。随包 runner 一次返回 1,024 个候选概率，实测 16 个候选全部在内；万一有候选缺失，这次判断按失败处理并退回默认规则，不把不完整的分布当成完整的记账。</p>
+<div class="wf">
+  <div class="wf-cap"><b>本机判断失败</b> · 延用既有兜底文案，不自动改走云端</div>
+  <div class="wf-body">
+    <div class="two">
+      <div class="dock"><div class="dockline"><span>本机判断未完成，本轮按默认处理</span><span style="color:var(--accent);margin-left:auto">改用云端判断</span></div></div>
+      <div class="toast"><span>本机决策引擎已停止 · 判断按默认规则处理</span><span class="btn quiet">重新启用</span></div>
+    </div>
+  </div>
+</div>
+
+<h2>五、准备状态机</h2>
+<div class="mermaid">
+stateDiagram-v2
+  [*] --> 不可用: 非 Apple Silicon
+  [*] --> 未下载
+  未下载 --> 磁盘不足: 可用空间不够
+  磁盘不足 --> 未下载: 清理后重试
+  未下载 --> 下载中: 下载并启用
+  下载中 --> 已暂停: 暂停 / 断网 / 退出
+  已暂停 --> 下载中: 继续（Range 续传）
+  已暂停 --> 未下载: 删除临时文件
+  下载中 --> 校验中: 字节齐备
+  校验中 --> 未下载: sha256 不符，清除
+  校验中 --> 自检中: sha256 通过
+  自检中 --> 已启用: 选择与分布一致，速度达标
+  自检中 --> 已下载未启用: 自检失败或速度过慢
+  已下载未启用 --> 自检中: 重试 / 仍要启用
+  已启用 --> 已下载未启用: 停用 / 连续崩溃自动停用
+  已启用 --> 自检中: 应用升级带来新 runner
+  已下载未启用 --> 未下载: 删除并回收空间
+</div>
+<p>两条硬性要求：应用升级<b>绝不删除用户已校验的权重</b>，只重跑自检；runner 版本变化后<b>不沿用旧的自检结论</b>。</p>
+
+<h2>六、文案表</h2>
+<p>全部走现有 locale 字典，zh 先写、en 由 <code>System3Key</code> 同构约束。短提示按既有惯例不带句号。</p>
+<table>
+  <tr><th>场景</th><th>中文</th><th>English</th></tr>
+  <tr><td>就绪弹窗标题</td><td>先选一种推理方式</td><td>Choose how to run</td></tr>
+  <tr><td>就绪弹窗说明</td><td>APUS Reflex 需要一个回答模型才能开始</td><td>APUS Reflex needs a model to answer with</td></tr>
+  <tr><td>门 A</td><td>配置 API 密钥 · 官方或第三方提供商，约 30 秒</td><td>Add an API key · official or third-party, about 30 seconds</td></tr>
+  <tr><td>门 B</td><td>连接本机模型端点 · 已在本机运行 LM Studio、Ollama 等服务时选这项</td><td>Connect a local endpoint · for LM Studio, Ollama and similar</td></tr>
+  <tr><td>延后提示</td><td>还没有可用的回答模型，发送后无法得到回复</td><td>No model can answer yet; messages will not get a reply</td></tr>
+  <tr><td>功能名</td><td>本机决策引擎</td><td>Local decision engine</td></tr>
+  <tr><td>功能说明</td><td>判断在本机完成；回答仍由你配置的模型生成</td><td>Judgments run on this Mac; answers still come from the model you configured</td></tr>
+  <tr><td>邀请卡</td><td>这台 Mac 可以本机运行判断层</td><td>This Mac can run the judgment layer locally</td></tr>
+  <tr><td>设备不支持</td><td>这台设备不支持本机决策引擎，判断继续在云端进行</td><td>This device cannot run it; judgments stay in the cloud</td></tr>
+  <tr><td>下载按钮</td><td>下载并启用 · {size}</td><td>Download and turn on · {size}</td></tr>
+  <tr><td>磁盘不足</td><td>需要 {need}，当前可用 {free}</td><td>Needs {need}; {free} available</td></tr>
+  <tr><td>下载暂停</td><td>下载已暂停，已完成 {percent}，继续会从断点接上</td><td>Download paused at {percent}; it resumes where it stopped</td></tr>
+  <tr><td>校验失败</td><td>文件校验未通过，需要重新下载</td><td>The files failed verification. Download again.</td></tr>
+  <tr><td>速度过慢</td><td>这台 Mac 判断较慢，建议保留云端</td><td>Judgments are slow on this Mac; keeping them in the cloud is recommended</td></tr>
+  <tr><td>自检失败</td><td>本机自检未通过，判断继续在云端进行</td><td>The local check did not pass; judgments stay in the cloud</td></tr>
+  <tr><td>启用 Toast</td><td>判断已在本机进行</td><td>Judgments now run on this Mac</td></tr>
+  <tr><td>已启用徽标</td><td>本机判断</td><td>Judged locally</td></tr>
+  <tr><td>本轮失败</td><td>本机判断未完成，本轮按默认处理</td><td>The local judgment did not finish; this turn used the default</td></tr>
+  <tr><td>运行时停止</td><td>本机决策引擎已停止，判断按默认规则处理</td><td>The local decision engine stopped; judgments use the default rules</td></tr>
+</table>
+
+<h2>七、失败与恢复</h2>
+<p>每一行都要有：命名状态、用户看见的一句话、一个可点的恢复动作。没有恢复动作的状态不允许存在。</p>
+<table>
+  <tr><th>状态</th><th>用户看见</th><th>恢复动作</th><th>数据影响</th></tr>
+  <tr><td>平台不支持</td><td>设备不支持说明，入口不出现</td><td>无需操作</td><td>无</td></tr>
+  <tr><td>磁盘不足</td><td>下载前拦截 + 需要与可用容量</td><td>清理后重试</td><td>未写入</td></tr>
+  <tr><td>下载中断</td><td>已完成百分比</td><td>继续，从断点续传</td><td>临时文件保留，不视为可用</td></tr>
+  <tr><td>校验失败</td><td>文件校验未通过</td><td>重新下载</td><td>清除临时文件</td></tr>
+  <tr><td>自检失败</td><td>自检未通过 + 原因</td><td>重试 / 保留云端判断</td><td>权重保留</td></tr>
+  <tr><td>速度过慢</td><td>这台 Mac 判断较慢</td><td>仍要启用 / 保留云端</td><td>权重保留</td></tr>
+  <tr><td>单次判断超时</td><td>本轮按默认处理</td><td>本次可显式改用云端</td><td>记入会话</td></tr>
+  <tr><td>runner 崩溃</td><td>Toast + 下次判断前自动重启</td><td>连续失败自动停用并说明，可重新启用</td><td>记入会话</td></tr>
+  <tr><td>内存压力</td><td>一次性提示占用偏高</td><td>改用 Q4_K_M / 停用</td><td>无</td></tr>
+  <tr><td>应用升级</td><td>正在重新自检</td><td>自动</td><td>权重不删</td></tr>
+</table>
+
+<h2>八、运行时：随包 llama-server</h2>
+<p>评判标准是便利与易用。llama.cpp 的 <code>llama-server</code> 随桌面安装包分发、由我们预签名，用户<b>不安装任何东西</b>，只点一次「下载并启用」。版本锁定为模型作者在 Mac 上验证用的 <code>b11118</code>。</p>
+
+<h3>在这台 Mac 上的冒烟实测</h3>
+<p>2026-10-14，Apple M5、24 GB、4B Q8_0。单机、单次、合成状态，不是 P0。</p>
+<table>
+  <tr><th>项</th><th>实测</th></tr>
+  <tr><td>安装包增量</td><td>24 MB（可执行文件 + 10 个依赖库）</td></tr>
+  <tr><td>Hardened Runtime</td><td>须同一 Team ID 签名（ad-hoc 被拒）；<b>不需要 JIT entitlement</b>，Metal 正常</td></tr>
+  <tr><td>启动到可用</td><td>4.0 秒</td></tr>
+  <tr><td>新对话首次判断（约 3.9k token 状态）</td><td>3.9 秒</td></tr>
+  <tr><td>同一请求的后续判断</td><td>0.6–0.8 秒</td></tr>
+  <tr><td>之后每轮每次判断</td><td><b>约 0.43 秒</b></td></tr>
+  <tr><td>16 个候选</td><td>分布完整</td></tr>
+  <tr><td>断点续传</td><td>HF 返回 206，补齐后 sha256 与官方一致</td></tr>
+</table>
+
+<h3>为什么不选 Ollama 和 MLX</h3>
+<table>
+  <tr><th>维度</th><th>随包 llama-server</th><th>Ollama</th><th>MLX + CPython</th></tr>
+  <tr><td>用户动作</td><td><b>点一次下载</b></td><td>先装第三方应用</td><td>点一次下载</td></tr>
+  <tr><td>16 候选的分布</td><td><b>完整</b></td><td>截断（上限 20 个，作者数据 16/16 不完整）</td><td>完整</td></tr>
+  <tr><td>固定权重版本</td><td>固定修订号 + sha256</td><td>只能事后核对摘要</td><td>固定修订号</td></tr>
+  <tr><td>行为漂移</td><td>我们锁定</td><td>随用户升级 Ollama 变化</td><td>我们锁定</td></tr>
+  <tr><td>安装包增量</td><td>24 MB</td><td>0</td><td>数百 MB</td></tr>
+</table>
+<p>Ollama 的实测并不差（<code>raw</code> 模式选择 80/80 一致），它唯一的优势是我们少写 1–2 周代码；但多一步安装和截断都直接落在用户体验上。</p>
+
+<div class="gate">
+  <b>延迟是本功能的生死门，不是优化项。</b>训练契约把状态放前、任务放后，所以每次判断都要重算任务段，约 0.4–0.6 秒是结构下限；新对话首次判断约 1 秒 / 1k token（M5 基础款），旧芯片更慢。一个 4 问请求暖态约 2 秒、冷态约 6 秒。P0 必须拿真实决策点和云端判断做对比；暖态 p95 若不优于云端，本机决策引擎默认不开启。
+</div>
+
+<h2>九、协议落差：Harness 的请求与训练契约不是一一对应</h2>
+<p>这是整个方案里最被低估的部分。现有 <code>JevRequest</code> 与模型契约有三处实质差异，不处理就会静默产出错误的判断。</p>
+<table>
+  <tr><th>维度</th><th>Harness 请求</th><th>模型契约</th><th>后果</th></tr>
+  <tr><td>每次请求的问题数</td><td>一次最多 <b>16 个问题</b></td><td>一次一个 primitive + 一组候选</td><td><b>一个请求要跑 N 次模型调用</b>，延迟按问题数放大；N 个问题共享同一状态前缀，是前缀缓存的用武之地</td></tr>
+  <tr><td>每题候选数</td><td>最多 255 个</td><td>标签只有 A–P，<b>16 个</b></td><td>超过 16 个候选的问题本机无法表达，必须显式拒绝并退回确定性兜底；不得分批或淘汰赛</td></tr>
+  <tr><td><code>score</code> 语义</td><td>有序档位，答案是 <code>Σ i·pᵢ</code> 的数值</td><td><code>score_level</code> <b>要求规范的是非候选集</b>，返回 yes 概率</td><td>不能直接映射。必须把有序档位渲染成 <code>choice</code>（A–P），再在本机按 <code>Σ i·pᵢ</code> 还原数值与档位说明</td></tr>
+  <tr><td><code>noul</code></td><td>可选是非描述，答案是真值概率</td><td>同样要求规范是非候选集</td><td>可直接映射</td></tr>
+</table>
+
+<h3>以及一处不会报错的实现陷阱</h3>
+<p>训练契约的 prompt 由 Python <code>json.dumps(task, ensure_ascii=False, sort_keys=True)</code> 渲染。TypeScript 里用 <code>JSON.stringify</code> 直译会产出<b>不同的字符串</b>——Python 默认分隔符是 <code>", "</code> 与 <code>": "</code>，<code>JSON.stringify</code> 不带空格。</p>
+<table>
+  <tr><th>渲染方</th><th>输出片段</th></tr>
+  <tr><td>Python 契约</td><td><code>{"criteria": [{"description": "Close…", "label": "A"}], "instructions": …}</code></td></tr>
+  <tr><td><code>JSON.stringify</code> 直译</td><td><code>{"criteria":[{"description":"Close…","label":"A"}],"instructions":…}</code></td></tr>
+</table>
+<p>字符不同即 token 不同，模型收到的是一个它没被训练过的 prompt。它不会报错，只会给出偏移的分布——这类缺陷在功能测试里完全看不出来。因此 prompt 渲染必须有一组由 Python 契约生成、随仓库固化的黄金样例，覆盖中文、引号、换行、emoji 与控制字符，并逐字节比对；同时保留候选字母「在作答位置必须是单 token」这项校验，缺一不可。</p>
+
+<h2>十、分期与验收门</h2>
+<table>
+  <tr><th>阶段</th><th>交付</th><th>通过条件</th></tr>
+  <tr><td>P0 资格验证</td><td>脚本直连 llama-server，不写产品代码：用<b>真实决策点</b>的 prompt，在 M1/M2/M5、8/16/24 GB 上实测 4B / 9B 的冷启动、首次判断、同一请求的后续判断、下一轮；与<b>云端判断</b>对比延迟和选择</td><td>暖态 p95 达标；得出自检的速度门槛</td></tr>
+  <tr><td>P1 契约与 provider</td><td>黄金样例逐字节比对；三种 primitive；完整性检查；失败映射；串行化与取消</td><td>三种 primitive 全覆盖；超 16 候选与候选缺失有测试</td></tr>
+  <tr><td>P2 分发与准备流程</td><td>runner 平台包与签名、下载续传校验、进程管理、自检、单主按钮卡片、就绪弹窗、dock 来源标记</td><td>断网、磁盘不足、中途退出、runner 崩溃都有命名状态与恢复动作</td></tr>
+  <tr><td>P3 会话与回放</td><td>回放不重复调用模型；本机失败的确定性兜底可回放</td><td>快照覆盖本机判断、本机失败兜底、显式切云端</td></tr>
+  <tr><td>P4 真机验收</td><td>Developer ID 签名并公证的安装包：首次下载、续传、无网络启动、删除重装、升级</td><td>判断数据确实留在本机；本机失败不自动外发</td></tr>
+</table>
+<p>会话层无需改动：决策回执里已经记录了 provider 与模型标识，判断位置本来就可回放。</p>
+
+<h2>十一、待产品确认</h2>
+<p>运行时（随包 llama-server）与格式（GGUF）已定稿。剩余：</p>
+<ul>
+  <li>首发是否只做 mac-arm64。</li>
+  <li>账号登录若已提供可用生成线路，是否仍要求配置官方 API 密钥。本设计默认<b>不要求</b>。</li>
+  <li>权重下载走 Hugging Face 直连与镜像，还是迁到自有 CDN 或魔搭。</li>
+  <li>本机判断失败时，是否允许用户在当次任务里显式切到云端；默认隐私策略是否保持仅本机。</li>
+  <li>自检通过后是否<b>自动启用</b>（本设计默认是，配 Toast 撤销）。</li>
+  <li>是否接受 runner 的长期维护责任：安全更新、上游跟进、每次升版的分布复验。</li>
+</ul>
+
+<p class="foot">线框为设计示意。文件大小与一致率引自 Hugging Face 模型仓库（2026-10-14 读取）；延迟为 M5 冒烟实测，正式数字待 P0 填入。</p>
+
+</main>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.min.js"></script>
+<script>
+  const root = document.documentElement
+  const render = () => {
+    const dark = root.dataset.theme !== 'light'
+    document.getElementById('t').textContent = dark ? '切换浅色' : '切换深色'
+    if (window.mermaid) {
+      window.mermaid.initialize({ startOnLoad: false, theme: dark ? 'dark' : 'neutral' })
+      document.querySelectorAll('.mermaid').forEach((n) => {
+        if (!n.dataset.src) n.dataset.src = n.textContent
+        n.removeAttribute('data-processed')
+        n.textContent = n.dataset.src
+      })
+      window.mermaid.run({ querySelector: '.mermaid' })
+    }
+  }
+  document.getElementById('t').addEventListener('click', () => {
+    root.dataset.theme = root.dataset.theme === 'light' ? 'dark' : 'light'
+    render()
+  })
+  window.addEventListener('load', render)
+</script>
+</body>
+</html>

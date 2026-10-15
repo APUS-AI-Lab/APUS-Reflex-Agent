@@ -45,7 +45,7 @@ const decision = ctx.system3.route(candidates, 'local-9b')
 
 在 System3 旁挂载 Jev 插件，然后以决策事实的数据类别以及独立 supervisor 检查调用 `shadowDecision(session, request, signal)`。System3 从检查与目标元数据生成结构化 state 和封闭 action 候选，不接收原始任务或工具文本。即使 Jev 建议完成，返回的 receipt 仍保留确定性 baseline。Timeout、非法响应、缺少 provider 或隐私拒绝会得到 `unknown`。调用方取消会记录 cancelled receipt 并抛出取消错误。
 
-`jevExecutionDomain` 默认为 `network`，只有 Jev 实际在同机执行时才设为 `local`。指向 RunPod 的回环 SSH tunnel 仍然是 `network`。受控远程执行要求配置的 `jevRouteId`（默认 `jev`）及所有输入数据类别都在隐私 allowlist 中。`jevEffort` 选择 `low` 或 `high`（默认 `low`）。
+隐私准入使用每次决策所解析到的 Jev provider 的执行域：声明了 `executionDomain` 的 provider（例如本机 Reflex 引擎为 `local`）使用自己的声明，回执记录准入时检查的执行域。`jevExecutionDomain`（默认 `network`）只用于未声明执行域的 provider，例如内置网关 provider；只有该网关实际在同机执行时才设为 `local`。指向 RunPod 的回环 SSH tunnel 仍然是 `network`。在等待查询之后才构建的请求会固定到准入时检查的 provider。受控远程执行要求配置的 `jevRouteId`（默认 `jev`）及所有输入数据类别都在隐私 allowlist 中。`jevEffort` 选择 `low` 或 `high`（默认 `low`）。
 
 每次显式调用会追加 `system3/decision`，记录 state digest、evidence 引用、模型身份、完整答案概率、provider 提供的 usage 以及未改变的 baseline。完整的结构化 Jev payload 会被记录以便重构；原始任务文本、工具输出和 provider 错误文本被省略。`lastDecision(session)` 从 live 或 restored Session 读取最新的 projection receipt，不调用 Jev。Evidence 引用标识外部检查；evidence 存储仍由 Host 负责。
 
@@ -73,7 +73,7 @@ const decision = ctx.system3.route(candidates, 'local-9b')
 
 `skillSelection` 在原生 `agent/pre-step` 扩展点为下游保留的普通文本输入分类，并可选择至多一个允许模型调用的 Skill。配置包含 `sessionDataClasses`、`minConfidence`、`maxInputBytes`、`maxContentBytes`、`maxCandidates`（1–254）和 `deadlineMs`。Jev 接收完整的当前文本及固定意图选项：`conversation`、`retrieval`、`research`、`creation`、`action`、`uncertain`。标签描述请求，绝不代表动作已执行或授予工具权限。目录完整时，同一请求按目录顺序把 Skill 名称与描述分成每组至多 `maxCandidates` 个，每组一道选择题（`skill`、`skill2`……，与意图题合计最多 15 组），各组都有自己的弃权选项。各组达到 `minConfidence` 的选择中取置信度最高者，相同时取靠前的组；没有被接受的选择而有组的选择低于阈值时记录 `low-confidence`，所有组都弃权时记录 `abstain`。目录超过 15 组容量时，先按名称和描述与输入共享的单词或汉字二元组数量选出该容量的 Skill，不足部分按目录顺序补齐。回执的 `candidateNames` 恰好列出 Jev 看到的 Skill。目录不完整或为空时仍可分类意图，但不声称已自动选择 Skill。仅支持的且达到置信度阈值的意图值进入回执及客户端视图。提供方或凭据未配置、隐私拒绝、超时、请求预算超限时保留原生生成流程。显式 `/name` 调用和非文本输入保留原生路径。桌面配置安装该选择器，总准备期限为 3,000 ms，至多 15 个 Skill 加一个弃权项，使用已配置提供方的 effort 与凭据，并保持模型路由、监督及记忆关闭。配置 Reflex 后，用户文本和符合条件的 Skill 描述会发送至该接入点；三秒期限是回退预算，一秒仅为体验目标，并非响应时间保证。`skillSelection` 状态记录安装情况，`system3/skill-decision.intent` 记录分类，精确的指令消息记录 Skill 采用情况。`elapsedMs` 包含目录查找、远程决策及可选的 Skill 正文加载。运行时视图保留已结束轮次的结果，在新轮次开始时清除。
 
-`system3/skill-decision` 记录准确请求、验证后的响应与提供方报告的用量、选择结果，以及拟注入的原生 `injectionMessageId`。加载的正文采用 `skill-invocation` 指令，只有 loop 提交准确的 `user/message` 后才成为模型可见内容，不授予工具权限。`system3Runtime` wire 投影分别呈现 `entry.suggested`、`entry.adopted` 和 `entry.used`，在 `history` 中保留最多 100 条输入已进入轮次的更早决策，并区分 `skill.selected` 与 `skill.injected`。实际使用须由准确输入所属 turn 的模型输出，或含内容增量、完整内容块的流式 attempt 确认。用量、块占位及仅含结束错误或取消的记录不证明已收到响应；真实内容之后发生错误仍保留响应事实。仅准入不代表已发送模型请求。回放会重建这些事实而不调用 Jev，客户端无法从投影取得提供方原始输入或完整概率。
+`system3/skill-decision` 记录准确请求、验证后的响应与提供方报告的用量、选择结果，以及拟注入的原生 `injectionMessageId`。加载的正文采用 `skill-invocation` 指令，只有 loop 提交准确的 `user/message` 后才成为模型可见内容，不授予工具权限。`system3Runtime` wire 投影分别呈现 `entry.suggested`、`entry.adopted` 和 `entry.used`，以 `entry.executionDomain` 呈现已记录入口决策的执行位置（决策中为 null），在 `history` 中保留最多 100 条输入已进入轮次的更早决策，并区分 `skill.selected` 与 `skill.injected`。实际使用须由准确输入所属 turn 的模型输出，或含内容增量、完整内容块的流式 attempt 确认。用量、块占位及仅含结束错误或取消的记录不证明已收到响应；真实内容之后发生错误仍保留响应事实。仅准入不代表已发送模型请求。回放会重建这些事实而不调用 Jev，客户端无法从投影取得提供方原始输入或完整概率。
 
 ### 完成核验
 
@@ -90,6 +90,8 @@ const decision = ctx.system3.route(candidates, 'local-9b')
 `reflexSupervision` 为激活且已启动的 Goal 启用有界 Codex 观察。执行类别和指纹交由 Reflex 决策服务判断；自动建议走单独归属的插话通道。送达回执与观察到改善分别持久化。终态反馈归属于已结束运行；人工输入到达或被领取、任务框架变化、Goal 或激活状态变化都会使在途反馈失效。失效反馈只记录证据不足；卸载等待取消完成，不发布迟到反馈。目标修订、运行结束和更新的证据会使待处理判断失效。冷却和干预上限跨同一 Goal 的多次运行生效；监督模型不接收原始命令和输出。未开启语义采集时，这些证据只支持重复与进展检查，不支持 Goal 语义相关性判断。可选 `semantic: { minObservations }` 要求至少两份完整原生动作及路径观察，由 Reflex 判断整个窗口是否持续操作无关目标；相关调查、混合证据和不确定性均不授权回正。还须开启 Codex `evidenceSummary` 采集。该路径只使用结构化工作区相对目标与动作类别，不使用原始命令、输出、查询、diff 或私有推理。即使其他配置类别为 public，摘要仍须通过 workspace 数据准入。缺失、截断或没有路径的摘要保留指纹监督，不声称语义覆盖。语义模式下，成功验证只有具备完整目标证据且被肯定判断与 Goal 相关，才能证明改善；无关或目标不明的通过测试不能重置语义进展。 每份证据快照只判断一次，包括继续观察、不确定和 provider 失败；仅时间增长不会重复请求。调整后，不确定和未改善反馈会继续归属于该调整，只有出现新证据才会再次复核；只有改善、失效或卸载状态才会清除。新证据或 Goal 修订允许重新判断，请求期间到达的新证据仍待评估。 延迟回执保留发送时的 Goal 修订。Goal、人工输入、任务框架或恢复状态改变后，迟到的确认不会重新开启旧建议反馈；等待确认期间到达的原生执行证据仍可参与反馈。充分语义后缀可按配置间隔独立触发判断，不必等待无进展期限；置信阈值、冷却与 Goal 预算仍然生效。完整有界审计历史继续保留；语义相关性只判断最新连续完整后缀，新的未知、截断或缺失路径观察立即打断该后缀，不跨缺口散选证据，至少满足原有最少观察数量才可判断。
 
 `reflexContext` 先等待本步骤已取走消息的任务卡判断，再捕获删减约束；后续排队消息不延长等待，取消会终止等待。它只按原始文本块和行范围编辑未提交且未冻结的尾部文本；已提交历史和生成的助手文本冻结。冻结记忆只追加恢复，不改写旧省略标记。当前输入、保留的要求、结构化块及工具配对受到保护。有把握的选择通过持久化、可逆投影影响后续请求；错误或不确定答案保留文本。`reflex_memory` 检索本会话已移出的文本并恢复原文，支持重启与摘要压缩后恢复。被压缩替换的原文通过已记录的 `reflex-memory` 消息返回；消息来源只标识归属，正文包含原始引用和历史文本。已可见的恢复文本不会在下一步重复注入。原始日志保持完整。这管理 Harness 请求，不修改 Codex 的私有内部历史。判断与恢复预算由部署配置控制。 上下文判断 v3 分开传递按时间排序的当前用户请求、活跃 Goal 与此前任务框架。最新请求决定本轮相关性，同批较早且未撤销的约束仍保留。旧任务排除某个话题不等于永久禁止恢复相关事实；安全、权限、精度与原文件保护约束继续有效。
+
+`reflexContext.compactionSweep` 在 `compaction/prepare` 中运行；此时模型服务的提示缓存本来就会重建，因此它可以隐藏已冻结的历史。Reflex 开启期间，它把最近消息之外、未受保护的工具输出块切成由整行组成的段落，隐藏确定的噪声（包管理器和下载进度、页面框架和广告、内嵌图片、重复输出中较早的完全相同副本），以及针对最新用户请求的三个独立问题全部回答不高于 `no` 的段落。提到错误、失败、要求或过敏的段落既不提问也不隐藏。影子模式只记录判断而不隐藏任何内容，清扫失败时表面保持不变。被隐藏的段落仍可通过 `reflex_memory` 找回。
 
 客户端根据已提交事件展示 Reflex 送达、反馈和上下文变化。设置提供专用的 Reflex 配置页面；连接测试与运行能力结果分别呈现。
 

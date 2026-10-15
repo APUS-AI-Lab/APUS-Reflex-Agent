@@ -851,6 +851,48 @@ describe('pressure measurement and retention', () => {
     expect(await compactIfNeeded(compact, retained)).toBeNull()
   })
 
+  it('skips the summary when compaction/prepare listeners shrink the surface below the threshold', async () => {
+    const ctx = createContext()
+    const compact = service(compactConfig, ctx)
+    const session = conversation(4)
+    const measure = vi.spyOn(ctx.tokenMeter, 'measure')
+    ctx.on('compaction/prepare', (target) => {
+      for (const seq of target.session.surface.nodes.slice(0, -1)) {
+        target.session.append('user/message', createUserMessage({ source: { kind: 'user' }, content: [{ type: 'text', text: 'short' }] }),
+          { surfaceOp: { op: 'replace', startSeq: seq, endSeq: seq }, sourceEventSeqs: [seq] })
+      }
+    })
+    await expect(compactIfNeeded(compact, session)).resolves.toBeNull()
+    expect(compact.calls).toHaveLength(0)
+    expect(measure).toHaveBeenCalledTimes(2)
+  })
+
+  it('fails on a failed preparation and keeps the cancellation reason when cancelled', async () => {
+    const ctx = createContext()
+    const compact = service(compactConfig, ctx)
+    const failure = new Error('listener failed')
+    const dispose = ctx.on('compaction/prepare', () => { throw failure })
+    await expect(compactIfNeeded(compact, conversation(4))).rejects.toBeInstanceOf(AggregateError)
+    dispose()
+    const abort = new AbortController()
+    const reason = new Error('cancelled while preparing')
+    ctx.on('compaction/prepare', () => {
+      abort.abort(reason)
+      throw reason
+    })
+    await expect(compact.compactIfNeeded(agent(conversation(4), MODEL), 'pressure', abort.signal)).rejects.toBe(reason)
+  })
+
+  it('prepares the surface before a context-overflow summary', async () => {
+    const ctx = createContext()
+    const compact = service(compactConfig, ctx)
+    const prepared = vi.fn()
+    ctx.on('compaction/prepare', prepared)
+    await compactIfNeeded(compact, conversation(4), 'context-overflow')
+    expect(prepared).toHaveBeenCalledTimes(1)
+    expect(compact.calls).toHaveLength(1)
+  })
+
   it('uses one unified measurement for each pressure-and-retention decision', async () => {
     const ctx = createContext()
     const compact = service(compactConfig, ctx)

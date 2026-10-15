@@ -90,6 +90,8 @@ kind: "package-reference"
 
 在本包之前挂载 `dsh-compaction-tool-result-pruner`，即可在压缩过程中修剪超大工具结果。修剪不发起模型调用，并可能完全省去摘要：当修剪后的对话在阈值之内时，压缩会跳过摘要。修剪只在压缩触发条件满足后运行——低于压力的对话绝不会被触碰。
 
+自动压缩在修剪之后还会触发 `compaction/prepare`，挂载的监听器（例如 System3 的 Reflex 压缩清扫）可以隐藏当前任务不再需要的工具输出。准备后的对话在阈值之内时，压缩跳过摘要。`/compact` 不触发该事件。
+
 -----
 
 <a id="understand-the-implementation"></a>

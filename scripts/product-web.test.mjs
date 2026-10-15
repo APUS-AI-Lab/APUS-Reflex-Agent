@@ -10,7 +10,7 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { digest, webAssetNames, linuxNativePackage, payloadFiles, verifyWebRuntime, verifyProductClientBuild, webProfilePatch } from './product-web-package.mjs'
 import { launchOptions } from './product-web-launch.mjs'
-import { verifyReflexExecution, verifyReflexExecutionResponse } from './product-reflex-smoke.mjs'
+import { verifyReflexExecution, verifyReflexExecutionResponse, verifyReflexSettings } from './product-reflex-smoke.mjs'
 import { readinessUrl, redact, smokeEnvironment, verifyPayload, verifyPublishedInventory, verifyHttpAuthentication, verifySandboxExecution } from './product-web-smoke.mjs'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
@@ -290,4 +290,36 @@ test('Reflex execution qualification sends an authenticated read-only Host reque
   assert.deepEqual(requests[0], { path: '/api/reflex/readStatus', method: 'POST', cookie: 'dsh=fixture',
     body: { type: 'client-request', rpcId: requests[0].body.rpcId, method: 'reflex/readStatus', payload: { args: {} } } })
   assert.match(requests[0].body.rpcId, /^[0-9a-f-]{36}$/)
+})
+
+/** A Playwright-shaped dialog whose visible controls follow the selected Reflex connection mode. */
+function reflexDialog(options, { localBody = true, localFields = false } = {}) {
+  let mode = 'custom'
+  const visible = selector => {
+    if (selector === '[data-reflex-local]') return mode === 'local' && localBody ? 1 : 0
+    if (selector === '#reflex-endpoint') return mode === 'custom' || (mode === 'local' && localFields) ? 1 : 0
+    if (selector === '#reflex-endpoint, #reflex-api-key') return mode === 'local' && localFields ? 1 : 0
+    if (selector === '#reflex-api-key, #reflex-protocol' || selector === '#reflex-protocol') return 0
+    return mode === 'custom' ? 1 : 0
+  }
+  const locator = selector => ({
+    first: () => locator(selector),
+    count: async () => visible(selector),
+    getByRole: () => ({ allTextContents: async () => options }),
+    selectOption: async (value) => { mode = value },
+    waitFor: async ({ state } = {}) => {
+      const shown = selector === '#reflex-mode' || visible(selector) > 0
+      if ((state === 'detached') === shown) throw new Error(`${selector} is not ${state}`)
+    },
+  })
+  return { locator, getByText: () => ({ waitFor: async () => {} }), getByRole: () => ({ waitFor: async () => {} }) }
+}
+
+test('Reflex settings qualification requires the trial, custom, and local modes', async () => {
+  await verifyReflexSettings(reflexDialog(['APUS Reflex 限时免费端点', '自定义参数', '本机']))
+  await assert.rejects(verifyReflexSettings(reflexDialog(['APUS Reflex 限时免费端点', '自定义参数'])), /trial, custom, and local modes/)
+  await assert.rejects(verifyReflexSettings(reflexDialog(['APUS Reflex limited-time free endpoint', 'Custom parameters', 'This Mac'],
+    { localFields: true })), /local mode exposes remote connection fields/)
+  await assert.rejects(verifyReflexSettings(reflexDialog(['APUS Reflex limited-time free endpoint', 'Custom parameters', 'This Mac'],
+    { localBody: false })), /\[data-reflex-local\] is not visible/)
 })

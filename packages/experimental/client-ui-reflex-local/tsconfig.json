@@ -1,0 +1,57 @@
+{
+  "extends": "../../../tsconfig.base.client.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "lib/types"
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../../vendor/cordis"
+    },
+    {
+      "path": "../../api/remotes/tsconfig.client.json"
+    },
+    {
+      "path": "../../client/locale/tsconfig.client.json"
+    },
+    {
+      "path": "../../client/ui-conversation/tsconfig.client.json"
+    },
+    {
+      "path": "../../client/ui-settings/tsconfig.client.json"
+    },
+    {
+      "path": "../../client/ui-primitives"
+    },
+    {
+      "path": "../../client/ui-renderer"
+    },
+    {
+      "path": "../../client/ui-slots"
+    },
+    {
+      "path": "../../typert/protocol"
+    },
+    {
+      "path": "../api-reflex-local"
+    },
+    {
+      "path": "../reflex-local"
+    },
+    {
+      "path": "../../api/gateway/tsconfig.client.json"
+    },
+    {
+      "path": "../../client/store"
+    },
+    {
+      "path": "../../client/ui-plugin-manager/tsconfig.client.json"
+    },
+    {
+      "path": "../../util/values"
+    }
+  ]
+}

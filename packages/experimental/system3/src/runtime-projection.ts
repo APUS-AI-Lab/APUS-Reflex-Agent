@@ -42,7 +42,7 @@ const selection = z.object({ provider: z.string(), model: z.string(), reasoningE
 const requestId = z.string().transform(value => brandString<SessionRequestId>(value))
 const entrySchema = z.object({ requestId, phase: z.enum(['deciding', 'decided']), outcome: z.string().nullable(),
   suggested: selection.nullable(), adopted: selection.nullable(), used: selection.nullable(),
-  elapsedMs: z.number().nullable(), turn: z.number().nullable(),
+  elapsedMs: z.number().nullable(), executionDomain: z.enum(['local', 'network']).nullable(), turn: z.number().nullable(),
   avoided: z.array(z.object({ label: z.string(), reason: z.string() })),
   route: z.object({ id: z.string(), label: z.string().nullable(), retained: z.boolean(),
     delegation: z.object({ candidateId: z.string(), tool: z.string(), injected: z.boolean(), called: z.boolean() })
@@ -100,7 +100,7 @@ function hasResponseContent(stream: readonly AssistantStreamRecord[]): boolean {
 
 /** Fold advice and adoption; confirm request use from output or a streamed attempt in the exact input turn. */
 export const system3RuntimeProjection = {
-  key: 'system3Runtime', stateVersion: 17, stateSchema,
+  key: 'system3Runtime', stateVersion: 18, stateSchema,
   init: () => ({ entry: null, history: [], skill: null, subagentRun: null, notices: [], taskFrame: null, interjection: null, header: null,
     currentTurn: null, currentStep: null, entryTurn: null, startRequestId: null, skillMessageId: null, imageInSession: false,
     route: null }),
@@ -167,7 +167,8 @@ export const system3RuntimeProjection = {
       // The decision being replaced keeps its route line only if its input reached a turn.
       history: state.entry?.turn == null ? state.history : [...state.history, state.entry].slice(-HISTORY_KEPT),
       entry: { requestId: event.data.requestId,
-        phase: 'deciding', outcome: null, suggested: null, adopted: null, used: null, elapsedMs: null, turn: null, avoided: [], route: null } }
+        phase: 'deciding', outcome: null, suggested: null, adopted: null, used: null, elapsedMs: null, executionDomain: null, turn: null,
+        avoided: [], route: null } }
     if (event.type === 'system3/entry-decision') {
       if (state.startRequestId !== null && state.startRequestId !== event.data.requestId) return state
       const previous = state.entry?.requestId === event.data.requestId ? state.entry : null
@@ -177,7 +178,8 @@ export const system3RuntimeProjection = {
       return { ...state, route, entryTurn: previous === null ? null : state.entryTurn,
         entry: { requestId: event.data.requestId, phase: 'decided', outcome: event.data.outcome,
           suggested: event.data.selected ?? null, adopted: previous?.adopted ?? null,
-          used: previous?.used ?? null, elapsedMs: event.data.elapsedMs, turn: previous?.turn ?? null,
+          used: previous?.used ?? null, elapsedMs: event.data.elapsedMs, executionDomain: event.data.executionDomain,
+          turn: previous?.turn ?? null,
           avoided: (event.data.avoided ?? []).map(value => ({ label: value.label ?? value.id, reason: value.reason })),
           route: event.data.candidate === undefined ? null : { id: event.data.candidate.id,
             label: event.data.candidate.label ?? null, retained: event.data.retained !== undefined,

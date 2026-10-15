@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { resolveSystem3Runtime } from '../src/main/system3-runtime'
 
 const roots: string[] = []
+const reflexLocalPackages = ['reflex-local-bundle', 'reflex-local', 'api-reflex-local', 'client-ui-reflex-local'].map(name => `@deepseek-ai/dsh-experimental-${name}`)
 function fixture(mode: 'workspace' | 'deployed' = 'workspace') {
   const root = mkdtempSync(join(tmpdir(), 'system3-runtime-'))
   roots.push(root)
@@ -12,7 +13,8 @@ function fixture(mode: 'workspace' | 'deployed' = 'workspace') {
   mkdirSync(runtime, { recursive: true })
   const source = mode === 'workspace' ? join(root, 'source') : runtime
   mkdirSync(source, { recursive: true })
-  const names = ['@deepseek-ai/dsh', '@deepseek-ai/dsh-experimental-system3', '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin', '@deepseek-ai/dsh-experimental-system3-policy', '@deepseek-ai/dsh-experimental-system3-evidence', '@deepseek-ai/dsh-experimental-system3-supervisor', '@deepseek-ai/dsh-experimental-client-ui-system3', '@deepseek-ai/dsh-continuum', '@deepseek-ai/dsh-experimental-continuum-jev']
+  const names = ['@deepseek-ai/dsh', '@deepseek-ai/dsh-experimental-system3', '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin', '@deepseek-ai/dsh-experimental-system3-policy', '@deepseek-ai/dsh-experimental-system3-evidence', '@deepseek-ai/dsh-experimental-system3-supervisor', '@deepseek-ai/dsh-experimental-client-ui-system3', '@deepseek-ai/dsh-continuum', '@deepseek-ai/dsh-experimental-continuum-jev',
+    ...reflexLocalPackages]
   const packages = names.map((name, index) => {
     const path = `package-${index}.json`
     writeFileSync(join(source, path), JSON.stringify({ name, version: '0.1.7-rc.2' }))
@@ -27,12 +29,28 @@ function fixture(mode: 'workspace' | 'deployed' = 'workspace') {
 afterEach(() => { for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true }) })
 
 describe('own System3 runtime identity', () => {
-  it.each(['@deepseek-ai/dsh-continuum', '@deepseek-ai/dsh-experimental-continuum-jev'])('rejects a current edition missing %s', (name) => {
+  it.each(['@deepseek-ai/dsh-continuum', '@deepseek-ai/dsh-experimental-continuum-jev', ...reflexLocalPackages])('rejects a current edition missing %s', (name) => {
     const f = fixture()
     writeFileSync(join(f.runtime, 'product-edition.patch.yml'), '[]\n')
     writeFileSync(join(f.runtime, 'runtime-manifest.json'), JSON.stringify({ ...f.manifest,
       edition: 'full', editionPatch: 'product-edition.patch.yml', packages: f.manifest.packages.filter(item => item.name !== name) }))
     expect(() => resolveSystem3Runtime(f.root, '/unused', false)).toThrow(name)
+  })
+  it('exposes the prepared local Reflex runner only as a regular file inside the artifact root', () => {
+    const f = fixture()
+    expect(resolveSystem3Runtime(f.root, '/unused', false)).not.toHaveProperty('reflexRunnerPath')
+    const directory = join(f.runtime, 'dependencies', 'llama-server')
+    const runner = join(directory, 'llama-server')
+    mkdirSync(runner, { recursive: true })
+    expect(resolveSystem3Runtime(f.root, '/unused', false)).not.toHaveProperty('reflexRunnerPath')
+    rmSync(runner, { recursive: true })
+    writeFileSync(runner, '')
+    expect(resolveSystem3Runtime(f.root, '/unused', false).reflexRunnerPath).toBe(realpathSync(runner))
+    rmSync(runner)
+    const external = join(f.root, 'llama-server')
+    writeFileSync(external, '')
+    symlinkSync(external, runner)
+    expect(() => resolveSystem3Runtime(f.root, '/unused', false)).toThrow('escapes its prepared root')
   })
   it('launches the explicitly prepared rc.2 checkout', () => {
     const f = fixture()

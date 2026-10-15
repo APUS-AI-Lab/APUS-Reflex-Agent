@@ -9,7 +9,9 @@
         mode: off
         selection: threshold
         minRelevance: 0.7
-        minImportance: 0.5
+        routeAbove: 16
+        minRouteProbability: 0.5
+        minTagProbability: 0.5
         maxQueryChars: 500
         maxRequestBytes: 65536
         privacyPolicy:
@@ -23,5 +25,6 @@
         candidatePool: all
         scopes: [workspace]
         maxCandidates: 8
+        maxPool: 200
         maxExcerptBytes: 2048
         maxTotalBytes: 8192

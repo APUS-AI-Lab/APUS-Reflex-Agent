@@ -33,7 +33,7 @@ Open the Models page from the Settings navigation to see every configured provid
 
 A provider with a stored catalog error remains visible with its diagnostic and edit/delete actions. Add actions are offered only for registered settings namespaces, so an unavailable namespace cannot leave a button that opens no editor. A rejected save leaves the editor open and displays the Host diagnostic.
 
-Host configuration `credentialOnboarding` defaults to `true`; `welcomeNotice` also defaults to `true`, and `welcomeNotice: false` removes the welcome notice for deployments that introduce themselves. A remote browser keeps the notice acknowledgement only in page memory, so with the notice on it reappears on every page load. The Electron preload marker suppresses automatic credential onboarding and the Web welcome notice; Models settings and explicit API-key editing remain available. The [account plugin](../ui-settings-account/README.md#desktop-onboarding) owns the Desktop introduction. Other native shells can disable only the credential step with `credentialOnboarding: false`. Host publishes this public boolean through `webserver/index-inject`, and Client validates it before registering dialogs. It is page initialization data, not a durable completion marker.
+Host configuration `credentialOnboarding` defaults to `true`; `welcomeNotice` also defaults to `true`, and `welcomeNotice: false` removes the welcome notice for deployments that introduce themselves. A remote browser keeps the notice acknowledgement only in page memory, so with the notice on it reappears on every page load. The Electron preload marker suppresses only the Web welcome notice; the [account plugin](../ui-settings-account/README.md#desktop-onboarding) owns the Desktop introduction and routes the Desktop credential step. Other native shells can disable only the credential step with `credentialOnboarding: false`. Host publishes this public boolean through `webserver/index-inject`, and Client validates it before registering dialogs. It is page initialization data, not a durable completion marker.
 
 ### API keys
 
@@ -55,7 +55,7 @@ Expand **Customized settings → Model options** to edit each model. Both provid
 
 ### First-run dialogs
 
-After the versioned notice step completes, the DeepSeek step projects first-run readiness from the same joined snapshot. ANY provider the user can already reach ends it without rendering; only a user with none is asked for the official DeepSeek key. Configure later completes only this coordinator pass, and an absent adapter, inactive route, failed join, read-only deployment, or unusable capability completes the step without rendering — Models remains the diagnostic surface.
+After the versioned notice step completes, the DeepSeek step projects first-run readiness from the same joined snapshot. ANY provider the user can already reach ends it without rendering; only a user with none is asked for the official DeepSeek key. Configure later defers the automatic step for the rest of the page load and leaves a closable notice above the composer while the official key is still missing; its Configure action opens the same credential editor. The notice joins the composer dock only after such a deferral, so a composition that removes the automatic step never contributes it. A new page load checks readiness again, and explicit reopening is never deferred. An absent adapter, inactive route, failed join, read-only deployment, or unusable capability completes the step without rendering — Models remains the diagnostic surface.
 
 ### Extension slots
 
@@ -104,7 +104,7 @@ These pages cover the settings base, the seams this page joins, and the design r
 
 -----
 
-The `settings.models.sign-in` slot lets account login offer a choice before the credential editor; without a contributor the editor renders directly. Closing the account choice completes the whole onboarding step. Explicit reopening from the account menu enters the same editor even when a provider is already configured.
+The `settings.models.sign-in` slot lets the account plugin route the automatic step before the credential editor: `useApiKey` opens the editor and `later` defers the step exactly as Configure later does. Without a contributor the editor renders directly. Explicit reopening from the account menu enters the same editor even when a provider is already configured.
 
 <a id="model-experience"></a>
 ## Model Experience

@@ -1,0 +1,91 @@
+# Live overlay over the shipped headless profile with the System3 Reflex compaction sweep: DeepSeek's official API
+# answers, the deployed APUS Reflex (Jev) endpoint judges the sweep, and a declared 24K window forces compaction.
+# REFLEX_SWEEP_MODE=off keeps the original compaction for the paired baseline.
+# Credentials come only from DEEPSEEK_API_KEY and APUS_JEV_API_KEY in the environment.
+- id: llm-deepseek
+  config:
+    apiKeyEnv: DEEPSEEK_API_KEY
+    models:
+      - id: deepseek-flash
+        name: DeepSeek Flash (24K live window)
+        contextWindow: 24576
+        maxTokens: 4096
+        inputModalities: [text]
+        systemPromptUpdate: in-history
+        toolUpdate: addition-only
+
+- id: agent-default-model
+  config:
+    provider: deepseek-official
+    model: deepseek-flash
+
+- id: compaction-basic
+  config:
+    headroomTokens: 2048
+    thresholdRatio: 0.7
+    retainRatio: 0.2
+    # Long-term use repeatedly summarizes summaries; a smaller summary budget reproduces that pressure.
+    maxTokens: !!js Number(process.env.CONTINUUM_LIVE_SUMMARY_TOKENS ?? '2048')
+
+- id: session-persistence-jsonl
+  config:
+    root: !!js dshHomePath('sessions')
+    compression: none
+
+- insert:
+    - id: jev
+      name: ../../../../../../../packages/experimental/apus-dsh-jev-plugin/src/index.ts
+      config:
+        endpoint: https://ac2n5m38jjciqg-8086.proxy.runpod.net
+        model: APUS-OpenJev-v1-9B-5949
+        apiKeyEnv: APUS_JEV_API_KEY
+        timeoutMs: 15000
+    - id: continuum-jev
+      name: ../../../../../../../packages/experimental/continuum-jev/src/index.ts
+      config:
+        mode: !!js process.env.CONTINUUM_LIVE_JEV_MODE ?? 'active'
+        selection: threshold
+        minRelevance: 0.7
+        minImportance: 0.5
+        maxQueryChars: 500
+        maxRequestBytes: 65536
+        timeoutMs: 15000
+        sessionDataClasses: [workspace]
+        privacyPolicy:
+          mode: controlled
+          approvedRemoteIds: [system-one]
+          approvedRemoteDataClasses: [workspace]
+    - id: continuum-memory
+      name: ../../../../../../../packages/experimental/continuum-jev/src/product-memory.ts
+      config:
+        enabled: true
+    - id: system3
+      name: ../../../../../../../packages/experimental/system3/src/index.ts
+      config:
+        privacyMode: controlled
+        approvedRemoteIds: [jev]
+        approvedRemoteDataClasses: [workspace]
+        jevRouteId: jev
+        jevExecutionDomain: network
+        reflexContext:
+          # The per-step review stays off so the pair differs only in the compaction sweep.
+          mode: off
+          yes: 0.9
+          no: 0.1
+          deadlineMs: 5000
+          sessionDataClasses: [workspace]
+          maxRequestChars: 4000
+          maxCandidates: 16
+          maxFragmentChars: 1024
+          protectRecentMessages: 4
+          maxRestoredChars: 8192
+          maxSearchResults: 8
+          compactionSweep:
+            mode: !!js process.env.REFLEX_SWEEP_MODE ?? 'active'
+            yes: 0.9
+            no: 0.05
+            deadlineMs: 8000
+            fragmentChars: 1000
+            maxFragments: 240
+            fragmentsPerRequest: 5
+            concurrency: 8
