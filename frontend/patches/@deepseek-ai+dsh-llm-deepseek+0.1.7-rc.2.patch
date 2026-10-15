@@ -1,5 +1,5 @@
 diff --git a/node_modules/@deepseek-ai/dsh-llm-deepseek/lib/index.js b/node_modules/@deepseek-ai/dsh-llm-deepseek/lib/index.js
-index 4deb593..23656cc 100644
+index 4deb593..5da11a6 100644
 --- a/node_modules/@deepseek-ai/dsh-llm-deepseek/lib/index.js
 +++ b/node_modules/@deepseek-ai/dsh-llm-deepseek/lib/index.js
 @@ -1742,8 +1742,9 @@ function providerError(raw, status, headers) {
@@ -14,7 +14,8 @@ index 4deb593..23656cc 100644
  	else if (status === 429 || type === "rate_limit_error") code = "RATE_LIMIT";
  	else if (isContextWindowExceededError(detail)) code = "CONTEXT_WINDOW_EXCEEDED";
  	else if (status === 400 || status === 413 || type === "invalid_request_error") code = "INVALID_REQUEST";
-@@ -1860,26 +1860,48 @@ function deltaChunk(block, raw) {
+@@ -1859,26 +1860,48 @@ function startBlock(event, index) {
+ function deltaChunk(block, raw) {
  	const delta = object(raw);
  	const content = block.content;
 -	if (delta.type === "text_delta" && content.type === "text") {
@@ -26,8 +27,6 @@ index 4deb593..23656cc 100644
 -			index: block.index,
 -			text
 -		};
--	}
--	if (delta.type === "thinking_delta" && content.type === "reasoning") {
 +		if (content.type === "text") {
 +			content.text += text;
 +			return {
@@ -44,7 +43,8 @@ index 4deb593..23656cc 100644
 +				text
 +			};
 +		}
-+	}
+ 	}
+-	if (delta.type === "thinking_delta" && content.type === "reasoning") {
 +	if (delta.type === "thinking_delta") {
  		const text = string(delta.thinking);
 -		content.text += text;
@@ -53,9 +53,6 @@ index 4deb593..23656cc 100644
 -			index: block.index,
 -			text
 -		};
--	}
--	if (delta.type === "signature_delta" && content.type === "reasoning") {
--		block.replay.signature = (block.replay.signature ?? "") + string(delta.signature);
 +		if (content.type === "reasoning") {
 +			content.text += text;
 +			return {
@@ -72,7 +69,9 @@ index 4deb593..23656cc 100644
 +				text
 +			};
 +		}
-+	}
+ 	}
+-	if (delta.type === "signature_delta" && content.type === "reasoning") {
+-		block.replay.signature = (block.replay.signature ?? "") + string(delta.signature);
 +	if (delta.type === "signature_delta") {
 +		if (content.type === "reasoning") {
 +			block.replay.signature = (block.replay.signature ?? "") + string(delta.signature);
@@ -80,5 +79,3 @@ index 4deb593..23656cc 100644
  		return;
  	}
  	if (delta.type === "input_json_delta" && content.type === "tool-call") {
- 		const argumentsDelta = string(delta.partial_json);
- 		block.json += argumentsDelta;
