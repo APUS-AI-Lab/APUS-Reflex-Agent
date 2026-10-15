@@ -36,6 +36,27 @@ export function sizeText(bytes: number, t: Translate): string {
 }
 
 /**
+ * Format a memory tier the way Macs are sold: binary gigabytes, whole when exact, labeled GB.
+ * @param bytes - byte count of a GiB-based tier.
+ * @param t - locale seat owning the unit.
+ * @returns localized memory text, for example 16 GB for 16 GiB.
+ */
+export function memoryText(bytes: number, t: Translate): string {
+  const gib = bytes / 1024 ** 3
+  return t('size', { value: Number.isInteger(gib) ? String(gib) : gib.toFixed(1) })
+}
+
+/**
+ * Name one weights file without the product prefix, as the model list and its summary show it.
+ * @param variant - model and quantization.
+ * @param t - locale seat owning the names.
+ * @returns localized short name, for example 9B · Q8_0.
+ */
+export function shortVariantName(variant: ReflexVariant, t: Translate): string {
+  return t('variantShort', { model: t(`model.${variant.model}`), quant: t(`quant.${variant.quant}`) })
+}
+
+/**
  * Name one weights file the way the card lists it.
  * @param variant - model and quantization.
  * @param t - locale seat owning the names.

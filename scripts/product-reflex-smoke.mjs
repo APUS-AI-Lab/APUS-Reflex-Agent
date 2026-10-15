@@ -28,32 +28,46 @@ export async function verifyReflexExecution(page) {
   } finally { await response.dispose() }
 }
 
+/** The three connection choices in menu order, in either shipped language. */
+const LOCALIZED_MODES = [
+  ['APUS Reflex limited-time free endpoint', 'Custom parameters', 'This Mac'],
+  ['APUS Reflex 限时免费端点', '自定义参数', '本机'],
+]
+
+/** Open the page's mode menu, which renders in a portal outside the dialog, and return its rows. */
+async function openModeMenu(dialog) {
+  await dialog.locator('#reflex-mode').click()
+  const items = dialog.page().getByRole('menuitem')
+  await items.first().waitFor({ state: 'visible' })
+  return items
+}
+
+/** Choose one connection mode by its menu position: 0 preset, 1 custom, 2 local. */
+async function chooseMode(dialog, index) {
+  await (await openModeMenu(dialog)).nth(index).click()
+}
+
 /** Verify the three Reflex page modes and memory control; leave an unsaved custom draft selected. */
 export async function verifyReflexSettings(dialog) {
-  const mode = dialog.locator('#reflex-mode')
-  await mode.waitFor({ state: 'visible' })
-  const options = await mode.getByRole('option').allTextContents()
-  const localizedOptions = [
-    ['APUS Reflex limited-time free endpoint', 'Custom parameters', 'This Mac'],
-    ['APUS Reflex 限时免费端点', '自定义参数', '本机'],
-  ]
-  if (!localizedOptions.some(expected => JSON.stringify(options) === JSON.stringify(expected))) {
+  await dialog.locator('#reflex-mode').waitFor({ state: 'visible' })
+  const options = await (await openModeMenu(dialog)).allTextContents()
+  if (!LOCALIZED_MODES.some(expected => JSON.stringify(options) === JSON.stringify(expected))) {
     throw new Error('Reflex connection choices differ from the supported trial, custom, and local modes.')
   }
-  await mode.selectOption('trial')
-  await dialog.getByText(/^(Service protocol|服务协议): Reflex$/).waitFor()
+  await dialog.page().keyboard.press('Escape')
+  await chooseMode(dialog, 0)
   await dialog.locator('#reflex-endpoint').waitFor({ state: 'detached' })
   if (await dialog.locator('#reflex-api-key, #reflex-protocol').count() !== 0) {
     throw new Error('The trial mode exposes a credential field or protocol selector.')
   }
   await dialog.getByRole('switch', { name: /^Continuum (memory|无限记忆)$/, disabled: false }).waitFor()
   // Local mode shows the engine card when the local engine plugin is mounted, otherwise the page's own fallback.
-  await mode.selectOption('local')
+  await chooseMode(dialog, 2)
   await dialog.locator('[data-reflex-local]').first().waitFor({ state: 'visible' })
   if (await dialog.locator('#reflex-endpoint, #reflex-api-key').count() !== 0) {
     throw new Error('The local mode exposes remote connection fields.')
   }
-  await mode.selectOption('custom')
+  await chooseMode(dialog, 1)
   for (const id of ['reflex-endpoint', 'reflex-model', 'reflex-api-key']) {
     await dialog.locator(`#${id}`).waitFor({ state: 'visible' })
   }

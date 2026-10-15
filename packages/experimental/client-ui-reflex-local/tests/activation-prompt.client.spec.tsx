@@ -39,13 +39,12 @@ it('waits for the Host check, then starts the download in one click and opens th
 
 it('keeps the prompt open with the reason when the Host rejects the download', async () => {
   const b = fixture()
-  b.publish(snapshotOf({ phase: 'absent' }, { recommended: undefined }))
-  expect(screen.getByText(zh.lede)).toBeTruthy()
+  b.publish(snapshotOf({ phase: 'absent' }))
   b.prepare.mockRejectedValueOnce(new Error('offline'))
-  fireEvent.click(screen.getByRole('button', { name: zh.downloadPlain }))
+  fireEvent.click(screen.getByRole('button', { name: '下载并启用 · 4.5 GB' }))
   await screen.findByText('操作没有完成：offline')
   b.prepare.mockRejectedValueOnce('closed')
-  fireEvent.click(screen.getByRole('button', { name: zh.downloadPlain }))
+  fireEvent.click(screen.getByRole('button', { name: '下载并启用 · 4.5 GB' }))
   await screen.findByText('操作没有完成：closed')
   expect(b.onOpenDetails).not.toHaveBeenCalled()
 })
@@ -55,6 +54,15 @@ it('sends a Mac without enough free space to the details page instead of downloa
   b.publish(snapshotOf({ phase: 'absent' }, { availableDiskBytes: 3.1e9,
     options: OPTIONS.map(option => sameVariant(option, Q8) ? { ...option, fits: false, reason: 'disk' } : option) }))
   expect(screen.getByText('下载需要 4.5 GB，这台 Mac 当前可用 3.1 GB。可以在详情页更换较小的模型')).toBeTruthy()
+  fireEvent.click(screen.getByRole('button', { name: zh['prompt.details'] }))
+  expect(b.onOpenDetails).toHaveBeenCalledOnce()
+  expect(b.prepare).not.toHaveBeenCalled()
+})
+
+it('points to the details when no option fits this Mac', () => {
+  const b = fixture()
+  b.publish(snapshotOf({ phase: 'absent' }, { recommended: undefined }))
+  expect(screen.getByText(zh.noFit)).toBeTruthy()
   fireEvent.click(screen.getByRole('button', { name: zh['prompt.details'] }))
   expect(b.onOpenDetails).toHaveBeenCalledOnce()
   expect(b.prepare).not.toHaveBeenCalled()

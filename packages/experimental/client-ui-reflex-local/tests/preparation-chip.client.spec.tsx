@@ -47,7 +47,14 @@ it('shows download progress and pauses, cancels, or opens the details from its m
   await waitFor(() => { expect(screen.queryByRole('menuitem')).toBeNull() })
   openMenu('正在准备本机判断 37%')
   fireEvent.click(row(zh.cancel))
+  expect(screen.getByText('取消并删除已下载的 1.7 GB？')).toBeTruthy()
+  fireEvent.click(screen.getByRole('button', { name: zh['confirm.cancel.keep'] }))
+  expect(b.cancel).not.toHaveBeenCalled()
+  openMenu('正在准备本机判断 37%')
+  fireEvent.click(row(zh.cancel))
+  fireEvent.click(screen.getByRole('button', { name: zh['confirm.cancel.confirm'] }))
   expect(b.cancel).toHaveBeenCalledOnce()
+  await waitFor(() => { expect(screen.queryByRole('dialog')).toBeNull() })
   openMenu('正在准备本机判断 37%')
   fireEvent.click(row(zh['chip.details']))
   expect(b.openDetails).toHaveBeenCalledOnce()
@@ -60,6 +67,14 @@ it('resumes a paused download with its variant and reports a rejected command', 
   fireEvent.click(row(zh.resume))
   expect(b.prepare).toHaveBeenCalledWith({ variant: Q4 })
   await waitFor(() => { expect(b.reportFailure).toHaveBeenCalledWith(new Error('offline')) })
+})
+
+it('cancels a paused download with no bytes yet without asking', () => {
+  const b = fixture(snapshotOf({ phase: 'paused', variant: Q4, completedBytes: 0, totalBytes: 2 }))
+  openMenu(zh['chip.paused'])
+  fireEvent.click(row(zh.cancel))
+  expect(screen.queryByRole('dialog')).toBeNull()
+  expect(b.cancel).toHaveBeenCalledOnce()
 })
 
 it.each(['verifying', 'testing'] as const)('shows %s with only the details action', (phase) => {
@@ -91,5 +106,16 @@ it('hides the slow-Mac chip for the page after Not now without a Host command', 
   expect(b.enable).not.toHaveBeenCalled()
   expect(b.view.container.innerHTML).toBe('')
   b.publish(snapshotOf({ phase: 'downloading', variant: Q8, completedBytes: 1, totalBytes: 2, source: 'https://huggingface.co' }))
+  expect(screen.getByRole('button', { name: '正在准备本机判断 50%' })).toBeTruthy()
+})
+
+it('names both models while another model prepares in the background', () => {
+  fixture(snapshotOf({ phase: 'downloading', variant: { model: '9b', quant: 'q8_0' }, completedBytes: 3.6e9, totalBytes: SIZES.nineQ8,
+    source: 'https://huggingface.co' }, { active: Q8 }))
+  expect(screen.getByRole('button', { name: '正在准备 9B · Q8_0 37% · 当前仍用 4B · Q8_0 判断' })).toBeTruthy()
+})
+
+it('keeps the plain label while the active model itself downloads', () => {
+  fixture(snapshotOf({ phase: 'downloading', variant: Q8, completedBytes: 1, totalBytes: 2, source: 'https://huggingface.co' }, { active: Q8 }))
   expect(screen.getByRole('button', { name: '正在准备本机判断 50%' })).toBeTruthy()
 })

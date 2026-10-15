@@ -1344,6 +1344,12 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     description: 'Cordis service that resolves one pinned Jev provider per request.',
     methods: [
       {
+        signature: 'isEnabled(): boolean',
+        description: 'Read the settings switch; `jev/enabled` announces each change.',
+        parameters: [],
+        returns: 'Whether Reflex decisions run, so callers can hide Reflex-only features while it is off.',
+      },
+      {
         signature: 'registerCapability(id: ReflexCapabilityId, read: () => ReflexCapabilityState): () => void',
         description: 'Register the runtime owner of one capability\'s observed status.',
         parameters: [{ name: 'id', description: 'Product capability identity.' }, { name: 'read', description: 'Runtime status projection; connection probes never update it.' }],
@@ -1921,8 +1927,13 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
       },
       {
         signature: 'prepare(options?: ReflexPrepareOptions): void',
-        description: 'Start or join download, verification, and self-test; a passing, fast self-test enables local decisions.',
-        parameters: [{ name: 'options', description: 'variant and download source; changing either while work is active throws.' }],
+        description: 'Select the given variant, else the variant of a paused or failed preparation, else the recommendation.',
+        parameters: [{ name: 'options', description: 'variant and download source.' }],
+      },
+      {
+        signature: 'select(variant: ReflexVariant, options?: Pick<ReflexPrepareOptions, \'downloadSource\'>): void',
+        description: 'Make a tested downloaded variant active now, or prepare another one in the background while the active one serves.',
+        parameters: [{ name: 'variant', description: 'option to make active.' }, { name: 'options', description: 'one advertised download origin used without fallback.' }],
       },
       {
         signature: 'async pause(): Promise<void>',
@@ -1935,19 +1946,37 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         parameters: [],
       },
       {
-        signature: 'async enable(): Promise<void>',
-        description: 'Route Jev decisions to the local provider; requires `ready`. @returns after the state or profile change is applied.',
+        signature: 'async chooseLocal(): Promise<void>',
+        description: 'Record the local engine as the chosen connection mode, removing a Jev `defaultProviderId` that names another provider.',
         parameters: [],
+        returns: 'after the profile change and the choice are persisted.',
+      },
+      {
+        signature: 'async enable(): Promise<void>',
+        description: 'Start the active model\'s runner, then route Jev decisions to the local provider; requires an active model.',
+        parameters: [],
+        returns: 'after the runner answers and the profile change is applied.',
       },
       {
         signature: 'async disable(): Promise<void>',
-        description: 'Stop local routing, restore `cloudProviderId` when configured, and clear the auto-enable notice. @returns after it applies.',
+        description: 'Stop local routing, clear both notices, and stop the runner after the decisions in flight. @returns after it stopped.',
         parameters: [],
       },
       {
         signature: 'async acknowledge(): Promise<void>',
         description: 'Clear `unacknowledgedAutoEnableAt` after a client showed it. @returns after the cleared state is persisted.',
         parameters: [],
+      },
+      {
+        signature: 'async acknowledgeSwitch(): Promise<void>',
+        description: 'Clear `unacknowledgedSwitch` after a client showed it. @returns after the cleared state is persisted.',
+        parameters: [],
+      },
+      {
+        signature: 'async deleteModel(variant?: ReflexVariant): Promise<void>',
+        description: 'Delete one variant, disabling local decisions first when it is the active, enabled model.',
+        parameters: [{ name: 'variant', description: 'option to delete; omission deletes every model.' }],
+        returns: 'after deletion.',
       },
       {
         signature: 'async remove(): Promise<void>',
@@ -1975,8 +2004,13 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
       },
       {
         signature: '@Remote prepare(options?: ReflexPrepareOptions): void',
-        description: 'Start or join download, verification, and self-test.',
-        parameters: [{ name: 'options', description: 'variant and download source; omission uses the device recommendation and configured origins.' }],
+        description: 'Select the given variant, else the variant of a paused or failed preparation, else the recommendation.',
+        parameters: [{ name: 'options', description: 'variant and download source; omission uses configured origins.' }],
+      },
+      {
+        signature: '@Remote select(variant: ReflexVariant): void',
+        description: 'Make a tested downloaded variant active now, or prepare another one in the background while the active one serves. Fails with `reflexLocal/preparing-other` while a different variant is being prepared.',
+        parameters: [{ name: 'variant', description: 'option to make active.' }],
       },
       {
         signature: '@Remote pause(): Promise<void>',
@@ -1991,10 +2025,16 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'after the work settles and the file is removed.',
       },
       {
-        signature: '@Remote enable(): Promise<void>',
-        description: 'Route Jev decisions to the local provider; the engine rejects this unless preparation is ready.',
+        signature: '@Remote chooseLocal(): Promise<void>',
+        description: 'Record the local engine as the chosen Reflex connection mode before any model is prepared.',
         parameters: [],
-        returns: 'after the change is applied.',
+        returns: 'after the choice is persisted.',
+      },
+      {
+        signature: '@Remote enable(): Promise<void>',
+        description: 'Start the active model\'s runner, then route Jev decisions to the local provider; the engine rejects this without an active model or when the runner cannot start.',
+        parameters: [],
+        returns: 'after the runner answers and the change is applied.',
       },
       {
         signature: '@Remote disable(): Promise<void>',
@@ -2009,9 +2049,15 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'after the cleared state is persisted.',
       },
       {
-        signature: '@Remote deleteModel(): Promise<void>',
-        description: 'Turn local decisions off, stop the runner, and delete downloaded weights and partial files.',
+        signature: '@Remote acknowledgeSwitch(): Promise<void>',
+        description: 'Record that a client showed the pending background model switch.',
         parameters: [],
+        returns: 'after the cleared state is persisted.',
+      },
+      {
+        signature: '@Remote deleteModel(variant?: ReflexVariant): Promise<void>',
+        description: 'Delete one model\'s weights, partial file, and records; deleting the active model stops its runner and keeps routing.',
+        parameters: [{ name: 'variant', description: 'option to delete; omission deletes every model.' }],
         returns: 'after deletion.',
       },
     ],
@@ -4390,6 +4436,14 @@ export const EVENT_API: readonly EventApiEntry[] = [
     parameters: [{ name: 'reloads', description: 'Replaced plugins and their module locations.' }],
   },
   {
+    name: 'jev/enabled',
+    mode: 'emit',
+    signature: '\'jev/enabled\'(enabled: boolean): void',
+    summary: 'The Reflex settings switch changed; `loader/volatile-update` reaches only the Jev entry, so dependents listen here.',
+    description: 'The Reflex settings switch changed; `loader/volatile-update` reaches only the Jev entry, so dependents listen here.',
+    parameters: [{ name: 'enabled', description: 'Whether Reflex decisions now run.' }],
+  },
+  {
     name: 'llm/adapters-updated',
     mode: 'emit',
     signature: '\'llm/adapters-updated\'(): void',
@@ -6615,7 +6669,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'ReflexCapabilityState',
-    declaration: 'export interface ReflexCapabilityState {\n    readonly implemented: boolean;\n    readonly enabled: boolean;\n    readonly verifiedAt?: number;\n    readonly lastOutcome?: string;\n    readonly semanticSupervision?: {\n        readonly enabled: boolean;\n    };\n    readonly settings?: {\n        readonly stallMs?: number;\n        readonly cooldownMs?: number;\n        readonly maxInterventions?: number;\n        readonly feedbackMs?: number;\n        readonly nativeSilenceMs?: number;\n        readonly recoveryReassessmentMs?: number;\n        readonly retryLimit?: number;\n        readonly interruptGraceMs?: number;\n        readonly recoveryCooldownMs?: number;\n        readonly maxRecoveries?: number;\n        readonly maxCandidates?: number;\n        readonly maxFragmentChars?: number;\n        readonly maxRestoredChars?: number;\n        readonly maxRequestChars?: number;\n    };\n}',
+    declaration: 'export interface ReflexCapabilityState {\n    readonly implemented: boolean;\n    readonly enabled: boolean;\n    readonly suspended?: boolean;\n    readonly verifiedAt?: number;\n    readonly lastOutcome?: string;\n    readonly semanticSupervision?: {\n        readonly enabled: boolean;\n    };\n    readonly settings?: {\n        readonly stallMs?: number;\n        readonly cooldownMs?: number;\n        readonly maxInterventions?: number;\n        readonly feedbackMs?: number;\n        readonly nativeSilenceMs?: number;\n        readonly recoveryReassessmentMs?: number;\n        readonly retryLimit?: number;\n        readonly interruptGraceMs?: number;\n        readonly recoveryCooldownMs?: number;\n        readonly maxRecoveries?: number;\n        readonly maxCandidates?: number;\n        readonly maxFragmentChars?: number;\n        readonly maxRestoredChars?: number;\n        readonly maxRequestChars?: number;\n    };\n}',
   },
   {
     name: 'ReflexConnectionInput',
@@ -6638,12 +6692,16 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type ReflexFailure = {\n    readonly kind: \'download\';\n    readonly download: ReflexDownloadFailure;\n} | {\n    readonly kind: \'disk\';\n    readonly requiredBytes: number;\n    readonly availableBytes: number;\n} | {\n    readonly kind: \'runner\';\n    readonly message: string;\n} | {\n    readonly kind: \'self-test\';\n    readonly message: string;\n};',
   },
   {
+    name: 'ReflexInventory',
+    declaration: 'export interface ReflexInventory {\n    readonly state: \'absent\' | \'partial\' | \'downloaded\';\n    readonly completedBytes?: number;\n    readonly selfTest?: \'passed\' | \'slow\' | \'failed\';\n}',
+  },
+  {
     name: 'ReflexModelId',
     declaration: 'export type ReflexModelId = \'4b\' | \'9b\' | \'35b-a3b\';',
   },
   {
     name: 'ReflexModelOption',
-    declaration: 'export interface ReflexModelOption extends ReflexVariant {\n    readonly bytes: number;\n    readonly minMemoryBytes: number;\n    readonly experimental: boolean;\n    readonly fits: boolean;\n    readonly reason?: \'memory\' | \'disk\';\n}',
+    declaration: 'export interface ReflexModelOption extends ReflexVariant {\n    readonly bytes: number;\n    readonly minMemoryBytes: number;\n    readonly experimental: boolean;\n    readonly fits: boolean;\n    readonly reason?: \'memory\' | \'disk\';\n    readonly inventory: ReflexInventory;\n}',
   },
   {
     name: 'ReflexPreparation',
@@ -6658,16 +6716,24 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type ReflexQuant = \'q8_0\' | \'q4_k_m\';',
   },
   {
+    name: 'ReflexRunnerStatus',
+    declaration: 'export type ReflexRunnerStatus = {\n    readonly state: \'stopped\';\n} | {\n    readonly state: \'starting\';\n    readonly model: ReflexVariant;\n} | {\n    readonly state: \'running\';\n    readonly model: ReflexVariant;\n    readonly approxResidentBytes: number;\n    readonly idleReleaseAt?: number;\n} | {\n    readonly state: \'failed\';\n    readonly reason: string;\n};',
+  },
+  {
     name: 'ReflexSelfTest',
     declaration: 'export interface ReflexSelfTest {\n    readonly prefillTokensPerSecond: number;\n    readonly decisionMs: number;\n    readonly slow: boolean;\n}',
   },
   {
     name: 'ReflexSnapshot',
-    declaration: 'export interface ReflexSnapshot {\n    readonly device: ReflexDeviceSupport;\n    readonly options: readonly ReflexModelOption[];\n    readonly recommended?: ReflexVariant;\n    readonly preparation: ReflexPreparation;\n    readonly enabled: boolean;\n    readonly reflexEnabled: boolean;\n    readonly providerId: string;\n    readonly availableDiskBytes?: number;\n    readonly downloadSources: readonly string[];\n    readonly unacknowledgedAutoEnableAt?: number;\n}',
+    declaration: 'export interface ReflexSnapshot {\n    readonly device: ReflexDeviceSupport;\n    readonly options: readonly ReflexModelOption[];\n    readonly recommended?: ReflexVariant;\n    readonly preparation: ReflexPreparation;\n    readonly active?: ReflexVariant;\n    readonly runner: ReflexRunnerStatus;\n    readonly unacknowledgedSwitch?: ReflexSwitch;\n    readonly enabled: boolean;\n    readonly localChosen: boolean;\n    readonly reflexEnabled: boolean;\n    readonly providerId: string;\n    readonly availableDiskBytes?: number;\n    readonly downloadSources: readonly string[];\n    readonly unacknowledgedAutoEnableAt?: number;\n}',
   },
   {
     name: 'ReflexStatus',
     declaration: 'export interface ReflexStatus {\n    readonly provider: JevProviderInfo | null;\n    readonly capabilities: readonly (ReflexCapabilityState & {\n        readonly id: ReflexCapabilityId;\n    })[];\n}',
+  },
+  {
+    name: 'ReflexSwitch',
+    declaration: 'export interface ReflexSwitch {\n    readonly from: ReflexVariant;\n    readonly to: ReflexVariant;\n    readonly at: number;\n}',
   },
   {
     name: 'ReflexVariant',

@@ -7,6 +7,8 @@ import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
 import type { ReflexSnapshot } from '@deepseek-ai/dsh-experimental-api-reflex-local/types'
 import type { ReflexLocalInjected } from './injected.ts'
 import type { NS, ReflexLocalKey } from './locales.ts'
+import { cancelCopy, ConfirmDialog } from './ConfirmDialog.tsx'
+import { sameVariant, shortVariantName } from './size.ts'
 import css from './ReflexLocal.module.css'
 
 /** Registration shares for the composer dock entry. */
@@ -16,11 +18,18 @@ export type PreparationChipProps = PropsRuntime<'conversation.input.dock'> & Pro
 
 type Actions = Omit<PreparationChipProps, 'useReflexReadiness' | 'useReflexSlowChipDismissed' | 't' | 'sessionId'>
 
+/** One menu command; `discards` names the downloaded bytes it deletes, which the user confirms first. */
+interface ChipCommand {
+  readonly key: ReflexLocalKey
+  readonly run: () => Promise<void>
+  readonly discards?: number
+}
+
 /** What the chip shows and offers; `null` leaves the dock untouched. */
 interface Chip {
   readonly tone: StateDotState
   readonly label: string
-  readonly commands: readonly { readonly key: ReflexLocalKey; readonly run: () => Promise<void> }[]
+  readonly commands: readonly ChipCommand[]
   /** A page-local choice that needs no Host connection. */
   readonly dismiss?: () => void
 }
@@ -28,12 +37,19 @@ interface Chip {
 function chipOf(snapshot: ReflexSnapshot | null, slowDismissed: boolean, actions: Actions, t: PreparationChipProps['t']): Chip | null {
   if (snapshot === null) return null
   const { preparation } = snapshot
-  const cancel = { key: 'cancel', run: actions.cancel } as const
   switch (preparation.phase) {
-    case 'downloading': return { tone: 'ongoing', commands: [{ key: 'pause', run: actions.pause }, cancel],
-      label: t('chip.downloading', { percent: String(Math.floor(preparation.completedBytes / preparation.totalBytes * 100)) }) }
+    case 'downloading': {
+      const percent = String(Math.floor(preparation.completedBytes / preparation.totalBytes * 100)), { active } = snapshot
+      // Preparing another model while the active one keeps answering names both.
+      const label = active !== undefined && !sameVariant(active, preparation.variant)
+        ? t('chip.background', { name: shortVariantName(preparation.variant, t), percent, active: shortVariantName(active, t) })
+        : t('chip.downloading', { percent })
+      return { tone: 'ongoing', label,
+        commands: [{ key: 'pause', run: actions.pause }, { key: 'cancel', run: actions.cancel, discards: preparation.completedBytes }] }
+    }
     case 'paused': return { tone: 'idle', label: t('chip.paused'),
-      commands: [{ key: 'resume', run: () => actions.prepare({ variant: preparation.variant }) }, cancel] }
+      commands: [{ key: 'resume', run: () => actions.prepare({ variant: preparation.variant }) },
+        { key: 'cancel', run: actions.cancel, discards: preparation.completedBytes }] }
     case 'verifying':
     case 'testing': return { tone: 'ongoing', label: t('chip.checking'), commands: [] }
     case 'ready': return preparation.selfTest.slow && !snapshot.enabled && !slowDismissed
@@ -56,10 +72,12 @@ export function PreparationChip({ useReflexReadiness, useReflexSlowChipDismissed
   const readiness = useReflexReadiness(value => value)
   const slowDismissed = useReflexSlowChipDismissed(value => value)
   const [open, setOpen] = useState(false)
+  const [confirming, setConfirming] = useState<{ readonly command: ChipCommand; readonly bytes: number } | null>(null)
   const chip = chipOf(readiness.snapshot, slowDismissed, actions, t)
   if (chip === null) return null
   const close = (): void => { setOpen(false) }
   const { dismiss } = chip
+  const run = (command: ChipCommand): void => { command.run().catch(actions.reportFailure) }
   return <div className={css.dockRow}>
     <Menu open={open} onClose={close} align="end" side="top" portal compact
       anchor={<button type="button" className={css.chip} aria-haspopup="menu" aria-expanded={open}
@@ -68,9 +86,15 @@ export function PreparationChip({ useReflexReadiness, useReflexSlowChipDismissed
         <span>{chip.label}</span>
       </button>}>
       {chip.commands.map(command => <MenuItemButton key={command.key} disabled={!readiness.connected}
-        onSelect={() => { close(); command.run().catch(actions.reportFailure) }}>{t(command.key)}</MenuItemButton>)}
+        onSelect={() => {
+          close()
+          if (command.discards !== undefined && command.discards > 0) setConfirming({ command, bytes: command.discards })
+          else run(command)
+        }}>{t(command.key)}</MenuItemButton>)}
       {dismiss !== undefined && <MenuItemButton onSelect={() => { close(); dismiss() }}>{t('chip.notNow')}</MenuItemButton>}
       <MenuItemButton onSelect={() => { close(); actions.openDetails() }}>{t('chip.details')}</MenuItemButton>
     </Menu>
+    {confirming !== null && <ConfirmDialog copy={cancelCopy(confirming.bytes, t)} t={t}
+      onCancel={() => { setConfirming(null) }} onConfirm={() => { setConfirming(null); run(confirming.command) }} />}
   </div>
 }
