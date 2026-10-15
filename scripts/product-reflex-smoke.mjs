@@ -1,15 +1,18 @@
 /** Shared installed-product Reflex execution and settings acceptance. */
 import { randomUUID } from 'node:crypto'
 
-/** Reject a missing execution plugin or unexpectedly active routing, supervision, or context recovery. */
+/** Capabilities the Desktop and Web product profile turns on. */
+const PRODUCT_ENABLED = new Set(['skillSelection', 'workspacePrefetch'])
+
+/** Reject a missing execution plugin or unexpectedly active routing, supervision, or context recovery, or inactive Skill selection or prefetch. */
 export function verifyReflexExecutionResponse(response, rpcId) {
   if (response?.type !== 'server-response' || response.rpcId !== rpcId || response.result?.ok !== true
     || !Array.isArray(response.result.value?.capabilities)) throw new Error('Reflex capability status RPC did not succeed.')
   const capabilities = response.result.value.capabilities
-  return ['entryRouting', 'codexSupervision', 'contextMemory', 'skillSelection'].map(id => {
+  return ['entryRouting', 'codexSupervision', 'contextMemory', 'skillSelection', 'workspacePrefetch'].map(id => {
     const matches = capabilities.filter(capability => capability?.id === id)
     const capability = matches[0]
-    if (matches.length !== 1 || capability.implemented !== true || capability.enabled !== (id === 'skillSelection')) {
+    if (matches.length !== 1 || capability.implemented !== true || capability.enabled !== PRODUCT_ENABLED.has(id)) {
       throw new Error(`Reflex execution capability differs from the product profile: ${id}`)
     }
     return { id, implemented: capability.implemented, enabled: capability.enabled }

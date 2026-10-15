@@ -148,7 +148,7 @@ it('reports absent capabilities separately and removes disposed runtime readers'
   const ctx = new Context()
   await ctx.plugin(Jev, { endpoint: 'http://localhost', model: 'default' })
   try {
-    expect(ctx.jev.readStatus().capabilities).toHaveLength(4)
+    expect(ctx.jev.readStatus().capabilities).toHaveLength(5)
     expect(ctx.jev.readStatus().capabilities.every(item => !item.implemented && !item.enabled)).toBe(true)
     let semanticEnabled = false
     const dispose = ctx.jev.registerCapability('codexSupervision', () => ({ implemented: true, enabled: true, semanticSupervision: { enabled: semanticEnabled } }))

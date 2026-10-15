@@ -6,7 +6,7 @@ import { parse } from 'yaml'
 import { generateSystem3Patch } from '../scripts/generate-system3-patch.mjs'
 
 describe('Desktop default profile', () => {
-  it.each(['deployed', 'workspace'])('installs bounded Skill advice without changing model routes in %s mode', async mode => {
+  it.each(['deployed', 'workspace'])('installs bounded Skill advice and workspace prefetch without changing model routes in %s mode', async mode => {
     const root = await mkdtemp(join(tmpdir(), 'apus-profile-'))
     try {
       await mkdir(join(root, 'deploy/system3'), { recursive: true })
@@ -21,16 +21,19 @@ describe('Desktop default profile', () => {
       const system3 = operations.flatMap(operation => operation.insert ?? []).find(plugin => plugin.id === 'system3')
       expect(system3.name).toBe(mode === 'deployed' ? '@deepseek-ai/dsh-experimental-system3' : join(root, 'packages/experimental/system3/lib/index.js'))
       expect(system3.config).toEqual({ privacyMode: 'controlled', approvedRemoteIds: ['jev'], approvedRemoteDataClasses: ['workspace'],
-        jevRouteId: 'jev', jevExecutionDomain: 'network', skillSelection: {
+        jevRouteId: 'jev', jevExecutionDomain: 'network', prefetch: {
+          mode: 'active', yes: 0.5, no: 0.3, deadlineMs: 3000, sessionDataClasses: ['workspace'], maxItemBytes: 8000, maxTotalBytes: 24000,
+          maxSourceFiles: 30, maxSearchTerms: 4, maxHitFiles: 3, commandTimeoutMs: 3000,
+        }, skillSelection: {
           sessionDataClasses: ['workspace'], minConfidence: 0.5, maxInputBytes: 16000, maxContentBytes: 12000,
           maxCandidates: 15, deadlineMs: 3000,
         } })
     } finally { await rm(root, { recursive: true, force: true }) }
   })
 
-  it('keeps Skill selection out of the safe-mode overlay', async () => {
+  it('keeps Skill selection and prefetch out of the safe-mode overlay', async () => {
     const safe = await readFile(new URL('../build/dsh-desktop-safe.patch.yml', import.meta.url), 'utf8')
-    expect(safe).not.toMatch(/experimental-system3|id: system3|skillSelection/)
+    expect(safe).not.toMatch(/experimental-system3|id: system3|skillSelection|prefetch/)
   })
 
   it('does not require a server deployment file to prepare a desktop runtime', async () => {

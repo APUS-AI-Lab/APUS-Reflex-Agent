@@ -1,7 +1,8 @@
-/** Shared Desktop and Web input judgment and Skill selection profile. */
+/** Shared Desktop and Web input judgment, Skill selection and workspace prefetch profile. */
 
 /**
- * Compose the product UI and bounded execution plugin without enabling other System3 capabilities.
+ * Compose the product UI and bounded execution plugin with Skill selection and workspace prefetch, without enabling other
+ * System3 capabilities.
  * @param {object} [modules] Deployed package names or workspace module paths.
  * @param {string} [modules.system3Ui] Client contribution module.
  * @param {string} [modules.system3] Execution plugin module.
@@ -9,7 +10,8 @@
  */
 export function system3ProductPatch({ system3Ui = '@deepseek-ai/dsh-experimental-client-ui-system3',
   system3 = '@deepseek-ai/dsh-experimental-system3' } = {}) {
-  return `# Skill advice uses the configured Reflex provider; unavailable decisions preserve native execution.
+  return `# Skill advice and workspace prefetch use the configured Reflex provider; unavailable decisions preserve native execution.
+# Prefetch limits are the values measured in packages/experimental/system3/tests/fixtures/scenario-bench.
 - insert:
     - id: ui-system3
       name: ${JSON.stringify(system3Ui)}
@@ -21,6 +23,18 @@ export function system3ProductPatch({ system3Ui = '@deepseek-ai/dsh-experimental
         approvedRemoteDataClasses: [workspace]
         jevRouteId: jev
         jevExecutionDomain: network
+        prefetch:
+          mode: active
+          yes: 0.5
+          no: 0.3
+          deadlineMs: 3000
+          sessionDataClasses: [workspace]
+          maxItemBytes: 8000
+          maxTotalBytes: 24000
+          maxSourceFiles: 30
+          maxSearchTerms: 4
+          maxHitFiles: 3
+          commandTimeoutMs: 3000
         skillSelection:
           sessionDataClasses: [workspace]
           minConfidence: 0.5

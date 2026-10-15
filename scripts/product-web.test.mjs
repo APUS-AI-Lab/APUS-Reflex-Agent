@@ -244,16 +244,16 @@ test('Web edition names cannot collide and a runtime cannot qualify as the other
 })
 
 
-test('Web qualification requires live Skill execution and leaves other System3 capabilities inactive', () => {
-  const capabilities = ['entryRouting', 'codexSupervision', 'contextMemory', 'skillSelection']
-    .map(id => ({ id, implemented: true, enabled: id === 'skillSelection' }))
+test('Web qualification requires live Skill selection and prefetch and leaves other System3 capabilities inactive', () => {
+  const capabilities = ['entryRouting', 'codexSupervision', 'contextMemory', 'skillSelection', 'workspacePrefetch']
+    .map(id => ({ id, implemented: true, enabled: id === 'skillSelection' || id === 'workspacePrefetch' }))
   const envelope = value => ({ type: 'server-response', rpcId: 'fixture', result: { ok: true, value: { capabilities: value } } })
   assert.deepEqual(verifyReflexExecutionResponse(envelope(capabilities), 'fixture'), capabilities)
   for (const response of [undefined, { ...envelope(capabilities), type: 'client-request' },
     { ...envelope(capabilities), rpcId: 'other' }, { ...envelope(capabilities), result: { ok: false } }, envelope(undefined)]) {
     assert.throws(() => verifyReflexExecutionResponse(response, 'fixture'), /RPC did not succeed/)
   }
-  for (const invalid of [[], capabilities.filter(value => value.id !== 'skillSelection'),
+  for (const invalid of [[], capabilities.filter(value => value.id !== 'skillSelection'), capabilities.filter(value => value.id !== 'workspacePrefetch'),
     [...capabilities, capabilities.at(-1)],
     capabilities.map(value => ({ ...value, implemented: false, enabled: false })),
     capabilities.map(value => ({ ...value, enabled: false })),
@@ -265,8 +265,8 @@ test('Web qualification requires live Skill execution and leaves other System3 c
 
 test('Reflex execution qualification sends an authenticated read-only Host request', async t => {
   const requests = []
-  const capabilities = ['entryRouting', 'codexSupervision', 'contextMemory', 'skillSelection']
-    .map(id => ({ id, implemented: true, enabled: id === 'skillSelection' }))
+  const capabilities = ['entryRouting', 'codexSupervision', 'contextMemory', 'skillSelection', 'workspacePrefetch']
+    .map(id => ({ id, implemented: true, enabled: id === 'skillSelection' || id === 'workspacePrefetch' }))
   const server = createServer(async (request, response) => {
     const chunks = []
     for await (const chunk of request) chunks.push(chunk)

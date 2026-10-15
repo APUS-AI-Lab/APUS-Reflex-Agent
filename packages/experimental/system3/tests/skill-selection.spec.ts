@@ -375,6 +375,7 @@ it('reports Skill installation independently of routing, supervision and memory,
     { id: 'codexSupervision', implemented: true, enabled: false, semanticSupervision: { enabled: false } },
     { id: 'contextMemory', implemented: true, enabled: false },
     { id: 'skillSelection', implemented: true, enabled: true },
+    { id: 'workspacePrefetch', implemented: true, enabled: false },
   ])
   await h.system3.dispose()
   expect(h.ctx.jev.readStatus().capabilities.every(capability => !capability.implemented && !capability.enabled)).toBe(true)
