@@ -34,6 +34,7 @@ export interface ContinuumConfig extends ContinuumMemoryContextConfig {
    */
   readonly admission?: ContinuumAdmissionMode
   readonly candidatePool?: MemoryCandidatePool
+  readonly maxPool?: number
 }
 
 /** Which human messages become memory records without an explicit caller. */
@@ -47,6 +48,8 @@ type ContinuumResolvedConfig = Omit<ContinuumConfig, 'enabled' | 'mode'> & {
 interface MemoryProjection {
   readonly controller: ContinuumMemoryController
   readonly store: MemoryRecordStore
+  /** L1 index tags by record ID, derived from `continuum/memory-index` events. */
+  readonly tags: Map<MemoryId, readonly string[]>
 }
 
 /** Typed schema fields reusable by profile providers with their own defaults. */
@@ -59,6 +62,7 @@ export const ContinuumConfigFields = {
   maxCandidates: z.number().step(1).min(1).default(8),
   maxExcerptBytes: z.number().step(1).min(1).default(2048),
   maxTotalBytes: z.number().step(1).min(1).default(8192),
+  maxPool: z.number().step(1).min(1).default(8),
 }
 
 /** Schemastery validation for {@link ContinuumConfig}. */
@@ -137,12 +141,12 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
       const principal = { scopes: [...config.scopes] }
       const retrievalConfig = {
         maxCandidates: config.maxCandidates, maxExcerptBytes: config.maxExcerptBytes, maxTotalBytes: config.maxTotalBytes,
-        candidatePool: config.candidatePool,
+        candidatePool: config.candidatePool, maxPool: config.maxPool,
       }
       installContinuumMemoryControllerContext(ctx, agent => this.reflexReady() ? this.projectionFor(agent, {
         enabled: readSetting(config.enabled), mode: readSetting(config.mode), reflexMounted: ctx.get('jev') !== undefined,
       }).controller : undefined, () => principal, retrievalConfig, () => ctx.get('continuumMemorySelector'),
-      agent => this.admissions.get(agent)?.settled)
+      agent => this.admissions.get(agent)?.settled, (agent, id) => this.projections.get(agent)?.tags.get(id) ?? [])
     })
     ctx.on('agent/created', ({ agent }) => { this.agentsBySession.set(agent.session.id, agent) })
     ctx.on('agent/disposed', ({ agent }) => {
@@ -218,10 +222,11 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
       existing.controller.setSwitch(switchConfig)
       return existing
     }
+    const tags = new Map<MemoryId, readonly string[]>()
     // oxlint-disable-next-line typescript/no-deprecated -- Existing Session history read; migration deferred.
-    const store = foldMemoryRecordEvents(agent.session.snapshotEvents(), new MemoryRecordStore())
+    const store = foldMemoryRecordEvents(agent.session.snapshotEvents(), new MemoryRecordStore(), tags)
     const controller = new ContinuumMemoryController(store, switchConfig)
-    const projection = { controller, store }
+    const projection = { controller, store, tags }
     this.projections.set(agent, projection)
     return projection
   }
@@ -249,7 +254,8 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
 
   private async admitCandidates(agent: Agent, event: SessionEvent<'compaction/summary'>, scope: string, signal: AbortSignal): Promise<void> {
     const shadowed = new Set<number>(event.data.shadowedSeqs)
-    const store = this.storeFor(agent)
+    const projection = this.projectionFor(agent, this.switchConfig())
+    const store = projection.store
     // oxlint-disable-next-line typescript/no-deprecated -- Existing Session history read; migration deferred.
     const candidates: (ContinuumAdmissionCandidate & { readonly seq: SessionEvent['seq'] })[] = agent.session.snapshotEvents()
       .filter(source => shadowed.has(source.seq))
@@ -268,6 +274,7 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
       const source = { sessionId: agent.session.id, eventSeq: candidate.seq }
       // The L1 index keeps only tags and the pointer; the in-memory record caches the L2 text for retrieval.
       appendMemoryIndexEvent(agent.session, { id, scope, tags: [...tags], source })
+      projection.tags.set(id, tags)
       this.controller(agent).observe(store.create({ id, kind: 'fact', scope, content: candidate.content, sourceRefs: [source] }))
     }
   }
