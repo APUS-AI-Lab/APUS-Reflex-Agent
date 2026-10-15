@@ -7,7 +7,7 @@ import { JevProviderError } from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plu
 import { describe, expect, it, onTestFinished, vi } from 'vitest'
 import { Config } from '../src/index.ts'
 import { inspectDevice } from '../src/device.ts'
-import { JEV_ENTRY_ID, ReflexEngine, type RoutingEditor, type RoutingEntry } from '../src/engine.ts'
+import { JEV_ENTRY_ID, ReflexEngine, ReflexLifecycleError, type RoutingEditor, type RoutingEntry } from '../src/engine.ts'
 import { VARIANT_KEYS, variantOf, type CatalogAsset, type VariantKey } from '../src/models.ts'
 import type { ReflexPreparation, ReflexSnapshot } from '../src/types.ts'
 import { assetOf, fakeRunner, runnerLog, serve, temporaryRoot, weightsServer } from './harness.ts'
@@ -32,7 +32,11 @@ catalog()
 const GIB = 1024 ** 3
 const Q9 = variantOf('9b-q8_0'), Q4 = variantOf('4b-q4_k_m')
 
+const noDrain = async (): Promise<void> => {}
+
 interface Options {
+  /** Stand-in for the provider's request queue. */
+  drain?: () => Promise<void>
   env?: Record<string, string>
   config?: Partial<Config>
   /** Raw jev entry configuration; null mounts no jev entry. */
@@ -57,7 +61,9 @@ function editor(jev: Record<string, unknown> | null) {
 
 async function fixture(options: Options = {}) {
   const root = await temporaryRoot()
-  const runner = await fakeRunner(root, options.env)
+  const markers = { crash: join(root, 'crash'), startFail: join(root, 'start-fail'), delay: join(root, 'delay') }
+  const runner = await fakeRunner(root, { FAKE_CRASH_FILE: markers.crash, FAKE_START_FAIL_FILE: markers.startFail,
+    FAKE_DELAY_FILE: markers.delay, ...options.env })
   const server = options.origin === undefined ? await weightsServer(files) : undefined
   const origin = options.origin ?? server!.origin
   vi.mocked(inspectDevice).mockReturnValue({ supported: true, memoryBytes: options.memory ?? 24 * GIB })
@@ -65,15 +71,19 @@ async function fixture(options: Options = {}) {
   onTestFinished(async () => { await ctx.fiber.dispose() })
   await ctx.plugin(LocalSubprocess)
   const warn = vi.spyOn(ctx.logger, 'warn')
-  const config = Config({ dataRoot: join(root, 'data'), runnerPath: runner.path, modelOrigins: [origin], idleTimeoutMs: 0, diskMarginBytes: 0,
+  const config = Config({ dataRoot: join(root, 'data'), runnerPath: runner.path, modelOrigins: [origin], diskMarginBytes: 0,
     minPrefillTokensPerSecond: 100, startupTimeoutMs: 10_000, graceMs: 500, progressIntervalMs: 1, ...options.config })
   const routing = editor(options.jev === undefined ? {} : options.jev)
   const create = (): ReflexEngine => {
-    const engine = new ReflexEngine(ctx, config, routing.routing)
+    const engine = new ReflexEngine(ctx, config, routing.routing, options.drain ?? noDrain)
     onTestFinished(async () => { await engine.dispose() })
     return engine
   }
-  return { root, data: join(root, 'data'), origin, server, runner, ctx, warn, config, create, routing }
+  const mark = async (name: keyof typeof markers, on = true): Promise<void> => {
+    if (on) await writeFile(markers[name], '')
+    else await rm(markers[name], { force: true })
+  }
+  return { root, data: join(root, 'data'), origin, server, runner, ctx, warn, config, create, routing, mark }
 }
 
 async function until(engine: ReflexEngine, phase: ReflexPreparation['phase'], seen: string[] = []): Promise<ReflexSnapshot> {
@@ -87,6 +97,26 @@ async function until(engine: ReflexEngine, phase: ReflexPreparation['phase'], se
   throw new Error('engine disposed')
 }
 
+async function untilSnapshot(engine: ReflexEngine, accept: (snapshot: ReflexSnapshot) => boolean): Promise<ReflexSnapshot> {
+  const abort = new AbortController()
+  try {
+    for await (const snapshot of engine.follow(abort.signal)) if (accept(snapshot)) return snapshot
+  } finally { abort.abort() }
+  throw new Error('engine disposed')
+}
+
+/** Activate, then prepare the first model and wait until it is active, tested, and enabled. */
+async function ready(engine: ReflexEngine, variant = Q9): Promise<void> {
+  engine.activate()
+  await until(engine, 'absent')
+  engine.select(variant)
+  await untilSnapshot(engine, snapshot => snapshot.enabled && snapshot.preparation.phase === 'ready')
+}
+
+const decide = async (engine: ReflexEngine): Promise<void> => {
+  await (await engine.acquire(new AbortController().signal)).complete('decision', new AbortController().signal)
+}
+
 async function state(data: string): Promise<Record<string, unknown>> {
   return JSON.parse(await readFile(join(data, 'state.json'), 'utf8')) as Record<string, unknown>
 }
@@ -94,10 +124,10 @@ async function state(data: string): Promise<Record<string, unknown>> {
 describe.skipIf(process.platform === 'win32')('ReflexEngine', () => {
   it('fails loud without the configuration editor or an enabled jev entry', async () => {
     const { ctx, config } = await fixture()
-    expect(() => new ReflexEngine(ctx, config, undefined)).toThrow('config-editor')
-    expect(() => new ReflexEngine(ctx, config, editor(null).routing)).toThrow('requires an enabled')
+    expect(() => new ReflexEngine(ctx, config, undefined, noDrain)).toThrow('config-editor')
+    expect(() => new ReflexEngine(ctx, config, editor(null).routing, noDrain)).toThrow('requires an enabled')
     const disabled: RoutingEditor = { entries: () => [{ options: { id: JEV_ENTRY_ID, disabled: true } }], edit: async () => {} }
-    expect(() => new ReflexEngine(ctx, config, disabled)).toThrow('requires an enabled')
+    expect(() => new ReflexEngine(ctx, config, disabled, noDrain)).toThrow('requires an enabled')
   })
 
   it('reports unsupported devices without options, work, or routing', async () => {
@@ -124,7 +154,7 @@ describe.skipIf(process.platform === 'win32')('ReflexEngine', () => {
     engine.activate()
     await until(engine, 'absent')
     expect(engine.snapshot().options[0]).toEqual({ model: '4b', quant: 'q4_k_m', bytes: weights['4b-q4_k_m'].length,
-      minMemoryBytes: 8 * GIB, experimental: false, fits: true })
+      minMemoryBytes: 8 * GIB, experimental: false, fits: true, inventory: { state: 'absent' } })
     const small = await fixture({ memory: 12 * GIB, config: { diskMarginBytes: Number.MAX_SAFE_INTEGER } })
     const tight = small.create()
     tight.activate()
@@ -188,7 +218,7 @@ describe.skipIf(process.platform === 'win32')('ReflexEngine', () => {
     expect(other.create().snapshot()).toMatchObject({ enabled: true, reflexEnabled: true })
     const plain: RoutingEditor = { entries: () => [{ options: { id: JEV_ENTRY_ID } }], edit: async () => {} }
     const bare = await fixture()
-    expect(new ReflexEngine(bare.ctx, bare.config, plain).snapshot()).toMatchObject({ enabled: false, reflexEnabled: true })
+    expect(new ReflexEngine(bare.ctx, bare.config, plain, noDrain).snapshot()).toMatchObject({ enabled: false, reflexEnabled: true })
   })
 
   it('keeps slow Hosts disabled until enabled explicitly and refuses enabling before readiness', async () => {
@@ -274,6 +304,48 @@ describe.skipIf(process.platform === 'win32')('ReflexEngine', () => {
     await engine.cancel()
   })
 
+  it('keeps a variant paused before its first byte resumable across restarts until cancelled', async () => {
+    let requests = 0
+    // The origin never answers, so no byte arrives.
+    const origin = await serve(() => { requests++ })
+    const { create, data } = await fixture({ origin, memory: 8 * GIB })
+    const inventory = (snapshot: ReflexSnapshot) => snapshot.options.find(option => option.model === '4b' && option.quant === 'q4_k_m')?.inventory
+    const engine = create()
+    engine.activate()
+    await until(engine, 'absent')
+    engine.select(Q4)
+    await vi.waitFor(() => { expect(requests).toBeGreaterThan(0) })
+    await engine.pause()
+    const empty = { phase: 'paused', variant: Q4, completedBytes: 0, totalBytes: weights['4b-q4_k_m'].length }
+    expect(engine.snapshot().preparation).toEqual(empty)
+    expect(inventory(engine.snapshot())).toEqual({ state: 'partial', completedBytes: 0 })
+    await engine.dispose()
+    const restarted = create()
+    restarted.activate()
+    expect((await until(restarted, 'paused')).preparation).toEqual(empty)
+    restarted.prepare()
+    await vi.waitFor(async () => { expect(await state(data)).toMatchObject({ preparing: { variant: Q4 } }) })
+    await restarted.pause()
+    await restarted.cancel()
+    expect(restarted.snapshot().preparation).toEqual({ phase: 'absent' })
+    expect(inventory(restarted.snapshot())).toEqual({ state: 'absent' })
+    await expect(readFile(join(data, 'models', `${fileOf('4b-q4_k_m')}.part`))).rejects.toThrow()
+  })
+
+  it('pauses a self-test leaving the complete file untested and no partial file', async () => {
+    const { create, data, mark } = await fixture()
+    await mark('delay')
+    const engine = create()
+    engine.activate()
+    await until(engine, 'absent')
+    engine.select(Q4)
+    await until(engine, 'testing')
+    await engine.pause()
+    const bytes = weights['4b-q4_k_m'].length
+    expect(engine.snapshot().preparation).toEqual({ phase: 'paused', variant: Q4, completedBytes: bytes, totalBytes: bytes })
+    await expect(readFile(join(data, 'models', `${fileOf('4b-q4_k_m')}.part`))).rejects.toThrow()
+  })
+
   it('rejects a variant or source change while work is active', async () => {
     const origin = await serve((request, response) => { if (request.method === 'HEAD') response.writeHead(200).end() })
     const other = await serve((request, response) => { if (request.method === 'HEAD') response.writeHead(200).end() })
@@ -282,8 +354,11 @@ describe.skipIf(process.platform === 'win32')('ReflexEngine', () => {
     engine.activate()
     await until(engine, 'absent')
     engine.prepare()
-    expect(() => { engine.prepare({ variant: Q4 }) }).toThrow('Cancel preparation')
+    const refusal = (() => { try { engine.select(Q4) } catch (error) { return error } })()
+    expect(refusal).toBeInstanceOf(ReflexLifecycleError)
+    expect(refusal).toMatchObject({ code: 'preparing-other', details: { preparing: Q9, requested: Q4 } })
     expect(() => { engine.prepare({ downloadSource: other }) }).toThrow('Cancel preparation')
+    engine.select(Q9)
     await engine.cancel()
   })
 
@@ -354,7 +429,7 @@ describe.skipIf(process.platform === 'win32')('ReflexEngine', () => {
     expect(engine.snapshot().preparation).toMatchObject({ phase: 'failed', variant: Q9 })
   })
 
-  it('removes weights during and after preparation, then disables', async () => {
+  it('removes weights during and after preparation without changing routing', async () => {
     const { create, data } = await fixture()
     const engine = create()
     engine.activate()
@@ -365,9 +440,9 @@ describe.skipIf(process.platform === 'win32')('ReflexEngine', () => {
     await engine.acquire(new AbortController().signal)
     await engine.remove()
     expect(engine.snapshot().unacknowledgedAutoEnableAt).toBeUndefined()
-    expect(engine.snapshot()).toMatchObject({ preparation: { phase: 'absent' }, enabled: false })
+    expect(engine.snapshot()).toMatchObject({ preparation: { phase: 'absent' }, enabled: true, runner: { state: 'stopped' } })
     await expect(readFile(join(data, 'models', fileOf('9b-q8_0')))).rejects.toThrow()
-    expect(await state(data)).toEqual({ models: {} })
+    expect(await state(data)).toEqual({ models: {}, localChosen: true })
     engine.prepare()
     await engine.remove()
     expect(engine.snapshot().preparation).toEqual({ phase: 'absent' })
@@ -443,5 +518,419 @@ describe.skipIf(process.platform === 'win32')('ReflexEngine', () => {
     expect(warn).not.toHaveBeenCalledWith('Reflex engine inspection failed', expect.anything())
     routing.routing.entries = () => []
     await expect(engine.disable()).rejects.toThrow('requires an enabled')
+  })
+})
+
+describe.skipIf(process.platform === 'win32')('ReflexEngine model lifecycle', () => {
+  it('prepares another model in the background while the active one answers, then switches and records the switch', async () => {
+    const release = Promise.withResolvers<undefined>()
+    const origin = await serve((request, response) => {
+      if (request.method === 'HEAD') { response.writeHead(200).end(); return }
+      const name = (request.url ?? '').split('/').at(-1) as string
+      const bytes = files[name] as Buffer
+      if (name === fileOf('4b-q4_k_m')) void release.promise.then(() => { response.writeHead(200).end(bytes) })
+      else response.writeHead(200).end(bytes)
+    })
+    const { create, runner } = await fixture({ origin })
+    const engine = create()
+    await ready(engine)
+    engine.select(Q4)
+    await vi.waitFor(() => { expect(engine.snapshot().preparation).toMatchObject({ phase: 'downloading', variant: Q4 }) })
+    expect(engine.snapshot()).toMatchObject({ active: Q9, enabled: true })
+    await decide(engine)
+    const served = (await runnerLog(runner.log)).filter(entry => entry.event === 'completion').at(-1)
+    expect(served?.model).toContain(fileOf('9b-q8_0'))
+    expect(engine.snapshot().runner).toMatchObject({ state: 'running', model: Q9, approxResidentBytes: weights['9b-q8_0'].length })
+    engine.select(Q4)
+    release.resolve(undefined)
+    const switched = await untilSnapshot(engine, snapshot => snapshot.active?.model === '4b')
+    expect(switched.unacknowledgedSwitch).toMatchObject({ from: Q9, to: Q4 })
+    expect(switched.options.find(option => option.model === '4b' && option.quant === 'q4_k_m')?.inventory)
+      .toEqual({ state: 'downloaded', selfTest: 'passed' })
+    await vi.waitFor(() => { expect(engine.snapshot().runner).toMatchObject({ state: 'running', model: Q4 }) })
+    await decide(engine)
+    expect((await runnerLog(runner.log)).filter(entry => entry.event === 'completion').at(-1)?.model).toContain(fileOf('4b-q4_k_m'))
+    await engine.acknowledgeSwitch()
+    expect(engine.snapshot().unacknowledgedSwitch).toBeUndefined()
+    engine.select(Q9)
+    await vi.waitFor(() => { expect(engine.snapshot()).toMatchObject({ active: Q9, preparation: { phase: 'ready', variant: Q9 } }) })
+    expect(engine.snapshot().unacknowledgedSwitch).toBeUndefined()
+    await vi.waitFor(() => { expect(engine.snapshot().runner).toMatchObject({ state: 'running', model: Q9 }) })
+    engine.select(Q9)
+  })
+
+  it('finishes the decision in flight on the old runner before stopping it for a switch', async () => {
+    const inFlight: Array<Promise<unknown>> = []
+    const { create, mark } = await fixture({ drain: async () => { await Promise.allSettled(inFlight) } })
+    const engine = create()
+    await ready(engine, Q4)
+    engine.select(Q9)
+    await untilSnapshot(engine, snapshot => snapshot.active?.model === '9b')
+    engine.select(Q4)
+    await vi.waitFor(() => { expect(engine.snapshot().runner).toMatchObject({ state: 'running', model: Q4 }) })
+    await mark('delay')
+    const client = await engine.acquire(new AbortController().signal)
+    const pending = client.complete('slow decision', new AbortController().signal)
+    inFlight.push(pending)
+    engine.select(Q9)
+    expect(engine.snapshot().active).toEqual(Q9)
+    await expect(pending).resolves.toMatchObject({ promptTokens: 13 })
+    await vi.waitFor(() => { expect(engine.snapshot().runner).toMatchObject({ state: 'running', model: Q9 }) })
+  })
+
+  it('keeps the active model when a background model is slow, and switches when it is selected again', async () => {
+    const { create } = await fixture({ env: { FAKE_SLOW_MODEL: fileOf('4b-q4_k_m') } })
+    const engine = create()
+    await ready(engine)
+    engine.select(Q4)
+    const slow = await untilSnapshot(engine, snapshot => snapshot.preparation.phase === 'ready'
+      && snapshot.options.some(option => option.model === '4b' && option.quant === 'q4_k_m' && option.inventory.selfTest === 'slow'))
+    expect(slow).toMatchObject({ active: Q9, preparation: { phase: 'ready', variant: Q9 } })
+    expect(slow.unacknowledgedSwitch).toBeUndefined()
+    engine.select(Q4)
+    await vi.waitFor(() => { expect(engine.snapshot()).toMatchObject({ active: Q4, preparation: { phase: 'ready', variant: Q4, selfTest: { slow: true } } }) })
+    expect(engine.snapshot().unacknowledgedSwitch).toBeUndefined()
+  })
+
+  it('makes a slow first model active without enabling it', async () => {
+    const { create } = await fixture({ env: { FAKE_SLOW_MODEL: fileOf('9b-q8_0') } })
+    const engine = create()
+    engine.activate()
+    await until(engine, 'absent')
+    engine.select(Q9)
+    const ready = await untilSnapshot(engine, snapshot => snapshot.preparation.phase === 'ready')
+    expect(ready).toMatchObject({ active: Q9, enabled: false, runner: { state: 'stopped' } })
+  })
+
+  it('records a failed self-test in the inventory and retests on the next selection', async () => {
+    const { create } = await fixture({ env: { FAKE_MODE: 'wrong' } })
+    const engine = create()
+    engine.activate()
+    await until(engine, 'absent')
+    engine.select(Q9)
+    const failed = await until(engine, 'failed')
+    expect(failed.options.find(option => option.model === '9b' && option.quant === 'q8_0')?.inventory).toEqual({ state: 'downloaded', selfTest: 'failed' })
+    expect(failed.active).toBeUndefined()
+    engine.select(Q9)
+    await until(engine, 'testing')
+  })
+
+  it('stops the runner on disable while keeping models, and starts it before routing on enable', async () => {
+    const { create } = await fixture()
+    const engine = create()
+    await ready(engine)
+    await decide(engine)
+    expect(engine.snapshot().runner.state).toBe('running')
+    await engine.disable()
+    expect(engine.snapshot()).toMatchObject({ enabled: false, active: Q9, runner: { state: 'stopped' } })
+    await engine.enable()
+    expect(engine.snapshot()).toMatchObject({ enabled: true, runner: { state: 'running', model: Q9 } })
+    await decide(engine)
+  })
+
+  it('starts the runner of an enabled active model at activation, and on enable once Reflex is on', async () => {
+    const { create, routing } = await fixture({ config: { routingPollMs: 10 } })
+    const first = create()
+    await ready(first)
+    await first.dispose()
+    const launched = create()
+    launched.activate()
+    const warm = await untilSnapshot(launched, snapshot => snapshot.runner.state === 'running')
+    expect(warm.runner).toEqual({ state: 'running', model: Q9, approxResidentBytes: weights['9b-q8_0'].length })
+    await launched.disable()
+    await launched.dispose()
+    const disabled = create()
+    disabled.activate()
+    await until(disabled, 'ready')
+    expect(disabled.snapshot()).toMatchObject({ enabled: false, runner: { state: 'stopped' } })
+    const jev = routing.routing.entries()[0]!.options as { config?: unknown }
+    jev.config = { ...jev.config as object, enabled: false }
+    await untilSnapshot(disabled, snapshot => !snapshot.reflexEnabled)
+    await disabled.enable()
+    expect(disabled.snapshot()).toMatchObject({ enabled: true, reflexEnabled: false, runner: { state: 'stopped' } })
+    jev.config = { ...jev.config as object, enabled: true }
+    await untilSnapshot(disabled, snapshot => snapshot.runner.state === 'running')
+  })
+
+  it('reports a runner that cannot start on enable and leaves routing off', async () => {
+    const { create, mark } = await fixture()
+    const engine = create()
+    await ready(engine)
+    await engine.disable()
+    await mark('startFail')
+    await expect(engine.enable()).rejects.toThrow('exited before readiness')
+    expect(engine.snapshot()).toMatchObject({ enabled: false, runner: { state: 'failed' } })
+    await mark('startFail', false)
+    await engine.enable()
+    expect(engine.snapshot()).toMatchObject({ enabled: true, runner: { state: 'running' } })
+  })
+
+  it('publishes external routing changes and stops the runner when Reflex or local routing is turned off elsewhere', async () => {
+    const { create, routing } = await fixture({ config: { routingPollMs: 10 } })
+    const engine = create()
+    await ready(engine)
+    await decide(engine)
+    const jev = routing.routing.entries()[0]!.options as { config?: unknown }
+    jev.config = { ...jev.config as object, enabled: false }
+    await untilSnapshot(engine, snapshot => !snapshot.reflexEnabled && snapshot.runner.state === 'stopped')
+    jev.config = { ...jev.config as object, enabled: true }
+    await untilSnapshot(engine, snapshot => snapshot.reflexEnabled)
+    await decide(engine)
+    jev.config = { enabled: true }
+    await untilSnapshot(engine, snapshot => !snapshot.enabled && snapshot.runner.state === 'stopped')
+  })
+
+  it('logs a failed runner stop after an external change', async () => {
+    const { create, routing, warn } = await fixture({ config: { routingPollMs: 10 }, drain: async () => { throw new Error('drain failed') } })
+    const engine = create()
+    await ready(engine)
+    await decide(engine)
+    const jev = routing.routing.entries()[0]!.options as { config?: unknown }
+    jev.config = { enabled: false }
+    await vi.waitFor(() => { expect(warn).toHaveBeenCalledWith('Reflex runner stop failed', expect.objectContaining({ message: 'drain failed' })) })
+  })
+
+  it('deletes inactive, active, and in-progress models without changing routing', async () => {
+    const hold = await serve((request, response) => { if (request.method === 'HEAD') response.writeHead(200).end() })
+    const { create, data, server } = await fixture()
+    const engine = create()
+    await ready(engine, Q4)
+    engine.select(Q9)
+    await untilSnapshot(engine, snapshot => snapshot.active?.model === '9b')
+    await engine.deleteModel(Q4)
+    await expect(readFile(join(data, 'models', fileOf('4b-q4_k_m')))).rejects.toThrow()
+    expect(engine.snapshot()).toMatchObject({ active: Q9, enabled: true })
+    await engine.deleteModel(Q9)
+    const deleted = engine.snapshot()
+    expect(deleted).toMatchObject({ enabled: true, runner: { state: 'stopped' }, preparation: { phase: 'absent' } })
+    expect(deleted.active).toBeUndefined()
+    expect(deleted.unacknowledgedSwitch).toBeUndefined()
+    expect(deleted.options.find(option => option.model === '9b' && option.quant === 'q8_0')?.inventory).toEqual({ state: 'absent' })
+    await expect(decide(engine)).rejects.toMatchObject({ failure: { code: 'transport', message: 'local Reflex engine is not ready' } })
+    expect(server!.ranges.length).toBeGreaterThan(0)
+    void hold
+    engine.select(Q4)
+    const reprepared = await untilSnapshot(engine, snapshot => snapshot.active?.model === '4b' && snapshot.preparation.phase === 'ready')
+    expect(reprepared).toMatchObject({ enabled: true, runner: { state: 'running', model: Q4 } })
+    expect(reprepared.unacknowledgedAutoEnableAt).toBeUndefined()
+    await engine.disable()
+    await engine.deleteModel(Q4)
+    expect(engine.snapshot().active).toBeUndefined()
+    expect(engine.snapshot().enabled).toBe(false)
+    await engine.deleteModel()
+    expect(engine.snapshot().preparation).toEqual({ phase: 'absent' })
+  })
+
+  it('deletes a model that is being prepared by cancelling its preparation', async () => {
+    const origin = await serve((request, response) => {
+      if (request.method === 'HEAD') { response.writeHead(200).end(); return }
+      const name = (request.url ?? '').split('/').at(-1) as string
+      if (name === fileOf('4b-q4_k_m')) { response.writeHead(200); response.write((files[name] as Buffer).subarray(0, 50)); return }
+      response.writeHead(200).end(files[name])
+    })
+    const { create, data } = await fixture({ origin })
+    const engine = create()
+    await ready(engine)
+    engine.select(Q4)
+    await vi.waitFor(() => { expect(engine.snapshot().preparation).toMatchObject({ phase: 'downloading', variant: Q4 }) })
+    await engine.deleteModel(variantOf('35b-a3b-q8_0'))
+    expect(engine.snapshot().preparation).toMatchObject({ phase: 'downloading', variant: Q4 })
+    await engine.deleteModel(Q4)
+    await expect(readFile(join(data, 'models', `${fileOf('4b-q4_k_m')}.part`))).rejects.toThrow()
+    expect(engine.snapshot()).toMatchObject({ active: Q9, preparation: { phase: 'ready', variant: Q9 } })
+    engine.select(Q4)
+    await vi.waitFor(() => { expect(engine.snapshot().preparation).toMatchObject({ phase: 'downloading', variant: Q4, completedBytes: 50 }) })
+    await engine.pause()
+    expect(engine.snapshot().preparation).toMatchObject({ phase: 'ready', variant: Q9 })
+    expect(engine.snapshot().options.find(option => option.model === '4b' && option.quant === 'q4_k_m')?.inventory)
+      .toEqual({ state: 'partial', completedBytes: 50 })
+  })
+
+  it('keeps the active model when another model fails to download, and clears that failure on cancel', async () => {
+    const origin = await serve((request, response) => {
+      const name = (request.url ?? '').split('/').at(-1) as string
+      if (name === fileOf('4b-q4_k_m')) { response.writeHead(404).end(); return }
+      response.writeHead(200).end(request.method === 'HEAD' ? undefined : files[name])
+    })
+    const { create } = await fixture({ origin })
+    const engine = create()
+    await ready(engine)
+    engine.select(Q4)
+    expect((await until(engine, 'failed')).preparation).toMatchObject({ variant: Q4, failure: { kind: 'download' } })
+    expect(engine.snapshot()).toMatchObject({ active: Q9, enabled: true })
+    await decide(engine)
+    await engine.cancel()
+    expect(engine.snapshot().preparation).toMatchObject({ phase: 'ready', variant: Q9 })
+  })
+
+  it('keeps the local connection mode across disable, deletion, and restarts until routing names another provider', async () => {
+    const { create, routing, data } = await fixture({ config: { routingPollMs: 10 }, jev: { defaultProviderId: 'system-one' } })
+    const jev = routing.routing.entries()[0]!.options as { config?: Record<string, unknown> }
+    const engine = create()
+    engine.activate()
+    expect((await until(engine, 'absent')).localChosen).toBe(false)
+    await engine.chooseLocal()
+    expect(jev.config).toEqual({})
+    expect(engine.snapshot()).toMatchObject({ localChosen: true, enabled: false })
+    await engine.chooseLocal()
+    engine.select(Q9)
+    await untilSnapshot(engine, snapshot => snapshot.enabled && snapshot.preparation.phase === 'ready')
+    await engine.disable()
+    await engine.deleteModel(Q9)
+    expect(engine.snapshot()).toMatchObject({ localChosen: true, enabled: false })
+    await engine.dispose()
+    const restarted = create()
+    restarted.activate()
+    expect((await until(restarted, 'absent')).localChosen).toBe(true)
+    jev.config = { defaultProviderId: 'system-one' }
+    await untilSnapshot(restarted, snapshot => !snapshot.localChosen)
+    await vi.waitFor(async () => { expect(await state(data)).not.toHaveProperty('localChosen') })
+    restarted.select(Q4)
+    expect(jev.config).toEqual({})
+    await untilSnapshot(restarted, snapshot => snapshot.localChosen && snapshot.enabled && snapshot.active?.model === '4b')
+  })
+
+  it('records the local connection mode for routing enabled before the mode existed, and clears it for other routing at launch', async () => {
+    const { create, routing } = await fixture({ jev: { defaultProviderId: 'reflex-local' } })
+    const engine = create()
+    engine.activate()
+    expect((await until(engine, 'absent')).localChosen).toBe(true)
+    await engine.dispose()
+    const jev = routing.routing.entries()[0]!.options as { config?: Record<string, unknown> }
+    jev.config = { defaultProviderId: 'cloud' }
+    const other = create()
+    other.activate()
+    expect((await until(other, 'absent')).localChosen).toBe(false)
+  })
+
+  it('logs connection mode updates that fail', async () => {
+    const { create, routing, warn, data } = await fixture({ config: { routingPollMs: 10 }, jev: { defaultProviderId: 'system-one' } })
+    const engine = create()
+    engine.activate()
+    await until(engine, 'absent')
+    const edit = routing.routing.edit.bind(routing.routing)
+    routing.routing.edit = async () => { throw new Error('profile locked') }
+    engine.select(Q4)
+    await vi.waitFor(() => { expect(warn).toHaveBeenCalledWith('Reflex connection mode update failed', expect.objectContaining({ message: 'profile locked' })) })
+    await engine.cancel()
+    routing.routing.edit = edit
+    await engine.chooseLocal()
+    await rm(join(data, 'state.json'))
+    await mkdir(join(data, 'state.json'))
+    const jev = routing.routing.entries()[0]!.options as { config?: Record<string, unknown> }
+    jev.config = { defaultProviderId: 'system-one' }
+    await vi.waitFor(() => {
+      expect(warn.mock.calls.filter(([message]) => message === 'Reflex connection mode update failed')).toHaveLength(2)
+    })
+  })
+
+  it('reports a full-size file without a record as downloaded and prepares it without downloading', async () => {
+    const { create, data, server } = await fixture()
+    await mkdir(join(data, 'models'), { recursive: true })
+    await writeFile(join(data, 'models', fileOf('4b-q4_k_m')), weights['4b-q4_k_m'])
+    await writeFile(join(data, 'models', fileOf('9b-q8_0')), weights['9b-q8_0'])
+    await writeFile(join(data, 'models', fileOf('4b-q8_0')), weights['4b-q8_0'].subarray(1))
+    const engine = create()
+    engine.activate()
+    const inspected = await until(engine, 'paused')
+    const inventory = (key: VariantKey) => inspected.options.find(option => `${option.model}-${option.quant}` === key)?.inventory
+    expect(inventory('4b-q4_k_m')).toEqual({ state: 'downloaded' })
+    expect(inventory('9b-q8_0')).toEqual({ state: 'downloaded' })
+    expect(inventory('4b-q8_0')).toEqual({ state: 'partial', completedBytes: weights['4b-q8_0'].length - 1 })
+    engine.select(Q9)
+    await untilSnapshot(engine, snapshot => snapshot.active?.model === '9b')
+    expect(server!.ranges).toEqual([])
+  })
+
+  it('reports running state with the idle release time', async () => {
+    const { create } = await fixture({ config: { idleReleaseMs: 60_000 } })
+    const engine = create()
+    await ready(engine)
+    const before = Date.now()
+    await decide(engine)
+    const status = engine.snapshot().runner
+    expect(status).toMatchObject({ state: 'running', model: Q9 })
+    expect(status.state === 'running' ? status.idleReleaseAt : 0).toBeGreaterThanOrEqual(before + 60_000)
+  })
+
+  it('turns local decisions off after consecutive runner failures and recovers on enable', async () => {
+    const { create, mark, warn } = await fixture({ config: { maxConsecutiveRunnerFailures: 2 } })
+    const engine = create()
+    await ready(engine)
+    await decide(engine)
+    await mark('crash')
+    await expect(decide(engine)).rejects.toMatchObject({ failure: { code: 'transport' } })
+    await untilSnapshot(engine, snapshot => snapshot.runner.state === 'stopped' && snapshot.enabled)
+    await mark('crash', false)
+    const aborted = new AbortController()
+    aborted.abort(new Error('caller left'))
+    await expect((await engine.acquire(new AbortController().signal)).complete('x', aborted.signal)).rejects.toThrow('caller left')
+    await decide(engine)
+    await mark('crash')
+    await expect(decide(engine)).rejects.toMatchObject({ failure: { code: 'transport' } })
+    await mark('crash', false)
+    await mark('startFail')
+    await expect(decide(engine)).rejects.toMatchObject({ failure: { message: 'local Reflex runner is unavailable' } })
+    const failed = await untilSnapshot(engine, snapshot => snapshot.runner.state === 'failed' && !snapshot.enabled)
+    expect(failed.runner.state === 'failed' ? failed.runner.reason : '').toContain('exited before readiness')
+    expect(warn).toHaveBeenCalledWith('Reflex runner failed repeatedly; local decisions are turned off', expect.anything())
+    await mark('startFail', false)
+    await engine.enable()
+    expect(engine.snapshot().runner.state).toBe('running')
+    await decide(engine)
+  })
+
+  it('logs routing and warm-up failures around runner failures and immediate switches', async () => {
+    const { create, mark, warn, routing, root, data } = await fixture({ config: { maxConsecutiveRunnerFailures: 1 } })
+    const engine = create()
+    await ready(engine, Q4)
+    engine.select(Q9)
+    await untilSnapshot(engine, snapshot => snapshot.active?.model === '9b')
+    const edit = routing.routing.edit.bind(routing.routing)
+    routing.routing.edit = async () => { throw new Error('profile locked') }
+    await mark('crash')
+    await expect(decide(engine)).rejects.toMatchObject({ failure: { code: 'transport' } })
+    await vi.waitFor(() => { expect(warn).toHaveBeenCalledWith('Reflex routing after runner failures failed', expect.anything()) })
+    routing.routing.edit = edit
+    await mark('crash', false)
+    await engine.enable()
+    await writeFile(join(root, 'llama-server'), '#!/bin/sh\nexit 4\n')
+    engine.select(Q4)
+    await vi.waitFor(() => { expect(warn).toHaveBeenCalledWith('Reflex runner warm-up failed', expect.anything()) })
+    await rm(join(data, 'state.json'))
+    await mkdir(join(data, 'state.json'))
+    engine.select(Q9)
+    await vi.waitFor(() => { expect(warn).toHaveBeenCalledWith('Reflex model switch failed', expect.anything()) })
+  })
+
+  it('never activates a tested model without an active record, and drops an active model whose file is gone', async () => {
+    const { create, data } = await fixture()
+    const engine = create()
+    await ready(engine, Q4)
+    const { autoEnabledAt: _notice, active: _active, ...deleted } = await state(data)
+    await engine.dispose()
+    await writeFile(join(data, 'state.json'), JSON.stringify(deleted))
+    const relaunched = create()
+    relaunched.activate()
+    const inactive = await until(relaunched, 'ready')
+    expect(inactive.preparation).toMatchObject({ variant: Q4 })
+    expect(inactive.active).toBeUndefined()
+    relaunched.select(Q4)
+    expect(relaunched.snapshot().active).toEqual(Q4)
+    await relaunched.dispose()
+    await rm(join(data, 'models', fileOf('4b-q4_k_m')))
+    const gone = create()
+    gone.activate()
+    expect((await until(gone, 'absent')).active).toBeUndefined()
+  })
+
+  it('refuses a preparation without a recommendation and treats selecting the active model as done', async () => {
+    const tiers = { '4b-q4_k_m': 64 * GIB, '4b-q8_0': 64 * GIB, '9b-q4_k_m': 64 * GIB, '9b-q8_0': 64 * GIB, '35b-a3b-q4_k_m': 8 * GIB, '35b-a3b-q8_0': 64 * GIB }
+    const { create } = await fixture({ config: { minMemoryBytes: tiers } })
+    const engine = create()
+    engine.activate()
+    await until(engine, 'absent')
+    expect(engine.snapshot().recommended).toBeUndefined()
+    expect(() => { engine.prepare() }).toThrow('does not fit')
   })
 })

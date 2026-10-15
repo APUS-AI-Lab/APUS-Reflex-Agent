@@ -24,7 +24,8 @@ it('pins every published variant to a revision-qualified Hugging Face URL, small
 it('judges memory before disk, counts bytes already present, and never recommends experimental models', () => {
   const catalog = readCatalog()
   const judge = (memoryBytes: number, availableBytes: number | undefined, present = 0) => modelOptions(catalog, tiers,
-    { memoryBytes, availableBytes, diskMarginBytes: GIB, presentBytes: key => key === '9b-q8_0' ? present : 0 })
+    { memoryBytes, availableBytes, diskMarginBytes: GIB,
+      inventory: key => key === '9b-q8_0' && present > 0 ? { state: 'partial', completedBytes: present } : { state: 'absent' } })
   const roomy = judge(128 * GIB, 1000 * GIB)
   expect(roomy.every(option => option.fits)).toBe(true)
   expect(recommend(roomy)).toEqual({ model: '9b', quant: 'q8_0' })

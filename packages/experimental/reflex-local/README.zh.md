@@ -39,14 +39,20 @@ kind: "package-reference"
 | `diskMarginBytes` | 1 GiB | 下载完成后需保留的可用空间 |
 | `contextTokens` | `9216` | runner 上下文窗口 |
 | `startupTimeoutMs` / `decisionTimeoutMs` | `120000` / `30000` | runner 就绪时限与每问时限 |
-| `idleTimeoutMs` | `600000` | runner 空闲多久后停止；`0` 表示一直运行 |
+| `idleReleaseMs` | 不设置 | runner 空闲多久后停止并释放模型内存；不设置时，本机判断启用期间 runner 常驻 |
+| `maxConsecutiveRunnerFailures` | `3` | runner 连续启动或请求失败多少次后停用本机判断，runner 报告 `failed` |
+| `routingPollMs` | `2000` | 读取 `jev` 条目的间隔，使别处的修改得以发布并停止 runner |
 | `minPrefillTokensPerSecond` | `150` | 自检吞吐低于此值时报告为慢机，且不会自动启用；Apple M5（Metal）在 118 token 的参考 prompt 上约为 400，纯 CPU 推理约为 100 |
 
 `snapshot().options` 列出六个选项（4B、9B、35B-A3B 各有 Q4_K_M 与 Q8_0），含精确大小、内存档位，以及 `fits` 和第一个未满足的条件：先看 `memory`，再看可用空间能否容下尚缺的字节加 `diskMarginBytes`。`recommended` 是能装下的最大非实验选项；可用空间一个都装不下时，取内存够用的最小非实验选项。35B-A3B 为实验选项：在 Mac 上实测前从不推荐，但内存够时仍可准备。不指定变体的 `prepare()` 沿用当前或失败的变体，否则使用推荐；超出内存档位的选项会被拒绝。
 
-`prepare()` 检查可用空间，把所选档下载到 `models/<file>.part`，用 HTTP Range 请求续传已保留的字节，校验固定的大小与 SHA-256，再重命名文件。随后启动 runner，在所选模型上运行模型卡的参考决策；答案正确且速度不低于下限时启用本机决策。每个模型在 `state.json` 中各自保留校验指纹与自检结果，切回已自检的模型无需重测。`pause()` 保留部分文件，`cancel()` 删除它，`remove()` 删除全部权重并停用。`runtime/assets.json` 把每个文件固定到仓库修订，以及该修订 `SHA256SUMS` 中的 SHA-256：`apus-ailab/APUS-Reflex-4B-GGUF` 为 `191bfcb721ec6d44352c622a30d290ae6afbabc8`，`APUS-Reflex-9B-GGUF` 为 `d3691a7f15fe26ac8d6199505e03a30fdafcc563`，`APUS-Reflex-35B-A3B-GGUF` 为 `0103cd6bb0878c4229e5f7ac5f02e20a630d1ffd`。
+`prepare()` 检查可用空间，把所选档下载到 `models/<file>.part`，用 HTTP Range 请求续传已保留的字节，校验固定的大小与 SHA-256，再重命名文件。随后启动 runner，在所选模型上运行模型卡的参考决策；答案正确且速度不低于下限时启用本机决策。每个模型在 `state.json` 中各自保留校验指纹与自检结果，切回已自检的模型无需重测。`pause()` 保留部分文件，尚未收到任何字节时创建一个空的部分文件，使该变体保持 `paused` 且可续传；`cancel()` 删除它，`remove()` 删除全部权重。`runtime/assets.json` 把每个文件固定到仓库修订，以及该修订 `SHA256SUMS` 中的 SHA-256：`apus-ailab/APUS-Reflex-4B-GGUF` 为 `191bfcb721ec6d44352c622a30d290ae6afbabc8`，`APUS-Reflex-9B-GGUF` 为 `d3691a7f15fe26ac8d6199505e03a30fdafcc563`，`APUS-Reflex-35B-A3B-GGUF` 为 `0103cd6bb0878c4229e5f7ac5f02e20a630d1ffd`。
 
-`enable()` 通过 config editor 把 `jev` 条目的 volatile 字段 `defaultProviderId` 设为 `providerId`，`disable()` 删除该字段，恢复 Jev 的内置默认；两者都不会重载 Jev。`snapshot().enabled` 报告该条目实际的默认 provider 是否为此 provider，`snapshot().reflexEnabled` 报告 Jev 总开关 `jev.enabled`，为 false 时所有 provider（包括此 provider）都会停止。provider 声明 `local` 执行域，因此 System3 准入把它的决策视为本机。自检后的自动启用还会在 `state.json` 记录 `unacknowledgedAutoEnableAt`，使客户端在重启后仍能提供撤销；`acknowledge()`、`disable()` 与 `remove()` 会清除它，手动 `enable()` 从不设置它。
+`snapshot().localChosen` 在 `state.json` 中记录用户已选择本引擎作为 Reflex 接入方式。`chooseLocal()`、`select()`、`prepare()` 与启用会设置它，`chooseLocal()` 还会删除指向其他 provider 的 `defaultProviderId`。它在 `disable()`、删除、runner 失败、Reflex 总开关切换与重启后保留，只在 `jev` 条目的 `defaultProviderId` 指向其他 provider 时清除，客户端保存非本机接入方式时会写入该值。激活时路由已指向此 provider 也会设置它。`enable()` 先启动生效模型的 runner，再通过 config editor 把 `jev` 条目的 volatile 字段 `defaultProviderId` 设为 `providerId`；runner 无法启动时报告 `failed`、不改路由并拒绝。`disable()` 删除该字段，恢复 Jev 的内置默认；两者都不会重载 Jev。`snapshot().enabled` 报告该条目实际的默认 provider 是否为此 provider，`snapshot().reflexEnabled` 报告 Jev 总开关 `jev.enabled`，为 false 时所有 provider（包括此 provider）都会停止。provider 声明 `local` 执行域，因此 System3 准入把它的决策视为本机。自检后的自动启用还会在 `state.json` 记录 `unacknowledgedAutoEnableAt`，使客户端在重启后仍能提供撤销；`acknowledge()`、`disable()` 与删除生效模型会清除它，手动 `enable()` 从不设置它。
+
+provider 用来回答的模型是 `snapshot().active`，准备过程在成功前不会改变它。对已下载、且该文件自检通过或测得较慢的模型，`select(variant)` 会立即让它生效：已接受的决策在旧 runner 上完成后旧 runner 停止；本机判断已启用时立即为新模型启动 runner，否则在下一次决策时启动。选择其他模型时在后台准备，当前生效模型继续回答；自检在独立进程中运行，通过且速度达标时该进程成为新的 runner，并在 `unacknowledgedSwitch` 中记录 `{ from, to, at }`，直到 `acknowledgeSwitch()`；撤销即选择 `from`。较慢的结果保留当前生效模型，并把该选项的 `inventory.selfTest` 标为 `slow`；再次选择它即切换。第一个通过且速度达标的模型还会启用尚未启用的本机判断。正在准备某个变体时选择另一个，会抛出错误码为 `preparing-other` 的 `ReflexLifecycleError`。`snapshot().options[].inventory` 报告 `absent`、带字节数的 `partial`，或带该文件最近一次自检结果的 `downloaded`；没有匹配记录的满尺寸文件（例如状态丢失后）为不带 `selfTest` 的 `downloaded`，选择它会计算哈希并自检，不重新下载；`snapshot().runner` 报告 `stopped`、`starting`、带权重大小（即约占内存）以及设置 `idleReleaseMs` 时空闲释放时间的 `running`，或 `failed`。
+
+本机判断与 Reflex 总开关都开启时，生效模型的 runner 常驻，约占其权重文件大小的内存：它在 Host 激活、`enable()`、切换之后以及总开关在别处开启时启动。权重文件在页缓存中时，Apple M5 加载 4B Q8_0 约需 0.75 s；runner 加载期间到达的决策会等待加载，模型越大或缓存越冷等待越久。`disable()` 以及在别处关闭的 Reflex 总开关，会在进行中的决策完成后停止 runner；模型保留在磁盘上。设置 `idleReleaseMs` 时，空闲的 runner 也会停止，下一次决策再重启它。`deleteModel(variant)` 删除一个模型；删除生效模型会停止其 runner，并清除 `active` 及相关提示。删除从不改变路由，因此客户端仍显示本机模式，已启用的本机判断在另一个模型生效前以 `transport` 失败。`remove()` 与 `deleteModel()` 删除全部模型。连续 `maxConsecutiveRunnerFailures` 次启动或传输失败后，引擎停用本机判断、恢复 Jev 的内置默认，并把 runner 报告为 `failed`，直到 `enable()` 或新的选择。
 
 -----
 
@@ -59,18 +65,18 @@ kind: "package-reference"
 | 源文件 | 职责 |
 |---|---|
 | `src/index.ts` | `ReflexLocal` Service：开始检查、在嵌套的 `jev` 依赖中注册 provider、委托 `ReflexLocalService` |
-| `src/engine.ts` | 准备状态机、`state.json`、自检、路由编辑、runner 归属 |
+| `src/engine.ts` | 准备状态机、生效模型与切换、`state.json`、自检、路由编辑、runner 归属与失败计数 |
 | `src/models.ts` | 固定的模型目录、选项适配判断与自动推荐 |
 | `src/download.ts` | 下载源探测、可续传下载、校验、失败分类、可用空间检查 |
 | `src/runner.ts` | `llama-server` 进程、就绪判定、`/completion` 客户端、崩溃重启、空闲停止 |
 | `src/device.ts` | 平台、内存与 runner 门控 |
 | `src/contract.ts` / `src/provider.ts` | 训练契约 prompt 渲染与 Jev provider |
 
-启用时先读 `state.json`，再检查权重：大小与修改时间与上次哈希校验指纹一致的文件直接采信，其余完整文件重新计算哈希。已自检的权重恢复为 `ready`；未自检的权重报告满字节的 `paused`；部分文件报告带字节数的 `paused`。Host 停止时留下的 `preparing` 记录会立即续上。检查结束前拒绝 `prepare()`。
+启用时先读 `state.json`，再检查权重：大小与修改时间与上次哈希校验指纹一致的文件直接采信，其余完整文件重新计算哈希，直到第一个通过校验为止。仍是已校验、已自检文件的生效模型恢复为 `ready`；否则清除 `active`。启动时不会让其他文件生效，因此作为生效模型被删除的模型保持未生效。没有生效模型时，未自检的权重报告满字节的 `paused`，部分文件报告带字节数的 `paused`。Host 停止时留下的 `preparing` 记录会立即续上。检查结束前拒绝 `select()` 与 `prepare()`。
 
 Service 只注入 `subprocess`；provider 注册放在嵌套的 `jev` 依赖中，因此 Jev 重载（例如修改非 volatile 的 Jev 设置引起的重载）只会重新注册 provider，引擎、runner 与下载都继续运行。
 
-runner 在第一次决策或 `warm()` 时懒启动，参数为 `--host 127.0.0.1 --port 0`、`-np 1` 与 `--offline`；每次新生成的 32 字节 key 通过 `LLAMA_API_KEY` 传入（b11118 读取它，忽略 `LLAMA_ARG_API_KEY`），因此 key 不会出现在进程列表中。端口取自 stderr 的 `listening on` 行，之后 `GET /health` 必须返回 200，且 `GET /props` 不带 key 时返回 401、带 key 时返回 200；stderr 只保留有界尾部，仅写入 Host 日志。在 HTTP 层以下失败的请求会把进程标记为待替换，下一次获取时重启。自检在新进程上以 `cache_prompt: false` 运行参考 prompt 两次并测量第二次，因为第一次包含一次性的 GPU 初始化。
+runner 在 `warm()`、`enable()` 或第一次决策时启动，参数为 `--host 127.0.0.1 --port 0`、`-np 1` 与 `--offline`；每次新生成的 32 字节 key 通过 `LLAMA_API_KEY` 传入（b11118 读取它，忽略 `LLAMA_ARG_API_KEY`），因此 key 不会出现在进程列表中。端口取自 stderr 的 `listening on` 行，之后 `GET /health` 必须返回 200，且 `GET /props` 不带 key 时返回 401、带 key 时返回 200；stderr 只保留有界尾部，仅写入 Host 日志。在 HTTP 层以下失败的请求会把进程标记为待替换，下一次获取时重启。自检在新进程上以 `cache_prompt: false` 运行参考 prompt 两次并测量第二次，因为第一次包含一次性的 GPU 初始化。
 
 不发布运行时不变量配套：进程观测由 `dsh-subprocess` 负责，引擎没有需要对账的第二份投影。
 
@@ -100,7 +106,7 @@ runner 在第一次决策或 `warm()` 时懒启动，参数为 `--host 127.0.0.1
 
 #### KV Cache 影响
 
-与主生成路由相互独立。runner 只有一个 slot，同一请求的各问题复用共享状态前缀；状态不同或空闲停止都会使复用失效。
+与主生成路由相互独立。runner 只有一个 slot，同一请求的各问题复用共享状态前缀；状态不同或 runner 停止都会使复用失效。
 
 ## 已知限制与后续工作
 
@@ -108,7 +114,9 @@ runner 在第一次决策或 `warm()` 时懒启动，参数为 `--host 127.0.0.1
 
 - **仅支持 macOS arm64** — runner 随 macOS arm64 桌面 runtime 分发；其他 Host 报告 `platform`。
 - **自检吞吐在短 prompt 上测量** — 参考 prompt 约 120 个 token，固定开销占主导；Apple M5 测得约每秒 400 token，长 prompt 约 1,000。默认值 150 仅在 M5 上校准。
-- **外部路由变化不会推送** — `snapshot()` 每次调用都从 `jev` 条目读取 `enabled` 与 `reflexEnabled`，但 `follow()` 只发布引擎自身的变化；在 Reflex 设置页做的修改会在下一次发布或读取 snapshot 时出现。
+- **外部路由变化靠轮询发现** — `snapshot()` 每次调用都读取 `enabled` 与 `reflexEnabled`，但 `follow()` 与 runner 停止要到下一个 `routingPollMs` 周期才看到在 Reflex 设置页做的修改。
+- **模型加载会延迟启动与切换后的决策** — Host 启动时以及 `select()` 切换模型后，Jev 已路由到此 provider 而 runner 仍在加载，这期间的决策会等待加载；只有 `enable()` 先加载再改路由。
+- **后台切换会短暂运行两个进程** — 候选模型在独立进程中自检，同时当前生效模型继续服务，因此切换完成前内存峰值是两个权重文件之和。
 - **35B-A3B 尚未在 Mac 上实测** — 在 Mac 实测确定档位与速度预期之前，这些选项保持实验状态。
 - **契约输入缺口** — 训练契约拒绝空或仅含空白的 state 与 instructions，但 Jev 校验只要求 instructions 非空，这类请求仍会被渲染。形如整数的 choice key 在分配字母时遵循 JavaScript 键顺序，而不是插入顺序。
 
@@ -120,6 +128,6 @@ runner 在第一次决策或 `warm()` 时懒启动，参数为 `--host 127.0.0.1
 <details>
 <summary>维护者细节 — 点击展开</summary>
 
-设置 `REFLEX_LOCAL_RUNNER` 与 `REFLEX_LOCAL_WEIGHTS` 时，`tests/engine.e2e.ts` 使用真实 runner；单元测试使用 `tests/fake-llama-server.fixture.mjs`，它读取与真实 runner 相同的参数与 `LLAMA_API_KEY`，输出相同的 stderr 行，并以相同字段响应 `/health`、`/props` 与 `/completion`。
+设置 `REFLEX_LOCAL_RUNNER` 与 `REFLEX_LOCAL_WEIGHTS` 时，`tests/engine.e2e.ts` 使用真实 runner，再设置 `REFLEX_LOCAL_SWITCH_WEIGHTS` 时还会验证真实的 4B→9B 切换；单元测试使用 `tests/fake-llama-server.fixture.mjs`，它读取与真实 runner 相同的参数与 `LLAMA_API_KEY`，输出相同的 stderr 行，并以相同字段响应 `/health`、`/props` 与 `/completion`。
 
 </details>

@@ -101,7 +101,7 @@ Harness 的 `JevRequest` 与模型训练契约不是一一对应，有三处实�
 - `orderModelSources()`（`src/model-sources.ts:13`）：多源并发 HEAD 探测，首个可用优先。
 - 失败分类 `'http' | 'integrity' | 'timeout' | 'storage' | 'unknown'`（`src/download-error.ts:20`）。
 - 进度上报 phase `checking | downloading | loading | waking | ready | standby`，按 `progressIntervalMs` 节流。
-- 进程管理：`ctx.subprocess.spawn` + 从输出握手拿端口 + `Bearer` 鉴权 + `idleTimeoutMs` 空闲回收（`src/process-server.ts:14-55`）。llama-server 自带 `--api-key` 与 `--port 0`，不需要再包一层 Node 服务。
+- 进程管理：`ctx.subprocess.spawn` + 从输出握手拿端口 + `Bearer` 鉴权 + `idleTimeoutMs` 空闲回收（`src/process-server.ts:14-55`）；本机 Reflex runner 的空闲释放改为通过 `idleReleaseMs` 显式开启。llama-server 自带 `--api-key` 与 `--port 0`，不需要再包一层 Node 服务。
 - teardown 顺序（`recognizer.ts:320-326`）与「推理路径绝不触发下载」原样沿用。
 - 声明式 bundle：`cordis.patch.yml` + `icon.svg` + `locale/{en,zh}.json`。
 
@@ -219,7 +219,7 @@ llama-server -m <weights> --host 127.0.0.1 --port 0 --api-key <randomBytes(32)> 
 1. 同一 provider 的请求**串行**，按问题顺序发送，使 2..N 问命中前缀缓存。
 2. 候选数 > 16 直接拒绝；任一候选不在返回的 1,024 项里时报 `invalid-response`，不补 0。实测 16 候选全部在内，这条是防御。
 3. `warm()` 在会话开始时启动进程并加载模型，把 4 秒加载挪出第一轮判断。
-4. 空闲超过 `Config.idleTimeoutMs` 后结束进程，释放约 4.5 GB 内存；下次判断前重新 `warm()`。
+4. 本机判断启用期间进程常驻（4B Q8_0 约 4.5 GB）：它在 Host 启动时、`enable()` 修改路由之前以及模型切换后启动。只有配置了 `Config.idleReleaseMs` 才会结束空闲进程以释放这部分内存，之后的下一次判断需等待加载。
 5. 权重文件与 runner 版本都锁定。升级 runner 视为需要重跑分布一致性复验的变更，不随 CI 自动放行。
 
 <a id="preparation-flow"></a>

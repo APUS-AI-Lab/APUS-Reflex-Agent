@@ -1,7 +1,9 @@
 /** The Remote namespace forwards each call to the Host-owned local decision engine. */
 import { Context } from '@deepseek-ai/cordis'
 import { afterEach, expect, it, vi } from 'vitest'
+import { ReflexLifecycleError } from '@deepseek-ai/dsh-experimental-reflex-local'
 import type { ReflexLocalService, ReflexSnapshot } from '@deepseek-ai/dsh-experimental-reflex-local/types'
+import { remoteErrorOf } from '@deepseek-ai/dsh-typert-protocol'
 import ReflexLocalController from '../src/index.ts'
 
 const roots: Context[] = []
@@ -9,9 +11,10 @@ afterEach(async () => { await Promise.all(roots.splice(0).map(root => root.fiber
 
 const snapshot: ReflexSnapshot = {
   device: { supported: true, memoryBytes: 24e9 },
-  options: [{ model: '4b', quant: 'q8_0', bytes: 4.48e9, minMemoryBytes: 16e9, experimental: false, fits: true }],
+  options: [{ model: '4b', quant: 'q8_0', bytes: 4.48e9, minMemoryBytes: 16e9, experimental: false, fits: true, inventory: { state: 'absent' } }],
   recommended: { model: '4b', quant: 'q8_0' },
-  preparation: { phase: 'absent' }, enabled: false, reflexEnabled: true, providerId: 'reflex-local', downloadSources: [],
+  preparation: { phase: 'absent' }, runner: { state: 'stopped' },
+  enabled: false, localChosen: false, reflexEnabled: true, providerId: 'reflex-local', downloadSources: [],
 }
 
 function fixture() {
@@ -19,9 +22,10 @@ function fixture() {
   const service = {
     snapshot: vi.fn(() => snapshot),
     follow: vi.fn(async function* (_signal: AbortSignal) { yield snapshot }),
-    prepare: vi.fn(),
-    pause: vi.fn(async () => {}), cancel: vi.fn(async () => {}),
+    prepare: vi.fn(), select: vi.fn(),
+    pause: vi.fn(async () => {}), cancel: vi.fn(async () => {}), chooseLocal: vi.fn(async () => {}),
     enable: vi.fn(async () => {}), disable: vi.fn(async () => {}), remove: vi.fn(async () => {}), acknowledge: vi.fn(async () => {}),
+    acknowledgeSwitch: vi.fn(async () => {}), deleteModel: vi.fn(async () => {}),
   } satisfies ReflexLocalService
   ctx.provide('reflexLocal', service)
   return { api: new ReflexLocalController(ctx), service }
@@ -39,10 +43,28 @@ it('forwards observation and every preparation and enablement command', async ()
   api.prepare({ variant: { model: '9b', quant: 'q4_k_m' }, downloadSource: 'https://hf-mirror.com' })
   expect(service.prepare).toHaveBeenNthCalledWith(1, undefined)
   expect(service.prepare).toHaveBeenNthCalledWith(2, { variant: { model: '9b', quant: 'q4_k_m' }, downloadSource: 'https://hf-mirror.com' })
-  await api.pause(); await api.cancel(); await api.enable(); await api.disable(); await api.deleteModel(); await api.acknowledge()
-  for (const method of [service.pause, service.cancel, service.enable, service.disable, service.remove, service.acknowledge]) {
+  api.select({ model: '9b', quant: 'q8_0' })
+  expect(service.select).toHaveBeenCalledWith({ model: '9b', quant: 'q8_0' })
+  await api.pause(); await api.cancel(); await api.chooseLocal(); await api.enable(); await api.disable(); await api.acknowledge()
+  await api.acknowledgeSwitch()
+  const commands = [service.pause, service.cancel, service.chooseLocal, service.enable, service.disable, service.acknowledge,
+    service.acknowledgeSwitch]
+  for (const method of commands) {
     expect(method).toHaveBeenCalledOnce()
   }
+  await api.deleteModel()
+  await api.deleteModel({ model: '4b', quant: 'q8_0' })
+  expect(service.deleteModel.mock.calls).toEqual([[undefined], [{ model: '4b', quant: 'q8_0' }]])
+})
+
+it('turns a typed engine refusal into a coded Remote failure', () => {
+  const { api, service } = fixture()
+  const details = { preparing: { model: '9b', quant: 'q8_0' }, requested: { model: '4b', quant: 'q4_k_m' } } as const
+  service.select.mockImplementationOnce(() => { throw new ReflexLifecycleError('preparing-other', 'busy', details) })
+  const failure = remoteErrorOf((() => { try { api.select(details.requested) } catch (error) { return error } })())
+  expect(failure).toMatchObject({ code: 'reflexLocal/preparing-other', details })
+  service.prepare.mockImplementationOnce(() => { throw new ReflexLifecycleError('preparing-other', 'busy', details) })
+  expect(remoteErrorOf((() => { try { api.prepare() } catch (error) { return error } })())?.code).toBe('reflexLocal/preparing-other')
 })
 
 it('propagates Host rejections unchanged', async () => {

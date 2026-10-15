@@ -82,6 +82,9 @@ class StderrTail {
 
   constructor(stream: Readable, private readonly limit: number) {
     stream.on('data', (chunk: Buffer) => { this.append(chunk) })
+    void this.port.promise.catch((_exitBeforeReadiness: unknown) => {
+      // Startup observes this rejection; an aborted startup stops waiting first and must not leave it unhandled.
+    })
   }
 
   private append(chunk: Buffer): void {
@@ -135,6 +138,13 @@ function parseCompletion(text: string): ReflexCompletion {
   return { logprobs, promptTokens, cachedTokens, promptMs }
 }
 
+/** Process lifecycle of one runner, as `ReflexRunner.status()` reports it. */
+export interface RunnerStatus {
+  readonly state: 'stopped' | 'starting' | 'running'
+  /** Epoch milliseconds when the idle process stops; set only while running idle with `idleReleaseMs` configured. */
+  readonly idleReleaseAt?: number
+}
+
 /**
  * Owns at most one `llama-server` for one weights file. Startup is shared by concurrent callers; an exited process is
  * replaced on the next acquisition; disposal terminates the process and waits for its exit.
@@ -144,6 +154,7 @@ export class ReflexRunner {
   private starting: Promise<RunnerProcess> | undefined
   private readonly lifetime = new AbortController()
   private idle: ReturnType<typeof setTimeout> | undefined
+  private idleReleaseAt: number | undefined
   private busy = 0
 
   /**
@@ -151,10 +162,22 @@ export class ReflexRunner {
    * @param config - process limits and deadlines.
    * @param executable - absolute `llama-server` path.
    * @param model - absolute verified weights path.
+   * @param changed - called after each `status()` change; it must not throw.
    */
   constructor(
     private readonly ctx: Context, private readonly config: Config, private readonly executable: string, readonly model: string,
+    private readonly changed: () => void = () => {},
   ) {}
+
+  /**
+   * Report the process lifecycle.
+   * @returns whether a process is starting or running, and when an idle one stops.
+   */
+  status(): RunnerStatus {
+    if (this.starting !== undefined) return { state: 'starting' }
+    if (this.process === undefined || this.process.exited) return { state: 'stopped' }
+    return this.idleReleaseAt === undefined ? { state: 'running' } : { state: 'running', idleReleaseAt: this.idleReleaseAt }
+  }
 
   /**
    * Start the runner when it is not running and return a client bound to that process.
@@ -166,9 +189,18 @@ export class ReflexRunner {
     signal.throwIfAborted()
     const current = this.process
     const process = current !== undefined && !current.exited ? current
-      : await waitFor(this.starting ??= this.restart().finally(() => { this.starting = undefined }), signal)
+      : await waitFor(this.starting ??= this.begin(), signal)
     this.scheduleIdle()
     return { complete: async (prompt, callSignal, cachePrompt = true) => await this.complete(process, prompt, callSignal, cachePrompt) }
+  }
+
+  private begin(): Promise<RunnerProcess> {
+    const starting = this.restart().finally(() => {
+      this.starting = undefined
+      this.changed()
+    })
+    this.changed()
+    return starting
   }
 
   private async restart(): Promise<RunnerProcess> {
@@ -205,6 +237,7 @@ export class ReflexRunner {
         if (process.exited) return
         process.exited = true
         this.ctx.logger.warn('Reflex runner exited; the next decision restarts it', log.text())
+        this.changed()
       })
       return process
     } catch (error) {
@@ -220,7 +253,7 @@ export class ReflexRunner {
   private async complete(process: RunnerProcess, prompt: string, signal: AbortSignal, cachePrompt: boolean): Promise<ReflexCompletion> {
     if (process.exited) throw new JevProviderError({ code: 'transport', message: 'local Reflex runner is not running' })
     this.busy++
-    clearTimeout(this.idle)
+    this.clearIdle()
     using call = deadline(signal, this.config.decisionTimeoutMs, DECISION)
     try {
       const response = await fetch(`${process.url}/completion`, {
@@ -246,20 +279,30 @@ export class ReflexRunner {
   }
 
   private scheduleIdle(): void {
+    this.clearIdle()
+    const release = this.config.idleReleaseMs
+    if (release !== undefined && this.busy === 0 && this.process !== undefined) {
+      this.idleReleaseAt = Date.now() + release
+      this.idle = setTimeout(() => {
+        void this.stop().catch((error: unknown) => { this.ctx.logger.warn('Reflex runner idle cleanup failed', error) })
+      }, release)
+    }
+    this.changed()
+  }
+
+  private clearIdle(): void {
     clearTimeout(this.idle)
-    if (this.config.idleTimeoutMs === 0 || this.busy > 0 || this.process === undefined) return
-    this.idle = setTimeout(() => {
-      void this.stop().catch((error: unknown) => { this.ctx.logger.warn('Reflex runner idle cleanup failed', error) })
-    }, this.config.idleTimeoutMs)
+    this.idleReleaseAt = undefined
   }
 
   /** Terminate the running process. @returns after the managed process range is empty. */
   async stop(): Promise<void> {
-    clearTimeout(this.idle)
+    this.clearIdle()
     const process = this.process
     this.process = undefined
     if (process === undefined) return
     process.exited = true
+    this.changed()
     process.handle.terminate()
     await process.handle.waitForExit()
   }

@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-The `reflexLocal` Remote connects the browser to `ctx.reflexLocal`. It streams device support, preparation, and enablement snapshots and forwards the preparation, pause, cancel, enable, disable, and model deletion (`deleteModel`) commands.
+The `reflexLocal` Remote connects the browser to `ctx.reflexLocal`. It streams device support, model inventory, preparation, runner, and enablement snapshots and forwards the connection mode choice (`chooseLocal`), model selection, preparation, pause, cancel, enable, disable, notice acknowledgement, and model deletion (`deleteModel`) commands.
 
 ## Table of Contents
 
@@ -25,7 +25,7 @@ The `reflexLocal` Remote connects the browser to `ctx.reflexLocal`. It streams d
 <a id="use-this-package"></a>
 ## Use this package
 
-Compose with the local decision engine service and Typert. The browser UI mounts this package’s generated `/remote` contribution when enabled. `prepare({ variant, downloadSource })` forwards one variant and one advertised source to the engine; omission uses the device recommendation and the configured origins. The engine rejects a variant or source change while work is active, and the rejection reaches the caller unchanged.
+Compose with the local decision engine service and Typert. The browser UI mounts this package’s generated `/remote` contribution when enabled. `prepare({ variant, downloadSource })` forwards one variant and one advertised source to the engine; omission uses the device recommendation and the configured origins. `select(variant)` makes a tested downloaded model active at once or prepares another one in the background. While a different variant is being prepared, `select()` and `prepare()` fail with the Remote code `reflexLocal/preparing-other` and details `{ preparing, requested }`, so a client can offer to pause the current download; other engine rejections reach the caller unchanged. `deleteModel(variant)` deletes one model, and `deleteModel()` deletes every model. `acknowledgeSwitch()` clears a background switch notice.
 
 -----
 

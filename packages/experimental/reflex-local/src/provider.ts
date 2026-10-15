@@ -89,6 +89,14 @@ export class ReflexJevProvider implements JevProvider {
   }
 
   /**
+   * Wait for the requests accepted so far, including queued ones; later requests are not awaited.
+   * @returns after each of those requests settled.
+   */
+  async drain(): Promise<void> {
+    await this.tail
+  }
+
+  /**
    * Answer every question through the local runner and validate the assembled response.
    * @param request - JSON state and typed questions with at most 16 candidates each.
    * @param signal - Caller cancellation; an abort rethrows its reason.

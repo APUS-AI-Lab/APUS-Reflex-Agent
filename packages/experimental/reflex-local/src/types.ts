@@ -12,6 +12,19 @@ export interface ReflexVariant {
   readonly quant: ReflexQuant
 }
 
+/** What this Host holds for one option. */
+export interface ReflexInventory {
+  /**
+   * `downloaded` is a complete file of the pinned size; it is hash-verified when `selfTest` is present, and otherwise the
+   * next preparation verifies and self-tests it without downloading. `partial` is a retained incomplete file.
+   */
+  readonly state: 'absent' | 'partial' | 'downloaded'
+  /** Bytes on disk for `partial`. */
+  readonly completedBytes?: number
+  /** Last self-test of this exact downloaded file; absent before one ran. */
+  readonly selfTest?: 'passed' | 'slow' | 'failed'
+}
+
 /** One weights file this deployment offers, judged against this Host. */
 export interface ReflexModelOption extends ReflexVariant {
   /** Exact pinned file size. */
@@ -24,7 +37,40 @@ export interface ReflexModelOption extends ReflexVariant {
   readonly fits: boolean
   /** First unmet requirement when `fits` is false: total memory, then free disk space for the bytes still missing. */
   readonly reason?: 'memory' | 'disk'
+  readonly inventory: ReflexInventory
 }
+
+/** The managed `llama-server` process. */
+export type ReflexRunnerStatus =
+  | { readonly state: 'stopped' }
+  | { readonly state: 'starting'; readonly model: ReflexVariant }
+  | {
+    readonly state: 'running'
+    readonly model: ReflexVariant
+    /** Weights file size, the dominant part of the process's memory. */
+    readonly approxResidentBytes: number
+    /** Epoch milliseconds when an idle runner stops; absent while a decision runs or when idle release is off. */
+    readonly idleReleaseAt?: number
+  }
+  /** Consecutive runner failures reached the configured limit, so local decisions were turned off. */
+  | { readonly state: 'failed'; readonly reason: string }
+
+/** A completed background switch of the active model that no client has acknowledged; undo selects `from`. */
+export interface ReflexSwitch {
+  readonly from: ReflexVariant
+  readonly to: ReflexVariant
+  /** Epoch milliseconds of the switch. */
+  readonly at: number
+}
+
+/** Typed refusals of lifecycle requests, keyed by code, with their details. */
+export interface ReflexLifecycleErrorDetails {
+  /** Another variant is being prepared; pause or cancel it before selecting `requested`. */
+  'preparing-other': { readonly preparing: ReflexVariant; readonly requested: ReflexVariant }
+}
+
+/** Code of a typed lifecycle refusal. */
+export type ReflexLifecycleErrorCode = keyof ReflexLifecycleErrorDetails
 
 /** Whether this Host can run the bundled runner, decided once at activation. */
 export type ReflexDeviceSupport =
@@ -56,7 +102,10 @@ export interface ReflexSelfTest {
   readonly slow: boolean
 }
 
-/** Preparation phase of the selected variant. Byte counts are exact; no phase reports an estimated percentage. */
+/**
+ * Preparation work and its resting result. A running task reports its variant, which may differ from `active`; with no
+ * task, `ready` reports the active model and `paused` a retained partial or untested file. Byte counts are exact.
+ */
 export type ReflexPreparation =
   | { readonly phase: 'unsupported' }
   | { readonly phase: 'checking' }
@@ -78,8 +127,18 @@ export interface ReflexSnapshot {
    */
   readonly recommended?: ReflexVariant
   readonly preparation: ReflexPreparation
+  /** Model the provider answers with; preparing another variant leaves it serving until that variant passes. */
+  readonly active?: ReflexVariant
+  readonly runner: ReflexRunnerStatus
+  /** Background switch awaiting `acknowledgeSwitch()`; `disable()`, deleting the active model, and a later switch replace or clear it. */
+  readonly unacknowledgedSwitch?: ReflexSwitch
   /** Whether the Jev entry's effective `defaultProviderId` is `providerId`. */
   readonly enabled: boolean
+  /**
+   * Whether the user chose the local engine as the Reflex connection mode. It persists across `disable()`, deletion,
+   * runner failures, and restarts, and clears only when the Jev entry's `defaultProviderId` names another provider.
+   */
+  readonly localChosen: boolean
   /** The Jev master switch (`jev.enabled`); false stops every provider, including the local one. */
   readonly reflexEnabled: boolean
   /** Jev registry id of the local provider. */
@@ -90,7 +149,8 @@ export interface ReflexSnapshot {
   readonly downloadSources: readonly string[]
   /**
    * Epoch milliseconds of an automatic enablement the user has not acknowledged. It persists across restarts so a
-   * client that was closed when the self-test finished can still offer undo; `acknowledge()` and `disable()` clear it.
+   * client that was closed when the self-test finished can still offer undo; `acknowledge()`, `disable()`, and deleting
+   * the active model clear it.
    */
   readonly unacknowledgedAutoEnableAt?: number
 }
@@ -114,24 +174,58 @@ export interface ReflexLocalService {
    */
   follow(signal: AbortSignal): AsyncIterable<ReflexSnapshot>
   /**
-   * Start or join download, verification, and self-test; a passing, fast self-test enables local decisions.
-   * Resumes a paused or interrupted download from its retained partial file.
-   * @param options - variant and source selection; changing either while work is active throws.
+   * Make a variant active. A downloaded variant whose file passed (or was measured slow by) its self-test becomes active
+   * at once: the in-flight decision finishes on the old runner, which then stops, and the next decision starts the new
+   * one. Any other variant is prepared in the background while the current active model keeps answering; a passing,
+   * fast self-test then switches to it and records `unacknowledgedSwitch`, while a slow one leaves the active model.
+   * The first passing, fast model also enables local decisions that are off. Selecting also performs `chooseLocal()`.
+   * @param variant - option to make active; it must fit memory.
+   * @param options - one advertised download origin used without fallback.
+   * @throws ReflexLifecycleError `preparing-other` while another variant is being prepared.
+   */
+  select(variant: ReflexVariant, options?: Pick<ReflexPrepareOptions, 'downloadSource'>): void
+  /**
+   * `select()` the given variant, else the variant of a paused or failed preparation, else the recommendation; joins
+   * matching work and resumes a retained partial file.
+   * @param options - variant and source selection.
+   * @throws ReflexLifecycleError `preparing-other` while another variant is being prepared.
    */
   prepare(options?: ReflexPrepareOptions): void
   /** Stop active work and keep the partial download for a later `prepare()`. @returns after the work settles. */
   pause(): Promise<void>
   /** Stop active work and delete the partial download. @returns after the work settles and the file is removed. */
   cancel(): Promise<void>
-  /** Set the Jev entry's `defaultProviderId` to the local provider; requires `ready`. @returns after the profile change is applied. */
+  /**
+   * Record the local engine as the chosen Reflex connection mode and remove a Jev `defaultProviderId` that names another
+   * provider; routing to the local provider still requires `enable()`.
+   * @returns after the profile change and the choice are persisted.
+   */
+  chooseLocal(): Promise<void>
+  /**
+   * Start the active model's runner while the Jev master switch is on, then set the Jev entry's `defaultProviderId` to
+   * the local provider; requires an active model. A runner that cannot start is reported as `failed` and leaves routing
+   * unchanged.
+   * @returns after the runner answers and the profile change is applied.
+   */
   enable(): Promise<void>
   /**
-   * Remove the Jev entry's `defaultProviderId`, restoring the built-in default, and clear the automatic-enable notice.
-   * @returns after the change is applied.
+   * Remove the Jev entry's `defaultProviderId`, restoring the built-in default, clear the automatic-enable and switch
+   * notices, and stop the runner after the in-flight decision; downloaded models stay.
+   * @returns after the change is applied and the runner stopped.
    */
   disable(): Promise<void>
   /** Clear `unacknowledgedAutoEnableAt` after a client showed it. @returns after the cleared state is persisted. */
   acknowledge(): Promise<void>
-  /** Disable, stop the runner, and delete downloaded weights and partial files. @returns after deletion. */
+  /** Clear `unacknowledgedSwitch` after a client showed it. @returns after the cleared state is persisted. */
+  acknowledgeSwitch(): Promise<void>
+  /**
+   * Delete one variant's weights, partial file, and records. Deleting the active variant stops the runner and clears
+   * `active` and the notices about it. Routing is unchanged: while it points at the local provider, decisions fail
+   * with `transport` until another model becomes active.
+   * @param variant - option to delete; omission deletes every model like `remove()`.
+   * @returns after deletion.
+   */
+  deleteModel(variant?: ReflexVariant): Promise<void>
+  /** Stop preparation and the runner, and delete downloaded weights and partial files; routing is unchanged. @returns after deletion. */
   remove(): Promise<void>
 }
