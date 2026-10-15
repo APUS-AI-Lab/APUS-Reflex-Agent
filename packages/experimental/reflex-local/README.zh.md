@@ -44,7 +44,7 @@ kind: "package-reference"
 | `routingPollMs` | `2000` | 读取 `jev` 条目的间隔，使别处的修改得以发布并停止 runner |
 | `minPrefillTokensPerSecond` | `150` | 自检吞吐低于此值时报告为慢机，且不会自动启用；Apple M5（Metal）在 118 token 的参考 prompt 上约为 400，纯 CPU 推理约为 100 |
 
-`snapshot().options` 列出六个选项（4B、9B、35B-A3B 各有 Q4_K_M 与 Q8_0），含精确大小、内存档位，以及 `fits` 和第一个未满足的条件：先看 `memory`，再看可用空间能否容下尚缺的字节加 `diskMarginBytes`。`recommended` 是能装下的最大非实验选项；可用空间一个都装不下时，取内存够用的最小非实验选项。35B-A3B 为实验选项：在 Mac 上实测前从不推荐，但内存够时仍可准备。不指定变体的 `prepare()` 沿用当前或失败的变体，否则使用推荐；超出内存档位的选项会被拒绝。
+`snapshot().options` 列出六个选项（4B、9B、35B-A3B 各有 Q4_K_M 与 Q8_0），含精确大小、内存档位，以及 `fits` 和第一个未满足的条件：先看 `memory`，再看可用空间能否容下尚缺的字节加 `diskMarginBytes`。`recommended` 是能装下的最大非实验选项；可用空间一个都装不下时，取内存够用的最小非实验选项。35B-A3B 为实验选项：在 Mac 上实测前从不推荐，但仍可准备。不指定变体的 `prepare()` 沿用当前或失败的变体，否则使用推荐。对超出本机内存档位的选项，`select()` 与 `prepare()` 以错误码 `unfit`、details 为 `{ variant, requiredBytes, deviceBytes }` 的 `ReflexLifecycleError` 拒绝，除非调用方在用户同意后传入 `allowUnfit: true`。此后该选项与其他选项一样下载、校验并自检；仍需足够的可用磁盘空间，runner 无法加载时准备失败，当前生效模型继续回答。选择当前生效模型不会再次询问。
 
 `prepare()` 检查可用空间，把所选档下载到 `models/<file>.part`，用 HTTP Range 请求续传已保留的字节，校验固定的大小与 SHA-256，再重命名文件。随后启动 runner，在所选模型上运行模型卡的参考决策；答案正确且速度不低于下限时启用本机决策。每个模型在 `state.json` 中各自保留校验指纹与自检结果，切回已自检的模型无需重测。`pause()` 保留部分文件，尚未收到任何字节时创建一个空的部分文件，使该变体保持 `paused` 且可续传；`cancel()` 删除它，`remove()` 删除全部权重。`runtime/assets.json` 把每个文件固定到仓库修订，以及该修订 `SHA256SUMS` 中的 SHA-256：`apus-ailab/APUS-Reflex-4B-GGUF` 为 `191bfcb721ec6d44352c622a30d290ae6afbabc8`，`APUS-Reflex-9B-GGUF` 为 `d3691a7f15fe26ac8d6199505e03a30fdafcc563`，`APUS-Reflex-35B-A3B-GGUF` 为 `0103cd6bb0878c4229e5f7ac5f02e20a630d1ffd`。
 
@@ -113,10 +113,12 @@ runner 在 `warm()`、`enable()` 或第一次决策时启动，参数为 `--host
 <a id="known-limitations-and-deferred-work"></a>
 
 - **仅支持 macOS arm64** — runner 随 macOS arm64 桌面 runtime 分发；其他 Host 报告 `platform`。
+- **只有下载后才发现 Metal 不可用** — `inspectDevice` 检查平台、总内存与可执行的 runner，但不检查 Metal 设备是否可用。虚拟机或 Metal 初始化失败的 Mac 会被报告为受支持；准备阶段先下载权重，之后若 runner 启动超过 `startupTimeoutMs`，自检失败；若 ggml 回退到 CPU（约每秒 100 token，低于 `minPrefillTokensPerSecond`），自检报告 `slow`。待办：在下载前用有时限的 `--list-devices` 探测，要求存在 `MTL0` 设备，并报告专门的不支持原因。
 - **自检吞吐在短 prompt 上测量** — 参考 prompt 约 120 个 token，固定开销占主导；Apple M5 测得约每秒 400 token，长 prompt 约 1,000。默认值 150 仅在 M5 上校准。
-- **外部路由变化靠轮询发现** — `snapshot()` 每次调用都读取 `enabled` 与 `reflexEnabled`，但 `follow()` 与 runner 停止要到下一个 `routingPollMs` 周期才看到在 Reflex 设置页做的修改。
+- **外部路由变化靠轮询发现** — `snapshot()` 每次调用都读取 `enabled` 与 `reflexEnabled`，Reflex 总开关的变化通过 Jev 的 `jev/enabled` 事件立即到达 `follow()` 与 runner；在 Reflex 设置页修改的 `defaultProviderId` 要到下一个 `routingPollMs` 周期才被看到。
 - **模型加载会延迟启动与切换后的决策** — Host 启动时以及 `select()` 切换模型后，Jev 已路由到此 provider 而 runner 仍在加载，这期间的决策会等待加载；只有 `enable()` 先加载再改路由。
 - **后台切换会短暂运行两个进程** — 候选模型在独立进程中自检，同时当前生效模型继续服务，因此切换完成前内存峰值是两个权重文件之和。
+- **超出内存档位的模型加载时可能拖慢整台 Mac** — `allowUnfit` 允许大于内存档位的权重；runner 进程可能大量换页，直到失败或超过 `startupTimeoutMs`。失败只发生在该进程中，不计入 `maxConsecutiveRunnerFailures`。
 - **35B-A3B 尚未在 Mac 上实测** — 在 Mac 实测确定档位与速度预期之前，这些选项保持实验状态。
 - **契约输入缺口** — 训练契约拒绝空或仅含空白的 state 与 instructions，但 Jev 校验只要求 instructions 非空，这类请求仍会被渲染。形如整数的 choice key 在分配字母时遵循 JavaScript 键顺序，而不是插入顺序。
 

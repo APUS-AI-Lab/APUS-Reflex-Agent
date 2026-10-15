@@ -10,9 +10,9 @@ import type {
 } from '@deepseek-ai/dsh-experimental-api-reflex-local/types'
 import type { ReflexLocalInjected } from './injected.ts'
 import type { NS, ReflexLocalKey } from './locales.ts'
-import { cancelCopy, ConfirmDialog, type ConfirmCopy } from './ConfirmDialog.tsx'
+import { cancelCopy, ConfirmDialog, NoticeDialog, type ConfirmCopy } from './ConfirmDialog.tsx'
 import { ModelSelect } from './ModelSelect.tsx'
-import { memoryText, optionOf, sameVariant, shortVariantName, sizeText } from './size.ts'
+import { memoryShortfall, memoryText, optionOf, sameVariant, shortfallText, shortVariantName, sizeText, type MemoryNeed } from './size.ts'
 import css from './ReflexLocal.module.css'
 
 /** Registration shares for the Reflex local-mode body and the bundle configuration entry. */
@@ -64,7 +64,7 @@ interface CardContent {
 type Confirmation =
   | { readonly kind: 'delete'; readonly variant: ReflexVariant }
   | { readonly kind: 'cancel'; readonly bytes: number }
-  | { readonly kind: 'switch'; readonly variant: ReflexVariant }
+  | { readonly kind: 'switch'; readonly variant: ReflexVariant; readonly allowUnfit: boolean }
 
 const TONES: Readonly<Record<CardState, StateDotState>> = {
   unsupported: 'idle', checking: 'ongoing', absent: 'idle', downloaded: 'idle', preparing: 'ongoing', verifying: 'ongoing',
@@ -102,10 +102,13 @@ function taskOf(preparation: ReflexPreparation): Task | undefined {
   }
 }
 
-/** The variant a freshly opened card describes: the active model, else the one preparation names, else the recommendation. */
+/**
+ * The variant a freshly opened card describes: the active model, else the one preparation names, else the recommendation,
+ * else the smallest option when none fits.
+ */
 function initialDraft(snapshot: ReflexSnapshot): ReflexVariant | undefined {
   const { preparation } = snapshot
-  return snapshot.active ?? ('variant' in preparation ? preparation.variant : undefined) ?? snapshot.recommended
+  return snapshot.active ?? ('variant' in preparation ? preparation.variant : undefined) ?? snapshot.recommended ?? snapshot.options[0]
 }
 
 function runnerFact(runner: Exclude<ReflexRunnerStatus, { readonly state: 'failed' }>, preparation: ReflexPreparation, t: Translate): string {
@@ -174,11 +177,12 @@ function inventoryContent(snapshot: ReflexSnapshot, option: ReflexModelOption, r
     case 'partial': return { state: 'paused', menu: ['delete'], primary: { key: 'resume', variant: 'primary', onClick: choose },
       fact: t('partialFacts', { completed: sizeText(option.inventory.completedBytes ?? 0, t), size, memory }) }
     case 'absent': {
-      const free = snapshot.availableDiskBytes
+      // Free disk space is a hard limit; a memory shortfall only asks first.
+      const free = snapshot.availableDiskBytes, key = snapshot.active === undefined ? 'download' : 'downloadSwitch'
       return { state: 'absent', fact: t('optionFacts', { size, memory }), menu: [],
-        primary: option.fits || free === undefined
-          ? { key: snapshot.active === undefined ? 'download' : 'downloadSwitch', params: { size }, variant: 'primary', onClick: choose }
-          : { key: 'diskShort', params: { need: size, free: sizeText(free, t) }, variant: 'primary' } }
+        primary: option.reason === 'disk' && free !== undefined
+          ? { key: 'diskShort', params: { need: size, free: sizeText(free, t) }, variant: 'primary' }
+          : { key, params: { size }, variant: 'primary', onClick: choose } }
     }
     /* v8 ignore next 2 -- closed-union backstop; only reached if an inventory state is forged */
     default: return assertNever(option.inventory.state)
@@ -197,13 +201,17 @@ function draftContent(snapshot: ReflexSnapshot, draft: ReflexModelOption, run: C
   return sameVariant(draft, active) ? activeContent(snapshot, draft, run, t) : inventoryContent(snapshot, draft, run, t)
 }
 
-/** The line naming a task for a variant other than the described one, while the active model keeps answering. */
+/**
+ * The line naming a task for a variant other than the active one in any phase, so the model that keeps answering stays
+ * visible; when the card describes that task, its header already states the phase and the line names only the active model.
+ */
 function backgroundFact(snapshot: ReflexSnapshot, draft: ReflexVariant, t: Translate): string | undefined {
   const task = taskOf(snapshot.preparation), { active } = snapshot
-  if (task === undefined || sameVariant(task.variant, draft)) return undefined
-  const name = shortVariantName(task.variant, t)
-  if (active === undefined) return task.phase === 'paused' ? undefined : t('otherTask', { name })
+  if (task === undefined || sameVariant(task.variant, active)) return undefined
+  const name = shortVariantName(task.variant, t), describesTask = sameVariant(task.variant, draft)
+  if (active === undefined) return task.phase === 'paused' || describesTask ? undefined : t('otherTask', { name })
   const current = shortVariantName(active, t)
+  if (describesTask) return t('stillActive', { active: current })
   switch (task.phase) {
     case 'downloading': return t('background', { name, active: current, percent: percentOf(task) })
     case 'paused': return t('backgroundPaused', { name, active: current, percent: percentOf(task) })
@@ -248,6 +256,15 @@ function preparingOther(error: unknown): boolean {
   return typeof error === 'object' && error !== null && 'code' in error && error.code === 'reflexLocal/preparing-other'
 }
 
+/** The memory need a Remote failure reports when the Host refuses an option memory does not admit. */
+function unfitRefusal(error: unknown): MemoryNeed | undefined {
+  if (typeof error !== 'object' || error === null || !('code' in error) || error.code !== 'reflexLocal/unfit' || !('details' in error)) return undefined
+  const { details } = error
+  return typeof details === 'object' && details !== null && 'requiredBytes' in details && typeof details.requiredBytes === 'number'
+    && 'deviceBytes' in details && typeof details.deviceBytes === 'number'
+    ? { requiredBytes: details.requiredBytes, deviceBytes: details.deviceBytes } : undefined
+}
+
 /**
  * Render readiness as one bordered group: a model dropdown with the described model's status, its single next action, a
  * menu of secondary actions, one fact line, and inline progress. Choosing a model in the dropdown changes only the view;
@@ -259,6 +276,7 @@ export function EngineCard({ useReflexReadiness, useReflexMaster, t, ...actions 
   const readiness = useReflexReadiness(value => value), master = useReflexMaster(value => value)
   const [busy, setBusy] = useState(false), [error, setError] = useState(''), [confirming, setConfirming] = useState<Confirmation | null>(null)
   const [source, setSource] = useState(''), [menuOpen, setMenuOpen] = useState(false), [picked, setPicked] = useState<ReflexVariant>()
+  const [notice, setNotice] = useState<{ readonly variant: ReflexVariant; readonly need: MemoryNeed } | null>(null)
   // The Jev settings form is the live master switch; the Host snapshot's copy covers clients without that form.
   const snapshot = readiness.snapshot === null || master === null ? readiness.snapshot : { ...readiness.snapshot, reflexEnabled: master }
   if (snapshot === null) {
@@ -290,20 +308,29 @@ export function EngineCard({ useReflexReadiness, useReflexMaster, t, ...actions 
     try { await action() } catch (failure) { setError(failure instanceof Error ? failure.message : String(failure)) }
     finally { setBusy(false) }
   }
-  const prepare = (variant: ReflexVariant): Promise<void> => actions.prepare({ variant: { model: variant.model, quant: variant.quant },
-    ...selectedSource === '' ? {} : { downloadSource: selectedSource } } satisfies ReflexPrepareOptions)
+  const prepare = (variant: ReflexVariant, allowUnfit: boolean): Promise<void> => actions.prepare({
+    variant: { model: variant.model, quant: variant.quant },
+    ...selectedSource === '' ? {} : { downloadSource: selectedSource }, ...allowUnfit ? { allowUnfit } : {},
+  } satisfies ReflexPrepareOptions)
   const task = taskOf(snapshot.preparation)
-  const choose = (variant: ReflexVariant): void => {
-    if (task !== undefined && task.phase !== 'paused' && !sameVariant(variant, task.variant)) { setConfirming({ kind: 'switch', variant }); return }
-    void run(async () => {
-      try { await prepare(variant) } catch (failure) {
-        if (!preparingOther(failure)) throw failure
-        setConfirming({ kind: 'switch', variant })
-      }
-    })
+  /** Prepare, turning a Host refusal into the confirmation that resolves it. */
+  const attempt = async (variant: ReflexVariant, allowUnfit: boolean): Promise<void> => {
+    try { await prepare(variant, allowUnfit) } catch (failure) {
+      const need = unfitRefusal(failure)
+      if (need !== undefined) setNotice({ variant, need })
+      else if (preparingOther(failure)) setConfirming({ kind: 'switch', variant, allowUnfit })
+      else throw failure
+    }
+  }
+  // Every action targets the described model, so its memory need decides whether to ask first.
+  const choose = (variant: ReflexVariant, allowUnfit = false): void => {
+    const need = allowUnfit ? undefined : memoryShortfall(snapshot, draft)
+    if (need !== undefined) setNotice({ variant, need })
+    else if (task !== undefined && task.phase !== 'paused' && !sameVariant(variant, task.variant)) setConfirming({ kind: 'switch', variant, allowUnfit })
+    else void run(() => attempt(variant, allowUnfit))
   }
   const content = draftContent(snapshot, draft, {
-    choose,
+    choose: (variant) => { choose(variant) },
     pause: () => { void run(actions.pause) },
     enable: () => { void run(actions.enable) },
     disable: () => { void run(actions.disable) },
@@ -311,8 +338,11 @@ export function EngineCard({ useReflexReadiness, useReflexMaster, t, ...actions 
   const { state, primary } = content
   const background = backgroundFact(snapshot, draft, t)
   const choosesSource = sources.length > 1 && (state === 'absent' || state === 'paused' || state === 'fault')
+  // While the card describes another model, the model in use can still be turned off from here.
+  const { active } = snapshot, disablesActive = snapshot.enabled && active !== undefined && !sameVariant(draft, active)
   const menu: MenuEntry[] = [
     ...content.menu.map(id => ({ id, label: t(id === 'delete' ? 'deleteThis' : 'cancel'), danger: id === 'delete' })),
+    ...disablesActive ? [{ id: 'disableActive', label: t('disableActive', { name: shortVariantName(active, t) }) }] : [],
     ...choosesSource ? [{ id: 'source', label: t('sourceChoice'),
       submenu: ['', ...sources].map(origin => ({ id: `${SOURCE}${origin}`, label: sourceLabel(origin, t) })) }] : [],
   ]
@@ -324,6 +354,7 @@ export function EngineCard({ useReflexReadiness, useReflexMaster, t, ...actions 
       if (bytes > 0) setConfirming({ kind: 'cancel', bytes })
       else void run(actions.cancel)
     }
+    else if (id === 'disableActive') void run(actions.disable)
     else if (id === 'delete') {
       const variant = { model: draft.model, quant: draft.quant }
       if (sameVariant(draft, snapshot.active) && snapshot.enabled) setConfirming({ kind: 'delete', variant })
@@ -335,7 +366,7 @@ export function EngineCard({ useReflexReadiness, useReflexMaster, t, ...actions 
     switch (pending.kind) {
       case 'delete': void run(() => actions.deleteModel(pending.variant), false); break
       case 'cancel': void run(actions.cancel); break
-      case 'switch': void run(async () => { await actions.pause(); await prepare(pending.variant) }); break
+      case 'switch': void run(async () => { await actions.pause(); await attempt(pending.variant, pending.allowUnfit) }); break
       /* v8 ignore next 2 -- closed-union backstop; only reached if a confirmation is forged */
       default: assertNever(pending)
     }
@@ -347,7 +378,7 @@ export function EngineCard({ useReflexReadiness, useReflexMaster, t, ...actions 
           <ModelSelect snapshot={snapshot} draft={draft} disabled={disabled || gated} choose={setPicked} t={t} />
           <StateBadge content={content} t={t} />
         </div>
-        {content.fact !== undefined && <div className={css.fact} role={state === 'fault' ? 'alert' : undefined}>{content.fact}</div>}
+        {content.fact !== undefined && <div className={css.fact} role={state === 'fault' ? 'alert' : undefined}>{content.fact}{shortfallText(snapshot, draft, t)}</div>}
         {background !== undefined && <div className={css.fact}>{background}</div>}
         {reconnecting}
         {error !== '' && <div className={css.error} role="alert">{t('actionFailed', { message: error })}</div>}
@@ -365,6 +396,9 @@ export function EngineCard({ useReflexReadiness, useReflexMaster, t, ...actions 
     </div>
     {content.progress && <progress className={css.progress} aria-label={t('progressLabel')}
       value={content.progress.completedBytes} max={content.progress.totalBytes} />}
+    {notice !== null && <NoticeDialog title={t('notice.unfit.title')} t={t} action="notice.unfit.ok"
+      body={t('notice.unfit.body', { need: memoryText(notice.need.requiredBytes, t), have: memoryText(notice.need.deviceBytes, t) })}
+      onClose={() => { setNotice(null); choose(notice.variant, true) }} />}
     {confirming !== null && <ConfirmDialog copy={confirmCopy(confirming, t)} t={t} onCancel={close}
       onConfirm={() => { close(); confirm(confirming) }} />}
   </section>

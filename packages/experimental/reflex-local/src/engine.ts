@@ -16,8 +16,8 @@ import { modelOptions, readCatalog, recommend, variantKey, variantOf, VARIANT_KE
 import { ReflexRunner, ReflexRunnerError, type ReflexRunnerClient } from './runner.ts'
 import type {
   ReflexDeviceSupport, ReflexFailure, ReflexInventory, ReflexLifecycleErrorCode, ReflexLifecycleErrorDetails, ReflexLocalService,
-  ReflexModelOption, ReflexPreparation, ReflexPrepareOptions, ReflexRunnerStatus, ReflexSelfTest, ReflexSnapshot, ReflexSwitch,
-  ReflexVariant,
+  ReflexModelOption, ReflexPreparation, ReflexPrepareOptions, ReflexRunnerStatus, ReflexSelectOptions, ReflexSelfTest, ReflexSnapshot,
+  ReflexSwitch, ReflexVariant,
 } from './types.ts'
 
 /**
@@ -120,6 +120,8 @@ function same(left: ReflexVariant, right: ReflexVariant): boolean {
  */
 export class ReflexEngine implements ReflexLocalService {
   private readonly device: ReflexDeviceSupport
+  /** Total memory of a supported device; zero otherwise. */
+  private readonly memoryBytes: number
   private readonly assets: Record<VariantKey, CatalogAsset>
   private readonly editor: RoutingEditor
   /** The complete or partial file of each variant on disk at the last disk check; absent variants have no entry. */
@@ -166,6 +168,7 @@ export class ReflexEngine implements ReflexLocalService {
     }
     this.assets = readCatalog()
     this.device = inspectDevice(config)
+    this.memoryBytes = this.device.supported ? this.device.memoryBytes : 0
     this.origins = config.modelOrigin === undefined ? config.modelOrigins : [config.modelOrigin]
     this.downloadSources = [...new Set(this.origins.map(origin => new URL(origin).origin))]
     this.directory = join(config.dataRoot, 'models')
@@ -189,23 +192,22 @@ export class ReflexEngine implements ReflexLocalService {
     this.persisted = await this.readState()
     await this.reconcileChoice()
     await this.measureDisk()
-    // An active model must still be a tested, verified file this Host can run; a missing one is cleared.
+    // An active model must still be a tested, verified file; a missing one is cleared. The user accepted its memory tier.
     const active = this.persisted.active
-    const usable = active !== undefined && this.offers(active) && this.tested(variantKey(active))
+    const usable = active !== undefined && this.tested(variantKey(active))
       && await this.verified(active, this.lifetime.signal)
     if (active !== undefined && !usable) {
       const { active: _gone, ...rest } = this.persisted
       await this.persist(rest)
     }
     const { preparing } = this.persisted
-    if (preparing !== undefined && this.offers(preparing.variant)
-      && (preparing.source === undefined || this.downloadSources.includes(preparing.source))) {
+    if (preparing !== undefined && (preparing.source === undefined || this.downloadSources.includes(preparing.source))) {
       this.start(preparing.variant, preparing.source)
       return
     }
-    // Tested variants first, then every other variant this Host can run, smallest first.
+    // Tested variants first, then every other variant, smallest first.
     const tested = VARIANT_KEYS.filter(key => this.tested(key))
-    const candidates = [...new Set([...tested, ...VARIANT_KEYS])].map(variantOf).filter(variant => this.offers(variant))
+    const candidates = [...new Set([...tested, ...VARIANT_KEYS])].map(variantOf)
     // Only the first complete file is hashed now; others are verified when prepared. No file becomes active here.
     for (const variant of candidates) if (await this.verified(variant, this.lifetime.signal)) break
     await this.measureDisk()
@@ -295,12 +297,12 @@ export class ReflexEngine implements ReflexLocalService {
   /**
    * Make a variant active now when its file passed or was measured by a self-test; otherwise prepare it in the background.
    * @param variant - option to make active.
-   * @param options - one advertised download origin used without fallback.
+   * @param options - one advertised download origin used without fallback, and consent to a variant above this Host's
+   * memory tier.
    */
-  select(variant: ReflexVariant, options: Pick<ReflexPrepareOptions, 'downloadSource'> = {}): void {
+  select(variant: ReflexVariant, options: ReflexSelectOptions = {}): void {
     const source = options.downloadSource
     this.admit(source)
-    if (!this.offers(variant)) throw new Error('This Reflex model does not fit this device')
     if (this.task !== undefined) {
       if (!same(this.task.variant, variant)) {
         throw new ReflexLifecycleError('preparing-other', 'Pause or cancel the current preparation before selecting another model',
@@ -309,17 +311,27 @@ export class ReflexEngine implements ReflexLocalService {
       if (source !== undefined && source !== this.task.source) throw new Error('Cancel preparation before changing its download source')
       return
     }
+    const active = this.persisted.active
+    const isActive = active !== undefined && same(active, variant)
+    if (!isActive && options.allowUnfit !== true) this.requireMemory(variant)
     if (this.persisted.localChosen !== true || this.foreignRouting()) {
       void this.chooseLocal().catch((error: unknown) => { this.ctx.logger.warn('Reflex connection mode update failed', error) })
     }
-    const active = this.persisted.active
-    if (active !== undefined && same(active, variant)) return
+    if (isActive) return
     const { selfTest } = this.inventory(variantKey(variant))
     if (selfTest === 'passed' || selfTest === 'slow') {
       void this.switchTo(variant).catch((error: unknown) => { this.ctx.logger.warn('Reflex model switch failed', error) })
       return
     }
     this.start(variant, source)
+  }
+
+  /** Refuse a variant above this Host's memory tier; the caller repeats the request with `allowUnfit` after the user agrees. */
+  private requireMemory(variant: ReflexVariant): void {
+    const option = this.options().find(candidate => same(candidate, variant)) as ReflexModelOption
+    if (option.reason !== 'memory') return
+    throw new ReflexLifecycleError('unfit', 'This Reflex model needs more memory than this device has',
+      { variant, requiredBytes: option.minMemoryBytes, deviceBytes: this.memoryBytes })
   }
 
   /** Refuse requests the engine cannot take now. */
@@ -599,11 +611,18 @@ export class ReflexEngine implements ReflexLocalService {
     void this.warm().catch((error: unknown) => { this.ctx.logger.warn('Reflex runner warm-up failed', error) })
   }
 
+  /** React to a routing or Reflex master switch change announced by Jev at once instead of at the next poll. */
+  routingChanged(): void {
+    this.watchRouting()
+  }
+
   /**
    * Publish external routing changes; start the runner once local decisions and Reflex are both on, and stop it once
    * either is off.
    */
   private watchRouting(): void {
+    // Before inspection publishes, the persisted state is not loaded; the poll after it observes any change made meanwhile.
+    if (this.preparation.phase === 'checking' || this.preparation.phase === 'unsupported') return
     const signature = this.routingSignature()
     if (signature === this.routingSeen) return
     this.routingSeen = signature
@@ -858,11 +877,6 @@ export class ReflexEngine implements ReflexLocalService {
 
   private recommended(): ReflexVariant | undefined {
     return recommend(this.options())
-  }
-
-  /** Whether this Host has the memory for a variant; free disk space is checked when the download starts. */
-  private offers(variant: ReflexVariant): boolean {
-    return this.options().some(option => same(option, variant) && option.reason !== 'memory')
   }
 
   /** Refresh free space and the bytes each variant already holds, complete or partial. */

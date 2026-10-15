@@ -2,7 +2,7 @@
 import { Context } from '@deepseek-ai/cordis'
 import { Remote, RemoteError, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
 import { ReflexLifecycleError } from '@deepseek-ai/dsh-experimental-reflex-local'
-import type { ReflexLifecycleErrorCode, ReflexPrepareOptions, ReflexSnapshot, ReflexVariant } from './types.ts'
+import type { ReflexLifecycleErrorCode, ReflexPrepareOptions, ReflexSelectOptions, ReflexSnapshot, ReflexVariant } from './types.ts'
 
 export type * from './types.ts'
 
@@ -14,7 +14,9 @@ declare module '@deepseek-ai/cordis' {
 }
 
 /** Remote failure code of each engine refusal; a new refusal code must be added here and to `RemoteErrorDetailsMap`. */
-const REMOTE_CODES: { readonly [Code in ReflexLifecycleErrorCode]: `reflexLocal/${Code}` } = { 'preparing-other': 'reflexLocal/preparing-other' }
+const REMOTE_CODES: { readonly [Code in ReflexLifecycleErrorCode]: `reflexLocal/${Code}` } = {
+  'preparing-other': 'reflexLocal/preparing-other', unfit: 'reflexLocal/unfit',
+}
 
 /** Rethrow typed engine refusals as Remote failures whose code clients branch on. */
 function typed(call: () => void): void {
@@ -48,19 +50,24 @@ export default class ReflexLocalController extends TypertRemoteService {
   follow(signal: AbortSignal): AsyncIterable<ReflexSnapshot> { return this.ctx.reflexLocal.follow(signal) }
 
   /**
-   * Select the given variant, else the variant of a paused or failed preparation, else the recommendation.
-   * @param options - variant and download source; omission uses configured origins.
+   * Select the given variant, else the variant of a paused or failed preparation, else the recommendation. Fails with
+   * `reflexLocal/unfit` for a variant above this Host's memory tier unless `allowUnfit` is set.
+   * @param options - variant, download source, and memory consent; omission uses configured origins.
    */
   @Remote
   prepare(options?: ReflexPrepareOptions): void { typed(() => { this.ctx.reflexLocal.prepare(options) }) }
 
   /**
    * Make a tested downloaded variant active now, or prepare another one in the background while the active one serves.
-   * Fails with `reflexLocal/preparing-other` while a different variant is being prepared.
+   * Fails with `reflexLocal/preparing-other` while a different variant is being prepared, and with `reflexLocal/unfit` for a
+   * variant above this Host's memory tier unless `allowUnfit` is set.
    * @param variant - option to make active.
+   * @param options - consent to a variant above this Host's memory tier.
    */
   @Remote
-  select(variant: ReflexVariant): void { typed(() => { this.ctx.reflexLocal.select(variant) }) }
+  select(variant: ReflexVariant, options?: Pick<ReflexSelectOptions, 'allowUnfit'>): void {
+    typed(() => { this.ctx.reflexLocal.select(variant, options) })
+  }
 
   /**
    * Stop active preparation and keep the partial download for a later `prepare()`.

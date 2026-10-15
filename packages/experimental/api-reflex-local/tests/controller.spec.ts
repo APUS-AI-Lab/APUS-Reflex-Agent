@@ -44,7 +44,9 @@ it('forwards observation and every preparation and enablement command', async ()
   expect(service.prepare).toHaveBeenNthCalledWith(1, undefined)
   expect(service.prepare).toHaveBeenNthCalledWith(2, { variant: { model: '9b', quant: 'q4_k_m' }, downloadSource: 'https://hf-mirror.com' })
   api.select({ model: '9b', quant: 'q8_0' })
-  expect(service.select).toHaveBeenCalledWith({ model: '9b', quant: 'q8_0' })
+  api.select({ model: '35b-a3b', quant: 'q8_0' }, { allowUnfit: true })
+  expect(service.select.mock.calls).toEqual([[{ model: '9b', quant: 'q8_0' }, undefined],
+    [{ model: '35b-a3b', quant: 'q8_0' }, { allowUnfit: true }]])
   await api.pause(); await api.cancel(); await api.chooseLocal(); await api.enable(); await api.disable(); await api.acknowledge()
   await api.acknowledgeSwitch()
   const commands = [service.pause, service.cancel, service.chooseLocal, service.enable, service.disable, service.acknowledge,
@@ -65,6 +67,10 @@ it('turns a typed engine refusal into a coded Remote failure', () => {
   expect(failure).toMatchObject({ code: 'reflexLocal/preparing-other', details })
   service.prepare.mockImplementationOnce(() => { throw new ReflexLifecycleError('preparing-other', 'busy', details) })
   expect(remoteErrorOf((() => { try { api.prepare() } catch (error) { return error } })())?.code).toBe('reflexLocal/preparing-other')
+  const unfit = { variant: { model: '35b-a3b', quant: 'q8_0' }, requiredBytes: 64e9, deviceBytes: 24e9 } as const
+  service.select.mockImplementationOnce(() => { throw new ReflexLifecycleError('unfit', 'needs more memory', unfit) })
+  expect(remoteErrorOf((() => { try { api.select(unfit.variant) } catch (error) { return error } })()))
+    .toMatchObject({ code: 'reflexLocal/unfit', details: unfit })
 })
 
 it('propagates Host rejections unchanged', async () => {

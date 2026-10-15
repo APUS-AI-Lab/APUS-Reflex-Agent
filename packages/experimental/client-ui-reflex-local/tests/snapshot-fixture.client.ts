@@ -11,6 +11,7 @@ export const GIB = 1024 ** 3
 export const Q8: ReflexVariant = { model: '4b', quant: 'q8_0' }
 export const Q4: ReflexVariant = { model: '4b', quant: 'q4_k_m' }
 export const NINE: ReflexVariant = { model: '9b', quant: 'q8_0' }
+export const BIG: ReflexVariant = { model: '35b-a3b', quant: 'q4_k_m' }
 
 const ABSENT = { state: 'absent' } as const
 
@@ -33,7 +34,7 @@ export function snapshotOf(preparation: ReflexPreparation, overrides: Omit<Parti
   & { availableDiskBytes?: number | undefined; recommended?: ReflexVariant | undefined } = {}): ReflexSnapshot {
   const { availableDiskBytes, recommended, ...rest } = { availableDiskBytes: 180e9, recommended: Q8, ...overrides }
   const snapshot: ReflexSnapshot = {
-    device: { supported: true, memoryBytes: 24e9 }, options: OPTIONS,
+    device: { supported: true, memoryBytes: 24 * GIB }, options: OPTIONS,
     preparation, runner: { state: 'stopped' }, enabled: false, localChosen: false, reflexEnabled: true, providerId: 'reflex-local', downloadSources: [],
     ...rest,
   }

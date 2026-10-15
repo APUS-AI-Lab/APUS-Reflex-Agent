@@ -8,7 +8,7 @@ import type {} from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
 import type {} from '@deepseek-ai/dsh-subprocess'
 import { ReflexEngine } from './engine.ts'
 import { ReflexJevProvider } from './provider.ts'
-import type { ReflexLocalService, ReflexPrepareOptions, ReflexSnapshot, ReflexVariant } from './types.ts'
+import type { ReflexLocalService, ReflexPrepareOptions, ReflexSelectOptions, ReflexSnapshot, ReflexVariant } from './types.ts'
 
 export type * from './types.ts'
 export { ReflexLifecycleError } from './engine.ts'
@@ -160,7 +160,11 @@ export default class ReflexLocal extends Service implements ReflexLocalService {
       engine.activate()
       return async () => { await engine.dispose() }
     })
-    ctx.inject(['jev'], (child) => { child.effect(() => child.jev.register(provider)) })
+    ctx.inject(['jev'], (child) => {
+      child.effect(() => child.jev.register(provider))
+      // The Reflex master switch reaches dependents only through this event; the routing poll covers other Jev fields.
+      child.on('jev/enabled', () => { engine.routingChanged() })
+    })
   }
 
   /**
@@ -187,7 +191,7 @@ export default class ReflexLocal extends Service implements ReflexLocalService {
    * @param variant - option to make active.
    * @param options - one advertised download origin used without fallback.
    */
-  select(variant: ReflexVariant, options?: Pick<ReflexPrepareOptions, 'downloadSource'>): void { this.engine.select(variant, options) }
+  select(variant: ReflexVariant, options?: ReflexSelectOptions): void { this.engine.select(variant, options) }
 
   /** Stop active preparation and keep the partial download. @returns after the work settles. */
   async pause(): Promise<void> { await this.engine.pause() }

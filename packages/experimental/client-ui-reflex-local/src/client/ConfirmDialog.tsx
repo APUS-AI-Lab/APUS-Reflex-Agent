@@ -1,4 +1,4 @@
-/** One confirmation the local engine surfaces raise before an action that discards a download or a model in use. */
+/** Dialogs the local engine surfaces raise: a confirmation before discarding a download or a model in use, and a notice. */
 import { Button, Modal } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { PropsLocale } from '@deepseek-ai/dsh-client-ui-slots'
 import type { NS, ReflexLocalKey } from './locales.ts'
@@ -23,6 +23,24 @@ export interface ConfirmCopy {
 export function cancelCopy(bytes: number, t: Translate): ConfirmCopy {
   return { title: t('confirm.cancel.title', { size: sizeText(bytes, t) }), body: t('confirm.cancel.body'),
     action: 'confirm.cancel.confirm', dismiss: 'confirm.cancel.keep' }
+}
+
+/**
+ * Render one open notice whose only answer, like closing it, proceeds; the owner unmounts it once answered.
+ * @param props - the copy, the proceed callback, and the locale seat.
+ * @returns the modal dialog.
+ */
+export function NoticeDialog({ title, body, action, onClose, t }: {
+  readonly title: string
+  readonly body: string
+  readonly action: ReflexLocalKey
+  readonly onClose: () => void
+  readonly t: Translate
+}) {
+  return <Modal open title={title} closeLabel={t('close')} onClose={onClose}
+    footer={<Button variant="primary" data-modal-autofocus onClick={onClose}>{t(action)}</Button>}>
+    <p>{body}</p>
+  </Modal>
 }
 
 /**

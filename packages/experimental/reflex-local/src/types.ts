@@ -31,11 +31,14 @@ export interface ReflexModelOption extends ReflexVariant {
   readonly bytes: number
   /** Total memory this option requires on this deployment. */
   readonly minMemoryBytes: number
-  /** Not yet measured on Mac; never recommended automatically, still selectable when it fits. */
+  /** Not yet measured on Mac; never recommended automatically, still selectable. */
   readonly experimental: boolean
   /** Whether memory and, after the first disk check, free space admit this option. */
   readonly fits: boolean
-  /** First unmet requirement when `fits` is false: total memory, then free disk space for the bytes still missing. */
+  /**
+   * First unmet requirement when `fits` is false: total memory, then free disk space for the bytes still missing. A
+   * `memory` option is informational: `select()` and `prepare()` accept it with `allowUnfit: true`.
+   */
   readonly reason?: 'memory' | 'disk'
   readonly inventory: ReflexInventory
 }
@@ -67,6 +70,8 @@ export interface ReflexSwitch {
 export interface ReflexLifecycleErrorDetails {
   /** Another variant is being prepared; pause or cancel it before selecting `requested`. */
   'preparing-other': { readonly preparing: ReflexVariant; readonly requested: ReflexVariant }
+  /** The variant's memory tier exceeds this Host's memory; repeat the request with `allowUnfit: true` after the user agrees. */
+  unfit: { readonly variant: ReflexVariant; readonly requiredBytes: number; readonly deviceBytes: number }
 }
 
 /** Code of a typed lifecycle refusal. */
@@ -161,7 +166,15 @@ export interface ReflexPrepareOptions {
   readonly variant?: ReflexVariant
   /** One advertised origin used without fallback; omission probes the configured origins. */
   readonly downloadSource?: string
+  /**
+   * Accept a variant whose memory tier exceeds this Host's memory, after the user agreed. Free disk space is still
+   * required, and such a variant is prepared and self-tested like any other.
+   */
+  readonly allowUnfit?: boolean
 }
+
+/** Options of one model selection. */
+export type ReflexSelectOptions = Pick<ReflexPrepareOptions, 'downloadSource' | 'allowUnfit'>
 
 /** Host service controlling preparation and use of the local engine. Page and transport lifetimes own none of its work. */
 export interface ReflexLocalService {
@@ -179,16 +192,19 @@ export interface ReflexLocalService {
    * one. Any other variant is prepared in the background while the current active model keeps answering; a passing,
    * fast self-test then switches to it and records `unacknowledgedSwitch`, while a slow one leaves the active model.
    * The first passing, fast model also enables local decisions that are off. Selecting also performs `chooseLocal()`.
-   * @param variant - option to make active; it must fit memory.
-   * @param options - one advertised download origin used without fallback.
-   * @throws ReflexLifecycleError `preparing-other` while another variant is being prepared.
+   * @param variant - option to make active.
+   * @param options - one advertised download origin used without fallback, and consent to a variant above this Host's
+   * memory tier.
+   * @throws ReflexLifecycleError `preparing-other` while another variant is being prepared, and `unfit` for a variant
+   * above this Host's memory tier without `allowUnfit`.
    */
-  select(variant: ReflexVariant, options?: Pick<ReflexPrepareOptions, 'downloadSource'>): void
+  select(variant: ReflexVariant, options?: ReflexSelectOptions): void
   /**
    * `select()` the given variant, else the variant of a paused or failed preparation, else the recommendation; joins
    * matching work and resumes a retained partial file.
-   * @param options - variant and source selection.
-   * @throws ReflexLifecycleError `preparing-other` while another variant is being prepared.
+   * @param options - variant and source selection, and consent to a variant above this Host's memory tier.
+   * @throws ReflexLifecycleError `preparing-other` while another variant is being prepared, and `unfit` for a variant
+   * above this Host's memory tier without `allowUnfit`.
    */
   prepare(options?: ReflexPrepareOptions): void
   /** Stop active work and keep the partial download for a later `prepare()`. @returns after the work settles. */

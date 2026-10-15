@@ -139,6 +139,7 @@ describe.skipIf(process.platform === 'win32')('ReflexEngine', () => {
     expect(engine.snapshot().recommended).toBeUndefined()
     expect(() => { engine.prepare() }).toThrow('cannot run')
     await expect(engine.acquire(new AbortController().signal)).rejects.toBeInstanceOf(JevProviderError)
+    engine.routingChanged()
     await engine.remove()
     expect(engine.snapshot().preparation).toEqual({ phase: 'unsupported' })
   })
@@ -161,7 +162,12 @@ describe.skipIf(process.platform === 'win32')('ReflexEngine', () => {
     const absent = await until(tight, 'absent')
     expect(absent.options.map(option => option.reason)).toEqual(['disk', 'memory', 'memory', 'memory', 'memory', 'memory'])
     expect(absent.recommended).toEqual(Q4)
-    expect(() => { tight.prepare({ variant: Q9 }) }).toThrow('does not fit')
+    const refusal = (() => { try { tight.prepare({ variant: Q9 }) } catch (error) { return error } })()
+    expect(refusal).toBeInstanceOf(ReflexLifecycleError)
+    expect(refusal).toMatchObject({ code: 'unfit', details: { variant: Q9, requiredBytes: 24 * GIB, deviceBytes: 12 * GIB } })
+    // Consent relaxes only the memory tier; the download still needs the free space.
+    tight.prepare({ variant: Q9, allowUnfit: true })
+    expect((await until(tight, 'failed')).preparation).toMatchObject({ variant: Q9, failure: { kind: 'disk' } })
   })
 
   it('downloads, verifies, self-tests, and enables, then restores readiness on the next activation without hashing or a runner', async () => {
@@ -284,7 +290,7 @@ describe.skipIf(process.platform === 'win32')('ReflexEngine', () => {
     const engine = create()
     engine.activate()
     await until(engine, 'absent')
-    expect(() => { engine.prepare({ variant: Q9 }) }).toThrow('does not fit')
+    expect(() => { engine.prepare({ variant: Q9 }) }).toThrow('more memory')
     expect(() => { engine.prepare({ downloadSource: 'https://elsewhere.example' }) }).toThrow('source is unavailable')
     engine.prepare({ downloadSource: origin })
     engine.prepare()
@@ -674,10 +680,29 @@ describe.skipIf(process.platform === 'win32')('ReflexEngine model lifecycle', ()
     jev.config = { ...jev.config as object, enabled: false }
     await untilSnapshot(engine, snapshot => !snapshot.reflexEnabled && snapshot.runner.state === 'stopped')
     jev.config = { ...jev.config as object, enabled: true }
-    await untilSnapshot(engine, snapshot => snapshot.reflexEnabled)
+    // The poll alone restarts the resident runner once Reflex is back on, before any decision.
+    await untilSnapshot(engine, snapshot => snapshot.reflexEnabled && snapshot.runner.state === 'running')
     await decide(engine)
     jev.config = { enabled: true }
     await untilSnapshot(engine, snapshot => !snapshot.enabled && snapshot.runner.state === 'stopped')
+  })
+
+  it('reacts to an announced routing change at once and ignores announcements before inspection publishes', async () => {
+    const { create, routing, data } = await fixture({ config: { routingPollMs: 600_000 } })
+    const early = create()
+    early.routingChanged()
+    expect(early.snapshot().preparation.phase).toBe('checking')
+    await early.dispose()
+    await expect(readFile(join(data, 'state.json'))).rejects.toThrow()
+    const engine = create()
+    await ready(engine)
+    const jev = routing.routing.entries()[0]!.options as { config?: unknown }
+    jev.config = { ...jev.config as object, enabled: false }
+    engine.routingChanged()
+    await untilSnapshot(engine, snapshot => !snapshot.reflexEnabled && snapshot.runner.state === 'stopped')
+    jev.config = { ...jev.config as object, enabled: true }
+    engine.routingChanged()
+    await untilSnapshot(engine, snapshot => snapshot.reflexEnabled && snapshot.runner.state === 'running')
   })
 
   it('logs a failed runner stop after an external change', async () => {
@@ -744,6 +769,25 @@ describe.skipIf(process.platform === 'win32')('ReflexEngine model lifecycle', ()
     expect(engine.snapshot().preparation).toMatchObject({ phase: 'ready', variant: Q9 })
     expect(engine.snapshot().options.find(option => option.model === '4b' && option.quant === 'q4_k_m')?.inventory)
       .toEqual({ state: 'partial', completedBytes: 50 })
+  })
+
+  it('prepares an unfit model only with consent, and keeps the active model serving when its runner cannot load', async () => {
+    const { create, mark } = await fixture({ memory: 16 * GIB, config: { maxConsecutiveRunnerFailures: 1 } })
+    const engine = create()
+    await ready(engine, Q4)
+    await decide(engine)
+    expect(() => { engine.select(Q9) }).toThrow(ReflexLifecycleError)
+    expect(engine.snapshot().preparation).toMatchObject({ phase: 'ready', variant: Q4 })
+    await mark('startFail')
+    engine.select(Q9, { allowUnfit: true })
+    const failed = await untilSnapshot(engine, snapshot => snapshot.preparation.phase === 'failed')
+    expect(failed.preparation).toMatchObject({ variant: Q9, failure: { kind: 'runner' } })
+    expect(JSON.stringify(failed.preparation)).toContain('exited before readiness')
+    expect(failed).toMatchObject({ active: Q4, enabled: true, runner: { state: 'running', model: Q4 } })
+    await decide(engine)
+    expect(engine.snapshot()).toMatchObject({ enabled: true, runner: { state: 'running', model: Q4 } })
+    engine.select(Q4)
+    expect(engine.snapshot().active).toEqual(Q4)
   })
 
   it('keeps the active model when another model fails to download, and clears that failure on cancel', async () => {

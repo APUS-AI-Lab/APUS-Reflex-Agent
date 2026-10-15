@@ -489,7 +489,7 @@ prepare(options?: ReflexPrepareOptions): void
  * @param variant - option to make active.
  * @param options - one advertised download origin used without fallback.
  */
-select(variant: ReflexVariant, options?: Pick<ReflexPrepareOptions, 'downloadSource'>): void
+select(variant: ReflexVariant, options?: ReflexSelectOptions): void
 
 /** Stop active preparation and keep the partial download. @returns after the work settles. */
 async pause(): Promise<void>
@@ -552,17 +552,20 @@ Forwards each call to `ctx.reflexLocal`; a disconnected observer never cancels H
 @Remote({ mode: 'stream' }) follow(signal: AbortSignal): AsyncIterable<ReflexSnapshot>
 
 /**
- * Select the given variant, else the variant of a paused or failed preparation, else the recommendation.
- * @param options - variant and download source; omission uses configured origins.
+ * Select the given variant, else the variant of a paused or failed preparation, else the recommendation. Fails with
+ * `reflexLocal/unfit` for a variant above this Host's memory tier unless `allowUnfit` is set.
+ * @param options - variant, download source, and memory consent; omission uses configured origins.
  */
 @Remote prepare(options?: ReflexPrepareOptions): void
 
 /**
  * Make a tested downloaded variant active now, or prepare another one in the background while the active one serves.
- * Fails with `reflexLocal/preparing-other` while a different variant is being prepared.
+ * Fails with `reflexLocal/preparing-other` while a different variant is being prepared, and with `reflexLocal/unfit` for a
+ * variant above this Host's memory tier unless `allowUnfit` is set.
  * @param variant - option to make active.
+ * @param options - consent to a variant above this Host's memory tier.
  */
-@Remote select(variant: ReflexVariant): void
+@Remote select(variant: ReflexVariant, options?: Pick<ReflexSelectOptions, 'allowUnfit'>): void
 
 /**
  * Stop active preparation and keep the partial download for a later `prepare()`.

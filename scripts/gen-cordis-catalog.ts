@@ -877,6 +877,7 @@ export const TYPE_LINK_EXEMPTIONS: Readonly<Record<string, string>> = {
   MemoryRecord: 'Continuum memory records are owned by packages/context/continuum/README.md',
   NewMemoryRecord: 'Continuum memory admission is owned by packages/context/continuum/README.md',
   ReflexPrepareOptions: 'Local Reflex engine contract is owned by packages/experimental/reflex-local/README.md',
+  ReflexSelectOptions: 'Local Reflex engine contract is owned by packages/experimental/reflex-local/README.md',
   ReflexSnapshot: 'Local Reflex engine contract is owned by packages/experimental/reflex-local/README.md',
   ReflexVariant: 'Local Reflex engine contract is owned by packages/experimental/reflex-local/README.md',
   System3AdviceAction: 'System3 policy contract is owned by packages/experimental/system3/README.md',

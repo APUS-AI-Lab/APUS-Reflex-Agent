@@ -9,7 +9,8 @@ import { EngineCard, type EngineCardProps } from '../src/client/EngineCard.tsx'
 import type { ReflexReadiness } from '../src/client/readiness.ts'
 import { zh } from '../src/client/locales.ts'
 import { RemoteError } from '@deepseek-ai/dsh-typert-protocol'
-import { FAST, GIB, NINE, OPTIONS, Q4, Q8, SIZES, holding, snapshotOf } from './snapshot-fixture.client.ts'
+import { BIG, FAST, GIB, NINE, OPTIONS, Q4, Q8, SIZES, holding, snapshotOf } from './snapshot-fixture.client.ts'
+import { sameVariant } from '../src/client/size.ts'
 
 afterEach(cleanup)
 const t = makeTranslate(zh)
@@ -82,8 +83,13 @@ it('formats a fractional memory tier with one decimal', () => {
   expect(screen.getByText('下载 4.5 GB · 需要 12.5 GB 内存')).toBeTruthy()
 })
 
-it('offers no model and no download when no option fits this Mac', () => {
+it('describes the smallest option when the Host recommends none', () => {
   fixture(snapshotOf({ phase: 'absent' }, { recommended: undefined }))
+  expect(pill().textContent).toBe('APUS Reflex 4B · Q4_K_M')
+})
+
+it('offers no model and no download when the Host offers no option', () => {
+  fixture(snapshotOf({ phase: 'absent' }, { recommended: undefined, options: [] }))
   expect(screen.getByText(zh.noFit)).toBeTruthy()
   expect(screen.getByText('APUS Reflex')).toBeTruthy()
   expect(screen.queryByRole('button')).toBeNull()
@@ -94,8 +100,8 @@ it('states need against free space when the recommendation does not fit the disk
   const b = fixture(snapshotOf({ phase: 'absent' }, { availableDiskBytes: 1e9, recommended: Q4, options: [short] }))
   expect(button('需要 2.7 GB，当前可用 1.0 GB').disabled).toBe(true)
   fireEvent.click(pill())
-  expect(optionRow('4B · Q4_K_M').textContent).toContain(zh['tag.disk'])
-  expect(optionRow('4B · Q4_K_M').disabled).toBe(true)
+  expect(optionRow('4B · Q4_K_M').textContent).toContain(zh['unfit.disk'])
+  expect(optionRow('4B · Q4_K_M').disabled).toBe(false)
   b.publish({ snapshot: snapshotOf({ phase: 'absent' }, { availableDiskBytes: undefined, recommended: Q4, options: [short] }) })
   await waitFor(() => { expect(button('下载并启用 · 2.7 GB').disabled).toBe(false) })
 })
@@ -108,10 +114,10 @@ it('lists every option grouped by size with facts and tags, and choosing one onl
     '4B · Q4_K_M已下载 1.2 GB / 2.7 GB · 需要 8 GB 内存',
     `4B · Q8_0${zh['tag.recommended']}下载 4.5 GB · 需要 16 GB 内存`,
     `9B · Q8_0${zh['tag.downloaded']}下载 9.5 GB · 需要 24 GB 内存`,
-    `35B-A3B · Q4_K_M${zh['tag.experimental']}${zh['tag.memory']}下载 21.2 GB · 需要 32 GB 内存`,
+    `35B-A3B · Q4_K_M（内存可能不足：需要 32 GB，这台 Mac 24 GB）${zh['tag.experimental']}下载 21.2 GB · 需要 32 GB 内存`,
   ])
   expect(screen.getAllByRole('separator')).toHaveLength(2)
-  expect(optionRow('35B-A3B').disabled).toBe(true)
+  expect(optionRow('35B-A3B').disabled).toBe(false)
   fireEvent.keyDown(document, { key: 'Escape' })
   expect(screen.queryByRole('menuitem')).toBeNull()
   fireEvent.click(pill())
@@ -132,6 +138,65 @@ it('lists every option grouped by size with facts and tags, and choosing one onl
   expect(screen.getByText(zh['state.downloaded'])).toBeTruthy()
   fireEvent.click(button(zh.useAnyway))
   expect(b.prepare).toHaveBeenLastCalledWith({ variant: NINE })
+})
+
+it.each([
+  [undefined, '下载并启用 · 21.2 GB'], [NINE, '下载并切换 · 21.2 GB'],
+] as const)('notes a memory shortfall once and then downloads (active %j)', async (active, label) => {
+  const options = active === undefined ? OPTIONS : holding([NINE, DOWNLOADED])
+  const b = fixture(snapshotOf({ phase: 'absent' }, { options, ...active === undefined ? {} : { active } }))
+  pick('35B-A3B · Q4_K_M')
+  expect(screen.getByText('下载 21.2 GB · 需要 32 GB 内存（内存可能不足：需要 32 GB，这台 Mac 24 GB）')).toBeTruthy()
+  fireEvent.click(button(label))
+  expect(screen.getByText(zh['notice.unfit.title'])).toBeTruthy()
+  expect(screen.getByText('需要 32 GB，这台 Mac 24 GB。可能运行很慢或无法加载')).toBeTruthy()
+  expect(screen.queryByRole('button', { name: zh.dismiss })).toBeNull()
+  expect(b.prepare).not.toHaveBeenCalled()
+  fireEvent.click(button(zh['notice.unfit.ok']))
+  await waitFor(() => { expect(b.prepare).toHaveBeenCalledWith({ variant: BIG, allowUnfit: true }) })
+})
+
+it('proceeds when the memory notice is closed rather than acknowledged, for a downloaded model too', async () => {
+  const options = OPTIONS.map(option => sameVariant(option, BIG) ? { ...option, inventory: DOWNLOADED } : option)
+  const b = fixture(snapshotOf({ phase: 'absent' }, { options }))
+  pick('35B-A3B · Q4_K_M')
+  fireEvent.click(button(zh.use))
+  fireEvent.click(button(zh.close))
+  await waitFor(() => { expect(b.prepare).toHaveBeenCalledWith({ variant: BIG, allowUnfit: true }) })
+})
+
+it('notes the memory shortfall before asking to pause another download', async () => {
+  const b = fixture(snapshotOf(NINE_DOWNLOADING))
+  pick('35B-A3B · Q4_K_M')
+  fireEvent.click(button('下载并启用 · 21.2 GB'))
+  fireEvent.click(button(zh['notice.unfit.ok']))
+  expect(screen.getByText(zh['confirm.switch.title'])).toBeTruthy()
+  fireEvent.click(button(zh['confirm.switch.confirm']))
+  await waitFor(() => { expect(b.prepare).toHaveBeenCalledWith({ variant: BIG, allowUnfit: true }) })
+  expect(b.pause).toHaveBeenCalledOnce()
+})
+
+it('names a self-test failure of a model memory may not admit as a memory problem', () => {
+  fixture(snapshotOf({ phase: 'failed', variant: BIG, failure: { kind: 'runner', message: 'oom' } }))
+  expect(screen.getByRole('alert').textContent).toBe(`${zh['failure.runner']}（内存可能不足：需要 32 GB，这台 Mac 24 GB）`)
+})
+
+it('shows the memory notice when the Host refuses an option, and reports a malformed refusal', async () => {
+  const b = fixture(snapshotOf({ phase: 'absent' }))
+  vi.mocked(b.prepare).mockRejectedValueOnce({ code: 'reflexLocal/unfit', message: 'unfit',
+    details: { variant: Q8, requiredBytes: 32 * GIB, deviceBytes: 24 * GIB } })
+  fireEvent.click(button('下载并启用 · 4.5 GB'))
+  await screen.findByText(zh['notice.unfit.title'])
+  fireEvent.click(button(zh['notice.unfit.ok']))
+  await waitFor(() => { expect(b.prepare).toHaveBeenLastCalledWith({ variant: Q8, allowUnfit: true }) })
+  for (const failure of [{ code: 'reflexLocal/unfit', details: { requiredBytes: 'x' } }, { code: 'reflexLocal/unfit', details: null },
+    { code: 'reflexLocal/unfit' }, { code: 'other' }, 'closed']) {
+    vi.mocked(b.prepare).mockRejectedValueOnce(failure)
+    await waitFor(() => { expect(button('下载并启用 · 4.5 GB').disabled).toBe(false) })
+    fireEvent.click(button('下载并启用 · 4.5 GB'))
+    await screen.findByRole('alert')
+    expect(screen.queryByRole('dialog')).toBeNull()
+  }
 })
 
 it('states partial progress without a byte count when the Host omits one', () => {
@@ -228,6 +293,31 @@ it('keeps describing the active model while another model prepares in the backgr
   expect(screen.getByText('9B · Q8_0 已暂停，已完成 37% · 当前仍用 4B · Q8_0 判断')).toBeTruthy()
   b.publish({ snapshot: activeQ8({ enabled: true, runner: running, preparation: { phase: 'testing', variant: NINE } }) })
   expect(screen.getByText('正在检查 9B · Q8_0 · 当前仍用 4B · Q8_0 判断')).toBeTruthy()
+})
+
+it.each([
+  ['downloading', NINE_DOWNLOADING, '准备中 37%'],
+  ['paused', { phase: 'paused', variant: NINE, completedBytes: 3.6e9, totalBytes: SIZES.nineQ8 }, zh['state.paused']],
+  ['verifying', { phase: 'verifying', variant: NINE }, zh['state.verifying']],
+  ['testing', { phase: 'testing', variant: NINE }, zh['state.testing']],
+] as const)('keeps the active model named and its 停用 reachable while describing another model %s', async (_phase, preparation, badge) => {
+  const b = fixture(activeQ8({ enabled: true, preparation }))
+  pick('9B · Q8_0')
+  expect(screen.getByText(badge)).toBeTruthy()
+  expect(screen.getByText('当前仍用 4B · Q8_0 判断')).toBeTruthy()
+  expect(screen.queryByRole('button', { name: zh.disable })).toBeNull()
+  openMenu()
+  expect(menuItems()).toEqual([zh.cancel, '停用当前模型（4B · Q8_0）'])
+  fireEvent.click(screen.getByRole('menuitem', { name: '停用当前模型（4B · Q8_0）' }))
+  await waitFor(() => { expect(b.disable).toHaveBeenCalledOnce() })
+})
+
+it('offers no 停用当前模型 while local judgments are already off, and no line while the active model itself is checked', () => {
+  fixture(activeQ8({ preparation: { phase: 'testing', variant: Q8 }, options: holding([Q8, DOWNLOADED], [Q4, DOWNLOADED]) }))
+  expect(screen.queryByText(/当前仍用/)).toBeNull()
+  pick('4B · Q4_K_M')
+  openMenu()
+  expect(menuItems()).toEqual([zh.deleteThis])
 })
 
 it('keeps only pausing a download while the master switch is off', async () => {

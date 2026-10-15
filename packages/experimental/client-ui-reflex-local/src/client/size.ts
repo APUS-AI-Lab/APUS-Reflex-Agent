@@ -5,6 +5,36 @@ import type { NS } from './locales.ts'
 
 type Translate = PropsLocale<typeof NS>['t']
 
+/** A model's memory requirement against this Mac's memory. */
+export interface MemoryNeed {
+  readonly requiredBytes: number
+  readonly deviceBytes: number
+}
+
+/**
+ * The memory shortfall of an option this Mac can select but may not run.
+ * @param snapshot - Host observation with the device memory.
+ * @param option - option to judge.
+ * @returns the need and the device memory, or undefined when memory admits the option.
+ */
+export function memoryShortfall(snapshot: ReflexSnapshot, option: ReflexModelOption): MemoryNeed | undefined {
+  const { device } = snapshot
+  return option.reason === 'memory' && device.supported ? { requiredBytes: option.minMemoryBytes, deviceBytes: device.memoryBytes } : undefined
+}
+
+/**
+ * Name why this Mac may not run an option, as the parenthetical shown after its name and in the card's fact line.
+ * @param snapshot - Host observation with the device memory.
+ * @param option - option to judge.
+ * @param t - locale seat owning the copy.
+ * @returns the parenthetical, or an empty string when the option fits.
+ */
+export function shortfallText(snapshot: ReflexSnapshot, option: ReflexModelOption, t: Translate): string {
+  if (option.reason === 'disk') return t('unfit.disk')
+  const need = memoryShortfall(snapshot, option)
+  return need === undefined ? '' : t('unfit.memory', { need: memoryText(need.requiredBytes, t), have: memoryText(need.deviceBytes, t) })
+}
+
 /**
  * Compare two weights identities.
  * @param a - one variant.

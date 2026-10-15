@@ -1931,7 +1931,7 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         parameters: [{ name: 'options', description: 'variant and download source.' }],
       },
       {
-        signature: 'select(variant: ReflexVariant, options?: Pick<ReflexPrepareOptions, \'downloadSource\'>): void',
+        signature: 'select(variant: ReflexVariant, options?: ReflexSelectOptions): void',
         description: 'Make a tested downloaded variant active now, or prepare another one in the background while the active one serves.',
         parameters: [{ name: 'variant', description: 'option to make active.' }, { name: 'options', description: 'one advertised download origin used without fallback.' }],
       },
@@ -2004,13 +2004,13 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
       },
       {
         signature: '@Remote prepare(options?: ReflexPrepareOptions): void',
-        description: 'Select the given variant, else the variant of a paused or failed preparation, else the recommendation.',
-        parameters: [{ name: 'options', description: 'variant and download source; omission uses configured origins.' }],
+        description: 'Select the given variant, else the variant of a paused or failed preparation, else the recommendation. Fails with `reflexLocal/unfit` for a variant above this Host\'s memory tier unless `allowUnfit` is set.',
+        parameters: [{ name: 'options', description: 'variant, download source, and memory consent; omission uses configured origins.' }],
       },
       {
-        signature: '@Remote select(variant: ReflexVariant): void',
-        description: 'Make a tested downloaded variant active now, or prepare another one in the background while the active one serves. Fails with `reflexLocal/preparing-other` while a different variant is being prepared.',
-        parameters: [{ name: 'variant', description: 'option to make active.' }],
+        signature: '@Remote select(variant: ReflexVariant, options?: Pick<ReflexSelectOptions, \'allowUnfit\'>): void',
+        description: 'Make a tested downloaded variant active now, or prepare another one in the background while the active one serves. Fails with `reflexLocal/preparing-other` while a different variant is being prepared, and with `reflexLocal/unfit` for a variant above this Host\'s memory tier unless `allowUnfit` is set.',
+        parameters: [{ name: 'variant', description: 'option to make active.' }, { name: 'options', description: 'consent to a variant above this Host\'s memory tier.' }],
       },
       {
         signature: '@Remote pause(): Promise<void>',
@@ -6717,7 +6717,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'ReflexPrepareOptions',
-    declaration: 'export interface ReflexPrepareOptions {\n    readonly variant?: ReflexVariant;\n    readonly downloadSource?: string;\n}',
+    declaration: 'export interface ReflexPrepareOptions {\n    readonly variant?: ReflexVariant;\n    readonly downloadSource?: string;\n    readonly allowUnfit?: boolean;\n}',
   },
   {
     name: 'ReflexQuant',
@@ -6726,6 +6726,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'ReflexRunnerStatus',
     declaration: 'export type ReflexRunnerStatus = {\n    readonly state: \'stopped\';\n} | {\n    readonly state: \'starting\';\n    readonly model: ReflexVariant;\n} | {\n    readonly state: \'running\';\n    readonly model: ReflexVariant;\n    readonly approxResidentBytes: number;\n    readonly idleReleaseAt?: number;\n} | {\n    readonly state: \'failed\';\n    readonly reason: string;\n};',
+  },
+  {
+    name: 'ReflexSelectOptions',
+    declaration: 'export type ReflexSelectOptions = Pick<ReflexPrepareOptions, \'downloadSource\' | \'allowUnfit\'>;',
   },
   {
     name: 'ReflexSelfTest',
