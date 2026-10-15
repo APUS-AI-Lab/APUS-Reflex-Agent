@@ -152,6 +152,7 @@ export function installSystem3SkillSelection(ctx: Context, config: System3SkillS
     let intent: System3InputIntent | undefined
     let outcome = 'provider-unavailable'
     let candidateNames: string[] = []
+    let pending: Promise<void> | undefined
     const started = performance.now()
     const requestId = users.reduce<SessionRequestId | null>((_previous, message) =>
       'rpcId' in message.source ? message.source.rpcId : null, null)
@@ -185,14 +186,33 @@ export function installSystem3SkillSelection(ctx: Context, config: System3SkillS
       const spec = jev.resolve(query)
       if (Buffer.byteLength(JSON.stringify(spec), 'utf8') > settings.maxInputBytes) { outcome = 'input-too-large'; return decision }
       request = spec
+      const classify = (answer: JevResponse): void => {
+        const classification = answer.answers.intent
+        if (classification?.type === 'choice' && isInputIntent(classification.choice) && classification.confidence >= settings.minConfidence) {
+          intent = classification.choice
+        }
+      }
+      if (!skillEligible) {
+        // Intent alone never changes this step's messages, so the step starts while the intent is judged and recorded.
+        pending = (async () => {
+          try {
+            const result = await bounded(jev.decide(spec, lookupSignal), lookupSignal)
+            if (result.kind === 'unknown') { outcome = result.failure.code; return }
+            response = result.response
+            classify(result.response)
+          } catch (error) {
+            if (signal.aborted || lifetime.signal.aborted) outcome = 'cancelled'
+            else if (deadline.signal.aborted) outcome = 'timeout'
+            else if (error instanceof JevConfigurationError) outcome = 'provider-unavailable'
+            else ctx.logger.warn(`system3 intent judgement: ${String(error)}`)
+          }
+        })()
+        return decision
+      }
       const result = await bounded(jev.decide(spec, lookupSignal), lookupSignal)
       if (result.kind === 'unknown') { outcome = result.failure.code; return decision }
       response = result.response
-      const classification = response.answers.intent
-      if (classification?.type === 'choice' && isInputIntent(classification.choice) && classification.confidence >= settings.minConfidence) {
-        intent = classification.choice
-      }
-      if (!skillEligible) return decision
+      classify(result.response)
       // Every group answers on its own; the most confident accepted choice across groups wins, the earlier group on ties.
       let best: { readonly skill: (typeof candidates)[number]; readonly confidence: number } | undefined
       let lowConfidence = false
@@ -224,11 +244,15 @@ export function installSystem3SkillSelection(ctx: Context, config: System3SkillS
       if (error instanceof JevConfigurationError) { outcome = 'provider-unavailable'; return decision }
       throw error
     } finally {
-      clearTimeout(timer)
-      agent.session.append('system3/skill-decision', { version: 1, requestId, turn, step, request, candidateNames,
-        outcome, ...intent === undefined ? {} : { intent }, ...injectionMessageId === undefined ? {} : { injectionMessageId },
-        ...response === undefined ? {} : { response }, ...selected === undefined ? {} : { selected },
-        elapsedMs: performance.now() - started })
+      const record = (): void => {
+        clearTimeout(timer)
+        agent.session.append('system3/skill-decision', { version: 1, requestId, turn, step, request, candidateNames,
+          outcome, ...intent === undefined ? {} : { intent }, ...injectionMessageId === undefined ? {} : { injectionMessageId },
+          ...response === undefined ? {} : { response }, ...selected === undefined ? {} : { selected },
+          elapsedMs: performance.now() - started })
+      }
+      if (pending === undefined) record()
+      else void pending.then(record)
     }
   })
 }
