@@ -35,6 +35,7 @@ function fake(probabilities: readonly number[] = []): ContinuumJev & { calls: Je
   return {
     calls,
     resolve: request => ({ ...request, providerId: 'fake', model: 'fake-model', effort: 'high' }),
+    providerInfo: () => undefined,
     decide: (request) => {
       calls.push(request)
       return Promise.resolve({ kind: 'ok', spec: { ...request, providerId: 'fake', model: 'fake-model' }, response: {
@@ -205,7 +206,8 @@ describe('Continuum threshold selection', () => {
     const relevance = fake([0.95, 0.1, 0.8])
     let calls = 0
     const jev: ContinuumJev = {
-      resolve: provider.resolve, decide: (request, signal) => (calls++ === 0 ? provider : relevance).decide(request, signal),
+      resolve: provider.resolve, providerInfo: provider.providerInfo,
+      decide: (request, signal) => (calls++ === 0 ? provider : relevance).decide(request, signal),
     }
     const candidates = [candidate('kid', 0, '乐乐爱恐龙', ['people']), candidate('budget', 0, '预算 5000', ['money']),
       candidate('loose', 0, '未分类原话'), candidate('mom', 0, '妈妈晕车', ['people', 'health'])]

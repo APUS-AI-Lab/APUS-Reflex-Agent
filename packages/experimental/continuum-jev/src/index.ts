@@ -169,8 +169,8 @@ declare module '@deepseek-ai/dsh-session/types' {
   }
 }
 
-/** Narrow provider capability consumed by the adapter. */
-export type ContinuumJev = Pick<Jev, 'resolve' | 'decide'>
+/** Narrow provider capability consumed by the adapter; `providerInfo` supplies the execution domain admission checks. */
+export type ContinuumJev = Pick<Jev, 'resolve' | 'decide' | 'providerInfo'>
 
 /** Profile settings resolve the same explicit configuration used by direct consumers. */
 export type ContinuumJevProfileConfig = ContinuumJevConfig
@@ -372,8 +372,10 @@ async function askBatch(
     if (error instanceof JevConfigurationError || error instanceof JevProtocolError) throw error
     return { kind: 'fallback', reason: 'provider-error', failure: 'resolve-error', request: null }
   }
+  // A provider that does not declare where it runs is treated as network.
   const admission = admitSystem3Routes(config.privacyPolicy, [{
-    id: request.providerId, executionDomain: 'network', dataClasses: config.sessionDataClasses ?? [],
+    id: request.providerId, executionDomain: jev.providerInfo(request.providerId)?.executionDomain ?? 'network',
+    dataClasses: config.sessionDataClasses ?? [],
   }])
   if (admission.allowed.length === 0) return { kind: 'fallback', reason: 'privacy-denied', failure: 'privacy-denied', request: null }
   if (new TextEncoder().encode(JSON.stringify(request)).byteLength > config.maxRequestBytes) {

@@ -6,7 +6,7 @@ import { JevConfigurationError, type JevAnswer, type JevErrorCode, type JevQuest
 import { admitSystem3Routes, type System3DataClass, type System3PrivacyPolicy } from '@deepseek-ai/dsh-experimental-system3-policy'
 import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
 import type { JsonValue } from '@deepseek-ai/dsh-util-values'
-import type { System3JevOptions } from './decisions.ts'
+import { resolveSystem3JevRoute, type System3JevOptions } from './decisions.ts'
 
 /** `off` asks nothing; `shadow` asks and records but never changes behavior; `active` lets the judgement act. */
 export type System3DecisionMode = 'off' | 'shadow' | 'active'
@@ -137,10 +137,10 @@ export async function runSystem3Decision<Input, Outcome extends string>(ctx: Con
   let judged: Outcome | 'unsure' = 'unsure'
   let reason: System3JudgementReason = 'provider-unavailable'
   if (settings.mode === 'off') { reason = 'off'; return finish() }
-  const admission = admitSystem3Routes(shared.policy, [{ id: shared.options.routeId,
-    executionDomain: shared.options.executionDomain, dataClasses: shared.dataClasses }])
-  if (admission.allowed.length === 0) { reason = 'privacy-denied'; return finish() }
   const jev = ctx.get('jev')
+  const admission = admitSystem3Routes(shared.policy, [{ id: shared.options.routeId,
+    executionDomain: resolveSystem3JevRoute(jev, shared.options).executionDomain, dataClasses: shared.dataClasses }])
+  if (admission.allowed.length === 0) { reason = 'privacy-denied'; return finish() }
   if (jev === undefined) return finish()
   try {
     request = jev.resolve({ state: spec.state(input),

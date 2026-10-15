@@ -8,7 +8,7 @@ import { mountAgentLoopTestDependencies } from '@deepseek-ai/dsh-agent-loop-test
 import { createUserMessage, ReasoningEffortId } from '@deepseek-ai/dsh-llm'
 import { SessionId } from '@deepseek-ai/dsh-session'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import Jev from '../../apus-dsh-jev-plugin/src/index.ts'
+import Jev, { JevConfigurationError } from '../../apus-dsh-jev-plugin/src/index.ts'
 import { MockAdapter } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import { createSystem3EntryRouter, type System3EntryModelCandidate, type System3EntryRoutingConfig } from '../src/entry-routing.ts'
 import System3 from '../src/index.ts'
@@ -169,6 +169,23 @@ it('blocks the remote Jev before I/O even when its URL is loopback', async () =>
   expect(request.agent.session.snapshotEvents().at(-1)?.data).toMatchObject({ outcome: 'privacy-denied', request: null })
 })
 
+it('admits the selected provider by its declared domain, pins the request to it, and records that domain', async () => {
+  const { ctx, decide, request, signal } = await setup()
+  const info = { id: 'reflex-local', model: 'local', endpoint: 'http://127.0.0.1:2', executionDomain: 'local' as const }
+  ctx.effect(() => ctx.jev.register({ info, decide: async () => { throw new Error('the decide spy answers') } }))
+  const providerInfo = vi.spyOn(ctx.jev, 'providerInfo').mockReturnValue(info)
+  const router = createSystem3EntryRouter(ctx, config, { mode: 'local-only' }, { routeId: 'jev', executionDomain: 'network', effort: 'low' })
+  expect(await router.route(request, signal)).toEqual({ provider: 'mock', model: 'fast' })
+  expect(decide.mock.calls[0]?.[0]).toMatchObject({ providerId: 'reflex-local', model: 'local' })
+  expect(request.agent.session.snapshotEvents().at(-1)?.data).toMatchObject({ outcome: 'selected', executionDomain: 'local' })
+
+  providerInfo.mockReturnValue({ ...info, id: 'gateway', executionDomain: 'network' })
+  const fallbackLocal = createSystem3EntryRouter(ctx, config, { mode: 'local-only' }, { routeId: 'jev', executionDomain: 'local', effort: 'low' })
+  expect(await fallbackLocal.route(request, signal)).toBeUndefined()
+  expect(decide).toHaveBeenCalledTimes(1)
+  expect(request.agent.session.snapshotEvents().at(-1)?.data).toMatchObject({ outcome: 'privacy-denied', executionDomain: 'network' })
+})
+
 it('excludes generation routes that cannot receive the classified session', async () => {
   const { decide, request, router, signal } = await setup({ sessionDataClasses: ['secret'] })
   expect(await router.route(request, signal)).toBeUndefined()
@@ -292,6 +309,13 @@ it('returns a safe unavailable receipt when Jev is not mounted', async () => {
   const router = createSystem3EntryRouter(ctx, config, { mode: 'local-only' }, { routeId: 'jev', executionDomain: 'local', effort: 'low' })
   expect(await router.route(request, signal)).toBeUndefined()
   expect(request.agent.session.snapshotEvents().at(-1)?.data).toMatchObject({ outcome: 'provider-unavailable', request: null })
+})
+
+it('keeps the baseline when Jev is switched off during dispatch', async () => {
+  const { decide, request, router, signal } = await setup()
+  decide.mockRejectedValue(new JevConfigurationError('switched off'))
+  expect(await router.route(request, signal)).toBeUndefined()
+  expect(request.agent.session.snapshotEvents().at(-1)?.data).toMatchObject({ outcome: 'provider-unavailable' })
 })
 
 it('rejects entry routing without a native model resolver', async () => {

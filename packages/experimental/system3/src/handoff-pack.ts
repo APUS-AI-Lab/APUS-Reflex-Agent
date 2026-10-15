@@ -6,7 +6,7 @@ import type { MessageId } from '@deepseek-ai/dsh-llm'
 import { JevConfigurationError, MAX_JEV_QUESTIONS, type JevErrorCode, type JevRequest, type JevResponse } from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
 import { admitSystem3Routes, type System3DataClass, type System3PrivacyPolicy } from '@deepseek-ai/dsh-experimental-system3-policy'
 import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
-import type { System3JevOptions } from './decisions.ts'
+import { resolveSystem3JevRoute, type System3JevOptions } from './decisions.ts'
 
 /** How many earlier messages Jev reviews and how a requirement is recognized; deployment-owned. */
 export interface System3HandoffPackConfig {
@@ -107,7 +107,7 @@ export async function prepareSystem3HandoffPack(ctx: Context, agent: Agent, requ
   try {
     if (earlier.length === 0) { outcome = 'no-history'; return [] }
     const admission = admitSystem3Routes(settings.policy, [{ id: settings.options.routeId,
-      executionDomain: settings.options.executionDomain, dataClasses: settings.dataClasses }])
+      executionDomain: resolveSystem3JevRoute(jev, settings.options).executionDomain, dataClasses: settings.dataClasses }])
     if (admission.allowed.length === 0) { outcome = 'privacy-denied'; return [] }
     if (jev === undefined) return []
     const unresolved: JevRequest = {
