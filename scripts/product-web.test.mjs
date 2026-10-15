@@ -97,16 +97,18 @@ writeFileSync(process.env.DSH_HOME + '/observed.json', JSON.stringify({args:proc
   assert.equal(observed.edition, edition)
   assert.deepEqual(observed.args, ['--profile', 'web', '--patch', join(installation, 'web.patch.yml'), '--patch', join(installation, 'runtime/product-edition.patch.yml'), '--host', '127.0.0.1', '--port', '0', '--no-open'])
   const profile = join(home, 'profiles/web/package.json')
-  const expectedBundles = ['base', 'web', '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin', '@deepseek-ai/dsh-experimental-continuum-jev']
+  const expectedBundles = ['base', 'web', '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin', '@deepseek-ai/dsh-experimental-system3',
+    '@deepseek-ai/dsh-experimental-continuum-jev']
   assert.deepEqual(JSON.parse(readFileSync(profile, 'utf8')).dsh.profile.bundles, expectedBundles)
   writeFileSync(profile, JSON.stringify({ user: 'retained', dsh: { profile: { bundles: ['base', 'web', 'user-plugin'] } } }))
   const userPatch = join(home, 'profiles/web/cordis.patch.yml')
-  writeFileSync(userPatch, '- id: continuum-memory\n  config:\n    enabled: true\n')
+  const savedSettings = '- id: continuum-memory\n  config:\n    enabled: true\n- id: system3\n  config:\n    frontLoadedDecisions: false\n'
+  writeFileSync(userPatch, savedSettings)
   execFileSync(process.execPath, [join(installation, 'launch.mjs')], { env })
   const retained = JSON.parse(readFileSync(profile, 'utf8'))
   assert.equal(retained.user, 'retained')
   assert.deepEqual(retained.dsh.profile.bundles, ['base', 'web', 'user-plugin', ...expectedBundles.slice(2)])
-  assert.equal(readFileSync(userPatch, 'utf8'), '- id: continuum-memory\n  config:\n    enabled: true\n')
+  assert.equal(readFileSync(userPatch, 'utf8'), savedSettings)
   const savedManifest = readFileSync(profile, 'utf8')
   execFileSync(process.execPath, [join(installation, 'launch.mjs')], { env })
   assert.equal(readFileSync(profile, 'utf8'), savedManifest)
@@ -292,8 +294,9 @@ test('Reflex execution qualification sends an authenticated read-only Host reque
   assert.match(requests[0].body.rpcId, /^[0-9a-f-]{36}$/)
 })
 
-/** A Playwright-shaped dialog whose visible controls follow the selected Reflex connection mode. */
+/** A Playwright-shaped dialog whose mode menu renders in its page and whose controls follow the chosen mode. */
 function reflexDialog(options, { localBody = true, localFields = false } = {}) {
+  const modes = ['trial', 'custom', 'local']
   let mode = 'custom'
   const visible = selector => {
     if (selector === '[data-reflex-local]') return mode === 'local' && localBody ? 1 : 0
@@ -304,15 +307,20 @@ function reflexDialog(options, { localBody = true, localFields = false } = {}) {
   }
   const locator = selector => ({
     first: () => locator(selector),
+    click: async () => {},
     count: async () => visible(selector),
-    getByRole: () => ({ allTextContents: async () => options }),
-    selectOption: async (value) => { mode = value },
     waitFor: async ({ state } = {}) => {
       const shown = selector === '#reflex-mode' || visible(selector) > 0
       if ((state === 'detached') === shown) throw new Error(`${selector} is not ${state}`)
     },
   })
-  return { locator, getByText: () => ({ waitFor: async () => {} }), getByRole: () => ({ waitFor: async () => {} }) }
+  const items = {
+    first: () => ({ waitFor: async () => {} }),
+    allTextContents: async () => options,
+    nth: index => ({ click: async () => { mode = modes[index] } }),
+  }
+  const page = { getByRole: () => items, keyboard: { press: async () => {} } }
+  return { locator, page: () => page, getByRole: () => ({ waitFor: async () => {} }) }
 }
 
 test('Reflex settings qualification requires the trial, custom, and local modes', async () => {

@@ -272,7 +272,9 @@ export function installSystem3TaskFrame(ctx: Context, settings: System3TaskFrame
   }
   // A claimed message reuses its pending judgement, or gets one replacement if that judgement becomes stale.
   const early = new WeakMap<Session, Map<MessageId, Promise<FrameOutcome | undefined>>>()
-  const topLevel = (agent: Agent): boolean => config.mode !== 'off' && (agent.session.header.delegationDepth ?? 0) === 0
+  // With front-loaded decisions off no frame is started, judged, or interjected; a recorded frame stays in the prompt.
+  const topLevel = (agent: Agent): boolean => config.mode !== 'off' && settings.options.frontLoaded?.() !== false
+    && (agent.session.header.delegationDepth ?? 0) === 0
 
   // A DSH goal sets the task: creating one starts a frame from its objective, editing the objective keeps the requirements.
   ctx.on('goal/changed', ({ agent, change }) => {

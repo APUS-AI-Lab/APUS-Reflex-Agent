@@ -382,3 +382,15 @@ it('records a total-deadline timeout distinctly from user cancellation', async (
   await expect(h.router.route(h.request, abort.signal)).rejects.toThrow('deadline')
   expect(h.request.agent.session.snapshotEvents().at(-1)?.data).toMatchObject({ outcome: 'timeout' })
 })
+
+it('takes the baseline route without recording or asking Jev while front-loaded decisions are off', async () => {
+  const { ctx, decide, request, signal } = await setup()
+  let on = false
+  const router = createSystem3EntryRouter(ctx, config, { mode: 'local-only' },
+    { routeId: 'jev', executionDomain: 'local', effort: 'low', frontLoaded: () => on })
+  expect(await router.route(request, signal)).toBeUndefined()
+  expect(decide).not.toHaveBeenCalled()
+  expect(request.agent.session.snapshotEvents().filter(event => event.type.startsWith('system3/'))).toEqual([])
+  on = true
+  expect(await router.route(request, signal)).toEqual({ provider: 'mock', model: 'fast' })
+})

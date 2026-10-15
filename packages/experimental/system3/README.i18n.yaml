@@ -3,8 +3,8 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/experimental/system3/README.md
 /:
-  en: ba6526ce7984bc9c
-  zh: 099156a89f4c5d5d
+  en: c3ed0a5037eabd2c
+  zh: 2f4d09599d0269c0
 /deepseek-ai-dsh-experimental-system3:
   en: 713f0995c117bffe
   zh: 0a1a499368073764
@@ -15,8 +15,8 @@
   en: 76368b6b1da79c80
   zh: 577bc812458ce0c0
 /deepseek-ai-dsh-experimental-system3/use-this-package:
-  en: 4084e49e2c048eae
-  zh: b632cfbe3311c52a
+  en: 4204c3f0ea5ca18b
+  zh: 46b438ebec0813d5
 /deepseek-ai-dsh-experimental-system3/use-this-package/explicit-jev-shadow-decisions:
   en: 223f4f6b214477f0
   zh: f5890a001589762c

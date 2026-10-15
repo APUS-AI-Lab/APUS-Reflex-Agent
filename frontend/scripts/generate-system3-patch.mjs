@@ -18,12 +18,10 @@ export async function generateSystem3Patch(stage, { sourceRoot = join(appRoot, '
   const selected = productEdition.resolveEdition(edition)
   const system3Ui = mode === 'deployed' ? '@deepseek-ai/dsh-experimental-client-ui-system3'
     : join(sourceRoot, 'packages/experimental/client-ui-system3/lib/index.js')
-  const system3 = mode === 'deployed' ? '@deepseek-ai/dsh-experimental-system3'
-    : join(sourceRoot, 'packages/experimental/system3/lib/index.js')
   const desktop = await readFile(join(appRoot, 'build/dsh-desktop.patch.yml'), 'utf8')
   await writeFile(join(stage, 'desktop.patch.yml'), `${desktop.trimEnd()}
 
-${system3ProductPatch({ system3Ui, system3 }).trimEnd()}
+${system3ProductPatch({ system3Ui }).trimEnd()}
 # Remote session export is opt-in for the APUS desktop product.
 - id: session-log-deepseek
   config:

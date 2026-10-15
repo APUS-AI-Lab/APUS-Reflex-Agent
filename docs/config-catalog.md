@@ -1259,7 +1259,7 @@ export interface Config {
 ## `@deepseek-ai/dsh-experimental-reflex-local`
 
 - `inject`: `subprocess`
-- `source`: [`packages/experimental/reflex-local/src/index.ts:21`](../packages/experimental/reflex-local/src/index.ts)
+- `source`: [`packages/experimental/reflex-local/src/index.ts:22`](../packages/experimental/reflex-local/src/index.ts)
 
 ```ts config-catalog
 /** Device, download, process, and self-test settings of the local engine. */
@@ -1284,8 +1284,11 @@ export interface Config {
   startupTimeoutMs: number
   /** Deadline of one runner completion, which answers one question. */
   decisionTimeoutMs: number
-  /** Idle period before stopping the runner; zero keeps it running until disposal. */
-  idleTimeoutMs: number
+  /**
+   * Idle period after which the runner stops and frees the model's memory; absent keeps it resident while local
+   * decisions are enabled. The next decision after a release waits for the model to load.
+   */
+  idleReleaseMs?: number | undefined
   /** Managed process termination grace period. */
   graceMs: number
   /** Maximum retained runner diagnostic bytes. */
@@ -1317,6 +1320,10 @@ export interface Config {
   }
   /** Free bytes left on the data volume after a download completes. */
   diskMarginBytes: number
+  /** Consecutive runner start or request failures after which local decisions are turned off. */
+  maxConsecutiveRunnerFailures: number
+  /** Interval for reading the Jev entry's routing and master switch, so external changes publish and stop the runner. */
+  routingPollMs: number
 }
 ```
 <!-- END GENERATED config-catalog:@deepseek-ai/dsh-experimental-reflex-local -->
@@ -1404,7 +1411,7 @@ export interface Config {
 
 ## `@deepseek-ai/dsh-experimental-system3`
 
-- `refs`: [`System3DataClass`](../packages/experimental/system3-policy/src/index.ts) · [`System3ExecutionDomain`](../packages/experimental/system3-policy/src/index.ts) · [`System3PrivacyMode`](../packages/experimental/system3-policy/src/index.ts)
+- `refs`: [`System3DataClass`](../packages/experimental/system3-policy/src/index.ts) · [`System3ExecutionDomain`](../packages/experimental/system3-policy/src/index.ts) · [`System3PrivacyMode`](../packages/experimental/system3-policy/src/index.ts) · `Volatile` (`@deepseek-ai/cordis`)
 - `source`: [`packages/experimental/system3/src/index.ts:61`](../packages/experimental/system3/src/index.ts)
 
 ```ts config-catalog
@@ -1455,6 +1462,14 @@ export interface Config {
    * input needs; `false` or omission disables it.
    */
   readonly prefetch?: false | System3PrefetchConfig
+  /**
+   * Live switch for the decisions System3 makes before the main model: entry routing, goal routing, Skill selection, the
+   * task frame, and prefetch. While false, new requests take the native path, ask Jev nothing, and record no System3
+   * decision; a task frame recorded earlier stays in the prompt, and work already started finishes. Process and Reflex
+   * supervision, Reflex context, completion review, and output folding do not follow it. Edited live through the
+   * entry's settings form without reloading the plugin. @default true
+   */
+  readonly frontLoadedDecisions?: Volatile<boolean>
 }
 
 /** Explicit controls for entry recommendations; omission leaves entry routing disabled. */

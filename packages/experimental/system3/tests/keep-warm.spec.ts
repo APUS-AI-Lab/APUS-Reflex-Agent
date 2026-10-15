@@ -36,6 +36,17 @@ it('warms at start and every interval until the window ends, then again after a 
   expect(warm).toHaveBeenCalledTimes(5)
 })
 
+it('keeps its schedule but sends no warm-up while front-loaded decisions are off', async () => {
+  const { ctx, warm } = await setup()
+  let on = false
+  installSystem3KeepWarm(ctx, { windowMs: 5000, intervalMs: 2000 }, () => on)
+  await vi.advanceTimersByTimeAsync(2000)
+  expect(warm).not.toHaveBeenCalled()
+  on = true
+  await vi.advanceTimersByTimeAsync(2000)
+  expect(warm).toHaveBeenCalledOnce()
+})
+
 it('stops on disposal, including a warm-up rejected by that disposal', async () => {
   const { ctx, warm } = await setup()
   warm.mockImplementation(async (_id, signal) => await new Promise((_resolve, reject) => {

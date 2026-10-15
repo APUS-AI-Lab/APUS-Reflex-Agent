@@ -75,7 +75,7 @@ it('rejects configurations that cannot work', () => {
 type Script = Readonly<Record<string, JevResponse>>
 
 async function setup(script: Script, config: Partial<System3TaskFrameConfig> = {}, turns = 6, goals = false,
-  responses?: ConstructorParameters<typeof MockAdapter>[0], owned = false) {
+  responses?: ConstructorParameters<typeof MockAdapter>[0], owned = false, frontLoaded?: () => boolean) {
   const ctx = new Context()
   contexts.push(ctx)
   await mountAgentLoopTestDependencies(ctx)
@@ -91,7 +91,7 @@ async function setup(script: Script, config: Partial<System3TaskFrameConfig> = {
   ctx.effect(() => ctx.llm.registerAdapter(['mock'], adapter))
   const settings = { config: { ...CONFIG, ...config },
     policy: { mode: 'controlled', approvedRemoteIds: ['jev'], approvedRemoteDataClasses: ['workspace'] },
-    options: { routeId: 'jev', executionDomain: 'network', effort: 'low' } } as const
+    options: { routeId: 'jev', executionDomain: 'network', effort: 'low', ...frontLoaded === undefined ? {} : { frontLoaded } } } as const
   const readers: ReturnType<typeof installSystem3TaskFrame>[] = []
   const frameFiber = owned ? await ctx.plugin({ name: 'task-frame-fixture', inject: ['systemPrompt'], apply(owner: Context) {
     readers.push(installSystem3TaskFrame(owner, settings))
@@ -288,6 +288,19 @@ it('records judgements without changing the frame or the requests in shadow mode
   await off.say('别动 README.md', 0)
   expect(off.decide).not.toHaveBeenCalled()
   expect(off.events('system3/judgement')).toEqual([])
+})
+
+it('starts, judges, and records no frame while front-loaded decisions are off, and frames again once on', async () => {
+  let on = false
+  const h = await setup({ '别动 README.md': answers('continue', { requirement: 0.9 }) }, {}, 6, false, undefined, false, () => on)
+  await h.say('加一个汇总命令', 0)
+  await h.say('别动 README.md', 0)
+  expect(h.decide).not.toHaveBeenCalled()
+  expect(h.frames()).toEqual([])
+  expect(h.events('system3/judgement')).toEqual([])
+  on = true
+  await h.say('加一个汇总命令')
+  expect(h.frames()).toHaveLength(1)
 })
 
 it('continues a frame restored from the Session log', async () => {

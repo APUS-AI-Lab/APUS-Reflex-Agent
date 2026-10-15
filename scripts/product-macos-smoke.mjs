@@ -236,21 +236,35 @@ async function run(installer, reportDirectory, expectedSource = process.env.GITH
       report.memorySetting = { initialEnabled: false, writeAccepted: true, modelRecallExercised: false }
       report.stages.push('continuum-setting-enabled')
     }
+    // 决策前置 is a volatile System3 field the System3 profile bundle owns, so its write must also survive a restart.
+    const frontLoadedSwitch = (page, checked) => page.getByRole('switch', {
+      name: /^(决策前置|Pre-step decisions)$/u, checked, disabled: false,
+    })
+    await frontLoadedSwitch(page, true).waitFor({ state: 'visible', timeout: 20_000 })
+    await frontLoadedSwitch(page, true).click()
+    await frontLoadedSwitch(page, false).waitFor({ state: 'visible', timeout: 20_000 })
+    await page.screenshot({ path: join(reportDirectory, 'front-loaded-disabled.png') })
+    report.frontLoadedSetting = { initialEnabled: true, writeAccepted: true }
+    report.stages.push('front-loaded-setting-disabled')
     await close()
     report.stages.push('first-exit-quiescent')
     page = await launch()
     await page.screenshot({ path: join(reportDirectory, 'restart.png') })
     report.reflexCapabilities.restarted = await verifyReflexExecution(page)
     report.stages.push('reflex-execution-modules-ready-after-restart')
+    await page.getByText(/^(设置|Settings)$/).last().click()
+    await page.getByText(new RegExp(`^(当前版本：|Current version: )${build.version.replaceAll('.', '\\.')}$`)).waitFor({ timeout: 20_000 })
+    await page.getByRole('button', { name: /^(Reflex 配置|Reflex configuration)$/u, exact: true }).click()
     if (qualifyMemorySetting) {
-      await page.getByText(/^(设置|Settings)$/).last().click()
-      await page.getByText(new RegExp(`^(当前版本：|Current version: )${build.version.replaceAll('.', '\\.')}$`)).waitFor({ timeout: 20_000 })
-      await page.getByRole('button', { name: /^(Reflex 配置|Reflex configuration)$/u, exact: true }).click()
       await continuumSwitch(page, true).waitFor({ state: 'visible', timeout: 20_000 })
       await page.screenshot({ path: join(reportDirectory, 'continuum-restart.png') })
       report.memorySetting.persistedAfterRestart = true
       report.stages.push('continuum-setting-persisted-after-restart')
     }
+    await frontLoadedSwitch(page, false).waitFor({ state: 'visible', timeout: 20_000 })
+    await page.screenshot({ path: join(reportDirectory, 'front-loaded-restart.png') })
+    report.frontLoadedSetting.persistedAfterRestart = true
+    report.stages.push('front-loaded-setting-persisted-after-restart')
     await close()
     report.stages.push('restart-home-and-exit-quiescent')
     report.passed = true

@@ -136,7 +136,7 @@ export function installSystem3SkillSelection(ctx: Context, config: System3SkillS
   ctx.effect(() => () => { lifetime.abort(new DOMException('System3 Skill selector removed', 'AbortError')) })
   ctx.on('agent/pre-step', async ({ agent, signal, turn, step }, next): Promise<PreStepDecision> => {
     const decision = await next()
-    if (decision.kind === 'reject') return decision
+    if (decision.kind === 'reject' || options.frontLoaded?.() === false) return decision
     const users = decision.messages.filter(message => message.source.kind === 'user')
     const input = users.flatMap(message => message.content.flatMap(part => part.type === 'text' ? [part.text] : [])).join('\n')
     if (users.length === 0 || users.some(message => message.content.some(part => part.type !== 'text'))
