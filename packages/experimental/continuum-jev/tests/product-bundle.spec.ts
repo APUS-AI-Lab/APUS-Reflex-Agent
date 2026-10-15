@@ -87,7 +87,7 @@ async function fixture(edition: 'full' | 'lite', existing: boolean | string = fa
         selector: ContinuumJevPlugin, query: ReadOnlyQuery, office: { apply() {} } })
     })
     contexts.push(ctx)
-    const adapter = new MockAdapter(Array.from({ length: 6 }, () => textResponse('ack')))
+    const adapter = new MockAdapter(Array.from({ length: 8 }, () => textResponse('ack')))
     ctx.llm.registerAdapter(['recording'], adapter)
     return { ctx, adapter, profile }
   }
@@ -137,6 +137,16 @@ it.each([
   resumed.agent.followup(user('After restart, are the history tools still offered?'))
   await resumed.agent.whenIdle()
   expect(toolNames(restarted.adapter)).toContain('history_read')
+  // The Reflex settings switch hides the recall tools without unloading the memory profile.
+  await restarted.ctx.settings.mutate('jev', [{ op: 'set', path: ['enabled'], value: false }])
+  resumed.agent.followup(user('Reflex is switched off in settings.'))
+  await resumed.agent.whenIdle()
+  expect(toolNames(restarted.adapter)).not.toContain('history_read')
+  expect(toolNames(restarted.adapter)).not.toContain('history_search')
+  await restarted.ctx.settings.mutate('jev', [{ op: 'set', path: ['enabled'], value: true }])
+  resumed.agent.followup(user('Reflex is switched on again.'))
+  await resumed.agent.whenIdle()
+  expect(toolNames(restarted.adapter)).toEqual(expect.arrayContaining(['history_read', 'history_search']))
   await restarted.ctx.configEditor.edit(restarted.ctx.configEditor.entries().find(row => row.options.id === 'continuum-jev')!, raw => ({ ...raw, mode: 'off' }))
   expect(restarted.ctx.get('continuumMemoryAdmitter')).toBeUndefined()
   resumed.agent.followup(user('Reflex is off again.'))

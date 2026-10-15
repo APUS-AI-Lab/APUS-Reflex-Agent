@@ -7,7 +7,7 @@ import type { Agent } from '@deepseek-ai/dsh-agent'
 import * as HistoryRecall from '@deepseek-ai/dsh-tool-history-recall'
 import type { SessionPersistence } from '@deepseek-ai/dsh-session-persistence'
 import type { Session, SessionEvent, SessionSeq } from '@deepseek-ai/dsh-session'
-import { Context, Service } from '@deepseek-ai/cordis'
+import { Context, Service, type Fiber } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 
 /** Only active mode applies Reflex advice; off and shadow keep the deterministic result. */
@@ -313,7 +313,18 @@ class ContinuumJevPlugin extends Service {
         },
       }
       ctx.provide('continuumMemoryAdmitter', admitter)
-      ctx.plugin(HistoryRecall, {})
+      // The recall tools exist only while the Reflex switch is on, so a switched-off profile offers the original tools.
+      let recall: Fiber | undefined
+      const synchronizeRecall = (enabled: boolean): void => {
+        if (enabled) {
+          recall ??= ctx.plugin(HistoryRecall, {})
+          return
+        }
+        void recall?.dispose()
+        recall = undefined
+      }
+      synchronizeRecall(ctx.jev.isEnabled())
+      ctx.on('jev/enabled', synchronizeRecall)
     })
   }
 }

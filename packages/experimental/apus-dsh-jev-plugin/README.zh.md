@@ -51,7 +51,7 @@ kind: "package-bundle"
 
 | 字段 | 默认值 | 含义 |
 |---|---|---|
-| `enabled` | `true` | 是否运行 Reflex 判定。为 `false` 时，解析或发送判定会抛出 `JevDisabledError`（与未配置提供方相同的 `JevConfigurationError`），不会向网关发送任何请求；System3 判定记录 `provider-unavailable` 并保持原生路径，Continuum 排序在各模式下都保持基线顺序。提供方元数据仍会列出。“设置 → Reflex 配置”将其显示为立即保存的开关；更改对下一次判定生效 |
+| `enabled` | `true` | 是否运行 Reflex 判定。为 `false` 时，解析或发送判定会抛出 `JevDisabledError`（与未配置提供方相同的 `JevConfigurationError`），不会向网关发送任何请求；System3 判定记录 `provider-unavailable` 并保持原生路径，Continuum 排序在各模式下都保持基线顺序。提供方元数据仍会列出。“设置 → Reflex 配置”将其显示为立即保存的开关；更改对下一次判定生效。`isEnabled()` 读取该值，每次变化都会触发 `jev/enabled`，供 Jev 配置项以外的依赖方监听 |
 | `endpoint` | 空 | HTTP gateway 根 URL 或 `/v1` URL；执行决策前须与 `model` 一同配置 |
 | `model` | 空 | 发给 gateway 的模型 id；执行决策前须与 `endpoint` 一同配置 |
 | `protocol` | `openjev` | 决策协议：OpenJev（`openjev`）或 Typesafe（`typesafe`） |

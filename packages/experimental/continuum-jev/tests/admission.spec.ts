@@ -273,7 +273,7 @@ describe('Continuum Reflex admitter service', () => {
       await ctx.plugin(AgentLoop, { agents: [] })
       ctx.llm.registerAdapter(['recording'], new MockAdapter([]))
     }
-    if (options.jev !== undefined) ctx.provide('jev', options.jev as never)
+    if (options.jev !== undefined) ctx.provide('jev', { isEnabled: () => true, ...options.jev } as never)
     const fiber = ctx.plugin(ContinuumJevPlugin, { ...config, mode })
     await fiber
     return { ctx, fiber }
@@ -283,8 +283,25 @@ describe('Continuum Reflex admitter service', () => {
     expect((await mount('off', { jev: fake() })).ctx.get('continuumMemoryAdmitter')).toBeUndefined()
     const { ctx } = await mount('active')
     expect(ctx.get('continuumMemoryAdmitter')).toBeUndefined()
-    ctx.provide('jev', fake() as never)
+    ctx.provide('jev', { isEnabled: () => true, ...fake() } as never)
     await new Promise(resolve => setTimeout(resolve, 0))
+    expect(ctx.get('continuumMemoryAdmitter')).toBeDefined()
+  })
+
+  it('offers the history recall tools only while the Reflex switch is on', async () => {
+    const { ctx } = await mount('active', { jev: { ...fake(), isEnabled: () => false } as ContinuumJev, persistence: true })
+    ctx.provide('sessionQuery', {} as never)
+    const settle = () => new Promise(resolve => setTimeout(resolve, 0))
+    await settle()
+    expect(ctx.tools.get('history_read')).toBeUndefined()
+    ctx.emit('jev/enabled', true)
+    await settle()
+    expect(ctx.tools.get('history_read')).toBeDefined()
+    expect(ctx.tools.get('history_search')).toBeDefined()
+    ctx.emit('jev/enabled', true)
+    ctx.emit('jev/enabled', false)
+    await settle()
+    expect(ctx.tools.get('history_read')).toBeUndefined()
     expect(ctx.get('continuumMemoryAdmitter')).toBeDefined()
   })
 

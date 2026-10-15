@@ -1,4 +1,5 @@
 /** Experimental generic Jev capability with a built-in APUS System One provider. */
+import type {} from '@deepseek-ai/cordis-plugin-loader'
 import { Context, type Volatile } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import { Remote, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
@@ -31,6 +32,14 @@ declare module '@deepseek-ai/cordis' {
   interface Context {
     /** Provider-neutral typed Jev decision service. */
     jev: Jev
+  }
+  interface Events {
+    /**
+     * The Reflex settings switch changed; `loader/volatile-update` reaches only the Jev entry, so dependents listen here.
+     * @param enabled - Whether Reflex decisions now run.
+     * @mode emit
+     */
+    'jev/enabled'(enabled: boolean): void
   }
 }
 
@@ -117,6 +126,12 @@ export default class Jev extends TypertRemoteService {
     this.defaultEffort = () => config.effort.get()
     this.questionsPerRequest = config.questionsPerRequest
     this.enabled = () => config.enabled.get()
+    let announced = this.enabled()
+    ctx.on('loader/volatile-update', () => {
+      if (this.enabled() === announced) return
+      announced = this.enabled()
+      ctx.emit('jev/enabled', announced)
+    })
     if (config.http2 === true && config.keepAliveMs === undefined) throw new Error('jev http2 requires keepAliveMs')
     if (config.resetAfterFailures !== undefined && config.keepAliveMs === undefined) throw new Error('jev resetAfterFailures requires keepAliveMs')
     const fetcher = config.keepAliveMs === undefined ? undefined
@@ -142,6 +157,14 @@ export default class Jev extends TypertRemoteService {
       providerIdentity(candidate)
       return resolved
     }, { prepend: true }) // Validate after the loader evaluates inherited !!js expressions.
+  }
+
+  /**
+   * Read the settings switch; `jev/enabled` announces each change.
+   * @returns Whether Reflex decisions run, so callers can hide Reflex-only features while it is off.
+   */
+  isEnabled(): boolean {
+    return this.enabled()
   }
 
   /** Register the runtime owner of one capability's observed status.
