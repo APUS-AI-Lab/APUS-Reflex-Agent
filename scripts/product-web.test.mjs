@@ -321,12 +321,14 @@ function reflexDialog(options, { localBody = true, localFields = false } = {}) {
       if ((state === 'detached') === shown) throw new Error(`${selector} is not ${state}`)
     },
   })
-  const items = {
+  const rows = texts => ({
     first: () => ({ waitFor: async () => {} }),
-    allTextContents: async () => options,
-    nth: index => ({ click: async () => { mode = modes[index] } }),
-  }
-  const page = { getByRole: () => items, keyboard: { press: async () => {} } }
+    allTextContents: async () => texts,
+    nth: index => ({ click: async () => { mode = modes[index - texts.length + options.length] } }),
+  })
+  // The Windows caption menubar renders its own `menuitem` buttons outside the mode menu.
+  const menu = { filter: () => ({ getByRole: () => rows(options) }) }
+  const page = { getByRole: role => role === 'menu' ? menu : rows(['应用', '编辑', ...options]), keyboard: { press: async () => {} } }
   return { locator, page: () => page, getByRole: () => ({ waitFor: async () => {} }) }
 }
 

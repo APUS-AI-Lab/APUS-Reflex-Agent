@@ -48,10 +48,13 @@ const LOCALIZED_MODES = [
   ['APUS Reflex 限时免费端点', '自定义参数', '本机'],
 ]
 
-/** Open the page's mode menu, which renders in a portal outside the dialog, and return its rows. */
+/**
+ * Open the page's mode menu, which renders in a portal outside the dialog, and return its rows.
+ * Rows are read from the open `menu` popup because the Windows caption menubar also renders `menuitem` buttons.
+ */
 async function openModeMenu(dialog) {
   await dialog.locator('#reflex-mode').click()
-  const items = dialog.page().getByRole('menuitem')
+  const items = dialog.page().getByRole('menu').filter({ visible: true }).getByRole('menuitem')
   await items.first().waitFor({ state: 'visible' })
   return items
 }
