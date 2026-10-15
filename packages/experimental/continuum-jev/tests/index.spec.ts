@@ -10,8 +10,8 @@ import { JevConfigurationError, JevDisabledError, JevProtocolError, type JevRequ
 import { Context } from '@deepseek-ai/cordis'
 import type { Agent } from '@deepseek-ai/dsh-agent'
 
-const first = { id: MemoryId('a'), label: 'A', excerpt: 'alpha', score: 0.8 } as const
-const second = { id: MemoryId('b'), label: 'B', excerpt: 'beta', score: 0.4 } as const
+const first = { id: MemoryId('a'), label: 'A', excerpt: 'alpha', score: 0.8, tags: [] } as const
+const second = { id: MemoryId('b'), label: 'B', excerpt: 'beta', score: 0.4, tags: [] } as const
 const input = { isCurrent: () => true, query: 'which memory?', candidates: [first, second] } as const
 const config = {
   mode: 'active', timeoutMs: 2000, maxRequestBytes: 32_768, sessionDataClasses: ['workspace'],

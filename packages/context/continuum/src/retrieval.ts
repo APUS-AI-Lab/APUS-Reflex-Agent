@@ -114,6 +114,25 @@ export function renderMemoryWorkingSet(query: string, candidates: readonly Memor
   return Object.freeze({ query, candidates: Object.freeze([...candidates]), text, bytes: utf8Bytes(text) })
 }
 
+/**
+ * Render selected candidates in order, keeping each one while the complete recall stays within the byte budget.
+ * @param query - original retrieval query.
+ * @param candidates - selected candidates in recall order; each excerpt is already bounded.
+ * @param maxTotalBytes - UTF-8 byte limit including the heading, metadata and separators.
+ * @returns the bounded working set; a candidate that does not fit is skipped and later ones may still fit.
+ */
+export function budgetMemoryWorkingSet(query: string, candidates: readonly MemoryCandidate[], maxTotalBytes: number): MemoryWorkingSet {
+  const kept: MemoryCandidate[] = []
+  let bytes = utf8Bytes(heading)
+  for (const candidate of candidates) {
+    const added = utf8Bytes(renderCandidate(candidate)) + (kept.length > 0 ? 1 : 0)
+    if (bytes + added > maxTotalBytes) continue
+    bytes += added
+    kept.push(candidate)
+  }
+  return renderMemoryWorkingSet(query, kept)
+}
+
 function renderCandidate(candidate: MemoryCandidate): string {
   const before = candidate.excerptStart > 0
   const after = candidate.excerptEnd < candidate.record.content.length

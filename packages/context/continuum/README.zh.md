@@ -32,7 +32,7 @@ Session 事件使用现有 persistence backend；完成 `ctx.sessions.flush(sess
 
 使用 `MemoryRecordStore` 保存确定性的 revision 语义；用 `appendMemoryRecordEvent` 把变更追加到现有 Session 日志，用 `foldMemoryRecordEvents` 从日志重建，用 `readMemorySourceEvents` 精确回读来源，用 `retrieveMemoryWorkingSet` 生成有界候选。只有 `ctx.sessions.flush(session)` 成功后，调用方才能报告已经持久化。
 
-`ContinuumConfigFields` 导出经过校验的 schema 字段，供 profile provider 定义自己的默认值。Core 默认仍为 `enabled: false`、`mode: off`、`admission: explicit`、`candidatePool: lexical` 和空作用域。Reflex 专属开关生效时，`admission: 'user-message'` 记录每条已提交的人类消息，`admission: 'compaction'` 在挂载的 Reflex admitter 选中后，为压缩检查点替换掉的人类消息建立索引。`candidatePool: all` 还会在所有字面命中之后按从新到旧提供与输入没有共同词的记录，供挂载的 selector 判断；没有 selector 时只注入有共同词的记录。
+`ContinuumConfigFields` 导出经过校验的 schema 字段，供 profile provider 定义自己的默认值。Core 默认仍为 `enabled: false`、`mode: off`、`admission: explicit`、`candidatePool: lexical` 和空作用域。Reflex 专属开关生效时，`admission: 'user-message'` 记录每条已提交的人类消息，`admission: 'compaction'` 在挂载的 Reflex admitter 选中后，为压缩检查点替换掉的人类消息建立索引。`candidatePool: all` 还会在所有字面命中之后按从新到旧提供与输入没有共同词的记录，供挂载的 selector 判断；没有 selector 时只注入有共同词的记录。挂载的 selector 最多收到 `maxPool` 个候选（默认等于 `maxCandidates`），每个候选附带记录的 L1 标签；它选出的召回仍受 `maxTotalBytes` 限制。
 
 -----
 

@@ -2,8 +2,8 @@ import { Context } from '@deepseek-ai/cordis'
 import type { Agent, PreStepDecision } from '@deepseek-ai/dsh-agent'
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import type { ContentBlock, UserMessage } from '@deepseek-ai/dsh-llm'
-import type { MemoryRecordStore } from './records.ts'
-import { renderMemoryWorkingSet, retrieveMemoryWorkingSet, type MemoryRetrievalConfig } from './retrieval.ts'
+import type { MemoryId, MemoryRecordStore } from './records.ts'
+import { budgetMemoryWorkingSet, renderMemoryWorkingSet, retrieveMemoryWorkingSet, type MemoryRetrievalConfig } from './retrieval.ts'
 import type { ContinuumMemoryController, ContinuumMemoryPrincipal } from './policy.ts'
 
 /** Model-visible source for one bounded Continuum memory snapshot. */
@@ -24,7 +24,13 @@ declare module '@deepseek-ai/dsh-llm' {
 }
 
 /** Configuration for the deterministic memory context consumer. */
-export interface ContinuumMemoryContextConfig extends MemoryRetrievalConfig {}
+export interface ContinuumMemoryContextConfig extends MemoryRetrievalConfig {
+  /**
+   * Candidates offered to a mounted selector, which may route by tag before judging; the final recall still keeps
+   * `maxTotalBytes`. Omitted means `maxCandidates`.
+   */
+  readonly maxPool?: number | undefined
+}
 
 /** Candidate passed to the optional mounted Reflex selector. */
 export interface ContinuumMemorySelectionCandidate {
@@ -32,6 +38,8 @@ export interface ContinuumMemorySelectionCandidate {
   readonly label: string
   readonly excerpt: string
   readonly score: number
+  /** L1 index tags of the record; empty for untagged records. */
+  readonly tags: readonly string[]
 }
 
 /** Minimal replayable outcome returned by a mounted Reflex selector. */
@@ -141,6 +149,7 @@ export function installContinuumMemoryContext(
  * @param selectorOf - Reads the optional Jev selector at request time. Without one, only candidates that share a
  * query term are injected.
  * @param pendingOf - Admissions the read waits for, so records from a just-completed compaction are visible.
+ * @param tagsOf - L1 index tags of one record, passed to the selector.
  * @returns idempotent synchronous disposer for the listener.
  */
 export function installContinuumMemoryControllerContext(
@@ -150,6 +159,7 @@ export function installContinuumMemoryControllerContext(
   config: ContinuumMemoryContextConfig,
   selectorOf: () => ContinuumMemorySelector | undefined = () => undefined,
   pendingOf: (agent: Agent) => Promise<void> | undefined = () => undefined,
+  tagsOf: (agent: Agent, id: MemoryId) => readonly string[] = () => [],
 ): () => void {
   let active = true
   const isActive = (): boolean => active
@@ -166,9 +176,12 @@ export function installContinuumMemoryControllerContext(
     if (!isActive()) return decision
     const ticket = controller.beginRead(principalOf(agent))
     if (ticket === undefined) return decision
-    const workingSet = controller.read(ticket, config, query)
-    if (workingSet === undefined || !controller.isCurrent(ticket) || workingSet.candidates.length === 0) return decision
     const selector = selectorOf()
+    // A selector sees the larger pool and may route by tag; the byte budget applies to the recall it selects.
+    const workingSet = controller.read(ticket, selector === undefined ? config : {
+      ...config, maxCandidates: config.maxPool ?? config.maxCandidates, maxTotalBytes: Number.MAX_SAFE_INTEGER,
+    }, query)
+    if (workingSet === undefined || !controller.isCurrent(ticket) || workingSet.candidates.length === 0) return decision
     if (selector === undefined) {
       const matched = renderMemoryWorkingSet(workingSet.query, workingSet.candidates.filter(candidate => candidate.score > 0))
       return matched.candidates.length === 0 ? decision : { ...decision, messages: [...decision.messages, recallMessage(matched)] }
@@ -181,6 +194,7 @@ export function installContinuumMemoryControllerContext(
         label: candidate.record.kind,
         excerpt: candidate.excerpt,
         score: candidate.score,
+        tags: tagsOf(agent, candidate.id),
       })),
     }, signal)
     signal.throwIfAborted()
@@ -190,7 +204,7 @@ export function installContinuumMemoryControllerContext(
       const candidate = byId.get(id)
       return candidate === undefined ? [] : [candidate]
     })
-    const filtered = renderMemoryWorkingSet(workingSet.query, candidates)
+    const filtered = budgetMemoryWorkingSet(workingSet.query, candidates, config.maxTotalBytes)
     if (filtered.candidates.length === 0) return decision
     return { ...decision, messages: [...decision.messages, recallMessage(filtered)] }
   })

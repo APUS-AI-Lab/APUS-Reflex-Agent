@@ -1040,7 +1040,7 @@ export interface Config {
 ## `@deepseek-ai/dsh-experimental-continuum-jev`
 
 - `refs`: [`System3DataClass`](../packages/experimental/system3-policy/src/index.ts) · [`System3PrivacyPolicy`](../packages/experimental/system3-policy/src/index.ts)
-- `source`: [`packages/experimental/continuum-jev/src/index.ts:153`](../packages/experimental/continuum-jev/src/index.ts)
+- `source`: [`packages/experimental/continuum-jev/src/index.ts:176`](../packages/experimental/continuum-jev/src/index.ts)
 
 ```ts config-catalog
 /** Profile settings resolve the same explicit configuration used by direct consumers. */
@@ -1062,6 +1062,13 @@ export interface ContinuumJevConfig {
   readonly selection?: ContinuumJevSelection
   /** Lowest relevance probability `threshold` selection keeps, from 0 to 1. Omitted means 0.7. */
   readonly minRelevance?: number
+  /**
+   * With `threshold` selection, more candidates than this are first routed: Reflex picks the tags the input needs and
+   * only candidates carrying one of them, or no tag, are judged. Omitted means 16.
+   */
+  readonly routeAbove?: number
+  /** Lowest probability, from 0 to 1, at which routing picks a tag. Omitted means 0.5. */
+  readonly minRouteProbability?: number
   /** Index tags compaction admission judges each message against. Omitted means {@link DEFAULT_MEMORY_TAGS}. */
   readonly tags?: readonly ContinuumMemoryTag[]
   /** Lowest tag probability, from 0 to 1, that assigns a tag; a message with no assigned tag is not indexed. Omitted means 0.5. */
@@ -1095,6 +1102,8 @@ export type ContinuumJevSelection = 'rank' | 'threshold'
 export interface ContinuumMemoryTag {
   /** Stable tag ID written to L1 index entries. */
   readonly id: string
+  /** Short name the routing question shows for the tag. */
+  readonly label: string
   /** English noun phrase completing "states a fact about the user or someone in their life concerning …". */
   readonly description: string
 }
