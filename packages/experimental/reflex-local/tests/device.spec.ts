@@ -3,7 +3,7 @@ import { chmod, mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { afterEach, expect, it, vi } from 'vitest'
 import { Config } from '../src/index.ts'
-import { inspectDevice, offeredVariants } from '../src/device.ts'
+import { inspectDevice } from '../src/device.ts'
 import { temporaryRoot } from './harness.ts'
 
 const memory = vi.hoisted(() => ({ bytes: 24 * 1024 ** 3 }))
@@ -22,17 +22,16 @@ function host(platform: string, arch: string): void {
   vi.stubGlobal('process', { ...process, platform, arch })
 }
 
-it('recommends the largest variant that fits memory and honors a pinned variant', async () => {
+it('admits Apple Silicon Hosts whose memory meets the smallest configured tier', async () => {
   host('darwin', 'arm64')
   const runnerPath = await runner()
-  expect(inspectDevice(Config({ dataRoot: '/data', runnerPath }))).toEqual({ supported: true, memoryBytes: 24 * GIB, recommended: 'q8_0' })
+  expect(inspectDevice(Config({ dataRoot: '/data', runnerPath }))).toEqual({ supported: true, memoryBytes: 24 * GIB })
   memory.bytes = 8 * GIB
-  expect(inspectDevice(Config({ dataRoot: '/data', runnerPath }))).toEqual({ supported: true, memoryBytes: 8 * GIB, recommended: 'q4_k_m' })
-  expect(inspectDevice(Config({ dataRoot: '/data', runnerPath, variant: 'q8_0' }))).toEqual({ supported: false, reason: 'memory' })
+  expect(inspectDevice(Config({ dataRoot: '/data', runnerPath }))).toEqual({ supported: true, memoryBytes: 8 * GIB })
   memory.bytes = 4 * GIB
   expect(inspectDevice(Config({ dataRoot: '/data', runnerPath }))).toEqual({ supported: false, reason: 'memory' })
-  expect(offeredVariants(Config({ dataRoot: '/data' }), 32 * GIB)).toEqual(['q8_0', 'q4_k_m'])
-  expect(offeredVariants(Config({ dataRoot: '/data', variant: 'q4_k_m' }), 32 * GIB)).toEqual(['q4_k_m'])
+  const lowered = { ...Config({ dataRoot: '/data' }).minMemoryBytes, '4b-q4_k_m': 4 * GIB }
+  expect(inspectDevice(Config({ dataRoot: '/data', runnerPath, minMemoryBytes: lowered }))).toEqual({ supported: true, memoryBytes: 4 * GIB })
 })
 
 it.each([['linux', 'x64'], ['darwin', 'x64'], ['win32', 'arm64']])('reports %s-%s as an unsupported platform', (platform, arch) => {

@@ -91,6 +91,8 @@ const outcome = await ctx.jev.decide({
 
 默认提供方尚未配置时，解析或执行请求会在读取凭据或发送 HTTP 前抛出配置错误；请求中显式指定模型也不能绕过此要求。此状态下 `warm` 返回 false。`kind: 'unknown'` 会对 transport、timeout、HTTP、credential 和响应校验错误执行 fail-open。调用方继续以确定性的 System3 策略为权威，并可以记录返回的 failure，而不会暴露请求或响应文本。
 
+`providerInfo(providerId?)` 不做 I/O，返回请求将使用的 provider 的元数据（省略 id 时为默认 provider）；Reflex 关闭、该 provider 未配置或未注册时返回 undefined。provider 可以声明 `executionDomain`：请求状态不离开本机时为 `local`（例如本机 Reflex 引擎），否则为 `network`。内置网关 provider 不声明执行域，因为其 URL 可能是通往其他主机的 tunnel；System3 等调用方此时使用自己的部署默认值。
+
 -----
 
 <a id="understand-the-implementation"></a>

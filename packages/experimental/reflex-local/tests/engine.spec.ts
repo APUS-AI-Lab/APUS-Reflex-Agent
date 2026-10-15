@@ -7,13 +7,15 @@ import { JevProviderError } from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plu
 import { describe, expect, it, onTestFinished, vi } from 'vitest'
 import { Config } from '../src/index.ts'
 import { inspectDevice } from '../src/device.ts'
-import type { ModelAsset } from '../src/download.ts'
-import { JEV_PLUGIN, ReflexEngine, SYSTEM3_PLUGIN, type RoutingEditor, type RoutingEntry } from '../src/engine.ts'
+import { JEV_ENTRY_ID, ReflexEngine, type RoutingEditor, type RoutingEntry } from '../src/engine.ts'
+import { VARIANT_KEYS, variantOf, type CatalogAsset, type VariantKey } from '../src/models.ts'
 import type { ReflexPreparation, ReflexSnapshot } from '../src/types.ts'
 import { assetOf, fakeRunner, runnerLog, serve, temporaryRoot, weightsServer } from './harness.ts'
 
-const weights = { q8_0: Buffer.from('q8 weights fixture '.repeat(40)), q4_k_m: Buffer.from('q4 weights '.repeat(30)) }
-const lock = vi.hoisted(() => ({ models: {} as Record<string, ModelAsset> }))
+const weights = Object.fromEntries(VARIANT_KEYS.map((key, index) => [key, Buffer.from(`${key} weights `.repeat(20 + index))])) as Record<VariantKey, Buffer>
+const fileOf = (key: VariantKey): string => `${key}.gguf`
+const files = Object.fromEntries(VARIANT_KEYS.map(key => [fileOf(key), weights[key]]))
+const lock = vi.hoisted(() => ({ models: {} as Record<string, CatalogAsset> }))
 vi.mock('node:fs', async (importOriginal) => {
   const actual = await importOriginal<typeof import('node:fs')>()
   return { ...actual, readFileSync: (...args: Parameters<typeof actual.readFileSync>) => {
@@ -22,37 +24,56 @@ vi.mock('node:fs', async (importOriginal) => {
   } }
 })
 vi.mock('../src/device.ts', async importOriginal => ({ ...await importOriginal<typeof import('../src/device.ts')>(), inspectDevice: vi.fn() }))
-lock.models = { q8_0: assetOf('q8.gguf', weights.q8_0), q4_k_m: assetOf('q4.gguf', weights.q4_k_m) }
+function catalog(overrides: Partial<Record<VariantKey, Buffer>> = {}): void {
+  lock.models = Object.fromEntries(VARIANT_KEYS.map(key => [key,
+    { ...assetOf(fileOf(key), overrides[key] ?? weights[key]), experimental: key.startsWith('35b') }]))
+}
+catalog()
 const GIB = 1024 ** 3
+const Q9 = variantOf('9b-q8_0'), Q4 = variantOf('4b-q4_k_m')
 
 interface Options {
   env?: Record<string, string>
   config?: Partial<Config>
-  editor?: RoutingEditor
+  /** Raw jev entry configuration; null mounts no jev entry. */
+  jev?: Record<string, unknown> | null
   memory?: number
   origin?: string
-  root?: string
+}
+
+function editor(jev: Record<string, unknown> | null) {
+  const entries: RoutingEntry[] = jev === null ? [] : [{ options: { id: JEV_ENTRY_ID, config: jev } }]
+  const edits: Array<Record<string, unknown>> = []
+  const routing: RoutingEditor = {
+    entries: () => entries,
+    edit: async (entry, change) => {
+      const next = change(entry.options.config as Record<string, unknown>)
+      edits.push(next);
+      (entry.options as { config?: unknown }).config = next
+    },
+  }
+  return { routing, edits }
 }
 
 async function fixture(options: Options = {}) {
-  const root = options.root ?? await temporaryRoot()
+  const root = await temporaryRoot()
   const runner = await fakeRunner(root, options.env)
-  const server = options.origin === undefined ? await weightsServer(weights.q8_0) : undefined
+  const server = options.origin === undefined ? await weightsServer(files) : undefined
   const origin = options.origin ?? server!.origin
-  const memory = options.memory ?? 24 * GIB
-  vi.mocked(inspectDevice).mockReturnValue({ supported: true, memoryBytes: memory, recommended: memory >= 16 * GIB ? 'q8_0' : 'q4_k_m' })
+  vi.mocked(inspectDevice).mockReturnValue({ supported: true, memoryBytes: options.memory ?? 24 * GIB })
   const ctx = new Context()
   onTestFinished(async () => { await ctx.fiber.dispose() })
   await ctx.plugin(LocalSubprocess)
   const warn = vi.spyOn(ctx.logger, 'warn')
   const config = Config({ dataRoot: join(root, 'data'), runnerPath: runner.path, modelOrigins: [origin], idleTimeoutMs: 0, diskMarginBytes: 0,
     minPrefillTokensPerSecond: 100, startupTimeoutMs: 10_000, graceMs: 500, progressIntervalMs: 1, ...options.config })
+  const routing = editor(options.jev === undefined ? {} : options.jev)
   const create = (): ReflexEngine => {
-    const engine = new ReflexEngine(ctx, config, options.editor)
+    const engine = new ReflexEngine(ctx, config, routing.routing)
     onTestFinished(async () => { await engine.dispose() })
     return engine
   }
-  return { root, data: join(root, 'data'), origin, server, runner, ctx, warn, config, create }
+  return { root, data: join(root, 'data'), origin, server, runner, ctx, warn, config, create, routing }
 }
 
 async function until(engine: ReflexEngine, phase: ReflexPreparation['phase'], seen: string[] = []): Promise<ReflexSnapshot> {
@@ -70,54 +91,70 @@ async function state(data: string): Promise<Record<string, unknown>> {
   return JSON.parse(await readFile(join(data, 'state.json'), 'utf8')) as Record<string, unknown>
 }
 
-function editor(rows: Array<{ name: string; config: Record<string, unknown> }>) {
-  const entries: RoutingEntry[] = rows.map(row => ({ options: { name: row.name, config: row.config } }))
-  const edits: Array<[string, Record<string, unknown>]> = []
-  const routing: RoutingEditor = {
-    entries: () => entries,
-    edit: async (entry, change) => {
-      const next = change(entry.options.config as Record<string, unknown>)
-      edits.push([entry.options.name, next]);
-      (entry.options as { config?: unknown }).config = next
-    },
-  }
-  return { routing, edits }
-}
-
 describe.skipIf(process.platform === 'win32')('ReflexEngine', () => {
-  it('reports unsupported devices without files, work, or routing', async () => {
+  it('fails loud without the configuration editor or an enabled jev entry', async () => {
+    const { ctx, config } = await fixture()
+    expect(() => new ReflexEngine(ctx, config, undefined)).toThrow('config-editor')
+    expect(() => new ReflexEngine(ctx, config, editor(null).routing)).toThrow('requires an enabled')
+    const disabled: RoutingEditor = { entries: () => [{ options: { id: JEV_ENTRY_ID, disabled: true } }], edit: async () => {} }
+    expect(() => new ReflexEngine(ctx, config, disabled)).toThrow('requires an enabled')
+  })
+
+  it('reports unsupported devices without options, work, or routing', async () => {
     const { create } = await fixture()
     vi.mocked(inspectDevice).mockReturnValue({ supported: false, reason: 'runner-missing' })
     const engine = create()
     engine.activate()
-    expect(engine.snapshot()).toMatchObject({ device: { supported: false }, models: [], preparation: { phase: 'unsupported' }, enabled: false })
+    expect(engine.snapshot()).toMatchObject({ device: { supported: false }, options: [], preparation: { phase: 'unsupported' }, enabled: false, reflexEnabled: true })
+    expect(engine.snapshot().recommended).toBeUndefined()
     expect(() => { engine.prepare() }).toThrow('cannot run')
     await expect(engine.acquire(new AbortController().signal)).rejects.toBeInstanceOf(JevProviderError)
     await engine.remove()
     expect(engine.snapshot().preparation).toEqual({ phase: 'unsupported' })
   })
 
+  it('lists every option with fitness and recommends the largest stable option that fits memory and disk', async () => {
+    const { create } = await fixture({ memory: 64 * GIB })
+    const engine = create()
+    expect(engine.snapshot().options.map(option => [option.model, option.quant, option.fits, option.experimental])).toEqual([
+      ['4b', 'q4_k_m', true, false], ['4b', 'q8_0', true, false], ['9b', 'q4_k_m', true, false], ['9b', 'q8_0', true, false],
+      ['35b-a3b', 'q4_k_m', true, true], ['35b-a3b', 'q8_0', true, true],
+    ])
+    expect(engine.snapshot().recommended).toEqual(Q9)
+    engine.activate()
+    await until(engine, 'absent')
+    expect(engine.snapshot().options[0]).toEqual({ model: '4b', quant: 'q4_k_m', bytes: weights['4b-q4_k_m'].length,
+      minMemoryBytes: 8 * GIB, experimental: false, fits: true })
+    const small = await fixture({ memory: 12 * GIB, config: { diskMarginBytes: Number.MAX_SAFE_INTEGER } })
+    const tight = small.create()
+    tight.activate()
+    const absent = await until(tight, 'absent')
+    expect(absent.options.map(option => option.reason)).toEqual(['disk', 'memory', 'memory', 'memory', 'memory', 'memory'])
+    expect(absent.recommended).toEqual(Q4)
+    expect(() => { tight.prepare({ variant: Q9 }) }).toThrow('does not fit')
+  })
+
   it('downloads, verifies, self-tests, and enables, then restores readiness on the next activation without hashing or a runner', async () => {
-    const { create, data, runner, origin } = await fixture()
+    const { create, data, runner, origin, routing } = await fixture({ jev: { providerId: 'system-one', enabled: true } })
     const engine = create()
     expect(engine.snapshot()).toMatchObject({ preparation: { phase: 'checking' }, providerId: 'reflex-local', downloadSources: [origin] })
     expect(() => { engine.prepare() }).toThrow('still checking')
     engine.activate()
     const absent = await until(engine, 'absent')
-    expect(absent.models).toEqual([{ variant: 'q8_0', bytes: weights.q8_0.length }, { variant: 'q4_k_m', bytes: weights.q4_k_m.length }])
     expect(absent.availableDiskBytes).toBeGreaterThan(0)
     const seen: string[] = []
     engine.prepare()
     engine.prepare()
     const ready = await until(engine, 'ready', seen)
     expect(seen).toEqual(expect.arrayContaining(['downloading', 'verifying', 'testing', 'ready']))
-    expect(ready.preparation).toMatchObject({ phase: 'ready', variant: 'q8_0', selfTest: { slow: false } })
-    await vi.waitFor(() => { expect(engine.snapshot().enabled).toBe(true) })
-    await vi.waitFor(async () => { expect(await state(data)).toMatchObject({ enabled: true, model: { variant: 'q8_0', selfTest: { slow: false } } }) })
+    expect(ready.preparation).toMatchObject({ phase: 'ready', variant: Q9, selfTest: { slow: false } })
+    await vi.waitFor(() => { expect(engine.snapshot().unacknowledgedAutoEnableAt).toBeGreaterThan(0) })
+    expect(engine.snapshot().enabled).toBe(true)
+    expect(routing.edits).toEqual([{ providerId: 'system-one', enabled: true, defaultProviderId: 'reflex-local' }])
     const notice = engine.snapshot().unacknowledgedAutoEnableAt
-    expect(notice).toBeGreaterThan(0)
-    expect(await state(data)).toHaveProperty('autoEnabledAt', notice)
+    await vi.waitFor(async () => { expect(await state(data)).toMatchObject({ autoEnabledAt: notice, models: { '9b-q8_0': { selfTest: { slow: false } } } }) })
     await engine.enable()
+    expect(routing.edits).toHaveLength(1)
     expect(engine.snapshot().unacknowledgedAutoEnableAt).toBe(notice)
     await engine.acknowledge()
     expect(engine.snapshot().unacknowledgedAutoEnableAt).toBeUndefined()
@@ -129,7 +166,7 @@ describe.skipIf(process.platform === 'win32')('ReflexEngine', () => {
     const client = await engine.acquire(new AbortController().signal)
     expect((await client.complete('decision', new AbortController().signal)).logprobs.get('A')).toBe(-0.01)
     await engine.warm()
-    engine.prepare({ variant: 'q8_0' })
+    engine.prepare({ variant: Q9 })
     await engine.dispose()
 
     const restored = create()
@@ -137,8 +174,21 @@ describe.skipIf(process.platform === 'win32')('ReflexEngine', () => {
     expect((await until(restored, 'ready')).enabled).toBe(true)
     expect((await runnerLog(runner.log)).filter(entry => entry.event === 'start')).toHaveLength(1)
     await restored.disable()
+    expect(routing.edits.at(-1)).toEqual({ providerId: 'system-one', enabled: true })
     expect(restored.snapshot().enabled).toBe(false)
+    await restored.disable()
+    expect(routing.edits).toHaveLength(2)
     await expect(restored.acquire(new AbortController().signal)).rejects.toMatchObject({ failure: { code: 'transport', message: 'local Reflex engine is not enabled' } })
+  })
+
+  it('reports the Jev master switch and a default provider set elsewhere', async () => {
+    const { create } = await fixture({ jev: { enabled: false, defaultProviderId: 'reflex-local' } })
+    expect(create().snapshot()).toMatchObject({ enabled: true, reflexEnabled: false })
+    const other = await fixture({ jev: { providerId: 'reflex-local' } })
+    expect(other.create().snapshot()).toMatchObject({ enabled: true, reflexEnabled: true })
+    const plain: RoutingEditor = { entries: () => [{ options: { id: JEV_ENTRY_ID } }], edit: async () => {} }
+    const bare = await fixture()
+    expect(new ReflexEngine(bare.ctx, bare.config, plain).snapshot()).toMatchObject({ enabled: false, reflexEnabled: true })
   })
 
   it('keeps slow Hosts disabled until enabled explicitly and refuses enabling before readiness', async () => {
@@ -154,7 +204,6 @@ describe.skipIf(process.platform === 'win32')('ReflexEngine', () => {
     await engine.enable()
     expect(engine.snapshot()).toMatchObject({ enabled: true })
     expect(engine.snapshot().unacknowledgedAutoEnableAt).toBeUndefined()
-    await engine.enable()
   })
 
   it.each([
@@ -168,8 +217,8 @@ describe.skipIf(process.platform === 'win32')('ReflexEngine', () => {
     engine.activate()
     await until(engine, 'absent')
     engine.prepare()
-    expect((await until(engine, 'failed')).preparation).toEqual({ phase: 'failed', variant: 'q8_0', failure })
-    expect(await readFile(join(data, 'models', 'q8.gguf'))).toEqual(weights.q8_0)
+    expect((await until(engine, 'failed')).preparation).toEqual({ phase: 'failed', variant: Q9, failure })
+    expect(await readFile(join(data, 'models', fileOf('9b-q8_0')))).toEqual(weights['9b-q8_0'])
     engine.prepare()
     await until(engine, 'failed')
   })
@@ -189,31 +238,30 @@ describe.skipIf(process.platform === 'win32')('ReflexEngine', () => {
     full.prepare()
     const { failure } = (await until(full, 'failed')).preparation as Extract<ReflexPreparation, { phase: 'failed' }>
     expect(failure.kind).toBe('disk')
-    expect(failure).toHaveProperty('requiredBytes', Number.MAX_SAFE_INTEGER + weights.q8_0.length)
+    // No option fits the disk, so the recommendation falls back to the smallest stable option.
+    expect(failure).toHaveProperty('requiredBytes', Number.MAX_SAFE_INTEGER + weights['4b-q4_k_m'].length)
   })
 
-  it('pauses a download keeping its partial file, cancels it deleting the file, and validates variant and source changes', async () => {
-    const bytes = weights.q8_0
+  it('pauses a download keeping its partial file, cancels it deleting the file, and validates sources', async () => {
+    const bytes = weights['4b-q4_k_m']
     const origin = await serve((request, response) => {
       if (request.method === 'HEAD') { response.writeHead(200).end(); return }
       response.writeHead(200)
       // The delay separates the body from the initial progress report, which the 1 ms throttle would otherwise absorb.
       setTimeout(() => { response.write(bytes.subarray(0, 100)) }, 20)
     })
-    lock.models.q4_k_m = assetOf('q4.gguf', bytes)
-    onTestFinished(() => { lock.models.q4_k_m = assetOf('q4.gguf', weights.q4_k_m) })
     const { create, data } = await fixture({ origin, memory: 8 * GIB })
     const engine = create()
     engine.activate()
     await until(engine, 'absent')
-    expect(() => { engine.prepare({ variant: 'q8_0' }) }).toThrow('unavailable on this device')
+    expect(() => { engine.prepare({ variant: Q9 }) }).toThrow('does not fit')
     expect(() => { engine.prepare({ downloadSource: 'https://elsewhere.example' }) }).toThrow('source is unavailable')
     engine.prepare({ downloadSource: origin })
     engine.prepare()
     await vi.waitFor(() => { expect(engine.snapshot().preparation).toMatchObject({ phase: 'downloading', completedBytes: 100, source: origin }) })
-    expect(await state(data)).toMatchObject({ preparing: { variant: 'q4_k_m', source: origin } })
+    expect(await state(data)).toMatchObject({ preparing: { variant: Q4, source: origin } })
     await engine.pause()
-    expect(engine.snapshot().preparation).toEqual({ phase: 'paused', variant: 'q4_k_m', completedBytes: 100, totalBytes: bytes.length })
+    expect(engine.snapshot().preparation).toEqual({ phase: 'paused', variant: Q4, completedBytes: 100, totalBytes: bytes.length })
     expect(await state(data)).not.toHaveProperty('preparing')
     await engine.pause()
     await engine.cancel()
@@ -222,7 +270,7 @@ describe.skipIf(process.platform === 'win32')('ReflexEngine', () => {
     await vi.waitFor(() => { expect(engine.snapshot().preparation).toMatchObject({ phase: 'downloading', completedBytes: 100 }) })
     await engine.cancel()
     expect(engine.snapshot().preparation).toEqual({ phase: 'absent' })
-    await expect(readFile(join(data, 'models', 'q4.gguf.part'))).rejects.toThrow()
+    await expect(readFile(join(data, 'models', `${fileOf('4b-q4_k_m')}.part`))).rejects.toThrow()
     await engine.cancel()
   })
 
@@ -234,7 +282,7 @@ describe.skipIf(process.platform === 'win32')('ReflexEngine', () => {
     engine.activate()
     await until(engine, 'absent')
     engine.prepare()
-    expect(() => { engine.prepare({ variant: 'q4_k_m' }) }).toThrow('Cancel preparation')
+    expect(() => { engine.prepare({ variant: Q4 }) }).toThrow('Cancel preparation')
     expect(() => { engine.prepare({ downloadSource: other }) }).toThrow('Cancel preparation')
     await engine.cancel()
   })
@@ -242,8 +290,8 @@ describe.skipIf(process.platform === 'win32')('ReflexEngine', () => {
   it('resumes an interrupted preparation on activation with a Range request', async () => {
     const { create, data, server } = await fixture()
     await mkdir(join(data, 'models'), { recursive: true })
-    await writeFile(join(data, 'models', 'q8.gguf.part'), weights.q8_0.subarray(0, 64))
-    await writeFile(join(data, 'state.json'), JSON.stringify({ enabled: false, preparing: { variant: 'q8_0', source: server!.origin } }))
+    await writeFile(join(data, 'models', `${fileOf('9b-q8_0')}.part`), weights['9b-q8_0'].subarray(0, 64))
+    await writeFile(join(data, 'state.json'), JSON.stringify({ models: {}, preparing: { variant: Q9, source: server!.origin } }))
     const engine = create()
     engine.activate()
     await until(engine, 'ready')
@@ -253,26 +301,27 @@ describe.skipIf(process.platform === 'win32')('ReflexEngine', () => {
   it('inspects untested, corrupt, and partial weights without downloads and ignores invalid state', async () => {
     const { create, data, server, warn } = await fixture()
     await mkdir(join(data, 'models'), { recursive: true })
-    await writeFile(join(data, 'models', 'q8.gguf'), weights.q8_0)
-    await writeFile(join(data, 'state.json'), '{"enabled":"yes"}')
+    await writeFile(join(data, 'models', fileOf('4b-q8_0')), weights['4b-q8_0'])
+    await writeFile(join(data, 'state.json'), '{"models":"none"}')
     const untested = create()
     untested.activate()
     expect(() => { untested.prepare() }).toThrow('still checking')
-    expect((await until(untested, 'paused')).preparation).toEqual({ phase: 'paused', variant: 'q8_0', completedBytes: weights.q8_0.length, totalBytes: weights.q8_0.length })
+    const paused = await until(untested, 'paused')
+    expect(paused.preparation).toEqual({ phase: 'paused', variant: variantOf('4b-q8_0'), completedBytes: weights['4b-q8_0'].length, totalBytes: weights['4b-q8_0'].length })
     expect(warn).toHaveBeenCalledWith('Ignoring invalid Reflex state', expect.anything())
     await untested.dispose()
 
-    await writeFile(join(data, 'models', 'q8.gguf'), Buffer.alloc(weights.q8_0.length))
-    await utimes(join(data, 'models', 'q8.gguf'), new Date(), new Date(Date.now() + 5000))
-    await writeFile(join(data, 'models', 'q4.gguf.part'), weights.q4_k_m.subarray(0, 7))
+    await writeFile(join(data, 'models', fileOf('4b-q8_0')), Buffer.alloc(weights['4b-q8_0'].length))
+    await utimes(join(data, 'models', fileOf('4b-q8_0')), new Date(), new Date(Date.now() + 5000))
+    await writeFile(join(data, 'models', `${fileOf('4b-q4_k_m')}.part`), weights['4b-q4_k_m'].subarray(0, 7))
     await writeFile(join(data, 'state.json'), 'not json')
     const partial = create()
     partial.activate()
-    expect((await until(partial, 'paused')).preparation).toEqual({ phase: 'paused', variant: 'q4_k_m', completedBytes: 7, totalBytes: weights.q4_k_m.length })
+    expect((await until(partial, 'paused')).preparation).toEqual({ phase: 'paused', variant: Q4, completedBytes: 7, totalBytes: weights['4b-q4_k_m'].length })
     expect(warn).toHaveBeenCalledWith('Ignoring unreadable Reflex state', expect.anything())
     await partial.dispose()
 
-    await rm(join(data, 'models', 'q4.gguf.part'))
+    await rm(join(data, 'models', `${fileOf('4b-q4_k_m')}.part`))
     const corrupt = create()
     corrupt.activate()
     await until(corrupt, 'absent')
@@ -302,7 +351,7 @@ describe.skipIf(process.platform === 'win32')('ReflexEngine', () => {
     await rm(join(data, 'state.json'))
     await mkdir(join(data, 'state.json'))
     await engine.pause()
-    expect(engine.snapshot().preparation).toMatchObject({ phase: 'failed', variant: 'q8_0' })
+    expect(engine.snapshot().preparation).toMatchObject({ phase: 'failed', variant: Q9 })
   })
 
   it('removes weights during and after preparation, then disables', async () => {
@@ -317,31 +366,29 @@ describe.skipIf(process.platform === 'win32')('ReflexEngine', () => {
     await engine.remove()
     expect(engine.snapshot().unacknowledgedAutoEnableAt).toBeUndefined()
     expect(engine.snapshot()).toMatchObject({ preparation: { phase: 'absent' }, enabled: false })
-    await expect(readFile(join(data, 'models', 'q8.gguf'))).rejects.toThrow()
-    expect(await state(data)).toEqual({ enabled: false })
+    await expect(readFile(join(data, 'models', fileOf('9b-q8_0')))).rejects.toThrow()
+    expect(await state(data)).toEqual({ models: {} })
     engine.prepare()
     await engine.remove()
     expect(engine.snapshot().preparation).toEqual({ phase: 'absent' })
   })
 
-  it('switches variants by replacing the runner and maps runner failures for the provider', async () => {
-    lock.models.q4_k_m = assetOf('q4.gguf', weights.q8_0)
-    onTestFinished(() => { lock.models.q4_k_m = assetOf('q4.gguf', weights.q4_k_m) })
+  it('self-tests each selected model, keeps per-model results, and maps runner failures for the provider', async () => {
     const { create, data, root } = await fixture()
     const engine = create()
     engine.activate()
     await until(engine, 'absent')
     engine.prepare()
     await until(engine, 'ready')
-    engine.prepare({ variant: 'q4_k_m' })
+    engine.prepare({ variant: Q4 })
     await until(engine, 'testing')
-    expect((await until(engine, 'ready')).preparation).toMatchObject({ variant: 'q4_k_m' })
-    expect(await state(data)).toMatchObject({ model: { variant: 'q4_k_m' } })
+    expect((await until(engine, 'ready')).preparation).toMatchObject({ variant: Q4 })
+    expect(Object.keys((await state(data)).models as object).sort()).toEqual(['4b-q4_k_m', '9b-q8_0'])
     await writeFile(join(root, 'llama-server'), '#!/bin/sh\nexit 4\n')
     await engine.dispose()
     const broken = create()
     broken.activate()
-    await until(broken, 'ready')
+    expect((await until(broken, 'ready')).preparation).toMatchObject({ variant: variantOf('4b-q4_k_m') })
     const abort = new AbortController(), reason = new Error('caller left')
     abort.abort(reason)
     await expect(broken.acquire(abort.signal)).rejects.toBe(reason)
@@ -359,7 +406,7 @@ describe.skipIf(process.platform === 'win32')('ReflexEngine', () => {
     const follower = until(engine, 'ready')
     await engine.dispose()
     await expect(follower).rejects.toThrow('engine disposed')
-    expect(await state(data)).toMatchObject({ preparing: { variant: 'q8_0' } })
+    expect(await state(data)).toMatchObject({ preparing: { variant: Q9 } })
     expect(() => { engine.prepare() }).toThrow('disposed')
     await expect(engine.acquire(new AbortController().signal)).rejects.toMatchObject({ failure: { code: 'transport' } })
     const relaunched = create()
@@ -367,57 +414,13 @@ describe.skipIf(process.platform === 'win32')('ReflexEngine', () => {
     await vi.waitFor(() => { expect(relaunched.snapshot().preparation.phase).toBe('downloading') })
   })
 
-  it('routes through the profile editor in privacy-safe order when a cloud provider is configured', async () => {
-    const { routing, edits } = editor([
-      { name: JEV_PLUGIN, config: { endpoint: 'https://jev.example', providerId: 'system-one' } },
-      { name: SYSTEM3_PLUGIN, config: { jevExecutionDomain: 'network' } },
-    ])
-    const server = await weightsServer(weights.q8_0)
-    const { create } = await fixture({ editor: routing, origin: server.origin, config: { cloudProviderId: 'system-one', modelOrigin: server.origin } })
-    const engine = create()
-    expect(engine.snapshot()).toMatchObject({ enabled: false, cloudProviderId: 'system-one', downloadSources: [server.origin] })
-    engine.activate()
-    await until(engine, 'absent')
-    engine.prepare()
-    await until(engine, 'ready')
-    await vi.waitFor(() => { expect(engine.snapshot().unacknowledgedAutoEnableAt).toBeGreaterThan(0) })
-    expect(engine.snapshot().enabled).toBe(true)
-    expect(edits).toEqual([
-      [JEV_PLUGIN, { endpoint: 'https://jev.example', providerId: 'system-one', defaultProviderId: 'reflex-local' }],
-      [SYSTEM3_PLUGIN, { jevExecutionDomain: 'local' }],
-    ])
-    await engine.enable()
-    expect(edits).toHaveLength(2)
-    await engine.disable()
-    expect(edits.slice(2)).toEqual([
-      [SYSTEM3_PLUGIN, { jevExecutionDomain: 'network' }],
-      [JEV_PLUGIN, { endpoint: 'https://jev.example', providerId: 'system-one', defaultProviderId: 'system-one' }],
-    ])
-    expect(engine.snapshot()).toMatchObject({ enabled: false })
-    expect(engine.snapshot().unacknowledgedAutoEnableAt).toBeUndefined()
-  })
-
-  it('requires an editor and a jev entry for cloud routing and skips an absent System3 entry', async () => {
-    const { config, ctx } = await fixture({ config: { cloudProviderId: 'system-one' } })
-    expect(() => new ReflexEngine(ctx, config)).toThrow('config-editor')
-    const lone = editor([{ name: JEV_PLUGIN, config: { defaultProviderId: 'reflex-local' } }])
-    const withJev = new ReflexEngine(ctx, config, lone.routing)
-    onTestFinished(async () => { await withJev.dispose() })
-    expect(withJev.snapshot().enabled).toBe(true)
-    await withJev.disable()
-    expect(lone.edits).toEqual([[JEV_PLUGIN, { defaultProviderId: 'system-one' }]])
-    const none = new ReflexEngine(ctx, config, editor([]).routing)
-    onTestFinished(async () => { await none.dispose() })
-    expect(none.snapshot().enabled).toBe(false)
-    await expect(none.disable()).rejects.toThrow('jev plugin entry')
-  })
-
-  it('logs a failed automatic enable and keeps the engine ready', async () => {
-    const rows = editor([{ name: JEV_PLUGIN, config: {} }])
+  it('uses an explicit model origin and logs a failed automatic enable while staying ready', async () => {
+    const server = await weightsServer(files)
+    const { create, warn, routing } = await fixture({ origin: server.origin, config: { modelOrigin: server.origin } })
     const refused = new Error('profile is overridden')
-    rows.routing.edit = async () => { throw refused }
-    const { create, warn } = await fixture({ editor: rows.routing, config: { cloudProviderId: 'system-one' } })
+    routing.routing.edit = async () => { throw refused }
     const engine = create()
+    expect(engine.snapshot().downloadSources).toEqual([server.origin])
     engine.activate()
     await until(engine, 'absent')
     engine.prepare()
@@ -426,19 +429,19 @@ describe.skipIf(process.platform === 'win32')('ReflexEngine', () => {
     expect(engine.snapshot()).toMatchObject({ enabled: false, preparation: { phase: 'ready' } })
   })
 
-  it('refuses decisions while enabled but not ready and stops inspection on disposal', async () => {
-    const { create, data, warn } = await fixture()
-    await mkdir(data, { recursive: true })
-    await writeFile(join(data, 'state.json'), JSON.stringify({ enabled: true }))
+  it('refuses decisions while enabled but not ready, and stops inspection on disposal', async () => {
+    const { create, data, warn, routing } = await fixture({ jev: { defaultProviderId: 'reflex-local' } })
     const engine = create()
     engine.activate()
     await until(engine, 'absent')
     await expect(engine.acquire(new AbortController().signal)).rejects.toMatchObject({ failure: { code: 'transport', message: 'local Reflex engine is not ready' } })
     await mkdir(join(data, 'models'), { recursive: true })
-    await writeFile(join(data, 'models', 'q8.gguf'), weights.q8_0)
+    await writeFile(join(data, 'models', fileOf('9b-q8_0')), weights['9b-q8_0'])
     const disposed = create()
     disposed.activate()
     await disposed.dispose()
     expect(warn).not.toHaveBeenCalledWith('Reflex engine inspection failed', expect.anything())
+    routing.routing.entries = () => []
+    await expect(engine.disable()).rejects.toThrow('requires an enabled')
   })
 })

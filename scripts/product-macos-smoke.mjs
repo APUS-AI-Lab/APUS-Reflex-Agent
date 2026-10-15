@@ -177,6 +177,11 @@ async function run(installer, reportDirectory, expectedSource = process.env.GITH
     if (version.trim() !== build.version) throw new Error('Installed bundle version differs from collected build')
     await command('installed-code-signature', '/usr/bin/codesign', ['--verify', '--deep', '--strict', '--verbose=2', installation], 120_000)
     report.codeSignature = { verified: true, developerIdOrNotarizationVerified: false }
+    if (runtime.llamaServer !== undefined) {
+      // The signed runner must still load its sibling libraries under the installed application's hardened runtime.
+      await command('installed-reflex-runner', join(installation, 'Contents/Resources/system3-runtime/dependencies/llama-server/llama-server'), ['--version'], 30_000)
+      report.reflexRunner = runtime.llamaServer
+    }
     const { stdout: minimum } = await execute('/usr/bin/plutil', ['-extract', 'LSMinimumSystemVersion', 'raw', '-o', '-', join(installation, 'Contents/Info.plist')])
     report.minimumSystemVersion = minimum.trim()
     report.stages.push('copied-runtime-identity-verified-and-image-detached')

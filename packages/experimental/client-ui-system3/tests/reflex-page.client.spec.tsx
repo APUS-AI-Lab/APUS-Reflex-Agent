@@ -159,11 +159,11 @@ it('keeps first-run configuration editable and distinguishes a draft probe from 
   expect(screen.queryByText('已启用')).toBeNull()
 })
 
-it('offers only the two Reflex connection modes and hides preset connection fields', () => {
+it('offers the three Reflex connection modes and hides preset connection fields', () => {
   const p = props({ ...state, mode: 'trial' })
   render(<ReflexSettings {...p} />)
   const select = screen.getByRole('combobox', { name: zh.connectionMode }) as HTMLSelectElement
-  expect([...select.options].map(option => option.text)).toEqual([zh.trialMode, zh.customMode])
+  expect([...select.options].map(option => option.text)).toEqual([zh.trialMode, zh.customMode, zh.localMode])
   expect(select.value).toBe('trial')
   expect(screen.getByText('服务协议: Reflex')).toBeTruthy()
   expect(screen.queryByLabelText(zh.endpoint)).toBeNull()
@@ -187,4 +187,21 @@ it('explains a missing preset credential without offering a hidden key control',
   expect(screen.getByText(zh.trialAuthFailed, { exact: false })).toBeTruthy()
   expect(screen.queryByText(zh.authFailed, { exact: false })).toBeNull()
   expect(screen.getByText(zh.trialHint)).toBeTruthy()
+})
+
+it('renders the local engine contribution as the local mode body without connection fields or probes', () => {
+  const p = props({ ...state, mode: 'local' })
+  vi.mocked(p.renderSlot).mockImplementation((key: string, _owner: object, opts?: { fallback?: unknown }) => key === 'settings.reflex.local'
+    ? opts?.fallback as never : null)
+  render(<ReflexSettings {...p} />)
+  expect(vi.mocked(p.renderSlot).mock.calls.some(([key]) => key === 'settings.reflex.local')).toBe(true)
+  expect(screen.getByText(zh.localHint)).toBeTruthy()
+  expect(screen.getByText(zh.localUnavailable)).toBeTruthy()
+  expect(screen.queryByText('服务协议: Reflex')).toBeNull()
+  expect(screen.queryByLabelText(zh.endpoint)).toBeNull()
+  expect(screen.queryByRole('button', { name: zh.test })).toBeNull()
+  expect(screen.queryByText(zh.draft)).toBeNull()
+  expect(screen.getByText(zh.effective)).toBeTruthy()
+  fireEvent.change(screen.getByRole('combobox', { name: zh.connectionMode }), { target: { value: 'trial' } })
+  expect(p.selectMode).toHaveBeenCalledWith('trial')
 })

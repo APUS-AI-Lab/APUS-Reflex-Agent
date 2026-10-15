@@ -71,7 +71,8 @@ function waitTurn(previous: Promise<void>, signal: AbortSignal): Promise<void> {
 }
 
 /**
- * Local Jev provider. Requests run one at a time in arrival order; a request holds the provider until all its
+ * Local Jev provider. Its `executionDomain` is `local`, so System3 privacy admission accepts it under a `local-only` policy.
+ * Requests run one at a time in arrival order; a request holds the provider until all its
  * questions finish so later questions reuse the runner's prefix cache. Each question with two or more candidates
  * costs one runner completion; a one-candidate Choice is answered with probability 1 without a runner call.
  */
@@ -83,7 +84,7 @@ export class ReflexJevProvider implements JevProvider {
 
   constructor(options: ReflexProviderOptions) {
     this.options = options
-    this.info = { id: options.id, model: options.model, endpoint: options.endpoint }
+    this.info = { id: options.id, model: options.model, endpoint: options.endpoint, executionDomain: 'local' }
     if (options.warm !== undefined) this.warm = options.warm.bind(options)
   }
 

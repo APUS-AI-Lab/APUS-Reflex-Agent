@@ -3,13 +3,24 @@ import { Context } from '@deepseek-ai/cordis'
 import Jev from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
 import LocalSubprocess from '@deepseek-ai/dsh-subprocess-local'
 import { expect, it, onTestFinished } from 'vitest'
+import { JEV_ENTRY_ID, type RoutingEditor } from '../src/engine.ts'
 import ReflexLocal, * as module from '../src/index.ts'
 import { temporaryRoot } from './harness.ts'
+
+/** A profile editor holding one jev row, standing in for the config-editor plugin. */
+function provideEditor(ctx: Context): void {
+  const editor: RoutingEditor = {
+    entries: () => [{ options: { id: JEV_ENTRY_ID, config: { defaultProviderId: 'reflex-local' } } }],
+    edit: async () => {},
+  }
+  ctx.provide('configEditor', editor)
+}
 
 async function host() {
   const ctx = new Context()
   onTestFinished(async () => { await ctx.fiber.dispose() })
   await ctx.plugin(LocalSubprocess)
+  provideEditor(ctx)
   await ctx.plugin(Jev, { defaultProviderId: 'reflex-local' })
   return ctx
 }
@@ -19,9 +30,9 @@ it('registers the local provider while mounted and answers decisions with a tran
   const fiber = ctx.plugin(ReflexLocal, { dataRoot, runnerPath: `${dataRoot}/absent` })
   await fiber
   expect(module.name).toBe('experimental-reflex-local')
-  expect(ctx.jev.listProviders()).toEqual([{ id: 'reflex-local', model: module.REFLEX_MODEL, endpoint: 'http://127.0.0.1' }])
+  expect(ctx.jev.listProviders()).toMatchObject([{ id: 'reflex-local', model: module.REFLEX_MODEL, endpoint: 'http://127.0.0.1' }])
   const service = ctx.get('reflexLocal')!
-  expect(service.snapshot()).toMatchObject({ device: { supported: false }, enabled: false, providerId: 'reflex-local' })
+  expect(service.snapshot()).toMatchObject({ device: { supported: false }, enabled: true, reflexEnabled: true, providerId: 'reflex-local' })
   const abort = new AbortController()
   const iterator = service.follow(abort.signal)[Symbol.asyncIterator]()
   expect((await iterator.next()).value).toMatchObject({ preparation: { phase: 'unsupported' } })
@@ -42,9 +53,13 @@ it('registers the local provider while mounted and answers decisions with a tran
   expect(ctx.get('reflexLocal')).toBeUndefined()
 })
 
-it('fails loud at load when cloud routing lacks the configuration editor', async () => {
-  const ctx = await host(), dataRoot = await temporaryRoot()
-  await expect(Promise.resolve(ctx.plugin(ReflexLocal, { dataRoot, cloudProviderId: 'system-one' }))).rejects.toThrow('config-editor')
+it('fails loud at load without the configuration editor', async () => {
+  const ctx = new Context()
+  onTestFinished(async () => { await ctx.fiber.dispose() })
+  await ctx.plugin(LocalSubprocess)
+  await ctx.plugin(Jev, {})
+  const dataRoot = await temporaryRoot()
+  await expect(Promise.resolve(ctx.plugin(ReflexLocal, { dataRoot }))).rejects.toThrow('config-editor')
   expect(ctx.jev.listProviders()).toEqual([])
 })
 
@@ -52,6 +67,7 @@ it('re-registers the provider across Jev reloads without stopping the engine', a
   const ctx = new Context()
   onTestFinished(async () => { await ctx.fiber.dispose() })
   await ctx.plugin(LocalSubprocess)
+  provideEditor(ctx)
   const dataRoot = await temporaryRoot()
   await ctx.plugin(ReflexLocal, { dataRoot, runnerPath: `${dataRoot}/absent` })
   const service = ctx.get('reflexLocal')!

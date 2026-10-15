@@ -23,10 +23,10 @@ import { installSystem3TaskFrame, type System3TaskFrameConfig } from './task-fra
 import { installSystem3Prefetch, type System3PrefetchConfig } from './prefetch.ts'
 import { installSystem3CompletionReview, type System3CompletionReviewConfig } from './completion-review.ts'
 import type { Session } from '@deepseek-ai/dsh-session'
-import { recordSystem3Decision, type System3DecisionRequest, type System3DecisionReceipt, type System3JevOptions } from './decisions.ts'
+import { recordSystem3Decision, resolveSystem3JevRoute, type System3DecisionRequest, type System3DecisionReceipt, type System3JevOptions } from './decisions.ts'
 
 export type { System3DecisionId, System3DecisionRequest, System3DecisionReceipt, System3DecisionOutcome } from './decisions.ts'
-export type { System3JevOptions } from './decisions.ts'
+export type { System3JevOptions, System3JevRoute } from './decisions.ts'
 export type { System3SkillSelectionConfig, System3SkillDecisionReceipt } from './skill-selection.ts'
 export type { System3EntryView, System3SkillView, System3RuntimeView, System3TaskFrameView } from './types.ts'
 export { createSystem3EntryRouter } from './entry-routing.ts'
@@ -71,7 +71,10 @@ export interface Config {
   readonly observeAgentLoop?: boolean
   /** Privacy-policy route identity for explicit Jev calls. */
   readonly jevRouteId?: string
-  /** Actual execution location, including the remote destination of any tunnel. */
+  /**
+   * Execution location of a Jev provider that does not declare its own, including the remote destination of any tunnel.
+   * A provider's declared `executionDomain`, such as the local Reflex engine's `local`, takes precedence.
+   */
   readonly jevExecutionDomain?: 'local' | 'network'
   /** Execution effort sent to the Jev provider. */
   readonly jevEffort?: 'low' | 'high'
@@ -435,12 +438,14 @@ export default class System3 extends Service implements System3Service {
     }
     ctx.inject(['jev'], (ctx) => {
       const enabled = (value: false | { readonly mode: string } | undefined): boolean => value !== undefined && value !== false && value.mode === 'active'
+      const semanticEnabled = (supervision: ReflexSupervisionConfig): boolean =>
+        reflexSemanticEnabled(supervision, this.privacyPolicy, this.jevOptions, resolveSystem3JevRoute(ctx.jev, this.jevOptions))
       ctx.effect(() => ctx.jev.registerCapability('skillSelection', () => ({ implemented: true, enabled: installed.has('skillSelection') })))
       ctx.effect(() => ctx.jev.registerCapability('entryRouting', () => ({ implemented: true,
         enabled: installed.has('entryRouting') || installed.has('goalRouting') })))
       ctx.effect(() => ctx.jev.registerCapability('codexSupervision', () => ({ implemented: true, enabled: enabled(config.reflexSupervision) && installed.has('codexSupervision'),
         semanticSupervision: { enabled: !!config.reflexSupervision && enabled(config.reflexSupervision)
-          && installed.has('codexSupervision') && reflexSemanticEnabled(config.reflexSupervision, this.privacyPolicy, this.jevOptions) },
+          && installed.has('codexSupervision') && semanticEnabled(config.reflexSupervision) },
         ...!config.reflexSupervision ? {} : { settings: { stallMs: config.reflexSupervision.stallMs,
           cooldownMs: config.reflexSupervision.cooldownMs, maxInterventions: config.reflexSupervision.maxInterventions,
           feedbackMs: config.reflexSupervision.feedbackMs,

@@ -234,9 +234,23 @@ export default class Jev extends TypertRemoteService {
     return [...configured ? [configured] : [], ...this.providers.values()].map(provider => ({ ...provider.info }))
   }
 
+  /**
+   * Read the metadata of the provider a request would use, without performing I/O.
+   * @param providerId - Requested provider; omission selects the current default provider.
+   * @returns Detached metadata, or undefined when Reflex is off or the provider is unconfigured or not registered.
+   */
+  providerInfo(providerId?: string): JevProviderInfo | undefined {
+    const provider = this.enabled() ? this.lookup(providerId ?? this.defaultProviderId()) : undefined
+    return provider === undefined ? undefined : { ...provider.info }
+  }
+
+  private lookup(id: string): JevProvider | undefined {
+    return id === this.builtinProviderId ? this.configuredProvider() : this.providers.get(id)
+  }
+
   private provider(id: string): JevProvider {
     if (!this.enabled()) throw new JevDisabledError('Reflex is turned off in settings')
-    const provider = id === this.builtinProviderId ? this.configuredProvider() : this.providers.get(id)
+    const provider = this.lookup(id)
     if (provider === undefined) {
       if (id === this.builtinProviderId) throw new JevConfigurationError('Jev is not configured; set an endpoint and model in Reflex settings')
       throw new JevConfigurationError(`jev provider "${id}" is not registered`)
@@ -267,8 +281,7 @@ export default class Jev extends TypertRemoteService {
    */
   async warm(providerId?: string, signal?: AbortSignal): Promise<boolean> {
     if (!this.enabled()) return false
-    const id = providerId ?? this.defaultProviderId()
-    const provider = id === this.builtinProviderId ? this.configuredProvider() : this.providers.get(id)
+    const provider = this.lookup(providerId ?? this.defaultProviderId())
     if (provider?.warm === undefined) return false
     try {
       await provider.warm(signal)
@@ -309,7 +322,9 @@ export default class Jev extends TypertRemoteService {
     }
     const [first] = responses
     const answers = Object.fromEntries(responses.flatMap(response => Object.entries(response.answers)))
-    return { model: first?.model ?? spec.model, answers, ...Object.keys(usage).length === 0 ? {} : { usage } }
+    /* v8 ignore next -- a split decision has at least two groups, so `first` always exists; the fallback only satisfies the index type. */
+    const model = first?.model ?? spec.model
+    return { model, answers, ...Object.keys(usage).length === 0 ? {} : { usage } }
   }
 
   /**

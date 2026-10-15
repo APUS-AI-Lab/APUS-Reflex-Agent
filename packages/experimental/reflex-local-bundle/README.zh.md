@@ -1,5 +1,5 @@
 ---
-description: "从插件管理页启用实验性的本机 APUS Reflex 判断。"
+description: "在 Jev bundle 旁加入实验性的本机 APUS Reflex 判断。"
 kind: "package-bundle"
 ---
 
@@ -9,7 +9,7 @@ kind: "package-bundle"
 
 ## 概述
 
-此可选 Bundle 组合 Jev 服务、本机决策引擎、其带认证的 Remote 与浏览器卡片，以及使用仅本机隐私策略的 System3。本机判断是此组合中唯一的 Jev provider。默认配置不启用它。
+此可选 Bundle 在已有的 Jev 组合旁加入本机决策引擎、其带认证的 Remote 与浏览器卡片。它不插入 `jev`、System3 或 System3 UI 条目；`jev` 由 Jev bundle 提供，缺少它时引擎加载失败。默认配置不启用它。
 
 ## 目录
 
@@ -25,7 +25,7 @@ kind: "package-bundle"
 <a id="use-this-package"></a>
 ## 使用此包
 
-打开 Web 侧栏的插件管理页并启用“本机决策引擎”。在运行桌面应用的 Apple 芯片 Mac 上，弹窗提供“下载并启用”；Bundle 详情显示同一张卡片，包含下载进度、“暂停”以及之后的“停用”和“删除模型”。自检通过且速度达标时自动启用本机判断，并显示带“撤销”的提示条。在此之前以及引擎停用时，System3 决策点按默认规则处理。在桌面应用之外，卡片说明本机判断需要在 Apple 芯片上使用桌面应用。
+与 Jev bundle 一同启用此 Bundle。在运行桌面应用的 Apple Silicon Mac 上，本机引擎卡片给出推荐模型及其下载大小，也可以改选其他模型；内存或可用空间装不下的选项会标出原因。自检通过且速度达标时，把 Jev 的默认 provider 设为本机引擎，并显示带“撤销”的提示条。停用引擎会删除该默认设置，Jev 回到内置 provider。在设置中关闭 Reflex 时，任何 provider 都不会回答，包括本机引擎。在桌面应用之外，卡片说明本机判断需要在 Apple Silicon 上使用桌面应用。
 
 -----
 
@@ -35,7 +35,8 @@ kind: "package-bundle"
 <details>
 <summary>维护者信息 — 点击展开</summary>
 
-静态 `cordis.patch.yml` 插入六个条目。`jev` 条目设置 `defaultProviderId: reflex-local` 且不设 endpoint，因此不注册内置 System One provider。`reflex-local` 条目把数据存放在 `dshHomePath('reflex-local')`，并从只有桌面 Host 导出的 `DSH_DESKTOP_PRIMARY_RUNTIME_SOURCE` 读取 `runnerPath`；缺少该变量时此选项为 undefined，引擎报告 `runner-missing`。`system3` 条目使用 `privacyMode: local-only` 与 `jevExecutionDomain: local`，只启用不需要云端生成线路的决策点：任务框架（active）、完成复核（shadow）与最多 16 个候选的技能选择，16 是本机模型的标签上限。其阈值与限制沿用 `deploy/system3/runtime.patch.yml`；本机线路对所有数据类别都放行，因此 `sessionDataClasses` 列出 `workspace`。`tests/loader-composition.e2e.ts` 经 Loader 将此补丁叠加在 headless 配置上启动。此纯配置包没有独立可变的运行时状态，因此不发布不变量伴随模块。
+
+静态 `cordis.patch.yml` 插入三个条目：`reflex-local`、`api-reflex-local` 与 `ui-reflex-local`。`reflex-local` 条目把数据存放在 `dshHomePath('reflex-local')`。其 `runnerPath` 在桌面 Host 导出 `APUS_REFLEX_RUNNER` 时取该值，否则取 `DSH_DESKTOP_PRIMARY_RUNTIME_SOURCE` 下的 `dependencies/llama-server/llama-server`，再否则为 undefined，此时引擎报告 `runner-missing`。路由只编辑 volatile 字段 `jev.defaultProviderId`，因此开关引擎从不重载 Jev；System3 准入读取本机 provider 的 `local` 执行域。`tests/loader-composition.e2e.ts` 经 Loader 将此补丁叠加在 headless 配置上启动：一次叠在 Jev bundle 之上并确认没有重复的条目 id，一次不含 Jev bundle 以证明引擎条目失败。此纯配置包没有独立可变的运行时状态，因此不发布不变量伴随模块。
 
 </details>
 
@@ -61,8 +62,7 @@ Bundle 本身不向请求前缀添加内容；任务框架与技能指令的位�
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- 入口路由、委派与交接包需要云端生成线路，因此未组合；需要它们时请将 System3 与云端 Jev provider 组合。
-- 权重在首次使用时下载：按统一内存选择 Q8_0 的 4.5 GB 或 Q4_K_M 的 2.7 GB。
+- 权重在首次使用时下载，推荐选项为 2.7 GB（4B Q4_K_M）到 9.5 GB（9B Q8_0）；实验性的 35B-A3B 选项需要 21–37 GB，且从不推荐。
 
 -----
 

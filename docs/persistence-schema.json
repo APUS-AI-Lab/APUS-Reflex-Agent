@@ -30568,7 +30568,7 @@
       },
       "names": [],
       "sources": [
-        "packages/experimental/system3/src/entry-routing.ts:130"
+        "packages/experimental/system3/src/entry-routing.ts:131"
       ]
     },
     {
@@ -47577,7 +47577,7 @@
       },
       "names": [],
       "sources": [
-        "packages/experimental/system3/src/decisions.ts:24"
+        "packages/experimental/system3/src/decisions.ts:25"
       ]
     },
     {
@@ -47754,7 +47754,7 @@
       },
       "names": [],
       "sources": [
-        "packages/experimental/system3/src/decisions.ts:25"
+        "packages/experimental/system3/src/decisions.ts:26"
       ]
     },
     {
@@ -64373,7 +64373,7 @@
         "packages/experimental/agent-team/src/types.ts:20",
         "packages/experimental/agent-team/src/types.ts:32",
         "packages/experimental/agent-team/src/types.ts:8",
-        "packages/experimental/system3/src/decisions.ts:12",
+        "packages/experimental/system3/src/decisions.ts:13",
         "packages/feedback/message-feedback/src/types.ts:14",
         "packages/goal/goal/src/types.ts:17",
         "packages/interaction/commands/src/brand.ts:31",
@@ -77929,7 +77929,7 @@
         "packages/experimental/system3/src/decisions.ts#System3DecisionReceipt"
       ],
       "sources": [
-        "packages/experimental/system3/src/decisions.ts:28"
+        "packages/experimental/system3/src/decisions.ts:29"
       ]
     },
     {
@@ -78653,7 +78653,7 @@
       },
       "names": [],
       "sources": [
-        "packages/experimental/system3/src/entry-routing.ts:123"
+        "packages/experimental/system3/src/entry-routing.ts:124"
       ]
     },
     {
@@ -85419,7 +85419,7 @@
         "packages/experimental/system3/src/decisions.ts#System3DecisionOutcome"
       ],
       "sources": [
-        "packages/experimental/system3/src/decisions.ts:23"
+        "packages/experimental/system3/src/decisions.ts:24"
       ]
     },
     {
@@ -118159,7 +118159,7 @@
       },
       "names": [],
       "sources": [
-        "packages/experimental/system3/src/entry-routing.ts:120"
+        "packages/experimental/system3/src/entry-routing.ts:121"
       ]
     },
     {
@@ -122707,7 +122707,7 @@
       },
       "names": [],
       "sources": [
-        "packages/experimental/system3/src/entry-routing.ts:128"
+        "packages/experimental/system3/src/entry-routing.ts:129"
       ]
     },
     {
@@ -127804,7 +127804,7 @@
       },
       "names": [],
       "sources": [
-        "packages/experimental/system3/src/entry-routing.ts:141"
+        "packages/experimental/system3/src/entry-routing.ts:142"
       ]
     },
     {

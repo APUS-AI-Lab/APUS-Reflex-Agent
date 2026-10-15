@@ -35,7 +35,7 @@ import { resolveEnabledGenerations } from './registry.mjs'
  */
 
 /** Packages the desktop shell owns as profile bundles; never projected or pruned. */
-const IN_BOX_BUNDLES = new Set(['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app', '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin', '@deepseek-ai/dsh-experimental-continuum-jev'])
+const IN_BOX_BUNDLES = new Set(['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app', '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin', '@deepseek-ai/dsh-experimental-continuum-jev', '@deepseek-ai/dsh-experimental-reflex-local-bundle'])
 
 /** Substring that marks a symlink target as one this projector wrote. */
 const GENERATION_LINK_MARKER = join('profiles', '.generations', 'live')

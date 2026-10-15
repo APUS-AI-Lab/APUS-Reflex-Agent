@@ -53,7 +53,7 @@ describe('ReflexJevProvider', () => {
     expect(answer.probabilities.refund).toBeCloseTo(0.0625, 12)
     expect(answer.confidence).toBeGreaterThan(0)
     expect(answer.confidence).toBeLessThan(1)
-    expect(provider.info).toEqual({ id: 'reflex-local', model: 'apus-reflex-4b-q8_0', endpoint: 'http://127.0.0.1:1' })
+    expect(provider.info).toEqual({ id: 'reflex-local', model: 'apus-reflex-4b-q8_0', endpoint: 'http://127.0.0.1:1', executionDomain: 'local' })
   })
 
   it('serves every question type in insertion order through one acquired runner', async () => {

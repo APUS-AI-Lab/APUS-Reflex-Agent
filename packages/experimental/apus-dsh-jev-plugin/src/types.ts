@@ -76,6 +76,11 @@ export interface JevProviderInfo {
   readonly id: string
   readonly model: string
   readonly endpoint: string
+  /**
+   * Where the model runs: `local` keeps request state on this machine; `network` sends it to another host.
+   * Absent when the provider cannot know, such as a configured gateway URL; consumers then apply their own deployment default.
+   */
+  readonly executionDomain?: 'local' | 'network'
 }
 
 /** Implemented provider seam; providers must return a validated response or throw. */

@@ -88,6 +88,8 @@ const outcome = await ctx.jev.decide({
 
 Resolving or executing a request with an unconfigured default provider throws a configuration error before credential resolution or HTTP; an explicit request model does not bypass this requirement. `warm` returns false in this state. `kind: 'unknown'` is fail-open for transport, timeout, HTTP, credential, and response validation failures. The caller keeps deterministic System3 policy as the authority and may record the returned failure without exposing request or response text.
 
+`providerInfo(providerId?)` returns the metadata of the provider a request would use, the default provider when the id is omitted, without I/O; it returns undefined while Reflex is off or that provider is unconfigured or not registered. A provider may declare `executionDomain`: `local` when request state never leaves this machine, as the local Reflex engine does, or `network`. The built-in gateway provider declares none because its URL may be a tunnel to another host; consumers such as System3 then apply their own deployment default.
+
 -----
 
 <a id="understand-the-implementation"></a>

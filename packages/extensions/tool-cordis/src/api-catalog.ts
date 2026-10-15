@@ -1374,6 +1374,12 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'Detached registered provider metadata.',
       },
       {
+        signature: 'providerInfo(providerId?: string): JevProviderInfo | undefined',
+        description: 'Read the metadata of the provider a request would use, without performing I/O.',
+        parameters: [{ name: 'providerId', description: 'Requested provider; omission selects the current default provider.' }],
+        returns: 'Detached metadata, or undefined when Reflex is off or the provider is unconfigured or not registered.',
+      },
+      {
         signature: 'resolve(request: JevRequest): JevSpec',
         description: 'Resolve a request to a provider and effective model without performing I/O.',
         parameters: [{ name: 'request', description: 'Host request and optional provider selection.' }],
@@ -1899,7 +1905,7 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
   {
     key: 'reflexLocal',
     summary: 'Host service exposing engine preparation; its Fiber owns the engine and runner.',
-    description: 'Host service exposing engine preparation; its Fiber owns the engine and runner. The provider registration lives in a nested `jev` dependency, so a Jev reload caused by `enable()` or `disable()` re-registers it without stopping the engine.',
+    description: 'Host service exposing engine preparation; its Fiber owns the engine and runner. The provider registration lives in a nested `jev` dependency, so a Jev reload re-registers it without stopping the engine.',
     methods: [
       {
         signature: 'snapshot(): ReflexSnapshot',
@@ -5793,7 +5799,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'JevProviderInfo',
-    declaration: 'export interface JevProviderInfo {\n    readonly id: string;\n    readonly model: string;\n    readonly endpoint: string;\n}',
+    declaration: 'export interface JevProviderInfo {\n    readonly id: string;\n    readonly model: string;\n    readonly endpoint: string;\n    readonly executionDomain?: \'local\' | \'network\';\n}',
   },
   {
     name: 'JevQuestion',
@@ -6621,7 +6627,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'ReflexDeviceSupport',
-    declaration: 'export type ReflexDeviceSupport = {\n    readonly supported: true;\n    readonly memoryBytes: number;\n    readonly recommended: ReflexVariant;\n} | {\n    readonly supported: false;\n    readonly reason: \'platform\' | \'memory\' | \'runner-missing\';\n};',
+    declaration: 'export type ReflexDeviceSupport = {\n    readonly supported: true;\n    readonly memoryBytes: number;\n} | {\n    readonly supported: false;\n    readonly reason: \'platform\' | \'memory\' | \'runner-missing\';\n};',
   },
   {
     name: 'ReflexDownloadFailure',
@@ -6632,8 +6638,12 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type ReflexFailure = {\n    readonly kind: \'download\';\n    readonly download: ReflexDownloadFailure;\n} | {\n    readonly kind: \'disk\';\n    readonly requiredBytes: number;\n    readonly availableBytes: number;\n} | {\n    readonly kind: \'runner\';\n    readonly message: string;\n} | {\n    readonly kind: \'self-test\';\n    readonly message: string;\n};',
   },
   {
-    name: 'ReflexModelInfo',
-    declaration: 'export interface ReflexModelInfo {\n    readonly variant: ReflexVariant;\n    readonly bytes: number;\n}',
+    name: 'ReflexModelId',
+    declaration: 'export type ReflexModelId = \'4b\' | \'9b\' | \'35b-a3b\';',
+  },
+  {
+    name: 'ReflexModelOption',
+    declaration: 'export interface ReflexModelOption extends ReflexVariant {\n    readonly bytes: number;\n    readonly minMemoryBytes: number;\n    readonly experimental: boolean;\n    readonly fits: boolean;\n    readonly reason?: \'memory\' | \'disk\';\n}',
   },
   {
     name: 'ReflexPreparation',
@@ -6644,12 +6654,16 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface ReflexPrepareOptions {\n    readonly variant?: ReflexVariant;\n    readonly downloadSource?: string;\n}',
   },
   {
+    name: 'ReflexQuant',
+    declaration: 'export type ReflexQuant = \'q8_0\' | \'q4_k_m\';',
+  },
+  {
     name: 'ReflexSelfTest',
     declaration: 'export interface ReflexSelfTest {\n    readonly prefillTokensPerSecond: number;\n    readonly decisionMs: number;\n    readonly slow: boolean;\n}',
   },
   {
     name: 'ReflexSnapshot',
-    declaration: 'export interface ReflexSnapshot {\n    readonly device: ReflexDeviceSupport;\n    readonly models: readonly ReflexModelInfo[];\n    readonly preparation: ReflexPreparation;\n    readonly enabled: boolean;\n    readonly providerId: string;\n    readonly availableDiskBytes?: number;\n    readonly downloadSources: readonly string[];\n    readonly cloudProviderId?: string;\n    readonly unacknowledgedAutoEnableAt?: number;\n}',
+    declaration: 'export interface ReflexSnapshot {\n    readonly device: ReflexDeviceSupport;\n    readonly options: readonly ReflexModelOption[];\n    readonly recommended?: ReflexVariant;\n    readonly preparation: ReflexPreparation;\n    readonly enabled: boolean;\n    readonly reflexEnabled: boolean;\n    readonly providerId: string;\n    readonly availableDiskBytes?: number;\n    readonly downloadSources: readonly string[];\n    readonly unacknowledgedAutoEnableAt?: number;\n}',
   },
   {
     name: 'ReflexStatus',
@@ -6657,7 +6671,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'ReflexVariant',
-    declaration: 'export type ReflexVariant = \'q8_0\' | \'q4_k_m\';',
+    declaration: 'export interface ReflexVariant {\n    readonly model: ReflexModelId;\n    readonly quant: ReflexQuant;\n}',
   },
   {
     name: 'Registry',

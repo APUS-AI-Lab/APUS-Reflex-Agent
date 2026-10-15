@@ -1,5 +1,4 @@
 /** Preparation state machine, persisted choices, routing edits, and runner ownership of the local Reflex engine. */
-import { readFileSync } from 'node:fs'
 import { readFile, rm, stat } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { Context } from '@deepseek-ai/cordis'
@@ -8,21 +7,25 @@ import { writeFileAtomic } from '@deepseek-ai/dsh-atomic-write'
 import { z } from 'zod'
 import type { Config } from './index.ts'
 import { CANDIDATE_LABELS, renderPrompt } from './contract.ts'
-import { inspectDevice, offeredVariants } from './device.ts'
+import { inspectDevice } from './device.ts'
 import {
   availableBytes, classifyFailure, downloadModel, fileInfo, matchesAsset, orderSources, partialBytes, partialPath,
-  ReflexDiskError, ReflexDownloadError, type ModelAsset,
+  ReflexDiskError, ReflexDownloadError,
 } from './download.ts'
+import { modelOptions, readCatalog, recommend, variantKey, variantOf, VARIANT_KEYS, type CatalogAsset, type VariantKey } from './models.ts'
 import { ReflexRunner, ReflexRunnerError, type ReflexRunnerClient } from './runner.ts'
 import type {
-  ReflexDeviceSupport, ReflexFailure, ReflexLocalService, ReflexModelInfo, ReflexPreparation, ReflexPrepareOptions, ReflexSelfTest,
+  ReflexDeviceSupport, ReflexFailure, ReflexLocalService, ReflexModelOption, ReflexPreparation, ReflexPrepareOptions, ReflexSelfTest,
   ReflexSnapshot, ReflexVariant,
 } from './types.ts'
 
-/** Plugin name of the profile entry whose `defaultProviderId` routing edits. */
-export const JEV_PLUGIN = '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
-/** Plugin name of the optional profile entry whose `jevExecutionDomain` routing edits. */
-export const SYSTEM3_PLUGIN = '@deepseek-ai/dsh-experimental-system3'
+/**
+ * Profile id of the required Jev entry whose `defaultProviderId` routing edits. Matched by id because the Jev bundle names
+ * its plugin by a package-relative module path that resolves to a file URL.
+ */
+export const JEV_ENTRY_ID = 'jev'
+/** Registry id Jev selects when `defaultProviderId` and `providerId` are both unset. */
+const JEV_BUILTIN_PROVIDER = 'system-one'
 
 /** The model card's reference decision; the first candidate is the expected answer. */
 const REFERENCE = {
@@ -31,20 +34,21 @@ const REFERENCE = {
   descriptions: ['Close the ticket as resolved.', 'Escalate to a human agent.', 'Issue a refund.'],
 } as const
 
-const variantSchema = z.enum(['q8_0', 'q4_k_m'])
+const variantSchema = z.object({ model: z.enum(['4b', '9b', '35b-a3b']), quant: z.enum(['q8_0', 'q4_k_m']) })
 const stateSchema = z.object({
-  enabled: z.boolean(),
   /** Preparation that was running when the Host stopped; activation resumes it. */
   preparing: z.object({ variant: variantSchema, source: z.string().optional() }).optional(),
-  /** Fingerprint of the last hash-verified weights file and its self-test. */
-  model: z.object({
-    variant: variantSchema, sha256: z.string(), size: z.number(), mtimeMs: z.number(),
+  /** Per variant key: fingerprint of the last hash-verified weights file and its self-test. */
+  models: z.record(z.string(), z.object({
+    sha256: z.string(), size: z.number(), mtimeMs: z.number(),
     selfTest: z.object({ prefillTokensPerSecond: z.number(), decisionMs: z.number(), slow: z.boolean() }).optional(),
-  }).optional(),
+  })),
   /** Epoch milliseconds of an automatic enablement no client has acknowledged. */
   autoEnabledAt: z.number().optional(),
 })
 type Persisted = z.infer<typeof stateSchema>
+type ModelRecord = Persisted['models'][string]
+const EMPTY_STATE: Persisted = { models: {} }
 
 interface Task {
   readonly variant: ReflexVariant
@@ -56,7 +60,7 @@ interface Task {
 
 /** A profile row as read by routing; Loader entries satisfy it. */
 export interface RoutingEntry {
-  readonly options: { readonly name: string; readonly config?: unknown }
+  readonly options: { readonly id: string; readonly config?: unknown; readonly disabled?: unknown }
 }
 
 /** The part of the configuration editor used to route Jev decisions; `ConfigEditor` satisfies it. */
@@ -73,19 +77,25 @@ export interface RoutingEditor {
 
 class SelfTestError extends Error {}
 
+function same(left: ReflexVariant, right: ReflexVariant): boolean {
+  return left.model === right.model && left.quant === right.quant
+}
+
 /**
  * Host-owned engine. Activation inspects the device and local files without downloading, except that it resumes a
  * preparation the previous Host left running. Page and transport lifetimes own none of its work.
  */
 export class ReflexEngine implements ReflexLocalService {
   private readonly device: ReflexDeviceSupport
-  private readonly models: readonly ReflexModelInfo[]
-  private readonly assets: Record<ReflexVariant, ModelAsset>
+  private readonly assets: Record<VariantKey, CatalogAsset>
+  private readonly editor: RoutingEditor
+  /** Bytes of each variant on disk, complete or partial, at the last disk check. */
+  private readonly present = new Map<VariantKey, number>()
   private readonly origins: readonly string[]
   private readonly downloadSources: readonly string[]
   private readonly directory: string
   private preparation: ReflexPreparation
-  private persisted: Persisted = { enabled: false }
+  private persisted: Persisted = EMPTY_STATE
   private availableDisk: number | undefined
   private task: Task | undefined
   private runner: ReflexRunner | undefined
@@ -100,16 +110,16 @@ export class ReflexEngine implements ReflexLocalService {
   /**
    * @param ctx - Host context owning subprocesses and logging.
    * @param config - checked engine configuration.
-   * @param editor - profile editor; required when `config.cloudProviderId` is set.
+   * @param editor - profile editor; required, and its profile must contain an enabled jev entry.
    */
-  constructor(private readonly ctx: Context, private readonly config: Config, private readonly editor?: RoutingEditor) {
-    if (config.cloudProviderId !== undefined && editor === undefined) throw new Error('Reflex cloudProviderId requires the config-editor plugin')
-    const lock = JSON.parse(readFileSync(new URL('../runtime/assets.json', import.meta.url), 'utf8')) as { models: Record<ReflexVariant, ModelAsset> }
-    this.assets = lock.models
+  constructor(private readonly ctx: Context, private readonly config: Config, editor: RoutingEditor | undefined) {
+    if (editor === undefined) throw new Error('reflex-local requires the config-editor plugin to route Jev decisions')
+    this.editor = editor
+    if (this.jevEntry() === undefined) {
+      throw new Error(`reflex-local requires an enabled '${JEV_ENTRY_ID}' entry; enable the Jev bundle beside the reflex-local bundle`)
+    }
+    this.assets = readCatalog()
     this.device = inspectDevice(config)
-    this.models = this.device.supported
-      ? offeredVariants(config, this.device.memoryBytes).map(variant => ({ variant, bytes: lock.models[variant].bytes }))
-      : []
     this.origins = config.modelOrigin === undefined ? config.modelOrigins : [config.modelOrigin]
     this.downloadSources = [...new Set(this.origins.map(origin => new URL(origin).origin))]
     this.directory = join(config.dataRoot, 'models')
@@ -129,15 +139,16 @@ export class ReflexEngine implements ReflexLocalService {
 
   private async inspect(): Promise<void> {
     this.persisted = await this.readState()
-    this.availableDisk = await availableBytes(this.config.dataRoot)
-    const { preparing, model } = this.persisted
+    await this.measureDisk()
+    const { preparing } = this.persisted
     if (preparing !== undefined && this.offers(preparing.variant)
       && (preparing.source === undefined || this.downloadSources.includes(preparing.source))) {
       this.start(preparing.variant, preparing.source)
       return
     }
-    const candidates = [...new Set([model?.variant, ...this.models.map(info => info.variant)])]
-      .filter((variant): variant is ReflexVariant => variant !== undefined && this.offers(variant))
+    // Tested variants first, then every other variant this Host can run, smallest first.
+    const tested = VARIANT_KEYS.filter(key => this.persisted.models[key]?.selfTest !== undefined)
+    const candidates = [...new Set([...tested, ...VARIANT_KEYS])].map(variantOf).filter(variant => this.offers(variant))
     for (const variant of candidates) {
       if (await this.verified(variant, this.lifetime.signal)) { this.publish(await this.resting(variant)); return }
     }
@@ -150,11 +161,12 @@ export class ReflexEngine implements ReflexLocalService {
 
   /** @returns the latest consistent observation. */
   snapshot(): ReflexSnapshot {
+    const recommended = this.recommended()
     return {
-      device: this.device, models: this.models, preparation: this.preparation, enabled: this.enabled(),
+      device: this.device, options: this.options(), ...recommended === undefined ? {} : { recommended },
+      preparation: this.preparation, enabled: this.enabled(), reflexEnabled: this.jevConfig().enabled !== false,
       providerId: this.config.providerId, downloadSources: this.downloadSources,
       ...this.availableDisk === undefined ? {} : { availableDiskBytes: this.availableDisk },
-      ...this.config.cloudProviderId === undefined ? {} : { cloudProviderId: this.config.cloudProviderId },
       ...this.persisted.autoEnabledAt === undefined ? {} : { unacknowledgedAutoEnableAt: this.persisted.autoEnabledAt },
     }
   }
@@ -199,15 +211,15 @@ export class ReflexEngine implements ReflexLocalService {
     const source = options.downloadSource
     if (source !== undefined && !this.downloadSources.includes(source)) throw new Error('Reflex download source is unavailable')
     const current = 'variant' in this.preparation ? this.preparation.variant : undefined
-    const variant = options.variant ?? this.task?.variant ?? current ?? this.device.recommended
-    if (!this.offers(variant)) throw new Error(`Reflex variant ${variant} is unavailable on this device`)
+    const variant = options.variant ?? this.task?.variant ?? current ?? this.recommended()
+    if (variant === undefined || !this.offers(variant)) throw new Error('This Reflex model does not fit this device')
     if (this.task !== undefined) {
-      if (this.task.variant !== variant || source !== undefined && source !== this.task.source) {
+      if (!same(this.task.variant, variant) || source !== undefined && source !== this.task.source) {
         throw new Error('Cancel preparation before changing its variant or download source')
       }
       return
     }
-    if (this.preparation.phase === 'ready' && this.preparation.variant === variant) return
+    if (this.preparation.phase === 'ready' && same(this.preparation.variant, variant)) return
     this.start(variant, source)
   }
 
@@ -226,7 +238,7 @@ export class ReflexEngine implements ReflexLocalService {
   private async run(task: Task): Promise<ReflexSelfTest> {
     const { variant, source } = task
     const signal = AbortSignal.any([task.abort.signal, this.lifetime.signal])
-    const asset = this.assets[variant]
+    const key = variantKey(variant), asset = this.assets[key]
     await this.persist({ ...this.persisted, preparing: source === undefined ? { variant } : { variant, source } })
     if (!await this.verified(variant, signal)) {
       const urls = await orderSources(asset.url, source === undefined ? this.origins : [source], this.config.modelProbeTimeoutMs, signal)
@@ -241,12 +253,14 @@ export class ReflexEngine implements ReflexLocalService {
         verifying: () => { this.publish({ phase: 'verifying', variant }) },
       })
       const { mtimeMs } = await stat(path)
-      await this.persist({ ...this.persisted, model: { variant, sha256: asset.sha256, size: asset.bytes, mtimeMs } })
+      this.present.set(key, asset.bytes)
+      this.availableDisk = await availableBytes(this.directory)
+      await this.record(key, { sha256: asset.sha256, size: asset.bytes, mtimeMs })
     }
     this.publish({ phase: 'testing', variant })
     const selfTest = await this.selfTest(variant, signal)
     const { preparing: _finished, ...rest } = this.persisted
-    await this.persist({ ...rest, model: { ...rest.model as NonNullable<Persisted['model']>, selfTest } })
+    await this.persist({ ...rest, models: { ...rest.models, [key]: { ...rest.models[key] as ModelRecord, selfTest } } })
     return selfTest
   }
 
@@ -261,7 +275,8 @@ export class ReflexEngine implements ReflexLocalService {
         this.publish({ phase: 'failed', variant: task.variant, failure: this.failureOf(error, task.source) })
         return
       }
-      if (task.stop === 'cancel') await rm(partialPath(this.directory, this.assets[task.variant]), { force: true })
+      if (task.stop === 'cancel') await rm(partialPath(this.directory, this.assets[variantKey(task.variant)]), { force: true })
+      await this.measureDisk()
       this.publish(await this.resting(task.variant))
     } catch (cleanupError) {
       this.ctx.logger.warn('Reflex preparation cleanup failed', cleanupError)
@@ -271,27 +286,32 @@ export class ReflexEngine implements ReflexLocalService {
 
   /** Hash-verify weights unless their size and modification time match the last verified fingerprint. */
   private async verified(variant: ReflexVariant, signal: AbortSignal): Promise<boolean> {
-    const asset = this.assets[variant], path = join(this.directory, asset.name)
+    const key = variantKey(variant), asset = this.assets[key], path = join(this.directory, asset.name)
     const info = await fileInfo(path)
     if (info === undefined) return false
-    if (this.fingerprinted(variant, info.size, info.mtimeMs)) return true
+    if (this.fingerprinted(key, info.size, info.mtimeMs)) return true
     this.publish({ phase: 'verifying', variant })
     if (!await matchesAsset(path, asset, signal)) return false
-    await this.persist({ ...this.persisted, model: { variant, sha256: asset.sha256, size: info.size, mtimeMs: info.mtimeMs } })
+    await this.record(key, { sha256: asset.sha256, size: info.size, mtimeMs: info.mtimeMs })
     return true
   }
 
-  private fingerprinted(variant: ReflexVariant, size: number, mtimeMs: number): boolean {
-    const model = this.persisted.model
-    return model?.variant === variant && model.sha256 === this.assets[variant].sha256 && model.size === size && model.mtimeMs === mtimeMs
+  /** Replace a variant's fingerprint; a changed file loses its self-test. */
+  private async record(key: VariantKey, fingerprint: Omit<ModelRecord, 'selfTest'>): Promise<void> {
+    await this.persist({ ...this.persisted, models: { ...this.persisted.models, [key]: fingerprint } })
+  }
+
+  private fingerprinted(key: VariantKey, size: number, mtimeMs: number): boolean {
+    const model = this.persisted.models[key]
+    return model?.sha256 === this.assets[key].sha256 && model.size === size && model.mtimeMs === mtimeMs
   }
 
   /** Phase of a variant without active work: tested weights are ready; untested weights and partial files are paused. */
   private async resting(variant: ReflexVariant): Promise<ReflexPreparation> {
-    const asset = this.assets[variant]
+    const key = variantKey(variant), asset = this.assets[key]
     const info = await fileInfo(join(this.directory, asset.name))
-    const selfTest = this.persisted.model?.selfTest
-    if (info !== undefined && this.fingerprinted(variant, info.size, info.mtimeMs)) {
+    const selfTest = this.persisted.models[key]?.selfTest
+    if (info !== undefined && this.fingerprinted(key, info.size, info.mtimeMs)) {
       return selfTest === undefined ? { phase: 'paused', variant, completedBytes: asset.bytes, totalBytes: asset.bytes } : { phase: 'ready', variant, selfTest }
     }
     const completedBytes = await partialBytes(partialPath(this.directory, asset))
@@ -320,7 +340,7 @@ export class ReflexEngine implements ReflexLocalService {
   }
 
   private async runnerFor(variant: ReflexVariant): Promise<ReflexRunner> {
-    const model = join(this.directory, this.assets[variant].name)
+    const model = join(this.directory, this.assets[variantKey(variant)].name)
     if (this.runner?.model === model) return this.runner
     await this.runner?.dispose()
     this.lifetime.signal.throwIfAborted()
@@ -354,14 +374,19 @@ export class ReflexEngine implements ReflexLocalService {
     await this.acquire(signal ?? new AbortController().signal)
   }
 
-  private enabled(): boolean {
-    if (this.config.cloudProviderId === undefined) return this.persisted.enabled
-    const config = this.entry(JEV_PLUGIN)?.options.config as { defaultProviderId?: unknown; providerId?: unknown } | undefined
-    return (config?.defaultProviderId ?? config?.providerId) === this.config.providerId
+  /** Raw configuration of the jev entry as the Loader holds it; volatile edits update it in place. */
+  private jevConfig(): { readonly enabled?: unknown; readonly defaultProviderId?: unknown; readonly providerId?: unknown } {
+    const config = this.jevEntry()?.options.config
+    return typeof config === 'object' && config !== null ? config : {}
   }
 
-  private entry(plugin: string): RoutingEntry | undefined {
-    return (this.editor as RoutingEditor).entries().find(entry => entry.options.name === plugin)
+  private enabled(): boolean {
+    const config = this.jevConfig()
+    return (config.defaultProviderId ?? config.providerId ?? JEV_BUILTIN_PROVIDER) === this.config.providerId
+  }
+
+  private jevEntry(): RoutingEntry | undefined {
+    return this.editor.entries().find(entry => entry.options.id === JEV_ENTRY_ID && entry.options.disabled !== true)
   }
 
   /** Route Jev decisions to the local provider. @returns after the state or profile change is applied. */
@@ -370,7 +395,7 @@ export class ReflexEngine implements ReflexLocalService {
     await this.route(true)
   }
 
-  /** Stop local routing and restore the cloud provider when configured. @returns after the change is applied. */
+  /** Remove the jev `defaultProviderId`, restoring the built-in default. @returns after the change is applied. */
   async disable(): Promise<void> {
     await this.route(false)
   }
@@ -382,35 +407,23 @@ export class ReflexEngine implements ReflexLocalService {
     this.publish()
   }
 
-  /** Apply the routing choice, then record, keep, or clear the automatic-enable notice in one state write. */
+  /**
+   * Edit only the volatile jev `defaultProviderId`, so Jev switches providers without reloading, then record, keep, or
+   * clear the automatic-enable notice.
+   */
   private async route(local: boolean, automatic = false): Promise<void> {
-    const cloud = this.config.cloudProviderId
-    if (cloud !== undefined) await this.editRouting(local, cloud)
+    const entry = this.jevEntry()
+    if (entry === undefined) throw new Error('reflex-local requires an enabled jev entry')
+    if (this.enabled() !== local) {
+      await this.editor.edit(entry, (raw) => {
+        const { defaultProviderId: _previous, ...rest } = raw
+        return local ? { ...rest, defaultProviderId: this.config.providerId } : rest
+      })
+    }
     const { autoEnabledAt, ...rest } = this.persisted
     const notice = !local ? undefined : automatic ? Date.now() : autoEnabledAt
-    await this.persist({
-      ...rest, ...cloud === undefined ? { enabled: local } : {}, ...notice === undefined ? {} : { autoEnabledAt: notice },
-    })
+    await this.persist(notice === undefined ? rest : { ...rest, autoEnabledAt: notice })
     this.publish()
-  }
-
-  private async editRouting(local: boolean, cloud: string): Promise<void> {
-    // Enabling switches the provider before labeling decisions local; disabling relabels them before switching back,
-    // so System3 never treats a network provider as a local execution domain.
-    const steps = [
-      [JEV_PLUGIN, 'defaultProviderId', local ? this.config.providerId : cloud],
-      [SYSTEM3_PLUGIN, 'jevExecutionDomain', local ? 'local' : 'network'],
-    ] as const
-    for (const [plugin, field, value] of local ? steps : [...steps].reverse()) {
-      const entry = this.entry(plugin)
-      if (entry === undefined) {
-        if (plugin === JEV_PLUGIN) throw new Error('Reflex routing requires a jev plugin entry in the profile')
-        continue
-      }
-      const current: unknown = entry.options.config
-      if (typeof current === 'object' && current !== null && field in current && (current as Record<string, unknown>)[field] === value) continue
-      await (this.editor as RoutingEditor).edit(entry, raw => ({ ...raw, [field]: value }))
-    }
   }
 
   /** Stop preparation and the runner, delete weights and partial files, then disable. @returns after deletion. */
@@ -428,8 +441,8 @@ export class ReflexEngine implements ReflexLocalService {
       await rm(join(this.directory, asset.name), { force: true })
       await rm(partialPath(this.directory, asset), { force: true })
     }
-    const { model: _removed, ...rest } = this.persisted
-    await this.persist(rest)
+    await this.persist({ ...this.persisted, models: {} })
+    await this.measureDisk()
     if (this.device.supported) this.publish({ phase: 'absent' })
     await this.disable()
   }
@@ -454,7 +467,8 @@ export class ReflexEngine implements ReflexLocalService {
     }
     const preparation = this.preparation
     if (preparation.phase !== 'paused' && preparation.phase !== 'failed' || preparation.variant === undefined) return
-    await rm(partialPath(this.directory, this.assets[preparation.variant]), { force: true })
+    await rm(partialPath(this.directory, this.assets[variantKey(preparation.variant)]), { force: true })
+    await this.measureDisk()
     this.publish(await this.resting(preparation.variant))
   }
 
@@ -467,8 +481,31 @@ export class ReflexEngine implements ReflexLocalService {
     return { kind: 'download', download: { source, ...classifyFailure(error) } }
   }
 
+  private options(): ReflexModelOption[] {
+    if (!this.device.supported) return []
+    return modelOptions(this.assets, this.config.minMemoryBytes, {
+      memoryBytes: this.device.memoryBytes, availableBytes: this.availableDisk, diskMarginBytes: this.config.diskMarginBytes,
+      presentBytes: key => this.present.get(key) ?? 0,
+    })
+  }
+
+  private recommended(): ReflexVariant | undefined {
+    return recommend(this.options())
+  }
+
+  /** Whether this Host has the memory for a variant; free disk space is checked when the download starts. */
   private offers(variant: ReflexVariant): boolean {
-    return this.models.some(info => info.variant === variant)
+    return this.options().some(option => same(option, variant) && option.reason !== 'memory')
+  }
+
+  /** Refresh free space and the bytes each variant already holds, complete or partial. */
+  private async measureDisk(): Promise<void> {
+    this.availableDisk = await availableBytes(this.config.dataRoot)
+    for (const key of VARIANT_KEYS) {
+      const asset = this.assets[key]
+      const complete = await fileInfo(join(this.directory, asset.name))
+      this.present.set(key, complete?.isFile() === true ? complete.size : await partialBytes(partialPath(this.directory, asset)))
+    }
   }
 
   private publish(preparation: ReflexPreparation = this.preparation): void {
@@ -483,16 +520,16 @@ export class ReflexEngine implements ReflexLocalService {
       if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error
       return undefined
     })
-    if (text === undefined) return { enabled: false }
+    if (text === undefined) return EMPTY_STATE
     let value: unknown
     try { value = JSON.parse(text) } catch (error) {
       this.ctx.logger.warn('Ignoring unreadable Reflex state', error)
-      return { enabled: false }
+      return EMPTY_STATE
     }
     const parsed = stateSchema.safeParse(value)
     if (parsed.success) return parsed.data
     this.ctx.logger.warn('Ignoring invalid Reflex state', parsed.error)
-    return { enabled: false }
+    return EMPTY_STATE
   }
 
   private async persist(next: Persisted): Promise<void> {

@@ -3,6 +3,7 @@ import { createHash, randomUUID } from 'node:crypto'
 import { brandString, type Branded } from '@deepseek-ai/dsh-brand'
 import type { Context } from '@deepseek-ai/cordis'
 import type { Session } from '@deepseek-ai/dsh-session'
+import type Jev from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
 import { JevConfigurationError, type JevFailure, type JevRequest, type JevResponse,
   type JevSpec } from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
 import { selectSystem3Route, type System3DataClass, type System3ExecutionDomain, type System3PrivacyPolicy } from '@deepseek-ai/dsh-experimental-system3-policy'
@@ -36,6 +37,7 @@ export interface System3DecisionReceipt {
   readonly goalRevision: string
   readonly dataClasses: readonly System3DataClass[]
   readonly routeId: string
+  /** Execution domain that admission checked: the selected provider's declared domain, otherwise the configured default. */
   readonly executionDomain: System3ExecutionDomain
   readonly providerId?: string
   readonly requestedModel?: string
@@ -59,8 +61,38 @@ declare module '@deepseek-ai/dsh-session/types' {
 /** Deployment facts used by the System3 consumer before sending any state. */
 export interface System3JevOptions {
   readonly routeId: string
+  /** Execution domain assumed for a Jev provider that does not declare its own. */
   readonly executionDomain: System3ExecutionDomain
   readonly effort?: 'low' | 'high'
+}
+
+/** The Jev provider a decision would use now and the execution domain privacy admission checks for it. */
+export interface System3JevRoute {
+  /** Provider a request without `providerId` selects; absent when Jev is missing or off, or its default provider is unavailable. */
+  readonly providerId?: string
+  /** The provider's declared execution domain, otherwise {@link System3JevOptions.executionDomain}. */
+  readonly executionDomain: System3ExecutionDomain
+}
+
+/**
+ * Resolve the Jev provider and execution domain that privacy admission checks, without I/O.
+ * @param jev - The Jev service, or undefined when it is not mounted.
+ * @param options - Deployment default for providers that do not declare their execution domain.
+ * @returns The currently selected provider and its execution domain.
+ */
+export function resolveSystem3JevRoute(jev: Pick<Jev, 'providerInfo'> | undefined, options: System3JevOptions): System3JevRoute {
+  const info = jev?.providerInfo()
+  return { ...info === undefined ? {} : { providerId: info.id }, executionDomain: info?.executionDomain ?? options.executionDomain }
+}
+
+/**
+ * Pin a request to the admitted provider, so a default-provider change after admission cannot redirect its state.
+ * @param request - Request built after admission.
+ * @param route - Route that admission checked.
+ * @returns The request with `providerId` set, or unchanged when admission found no provider.
+ */
+export function pinSystem3JevRequest(request: JevRequest, route: System3JevRoute): JevRequest {
+  return route.providerId === undefined ? request : { ...request, providerId: route.providerId }
 }
 
 const CRITERIA: Readonly<Record<System3AdviceAction, string>> = {
@@ -100,7 +132,7 @@ function configured(jev: { resolve(request: JevRequest): JevSpec }, query: JevRe
  * @param ctx - Context providing the optional Jev capability.
  * @param session - Session that owns the durable receipt.
  * @param policy - Captured System3 privacy policy.
- * @param options - Declared Jev execution location and effort.
+ * @param options - Jev route identity, default execution domain, and effort.
  * @param input - Classified decision facts and independent supervisor checks.
  * @param signal - Caller cancellation; a cancelled receipt is committed before rejection.
  * @returns The appended receipt with the unchanged deterministic baseline.
@@ -112,10 +144,11 @@ export async function recordSystem3Decision(
   const started = Date.now()
   const request = structuredClone(input)
   const baseline = superviseSystem3Advice(request.supervisor)
-  const admission = selectSystem3Route(policy, [
-    { id: options.routeId, executionDomain: options.executionDomain, dataClasses: request.dataClasses },
-  ])
   const jev = ctx.get('jev')
+  const route = resolveSystem3JevRoute(jev, options)
+  const admission = selectSystem3Route(policy, [
+    { id: options.routeId, executionDomain: route.executionDomain, dataClasses: request.dataClasses },
+  ])
   let outcome: System3DecisionOutcome = { kind: 'unknown', code: 'provider-unavailable' }
   let advice: System3AdviceAction = 'unknown'
   let providerId: string | undefined
@@ -164,7 +197,7 @@ export async function recordSystem3Decision(
     version: 1, id: brandString<System3DecisionId>(randomUUID()), mode: 'shadow',
     request: query, stateDigest: createHash('sha256').update(JSON.stringify(query)).digest('hex'),
     evidenceRefs: [...request.supervisor.advice.evidenceRefs], goalRevision: request.supervisor.currentGoalRevision,
-    dataClasses: [...request.dataClasses], routeId: options.routeId, executionDomain: options.executionDomain,
+    dataClasses: [...request.dataClasses], routeId: options.routeId, executionDomain: route.executionDomain,
     ...providerId === undefined ? {} : { providerId }, ...requestedModel === undefined ? {} : { requestedModel },
     ...query.effort === undefined ? {} : { effort: query.effort },
     ...request.turn === undefined ? {} : { turn: request.turn },

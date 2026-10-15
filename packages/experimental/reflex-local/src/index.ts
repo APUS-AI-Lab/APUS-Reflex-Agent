@@ -8,14 +8,14 @@ import type {} from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
 import type {} from '@deepseek-ai/dsh-subprocess'
 import { ReflexEngine } from './engine.ts'
 import { ReflexJevProvider } from './provider.ts'
-import type { ReflexLocalService, ReflexPrepareOptions, ReflexSnapshot, ReflexVariant } from './types.ts'
+import type { ReflexLocalService, ReflexPrepareOptions, ReflexSnapshot } from './types.ts'
 
 export type * from './types.ts'
 
 export const name = 'experimental-reflex-local'
 
 /** Model identity reported in Jev responses from the local provider. */
-export const REFLEX_MODEL = 'APUS-OpenJev-v1-4B-GGUF'
+export const REFLEX_MODEL = 'APUS-OpenJev-v1-GGUF'
 
 /** Device, download, process, and self-test settings of the local engine. */
 export interface Config {
@@ -25,8 +25,6 @@ export interface Config {
   dataRoot: string
   /** Absolute path of the bundled `llama-server`; omission or a non-executable file reports `runner-missing`. */
   runnerPath?: string | undefined
-  /** Quantization to prepare; `auto` follows the device memory recommendation. */
-  variant: 'auto' | ReflexVariant
   /** Explicit Hugging Face-compatible origin; bypasses probing and public fallback. */
   modelOrigin?: string | undefined
   /** Hugging Face-compatible origins compared before each download. */
@@ -57,12 +55,23 @@ export interface Config {
    * CPU-only inference (about 100).
    */
   minPrefillTokensPerSecond: number
-  /** Total memory each variant requires. */
-  minMemoryBytes: Record<ReflexVariant, number>
+  /** Total memory each variant requires; options below their tier are greyed and never recommended. */
+  minMemoryBytes: {
+    /** 4B Q4_K_M. */
+    '4b-q4_k_m': number
+    /** 4B Q8_0. */
+    '4b-q8_0': number
+    /** 9B Q4_K_M. */
+    '9b-q4_k_m': number
+    /** 9B Q8_0. */
+    '9b-q8_0': number
+    /** 35B-A3B Q4_K_M; experimental. */
+    '35b-a3b-q4_k_m': number
+    /** 35B-A3B Q8_0; experimental. */
+    '35b-a3b-q8_0': number
+  }
   /** Free bytes left on the data volume after a download completes. */
   diskMarginBytes: number
-  /** Cloud Jev provider restored by `disable()`; omission persists the enable choice in `state.json` instead of editing the profile. */
-  cloudProviderId?: string | undefined
 }
 
 const origin = z.string().pattern(/^https?:\/\/[^/\s?#@]+\/?$/)
@@ -74,7 +83,6 @@ export const Config: z<Partial<Config>, Config> = z.object({
   providerId: z.string().min(1).default('reflex-local'),
   dataRoot: z.string().min(1).required(),
   runnerPath: z.union([z.string().min(1), z.const(undefined)]),
-  variant: z.union(['auto', 'q8_0', 'q4_k_m']).default('auto'),
   modelOrigin: z.union([origin, z.const(undefined)]),
   modelOrigins: z.array(origin).min(1).default(['https://huggingface.co', 'https://hf-mirror.com']),
   modelProbeTimeoutMs: timeout.default(3000),
@@ -89,11 +97,14 @@ export const Config: z<Partial<Config>, Config> = z.object({
   progressIntervalMs: timeout.default(250),
   minPrefillTokensPerSecond: z.number().min(0).default(150),
   minMemoryBytes: z.object({
-    q8_0: z.natural().default(16 * GIB),
-    q4_k_m: z.natural().default(8 * GIB),
+    '4b-q4_k_m': z.natural().default(8 * GIB),
+    '4b-q8_0': z.natural().default(16 * GIB),
+    '9b-q4_k_m': z.natural().default(16 * GIB),
+    '9b-q8_0': z.natural().default(24 * GIB),
+    '35b-a3b-q4_k_m': z.natural().default(32 * GIB),
+    '35b-a3b-q8_0': z.natural().default(64 * GIB),
   }),
   diskMarginBytes: z.natural().default(GIB),
-  cloudProviderId: z.union([z.string().min(1), z.const(undefined)]),
 })
 
 /**
@@ -106,7 +117,6 @@ export function checkConfig(config: Config): Config {
     if (path !== undefined && !isAbsolute(path)) throw new Error(`Reflex paths must be absolute: ${path}`)
   }
   for (const value of config.modelOrigin === undefined ? config.modelOrigins : [config.modelOrigin]) new URL(value)
-  if (config.cloudProviderId === config.providerId) throw new Error('Reflex cloudProviderId must differ from providerId')
   return config
 }
 
@@ -119,7 +129,7 @@ declare module '@deepseek-ai/cordis' {
 
 /**
  * Host service exposing engine preparation; its Fiber owns the engine and runner. The provider registration lives in a
- * nested `jev` dependency, so a Jev reload caused by `enable()` or `disable()` re-registers it without stopping the engine.
+ * nested `jev` dependency, so a Jev reload re-registers it without stopping the engine.
  */
 export default class ReflexLocal extends Service implements ReflexLocalService {
   static inject = ['subprocess']

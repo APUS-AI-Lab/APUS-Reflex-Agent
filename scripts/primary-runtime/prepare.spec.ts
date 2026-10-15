@@ -7,8 +7,8 @@ import { zipSync } from 'fflate'
 import { c as createTar } from 'tar'
 import { expect, it } from 'vitest'
 import {
-  downloadPrimaryRuntimeAsset, machOLinks, prepareLlamaServer, prepareOfficeSkillAssets, primaryRuntimePayloadDigest,
-  smokeLlamaServer, smokePrimaryRuntime, unpackPrimaryRuntimeWheel,
+  downloadPrimaryRuntimeAsset, machOLinks, prepareLlamaServer, prepareLockedLlamaServer, prepareOfficeSkillAssets,
+  primaryRuntimePayloadDigest, smokeLlamaServer, smokePrimaryRuntime, unpackPrimaryRuntimeWheel,
 } from './prepare.ts'
 import lock from './lock.json' with { type: 'json' }
 
@@ -162,6 +162,15 @@ it('locks the llama.cpp runner for macOS arm64 only', () => {
   const { release, url, sha256 } = lock.targets['mac-arm64'].llamaServer
   expect(url).toBe(`https://github.com/ggml-org/llama.cpp/releases/download/${release}/llama-${release}-bin-macos-arm64.tar.gz`)
   expect(sha256).toMatch(/^[a-f0-9]{64}$/u)
+})
+
+it.each(['linux-x64', 'mac-x64', 'win-x64'] as const)('stages no runner and downloads nothing for %s', async (target) => {
+  const root = await mkdtemp(join(tmpdir(), 'desktop-llama-target-'))
+  try {
+    expect(await prepareLockedLlamaServer(target, join(root, 'runner'), join(root, 'cache'))).toBeUndefined()
+    await expect(lstat(join(root, 'runner'))).rejects.toMatchObject({ code: 'ENOENT' })
+    await expect(lstat(join(root, 'cache'))).rejects.toMatchObject({ code: 'ENOENT' })
+  } finally { await rm(root, { recursive: true, force: true }) }
 })
 
 /** Thin arm64 Mach-O image carrying only the load commands the runner closure reads. */
