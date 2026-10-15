@@ -252,7 +252,8 @@ export function hitFiles(output: string, terms: readonly string[], limit: number
 
 /**
  * Complete the candidates once the file list and the search output are known: the small-folder candidate reads the
- * listed files, and the files with the most search hits become candidates of their own.
+ * listed files, a single-file candidate names the search words its file contains, and the other files with the most
+ * search hits become candidates of their own.
  * @param candidates - Candidates from {@link prefetchCandidates}.
  * @param listed - Output of the file-list candidate, one path per line, when it ran.
  * @param found - Output of the search candidate, when it ran.
@@ -265,7 +266,14 @@ export function withFileReads(candidates: readonly System3PrefetchCandidate[], l
   const files = (listed ?? '').split('\n').map(line => line.trim()).filter(line => line !== '')
   const offered = new Set(candidates.flatMap(candidate => candidate.files ?? []))
   const hits = found === undefined ? [] : hitFiles(found, terms, config.maxHitFiles, offered)
-  return [...candidates.map(candidate => candidate.id === 'sources' && files.length > 0 ? { ...candidate, files } : candidate),
+  // A file already offered alone (README, manifest, mentioned file) names the search words it contains, so Jev also
+  // offers it for an edit that has to change it.
+  const contains = new Map(found === undefined ? [] : hitFiles(found, terms, Infinity, new Set()).map(hit => [hit.path, hit.terms]))
+  const annotated = (candidate: System3PrefetchCandidate): System3PrefetchCandidate => {
+    const contained = candidate.files?.length === 1 ? contains.get(candidate.files[0] ?? '') : undefined
+    return contained === undefined ? candidate : { ...candidate, description: `${candidate.description}（其中包含 ${contained.join('、')}）` }
+  }
+  return [...candidates.map(candidate => candidate.id === 'sources' && files.length > 0 ? { ...candidate, files } : annotated(candidate)),
     ...hits.map(hit => ({ id: `hit:${hit.path}`, description: `文件 ${hit.path} 的完整内容（其中包含 ${hit.terms.join('、')}）`,
       label: `cat ${hit.path}`, command: `head -c 1000000 -- ${shellWord(hit.path)}`, files: [hit.path] }))].slice(0, 16)
 }

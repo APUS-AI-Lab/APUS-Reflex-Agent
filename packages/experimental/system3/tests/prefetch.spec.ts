@@ -60,7 +60,8 @@ it('offers the files with the most search hits for a complete read, and the list
   const base = prefetchCandidates('Where is orderTotal used?', { git: true, trackedFiles: 3, readme: 'README.md', mentioned: [] }, CONFIG)
   const full = withFileReads(base, 'README.md\nsrc/a.ts\nsrc/b.ts\n', 'src/b.ts:4:orderTotal\nREADME.md:1:orderTotal\n', ['orderTotal'], CONFIG)
   expect(full.find(candidate => candidate.id === 'sources')?.files).toEqual(['README.md', 'src/a.ts', 'src/b.ts'])
-  expect(full.find(candidate => candidate.id === 'readme')?.files).toEqual(['README.md'])
+  expect(full.find(candidate => candidate.id === 'readme')).toMatchObject({ files: ['README.md'],
+    description: '项目说明文件 README.md（其中包含 orderTotal）' })
   expect(full.filter(candidate => candidate.id.startsWith('hit:')).map(candidate => [candidate.files, candidate.description]))
     .toEqual([[['src/b.ts'], '文件 src/b.ts 的完整内容（其中包含 orderTotal）']])
 })

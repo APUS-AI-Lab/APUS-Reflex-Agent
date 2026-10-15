@@ -97,7 +97,9 @@ it('asks one yes/no question per Skill of a small catalog with stable ids, even 
   const questions = h.decide.mock.calls[0]?.[0].questions ?? {}
   expect(Object.keys(questions)).toEqual(['intent', 'skill-0', 'skill'])
   expect(questions['skill-0']).toMatchObject({ type: 'noul', criteria: { true: '应该使用', false: '不应使用' } })
-  expect(questions['skill-0']?.instructions).toContain('Skill「abstain」：Reconcile public CSV rows and report discrepancies.')
+  // A Skill without whenToUse applies only when the person asks for what its description names.
+  expect(questions['skill-0']?.instructions).toContain('Skill「abstain」：Reconcile public CSV rows and report discrepancies.'
+    + '适用：用户明确要求这件事：Reconcile public CSV rows and report discrepancies.判断处理这条输入时是否应该使用这个 Skill。')
   expect(questions.skill).toMatchObject({ type: 'choice', criteria: { 'skill-0': 'abstain: Reconcile public CSV rows and report discrepancies.',
     abstain: 'No clearly applicable skill.' } })
   expect(h.ctx.sessionProjections.stateOf(h.agent.session, 'system3Runtime')?.skill).toMatchObject({ selected: 'abstain', injected: true })

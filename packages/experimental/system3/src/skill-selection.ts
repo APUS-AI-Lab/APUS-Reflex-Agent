@@ -84,8 +84,10 @@ export function skillLabel(skill: System3SkillRouting): string {
  */
 export function skillQuestion(input: string, skill: System3SkillRouting): JevQuestion {
   // Wording measured on the deployed Jev; small changes flip its answers, so change it only with a live evaluation run.
+  // Without whenToUse, Jev accepts a Skill for any task near its description (a code edit for commit-message), so the
+  // description is stated as an explicit request.
   return { type: 'noul', instructions: `用户输入：「${input}」。Skill「${skill.name}」：${skill.description}`
-    + `${skill.whenToUse === undefined ? '' : `适用：${skill.whenToUse}`}判断处理这条输入时是否应该使用这个 Skill。`,
+    + `适用：${skill.whenToUse ?? `用户明确要求这件事：${skill.description}`}判断处理这条输入时是否应该使用这个 Skill。`,
   criteria: { true: '应该使用', false: '不应使用' } }
 }
 
