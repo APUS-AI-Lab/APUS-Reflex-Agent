@@ -1,8 +1,8 @@
-/** Prepare pinned, relocatable script interpreters without installing into the build host. */
+/** Prepare pinned, relocatable script interpreters and the macOS arm64 llama.cpp runner without installing into the build host. */
 
-import { execFileSync } from 'node:child_process'
+import { execFileSync, spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { cp } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
@@ -10,7 +10,7 @@ import { dirname, join, resolve } from 'node:path'
 import { parseArgs } from 'node:util'
 import extractZip from 'extract-zip'
 import { x as extractTar } from 'tar'
-import { parsePrimaryRuntime, workspaceDependencyPaths, type PrimaryRuntimeManifest } from '../../packages/skill/tool-workspace-dependencies/src/index.ts'
+import { llamaServerPath, parsePrimaryRuntime, workspaceDependencyPaths, type PrimaryRuntimeManifest } from '../../packages/skill/tool-workspace-dependencies/src/index.ts'
 import lock from './lock.json' with { type: 'json' }
 
 /**
@@ -88,6 +88,94 @@ export async function prepareOfficeSkillAssets(source: string, destination: stri
   await cp(source, destination, { recursive: true, dereference: true })
 }
 
+/** LC_LOAD_DYLIB, LC_LOAD_WEAK_DYLIB, LC_REEXPORT_DYLIB, LC_LAZY_LOAD_DYLIB and LC_LOAD_UPWARD_DYLIB. */
+const LOAD_DYLIB_COMMANDS = new Set([0xc, 0x80000018, 0x8000001f, 0x20, 0x80000023])
+const LC_RPATH = 0x8000001c
+
+/**
+ * Read the libraries and run-path entries a Mach-O image asks dyld to resolve.
+ * @param bytes - Thin 64-bit little-endian Mach-O file contents.
+ * @returns Dependent install names and LC_RPATH entries in load-command order.
+ * @throws For universal, 32-bit or big-endian files.
+ */
+export function machOLinks(bytes: Buffer): { dylibs: string[]; rpaths: string[] } {
+  if (bytes.length < 32 || bytes.readUInt32LE(0) !== 0xfeedfacf) throw new Error('llama-server: expected a thin 64-bit Mach-O file')
+  const dylibs: string[] = []
+  const rpaths: string[] = []
+  const commands = bytes.readUInt32LE(16)
+  for (let index = 0, offset = 32; index < commands; index++) {
+    const command = bytes.readUInt32LE(offset)
+    const name = (): string => {
+      const start = offset + bytes.readUInt32LE(offset + 8)
+      return bytes.toString('utf8', start, bytes.indexOf(0, start))
+    }
+    if (LOAD_DYLIB_COMMANDS.has(command)) dylibs.push(name())
+    else if (command === LC_RPATH) rpaths.push(name())
+    offset += bytes.readUInt32LE(offset + 4)
+  }
+  return { dylibs, rpaths }
+}
+
+/**
+ * Copy `llama-server`, the release libraries it loads, and the llama.cpp license into one directory of regular files.
+ * Symbolic links are materialized under the install name each image references, so the result passes Mach-O signing without links.
+ * @param archive - Hash-verified llama.cpp macOS release archive.
+ * @param release - Locked release tag; names the archive's top-level `llama-<release>` directory.
+ * @param destination - Directory replaced with the runner files.
+ * @returns Resolves after every non-system dependency resolves inside `destination`.
+ * @throws When an image loads a library outside `/usr/lib`, `/System/Library` and the release directory,
+ * or searches a run path outside the runner directory.
+ */
+export async function prepareLlamaServer(archive: string, release: string, destination: string): Promise<void> {
+  const staging = mkdtempSync(join(tmpdir(), 'dsh-llama-server-'))
+  try {
+    await extractTar({ file: archive, cwd: staging })
+    const source = realpathSync(join(staging, `llama-${release}`))
+    rmSync(destination, { recursive: true, force: true })
+    mkdirSync(destination, { recursive: true })
+    const pending = ['llama-server']
+    const copied = new Set<string>()
+    for (let name = pending.pop(); name !== undefined; name = pending.pop()) {
+      if (copied.has(name)) continue
+      copied.add(name)
+      const file = realpathSync(join(source, name))
+      if (dirname(file) !== source) throw new Error(`llama-server: ${name} links outside the release directory`)
+      const bytes = readFileSync(file)
+      const { dylibs, rpaths } = machOLinks(bytes)
+      const outside = rpaths.find(path => path !== '@loader_path' && path !== '@executable_path')
+      if (outside !== undefined) throw new Error(`llama-server: ${name} searches run path ${outside} outside the runner directory`)
+      for (const dylib of dylibs) {
+        if (/^\/(?:usr\/lib|System\/Library)\//u.test(dylib)) continue
+        const library = /^@(?:rpath|loader_path|executable_path)\/([^/]+)$/u.exec(dylib)?.[1]
+        if (library === undefined || (dylib.startsWith('@rpath/') && rpaths.length === 0) || !existsSync(join(source, library))) {
+          throw new Error(`llama-server: ${name} loads ${dylib}, which the release directory does not provide`)
+        }
+        pending.push(library)
+      }
+      writeFileSync(join(destination, name), bytes)
+      chmodSync(join(destination, name), 0o755)
+    }
+    cpSync(join(source, 'LICENSE'), join(destination, 'LICENSE'))
+  } finally {
+    rmSync(staging, { recursive: true, force: true })
+  }
+}
+
+/**
+ * Execute the runner and require the build number of its locked release.
+ * @param executable - Prepared or signed `llama-server`.
+ * @param release - Locked release tag recorded in runtime.json.
+ * @param environment - Subprocess environment.
+ */
+export function smokeLlamaServer(executable: string, release: string, environment: NodeJS.ProcessEnv): void {
+  const result = spawnSync(executable, ['--version'], { encoding: 'utf8', timeout: 120_000, env: environment })
+  if (result.error !== undefined) throw result.error
+  const output = `${result.stdout}${result.stderr}`
+  if (result.status !== 0 || !output.includes(`(build ${release.slice(1)},`)) {
+    throw new Error(`llama-server: ${executable} --version did not report release ${release} (exit ${String(result.status)}):\n${output}`)
+  }
+}
+
 /** A locked interpreter and wheel target. */
 export type PrimaryRuntimeTarget = keyof typeof lock.targets
 
@@ -101,7 +189,7 @@ export interface PreparePrimaryRuntimeOptions {
   readonly cache: string
   /** Carrier release recorded in the legacy desktopVersion manifest field. */
   readonly version: string
-  /** Omit Node.js and pnpm for carriers providing only Python. */
+  /** Omit Node.js, pnpm and the llama.cpp runner for carriers providing only Python. */
   readonly pythonOnly?: boolean
 }
 
@@ -142,6 +230,11 @@ export async function preparePrimaryRuntime(options: PreparePrimaryRuntimeOption
       await cp(dirname(pnpmManifest), join(dependencies, 'pnpm'), { recursive: true, dereference: true })
     }
     await extractTar({ file: await pythonArchive(target, paths.downloads), cwd: dependencies })
+    const llamaServer = options.pythonOnly || !('llamaServer' in artifact) ? undefined : artifact.llamaServer
+    if (llamaServer !== undefined) {
+      await prepareLlamaServer(await downloadPrimaryRuntimeAsset(llamaServer.url, llamaServer.sha256, paths.downloads),
+        llamaServer.release, join(dependencies, 'llama-server'))
+    }
     const manifest: PrimaryRuntimeManifest = {
       desktopVersion: options.version,
       platform: target === 'win-x64' ? 'win32' : target.startsWith('linux-') ? 'linux' : 'darwin',
@@ -150,6 +243,7 @@ export async function preparePrimaryRuntime(options: PreparePrimaryRuntimeOption
       python: lock.pythonVersion,
       ...(pnpmVersion === undefined ? {} : { node: lock.nodeVersion, pnpm: pnpmVersion }),
       pythonPackages: lock.pythonPackages,
+      ...(llamaServer === undefined ? {} : { llamaServer: llamaServer.release }),
     }
     const entries = workspaceDependencyPaths(output, manifest)
     for (const wheel of [...artifact.wheels, ...lock.wheels]) {
@@ -168,7 +262,7 @@ export async function preparePrimaryRuntime(options: PreparePrimaryRuntimeOption
 }
 
 /**
- * Execute the native payload's interpreters, package manager and Python libraries.
+ * Execute the native payload's interpreters, package manager, Python libraries and declared llama.cpp runner.
  * @param root - Final payload directory, including any platform signatures.
  * @param environment - Scrubbed subprocess environment; defaults to excluding credential-shaped names.
  */
@@ -186,6 +280,7 @@ export function smokePrimaryRuntime(root: string, environment: NodeJS.ProcessEnv
   execFileSync(entries.python, ['-I', '-B', '-m', 'pip', 'check'], options)
   if (entries.node !== undefined) execFileSync(entries.node, ['-e', `if (process.versions.node !== ${JSON.stringify(manifest.node)}) process.exit(1)`], options)
   if (entries.pnpm !== undefined && entries.node !== undefined) execFileSync(entries.node, [entries.pnpm, '--version'], options)
+  if (manifest.llamaServer !== undefined) smokeLlamaServer(llamaServerPath(root), manifest.llamaServer, environment)
 }
 
 if (import.meta.main) {

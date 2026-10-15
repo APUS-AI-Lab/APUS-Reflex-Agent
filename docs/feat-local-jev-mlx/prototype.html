@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="APUS Reflex 本机判断的可点击原型：从首次登录、配置密钥，到一键启用本机判断与各类异常恢复。">
+<title>本机判断原型</title>
+<style>
+:root{
+  --bg:#f1f3f5;--win:#fff;--side:#f9fafb;--layer:#fff;--layer2:#f1f3f5;--hover:#ebeef2;
+  --ink:#0f1115;--ink-2:#61666b;--ink-3:#81858c;--rule:rgba(0,0,0,.1);--rule-2:rgba(0,0,0,.16);
+  --pri:#0f1115;--pri-ink:#fff;--ok:#22c55e;--ok-soft:rgba(34,197,94,.12);--bad:#ec1313;--bad-soft:rgba(236,19,19,.08);
+  --warn:#d97706;--warn-soft:rgba(217,119,6,.1);--local:#2563eb;--local-soft:rgba(37,99,235,.1);
+  --shadow:0 12px 40px rgba(15,17,21,.14),0 2px 8px rgba(15,17,21,.06);
+  --scrim:rgba(15,17,21,.32);
+  --r-xs:4px;--r-sm:8px;--r-md:12px;--r-lg:16px;
+  --font:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei','Helvetica Neue',Arial,sans-serif;
+  --ease:cubic-bezier(.4,0,.2,1);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0c0c0d;--win:#151517;--side:#1b1b1c;--layer:#232324;--layer2:#2c2c2e;--hover:#353638;
+  --ink:#f9fafb;--ink-2:#adb2b8;--ink-3:#979da6;--rule:rgba(255,255,255,.12);--rule-2:rgba(255,255,255,.2);
+  --pri:#f9fafb;--pri-ink:#0f1115;--bad:#f25a5a;--bad-soft:rgba(242,90,90,.12);--warn:#f59e0b;--warn-soft:rgba(245,158,11,.12);
+  --local:#60a5fa;--local-soft:rgba(96,165,250,.14);--shadow:0 12px 40px rgba(0,0,0,.5),0 2px 8px rgba(0,0,0,.3);--scrim:rgba(0,0,0,.55);
+}}
+:root[data-theme="dark"]{
+  --bg:#0c0c0d;--win:#151517;--side:#1b1b1c;--layer:#232324;--layer2:#2c2c2e;--hover:#353638;
+  --ink:#f9fafb;--ink-2:#adb2b8;--ink-3:#979da6;--rule:rgba(255,255,255,.12);--rule-2:rgba(255,255,255,.2);
+  --pri:#f9fafb;--pri-ink:#0f1115;--bad:#f25a5a;--bad-soft:rgba(242,90,90,.12);--warn:#f59e0b;--warn-soft:rgba(245,158,11,.12);
+  --local:#60a5fa;--local-soft:rgba(96,165,250,.14);--shadow:0 12px 40px rgba(0,0,0,.5),0 2px 8px rgba(0,0,0,.3);--scrim:rgba(0,0,0,.55);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:13px/1.55 var(--font);-webkit-font-smoothing:antialiased;min-height:100vh}
+button{font:inherit;color:inherit;cursor:pointer}
+b,strong{font-weight:500}
+
+/* scenario bar */
+.bar{max-width:1180px;margin:0 auto;padding:16px 16px 10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.bar h1{font-size:15px;font-weight:500;margin:0 12px 0 0}
+.bar .grp{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chipbtn{border:1px solid var(--rule);background:var(--layer);border-radius:999px;padding:4px 11px;font-size:12px;color:var(--ink-2);transition:background var(--ease) .15s}
+.chipbtn:hover{background:var(--hover)}
+.chipbtn[aria-pressed="true"]{background:var(--pri);color:var(--pri-ink);border-color:var(--pri)}
+.hint{max-width:1180px;margin:0 auto;padding:0 16px 12px;color:var(--ink-3);font-size:12px}
+
+/* window */
+.win{max-width:1180px;height:min(760px,calc(100vh - 120px));min-height:560px;margin:0 auto 24px;background:var(--win);border:1px solid var(--rule);border-radius:var(--r-md);box-shadow:var(--shadow);display:flex;overflow:hidden;position:relative}
+.side{width:220px;flex:none;background:var(--side);border-right:1px solid var(--rule);display:flex;flex-direction:column;padding:12px 10px}
+.lights{display:flex;gap:7px;padding:2px 4px 14px}
+.lights i{width:11px;height:11px;border-radius:50%;background:var(--rule-2)}
+.brand{font-size:13px;font-weight:500;padding:0 6px 10px}
+.newchat{display:flex;align-items:center;gap:8px;border:1px solid var(--rule);background:var(--layer);border-radius:var(--r-sm);padding:7px 10px;margin-bottom:12px}
+.sess{padding:6px 10px;border-radius:var(--r-sm);color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sess.on{background:var(--hover);color:var(--ink)}
+.side .grow{flex:1}
+.gear{display:flex;align-items:center;gap:8px;padding:7px 10px;border:0;background:none;border-radius:var(--r-sm);color:var(--ink-2);text-align:left;width:100%}
+.gear:hover{background:var(--hover)}
+.main{flex:1;display:flex;flex-direction:column;min-width:0;position:relative}
+.head{height:48px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-bottom:1px solid var(--rule)}
+.head .t{font-weight:500}
+.route{font-size:12px;color:var(--ink-2);border:1px solid var(--rule);border-radius:999px;padding:3px 10px}
+.msgs{flex:1;overflow-y:auto;padding:24px max(20px,calc(50% - 340px)) 12px}
+.empty{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--ink-3);gap:6px;text-align:center}
+.empty b{color:var(--ink);font-size:18px}
+.m{margin:0 0 18px;max-width:680px}
+.m.u{margin-left:auto;background:var(--layer2);border-radius:var(--r-md);padding:9px 13px;width:fit-content;max-width:80%}
+.m.a p{margin:0 0 6px}
+.foot{flex:none;padding:0 max(20px,calc(50% - 340px)) 16px}
+
+/* dock */
+.dock{display:flex;align-items:center;gap:8px;min-height:30px;font-size:12px;color:var(--ink-2);padding:0 4px 6px;flex-wrap:wrap}
+.dock .sp{flex:1}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--ink-3);flex:none}
+.dot.live{animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.3}}
+.pill{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:1px 8px;font-size:11.5px;border:1px solid var(--rule);color:var(--ink-2);white-space:nowrap}
+.pill.local{color:var(--local);border-color:color-mix(in srgb,var(--local) 40%,transparent);background:var(--local-soft)}
+.pill.ok{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 40%,transparent);background:var(--ok-soft)}
+.pill.warn{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 40%,transparent);background:var(--warn-soft)}
+.pill.bad{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 40%,transparent);background:var(--bad-soft)}
+.link{border:0;background:none;padding:0;color:var(--ink);text-decoration:underline;text-decoration-color:var(--rule-2);text-underline-offset:3px}
+.link:hover{text-decoration-color:var(--ink)}
+.prep{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--rule);background:var(--layer);border-radius:999px;padding:2px 10px 2px 8px;font-size:11.5px;color:var(--ink-2);position:relative}
+.prep .mini{width:46px;height:4px;border-radius:2px;background:var(--rule);overflow:hidden}
+.prep .mini i{display:block;height:100%;background:var(--ink);transition:width .3s var(--ease)}
+.evid{border:1px solid var(--rule);border-radius:var(--r-sm);background:var(--layer);padding:10px 12px;margin:0 4px 8px;display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:12px}
+.evid dt{color:var(--ink-3)}
+.evid dd{margin:0}
+.evid .row{grid-column:1/-1;border-top:1px solid var(--rule);padding-top:8px;margin-top:4px;color:var(--ink-2)}
+
+.invite{border:1px solid var(--rule-2);border-radius:var(--r-md);background:var(--layer);padding:14px 16px;margin:0 0 10px;display:flex;gap:14px;align-items:flex-start;animation:rise .25s var(--ease)}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}}
+.invite .ic{width:30px;height:30px;border-radius:var(--r-sm);background:var(--local-soft);color:var(--local);display:grid;place-items:center;flex:none}
+.invite .tx{flex:1;min-width:0}
+.invite b{display:block;font-size:14px;margin-bottom:2px}
+.invite p{margin:0 0 10px;color:var(--ink-2)}
+.invite .acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.invite .x{border:0;background:none;color:var(--ink-3);padding:2px 4px;border-radius:var(--r-xs)}
+.invite .x:hover{background:var(--hover)}
+.notice{display:flex;align-items:center;gap:10px;border:1px solid var(--rule);border-radius:var(--r-sm);padding:8px 12px;margin:0 0 10px;font-size:12.5px;color:var(--ink-2);background:var(--layer)}
+.notice.warn{border-color:color-mix(in srgb,var(--warn) 35%,var(--rule));background:var(--warn-soft)}
+.notice .sp{flex:1}
+
+.composer{border:1px solid var(--rule-2);border-radius:var(--r-lg);background:var(--layer);padding:10px 10px 10px 14px;display:flex;gap:10px;align-items:flex-end}
+.composer textarea{flex:1;border:0;background:none;resize:none;outline:none;font:inherit;color:var(--ink);min-height:22px;max-height:120px;padding:4px 0}
+.composer textarea::placeholder{color:var(--ink-3)}
+.send{width:30px;height:30px;border-radius:50%;border:0;background:var(--pri);color:var(--pri-ink);display:grid;place-items:center;flex:none}
+.send:disabled{opacity:.35;cursor:default}
+
+.btn{border:1px solid var(--rule-2);background:var(--layer);border-radius:var(--r-sm);padding:6px 13px;font-size:12.5px;white-space:nowrap;transition:background .15s var(--ease)}
+.btn:hover{background:var(--hover)}
+.btn.pri{background:var(--pri);color:var(--pri-ink);border-color:var(--pri)}
+.btn.pri:hover{opacity:.9}
+.btn.quiet{border-color:transparent;background:none;color:var(--ink-2)}
+.btn.quiet:hover{background:var(--hover)}
+.btn:disabled{opacity:.45;cursor:default}
+
+/* overlays */
+.scrim{position:absolute;inset:0;background:var(--scrim);display:grid;place-items:center;z-index:20;padding:16px;animation:fade .2s var(--ease)}
+@keyframes fade{from{opacity:0}}
+.modal{width:min(440px,100%);background:var(--win);border:1px solid var(--rule);border-radius:var(--r-lg);box-shadow:var(--shadow);padding:22px}
+.modal h2{font-size:17px;font-weight:500;margin:0 0 4px}
+.modal .sub{color:var(--ink-2);margin:0 0 16px}
+.door{display:flex;gap:12px;align-items:center;border:1px solid var(--rule);border-radius:var(--r-md);padding:12px 14px;margin-bottom:10px;background:var(--layer);width:100%;text-align:left}
+.door:hover{border-color:var(--rule-2);background:var(--hover)}
+.door .tx{flex:1}
+.door small{display:block;color:var(--ink-3);font-size:12px}
+.field{display:flex;flex-direction:column;gap:6px;margin:4px 0 14px}
+.field label{font-size:12px;color:var(--ink-2)}
+.field input{border:1px solid var(--rule-2);border-radius:var(--r-sm);background:var(--layer);color:var(--ink);padding:8px 10px;font:inherit;outline:none}
+.field input:focus{border-color:var(--ink)}
+.field .err{font-size:12px;color:var(--bad)}
+.rowend{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+
+.settings{width:min(820px,100%);height:min(560px,100%);background:var(--win);border:1px solid var(--rule);border-radius:var(--r-lg);box-shadow:var(--shadow);display:flex;overflow:hidden}
+.snav{width:170px;flex:none;border-right:1px solid var(--rule);padding:14px 8px;background:var(--side)}
+.snav button{display:block;width:100%;text-align:left;border:0;background:none;padding:7px 10px;border-radius:var(--r-sm);color:var(--ink-2)}
+.snav button.on{background:var(--hover);color:var(--ink)}
+.sbody{flex:1;overflow-y:auto;padding:20px 24px;position:relative}
+.sbody h3{font-size:15px;font-weight:500;margin:0 0 4px}
+.sbody .lede{color:var(--ink-2);margin:0 0 14px}
+.sclose{position:absolute;top:12px;right:12px}
+.card{border:1px solid var(--rule-2);border-radius:var(--r-md);padding:14px 16px;margin-bottom:12px;background:var(--layer)}
+.card .hd{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.card .hd b{font-size:13.5px}
+.card .hd .sp{flex:1}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 16px;margin:8px 0 12px;font-size:12.5px}
+.kv dt{color:var(--ink-3)}
+.kv dd{margin:0}
+.progress{height:6px;border-radius:3px;background:var(--rule);overflow:hidden;margin:10px 0 6px}
+.progress i{display:block;height:100%;background:var(--ink);transition:width .3s var(--ease)}
+.meta{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-3);margin-bottom:10px}
+.honest{font-size:12px;color:var(--ink-3);margin:8px 0 0}
+
+.toasts{position:absolute;right:16px;top:60px;display:flex;flex-direction:column;gap:8px;z-index:30;max-width:min(360px,calc(100% - 32px))}
+.toast{display:flex;align-items:center;gap:10px;background:var(--pri);color:var(--pri-ink);border-radius:var(--r-sm);padding:9px 12px;box-shadow:var(--shadow);font-size:12.5px;animation:rise .2s var(--ease)}
+.toast .sp{flex:1}
+.toast button{border:0;background:none;color:inherit;opacity:.8;text-decoration:underline;text-underline-offset:3px;padding:0}
+.toast button:hover{opacity:1}
+
+.coach{position:absolute;z-index:15;background:var(--pri);color:var(--pri-ink);border-radius:var(--r-sm);padding:9px 12px;font-size:12px;max-width:260px;box-shadow:var(--shadow);animation:rise .2s var(--ease)}
+.coach::after{content:'';position:absolute;left:18px;bottom:-5px;width:10px;height:10px;background:var(--pri);transform:rotate(45deg)}
+.coach button{border:0;background:none;color:inherit;opacity:.8;text-decoration:underline;padding:0;margin-left:6px}
+.menu{position:absolute;bottom:calc(100% + 6px);right:0;min-width:150px;background:var(--win);border:1px solid var(--rule);border-radius:var(--r-sm);box-shadow:var(--shadow);padding:4px;z-index:26}
+.menu button{display:block;width:100%;text-align:left;border:0;background:none;padding:6px 10px;border-radius:var(--r-xs);font-size:12.5px;color:var(--ink)}
+.menu button:hover{background:var(--hover)}
+
+.log{max-width:1180px;margin:0 auto 32px;padding:0 16px;color:var(--ink-3);font-size:12px}
+.log ol{margin:6px 0 0;padding-left:18px}
+
+@media (max-width:760px){
+  .side{display:none}
+  .win{height:calc(100vh - 140px);min-height:520px}
+  .settings{flex-direction:column}
+  .snav{width:auto;display:flex;gap:4px;border-right:0;border-bottom:1px solid var(--rule);padding:8px;overflow-x:auto}
+  .snav button{width:auto;white-space:nowrap}
+  .invite{flex-direction:column}
+}
+</style>
+</head>
+<body>
+<div class="bar">
+  <h1>本机判断 · 可点击原型</h1>
+  <div class="grp" id="scenes"></div>
+  <div class="grp" style="margin-left:auto">
+    <button class="chipbtn" id="theme" type="button">切换主题</button>
+  </div>
+</div>
+<p class="hint" id="hint"></p>
+
+<div class="win" id="win">
+  <aside class="side">
+    <div class="lights"><i></i><i></i><i></i></div>
+    <div class="brand">APUS Reflex Harness</div>
+    <button class="newchat" type="button" id="newchat">＋ 新对话</button>
+    <div class="sess on">修复取消信号的重试循环</div>
+    <div class="sess">整理发布说明</div>
+    <div class="sess">数据管线的回归测试</div>
+    <div class="grow"></div>
+    <button class="gear" type="button" id="opensettings">⚙ 设置</button>
+  </aside>
+  <section class="main">
+    <div class="head"><span class="t">修复取消信号的重试循环</span><span class="route">自动调度</span></div>
+    <div class="msgs" id="msgs"></div>
+    <div class="foot">
+      <div id="above"></div>
+      <div class="dock" id="dock"></div>
+      <div id="evid"></div>
+      <div class="composer">
+        <textarea id="input" rows="1" placeholder="描述你要做的事，回车发送"></textarea>
+        <button class="send" id="send" type="button" aria-label="发送">↑</button>
+      </div>
+    </div>
+  </section>
+  <div id="overlay"></div>
+  <div class="toasts" id="toasts"></div>
+</div>
+
+<div class="log"><b>原型说明</b>：数据与耗时均为模拟（下载 4.5 GB 压缩为约 10 秒；本机判断耗时取 M5 冒烟实测的 0.43 秒）。文案即建议的产品文案，按 locale 字典落地。<ol id="log"></ol></div>
+
+<script>
+const $ = (s, r = document) => r.querySelector(s)
+const h = (html) => { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstElementChild }
+const GB = 4.48, GB_LITE = 2.71
+
+const SCENES = {
+  fresh: { label: '新用户 · 未配置模型', hint: '首次登录且没有可用的回答模型：先弹就绪引导，配置密钥（任意 sk- 开头）后就能对话。本机判断邀请要在 20 次判断后才出现，可切到「已在使用」体验' },
+  ready: { label: '已在使用 · 邀请出现', hint: '已有可用模型、判断次数已够。发一条消息，本轮结束后输入框上方出现邀请卡，点「一键启用」体验全过程' },
+  privacy: { label: '隐私模式拦截', hint: '隐私策略设为「仅本机」，云端判断会被拒。发一条消息，看 dock 上的一键动作' },
+  timeout: { label: '云端判断不稳', hint: '云端判断连续超时。发两条消息，第二次超时后 dock 末尾出现「改为本机判断」' },
+  offline: { label: '下载中途断网', hint: '点邀请卡的「一键启用」：下载到 62% 时断网，恢复后自动续传' },
+  disk: { label: '磁盘不足', hint: '可用空间只有 3.1 GB。点「一键启用」，看按钮如何在点击前说清楚代价并给出精简版' },
+  slow: { label: '较慢的 Mac', hint: '点「一键启用」：自检测出判断较慢，不自动启用，交给用户选择' },
+  crash: { label: '本机运行中崩溃', hint: '本机判断已启用。发一条消息，模拟推理进程崩溃后的兜底与自动恢复' },
+}
+
+let S, shownModal = null, shownInvite = false
+function reset(scene) {
+  clearTimers()
+  S = {
+    scene, gen: scene !== 'fresh', msgs: [], deciding: false, decisions: scene === 'fresh' ? 0 : 19,
+    local: 'off', progress: 0, paused: false, net: true, invite: false, inviteSnoozed: false,
+    timeouts: 0, privacy: scene === 'privacy', diskFree: scene === 'disk' ? 3.1 : 180, lite: false,
+    coachDone: false, lastDecision: null, evidOpen: false, menu: false, modal: scene === 'fresh' ? 'ready' : null,
+    settingsTab: 'models', unstableOffered: false, crashOnce: scene === 'crash', laterNotice: false,
+  }
+  if (scene === 'crash') { S.local = 'enabled'; S.coachDone = true }
+  if (['offline', 'disk', 'slow'].includes(scene)) S.invite = true
+  $('#log').innerHTML = ''
+  document.querySelectorAll('#scenes .chipbtn').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.s === scene)))
+  $('#hint').textContent = SCENES[scene].hint
+  $('#toasts').innerHTML = ''
+  document.querySelectorAll('.coach').forEach(c => c.remove())
+  render()
+}
+let timers = []
+const later = (fn, ms) => { const id = setTimeout(fn, ms); timers.push(id); return id }
+const every = (fn, ms) => { const id = setInterval(fn, ms); timers.push(id); return id }
+function clearTimers() { timers.forEach(id => { clearTimeout(id); clearInterval(id) }); timers = [] }
+const log = (t) => $('#log').appendChild(h(`<li>${t}</li>`))
+
+function toast(text, action, onAction, ms = 6000) {
+  const el = h(`<div class="toast"><span>${text}</span><span class="sp"></span>${action ? `<button type="button">${action}</button>` : ''}</div>`)
+  if (action) el.querySelector('button').onclick = () => { el.remove(); onAction() }
+  $('#toasts').appendChild(el)
+  later(() => el.remove(), ms)
+}
+
+/* ---------- rendering ---------- */
+function render() {
+  renderMsgs(); renderAbove(); renderDock(); renderEvid(); renderOverlay()
+  $('#send').disabled = S.deciding
+}
+function renderMsgs() {
+  const box = $('#msgs')
+  if (!S.msgs.length) {
+    box.innerHTML = `<div class="empty"><b>有什么要做的？</b><span>${S.gen ? '描述任务，APUS Reflex 会先判断用哪个模型和哪些专业指令' : '还没有可用的回答模型'}</span></div>`
+    return
+  }
+  box.innerHTML = S.msgs.map(m => m.role === 'u'
+    ? `<div class="m u">${m.text}</div>`
+    : `<div class="m a">${m.text.split('\n').map(p => `<p>${p}</p>`).join('')}</div>`).join('')
+  box.scrollTop = box.scrollHeight
+}
+function renderAbove() {
+  const box = $('#above'); box.innerHTML = ''
+  if (!S.gen && S.laterNotice) {
+    const n = h(`<div class="notice warn"><span>还没有可用的回答模型，发送后无法得到回复</span><span class="sp"></span><button class="btn pri" type="button">去配置</button><button class="btn quiet" type="button" aria-label="关闭">×</button></div>`)
+    const [go, x] = n.querySelectorAll('button')
+    go.onclick = () => { S.modal = 'key'; render() }
+    x.onclick = () => { S.laterNotice = false; render() }
+    box.appendChild(n)
+  }
+  if (S.invite && S.local === 'off') { const c = inviteCard(); if (shownInvite) c.style.animation = 'none'; shownInvite = true; box.appendChild(c) } else shownInvite = false
+  if (S.local === 'slow') {
+    const n = h(`<div class="notice warn"><span>这台 Mac 判断较慢（每次约 1.8 秒），建议判断保留在云端</span><span class="sp"></span><button class="btn" type="button">仍要启用</button><button class="btn pri" type="button">保留云端</button></div>`)
+    const [force, keep] = n.querySelectorAll('button')
+    force.onclick = () => enable('用户选择仍要启用')
+    keep.onclick = () => { S.local = 'ready-off'; log('用户选择保留云端；模型已下载，可随时在设置里启用'); render() }
+    box.appendChild(n)
+  }
+}
+function inviteCard() {
+  const need = S.lite ? GB_LITE : GB
+  const enough = S.diskFree >= need + 1
+  const el = h(`<div class="invite">
+    <div class="ic"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="3.5" y="3.5" width="9" height="9" rx="1.5"/><path d="M6 1.5v2M10 1.5v2M6 12.5v2M10 12.5v2M1.5 6h2M1.5 10h2M12.5 6h2M12.5 10h2"/></svg></div>
+    <div class="tx">
+      <b>这台 Mac 可以自己做判断</b>
+      <p>下载一次，之后每轮的判断都在本机完成：不排队、不计费，「仅本机」隐私模式下也能用。回答仍由当前模型生成</p>
+      <div class="acts"></div>
+    </div>
+    <button class="x" type="button" aria-label="关闭">×</button></div>`)
+  const acts = el.querySelector('.acts')
+  if (enough) {
+    acts.appendChild(btn(`一键启用 · ${need.toFixed(1)} GB`, 'pri', () => oneClick('邀请卡')))
+  } else {
+    acts.appendChild(btn(`需要 ${need.toFixed(1)} GB，当前可用 ${S.diskFree} GB`, '', null, true))
+    if (!S.lite && S.diskFree >= GB_LITE + .3) acts.appendChild(btn(`改用精简版 · ${GB_LITE.toFixed(1)} GB`, 'pri', () => { S.lite = true; log('改用精简版（Q4_K_M，与参考一致 77/80）'); oneClick('邀请卡 · 精简版') }))
+  }
+  acts.appendChild(btn('以后再说', 'quiet', () => { S.invite = false; S.inviteSnoozed = true; log('「以后再说」：14 天内不再主动邀请；设置页与执行依据里仍可启用'); render() }))
+  el.querySelector('.x').onclick = () => { S.invite = false; S.inviteSnoozed = true; render() }
+  return el
+}
+function btn(text, kind, fn, disabled) {
+  const b = h(`<button class="btn ${kind}" type="button">${text}</button>`)
+  if (disabled) b.disabled = true
+  if (fn) b.onclick = fn
+  return b
+}
+function renderDock() {
+  const d = $('#dock'); d.innerHTML = ''
+  if (S.deciding) d.appendChild(h(`<span style="display:flex;align-items:center;gap:8px"><i class="dot live"></i>正在选择处理方式</span>`))
+  else if (S.lastDecision) {
+    const x = S.lastDecision
+    const line = h(`<span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"></span>`)
+    line.appendChild(h(`<i class="dot"></i>`))
+    line.appendChild(h(`<span>${x.text}</span>`))
+    if (x.where === 'local') line.appendChild(h(`<span class="pill local" id="localbadge">本机</span>`))
+    if (x.where === 'cloud') line.appendChild(h(`<span class="pill">云端</span>`))
+    if (x.ms) line.appendChild(h(`<span style="color:var(--ink-3)">决策耗时 ${x.ms} 毫秒</span>`))
+    if (x.action) line.appendChild(btn(x.action.label, 'pri', x.action.fn))
+    d.appendChild(line)
+  } else d.appendChild(h(`<span style="display:flex;align-items:center;gap:8px"><i class="dot"></i>${S.gen ? '准备就绪' : '还没有可用的回答模型'}</span>`))
+  d.appendChild(h('<span class="sp"></span>'))
+  const chip = prepChip(); if (chip) d.appendChild(chip)
+  if (S.lastDecision) { const b = h(`<button class="link" type="button">${S.evidOpen ? '收起执行依据' : '查看执行依据'}</button>`); b.onclick = () => { S.evidOpen = !S.evidOpen; render() }; d.appendChild(b) }
+  if (S.local === 'enabled' && !S.coachDone && S.lastDecision?.where === 'local') later(showCoach, 50)
+}
+function prepChip() {
+  const pct = Math.round(S.progress * 100)
+  let label
+  if (S.local === 'downloading') label = !S.net ? `网络中断，恢复后自动继续 · ${pct}%` : S.paused ? `已暂停 · ${pct}%` : `正在准备本机判断 · ${pct}%`
+  else if (S.local === 'verifying') label = '正在自检'
+  else return null
+  const c = h(`<button class="prep" type="button" aria-haspopup="menu"><span class="mini"><i style="width:${S.local === 'verifying' ? 100 : pct}%"></i></span><span>${label}</span></button>`)
+  c.onclick = (e) => { e.stopPropagation(); S.menu = !S.menu; render() }
+  if (S.menu && S.local === 'downloading') {
+    const m = h(`<div class="menu" role="menu"></div>`)
+    m.appendChild(btn(S.paused ? '继续' : '暂停', '', (e) => { e.stopPropagation(); S.paused = !S.paused; S.menu = false; log(S.paused ? '暂停下载；已下载部分保留，继续时从断点续传' : '继续下载（Range 续传）'); render() }))
+    m.appendChild(btn('查看详情', '', (e) => { e.stopPropagation(); S.menu = false; S.modal = 'settings'; render() }))
+    m.appendChild(btn('取消', '', (e) => { e.stopPropagation(); cancelDownload() }))
+    m.querySelectorAll('button').forEach(b => b.className = '')
+    c.appendChild(m)
+  }
+  return c
+}
+function renderEvid() {
+  const box = $('#evid'); box.innerHTML = ''
+  if (!S.evidOpen || !S.lastDecision) return
+  const x = S.lastDecision
+  const e = h(`<dl class="evid">
+    <dt>判断位置</dt><dd>${x.where === 'local' ? '本机 · Reflex 4B' : x.where === 'cloud' ? '云端 Jev' : '未判断，使用默认规则'}</dd>
+    <dt>判断结果</dt><dd>${x.route}</dd>
+    <dt>概率分布</dt><dd>${x.where === 'none' ? '—' : '完整 · 3 个候选'}</dd>
+    <dt>数据范围</dt><dd>${x.where === 'local' ? '判断内容没有离开这台 Mac' : x.where === 'cloud' ? '判断状态发往云端 Jev 服务' : '本轮没有发出判断请求'}</dd>
+  </dl>`)
+  if ((S.local === 'off' || S.local === 'ready-off') && S.gen) {
+    const r = h(`<div class="row">也可以改为在这台 Mac 上判断 <button class="link" type="button">一键启用</button></div>`)
+    r.querySelector('button').onclick = () => oneClick('执行依据')
+    e.appendChild(r)
+  }
+  box.appendChild(e)
+}
+function showCoach() {
+  if (S.coachDone || $('.coach')) return
+  const badge = $('#localbadge'); if (!badge) return
+  const win = $('#win').getBoundingClientRect(), b = badge.getBoundingClientRect()
+  const c = h(`<div class="coach">以后判断都在这台 Mac 上完成，点「查看执行依据」看细节<button type="button">知道了</button></div>`)
+  $('#win').appendChild(c)
+  c.style.left = Math.max(8, b.left - win.left - 12) + 'px'
+  c.style.top = (b.top - win.top - c.offsetHeight - 10) + 'px'
+  c.querySelector('button').onclick = () => { S.coachDone = true; c.remove() }
+  later(() => { S.coachDone = true; c.remove() }, 7000)
+}
+
+/* ---------- overlays ---------- */
+function renderOverlay() {
+  const o = $('#overlay'); o.innerHTML = ''
+  if (!S.modal) { shownModal = null; return }
+  document.querySelectorAll('.coach').forEach(c => c.remove())
+  const scrim = h(`<div class="scrim"></div>`)
+  if (shownModal === S.modal) scrim.style.animation = 'none'
+  shownModal = S.modal
+  if (S.modal === 'ready') scrim.appendChild(readyModal())
+  if (S.modal === 'key') scrim.appendChild(keyModal())
+  if (S.modal === 'settings') { scrim.appendChild(settingsPanel()); scrim.onclick = (e) => { if (e.target === scrim) { S.modal = null; render() } } }
+  o.appendChild(scrim)
+}
+function readyModal() {
+  const m = h(`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="rt">
+    <h2 id="rt">先选一种推理方式</h2><p class="sub">APUS Reflex 需要一个回答模型才能开始</p></div>`)
+  const d1 = h(`<button class="door" type="button"><span class="tx"><b>配置 API 密钥</b><small>官方或第三方提供商，约 30 秒</small></span><span class="btn pri">配置</span></button>`)
+  d1.onclick = () => { S.modal = 'key'; render() }
+  const d2 = h(`<button class="door" type="button"><span class="tx"><b>连接本机模型端点</b><small>已在本机运行 OpenAI 兼容的生成服务时选这项</small></span><span class="btn">连接</span></button>`)
+  d2.onclick = () => toast('原型未展开此路径：沿用现有「自定义模型 API」表单')
+  m.append(d1, d2)
+  const r = h(`<div class="rowend"></div>`); r.appendChild(btn('稍后配置', 'quiet', () => { S.modal = null; S.laterNotice = true; log('「稍后配置」：关闭弹窗，输入框上方保留可关闭的就地提示；本次会话不再弹窗'); render() }))
+  m.appendChild(r)
+  return m
+}
+function keyModal() {
+  const m = h(`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="kt">
+    <h2 id="kt">配置 API 密钥</h2><p class="sub">密钥只保存在这台电脑上，保存前会先测试能否连通</p>
+    <div class="field"><label for="k">DeepSeek API 密钥</label><input id="k" placeholder="sk-…" autocomplete="off"><span class="err" id="kerr"></span></div></div>`)
+  const r = h(`<div class="rowend"></div>`)
+  r.appendChild(btn('返回', 'quiet', () => { S.modal = 'ready'; render() }))
+  const save = btn('保存并连接', 'pri', () => {
+    const v = $('#k').value.trim()
+    if (!v.startsWith('sk-') || v.length < 8) { $('#kerr').textContent = '密钥格式不对，应以 sk- 开头'; return }
+    save.disabled = true; save.textContent = '正在连接…'
+    later(() => { S.gen = true; S.modal = null; S.laterNotice = false; toast('已连接，可以开始对话'); log('密钥连通性探测通过后才关闭弹窗；不把刚登录的用户丢进设置页'); render() }, 900)
+  })
+  r.appendChild(save)
+  m.appendChild(r)
+  later(() => $('#k')?.focus(), 30)
+  return m
+}
+function settingsPanel() {
+  const p = h(`<div class="settings" role="dialog" aria-modal="true" aria-label="设置"><nav class="snav"></nav><div class="sbody"></div></div>`)
+  const nav = p.querySelector('.snav')
+  for (const [id, label] of [['general', '通用'], ['models', '模型'], ['account', '账号']]) {
+    const b = btn(label, '', () => { S.settingsTab = id; render() }); b.className = S.settingsTab === id ? 'on' : ''; nav.appendChild(b)
+  }
+  const body = p.querySelector('.sbody')
+  const close = btn('×', 'quiet sclose', () => { S.modal = null; render() }); close.setAttribute('aria-label', '关闭')
+  body.appendChild(close)
+  if (S.settingsTab !== 'models') { body.appendChild(h(`<div><h3>${S.settingsTab === 'general' ? '通用' : '账号'}</h3><p class="lede">原型只展开「模型」页</p></div>`)); return p }
+  body.appendChild(h(`<div><h3>模型</h3><p class="lede">回答由下面的提供商生成；判断可以交给本机</p></div>`))
+  body.appendChild(h(`<div class="card"><div class="hd"><b>DeepSeek</b><span class="sp"></span><span class="pill ${S.gen ? 'ok' : 'warn'}">${S.gen ? '可用' : '缺少密钥'}</span></div><div style="color:var(--ink-2);font-size:12.5px">${S.gen ? 'deepseek-chat · deepseek-reasoner' : '配置密钥后可用'}</div></div>`))
+  body.appendChild(h(`<div style="margin:22px 0 8px"><h3>本机决策引擎</h3><p class="lede" style="margin:0">判断在这台 Mac 上完成；回答仍由上面的模型生成</p></div>`))
+  body.appendChild(localCard())
+  return p
+}
+function localCard() {
+  const need = S.lite ? GB_LITE : GB
+  const pct = Math.round(S.progress * 100)
+  const st = { off: ['未启用', ''], downloading: [S.paused ? '已暂停' : !S.net ? '等待网络' : '正在下载', ''], verifying: ['正在自检', ''], enabled: ['判断在本机', 'local'], 'ready-off': ['已下载 · 未启用', ''], slow: ['这台 Mac 较慢', 'warn'] }[S.local] || ['', '']
+  const c = h(`<div class="card"><div class="hd"><b>Reflex ${S.lite ? '4B · 精简版' : '4B'}</b><span class="sp"></span><span class="pill ${st[1]}">${st[0]}</span></div></div>`)
+  const kv = h(`<dl class="kv"></dl>`)
+  const rows = [['设备', 'Apple M5 · 24 GB 内存 · 可用磁盘 ' + S.diskFree + ' GB'], ['下载', need.toFixed(1) + ' GB' + (S.lite ? '（Q4_K_M，与参考一致 77/80）' : '（Q8_0，与参考一致 80/80）')]]
+  if (S.local === 'enabled') rows.push(['每次判断', '约 0.4 秒'], ['数据', '判断内容不离开这台 Mac'])
+  rows.forEach(([k, v]) => kv.append(h(`<dt>${k}</dt>`), h(`<dd>${v}</dd>`)))
+  c.appendChild(kv)
+  if (S.local === 'downloading' || S.local === 'verifying') {
+    c.appendChild(h(`<div class="progress"><i style="width:${S.local === 'verifying' ? 100 : pct}%"></i></div>`))
+    c.appendChild(h(`<div class="meta"><span>${S.local === 'verifying' ? '文件校验通过，正在做一次真实判断' : (need * S.progress).toFixed(1) + ' GB / ' + need.toFixed(1) + ' GB'}</span><span>${S.local === 'verifying' ? '' : S.paused ? '已暂停' : !S.net ? '网络恢复后自动继续' : '约 ' + Math.max(1, Math.round((1 - S.progress) * 10)) + ' 秒'}</span></div>`))
+  }
+  const acts = h(`<div class="rowend" style="justify-content:flex-start"></div>`)
+  if (S.local === 'off') {
+    if (S.diskFree >= need + 1) acts.appendChild(btn(`下载并启用 · ${need.toFixed(1)} GB`, 'pri', () => oneClick('设置页')))
+    else { acts.appendChild(btn(`需要 ${need.toFixed(1)} GB，当前可用 ${S.diskFree} GB`, '', null, true)); if (!S.lite) acts.appendChild(btn(`改用精简版 · ${GB_LITE.toFixed(1)} GB`, 'pri', () => { S.lite = true; oneClick('设置页 · 精简版') })) }
+  }
+  if (S.local === 'downloading') { acts.appendChild(btn(S.paused ? '继续' : '暂停', '', () => { S.paused = !S.paused; render() })); acts.appendChild(btn('取消', 'quiet', cancelDownload)) }
+  if (S.local === 'enabled') { acts.appendChild(btn('停用', '', () => { S.local = 'ready-off'; toast('判断已回到云端'); render() })); acts.appendChild(btn('删除模型', 'quiet', () => { S.local = 'off'; S.progress = 0; toast(`已删除，释放 ${need.toFixed(1)} GB`); render() })) }
+  if (S.local === 'ready-off' || S.local === 'slow') { acts.appendChild(btn('启用', 'pri', () => enable('设置页启用'))); acts.appendChild(btn('删除模型', 'quiet', () => { S.local = 'off'; S.progress = 0; render() })) }
+  c.appendChild(acts)
+  if (S.local === 'off') c.appendChild(h(`<p class="honest">下载在后台进行，期间判断照常走云端；退出应用后再打开会从断点继续</p>`))
+  return c
+}
+
+/* ---------- flows ---------- */
+function oneClick(from) {
+  if (S.local === 'ready-off') { log(`${from}：模型已下载，直接启用`); S.invite = false; if (S.lastDecision?.action) S.lastDecision.action = null; enable('一键启用'); return }
+  if (S.local !== 'off') return
+  const need = S.lite ? GB_LITE : GB
+  if (S.diskFree < need + 1) { log(`${from}：磁盘不够，按钮在点击前就说明需要的空间`); render(); return }
+  S.invite = false; S.local = 'downloading'; S.progress = 0; S.paused = false; S.evidOpen = false
+  if (S.lastDecision?.action) S.lastDecision.action = null
+  log(`${from}：点一次「一键启用」。邀请卡收起成 dock 右侧的进度标签，对话不受影响`)
+  render()
+  const tick = every(() => {
+    if (S.local !== 'downloading') { clearInterval(tick); return }
+    if (S.paused || !S.net) return
+    S.progress = Math.min(1, S.progress + 0.02)
+    if (S.scene === 'offline' && S.progress >= 0.62 && !S._dropped) {
+      S._dropped = true; S.net = false; log('62% 时断网：不报错、不清空，标签显示「网络中断，恢复后自动继续」')
+      later(() => { S.net = true; log('网络恢复：自动以 Range 续传，用户不需要任何操作'); render() }, 3000)
+    }
+    if (S.progress >= 1) { clearInterval(tick); verify() }
+    render()
+  }, 200)
+}
+function cancelDownload() { S.local = 'off'; S.progress = 0; S.menu = false; log('取消：删除临时文件'); render() }
+function verify() {
+  S.local = 'verifying'; log('下载完成，sha256 校验通过，自动开始自检（黄金样例 + 测速）'); render()
+  later(() => {
+    if (S.scene === 'slow') { S.local = 'slow'; log('自检测出每次判断约 1.8 秒：不自动启用，交给用户决定'); render(); return }
+    enable('自检通过')
+  }, 2000)
+}
+function enable(why) {
+  S.local = 'enabled'; log(`${why}：自动启用，Toast 可撤销`)
+  toast('判断已在本机进行', '撤销', () => { S.local = 'ready-off'; log('撤销：判断回到云端，模型保留'); render() })
+  render()
+}
+
+function send() {
+  const v = $('#input').value.trim()
+  if (!v || S.deciding) return
+  if (!S.gen) { S.laterNotice = true; toast('还没有可用的回答模型', '去配置', () => { S.modal = 'key'; render() }); render(); return }
+  $('#input').value = ''
+  S.msgs.push({ role: 'u', text: v }); S.deciding = true; S.lastDecision = null; S.evidOpen = false
+  render()
+  const local = S.local === 'enabled'
+  let outcome
+  if (local && S.crashOnce) {
+    S.crashOnce = false
+    outcome = { where: 'none', text: '本机判断未完成，本轮按默认处理', route: 'Flash（默认规则）', delay: 600 }
+    later(() => { toast('本机判断进程已自动重启'); log('推理进程崩溃：本轮退回默认规则，不改走云端；下次判断前自动重启，连续失败才停用'); }, 900)
+  } else if (local) outcome = { where: 'local', text: '已判断：Flash', route: 'Flash', ms: 430, delay: 430 }
+  else if (S.privacy) outcome = { where: 'none', text: '隐私设置不允许云端判断，本轮按默认处理', route: 'Flash（默认规则）', delay: 300,
+    action: { label: '在本机判断', fn: () => oneClick('隐私拦截') } }
+  else if (S.scene === 'timeout') {
+    S.timeouts++
+    outcome = { where: 'none', text: '判断超时，先由 Flash 回答', route: 'Flash（默认规则）', delay: 1600 }
+    if (S.timeouts >= 2 && !S.unstableOffered && S.local === 'off') { S.unstableOffered = true; outcome.action = { label: '改为本机判断', fn: () => oneClick('云端不稳') } }
+  } else outcome = { where: 'cloud', text: '已判断：Flash', route: 'Flash', ms: 820 + Math.round(Math.random() * 400), delay: 900 }
+  later(() => {
+    S.deciding = false; S.lastDecision = outcome; S.decisions++
+    render()
+    later(() => {
+      S.msgs.push({ role: 'a', text: '在 retry 循环里，AbortError 被当成普通错误重试了。\n建议在 catch 里先判断 signal.aborted，命中就直接抛出，并补一个回归测试覆盖取消路径。' })
+      maybeInvite(); render()
+    }, 700)
+  }, outcome.delay)
+}
+function maybeInvite() {
+  if (S.local !== 'off' || S.inviteSnoozed || S.invite || !S.gen || S.privacy || S.scene === 'timeout') return
+  if (S.decisions >= 20) { S.invite = true; log('判断次数达到 20 且本轮已结束：输入框上方出现一次性邀请卡，不在本轮进行中打断') }
+}
+
+/* ---------- wiring ---------- */
+for (const [id, s] of Object.entries(SCENES)) {
+  const b = h(`<button class="chipbtn" type="button" data-s="${id}">${s.label}</button>`)
+  b.onclick = () => reset(id)
+  $('#scenes').appendChild(b)
+}
+$('#send').onclick = send
+$('#input').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); send() } })
+$('#opensettings').onclick = () => { S.modal = 'settings'; S.settingsTab = 'models'; render() }
+$('#newchat').onclick = () => { S.msgs = []; S.lastDecision = null; render() }
+document.addEventListener('click', () => { if (S.menu) { S.menu = false; render() } })
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && S.modal === 'settings') { S.modal = null; render() } })
+$('#theme').onclick = () => {
+  const r = document.documentElement
+  const dark = r.dataset.theme ? r.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches
+  r.dataset.theme = dark ? 'light' : 'dark'
+}
+reset('fresh')
+</script>
+</body>
+</html>

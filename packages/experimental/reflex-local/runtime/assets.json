@@ -1,0 +1,16 @@
+{
+  "models": {
+    "q8_0": {
+      "name": "APUS-OpenJev-v1-4B-Q8_0.gguf",
+      "url": "https://huggingface.co/apus-ailab/APUS-Reflex-4B-GGUF/resolve/191bfcb721ec6d44352c622a30d290ae6afbabc8/APUS-OpenJev-v1-4B-Q8_0.gguf",
+      "bytes": 4482403168,
+      "sha256": "5e57075a169a76de5150f5c5defd805525ce4df86ae8865f70f128e15e57416c"
+    },
+    "q4_k_m": {
+      "name": "APUS-OpenJev-v1-4B-Q4_K_M.gguf",
+      "url": "https://huggingface.co/apus-ailab/APUS-Reflex-4B-GGUF/resolve/191bfcb721ec6d44352c622a30d290ae6afbabc8/APUS-OpenJev-v1-4B-Q4_K_M.gguf",
+      "bytes": 2708804768,
+      "sha256": "3e77f041b48a6b28081071dc4dca8b047c10acf0a4b9b9b48603cef6b06ee186"
+    }
+  }
+}

@@ -48,6 +48,13 @@
       "@deepseek-ai/dsh-experimental-speech-to-text/types": ["./packages/experimental/speech-to-text/src/types.ts"],
       "@deepseek-ai/dsh-experimental-api-speech-to-text/types": ["./packages/experimental/api-speech-to-text/src/types.ts"],
       "@deepseek-ai/dsh-experimental-client-ui-voice-input/client": ["./packages/experimental/client-ui-voice-input/src/client/index.ts"],
+      "@deepseek-ai/dsh-experimental-reflex-local": ["./packages/experimental/reflex-local/src/index.ts"],
+      "@deepseek-ai/dsh-experimental-reflex-local/types": ["./packages/experimental/reflex-local/src/types.ts"],
+      "@deepseek-ai/dsh-experimental-api-reflex-local": ["./packages/experimental/api-reflex-local/src/index.ts"],
+      "@deepseek-ai/dsh-experimental-api-reflex-local/types": ["./packages/experimental/api-reflex-local/src/types.ts"],
+      "@deepseek-ai/dsh-experimental-client-ui-reflex-local": ["./packages/experimental/client-ui-reflex-local/src/index.ts"],
+      "@deepseek-ai/dsh-experimental-client-ui-reflex-local/client": ["./packages/experimental/client-ui-reflex-local/src/client/index.ts"],
+      "@deepseek-ai/dsh-experimental-reflex-local-bundle": ["./packages/experimental/reflex-local-bundle/src/index.ts"],
 
       "@deepseek-ai/dsh/profile-boot": ["./apps/cli/src/profile-boot.ts"],
       "@deepseek-ai/dsh-browser-use": ["./packages/browser-use/browser-use/src/index.ts"],

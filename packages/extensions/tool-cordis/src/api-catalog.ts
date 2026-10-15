@@ -1897,6 +1897,120 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
+    key: 'reflexLocal',
+    summary: 'Host service exposing engine preparation; its Fiber owns the engine and runner.',
+    description: 'Host service exposing engine preparation; its Fiber owns the engine and runner. The provider registration lives in a nested `jev` dependency, so a Jev reload caused by `enable()` or `disable()` re-registers it without stopping the engine.',
+    methods: [
+      {
+        signature: 'snapshot(): ReflexSnapshot',
+        description: 'Read device support, preparation, and routing in one observation.',
+        parameters: [],
+        returns: 'the latest consistent snapshot.',
+      },
+      {
+        signature: 'follow(signal: AbortSignal): AsyncIterable<ReflexSnapshot>',
+        description: 'Observe readiness until the signal aborts or the plugin unloads; changes between reads coalesce.',
+        parameters: [{ name: 'signal', description: 'observer lifetime.' }],
+        returns: 'the current snapshot followed by each later change.',
+      },
+      {
+        signature: 'prepare(options?: ReflexPrepareOptions): void',
+        description: 'Start or join download, verification, and self-test; a passing, fast self-test enables local decisions.',
+        parameters: [{ name: 'options', description: 'variant and download source; changing either while work is active throws.' }],
+      },
+      {
+        signature: 'async pause(): Promise<void>',
+        description: 'Stop active preparation and keep the partial download. @returns after the work settles.',
+        parameters: [],
+      },
+      {
+        signature: 'async cancel(): Promise<void>',
+        description: 'Stop active preparation and delete the partial download. @returns after the work settles and the file is removed.',
+        parameters: [],
+      },
+      {
+        signature: 'async enable(): Promise<void>',
+        description: 'Route Jev decisions to the local provider; requires `ready`. @returns after the state or profile change is applied.',
+        parameters: [],
+      },
+      {
+        signature: 'async disable(): Promise<void>',
+        description: 'Stop local routing, restore `cloudProviderId` when configured, and clear the auto-enable notice. @returns after it applies.',
+        parameters: [],
+      },
+      {
+        signature: 'async acknowledge(): Promise<void>',
+        description: 'Clear `unacknowledgedAutoEnableAt` after a client showed it. @returns after the cleared state is persisted.',
+        parameters: [],
+      },
+      {
+        signature: 'async remove(): Promise<void>',
+        description: 'Stop preparation and the runner, delete weights and partial files, then disable. @returns after deletion.',
+        parameters: [],
+      },
+    ],
+  },
+  {
+    key: 'reflexLocalController',
+    summary: 'Forwards each call to `ctx.reflexLocal`; a disconnected observer never cancels Host-owned preparation.',
+    description: 'Forwards each call to `ctx.reflexLocal`; a disconnected observer never cancels Host-owned preparation.',
+    methods: [
+      {
+        signature: '@Remote snapshot(): ReflexSnapshot',
+        description: 'Read the current readiness without waiting for a change.',
+        parameters: [],
+        returns: 'the latest device, preparation, and enablement observation.',
+      },
+      {
+        signature: '@Remote({ mode: \'stream\' }) follow(signal: AbortSignal): AsyncIterable<ReflexSnapshot>',
+        description: 'Follow readiness independently of Session and preparation lifetimes.',
+        parameters: [{ name: 'signal', description: 'Client observation lifetime.' }],
+        returns: 'the current snapshot followed by each later change.',
+      },
+      {
+        signature: '@Remote prepare(options?: ReflexPrepareOptions): void',
+        description: 'Start or join download, verification, and self-test.',
+        parameters: [{ name: 'options', description: 'variant and download source; omission uses the device recommendation and configured origins.' }],
+      },
+      {
+        signature: '@Remote pause(): Promise<void>',
+        description: 'Stop active preparation and keep the partial download for a later `prepare()`.',
+        parameters: [],
+        returns: 'after the work settles.',
+      },
+      {
+        signature: '@Remote cancel(): Promise<void>',
+        description: 'Stop active preparation and delete the partial download.',
+        parameters: [],
+        returns: 'after the work settles and the file is removed.',
+      },
+      {
+        signature: '@Remote enable(): Promise<void>',
+        description: 'Route Jev decisions to the local provider; the engine rejects this unless preparation is ready.',
+        parameters: [],
+        returns: 'after the change is applied.',
+      },
+      {
+        signature: '@Remote disable(): Promise<void>',
+        description: 'Stop routing Jev decisions to the local provider.',
+        parameters: [],
+        returns: 'after the change is applied.',
+      },
+      {
+        signature: '@Remote acknowledge(): Promise<void>',
+        description: 'Record that a client showed the pending automatic enablement, so later clients do not offer its undo again.',
+        parameters: [],
+        returns: 'after the cleared state is persisted.',
+      },
+      {
+        signature: '@Remote deleteModel(): Promise<void>',
+        description: 'Turn local decisions off, stop the runner, and delete downloaded weights and partial files.',
+        parameters: [],
+        returns: 'after deletion.',
+      },
+    ],
+  },
+  {
     key: 'sandbox',
     summary: 'Abstract process-sandbox service.',
     description: 'Abstract process-sandbox service. confine must return enforcing argv or fail closed at wrap or runner-execution time; silent unconfined passthrough is forbidden. Functional probes arbitrate multi-runner chains and may be skipped for a sole candidate, whose own refusal remains the fail-closed end.',
@@ -6506,8 +6620,44 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface ReflexConnectionResult {\n    readonly kind: \'ok\' | \'failed\';\n    readonly stage: \'health\' | \'models\' | \'decision\';\n    readonly latencyMs: number;\n    readonly model: string;\n    readonly effort: \'low\' | \'high\';\n    readonly code?: JevFailure[\'code\'] | \'model-missing\' | \'decision-rejected\';\n    readonly status?: number;\n}',
   },
   {
+    name: 'ReflexDeviceSupport',
+    declaration: 'export type ReflexDeviceSupport = {\n    readonly supported: true;\n    readonly memoryBytes: number;\n    readonly recommended: ReflexVariant;\n} | {\n    readonly supported: false;\n    readonly reason: \'platform\' | \'memory\' | \'runner-missing\';\n};',
+  },
+  {
+    name: 'ReflexDownloadFailure',
+    declaration: 'export interface ReflexDownloadFailure {\n    readonly reason: \'network\' | \'dns\' | \'timeout\' | \'certificate\' | \'http\' | \'integrity\' | \'storage\' | \'unknown\';\n    readonly source: string;\n    readonly code?: string;\n    readonly status?: number;\n}',
+  },
+  {
+    name: 'ReflexFailure',
+    declaration: 'export type ReflexFailure = {\n    readonly kind: \'download\';\n    readonly download: ReflexDownloadFailure;\n} | {\n    readonly kind: \'disk\';\n    readonly requiredBytes: number;\n    readonly availableBytes: number;\n} | {\n    readonly kind: \'runner\';\n    readonly message: string;\n} | {\n    readonly kind: \'self-test\';\n    readonly message: string;\n};',
+  },
+  {
+    name: 'ReflexModelInfo',
+    declaration: 'export interface ReflexModelInfo {\n    readonly variant: ReflexVariant;\n    readonly bytes: number;\n}',
+  },
+  {
+    name: 'ReflexPreparation',
+    declaration: 'export type ReflexPreparation = {\n    readonly phase: \'unsupported\';\n} | {\n    readonly phase: \'checking\';\n} | {\n    readonly phase: \'absent\';\n} | {\n    readonly phase: \'downloading\';\n    readonly variant: ReflexVariant;\n    readonly completedBytes: number;\n    readonly totalBytes: number;\n    readonly source: string;\n} | {\n    readonly phase: \'paused\';\n    readonly variant: ReflexVariant;\n    readonly completedBytes: number;\n    readonly totalBytes: number;\n} | {\n    readonly phase: \'verifying\' | \'testing\';\n    readonly variant: ReflexVariant;\n} | {\n    readonly phase: \'ready\';\n    readonly variant: ReflexVariant;\n    readonly selfTest: ReflexSelfTest;\n} | {\n    readonly phase: \'failed\';\n    readonly variant?: ReflexVariant;\n    readonly failure: ReflexFailure;\n};',
+  },
+  {
+    name: 'ReflexPrepareOptions',
+    declaration: 'export interface ReflexPrepareOptions {\n    readonly variant?: ReflexVariant;\n    readonly downloadSource?: string;\n}',
+  },
+  {
+    name: 'ReflexSelfTest',
+    declaration: 'export interface ReflexSelfTest {\n    readonly prefillTokensPerSecond: number;\n    readonly decisionMs: number;\n    readonly slow: boolean;\n}',
+  },
+  {
+    name: 'ReflexSnapshot',
+    declaration: 'export interface ReflexSnapshot {\n    readonly device: ReflexDeviceSupport;\n    readonly models: readonly ReflexModelInfo[];\n    readonly preparation: ReflexPreparation;\n    readonly enabled: boolean;\n    readonly providerId: string;\n    readonly availableDiskBytes?: number;\n    readonly downloadSources: readonly string[];\n    readonly cloudProviderId?: string;\n    readonly unacknowledgedAutoEnableAt?: number;\n}',
+  },
+  {
     name: 'ReflexStatus',
     declaration: 'export interface ReflexStatus {\n    readonly provider: JevProviderInfo | null;\n    readonly capabilities: readonly (ReflexCapabilityState & {\n        readonly id: ReflexCapabilityId;\n    })[];\n}',
+  },
+  {
+    name: 'ReflexVariant',
+    declaration: 'export type ReflexVariant = \'q8_0\' | \'q4_k_m\';',
   },
   {
     name: 'Registry',

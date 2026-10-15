@@ -915,8 +915,13 @@ export interface Config {
   readonly timeoutMs: Volatile<number>
   /** Credential reference for bearer authentication; omission permits an unauthenticated gateway. */
   readonly apiKeyEnv: Volatile<string | undefined>
-  /** Registry identity of the built-in provider, selected when a request omits providerId. @default 'system-one' */
+  /** Registry identity of the built-in provider; selected when a request omits providerId and `defaultProviderId` is unset. @default 'system-one' */
   readonly providerId?: string
+  /**
+   * Provider selected when a request omits providerId. Another plugin may register it; changing it switches the next
+   * decision without renaming or reloading the built-in provider. Omission selects `providerId`.
+   */
+  readonly defaultProviderId?: Volatile<string | undefined>
   /**
    * Idle time in milliseconds a direct connection to the gateway stays open for reuse. Omission keeps
    * the process-wide transport. A request routed through a configured HTTP proxy always uses that proxy's transport.
@@ -1244,6 +1249,68 @@ export interface Config {
 }
 ```
 <!-- END GENERATED config-catalog:@deepseek-ai/dsh-experimental-ptc-runtime-python -->
+
+<!-- BEGIN GENERATED config-catalog:@deepseek-ai/dsh-experimental-reflex-local -->
+<a id="deepseek-aidsh-experimental-reflex-local"></a>
+
+## `@deepseek-ai/dsh-experimental-reflex-local`
+
+- `inject`: `subprocess`
+- `source`: [`packages/experimental/reflex-local/src/index.ts:21`](../packages/experimental/reflex-local/src/index.ts)
+
+```ts config-catalog
+/** Device, download, process, and self-test settings of the local engine. */
+export interface Config {
+  /** Jev registry id of the local provider. */
+  providerId: string
+  /** Absolute directory owning downloaded weights, partial files, and `state.json`. */
+  dataRoot: string
+  /** Absolute path of the bundled `llama-server`; omission or a non-executable file reports `runner-missing`. */
+  runnerPath?: string | undefined
+  /** Quantization to prepare; `auto` follows the device memory recommendation. */
+  variant: 'auto' | ReflexVariant
+  /** Explicit Hugging Face-compatible origin; bypasses probing and public fallback. */
+  modelOrigin?: string | undefined
+  /** Hugging Face-compatible origins compared before each download. */
+  modelOrigins: string[]
+  /** Deadline for concurrent HEAD probes, including redirects. */
+  modelProbeTimeoutMs: number
+  /** Longest interval without response bytes before a download attempt fails with `timeout`. */
+  downloadStallTimeoutMs: number
+  /** Runner context window in tokens (`-c`). */
+  contextTokens: number
+  /** Deadline from spawn until the runner answers `GET /health` with 200. */
+  startupTimeoutMs: number
+  /** Deadline of one runner completion, which answers one question. */
+  decisionTimeoutMs: number
+  /** Idle period before stopping the runner; zero keeps it running until disposal. */
+  idleTimeoutMs: number
+  /** Managed process termination grace period. */
+  graceMs: number
+  /** Maximum retained runner diagnostic bytes. */
+  maxLogBytes: number
+  /** Maximum runner completion response bytes. */
+  maxResponseBytes: number
+  /** Minimum interval between intermediate download progress notifications. */
+  progressIntervalMs: number
+  /**
+   * Self-test prompt-processing throughput below which a Host is reported slow and never enabled automatically. The
+   * default sits between an Apple M5 with Metal (about 400 tokens per second on the 118-token reference prompt) and
+   * CPU-only inference (about 100).
+   */
+  minPrefillTokensPerSecond: number
+  /** Total memory each variant requires. */
+  minMemoryBytes: Record<ReflexVariant, number>
+  /** Free bytes left on the data volume after a download completes. */
+  diskMarginBytes: number
+  /** Cloud Jev provider restored by `disable()`; omission persists the enable choice in `state.json` instead of editing the profile. */
+  cloudProviderId?: string | undefined
+}
+
+/** Published GGUF quantization of the pinned 4B weights. */
+export type ReflexVariant = 'q8_0' | 'q4_k_m'
+```
+<!-- END GENERATED config-catalog:@deepseek-ai/dsh-experimental-reflex-local -->
 
 <!-- BEGIN GENERATED config-catalog:@deepseek-ai/dsh-experimental-speech-to-text -->
 <a id="deepseek-aidsh-experimental-speech-to-text"></a>
@@ -4954,8 +5021,10 @@ These load from a `cordis.yml` entry with no `config:` block; they declare no co
 | `@deepseek-ai/dsh-config-editor` | `loader` · `profileContext` | [`packages/boot/config-editor/src/index.ts`](../packages/boot/config-editor/src/index.ts) |
 | `@deepseek-ai/dsh-cordis-client-runner` | — | [`packages/extensions/cordis-client-runner/src/index.ts`](../packages/extensions/cordis-client-runner/src/index.ts) |
 | `@deepseek-ai/dsh-deepseek-llm-api-extensions` | — | [`packages/llm/deepseek-llm-api-extensions/src/index.ts`](../packages/llm/deepseek-llm-api-extensions/src/index.ts) |
+| `@deepseek-ai/dsh-experimental-api-reflex-local` | `reflexLocal` · `typert` | [`packages/experimental/api-reflex-local/src/index.ts`](../packages/experimental/api-reflex-local/src/index.ts) |
 | `@deepseek-ai/dsh-experimental-auto-review` | `approval` · `llm` · `permissionPresets` · `sessions` · `tools` | [`packages/experimental/auto-review/src/index.ts`](../packages/experimental/auto-review/src/index.ts) |
 | `@deepseek-ai/dsh-experimental-client-ui-agent-team` | — | [`packages/experimental/client-ui-agent-team/src/index.ts`](../packages/experimental/client-ui-agent-team/src/index.ts) |
+| `@deepseek-ai/dsh-experimental-client-ui-reflex-local` | — | [`packages/experimental/client-ui-reflex-local/src/index.ts`](../packages/experimental/client-ui-reflex-local/src/index.ts) |
 | `@deepseek-ai/dsh-experimental-client-ui-system3` | — | [`packages/experimental/client-ui-system3/src/index.ts`](../packages/experimental/client-ui-system3/src/index.ts) |
 | `@deepseek-ai/dsh-experimental-client-ui-voice-input` | — | [`packages/experimental/client-ui-voice-input/src/index.ts`](../packages/experimental/client-ui-voice-input/src/index.ts) |
 | `@deepseek-ai/dsh-experimental-computer-use-cua-driver-native` | `computerUse` · `tools` · `systemPrompt` | [`packages/experimental/computer-use-cua-driver-native/src/index.ts`](../packages/experimental/computer-use-cua-driver-native/src/index.ts) |
@@ -5039,6 +5108,7 @@ Imported as libraries by other packages; a `cordis.yml` cannot load them.
 | `@deepseek-ai/dsh-deque` | — | [`packages/util/deque/src/index.ts`](../packages/util/deque/src/index.ts) |
 | `@deepseek-ai/dsh-experimental-agent-team-profile` | — | [`packages/experimental/agent-team-profile/src/index.ts`](../packages/experimental/agent-team-profile/src/index.ts) |
 | `@deepseek-ai/dsh-experimental-browser-use-runtime` | — | [`packages/experimental/browser-use-runtime/src/index.ts`](../packages/experimental/browser-use-runtime/src/index.ts) |
+| `@deepseek-ai/dsh-experimental-reflex-local-bundle` | — | [`packages/experimental/reflex-local-bundle/src/index.ts`](../packages/experimental/reflex-local-bundle/src/index.ts) |
 | `@deepseek-ai/dsh-experimental-system3-evidence` | — | [`packages/experimental/system3-evidence/src/index.ts`](../packages/experimental/system3-evidence/src/index.ts) |
 | `@deepseek-ai/dsh-experimental-system3-policy` | — | [`packages/experimental/system3-policy/src/index.ts`](../packages/experimental/system3-policy/src/index.ts) |
 | `@deepseek-ai/dsh-experimental-system3-supervisor` | — | [`packages/experimental/system3-supervisor/src/index.ts`](../packages/experimental/system3-supervisor/src/index.ts) |

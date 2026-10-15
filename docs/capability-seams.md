@@ -9,6 +9,7 @@ A service can be a core spine service, a swappable capability seam, a bundle/com
 flowchart LR
   pkg_experimental_apus_dsh_jev_plugin["experimental-apus-dsh-jev-plugin"]
   svc_jev["ctx.jev<br/>Typed model decisions"]
+  pkg_experimental_reflex_local["experimental-reflex-local"]
   pkg_experimental_system3["experimental-system3"]
   svc_system3["ctx.system3<br/>Decision evidence and supervision"]
   pkg_continuum["continuum"]
@@ -77,6 +78,9 @@ flowchart LR
   pkg_message_feedback["message-feedback"]
   pkg_experimental_api_speech_to_text["experimental-api-speech-to-text"]
   svc_speechController["ctx.speechController<br/>Experimental transcription Remote"]
+  svc_reflexLocal["ctx.reflexLocal<br/>Local decision engine"]
+  pkg_experimental_api_reflex_local["experimental-api-reflex-local"]
+  svc_reflexLocalController["ctx.reflexLocalController<br/>Experimental local decision engine Remote"]
   svc_sessionController["ctx.sessionController<br/>Host Session Remote controller"]
   svc_sessionFileReferences["ctx.sessionFileReferences<br/>Session-addressed file-reference Remote adapter"]
   svc_sessionSkillCatalog["ctx.sessionSkillCatalog<br/>Session-addressed skill Remote adapter"]
@@ -324,6 +328,7 @@ flowchart LR
   pkg_deepseek_account_platform --> svc_deepseekAccount
   pkg_deepseek_llm_api_extensions --> svc_deepseekLlmApiExtensions
   pkg_experimental_agent_team --> svc_agentTeams
+  pkg_experimental_api_reflex_local --> svc_reflexLocalController
   pkg_experimental_api_speech_to_text --> svc_speechController
   pkg_experimental_apus_dsh_jev_plugin --> svc_jev
   pkg_experimental_browser_use_chrome_devtools_mcp --> svc_browserUse
@@ -332,6 +337,8 @@ flowchart LR
   pkg_experimental_computer_use_cua_driver_mcp --> svc_computerUse
   pkg_experimental_computer_use_cua_driver_native --> svc_computerUse
   pkg_experimental_ptc_runtime_python --> svc_ptcRuntime
+  pkg_experimental_reflex_local --> svc_jev
+  pkg_experimental_reflex_local --> svc_reflexLocal
   pkg_experimental_speech_to_text --> svc_speechToText
   pkg_experimental_speech_to_text_sensevoice --> svc_speechToText
   pkg_experimental_system3 --> svc_system3
@@ -498,6 +505,7 @@ flowchart LR
   svc_profileContext --> pkg_plugin_manager
   svc_ptcRuntime --> pkg_tools
   svc_ptcRuntime --> pkg_workflow_ptc
+  svc_reflexLocal --> pkg_experimental_api_reflex_local
   svc_sandbox --> pkg_bash_sandbox
   svc_sandbox --> pkg_terminal_bash
   svc_sandboxPolicy --> pkg_bash_sandbox
@@ -587,7 +595,7 @@ flowchart LR
 
 | ctx key | Role | Owner | Implementations | Direct consumers | Companion plugins | Note |
 | --- | --- | --- | --- | --- | --- | --- |
-| `ctx.jev` | `seam` | [`experimental-apus-dsh-jev-plugin`](../packages/experimental/apus-dsh-jev-plugin) | [`experimental-apus-dsh-jev-plugin`](../packages/experimental/apus-dsh-jev-plugin) | [`experimental-system3`](../packages/experimental/system3) | - | Resolves registered decision providers and validates typed answers; System3 owns privacy admission and durable recommendation receipts. |
+| `ctx.jev` | `seam` | [`experimental-apus-dsh-jev-plugin`](../packages/experimental/apus-dsh-jev-plugin) | [`experimental-apus-dsh-jev-plugin`](../packages/experimental/apus-dsh-jev-plugin), [`experimental-reflex-local`](../packages/experimental/reflex-local) | [`experimental-system3`](../packages/experimental/system3) | - | Resolves registered decision providers and validates typed answers; System3 owns privacy admission and durable recommendation receipts. |
 | `ctx.system3` | `service` | [`experimental-system3`](../packages/experimental/system3) | - | - | - | Composes routing, evidence and supervision policies; opt-in API input routing records Jev recommendations separately from adopted model selections. |
 | `ctx.continuumMemory` | `service` | [`continuum`](../packages/context/continuum) | - | [`agent-loop`](../packages/core/agent-loop), [`experimental-continuum-jev`](../packages/experimental/continuum-jev) | - | Owns revisioned memory records, bounded recall, and the opt-in user-message admission path; the Reflex plugin supplies Jev selection while the original profile keeps the service disabled. |
 | `ctx.continuumTasks` | `service` | [`continuum`](../packages/context/continuum) | - | [`agent-loop`](../packages/core/agent-loop) | - | Owns the leased task journal, source readback, explicit revisions and bounded task pages across business Sessions. |
@@ -609,6 +617,8 @@ flowchart LR
 | `ctx.toolResultPruner` | `core` | [`compaction-tool-result-pruner`](../packages/compaction/compaction-tool-result-pruner) | - | [`compaction-basic`](../packages/compaction/compaction-basic) | - | Rewrites oversized current tool results through replayable single-node surface replacements before summary compaction. |
 | `ctx.sessions` | `core` | [`session`](../packages/core/session) | - | [`agent-loop`](../packages/core/agent-loop), [`agent`](../packages/core/agent), [`session-persistence`](../packages/session/session-persistence), [`session-query`](../packages/session-query/session-query), [`session-query-sqlite`](../packages/session-query/session-query-sqlite), [`subagent-in-process-driver`](../packages/subagent/subagent-in-process-driver), [`invariants`](../packages/runtime-diagnostics/invariants), [`message-feedback`](../packages/feedback/message-feedback) | - | Owns append-only Session instances and emits the durable session event feed. |
 | `ctx.speechController` | `core` | [`experimental-api-speech-to-text`](../packages/experimental/api-speech-to-text) | - | - | - | Validates bounded browser audio before provider dispatch. |
+| `ctx.reflexLocal` | `core` | [`experimental-reflex-local`](../packages/experimental/reflex-local) | - | [`experimental-api-reflex-local`](../packages/experimental/api-reflex-local) | - | Owns weight preparation, the self-test, routing edits, and the llama-server runner behind the local Jev provider. |
+| `ctx.reflexLocalController` | `core` | [`experimental-api-reflex-local`](../packages/experimental/api-reflex-local) | - | - | - | Forwards readiness streams and preparation commands to the Host-owned local decision engine. |
 | `ctx.sessionController` | `core` | [`api-session-controller`](../packages/api/session-controller) | - | - | - | Owns Session commands, cold reads, durable-event following, live control state, model catalogs, workspace opening, and Agent activation policy. |
 | `ctx.sessionFileReferences` | `core` | [`api-session-controller`](../packages/api/session-controller) | - | - | - | Delegates file-reference discovery through the Session Controller's established Agent lookup policy. |
 | `ctx.sessionSkillCatalog` | `core` | [`api-session-controller`](../packages/api/session-controller) | - | - | - | Lists the Session composition's user-invocable skills without activating a cold Agent. |

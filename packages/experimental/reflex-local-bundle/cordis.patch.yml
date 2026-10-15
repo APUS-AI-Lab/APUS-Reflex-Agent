@@ -1,0 +1,51 @@
+# Local decisions are the only Jev provider here, so System3 runs under local-only privacy with local-only decision points.
+- insert:
+    - id: jev
+      name: '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
+      config:
+        defaultProviderId: reflex-local
+    - id: reflex-local
+      name: '@deepseek-ai/dsh-experimental-reflex-local'
+      config:
+        dataRoot: !!js dshHomePath('reflex-local')
+        # Only the desktop Host exports the bundled primary runtime; elsewhere the engine reports runner-missing.
+        runnerPath: !!js "process.env.DSH_DESKTOP_PRIMARY_RUNTIME_SOURCE ? process.env.DSH_DESKTOP_PRIMARY_RUNTIME_SOURCE + '/dependencies/llama-server/llama-server' : undefined"
+    - id: api-reflex-local
+      name: '@deepseek-ai/dsh-experimental-api-reflex-local'
+    - id: ui-reflex-local
+      name: '@deepseek-ai/dsh-experimental-client-ui-reflex-local'
+    - id: system3
+      name: '@deepseek-ai/dsh-experimental-system3'
+      config:
+        privacyMode: local-only
+        jevRouteId: jev
+        jevExecutionDomain: local
+        # Thresholds and limits follow deploy/system3/runtime.patch.yml; local routes are admitted for every data class.
+        taskFrame:
+          mode: active
+          yes: 0.5
+          no: 0.3
+          deadlineMs: 8000
+          sessionDataClasses: [workspace]
+          maxItems: 8
+          maxMessageChars: 600
+          interjection: active
+        completionReview:
+          mode: shadow
+          yes: 0.5
+          no: 0.3
+          deadlineMs: 15000
+          sessionDataClasses: [workspace]
+          maxRefusals: 2
+          evidenceCalls: 20
+          resultChars: 300
+        skillSelection:
+          sessionDataClasses: [workspace]
+          minConfidence: 0.5
+          maxInputBytes: 16000
+          maxContentBytes: 24000
+          deadlineMs: 8000
+          # The local model labels at most 16 candidates per question.
+          maxCandidates: 16
+    - id: ui-system3
+      name: '@deepseek-ai/dsh-experimental-client-ui-system3'

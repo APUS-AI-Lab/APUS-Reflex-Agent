@@ -1,52 +1,70 @@
 // @vitest-environment jsdom
-/** The credential onboarding step owns login until dismissal or completion. */
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+/** The Desktop readiness seat routes a provider-less workspace by account state. */
+import { cleanup, render } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
 import type { GlobalStandardProps } from '@deepseek-ai/dsh-client-ui-slots'
-import type { ThemeSnapshot } from '@deepseek-ai/dsh-client-ui-theme/client'
 import { AccountOnboarding } from '../src/client/AccountOnboarding.tsx'
 import type { AccountSnapshot } from '../src/client/AccountSection.tsx'
-import { makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
-import { en } from '../src/client/locales.ts'
+import type { DesktopOnboardingState } from '../src/client/onboarding-contract.ts'
 
 afterEach(cleanup)
 
-const theme: ThemeSnapshot = {
-  preference: 'light', fontSize: 14,
-  active: { id: 'light', colorScheme: 'light', tokens: {} }, themes: [], revision: 0,
+const unused = (): never => { throw new Error('AccountOnboarding does not consume global hooks') }
+const globals: GlobalStandardProps = {
+  usePanelInfo: unused, useSessions: unused, useSessionStatus: unused,
+  useSessionRetainInfo: unused, useResource: unused, useWorkspaces: unused,
+}
+const links = { usageUrl: '', topUpUrl: '' }
+const introductionDone: DesktopOnboardingState = {
+  status: 'ready', visible: false, creditFunded: false, error: null,
+  progress: { version: 1, step: 'done', purpose: null, process: 'standard', completion: 'skipped', usage: 'compact', developerTools: false },
 }
 
-it('claims onboarding while loading, offers API key fallback, and completes after login', () => {
-  let account: AccountSnapshot = { view: undefined, details: undefined, failed: false }
-  const unused = (): never => { throw new Error('AccountOnboarding does not consume global hooks') }
-  const globals: GlobalStandardProps = {
-    usePanelInfo: unused, useSessions: unused, useSessionStatus: unused,
-    useSessionRetainInfo: unused, useResource: unused, useWorkspaces: unused,
+function harness() {
+  const state = {
+    account: { view: undefined, details: undefined, failed: false } as AccountSnapshot,
+    introduction: { ...introductionDone, status: 'loading' } as DesktopOnboardingState,
   }
   const props = {
     ...globals,
-    hasRunningAccountTasks: vi.fn(async () => false),
-    complete: vi.fn(), useApiKey: vi.fn(), setOnboarding: vi.fn(), showLogin: vi.fn(),
-    useAccount: <T,>(select: (snapshot: AccountSnapshot) => T) => select(account),
-    useTheme: <T,>(select: (snapshot: ThemeSnapshot) => T) => select(theme),
-    start: vi.fn(async () => {}), cancel: vi.fn(async () => {}), signOut: vi.fn(async () => {}),
-    contactUs: vi.fn(), t: makeTranslate(en),
-    refreshAccount: vi.fn(async () => {}), bonusNoticeShown: vi.fn(), bonusNoticeDismissed: vi.fn(),
+    later: vi.fn(), useApiKey: vi.fn(),
+    useAccount: <T,>(select: (snapshot: AccountSnapshot) => T) => select(state.account),
+    useIntroduction: <T,>(select: (snapshot: DesktopOnboardingState) => T) => select(state.introduction),
   }
   const view = render(<AccountOnboarding {...props} />)
-  expect(props.setOnboarding).toHaveBeenCalledExactlyOnceWith(true)
-  expect(screen.queryByRole('dialog')).toBeNull()
-  account = { ...account, view: { status: 'signed-out', attempt: null, links: { usageUrl: '', topUpUrl: '' } } }
-  view.rerender(<AccountOnboarding {...props} />)
-  fireEvent.click(screen.getByRole('button', { name: en.addApiKey }))
-  expect(props.showLogin).toHaveBeenLastCalledWith(false)
-  expect(props.useApiKey).toHaveBeenCalledOnce()
-  fireEvent.click(screen.getByRole('button', { name: en.close }))
-  expect(props.complete).toHaveBeenCalledOnce()
-  account = { ...account, view: { ...account.view!, status: 'credential-stored' } }
-  view.rerender(<AccountOnboarding {...props} />)
-  expect(props.complete).toHaveBeenCalledTimes(2)
-  expect(screen.queryByRole('dialog')).toBeNull()
-  view.unmount()
-  expect(props.setOnboarding).toHaveBeenLastCalledWith(false)
+  return { state, props, rerender: () => { view.rerender(<AccountOnboarding {...props} />) } }
+}
+
+it('waits for account state and the introduction before opening the key editor for a signed-in account', () => {
+  const h = harness()
+  expect(h.props.useApiKey).not.toHaveBeenCalled()
+  h.state.account = { ...h.state.account, view: { status: 'credential-stored', attempt: null, links } }
+  h.state.introduction = { ...introductionDone, status: 'ready', visible: true, progress: { ...introductionDone.progress, step: 'credit' } }
+  h.rerender()
+  expect(h.props.useApiKey).not.toHaveBeenCalled()
+  h.state.introduction = introductionDone
+  h.rerender()
+  expect(h.props.useApiKey).toHaveBeenCalledOnce()
+  expect(h.props.later).not.toHaveBeenCalled()
+  expect(document.body.textContent).toBe('')
+})
+
+it('defers to the composer notice when signed out because the native welcome owns that entry', () => {
+  const h = harness()
+  h.state.introduction = introductionDone
+  h.rerender()
+  expect(h.props.later).not.toHaveBeenCalled()
+  h.state.account = { ...h.state.account, view: { status: 'signed-out', attempt: null, links } }
+  h.rerender()
+  expect(h.props.later).toHaveBeenCalledOnce()
+  expect(h.props.useApiKey).not.toHaveBeenCalled()
+})
+
+it('defers when the account stream failed before reporting a state', () => {
+  const h = harness()
+  h.state.introduction = introductionDone
+  h.state.account = { ...h.state.account, failed: true }
+  h.rerender()
+  expect(h.props.later).toHaveBeenCalledOnce()
+  expect(h.props.useApiKey).not.toHaveBeenCalled()
 })

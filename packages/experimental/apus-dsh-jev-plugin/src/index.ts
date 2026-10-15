@@ -63,8 +63,16 @@ export interface Config {
   readonly timeoutMs: Volatile<number>
   /** Credential reference for bearer authentication; omission permits an unauthenticated gateway. */
   readonly apiKeyEnv: Volatile<string | undefined>
-  /** Registry identity of the built-in provider, selected when a request omits providerId. @default 'system-one' */
+  /**
+   * Registry identity of the built-in provider; selected when a request omits providerId and `defaultProviderId` is
+   * unset. @default 'system-one'
+   */
   readonly providerId?: string
+  /**
+   * Provider selected when a request omits providerId. Another plugin may register it; changing it switches the next
+   * decision without renaming or reloading the built-in provider. Omission selects `providerId`.
+   */
+  readonly defaultProviderId?: Volatile<string | undefined>
   /**
    * Idle time in milliseconds a direct connection to the gateway stays open for reuse. Omission keeps
    * the process-wide transport. A request routed through a configured HTTP proxy always uses that proxy's transport.
@@ -105,6 +113,7 @@ export default class Jev extends TypertRemoteService {
     timeoutMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).default(DEFAULT_TIMEOUT_MS).volatile(),
     apiKeyEnv: z.string().role('credential-ref').volatile(),
     providerId: z.string().default(DEFAULT_PROVIDER_ID),
+    defaultProviderId: z.string().volatile(),
     keepAliveMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS),
     http2: z.boolean().default(false),
     resetAfterFailures: z.number().step(1).min(1),
@@ -112,7 +121,8 @@ export default class Jev extends TypertRemoteService {
   })
 
   private readonly providers = new Map<string, JevProvider>()
-  private readonly defaultProviderId: string
+  private readonly builtinProviderId: string
+  private readonly defaultProviderId: () => string
   private readonly defaultEffort: () => 'low' | 'high'
   private readonly configuredProvider: () => SystemOneProvider | undefined
   private readonly capabilityReaders = new Map<ReflexCapabilityId, () => ReflexCapabilityState>()
@@ -122,7 +132,8 @@ export default class Jev extends TypertRemoteService {
   constructor(ctx: Context, config: Config) {
     super(ctx, 'jev', { namespace: 'reflex' })
     const providerId = config.providerId ?? DEFAULT_PROVIDER_ID
-    this.defaultProviderId = providerId
+    this.builtinProviderId = providerId
+    this.defaultProviderId = () => config.defaultProviderId?.get() ?? providerId
     this.defaultEffort = () => config.effort.get()
     this.questionsPerRequest = config.questionsPerRequest
     this.enabled = () => config.enabled.get()
@@ -207,7 +218,7 @@ export default class Jev extends TypertRemoteService {
    * @returns A disposer that removes only this registration.
    */
   register(provider: JevProvider): () => void {
-    if (provider.info.id === this.defaultProviderId || this.providers.has(provider.info.id)) throw new Error(`jev provider "${provider.info.id}" is already registered`)
+    if (provider.info.id === this.builtinProviderId || this.providers.has(provider.info.id)) throw new Error(`jev provider "${provider.info.id}" is already registered`)
     this.providers.set(provider.info.id, provider)
     return () => {
       if (this.providers.get(provider.info.id) === provider) this.providers.delete(provider.info.id)
@@ -225,9 +236,9 @@ export default class Jev extends TypertRemoteService {
 
   private provider(id: string): JevProvider {
     if (!this.enabled()) throw new JevDisabledError('Reflex is turned off in settings')
-    const provider = id === this.defaultProviderId ? this.configuredProvider() : this.providers.get(id)
+    const provider = id === this.builtinProviderId ? this.configuredProvider() : this.providers.get(id)
     if (provider === undefined) {
-      if (id === this.defaultProviderId) throw new JevConfigurationError('Jev is not configured; set an endpoint and model in Reflex settings')
+      if (id === this.builtinProviderId) throw new JevConfigurationError('Jev is not configured; set an endpoint and model in Reflex settings')
       throw new JevConfigurationError(`jev provider "${id}" is not registered`)
     }
     return provider
@@ -241,10 +252,10 @@ export default class Jev extends TypertRemoteService {
    */
   resolve(request: JevRequest): JevSpec {
     const normalized = validateJevRequest(request)
-    const providerId = normalized.providerId ?? this.defaultProviderId
+    const providerId = normalized.providerId ?? this.defaultProviderId()
     const provider = this.provider(providerId)
     return { ...normalized, providerId, model: normalized.model ?? provider.info.model,
-      ...normalized.effort === undefined && providerId === this.defaultProviderId ? { effort: this.defaultEffort() } : {},
+      ...normalized.effort === undefined && providerId === this.builtinProviderId ? { effort: this.defaultEffort() } : {},
     }
   }
 
@@ -256,8 +267,8 @@ export default class Jev extends TypertRemoteService {
    */
   async warm(providerId?: string, signal?: AbortSignal): Promise<boolean> {
     if (!this.enabled()) return false
-    const id = providerId ?? this.defaultProviderId
-    const provider = id === this.defaultProviderId ? this.configuredProvider() : this.providers.get(id)
+    const id = providerId ?? this.defaultProviderId()
+    const provider = id === this.builtinProviderId ? this.configuredProvider() : this.providers.get(id)
     if (provider?.warm === undefined) return false
     try {
       await provider.warm(signal)

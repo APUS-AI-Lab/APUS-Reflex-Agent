@@ -1,18 +1,40 @@
-/** Account choice inside the model credential onboarding step. */
+/**
+ * Desktop routing inside the model-credential readiness step, which renders
+ * this seat only while no provider is usable. The native welcome window owns
+ * signed-out credential entry, so a signed-out workspace defers the prompt to
+ * the composer notice instead of asking again; a signed-in account without a
+ * usable route goes straight to the API-key editor.
+ */
 import { useEffect } from 'react'
-import type { InjectFace, PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
+import type { HostObservable, InjectFace, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 import type {} from '@deepseek-ai/dsh-client-ui-settings-models/client'
-import type { AccountSectionInjected } from './AccountSection.tsx'
-import { SignInDialog } from './SignInDialog.tsx'
+import type { AccountSnapshot } from './AccountSection.tsx'
+import type { DesktopOnboardingState } from './onboarding-contract.ts'
 
-/** @param props - onboarding completion, account state and actions. @returns account dialog while signed out. */
-export function AccountOnboarding({ complete, useApiKey, useAccount, useTheme, setOnboarding, showLogin, start, cancel, t }:
-  PropsRuntime<'settings.models.sign-in'> & PropsLocale<'settings.account'> & InjectFace<AccountSectionInjected>) {
-  const account = useAccount(value => value)
-  const colorScheme = useTheme(snapshot => snapshot.active.colorScheme)
-  useEffect(() => { setOnboarding(true); return () => { setOnboarding(false) } }, [setOnboarding])
-  useEffect(() => { if (account.view?.status === 'credential-stored') complete() }, [account.view?.status, complete])
-  if (!account.view || account.view.status === 'credential-stored') return null
-  return <SignInDialog account={account} colorScheme={colorScheme} start={start} cancel={cancel} t={t}
-    close={() => { showLogin(false); complete() }} useApiKey={() => { showLogin(false); useApiKey() }} />
+/** Observable sources the account plugin supplies to the readiness seat. */
+export interface AccountOnboardingInjected {
+  hooks: {
+    /** Account stream state, unresolved until the Host responds. */
+    account: HostObservable<AccountSnapshot>
+    /** Desktop introduction state; the prompt waits until the introduction is not showing. */
+    introduction: HostObservable<DesktopOnboardingState>
+  }
+}
+
+/**
+ * @param props - readiness-step actions plus account and introduction state.
+ * @returns nothing; the step's own editor or the composer notice presents the outcome.
+ */
+export function AccountOnboarding({ later, useApiKey, useAccount, useIntroduction }:
+  PropsRuntime<'settings.models.sign-in'> & InjectFace<AccountOnboardingInjected>) {
+  const status = useAccount(snapshot => snapshot.view?.status)
+  const accountFailed = useAccount(snapshot => snapshot.failed)
+  const introductionPending = useIntroduction(snapshot => snapshot.visible || snapshot.status === 'loading')
+  const settled = (status !== undefined || accountFailed) && !introductionPending
+  useEffect(() => {
+    if (!settled) return
+    if (status === 'credential-stored') useApiKey()
+    else later()
+  }, [settled, status, useApiKey, later])
+  return null
 }
