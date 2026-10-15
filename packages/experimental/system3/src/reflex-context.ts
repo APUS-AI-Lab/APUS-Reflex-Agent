@@ -11,6 +11,8 @@ import type { System3DataClass } from '@deepseek-ai/dsh-experimental-system3-pol
 import { runSystem3Decision, validateSystem3DecisionSettings, type System3DecisionSettings, type System3DecisionContext, type System3DecisionSpec } from './decision-kernel.ts'
 import { JevConfigurationError, type JevRequest, type JevSpec } from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
 import { reflexContextStateProjection, type ReflexContextState } from './reflex-context-state.ts'
+import { sweepReflexContext, validateReflexContextSweepConfig, type ReflexContextSweepConfig, type SweepHost } from './reflex-context-sweep.ts'
+import type {} from '@deepseek-ai/dsh-compaction'
 
 /**
  * Resolve a decision for comparison, or undefined when the provider is missing, unconfigured, or switched off.
@@ -43,6 +45,8 @@ export interface ReflexContextConfig extends System3DecisionSettings {
   readonly maxRestoredChars: number
   /** Maximum memory search results returned to the caller. */
   readonly maxSearchResults: number
+  /** Compaction-time sweep over the whole visible tool output; omitted or false keeps compaction unchanged. */
+  readonly compactionSweep?: false | ReflexContextSweepConfig
 }
 /**
  * Reject invalid budgets before installing listeners or tools.
@@ -54,6 +58,7 @@ export function validateReflexContextConfig(config: ReflexContextConfig): void {
     if (!Number.isSafeInteger(config[field]) || config[field] < 1) throw new Error(`reflexContext.${field} must be a positive integer`)
   }
   if (config.maxRequestChars > 6000 || config.maxCandidates > 16 || config.maxFragmentChars > 2048) throw new Error('Reflex context request exceeds decision service bounds')
+  if (config.compactionSweep !== undefined && config.compactionSweep !== false) validateReflexContextSweepConfig(config.compactionSweep)
 }
 declare module '@deepseek-ai/dsh-llm' {
   interface MessageSourceMap {
@@ -143,17 +148,17 @@ function fragments(text: string, limit: number): ReflexTextRange[] {
   return result
 }
 function key(target: Pick<ReflexContextTarget, 'seq' | 'block'>): string { return `${target.seq}:${target.block}` }
-function stateOf(ctx: Context, agent: Agent): ReflexContextState {
+function stateOf(ctx: Context, agent: Pick<Agent, 'session'>): ReflexContextState {
   const state = ctx.sessionProjections.stateOf(agent.session, 'reflexContext')
   if (state === undefined) throw new Error('Reflex context projection is not installed')
   return state
 }
-function activeBlocks(agent: Agent, state: ReflexContextState): ReflexContextState['blocks'] {
+function activeBlocks(agent: Pick<Agent, 'session'>, state: ReflexContextState): ReflexContextState['blocks'] {
   const nodes = new Set(agent.session.surface.nodes)
   return state.blocks.filter(block => nodes.has(block.seq))
 }
 type SelectedTarget = ReflexContextTarget & { messageId: MessageId }
-function apply(ctx: Context, agent: Agent, revision: number, targets: SelectedTarget[], action: 'restore' | 'remove'): SelectedTarget[] {
+function apply(ctx: Context, agent: Pick<Agent, 'session'>, revision: number, targets: SelectedTarget[], action: 'restore' | 'remove'): SelectedTarget[] {
   if (targets.length === 0 || stateOf(ctx, agent).revision !== revision) return []
   const messages = new Map(agent.session.deriveMessages().map(message => [message.id, message]))
   const priced = targets.flatMap((target) => {
@@ -312,6 +317,25 @@ export function installReflexContext(ctx: Context, config: ReflexContextConfig, 
     }
     return { ...decision, messages: [...decision.messages, ...recovered] }
   })
+  const sweep = config.compactionSweep
+  if (sweep !== undefined && sweep !== false) {
+    const host: SweepHost = {
+      state: agent => stateOf(ctx, agent),
+      blocks: activeBlocks,
+      remove: (agent, revision, hidden) => apply(ctx, agent, revision, [...hidden.values()].map(({ block, ranges }) => ({
+        seq: block.seq, block: block.block, messageId: block.messageId, original: block.original, tokenDelta: 0,
+        hidden: [...block.hidden, ...ranges].sort((a, b) => a.start - b.start) })), 'remove').length,
+    }
+    ctx.on('compaction/prepare', async (agent, signal) => {
+      try {
+        await sweepReflexContext(ctx, host, agent, sweep, config.protectRecentMessages, shared, AbortSignal.any([signal, lifetime.signal]))
+      } catch (error) {
+        if (signal.aborted || lifetime.signal.aborted) throw error
+        // Compaction proceeds on the unchanged surface; a failed sweep appends no projection.
+        ctx.logger.warn(`reflex context sweep failed: ${String(error)}`)
+      }
+    })
+  }
   ctx.effect(() => ctx.tools.register(defineTool({
     name: 'reflex_memory',
     description: 'Retrieve archived text only when a specific fact needed for the current task is missing. An omission marker alone is not missing evidence. Respect the user’s excluded topics; do not retrieve them merely to explain an omission. Search returns bounded excerpts with stable references; restore adds original text to subsequent requests.',

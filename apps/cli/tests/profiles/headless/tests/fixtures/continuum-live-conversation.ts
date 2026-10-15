@@ -24,13 +24,16 @@ export interface Conversation {
  * Run every turn as its own headless process on the persisted Session, then read the complete log.
  * @param turns - user inputs in order.
  * @param env - extra environment, such as the Reflex mode.
+ * @param template - profile patch whose package paths are rewritten for the temporary directory.
  * @returns the persisted events and per-turn wall time in milliseconds.
  */
-export async function converse(turns: readonly string[], env: Record<string, string> = {}): Promise<Conversation> {
+export async function converse(
+  turns: readonly string[], env: Record<string, string> = {}, template = patchTemplatePath,
+): Promise<Conversation> {
   const cwd = await mkdtemp(join(tmpdir(), 'continuum-lossless-live-'))
   try {
     const patchPath = join(cwd, 'continuum-lossless-live.patch.yml')
-    await writeFile(patchPath, (await readFile(patchTemplatePath, 'utf8')).replaceAll('../../../../../../../packages/', packagesRoot))
+    await writeFile(patchPath, (await readFile(template, 'utf8')).replaceAll('../../../../../../../packages/', packagesRoot))
     let sessionId: string | undefined
     const elapsed: number[] = []
     for (const task of turns) {

@@ -894,7 +894,7 @@ export interface Config {
 ## `@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin`
 
 - `refs`: `Volatile` (`@deepseek-ai/cordis`)
-- `source`: [`packages/experimental/apus-dsh-jev-plugin/src/index.ts:38`](../packages/experimental/apus-dsh-jev-plugin/src/index.ts)
+- `source`: [`packages/experimental/apus-dsh-jev-plugin/src/index.ts:47`](../packages/experimental/apus-dsh-jev-plugin/src/index.ts)
 
 ```ts config-catalog
 /** Plugin configuration for the built-in System One provider. */
@@ -1509,6 +1509,8 @@ export interface ReflexContextConfig extends System3DecisionSettings {
   readonly maxRestoredChars: number
   /** Maximum memory search results returned to the caller. */
   readonly maxSearchResults: number
+  /** Compaction-time sweep over the whole visible tool output; omitted or false keeps compaction unchanged. */
+  readonly compactionSweep?: false | ReflexContextSweepConfig
 }
 
 /** Which shell results are folded and how large a repeat must be; deployment-owned. */
@@ -1658,6 +1660,18 @@ export interface ReflexRecoveryConfig {
   readonly cooldownMs: number
   /** Maximum reserved recoveries per Goal, including unknown transport outcomes. */
   readonly maxRecoveries: number
+}
+
+/** Deployment settings of the compaction sweep; `no` is the probability at or below which every question must answer. */
+export interface ReflexContextSweepConfig extends System3DecisionSettings {
+  /** Maximum original characters in one judged passage of consecutive lines. */
+  readonly fragmentChars: number
+  /** Maximum passages judged in one compaction; certain noise does not count. */
+  readonly maxFragments: number
+  /** Passages per decision request, each asked three questions, at most 5. */
+  readonly fragmentsPerRequest: number
+  /** Decision requests in flight at once. */
+  readonly concurrency: number
 }
 
 /** Deployment-owned model route; choosing it switches the generation model for this input. */

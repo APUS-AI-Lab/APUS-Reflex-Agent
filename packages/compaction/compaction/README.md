@@ -83,6 +83,8 @@ A backend that summarizes through `ctx.llm.stream()` must forward the abort sign
 
 The synchronous `compaction/summary-error` waterfall lets a backend request durable input recovery for a failed summary and an explicit selection. A listener returns true only after recording progress, or calls `next()` to delegate. The backend checks cancellation and selection stability before dispatch, then re-derives and re-prices input before retrying. The event declaration documents its payload; image policy belongs to `dsh-compaction-image-offload`.
 
+The parallel Cordis event `compaction/prepare` runs after an automatic trigger qualifies and before the backend selects a summary range. Listeners may only append durable, replay-safe message projections that keep every surface node and tool pairing; the backend re-measures afterwards and summarizes only when the surface still needs it. A failed listener fails the compaction, and cancellation keeps its exact reason. Manual compaction does not emit it, because its lock is acquired synchronously.
+
 Expected manual failures throw `ManualCompactionError` with a stable `code` from a small closed set; only failures after the `compaction/start` marker are recorded — as a `compaction/end` carrying the error — while a `busy` rejection or pre-start cancellation leaves no record. The per-code semantics live in the [compaction subsystem reference](../../../docs/subsystems/compaction.md).
 
 <a id="tool-pairing-boundaries"></a>
