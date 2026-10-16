@@ -383,6 +383,24 @@ it('classifies ordinary conversation without any applicable Skills or instructio
   })
 })
 
+it('starts the step without waiting for an intent-only judgement and records the intent when it arrives', async () => {
+  const h = await setup({ modelInvocable: false })
+  const answer = Promise.withResolvers<undefined>()
+  h.decide.mockImplementation(async (query) => {
+    await answer.promise
+    return { kind: 'ok', spec: h.ctx.jev.resolve(query), response: { model: 'jev-test',
+      answers: { intent: { type: 'choice', choice: 'conversation', confidence: 1, probabilities: { conversation: 1 } } } } }
+  })
+  h.agent.followup(h.message)
+  await h.agent.whenIdle()
+  expect(h.adapter.requests).toHaveLength(1)
+  expect(h.agent.session.snapshotEvents().some(event => event.type === 'system3/skill-decision')).toBe(false)
+  answer.resolve(undefined)
+  await vi.waitFor(() => {
+    expect(h.ctx.sessionProjections.stateOf(h.agent.session, 'system3Runtime')?.skill).toMatchObject({ intent: 'conversation', outcome: 'no-candidates' })
+  })
+})
+
 it.each(['untrusted-free-text', 'low-confidence'] as const)('never publishes unsupported or unreliable input labels: %s', async (kind) => {
   const h = await setup({ modelInvocable: false })
   h.decide.mockImplementation(async query => ({ kind: 'ok', spec: h.ctx.jev.resolve(query), response: {

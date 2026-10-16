@@ -35,6 +35,17 @@ it('turns discovery output into workspace facts and candidates in model order', 
   expect(prefetchCandidates('hi', { ...facts, trackedFiles: 31 }, CONFIG).map(candidate => candidate.id)).not.toContain('sources')
 })
 
+it('offers a folder that is not a Git repository its file list, search and files, and finds Chinese words', () => {
+  expect(searchTerms('九月我在餐饮上一共花了多少钱？', 4)).toEqual(['九月', '餐饮'])
+  expect(searchTerms('我的护照什么时候过期？', 4)).toEqual(['护照', '过期'])
+  const folder = prefetchCandidates('九月我在餐饮上一共花了多少钱？', { git: false, trackedFiles: 9, mentioned: [] }, CONFIG)
+  expect(folder.map(candidate => candidate.id)).toEqual(['files', 'search', 'sources'])
+  expect(folder.every(candidate => !candidate.command.includes('git '))).toBe(true)
+  expect(folder.find(candidate => candidate.id === 'search')?.command).toContain('-e \'餐饮\'')
+  expect(parseWorkspaceFacts('files=  9\n')).toEqual({ git: false, trackedFiles: 9, mentioned: [] })
+  expect(discoveryCommand([])).toContain('else echo files=$(find . -mindepth 1')
+})
+
 it('asks one question per candidate and prefetches when any is needed', () => {
   const candidates = prefetchCandidates('hi', { git: true, trackedFiles: 99, mentioned: [] }, CONFIG)
   const input = { input: 'What changed?', candidates }

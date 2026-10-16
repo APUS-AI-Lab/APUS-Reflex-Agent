@@ -1,0 +1,46 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/research-reflex-predecision/README.md
+/:
+  en: 6ec3407ae94e9814
+  zh: b14ffd311643c535
+/reflex-pre-decision-theory-and-evaluation-framework:
+  en: 2c61f71f342d9bf2
+  zh: 102094afd4b577f4
+/reflex-pre-decision-theory-and-evaluation-framework/summary:
+  en: f0ba3eab1b6aaedd
+  zh: 33bc099e4d3b0369
+/reflex-pre-decision-theory-and-evaluation-framework/table-of-contents:
+  en: 00699c95a08d0ddf
+  zh: e4ecaa5bc6dfde12
+/reflex-pre-decision-theory-and-evaluation-framework/problem-and-latency-model:
+  en: 4852ffd4e3045fe9
+  zh: 317fc40d93bca342
+/reflex-pre-decision-theory-and-evaluation-framework/design-principles:
+  en: d4f1098c5481d2f7
+  zh: 9fa1235c6fa865d3
+/reflex-pre-decision-theory-and-evaluation-framework/mechanisms:
+  en: 6f279de397c1e224
+  zh: 5a82766809d74023
+/reflex-pre-decision-theory-and-evaluation-framework/hypotheses:
+  en: 9d472c0302e81b6d
+  zh: e3a89cf6c7e3e4d7
+/reflex-pre-decision-theory-and-evaluation-framework/method:
+  en: 505d8a0c04a64134
+  zh: ba67e4227c94f998
+/reflex-pre-decision-theory-and-evaluation-framework/results:
+  en: 4651f6084e949192
+  zh: 5fdf12fe700431b0
+/reflex-pre-decision-theory-and-evaluation-framework/threats-to-validity:
+  en: 20f21fa3975026b4
+  zh: bbbb873c0d8ff18d
+/reflex-pre-decision-theory-and-evaluation-framework/iteration-loop:
+  en: ef1d4a211faf94d5
+  zh: d4cc6810bc054965
+/reflex-pre-decision-theory-and-evaluation-framework/related-work:
+  en: a01ffc81d3f96fc6
+  zh: 4e21d0ee07775aad
+/reflex-pre-decision-theory-and-evaluation-framework/dev-note:
+  en: 3c85853358aa0dbb
+  zh: 757a666f6e5aae02

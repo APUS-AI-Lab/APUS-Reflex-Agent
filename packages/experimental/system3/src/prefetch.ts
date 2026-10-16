@@ -78,6 +78,12 @@ const README_NAMES = ['README.md', 'README', 'readme.md', 'README.rst', 'README.
 const MANIFEST_NAMES = ['package.json', 'pyproject.toml', 'Cargo.toml', 'go.mod', 'pom.xml', 'build.gradle', 'composer.json', 'Gemfile']
 /** Git without hooks or fsmonitor; diffs also pass --no-ext-diff --no-textconv, so no repository-configured program runs. */
 const GIT = 'git --no-pager -c core.fsmonitor=false -c core.hooksPath=/dev/null'
+/** Files under the workspace outside hidden directories and node_modules, for a folder that is not a Git repository. */
+const FIND_FILES = 'find . -mindepth 1 \\( -name \'.*\' -o -name node_modules \\) -prune -o -type f'
+/** Chinese function and question words, which name no fact in a folder. */
+const CHINESE_QUESTION_WORDS = new Set(['我的', '我在', '我有', '你的', '这个', '那个', '现在', '今天', '已经', '可以', '什么', '什么时候',
+  '多少', '多少钱', '哪些', '哪里', '哪个', '怎么', '怎样', '为什么', '是否', '需要', '一下', '一共', '一句', '回答', '帮我', '请问', '截至',
+  '花了', '天内', '只有', '还有', '没有', '一个', '给我', '告诉'])
 /** Words that name no project fact, so searching for them finds nothing useful. */
 const QUESTION_WORDS = new Set(['what', 'which', 'where', 'when', 'does', 'this', 'that', 'with', 'from', 'have', 'many', 'much', 'most',
   'answer', 'sentence', 'only', 'project', 'please', 'tell', 'show', 'list', 'write', 'line', 'lines', 'file', 'files', 'code', 'need',
@@ -106,16 +112,17 @@ export function mentionedPaths(input: string): string[] {
 }
 
 /**
- * Words of the input worth searching for in the project: identifiers and words of at least four letters that are not
- * question words, longest first.
+ * Words of the input worth searching for in the workspace: identifiers and Latin words of at least four letters, and
+ * Chinese words of at least two characters from word segmentation, without question or function words, longest first.
  * @param input - The person's text input.
  * @param limit - Most words returned.
  * @returns Distinct search words.
  */
 export function searchTerms(input: string, limit: number): string[] {
-  const words = input.match(/[A-Za-z_][A-Za-z0-9_]{3,}/gu) ?? []
-  return [...new Set(words.filter(word => !QUESTION_WORDS.has(word.toLowerCase())))]
-    .sort((a, b) => b.length - a.length).slice(0, limit)
+  const latin = (input.match(/[A-Za-z_][A-Za-z0-9_]{3,}/gu) ?? []).filter(word => !QUESTION_WORDS.has(word.toLowerCase()))
+  const chinese = [...new Intl.Segmenter('zh', { granularity: 'word' }).segment(input)]
+    .map(part => part.segment).filter(word => /^\p{Script=Han}{2,}$/u.test(word) && !CHINESE_QUESTION_WORDS.has(word))
+  return [...new Set([...latin, ...chinese])].sort((a, b) => b.length - a.length).slice(0, limit)
 }
 
 /**
@@ -125,7 +132,8 @@ export function searchTerms(input: string, limit: number): string[] {
  */
 export function discoveryCommand(mentioned: readonly string[]): string {
   return [
-    `if ${GIT} rev-parse --is-inside-work-tree >/dev/null 2>&1; then echo git=1; echo files=$(${GIT} ls-files | wc -l); fi`,
+    `if ${GIT} rev-parse --is-inside-work-tree >/dev/null 2>&1; then echo git=1; echo files=$(${GIT} ls-files | wc -l);`
+      + ` else echo files=$(${FIND_FILES} -print | wc -l); fi`,
     `for f in ${README_NAMES.map(shellWord).join(' ')}; do if [ -f "$f" ]; then echo "readme=$f"; break; fi; done`,
     `for f in ${MANIFEST_NAMES.map(shellWord).join(' ')}; do if [ -f "$f" ]; then echo "manifest=$f"; break; fi; done`,
     ...mentioned.map(path => `if [ -f ${shellWord(path)} ]; then printf 'mentioned=%s\\n' ${shellWord(path)}; fi`),
@@ -160,11 +168,16 @@ export function prefetchCandidates(input: string, facts: System3WorkspaceFacts,
   config: Pick<System3PrefetchConfig, 'maxItemBytes' | 'maxSourceFiles' | 'maxSearchTerms'>): System3PrefetchCandidate[] {
   const cut = (command: string): string => `{ ${command}; } 2>&1 | head -c ${String(config.maxItemBytes + 1)}`
   const candidates: System3PrefetchCandidate[] = []
+  // A Git repository lists its tracked files; any other folder lists its files outside hidden directories.
+  const listing = facts.git ? `${GIT} ls-files -z` : `${FIND_FILES} -print0`
   if (facts.git) {
     candidates.push({ id: 'changes', description: '工作区当前未提交的改动（git status 以及暂存区和工作区的 diff）',
       label: 'git status --short && git diff --staged && git diff',
       command: cut(`${GIT} status --short && ${GIT} diff --staged --no-ext-diff --no-textconv && ${GIT} diff --no-ext-diff --no-textconv`) })
     candidates.push({ id: 'files', description: '项目中受版本管理的文件列表', label: 'git ls-files', command: cut(`${GIT} ls-files`) })
+  } else if (facts.trackedFiles > 0) {
+    candidates.push({ id: 'files', description: '工作区中的文件列表', label: 'find . -type f',
+      command: cut(`${FIND_FILES} -print | sed 's|^\\./||' | LC_ALL=C sort`) })
   }
   if (facts.readme !== undefined) {
     candidates.push({ id: 'readme', description: `项目说明文件 ${facts.readme}`, label: `cat ${facts.readme}`, command: cut(`cat -- ${shellWord(facts.readme)}`) })
@@ -177,14 +190,16 @@ export function prefetchCandidates(input: string, facts: System3WorkspaceFacts,
     candidates.push({ id: `file:${path}`, description: `用户输入中提到的文件 ${path} 的内容`, label: `cat ${path}`, command: cut(`cat -- ${shellWord(path)}`) })
   }
   const terms = searchTerms(input, config.maxSearchTerms)
-  if (facts.git && terms.length > 0) {
+  const patterns = terms.map(term => `-e ${shellWord(term)}`).join(' ')
+  if (terms.length > 0 && facts.trackedFiles > 0) {
     // Substring matching, so a word of the input also finds identifiers that contain it (items → MAX_ITEMS_PER_ORDER).
-    candidates.push({ id: 'search', description: `在项目文件中搜索包含 ${terms.join('、')} 的行（不区分大小写，标识符中的部分匹配也算）`,
-      label: `git grep -n -i ${terms.join(' ')}`, command: cut(`${GIT} grep -n -I -i -F ${terms.map(term => `-e ${shellWord(term)}`).join(' ')}`) })
+    candidates.push({ id: 'search', description: `在工作区文件中搜索包含 ${terms.join('、')} 的行（不区分大小写，标识符中的部分匹配也算）`,
+      label: `grep -n -i ${terms.join(' ')}`, command: cut(facts.git ? `${GIT} grep -n -I -i -F ${patterns}`
+        : `${listing} | xargs -0 grep -n -I -i -F ${patterns} -- 2>/dev/null | sed 's|^\\./||'`) })
   }
-  if (facts.git && facts.trackedFiles > 0 && facts.trackedFiles <= config.maxSourceFiles) {
-    candidates.push({ id: 'sources', description: '项目全部文件的内容（项目很小，可以一次读完）', label: 'cat $(git ls-files)',
-      command: cut(`${GIT} ls-files -z | xargs -0 grep -I -l '' -- 2>/dev/null | while IFS= read -r f; do printf '==> %s <==\\n' "$f"; cat -- "$f"; echo; done`) })
+  if (facts.trackedFiles > 0 && facts.trackedFiles <= config.maxSourceFiles) {
+    candidates.push({ id: 'sources', description: '工作区全部文件的内容（文件很少，可以一次读完）', label: facts.git ? 'cat $(git ls-files)' : 'cat $(find . -type f)',
+      command: cut(`${listing} | xargs -0 grep -I -l '' -- 2>/dev/null | while IFS= read -r f; do printf '==> %s <==\\n' "\${f#./}"; cat -- "$f"; echo; done`) })
   }
   return candidates.slice(0, 16)
 }
