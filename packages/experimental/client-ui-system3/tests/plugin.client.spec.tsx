@@ -47,6 +47,12 @@ it('registers and disposes the native dock and calls the live Session reset RPC'
   expect(typeof settings.options.label === 'function' ? settings.options.label() : settings.options.label).toBe('Reflex configuration')
   expect(settings.inject!()).toHaveProperty('refresh')
   remote.emit('credentials/reference-updated', ['REFLEX_API_KEY'])
+  const unsubscribeLocal = vi.fn()
+  const localMode = { chosen: { getSnapshot: () => true, subscribe: vi.fn(() => unsubscribeLocal) }, choose: vi.fn(async () => {}) }
+  const local = ctx.provide('reflexLocalMode', localMode)
+  await vi.waitFor(() => { expect(localMode.chosen.subscribe).toHaveBeenCalledOnce() })
+  local()
+  await vi.waitFor(() => { expect(unsubscribeLocal).toHaveBeenCalledOnce() })
   const actions = entry.inject!('root' as never)
   const onAutomatic = actions.onAutomatic as System3Actions['onAutomatic']
   const onStop = actions.onStop as System3Actions['onStop']

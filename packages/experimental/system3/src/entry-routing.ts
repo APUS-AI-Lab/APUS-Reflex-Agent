@@ -10,7 +10,7 @@ import type {} from '@deepseek-ai/dsh-subagent'
 import type {} from '@deepseek-ai/dsh-tools'
 import { JevConfigurationError, MAX_JEV_CHOICES, type JevErrorCode, type JevRequest, type JevResponse, type JevChoiceQuestion } from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
 import { admitSystem3Routes, type System3DataClass, type System3ExecutionDomain, type System3PrivacyPolicy } from '@deepseek-ai/dsh-experimental-system3-policy'
-import type { System3JevOptions } from './decisions.ts'
+import { pinSystem3JevRequest, resolveSystem3JevRoute, type System3JevOptions } from './decisions.ts'
 import type { System3HandoffPackConfig } from './handoff-pack.ts'
 import type { System3KeepWarmConfig } from './keep-warm.ts'
 import type { System3RouteHealth, System3RouteHealthConfig, System3RouteHealthReason } from './route-health.ts'
@@ -112,6 +112,7 @@ export interface System3EntryDecisionReceipt {
   readonly candidateIds: readonly string[]
   readonly dataClasses: readonly System3DataClass[]
   readonly routeId: string
+  /** Execution domain of the Jev provider that admission checked: its declared domain, otherwise the configured default. */
   readonly executionDomain: System3ExecutionDomain
   readonly outcome: System3EntryOutcome
   readonly response?: JevResponse
@@ -214,7 +215,7 @@ function validateConfig(config: System3EntryRoutingConfig): void {
  * @param ctx - Services providing Jev and the native model catalog.
  * @param config - Explicit candidate, input-classification, confidence and size controls.
  * @param policy - Privacy admission shared with other System3 decisions.
- * @param options - Actual Jev execution location and effort.
+ * @param options - Jev route identity, default execution domain, and effort.
  * @param health - Route health that leaves degraded model candidates out of the choice; omission offers every candidate.
  * @returns Router recording decisions in the requesting Agent's Session; cancellation rejects.
  */
@@ -240,6 +241,8 @@ export function createSystem3EntryRouter(
       }
     },
     async route(input, signal) {
+      // With front-loaded decisions off, the prompt takes its baseline route and nothing is recorded.
+      if (options.frontLoaded?.() === false) return undefined
       const started = Date.now()
       let request: JevRequest | null = null
       let response: JevResponse | undefined
@@ -274,6 +277,8 @@ export function createSystem3EntryRouter(
         chosen = candidate
         return selection
       }
+      // Resolved once, so admission, the pinned request, and the receipt name the same provider and domain.
+      const jevRoute = resolveSystem3JevRoute(ctx.get('jev'), options)
       input.agent.session.append('system3/entry-start', { requestId: input.requestId })
       try {
         signal.throwIfAborted()
@@ -292,7 +297,7 @@ export function createSystem3EntryRouter(
         candidateIds = allowed.map(candidate => candidate.id)
         if (allowed.length === 0) { outcome = 'no-candidates'; return undefined }
         const jevAdmission = admitSystem3Routes(policy, [{
-          id: options.routeId, executionDomain: options.executionDomain, dataClasses: settings.sessionDataClasses,
+          id: options.routeId, executionDomain: jevRoute.executionDomain, dataClasses: settings.sessionDataClasses,
         }])
         if (jevAdmission.allowed.length === 0) { outcome = 'privacy-denied'; return undefined }
         const jev = ctx.get('jev')
@@ -343,7 +348,8 @@ export function createSystem3EntryRouter(
           ...options.effort === undefined ? {} : { effort: options.effort },
           questions: { route: system3EntryRouteQuestion(allowed) },
         }
-        const spec = jev.resolve(query)
+        // Model lookups awaited after admission; run on the admitted provider even if the default changed meanwhile.
+        const spec = jev.resolve(pinSystem3JevRequest(query, jevRoute))
         if (Buffer.byteLength(JSON.stringify(spec), 'utf8') > settings.maxInputBytes) { outcome = 'input-too-large'; return undefined }
         request = spec
         const result = await jev.decide(spec, signal)
@@ -369,7 +375,7 @@ export function createSystem3EntryRouter(
       } finally {
         input.agent.session.append('system3/entry-decision', {
           version: 1, requestId: input.requestId, request, baseline: { ...input.baseline }, candidateIds,
-          dataClasses: [...settings.sessionDataClasses], routeId: options.routeId, executionDomain: options.executionDomain,
+          dataClasses: [...settings.sessionDataClasses], routeId: options.routeId, executionDomain: jevRoute.executionDomain,
           outcome, ...response === undefined ? {} : { response }, ...selected === undefined ? {} : { selected },
           ...retained === undefined ? {} : { retained },
           ...avoided.length === 0 ? {} : { avoided },

@@ -1,9 +1,19 @@
 # Editable memory defaults; enabling local recall never grants remote access.
+# Compaction admission and the history tools exist only while Reflex is enabled
+# (continuum-jev mode shadow or active, with a mounted Jev provider); otherwise
+# the profile behaves as the base DSH profile.
 - insert:
     - id: continuum-jev
       name: ./lib/index.js
       config:
         mode: off
+        selection: threshold
+        minRelevance: 0.7
+        routeAbove: 16
+        minRouteProbability: 0.5
+        minTagProbability: 0.5
+        maxQueryChars: 500
+        maxRequestBytes: 65536
         privacyPolicy:
           mode: local-only
     - id: continuum-memory
@@ -11,8 +21,10 @@
       config:
         enabled: false
         mode: active
-        admission: user-message
+        admission: compaction
+        candidatePool: all
         scopes: [workspace]
         maxCandidates: 8
+        maxPool: 200
         maxExcerptBytes: 2048
         maxTotalBytes: 8192

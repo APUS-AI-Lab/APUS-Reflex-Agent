@@ -36,8 +36,12 @@ it.each(['Desktop', 'Web'].flatMap(surface => [false, true].map(configured => ({
     writeFileSync(patch, stdout)
   }
   const operations = loadOverlayPatches('test', patch)
-  const selector = operations.flatMap(operation => operation.insert ?? []).find(plugin => plugin.id === 'system3')
-  if (selector === undefined) throw new Error(`${surface} did not include Skill selection`)
+  expect(operations.flatMap(operation => operation.insert ?? []).map(plugin => plugin.id)).toContain('ui-system3')
+  // The System3 profile bundle, not the overlay, inserts the editable Skill selection row.
+  expect(operations.flatMap(operation => operation.insert ?? []).some(plugin => plugin.id === 'system3')).toBe(false)
+  const selector = loadOverlayPatches('test', resolve('packages/experimental/system3/cordis.patch.yml'))
+    .flatMap(operation => operation.insert ?? []).find(plugin => plugin.id === 'system3')
+  if (selector === undefined) throw new Error('The System3 bundle did not include Skill selection')
   const dir = join(home, 'profiles', 'test')
   initProfile(dir, ['test-bundle'])
   const bundle = join(dir, 'node_modules', 'test-bundle')

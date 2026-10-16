@@ -55,7 +55,10 @@ export async function prepareGenerationsForLaunch(dshHome: string, note: Note): 
   }
   const manifest = readProfileManifest('APUS Reflex Harness', profileDir)
   const bundles = manifest.dsh?.profile?.bundles ?? []
-  const missingBundles = ['@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin', '@deepseek-ai/dsh-experimental-continuum-jev']
+  // The System3 and local Reflex bundles route to the Jev entry, so they follow the Jev bundle. Profiles from earlier
+  // releases lack the System3 bundle and receive it appended, after their Jev bundle.
+  const missingBundles = ['@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin', '@deepseek-ai/dsh-experimental-system3',
+    '@deepseek-ai/dsh-experimental-continuum-jev', '@deepseek-ai/dsh-experimental-reflex-local-bundle']
     .filter(bundle => !bundles.includes(bundle))
   if (missingBundles.length > 0) {
     writeProfileBundles(profileDir, manifest, [...bundles, ...missingBundles])

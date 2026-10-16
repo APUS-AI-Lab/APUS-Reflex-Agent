@@ -193,6 +193,21 @@ export function frameSummary(summary: readonly ContentBlock[]): ContentBlock[] {
   ]
 }
 
+/**
+ * Compose the deterministic recall footer that names one checkpoint and the span it replaced.
+ * @param summarySeq - seq of the checkpoint's `compaction/summary` event, used as the recall id.
+ * @param start - first shadowed surface seq.
+ * @param end - last shadowed surface seq.
+ * @returns one text block appended after the framed summary.
+ */
+export function recallFooter(summarySeq: number, start: number, end: number): ContentBlock {
+  return {
+    type: 'text',
+    text: `[checkpoint c${summarySeq}: shadows conversation events #${start}–#${end}; `
+      + `originals retrievable via history_read with checkpoint ${summarySeq}]`,
+  }
+}
+
 /** Map a terminal summarization finish to its fail-closed error. */
 function finishError(finish: FinishReason): Error | undefined {
   switch (finish.kind) {

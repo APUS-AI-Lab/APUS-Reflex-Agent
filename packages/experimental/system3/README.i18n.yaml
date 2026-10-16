@@ -3,8 +3,8 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/experimental/system3/README.md
 /:
-  en: ba6526ce7984bc9c
-  zh: 099156a89f4c5d5d
+  en: c3ed0a5037eabd2c
+  zh: 2f4d09599d0269c0
 /deepseek-ai-dsh-experimental-system3:
   en: 713f0995c117bffe
   zh: 0a1a499368073764
@@ -15,23 +15,23 @@
   en: 76368b6b1da79c80
   zh: 577bc812458ce0c0
 /deepseek-ai-dsh-experimental-system3/use-this-package:
-  en: 4084e49e2c048eae
-  zh: b632cfbe3311c52a
+  en: 3f9042cd2b18e69d
+  zh: dd4fcfe64376780d
 /deepseek-ai-dsh-experimental-system3/use-this-package/explicit-jev-shadow-decisions:
-  en: 3dc70484ca0ec162
-  zh: ffe2a312c704e222
+  en: 223f4f6b214477f0
+  zh: f5890a001589762c
 /deepseek-ai-dsh-experimental-system3/use-this-package/session-api-entry-routing:
-  en: 0794b8230c297e81
-  zh: 9ccb50b362415d90
+  en: d8e46a8f29f31dc0
+  zh: b2a6317ae45aff03
 /deepseek-ai-dsh-experimental-system3/use-this-package/completion-review:
   en: cdcaae530ffd6372
   zh: 302c2eff352ae35b
 /deepseek-ai-dsh-experimental-system3/use-this-package/reflex-prefetch:
-  en: 3b7607b12b9e0013
-  zh: b76b8b151c4ca7a3
+  en: 6006fa0352a91e1b
+  zh: eb54c36cd0492e94
 /deepseek-ai-dsh-experimental-system3/use-this-package/reflex-goal-supervision-and-context-memory:
-  en: 71dac8083a71daee
-  zh: 7b47f57ec758b15f
+  en: ec1e213b099e4789
+  zh: 2c1e1be688f74f0d
 /deepseek-ai-dsh-experimental-system3/understand-the-implementation:
   en: 1201bb8eb528722c
   zh: 13fe475bf9c4e586

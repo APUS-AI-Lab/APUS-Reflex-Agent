@@ -54,7 +54,15 @@ describe('apus-dsh-jev-plugin service', () => {
       expect(await service.warm('switch')).toBe(false)
       expect(decide).not.toHaveBeenCalled()
       expect(warm).not.toHaveBeenCalled()
+      const announced: boolean[] = []
+      ctx.on('jev/enabled', (value) => { announced.push(value) })
+      ctx.emit('loader/volatile-update', [['endpoint']])
+      expect(service.isEnabled()).toBe(false)
       enabled = true
+      ctx.emit('loader/volatile-update', [['enabled']])
+      ctx.emit('loader/volatile-update', [['model']])
+      expect(announced).toEqual([true])
+      expect(service.isEnabled()).toBe(true)
       expect(await service.decide(request)).toMatchObject({ kind: 'ok' })
       expect(await service.warm('switch')).toBe(true)
     } finally { dispose(); await ctx.fiber.dispose() }
@@ -86,6 +94,26 @@ describe('apus-dsh-jev-plugin service', () => {
       sent.length = 0
       await service.decide({ providerId: 'split', state: null, questions: { a: { type: 'noul' }, b: { type: 'noul' } } })
       expect(sent).toEqual([['a', 'b']])
+    } finally { dispose(); await ctx.fiber.dispose() }
+  })
+
+  it('passes caller cancellation to every group and omits usage when no group reports it', async () => {
+    const ctx = new Context()
+    await ctx.plugin(Jev, { endpoint: 'http://localhost', model: 'default', questionsPerRequest: 1 })
+    const service = ctx.get('jev')!
+    const signals: AbortSignal[] = []
+    const dispose = service.register({ info: { id: 'split', model: 'm', endpoint: 'http://localhost' }, decide: async (request, signal) => {
+      if (signal !== undefined) signals.push(signal)
+      return { model: 'm', answers: Object.fromEntries(Object.keys(request.questions).map(key => [key, { type: 'noul' as const, noul: 0.5 }])) }
+    } })
+    const caller = new AbortController()
+    try {
+      const outcome = await service.decide({ providerId: 'split', state: null, questions: { a: { type: 'noul' }, b: { type: 'noul' } } }, caller.signal)
+      expect(outcome).toMatchObject({ kind: 'ok', response: { model: 'm' } })
+      expect(outcome.kind === 'ok' ? outcome.response : undefined).not.toHaveProperty('usage')
+      expect(signals).toHaveLength(2)
+      caller.abort()
+      expect(signals.every(signal => signal.aborted)).toBe(true)
     } finally { dispose(); await ctx.fiber.dispose() }
   })
 
@@ -141,6 +169,84 @@ describe('apus-dsh-jev-plugin service', () => {
     const ctx = new Context()
     await expect(ctx.plugin(Jev, { endpoint: 'http://localhost', model: 'default', resetAfterFailures: 2 })).rejects.toThrow('resetAfterFailures requires keepAliveMs')
     await ctx.fiber.dispose()
+  })
+
+  it('selects a provider another plugin registers when no gateway is configured', async () => {
+    const ctx = new Context()
+    await ctx.plugin(Jev, { defaultProviderId: 'reflex-local' })
+    try {
+      expect(ctx.jev.listProviders()).toEqual([])
+      expect(() => ctx.jev.resolve({ state: null, questions: { q: { type: 'noul' } } })).toThrow('jev provider "reflex-local" is not registered')
+      const dispose = ctx.jev.register({ info: { id: 'reflex-local', model: 'local', endpoint: 'http://127.0.0.1' },
+        decide: async () => ({ model: 'local', answers: { q: { type: 'noul', noul: 0.25 } } }) })
+      await expect(ctx.jev.decide({ state: null, questions: { q: { type: 'noul' } } }))
+        .resolves.toMatchObject({ kind: 'ok', spec: { providerId: 'reflex-local', model: 'local' } })
+      dispose()
+    } finally {
+      await ctx.fiber.dispose()
+    }
+  })
+
+  it('keeps the built-in provider registered while another provider is the default', async () => {
+    const ctx = new Context()
+    await ctx.plugin(Jev, { endpoint: 'http://localhost', model: 'cloud', defaultProviderId: 'reflex-local' })
+    try {
+      expect(ctx.jev.listProviders()).toEqual([{ id: 'system-one', endpoint: 'http://localhost', model: 'cloud' }])
+      const dispose = ctx.jev.register({ info: { id: 'reflex-local', model: 'local', endpoint: 'http://127.0.0.1' },
+        decide: async () => ({ model: 'local', answers: { q: { type: 'noul', noul: 0.5 } } }) })
+      expect(ctx.jev.resolve({ state: null, questions: { q: { type: 'noul' } } })).toMatchObject({ providerId: 'reflex-local', model: 'local' })
+      expect(ctx.jev.resolve({ providerId: 'system-one', state: null, questions: { q: { type: 'noul' } } })).toMatchObject({ model: 'cloud' })
+      dispose()
+    } finally {
+      await ctx.fiber.dispose()
+    }
+  })
+
+  it('reports the selected provider and its execution domain without I/O', async () => {
+    const ctx = new Context()
+    let enabled = true
+    let defaultProviderId: string | undefined = 'reflex-local'
+    new Jev(ctx, { enabled: { get: () => enabled }, endpoint: { get: () => 'http://localhost' }, model: { get: () => 'cloud' },
+      effort: { get: () => 'low' }, protocol: { get: () => 'openjev' }, timeoutMs: { get: () => 1000 }, apiKeyEnv: { get: () => undefined },
+      defaultProviderId: { get: () => defaultProviderId } })
+    const service = ctx.get('jev')!
+    const decide = vi.fn(async () => ({ model: 'local', answers: { q: { type: 'noul' as const, noul: 0.5 } } }))
+    try {
+      expect(service.providerInfo()).toBeUndefined()
+      const dispose = service.register({ info: { id: 'reflex-local', model: 'local', endpoint: 'http://127.0.0.1', executionDomain: 'local' }, decide })
+      expect(service.providerInfo()).toEqual({ id: 'reflex-local', model: 'local', endpoint: 'http://127.0.0.1', executionDomain: 'local' })
+      expect(service.providerInfo('system-one')).toEqual({ id: 'system-one', model: 'cloud', endpoint: 'http://localhost' })
+      expect(service.providerInfo('absent')).toBeUndefined()
+      defaultProviderId = undefined
+      expect(service.providerInfo()?.id).toBe('system-one')
+      enabled = false
+      expect(service.providerInfo('reflex-local')).toBeUndefined()
+      expect(decide).not.toHaveBeenCalled()
+      dispose()
+    } finally { await ctx.fiber.dispose() }
+  })
+
+  it('switches the default provider on the next decision and stops it while Reflex is off', async () => {
+    const ctx = new Context()
+    let enabled = true
+    let defaultProviderId: string | undefined = 'reflex-local'
+    new Jev(ctx, { enabled: { get: () => enabled }, endpoint: { get: () => '' }, model: { get: () => '' },
+      effort: { get: () => 'low' }, protocol: { get: () => 'openjev' }, timeoutMs: { get: () => 1000 }, apiKeyEnv: { get: () => undefined },
+      defaultProviderId: { get: () => defaultProviderId } })
+    const service = ctx.get('jev')!
+    const decide = vi.fn(async () => ({ model: 'local', answers: { q: { type: 'noul' as const, noul: 0.5 } } }))
+    const dispose = service.register({ info: { id: 'reflex-local', model: 'local', endpoint: 'http://127.0.0.1' }, decide })
+    const request = { state: null, questions: { q: { type: 'noul' as const } } }
+    try {
+      await expect(service.decide(request)).resolves.toMatchObject({ kind: 'ok', spec: { providerId: 'reflex-local' } })
+      enabled = false
+      expect(() => service.resolve(request)).toThrow(JevDisabledError)
+      enabled = true
+      defaultProviderId = undefined
+      expect(() => service.resolve(request)).toThrow('Jev is not configured')
+      expect(() => service.register({ info: { id: 'system-one', model: 'x', endpoint: 'http://x' }, decide })).toThrow('already registered')
+      expect(decide).toHaveBeenCalledTimes(1)
+    } finally { dispose(); await ctx.fiber.dispose() }
   })
 })
 

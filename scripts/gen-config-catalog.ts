@@ -208,13 +208,18 @@ function pasteText(ctx: FileCtx, decl: TypeDecl): string {
   return ctx.text.slice(start, decl.end)
 }
 
+/** A property's key as the schema spells it: a quoted member such as `'4b-q8_0'` without its quotes. */
+function memberName(member: ts.PropertySignature, sf: ts.SourceFile): string {
+  return ts.isStringLiteral(member.name) ? member.name.text : member.name.getText(sf)
+}
+
 /** Enforce non-empty JSDoc prose on every property of a pasted declaration,
  * recursing into nested type literals (e.g. an array-of-objects field). */
 function checkMemberDocs(ctx: FileCtx, decl: TypeDecl, violations: string[]): void {
   const walkMembers = (members: ts.NodeArray<ts.TypeElement>, path: string): void => {
     for (const member of members) {
       if (!ts.isPropertySignature(member)) continue
-      const name = member.name.getText(ctx.sf)
+      const name = memberName(member, ctx.sf)
       const where = `config field '${path}.${name}' (${pointer(ctx.rel, ctx.sf, member)})`
       if (!parseJsDoc(rawJsDoc(ctx.text, member)).doc) violations.push(`${where} has no JSDoc prose.`)
       if (member.type) walkNested(member.type, `${path}.${name}`)
@@ -423,7 +428,7 @@ function lookupPath(world: World, ctx: FileCtx, node: ts.Node, steps: PathStep[]
   const intoMembers = (members: ts.NodeArray<ts.TypeElement>): PathLookup | null => {
     if (!('member' in step)) return null
     for (const m of members) {
-      if (!ts.isPropertySignature(m) || m.name.getText(ctx.sf) !== step.member) continue
+      if (!ts.isPropertySignature(m) || memberName(m, ctx.sf) !== step.member) continue
       if (steps.length === 1) return 'found'
       return m.type ? lookupPath(world, ctx, m.type, steps.slice(1), seen) : 'unknown'
     }

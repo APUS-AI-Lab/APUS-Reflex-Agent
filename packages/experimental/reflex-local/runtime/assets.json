@@ -1,0 +1,46 @@
+{
+  "models": {
+    "4b-q4_k_m": {
+      "name": "APUS-OpenJev-v1-4B-Q4_K_M.gguf",
+      "url": "https://huggingface.co/apus-ailab/APUS-Reflex-4B-GGUF/resolve/191bfcb721ec6d44352c622a30d290ae6afbabc8/APUS-OpenJev-v1-4B-Q4_K_M.gguf",
+      "bytes": 2708804768,
+      "sha256": "3e77f041b48a6b28081071dc4dca8b047c10acf0a4b9b9b48603cef6b06ee186",
+      "experimental": false
+    },
+    "4b-q8_0": {
+      "name": "APUS-OpenJev-v1-4B-Q8_0.gguf",
+      "url": "https://huggingface.co/apus-ailab/APUS-Reflex-4B-GGUF/resolve/191bfcb721ec6d44352c622a30d290ae6afbabc8/APUS-OpenJev-v1-4B-Q8_0.gguf",
+      "bytes": 4482403168,
+      "sha256": "5e57075a169a76de5150f5c5defd805525ce4df86ae8865f70f128e15e57416c",
+      "experimental": false
+    },
+    "9b-q4_k_m": {
+      "name": "APUS-OpenJev-v1-9B-Q4_K_M.gguf",
+      "url": "https://huggingface.co/apus-ailab/APUS-Reflex-9B-GGUF/resolve/d3691a7f15fe26ac8d6199505e03a30fdafcc563/APUS-OpenJev-v1-9B-Q4_K_M.gguf",
+      "bytes": 5629109472,
+      "sha256": "337c1a8bdaf88e7f8e46f6551e35c63e4f4e97d0309147999e4a8002a928b08c",
+      "experimental": false
+    },
+    "9b-q8_0": {
+      "name": "APUS-OpenJev-v1-9B-Q8_0.gguf",
+      "url": "https://huggingface.co/apus-ailab/APUS-Reflex-9B-GGUF/resolve/d3691a7f15fe26ac8d6199505e03a30fdafcc563/APUS-OpenJev-v1-9B-Q8_0.gguf",
+      "bytes": 9527501728,
+      "sha256": "6b1de49865bf467b4b33b9f0d1e5df8c1aa0130d5be4732e75102dfc70f69a8f",
+      "experimental": false
+    },
+    "35b-a3b-q4_k_m": {
+      "name": "APUS-OpenJev-v1-35B-A3B-Q4_K_M.gguf",
+      "url": "https://huggingface.co/apus-ailab/APUS-Reflex-35B-A3B-GGUF/resolve/0103cd6bb0878c4229e5f7ac5f02e20a630d1ffd/APUS-OpenJev-v1-35B-A3B-Q4_K_M.gguf",
+      "bytes": 21166758624,
+      "sha256": "b7b043d9aa7527c5092eb1e85012b95fa1ff3fdbc907d5c65eae14e74880e96a",
+      "experimental": true
+    },
+    "35b-a3b-q8_0": {
+      "name": "APUS-OpenJev-v1-35B-A3B-Q8_0.gguf",
+      "url": "https://huggingface.co/apus-ailab/APUS-Reflex-35B-A3B-GGUF/resolve/0103cd6bb0878c4229e5f7ac5f02e20a630d1ffd/APUS-OpenJev-v1-35B-A3B-Q8_0.gguf",
+      "bytes": 36903139712,
+      "sha256": "93ded91451d52edc197bf31de4822700805fc7522ac1c188bd9a8694af0a83d8",
+      "experimental": true
+    }
+  }
+}

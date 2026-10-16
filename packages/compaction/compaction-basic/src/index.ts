@@ -13,6 +13,7 @@ import { CONTEXT_WINDOW_EXCEEDED_CODE } from '@deepseek-ai/dsh-llm'
 import type { LlmCallConfig } from '@deepseek-ai/dsh-llm'
 import { assertNever } from '@deepseek-ai/dsh-util-values'
 import type { Agent, PreStepDecision } from '@deepseek-ai/dsh-agent'
+import type { TokenMeasurement } from '@deepseek-ai/dsh-token-meter'
 import type { CommandId } from '@deepseek-ai/dsh-commands/brand'
 // Type-only: makes the optional sibling service available to `ctx.get()`.
 import type {} from '@deepseek-ai/dsh-compaction-tool-result-pruner'
@@ -125,6 +126,7 @@ export class BasicCompactionEngine extends CompactionEngine {
     maxOverflowRetries: maxOverflowRetriesSchema,
     modelPolicies: z.array(modelPolicy),
     auto: z.boolean(),
+    recallFooter: z.boolean(),
   })
 
   /** Resolved and validated compaction configuration. */
@@ -292,10 +294,7 @@ export class BasicCompactionEngine extends CompactionEngine {
     const prune = this.ctx.get('toolResultPruner')
 
     if (trigger === 'context-overflow') {
-      if (prune !== undefined) {
-        prune.pruneSession(agent.session)
-        measurement = meter.measure(agent.session)
-      }
+      measurement = await this.prepareSurface(agent, prune, signal) ?? measurement
       const range = selectCompactableRange(agent.session, measurement, 0)
       if (range === null) return null
       return this.compactRegion(range.start, range.end, agent, signal)
@@ -318,12 +317,10 @@ export class BasicCompactionEngine extends CompactionEngine {
     )
     if (measurement.totalTokens < spec.thresholdTokens) return null
 
-    // Once pressure qualifies, land the model-free pass before choosing a
-    // summary range, then remeasure through the singleton replay fold.
-    if (prune !== undefined) {
-      prune.pruneSession(agent.session)
-      measurement = meter.measure(agent.session)
-    }
+    // Once pressure qualifies, land the model-free pass and any listener's
+    // projections before choosing a summary range, then remeasure through the
+    // singleton replay fold; a sufficient preparation makes the summary unnecessary.
+    measurement = await this.prepareSurface(agent, prune, signal) ?? measurement
     if (measurement.totalTokens < spec.thresholdTokens) return null
 
     let result: CompactionResult | null = null
@@ -344,6 +341,30 @@ export class BasicCompactionEngine extends CompactionEngine {
       `compaction still above threshold after ${spec.compactionRetries + 1} compaction attempts `
       + `(${measurement.totalTokens} estimated tokens >= threshold ${spec.thresholdTokens})`,
     )
+  }
+
+  /**
+   * Land the model-free prune and the `compaction/prepare` listeners' projections.
+   * @param agent - agent whose surface is prepared.
+   * @param prune - optional tool-result pruner.
+   * @param signal - compaction cancellation forwarded to listeners.
+   * @returns a fresh measurement when the surface content changed, otherwise `undefined`.
+   */
+  private async prepareSurface(
+    agent: Agent,
+    prune: Context['toolResultPruner'] | undefined,
+    signal: AbortSignal,
+  ): Promise<TokenMeasurement | undefined> {
+    const generation = agent.session.surface.contentGeneration
+    if (prune !== undefined) prune.pruneSession(agent.session)
+    try {
+      await this.ctx.parallel('compaction/prepare', agent, signal)
+    } catch (error) {
+      // Cancellation keeps its exact reason rather than the listeners' aggregate.
+      signal.throwIfAborted()
+      throw error
+    }
+    return agent.session.surface.contentGeneration === generation ? undefined : this.ctx.tokenMeter.measure(agent.session)
   }
 
   /**
@@ -438,6 +459,7 @@ export class BasicCompactionEngine extends CompactionEngine {
   private regionDependencies(): Parameters<typeof compactSurfaceRegion>[0] {
     return {
       meter: this.ctx.tokenMeter,
+      recallFooter: this.config.recallFooter,
       summarize: (input, owner, abort) => this.summarize(input, owner, abort),
       recover: (error, agent, sourceEventSeqs, signal) => this.ctx.waterfall('compaction/summary-error', {
         session: agent.session,

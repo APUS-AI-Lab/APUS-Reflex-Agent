@@ -15,8 +15,9 @@ export interface System3KeepWarmConfig {
  * Warm-up failures are ignored: the next decision opens a connection as it would without warming.
  * @param ctx - Plugin context owning the timer; the loop stops when it is disposed.
  * @param config - Window and interval, each within the Node timer range.
+ * @param frontLoaded - Whether entry decisions run; while false the loop keeps its schedule but sends nothing.
  */
-export function installSystem3KeepWarm(ctx: Context, config: System3KeepWarmConfig): void {
+export function installSystem3KeepWarm(ctx: Context, config: System3KeepWarmConfig, frontLoaded: () => boolean = () => true): void {
   for (const key of ['windowMs', 'intervalMs'] as const) {
     if (!Number.isSafeInteger(config[key]) || config[key] <= 0 || config[key] > MAX_TIMER_DELAY_MS) {
       throw new Error(`entryRouting keepWarm ${key} must be a positive integer within the timer range`)
@@ -29,7 +30,7 @@ export function installSystem3KeepWarm(ctx: Context, config: System3KeepWarmConf
   const tick = async (): Promise<void> => {
     timer = undefined
     if (lifetime.signal.aborted || Date.now() >= until) return
-    await ctx.get('jev')?.warm(undefined, lifetime.signal).catch((error: unknown) => {
+    if (frontLoaded()) await ctx.get('jev')?.warm(undefined, lifetime.signal).catch((error: unknown) => {
       // Only plugin disposal rejects here; Jev reports transport failures as false.
       if (!stopped()) throw error
     })

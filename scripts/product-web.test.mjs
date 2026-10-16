@@ -10,7 +10,7 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { digest, webAssetNames, linuxNativePackage, payloadFiles, verifyWebRuntime, verifyProductClientBuild, webProfilePatch } from './product-web-package.mjs'
 import { launchOptions } from './product-web-launch.mjs'
-import { verifyReflexExecution, verifyReflexExecutionResponse } from './product-reflex-smoke.mjs'
+import { verifyReflexExecution, verifyReflexExecutionResponse, verifyReflexSettings } from './product-reflex-smoke.mjs'
 import { readinessUrl, redact, smokeEnvironment, verifyPayload, verifyPublishedInventory, verifyHttpAuthentication, verifySandboxExecution } from './product-web-smoke.mjs'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
@@ -97,16 +97,18 @@ writeFileSync(process.env.DSH_HOME + '/observed.json', JSON.stringify({args:proc
   assert.equal(observed.edition, edition)
   assert.deepEqual(observed.args, ['--profile', 'web', '--patch', join(installation, 'web.patch.yml'), '--patch', join(installation, 'runtime/product-edition.patch.yml'), '--host', '127.0.0.1', '--port', '0', '--no-open'])
   const profile = join(home, 'profiles/web/package.json')
-  const expectedBundles = ['base', 'web', '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin', '@deepseek-ai/dsh-experimental-continuum-jev']
+  const expectedBundles = ['base', 'web', '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin', '@deepseek-ai/dsh-experimental-system3',
+    '@deepseek-ai/dsh-experimental-continuum-jev']
   assert.deepEqual(JSON.parse(readFileSync(profile, 'utf8')).dsh.profile.bundles, expectedBundles)
   writeFileSync(profile, JSON.stringify({ user: 'retained', dsh: { profile: { bundles: ['base', 'web', 'user-plugin'] } } }))
   const userPatch = join(home, 'profiles/web/cordis.patch.yml')
-  writeFileSync(userPatch, '- id: continuum-memory\n  config:\n    enabled: true\n')
+  const savedSettings = '- id: continuum-memory\n  config:\n    enabled: true\n- id: system3\n  config:\n    frontLoadedDecisions: false\n'
+  writeFileSync(userPatch, savedSettings)
   execFileSync(process.execPath, [join(installation, 'launch.mjs')], { env })
   const retained = JSON.parse(readFileSync(profile, 'utf8'))
   assert.equal(retained.user, 'retained')
   assert.deepEqual(retained.dsh.profile.bundles, ['base', 'web', 'user-plugin', ...expectedBundles.slice(2)])
-  assert.equal(readFileSync(userPatch, 'utf8'), '- id: continuum-memory\n  config:\n    enabled: true\n')
+  assert.equal(readFileSync(userPatch, 'utf8'), savedSettings)
   const savedManifest = readFileSync(profile, 'utf8')
   execFileSync(process.execPath, [join(installation, 'launch.mjs')], { env })
   assert.equal(readFileSync(profile, 'utf8'), savedManifest)
@@ -260,6 +262,15 @@ test('Web qualification requires live Skill selection and prefetch and leaves ot
     capabilities.map(value => ({ ...value, enabled: true }))]) {
     assert.throws(() => verifyReflexExecutionResponse(envelope(invalid), 'fixture'), /differs from the product profile/)
   }
+  const frontLoadedIds = new Set(['skillSelection', 'workspacePrefetch'])
+  const paused = capabilities.map(value => frontLoadedIds.has(value.id) ? { ...value, enabled: false, suspended: true } : value)
+  assert.deepEqual(verifyReflexExecutionResponse(envelope(paused), 'fixture', { frontLoaded: false }), paused)
+  for (const [invalid, frontLoaded] of [[capabilities, false], [paused, true],
+    [paused.map(value => ({ ...value, suspended: true })), false],
+    [paused.map(value => value.id === 'skillSelection' ? { ...value, suspended: false } : value), false],
+    [paused.map(value => value.id === 'workspacePrefetch' ? { ...value, suspended: false } : value), false]]) {
+    assert.throws(() => verifyReflexExecutionResponse(envelope(invalid), 'fixture', { frontLoaded }), /differs from the product profile/)
+  }
 })
 
 
@@ -290,4 +301,44 @@ test('Reflex execution qualification sends an authenticated read-only Host reque
   assert.deepEqual(requests[0], { path: '/api/reflex/readStatus', method: 'POST', cookie: 'dsh=fixture',
     body: { type: 'client-request', rpcId: requests[0].body.rpcId, method: 'reflex/readStatus', payload: { args: {} } } })
   assert.match(requests[0].body.rpcId, /^[0-9a-f-]{36}$/)
+})
+
+/** A Playwright-shaped dialog whose mode menu renders in its page and whose controls follow the chosen mode. */
+function reflexDialog(options, { localBody = true, localFields = false } = {}) {
+  const modes = ['trial', 'custom', 'local']
+  let mode = 'custom'
+  const visible = selector => {
+    if (selector === '[data-reflex-local]') return mode === 'local' && localBody ? 1 : 0
+    if (selector === '#reflex-endpoint') return mode === 'custom' || (mode === 'local' && localFields) ? 1 : 0
+    if (selector === '#reflex-endpoint, #reflex-api-key') return mode === 'local' && localFields ? 1 : 0
+    if (selector === '#reflex-api-key, #reflex-protocol' || selector === '#reflex-protocol') return 0
+    return mode === 'custom' ? 1 : 0
+  }
+  const locator = selector => ({
+    first: () => locator(selector),
+    click: async () => {},
+    count: async () => visible(selector),
+    waitFor: async ({ state } = {}) => {
+      const shown = selector === '#reflex-mode' || visible(selector) > 0
+      if ((state === 'detached') === shown) throw new Error(`${selector} is not ${state}`)
+    },
+  })
+  const rows = texts => ({
+    first: () => ({ waitFor: async () => {} }),
+    allTextContents: async () => texts,
+    nth: index => ({ click: async () => { mode = modes[index - texts.length + options.length] } }),
+  })
+  // The Windows caption menubar renders its own `menuitem` buttons outside the mode menu.
+  const menu = { filter: () => ({ getByRole: () => rows(options) }) }
+  const page = { getByRole: role => role === 'menu' ? menu : rows(['应用', '编辑', ...options]), keyboard: { press: async () => {} } }
+  return { locator, page: () => page, getByRole: () => ({ waitFor: async () => {} }) }
+}
+
+test('Reflex settings qualification requires the trial, custom, and local modes', async () => {
+  await verifyReflexSettings(reflexDialog(['APUS Reflex 限时免费端点', '自定义参数', '本机']))
+  await assert.rejects(verifyReflexSettings(reflexDialog(['APUS Reflex 限时免费端点', '自定义参数'])), /trial, custom, and local modes/)
+  await assert.rejects(verifyReflexSettings(reflexDialog(['APUS Reflex limited-time free endpoint', 'Custom parameters', 'This Mac'],
+    { localFields: true })), /local mode exposes remote connection fields/)
+  await assert.rejects(verifyReflexSettings(reflexDialog(['APUS Reflex limited-time free endpoint', 'Custom parameters', 'This Mac'],
+    { localBody: false })), /\[data-reflex-local\] is not visible/)
 })

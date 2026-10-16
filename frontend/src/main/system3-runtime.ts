@@ -1,5 +1,5 @@
 /** Resolve only the explicitly prepared APUS Harness runtime. */
-import { readFileSync, realpathSync, statSync } from 'node:fs'
+import { existsSync, readFileSync, realpathSync, statSync } from 'node:fs'
 import { isAbsolute, join, relative, resolve } from 'node:path'
 
 export const SYSTEM3_RUNTIME_VERSION = '0.1.7-rc.2'
@@ -14,6 +14,8 @@ export interface System3Runtime {
   readonly edition: 'full' | 'lite'
   /** Final application overlay; absent only for legacy Full runtime manifests. */
   readonly editionPatchPath?: string
+  /** Prepared llama.cpp runner for local Reflex decisions; absent when this runtime carries no executable runner file. */
+  readonly reflexRunnerPath?: string
 }
 
 function record(value: unknown): value is Record<string, unknown> {
@@ -75,6 +77,7 @@ export function resolveSystem3Runtime(appPath: string, resourcesPath: string, is
   if (manifest.edition !== undefined) {
     required.add('@deepseek-ai/dsh-continuum')
     required.add('@deepseek-ai/dsh-experimental-continuum-jev')
+    for (const name of ['reflex-local-bundle', 'reflex-local', 'api-reflex-local', 'client-ui-reflex-local']) required.add(`@deepseek-ai/dsh-experimental-${name}`)
   }
   for (const item of manifest.packages) {
     if (!record(item) || typeof item.name !== 'string' || typeof item.path !== 'string') throw new Error('Invalid APUS Reflex Harness package identity')
@@ -85,5 +88,8 @@ export function resolveSystem3Runtime(appPath: string, resourcesPath: string, is
     required.delete(item.name)
   }
   if (required.size) throw new Error(`APUS Reflex Harness runtime is incomplete: ${[...required].join(', ')}`)
-  return { root: realpathSync(root), entry: contained(root, manifest.entry), version: SYSTEM3_RUNTIME_VERSION, mode: manifest.mode, sourceRevision: manifest.sourceRevision, edition, editionPatchPath }
+  const runner = join(artifactRoot, 'dependencies', 'llama-server', 'llama-server')
+  const reflexRunnerPath = existsSync(runner) && statSync(runner).isFile() ? contained(artifactRoot, 'dependencies/llama-server/llama-server') : undefined
+  return { root: realpathSync(root), entry: contained(root, manifest.entry), version: SYSTEM3_RUNTIME_VERSION, mode: manifest.mode, sourceRevision: manifest.sourceRevision, edition, editionPatchPath,
+    ...(reflexRunnerPath === undefined ? {} : { reflexRunnerPath }) }
 }

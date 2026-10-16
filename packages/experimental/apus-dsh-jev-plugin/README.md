@@ -48,7 +48,7 @@ Set `JEV_ENDPOINT` and `JEV_MODEL` to your serving endpoint and model. Values ar
 
 | Field | Default | Meaning |
 |---|---|---|
-| `enabled` | `true` | Whether Reflex decisions run. When `false`, resolving or sending a decision throws `JevDisabledError`, a `JevConfigurationError` like an unconfigured provider's, and nothing reaches the gateway; System3 decisions record `provider-unavailable` and keep their native path, and Continuum ranking keeps the baseline order in every mode. Provider metadata stays listed. **Settings → Reflex configuration** shows it as a switch that saves at once; changes apply to the next decision |
+| `enabled` | `true` | Whether Reflex decisions run. When `false`, resolving or sending a decision throws `JevDisabledError`, a `JevConfigurationError` like an unconfigured provider's, and nothing reaches the gateway; System3 decisions record `provider-unavailable` and keep their native path, and Continuum ranking keeps the baseline order in every mode. Provider metadata stays listed. **Settings → Reflex configuration** shows it as a switch that saves at once; changes apply to the next decision. `isEnabled()` reads it, and each change emits `jev/enabled` for dependents outside the Jev entry |
 | `endpoint` | empty | HTTP gateway root or `/v1` URL; required with `model` before decisions |
 | `model` | empty | Model id sent to the gateway; required with `endpoint` before decisions |
 | `protocol` | `openjev` | Decision protocol: OpenJev (`openjev`) or Typesafe (`typesafe`) |
@@ -59,7 +59,8 @@ Set `JEV_ENDPOINT` and `JEV_MODEL` to your serving endpoint and model. Values ar
 | `http2` | `false` | Negotiate HTTP/2 on the dedicated connection; requires `keepAliveMs` |
 | `resetAfterFailures` | absent | Consecutive requests without a response after which the dedicated pool is destroyed and the next request opens a fresh connection; on HTTP/2 every request shares one connection, so a stalled one otherwise fails every later decision. Requires `keepAliveMs`; omission never reopens the pool |
 | `questionsPerRequest` | absent | Most questions one gateway request carries (1–16). A decision with more questions is sent as consecutive groups of this size in parallel requests with the same state, and their answers are merged into one response with usage counters summed; the first failing group cancels the others and fails the decision. Gateway time grows with the question count: on the deployed gateway, seven questions answered in about 340 ms as one request and about 260 ms as seven parallel requests over kept-alive connections. Omission sends every decision as one request |
-| `providerId` | `system-one` | Built-in provider registry id |
+| `providerId` | `system-one` | Built-in provider registry id; selected when a request omits one and `defaultProviderId` is unset |
+| `defaultProviderId` | absent | Provider selected when a request omits one, such as the local Reflex engine (`@deepseek-ai/dsh-experimental-reflex-local`) registered by another plugin. Changing it switches the next decision without renaming or reloading the built-in provider; `enabled: false` still stops every provider |
 
 The endpoint may be a local SSH tunnel or a controlled service URL. The provider appends `/v1/systemone` when the configured URL does not already end in `/v1`; it sends a Bearer credential only when `apiKeyEnv` resolves to a value.
 
@@ -86,6 +87,8 @@ const outcome = await ctx.jev.decide({
 ```
 
 Resolving or executing a request with an unconfigured default provider throws a configuration error before credential resolution or HTTP; an explicit request model does not bypass this requirement. `warm` returns false in this state. `kind: 'unknown'` is fail-open for transport, timeout, HTTP, credential, and response validation failures. The caller keeps deterministic System3 policy as the authority and may record the returned failure without exposing request or response text.
+
+`providerInfo(providerId?)` returns the metadata of the provider a request would use, the default provider when the id is omitted, without I/O; it returns undefined while Reflex is off or that provider is unconfigured or not registered. A provider may declare `executionDomain`: `local` when request state never leaves this machine, as the local Reflex engine does, or `network`. The built-in gateway provider declares none because its URL may be a tunnel to another host; consumers such as System3 then apply their own deployment default.
 
 -----
 
@@ -133,7 +136,7 @@ The form schema contains only serializable data. The service validates endpoints
 
 The `jev` Loader entry exposes its endpoint, model, effort, deadline, protocol and credential reference as volatile settings. The dedicated **Reflex configuration** page presents the service as Reflex and offers the APUS Reflex limited-time free endpoint or custom parameters; it edits this entry through ConfigForms and writes API keys through Credentials; new requests read the committed values while requests already in flight retain their resolved provider. Pool parameters remain deployment-owned.
 
-The `reflex` Remote namespace exposes `readStatus` and `testConnection`. An OpenJev connection test checks `/health`, authenticates `/v1/models`, confirms the selected model, and submits a fixed non-user yes/no proposition to `/v1/systemone`. Typesafe skips `/health` and checks the model list before submitting the same decision without the effort extension. The test uses the draft’s selected protocol, accepts unsaved values and an optional transient key without storing them, returns only sanitized failure classes and elapsed time, and never marks task capabilities verified. Runtime owners register capability readers through `registerCapability` and own their disposers.
+The `reflex` Remote namespace exposes `readStatus` and `testConnection`. An OpenJev connection test checks `/health`, authenticates `/v1/models`, confirms the selected model, and submits a fixed non-user yes/no proposition to `/v1/systemone`. Typesafe skips `/health` and checks the model list before submitting the same decision without the effort extension. The test uses the draft’s selected protocol, accepts unsaved values and an optional transient key without storing them, returns only sanitized failure classes and elapsed time, and never marks task capabilities verified. Runtime owners register capability readers through `registerCapability` and own their disposers; a reader reports `suspended: true` for an installed capability that a product switch turned off.
 
 `ReflexCapabilityId` names the reported capabilities: `entryRouting`, `codexSupervision`, `contextMemory`, `skillSelection` and `workspacePrefetch`; `ReflexCapabilityState` carries installation, enablement, observed outcomes and read-only deployment limits. `ReflexStatus` combines those states with the configured provider; its `provider` is `null` before configuration and after both fields are cleared. `ReflexConnectionInput` describes the unsaved candidate and optional transient key; `ReflexConnectionResult` reports the tested stage, sanitized status and duration.
 

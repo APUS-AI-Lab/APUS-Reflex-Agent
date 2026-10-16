@@ -11,6 +11,7 @@ import packageMetadata from './package-metadata-policy.cjs'
 import productEdition from './product-edition.cjs'
 import { existsSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
+import { prepareReflexRunner } from './reflex-runner.mjs'
 
 const appRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const args = process.argv.slice(2)
@@ -27,7 +28,8 @@ if (!/^[0-9a-f]{40}$/.test(sourceRevision)) throw new Error('Harness source revi
 const sourceDirty = execFileSync('git', ['status', '--porcelain'], { cwd: sourceRoot, encoding: 'utf8' }).trim().length > 0
 if (deployed && sourceDirty && !args.includes('--allow-dirty')) throw new Error('Production preparation requires committed Harness source; --allow-dirty is for local acceptance only')
 const version = '0.1.7-rc.2'
-const names = ['system3-policy', 'system3', 'system3-evidence', 'system3-supervisor', 'apus-dsh-jev-plugin', 'client-ui-system3', 'continuum-jev']
+const names = ['system3-policy', 'system3', 'system3-evidence', 'system3-supervisor', 'apus-dsh-jev-plugin', 'client-ui-system3', 'continuum-jev',
+  'reflex-local-bundle', 'reflex-local', 'api-reflex-local', 'client-ui-reflex-local']
 const sourceDefinitions = [['@deepseek-ai/dsh', 'apps/cli/package.json'], ...names.map(name => [`@deepseek-ai/dsh-experimental-${name}`, `packages/experimental/${name}/package.json`]),
   ['@deepseek-ai/dsh-continuum', 'packages/context/continuum/package.json']]
 async function checkPackages(root, definitions) {
@@ -88,7 +90,7 @@ try {
       closure.dependencies[name] = 'workspace:*'
       cli.dependencies[name] = 'workspace:*'
     }
-    for (const [name] of sourceDefinitions.slice(1)) cli.dependencies[name] = 'workspace:*'
+    for (const [name] of sourceDefinitions.slice(1)) closure.dependencies[name] = cli.dependencies[name] = 'workspace:*'
     for (const name of ['@deepseek-ai/dsh-deepseek-account', 'react-dom']) {
       if (desktopPackage.dependencies[name]) closure.dependencies[name] = cli.dependencies[name] = name.startsWith('@deepseek-ai/') ? 'workspace:*' : desktopPackage.dependencies[name]
     }
@@ -139,20 +141,22 @@ try {
     execFileSync(process.execPath, [join(appRoot, 'scripts/install-brand-assets.mjs'), root], { cwd: appRoot, stdio: 'pipe' })
     const deployedCli = JSON.parse(await readFile(join(root, 'node_modules/@deepseek-ai/dsh/package.json'), 'utf8'))
     if (sourceDefinitions.slice(1).some(([name]) => !deployedCli.dependencies[name])) throw new Error('Own CLI resolver manifest omits a System3 package')
-    await access(join(root, 'node_modules/@deepseek-ai/dsh-experimental-continuum-jev/cordis.patch.yml'))
+    for (const bundle of ['continuum-jev', 'system3']) await access(join(root, `node_modules/@deepseek-ai/dsh-experimental-${bundle}/cordis.patch.yml`))
     const smokeImports = ['dsh-ppt/lib/preview-manifest.js', 'dsh-ppt/lib/index.js', 'dsh-ppt-composer/lib/index.js',
       '@deepseek-ai/dsh-experimental-continuum-jev/lib/product-memory.js',
       ...sourceDefinitions.slice(1).map(([name]) => `${name}/lib/index.js`)]
     const smoke = smokeImports.map(name => `await import(${JSON.stringify(pathToFileURL(join(root, 'node_modules', name)).href)});`).join('\n')
     execFileSync(process.execPath, ['--input-type=module', '-e', smoke], { cwd: root, stdio: 'pipe', timeout: 60_000 })
   } else await mkdir(stage)
+  const llamaServer = await prepareReflexRunner(sourceRoot, join(stage, 'dependencies', 'llama-server'), join(appRoot, '.build', 'runtime-downloads'))
   const definitions = deployed ? sourceDefinitions.map(([name]) => [name, `node_modules/${name}/package.json`]) : sourceDefinitions
   await checkPackages(root, definitions)
   const entry = deployed ? 'node_modules/@deepseek-ai/dsh/lib/bin.js' : 'apps/cli/lib/bin.js'
   await access(join(root, entry))
   const manifest = { formatVersion: 1, product: 'xdan-system3', version, edition, editionPatch: 'product-edition.patch.yml', sourceRevision, sourceDirty,
     platform: process.platform, arch: process.arch, mode: deployed ? 'deployed' : 'workspace',
-    ...(deployed ? { dependencyInventory: dependencyInventory.writeDependencyInventory(root) } : { sourceRoot }), entry, packages: definitions.map(([name, path]) => ({ name, path })) }
+    ...(deployed ? { dependencyInventory: dependencyInventory.writeDependencyInventory(root) } : { sourceRoot }), entry, packages: definitions.map(([name, path]) => ({ name, path })),
+    ...(llamaServer === undefined ? {} : { llamaServer }) }
   await generateSystem3Patch(stage, { sourceRoot, mode: manifest.mode, edition })
   await writeFile(join(stage, manifest.editionPatch), productEdition.editionPatch(edition))
   await writeFile(join(stage, 'runtime-manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`)

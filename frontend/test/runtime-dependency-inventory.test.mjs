@@ -21,7 +21,8 @@ function fixture() {
   const project = mkdtempSync(join(tmpdir(), 'runtime-inventory-'))
   roots.push(project)
   const root = join(project, '.build/system3-runtime')
-  const names = ['@deepseek-ai/dsh', '@deepseek-ai/dsh-continuum', ...['system3', 'system3-policy', 'system3-evidence', 'system3-supervisor', 'apus-dsh-jev-plugin', 'client-ui-system3', 'continuum-jev'].map(name => `@deepseek-ai/dsh-experimental-${name}`)]
+  const names = ['@deepseek-ai/dsh', '@deepseek-ai/dsh-continuum', ...['system3', 'system3-policy', 'system3-evidence', 'system3-supervisor', 'apus-dsh-jev-plugin', 'client-ui-system3', 'continuum-jev',
+    'reflex-local-bundle', 'reflex-local', 'api-reflex-local', 'client-ui-reflex-local'].map(name => `@deepseek-ai/dsh-experimental-${name}`)]
   const packages = names.map(name => {
     packageAt(root, `node_modules/${name}`, name, '0.1.7-rc.2')
     return { name, path: `node_modules/${name}/package.json` }
@@ -32,7 +33,7 @@ function fixture() {
   const entry = 'node_modules/@deepseek-ai/dsh/lib/bin.js'
   mkdirSync(join(root, 'node_modules/@deepseek-ai/dsh/lib'))
   writeFileSync(join(root, entry), '')
-  const manifest = { product: 'xdan-system3', version: '0.1.7-rc.2', mode: 'deployed', edition: 'full', editionPatch: 'product-edition.patch.yml', sourceRevision: 'a'.repeat(40), sourceDirty: false, platform: 'darwin', arch: 'arm64', packages, entry, dependencyInventory: inventory.writeDependencyInventory(root) }
+  const manifest = { product: 'xdan-system3', version: '0.1.7-rc.2', mode: 'deployed', edition: 'full', editionPatch: 'product-edition.patch.yml', sourceRevision: 'a'.repeat(40), sourceDirty: false, platform: 'darwin', arch: 'arm64', packages, entry, llamaServer: 'b11118', dependencyInventory: inventory.writeDependencyInventory(root) }
   writeFileSync(join(root, manifest.editionPatch), productEdition.editionPatch(manifest.edition))
   writeFileSync(join(root, 'runtime-manifest.json'), JSON.stringify(manifest))
   writeFileSync(join(root, 'desktop-patch-receipt.json'), JSON.stringify(Array.from({ length: 27 }, () => ({ targets: [] }))))
@@ -53,13 +54,24 @@ describe('deployed runtime dependency inventory', () => {
     const { root, manifest, context } = fixture()
     const first = readFileSync(join(root, inventory.inventoryFileName), 'utf8')
     const actual = JSON.parse(first)
-    expect(actual.packages).toHaveLength(12)
+    expect(actual.packages).toHaveLength(16)
     expect(actual.packages.map(item => item.path)).toEqual(actual.packages.map(item => item.path).sort())
     expect(actual.packages).toContainEqual(expect.objectContaining({ path: 'node_modules/extra/node_modules/@nested/child/node_modules/deep/package.json', name: 'deep', version: '3.0.0', packageJsonSha256: expect.stringMatching(/^[a-f0-9]{64}$/) }))
     expect(inventory.writeDependencyInventory(root)).toEqual(manifest.dependencyInventory)
     expect(readFileSync(join(root, inventory.inventoryFileName), 'utf8')).toBe(first)
     expect(inventory.verifyDependencyInventory(root, manifest)).toEqual(manifest.dependencyInventory)
     await expect(beforePack(context)).resolves.toBeUndefined()
+  })
+
+  it('requires the local Reflex runner exactly for macOS arm64 runtimes', async () => {
+    const { root, manifest, context } = fixture()
+    const { llamaServer: _runner, ...withoutRunner } = manifest
+    writeFileSync(join(root, 'runtime-manifest.json'), JSON.stringify(withoutRunner))
+    await expect(beforePack(context)).rejects.toThrow('local Reflex runner exactly on macOS arm64')
+    writeFileSync(join(root, 'runtime-manifest.json'), JSON.stringify({ ...manifest, arch: 'x64' }))
+    await expect(beforePack({ ...context, arch: 1 })).rejects.toThrow('local Reflex runner exactly on macOS arm64')
+    writeFileSync(join(root, 'runtime-manifest.json'), JSON.stringify({ ...withoutRunner, arch: 'x64' }))
+    await expect(beforePack({ ...context, arch: 1 })).resolves.toBeUndefined()
   })
 
   it('does not describe a workspace checkout as a deployed dependency inventory', () => {

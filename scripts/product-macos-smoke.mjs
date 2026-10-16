@@ -177,6 +177,13 @@ async function run(installer, reportDirectory, expectedSource = process.env.GITH
     if (version.trim() !== build.version) throw new Error('Installed bundle version differs from collected build')
     await command('installed-code-signature', '/usr/bin/codesign', ['--verify', '--deep', '--strict', '--verbose=2', installation], 120_000)
     report.codeSignature = { verified: true, developerIdOrNotarizationVerified: false }
+    if (runtime.llamaServer !== undefined) {
+      // The signed runner must still load its sibling libraries under the installed application's hardened runtime.
+      // GGML_METAL_DEVICES=0 skips Metal device setup, which llama.cpp runs before `--version` and which can stall on a virtual GPU.
+      await runCommand('installed-reflex-runner', join(installation, 'Contents/Resources/system3-runtime/dependencies/llama-server/llama-server'), ['--version'],
+        { timeout: 30_000, maxBuffer: 4 * 1024 * 1024, env: { ...env, GGML_METAL_DEVICES: '0' } }, report.commands)
+      report.reflexRunner = runtime.llamaServer
+    }
     const { stdout: minimum } = await execute('/usr/bin/plutil', ['-extract', 'LSMinimumSystemVersion', 'raw', '-o', '-', join(installation, 'Contents/Info.plist')])
     report.minimumSystemVersion = minimum.trim()
     report.stages.push('copied-runtime-identity-verified-and-image-detached')
@@ -231,21 +238,35 @@ async function run(installer, reportDirectory, expectedSource = process.env.GITH
       report.memorySetting = { initialEnabled: false, writeAccepted: true, modelRecallExercised: false }
       report.stages.push('continuum-setting-enabled')
     }
+    // 决策前置 is a volatile System3 field the System3 profile bundle owns, so its write must also survive a restart.
+    const frontLoadedSwitch = (page, checked) => page.getByRole('switch', {
+      name: /^(决策前置|Pre-step decisions)$/u, checked, disabled: false,
+    })
+    await frontLoadedSwitch(page, true).waitFor({ state: 'visible', timeout: 20_000 })
+    await frontLoadedSwitch(page, true).click()
+    await frontLoadedSwitch(page, false).waitFor({ state: 'visible', timeout: 20_000 })
+    await page.screenshot({ path: join(reportDirectory, 'front-loaded-disabled.png') })
+    report.frontLoadedSetting = { initialEnabled: true, writeAccepted: true }
+    report.stages.push('front-loaded-setting-disabled')
     await close()
     report.stages.push('first-exit-quiescent')
     page = await launch()
     await page.screenshot({ path: join(reportDirectory, 'restart.png') })
-    report.reflexCapabilities.restarted = await verifyReflexExecution(page)
+    report.reflexCapabilities.restarted = await verifyReflexExecution(page, { frontLoaded: false })
     report.stages.push('reflex-execution-modules-ready-after-restart')
+    await page.getByText(/^(设置|Settings)$/).last().click()
+    await page.getByText(new RegExp(`^(当前版本：|Current version: )${build.version.replaceAll('.', '\\.')}$`)).waitFor({ timeout: 20_000 })
+    await page.getByRole('button', { name: /^(Reflex 配置|Reflex configuration)$/u, exact: true }).click()
     if (qualifyMemorySetting) {
-      await page.getByText(/^(设置|Settings)$/).last().click()
-      await page.getByText(new RegExp(`^(当前版本：|Current version: )${build.version.replaceAll('.', '\\.')}$`)).waitFor({ timeout: 20_000 })
-      await page.getByRole('button', { name: /^(Reflex 配置|Reflex configuration)$/u, exact: true }).click()
       await continuumSwitch(page, true).waitFor({ state: 'visible', timeout: 20_000 })
       await page.screenshot({ path: join(reportDirectory, 'continuum-restart.png') })
       report.memorySetting.persistedAfterRestart = true
       report.stages.push('continuum-setting-persisted-after-restart')
     }
+    await frontLoadedSwitch(page, false).waitFor({ state: 'visible', timeout: 20_000 })
+    await page.screenshot({ path: join(reportDirectory, 'front-loaded-restart.png') })
+    report.frontLoadedSetting.persistedAfterRestart = true
+    report.stages.push('front-loaded-setting-persisted-after-restart')
     await close()
     report.stages.push('restart-home-and-exit-quiescent')
     report.passed = true

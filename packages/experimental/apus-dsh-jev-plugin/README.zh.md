@@ -51,7 +51,7 @@ kind: "package-bundle"
 
 | 字段 | 默认值 | 含义 |
 |---|---|---|
-| `enabled` | `true` | 是否运行 Reflex 判定。为 `false` 时，解析或发送判定会抛出 `JevDisabledError`（与未配置提供方相同的 `JevConfigurationError`），不会向网关发送任何请求；System3 判定记录 `provider-unavailable` 并保持原生路径，Continuum 排序在各模式下都保持基线顺序。提供方元数据仍会列出。“设置 → Reflex 配置”将其显示为立即保存的开关；更改对下一次判定生效 |
+| `enabled` | `true` | 是否运行 Reflex 判定。为 `false` 时，解析或发送判定会抛出 `JevDisabledError`（与未配置提供方相同的 `JevConfigurationError`），不会向网关发送任何请求；System3 判定记录 `provider-unavailable` 并保持原生路径，Continuum 排序在各模式下都保持基线顺序。提供方元数据仍会列出。“设置 → Reflex 配置”将其显示为立即保存的开关；更改对下一次判定生效。`isEnabled()` 读取该值，每次变化都会触发 `jev/enabled`，供 Jev 配置项以外的依赖方监听 |
 | `endpoint` | 空 | HTTP gateway 根 URL 或 `/v1` URL；执行决策前须与 `model` 一同配置 |
 | `model` | 空 | 发给 gateway 的模型 id；执行决策前须与 `endpoint` 一同配置 |
 | `protocol` | `openjev` | 决策协议：OpenJev（`openjev`）或 Typesafe（`typesafe`） |
@@ -62,7 +62,8 @@ kind: "package-bundle"
 | `http2` | `false` | 在专用连接上协商 HTTP/2；需要 `keepAliveMs` |
 | `resetAfterFailures` | 无 | 连续这么多次请求没有响应后销毁专用连接池，下一次请求打开新连接；HTTP/2 下所有请求共用一条连接，否则一条卡住的连接会让之后的每次判定都失败。需要 `keepAliveMs`；省略时从不重建连接池 |
 | `questionsPerRequest` | 无 | 一次网关请求最多携带的问题数（1–16）。问题更多的判定按此大小分成连续的组，以相同 state 并行发送，答复合并成一个响应，用量计数相加；任一组失败会取消其他组，整次判定失败。网关耗时随问题数增长：在已部署的网关上，7 个问题作为一个请求约 340 ms，复用连接时拆成 7 个并行请求约 260 ms。省略时每次判定作为一个请求发送 |
-| `providerId` | `system-one` | 内置 provider 的 registry id |
+| `providerId` | `system-one` | 内置 provider 的 registry id；请求未指定 provider 且未设置 `defaultProviderId` 时选用 |
+| `defaultProviderId` | 不设置 | 请求未指定 provider 时选用的 id，例如由其他插件注册的本机 Reflex 引擎（`@deepseek-ai/dsh-experimental-reflex-local`）。修改后下一次判断即切换，不重命名、不重载内置 provider；`enabled: false` 仍会停止所有 provider |
 
 endpoint 可以是本地 SSH tunnel 或受控服务 URL。配置 URL 不以 `/v1` 结尾时，provider 会补上 `/v1/systemone`；只有 `apiKeyEnv` 解析出值时才会发送 Bearer credential。
 
@@ -89,6 +90,8 @@ const outcome = await ctx.jev.decide({
 ```
 
 默认提供方尚未配置时，解析或执行请求会在读取凭据或发送 HTTP 前抛出配置错误；请求中显式指定模型也不能绕过此要求。此状态下 `warm` 返回 false。`kind: 'unknown'` 会对 transport、timeout、HTTP、credential 和响应校验错误执行 fail-open。调用方继续以确定性的 System3 策略为权威，并可以记录返回的 failure，而不会暴露请求或响应文本。
+
+`providerInfo(providerId?)` 不做 I/O，返回请求将使用的 provider 的元数据（省略 id 时为默认 provider）；Reflex 关闭、该 provider 未配置或未注册时返回 undefined。provider 可以声明 `executionDomain`：请求状态不离开本机时为 `local`（例如本机 Reflex 引擎），否则为 `network`。内置网关 provider 不声明执行域，因为其 URL 可能是通往其他主机的 tunnel；System3 等调用方此时使用自己的部署默认值。
 
 -----
 
@@ -134,7 +137,7 @@ const outcome = await ctx.jev.decide({
 
 `jev` Loader 条目将服务地址、模型、决策强度、超时、协议和凭据引用作为 volatile 设置提供。“Reflex 配置”专用页面将服务显示为 Reflex，提供 APUS Reflex 限时免费端点或自定义参数，通过 ConfigForms 编辑条目，通过 Credentials 保存 API Key；新请求读取已提交的值，执行中的请求保留已解析的提供方配置。连接池参数由部署管理。
 
-`reflex` Remote 命名空间提供 `readStatus` 和 `testConnection`。OpenJev 连接测试先检查 `/health`，再鉴权访问 `/v1/models` 并确认所选模型，再向 `/v1/systemone` 发送不含用户内容的固定是非判断。Typesafe 跳过 `/health`，检查模型列表后发送不带 effort 扩展的相同判断。测试使用草稿所选协议，接受未保存的配置和可选临时密钥，不持久化它们，只返回脱敏错误类别与耗时，也不会把任务能力标记为已验收。运行时模块通过 `registerCapability` 注册能力状态读取器，并负责释放注册。
+`reflex` Remote 命名空间提供 `readStatus` 和 `testConnection`。OpenJev 连接测试先检查 `/health`，再鉴权访问 `/v1/models` 并确认所选模型，再向 `/v1/systemone` 发送不含用户内容的固定是非判断。Typesafe 跳过 `/health`，检查模型列表后发送不带 effort 扩展的相同判断。测试使用草稿所选协议，接受未保存的配置和可选临时密钥，不持久化它们，只返回脱敏错误类别与耗时，也不会把任务能力标记为已验收。运行时模块通过 `registerCapability` 注册能力状态读取器，并负责释放注册；已安装但被产品开关关闭的能力，其读取器报告 `suspended: true`。
 
 `ReflexCapabilityId` 标识上报状态的能力：`entryRouting`、`codexSupervision`、`contextMemory`、`skillSelection` 和 `workspacePrefetch`；`ReflexCapabilityState` 包含安装、启用、实际执行结果及只读部署参数。`ReflexStatus` 汇集这些状态与已配置提供方；首次配置前或清空两个字段后，`provider` 为 `null`。`ReflexConnectionInput` 描述未保存候选及可选临时密钥；`ReflexConnectionResult` 报告测试阶段、脱敏状态及耗时。
 

@@ -68,6 +68,15 @@ export function routeNotice(entry: System3RuntimeView['entry'] | undefined, pend
   return null
 }
 /**
+ * Name where a recorded entry decision ran.
+ * @param entry - Projected entry facts.
+ * @returns The source label key, or null before the decision is recorded.
+ */
+export function sourceKey(entry: System3RuntimeView['entry'] | undefined): System3Key | null {
+  if (entry?.executionDomain === 'local') return 'sourceLocal'
+  return entry?.executionDomain === 'network' ? 'sourceNetwork' : null
+}
+/**
  * Format a duration for progress lines: seconds below one minute, then minutes and seconds.
  * @param ms - Duration in milliseconds.
  * @param t - System3 translations.
@@ -280,6 +289,7 @@ export function System3Feedback(props: System3FeedbackProps) {
     ? null : facts?.skill
   const judgment = props.opening ? undefined : reflexJudgmentText(currentSkill, t)
   const fixed = selection?.mode === 'fixed'
+  const source = sourceKey(facts?.entry)
   const route = facts?.entry?.route
   const suggestion = route?.retained === true ? t('continued')
     : route?.delegation ? route.label ?? route.delegation.tool : model(facts?.entry?.suggested, t)
@@ -310,6 +320,8 @@ export function System3Feedback(props: System3FeedbackProps) {
         <dt>{t('adoption')}</dt><dd>{model(facts?.entry?.adopted, t)}</dd>
         <dt>{t('actual')}</dt><dd>{model(facts?.entry?.used, t)}</dd>
         {facts?.entry?.elapsedMs !== null && facts?.entry?.elapsedMs !== undefined && <><dt>{t('decisionTime')}</dt><dd>{facts.entry.elapsedMs} {t('milliseconds')}</dd></>}
+        {source !== null && <><dt>{t('decisionPlace')}</dt><dd>{source === 'sourceLocal'
+          ? `${t(source)} · ${t('sourceLocalDetail')}` : t(source)}</dd></>}
         {facts?.entry?.route?.delegation && <><dt>{t('delegation')}</dt><dd>{t(facts.entry.route.delegation.called ? 'delegationCalled'
           : facts.entry.route.delegation.injected ? 'delegationInjected' : 'delegationSuggested', { tool: facts.entry.route.delegation.tool })}</dd></>}
         <dt>{t('skill')}</dt><dd>{facts?.skill?.selected

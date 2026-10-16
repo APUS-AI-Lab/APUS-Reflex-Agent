@@ -57,7 +57,11 @@ export interface WelcomeAuthentication {
 }
 
 /**
- * Decide whether a startup or sign-out requires the welcome entry.
+ * Decide whether a startup or sign-out requires the welcome entry. Welcome owns
+ * only authentication entry: a signed-in account opens the workspace even
+ * without a usable model route, because only the workspace can read route
+ * availability from the provider directory and model catalog; its readiness
+ * prompt then offers the API-key editor.
  * @param authentication - current account and independently stored API-key facts.
  * @returns true only when neither authentication route is configured.
  */

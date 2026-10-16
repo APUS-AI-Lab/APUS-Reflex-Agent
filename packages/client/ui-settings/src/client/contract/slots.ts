@@ -92,6 +92,12 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
     'settings.general.item': { kind: 'list'; scope: 'root'; owner: SettingsGeneralItemOwnerProps }
     /** Preference rows hosted by the Reflex settings section when that page is composed. */
     'settings.reflex.item': { kind: 'list'; scope: 'root'; owner: SettingsReflexItemOwnerProps }
+    /**
+     * Body of the Reflex section's local connection mode, contributed by the plugin that runs a local Jev provider.
+     * The section renders its own fallback when nothing is registered; the contribution owns its state, copy, and
+     * the action that routes decisions to the local provider.
+     */
+    'settings.reflex.local': { kind: 'single'; scope: 'root'; owner: SettingsReflexItemOwnerProps }
   }
 }
 /** Owner share of a Reflex preference row; each contribution supplies its own state and copy. */

@@ -100,7 +100,7 @@ it('rejects configurations that cannot work', () => {
 
 /** A read-only workspace served by a fake shell: discovery reports git with a README, and each command echoes its file. */
 async function setup(answers: (request: JevRequest) => Record<string, ReturnType<typeof noul>>, config: Partial<System3PrefetchConfig> = {},
-  shell = true, reflexEnabled = true, workspace = '/workspace') {
+  shell = true, reflexEnabled = true, workspace = '/workspace', frontLoaded = true) {
   const ctx = new Context()
   contexts.push(ctx)
   await mountAgentLoopTestDependencies(ctx)
@@ -126,7 +126,7 @@ async function setup(answers: (request: JevRequest) => Record<string, ReturnType
   const adapter = new MockAdapter([textResponse('Above 2500 EUR.'), textResponse('Above 2500 EUR.')])
   ctx.effect(() => ctx.llm.registerAdapter(['mock'], adapter))
   await ctx.plugin(System3, { privacyMode: 'controlled', approvedRemoteIds: ['jev'], approvedRemoteDataClasses: ['workspace'],
-    jevExecutionDomain: 'network', prefetch: { ...CONFIG, ...config, sessionDataClasses: ['workspace'] } })
+    jevExecutionDomain: 'network', frontLoadedDecisions: frontLoaded, prefetch: { ...CONFIG, ...config, sessionDataClasses: ['workspace'] } })
   const agent = await ctx.agentLoop.create(SessionId('prefetch'), { provider: 'mock', model: 'mock' }, { cwd: workspace })
   const say = async (text: string): Promise<void> => {
     agent.followup(createUserMessage({ content: [{ type: 'text', text }], source: { kind: 'user' } }))
@@ -141,6 +141,15 @@ async function setup(answers: (request: JevRequest) => Record<string, ReturnType
 /** Mark the README candidate needed and everything else not needed. */
 const readmeOnly = (request: JevRequest) => Object.fromEntries(Object.entries(request.questions).map(([key, question]) =>
   [key, noul(question.instructions?.includes('README.md') === true ? 0.9 : 0.05)]))
+
+it('runs no command and asks Jev nothing while front-loaded decisions are off', async () => {
+  const h = await setup(readmeOnly, {}, true, true, '/workspace', false)
+  await h.say('Above which amount does an order need approval?')
+  expect(h.commands).toEqual([])
+  expect(h.decide).not.toHaveBeenCalled()
+  expect(h.shown(h.adapter.requests[0])).toBe('')
+  expect(h.agent.session.snapshotEvents().some(event => event.type === 'system3/judgement')).toBe(false)
+})
 
 it('runs every candidate in the read-only sandbox and shows the needed outputs to the model in the same step', async () => {
   const h = await setup(readmeOnly)
@@ -199,8 +208,9 @@ it('leaves the step unchanged when nothing is needed, in shadow mode, without a 
   await off.say('Above which amount does an order need approval?')
   expect(off.shown(off.adapter.requests[0])).toBe('')
   expect(off.adapter.requests).toHaveLength(1)
-  expect(off.agent.session.snapshotEvents().find(event => event.type === 'system3/judgement')?.data)
-    .toMatchObject({ decision: 'prefetch', reason: 'provider-unavailable', applied: false, request: null })
+  // The Reflex master switch off skips the front-loaded decision entirely, so nothing is asked or recorded.
+  expect(off.decide).not.toHaveBeenCalled()
+  expect(off.agent.session.snapshotEvents().some(event => event.type === 'system3/judgement')).toBe(false)
 
   const failing = await setup(readmeOnly)
   failing.decide.mockResolvedValue({ kind: 'unknown', failure: { code: 'transport', message: 'down' } } as never)

@@ -50,6 +50,10 @@ kind: "package-group"
 | [`system3`](system3/README.zh.md) | 组合 System3 策略、证据和监督能力的 Cordis 服务 | `ctx.system3` |
 | [`apus-dsh-jev-plugin`](apus-dsh-jev-plugin/README.zh.md) | 通过 System One HTTP provider 提供与部署无关的类型化 Jev 决策 | `ctx.jev` |
 | [`continuum-jev`](continuum-jev/README.zh.md) | Reflex 专属的有限 Continuum 记忆选择，支持 off/shadow/active | — |
+| [`api-reflex-local`](api-reflex-local/README.zh.md) | 带认证的本机决策引擎准备与启用 Remote | `ctx.reflexLocalController` |
+| [`client-ui-reflex-local`](client-ui-reflex-local/README.zh.md) | 本机决策引擎卡片、启用引导与启用提示 | — |
+| [`reflex-local`](reflex-local/README.zh.md) | 本机 APUS Reflex 决策引擎：权重准备、托管 llama-server 与 Jev provider | `ctx.reflexLocal` |
+| [`reflex-local-bundle`](reflex-local-bundle/README.zh.md) | 默认禁用的可选本机判断组合 | — |
 | [`agui`](agui/README.zh.md) | 基于 HTTP 的 AG-UI：为 Muse 等外部客户端提供轮次、线程、审批与提问 | 无（路由挂在 `ctx.webServer`） |
 
 -----

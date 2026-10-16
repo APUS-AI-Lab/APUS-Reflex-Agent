@@ -385,6 +385,12 @@ Source: [`packages/experimental/inspector/src/index.ts`](../../packages/experime
 Cordis service that resolves one pinned Jev provider per request.
 
 ```ts cordis-catalog
+/**
+ * Read the settings switch; `jev/enabled` announces each change.
+ * @returns Whether Reflex decisions run, so callers can hide Reflex-only features while it is off.
+ */
+isEnabled(): boolean
+
 /** Register the runtime owner of one capability's observed status.
  * @param id - Product capability identity.
  * @param read - Runtime status projection; connection probes never update it.
@@ -418,6 +424,13 @@ register(provider: JevProvider): () => void
 listProviders(): readonly JevProviderInfo[]
 
 /**
+ * Read the metadata of the provider a request would use, without performing I/O.
+ * @param providerId - Requested provider; omission selects the current default provider.
+ * @returns Detached metadata, or undefined when Reflex is off or the provider is unconfigured or not registered.
+ */
+providerInfo(providerId?: string): JevProviderInfo | undefined
+
+/**
  * Resolve a request to a provider and effective model without performing I/O.
  * @param request - Host request and optional provider selection.
  * @returns Validated request with provider and model pinned.
@@ -444,6 +457,168 @@ async decide(request: JevRequest, signal?: AbortSignal): Promise<JevOutcome>
 ```
 
 Source: [`packages/experimental/apus-dsh-jev-plugin/src/index.ts`](../../packages/experimental/apus-dsh-jev-plugin/src/index.ts)
+
+<a id="ctxreflexlocal--reflexlocal"></a>
+
+### `ctx.reflexLocal` — `ReflexLocal`
+
+Host service exposing engine preparation; its Fiber owns the engine and runner. The provider registration lives in a nested `jev` dependency, so a Jev reload re-registers it without stopping the engine.
+
+```ts cordis-catalog
+/**
+ * Read device support, preparation, and routing in one observation.
+ * @returns the latest consistent snapshot.
+ */
+snapshot(): ReflexSnapshot
+
+/**
+ * Observe readiness until the signal aborts or the plugin unloads; changes between reads coalesce.
+ * @param signal - observer lifetime.
+ * @returns the current snapshot followed by each later change.
+ */
+follow(signal: AbortSignal): AsyncIterable<ReflexSnapshot>
+
+/**
+ * Select the given variant, else the variant of a paused or failed preparation, else the recommendation.
+ * @param options - variant and download source.
+ */
+prepare(options?: ReflexPrepareOptions): void
+
+/**
+ * Make a tested downloaded variant active now, or prepare another one in the background while the active one serves.
+ * @param variant - option to make active.
+ * @param options - one advertised download origin used without fallback.
+ */
+select(variant: ReflexVariant, options?: ReflexSelectOptions): void
+
+/** Stop active preparation and keep the partial download. @returns after the work settles. */
+async pause(): Promise<void>
+
+/** Stop active preparation and delete the partial download. @returns after the work settles and the file is removed. */
+async cancel(): Promise<void>
+
+/**
+ * Record the local engine as the chosen connection mode, removing a Jev `defaultProviderId` that names another provider.
+ * @returns after the profile change and the choice are persisted.
+ */
+async chooseLocal(): Promise<void>
+
+/**
+ * Start the active model's runner, then route Jev decisions to the local provider; requires an active model.
+ * @returns after the runner answers and the profile change is applied.
+ */
+async enable(): Promise<void>
+
+/** Stop local routing, clear both notices, and stop the runner after the decisions in flight. @returns after it stopped. */
+async disable(): Promise<void>
+
+/** Clear `unacknowledgedAutoEnableAt` after a client showed it. @returns after the cleared state is persisted. */
+async acknowledge(): Promise<void>
+
+/** Clear `unacknowledgedSwitch` after a client showed it. @returns after the cleared state is persisted. */
+async acknowledgeSwitch(): Promise<void>
+
+/**
+ * Delete one variant, disabling local decisions first when it is the active, enabled model.
+ * @param variant - option to delete; omission deletes every model.
+ * @returns after deletion.
+ */
+async deleteModel(variant?: ReflexVariant): Promise<void>
+
+/** Stop preparation and the runner, delete weights and partial files, then disable. @returns after deletion. */
+async remove(): Promise<void>
+```
+
+Source: [`packages/experimental/reflex-local/src/index.ts`](../../packages/experimental/reflex-local/src/index.ts)
+
+<a id="ctxreflexlocalcontroller--reflexlocalcontroller"></a>
+
+### `ctx.reflexLocalController` — `ReflexLocalController`
+
+Forwards each call to `ctx.reflexLocal`; a disconnected observer never cancels Host-owned preparation.
+
+```ts cordis-catalog
+/**
+ * Read the current readiness without waiting for a change.
+ * @returns the latest device, preparation, and enablement observation.
+ */
+@Remote snapshot(): ReflexSnapshot
+
+/**
+ * Follow readiness independently of Session and preparation lifetimes.
+ * @param signal - Client observation lifetime.
+ * @returns the current snapshot followed by each later change.
+ */
+@Remote({ mode: 'stream' }) follow(signal: AbortSignal): AsyncIterable<ReflexSnapshot>
+
+/**
+ * Select the given variant, else the variant of a paused or failed preparation, else the recommendation. Fails with
+ * `reflexLocal/unfit` for a variant above this Host's memory tier unless `allowUnfit` is set.
+ * @param options - variant, download source, and memory consent; omission uses configured origins.
+ */
+@Remote prepare(options?: ReflexPrepareOptions): void
+
+/**
+ * Make a tested downloaded variant active now, or prepare another one in the background while the active one serves.
+ * Fails with `reflexLocal/preparing-other` while a different variant is being prepared, and with `reflexLocal/unfit` for a
+ * variant above this Host's memory tier unless `allowUnfit` is set.
+ * @param variant - option to make active.
+ * @param options - consent to a variant above this Host's memory tier.
+ */
+@Remote select(variant: ReflexVariant, options?: Pick<ReflexSelectOptions, 'allowUnfit'>): void
+
+/**
+ * Stop active preparation and keep the partial download for a later `prepare()`.
+ * @returns after the work settles.
+ */
+@Remote pause(): Promise<void>
+
+/**
+ * Stop active preparation and delete the partial download.
+ * @returns after the work settles and the file is removed.
+ */
+@Remote cancel(): Promise<void>
+
+/**
+ * Record the local engine as the chosen Reflex connection mode before any model is prepared.
+ * @returns after the choice is persisted.
+ */
+@Remote chooseLocal(): Promise<void>
+
+/**
+ * Start the active model's runner, then route Jev decisions to the local provider; the engine rejects this without an
+ * active model or when the runner cannot start.
+ * @returns after the runner answers and the change is applied.
+ */
+@Remote enable(): Promise<void>
+
+/**
+ * Stop routing Jev decisions to the local provider.
+ * @returns after the change is applied.
+ */
+@Remote disable(): Promise<void>
+
+/**
+ * Record that a client showed the pending automatic enablement, so later clients do not offer its undo again.
+ * @returns after the cleared state is persisted.
+ */
+@Remote acknowledge(): Promise<void>
+
+/**
+ * Record that a client showed the pending background model switch.
+ * @returns after the cleared state is persisted.
+ */
+@Remote acknowledgeSwitch(): Promise<void>
+
+/**
+ * Delete one model's weights, partial file, and records; deleting the active model stops its runner and keeps routing.
+ * @param variant - option to delete; omission deletes every model.
+ * @returns after deletion.
+ */
+@Remote deleteModel(variant?: ReflexVariant): Promise<void>
+```
+
+Source: [`packages/experimental/api-reflex-local/src/index.ts`](../../packages/experimental/api-reflex-local/src/index.ts)
 
 <a id="ctxsystem3--system3service"></a>
 
@@ -628,6 +803,27 @@ A pending Client activation request left the answerable state.
 ```
 
 Source: [`packages/extensions/cordis-host-runner/src/types.ts`](../../packages/extensions/cordis-host-runner/src/types.ts)
+
+<a id="jev-events"></a>
+
+### `jev/*` events
+
+<a id="jevenabled--emit"></a>
+
+#### `jev/enabled` — emit
+
+The Reflex settings switch changed; `loader/volatile-update` reaches only the Jev entry, so dependents listen here.
+
+```ts cordis-catalog
+/**
+ * The Reflex settings switch changed; `loader/volatile-update` reaches only the Jev entry, so dependents listen here.
+ * @param enabled - Whether Reflex decisions now run.
+ * @mode emit
+ */
+'jev/enabled'(enabled: boolean): void
+```
+
+Source: [`packages/experimental/apus-dsh-jev-plugin/src/index.ts`](../../packages/experimental/apus-dsh-jev-plugin/src/index.ts)
 
 <a id="system3-events"></a>
 

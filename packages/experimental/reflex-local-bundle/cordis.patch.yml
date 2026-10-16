@@ -1,0 +1,12 @@
+# Adds the local decision engine beside an existing Jev entry (the Jev bundle inserts it); Jev and System3 stay owned by their bundles.
+- insert:
+    - id: reflex-local
+      name: '@deepseek-ai/dsh-experimental-reflex-local'
+      config:
+        dataRoot: !!js dshHomePath('reflex-local')
+        # The desktop Host exports APUS_REFLEX_RUNNER; otherwise the bundled primary runtime, else the engine reports runner-missing.
+        runnerPath: !!js "process.env.APUS_REFLEX_RUNNER ? process.env.APUS_REFLEX_RUNNER : process.env.DSH_DESKTOP_PRIMARY_RUNTIME_SOURCE ? process.env.DSH_DESKTOP_PRIMARY_RUNTIME_SOURCE + '/dependencies/llama-server/llama-server' : undefined"
+    - id: api-reflex-local
+      name: '@deepseek-ai/dsh-experimental-api-reflex-local'
+    - id: ui-reflex-local
+      name: '@deepseek-ai/dsh-experimental-client-ui-reflex-local'

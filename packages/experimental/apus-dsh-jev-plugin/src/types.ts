@@ -76,6 +76,11 @@ export interface JevProviderInfo {
   readonly id: string
   readonly model: string
   readonly endpoint: string
+  /**
+   * Where the model runs: `local` keeps request state on this machine; `network` sends it to another host.
+   * Absent when the provider cannot know, such as a configured gateway URL; consumers then apply their own deployment default.
+   */
+  readonly executionDomain?: 'local' | 'network'
 }
 
 /** Implemented provider seam; providers must return a validated response or throw. */
@@ -129,6 +134,8 @@ export type ReflexCapabilityId = 'entryRouting' | 'codexSupervision' | 'contextM
 export interface ReflexCapabilityState {
   readonly implemented: boolean
   readonly enabled: boolean
+  /** True when the capability is installed but a product switch turned it off; `enabled` is then false. */
+  readonly suspended?: boolean
   readonly verifiedAt?: number
   readonly lastOutcome?: string
   /** Effective Goal-relevance supervision after module, activation and workspace-data admission checks. */
