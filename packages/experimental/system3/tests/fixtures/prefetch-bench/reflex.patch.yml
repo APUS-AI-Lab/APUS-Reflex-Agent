@@ -46,4 +46,5 @@
           maxTotalBytes: 24000
           maxSourceFiles: 30
           maxSearchTerms: 4
+          maxHitFiles: 3
           commandTimeoutMs: 3000

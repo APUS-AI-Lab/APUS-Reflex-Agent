@@ -306,8 +306,8 @@
   en: ac55bdc5bb0a3b7d
   zh: ce789fa10563513a
 /session-persistence-event-catalog/events/system3/system3-skill-decision-log-only:
-  en: 6b9bfe9ca05df160
-  zh: e78dcb362e31965c
+  en: cd94505d8b146ef9
+  zh: c1943feead7e2705
 /session-persistence-event-catalog/events/system3/system3-task-frame-log-only:
   en: 2f393738a5379e52
   zh: aab86161eae5646d
@@ -1911,8 +1911,8 @@
   en: 0315ee01993e1b3e
   zh: 305599088d8682b1
 /session-persistence-event-catalog/resolved-persistence-types/system3prefetchsource:
-  en: 6fef03ce74612bdf
-  zh: d4e555db24eefccf
+  en: 7b91d8936fd12b45
+  zh: 866d9b4c158dfac9
 /session-persistence-event-catalog/resolved-persistence-types/system3processnotice:
   en: 0bf073f6a6f1c76e
   zh: f78af8cea9d82852
@@ -1926,8 +1926,8 @@
   en: 356d2a016b227c2d
   zh: f7ce8661350a04a1
 /session-persistence-event-catalog/resolved-persistence-types/system3skilldecisionreceipt:
-  en: 636f8f487797b46e
-  zh: 5fb88d88db4a87b8
+  en: 407115737b98cc02
+  zh: b0aaac6a5e56bd58
 /session-persistence-event-catalog/resolved-persistence-types/system3supervisedaction:
   en: d93eb2936e265b8e
   zh: 6e980032451a2ead

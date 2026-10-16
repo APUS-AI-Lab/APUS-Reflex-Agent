@@ -40993,7 +40993,7 @@
         "packages/experimental/system3/src/prefetch.ts#System3PrefetchSource"
       ],
       "sources": [
-        "packages/experimental/system3/src/prefetch.ts:34"
+        "packages/experimental/system3/src/prefetch.ts:37"
       ]
     },
     {
@@ -79840,7 +79840,7 @@
         "packages/experimental/system3/src/skill-selection.ts#System3SkillDecisionReceipt"
       ],
       "sources": [
-        "packages/experimental/system3/src/skill-selection.ts:86"
+        "packages/experimental/system3/src/skill-selection.ts:115"
       ]
     },
     {

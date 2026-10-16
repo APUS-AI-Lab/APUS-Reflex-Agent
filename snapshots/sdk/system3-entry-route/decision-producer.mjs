@@ -27,7 +27,7 @@ export async function apply(ctx) {
           type: 'choice', choice: 'conversation', probabilities: Object.fromEntries(Object.keys(query.questions.intent.criteria).map(id => [id, id === 'conversation' ? 1 : 0])), confidence: 1,
         }, skill: {
           type: 'choice', choice, probabilities: Object.fromEntries(Object.keys(query.questions.skill.criteria).map(id => [id, id === choice ? 1 : 0])), confidence: 1,
-        } }, usage: { input_tokens: 9, output_tokens: 1 },
+        }, [choice]: { type: 'noul', noul: 1 } }, usage: { input_tokens: 9, output_tokens: 1 },
       }))
       return
     }

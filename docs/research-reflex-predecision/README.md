@@ -71,6 +71,8 @@ Each mechanism lives in the System3 package or the Jev plugin and is described i
 | Parallel question split (`questionsPerRequest`) | part of d | [Jev plugin configuration](../../packages/experimental/apus-dsh-jev-plugin/README.md) |
 | Non-blocking intent judgement | d when no Skill applies | [System3 Skill selection](../../packages/experimental/system3/README.md) |
 | Reflex switch and configuration-error fallback | failure cost | [Jev plugin configuration](../../packages/experimental/apus-dsh-jev-plugin/README.md) |
+| Prefetched files read through the filesystem and recorded as read, and files with the most search words offered whole | the read before each edit | [System3 Reflex prefetch](../../packages/experimental/system3/README.md) |
+| Skill choice confirmed by a per-Skill yes, with `whenToUse` | wrong and missed Skills | [System3 Skill selection](../../packages/experimental/system3/README.md) |
 
 -----
 
@@ -97,7 +99,7 @@ The benchmarks run the shipped Headless profile on real endpoints; their drivers
 - **Isolation.** Every task runs in a fresh process and Session over a fresh workspace, so each Jev connection starts cold; this overstates d compared with a long-running product.
 - **Interleaving.** Arms alternate within each round to spread provider drift over both.
 - **Measures.** Wall time from input to final answer, main-model steps, tool calls, success by a deterministic check on the answer or the workspace, decision latency, and the facts and Skills chosen.
-- **Suites.** `scenario-bench` covers a 40-file service (facts, code location, staged changes, Skills, edits with tests, Chinese input, small talk) and a personal folder (schedule, expenses, todos, mail, notes, documents, small talk, edits); `prefetch-bench` and `skill-bench` isolate one mechanism each.
+- **Suites.** `scenario-bench` covers a 40-file service (facts, code location, staged changes, Skills, edits with tests, Chinese input, small talk) and a personal folder (schedule, expenses, todos, mail, notes, documents, small talk, edits); `prefetch-bench` and `skill-bench` isolate one mechanism each. `skill-eval` measures Skill selection alone on 48 labelled inputs over a 20-Skill catalog, with or without `whenToUse`. The [scenario benchmark procedure](../../packages/experimental/system3/tests/fixtures/scenario-bench/README.md) gives the commands, variables and iteration steps.
 
 -----
 
@@ -114,10 +116,16 @@ All runs below are from 2026-10-14, two rounds per arm unless stated otherwise.
 | Personal folder, 10 tasks, before non-Git support | 161.6 s → 171.7 s | 0.94× | 67 → 72 | 19/20 → 18/20 |
 | Personal folder, 10 tasks, with non-Git support and Chinese search terms | 186.1 s → 179.2 s (median 8.8 s → 4.6 s) | 1.04× | 71 → 29 | 18/20 → 20/20 |
 | Scenario suite, 40-file service, 16 tasks, with Chinese search terms and non-blocking intent | 310.5 s → 189.5 s | 1.64× | 139 → 70 | 32/32 → 32/32 |
+| Scenario suite, 40-file service, after observed file reads, hit files and Skill confirmation | 365.9 s → 223.7 s (median 10.0 s → 4.1 s) | 1.64× | 144 → 66 | 31/32 → 32/32 |
+| Personal folder, 10 tasks, same iteration | 155.6 s → 93.9 s (median 6.9 s → 3.7 s) | 1.66× | 69 → 24 | 19/20 → 20/20 |
+| Skill selection, 48 labelled inputs, 20 Skills with `whenToUse` (decision only) | 39/48 → 46/48 correct | — | — | false selections 1/15 → 0/15 |
+| Skill selection, same inputs, Skills without `whenToUse` (decision only) | 39/48 → 44/48 correct | — | — | false selections 1/15 → 2/15 |
+| Edits with tests, 40-file service, 2026-10-15, 3 rounds, with hit-annotated single files and explicit-request Skill wording | 166.8 s → 83.7 s | 1.99× | 52 → 22 | 6/6 → 6/6 |
+| Skill selection, Skills without `whenToUse`, explicit-request wording (decision only) | 44/48 → 43/48 correct | — | — | false selections 2/15 → 1/15 |
 
 Per category on the 40-file service: fact lookup 1.85×, code location 1.66×, Skills 1.49×, edits with tests 1.42×, staged changes 1.30×, Chinese input 1.21×, small talk 0.70×. The decision took a median of about 0.6 s with cold connections; through a warm connection seven questions took about 340 ms as one request and 260 ms as seven parallel requests. After the second iteration, Chinese input rose to 3.51×, fact lookup to 2.51× and code location to 2.11×; in the personal folder todos reached 2.79×, expenses 2.28× and document lookups 1.66×, while one personal edit with a single 60-second main-model step held the folder total at 1.04×.
 
-**Reading.** H1 and H2 hold on the service: steps halved and every task still succeeded, with the largest gains where gathering dominates. H3 failed before P5: small talk waited for the decision. H5 failed before non-Git support: the personal folder offered no candidates, so Reflex only added latency. After the second iteration H5 holds on gathering tasks: the folder needed less than half the steps and every task succeeded; H3 still fails for small talk, because the prefetch decision blocks the step and sometimes chooses a search for a greeting.
+**Reading.** H1 and H2 hold on the service: steps halved and every task still succeeded, with the largest gains where gathering dominates. H3 failed before P5: small talk waited for the decision. H5 failed before non-Git support: the personal folder offered no candidates, so Reflex only added latency. After the second iteration H5 holds on gathering tasks: the folder needed less than half the steps and every task succeeded; H3 still fails for small talk, because the prefetch decision blocks the step and sometimes chooses a search for a greeting. In the third and fourth iterations, an edit whose target file was prefetched and recorded as read went straight to the edit tool (3 steps instead of about 9, and 2 steps for a todo edit); when the decision chose no prefetch the edit stayed native. Skill selection depends on authored `whenToUse`: the confirmed choice reached 46/48 with it and 44/48 without it, and without it a review or edit input could still receive the commit-message Skill. Small talk and a one-step email draft got slower (0.48–0.60×), because the decision waits and over-selected facts lengthen the prompt. In the fifth iteration the prefetch `yes` threshold (0.5, 0.7, 0.85) left task totals within noise; 0.85 dropped the small-folder read and made a todo edit take 5–7 steps instead of 2–4. The edit gain came from two other changes: the README offered for an edit now names the search words it contains, so Jev offers it, and a Skill without `whenToUse` is asked as an explicit request, which removed the commit-message Skill from the refund edit (0.98× → 1.93× on that task). Jev still scores commit-message 0.99 for "Review my staged change", and two main-model calls stalled for 605 s and 900 s without an error; those runs are excluded from the totals.
 
 -----
 
@@ -140,8 +148,8 @@ These limits apply to every number above.
 Each iteration changes one mechanism, reruns the suites that exercise it, and records the result in [Results](#results). The open iterations, in order of expected gain:
 
 1. Remove the decision wait for small talk entirely by starting the main-model request in parallel and restarting it only when facts or a Skill are chosen.
-2. Prefetch again after each tool step, so multi-step edits also skip their later gathering steps.
-3. Raise Skill precision: an edit or a review input should not receive a commit-message Skill.
+2. Prefetch again after each tool step, so multi-step edits also skip their later gathering steps; observed file reads and hit files already remove the first read.
+3. Ask Skill authors for `whenToUse`, and measure whether a short excerpt of the Skill body helps when it is missing.
 4. Calibrate the yes threshold per candidate kind on labelled inputs, trading misses against injected noise.
 5. Measure against other agent products on the same tasks.
 
@@ -161,4 +169,4 @@ Each iteration changes one mechanism, reruns the suites that exercise it, and re
 <a id="dev-note"></a>
 ## Dev Note
 
-Non-authoritative. "Pre-decision" is used here for decisions taken before the main model's first call of an input; Reflex control decisions during execution (supervision, completion review) are outside this frame. The personal-folder total is dominated by one slow main-model step; repeat the folder suite before quoting its total.
+Non-authoritative. "Pre-decision" is used here for decisions taken before the main model's first call of an input; Reflex control decisions during execution (supervision, completion review) are outside this frame. The deployed decision model is sensitive to question wording: a reworded Skill question dropped from 47/48 to 43/48 on the same inputs, so wording changes need an evaluation run.

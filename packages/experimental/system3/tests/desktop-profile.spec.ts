@@ -65,6 +65,7 @@ it.each(['Desktop', 'Web'].flatMap(surface => [false, true].map(configured => ({
   if (configured) decide.mockImplementation(async query => ({ kind: 'ok', spec: ctx.jev.resolve(query), response: { model: 'fixture', answers: {
     intent: { type: 'choice', choice: 'action', confidence: 1, probabilities: { action: 1 } },
     skill: { type: 'choice', choice: 'skill-0', confidence: 1, probabilities: { 'skill-0': 1, abstain: 0 } },
+    'skill-0': { type: 'noul', noul: 1 },
   } } }))
   const adapter = new MockAdapter([textResponse('Native reply')])
   ctx.effect(() => ctx.llm.registerAdapter(['mock'], adapter))

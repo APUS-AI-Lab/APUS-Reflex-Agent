@@ -33,7 +33,8 @@ async function setup(config: Config) {
   await ctx.plugin(Jev, { endpoint: 'http://localhost:1', model: 'jev-test' })
   const decide = vi.spyOn(ctx.jev, 'decide').mockImplementation(async query => ({ kind: 'ok', spec: ctx.jev.resolve(query),
     response: { model: 'jev-test', answers: { intent: { type: 'choice', choice: 'action', confidence: 1, probabilities: { action: 1 } },
-      skill: { type: 'choice', choice: 'skill-0', confidence: 1, probabilities: { 'skill-0': 1, abstain: 0 } } } } }))
+      skill: { type: 'choice', choice: 'skill-0', confidence: 1, probabilities: { 'skill-0': 1, abstain: 0 } },
+      'skill-0': { type: 'noul', noul: 1 } } } }))
   ctx.effect(() => ctx.llm.registerAdapter(['mock'], new MockAdapter([textResponse('first'), textResponse('second')])))
   const fiber = ctx.plugin({ apply: (inner: Context) => { new System3(inner, { jevExecutionDomain: 'local', skillSelection, ...config }) } })
   await fiber

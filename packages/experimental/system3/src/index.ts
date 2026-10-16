@@ -367,6 +367,7 @@ export default class System3 extends Service implements System3Service {
       maxTotalBytes: z.number().step(1).min(1).required(),
       maxSourceFiles: z.number().step(1).min(1).required(),
       maxSearchTerms: z.number().step(1).min(1).required(),
+      maxHitFiles: z.number().step(1).min(1).required(),
       commandTimeoutMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).required(),
     })]).default(false),
   })

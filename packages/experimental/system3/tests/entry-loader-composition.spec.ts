@@ -62,14 +62,15 @@ it('routes an API prompt through Loader-mounted Jev and records the actual HTTP 
       }
       requests.push({ path, body: JSON.parse(body) as Record<string, unknown> })
       if (path === '/v1/systemone') {
-        const query = JSON.parse(body) as { questions: { skill?: object; intent?: object } }
-        if (query.questions.skill !== undefined) {
+        const query = JSON.parse(body) as { questions: { 'skill-0'?: object; intent?: object } }
+        if (query.questions['skill-0'] !== undefined) {
           skillRequests.push(query)
           response.writeHead(200, { 'content-type': 'application/json' })
           response.end(JSON.stringify({ model: 'APUS-OpenJev-fixture', answers: {
             intent: { type: 'choice', choice: 'research', confidence: 1,
               probabilities: { conversation: 0, retrieval: 0, research: 1, creation: 0, action: 0, uncertain: 0 } },
             skill: { type: 'choice', choice: 'skill-0', confidence: 1, probabilities: { 'skill-0': 1, abstain: 0 } },
+            'skill-0': { type: 'noul', noul: 1 },
           } }))
           return
         }
@@ -197,7 +198,7 @@ it('routes an API prompt through Loader-mounted Jev and records the actual HTTP 
   expect(jevRequests).toBe(2)
   expect(skillRequests).toHaveLength(2)
   for (const request of skillRequests) {
-    expect(Object.keys(request.questions).sort()).toEqual(['intent', 'skill'])
+    expect(Object.keys(request.questions).sort()).toEqual(['intent', 'skill', 'skill-0'])
     expect(request.questions.intent).toMatchObject({ type: 'choice' })
     for (const intent of ['conversation', 'retrieval', 'research', 'creation', 'action', 'uncertain']) {
       expect(request.questions.intent).toHaveProperty(`criteria.${intent}`)

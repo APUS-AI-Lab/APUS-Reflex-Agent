@@ -9191,6 +9191,9 @@ importers:
       '@deepseek-ai/dsh-experimental-system3-supervisor':
         specifier: workspace:*
         version: link:../system3-supervisor
+      '@deepseek-ai/dsh-fs':
+        specifier: workspace:*
+        version: link:../../fs/fs
       '@deepseek-ai/dsh-goal':
         specifier: workspace:*
         version: link:../../goal/goal

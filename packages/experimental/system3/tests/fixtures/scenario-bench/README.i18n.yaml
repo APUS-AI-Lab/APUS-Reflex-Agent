@@ -1,0 +1,25 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/experimental/system3/tests/fixtures/scenario-bench/README.md
+/reflex-scenario-benchmark:
+  en: 8018a64f59ed1225
+  zh: 18775de66d0bacec
+/reflex-scenario-benchmark/files:
+  en: b55989ef8f6111ac
+  zh: 3c09d900275855c4
+/reflex-scenario-benchmark/tasks:
+  en: e49bba5759f7e92c
+  zh: 8e67939c25508479
+/reflex-scenario-benchmark/running-a-comparison:
+  en: 51bac51673befdbb
+  zh: 97852230af5b8504
+/reflex-scenario-benchmark/variables:
+  en: a38631a0c4892449
+  zh: 1007389b88017ebb
+/reflex-scenario-benchmark/run-fields:
+  en: a152ff3417a58a11
+  zh: b5a7390b2a2a1edf
+/reflex-scenario-benchmark/iteration-procedure:
+  en: b407a2fea065785e
+  zh: eade1469d699c894
