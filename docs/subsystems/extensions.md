@@ -391,6 +391,15 @@ Cordis service that resolves one pinned Jev provider per request.
  */
 isEnabled(): boolean
 
+/**
+ * Report synchronously and without side effects whether a decision would reach a provider that can answer now, so
+ * optional consumers can skip a decision instead of recording a failure.
+ * @param providerId - Requested provider; omission selects the current default provider.
+ * @returns false when Reflex is off or the resolved provider's `ready()` returns false; true otherwise, including a
+ *   provider without `ready()` and an unconfigured or unregistered one, whose failure `decide()` still reports.
+ */
+isReady(providerId?: string): boolean
+
 /** Register the runtime owner of one capability's observed status.
  * @param id - Product capability identity.
  * @param read - Runtime status projection; connection probes never update it.
@@ -563,9 +572,10 @@ Forwards each call to `ctx.reflexLocal`; a disconnected observer never cancels H
  * Fails with `reflexLocal/preparing-other` while a different variant is being prepared, and with `reflexLocal/unfit` for a
  * variant above this Host's memory tier unless `allowUnfit` is set.
  * @param variant - option to make active.
- * @param options - consent to a variant above this Host's memory tier.
+ * @param options - consent to a variant above this Host's memory tier. Required in the signature, even as `undefined`,
+ * because the Client gateway rejects a call whose argument count differs from the declared parameters.
  */
-@Remote select(variant: ReflexVariant, options?: Pick<ReflexSelectOptions, 'allowUnfit'>): void
+@Remote select(variant: ReflexVariant, options: Pick<ReflexSelectOptions, 'allowUnfit'> | undefined): void
 
 /**
  * Stop active preparation and keep the partial download for a later `prepare()`.
@@ -580,20 +590,21 @@ Forwards each call to `ctx.reflexLocal`; a disconnected observer never cancels H
 @Remote cancel(): Promise<void>
 
 /**
- * Record the local engine as the chosen Reflex connection mode before any model is prepared.
+ * Record the local engine as the chosen Reflex connection mode before any model is prepared, and route Jev's default
+ * decisions to it; local decisions stay off until enabled.
  * @returns after the choice is persisted.
  */
 @Remote chooseLocal(): Promise<void>
 
 /**
- * Start the active model's runner, then route Jev decisions to the local provider; the engine rejects this without an
- * active model or when the runner cannot start.
+ * Start the active model's runner, then turn local decisions on; the engine rejects this without an active model or when
+ * the runner cannot start.
  * @returns after the runner answers and the change is applied.
  */
 @Remote enable(): Promise<void>
 
 /**
- * Stop routing Jev decisions to the local provider.
+ * Turn local decisions off and stop the runner; routing keeps naming the local provider, which then reports not ready.
  * @returns after the change is applied.
  */
 @Remote disable(): Promise<void>
@@ -611,7 +622,8 @@ Forwards each call to `ctx.reflexLocal`; a disconnected observer never cancels H
 @Remote acknowledgeSwitch(): Promise<void>
 
 /**
- * Delete one model's weights, partial file, and records; deleting the active model stops its runner and keeps routing.
+ * Delete one model's weights, partial file, and records; deleting the active model stops its runner, turns local
+ * decisions off, and keeps routing.
  * @param variant - option to delete; omission deletes every model.
  * @returns after deletion.
  */

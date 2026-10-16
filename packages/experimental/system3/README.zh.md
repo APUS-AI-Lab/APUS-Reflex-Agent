@@ -40,7 +40,7 @@ const decision = ctx.system3.route(candidates, 'local-9b')
 
 `ctx.system3.snapshot()` 只暴露操作计数，不暴露用户文本或工具输出。调用方需要 把片段、监督原因、shadow 对照和成本记录写入自己的持久化 Session/audit 层。
 
-`frontLoadedDecisions`（默认 `true`）是 System3 在主模型之前所做决策的实时开关，涵盖 Session API 入口路由、Goal 入口路由、Skill 选择、任务框架与预取。它是 volatile 字段，可由该条目的设置表单编辑，下一个请求无需重载即读到新值。为 `false` 时，新请求走原生路径：这些决策都不询问 Jev、不运行预取命令、也不追加 System3 记录，keep-warm 不再发送，`entryRouting` 与 `skillSelection` 能力报告 `enabled: false`，已安装时另报 `suspended: true`。关闭 Jev 总开关（`jev.enabled`）效果相同，每个请求通过 `jev.isEnabled()` 读取，因此 Reflex 关闭时轮次不记录任何 Reflex 判断。已开始的工作会完成，此前记录的任务框架仍留在提示中，恢复的 Goal 委派仍会结算。进程监督与 Reflex 监督、Reflex 上下文、完成复核与输出折叠不受它影响。
+`frontLoadedDecisions`（默认 `true`）是 System3 在主模型之前所做决策的实时开关，涵盖 Session API 入口路由、Goal 入口路由、Skill 选择、任务框架与预取。它是 volatile 字段，可由该条目的设置表单编辑，下一个请求无需重载即读到新值。为 `false` 时，新请求走原生路径：这些决策都不询问 Jev、不运行预取命令、也不追加 System3 记录，keep-warm 不再发送，`entryRouting` 与 `skillSelection` 能力报告 `enabled: false`，已安装时另报 `suspended: true`。关闭 Jev 总开关（`jev.enabled`），或默认提供方当前无法回答（例如本机引擎的本机判断已停用或没有模型），效果相同；每个请求通过 `jev.isReady()` 读取，因此这样的轮次不记录任何 Reflex 判断。已开始的工作会完成，此前记录的任务框架仍留在提示中，恢复的 Goal 委派仍会结算。进程监督与 Reflex 监督、Reflex 上下文、完成复核与输出折叠不受它影响。
 
 本包同时是 profile bundle：其 `cordis.patch.yml` 插入带 APUS 桌面版与 Web 版产品默认值（受控隐私、network 执行域上的 `jev` 路由与 Skill 选择）的 `system3` 行。产品在 Jev bundle 之后列出它，而不从命令行 overlay 插入该行，因为 overlay 行会覆盖每一次 profile 设置写入；因此 profile patch 中对 `frontLoadedDecisions` 的修改在重启后仍然保留。
 

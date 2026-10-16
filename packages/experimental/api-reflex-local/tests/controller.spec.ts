@@ -43,7 +43,7 @@ it('forwards observation and every preparation and enablement command', async ()
   api.prepare({ variant: { model: '9b', quant: 'q4_k_m' }, downloadSource: 'https://hf-mirror.com' })
   expect(service.prepare).toHaveBeenNthCalledWith(1, undefined)
   expect(service.prepare).toHaveBeenNthCalledWith(2, { variant: { model: '9b', quant: 'q4_k_m' }, downloadSource: 'https://hf-mirror.com' })
-  api.select({ model: '9b', quant: 'q8_0' })
+  api.select({ model: '9b', quant: 'q8_0' }, undefined)
   api.select({ model: '35b-a3b', quant: 'q8_0' }, { allowUnfit: true })
   expect(service.select.mock.calls).toEqual([[{ model: '9b', quant: 'q8_0' }, undefined],
     [{ model: '35b-a3b', quant: 'q8_0' }, { allowUnfit: true }]])
@@ -63,13 +63,13 @@ it('turns a typed engine refusal into a coded Remote failure', () => {
   const { api, service } = fixture()
   const details = { preparing: { model: '9b', quant: 'q8_0' }, requested: { model: '4b', quant: 'q4_k_m' } } as const
   service.select.mockImplementationOnce(() => { throw new ReflexLifecycleError('preparing-other', 'busy', details) })
-  const failure = remoteErrorOf((() => { try { api.select(details.requested) } catch (error) { return error } })())
+  const failure = remoteErrorOf((() => { try { api.select(details.requested, undefined) } catch (error) { return error } })())
   expect(failure).toMatchObject({ code: 'reflexLocal/preparing-other', details })
   service.prepare.mockImplementationOnce(() => { throw new ReflexLifecycleError('preparing-other', 'busy', details) })
   expect(remoteErrorOf((() => { try { api.prepare() } catch (error) { return error } })())?.code).toBe('reflexLocal/preparing-other')
   const unfit = { variant: { model: '35b-a3b', quant: 'q8_0' }, requiredBytes: 64e9, deviceBytes: 24e9 } as const
   service.select.mockImplementationOnce(() => { throw new ReflexLifecycleError('unfit', 'needs more memory', unfit) })
-  expect(remoteErrorOf((() => { try { api.select(unfit.variant) } catch (error) { return error } })()))
+  expect(remoteErrorOf((() => { try { api.select(unfit.variant, undefined) } catch (error) { return error } })()))
     .toMatchObject({ code: 'reflexLocal/unfit', details: unfit })
 })
 

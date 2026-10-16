@@ -99,6 +99,12 @@ export interface JevProvider {
    * @param signal - Caller cancellation.
    */
   warm?(signal?: AbortSignal): Promise<void>
+  /**
+   * Report synchronously, without I/O or side effects, whether the provider can answer now. Omission means it always
+   * can. A provider returning false is skipped by consumers that check `jev.isReady()`; `decide()` is unaffected.
+   * @returns false while the provider is switched off or has nothing to answer with.
+   */
+  ready?(): boolean
 }
 
 /** A request with the provider selected and its effective model pinned. */

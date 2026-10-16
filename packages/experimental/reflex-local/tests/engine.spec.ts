@@ -23,6 +23,14 @@ vi.mock('node:fs', async (importOriginal) => {
     return actual.readFileSync(...args)
   } }
 })
+const writes = vi.hoisted(() => ({ fail: undefined as RegExp | undefined }))
+vi.mock('@deepseek-ai/dsh-atomic-write', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@deepseek-ai/dsh-atomic-write')>()
+  return { ...actual, writeFileAtomic: async (...args: Parameters<typeof actual.writeFileAtomic>) => {
+    if (typeof args[1] === 'string' && writes.fail?.test(args[1]) === true) throw new Error('state volume full')
+    await actual.writeFileAtomic(...args)
+  } }
+})
 vi.mock('../src/device.ts', async importOriginal => ({ ...await importOriginal<typeof import('../src/device.ts')>(), inspectDevice: vi.fn() }))
 function catalog(overrides: Partial<Record<VariantKey, Buffer>> = {}): void {
   lock.models = Object.fromEntries(VARIANT_KEYS.map(key => [key,
@@ -210,18 +218,25 @@ describe.skipIf(process.platform === 'win32')('ReflexEngine', () => {
     expect((await until(restored, 'ready')).enabled).toBe(true)
     expect((await runnerLog(runner.log)).filter(entry => entry.event === 'start')).toHaveLength(1)
     await restored.disable()
-    expect(routing.edits.at(-1)).toEqual({ providerId: 'system-one', enabled: true })
-    expect(restored.snapshot().enabled).toBe(false)
+    // Disabling keeps routing on this provider; only the automatic enable edited the profile.
+    expect(routing.edits).toEqual([{ providerId: 'system-one', enabled: true, defaultProviderId: 'reflex-local' }])
+    expect(restored.snapshot()).toMatchObject({ enabled: false, localChosen: true })
+    expect(restored.ready()).toBe(false)
     await restored.disable()
-    expect(routing.edits).toHaveLength(2)
+    expect(routing.edits).toHaveLength(1)
     await expect(restored.acquire(new AbortController().signal)).rejects.toMatchObject({ failure: { code: 'transport', message: 'local Reflex engine is not enabled' } })
   })
 
-  it('reports the Jev master switch and a default provider set elsewhere', async () => {
+  it('reports the Jev master switch and reads routing set elsewhere as enabled in state from before local enablement existed', async () => {
     const { create } = await fixture({ jev: { enabled: false, defaultProviderId: 'reflex-local' } })
-    expect(create().snapshot()).toMatchObject({ enabled: true, reflexEnabled: false })
+    const master = create()
+    expect(master.snapshot()).toMatchObject({ enabled: false, reflexEnabled: false })
+    master.activate()
+    expect(await until(master, 'absent')).toMatchObject({ enabled: true, reflexEnabled: false, localChosen: true })
     const other = await fixture({ jev: { providerId: 'reflex-local' } })
-    expect(other.create().snapshot()).toMatchObject({ enabled: true, reflexEnabled: true })
+    const builtin = other.create()
+    builtin.activate()
+    expect(await until(builtin, 'absent')).toMatchObject({ enabled: true, reflexEnabled: true })
     const plain: RoutingEditor = { entries: () => [{ options: { id: JEV_ENTRY_ID } }], edit: async () => {} }
     const bare = await fixture()
     expect(new ReflexEngine(bare.ctx, bare.config, plain, noDrain).snapshot()).toMatchObject({ enabled: false, reflexEnabled: true })
@@ -435,7 +450,7 @@ describe.skipIf(process.platform === 'win32')('ReflexEngine', () => {
     expect(engine.snapshot().preparation).toMatchObject({ phase: 'failed', variant: Q9 })
   })
 
-  it('removes weights during and after preparation without changing routing', async () => {
+  it('removes weights during and after preparation, turning local decisions off without changing routing', async () => {
     const { create, data } = await fixture()
     const engine = create()
     engine.activate()
@@ -446,9 +461,9 @@ describe.skipIf(process.platform === 'win32')('ReflexEngine', () => {
     await engine.acquire(new AbortController().signal)
     await engine.remove()
     expect(engine.snapshot().unacknowledgedAutoEnableAt).toBeUndefined()
-    expect(engine.snapshot()).toMatchObject({ preparation: { phase: 'absent' }, enabled: true, runner: { state: 'stopped' } })
+    expect(engine.snapshot()).toMatchObject({ preparation: { phase: 'absent' }, enabled: false, localChosen: true, runner: { state: 'stopped' } })
     await expect(readFile(join(data, 'models', fileOf('9b-q8_0')))).rejects.toThrow()
-    expect(await state(data)).toEqual({ models: {}, localChosen: true })
+    expect(await state(data)).toEqual({ models: {}, localChosen: true, localEnabled: false })
     engine.prepare()
     await engine.remove()
     expect(engine.snapshot().preparation).toEqual({ phase: 'absent' })
@@ -523,7 +538,7 @@ describe.skipIf(process.platform === 'win32')('ReflexEngine', () => {
     await disposed.dispose()
     expect(warn).not.toHaveBeenCalledWith('Reflex engine inspection failed', expect.anything())
     routing.routing.entries = () => []
-    await expect(engine.disable()).rejects.toThrow('requires an enabled')
+    await expect(engine.chooseLocal()).rejects.toThrow('requires an enabled')
   })
 })
 
@@ -563,6 +578,21 @@ describe.skipIf(process.platform === 'win32')('ReflexEngine model lifecycle', ()
     expect(engine.snapshot().unacknowledgedSwitch).toBeUndefined()
     await vi.waitFor(() => { expect(engine.snapshot().runner).toMatchObject({ state: 'running', model: Q9 }) })
     engine.select(Q9)
+  })
+
+  it('PROBE undoes a background switch at once through select and acknowledgeSwitch', async () => {
+    const { create, data } = await fixture()
+    const engine = create()
+    await ready(engine, variantOf('4b-q8_0'))
+    await writeFile(join(data, 'models', fileOf('9b-q8_0')), weights['9b-q8_0'])
+    engine.prepare({ variant: Q9 })
+    const switched = await untilSnapshot(engine, snapshot => snapshot.unacknowledgedSwitch !== undefined)
+    expect(switched.active).toEqual(Q9)
+    void engine.acknowledgeSwitch()
+    engine.select(switched.unacknowledgedSwitch!.from)
+    expect(engine.snapshot().active).toEqual(variantOf('4b-q8_0'))
+    await new Promise(resolve => setTimeout(resolve, 300))
+    expect(engine.snapshot().active).toEqual(variantOf('4b-q8_0'))
   })
 
   it('finishes the decision in flight on the old runner before stopping it for a switch', async () => {
@@ -683,8 +713,12 @@ describe.skipIf(process.platform === 'win32')('ReflexEngine model lifecycle', ()
     // The poll alone restarts the resident runner once Reflex is back on, before any decision.
     await untilSnapshot(engine, snapshot => snapshot.reflexEnabled && snapshot.runner.state === 'running')
     await decide(engine)
+    // A default provider removed elsewhere is restored while the local mode is chosen, so Jev never uses its built-in one.
     jev.config = { enabled: true }
-    await untilSnapshot(engine, snapshot => !snapshot.enabled && snapshot.runner.state === 'stopped')
+    await vi.waitFor(() => { expect(jev.config).toMatchObject({ defaultProviderId: 'reflex-local' }) })
+    expect(engine.snapshot()).toMatchObject({ enabled: true, localChosen: true })
+    jev.config = { enabled: true, defaultProviderId: 'system-one' }
+    await untilSnapshot(engine, snapshot => !snapshot.enabled && !snapshot.localChosen && snapshot.runner.state === 'stopped')
   })
 
   it('reacts to an announced routing change at once and ignores announcements before inspection publishes', async () => {
@@ -715,9 +749,9 @@ describe.skipIf(process.platform === 'win32')('ReflexEngine model lifecycle', ()
     await vi.waitFor(() => { expect(warn).toHaveBeenCalledWith('Reflex runner stop failed', expect.objectContaining({ message: 'drain failed' })) })
   })
 
-  it('deletes inactive, active, and in-progress models without changing routing', async () => {
+  it('deletes inactive, active, and in-progress models, turning local decisions off without changing routing', async () => {
     const hold = await serve((request, response) => { if (request.method === 'HEAD') response.writeHead(200).end() })
-    const { create, data, server } = await fixture()
+    const { create, data, server, routing } = await fixture()
     const engine = create()
     await ready(engine, Q4)
     engine.select(Q9)
@@ -727,17 +761,21 @@ describe.skipIf(process.platform === 'win32')('ReflexEngine model lifecycle', ()
     expect(engine.snapshot()).toMatchObject({ active: Q9, enabled: true })
     await engine.deleteModel(Q9)
     const deleted = engine.snapshot()
-    expect(deleted).toMatchObject({ enabled: true, runner: { state: 'stopped' }, preparation: { phase: 'absent' } })
+    expect(deleted).toMatchObject({ enabled: false, localChosen: true, runner: { state: 'stopped' }, preparation: { phase: 'absent' } })
+    expect(routing.routing.entries()[0]!.options.config).toMatchObject({ defaultProviderId: 'reflex-local' })
+    expect(engine.ready()).toBe(false)
     expect(deleted.active).toBeUndefined()
     expect(deleted.unacknowledgedSwitch).toBeUndefined()
     expect(deleted.options.find(option => option.model === '9b' && option.quant === 'q8_0')?.inventory).toEqual({ state: 'absent' })
-    await expect(decide(engine)).rejects.toMatchObject({ failure: { code: 'transport', message: 'local Reflex engine is not ready' } })
+    await expect(decide(engine)).rejects.toMatchObject({ failure: { code: 'transport', message: 'local Reflex engine is not enabled' } })
     expect(server!.ranges.length).toBeGreaterThan(0)
     void hold
     engine.select(Q4)
-    const reprepared = await untilSnapshot(engine, snapshot => snapshot.active?.model === '4b' && snapshot.preparation.phase === 'ready')
+    const reprepared = await untilSnapshot(engine, snapshot => snapshot.active?.model === '4b' && snapshot.preparation.phase === 'ready'
+      && snapshot.enabled && snapshot.runner.state === 'running')
     expect(reprepared).toMatchObject({ enabled: true, runner: { state: 'running', model: Q4 } })
-    expect(reprepared.unacknowledgedAutoEnableAt).toBeUndefined()
+    // Local decisions were off after the deletion, so the next passing model turns them on with the usual notice.
+    expect(reprepared.unacknowledgedAutoEnableAt).toBeGreaterThan(0)
     await engine.disable()
     await engine.deleteModel(Q4)
     expect(engine.snapshot().active).toBeUndefined()
@@ -814,8 +852,9 @@ describe.skipIf(process.platform === 'win32')('ReflexEngine model lifecycle', ()
     engine.activate()
     expect((await until(engine, 'absent')).localChosen).toBe(false)
     await engine.chooseLocal()
-    expect(jev.config).toEqual({})
+    expect(jev.config).toEqual({ defaultProviderId: 'reflex-local' })
     expect(engine.snapshot()).toMatchObject({ localChosen: true, enabled: false })
+    expect(engine.ready()).toBe(false)
     await engine.chooseLocal()
     engine.select(Q9)
     await untilSnapshot(engine, snapshot => snapshot.enabled && snapshot.preparation.phase === 'ready')
@@ -830,7 +869,7 @@ describe.skipIf(process.platform === 'win32')('ReflexEngine model lifecycle', ()
     await untilSnapshot(restarted, snapshot => !snapshot.localChosen)
     await vi.waitFor(async () => { expect(await state(data)).not.toHaveProperty('localChosen') })
     restarted.select(Q4)
-    expect(jev.config).toEqual({})
+    expect(jev.config).toEqual({ defaultProviderId: 'reflex-local' })
     await untilSnapshot(restarted, snapshot => snapshot.localChosen && snapshot.enabled && snapshot.active?.model === '4b')
   })
 
@@ -845,6 +884,75 @@ describe.skipIf(process.platform === 'win32')('ReflexEngine model lifecycle', ()
     const other = create()
     other.activate()
     expect((await until(other, 'absent')).localChosen).toBe(false)
+  })
+
+  it('restores local routing at launch only for a chosen local mode, reading the removed routing as off', async () => {
+    const chosen = await fixture({ jev: {} })
+    await mkdir(chosen.data, { recursive: true })
+    await writeFile(join(chosen.data, 'state.json'), JSON.stringify({ models: {}, localChosen: true }))
+    const restored = chosen.create()
+    restored.activate()
+    expect(await until(restored, 'absent')).toMatchObject({ localChosen: true, enabled: false })
+    expect(chosen.routing.edits).toEqual([{ defaultProviderId: 'reflex-local' }])
+    expect(await state(chosen.data)).toMatchObject({ localChosen: true, localEnabled: false })
+    const never = await fixture({ jev: {} })
+    const untouched = never.create()
+    untouched.activate()
+    expect(await until(untouched, 'absent')).toMatchObject({ localChosen: false, enabled: false })
+    expect(never.routing.edits).toEqual([])
+    const locked = await fixture({ jev: {} })
+    locked.routing.routing.edit = async () => { throw new Error('profile locked') }
+    await mkdir(locked.data, { recursive: true })
+    await writeFile(join(locked.data, 'state.json'), JSON.stringify({ models: {}, localChosen: true }))
+    const failing = locked.create()
+    failing.activate()
+    await until(failing, 'absent')
+    expect(locked.warn).toHaveBeenCalledWith('Reflex local routing restore failed', expect.objectContaining({ message: 'profile locked' }))
+  })
+
+  it('does not count a runner that a switch retired while it started, nor a warm-up, and reports a failed enable as not ready', async () => {
+    const { create, routing, mark, warn } = await fixture({ config: { routingPollMs: 600_000, maxConsecutiveRunnerFailures: 1 } })
+    const engine = create()
+    await ready(engine, Q4)
+    engine.select(Q9)
+    await untilSnapshot(engine, snapshot => snapshot.active?.model === '9b' && snapshot.runner.state === 'running')
+    engine.select(Q4)
+    await untilSnapshot(engine, snapshot => snapshot.active?.model === '4b' && snapshot.runner.state === 'running')
+    const jev = routing.routing.entries()[0]!.options as { config?: unknown }
+    const master = async (enabled: boolean): Promise<void> => {
+      jev.config = { ...jev.config as object, enabled }
+      engine.routingChanged()
+      if (!enabled) await untilSnapshot(engine, snapshot => snapshot.runner.state === 'stopped')
+    }
+    await master(false)
+    await master(true)
+    // The decision joins the starting warm-up; the switch retires that runner before it answers.
+    const pending = decide(engine)
+    engine.select(Q9)
+    await expect(pending).rejects.toMatchObject({ failure: { code: 'transport', message: 'local Reflex runner is unavailable' } })
+    expect(engine.snapshot()).toMatchObject({ enabled: true, active: Q9 })
+    expect(engine.ready()).toBe(true)
+    await untilSnapshot(engine, snapshot => snapshot.runner.state === 'running')
+    await master(false)
+    await mark('startFail')
+    await master(true)
+    await vi.waitFor(() => { expect(warn).toHaveBeenCalledWith('Reflex runner warm-up failed', expect.anything()) })
+    expect(engine.ready()).toBe(true)
+    await expect(engine.enable()).rejects.toThrow('exited before readiness')
+    // Local decisions stay on, but the failed runner makes the provider report that it cannot answer.
+    expect(engine.snapshot()).toMatchObject({ enabled: true, runner: { state: 'failed' } })
+    expect(engine.ready()).toBe(false)
+    expect(warn).not.toHaveBeenCalledWith('Reflex runner failed repeatedly; local decisions are turned off', expect.anything())
+  })
+
+  it('reports a state write that fails while adopting a tested model', async () => {
+    const { create, warn } = await fixture()
+    const engine = create()
+    await ready(engine, Q4)
+    writes.fail = /"active":\{"model":"9b"/
+    onTestFinished(() => { writes.fail = undefined })
+    engine.select(Q9)
+    await vi.waitFor(() => { expect(warn).toHaveBeenCalledWith('Reflex model adoption failed', expect.objectContaining({ message: 'state volume full' })) })
   })
 
   it('logs connection mode updates that fail', async () => {
@@ -924,18 +1032,18 @@ describe.skipIf(process.platform === 'win32')('ReflexEngine model lifecycle', ()
     await decide(engine)
   })
 
-  it('logs routing and warm-up failures around runner failures and immediate switches', async () => {
-    const { create, mark, warn, routing, root, data } = await fixture({ config: { maxConsecutiveRunnerFailures: 1 } })
+  it('logs disable and warm-up failures around runner failures and immediate switches', async () => {
+    const { create, mark, warn, root, data } = await fixture({ config: { maxConsecutiveRunnerFailures: 1 } })
     const engine = create()
     await ready(engine, Q4)
     engine.select(Q9)
-    await untilSnapshot(engine, snapshot => snapshot.active?.model === '9b')
-    const edit = routing.routing.edit.bind(routing.routing)
-    routing.routing.edit = async () => { throw new Error('profile locked') }
+    await vi.waitFor(async () => { expect((await state(data)).active).toEqual(Q9) })
+    await rm(join(data, 'state.json'))
+    await mkdir(join(data, 'state.json'))
     await mark('crash')
     await expect(decide(engine)).rejects.toMatchObject({ failure: { code: 'transport' } })
-    await vi.waitFor(() => { expect(warn).toHaveBeenCalledWith('Reflex routing after runner failures failed', expect.anything()) })
-    routing.routing.edit = edit
+    await vi.waitFor(() => { expect(warn).toHaveBeenCalledWith('Reflex disable after runner failures failed', expect.anything()) })
+    await rm(join(data, 'state.json'), { recursive: true })
     await mark('crash', false)
     await engine.enable()
     await writeFile(join(root, 'llama-server'), '#!/bin/sh\nexit 4\n')
@@ -966,6 +1074,26 @@ describe.skipIf(process.platform === 'win32')('ReflexEngine model lifecycle', ()
     const gone = create()
     gone.activate()
     expect((await until(gone, 'absent')).active).toBeUndefined()
+  })
+
+  it('keeps the model 0.1.3 served active after an upgrade, on or off as that release routed it', async () => {
+    for (const routedHere of [true, false]) {
+      const { create, data, routing } = await fixture()
+      const engine = create()
+      await ready(engine, Q4)
+      // 0.1.3 persisted only preparation, verified files with their self-tests, and the automatic-enable notice.
+      const { models } = await state(data)
+      await engine.dispose()
+      await writeFile(join(data, 'state.json'), JSON.stringify({ models }))
+      const jev = routing.routing.entries()[0]!.options as { config?: Record<string, unknown> }
+      jev.config = routedHere ? { defaultProviderId: 'reflex-local' } : {}
+      const upgraded = create()
+      upgraded.activate()
+      const snapshot = await until(upgraded, 'ready')
+      expect(snapshot).toMatchObject({ active: Q4, enabled: routedHere, localChosen: routedHere })
+      expect(await state(data)).toMatchObject({ active: Q4, localEnabled: routedHere })
+      await upgraded.dispose()
+    }
   })
 
   it('refuses a preparation without a recommendation and treats selecting the active model as done', async () => {

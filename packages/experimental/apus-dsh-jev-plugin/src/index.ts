@@ -178,6 +178,17 @@ export default class Jev extends TypertRemoteService {
     return this.enabled()
   }
 
+  /**
+   * Report synchronously and without side effects whether a decision would reach a provider that can answer now, so
+   * optional consumers can skip a decision instead of recording a failure.
+   * @param providerId - Requested provider; omission selects the current default provider.
+   * @returns false when Reflex is off or the resolved provider's `ready()` returns false; true otherwise, including a
+   *   provider without `ready()` and an unconfigured or unregistered one, whose failure `decide()` still reports.
+   */
+  isReady(providerId?: string): boolean {
+    return this.isEnabled() && this.lookup(providerId ?? this.defaultProviderId())?.ready?.() !== false
+  }
+
   /** Register the runtime owner of one capability's observed status.
    * @param id - Product capability identity.
    * @param read - Runtime status projection; connection probes never update it.

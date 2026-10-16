@@ -254,6 +254,24 @@ it('saves the pre-step switch at once and lists the installed pre-step capabilit
   expect(screen.queryByRole('list')).toBeNull()
 })
 
+/** Both pre-step capabilities installed and suspended by a product switch or a provider that cannot answer. */
+const suspendedRows = { provider: state.runtime!.provider, capabilities: [
+  { id: 'skillSelection', implemented: true, enabled: false, suspended: true },
+  { id: 'entryRouting', implemented: true, enabled: false, suspended: true },
+] } as const
+
+it.each([
+  ['the master switch is off', { enabled: false }, zh.pausedByMaster],
+  ['决策前置 is off', { prestep: { ...state.prestep, enabled: false } }, zh.suspendedByPrestep],
+  ['the local engine cannot answer in 本机 mode', { mode: 'local' }, zh.suspendedLocal],
+  ['the local engine cannot answer and no 决策前置 switch is served', { mode: 'local', prestep: { ...state.prestep, available: false } }, zh.suspendedLocal],
+  ['a cloud provider cannot answer', { mode: 'custom' }, zh.suspendedService],
+] as const)('names why suspended rows are paused when %s', (_cause, overrides, label) => {
+  render(<ReflexSettings {...props({ ...state, ...overrides, runtime: suspendedRows })} />)
+  expect(within(screen.getByRole('region', { name: zh.prestepModule })).getAllByRole('listitem').map(row => row.textContent))
+    .toEqual([`${zh.skillSelection}${label}`, `${zh.entryRouting}${label}`])
+})
+
 it('reports a local mode choice that was not saved under the connection mode', () => {
   render(<ReflexSettings {...props({ ...state, mode: 'local', localChoiceFailed: true })} />)
   expect(screen.getByRole('alert').textContent).toBe(zh.localChoiceFailed)

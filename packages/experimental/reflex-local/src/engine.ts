@@ -54,6 +54,11 @@ const stateSchema = z.object({
   switched: z.object({ from: variantSchema, to: variantSchema, at: z.number() }).optional(),
   /** The user chose the local engine as the Reflex connection mode; absent when not chosen. */
   localChosen: z.literal(true).optional(),
+  /**
+   * Whether local decisions are on. Absent in state written before it existed, when routing to this provider meant on;
+   * activation then records that reading.
+   */
+  localEnabled: z.boolean().optional(),
 })
 type Persisted = z.infer<typeof stateSchema>
 type ModelRecord = Persisted['models'][string]
@@ -190,15 +195,18 @@ export class ReflexEngine implements ReflexLocalService {
 
   private async inspect(): Promise<void> {
     this.persisted = await this.readState()
+    // State written by 0.1.3 has neither `active` nor `localEnabled`; every later write records `localEnabled`.
+    const earlierRelease = this.persisted.active === undefined && this.persisted.localEnabled === undefined
     await this.reconcileChoice()
     await this.measureDisk()
+    if (earlierRelease) await this.adoptEarlierReleaseModel()
     // An active model must still be a tested, verified file; a missing one is cleared. The user accepted its memory tier.
     const active = this.persisted.active
     const usable = active !== undefined && this.tested(variantKey(active))
       && await this.verified(active, this.lifetime.signal)
     if (active !== undefined && !usable) {
       const { active: _gone, ...rest } = this.persisted
-      await this.persist(rest)
+      await this.persist({ ...rest, localEnabled: false })
     }
     const { preparing } = this.persisted
     if (preparing !== undefined && (preparing.source === undefined || this.downloadSources.includes(preparing.source))) {
@@ -212,6 +220,19 @@ export class ReflexEngine implements ReflexLocalService {
     for (const variant of candidates) if (await this.verified(variant, this.lifetime.signal)) break
     await this.measureDisk()
     this.publish(await this.idle(candidates))
+  }
+
+  /**
+   * Make the model 0.1.3 served active: that release answered with the first tested variant whose file still verifies, so
+   * an upgraded Host keeps local decisions on that model instead of waiting for the user to choose it again.
+   */
+  private async adoptEarlierReleaseModel(): Promise<void> {
+    for (const key of VARIANT_KEYS.filter(candidate => this.tested(candidate))) {
+      const variant = variantOf(key)
+      if (!await this.verified(variant, this.lifetime.signal)) continue
+      await this.persist({ ...this.persisted, active: variant })
+      return
+    }
   }
 
   /** Resting phase without a task: the active model is ready; otherwise the first retained file or nothing. */
@@ -347,7 +368,8 @@ export class ReflexEngine implements ReflexLocalService {
     this.task = task
     task.settled = this.run(task).then(async ({ selfTest, runner }) => {
       this.task = undefined
-      await this.finish(variant, selfTest, runner)
+      // Nothing awaits a finished task, so a failed state write while adopting the model is reported here.
+      await this.finish(variant, selfTest, runner).catch((error: unknown) => { this.ctx.logger.warn('Reflex model adoption failed', error) })
     }, async (error: unknown) => { await this.settle(task, error) })
   }
 
@@ -368,7 +390,7 @@ export class ReflexEngine implements ReflexLocalService {
     await this.switchTo(variant, selfTest.slow ? undefined : runner, previous === undefined || selfTest.slow ? undefined : previous)
     if (selfTest.slow) await runner.dispose()
     if (automatic) {
-      await this.route(true, true).catch((error: unknown) => { this.ctx.logger.warn('Reflex automatic enable failed', error) })
+      await this.turnOn(true).catch((error: unknown) => { this.ctx.logger.warn('Reflex automatic enable failed', error) })
     }
   }
 
@@ -555,8 +577,9 @@ export class ReflexEngine implements ReflexLocalService {
   }
 
   /**
-   * Return the active model's runner for one Jev request. Start failures and transport failures count toward
-   * `maxConsecutiveRunnerFailures`; a successful completion resets the count.
+   * Return the active model's runner for one Jev decision. Start and transport failures of the serving runner count toward
+   * `maxConsecutiveRunnerFailures`; a successful completion resets the count. Warm-ups never count, and neither does a
+   * runner a switch, stop, or deletion retired meanwhile, because its failure says nothing about the serving runner.
    * @param signal - decision cancellation.
    * @returns a started runner client.
    */
@@ -564,13 +587,14 @@ export class ReflexEngine implements ReflexLocalService {
     const active = this.persisted.active
     if (this.lifetime.signal.aborted || !this.enabled()) throw new JevProviderError({ code: 'transport', message: 'local Reflex engine is not enabled' })
     if (active === undefined) throw new JevProviderError({ code: 'transport', message: 'local Reflex engine is not ready' })
+    const runner = this.servingRunner(active)
     let client: ReflexRunnerClient
     try {
-      client = await this.servingRunner(active).acquire(signal)
+      client = await runner.acquire(signal)
     } catch (error) {
       if (signal.aborted) throw error
       // Runner startup rejects only with Errors, whose messages exclude paths and keys.
-      this.runnerFailed(error as Error)
+      if (runner === this.serving?.runner) this.runnerFailed(error as Error)
       throw new JevProviderError({ code: 'transport', message: 'local Reflex runner is unavailable' }, { cause: error })
     }
     return {
@@ -580,7 +604,7 @@ export class ReflexEngine implements ReflexLocalService {
           this.consecutiveFailures = 0
           return completion
         } catch (error) {
-          if (error instanceof JevProviderError && error.failure.code === 'transport') this.runnerFailed(error)
+          if (error instanceof JevProviderError && error.failure.code === 'transport' && runner === this.serving?.runner) this.runnerFailed(error)
           throw error
         }
       },
@@ -594,18 +618,32 @@ export class ReflexEngine implements ReflexLocalService {
     this.consecutiveFailures = 0
     this.runnerFailure = error.message
     this.ctx.logger.warn('Reflex runner failed repeatedly; local decisions are turned off', error)
-    this.disabling = this.disable().catch((routeError: unknown) => { this.ctx.logger.warn('Reflex routing after runner failures failed', routeError) })
+    this.disabling = this.disable().catch((disableError: unknown) => { this.ctx.logger.warn('Reflex disable after runner failures failed', disableError) })
   }
 
   /**
-   * Start the runner of an enabled, ready engine.
+   * Start the runner of an enabled engine with an active model. Failures reject without counting toward
+   * `maxConsecutiveRunnerFailures`; only decisions count.
    * @param signal - caller cancellation.
    */
   async warm(signal?: AbortSignal): Promise<void> {
-    await this.acquire(signal ?? new AbortController().signal)
+    const active = this.persisted.active
+    if (this.lifetime.signal.aborted || !this.enabled() || active === undefined) {
+      throw new JevProviderError({ code: 'transport', message: 'local Reflex engine is not ready' })
+    }
+    await this.servingRunner(active).acquire(signal ?? new AbortController().signal)
   }
 
-  /** Start the active model's runner in the background while local decisions and Reflex are on; failures are logged and counted. */
+  /**
+   * Whether a decision can be answered now: local decisions and Reflex are on, a model is active, and the runner has not
+   * failed. Synchronous and side-effect free; a stopped runner still counts, since a decision starts it.
+   * @returns false while Jev consumers should skip local decisions.
+   */
+  ready(): boolean {
+    return this.enabled() && this.reflexEnabled() && this.persisted.active !== undefined && this.runnerFailure === undefined
+  }
+
+  /** Start the active model's runner in the background while local decisions and Reflex are on; failures are logged. */
   private keepWarm(): void {
     if (this.persisted.active === undefined || !this.enabled() || !this.reflexEnabled()) return
     void this.warm().catch((error: unknown) => { this.ctx.logger.warn('Reflex runner warm-up failed', error) })
@@ -642,27 +680,42 @@ export class ReflexEngine implements ReflexLocalService {
     return typeof id === 'string' && id !== '' && id !== this.config.providerId
   }
 
-  /** Align `localChosen` with routing: routing to this provider implies it, and routing to another provider clears it. */
+  /**
+   * Align the persisted choices with routing. Routing to another provider clears the local mode and local decisions;
+   * routing here implies the local mode; state written before `localEnabled` reads routing here as on. A chosen local
+   * mode whose default provider was removed routes here again, so Jev never falls back to its built-in provider in it.
+   */
   private async reconcileChoice(): Promise<void> {
-    const { localChosen, ...rest } = this.persisted
-    const chosen = !this.foreignRouting() && (localChosen === true || this.enabled())
-    if (chosen === (localChosen === true)) return
-    await this.persist(chosen ? { ...rest, localChosen: true } : rest)
+    const foreign = this.foreignRouting()
+    // Earlier releases removed the default provider to turn local decisions off, so routing before a restore reads as off.
+    const routed = this.routedHere()
+    if (this.persisted.localChosen === true && !foreign && !routed) {
+      await this.routeHere().catch((error: unknown) => { this.ctx.logger.warn('Reflex local routing restore failed', error) })
+    }
+    const { localChosen, localEnabled, ...rest } = this.persisted
+    const chosen = !foreign && (localChosen === true || routed)
+    const on = !foreign && (localEnabled ?? routed)
+    if (chosen === (localChosen === true) && on === localEnabled) return
+    await this.persist({ ...rest, ...chosen ? { localChosen: true as const } : {}, localEnabled: on })
     this.publish()
   }
 
+  /** Point the jev `defaultProviderId` at this provider. */
+  private async routeHere(): Promise<void> {
+    await this.editJev((raw) => {
+      const { defaultProviderId: _previous, ...rest } = raw
+      return { ...rest, defaultProviderId: this.config.providerId }
+    })
+  }
+
   /**
-   * Record the local connection mode, first removing a jev `defaultProviderId` that names another provider.
+   * Record the local connection mode and route Jev's default decisions to this provider, so Jev never answers with its
+   * built-in provider in local mode. Local decisions stay as they are until `enable()`.
    * @returns after the profile change and the choice are persisted.
    */
   async chooseLocal(): Promise<void> {
-    if (this.foreignRouting()) {
-      await this.editJev((raw) => {
-        const { defaultProviderId: _other, ...rest } = raw
-        return rest
-      })
-    }
-    await this.persist({ ...this.persisted, localChosen: true })
+    if (!this.routedHere()) await this.routeHere()
+    await this.persist({ ...this.persisted, localChosen: true, localEnabled: this.persisted.localEnabled ?? false })
     this.routingSeen = this.routingSignature()
     this.publish()
   }
@@ -688,9 +741,15 @@ export class ReflexEngine implements ReflexLocalService {
     return typeof config === 'object' && config !== null ? config : {}
   }
 
-  private enabled(): boolean {
+  /** Whether the jev entry routes default decisions to this provider. */
+  private routedHere(): boolean {
     const config = this.jevConfig()
     return (config.defaultProviderId ?? config.providerId ?? JEV_BUILTIN_PROVIDER) === this.config.providerId
+  }
+
+  /** Local decisions are on: routing names this provider and they were turned on. */
+  private enabled(): boolean {
+    return this.routedHere() && this.persisted.localEnabled === true
   }
 
   private jevEntry(): RoutingEntry | undefined {
@@ -698,10 +757,11 @@ export class ReflexEngine implements ReflexLocalService {
   }
 
   /**
-   * Start the active model's runner, then route Jev decisions to the local provider, so the first local decision does not
-   * wait for the model to load. While the Reflex master switch is off, only routing changes and the runner starts when
-   * the switch turns on. A runner that cannot start is reported as `failed` and leaves routing unchanged.
-   * @returns after the runner answers and the profile change is applied.
+   * Start the active model's runner, then turn local decisions on and route Jev decisions to the local provider, so the
+   * first local decision does not wait for the model to load. While the Reflex master switch is off, only the state
+   * changes and the runner starts when the switch turns on. A runner that cannot start is reported as `failed` and leaves
+   * local decisions off.
+   * @returns after the runner answers and the change is persisted.
    */
   async enable(): Promise<void> {
     const active = this.persisted.active
@@ -719,15 +779,19 @@ export class ReflexEngine implements ReflexLocalService {
         throw error
       }
     }
-    await this.route(true)
+    await this.turnOn(false)
   }
 
   /**
-   * Remove the jev `defaultProviderId`, restoring the built-in default, clear both notices, and stop the runner after the
-   * decisions in flight. @returns after the runner stopped.
+   * Turn local decisions off, clear both notices, and stop the runner after the decisions in flight. Routing keeps naming
+   * this provider, so Jev consumers skip decisions through `ready()` instead of falling back to the built-in provider.
+   * @returns after the runner stopped.
    */
   async disable(): Promise<void> {
-    await this.route(false)
+    const { autoEnabledAt: _enabled, switched: _switched, ...rest } = this.persisted
+    await this.persist({ ...rest, localEnabled: false })
+    this.routingSeen = this.routingSignature()
+    this.publish()
     await this.stopServing()
   }
 
@@ -746,29 +810,21 @@ export class ReflexEngine implements ReflexLocalService {
   }
 
   /**
-   * Edit only the volatile jev `defaultProviderId`, so Jev switches providers without reloading, then record, keep, or
-   * clear the automatic-enable notice.
+   * Turn local decisions on: route Jev's default decisions here through the volatile `defaultProviderId`, so Jev switches
+   * providers without reloading, then record the local mode and the automatic-enable notice, or keep an earlier one.
    */
-  private async route(local: boolean, automatic = false): Promise<void> {
-    this.requireJev()
-    if (this.enabled() !== local) {
-      await this.editJev((raw) => {
-        const { defaultProviderId: _previous, ...rest } = raw
-        return local ? { ...rest, defaultProviderId: this.config.providerId } : rest
-      })
-    }
-    const { autoEnabledAt, switched, ...rest } = this.persisted
-    const notice = !local ? undefined : automatic ? Date.now() : autoEnabledAt
-    await this.persist({
-      ...rest, ...local ? { localChosen: true as const } : {}, ...notice === undefined ? {} : { autoEnabledAt: notice },
-      ...local && switched !== undefined ? { switched } : {},
-    })
+  private async turnOn(automatic: boolean): Promise<void> {
+    if (!this.routedHere()) await this.routeHere()
+    const { autoEnabledAt, ...rest } = this.persisted
+    const notice = automatic ? Date.now() : autoEnabledAt
+    await this.persist({ ...rest, localChosen: true, localEnabled: true, ...notice === undefined ? {} : { autoEnabledAt: notice } })
     this.routingSeen = this.routingSignature()
     this.publish()
   }
 
   /**
-   * Stop preparation and the runner, then delete weights, partial files, and the notices about them. Routing is unchanged.
+   * Stop preparation and the runner, then delete weights, partial files, and the notices about them, and turn local
+   * decisions off. Routing and the local mode are unchanged.
    * @returns after deletion.
    */
   async remove(): Promise<void> {
@@ -781,15 +837,15 @@ export class ReflexEngine implements ReflexLocalService {
       await rm(partialPath(this.directory, asset), { force: true })
     }
     const { active: _deleted, autoEnabledAt: _enabled, switched: _switched, ...rest } = this.persisted
-    await this.persist({ ...rest, models: {} })
+    await this.persist({ ...rest, models: {}, localEnabled: false })
     await this.measureDisk()
     if (this.device.supported) this.publish({ phase: 'absent' })
   }
 
   /**
-   * Delete one variant. Deleting the active model stops its runner after the decisions in flight and clears `active` and
-   * the notices about it; routing is unchanged, so enabled local decisions fail with `transport` until another model
-   * becomes active.
+   * Delete one variant. Deleting the active model stops its runner after the decisions in flight, clears `active` and the
+   * notices about it, and turns local decisions off; routing and the local mode are unchanged, so Jev consumers skip
+   * decisions until another model is prepared, whose passing self-test turns them on again.
    * @param variant - option to delete; omission deletes every model.
    * @returns after deletion.
    */
@@ -805,7 +861,7 @@ export class ReflexEngine implements ReflexLocalService {
     if (active !== undefined && same(active, variant)) {
       await this.stopServing()
       const { active: _deleted, autoEnabledAt: _enabled, switched: _switched, ...rest } = this.persisted
-      await this.persist(rest)
+      await this.persist({ ...rest, localEnabled: false })
     }
     await rm(join(this.directory, asset.name), { force: true })
     await rm(partialPath(this.directory, asset), { force: true })

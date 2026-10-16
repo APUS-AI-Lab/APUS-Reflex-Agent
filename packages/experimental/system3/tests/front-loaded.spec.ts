@@ -7,7 +7,7 @@ import { SessionId } from '@deepseek-ai/dsh-session'
 import Skills from '@deepseek-ai/dsh-skill'
 import GoalService from '@deepseek-ai/dsh-goal'
 import SubagentRuntime from '@deepseek-ai/dsh-subagent'
-import { afterEach, expect, it, vi } from 'vitest'
+import { afterEach, expect, it, onTestFinished, vi } from 'vitest'
 import Jev from '../../apus-dsh-jev-plugin/src/index.ts'
 import System3, { type Config } from '../src/index.ts'
 import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
@@ -73,6 +73,24 @@ it('treats the Reflex master switch off like the switch off: no Jev request, no 
   expect(h.injected()).toBe(0)
   expect(h.ctx.sessionProjections.stateOf(h.agent.session, 'system3Runtime')?.skill ?? null).toBeNull()
   master.mockReturnValue(true)
+  await h.send('Reconcile the CSV rows again.')
+  expect(h.decide).toHaveBeenCalledOnce()
+})
+
+it('skips front-loaded decisions without a record while the default provider cannot answer', async () => {
+  const h = await setup({})
+  let ready = false
+  const dispose = h.ctx.jev.register({ info: { id: 'local', model: 'm', endpoint: 'http://127.0.0.1' }, decide: async () => { throw new Error('unused') },
+    ready: () => ready })
+  onTestFinished(dispose)
+  // Route readiness to the registered provider as if it were the default one, through Jev's own check.
+  const isReady = h.ctx.jev.isReady.bind(h.ctx.jev)
+  vi.spyOn(h.ctx.jev, 'isReady').mockImplementation(() => isReady('local'))
+  expect(h.capability('skillSelection')).toEqual({ id: 'skillSelection', implemented: true, enabled: false, suspended: true })
+  await h.send('Reconcile the CSV rows.')
+  expect(h.decide).not.toHaveBeenCalled()
+  expect(h.ctx.sessionProjections.stateOf(h.agent.session, 'system3Runtime')?.skill ?? null).toBeNull()
+  ready = true
   await h.send('Reconcile the CSV rows again.')
   expect(h.decide).toHaveBeenCalledOnce()
 })

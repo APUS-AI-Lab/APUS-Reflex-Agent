@@ -62,10 +62,11 @@ export default class ReflexLocalController extends TypertRemoteService {
    * Fails with `reflexLocal/preparing-other` while a different variant is being prepared, and with `reflexLocal/unfit` for a
    * variant above this Host's memory tier unless `allowUnfit` is set.
    * @param variant - option to make active.
-   * @param options - consent to a variant above this Host's memory tier.
+   * @param options - consent to a variant above this Host's memory tier. Required in the signature, even as `undefined`,
+   * because the Client gateway rejects a call whose argument count differs from the declared parameters.
    */
   @Remote
-  select(variant: ReflexVariant, options?: Pick<ReflexSelectOptions, 'allowUnfit'>): void {
+  select(variant: ReflexVariant, options: Pick<ReflexSelectOptions, 'allowUnfit'> | undefined): void {
     typed(() => { this.ctx.reflexLocal.select(variant, options) })
   }
 
@@ -84,22 +85,23 @@ export default class ReflexLocalController extends TypertRemoteService {
   cancel(): Promise<void> { return this.ctx.reflexLocal.cancel() }
 
   /**
-   * Record the local engine as the chosen Reflex connection mode before any model is prepared.
+   * Record the local engine as the chosen Reflex connection mode before any model is prepared, and route Jev's default
+   * decisions to it; local decisions stay off until enabled.
    * @returns after the choice is persisted.
    */
   @Remote
   chooseLocal(): Promise<void> { return this.ctx.reflexLocal.chooseLocal() }
 
   /**
-   * Start the active model's runner, then route Jev decisions to the local provider; the engine rejects this without an
-   * active model or when the runner cannot start.
+   * Start the active model's runner, then turn local decisions on; the engine rejects this without an active model or when
+   * the runner cannot start.
    * @returns after the runner answers and the change is applied.
    */
   @Remote
   enable(): Promise<void> { return this.ctx.reflexLocal.enable() }
 
   /**
-   * Stop routing Jev decisions to the local provider.
+   * Turn local decisions off and stop the runner; routing keeps naming the local provider, which then reports not ready.
    * @returns after the change is applied.
    */
   @Remote
@@ -120,7 +122,8 @@ export default class ReflexLocalController extends TypertRemoteService {
   acknowledgeSwitch(): Promise<void> { return this.ctx.reflexLocal.acknowledgeSwitch() }
 
   /**
-   * Delete one model's weights, partial file, and records; deleting the active model stops its runner and keeps routing.
+   * Delete one model's weights, partial file, and records; deleting the active model stops its runner, turns local
+   * decisions off, and keeps routing.
    * @param variant - option to delete; omission deletes every model.
    * @returns after deletion.
    */

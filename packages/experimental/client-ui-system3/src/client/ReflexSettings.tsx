@@ -111,6 +111,18 @@ function ConnectionForm({ state, paused, t, ...props }: Pick<ReflexSettingsProps
 const PRESTEP_CAPABILITIES = ['skillSelection', 'entryRouting'] as const
 
 /**
+ * Name why an installed capability is not running: the master switch, else the 决策前置 switch, else the connection mode's
+ * provider that cannot answer (the local engine off, without a model, or failed).
+ * @param state - page snapshot with both switches and the mode.
+ * @returns the status label key.
+ */
+function pausedKey(state: ReflexCardState): ReflexSettingsKey {
+  if (!state.enabled) return 'pausedByMaster'
+  if (state.prestep.available && !state.prestep.enabled) return 'suspendedByPrestep'
+  return state.mode === 'local' ? 'suspendedLocal' : 'suspendedService'
+}
+
+/**
  * The 决策前置 switch and, as compact read-only rows, the capabilities this build installs: each is running, or suspended by
  * the switch; a capability that is neither is not installed and gets no row.
  */
@@ -134,7 +146,7 @@ function Prestep({ state, setPrestep, t }: Pick<ReflexSettingsProps, 'setPrestep
     {installed.length > 0 && <ul className={css.subRows} data-active={installed.some(capability => capability.enabled)}>
       {installed.map(capability => <li key={capability.id}>
         <span>{t(capability.id)}</span>
-        <span className={css.subStatus}>{t(!state.enabled ? 'pausedByMaster' : capability.enabled ? 'enabled' : 'suspendedByPrestep')}</span>
+        <span className={css.subStatus}>{t(state.enabled && capability.enabled ? 'enabled' : pausedKey(state))}</span>
       </li>)}
     </ul>}
   </>

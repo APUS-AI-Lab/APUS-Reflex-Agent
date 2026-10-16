@@ -210,7 +210,8 @@ it('announces each unacknowledged background switch once, undoes it by selecting
     actions.undoSwitch({ from: Q4, to: Q8, at: 30 })
     expect(toast.getSnapshot()).toBeNull()
     expect(b.remote.acknowledgeSwitch).toHaveBeenCalledTimes(2)
-    await vi.waitFor(() => { expect(b.remote.select).toHaveBeenCalledWith(Q4) })
+    // The Client gateway rejects a call whose argument count differs from the Remote's declared parameters.
+    await vi.waitFor(() => { expect(b.remote.select.mock.calls.at(-1)).toStrictEqual([Q4, undefined]) })
     b.remote.select.mockResolvedValueOnce(failure)
     observed.onSnapshot(switched(40))
     actions.undoSwitch({ from: Q4, to: Q8, at: 40 })
