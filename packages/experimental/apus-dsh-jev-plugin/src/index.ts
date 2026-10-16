@@ -194,7 +194,7 @@ export default class Jev extends TypertRemoteService {
    */
   @Remote
   readStatus(): ReflexStatus {
-    const ids: ReflexCapabilityId[] = ['entryRouting', 'codexSupervision', 'contextMemory', 'skillSelection']
+    const ids: ReflexCapabilityId[] = ['entryRouting', 'codexSupervision', 'contextMemory', 'skillSelection', 'workspacePrefetch']
     return {
       provider: this.configuredProvider()?.info ?? null,
       capabilities: ids.map(id => ({ id, ...(this.capabilityReaders.get(id)?.() ?? { implemented: false, enabled: false }) })),

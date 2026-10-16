@@ -108,7 +108,7 @@ function ConnectionForm({ state, paused, t, ...props }: Pick<ReflexSettingsProps
 }
 
 /** Capabilities that run before the main model answers and follow the 决策前置 switch, in display order. */
-const PRESTEP_CAPABILITIES = ['skillSelection', 'entryRouting'] as const
+const PRESTEP_CAPABILITIES = ['skillSelection', 'workspacePrefetch', 'entryRouting'] as const
 
 /**
  * The 决策前置 switch and, as compact read-only rows, the capabilities this build installs: each is running, or suspended by

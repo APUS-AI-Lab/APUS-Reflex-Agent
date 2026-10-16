@@ -1,5 +1,6 @@
 # Editable product System3 defaults; profile settings override this bundle. It follows the Jev bundle that inserts `jev`.
-# Skill advice uses the configured Reflex provider; unavailable decisions preserve native execution.
+# Skill advice and workspace prefetch use the configured Reflex provider; unavailable decisions preserve native execution.
+# Prefetch limits are the values measured in tests/fixtures/scenario-bench.
 - insert:
     - id: system3
       name: ./lib/index.js
@@ -9,6 +10,18 @@
         approvedRemoteDataClasses: [workspace]
         jevRouteId: jev
         jevExecutionDomain: network
+        prefetch:
+          mode: active
+          yes: 0.5
+          no: 0.3
+          deadlineMs: 3000
+          sessionDataClasses: [workspace]
+          maxItemBytes: 8000
+          maxTotalBytes: 24000
+          maxSourceFiles: 30
+          maxSearchTerms: 4
+          maxHitFiles: 3
+          commandTimeoutMs: 3000
         skillSelection:
           sessionDataClasses: [workspace]
           minConfidence: 0.5

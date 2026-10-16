@@ -5,17 +5,17 @@ import { randomUUID } from 'node:crypto'
  * Reject a missing execution plugin or unexpectedly active routing, supervision, or context recovery.
  * @param {unknown} response Host `reflex/readStatus` response envelope.
  * @param {string} rpcId Request id the envelope must answer.
- * @param {{ frontLoaded?: boolean }} [expected] Saved 决策前置 state; while off, Skill selection reports suspended.
+ * @param {{ frontLoaded?: boolean }} [expected] Saved 决策前置 state; while off, Skill selection and prefetch report suspended.
  * @returns {{ id: string, implemented: boolean, enabled: boolean, suspended?: boolean }[]} The checked capability rows.
  */
 export function verifyReflexExecutionResponse(response, rpcId, { frontLoaded = true } = {}) {
   if (response?.type !== 'server-response' || response.rpcId !== rpcId || response.result?.ok !== true
     || !Array.isArray(response.result.value?.capabilities)) throw new Error('Reflex capability status RPC did not succeed.')
   const capabilities = response.result.value.capabilities
-  return ['entryRouting', 'codexSupervision', 'contextMemory', 'skillSelection'].map(id => {
+  return ['entryRouting', 'codexSupervision', 'contextMemory', 'skillSelection', 'workspacePrefetch'].map(id => {
     const matches = capabilities.filter(capability => capability?.id === id)
     const capability = matches[0]
-    const installed = id === 'skillSelection'
+    const installed = id === 'skillSelection' || id === 'workspacePrefetch'
     if (matches.length !== 1 || capability.implemented !== true || capability.enabled !== (installed && frontLoaded)
       || (capability.suspended === true) !== (installed && !frontLoaded)) {
       throw new Error(`Reflex execution capability differs from the product profile: ${id}`)

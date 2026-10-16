@@ -389,8 +389,8 @@ export default class System3 extends Service implements System3Service {
       ...(config.approvedRemoteDataClasses === undefined ? {} : { approvedRemoteDataClasses: [...config.approvedRemoteDataClasses] }),
       ...(config.cloudApproval === undefined ? {} : { cloudApproval: config.cloudApproval }),
     }
-    const installed = new Set<'entryRouting' | 'goalRouting' | 'contextMemory' | 'codexSupervision' | 'skillSelection'>()
-    const markInstalled = (scope: Context, capability: 'entryRouting' | 'goalRouting' | 'contextMemory' | 'codexSupervision' | 'skillSelection'): void => {
+    const installed = new Set<'entryRouting' | 'goalRouting' | 'contextMemory' | 'codexSupervision' | 'skillSelection' | 'workspacePrefetch'>()
+    const markInstalled = (scope: Context, capability: 'entryRouting' | 'goalRouting' | 'contextMemory' | 'codexSupervision' | 'skillSelection' | 'workspacePrefetch'): void => {
       scope.effect(() => {
         installed.add(capability)
         return () => { installed.delete(capability) }
@@ -457,6 +457,8 @@ export default class System3 extends Service implements System3Service {
       const frontLoadedState = (present: boolean) => ({ implemented: true, enabled: frontLoaded() && present,
         ...present && !frontLoaded() ? { suspended: true } : {} })
       ctx.effect(() => ctx.jev.registerCapability('skillSelection', () => frontLoadedState(installed.has('skillSelection'))))
+      ctx.effect(() => ctx.jev.registerCapability('workspacePrefetch', () =>
+        frontLoadedState(enabled(config.prefetch) && installed.has('workspacePrefetch'))))
       ctx.effect(() => ctx.jev.registerCapability('entryRouting', () =>
         frontLoadedState(installed.has('entryRouting') || installed.has('goalRouting'))))
       ctx.effect(() => ctx.jev.registerCapability('codexSupervision', () => ({ implemented: true, enabled: enabled(config.reflexSupervision) && installed.has('codexSupervision'),
@@ -499,6 +501,7 @@ export default class System3 extends Service implements System3Service {
     // Registered before Skill selection so its commands and Jev request overlap that listener's own Jev request.
     if (config.prefetch !== undefined && config.prefetch !== false) {
       installSystem3Prefetch(ctx, { config: config.prefetch, policy: this.privacyPolicy, options: this.jevOptions })
+      markInstalled(ctx, 'workspacePrefetch')
     }
     if (config.skillSelection !== undefined && config.skillSelection !== false) {
       const skillConfig = config.skillSelection

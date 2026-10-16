@@ -139,7 +139,7 @@ const outcome = await ctx.jev.decide({
 
 `reflex` Remote 命名空间提供 `readStatus` 和 `testConnection`。OpenJev 连接测试先检查 `/health`，再鉴权访问 `/v1/models` 并确认所选模型，再向 `/v1/systemone` 发送不含用户内容的固定是非判断。Typesafe 跳过 `/health`，检查模型列表后发送不带 effort 扩展的相同判断。测试使用草稿所选协议，接受未保存的配置和可选临时密钥，不持久化它们，只返回脱敏错误类别与耗时，也不会把任务能力标记为已验收。运行时模块通过 `registerCapability` 注册能力状态读取器，并负责释放注册；已安装但被产品开关关闭的能力，其读取器报告 `suspended: true`。
 
-`ReflexCapabilityId` 标识三个能力所有者；`ReflexCapabilityState` 包含安装、启用、实际执行结果及只读部署参数。`ReflexStatus` 汇集这些状态与已配置提供方；首次配置前或清空两个字段后，`provider` 为 `null`。`ReflexConnectionInput` 描述未保存候选及可选临时密钥；`ReflexConnectionResult` 报告测试阶段、脱敏状态及耗时。
+`ReflexCapabilityId` 标识上报状态的能力：`entryRouting`、`codexSupervision`、`contextMemory`、`skillSelection` 和 `workspacePrefetch`；`ReflexCapabilityState` 包含安装、启用、实际执行结果及只读部署参数。`ReflexStatus` 汇集这些状态与已配置提供方；首次配置前或清空两个字段后，`provider` 为 `null`。`ReflexConnectionInput` 描述未保存候选及可选临时密钥；`ReflexConnectionResult` 报告测试阶段、脱敏状态及耗时。
 
 目标相关性监督单独报告 `semanticSupervision.enabled` 状态。只有监督模块已安装、处于 active 模式、显式配置语义证据且当前工作区数据策略允许时才启用。该子能力未启用时，操作指纹监督仍可启用；两种状态均不代表已验证执行效果。
 

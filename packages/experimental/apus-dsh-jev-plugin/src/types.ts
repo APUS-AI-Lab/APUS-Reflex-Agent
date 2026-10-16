@@ -129,7 +129,7 @@ export type JevOutcome =
   | { readonly kind: 'unknown'; readonly spec: JevSpec; readonly failure: JevFailure }
 
 /** Product capabilities shown independently of service connectivity. */
-export type ReflexCapabilityId = 'entryRouting' | 'codexSupervision' | 'contextMemory' | 'skillSelection'
+export type ReflexCapabilityId = 'entryRouting' | 'codexSupervision' | 'contextMemory' | 'skillSelection' | 'workspacePrefetch'
 /** Runtime-owned state; only an observed operation supplies verification metadata. */
 export interface ReflexCapabilityState {
   readonly implemented: boolean
