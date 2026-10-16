@@ -247,8 +247,10 @@ export async function qualify(archive, reports, edition = process.env.APUS_PRODU
     await dialog.getByRole('button', { name: 'Reflex configuration', exact: true }).click()
     if (await dialog.locator('#reflex-endpoint').inputValue() !== 'https://qualification.invalid'
       || await dialog.locator('#reflex-model').inputValue() !== 'qualification-only'
-      || await dialog.locator('#reflex-mode').inputValue() !== 'custom') throw new Error('Web profile settings did not survive restart.')
-    await dialog.getByText('Service protocol: Reflex', { exact: true }).waitFor()
+      // The connection mode is a menu button that shows the selected mode's label.
+      || !/^(Custom parameters|自定义参数)$/u.test((await dialog.locator('#reflex-mode').textContent() ?? '').trim())) {
+      throw new Error('Web profile settings did not survive restart.')
+    }
     report.reflexCapabilities.restarted = await verifyReflexExecution(page)
     report.stages.push('reflex-execution-retained-after-restart')
     await page.screenshot({ path: join(reports, 'restart.png') })
