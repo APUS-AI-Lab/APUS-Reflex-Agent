@@ -1,5 +1,5 @@
 /** Cordis service composing the System3 policy, evidence, and supervision seams. */
-import { Context, Service } from '@deepseek-ai/cordis'
+import { Context, Service, type Volatile } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
 import type {} from '@deepseek-ai/dsh-agent'
@@ -23,10 +23,10 @@ import { installSystem3TaskFrame, type System3TaskFrameConfig } from './task-fra
 import { installSystem3Prefetch, type System3PrefetchConfig } from './prefetch.ts'
 import { installSystem3CompletionReview, type System3CompletionReviewConfig } from './completion-review.ts'
 import type { Session } from '@deepseek-ai/dsh-session'
-import { recordSystem3Decision, type System3DecisionRequest, type System3DecisionReceipt, type System3JevOptions } from './decisions.ts'
+import { recordSystem3Decision, resolveSystem3JevRoute, type System3DecisionRequest, type System3DecisionReceipt, type System3JevOptions } from './decisions.ts'
 
 export type { System3DecisionId, System3DecisionRequest, System3DecisionReceipt, System3DecisionOutcome } from './decisions.ts'
-export type { System3JevOptions } from './decisions.ts'
+export type { System3JevOptions, System3JevRoute } from './decisions.ts'
 export type { System3SkillSelectionConfig, System3SkillDecisionReceipt } from './skill-selection.ts'
 export type { System3EntryView, System3SkillView, System3RuntimeView, System3TaskFrameView } from './types.ts'
 export { createSystem3EntryRouter } from './entry-routing.ts'
@@ -71,7 +71,10 @@ export interface Config {
   readonly observeAgentLoop?: boolean
   /** Privacy-policy route identity for explicit Jev calls. */
   readonly jevRouteId?: string
-  /** Actual execution location, including the remote destination of any tunnel. */
+  /**
+   * Execution location of a Jev provider that does not declare its own, including the remote destination of any tunnel.
+   * A provider's declared `executionDomain`, such as the local Reflex engine's `local`, takes precedence.
+   */
   readonly jevExecutionDomain?: 'local' | 'network'
   /** Execution effort sent to the Jev provider. */
   readonly jevEffort?: 'low' | 'high'
@@ -101,6 +104,14 @@ export interface Config {
    * input needs; `false` or omission disables it.
    */
   readonly prefetch?: false | System3PrefetchConfig
+  /**
+   * Live switch for the decisions System3 makes before the main model: entry routing, goal routing, Skill selection, the
+   * task frame, and prefetch. While false, new requests take the native path, ask Jev nothing, and record no System3
+   * decision; a task frame recorded earlier stays in the prompt, and work already started finishes. Process and Reflex
+   * supervision, Reflex context, completion review, and output folding do not follow it. Edited live through the
+   * entry's settings form without reloading the plugin. @default true
+   */
+  readonly frontLoadedDecisions?: Volatile<boolean>
 }
 
 /** Small operational counters, intentionally free of user data. */
@@ -269,6 +280,16 @@ export default class System3 extends Service implements System3Service {
       protectRecentMessages: z.number().step(1).min(1).required(),
       maxRestoredChars: z.number().step(1).min(1).required(),
       maxSearchResults: z.number().step(1).min(1).required(),
+      compactionSweep: z.union([z.const(false), z.object({
+        mode: z.union([z.const('off'), z.const('shadow'), z.const('active')]).required(),
+        yes: z.number().min(0).max(1).required(),
+        no: z.number().min(0).max(1).required(),
+        deadlineMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).required(),
+        fragmentChars: z.number().step(1).min(1).required(),
+        maxFragments: z.number().step(1).min(1).required(),
+        fragmentsPerRequest: z.number().step(1).min(1).max(5).required(),
+        concurrency: z.number().step(1).min(1).required(),
+      })]).default(false),
     })]).default(false),
     reflexSupervision: z.union([z.const(false), z.object({
       mode: z.union([z.const('off'), z.const('shadow'), z.const('active')]).required(),
@@ -335,6 +356,7 @@ export default class System3 extends Service implements System3Service {
       evidenceCalls: z.number().step(1).min(1).required(),
       resultChars: z.number().step(1).min(1).required(),
     })]).default(false),
+    frontLoadedDecisions: z.boolean().default(true).volatile(),
     prefetch: z.union([z.const(false), z.object({
       mode: z.union([z.const('off'), z.const('shadow'), z.const('active')]).required(),
       yes: z.number().min(0).max(1).required(),
@@ -356,7 +378,10 @@ export default class System3 extends Service implements System3Service {
 
   constructor(ctx: Context, config: Config = {}) {
     super(ctx, 'system3')
-    this.jevOptions = { routeId: config.jevRouteId ?? 'jev', executionDomain: config.jevExecutionDomain ?? 'network', ...config.jevEffort === undefined ? {} : { effort: config.jevEffort } }
+    // The 决策前置 switch and the Reflex master switch both turn front-loaded decisions off: no Jev request, no record.
+    const frontLoaded = (): boolean => config.frontLoadedDecisions?.get() !== false && ctx.get('jev')?.isEnabled() !== false
+    this.jevOptions = { routeId: config.jevRouteId ?? 'jev', executionDomain: config.jevExecutionDomain ?? 'network',
+      ...config.jevEffort === undefined ? {} : { effort: config.jevEffort }, frontLoaded }
     this.privacyPolicy = {
       mode: config.privacyMode ?? 'local-only',
       ...(config.approvedRemoteIds === undefined ? {} : { approvedRemoteIds: [...config.approvedRemoteIds] }),
@@ -398,7 +423,7 @@ export default class System3 extends Service implements System3Service {
         })
       }
       const keepWarm = config.entryRouting.keepWarm
-      if (keepWarm !== undefined) ctx.inject(['jev'], (ctx) => { installSystem3KeepWarm(ctx, keepWarm) })
+      if (keepWarm !== undefined) ctx.inject(['jev'], (ctx) => { installSystem3KeepWarm(ctx, keepWarm, frontLoaded) })
     }
     if (config.delegationProgress !== undefined && config.delegationProgress !== false) {
       installSystem3DelegationProgress(ctx, config.delegationProgress)
@@ -425,12 +450,17 @@ export default class System3 extends Service implements System3Service {
     }
     ctx.inject(['jev'], (ctx) => {
       const enabled = (value: false | { readonly mode: string } | undefined): boolean => value !== undefined && value !== false && value.mode === 'active'
-      ctx.effect(() => ctx.jev.registerCapability('skillSelection', () => ({ implemented: true, enabled: installed.has('skillSelection') })))
-      ctx.effect(() => ctx.jev.registerCapability('entryRouting', () => ({ implemented: true,
-        enabled: installed.has('entryRouting') || installed.has('goalRouting') })))
+      const semanticEnabled = (supervision: ReflexSupervisionConfig): boolean =>
+        reflexSemanticEnabled(supervision, this.privacyPolicy, this.jevOptions, resolveSystem3JevRoute(ctx.jev, this.jevOptions))
+      // An installed front-loaded capability that the switch turned off is suspended rather than absent.
+      const frontLoadedState = (present: boolean) => ({ implemented: true, enabled: frontLoaded() && present,
+        ...present && !frontLoaded() ? { suspended: true } : {} })
+      ctx.effect(() => ctx.jev.registerCapability('skillSelection', () => frontLoadedState(installed.has('skillSelection'))))
+      ctx.effect(() => ctx.jev.registerCapability('entryRouting', () =>
+        frontLoadedState(installed.has('entryRouting') || installed.has('goalRouting'))))
       ctx.effect(() => ctx.jev.registerCapability('codexSupervision', () => ({ implemented: true, enabled: enabled(config.reflexSupervision) && installed.has('codexSupervision'),
         semanticSupervision: { enabled: !!config.reflexSupervision && enabled(config.reflexSupervision)
-          && installed.has('codexSupervision') && reflexSemanticEnabled(config.reflexSupervision, this.privacyPolicy, this.jevOptions) },
+          && installed.has('codexSupervision') && semanticEnabled(config.reflexSupervision) },
         ...!config.reflexSupervision ? {} : { settings: { stallMs: config.reflexSupervision.stallMs,
           cooldownMs: config.reflexSupervision.cooldownMs, maxInterventions: config.reflexSupervision.maxInterventions,
           feedbackMs: config.reflexSupervision.feedbackMs,

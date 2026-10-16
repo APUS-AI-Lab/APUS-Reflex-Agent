@@ -50,6 +50,10 @@ The experimental group contains prototype capabilities whose contracts can chang
 | [`system3`](system3/README.md) | Cordis service composing System3 policy, evidence, and supervision | `ctx.system3` |
 | [`apus-dsh-jev-plugin`](apus-dsh-jev-plugin/README.md) | Provider-neutral typed Jev decisions through a System One HTTP provider | `ctx.jev` |
 | [`continuum-jev`](continuum-jev/README.md) | Reflex-only bounded Continuum memory selection with off/shadow/active modes | — |
+| [`api-reflex-local`](api-reflex-local/README.md) | Authenticated local decision engine preparation and enablement Remote | `ctx.reflexLocalController` |
+| [`client-ui-reflex-local`](client-ui-reflex-local/README.md) | Local decision engine card, activation prompt, and enablement notice | — |
+| [`reflex-local`](reflex-local/README.md) | Local APUS Reflex decision engine: weight preparation, managed llama-server, and a Jev provider | `ctx.reflexLocal` |
+| [`reflex-local-bundle`](reflex-local-bundle/README.md) | Default-disabled optional local decision composition | — |
 | [`agui`](agui/README.md) | AG-UI over HTTP: turns, threads, approvals and questions for an external client such as Muse | — (routes on `ctx.webServer`) |
 
 -----

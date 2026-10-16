@@ -80,6 +80,19 @@ export function browserSourceAliases(root: string): { find: RegExp; replacement:
   })
 }
 
+/**
+ * Remove the shipping guard against unprovided externals from a possibly nested plugin option.
+ * @param option - plugin, plugin array, or nested arrays from a client build config.
+ * @returns the same structure without the guard plugin.
+ */
+function withoutUnresolvedExternalGuard<T>(option: T): T {
+  if (!Array.isArray(option)) return option
+  const kept: unknown[] = option
+    .map(item => withoutUnresolvedExternalGuard<unknown>(item))
+    .filter(item => (item as { name?: unknown } | null)?.name !== 'dsh-client-unresolved-external')
+  return kept as T
+}
+
 async function collectClientBundles(
   root: string,
   manifests: ReadonlyMap<string, Manifest>,
@@ -102,7 +115,8 @@ async function collectClientBundles(
       input: client.entry as Rolldown.InputOption,
       platform: 'browser',
       transform: client.define === undefined ? {} : { define: client.define },
-      plugins: [recorder(seen, workspaceNames), client.plugins ?? []] as NonNullable<Rolldown.InputOptions['plugins']>,
+      // The recorder externalizes workspace packages to end the walk, so the shipping guard against unprovided externals does not apply.
+      plugins: [recorder(seen, workspaceNames), withoutUnresolvedExternalGuard(client.plugins ?? [])] as NonNullable<Rolldown.InputOptions['plugins']>,
       tsconfig: resolve(root, 'tsconfig.base.client.json'),
     })
     try {

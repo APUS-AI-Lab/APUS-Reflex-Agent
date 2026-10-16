@@ -1,0 +1,88 @@
+# Bilingual-pair consistency record for local-jev-mlx-design.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-local-jev-mlx/local-jev-mlx-design.md
+/:
+  en: ae9290c7ea0ab841
+  zh: 9263da640275a4da
+/local-decision-engine-and-inference-configuration-guidance:
+  en: 0ae40e6c89820ba5
+  zh: 40a6f95b737cf3e9
+/local-decision-engine-and-inference-configuration-guidance/summary:
+  en: 0b11d91653e55ebb
+  zh: 1ea3de2edc4e32e0
+/local-decision-engine-and-inference-configuration-guidance/final-choices:
+  en: 88aa0f711f390756
+  zh: ca613c69cb4b0e4d
+/local-decision-engine-and-inference-configuration-guidance/first-principle-constraints:
+  en: afe3e5a2e328b6c9
+  zh: 33749a6bc04e409e
+/local-decision-engine-and-inference-configuration-guidance/current-state:
+  en: 7397ebb3d10b6d75
+  zh: bf14dac9e520ebe9
+/local-decision-engine-and-inference-configuration-guidance/current-state/decision-extension-point:
+  en: f16a52fb3b8d68b0
+  zh: dac44545080f037a
+/local-decision-engine-and-inference-configuration-guidance/current-state/protocol-gap-the-most-underestimated-part:
+  en: ebb60628b228bb34
+  zh: 95c72dc94932dad2
+/local-decision-engine-and-inference-configuration-guidance/current-state/client-readiness-checks:
+  en: 3f5874bbb6271d11
+  zh: a4f45350b31f1ac9
+/local-decision-engine-and-inference-configuration-guidance/current-state/distribution-infrastructure:
+  en: 17b6127e1a4b327b
+  zh: 29c1a7087947dbed
+/local-decision-engine-and-inference-configuration-guidance/current-state/existing-implementation-template:
+  en: 0e0aff6a0d4c0c19
+  zh: 77011d1b8bb0849b
+/local-decision-engine-and-inference-configuration-guidance/current-state/model-facts:
+  en: c9d026ed3283fb17
+  zh: 2190179ba6096003
+/local-decision-engine-and-inference-configuration-guidance/current-state/local-smoke-measurements:
+  en: 7f89cd0596a8f410
+  zh: 336db6d1dc74d6a5
+/local-decision-engine-and-inference-configuration-guidance/goals-and-non-goals:
+  en: 67fcc78962c32a84
+  zh: b3d057a7fff9d34c
+/local-decision-engine-and-inference-configuration-guidance/readiness-model:
+  en: 78525141486c1f18
+  zh: 564efefe1c66b2a5
+/local-decision-engine-and-inference-configuration-guidance/proposed-architecture:
+  en: 3cb2a187344494f3
+  zh: 8d25cc267c9a1f20
+/local-decision-engine-and-inference-configuration-guidance/proposed-architecture/runner-integration-spec:
+  en: e9c271ab311383f7
+  zh: 311a6f773ede4bc7
+/local-decision-engine-and-inference-configuration-guidance/proposed-architecture/preparation-flow:
+  en: 22e6b2f07f54b642
+  zh: 8e66e17a8691d84e
+/local-decision-engine-and-inference-configuration-guidance/proposed-architecture/decision-protocol-implementation:
+  en: 9618d39ed68f68f7
+  zh: 7985c17c027a89e5
+/local-decision-engine-and-inference-configuration-guidance/proposed-architecture/runtime-selection:
+  en: 39b68c1f7d17462c
+  zh: bc4da0c9025830d0
+/local-decision-engine-and-inference-configuration-guidance/proposed-architecture/execution-domain-and-provider-selection:
+  en: 69e5c31b5d6a2721
+  zh: 8488f49352f190a2
+/local-decision-engine-and-inference-configuration-guidance/proposed-architecture/failure-mapping:
+  en: 14a80e06f19caaa5
+  zh: a2c9416018ad7e63
+/local-decision-engine-and-inference-configuration-guidance/experience-design:
+  en: eed56d5ab99b685e
+  zh: f5cb336e0b5991e5
+/local-decision-engine-and-inference-configuration-guidance/experience-design/guidance-and-prompt-rules:
+  en: 1d907de68a232fe5
+  zh: 75c1f43523701144
+/local-decision-engine-and-inference-configuration-guidance/change-scope:
+  en: b9cb7e9b9475366d
+  zh: b0ba2db12737af41
+/local-decision-engine-and-inference-configuration-guidance/phases-and-acceptance-gates:
+  en: 3a115a3ea6fb7453
+  zh: 05f5a849d3cfcc33
+/local-decision-engine-and-inference-configuration-guidance/risks:
+  en: 6e07d67e993cd26f
+  zh: 5238e68c766480fb
+/local-decision-engine-and-inference-configuration-guidance/pending-product-confirmation:
+  en: 7835cd7a3438c454
+  zh: 15467c51946a2080

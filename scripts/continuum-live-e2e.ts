@@ -25,8 +25,8 @@ async function main(): Promise<void> {
       privacyPolicy: { mode: 'controlled', approvedRemoteIds: ['system-one'], approvedRemoteDataClasses: ['workspace'] } }, {
       query: 'Choose the migration schedule memory.',
       candidates: [
-        { id: MemoryId('migration'), label: 'Migration schedule', excerpt: 'The migration is scheduled for Friday.', score: 0.8 },
-        { id: MemoryId('unrelated'), label: 'Unrelated note', excerpt: 'The office is closed on Monday.', score: 0.2 },
+        { id: MemoryId('migration'), label: 'Migration schedule', excerpt: 'The migration is scheduled for Friday.', score: 0.8, tags: [] },
+        { id: MemoryId('unrelated'), label: 'Unrelated note', excerpt: 'The office is closed on Monday.', score: 0.2, tags: [] },
       ],
     })
     if (result.outcome !== 'jev' || result.selectedIds.length !== 2) {

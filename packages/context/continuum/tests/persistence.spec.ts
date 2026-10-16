@@ -3,11 +3,13 @@ import { Context } from '@deepseek-ai/cordis'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import SessionStore, { SessionId, SessionSeq } from '@deepseek-ai/dsh-session'
+import SessionStore, { Session, SessionId, SessionSeq } from '@deepseek-ai/dsh-session'
+import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
 import {
   MemoryId,
   MemoryRecordStore,
+  appendMemoryIndexEvent,
   appendMemoryRecordEvent,
   foldMemoryRecordEvents,
   readMemorySourceEvents,
@@ -21,6 +23,36 @@ const roots: string[] = []
 
 afterEach(async () => {
   for (const root of roots.splice(0)) await rm(root, { recursive: true, force: true })
+})
+
+describe('Continuum L1 index events', () => {
+  const human = (session: Session, text: string, kind: 'user' | 'continuum-memory' = 'user') =>
+    session.append('user/message', createUserMessage({
+      source: kind === 'user' ? { kind } : { kind, form: 'recall', version: 1, recordIds: [] },
+      content: [{ type: 'text', text }],
+    }), { surfaceOp: 'append' })
+
+  it('rebuilds records whose text comes only from the L2 source event', () => {
+    const session = Session.create(SessionId('index-fold'))
+    session.append('turn/start', { turn: 1 })
+    const source = human(session, '  小米对猫毛过敏。  ')
+    const id = MemoryId(`index-fold:${String(source.seq)}`)
+    appendMemoryIndexEvent(session, { id, scope: 'workspace', tags: ['people', 'health'], source: { sessionId: session.id, eventSeq: source.seq } })
+    const indexEvent = session.snapshotEvents().at(-1)
+    expect(indexEvent?.type === 'continuum/memory-index' ? JSON.stringify(indexEvent.data) : '').not.toContain('猫毛')
+    const store = foldMemoryRecordEvents(session.snapshotEvents(), new MemoryRecordStore())
+    expect(store.get(id)).toMatchObject({ content: '小米对猫毛过敏。', kind: 'fact', scope: 'workspace', status: 'active',
+      sourceRefs: [{ sessionId: session.id, eventSeq: source.seq }] })
+  })
+
+  it.each(['missing', 'generated'] as const)('refuses an index entry whose source is %s', (kind) => {
+    const session = Session.create(SessionId('index-fold-bad'))
+    session.append('turn/start', { turn: 1 })
+    const generated = human(session, 'recall text', 'continuum-memory')
+    const eventSeq = kind === 'missing' ? SessionSeq(999) : generated.seq
+    appendMemoryIndexEvent(session, { id: MemoryId('bad'), scope: 'workspace', tags: [], source: { sessionId: session.id, eventSeq } })
+    expect(() => foldMemoryRecordEvents(session.snapshotEvents(), new MemoryRecordStore())).toThrow('has no human text')
+  })
 })
 
 describe('Continuum record events', () => {

@@ -1,0 +1,22 @@
+# Bilingual-pair consistency record for lessons.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-local-jev-mlx/tasks/lessons.md
+/feat-local-jev-mlx-lessons:
+  en: 8c6d5b4cd68cead2
+  zh: 77c706713d5a8759
+/feat-local-jev-mlx-lessons/2026-10-14-ask-for-the-evaluation-criteria-before-comparing-runtime-options:
+  en: 070ab33446df046a
+  zh: f86f91a52431db01
+/feat-local-jev-mlx-lessons/2026-10-14-confirm-a-worktree-is-really-a-linked-worktree-before-batch-processing-it:
+  en: e23b18d04009ec56
+  zh: ef55ce9a64eb540b
+/feat-local-jev-mlx-lessons/2026-10-14-before-designing-confirm-the-consumer-really-exists-in-the-target-product:
+  en: 55ac1788dacb36d6
+  zh: 07509efdad8abed9
+/feat-local-jev-mlx-lessons/2026-10-14-check-the-repository-s-documentation-gates-before-following-the-global-convention:
+  en: 4608b228e1a18a73
+  zh: d86b5de643bc4128
+/feat-local-jev-mlx-lessons/2026-10-15-model-settings-pages-on-the-product-s-functional-modules-not-on-how-the-data-is-displayed:
+  en: bbaf304a8179317c
+  zh: 701648223ef0e633

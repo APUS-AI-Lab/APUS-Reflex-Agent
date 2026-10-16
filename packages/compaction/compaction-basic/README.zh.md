@@ -74,6 +74,7 @@ kind: "package-reference"
 | `maxOverflowRetries` | `1` | 已确认上下文窗口溢出后的最大重试次数；`0` 只禁用恢复。 |
 | `modelPolicies` | `[]` | 针对个别模型路由的精确 `{ provider, model, ...partialPolicy }` 覆盖。 |
 | `auto` | `true` | 启用自动压缩与溢出恢复；设为 `false` 则仅手动执行。 |
+| `recallFooter` | `false` | 在每个检查点末尾写入 `[checkpoint c<seq>: shadows conversation events #<start>–#<end>; …]`，以其 `compaction/summary` 序号命名，供 `dsh-tool-history-recall` 读回原文。 |
 
 配置错误会快速失败：未知设置、重复的按模型覆盖、无效 token 数、两种保留形式同时出现，或保留比例不小于阈值比例，都会在加载时拒绝插件。模型首次使用时，`W − O − B` 必须为正，且解析出的保留预算必须低于触发阈值。余量为零时，必须在全局或对应模型策略中显式设置正数 `maxTokens`。小窗口部署必须配置适合其容量的余量；降低 `thresholdRatio` 可以提早压缩。
 
@@ -88,6 +89,8 @@ kind: "package-reference"
 ### 修剪超大工具输出
 
 在本包之前挂载 `dsh-compaction-tool-result-pruner`，即可在压缩过程中修剪超大工具结果。修剪不发起模型调用，并可能完全省去摘要：当修剪后的对话在阈值之内时，压缩会跳过摘要。修剪只在压缩触发条件满足后运行——低于压力的对话绝不会被触碰。
+
+自动压缩在修剪之后还会触发 `compaction/prepare`，挂载的监听器（例如 System3 的 Reflex 压缩清扫）可以隐藏当前任务不再需要的工具输出。准备后的对话在阈值之内时，压缩跳过摘要。`/compact` 不触发该事件。
 
 -----
 

@@ -340,7 +340,8 @@ export function installSystem3Prefetch(ctx: Context, settings: System3PrefetchSe
   }
 
   ctx.on('agent/pre-step', async ({ agent, messages, signal }, next): Promise<PreStepDecision> => {
-    if (config.mode === 'off' || (agent.session.header.delegationDepth ?? 0) !== 0) return next()
+    if (config.mode === 'off' || settings.options.frontLoaded?.() === false
+      || (agent.session.header.delegationDepth ?? 0) !== 0) return next()
     const input = personInput(messages)
     if (input === undefined) return next()
     const work = AbortSignal.any([signal, lifetime.signal])

@@ -15,6 +15,7 @@ import { Config as OnboardingConfig } from '../src/index.ts'
 import { ChatSettingsSchema as ChatConfig } from '../../ui-chat/src/chat-settings.ts'
 import { DeveloperToolsSettingsSchema as SettingsConfig } from '../../ui-settings/src/developer-tools-settings.ts'
 import type { DesktopOnboardingInjected } from '../src/client/DesktopOnboardingEntry.tsx'
+import type { AccountOnboardingInjected } from '../src/client/AccountOnboarding.tsx'
 import type { AccountSectionInjected } from '../src/client/AccountSection.tsx'
 import { CONTACT_CONFIG_GLOBAL } from '../src/contact-config.ts'
 import { AccountPlatformHost } from '../src/client/AccountPlatformHost.tsx'
@@ -88,13 +89,16 @@ it('claims account balance notices from the frame-wide quota chain and declines 
   expect(select({ ...notice, code: 'QUOTA' })).toBeNull()
 }, 60_000)
 
-it('shares account actions across seats, publishes dialog ownership, and opens contextual support', async ({ start }) => {
+it('shares account actions across seats, publishes login visibility, and opens contextual support', async ({ start }) => {
   vi.stubGlobal(CONTACT_CONFIG_GLOBAL, { contactFormUrl: 'https://example.test/form/', contactSource: 'harness' })
   const open = vi.spyOn(window, 'open').mockReturnValue(null)
   vi.stubGlobal('dshDesktop', {})
   const c = await start()
   const actions = operations(c)
-  expect(c.ctx.slots.entries('settings.models.sign-in')[0]!.inject!()).toBe(actions)
+  const seat = c.ctx.slots.entries('settings.models.sign-in')[0]!.inject!() as object as AccountOnboardingInjected
+  const introduction = c.ctx.slots.entries('shell.overlay').find(entry => entry.options.id === 'desktop-onboarding')!.inject!() as object as DesktopOnboardingInjected
+  expect(seat.hooks.account).toBe(actions.hooks.account)
+  expect(seat.hooks.introduction).toBe(introduction.hooks.onboarding)
   // The account UI follows the live theme service through the framework hook channel.
   const theme = c.ctx.get('theme') as ThemeRuntime
   const onTheme = vi.fn()
@@ -110,12 +114,11 @@ it('shares account actions across seats, publishes dialog ownership, and opens c
   const listener = vi.fn()
   const off = actions.hooks.account.subscribe(listener)
   actions.showLogin(true)
-  actions.setOnboarding(true)
-  expect(actions.hooks.account.getSnapshot()).toMatchObject({ loginVisible: true, onboarding: true })
-  expect(listener).toHaveBeenCalledTimes(2)
+  expect(actions.hooks.account.getSnapshot()).toMatchObject({ loginVisible: true })
+  expect(listener).toHaveBeenCalledOnce()
   off()
   actions.showLogin(false)
-  expect(listener).toHaveBeenCalledTimes(2)
+  expect(listener).toHaveBeenCalledOnce()
   actions.contactUs()
   const signedOut = new URL(String(open.mock.calls.at(-1)![0]))
   expect(signedOut.searchParams.has('prefill_uid')).toBe(false)

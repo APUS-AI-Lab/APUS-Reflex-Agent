@@ -6,6 +6,7 @@ import type {} from '@deepseek-ai/dsh-api-remotes/client'
 import type { ReflexConnectionResult, ReflexStatus } from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin/types'
 import type {} from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin/remote'
 import type { SnapshotStore } from '@deepseek-ai/dsh-client-store'
+import type { ReflexLocalMode } from '@deepseek-ai/dsh-client-ui-settings/client'
 import {
   SettingsFormModel, settingsNumberField, settingsTextField,
   type SettingsFieldSpec, type SettingsFieldState, type SettingsFormActions, type SettingsFormShell,
@@ -17,6 +18,21 @@ import {
  */
 export const REFLEX_NS = 'jev'
 
+/** Host settings namespace of the System3 entry, whose only volatile field is the 决策前置 switch. */
+export const PRESTEP_NS = 'system3'
+
+/** The System3 entry field this page edits; absence means on. */
+export interface PrestepSettings {
+  /** Whether System3 decides before the main model answers. */
+  frontLoadedDecisions?: boolean
+}
+
+/** Write progress of one immediately saved switch. */
+interface SwitchWrite {
+  toggling: boolean
+  failed: boolean
+}
+
 /** Managed reference assigned when the user supplies a first key. */
 const DEFAULT_API_KEY_REF = 'REFLEX_CUSTOM_API_KEY'
 
@@ -27,14 +43,23 @@ export const REFLEX_TRIAL = {
   apiKeyEnv: 'APUS_REFLEX_TRIAL_API_KEY',
 } as const
 
-/** The two connection choices offered by the product. */
-export type ReflexConnectionMode = 'trial' | 'custom'
+/** The connection choices offered by the product; `local` routes decisions to a provider named by `defaultProviderId`. */
+export type ReflexConnectionMode = 'trial' | 'custom' | 'local'
 
 const CONNECTION_FIELDS = ['endpoint', 'model', 'effort', 'timeoutMs', 'apiKeyEnv', 'protocol'] as const
 type ConnectionDraft = Record<typeof CONNECTION_FIELDS[number], string>
 
 /** Form field the credential control stages under. */
 const API_KEY_FIELD = 'apiKey'
+
+/** Jev field naming the default provider; the local engine sets its own id, and cloud modes save the built-in one. */
+const PROVIDER_FIELD = 'defaultProviderId'
+
+/**
+ * Jev's built-in provider id. It routes like an absent field; saving it for a cloud mode also tells the local engine
+ * that another mode was chosen, while an absent field means local mode with local judgments off.
+ */
+const BUILTIN_PROVIDER_ID = 'system-one'
 
 /** The decision-provider fields this page edits. */
 export interface ReflexSettings {
@@ -49,6 +74,8 @@ export interface ReflexSettings {
   protocol?: 'openjev' | 'typesafe'
   /** Decision request deadline. */
   timeoutMs?: number
+  /** Registered provider answering instead of the built-in endpoint; set by the local engine, cleared by leaving local mode. */
+  defaultProviderId?: string
 }
 
 /** What the credentials domain last reported, and for which reference. */
@@ -65,12 +92,16 @@ interface CredentialState {
 export interface ReflexCardState extends SettingsFormShell {
   /** Saved state of the Reflex switch. */
   enabled: boolean
+  /** The 决策前置 switch: whether the Host serves it, its saved value, and its write progress. */
+  prestep: { available: boolean; writable: boolean; enabled: boolean; toggling: boolean; failed: boolean }
   /** A switch change is being saved. */
   toggling: boolean
   /** The last switch change was not saved. */
   toggleFailed: boolean
   /** Selected service preset or editable connection. */
   mode: ReflexConnectionMode
+  /** Choosing local mode was not persisted by the local engine. */
+  localChoiceFailed: boolean
   /** Provider endpoint. */
   endpoint: SettingsFieldState
   model: SettingsFieldState
@@ -98,8 +129,12 @@ export interface ReflexCardState extends SettingsFormShell {
 export interface ReflexCardFace extends SettingsFormActions {
   /** Stage another connection mode without saving or testing it. */
   selectMode: (mode: ReflexConnectionMode) => void
+  /** Drop staged edits and return to the saved mode; the page calls it when it closes. */
+  reset: () => void
   /** Save the Reflex switch at once, independently of the staged connection form. */
   setEnabled: (enabled: boolean) => Promise<void>
+  /** Save the 决策前置 switch at once. */
+  setPrestep: (enabled: boolean) => Promise<void>
   testConnection: () => Promise<void>
   clearCredential: () => Promise<void>
   refresh: () => Promise<void>
@@ -124,8 +159,13 @@ export class ReflexCardController {
   private savedSettings: { inverse: SettingsFormPathOp[]; revision: number | undefined; originalRevision: number | undefined } | undefined
   private recoveredRevision: { from: number | undefined; to: number } | undefined
   private credentialFailed = false
-  private toggling = false
-  private toggleFailed = false
+  private readonly master: SwitchWrite = { toggling: false, failed: false }
+  private readonly prestepWrite: SwitchWrite = { toggling: false, failed: false }
+  private localMode: ReflexLocalMode | undefined
+  private localChoiceFailed = false
+  /** The staged edits are only the preset staged on first load, so a later saved local choice may replace them. */
+  private autoStaged = false
+  private readonly unsubscribePrestep: () => void
   private checkingCredential = false
   private credentialSaveError: ReflexCardState['credentialSaveError']
   private disposed = false
@@ -138,10 +178,12 @@ export class ReflexCardController {
    * @param scope - the bound settings scope for the `jev` namespace.
    * @param ctx - the page plugin's context, whose `remote.credentials` namespace
    * answers for the credential the section references.
+   * @param prestep - the bound settings scope of the 决策前置 switch.
    */
   constructor(
     private readonly scope: SettingsFormScope<ReflexSettings>,
     private readonly ctx: ClientContext,
+    private readonly prestep: SettingsFormScope<PrestepSettings>,
   ) {
     this.form = new SettingsFormModel(
       {
@@ -174,16 +216,19 @@ export class ReflexCardController {
           const value = Number(text)
           return Number.isInteger(value) && value > 0 && value <= 2147483647 ? { kind: 'set', value } : undefined
         } },
-        settingsTextField('apiKeyEnv')],
+        settingsTextField('apiKeyEnv'), settingsTextField(PROVIDER_FIELD)],
       [{ field: API_KEY_FIELD, write: text => this.writeKey(text) }],
     )
     this.store = this.form.bind(() => this.projection())
     this.unsubscribe = scope.subscribe(() => {
       this.initializeMode()
-      if (!this.form.shell().dirty && !this.form.shell().saving) this.mode = this.savedMode()
+      // A local pick is held until the engine persists it (and indefinitely without a local engine plugin), so a Host
+      // change such as the master switch never moves the page out of local mode.
+      if (!this.form.shell().dirty && !this.form.shell().saving && this.mode !== 'local') this.mode = this.savedMode()
       this.invalidateProbe()
       void this.readCredential(); this.store.set(this.projection())
     })
+    this.unsubscribePrestep = prestep.subscribe(() => { this.store.set(this.projection()) })
     this.initializeMode()
     void this.readCredential()
   }
@@ -191,8 +236,12 @@ export class ReflexCardController {
   private projection(): ReflexCardState {
     return {
       ...this.form.shell(),
-      enabled: this.scope.getSnapshot().value?.enabled !== false, toggling: this.toggling, toggleFailed: this.toggleFailed,
-      mode: this.mode,
+      enabled: this.scope.getSnapshot().value?.enabled !== false, toggling: this.master.toggling, toggleFailed: this.master.failed,
+      prestep: {
+        available: this.prestep.getSnapshot().status === 'ready', writable: this.prestep.getSnapshot().writable,
+        enabled: this.prestep.getSnapshot().value?.frontLoadedDecisions !== false, ...this.prestepWrite,
+      },
+      mode: this.mode, localChoiceFailed: this.localChoiceFailed,
       saving: this.checkingCredential || this.form.shell().saving,
       failed: this.credentialSaveError !== undefined || this.form.shell().failed,
       endpoint: this.form.field('endpoint'), model: this.form.field('model'), effort: this.form.field('effort'),
@@ -257,12 +306,17 @@ export class ReflexCardController {
   inject(): ReflexCardFace {
     const actions = this.form.actions()
     return { hooks: { reflexCard: this.store }, ...actions,
-      selectMode: (mode) => { this.selectMode(mode) },
-      setEnabled: enabled => this.setEnabled(enabled),
+      selectMode: (mode) => { this.autoStaged = false; this.selectMode(mode) },
+      setEnabled: async (enabled) => { await this.toggle(this.scope, 'enabled', this.master, enabled, this.form.shell().saving) },
+      // Capability rows report the switch's effect, so a saved change reads them again.
+      setPrestep: async (enabled) => {
+        if (await this.toggle(this.prestep, 'frontLoadedDecisions', this.prestepWrite, enabled, false)) await this.refresh()
+      },
       save: () => { void this.save() },
       edit: (field, text) => {
-        if (this.checkingCredential || this.form.shell().saving || !this.form.shell().writable || this.mode === 'trial') return
+        if (this.checkingCredential || this.form.shell().saving || !this.form.shell().writable || this.mode !== 'custom') return
         if (field === 'apiKeyEnv' && text.trim() === REFLEX_TRIAL.apiKeyEnv) return
+        this.autoStaged = false
         this.credentialSaveError = undefined
         this.invalidateProbe()
         if (field === API_KEY_FIELD && !this.form.field('apiKeyEnv').text.trim()) actions.edit('apiKeyEnv', DEFAULT_API_KEY_REF)
@@ -272,38 +326,84 @@ export class ReflexCardController {
         if (field === 'apiKeyEnv') void this.readCredential()
       },
       resetField: (field) => {
-        if (this.checkingCredential || this.mode === 'trial') return
+        if (this.checkingCredential || this.mode !== 'custom') return
+        this.autoStaged = false
         this.credentialSaveError = undefined
         this.invalidateProbe(); actions.resetField(field)
         if (this.form.field('apiKeyEnv').text.trim() === REFLEX_TRIAL.apiKeyEnv) actions.edit('apiKeyEnv', DEFAULT_API_KEY_REF)
         void this.readCredential()
       },
-      discard: () => {
-        if (this.checkingCredential) return
-        this.credentialSaveError = undefined
-        this.invalidateProbe(); this.partialSave = false; this.recoveredRevision = undefined
-        actions.discard(); this.mode = this.savedMode(); this.customDraft = undefined
-        this.store.set(this.projection()); void this.readCredential()
-      },
+      // Local mode renders no connection form: the form unmounting on the switch to it drops staged edits but keeps the mode.
+      discard: () => { this.discardStaged(this.mode === 'local') },
+      reset: () => { this.discardStaged(false) },
       testConnection: () => this.testConnection(), clearCredential: () => this.clearCredential(), refresh: () => this.refresh(),
     }
   }
 
-  private async setEnabled(enabled: boolean): Promise<void> {
-    const current = this.scope.getSnapshot()
-    if (this.toggling || this.form.shell().saving || !current.writable || current.status !== 'ready') return
-    this.toggling = true
-    this.toggleFailed = false
+  private discardStaged(keepMode: boolean): void {
+    if (this.checkingCredential) return
+    this.credentialSaveError = undefined
+    this.invalidateProbe(); this.partialSave = false; this.recoveredRevision = undefined; this.autoStaged = false
+    this.form.actions().discard()
+    if (!keepMode) { this.mode = this.savedMode(); this.customDraft = undefined }
+    this.store.set(this.projection()); void this.readCredential()
+  }
+
+  /**
+   * Save one boolean switch field at once; a refused or failed write leaves the saved value and is reported.
+   * @returns whether the write was accepted.
+   */
+  private async toggle<T>(scope: SettingsFormScope<T>, field: keyof T & string, write: SwitchWrite, enabled: boolean,
+    blocked: boolean): Promise<boolean> {
+    const current = scope.getSnapshot()
+    if (write.toggling || blocked || !current.writable || current.status !== 'ready') return false
+    write.toggling = true
+    write.failed = false
     this.store.set(this.projection())
     try {
-      this.toggleFailed = !await this.scope.mutate([{ op: 'set', path: ['enabled'], value: enabled }], current.revision)
+      write.failed = !await scope.mutate([{ op: 'set', path: [field], value: enabled }], current.revision)
     } catch (_error) {
       // A rejected write leaves the saved switch unchanged; the page reports it and the user can retry.
-      this.toggleFailed = true
+      write.failed = true
     } finally {
-      this.toggling = false
+      write.toggling = false
       if (!this.disposed) this.store.set(this.projection())
     }
+    return !write.failed
+  }
+
+  /**
+   * Follow the local engine's persisted connection-mode choice while its plugin is composed.
+   * @param mode - the local provider plugin's mode facts and commit action.
+   * @returns the detacher.
+   */
+  attachLocalMode(mode: ReflexLocalMode): () => void {
+    this.localMode = mode
+    const sync = (): void => {
+      const shell = this.form.shell()
+      // A saved local choice replaces the page's view unless the user has staged edits of their own.
+      if (this.initialized && this.mode !== 'local' && this.savedMode() === 'local' && !shell.saving && (!shell.dirty || this.autoStaged)) {
+        this.discardStaged(false)
+      }
+      this.store.set(this.projection())
+    }
+    const unsubscribe = mode.chosen.subscribe(sync)
+    sync()
+    return () => {
+      unsubscribe()
+      this.localMode = undefined
+    }
+  }
+
+  private async chooseLocal(mode: ReflexLocalMode): Promise<void> {
+    this.localChoiceFailed = false
+    try {
+      await mode.choose()
+    } catch (_error) {
+      // The page keeps showing local mode for this visit; reopening shows the mode that was saved.
+      this.localChoiceFailed = true
+    }
+    if (!this.disposed) this.store.set(this.projection())
   }
 
   private keyReference(): string {
@@ -313,7 +413,8 @@ export class ReflexCardController {
   }
 
   private savedMode(): ReflexConnectionMode {
-    const value = this.scope.getSnapshot().value
+    const value = this.scope.getSnapshot().value, provider = value?.defaultProviderId
+    if (provider ? provider !== BUILTIN_PROVIDER_ID : this.localMode?.chosen.getSnapshot() === true) return 'local'
     return value?.endpoint === REFLEX_TRIAL.endpoint && value.model === REFLEX_TRIAL.model
       && value.apiKeyEnv === REFLEX_TRIAL.apiKeyEnv ? 'trial' : 'custom'
   }
@@ -324,7 +425,10 @@ export class ReflexCardController {
     this.mode = this.savedMode()
     const value = this.scope.getSnapshot().value
     if (this.scope.getSnapshot().writable) {
-      if (!value?.endpoint && !value?.model) this.selectMode('trial')
+      if (!value?.endpoint && !value?.model && this.mode !== 'local') {
+        this.selectMode('trial')
+        this.autoStaged = true
+      }
       if (value?.protocol === 'typesafe') this.form.actions().edit('protocol', 'openjev')
       if (this.mode === 'custom' && value?.apiKeyEnv === REFLEX_TRIAL.apiKeyEnv) this.form.actions().edit('apiKeyEnv', DEFAULT_API_KEY_REF)
     }
@@ -334,12 +438,24 @@ export class ReflexCardController {
   private selectMode(mode: ReflexConnectionMode): void {
     if (this.checkingCredential || this.form.shell().saving || !this.form.shell().writable || mode === this.mode) return
     const actions = this.form.actions()
-    if (this.mode === 'custom') {
+    // Leaving local mode for custom starts from the saved connection, which local mode left untouched.
+    if (this.mode === 'custom' || (this.mode === 'local' && mode === 'custom' && this.customDraft === undefined)) {
       this.customDraft = Object.fromEntries(CONNECTION_FIELDS.map(field => [field, this.form.field(field).text])) as ConnectionDraft
     }
-    this.mode = mode
     this.invalidateProbe()
     this.credentialSaveError = undefined
+    if (mode === 'local') {
+      // The local engine owns enabling; leaving staged connection edits would let Save write a mode the page no longer shows.
+      // Local mode has no Save, so picking it is the commit.
+      actions.discard()
+      this.mode = mode
+      this.store.set(this.projection())
+      if (this.localMode !== undefined) void this.chooseLocal(this.localMode)
+      return
+    }
+    this.mode = mode
+    this.localChoiceFailed = false
+    actions.edit(PROVIDER_FIELD, BUILTIN_PROVIDER_ID)
     actions.edit(API_KEY_FIELD, '')
     const draft: ConnectionDraft = mode === 'trial' ? {
       ...REFLEX_TRIAL, protocol: 'openjev', effort: 'high', timeoutMs: '30000',
@@ -451,7 +567,7 @@ export class ReflexCardController {
         effort: this.form.field('effort').text.trim() as 'high' | 'low',
         protocol: this.form.field('protocol').text.trim() as 'openjev' | 'typesafe',
         timeoutMs: Number(this.form.field('timeoutMs').text),
-        ...apiKeyEnv ? { apiKeyEnv } : {}, ...apiKey ? { apiKey } : {},
+        apiKeyEnv, ...apiKey ? { apiKey } : {},
       }, controller.signal)
       if (this.disposed || epoch !== this.epoch) return
       this.probe = response.ok ? { pending: false, failed: false, result: response.value } : { pending: false, failed: true }
@@ -465,7 +581,7 @@ export class ReflexCardController {
 
   /** Remove only the currently stored credential; environment-owned values remain read-only. */
   async clearCredential(): Promise<void> {
-    if (this.mode === 'trial' || !this.credential.writable) return
+    if (this.mode !== 'custom' || !this.credential.writable) return
     const response = await this.ctx.remote.credentials.unset(this.credential.ref)
     if (this.disposed) return
     this.credentialFailed = !response.ok
@@ -482,7 +598,7 @@ export class ReflexCardController {
   }
 
   /** Release configuration subscriptions. */
-  dispose(): void { this.disposed = true; this.invalidateProbe(); this.unsubscribe(); this.form.dispose() }
+  dispose(): void { this.disposed = true; this.invalidateProbe(); this.unsubscribe(); this.unsubscribePrestep(); this.form.dispose() }
 
 }
 

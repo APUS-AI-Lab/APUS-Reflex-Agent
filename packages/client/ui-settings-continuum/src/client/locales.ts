@@ -6,5 +6,5 @@ export const en: Record<ContinuumSettingsLocaleKey, string> = {
 }
 /** Simplified Chinese settings copy. */
 export const zh: Record<ContinuumSettingsLocaleKey, string> = {
-  title: 'Continuum 无限记忆', description: '允许 Reflex 为后续回合管理基于 Session 的长历史记忆。', error: '部署没有接受此选择。', unavailable: '当前部署未提供 Continuum。', readOnly: '本部署的设置为只读。',
+  title: 'Continuum 无限记忆', description: '允许 Reflex 为后续回合管理基于 Session 的长历史记忆', error: '部署没有接受此选择', unavailable: '当前部署未提供 Continuum', readOnly: '本部署的设置为只读',
 }

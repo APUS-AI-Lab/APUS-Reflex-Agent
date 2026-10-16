@@ -65,18 +65,32 @@ function startBlock(event: Record<string, unknown>, index: number): Block {
 function deltaChunk(block: Block, raw: unknown): StreamChunk | undefined {
   const delta = object(raw)
   const content = block.content
-  if (delta.type === 'text_delta' && content.type === 'text') {
+  if (delta.type === 'text_delta') {
     const text = string(delta.text)
-    content.text += text
-    return { type: 'text-delta', index: block.index, text }
+    if (content.type === 'text') {
+      content.text += text
+      return { type: 'text-delta', index: block.index, text }
+    }
+    if (content.type === 'reasoning') {
+      content.text += text
+      return { type: 'reasoning-delta', index: block.index, text }
+    }
   }
-  if (delta.type === 'thinking_delta' && content.type === 'reasoning') {
+  if (delta.type === 'thinking_delta') {
     const text = string(delta.thinking)
-    content.text += text
-    return { type: 'reasoning-delta', index: block.index, text }
+    if (content.type === 'reasoning') {
+      content.text += text
+      return { type: 'reasoning-delta', index: block.index, text }
+    }
+    if (content.type === 'text') {
+      content.text += text
+      return { type: 'text-delta', index: block.index, text }
+    }
   }
-  if (delta.type === 'signature_delta' && content.type === 'reasoning') {
-    block.replay.signature = (block.replay.signature ?? '') + string(delta.signature)
+  if (delta.type === 'signature_delta') {
+    if (content.type === 'reasoning') {
+      block.replay.signature = (block.replay.signature ?? '') + string(delta.signature)
+    }
     return undefined
   }
   if (delta.type === 'input_json_delta' && content.type === 'tool-call') {

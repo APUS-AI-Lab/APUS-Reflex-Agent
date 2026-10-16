@@ -10,6 +10,8 @@ export interface System3EntryView {
   readonly adopted: ModelSelection | null
   readonly used: ModelSelection | null
   readonly elapsedMs: number | null
+  /** Where the recorded entry decision ran: on this device (`local`) or through a decision service (`network`); null while deciding. */
+  readonly executionDomain: 'local' | 'network' | null
   /** Turn that carried this input, once its user message is committed; null before admission. */
   readonly turn: number | null
   /** Model candidates left out of this decision because their route was degraded, by display label. */

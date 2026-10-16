@@ -10,8 +10,8 @@ import { JevConfigurationError, JevDisabledError, JevProtocolError, type JevRequ
 import { Context } from '@deepseek-ai/cordis'
 import type { Agent } from '@deepseek-ai/dsh-agent'
 
-const first = { id: MemoryId('a'), label: 'A', excerpt: 'alpha', score: 0.8 } as const
-const second = { id: MemoryId('b'), label: 'B', excerpt: 'beta', score: 0.4 } as const
+const first = { id: MemoryId('a'), label: 'A', excerpt: 'alpha', score: 0.8, tags: [] } as const
+const second = { id: MemoryId('b'), label: 'B', excerpt: 'beta', score: 0.4, tags: [] } as const
 const input = { isCurrent: () => true, query: 'which memory?', candidates: [first, second] } as const
 const config = {
   mode: 'active', timeoutMs: 2000, maxRequestBytes: 32_768, sessionDataClasses: ['workspace'],
@@ -25,6 +25,7 @@ function fake(probabilities = [0.1, 0.9]): ContinuumJev & { calls: JevRequest[] 
   return {
     calls,
     resolve: request => ({ ...request, providerId: 'fake', model: 'fake-model', effort: 'high' }),
+    providerInfo: () => undefined,
     decide: async (request) => {
       calls.push(request)
       return { kind: 'ok', spec: { ...request, providerId: 'fake', model: 'fake-model' }, response: {
@@ -87,6 +88,19 @@ describe('Continuum coverage-preserving relevance', () => {
     const result = await selectContinuumMemory(provider, { ...config, privacyPolicy }, input)
     expect(result).toMatchObject({ failure: 'privacy-denied', selectedIds: ['a', 'b'], evaluation: { request: null } })
     expect(provider.calls).toEqual([])
+  })
+
+  it('admits a provider that declares local execution under a local-only policy', async () => {
+    const provider = fake([0, 1])
+    const local: ContinuumJev = { ...provider,
+      providerInfo: id => ({ id: id ?? 'fake', model: 'fake-model', endpoint: 'http://127.0.0.1:1', executionDomain: 'local' }) }
+    const result = await selectContinuumMemory(local, { ...config, privacyPolicy: { mode: 'local-only' } }, input)
+    expect(result).toMatchObject({ selectedIds: ['b', 'a'], evaluation: { reason: 'ranked' } })
+    expect(provider.calls).toHaveLength(1)
+    const network: ContinuumJev = { ...provider,
+      providerInfo: id => ({ id: id ?? 'fake', model: 'fake-model', endpoint: 'http://gateway', executionDomain: 'network' }) }
+    expect(await selectContinuumMemory(network, { ...config, privacyPolicy: { mode: 'local-only' } }, input)).toMatchObject({ failure: 'privacy-denied' })
+    expect(provider.calls).toHaveLength(1)
   })
 
   it.each([null, [], ['secret']] as const)('denies unknown or unapproved session classification %j', async (sessionDataClasses) => {

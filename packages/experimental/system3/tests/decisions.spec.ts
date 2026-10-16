@@ -2,7 +2,7 @@ import { Context } from '@deepseek-ai/cordis'
 import Projections from '@deepseek-ai/dsh-session-projection'
 import { Session, SessionId, SessionLogOffset } from '@deepseek-ai/dsh-session'
 import { describe, expect, it, vi } from 'vitest'
-import Jev from '../../apus-dsh-jev-plugin/src/index.ts'
+import Jev, { JevConfigurationError } from '../../apus-dsh-jev-plugin/src/index.ts'
 import System3, { type System3DecisionRequest } from '../src/index.ts'
 import { system3DecisionProjection } from '../src/decision-projection.ts'
 
@@ -51,6 +51,24 @@ describe('System3 Jev shadow receipts', () => {
     } finally {
       transport.mockRestore(); await ctx.fiber.dispose()
     }
+  })
+
+  it('admits a registered provider declaring local execution in local-only mode and records its domain', async () => {
+    const ctx = new Context()
+    await ctx.plugin(Projections)
+    await ctx.plugin(Jev, { defaultProviderId: 'reflex-local' })
+    await ctx.plugin(System3, { privacyMode: 'local-only', jevExecutionDomain: 'network' })
+    const decide = vi.fn(async () => ({ model: 'local', answers: { action: { type: 'choice' as const, choice: 'retry',
+      probabilities: { continue: 0, retry: 1, escalate: 0, candidate_done: 0, unknown: 0 }, confidence: 1 } } }))
+    const dispose = ctx.jev.register({ info: { id: 'reflex-local', model: 'local', endpoint: 'http://127.0.0.1:1', executionDomain: 'local' }, decide })
+    try {
+      const receipt = await ctx.system3.shadowDecision(Session.create(SessionId('local-provider')), input)
+      expect(receipt).toMatchObject({ outcome: { kind: 'ok' }, advice: 'retry', executionDomain: 'local', providerId: 'reflex-local' })
+      expect(decide).toHaveBeenCalledTimes(1)
+      dispose()
+      const unavailable = await ctx.system3.shadowDecision(Session.create(SessionId('local-provider-gone')), input)
+      expect(unavailable).toMatchObject({ outcome: { kind: 'unknown', code: 'privacy-denied' }, executionDomain: 'network' })
+    } finally { dispose(); await ctx.fiber.dispose() }
   })
 
   it('blocks a loopback tunnel declared as remote in local-only mode before I/O', async () => {
@@ -122,4 +140,104 @@ it('restores a denied decision without inventing an effective effort', async () 
     expect(receipt.effort).toBeUndefined()
     expect(system3DecisionProjection.stateSchema.parse(receipt)).toEqual(receipt)
   } finally { await ctx.fiber.dispose() }
+})
+
+describe('System3 Jev shadow receipt failure paths', () => {
+  const spec = { state: null, questions: {}, providerId: 'unused', model: 'jev-test' }
+  const answer = (action: unknown) => ({ kind: 'ok' as const, spec, response: { model: 'jev-test', answers: { action } } }) as Awaited<ReturnType<Jev['decide']>>
+
+  it('reads advice only from a known choice', async () => {
+    const { ctx } = await mount({ jevExecutionDomain: 'local' })
+    const decide = vi.spyOn(ctx.jev, 'decide')
+    try {
+      decide.mockResolvedValueOnce(answer({ type: 'noul', noul: 1 }))
+      expect((await ctx.system3.shadowDecision(Session.create(SessionId('noul')), input)).advice).toBe('unknown')
+      decide.mockResolvedValueOnce(answer({ type: 'choice', choice: 'invent', probabilities: { invent: 1 }, confidence: 1 }))
+      expect((await ctx.system3.shadowDecision(Session.create(SessionId('invented')), input)).advice).toBe('unknown')
+    } finally { await ctx.fiber.dispose() }
+  })
+
+  it('records a provider HTTP status and treats a configuration error during dispatch as unavailable', async () => {
+    const { ctx } = await mount({ jevExecutionDomain: 'local' })
+    const decide = vi.spyOn(ctx.jev, 'decide')
+    try {
+      decide.mockResolvedValueOnce({ kind: 'unknown', spec, failure: { code: 'http', message: 'safe', status: 503 } })
+      expect((await ctx.system3.shadowDecision(Session.create(SessionId('http')), input)).outcome).toEqual({ kind: 'unknown', code: 'http', status: 503 })
+      decide.mockRejectedValueOnce(new JevConfigurationError('switched off'))
+      expect((await ctx.system3.shadowDecision(Session.create(SessionId('switched-off')), input)).outcome)
+        .toEqual({ kind: 'unknown', code: 'provider-unavailable' })
+    } finally { await ctx.fiber.dispose() }
+  })
+
+  it('records nothing and rethrows unexpected resolver and provider failures', async () => {
+    const { ctx } = await mount({ jevExecutionDomain: 'local' })
+    const session = Session.create(SessionId('unexpected'))
+    try {
+      const resolve = vi.spyOn(ctx.jev, 'resolve').mockImplementationOnce(() => { throw new Error('resolver bug') })
+      await expect(ctx.system3.shadowDecision(session, input)).rejects.toThrow('resolver bug')
+      resolve.mockRestore()
+      vi.spyOn(ctx.jev, 'decide').mockRejectedValueOnce(new Error('provider bug'))
+      await expect(ctx.system3.shadowDecision(session, input)).rejects.toThrow('provider bug')
+      expect(session.snapshotEvents().filter(event => event.type === 'system3/decision')).toEqual([])
+    } finally { await ctx.fiber.dispose() }
+  })
+
+  it('records cancellation for non-Error abort reasons and for a provider that settles after cancellation', async () => {
+    const { ctx } = await mount({ jevExecutionDomain: 'local' })
+    const decide = vi.spyOn(ctx.jev, 'decide')
+    try {
+      await expect(ctx.system3.shadowDecision(Session.create(SessionId('pre-aborted')), input, AbortSignal.abort('gone')))
+        .rejects.toMatchObject({ name: 'AbortError' })
+      const rejecting = new AbortController()
+      decide.mockImplementationOnce(async () => {
+        rejecting.abort('gone')
+        throw 'aborted by caller'
+      })
+      const rejected = Session.create(SessionId('rejected'))
+      await expect(ctx.system3.shadowDecision(rejected, input, rejecting.signal)).rejects.toMatchObject({ name: 'AbortError' })
+      expect(ctx.system3.lastDecision(rejected)?.outcome).toEqual({ kind: 'unknown', code: 'cancelled' })
+      const settling = new AbortController()
+      decide.mockImplementationOnce(async () => {
+        settling.abort('gone')
+        return answer({ type: 'choice', choice: 'retry', probabilities: { retry: 1 }, confidence: 1 })
+      })
+      await expect(ctx.system3.shadowDecision(Session.create(SessionId('settled')), input, settling.signal))
+        .rejects.toMatchObject({ name: 'AbortError' })
+    } finally { await ctx.fiber.dispose() }
+  })
+
+  it('sends the configured effort and records continue advice', async () => {
+    const { ctx } = await mount({ jevExecutionDomain: 'local', jevEffort: 'high' })
+    const decide = vi.spyOn(ctx.jev, 'decide').mockResolvedValueOnce(answer({ type: 'choice', choice: 'continue', probabilities: { continue: 1 }, confidence: 1 }))
+    try {
+      const receipt = await ctx.system3.shadowDecision(Session.create(SessionId('effort')), input)
+      expect(receipt).toMatchObject({ advice: 'continue', effort: 'high' })
+      expect(decide.mock.calls[0]?.[0]).toMatchObject({ effort: 'high' })
+    } finally { await ctx.fiber.dispose() }
+  })
+
+  it('keeps the provider error as the cancellation when it rejects with an Error after the caller aborts', async () => {
+    const { ctx } = await mount({ jevExecutionDomain: 'local' })
+    const abort = new AbortController()
+    vi.spyOn(ctx.jev, 'decide').mockImplementationOnce(async () => {
+      abort.abort('gone')
+      throw new Error('request aborted')
+    })
+    try {
+      await expect(ctx.system3.shadowDecision(Session.create(SessionId('error-abort')), input, abort.signal)).rejects.toThrow('request aborted')
+    } finally { await ctx.fiber.dispose() }
+  })
+
+  it('records unavailable without dispatch when Jev is not mounted or not configured', async () => {
+    const ctx = new Context()
+    await ctx.plugin(Projections)
+    await ctx.plugin(System3, { jevExecutionDomain: 'local' })
+    try {
+      expect((await ctx.system3.shadowDecision(Session.create(SessionId('no-jev')), input)).outcome)
+        .toEqual({ kind: 'unknown', code: 'provider-unavailable' })
+      await ctx.plugin(Jev, {})
+      expect((await ctx.system3.shadowDecision(Session.create(SessionId('unconfigured')), input)).outcome)
+        .toEqual({ kind: 'unknown', code: 'provider-unavailable' })
+    } finally { await ctx.fiber.dispose() }
+  })
 })

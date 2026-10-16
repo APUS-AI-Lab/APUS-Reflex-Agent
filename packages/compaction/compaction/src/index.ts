@@ -104,6 +104,16 @@ declare module '@deepseek-ai/cordis' {
      * @mode waterfall
      */
     'compaction/summary-error'(payload: { session: Session; sourceEventSeqs: readonly SessionSeq[]; error: unknown; signal?: AbortSignal }, next: () => boolean): boolean
+    /**
+     * Shrink the surface before automatic or manual compaction selects a summary range. Listeners may only append
+     * durable, replay-safe message projections that keep every node and tool pairing; the provider re-measures
+     * afterwards and summarizes only when the surface still needs it. A listener that fails or is cancelled must
+     * leave the surface unchanged.
+     * @param agent - agent context owning the session surface.
+     * @param signal - cancellation of the compaction that triggered this preparation.
+     * @mode parallel
+     */
+    'compaction/prepare'(agent: CompactionAgentContext, signal: AbortSignal): Promise<void> | void
   }
 }
 

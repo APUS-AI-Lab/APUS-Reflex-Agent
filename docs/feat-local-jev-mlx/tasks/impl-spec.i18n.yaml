@@ -1,0 +1,28 @@
+# Bilingual-pair consistency record for impl-spec.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/feat-local-jev-mlx/tasks/impl-spec.md
+/local-decision-engine-implementation-spec-for-parallel-implementers:
+  en: d620c07e2741b84c
+  zh: 034408b958e83721
+/local-decision-engine-implementation-spec-for-parallel-implementers/package-division:
+  en: 176ee7fc9edf01a1
+  zh: 7e423ea557b2d5aa
+/local-decision-engine-implementation-spec-for-parallel-implementers/measured-decisions-that-must-not-change:
+  en: 6bf9bb2c9f2b6fdd
+  zh: d2d2970bee86ec1f
+/local-decision-engine-implementation-spec-for-parallel-implementers/cross-file-interfaces-inside-reflex-local:
+  en: 9dc965c2a936cfbc
+  zh: 6ce4601e5875bab2
+/local-decision-engine-implementation-spec-for-parallel-implementers/enable-disable-semantics:
+  en: 16cc477280bc617a
+  zh: 5a652043ad1cba26
+/local-decision-engine-implementation-spec-for-parallel-implementers/runner-distribution-final-ships-with-the-desktop-primary-runtime:
+  en: 049a9b2914544c09
+  zh: 502729ba927c457c
+/local-decision-engine-implementation-spec-for-parallel-implementers/root-configuration:
+  en: f5659f79d321bf27
+  zh: 37f336c503c40477
+/local-decision-engine-implementation-spec-for-parallel-implementers/jev-plugin-fields-final-2026-10-14:
+  en: 10a8ef4f61c96dbb
+  zh: 7c68e5009516da45

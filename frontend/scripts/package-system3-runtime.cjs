@@ -10,6 +10,22 @@ const { execFile } = require('node:child_process')
 const { promisify } = require('node:util')
 const execFileAsync = promisify(execFile)
 
+/**
+ * Require the packaged local Reflex runner to start and report its locked llama.cpp release.
+ * GGML_METAL_DEVICES=0 skips the Metal device setup that llama.cpp performs before `--version`, which can stall on a
+ * virtual GPU; dyld still loads and validates every library the runner links.
+ * @returns {Promise<void>} Resolves when the runner reports the release's build number.
+ */
+async function verifyPackagedReflexRunner(runner, release) {
+  const stat = await fs.stat(runner)
+  if (!stat.isFile() || (stat.mode & 0o111) === 0) throw new Error('Packaged local Reflex runner is not an executable file')
+  const version = await execFileAsync(runner, ['--version'], { timeout: 30_000, maxBuffer: 1024 * 1024, env: { ...process.env, GGML_METAL_DEVICES: '0' } })
+    .catch(error => {
+      throw new Error('Packaged local Reflex runner failed (exit ' + error.code + ', signal ' + error.signal + ', killed ' + error.killed + '): ' + error.message, { cause: error })
+    })
+  if (!(version.stdout + version.stderr).includes('(build ' + release.slice(1) + ',')) throw new Error('Packaged local Reflex runner release mismatch')
+}
+
 module.exports = async function packageSystem3Runtime(context) {
   const product = context.packager.appInfo.productFilename
   const resources = context.electronPlatformName === 'darwin'
@@ -24,7 +40,7 @@ module.exports = async function packageSystem3Runtime(context) {
   const target = path.join(resources, 'system3-runtime')
   await fs.cp(source, target, { recursive: true, force: true, dereference: false })
   const manifest = JSON.parse(await fs.readFile(path.join(target, 'runtime-manifest.json'), 'utf8'))
-  if (manifest.mode !== 'deployed' || manifest.packages.length !== 9) throw new Error('Packaged System3 runtime is incomplete')
+  if (manifest.mode !== 'deployed' || manifest.packages.length !== 13) throw new Error('Packaged System3 runtime is incomplete')
   verifyDependencyInventory(target, manifest)
   verifyPackagedMetadata(resources)
   const edition = resolveEdition(context.packager.config?.extraMetadata?.apusProductEdition ?? process.env.APUS_PRODUCT_EDITION ?? 'full')
@@ -68,6 +84,9 @@ module.exports = async function packageSystem3Runtime(context) {
     }
   }
   await verifyPhysicalTree(target)
+  if (manifest.llamaServer !== undefined) {
+    await verifyPackagedReflexRunner(await requireContained('dependencies/llama-server/llama-server'), manifest.llamaServer)
+  }
   const executable = context.electronPlatformName === 'win32'
     ? path.join(context.appOutDir, product + '.exe')
     : path.join(resources, 'app.asar.unpacked', 'node_modules', 'node', 'bin', 'node')
@@ -82,5 +101,7 @@ module.exports = async function packageSystem3Runtime(context) {
   await execFileAsync(executable, ['--input-type=module', '-e', smoke], { cwd: target, timeout: 60_000, maxBuffer: 1024 * 1024,
     env: context.electronPlatformName === 'win32' ? { ...process.env, ELECTRON_RUN_AS_NODE: '1' } : process.env })
   await require('./verify-packaged-ppt-runtime.cjs')(context)
-  console.log('System3 packaged resources verified: 7 own packages, 27 compatibility patches, ' + manifest.version)
+  console.log('System3 packaged resources verified: ' + manifest.packages.length + ' runtime packages, 27 compatibility patches, '
+    + (manifest.llamaServer === undefined ? 'no local Reflex runner, ' : 'local Reflex runner ' + manifest.llamaServer + ', ') + manifest.version)
 }
+module.exports.verifyPackagedReflexRunner = verifyPackagedReflexRunner

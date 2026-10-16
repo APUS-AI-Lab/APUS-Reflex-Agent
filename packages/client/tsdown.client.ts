@@ -434,6 +434,30 @@ function matchesSpecifier(patterns: readonly RegExp[], specifier: string): boole
   return patterns.some(pattern => pattern.test(specifier))
 }
 
+/**
+ * Reject output that still imports a bare specifier the module table does not provide. Such an import appears when the
+ * bundler cannot resolve a dependency from its importer (for example a generated Remote whose package does not declare
+ * `zod`) and keeps it external; the loader then fails at runtime.
+ * @param isRequested - whether the module table answers a specifier for this package.
+ * @returns the build plugin.
+ */
+function unresolvedExternalPlugin(isRequested: (specifier: string) => boolean): TsdownPlugin {
+  return {
+    name: 'dsh-client-unresolved-external',
+    generateBundle(_options, bundle) {
+      for (const output of Object.values(bundle)) {
+        if (output.type !== 'chunk') continue
+        for (const specifier of [...output.imports, ...output.dynamicImports]) {
+          const local = specifier.replace(/^\.\//, '')
+          if (local in bundle || specifier.startsWith('../') || isRequested(specifier)) continue
+          this.error(`client bundle: "${specifier}" stayed external in ${output.fileName}, but the module table does not provide it; `
+            + 'declare it as a dependency of the package that imports it so the bundle inlines it')
+        }
+      }
+    },
+  }
+}
+
 /** Render package-local dynamic imports through the Client module loader's asynchronous operation. */
 function asyncChunkRequirePlugin(): TsdownPlugin {
   return {
@@ -544,7 +568,7 @@ function clientConfig(id: string, entry: string, clientBanner?: (fileName: strin
           + '(type-only imports are erased and never reach this gate)',
         )
       },
-    }, tscSourceMapPlugin(), asyncChunkRequirePlugin(), isolation.plugin, {
+    }, tscSourceMapPlugin(), asyncChunkRequirePlugin(), unresolvedExternalPlugin(isRequested), isolation.plugin, {
       name: 'dsh-css-modules-inline',
       resolveId(source: string, importer: string | undefined) {
         if (!source.endsWith('.module.css')) return null

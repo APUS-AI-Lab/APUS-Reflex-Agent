@@ -13,6 +13,11 @@
   "type": "module",
   "main": "lib/index.js",
   "types": "lib/types/index.d.ts",
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
   "exports": {
     ".": {
       "types": "./lib/types/index.d.ts",
@@ -27,6 +32,7 @@
   },
   "files": [
     "lib/index.js",
+    "cordis.patch.yml",
     "lib/types/**/*.js",
     "lib/types/**/*.d.ts"
   ],

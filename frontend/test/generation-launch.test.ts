@@ -63,7 +63,8 @@ describe('the launch-process half of the generation model', () => {
     const manifest = JSON.parse(await readFile(join(profileDir, 'package.json'), 'utf8'))
     const template = PROFILE_TEMPLATES.web
     if (template === undefined) throw new Error('Missing web profile template')
-    expect(manifest.dsh.profile.bundles).toEqual([...template.bundles, '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin', '@deepseek-ai/dsh-experimental-continuum-jev'])
+    expect(manifest.dsh.profile.bundles).toEqual([...template.bundles, '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin', '@deepseek-ai/dsh-experimental-system3',
+      '@deepseek-ai/dsh-experimental-continuum-jev', '@deepseek-ai/dsh-experimental-reflex-local-bundle'])
     expect(await readFile(join(profileDir, 'cordis.patch.yml'), 'utf8')).toContain('[]')
     expect(await readFile(join(profileDir, 'pnpm-workspace.yaml'), 'utf8')).toContain(
       'nodeLinker: hoisted'
@@ -112,6 +113,22 @@ describe('the launch-process half of the generation model', () => {
     const restarted = JSON.parse(await readFile(join(home, 'profiles', 'web', 'package.json'), 'utf8'))
     expect(restarted.dsh.profile.bundles.filter((name: string) => name === '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin')).toHaveLength(1)
     expect(restarted.dsh.profile.bundles.filter((name: string) => name === '@deepseek-ai/dsh-experimental-continuum-jev')).toHaveLength(1)
+    expect(restarted.dsh.profile.bundles.filter((name: string) => name === '@deepseek-ai/dsh-experimental-reflex-local-bundle')).toHaveLength(1)
+    expect(restarted.dsh.profile.bundles.filter((name: string) => name === '@deepseek-ai/dsh-experimental-system3')).toHaveLength(1)
+  })
+
+  it('appends the System3 bundle after the Jev bundle of a profile from an earlier release', async () => {
+    const home = await freshHome()
+    const profileDir = join(home, 'profiles', 'web')
+    const template = PROFILE_TEMPLATES.web
+    if (template === undefined) throw new Error('Missing web profile template')
+    const earlier = [...template.bundles, '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin', '@deepseek-ai/dsh-experimental-continuum-jev',
+      '@deepseek-ai/dsh-experimental-reflex-local-bundle']
+    await writeFile(join(profileDir, 'package.json'),
+      JSON.stringify({ name: 'dsh-profile-web', private: true, dependencies: {}, dsh: { profile: { bundles: earlier } } }))
+    await prepareGenerationsForLaunch(home, silent)
+    const manifest = JSON.parse(await readFile(join(profileDir, 'package.json'), 'utf8'))
+    expect(manifest.dsh.profile.bundles).toEqual([...earlier, '@deepseek-ai/dsh-experimental-system3'])
   })
 
   it('knows a generation install from a plain manifest one', async () => {

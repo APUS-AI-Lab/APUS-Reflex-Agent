@@ -22,6 +22,8 @@ export interface HarnessRuntimeOptions {
   dshEditionPatchPath?: string
   /** Overlay for dshmarket's entry, passed only when the profile declares the market. */
   dshMarketPatchPath?: string
+  /** Prepared llama.cpp runner, exported to the Harness as `APUS_REFLEX_RUNNER` for local Reflex decisions. */
+  reflexRunnerPath?: string
   dshHome: string
   logPath: string
   launchProcess(
@@ -295,7 +297,8 @@ export function buildHarnessSpawnOptions(
   dshHome: string,
   platform: NodeJS.Platform = process.platform,
   environment: NodeJS.ProcessEnv = process.env,
-  profile: string = 'web'
+  profile: string = 'web',
+  reflexRunnerPath?: string
 ): SpawnOptionsWithoutStdio {
   const {
     ELECTRON_RUN_AS_NODE: _runAsNode,
@@ -337,6 +340,8 @@ export function buildHarnessSpawnOptions(
       // `profiles/node_modules` fallback, whose junctions Windows can refuse.
       ...(profile === SAFE_MODE_PROFILE && { DSH_DESKTOP_HOST_RESOLVED: '1' }),
       NODE_COMPILE_CACHE: environment.NODE_COMPILE_CACHE ?? pathApi.join(dshHome, 'cache', 'compile-cache'),
+      // The local Reflex bundle reads this path from configuration; without it the engine reports a missing runner.
+      ...(reflexRunnerPath !== undefined && { APUS_REFLEX_RUNNER: reflexRunnerPath }),
       [pathKey]: resolveEnvironmentPath(environment, platform)
     },
     stdio: ['pipe', 'pipe', 'pipe'],
@@ -549,7 +554,8 @@ export class HarnessRuntime {
           this.options.dshHome,
           process.platform,
           shellEnvironment,
-          profile
+          profile,
+          this.options.reflexRunnerPath
         )
       )
     } catch (error) {

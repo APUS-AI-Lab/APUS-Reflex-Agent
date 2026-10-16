@@ -1,0 +1,28 @@
+# Bilingual-pair consistency record for 2026-10-14-continuum-memory-admission.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/persistence-changes/2026-10-14-continuum-memory-admission.md
+/:
+  en: 3d5a424ae7d7e46b
+  zh: c22a8e4a62d8cc1a
+/2026-10-14-continuum-memory-admission:
+  en: 11c86db16b040050
+  zh: de44d5e1e38ea86f
+/2026-10-14-continuum-memory-admission/summary:
+  en: 6a87782b1c2cb336
+  zh: 394d4ec467c8fbb7
+/2026-10-14-continuum-memory-admission/table-of-contents:
+  en: 6cf314a069ceb451
+  zh: 9adff678e9ecab3b
+/2026-10-14-continuum-memory-admission/declaration:
+  en: 6907136f28e48c90
+  zh: 02f8298485f3d8e7
+/2026-10-14-continuum-memory-admission/compatibility:
+  en: 9970035b3ec905fc
+  zh: 2924f13fea15f5a0
+/2026-10-14-continuum-memory-admission/verification:
+  en: 12d8ffc6fc96451e
+  zh: 6858f2dde4efd3af
+/2026-10-14-continuum-memory-admission/dev-note:
+  en: b75c8458928b72b9
+  zh: 003ba4e17b4b5269
