@@ -115,6 +115,37 @@ export async function runTrackedProcess(command, args, options, acquired, sample
   return result
 }
 
+/** Quote a value as a single-quoted PowerShell string literal.
+ * @param {string} value Literal text.
+ * @returns {string} PowerShell expression evaluating to `value`.
+ */
+export function powershellQuote(value) {
+  return "'" + value.replaceAll("'", "''") + "'"
+}
+
+/** Build the PowerShell command electron-builder's NSIS app-running check evaluates (`FIND_PROCESS` in
+ * app-builder-lib `templates/nsis/include/allowOnlyOneInstallerInstance.nsh`); exit 0 means a process runs from the installation.
+ * @param {string} installation Installed application directory, the NSIS `$INSTDIR`.
+ * @returns {string} Command for `powershell.exe -C`.
+ */
+export function appRunningQuery(installation) {
+  return `if ((Get-CimInstance -ClassName Win32_Process | ? {$_.Path -and $_.Path.StartsWith(${powershellQuote(installation)}, 'CurrentCultureIgnoreCase')}).Count -gt 0) { exit 0 } else { exit 1 }`
+}
+
+/** Summarize a process inventory by executable name; command lines are never collected.
+ * @param {{pid:number,parent:number,name:string,underInstallation:boolean,pathReadable:boolean,created:string|null}[]} processes Native observations.
+ * @returns {{count:number,byName:Record<string,number>,underInstallation:object[],unreadablePath:object[]}} Counts plus the processes the app-running check could match or cannot classify.
+ */
+export function summarizeProcessInventory(processes) {
+  const byName = {}
+  for (const process of processes) byName[process.name] = (byName[process.name] ?? 0) + 1
+  const sorted = Object.fromEntries(Object.entries(byName).sort(([left], [right]) => left.localeCompare(right)))
+  const detail = ({ pid, parent, name, created }) => ({ pid, parent, name, created })
+  return { count: processes.length, byName: sorted,
+    underInstallation: processes.filter(process => process.underInstallation).map(detail),
+    unreadablePath: processes.filter(process => !process.pathReadable).map(detail) }
+}
+
 /** Kill only currently owned roots, then require an empty live process observation. */
 export async function terminateOwnedProcesses(observe, terminate, roots) {
   const errors = []
@@ -202,7 +233,7 @@ async function run(installer, reportDirectory, expectedSource = process.env.GITH
   const report = { passed: false, stages: [], helperSourceRevision: process.env.GITHUB_SHA, buildRunId, cleanupErrors: [], uninstallations: [], limitations: ['Unsigned preview; Authenticode and SmartScreen trust are not qualified.', 'No provider credentials or real model API task is exercised.'] }
   let app
   let known = []
-  const psQuote = value => "'" + value.replaceAll("'", "''") + "'"
+  const psQuote = powershellQuote
   const observe = async () => {
     const script = `$ErrorActionPreference='Stop'; $ownedInstall=${psQuote(installation + win32.sep)}; $ownedRoot=${psQuote(temporary)}; $ownedInstaller=${psQuote(installer)}; @(Get-CimInstance Win32_Process | ForEach-Object { [PSCustomObject]@{pid=[int]$_.ProcessId;parent=[int]$_.ParentProcessId;owned=(($_.ExecutablePath -and ($_.ExecutablePath.StartsWith($ownedInstall,[System.StringComparison]::OrdinalIgnoreCase) -or $_.ExecutablePath.Equals($ownedInstaller,[System.StringComparison]::OrdinalIgnoreCase))) -or ($_.CommandLine -and $_.CommandLine.Contains($ownedRoot))) -and $_.ProcessId -ne $PID} }) | ConvertTo-Json -Compress`
     const { stdout } = await execute(powershell, ['-NoProfile', '-NonInteractive', '-Command', script], { timeout: 30_000, windowsHide: true })
@@ -237,9 +268,37 @@ async function run(installer, reportDirectory, expectedSource = process.env.GITH
     await closing.close()
     await quiescent()
   }
+  // Uninstall diagnostics: what the NSIS app-running check sees and how long its query takes, before and after the uninstaller.
+  const diagnose = async () => {
+    const diagnostics = {}
+    const startedQuery = performance.now()
+    try {
+      await execute(powershell, ['-C', appRunningQuery(installation)], { timeout: 120_000, windowsHide: true, env })
+      diagnostics.appRunningCheck = { exitCode: 0, durationMs: performance.now() - startedQuery }
+    } catch (error) {
+      diagnostics.appRunningCheck = { exitCode: typeof error.code === 'number' ? error.code : null, durationMs: performance.now() - startedQuery,
+        ...(typeof error.code === 'number' ? {} : { failure: failureDiagnostic(error) }) }
+    }
+    const startedInventory = performance.now()
+    try {
+      const script = `$ErrorActionPreference='Stop'; $installation=${psQuote(installation)}; @(Get-CimInstance Win32_Process | ForEach-Object { [PSCustomObject]@{pid=[int]$_.ProcessId;parent=[int]$_.ParentProcessId;name=[string]$_.Name;underInstallation=[bool]($_.ExecutablePath -and $_.ExecutablePath.StartsWith($installation,[System.StringComparison]::OrdinalIgnoreCase));pathReadable=[bool]$_.ExecutablePath;created=$(if ($_.CreationDate) { $_.CreationDate.ToUniversalTime().ToString('o') } else { $null })} }) | ConvertTo-Json -Compress`
+      const { stdout } = await execute(powershell, ['-NoProfile', '-NonInteractive', '-Command', script], { timeout: 120_000, windowsHide: true, maxBuffer: 16 * 1024 * 1024 })
+      const value = JSON.parse(stdout.trim() || '[]')
+      diagnostics.processes = { durationMs: performance.now() - startedInventory, ...summarizeProcessInventory(Array.isArray(value) ? value : [value]) }
+    } catch (error) {
+      diagnostics.processes = { durationMs: performance.now() - startedInventory, failure: failureDiagnostic(error) }
+    }
+    diagnostics.profileMaintenanceDeferred = {}
+    for (const home of ['harness', 'harness-home']) {
+      try { await access(join(profile, home, 'profiles', 'web', '.generations-deferred.json')); diagnostics.profileMaintenanceDeferred[home] = true }
+      catch (error) { diagnostics.profileMaintenanceDeferred[home] = error.code === 'ENOENT' ? false : failureDiagnostic(error) }
+    }
+    return diagnostics
+  }
   const uninstall = async phase => {
     const receipt = { phase }
     report.uninstallations.push(receipt)
+    receipt.before = await diagnose()
     try { await runInstalledUninstaller(installation, temporary, env, tracked, receipt) }
     finally {
       try {
@@ -247,6 +306,7 @@ async function run(installer, reportDirectory, expectedSource = process.env.GITH
         const owned = ownedProcessIds(processes, known)
         receipt.remainingProcesses = processes.filter(process => owned.includes(process.pid))
       } catch (error) { receipt.observationFailure = failureDiagnostic(error) }
+      receipt.after = await diagnose()
     }
     return receipt
   }
