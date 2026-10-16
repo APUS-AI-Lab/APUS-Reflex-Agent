@@ -450,6 +450,8 @@ export function installSystem3Prefetch(ctx: Context, settings: System3PrefetchSe
       const output = await run(shell, agent, cwd, candidate.command, signal)
       return output === undefined ? undefined : [{ label: candidate.label, text: output }]
     })
+    // Outputs the decision does not ask for are never awaited; their abort errors must not become unhandled rejections.
+    for (const output of outputs) output.catch(() => undefined)
     const result = await runSystem3Decision(ctx, shared, system3PrefetchDecision, config, agent, { input, candidates }, signal)
     if (result.outcome !== 'prefetch') return undefined
     const answers = result.judgement.response?.answers ?? {}
