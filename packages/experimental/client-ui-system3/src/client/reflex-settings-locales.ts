@@ -27,7 +27,7 @@ export const zh = {
   decisionRejected: '服务回答未通过真实判断检查', unavailableService: '服务不可用或响应无效', latency: '耗时：{ms} 毫秒',
   effective: '保存后对新请求生效',
   skillSelection: '输入判断与 Skill 选择', entryRouting: '用户入口路由',
-  enabled: '已启用', suspendedByPrestep: '已暂停 · 随决策前置', localChoiceFailed: '接入方式未保存，请重新选择',
+  enabled: '已启用', suspendedByPrestep: '已暂停 · 随决策前置', suspendedLocal: '已暂停 · 本机判断未开启', suspendedService: '已暂停 · 决策服务未就绪', localChoiceFailed: '接入方式未保存，请重新选择',
   runtimeUnavailable: '无法读取运行状态',
   switchTitle: '启用 Reflex 决策', switchOn: '已开启，新请求按所选接入方式做判断',
   switchOff: '已关闭，回答直接由主模型生成', switchFailed: '开关状态未保存，请重试',
@@ -59,7 +59,8 @@ export const en: Record<ReflexSettingsKey, string> = {
   trialNoCredential: 'This device has no credential for the preset service yet; switch to This Mac or Custom parameters', noCredential: 'No API key configured', timeout: 'Request timed out', modelMissing: 'This model is not served by the endpoint.',
   decisionRejected: 'The answer did not pass the real decision check.', unavailableService: 'The service is unavailable or returned an invalid response.', latency: 'Duration: {ms} ms', effective: 'Saved settings apply to new requests',
   skillSelection: 'Input judgment and Skill selection', entryRouting: 'User entry routing',
-  enabled: 'Enabled', suspendedByPrestep: 'Paused · follows Pre-step decisions', localChoiceFailed: 'The connection mode was not saved. Choose it again.', runtimeUnavailable: 'Runtime status is unavailable.',
+  enabled: 'Enabled', suspendedByPrestep: 'Paused · follows Pre-step decisions', suspendedLocal: "Paused · This Mac's judgments are off",
+  suspendedService: 'Paused · decision service not ready', localChoiceFailed: 'The connection mode was not saved. Choose it again.', runtimeUnavailable: 'Runtime status is unavailable.',
   switchTitle: 'Enable Reflex decisions', switchOn: 'On: new requests are judged through the selected connection',
   switchOff: 'Off: answers come straight from the main model', switchFailed: 'The switch was not saved. Try again.',
 }

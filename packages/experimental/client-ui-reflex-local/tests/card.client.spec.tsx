@@ -459,11 +459,14 @@ it('moves to the model the Host names next after a delete, and keeps a picked mo
   fireEvent.click(screen.getByRole('menuitem', { name: zh.deleteThis }))
   fireEvent.click(button(zh['confirm.delete']))
   expect(b.deleteModel).toHaveBeenCalledWith(Q8)
+  // Deleting the model in use turns local judging off and leaves no active model.
   b.publish({ snapshot: snapshotOf({ phase: 'ready', variant: Q4, selfTest: FAST },
-    { enabled: true, recommended: NINE, options: holding([Q4, DOWNLOADED]) }) })
+    { enabled: false, recommended: NINE, options: holding([Q4, DOWNLOADED]) }) })
   await waitFor(() => { expect(pill().disabled).toBe(false) })
   expect(pill().textContent).toBe('APUS Reflex 4B · Q4_K_M')
   expect(button(zh.use)).toBeTruthy()
+  expect(screen.queryByRole('button', { name: zh.disable })).toBeNull()
+  expect(screen.queryByRole('button', { name: zh.enable })).toBeNull()
   fireEvent.click(pill())
   expect(optionRow('4B · Q8_0').textContent).not.toMatch(new RegExp(`${zh['tag.inUse']}|${zh['tag.downloaded']}`))
   fireEvent.keyDown(document, { key: 'Escape' })

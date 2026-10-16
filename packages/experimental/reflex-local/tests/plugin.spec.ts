@@ -32,7 +32,9 @@ it('registers the local provider while mounted and answers decisions with a tran
   expect(module.name).toBe('experimental-reflex-local')
   expect(ctx.jev.listProviders()).toMatchObject([{ id: 'reflex-local', model: module.REFLEX_MODEL, endpoint: 'http://127.0.0.1' }])
   const service = ctx.get('reflexLocal')!
-  expect(service.snapshot()).toMatchObject({ device: { supported: false }, enabled: true, reflexEnabled: true, providerId: 'reflex-local' })
+  expect(service.snapshot()).toMatchObject({ device: { supported: false }, enabled: false, reflexEnabled: true, providerId: 'reflex-local' })
+  // Jev routes here, but the provider reports it cannot answer, so optional consumers skip decisions.
+  expect(ctx.jev.isReady()).toBe(false)
   const abort = new AbortController()
   const iterator = service.follow(abort.signal)[Symbol.asyncIterator]()
   expect((await iterator.next()).value).toMatchObject({ preparation: { phase: 'unsupported' } })
@@ -45,8 +47,8 @@ it('registers the local provider while mounted and answers decisions with a tran
   await service.disable()
   expect(() => { service.select({ model: '4b', quant: 'q8_0' }) }).toThrow('cannot run')
   await service.acknowledgeSwitch()
-  await service.chooseLocal()
-  expect(service.snapshot().localChosen).toBe(true)
+  await expect(service.chooseLocal()).rejects.toThrow('cannot run')
+  expect(service.snapshot().localChosen).toBe(false)
   await service.deleteModel({ model: '4b', quant: 'q8_0' })
   await service.acknowledge()
   await service.remove()

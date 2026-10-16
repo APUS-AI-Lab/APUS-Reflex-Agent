@@ -24,6 +24,11 @@ export interface ReflexProviderOptions {
    * @param signal - Caller cancellation.
    */
   warm?(signal?: AbortSignal): Promise<void>
+  /**
+   * Report synchronously, without side effects, whether a decision can be answered now.
+   * @returns false while local decisions are off, no model is active, or the runner failed.
+   */
+  ready?(): boolean
 }
 
 function failure(code: JevFailure['code'], message: string, cause?: unknown): JevProviderError {
@@ -79,6 +84,7 @@ function waitTurn(previous: Promise<void>, signal: AbortSignal): Promise<void> {
 export class ReflexJevProvider implements JevProvider {
   readonly info: JevProviderInfo
   readonly warm?: (signal?: AbortSignal) => Promise<void>
+  readonly ready?: () => boolean
   private readonly options: ReflexProviderOptions
   private tail: Promise<void> = Promise.resolve()
 
@@ -86,6 +92,7 @@ export class ReflexJevProvider implements JevProvider {
     this.options = options
     this.info = { id: options.id, model: options.model, endpoint: options.endpoint, executionDomain: 'local' }
     if (options.warm !== undefined) this.warm = options.warm.bind(options)
+    if (options.ready !== undefined) this.ready = options.ready.bind(options)
   }
 
   /**

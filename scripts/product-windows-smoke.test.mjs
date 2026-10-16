@@ -5,7 +5,9 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
-import { ownedProcessIds, redactDiagnostic, smokeEnvironment, verifyInstalledIdentity, failureDiagnostic, runTrackedProcess, runInstalledUninstaller, terminateOwnedProcesses } from './product-windows-smoke.mjs'
+import { ownedProcessIds, redactDiagnostic, smokeEnvironment, verifyInstalledIdentity, failureDiagnostic, runTrackedProcess, runInstalledUninstaller, terminateOwnedProcesses,
+  appRunningQuery, powershellQuote, summarizeProcessInventory } from './product-windows-smoke.mjs'
+import { existsSync, readFileSync } from 'node:fs'
 
 test('installed application cannot inherit developer Node, credentials or runtime overrides', () => {
   const source = { SystemRoot: 'C:\\Windows', Path: 'C:\\node;C:\\tools', APPDATA: 'C:\\Users\\runner\\AppData', GH_TOKEN: 'secret', DEEPSEEK_API_KEY: 'secret', JEV_API_KEY: 'secret', ELECTRON_RUN_AS_NODE: '1', NODE_OPTIONS: '--require=developer.js', DSH_HOME: 'C:\\existing' }
@@ -215,3 +217,30 @@ fs.rmSync(installation, { recursive: true });
     assert.throws(() => process.kill(receipt.rootPid, 0), error => error.code === 'ESRCH')
   })
 }
+
+const nsisAppRunningCheck = new URL('../frontend/node_modules/app-builder-lib/templates/nsis/include/allowOnlyOneInstallerInstance.nsh', import.meta.url)
+
+test('diagnostics run the same process query as the NSIS app-running check', { skip: !existsSync(nsisAppRunningCheck) && 'frontend dependencies are not installed' }, () => {
+  const template = readFileSync(nsisAppRunningCheck, 'utf8')
+  const command = /\$PowerShellPath" -C "(if \(\(Get-CimInstance[^"]*)"`/.exec(template)?.[1]
+  assert.ok(command, 'FIND_PROCESS PowerShell command')
+  const installation = "C:\\Temp\\apus-installed-x'y\\application"
+  assert.equal(appRunningQuery(installation), command.replaceAll('$$_', '$_').replace("'$INSTDIR'", powershellQuote(installation)))
+  assert.equal(powershellQuote("a'b"), "'a''b'")
+})
+
+test('process inventories report names and installation matches without command lines', () => {
+  const summary = summarizeProcessInventory([
+    { pid: 1, parent: 0, name: 'powershell.exe', underInstallation: false, pathReadable: true, created: '2026-10-16T00:00:00.000Z', commandLine: 'secret' },
+    { pid: 2, parent: 1, name: 'conhost.exe', underInstallation: false, pathReadable: true, created: null },
+    { pid: 3, parent: 4, name: 'APUS Reflex Harness.exe', underInstallation: true, pathReadable: true, created: '2026-10-16T00:00:01.000Z' },
+    { pid: 5, parent: 0, name: 'powershell.exe', underInstallation: false, pathReadable: false, created: null },
+  ])
+  assert.deepEqual(summary, {
+    count: 4,
+    byName: { 'APUS Reflex Harness.exe': 1, 'conhost.exe': 1, 'powershell.exe': 2 },
+    underInstallation: [{ pid: 3, parent: 4, name: 'APUS Reflex Harness.exe', created: '2026-10-16T00:00:01.000Z' }],
+    unreadablePath: [{ pid: 5, parent: 0, name: 'powershell.exe', created: null }],
+  })
+  assert.doesNotMatch(JSON.stringify(summary), /secret/)
+})

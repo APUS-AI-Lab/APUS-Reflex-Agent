@@ -82,6 +82,24 @@ describe.skipIf(runnerPath === '' || weights === '')('local Reflex engine with a
   }, 300_000)
 })
 
+describe.skipIf(runnerPath === '' || weights === '' || switchWeights === '')('PROBE undo', () => {
+  it('undoes a background switch as soon as it is announced', async () => {
+    const { service } = await mount([[key, weights], [switchKey, switchWeights]])
+    const first = variantOf(key), second = variantOf(switchKey)
+    await expect.poll(() => service.snapshot().preparation.phase, { timeout: 120_000, interval: 100 }).toBe('paused')
+    service.select(first)
+    await expect.poll(() => service.snapshot().enabled && service.snapshot().active, { timeout: 120_000, interval: 100 }).toEqual(first)
+    service.select(second)
+    await expect.poll(() => service.snapshot().unacknowledgedSwitch, { timeout: 300_000, interval: 20 }).toBeDefined()
+    console.info('PROBE switched', JSON.stringify(service.snapshot().unacknowledgedSwitch), JSON.stringify(service.snapshot().preparation))
+    void service.acknowledgeSwitch()
+    try { service.select(service.snapshot().unacknowledgedSwitch?.from ?? first) } catch (error) { console.info('PROBE select threw', String(error)) }
+    console.info('PROBE after', JSON.stringify(service.snapshot().active))
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    console.info('PROBE 2s', JSON.stringify(service.snapshot().active), JSON.stringify(service.snapshot().runner))
+  }, 600_000)
+})
+
 describe.skipIf(runnerPath === '' || weights === '' || switchWeights === '')('local Reflex model switch with a real runner', () => {
   it('switches to a second downloaded model in the background and back at once', async () => {
     const { ctx, service } = await mount([[key, weights], [switchKey, switchWeights]])

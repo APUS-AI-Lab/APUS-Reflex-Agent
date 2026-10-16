@@ -378,8 +378,9 @@ export default class System3 extends Service implements System3Service {
 
   constructor(ctx: Context, config: Config = {}) {
     super(ctx, 'system3')
-    // The 决策前置 switch and the Reflex master switch both turn front-loaded decisions off: no Jev request, no record.
-    const frontLoaded = (): boolean => config.frontLoadedDecisions?.get() !== false && ctx.get('jev')?.isEnabled() !== false
+    // The 决策前置 switch, the Reflex master switch, and a default provider that cannot answer now (such as a local engine
+    // without a model) turn front-loaded decisions off: no Jev request, no record.
+    const frontLoaded = (): boolean => config.frontLoadedDecisions?.get() !== false && ctx.get('jev')?.isReady() !== false
     this.jevOptions = { routeId: config.jevRouteId ?? 'jev', executionDomain: config.jevExecutionDomain ?? 'network',
       ...config.jevEffort === undefined ? {} : { effort: config.jevEffort }, frontLoaded }
     this.privacyPolicy = {

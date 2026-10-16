@@ -82,5 +82,12 @@ describe.skipIf(process.platform === 'win32')('Reflex master switch through prof
     await ctx.settings.update('jev', { enabled: true })
     // Eager start: the runner starts without waiting for a decision.
     expect(await untilSnapshot(ctx, snapshot => snapshot.runner.state === 'running')).toMatchObject({ reflexEnabled: true, active: variant })
+    expect(ctx.jev.isReady()).toBe(true)
+    // Turning local decisions off keeps Jev routed here; the provider reports not ready instead of Jev using its built-in one.
+    await ctx.reflexLocal.disable()
+    expect(ctx.settings.describe().find(row => row.ns === 'jev')?.value).toMatchObject({ defaultProviderId: 'reflex-local' })
+    expect(ctx.jev.isReady()).toBe(false)
+    await ctx.reflexLocal.enable()
+    expect(ctx.jev.isReady()).toBe(true)
   })
 })

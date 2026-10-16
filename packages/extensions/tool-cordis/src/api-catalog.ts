@@ -1350,6 +1350,12 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'Whether Reflex decisions run, so callers can hide Reflex-only features while it is off.',
       },
       {
+        signature: 'isReady(providerId?: string): boolean',
+        description: 'Report synchronously and without side effects whether a decision would reach a provider that can answer now, so optional consumers can skip a decision instead of recording a failure.',
+        parameters: [{ name: 'providerId', description: 'Requested provider; omission selects the current default provider.' }],
+        returns: 'false when Reflex is off or the resolved provider\'s `ready()` returns false; true otherwise, including a provider without `ready()` and an unconfigured or unregistered one, whose failure `decide()` still reports.',
+      },
+      {
         signature: 'registerCapability(id: ReflexCapabilityId, read: () => ReflexCapabilityState): () => void',
         description: 'Register the runtime owner of one capability\'s observed status.',
         parameters: [{ name: 'id', description: 'Product capability identity.' }, { name: 'read', description: 'Runtime status projection; connection probes never update it.' }],
@@ -2008,9 +2014,9 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         parameters: [{ name: 'options', description: 'variant, download source, and memory consent; omission uses configured origins.' }],
       },
       {
-        signature: '@Remote select(variant: ReflexVariant, options?: Pick<ReflexSelectOptions, \'allowUnfit\'>): void',
+        signature: '@Remote select(variant: ReflexVariant, options: Pick<ReflexSelectOptions, \'allowUnfit\'> | undefined): void',
         description: 'Make a tested downloaded variant active now, or prepare another one in the background while the active one serves. Fails with `reflexLocal/preparing-other` while a different variant is being prepared, and with `reflexLocal/unfit` for a variant above this Host\'s memory tier unless `allowUnfit` is set.',
-        parameters: [{ name: 'variant', description: 'option to make active.' }, { name: 'options', description: 'consent to a variant above this Host\'s memory tier.' }],
+        parameters: [{ name: 'variant', description: 'option to make active.' }, { name: 'options', description: 'consent to a variant above this Host\'s memory tier. Required in the signature, even as `undefined`, because the Client gateway rejects a call whose argument count differs from the declared parameters.' }],
       },
       {
         signature: '@Remote pause(): Promise<void>',
@@ -2026,19 +2032,19 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
       },
       {
         signature: '@Remote chooseLocal(): Promise<void>',
-        description: 'Record the local engine as the chosen Reflex connection mode before any model is prepared.',
+        description: 'Record the local engine as the chosen Reflex connection mode before any model is prepared, and route Jev\'s default decisions to it; local decisions stay off until enabled.',
         parameters: [],
         returns: 'after the choice is persisted.',
       },
       {
         signature: '@Remote enable(): Promise<void>',
-        description: 'Start the active model\'s runner, then route Jev decisions to the local provider; the engine rejects this without an active model or when the runner cannot start.',
+        description: 'Start the active model\'s runner, then turn local decisions on; the engine rejects this without an active model or when the runner cannot start.',
         parameters: [],
         returns: 'after the runner answers and the change is applied.',
       },
       {
         signature: '@Remote disable(): Promise<void>',
-        description: 'Stop routing Jev decisions to the local provider.',
+        description: 'Turn local decisions off and stop the runner; routing keeps naming the local provider, which then reports not ready.',
         parameters: [],
         returns: 'after the change is applied.',
       },
@@ -2056,7 +2062,7 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
       },
       {
         signature: '@Remote deleteModel(variant?: ReflexVariant): Promise<void>',
-        description: 'Delete one model\'s weights, partial file, and records; deleting the active model stops its runner and keeps routing.',
+        description: 'Delete one model\'s weights, partial file, and records; deleting the active model stops its runner, turns local decisions off, and keeps routing.',
         parameters: [{ name: 'variant', description: 'option to delete; omission deletes every model.' }],
         returns: 'after deletion.',
       },
@@ -5857,7 +5863,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'JevProvider',
-    declaration: 'export interface JevProvider {\n    readonly info: JevProviderInfo;\n    decide(request: JevRequest, signal?: AbortSignal): Promise<JevResponse>;\n    warm?(signal?: AbortSignal): Promise<void>;\n}',
+    declaration: 'export interface JevProvider {\n    readonly info: JevProviderInfo;\n    decide(request: JevRequest, signal?: AbortSignal): Promise<JevResponse>;\n    warm?(signal?: AbortSignal): Promise<void>;\n    ready?(): boolean;\n}',
   },
   {
     name: 'JevProviderInfo',

@@ -93,7 +93,7 @@ function registerUi(ctx: Context): void {
     },
     undoSwitch: (change) => {
       replace(null)
-      settled(remote.select(change.from)).catch(() => { show('undoFailed') })
+      settled(remote.select(change.from, undefined)).catch(() => { show('undoFailed') })
     },
   }
   ctx.slots.inject('plugins.bundle.config', () => ctx.slots.register({ name: 'plugins.bundle.config',

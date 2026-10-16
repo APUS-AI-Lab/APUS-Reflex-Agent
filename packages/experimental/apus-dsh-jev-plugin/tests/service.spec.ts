@@ -58,11 +58,22 @@ describe('apus-dsh-jev-plugin service', () => {
       ctx.on('jev/enabled', (value) => { announced.push(value) })
       ctx.emit('loader/volatile-update', [['endpoint']])
       expect(service.isEnabled()).toBe(false)
+      expect(service.isReady('switch')).toBe(false)
       enabled = true
       ctx.emit('loader/volatile-update', [['enabled']])
       ctx.emit('loader/volatile-update', [['model']])
       expect(announced).toEqual([true])
       expect(service.isEnabled()).toBe(true)
+      // A provider without ready() and an unregistered one count as ready; decide() reports the latter.
+      expect(service.isReady('switch')).toBe(true)
+      expect(service.isReady('absent')).toBe(true)
+      expect(service.isReady()).toBe(true)
+      let serving = false
+      const gated = service.register({ info: { id: 'gated', model: 'm', endpoint: 'http://localhost' }, decide, ready: () => serving })
+      expect(service.isReady('gated')).toBe(false)
+      serving = true
+      expect(service.isReady('gated')).toBe(true)
+      gated()
       expect(await service.decide(request)).toMatchObject({ kind: 'ok' })
       expect(await service.warm('switch')).toBe(true)
     } finally { dispose(); await ctx.fiber.dispose() }

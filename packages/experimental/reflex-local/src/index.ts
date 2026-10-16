@@ -153,6 +153,7 @@ export default class ReflexLocal extends Service implements ReflexLocalService {
       id: config.providerId, model: REFLEX_MODEL, endpoint: 'http://127.0.0.1',
       acquire: async signal => await engine.acquire(signal),
       warm: async (signal) => { await engine.warm(signal) },
+      ready: () => engine.ready(),
     })
     const engine: ReflexEngine = new ReflexEngine(ctx, checkConfig(config), ctx.get('configEditor'), provider.drain.bind(provider))
     this.engine = engine

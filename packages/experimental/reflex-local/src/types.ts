@@ -137,11 +137,17 @@ export interface ReflexSnapshot {
   readonly runner: ReflexRunnerStatus
   /** Background switch awaiting `acknowledgeSwitch()`; `disable()`, deleting the active model, and a later switch replace or clear it. */
   readonly unacknowledgedSwitch?: ReflexSwitch
-  /** Whether the Jev entry's effective `defaultProviderId` is `providerId`. */
+  /**
+   * Whether local decisions are on: the Jev entry's effective `defaultProviderId` is `providerId` and they were turned on
+   * by `enable()` or an automatic enable. `disable()`, repeated runner failures, and deleting the active model turn them
+   * off without changing routing, so a chosen local mode keeps routing here and Jev consumers skip decisions through the
+   * provider's `ready()`.
+   */
   readonly enabled: boolean
   /**
-   * Whether the user chose the local engine as the Reflex connection mode. It persists across `disable()`, deletion,
-   * runner failures, and restarts, and clears only when the Jev entry's `defaultProviderId` names another provider.
+   * Whether the user chose the local engine as the Reflex connection mode. While it is true, the Jev entry's
+   * `defaultProviderId` names `providerId`, and activation restores that field when it is missing. It persists across
+   * `disable()`, deletion, runner failures, and restarts, and clears only when `defaultProviderId` names another provider.
    */
   readonly localChosen: boolean
   /** The Jev master switch (`jev.enabled`); false stops every provider, including the local one. */
@@ -212,22 +218,23 @@ export interface ReflexLocalService {
   /** Stop active work and delete the partial download. @returns after the work settles and the file is removed. */
   cancel(): Promise<void>
   /**
-   * Record the local engine as the chosen Reflex connection mode and remove a Jev `defaultProviderId` that names another
-   * provider; routing to the local provider still requires `enable()`.
+   * Record the local engine as the chosen Reflex connection mode and set the Jev entry's `defaultProviderId` to the local
+   * provider, so Jev never answers with its built-in provider in local mode. Local decisions stay off until `enable()` or
+   * an automatic enable; until then Jev consumers skip them through the provider's `ready()`.
    * @returns after the profile change and the choice are persisted.
    */
   chooseLocal(): Promise<void>
   /**
-   * Start the active model's runner while the Jev master switch is on, then set the Jev entry's `defaultProviderId` to
-   * the local provider; requires an active model. A runner that cannot start is reported as `failed` and leaves routing
-   * unchanged.
-   * @returns after the runner answers and the profile change is applied.
+   * Start the active model's runner while the Jev master switch is on, then turn local decisions on and set the Jev
+   * entry's `defaultProviderId` to the local provider; requires an active model. A runner that cannot start is reported as
+   * `failed` and leaves local decisions off.
+   * @returns after the runner answers and the change is applied.
    */
   enable(): Promise<void>
   /**
-   * Remove the Jev entry's `defaultProviderId`, restoring the built-in default, clear the automatic-enable and switch
-   * notices, and stop the runner after the in-flight decision; downloaded models stay.
-   * @returns after the change is applied and the runner stopped.
+   * Turn local decisions off, clear the automatic-enable and switch notices, and stop the runner after the in-flight
+   * decision; routing and downloaded models stay, so Jev consumers skip decisions instead of using the built-in provider.
+   * @returns after the change is persisted and the runner stopped.
    */
   disable(): Promise<void>
   /** Clear `unacknowledgedAutoEnableAt` after a client showed it. @returns after the cleared state is persisted. */
@@ -235,13 +242,16 @@ export interface ReflexLocalService {
   /** Clear `unacknowledgedSwitch` after a client showed it. @returns after the cleared state is persisted. */
   acknowledgeSwitch(): Promise<void>
   /**
-   * Delete one variant's weights, partial file, and records. Deleting the active variant stops the runner and clears
-   * `active` and the notices about it. Routing is unchanged: while it points at the local provider, decisions fail
-   * with `transport` until another model becomes active.
+   * Delete one variant's weights, partial file, and records. Deleting the active variant stops the runner, clears `active`
+   * and the notices about it, and turns local decisions off; routing and the local mode are unchanged.
    * @param variant - option to delete; omission deletes every model like `remove()`.
    * @returns after deletion.
    */
   deleteModel(variant?: ReflexVariant): Promise<void>
-  /** Stop preparation and the runner, and delete downloaded weights and partial files; routing is unchanged. @returns after deletion. */
+  /**
+   * Stop preparation and the runner, delete downloaded weights and partial files, and turn local decisions off; routing is
+   * unchanged.
+   * @returns after deletion.
+   */
   remove(): Promise<void>
 }
