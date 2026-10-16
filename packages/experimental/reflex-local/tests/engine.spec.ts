@@ -139,13 +139,15 @@ describe.skipIf(process.platform === 'win32')('ReflexEngine', () => {
   })
 
   it('reports unsupported devices without options, work, or routing', async () => {
-    const { create } = await fixture()
+    const { create, routing } = await fixture()
     vi.mocked(inspectDevice).mockReturnValue({ supported: false, reason: 'runner-missing' })
     const engine = create()
     engine.activate()
     expect(engine.snapshot()).toMatchObject({ device: { supported: false }, options: [], preparation: { phase: 'unsupported' }, enabled: false, reflexEnabled: true })
     expect(engine.snapshot().recommended).toBeUndefined()
     expect(() => { engine.prepare() }).toThrow('cannot run')
+    await expect(engine.chooseLocal()).rejects.toThrow('cannot run')
+    expect(routing.edits).toEqual([])
     await expect(engine.acquire(new AbortController().signal)).rejects.toBeInstanceOf(JevProviderError)
     engine.routingChanged()
     await engine.remove()
@@ -1093,6 +1095,14 @@ describe.skipIf(process.platform === 'win32')('ReflexEngine model lifecycle', ()
       expect(snapshot).toMatchObject({ active: Q4, enabled: routedHere, localChosen: routedHere })
       expect(await state(data)).toMatchObject({ active: Q4, localEnabled: routedHere })
       await upgraded.dispose()
+      if (routedHere) continue
+      // A tested record whose file is gone adopts nothing.
+      await writeFile(join(data, 'state.json'), JSON.stringify({ models }))
+      await rm(join(data, 'models', fileOf('4b-q4_k_m')))
+      const missing = create()
+      missing.activate()
+      expect((await until(missing, 'absent')).active).toBeUndefined()
+      await missing.dispose()
     }
   })
 

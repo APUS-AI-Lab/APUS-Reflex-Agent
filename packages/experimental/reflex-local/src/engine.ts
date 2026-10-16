@@ -710,10 +710,12 @@ export class ReflexEngine implements ReflexLocalService {
 
   /**
    * Record the local connection mode and route Jev's default decisions to this provider, so Jev never answers with its
-   * built-in provider in local mode. Local decisions stay as they are until `enable()`.
+   * built-in provider in local mode. Local decisions stay as they are until `enable()`. A device that cannot run the
+   * engine is refused, so choosing local mode there never silences decisions that a cloud provider still answers.
    * @returns after the profile change and the choice are persisted.
    */
   async chooseLocal(): Promise<void> {
+    if (!this.device.supported) throw new Error('This device cannot run the local Reflex engine')
     if (!this.routedHere()) await this.routeHere()
     await this.persist({ ...this.persisted, localChosen: true, localEnabled: this.persisted.localEnabled ?? false })
     this.routingSeen = this.routingSignature()
