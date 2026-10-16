@@ -33,8 +33,8 @@
   en: 17b6127e1a4b327b
   zh: 29c1a7087947dbed
 /local-decision-engine-and-inference-configuration-guidance/current-state/existing-implementation-template:
-  en: adb7c8bc4b9b9d5e
-  zh: 7dac48a7fa0b79ee
+  en: 0e0aff6a0d4c0c19
+  zh: 77011d1b8bb0849b
 /local-decision-engine-and-inference-configuration-guidance/current-state/model-facts:
   en: c9d026ed3283fb17
   zh: 2190179ba6096003
@@ -51,8 +51,8 @@
   en: 3cb2a187344494f3
   zh: 8d25cc267c9a1f20
 /local-decision-engine-and-inference-configuration-guidance/proposed-architecture/runner-integration-spec:
-  en: ad7169fbfc3166bd
-  zh: 011c57a366601ced
+  en: e9c271ab311383f7
+  zh: 311a6f773ede4bc7
 /local-decision-engine-and-inference-configuration-guidance/proposed-architecture/preparation-flow:
   en: 22e6b2f07f54b642
   zh: 8e66e17a8691d84e

@@ -18,7 +18,10 @@ import { en, NS, zh } from './locales.ts'
 import { observeReadiness } from './readiness.ts'
 import { PreparationChip } from './PreparationChip.tsx'
 
-export const inject = ['remote', 'slots', 'locale', 'pluginNavigation']
+export const inject = ['remote', 'slots', 'locale', 'pluginNavigation', 'configForms']
+
+/** Settings namespace of the Jev entry, whose `enabled` field is the Reflex master switch. */
+const JEV_NS = 'jev'
 
 /** Package name keying the bundle page entries. */
 const BUNDLE = '@deepseek-ai/dsh-experimental-reflex-local-bundle'
@@ -32,34 +35,51 @@ function registerUi(ctx: Context): void {
   ctx.effect(() => ctx.locale.register(NS, { zh, en }))
   const toast = createSnapshotStore<ReflexToast | null>(null)
   const remote = ctx.remote.reflexLocal
-  let seq = 0, announced: number | undefined
-  // The Host keeps an automatic enablement unacknowledged across restarts. Closing its notice acknowledges it, so a page
-  // closed while the notice is visible announces it again on the next load; a successful undo clears it through `disable()`.
+  let seq = 0, announcedEnable: number | undefined, announcedSwitch: number | undefined
+  const localChosen = createSnapshotStore<boolean | null>(null)
+  // The Host keeps an automatic enablement and a background model switch unacknowledged across restarts. Closing a notice
+  // acknowledges it, so a page closed while it is visible announces it again on the next load; a newer notice of the same
+  // kind replaces it without acknowledging the marker it still announces.
   const replace = (next: ReflexToast | null): void => {
     const closing = toast.getSnapshot()
     toast.set(next)
-    if (closing?.kind !== 'enabled' || next?.kind === 'enabled') return
-    settled(remote.acknowledge()).catch(() => {
+    if (closing === null || closing.kind === next?.kind) return
+    const acknowledged = closing.kind === 'enabled' ? remote.acknowledge() : closing.kind === 'switched' ? remote.acknowledgeSwitch() : undefined
+    if (acknowledged === undefined) return
+    settled(acknowledged).catch(() => {
       // A failed acknowledgement leaves the marker set; another client or a later load announces it again.
     })
   }
   const show = (kind: 'enabled' | 'undoFailed'): void => { seq += 1; replace({ seq, kind }) }
-  const readiness = observeReadiness(ctx, ({ unacknowledgedAutoEnableAt: at }) => {
-    if (at === undefined || at === announced) return
-    announced = at
-    show('enabled')
+  const readiness = observeReadiness(ctx, (snapshot) => {
+    const { unacknowledgedAutoEnableAt: enabledAt, unacknowledgedSwitch: change, localChosen: chosen } = snapshot
+    if (chosen !== localChosen.getSnapshot()) localChosen.set(chosen)
+    if (enabledAt !== undefined && enabledAt !== announcedEnable) {
+      announcedEnable = enabledAt
+      show('enabled')
+    }
+    if (change !== undefined && change.at !== announcedSwitch) {
+      announcedSwitch = change.at
+      seq += 1
+      replace({ seq, kind: 'switched', change })
+    }
   })
   ctx.effect(() => readiness.dispose)
+  ctx.provide('reflexLocalMode', { chosen: localChosen, choose: () => settled(remote.chooseLocal()) })
+  const jev = ctx.configForms.get<{ enabled?: boolean }>(JEV_NS)
+  const masterOf = (): boolean | null => { const { status, value } = jev.getSnapshot(); return status === 'ready' ? value?.enabled !== false : null }
+  const master = createSnapshotStore(masterOf())
+  ctx.effect(() => jev.subscribe(() => { master.set(masterOf()) }))
   const slowChipDismissed = createSnapshotStore(false)
   const disable = (): Promise<void> => settled(remote.disable())
   const actions: ReflexLocalInjected = {
-    hooks: { reflexReadiness: readiness.state, reflexToast: toast, reflexSlowChipDismissed: slowChipDismissed },
+    hooks: { reflexReadiness: readiness.state, reflexToast: toast, reflexMaster: master, reflexSlowChipDismissed: slowChipDismissed },
     prepare: options => settled(remote.prepare(options)),
     pause: () => settled(remote.pause()),
     cancel: () => settled(remote.cancel()),
     enable: () => settled(remote.enable()),
     disable,
-    remove: () => settled(remote.deleteModel()),
+    deleteModel: variant => settled(remote.deleteModel(variant)),
     openDetails: () => { ctx.pluginNavigation.openBundle(BUNDLE) },
     dismissSlowChip: () => { slowChipDismissed.set(true) },
     reportFailure: (error) => {
@@ -70,6 +90,10 @@ function registerUi(ctx: Context): void {
     undoEnable: () => {
       toast.set(null)
       disable().catch(() => { show('undoFailed') })
+    },
+    undoSwitch: (change) => {
+      replace(null)
+      settled(remote.select(change.from)).catch(() => { show('undoFailed') })
     },
   }
   ctx.slots.inject('plugins.bundle.config', () => ctx.slots.register({ name: 'plugins.bundle.config',
@@ -99,7 +123,7 @@ function registerUi(ctx: Context): void {
  */
 export async function mountReflexLocal(ctx: Context, contribution: TypertRemoteContribution): Promise<() => Promise<void>> {
   const disposeRemote = await ctx.remote.$mount(contribution)
-  const ui = ctx.inject(['remote.reflexLocal', 'slots', 'locale', 'pluginNavigation'], registerUi)
+  const ui = ctx.inject(['remote.reflexLocal', 'slots', 'locale', 'pluginNavigation', 'configForms'], registerUi)
   try { await ui } catch (error) { await ui.dispose(); await disposeRemote(); throw error }
   return async () => { await ui.dispose(); await disposeRemote() }
 }

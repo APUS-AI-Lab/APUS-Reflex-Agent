@@ -64,6 +64,11 @@ export interface System3JevOptions {
   /** Execution domain assumed for a Jev provider that does not declare its own. */
   readonly executionDomain: System3ExecutionDomain
   readonly effort?: 'low' | 'high'
+  /**
+   * Whether front-loaded decisions (entry and goal routing, Skill selection, task frame, prefetch) start now; read for
+   * each new request. Omission means they always start. Other decisions ignore it.
+   */
+  readonly frontLoaded?: () => boolean
 }
 
 /** The Jev provider a decision would use now and the execution domain privacy admission checks for it. */

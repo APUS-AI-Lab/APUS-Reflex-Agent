@@ -22,7 +22,7 @@ flowchart LR
 
 The Linux workflow builds all native system binaries with `native/system`’s `build:native` before deployment and verifies their ELF formats. The root Harness build alone emits only the host Node-API addon; it does not supply the Landlock launcher. The collector requires the Landlock executable and both declared Linux x64 libc addons.
 
-The package reuses `frontend/.build/system3-runtime`, including the own CLI, Web bundle, browser distribution, native modules and dependency inventory. It does not apply `desktop.patch.yml` or launch Electron. A first-run initializer uses the existing app-boot profile functions to add editable Jev defaults. The Web overlay renders the native Reflex page and disables optional session upload. Empty credentials remain valid at startup.
+The package reuses `frontend/.build/system3-runtime`, including the own CLI, Web bundle, browser distribution, native modules and dependency inventory. It does not apply `desktop.patch.yml` or launch Electron. A first-run initializer uses the existing app-boot profile functions to add the Jev, System3, and Continuum bundles, which own the editable defaults. The Web overlay renders the native Reflex page and disables optional session upload. Empty credentials remain valid at startup.
 
 The launcher selects bundled Node by an absolute package-relative path, keeps data outside the extracted installation, and invokes the supported CLI `web` profile. It accepts a port and a data-directory override; the listener remains on `127.0.0.1`. Existing profiles are preserved. Replacing an extracted installation does not remove user data. Advanced plugin installation may require separate development tools and is outside the no-tools startup guarantee.
 

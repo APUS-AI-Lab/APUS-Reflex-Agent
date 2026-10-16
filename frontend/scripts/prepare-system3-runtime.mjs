@@ -141,7 +141,7 @@ try {
     execFileSync(process.execPath, [join(appRoot, 'scripts/install-brand-assets.mjs'), root], { cwd: appRoot, stdio: 'pipe' })
     const deployedCli = JSON.parse(await readFile(join(root, 'node_modules/@deepseek-ai/dsh/package.json'), 'utf8'))
     if (sourceDefinitions.slice(1).some(([name]) => !deployedCli.dependencies[name])) throw new Error('Own CLI resolver manifest omits a System3 package')
-    await access(join(root, 'node_modules/@deepseek-ai/dsh-experimental-continuum-jev/cordis.patch.yml'))
+    for (const bundle of ['continuum-jev', 'system3']) await access(join(root, `node_modules/@deepseek-ai/dsh-experimental-${bundle}/cordis.patch.yml`))
     const smokeImports = ['dsh-ppt/lib/preview-manifest.js', 'dsh-ppt/lib/index.js', 'dsh-ppt-composer/lib/index.js',
       '@deepseek-ai/dsh-experimental-continuum-jev/lib/product-memory.js',
       ...sourceDefinitions.slice(1).map(([name]) => `${name}/lib/index.js`)]

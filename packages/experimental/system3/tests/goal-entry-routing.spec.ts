@@ -25,6 +25,7 @@ async function setup(options: {
   available?: boolean
   settings?: Partial<System3EntryRoutingConfig>
   delayed?: boolean
+  frontLoaded?: () => boolean
 } = {}) {
   const ctx = new Context(); contexts.push(ctx)
   await mountAgentLoopTestDependencies(ctx)
@@ -48,7 +49,8 @@ async function setup(options: {
     ctx.tools.register(defineTool({ name: 'subagent_codex', description: 'Delegate', parameters: {},
       output: { schema: { type: 'string' }, render: (_args, value) => [{ type: 'text', text: value }] }, execute: async () => 'unused' }))
   }
-  installGoalEntryRouting(ctx, { ...config, ...options.settings }, { mode: 'local-only' }, { routeId: 'reflex', executionDomain: 'local' })
+  installGoalEntryRouting(ctx, { ...config, ...options.settings }, { mode: 'local-only' },
+    { routeId: 'reflex', executionDomain: 'local', ...options.frontLoaded === undefined ? {} : { frontLoaded: options.frontLoaded } })
   const agent = await ctx.agentLoop.create(SessionId('goal-routing'), { provider: 'mock', model: 'mock' })
   let goal = ctx.goals.create(agent, { objective: options.objective ?? 'Use Codex to repair ledger.py and preserve the tests.' })
   const message = () => createUserMessage({ content: [{ type: 'text', text: goal.objective }], source: { kind: 'goal', goalId: goal.id, revision: goal.revision, round: 1 } })
@@ -70,6 +72,15 @@ it('executes explicit Codex before the model step and records attributed results
   expect(JSON.stringify(result.messages.at(-1))).toContain('Independent verification passed')
   expect(h.events().map(event => event.state)).toEqual(['reserved', 'started', 'completed'])
   await h.step(); expect(h.start).toHaveBeenCalledTimes(1); expect(h.dispose).toHaveBeenCalledOnce()
+})
+it('runs a new Goal round natively without asking Jev or recording while front-loaded decisions are off', async () => {
+  let on = false
+  const h = await setup({ frontLoaded: () => on })
+  expect((await h.step()).kind).toBe('enter')
+  expect(h.decide).not.toHaveBeenCalled(); expect(h.start).not.toHaveBeenCalled(); expect(h.events()).toEqual([])
+  on = true
+  await h.step()
+  expect(h.decide).toHaveBeenCalledOnce(); expect(h.start).toHaveBeenCalledOnce()
 })
 it('lets Reflex select an ordinary Goal using its actual objective', async () => {
   const h = await setup({ objective: 'Repair ledger.py.', settings: { deadlineMs: 1000 } }); await h.step()

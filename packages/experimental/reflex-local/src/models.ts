@@ -1,7 +1,7 @@
 /** Pinned model catalog, per-Host option fitness, and the automatic recommendation. */
 import { readFileSync } from 'node:fs'
 import type { ModelAsset } from './download.ts'
-import type { ReflexModelId, ReflexModelOption, ReflexQuant, ReflexVariant } from './types.ts'
+import type { ReflexInventory, ReflexModelId, ReflexModelOption, ReflexQuant, ReflexVariant } from './types.ts'
 
 /** Stable string identity of a variant, used for configuration keys, catalog keys, and `state.json`. */
 export type VariantKey = `${ReflexModelId}-${ReflexQuant}`
@@ -46,8 +46,8 @@ export interface FitFacts {
   readonly memoryBytes: number
   /** Free bytes on the data volume; undefined before the first disk check judges only memory. */
   readonly availableBytes: number | undefined
-  /** Bytes of each variant already on disk, complete or partial. */
-  readonly presentBytes: (key: VariantKey) => number
+  /** What each variant already holds on disk; its bytes count toward the download. */
+  readonly inventory: (key: VariantKey) => ReflexInventory
   readonly diskMarginBytes: number
 }
 
@@ -55,19 +55,20 @@ export interface FitFacts {
  * Judge every catalog option against this Host.
  * @param catalog - pinned assets.
  * @param minMemoryBytes - configured memory tier per variant.
- * @param facts - memory, free space, and bytes already present.
+ * @param facts - memory, free space, and inventory.
  * @returns all options, smallest first; memory is checked before disk.
  */
 export function modelOptions(
   catalog: Record<VariantKey, CatalogAsset>, minMemoryBytes: Record<VariantKey, number>, facts: FitFacts,
 ): ReflexModelOption[] {
   return VARIANT_KEYS.map((key) => {
-    const asset = catalog[key], needMemory = minMemoryBytes[key]
-    const missing = asset.bytes - facts.presentBytes(key) + facts.diskMarginBytes
+    const asset = catalog[key], needMemory = minMemoryBytes[key], inventory = facts.inventory(key)
+    const present = inventory.state === 'downloaded' ? asset.bytes : inventory.completedBytes ?? 0
+    const missing = asset.bytes - present + facts.diskMarginBytes
     const reason = facts.memoryBytes < needMemory ? 'memory' as const
       : facts.availableBytes !== undefined && facts.availableBytes < missing ? 'disk' as const : undefined
     return { ...variantOf(key), bytes: asset.bytes, minMemoryBytes: needMemory, experimental: asset.experimental,
-      fits: reason === undefined, ...reason === undefined ? {} : { reason } }
+      fits: reason === undefined, ...reason === undefined ? {} : { reason }, inventory }
   })
 }
 

@@ -241,6 +241,8 @@ export function createSystem3EntryRouter(
       }
     },
     async route(input, signal) {
+      // With front-loaded decisions off, the prompt takes its baseline route and nothing is recorded.
+      if (options.frontLoaded?.() === false) return undefined
       const started = Date.now()
       let request: JevRequest | null = null
       let response: JevResponse | undefined

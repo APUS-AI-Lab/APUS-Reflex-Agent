@@ -17,7 +17,7 @@ async function fixture(env: Record<string, string> = {}, overrides: Partial<Conf
   const spawn = vi.spyOn(ctx.get('subprocess')!, 'spawn')
   const warn = vi.spyOn(ctx.logger, 'warn')
   const config = Config({
-    dataRoot: root, idleTimeoutMs: 0, startupTimeoutMs: 10_000, graceMs: 500, maxLogBytes: 100, maxResponseBytes: 2048, ...overrides,
+    dataRoot: root, startupTimeoutMs: 10_000, graceMs: 500, maxLogBytes: 100, maxResponseBytes: 2048, ...overrides,
   })
   const runner = new ReflexRunner(ctx, config, path, `${root}/model.gguf`)
   onTestFinished(async () => { await runner.dispose() })
@@ -129,7 +129,7 @@ describe.skipIf(process.platform === 'win32')('ReflexRunner', () => {
   })
 
   it('stops an idle runner and lets a waiting caller stop waiting for a shared startup', async () => {
-    const { runner, spawn, warn } = await fixture({}, { idleTimeoutMs: 50 })
+    const { runner, spawn, warn } = await fixture({}, { idleReleaseMs: 50 })
     const abort = new AbortController(), reason = new Error('not waiting')
     const waiting = runner.acquire(abort.signal)
     abort.abort(reason)
@@ -145,7 +145,7 @@ describe.skipIf(process.platform === 'win32')('ReflexRunner', () => {
   })
 
   it('logs an idle cleanup whose exit can no longer be observed', async () => {
-    const { runner, spawn, warn } = await fixture({}, { idleTimeoutMs: 50 })
+    const { runner, spawn, warn } = await fixture({}, { idleReleaseMs: 50 })
     await runner.acquire(signal())
     const handle = spawn.mock.results[0]!.value as SubprocessHandle
     const lost = new Error('process range lost')

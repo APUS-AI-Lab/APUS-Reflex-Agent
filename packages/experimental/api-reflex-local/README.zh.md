@@ -9,7 +9,7 @@ kind: "package-reference"
 
 ## 概述
 
-`reflexLocal` Remote 将浏览器连接至 `ctx.reflexLocal`。它以流的形式提供设备支持、准备与启用快照，并转发准备、暂停、取消、启用、停用与删除模型（`deleteModel`）命令。
+`reflexLocal` Remote 将浏览器连接至 `ctx.reflexLocal`。它以流的形式提供设备支持、模型库存、准备、runner 与启用快照，并转发选择接入方式（`chooseLocal`）、选择模型、准备、暂停、取消、启用、停用、确认提示与删除模型（`deleteModel`）命令。
 
 ## 目录
 
@@ -25,7 +25,7 @@ kind: "package-reference"
 <a id="use-this-package"></a>
 ## 使用此包
 
-与本机决策引擎服务和 Typert 组合。浏览器 UI 启用时挂载本包生成的 `/remote` 贡献。`prepare({ variant, downloadSource })` 将一个量化档和一个公布的下载源转发给引擎；省略时使用设备推荐档与配置的下载源。任务进行中变更量化档或下载源会被引擎拒绝，拒绝原样返回调用方。
+与本机决策引擎服务和 Typert 组合。浏览器 UI 启用时挂载本包生成的 `/remote` 贡献。`prepare({ variant, downloadSource })` 将一个量化档和一个公布的下载源转发给引擎；省略时使用设备推荐档与配置的下载源。`select(variant)` 让已下载且已自检的模型立即生效，或在后台准备另一个模型。正在准备另一个变体时，`select()` 与 `prepare()` 以 Remote 错误码 `reflexLocal/preparing-other` 失败，details 为 `{ preparing, requested }`，客户端据此可提议暂停当前下载。超出本机内存档位的模型以 `reflexLocal/unfit` 失败，details 为 `{ variant, requiredBytes, deviceBytes }`，除非调用方在用户同意后传入 `allowUnfit: true`（`select(variant, { allowUnfit })`、`prepare({ variant, allowUnfit })`）；引擎的其他拒绝原样返回调用方。`deleteModel(variant)` 删除一个模型，`deleteModel()` 删除全部模型。`acknowledgeSwitch()` 清除后台切换提示。
 
 -----
 

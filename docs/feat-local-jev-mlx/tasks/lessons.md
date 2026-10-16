@@ -26,3 +26,8 @@ English | [中文](lessons.zh.md)
 
 - **What happened**: following the global convention, the handoff documents were written as Chinese-only `docs/<worktree>/tasks/*.md`; at integration `test:docs` failed on pairing, wrapping, and a commit identifier, which required English translations and re-flowed paragraphs.
 - **Rule**: in this repository every Markdown file under `docs/**` must be a bilingual pair (`X.md` English, `X.zh.md` Chinese, `X.i18n.yaml` record), one physical line per paragraph, and no commit identifiers. Create new documents as pairs from the start, update both languages on every edit, and run `pnpm run verify-translation-pairing --write <X.md>`.
+
+## 2026-10-15 · Model settings pages on the product's functional modules, not on how the data is displayed
+
+- **What happened**: the Reflex settings capability list was treated as a read-only diagnostic and proposed for removal; the user pointed out that it is the decision front-loading module (Reflex selects Skills, tools, routes, and prefetch before the main model) and needs its own module switch.
+- **Rule**: before restructuring a settings page, map each section to the provider/consumer it controls (Jev provider → System3 front-loaded decisions, Continuum memory). Every independently useful consumer gets a module with its own switch under the master switch; status rows inside a module are not diagnostics to fold away.

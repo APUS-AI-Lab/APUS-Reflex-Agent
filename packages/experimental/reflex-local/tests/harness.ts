@@ -32,7 +32,7 @@ export async function fakeRunner(root: string, env: Record<string, string> = {})
 /** @returns parsed JSON lines the fake runner appended. */
 export async function runnerLog(
   log: string,
-): Promise<Array<{ event: string; argv?: string[]; key?: string; body?: Record<string, unknown> }>> {
+): Promise<Array<{ event: string; argv?: string[]; key?: string; model?: string; body?: Record<string, unknown> }>> {
   const text = await readFile(log, 'utf8').catch(() => '')
   return text.split('\n').filter(Boolean).map(line => JSON.parse(line) as { event: string })
 }

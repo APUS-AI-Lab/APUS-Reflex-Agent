@@ -101,7 +101,7 @@ The N questions in one request **share the same `state` prefix**; the contract p
 - `orderModelSources()` (`src/model-sources.ts:13`): concurrent HEAD probing of multiple sources, preferring the first available one.
 - Failure categories `'http' | 'integrity' | 'timeout' | 'storage' | 'unknown'` (`src/download-error.ts:20`).
 - Progress reporting phases `checking | downloading | loading | waking | ready | standby`, throttled by `progressIntervalMs`.
-- Process management: `ctx.subprocess.spawn` + port from an output handshake + `Bearer` authentication + idle reclamation through `idleTimeoutMs` (`src/process-server.ts:14-55`). llama-server has its own `--api-key` and `--port 0`, so no extra Node service layer is needed.
+- Process management: `ctx.subprocess.spawn` + port from an output handshake + `Bearer` authentication + idle reclamation through `idleTimeoutMs` (`src/process-server.ts:14-55`); the local Reflex runner makes idle release opt-in through `idleReleaseMs`. llama-server has its own `--api-key` and `--port 0`, so no extra Node service layer is needed.
 - The teardown order (`recognizer.ts:320-326`) and "the inference path never triggers a download" carry over unchanged.
 - Declarative bundle: `cordis.patch.yml` + `icon.svg` + `locale/{en,zh}.json`.
 
@@ -219,7 +219,7 @@ It takes the log probabilities of the 16 candidate letters from `completion_prob
 1. Requests to the same provider are **serialized** and sent in question order, so questions 2..N hit the prefix cache.
 2. More than 16 candidates are rejected directly; when any candidate is not among the 1,024 returned entries, report `invalid-response` instead of filling in 0. Measurements show all 16 candidates are included; this rule is defensive.
 3. `warm()` starts the process and loads the model at session start, moving the 4-second load out of the first decision.
-4. After idling longer than `Config.idleTimeoutMs`, the process ends and frees about 4.5 GB of memory; `warm()` runs again before the next decision.
+4. While local decisions are enabled, the process stays resident (about 4.5 GB for 4B Q8_0): it starts at Host launch, on `enable()` before routing changes, and after a model switch. Only a configured `Config.idleReleaseMs` ends an idle process to free that memory; the next decision then waits for the load.
 5. Both the weight file and the runner version are pinned. A runner upgrade is a change that requires rerunning the distribution agreement re-verification and is not approved automatically by CI.
 
 <a id="preparation-flow"></a>

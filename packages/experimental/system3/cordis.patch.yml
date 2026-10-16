@@ -1,0 +1,18 @@
+# Editable product System3 defaults; profile settings override this bundle. It follows the Jev bundle that inserts `jev`.
+# Skill advice uses the configured Reflex provider; unavailable decisions preserve native execution.
+- insert:
+    - id: system3
+      name: ./lib/index.js
+      config:
+        privacyMode: controlled
+        approvedRemoteIds: [jev]
+        approvedRemoteDataClasses: [workspace]
+        jevRouteId: jev
+        jevExecutionDomain: network
+        skillSelection:
+          sessionDataClasses: [workspace]
+          minConfidence: 0.5
+          maxInputBytes: 16000
+          maxContentBytes: 12000
+          maxCandidates: 15
+          deadlineMs: 3000

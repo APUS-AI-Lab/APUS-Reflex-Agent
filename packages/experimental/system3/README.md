@@ -1,6 +1,6 @@
 ---
-description: "Cordis service composing the experimental System3 policy, evidence, and supervision seams."
-kind: "package-reference"
+description: "Cordis service composing the experimental System3 policy, evidence, and supervision seams, and the profile layer holding its editable APUS product defaults."
+kind: "package-bundle"
 ---
 
 # @deepseek-ai/dsh-experimental-system3
@@ -39,6 +39,10 @@ const decision = ctx.system3.route(candidates, 'local-9b')
 ```
 
 `ctx.system3.snapshot()` exposes only operation counters, never user text or tool output. Callers persist the returned spans, supervision reasons, shadow comparisons, and cost records in their own durable Session/audit layer.
+
+`frontLoadedDecisions` (default `true`) is a live switch for the decisions System3 makes before the main model: Session API entry routing, Goal entry routing, Skill selection, the task frame, and prefetch. Because it is volatile, the entry's settings form edits it and the next request reads the new value without a reload. While it is `false`, new requests take the native path: none of these decisions asks Jev, runs prefetch commands, or appends a System3 record, keep-warm sends nothing, and the `entryRouting` and `skillSelection` capabilities report `enabled: false`, with `suspended: true` when installed. The Jev master switch (`jev.enabled`) turned off has the same effect, read through `jev.isEnabled()` on each request, so a turn records no Reflex judgement while Reflex is off. Work already started finishes, a task frame recorded earlier stays in the prompt, and restored Goal delegations are still settled. Process and Reflex supervision, Reflex context, completion review, and output folding do not follow it.
+
+The package is also a profile bundle: its `cordis.patch.yml` inserts the `system3` row with the APUS Desktop and Web product defaults (controlled privacy, the `jev` route on the network domain, and Skill selection). The products list it after the Jev bundle instead of inserting the row from their command-line overlay, because an overlay row would override every profile settings write; a `frontLoadedDecisions` edit in the profile patch therefore persists across restarts.
 
 
 ### Explicit Jev shadow decisions

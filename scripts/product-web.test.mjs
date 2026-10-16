@@ -97,16 +97,18 @@ writeFileSync(process.env.DSH_HOME + '/observed.json', JSON.stringify({args:proc
   assert.equal(observed.edition, edition)
   assert.deepEqual(observed.args, ['--profile', 'web', '--patch', join(installation, 'web.patch.yml'), '--patch', join(installation, 'runtime/product-edition.patch.yml'), '--host', '127.0.0.1', '--port', '0', '--no-open'])
   const profile = join(home, 'profiles/web/package.json')
-  const expectedBundles = ['base', 'web', '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin', '@deepseek-ai/dsh-experimental-continuum-jev']
+  const expectedBundles = ['base', 'web', '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin', '@deepseek-ai/dsh-experimental-system3',
+    '@deepseek-ai/dsh-experimental-continuum-jev']
   assert.deepEqual(JSON.parse(readFileSync(profile, 'utf8')).dsh.profile.bundles, expectedBundles)
   writeFileSync(profile, JSON.stringify({ user: 'retained', dsh: { profile: { bundles: ['base', 'web', 'user-plugin'] } } }))
   const userPatch = join(home, 'profiles/web/cordis.patch.yml')
-  writeFileSync(userPatch, '- id: continuum-memory\n  config:\n    enabled: true\n')
+  const savedSettings = '- id: continuum-memory\n  config:\n    enabled: true\n- id: system3\n  config:\n    frontLoadedDecisions: false\n'
+  writeFileSync(userPatch, savedSettings)
   execFileSync(process.execPath, [join(installation, 'launch.mjs')], { env })
   const retained = JSON.parse(readFileSync(profile, 'utf8'))
   assert.equal(retained.user, 'retained')
   assert.deepEqual(retained.dsh.profile.bundles, ['base', 'web', 'user-plugin', ...expectedBundles.slice(2)])
-  assert.equal(readFileSync(userPatch, 'utf8'), '- id: continuum-memory\n  config:\n    enabled: true\n')
+  assert.equal(readFileSync(userPatch, 'utf8'), savedSettings)
   const savedManifest = readFileSync(profile, 'utf8')
   execFileSync(process.execPath, [join(installation, 'launch.mjs')], { env })
   assert.equal(readFileSync(profile, 'utf8'), savedManifest)
@@ -260,6 +262,13 @@ test('Web qualification requires live Skill execution and leaves other System3 c
     capabilities.map(value => ({ ...value, enabled: true }))]) {
     assert.throws(() => verifyReflexExecutionResponse(envelope(invalid), 'fixture'), /differs from the product profile/)
   }
+  const paused = capabilities.map(value => value.id === 'skillSelection' ? { ...value, enabled: false, suspended: true } : value)
+  assert.deepEqual(verifyReflexExecutionResponse(envelope(paused), 'fixture', { frontLoaded: false }), paused)
+  for (const [invalid, frontLoaded] of [[capabilities, false], [paused, true],
+    [paused.map(value => ({ ...value, suspended: true })), false],
+    [paused.map(value => value.id === 'skillSelection' ? { ...value, suspended: false } : value), false]]) {
+    assert.throws(() => verifyReflexExecutionResponse(envelope(invalid), 'fixture', { frontLoaded }), /differs from the product profile/)
+  }
 })
 
 
@@ -292,8 +301,9 @@ test('Reflex execution qualification sends an authenticated read-only Host reque
   assert.match(requests[0].body.rpcId, /^[0-9a-f-]{36}$/)
 })
 
-/** A Playwright-shaped dialog whose visible controls follow the selected Reflex connection mode. */
+/** A Playwright-shaped dialog whose mode menu renders in its page and whose controls follow the chosen mode. */
 function reflexDialog(options, { localBody = true, localFields = false } = {}) {
+  const modes = ['trial', 'custom', 'local']
   let mode = 'custom'
   const visible = selector => {
     if (selector === '[data-reflex-local]') return mode === 'local' && localBody ? 1 : 0
@@ -304,15 +314,22 @@ function reflexDialog(options, { localBody = true, localFields = false } = {}) {
   }
   const locator = selector => ({
     first: () => locator(selector),
+    click: async () => {},
     count: async () => visible(selector),
-    getByRole: () => ({ allTextContents: async () => options }),
-    selectOption: async (value) => { mode = value },
     waitFor: async ({ state } = {}) => {
       const shown = selector === '#reflex-mode' || visible(selector) > 0
       if ((state === 'detached') === shown) throw new Error(`${selector} is not ${state}`)
     },
   })
-  return { locator, getByText: () => ({ waitFor: async () => {} }), getByRole: () => ({ waitFor: async () => {} }) }
+  const rows = texts => ({
+    first: () => ({ waitFor: async () => {} }),
+    allTextContents: async () => texts,
+    nth: index => ({ click: async () => { mode = modes[index - texts.length + options.length] } }),
+  })
+  // The Windows caption menubar renders its own `menuitem` buttons outside the mode menu.
+  const menu = { filter: () => ({ getByRole: () => rows(options) }) }
+  const page = { getByRole: role => role === 'menu' ? menu : rows(['应用', '编辑', ...options]), keyboard: { press: async () => {} } }
+  return { locator, page: () => page, getByRole: () => ({ waitFor: async () => {} }) }
 }
 
 test('Reflex settings qualification requires the trial, custom, and local modes', async () => {

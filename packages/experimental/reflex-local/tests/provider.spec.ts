@@ -101,6 +101,21 @@ describe('ReflexJevProvider', () => {
     expect(response.answers.next).toMatchObject({ type: 'choice', choice: 'refund' })
   })
 
+  it('drains the requests accepted before the call, including queued ones', async () => {
+    const release = Promise.withResolvers<ReflexCompletion>()
+    const { provider } = harness(async () => await release.promise)
+    let drained = false
+    await provider.drain()
+    const first = provider.decide(choiceRequest)
+    const second = provider.decide(choiceRequest)
+    const drain = provider.drain().then(() => { drained = true })
+    await new Promise(resolve => setTimeout(resolve, 10))
+    expect(drained).toBe(false)
+    release.resolve(completion({ A: 0.8, B: 0.1, C: 0.1 }))
+    await Promise.all([first, second, drain])
+    expect(drained).toBe(true)
+  })
+
   it('answers one-candidate questions without acquiring the runner', async () => {
     const { provider, acquire } = harness(async () => { throw new Error('unexpected runner call') })
     const response = await provider.decide({ state: null, questions: { only: { type: 'choice', criteria: { sole: 'Sole.' } } } })

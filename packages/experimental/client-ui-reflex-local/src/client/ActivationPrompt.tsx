@@ -27,9 +27,11 @@ export function ActivationPrompt({ useReflexReadiness, prepare, onDismiss, onOpe
     if (phase !== undefined && phase !== 'checking' && !offered) onDismiss()
   }, [phase, offered, onDismiss])
   if (snapshot === null || !snapshot.device.supported) return null
-  const option = optionOf(snapshot, snapshot.recommended), need = option?.bytes, free = snapshot.availableDiskBytes
-  const short = option !== undefined && !option.fits && free !== undefined
-    ? t('prompt.diskShort', { need: sizeText(option.bytes, t), free: sizeText(free, t) }) : undefined
+  const option = optionOf(snapshot, snapshot.recommended), free = snapshot.availableDiskBytes
+  // Without a fitting recommendation the details page explains why; the prompt then only points there.
+  const offer: { readonly blocked: string } | { readonly size: string } = option === undefined ? { blocked: t('noFit') }
+    : !option.fits && free !== undefined ? { blocked: t('prompt.diskShort', { need: sizeText(option.bytes, t), free: sizeText(free, t) }) }
+      : { size: sizeText(option.bytes, t) }
   const start = async (): Promise<void> => {
     setBusy(true); setError('')
     try {
@@ -40,15 +42,15 @@ export function ActivationPrompt({ useReflexReadiness, prepare, onDismiss, onOpe
       setBusy(false)
     }
   }
-  return <Modal open={offered} title={t('prompt.title')} closeLabel={t('cancel')} onClose={onDismiss}
+  return <Modal open={offered} title={t('prompt.title')} closeLabel={t('close')} onClose={onDismiss}
     footer={<>
       <Button variant="ghost" onClick={onDismiss}>{t('prompt.later')}</Button>
-      {short !== undefined
+      {'blocked' in offer
         ? <Button variant="primary" data-modal-autofocus onClick={onOpenDetails}>{t('prompt.details')}</Button>
         : <Button variant="primary" data-modal-autofocus disabled={busy} onClick={() => { void start() }}>
-          {need === undefined ? t('downloadPlain') : t('download', { size: sizeText(need, t) })}</Button>}
+          {t('download', { size: offer.size })}</Button>}
     </>}>
-    <p>{short ?? (need === undefined ? t('lede') : t('prompt.body', { size: sizeText(need, t) }))}</p>
+    <p>{'blocked' in offer ? offer.blocked : t('prompt.body', { size: offer.size })}</p>
     {error !== '' && <p className={css.error} role="alert">{t('actionFailed', { message: error })}</p>}
   </Modal>
 }

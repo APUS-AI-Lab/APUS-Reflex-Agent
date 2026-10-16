@@ -8,9 +8,10 @@ import type {} from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
 import type {} from '@deepseek-ai/dsh-subprocess'
 import { ReflexEngine } from './engine.ts'
 import { ReflexJevProvider } from './provider.ts'
-import type { ReflexLocalService, ReflexPrepareOptions, ReflexSnapshot } from './types.ts'
+import type { ReflexLocalService, ReflexPrepareOptions, ReflexSelectOptions, ReflexSnapshot, ReflexVariant } from './types.ts'
 
 export type * from './types.ts'
+export { ReflexLifecycleError } from './engine.ts'
 
 export const name = 'experimental-reflex-local'
 
@@ -39,8 +40,11 @@ export interface Config {
   startupTimeoutMs: number
   /** Deadline of one runner completion, which answers one question. */
   decisionTimeoutMs: number
-  /** Idle period before stopping the runner; zero keeps it running until disposal. */
-  idleTimeoutMs: number
+  /**
+   * Idle period after which the runner stops and frees the model's memory; absent keeps it resident while local
+   * decisions are enabled. The next decision after a release waits for the model to load.
+   */
+  idleReleaseMs?: number | undefined
   /** Managed process termination grace period. */
   graceMs: number
   /** Maximum retained runner diagnostic bytes. */
@@ -72,6 +76,10 @@ export interface Config {
   }
   /** Free bytes left on the data volume after a download completes. */
   diskMarginBytes: number
+  /** Consecutive runner start or request failures after which local decisions are turned off. */
+  maxConsecutiveRunnerFailures: number
+  /** Interval for reading the Jev entry's routing and master switch, so external changes publish and stop the runner. */
+  routingPollMs: number
 }
 
 const origin = z.string().pattern(/^https?:\/\/[^/\s?#@]+\/?$/)
@@ -90,7 +98,7 @@ export const Config: z<Partial<Config>, Config> = z.object({
   contextTokens: z.natural().min(1).default(9216),
   startupTimeoutMs: timeout.default(120_000),
   decisionTimeoutMs: timeout.default(30_000),
-  idleTimeoutMs: z.natural().max(MAX_TIMER_DELAY_MS).default(600_000),
+  idleReleaseMs: z.union([timeout, z.const(undefined)]),
   graceMs: timeout.default(2000),
   maxLogBytes: z.natural().min(1).default(64 * 1024),
   maxResponseBytes: z.natural().min(1).default(1024 * 1024),
@@ -105,6 +113,8 @@ export const Config: z<Partial<Config>, Config> = z.object({
     '35b-a3b-q8_0': z.natural().default(64 * GIB),
   }),
   diskMarginBytes: z.natural().default(GIB),
+  maxConsecutiveRunnerFailures: z.natural().min(1).default(3),
+  routingPollMs: timeout.default(2000),
 })
 
 /**
@@ -139,18 +149,22 @@ export default class ReflexLocal extends Service implements ReflexLocalService {
 
   constructor(ctx: Context, config: Config) {
     super(ctx, 'reflexLocal')
-    const engine = new ReflexEngine(ctx, checkConfig(config), ctx.get('configEditor'))
-    this.engine = engine
-    const provider = new ReflexJevProvider({
+    const provider: ReflexJevProvider = new ReflexJevProvider({
       id: config.providerId, model: REFLEX_MODEL, endpoint: 'http://127.0.0.1',
       acquire: async signal => await engine.acquire(signal),
       warm: async (signal) => { await engine.warm(signal) },
     })
+    const engine: ReflexEngine = new ReflexEngine(ctx, checkConfig(config), ctx.get('configEditor'), provider.drain.bind(provider))
+    this.engine = engine
     ctx.effect(() => {
       engine.activate()
       return async () => { await engine.dispose() }
     })
-    ctx.inject(['jev'], (child) => { child.effect(() => child.jev.register(provider)) })
+    ctx.inject(['jev'], (child) => {
+      child.effect(() => child.jev.register(provider))
+      // The Reflex master switch reaches dependents only through this event; the routing poll covers other Jev fields.
+      child.on('jev/enabled', () => { engine.routingChanged() })
+    })
   }
 
   /**
@@ -167,10 +181,17 @@ export default class ReflexLocal extends Service implements ReflexLocalService {
   follow(signal: AbortSignal): AsyncIterable<ReflexSnapshot> { return this.engine.follow(signal) }
 
   /**
-   * Start or join download, verification, and self-test; a passing, fast self-test enables local decisions.
-   * @param options - variant and download source; changing either while work is active throws.
+   * Select the given variant, else the variant of a paused or failed preparation, else the recommendation.
+   * @param options - variant and download source.
    */
   prepare(options?: ReflexPrepareOptions): void { this.engine.prepare(options) }
+
+  /**
+   * Make a tested downloaded variant active now, or prepare another one in the background while the active one serves.
+   * @param variant - option to make active.
+   * @param options - one advertised download origin used without fallback.
+   */
+  select(variant: ReflexVariant, options?: ReflexSelectOptions): void { this.engine.select(variant, options) }
 
   /** Stop active preparation and keep the partial download. @returns after the work settles. */
   async pause(): Promise<void> { await this.engine.pause() }
@@ -178,14 +199,33 @@ export default class ReflexLocal extends Service implements ReflexLocalService {
   /** Stop active preparation and delete the partial download. @returns after the work settles and the file is removed. */
   async cancel(): Promise<void> { await this.engine.cancel() }
 
-  /** Route Jev decisions to the local provider; requires `ready`. @returns after the state or profile change is applied. */
+  /**
+   * Record the local engine as the chosen connection mode, removing a Jev `defaultProviderId` that names another provider.
+   * @returns after the profile change and the choice are persisted.
+   */
+  async chooseLocal(): Promise<void> { await this.engine.chooseLocal() }
+
+  /**
+   * Start the active model's runner, then route Jev decisions to the local provider; requires an active model.
+   * @returns after the runner answers and the profile change is applied.
+   */
   async enable(): Promise<void> { await this.engine.enable() }
 
-  /** Stop local routing, restore `cloudProviderId` when configured, and clear the auto-enable notice. @returns after it applies. */
+  /** Stop local routing, clear both notices, and stop the runner after the decisions in flight. @returns after it stopped. */
   async disable(): Promise<void> { await this.engine.disable() }
 
   /** Clear `unacknowledgedAutoEnableAt` after a client showed it. @returns after the cleared state is persisted. */
   async acknowledge(): Promise<void> { await this.engine.acknowledge() }
+
+  /** Clear `unacknowledgedSwitch` after a client showed it. @returns after the cleared state is persisted. */
+  async acknowledgeSwitch(): Promise<void> { await this.engine.acknowledgeSwitch() }
+
+  /**
+   * Delete one variant, disabling local decisions first when it is the active, enabled model.
+   * @param variant - option to delete; omission deletes every model.
+   * @returns after deletion.
+   */
+  async deleteModel(variant?: ReflexVariant): Promise<void> { await this.engine.deleteModel(variant) }
 
   /** Stop preparation and the runner, delete weights and partial files, then disable. @returns after deletion. */
   async remove(): Promise<void> { await this.engine.remove() }

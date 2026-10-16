@@ -5,6 +5,36 @@ import type { NS } from './locales.ts'
 
 type Translate = PropsLocale<typeof NS>['t']
 
+/** A model's memory requirement against this Mac's memory. */
+export interface MemoryNeed {
+  readonly requiredBytes: number
+  readonly deviceBytes: number
+}
+
+/**
+ * The memory shortfall of an option this Mac can select but may not run.
+ * @param snapshot - Host observation with the device memory.
+ * @param option - option to judge.
+ * @returns the need and the device memory, or undefined when memory admits the option.
+ */
+export function memoryShortfall(snapshot: ReflexSnapshot, option: ReflexModelOption): MemoryNeed | undefined {
+  const { device } = snapshot
+  return option.reason === 'memory' && device.supported ? { requiredBytes: option.minMemoryBytes, deviceBytes: device.memoryBytes } : undefined
+}
+
+/**
+ * Name why this Mac may not run an option, as the parenthetical shown after its name and in the card's fact line.
+ * @param snapshot - Host observation with the device memory.
+ * @param option - option to judge.
+ * @param t - locale seat owning the copy.
+ * @returns the parenthetical, or an empty string when the option fits.
+ */
+export function shortfallText(snapshot: ReflexSnapshot, option: ReflexModelOption, t: Translate): string {
+  if (option.reason === 'disk') return t('unfit.disk')
+  const need = memoryShortfall(snapshot, option)
+  return need === undefined ? '' : t('unfit.memory', { need: memoryText(need.requiredBytes, t), have: memoryText(need.deviceBytes, t) })
+}
+
 /**
  * Compare two weights identities.
  * @param a - one variant.
@@ -33,6 +63,27 @@ export function optionOf(snapshot: ReflexSnapshot, variant: ReflexVariant | unde
  */
 export function sizeText(bytes: number, t: Translate): string {
   return t('size', { value: (bytes / 1e9).toFixed(1) })
+}
+
+/**
+ * Format a memory tier the way Macs are sold: binary gigabytes, whole when exact, labeled GB.
+ * @param bytes - byte count of a GiB-based tier.
+ * @param t - locale seat owning the unit.
+ * @returns localized memory text, for example 16 GB for 16 GiB.
+ */
+export function memoryText(bytes: number, t: Translate): string {
+  const gib = bytes / 1024 ** 3
+  return t('size', { value: Number.isInteger(gib) ? String(gib) : gib.toFixed(1) })
+}
+
+/**
+ * Name one weights file without the product prefix, as the model list and its summary show it.
+ * @param variant - model and quantization.
+ * @param t - locale seat owning the names.
+ * @returns localized short name, for example 9B · Q8_0.
+ */
+export function shortVariantName(variant: ReflexVariant, t: Translate): string {
+  return t('variantShort', { model: t(`model.${variant.model}`), quant: t(`quant.${variant.quant}`) })
 }
 
 /**

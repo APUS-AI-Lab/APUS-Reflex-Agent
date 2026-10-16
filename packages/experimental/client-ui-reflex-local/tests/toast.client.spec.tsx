@@ -12,10 +12,11 @@ afterEach(() => { cleanup(); vi.useRealTimers() })
 
 function fixture() {
   const state = createSnapshotStore<ReflexToast | null>(null)
-  const dismissToast = vi.fn(() => { state.set(null) }), undoEnable = vi.fn()
-  const props = { t: makeTranslate(zh), dismissToast, undoEnable, useReflexToast: bindSnapshotSelector(state) } as EnabledToastProps
+  const dismissToast = vi.fn(() => { state.set(null) }), undoEnable = vi.fn(), undoSwitch = vi.fn()
+  const props = { t: makeTranslate(zh), dismissToast, undoEnable, undoSwitch,
+    useReflexToast: bindSnapshotSelector(state) } as EnabledToastProps
   render(<EnabledToast {...props} />)
-  return { dismissToast, undoEnable, show(toast: ReflexToast) { act(() => { state.set(toast) }) } }
+  return { dismissToast, undoEnable, undoSwitch, show(toast: ReflexToast) { act(() => { state.set(toast) }) } }
 }
 
 it('renders nothing until a notice is raised, then offers undo', () => {
@@ -38,4 +39,13 @@ it('reports a failed undo or command and dismisses each notice after its hold', 
   expect(screen.queryByRole('alert')).toBeNull()
   b.show({ seq: 3, kind: 'actionFailed', message: 'offline' })
   expect(screen.getByRole('alert').textContent).toContain('操作没有完成：offline')
+})
+
+it('names the model a background switch moved to and undoes the switch', () => {
+  const b = fixture()
+  const change = { from: { model: '4b', quant: 'q8_0' }, to: { model: '9b', quant: 'q8_0' }, at: 5 } as const
+  b.show({ seq: 4, kind: 'switched', change })
+  expect(screen.getByRole('alert').textContent).toContain('已切换到 9B · Q8_0')
+  fireEvent.click(screen.getByRole('button', { name: zh['toast.undo'] }))
+  expect(b.undoSwitch).toHaveBeenCalledWith(change)
 })
