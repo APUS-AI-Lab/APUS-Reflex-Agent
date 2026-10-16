@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { ReflexStatus } from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
 import { stubConfigForm } from '@deepseek-ai/dsh-client-test-runtime'
-import { ReflexCardController, REFLEX_TRIAL, type ReflexSettings } from '../src/client/reflex-settings-controller.ts'
+import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
+import { ReflexCardController, REFLEX_TRIAL, type PrestepSettings, type ReflexSettings } from '../src/client/reflex-settings-controller.ts'
 
 function fixture(configured = true, protocol?: ReflexSettings['protocol']) {
   const host = stubConfigForm<ReflexSettings>()
@@ -14,9 +15,10 @@ function fixture(configured = true, protocol?: ReflexSettings['protocol']) {
     testConnection: vi.fn(async (_input: object, _signal?: AbortSignal) => ({ ok: true, value: { kind: 'ok', stage: 'decision', model: 'decision', effort: 'high', latencyMs: 4 } })),
     readStatus: vi.fn(async (): Promise<{ ok: boolean; value: ReflexStatus }> => ({ ok: true, value: { provider: { id: 'system-one', model: 'decision', endpoint: 'https://reflex.test' }, capabilities: [{ id: 'codexSupervision', implemented: false, enabled: false }] } })),
   }
-  const controller = new ReflexCardController(host.scope, { remote: { credentials, reflex } } as never)
+  const prestep = stubConfigForm<PrestepSettings>()
+  const controller = new ReflexCardController(host.scope, { remote: { credentials, reflex } } as never, prestep.scope)
   const face = controller.inject()
-  return { host, credentials, reflex, controller, face, state: () => face.hooks.reflexCard.getSnapshot() }
+  return { host, prestep, credentials, reflex, controller, face, state: () => face.hooks.reflexCard.getSnapshot() }
 }
 
 describe('Reflex dedicated settings controller', () => {
@@ -457,5 +459,301 @@ it('does not probe a changed Host endpoint with the trial credential', async () 
     f.face.save()
     await vi.waitFor(() => { expect(f.state().saving).toBe(false) })
     expect(f.host.mutate).toHaveBeenLastCalledWith(expect.arrayContaining([{ op: 'set', path: ['apiKeyEnv'], value: 'REFLEX_CUSTOM_API_KEY' }]), undefined)
+  } finally { f.controller.dispose() }
+})
+
+it('reads local mode from the saved default provider and leaves it only by saving the built-in provider', async () => {
+  const f = fixture()
+  try {
+    f.host.publish({ status: 'ready', writable: true, value: { endpoint: 'https://reflex.test', model: 'decision', effort: 'high',
+      timeoutMs: 1000, apiKeyEnv: 'REFLEX_API_KEY', defaultProviderId: 'reflex-local' }, user: { defaultProviderId: 'reflex-local' } })
+    expect(f.state().mode).toBe('local')
+    f.face.edit('endpoint', 'https://ignored.test')
+    f.face.resetField('endpoint')
+    await f.face.clearCredential()
+    expect(f.state()).toMatchObject({ dirty: false, endpoint: { text: 'https://reflex.test' } })
+    expect(f.credentials.unset).not.toHaveBeenCalled()
+    f.face.selectMode('custom')
+    expect(f.state()).toMatchObject({ mode: 'custom', dirty: true, endpoint: { text: 'https://reflex.test' } })
+    f.face.save()
+    await vi.waitFor(() => { expect(f.state().saving).toBe(false) })
+    expect(f.host.mutate).toHaveBeenCalledWith([{ op: 'set', path: ['defaultProviderId'], value: 'system-one' }], undefined)
+  } finally { f.controller.dispose() }
+})
+
+/** A local engine's connection-mode facts whose choice the test sets. */
+function localMode(chosen: boolean | null = null) {
+  const store = createSnapshotStore<boolean | null>(chosen)
+  return { chosen: store, choose: vi.fn(async () => {}) }
+}
+
+it('keeps local mode chosen on the engine across turning it off and reopening, and ignores it once a cloud mode is saved', () => {
+  const f = fixture()
+  try {
+    const mode = localMode(true)
+    const detach = f.controller.attachLocalMode(mode)
+    expect(f.state().mode).toBe('local')
+    f.host.publish({ value: { endpoint: 'https://reflex.test', model: 'decision', defaultProviderId: 'reflex-local' } })
+    expect(f.state().mode).toBe('local')
+    // 停用 removes the provider; the engine keeps the choice, so a reopened page still shows local mode.
+    f.host.publish({ value: { endpoint: 'https://reflex.test', model: 'decision' } })
+    f.face.reset()
+    expect(f.state().mode).toBe('local')
+    f.host.publish({ value: { endpoint: 'https://reflex.test', model: 'decision', defaultProviderId: 'system-one' } })
+    f.face.reset()
+    expect(f.state().mode).toBe('custom')
+    f.host.publish({ value: { endpoint: 'https://reflex.test', model: 'decision' } })
+    detach()
+    f.face.reset()
+    expect(f.state().mode).toBe('custom')
+  } finally { f.controller.dispose() }
+})
+
+it('replaces the preset staged on first load with a local choice the engine reports later, but never user edits', () => {
+  const host = stubConfigForm<ReflexSettings>()
+  host.publish({ status: 'ready', writable: true, value: {}, user: {} })
+  const remote = { credentials: { describe: vi.fn(async () => ({ ok: true, value: {} })) }, reflex: {} }
+  const controller = new ReflexCardController(host.scope, { remote } as never, stubConfigForm<PrestepSettings>().scope)
+  try {
+    const face = controller.inject(), state = () => face.hooks.reflexCard.getSnapshot()
+    expect(state()).toMatchObject({ mode: 'trial', dirty: true })
+    const mode = localMode()
+    controller.attachLocalMode(mode)
+    expect(state().mode).toBe('trial')
+    mode.chosen.set(true)
+    expect(state()).toMatchObject({ mode: 'local', dirty: false })
+    face.selectMode('custom')
+    face.edit('endpoint', 'https://mine.test')
+    mode.chosen.set(false)
+    mode.chosen.set(true)
+    expect(state()).toMatchObject({ mode: 'custom', dirty: true })
+  } finally { controller.dispose() }
+})
+
+it('waits for the first settings snapshot before following a reported local choice', () => {
+  const host = stubConfigForm<ReflexSettings>()
+  const remote = { credentials: { describe: vi.fn(async () => ({ ok: true, value: {} })) }, reflex: {} }
+  const controller = new ReflexCardController(host.scope, { remote } as never, stubConfigForm<PrestepSettings>().scope)
+  try {
+    controller.attachLocalMode(localMode(true))
+    host.publish({ status: 'ready', writable: true, value: {}, user: {} })
+    expect(controller.inject().hooks.reflexCard.getSnapshot()).toMatchObject({ mode: 'local', dirty: false })
+  } finally { controller.dispose() }
+})
+
+it('commits a local mode pick through the engine and reports a choice the engine did not persist', async () => {
+  const f = fixture()
+  try {
+    f.face.selectMode('local')
+    expect(f.state().mode).toBe('local')
+    const mode = localMode(false)
+    f.controller.attachLocalMode(mode)
+    f.face.selectMode('trial')
+    f.face.selectMode('local')
+    await vi.waitFor(() => { expect(mode.choose).toHaveBeenCalledOnce() })
+    expect(f.state().localChoiceFailed).toBe(false)
+    mode.choose.mockRejectedValueOnce(new Error('offline'))
+    f.face.selectMode('trial')
+    f.face.selectMode('local')
+    await vi.waitFor(() => { expect(f.state().localChoiceFailed).toBe(true) })
+    f.face.selectMode('trial')
+    expect(f.state()).toMatchObject({ localChoiceFailed: false, mode: 'trial' })
+  } finally { f.controller.dispose() }
+})
+
+it('stops reporting a local choice the engine settles after disposal', async () => {
+  const f = fixture()
+  const pending = Promise.withResolvers<undefined>()
+  const mode = { ...localMode(false), choose: vi.fn(async () => { await pending.promise }) }
+  f.controller.attachLocalMode(mode)
+  f.face.selectMode('local')
+  f.controller.dispose()
+  pending.resolve(undefined)
+  await pending.promise
+  expect(f.state().mode).toBe('local')
+})
+
+it('reads capabilities again after a saved pre-step change only', async () => {
+  const f = fixture()
+  try {
+    f.prestep.publish({ status: 'ready', writable: true, value: {}, user: {} })
+    f.reflex.readStatus.mockClear()
+    await f.face.setPrestep(false)
+    expect(f.reflex.readStatus).toHaveBeenCalledOnce()
+    f.prestep.mutate.mockResolvedValueOnce(false)
+    await f.face.setPrestep(true)
+    expect(f.reflex.readStatus).toHaveBeenCalledOnce()
+  } finally { f.controller.dispose() }
+})
+
+it('discards staged connection edits when choosing local mode and keeps the custom draft for a return', () => {
+  const f = fixture()
+  try {
+    f.face.edit('endpoint', 'https://my-custom.test')
+    f.face.selectMode('local')
+    expect(f.state()).toMatchObject({ mode: 'local', dirty: false, endpoint: { text: 'https://reflex.test' } })
+    f.face.selectMode('trial')
+    expect(f.state()).toMatchObject({ mode: 'trial', endpoint: { text: REFLEX_TRIAL.endpoint } })
+    f.face.selectMode('local')
+    f.face.selectMode('custom')
+    expect(f.state()).toMatchObject({ mode: 'custom', endpoint: { text: 'https://my-custom.test' } })
+    expect(f.host.mutate).not.toHaveBeenCalled()
+  } finally { f.controller.dispose() }
+})
+
+it('stays in a chosen local mode when the Host publishes a change such as the master switch', async () => {
+  const f = fixture()
+  try {
+    f.face.selectMode('local')
+    await f.face.setEnabled(false)
+    f.host.publish({ value: { endpoint: 'https://reflex.test', model: 'decision', enabled: false }, user: { enabled: false } })
+    expect(f.state()).toMatchObject({ mode: 'local', enabled: false })
+    f.face.reset()
+    expect(f.state().mode).toBe('custom')
+  } finally { f.controller.dispose() }
+})
+
+it('keeps a saved local mode without a connection instead of staging the preset', () => {
+  const host = stubConfigForm<ReflexSettings>()
+  host.publish({ status: 'ready', writable: true, value: { defaultProviderId: 'reflex-local' }, user: {} })
+  const remote = { credentials: { describe: vi.fn(async () => ({ ok: true, value: {} })) }, reflex: {} }
+  const controller = new ReflexCardController(host.scope, { remote } as never, stubConfigForm<PrestepSettings>().scope)
+  try {
+    expect(controller.inject().hooks.reflexCard.getSnapshot()).toMatchObject({ mode: 'local', dirty: false })
+  } finally { controller.dispose() }
+})
+
+it('saves the pre-step switch at once once its Host section is served, and reports a refused or rejected write', async () => {
+  const f = fixture()
+  try {
+    expect(f.state().prestep).toEqual({ available: false, writable: false, enabled: true, toggling: false, failed: false })
+    await f.face.setPrestep(false)
+    expect(f.prestep.mutate).not.toHaveBeenCalled()
+    f.prestep.publish({ status: 'ready', writable: true, value: {}, user: {}, revision: 3 })
+    expect(f.state().prestep).toMatchObject({ available: true, writable: true, enabled: true })
+    f.face.edit('model', 'staged-model')
+    const pending = f.face.setPrestep(false)
+    expect(f.state().prestep.toggling).toBe(true)
+    await pending
+    expect(f.prestep.mutate).toHaveBeenCalledWith([{ op: 'set', path: ['frontLoadedDecisions'], value: false }], 3)
+    expect(f.host.mutate).not.toHaveBeenCalled()
+    f.prestep.publish({ value: { frontLoadedDecisions: false }, user: { frontLoadedDecisions: false } })
+    expect(f.state().prestep).toMatchObject({ enabled: false, toggling: false, failed: false })
+    f.prestep.mutate.mockResolvedValueOnce(false)
+    await f.face.setPrestep(true)
+    expect(f.state().prestep.failed).toBe(true)
+    f.prestep.mutate.mockRejectedValueOnce(new Error('offline'))
+    await f.face.setPrestep(true)
+    expect(f.state().prestep).toMatchObject({ enabled: false, failed: true, toggling: false })
+  } finally { f.controller.dispose() }
+  expect(f.prestep.listenerCount()).toBe(0)
+})
+
+it('moves a custom preset endpoint off the shared reference and reports a rejected switch write', async () => {
+  const f = fixture()
+  try {
+    f.face.edit('endpoint', REFLEX_TRIAL.endpoint)
+    expect(f.state().apiKeyEnv.text).toBe('REFLEX_API_KEY')
+    f.face.edit('endpoint', 'https://another.test')
+    expect(f.state().apiKeyEnv.text).toBe('REFLEX_CUSTOM_API_KEY')
+    f.host.mutate.mockRejectedValueOnce(new Error('offline'))
+    await f.face.setEnabled(false)
+    expect(f.state()).toMatchObject({ toggling: false, toggleFailed: true })
+  } finally { f.controller.dispose() }
+})
+
+it('moves a saved custom connection off the preset reference on load and after a reset', () => {
+  const f = fixture()
+  try {
+    f.host.publish({ status: 'ready', writable: true, value: { endpoint: 'https://reflex.test', model: 'decision', apiKeyEnv: REFLEX_TRIAL.apiKeyEnv },
+      user: {}, base: { apiKeyEnv: REFLEX_TRIAL.apiKeyEnv } })
+    const late = new ReflexCardController(f.host.scope, { remote: { credentials: f.credentials, reflex: f.reflex } } as never,
+      stubConfigForm<PrestepSettings>().scope)
+    try {
+      const face = late.inject(), state = () => face.hooks.reflexCard.getSnapshot()
+      expect(state().apiKeyEnv.text).toBe('REFLEX_CUSTOM_API_KEY')
+      face.resetField('apiKeyEnv')
+      expect(state().apiKeyEnv.text).toBe('REFLEX_CUSTOM_API_KEY')
+    } finally { late.dispose() }
+  } finally { f.controller.dispose() }
+})
+
+it('stages nothing for a read-only scope or a repeated mode choice', () => {
+  const host = stubConfigForm<ReflexSettings>()
+  host.publish({ status: 'ready', writable: false, value: {}, user: {} })
+  const remote = { credentials: { describe: vi.fn(async () => ({ ok: true, value: {} })) }, reflex: {} }
+  const controller = new ReflexCardController(host.scope, { remote } as never, stubConfigForm<PrestepSettings>().scope)
+  try {
+    const face = controller.inject()
+    face.selectMode('custom')
+    expect(face.hooks.reflexCard.getSnapshot()).toMatchObject({ mode: 'custom', dirty: false })
+  } finally { controller.dispose() }
+})
+
+it('moves a custom draft that copied the preset connection onto the custom reference', () => {
+  const f = fixture()
+  try {
+    f.face.edit('endpoint', REFLEX_TRIAL.endpoint)
+    f.face.edit('model', REFLEX_TRIAL.model)
+    f.face.selectMode('trial')
+    f.face.selectMode('custom')
+    expect(f.state()).toMatchObject({ endpoint: { text: REFLEX_TRIAL.endpoint }, apiKeyEnv: { text: 'REFLEX_CUSTOM_API_KEY' } })
+  } finally { f.controller.dispose() }
+})
+
+it('stops after disposal during a switch write or a save preflight', async () => {
+  const f = fixture(false)
+  const write = Promise.withResolvers<boolean>()
+  f.host.mutate.mockReturnValueOnce(write.promise)
+  const toggling = f.face.setEnabled(false)
+  const check = Promise.withResolvers<{ ok: boolean; value: { REFLEX_API_KEY: { configured: boolean; writable: boolean } } }>()
+  f.credentials.describe.mockReturnValueOnce(check.promise)
+  f.face.edit('apiKey', 'secret')
+  f.face.save()
+  f.controller.dispose()
+  write.resolve(true); check.resolve({ ok: true, value: { REFLEX_API_KEY: { configured: false, writable: true } } })
+  await toggling
+  await vi.waitFor(() => { expect(f.credentials.describe).toHaveBeenCalled() })
+  expect(f.credentials.set).not.toHaveBeenCalled()
+})
+
+it('reports a refused credential-only save without compensating unchanged settings', async () => {
+  const f = fixture(false)
+  try {
+    f.credentials.set.mockResolvedValueOnce({ ok: false, value: undefined })
+    f.face.edit('apiKey', 'secret')
+    f.face.save()
+    await vi.waitFor(() => { expect(f.credentials.set).toHaveBeenCalledOnce() })
+    await vi.waitFor(() => { expect(f.state().saving).toBe(false) })
+    expect(f.state()).toMatchObject({ failed: true, partialSave: false })
+    expect(f.host.mutate).not.toHaveBeenCalled()
+  } finally { f.controller.dispose() }
+})
+
+it('leaves a disposed page alone when the status refresh after a save fails', async () => {
+  const f = fixture()
+  const status = Promise.withResolvers<never>()
+  f.reflex.readStatus.mockReturnValueOnce(status.promise)
+  f.face.edit('model', 'next-model')
+  f.face.save()
+  await vi.waitFor(() => { expect(f.reflex.readStatus).toHaveBeenCalledOnce() })
+  f.controller.dispose()
+  status.reject(new Error('offline'))
+  await vi.waitFor(() => { expect(f.state().saving).toBe(false) })
+  expect(f.state().runtime).toBeUndefined()
+})
+
+it('keeps a staged local mode when its form unmounts and returns to the saved mode when the page closes', () => {
+  const f = fixture()
+  try {
+    f.face.edit('endpoint', 'https://my-custom.test')
+    f.face.selectMode('local')
+    f.face.discard()
+    expect(f.state()).toMatchObject({ mode: 'local', dirty: false })
+    f.face.selectMode('custom')
+    expect(f.state()).toMatchObject({ mode: 'custom', endpoint: { text: 'https://my-custom.test' } })
+    f.face.selectMode('local')
+    f.face.reset()
+    expect(f.state()).toMatchObject({ mode: 'custom', dirty: false, endpoint: { text: 'https://reflex.test' } })
   } finally { f.controller.dispose() }
 })

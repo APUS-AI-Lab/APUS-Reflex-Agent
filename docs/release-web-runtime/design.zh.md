@@ -22,7 +22,7 @@ flowchart LR
 
 Linux 工作流在部署前执行 `native/system` 的 `build:native`，构建全部原生系统二进制并验证 ELF 格式。根 Harness 构建仅生成宿主 Node-API addon，不包含 Landlock 启动器。收集器要求 Landlock 可执行文件与 Linux x64 声明的两种 libc addon 均存在。
 
-压缩包复用 `frontend/.build/system3-runtime`，包含自有 CLI、Web bundle、浏览器构建产物、原生模块及依赖清单。它不应用 `desktop.patch.yml`，也不启动 Electron。首次初始化使用现有 app-boot profile 函数加入可编辑的 Jev 默认配置。Web overlay 加载原生 Reflex 页面并禁用可选的会话上传。启动时允许凭据为空。
+压缩包复用 `frontend/.build/system3-runtime`，包含自有 CLI、Web bundle、浏览器构建产物、原生模块及依赖清单。它不应用 `desktop.patch.yml`，也不启动 Electron。首次初始化使用现有 app-boot profile 函数加入 Jev、System3 与 Continuum bundle，可编辑的默认配置由它们提供。Web overlay 加载原生 Reflex 页面并禁用可选的会话上传。启动时允许凭据为空。
 
 启动器通过相对压缩包解析的绝对路径选择内置 Node，将数据保存在解压目录之外，并调用受支持的 CLI `web` profile。它接受端口和数据目录参数；监听地址固定为 `127.0.0.1`。已有 profile 保持不变。替换解压目录不会删除用户数据。高级插件安装可能需要另行安装开发工具，不属于无需工具即可启动的保证范围。
 

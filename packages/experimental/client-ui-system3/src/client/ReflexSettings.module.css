@@ -1,26 +1,201 @@
+/* Reflex section: the Built-in plugins header, General section rows (Setting-Cell: 16/0 padding, hairline separator),
+ * and titled modules separated by more space than their rows. Only the local engine card inside 决策服务 is bordered. */
+
 .section {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  font-size: 13px;
-  padding: 16px;
-}
-.section p { margin: 0; }
-.section h3 { font-size: 14px; font-weight: 500; margin: 8px 0 0; }
-.actions { display: flex; flex-wrap: wrap; gap: 8px; }
-.master { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
-.master > div { display: flex; flex-direction: column; gap: 4px; }
-.capabilities { display: flex; flex-direction: column; gap: 12px; padding: 0; list-style: none; }
-.capabilities li { display: flex; flex-wrap: wrap; gap: 8px; }
-.capabilities small { flex-basis: 100%; font-size: inherit; }
-.protocol { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
-.protocol select {
-  font: inherit;
-  color: var(--dsw-alias-label-primary);
-  background: var(--dsw-alias-bg-layer-1);
-  border: 0.5px solid var(--dsw-alias-border-l2);
-  border-radius: 6px;
-  padding: 8px;
   width: 100%;
+  color: var(--dsw-alias-label-primary);
 }
-.protocol p { color: var(--dsw-alias-label-secondary); }
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 4px;
+}
+
+.heading {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.intro {
+  margin: 0;
+  font-size: 13px;
+  color: var(--dsw-alias-label-tertiary);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 0;
+  border-bottom: 0.5px solid var(--dsw-alias-border-l2);
+}
+
+.rowText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-right: 48px;
+}
+
+.title {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 22px;
+  color: var(--dsw-alias-label-primary);
+}
+
+.desc {
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 18px;
+  color: var(--dsw-alias-label-tertiary);
+}
+
+.error {
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--dsw-alias-state-error-primary);
+}
+
+.fallback {
+  margin: 0;
+  padding: 16px 0;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--dsw-alias-label-tertiary);
+}
+
+.controls {
+  display: flex;
+  flex: none;
+  gap: 8px;
+}
+
+.selector {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  height: 36px;
+  padding: 0 14px;
+  border: none;
+  border-radius: var(--dsw-radius-md);
+  background: var(--dsw-alias-bg-module-platform);
+  font: inherit;
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--dsw-alias-label-primary);
+  cursor: pointer;
+}
+
+.selector:hover:not(:disabled) {
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
+.selector:disabled {
+  cursor: default;
+}
+
+.chevron {
+  flex: none;
+}
+
+/* Modules: a section title with more space above it than between rows. */
+.module {
+  display: flex;
+  flex-direction: column;
+  padding-top: 24px;
+}
+
+.moduleTitle {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 0 4px;
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 500;
+  color: var(--dsw-alias-label-secondary);
+}
+
+.pausedNote {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--dsw-alias-label-tertiary);
+}
+
+/* While the master switch is off, module content dims; the engine card disables its own controls. */
+.module[data-paused='true'] .dimmable {
+  opacity: 0.5;
+}
+
+/* The 记忆 module exists only while a contributed row renders. */
+.memory:not(:has(.items > :global([data-slot='settings.reflex.item']) > *)) {
+  display: none;
+}
+
+.modeBody {
+  padding: 16px 0;
+  border-bottom: 0.5px solid var(--dsw-alias-border-l2);
+}
+
+.fields {
+  border-bottom: 0.5px solid var(--dsw-alias-border-l2);
+}
+
+.saveNote,
+.saveError {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--dsw-alias-label-tertiary);
+}
+
+.saveError {
+  color: var(--dsw-alias-state-error-primary);
+}
+
+/* Contributed rows (settings.reflex.item) draw their own row chrome, as General section items do. */
+.items > :global([data-slot='settings.reflex.item']) {
+  display: flex;
+  flex-direction: column;
+}
+
+.subRows {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 4px 0 8px;
+  list-style: none;
+  border-bottom: 0.5px solid var(--dsw-alias-border-l2);
+}
+
+.subRows li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--dsw-alias-label-secondary);
+}
+
+.subRows[data-active='false'] li,
+.module[data-paused='true'] .subRows li {
+  opacity: 0.5;
+}
+
+.subStatus {
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--dsw-alias-label-tertiary);
+}

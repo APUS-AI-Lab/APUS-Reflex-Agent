@@ -473,3 +473,20 @@ describe('client bundle CSS Modules watch graph', () => {
     expect(addWatchFile).toHaveBeenCalledExactlyOnceWith(stylesheet)
   })
 })
+
+describe('client bundle unresolved externals', () => {
+  it('fails the build when a bare dependency cannot be resolved and would stay external', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'dsh-client-unresolved-'))
+    onTestFinished(() => { rmSync(root, { recursive: true, force: true }) })
+    const entry = join(root, 'lib/types/client/index.js')
+    mkdirSync(dirname(entry), { recursive: true })
+    writeFileSync(join(root, 'package.json'), JSON.stringify({ name: REQUESTING_PACKAGE, type: 'module' }))
+    writeFileSync(entry, 'import { z } from "dsh-test-undeclared-library"\nexport const schema = z\n')
+    const config = clientConfigs()[0]
+    if (config === undefined) throw new Error('client config missing')
+    await expect(build({
+      ...config, cwd: root, config: false, tsconfig: false,
+      write: false, clean: false, exports: false, report: false, logLevel: 'silent',
+    })).rejects.toThrow('"dsh-test-undeclared-library" stayed external')
+  })
+})

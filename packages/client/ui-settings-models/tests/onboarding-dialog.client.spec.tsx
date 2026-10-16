@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-/** First-run DeepSeek prompt behavior over the shared Models join. */
+/** First-run DeepSeek prompt and deferred composer notice behavior over the shared Models join. */
 import type { GlobalStandardProps } from '@deepseek-ai/dsh-client-ui-slots'
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -11,6 +11,9 @@ import { DeepSeekOnboardingDialog } from '../src/client/DeepSeekOnboardingDialog
 import type { DeepSeekOnboardingDialogProps } from '../src/client/DeepSeekOnboardingDialog.tsx'
 import { SettingsDescribeMirror } from '@deepseek-ai/dsh-client-ui-settings/src/client/settings-mirror.ts'
 import { ModelsSettingsStore } from '../src/client/store.ts'
+import { ReadinessDeferral } from '../src/client/readiness-deferral.ts'
+import { ReadinessNotice } from '../src/client/ReadinessNotice.tsx'
+import type { ReadinessNoticeProps } from '../src/client/ReadinessNotice.tsx'
 import { createModelsOperations } from '../src/client/operations.ts'
 import { en } from '../src/client/locales.ts'
 import { settingsSchema } from './settings-schema.client.ts'
@@ -139,6 +142,7 @@ function harness(options: {
   const ctx = { remote: { ...face, session: { initializeDefaultModel: async () => ({ ok: true, value: undefined }) } } } as never
   const operations = createModelsOperations(ctx)
   const controller = new ModelsSettingsStore(ctx, settingsSchema, new SettingsDescribeMirror(ctx))
+  const deferral = new ReadinessDeferral()
   const openSection = vi.fn()
   const complete = vi.fn()
   const unusedHook = (() => { throw new Error('unused standard hook') }) as never
@@ -153,13 +157,15 @@ function harness(options: {
     usePanelInfo, useSessionRetainInfo: () => undefined, useResource,
     useWorkspaces: unusedHook,
     controller,
+    deferral,
     useModels: bindSnapshotSelector(controller.store),
+    useDeferral: bindSnapshotSelector(deferral.store),
     operations,
     schema: settingsSchema,
     t: key => en[key],
   }
   return {
-    controller, complete, openSection, props, mutate, set,
+    controller, deferral, complete, openSection, props, mutate, set,
     configure: () => { fileConfigured = true },
   }
 }
@@ -229,15 +235,34 @@ describe('DeepSeekOnboardingDialog', () => {
     }
   })
 
-  it('allows configure-later dismissal without opening settings', async () => {
+  it('defers configure-later for the page load without opening settings', async () => {
     const h = harness()
-    render(<DeepSeekOnboardingDialog {...h.props} />)
+    const view = render(<DeepSeekOnboardingDialog {...h.props} />)
     await screen.findByRole('dialog')
     fireEvent.click(screen.getByRole('button', { name: en.onboardingLater }))
+    await waitFor(() => { expect(screen.queryByRole('dialog')).toBeNull() })
     expect(h.complete).toHaveBeenCalledOnce()
+    expect(h.deferral.store.getSnapshot()).toEqual({ deferred: true, noticeClosed: false })
     expect(h.openSection).not.toHaveBeenCalled()
     expect(h.set).not.toHaveBeenCalled()
     expect(h.mutate).not.toHaveBeenCalled()
+
+    // A later coordinator pass in the same page load does not prompt again.
+    view.unmount()
+    h.complete.mockClear()
+    render(<DeepSeekOnboardingDialog {...h.props} />)
+    await waitFor(() => { expect(h.complete).toHaveBeenCalledOnce() })
+    expect(screen.queryByRole('dialog')).toBeNull()
+  })
+
+  it('still opens an explicit request after the automatic prompt was deferred', async () => {
+    const h = harness()
+    h.deferral.defer()
+    h.props.explicit = true
+    render(<DeepSeekOnboardingDialog {...h.props} />)
+    expect(await screen.findByRole('dialog', { name: en.onboardingTitle })).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: en.onboardingLater }))
+    expect(h.complete).toHaveBeenCalledOnce()
   })
 
   it('does not block the product when DeepSeek setup is unavailable', async () => {
@@ -284,7 +309,7 @@ describe('DeepSeekOnboardingDialog', () => {
   })
 })
 
-it('offers account choice before reusing the existing API key editor', async () => {
+it('lets the account seat route to the existing API key editor', async () => {
   const h = harness()
   h.props.renderSlot = (_name, owner: unknown) => <button onClick={(owner as { useApiKey: () => void }).useApiKey}>Choose API key</button>
   render(<DeepSeekOnboardingDialog {...h.props} />)
@@ -292,6 +317,16 @@ it('offers account choice before reusing the existing API key editor', async () 
   fireEvent.click(screen.getByRole('button', { name: 'Choose API key' }))
   expect(screen.getByRole('dialog')).toBeTruthy()
   expect(h.complete).not.toHaveBeenCalled()
+})
+
+it('lets the account seat defer the automatic prompt to the composer notice', async () => {
+  const h = harness()
+  h.props.renderSlot = (_name, owner: unknown) => <button onClick={(owner as { later: () => void }).later}>Later</button>
+  render(<DeepSeekOnboardingDialog {...h.props} />)
+  fireEvent.click(await screen.findByRole('button', { name: 'Later' }))
+  await waitFor(() => { expect(h.complete).toHaveBeenCalledOnce() })
+  expect(h.deferral.store.getSnapshot().deferred).toBe(true)
+  expect(screen.queryByRole('button', { name: 'Later' })).toBeNull()
 })
 it('explicit account-menu setup reuses the editor without another login choice', async () => {
   const h = harness({ configured: () => true })
@@ -311,4 +346,66 @@ it('keeps explicit API key setup available when automatic onboarding is disabled
   render(<DeepSeekOnboardingDialog {...h.props} />)
   await waitFor(() => { expect(screen.getByRole('dialog')).toBeTruthy() })
   expect(h.complete).not.toHaveBeenCalled()
+})
+
+describe('ReadinessNotice', () => {
+  function noticeProps(h: ReturnType<typeof harness>): ReadinessNoticeProps {
+    return {
+      useModels: bindSnapshotSelector(h.controller.store), useDeferral: bindSnapshotSelector(h.deferral.store),
+      controller: h.controller, deferral: h.deferral, operations: h.props.operations, schema: h.props.schema, t: h.props.t,
+    }
+  }
+  function notice(h: ReturnType<typeof harness>) {
+    return render(<ReadinessNotice {...noticeProps(h)} />)
+  }
+
+  it('stays hidden until the prompt is deferred and while readiness is unknown', async () => {
+    const h = harness()
+    const view = notice(h)
+    expect(view.container.textContent).toBe('')
+    h.deferral.defer()
+    view.rerender(<ReadinessNotice {...noticeProps(h)} />)
+    expect(view.container.textContent).toBe('')
+    await act(async () => { await h.controller.load() })
+    expect(screen.getByRole('status').textContent).toContain(en.readinessNotice)
+  })
+
+  it('reopens the credential editor and keeps the notice after another Configure later', async () => {
+    const h = harness()
+    h.deferral.defer()
+    await act(async () => { await h.controller.load() })
+    notice(h)
+    fireEvent.click(screen.getByRole('button', { name: en.readinessConfigure }))
+    expect(await screen.findByRole('dialog', { name: en.onboardingTitle })).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: en.onboardingLater }))
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(screen.getByRole('status')).toBeTruthy()
+    expect(h.set).not.toHaveBeenCalled()
+  })
+
+  it('disappears once the stored credential makes the official route usable', async () => {
+    const h = harness()
+    h.deferral.defer()
+    await act(async () => { await h.controller.load() })
+    notice(h)
+    fireEvent.click(screen.getByRole('button', { name: en.readinessConfigure }))
+    fireEvent.change(await screen.findByLabelText(en.keyInput), { target: { value: 'sk-live' } })
+    fireEvent.click(screen.getByRole('button', { name: en.onboardingSave }))
+    await waitFor(() => { expect(screen.queryByRole('dialog')).toBeNull() })
+    await waitFor(() => { expect(screen.queryByRole('status')).toBeNull() })
+    expect(h.set).toHaveBeenCalledWith('DEEPSEEK_API_KEY', 'sk-live')
+  })
+
+  it('closes for the rest of the page load', async () => {
+    const h = harness()
+    h.deferral.defer()
+    await act(async () => { await h.controller.load() })
+    const view = notice(h)
+    fireEvent.click(screen.getByRole('button', { name: en.close }))
+    expect(h.deferral.store.getSnapshot()).toEqual({ deferred: true, noticeClosed: true })
+    expect(view.container.textContent).toBe('')
+    h.deferral.closeNotice()
+    h.deferral.defer()
+    expect(h.deferral.store.getSnapshot()).toEqual({ deferred: true, noticeClosed: true })
+  })
 })

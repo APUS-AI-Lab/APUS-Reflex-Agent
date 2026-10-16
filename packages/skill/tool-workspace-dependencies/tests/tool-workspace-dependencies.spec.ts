@@ -1,5 +1,5 @@
 import * as fs from 'node:fs/promises'
-import { mkdir, mkdtemp, readFile, rename, rm, symlink, writeFile } from 'node:fs/promises'
+import { chmod, mkdir, mkdtemp, readFile, rename, rm, stat, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -13,7 +13,7 @@ import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import ToolRuntime from '@deepseek-ai/dsh-tools'
 import { ToolCallId } from '@deepseek-ai/dsh-llm'
 import * as workspaceDependencies from '../src/index.ts'
-import { installPrimaryRuntime, parsePrimaryRuntime, readPrimaryRuntime, resolvePrimaryRuntime, workspaceDependencyPaths, type PrimaryRuntimeManifest } from '../src/index.ts'
+import { installPrimaryRuntime, llamaServerPath, parsePrimaryRuntime, readPrimaryRuntime, resolvePrimaryRuntime, workspaceDependencyPaths, type PrimaryRuntimeManifest } from '../src/index.ts'
 
 vi.mock('node:fs/promises', async (importOriginal) => {
   const actual = await importOriginal<typeof fs>()
@@ -183,6 +183,8 @@ it.each([
   { pythonPackages: { numpy: '2.3.5', Numpy: '2.3.5' } },
   { pythonPackages: { Pillow: '12.3.0', pillow: '12.3.0' } },
   { pythonPackages: { typing_extensions: '4.16.0', 'typing.extensions': '4.16.0' } },
+  { llamaServer: 'latest' },
+  { llamaServer: 11118 },
 ])('rejects invalid locked payload metadata: %j', async (invalid) => {
   const { source, manifest } = await fixture()
   await writeFile(join(source, 'runtime.json'), JSON.stringify({ ...manifest, ...invalid }))
@@ -237,6 +239,24 @@ it('uses a payload in place without copying and tolerates a payload without Node
   })
   await expect(readFile(join(directory, 'home', 'dsh-runtimes', 'dsh-primary-runtime', 'runtime.json'))).rejects.toMatchObject({ code: 'ENOENT' })
   await rm(paths.python)
+  await expect(resolvePrimaryRuntime(source)).rejects.toMatchObject({ code: 'ENOENT' })
+})
+
+it('installs a declared llama.cpp runner with its permissions and rejects a payload without it', async () => {
+  const { source, root, manifest } = await fixture()
+  const declared = { ...manifest, llamaServer: 'b11118' }
+  await writeFile(join(source, 'runtime.json'), JSON.stringify(declared))
+  await mkdir(dirname(llamaServerPath(source)), { recursive: true })
+  await writeFile(llamaServerPath(source), 'runner')
+  await chmod(llamaServerPath(source), 0o755)
+  expect(await readPrimaryRuntime(source)).toEqual(declared)
+  await installPrimaryRuntime(source, root)
+  expect(await readFile(llamaServerPath(root), 'utf8')).toBe('runner')
+  if (process.platform !== 'win32') expect((await stat(llamaServerPath(root))).mode & 0o777).toBe(0o755)
+  await rm(llamaServerPath(root))
+  await mkdir(llamaServerPath(root))
+  await expect(installPrimaryRuntime(source, root)).rejects.toThrow(`expected file at ${llamaServerPath(root)}`)
+  await rm(llamaServerPath(source))
   await expect(resolvePrimaryRuntime(source)).rejects.toMatchObject({ code: 'ENOENT' })
 })
 

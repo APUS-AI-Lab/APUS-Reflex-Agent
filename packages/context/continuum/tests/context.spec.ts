@@ -110,6 +110,68 @@ describe('Continuum same-step context consumer', () => {
     await ctx.fiber.dispose()
   })
 
+  it('injects only candidates that share a query term when no selector is mounted', async () => {
+    const ctx = new Context()
+    const controller = new ContinuumMemoryController(records(), { enabled: true, mode: 'active', reflexMounted: true })
+    installContinuumMemoryControllerContext(ctx, () => controller, () => ({ scopes: ['workspace'] }),
+      { maxCandidates: 4, maxExcerptBytes: 100, maxTotalBytes: 1024, candidatePool: 'all' })
+    const ask = async (text: string) => {
+      const user = createUserMessage({ source: { kind: 'user' }, content: [{ type: 'text', text }] })
+      const result = await agentEvents(ctx, {} as Agent).waterfall('agent/pre-step', {
+        messages: [user], turn: 1, step: 1, signal: new AbortController().signal,
+      }, () => Promise.resolve({ kind: 'enter' as const, messages: [user] }))
+      return result.kind === 'enter' ? result.messages : []
+    }
+    const matched = await ask('When is the migration scheduled?')
+    expect(matched).toHaveLength(2)
+    expect(matched[1]?.source).toMatchObject({ recordIds: ['migration'] })
+    expect(await ask('Unrelated words only')).toHaveLength(1)
+    await ctx.fiber.dispose()
+  })
+
+  it('waits for pending admissions before reading and honors cancellation while waiting', async () => {
+    const ctx = new Context()
+    const controller = new ContinuumMemoryController(records(), { enabled: true, mode: 'active', reflexMounted: true })
+    const pending = Promise.withResolvers<undefined>()
+    let waiting: Promise<void> | undefined = pending.promise
+    installContinuumMemoryControllerContext(ctx, () => controller, () => ({ scopes: ['workspace'] }),
+      { maxCandidates: 2, maxExcerptBytes: 100, maxTotalBytes: 512 }, () => undefined, () => waiting)
+    const user = createUserMessage({ source: { kind: 'user' }, content: [{ type: 'text', text: 'When is the migration scheduled?' }] })
+    const abort = new AbortController()
+    const cancelled = agentEvents(ctx, {} as Agent).waterfall('agent/pre-step', {
+      messages: [user], turn: 1, step: 1, signal: abort.signal,
+    }, () => Promise.resolve({ kind: 'enter' as const, messages: [user] }))
+    await new Promise(resolve => setTimeout(resolve, 0))
+    abort.abort(new Error('turn cancelled'))
+    await expect(cancelled).rejects.toThrow('turn cancelled')
+    const read = agentEvents(ctx, {} as Agent).waterfall('agent/pre-step', {
+      messages: [user], turn: 2, step: 1, signal: new AbortController().signal,
+    }, () => Promise.resolve({ kind: 'enter' as const, messages: [user] }))
+    pending.resolve(undefined)
+    const result = await read
+    expect(result.kind === 'enter' ? result.messages : []).toHaveLength(2)
+    waiting = undefined
+    await ctx.fiber.dispose()
+  })
+
+  it('leaves input unchanged when the consumer is disposed while it waits for admissions', async () => {
+    const ctx = new Context()
+    const controller = new ContinuumMemoryController(records(), { enabled: true, mode: 'active', reflexMounted: true })
+    const pending = Promise.withResolvers<undefined>()
+    const dispose = installContinuumMemoryControllerContext(ctx, () => controller, () => ({ scopes: ['workspace'] }),
+      { maxCandidates: 2, maxExcerptBytes: 100, maxTotalBytes: 512 }, () => undefined, () => pending.promise)
+    const user = createUserMessage({ source: { kind: 'user' }, content: [{ type: 'text', text: 'When is the migration scheduled?' }] })
+    const read = agentEvents(ctx, {} as Agent).waterfall('agent/pre-step', {
+      messages: [user], turn: 1, step: 1, signal: new AbortController().signal,
+    }, () => Promise.resolve({ kind: 'enter' as const, messages: [user] }))
+    await new Promise(resolve => setTimeout(resolve, 0))
+    dispose()
+    pending.resolve(undefined)
+    const result = await read
+    expect(result.kind === 'enter' ? result.messages : []).toHaveLength(1)
+    await ctx.fiber.dispose()
+  })
+
   it('filters the same-step recall through a mounted active selector', async () => {
     const ctx = new Context()
     const controller = new ContinuumMemoryController(records(), { enabled: true, mode: 'active', reflexMounted: true })
@@ -133,6 +195,37 @@ describe('Continuum same-step context consumer', () => {
       messages: [user], turn: 1, step: 1, signal: new AbortController().signal,
     }, () => Promise.resolve({ kind: 'enter' as const, messages: [user] }))
     expect(result.kind === 'enter' ? result.messages : []).toHaveLength(2)
+    await ctx.fiber.dispose()
+  })
+
+  it('offers the selector the larger pool with tags and keeps the byte budget on what it selects', async () => {
+    const store = new MemoryRecordStore()
+    for (let index = 0; index < 5; index += 1) {
+      store.create({ id: MemoryId(`m${index}`), kind: 'fact', scope: 'workspace', content: `fact number ${index} ${'x'.repeat(60)}`,
+        sourceRefs: [{ sessionId: SessionId('s'), eventSeq: SessionSeq(index) }] })
+    }
+    const ctx = new Context()
+    const controller = new ContinuumMemoryController(store, { enabled: true, mode: 'active', reflexMounted: true })
+    let offered: { id: string; tags: readonly string[] }[] = []
+    installContinuumMemoryControllerContext(ctx, () => controller, () => ({ scopes: ['workspace'] }),
+      { maxCandidates: 2, maxPool: 5, maxExcerptBytes: 200, maxTotalBytes: 390, candidatePool: 'all' },
+      () => ({
+        select: async (_agent, input) => {
+          offered = input.candidates.map(candidate => ({ id: candidate.id, tags: candidate.tags }))
+          const ids = input.candidates.map(candidate => candidate.id)
+          return { mode: 'active', selectedIds: ids, baselineIds: ids, outcome: 'jev' }
+        },
+      }), () => undefined, (_agent, id) => id === 'm4' ? ['people'] : [])
+    const user = createUserMessage({ source: { kind: 'user' }, content: [{ type: 'text', text: 'Unrelated words only' }] })
+    const result = await agentEvents(ctx, {} as Agent).waterfall('agent/pre-step', {
+      messages: [user], turn: 1, step: 1, signal: new AbortController().signal,
+    }, () => Promise.resolve({ kind: 'enter' as const, messages: [user] }))
+    expect(offered.map(candidate => candidate.id)).toEqual(['m4', 'm3', 'm2', 'm1', 'm0'])
+    expect(offered[0]!.tags).toEqual(['people'])
+    const recall = result.kind === 'enter' ? result.messages[1] : undefined
+    const text = recall?.content.map(block => block.type === 'text' ? block.text : '').join('') ?? ''
+    expect(Buffer.byteLength(text, 'utf8')).toBeLessThanOrEqual(390)
+    expect(recall?.source).toMatchObject({ recordIds: ['m4', 'm3'] })
     await ctx.fiber.dispose()
   })
 

@@ -216,6 +216,14 @@ describe('Harness launch contract', () => {
     expect(web.env).not.toHaveProperty('DSH_DESKTOP_HOST_RESOLVED')
   })
 
+  it('exports the prepared local Reflex runner only when the runtime carries one', () => {
+    const inherited = { PATH: '/usr/bin', APUS_REFLEX_RUNNER: '/inherited/llama-server' }
+    expect(buildHarnessSpawnOptions('/launch-root', '/harness', 'darwin', inherited, 'web', '/runtime/dependencies/llama-server/llama-server').env)
+      .toMatchObject({ APUS_REFLEX_RUNNER: '/runtime/dependencies/llama-server/llama-server' })
+    expect(buildHarnessSpawnOptions('/launch-root', '/harness', 'darwin', { PATH: '/usr/bin' }).env).not.toHaveProperty('APUS_REFLEX_RUNNER')
+    expect(buildHarnessSpawnOptions('/launch-root', '/harness', 'darwin', inherited).env).toMatchObject({ APUS_REFLEX_RUNNER: '/inherited/llama-server' })
+  })
+
   it('does not detach the Harness on macOS or Linux', () => {
     // `detached: true` is a Windows-only escape hatch. The macOS path uses
     // Electron's UtilityProcess fork, and Linux spawns are unaffected by

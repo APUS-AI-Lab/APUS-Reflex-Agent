@@ -9,11 +9,11 @@ import Settings from '@deepseek-ai/dsh-settings'
 import { expect, it, onTestFinished, vi } from 'vitest'
 import Jev from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
 import { SettingsController } from '@deepseek-ai/dsh-api-settings-controller'
-import { TestRemote } from '@deepseek-ai/dsh-client-test-runtime'
+import { stubConfigForm, TestRemote } from '@deepseek-ai/dsh-client-test-runtime'
 import { ConfigFormController } from '@deepseek-ai/dsh-client-ui-settings/src/client/config-form.ts'
 import { SettingsDescribeMirror } from '@deepseek-ai/dsh-client-ui-settings/src/client/settings-mirror.ts'
 import { SettingsSchemaService } from '@deepseek-ai/dsh-client-ui-settings/src/client/schema.ts'
-import { ReflexCardController, REFLEX_TRIAL, type ReflexSettings } from '../src/client/reflex-settings-controller.ts'
+import { ReflexCardController, REFLEX_TRIAL, type PrestepSettings, type ReflexSettings } from '../src/client/reflex-settings-controller.ts'
 import type { SettingsPathOpView } from '@deepseek-ai/dsh-api-remotes/client'
 
 
@@ -70,7 +70,7 @@ it.each([false, true])('saves through ConfigForms and BFF with a read-only key; 
   })
   const mirror = new SettingsDescribeMirror(client)
   const scope = new ConfigFormController<ReflexSettings>(client, { namespace: 'jev' }, mirror, 'host', new SettingsSchemaService(client))
-  const card = new ReflexCardController(scope, client)
+  const card = new ReflexCardController(scope, client, stubConfigForm<PrestepSettings>().scope)
   const face = card.inject()
   onTestFinished(async () => { card.dispose(); await scope.dispose() })
   await mirror.load()
@@ -116,7 +116,7 @@ it.each([false, true])('saves through ConfigForms and BFF with a read-only key; 
     const restartedTrial = await start()
     expect(restartedTrial.settings.describe().find(row => row.ns === 'jev')?.value).toMatchObject(REFLEX_TRIAL)
     await restartedTrial.fiber.dispose()
-    const reopened = new ReflexCardController(scope, client)
+    const reopened = new ReflexCardController(scope, client, stubConfigForm<PrestepSettings>().scope)
     expect(reopened.inject().hooks.reflexCard.getSnapshot().mode).toBe('trial')
     reopened.inject().selectMode('custom')
     expect(reopened.inject().hooks.reflexCard.getSnapshot().apiKeyEnv.text).toBe('REFLEX_CUSTOM_API_KEY')

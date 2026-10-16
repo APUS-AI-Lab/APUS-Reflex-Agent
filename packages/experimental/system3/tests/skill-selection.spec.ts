@@ -23,6 +23,7 @@ async function setup(options: {
   maxInputBytes?: number
   unconfiguredJev?: boolean
   missingCredential?: boolean
+  jevEffort?: 'low' | 'high'
 } = {}) {
   const ctx = new Context()
   contexts.push(ctx)
@@ -43,9 +44,10 @@ async function setup(options: {
           : { type: 'choice' as const, choice: 'skill-0', confidence: 1, probabilities: { 'skill-0': 1, abstain: 0 } }])) } }))
   const adapter = new MockAdapter([textResponse('verified')])
   ctx.effect(() => ctx.llm.registerAdapter(['mock'], adapter))
-  const system3 = await ctx.plugin(System3, { jevExecutionDomain: options.networkJev ? 'network' : 'local', skillSelection: { sessionDataClasses: ['public'],
-    minConfidence: 0.8, maxInputBytes: options.maxInputBytes ?? 8000, maxContentBytes: options.maxContentBytes ?? 8000,
-    maxCandidates: options.maxCandidates ?? 12, deadlineMs: options.deadlineMs ?? 500 } })
+  const effort = options.jevEffort === undefined ? {} : { jevEffort: options.jevEffort }
+  const system3 = await ctx.plugin(System3, { jevExecutionDomain: options.networkJev ? 'network' : 'local', ...effort, skillSelection: {
+    sessionDataClasses: ['public'], minConfidence: 0.8, maxInputBytes: options.maxInputBytes ?? 8000,
+    maxContentBytes: options.maxContentBytes ?? 8000, maxCandidates: options.maxCandidates ?? 12, deadlineMs: options.deadlineMs ?? 500 } })
   const agent = await ctx.agentLoop.create(SessionId('skill-selection'), { provider: 'mock', model: 'mock' })
   const message = createUserMessage({ content: [{ type: 'text', text: 'Reconcile the CSV rows.' }], source: { kind: 'user' } })
   return { ctx, agent, message, decide, adapter, system3, dispatch: agentEvents(ctx, agent) }
@@ -151,6 +153,19 @@ it('asks one Skill question per group of an oversized catalog in the same reques
   expect(h.ctx.sessionProjections.stateOf(h.agent.session, 'system3Runtime')?.skill).toMatchObject({ outcome: 'selected', selected: 'csv-reconciliation', injected: true })
 })
 
+it('keeps the more confident of two accepted group choices and sends the configured effort', async () => {
+  const h = await setup({ maxCandidates: 1, jevEffort: 'high' })
+  h.ctx.effect(() => h.ctx.skills.register({ name: 'another-skill', description: 'Another task.', source: 'runtime', content: 'Other instructions.' }))
+  h.decide.mockImplementation(async query => ({ kind: 'ok', spec: h.ctx.jev.resolve(query), response: { model: 'jev-test', answers: {
+    intent: { type: 'choice', choice: 'action', confidence: 1, probabilities: { action: 1 } },
+    skill: { type: 'choice', choice: 'skill-0', confidence: 0.95, probabilities: { 'skill-0': 0.95, abstain: 0.05 } },
+    skill2: { type: 'choice', choice: 'skill-1', confidence: 0.85, probabilities: { 'skill-1': 0.85, abstain: 0.15 } } } } }))
+  h.agent.followup(h.message)
+  await h.agent.whenIdle()
+  expect(h.decide.mock.calls[0]?.[0]).toMatchObject({ effort: 'high' })
+  expect(h.ctx.sessionProjections.stateOf(h.agent.session, 'system3Runtime')?.skill).toMatchObject({ outcome: 'selected', selected: 'another-skill' })
+})
+
 it('abstains only when every group abstains, and reports low confidence when a group chose below the threshold', async () => {
   const run = async (skill2: { choice: string; confidence: number }) => {
     const h = await setup({ maxCandidates: 1 })
@@ -210,6 +225,18 @@ it('does not send input to a denied network Jev or load model-disabled Skills', 
     expect(h.decide).toHaveBeenCalledTimes(options.networkJev ? 0 : 1)
     expect(h.ctx.sessionProjections.stateOf(h.agent.session, 'system3Runtime')?.skill?.injected).toBe(false)
   }
+})
+
+it('admits a provider declaring local execution in local-only mode and pins the request to it', async () => {
+  const h = await setup({ networkJev: true })
+  const info = { id: 'reflex-local', model: 'local', endpoint: 'http://127.0.0.1:2', executionDomain: 'local' as const }
+  h.ctx.effect(() => h.ctx.jev.register({ info, decide: async () => { throw new Error('the decide spy answers') } }))
+  vi.spyOn(h.ctx.jev, 'providerInfo').mockReturnValue(info)
+  h.agent.followup(h.message)
+  await h.agent.whenIdle()
+  expect(h.decide).toHaveBeenCalledTimes(1)
+  expect(h.decide.mock.calls[0]?.[0]).toMatchObject({ providerId: 'reflex-local', model: 'local' })
+  expect(h.ctx.sessionProjections.stateOf(h.agent.session, 'system3Runtime')?.skill?.injected).toBe(true)
 })
 
 it.each(['abstain', 'low-confidence'] as const)('keeps native input without injection for %s', async (outcome) => {

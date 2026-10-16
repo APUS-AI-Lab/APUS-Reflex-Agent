@@ -39,7 +39,8 @@ export async function launch(args = process.argv.slice(2)) {
   }
   const profileManifest = boot.readProfileManifest('APUS Reflex Agent', profile)
   const bundles = profileManifest.dsh?.profile?.bundles ?? []
-  const missing = ['@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin', '@deepseek-ai/dsh-experimental-continuum-jev']
+  // The System3 bundle owns the editable `system3` row and routes to `jev`, so it follows the Jev bundle.
+  const missing = ['@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin', '@deepseek-ai/dsh-experimental-system3', '@deepseek-ai/dsh-experimental-continuum-jev']
     .filter(bundle => !bundles.includes(bundle))
   if (missing.length > 0) {
     boot.writeProfileBundles(profile, profileManifest, [...bundles, ...missing])

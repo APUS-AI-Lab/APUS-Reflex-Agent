@@ -99,6 +99,22 @@ export function adaptBrandContext(chunk, target, own) {
   return chunk.replaceAll('DSH will enable', 'APUS Reflex Harness will enable').replaceAll('DSH 会自动启用', 'APUS Reflex Harness 会自动启用')
 }
 
+/**
+ * Drop hunks the own build already contains: its post-image is present and its pre-image is gone, as when a reviewed fix
+ * was made both in source and in the published-package patch. Both images are compared without whitespace, braces, and
+ * semicolons, because the bundler may print a one-statement block without braces. Any other mismatch is left for patch
+ * to reject.
+ */
+export function dropAppliedHunks(chunk, own) {
+  const [header, ...hunks] = chunk.split(/(?=^@@ )/m)
+  const normalize = text => text.replace(/[\s{};]/g, '')
+  const built = normalize(own)
+  const image = (hunk, sign) => normalize(hunk.split('\n').slice(1)
+    .filter(line => line.startsWith(' ') || line.startsWith(sign)).map(line => line.slice(1)).join('\n'))
+  const remaining = hunks.filter(hunk => !(built.includes(image(hunk, '+')) && !built.includes(image(hunk, '-'))))
+  return { chunk: remaining.length === 0 ? '' : header + remaining.join(''), dropped: hunks.length - remaining.length }
+}
+
 /** Apply runtime-JavaScript hunks, excluding the build-only signer; retain own declarations and reject missing runtime targets. */
 export async function patchSystem3Runtime(stage, appRoot) {
   const receipts = []
@@ -109,29 +125,35 @@ export async function patchSystem3Runtime(stage, appRoot) {
     const chunks = original.split(/(?=^diff --git )/m)
     const patches = []
     const targets = []
+    let alreadyApplied = 0
     for (let chunk of chunks) {
       const target = chunk.match(/^\+\+\+ b\/(.+\.js)$/m)?.[1]
       if (!target) continue
       const own = await readFile(join(stage, target), 'utf8')
       const installed = await readFile(join(appRoot, target), 'utf8')
       chunk = adaptBrandContext(adaptApiContext(adaptCss(chunk, installed, own), target), target, own)
-      patches.push(chunk)
+      const applied = dropAppliedHunks(chunk, own)
+      alreadyApplied += applied.dropped
       targets.push(target)
+      if (applied.chunk !== '') patches.push(applied.chunk)
     }
-    if (!patches.length) continue
-    const patchPath = join(stage, '.desktop-compatibility.patch')
+    if (!targets.length) continue
     const patch = patches.join('')
-    await writeFile(patchPath, patch)
-    try {
-      execFileSync(patchCommand, ['--dry-run', '--batch', '--forward', '--fuzz=0', '-p1', '-i', '.desktop-compatibility.patch'], { cwd: stage, stdio: 'pipe' })
-      execFileSync(patchCommand, ['--batch', '--forward', '--fuzz=0', '-p1', '-i', '.desktop-compatibility.patch'], { cwd: stage, stdio: 'pipe' })
-    } catch (error) {
-      throw new Error(`Desktop compatibility patch ${name} requires review: ${String(error.stdout ?? error.message)}`, { cause: error })
-    } finally { await unlink(patchPath) }
+    // A patch whose every hunk the own build already contains still gets a receipt, so each maintained patch stays accounted for.
+    if (patch !== '') {
+      const patchPath = join(stage, '.desktop-compatibility.patch')
+      await writeFile(patchPath, patch)
+      try {
+        execFileSync(patchCommand, ['--dry-run', '--batch', '--forward', '--fuzz=0', '-p1', '-i', '.desktop-compatibility.patch'], { cwd: stage, stdio: 'pipe' })
+        execFileSync(patchCommand, ['--batch', '--forward', '--fuzz=0', '-p1', '-i', '.desktop-compatibility.patch'], { cwd: stage, stdio: 'pipe' })
+      } catch (error) {
+        throw new Error(`Desktop compatibility patch ${name} requires review: ${String(error.stdout ?? error.message)}`, { cause: error })
+      } finally { await unlink(patchPath) }
+    }
     for (const target of targets) execFileSync(process.execPath, ['--check', join(stage, target)], { stdio: 'pipe' })
     receipts.push({ name, sourceSha256: createHash('sha256').update(original).digest('hex'),
       runtimePatchSha256: createHash('sha256').update(patch).digest('hex'),
-      declarations: 'own-build-retained', manifest: 'closure-owned',
+      declarations: 'own-build-retained', manifest: 'closure-owned', ...(alreadyApplied > 0 ? { alreadyAppliedHunks: alreadyApplied } : {}),
       targets: await Promise.all(targets.map(async path => ({ path,
         sha256: createHash('sha256').update(await readFile(join(stage, path))).digest('hex') }))) })
   }

@@ -107,6 +107,10 @@ it('shows the latest task frame', async () => {
   h.session.append('system3/task-frame', { version: 1, goal, items: [] })
   h.session.append('system3/task-frame', { version: 1, goal, items: [{ messageId: 'm2' as never, text: '别动 README.md' }] })
   expect(h.view()?.taskFrame).toEqual({ goal, items: [{ messageId: 'm2', text: '别动 README.md' }] })
+  const wire = () => system3RuntimeProjection.wire.viewSchema.parse(system3RuntimeProjection.wire.view(h.view()!)).taskFrame?.goal
+  expect(wire()).toEqual(goal)
+  h.session.append('system3/task-frame', { version: 1, goal: { goalId: 'g1' as never, text: '加一个汇总命令' }, items: [] })
+  expect(wire()).toEqual({ goalId: 'g1', text: '加一个汇总命令' })
 })
 
 
@@ -283,19 +287,22 @@ it('marks the Session as containing images from a user message or a tool result'
   expect(fromUser.view()?.imageInSession).toBe(true)
 })
 
-it('exposes the chosen route with its label and whether it continued the previous route', async () => {
+it('exposes the chosen route, where its decision ran, and whether it continued the previous route', async () => {
   const h = await setup()
   const first = brandString<SessionRequestId>('chosen')
   h.session.append('system3/entry-start', { requestId: first })
+  expect(h.view()?.entry?.executionDomain).toBeNull()
   h.session.append('system3/entry-decision', { version: 1, requestId: first, request: null, baseline: selected, candidateIds: ['deep'],
     dataClasses: ['public'], routeId: 'jev', executionDomain: 'local', outcome: 'selected', selected, candidate: { id: 'deep', label: 'Deep' }, elapsedMs: 1 })
   expect(h.view()?.entry?.route).toEqual({ id: 'deep', label: 'Deep', retained: false, delegation: null })
+  expect(h.view()?.entry?.executionDomain).toBe('local')
   const second = brandString<SessionRequestId>('continued')
   h.session.append('system3/entry-start', { requestId: second })
   h.session.append('system3/entry-decision', { version: 1, requestId: second, request: null, baseline: selected, candidateIds: ['deep'],
     dataClasses: ['public'], routeId: 'jev', executionDomain: 'local', outcome: 'abstain', retained: { requestId: first, selection: selected },
     candidate: { id: 'deep' }, elapsedMs: 1 })
   expect(h.view()?.entry?.route).toEqual({ id: 'deep', label: null, retained: true, delegation: null })
+  expect(system3RuntimeProjection.wire.viewSchema.parse(system3RuntimeProjection.wire.view(h.view()!)).entry?.executionDomain).toBe('local')
   expect(system3RuntimeProjection.wire.viewSchema.parse(system3RuntimeProjection.wire.view(h.view()!)).entry?.route).toEqual({ id: 'deep', label: null, retained: true, delegation: null })
 })
 

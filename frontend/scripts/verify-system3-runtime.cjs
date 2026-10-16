@@ -14,8 +14,13 @@ module.exports = async context => {
   const arch = ['ia32', 'x64', 'armv7l', 'arm64', 'universal'][context.arch]
   if (manifest.platform !== context.electronPlatformName || manifest.arch !== arch) throw new Error('System3 runtime platform/architecture does not match package target')
   if (manifest.sourceDirty && process.env.SYSTEM3_ALLOW_DIRTY_PACKAGE !== '1') throw new Error('Uncommitted runtime is for acceptance only; set SYSTEM3_ALLOW_DIRTY_PACKAGE=1 explicitly or prepare a committed release')
-  const required = ['@deepseek-ai/dsh', '@deepseek-ai/dsh-continuum', ...['system3', 'system3-policy', 'system3-evidence', 'system3-supervisor', 'apus-dsh-jev-plugin', 'client-ui-system3', 'continuum-jev'].map(name => '@deepseek-ai/dsh-experimental-' + name)]
+  const required = ['@deepseek-ai/dsh', '@deepseek-ai/dsh-continuum', ...['system3', 'system3-policy', 'system3-evidence', 'system3-supervisor', 'apus-dsh-jev-plugin', 'client-ui-system3', 'continuum-jev',
+    'reflex-local-bundle', 'reflex-local', 'api-reflex-local', 'client-ui-reflex-local'].map(name => '@deepseek-ai/dsh-experimental-' + name)]
   if (!required.every(name => manifest.packages.some(item => item.name === name))) throw new Error('System3 runtime manifest is incomplete')
+  // Apple silicon is the only target whose Harness lock pins a local Reflex runner.
+  if ((manifest.platform === 'darwin' && manifest.arch === 'arm64') !== /^b\d+$/.test(manifest.llamaServer ?? '')) {
+    throw new Error('System3 runtime must carry the local Reflex runner exactly on macOS arm64')
+  }
   const receipts = JSON.parse(fs.readFileSync(path.join(root, 'desktop-patch-receipt.json'), 'utf8'))
   if (receipts.length !== 27) throw new Error('Desktop compatibility receipt must cover all 27 maintained patches')
   for (const item of [...manifest.packages, { path: manifest.entry }]) {

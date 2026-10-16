@@ -321,6 +321,7 @@ describe('compact configuration and defaults', () => {
       maxOverflowRetries: 1,
       modelPolicies: [],
       auto: true,
+      recallFooter: false,
     })
     expect(Object.isFrozen(resolved)).toBe(true)
   })
@@ -513,6 +514,7 @@ describe('compact configuration and defaults', () => {
       [{ compactionRetries: -1 }, /compactionRetries/],
       [{ maxOverflowRetries: -1 }, /maxOverflowRetries/],
       [{ auto: 'yes' }, /auto must be a boolean/],
+      [{ recallFooter: 'yes' }, /recallFooter must be a boolean/],
       [{ summarizationProvider: 1 }, /summarizationProvider must be a string/],
       [{ summarizationModel: 1 }, /summarizationModel must be a string/],
       [{ summarizationProvider: MODEL }, /must be set together/],
@@ -849,6 +851,48 @@ describe('pressure measurement and retention', () => {
     expect(await compactIfNeeded(compact, retained)).toBeNull()
   })
 
+  it('skips the summary when compaction/prepare listeners shrink the surface below the threshold', async () => {
+    const ctx = createContext()
+    const compact = service(compactConfig, ctx)
+    const session = conversation(4)
+    const measure = vi.spyOn(ctx.tokenMeter, 'measure')
+    ctx.on('compaction/prepare', (target) => {
+      for (const seq of target.session.surface.nodes.slice(0, -1)) {
+        target.session.append('user/message', createUserMessage({ source: { kind: 'user' }, content: [{ type: 'text', text: 'short' }] }),
+          { surfaceOp: { op: 'replace', startSeq: seq, endSeq: seq }, sourceEventSeqs: [seq] })
+      }
+    })
+    await expect(compactIfNeeded(compact, session)).resolves.toBeNull()
+    expect(compact.calls).toHaveLength(0)
+    expect(measure).toHaveBeenCalledTimes(2)
+  })
+
+  it('fails on a failed preparation and keeps the cancellation reason when cancelled', async () => {
+    const ctx = createContext()
+    const compact = service(compactConfig, ctx)
+    const failure = new Error('listener failed')
+    const dispose = ctx.on('compaction/prepare', () => { throw failure })
+    await expect(compactIfNeeded(compact, conversation(4))).rejects.toBeInstanceOf(AggregateError)
+    dispose()
+    const abort = new AbortController()
+    const reason = new Error('cancelled while preparing')
+    ctx.on('compaction/prepare', () => {
+      abort.abort(reason)
+      throw reason
+    })
+    await expect(compact.compactIfNeeded(agent(conversation(4), MODEL), 'pressure', abort.signal)).rejects.toBe(reason)
+  })
+
+  it('prepares the surface before a context-overflow summary', async () => {
+    const ctx = createContext()
+    const compact = service(compactConfig, ctx)
+    const prepared = vi.fn()
+    ctx.on('compaction/prepare', prepared)
+    await compactIfNeeded(compact, conversation(4), 'context-overflow')
+    expect(prepared).toHaveBeenCalledTimes(1)
+    expect(compact.calls).toHaveLength(1)
+  })
+
   it('uses one unified measurement for each pressure-and-retention decision', async () => {
     const ctx = createContext()
     const compact = service(compactConfig, ctx)
@@ -1059,6 +1103,23 @@ describe('compaction region transaction', () => {
     expect(head.content[0]?.type === 'text' ? head.content[0].text : '').toContain('<compacted-summary>')
     expect(head.content.at(-1)).toEqual({ type: 'text', text: '</compacted-summary>' })
 
+    const replay = Session.create(SessionId('replay'), session.snapshotEvents())
+    expect(replay.deriveMessages()).toEqual(session.deriveMessages())
+  })
+
+  it('ends an opted-in checkpoint with a footer naming its summary seq and shadowed range', async () => {
+    const compact = service({ auto: false, recallFooter: true })
+    const session = conversation(3)
+    const before = [...session.surface.nodes]
+    const result = await compact.compactRegion(before[0]!, before[3]!, agent(session, MODEL), SIGNAL)
+
+    const head = session.deriveMessages()[0]!
+    expect(head.content.at(-2)).toEqual({ type: 'text', text: '</compacted-summary>' })
+    expect(head.content.at(-1)).toEqual({
+      type: 'text',
+      text: `[checkpoint c${result.summarySeq}: shadows conversation events #${before[0]}–#${before[3]}; `
+        + `originals retrievable via history_read with checkpoint ${result.summarySeq}]`,
+    })
     const replay = Session.create(SessionId('replay'), session.snapshotEvents())
     expect(replay.deriveMessages()).toEqual(session.deriveMessages())
   })

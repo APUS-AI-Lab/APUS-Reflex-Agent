@@ -15,6 +15,7 @@ import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import ToolRuntime from '@deepseek-ai/dsh-tools'
+import SessionQueryEngine, { type SessionEventSearchPage, type SessionSearchHit, type SessionSearchPage } from '@deepseek-ai/dsh-session-query'
 import Jev from '../../apus-dsh-jev-plugin/src/index.ts'
 import { ContinuumConfig } from '../../../context/continuum/src/service.ts'
 import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
@@ -23,10 +24,21 @@ import ProductContinuumMemory from '../src/product-memory.ts'
 import { expect, it, onTestFinished, vi } from 'vitest'
 
 const packageName = '@deepseek-ai/dsh-experimental-continuum-jev'
+
+/** Exact Session reads for the history tools; full-text search stays disabled as in shipped profiles. */
+class ReadOnlyQuery extends SessionQueryEngine {
+  override searchSessions(): Promise<SessionSearchPage<SessionSearchHit>> {
+    return Promise.resolve({ items: [] })
+  }
+
+  override searchEvents(): Promise<SessionEventSearchPage> {
+    throw new Error('history tools never search event text')
+  }
+}
 const { editionPatch } = createRequire(import.meta.url)('../../../../frontend/scripts/product-edition.cjs') as { editionPatch: (edition: 'full' | 'lite') => string }
 const user = (text: string) => createUserMessage({ source: { kind: 'user' }, content: [{ type: 'text', text }] })
 
-async function fixture(edition: 'full' | 'lite', existing = false, reflex = true) {
+async function fixture(edition: 'full' | 'lite', existing: boolean | string = false, reflex = true) {
   const home = realpathSync(mkdtempSync(join(tmpdir(), 'continuum-product-bundle-')))
   const contexts: Context[] = []
   onTestFinished(async () => {
@@ -46,7 +58,7 @@ async function fixture(edition: 'full' | 'lite', existing = false, reflex = true
     { id: 'projection', name: 'cordis:projection' }, { id: 'llm', name: 'cordis:llm' }, { id: 'sessions', name: 'cordis:sessions' },
     { id: 'persistence', name: 'cordis:persistence', config: { root: join(home, 'sessions'), compression: 'none' } },
     { id: 'system-prompt', name: 'cordis:prompt', config: { personaPrefix: '', personaSuffix: '', includeHarnessIdentity: false, includeRuntimeContext: false } },
-    { id: 'tools', name: 'cordis:tools' }, { id: 'agents', name: 'cordis:agents' },
+    { id: 'tools', name: 'cordis:tools' }, { id: 'agents', name: 'cordis:agents' }, { id: 'session-query', name: 'cordis:query' },
     { id: 'agent-loop', name: 'cordis:loop', config: { agents: [] } },
     { id: 'office-to-pdf', name: 'cordis:office' },
     ...reflex ? [{ id: 'jev', name: 'cordis:jev', config: {} }] : [],
@@ -59,7 +71,10 @@ async function fixture(edition: 'full' | 'lite', existing = false, reflex = true
   writeFileSync(join(dir, 'cordis.yml'), '[]\n')
   const editionPath = join(home, 'product-edition.patch.yml')
   writeFileSync(editionPath, editionPatch(edition))
-  if (existing) writeFileSync(join(dir, 'cordis.patch.yml'), '- id: continuum-memory\n  config:\n    maxCandidates: 3\n')
+  if (existing !== false) {
+    const admission = typeof existing === 'string' ? `\n    admission: ${existing}` : ''
+    writeFileSync(join(dir, 'cordis.patch.yml'), `- id: continuum-memory\n  config:\n    maxCandidates: 3${admission}\n`)
+  }
   const open = async () => {
     const profile: ProfileContext = { name: 'test', startedBundles: ['test-bundle', packageName], dir, patchPath: join(dir, 'cordis.patch.yml'), installAnchor: join(home, 'package.json'), cwd: home, home, overlays: loadOverlayPatches('test', editionPath), telemetryDisabledEnv: undefined }
     const patches = readProfilePatches('test', profile)
@@ -69,20 +84,22 @@ async function fixture(edition: 'full' | 'lite', existing = false, reflex = true
       Object.assign(ctx.loader.builtins, { editor: ConfigEditor, settings: Settings, projection: SessionProjectionRegistry,
         llm: LlmRuntime, sessions: SessionStore, persistence: JsonlSessionPersistence, prompt: SystemPrompt, tools: ToolRuntime,
         agents: AgentRegistry, loop: AgentLoop, jev: Jev, memory: ProductContinuumMemory,
-        selector: ContinuumJevPlugin, office: { apply() {} } })
+        selector: ContinuumJevPlugin, query: ReadOnlyQuery, office: { apply() {} } })
     })
     contexts.push(ctx)
-    const adapter = new MockAdapter(Array.from({ length: 6 }, () => textResponse('ack')))
+    const adapter = new MockAdapter(Array.from({ length: 8 }, () => textResponse('ack')))
     ctx.llm.registerAdapter(['recording'], adapter)
     return { ctx, adapter, profile }
   }
   return { home, open, contexts }
 }
 
+const toolNames = (adapter: MockAdapter): string[] => adapter.requests.at(-1)?.tools?.map(tool => tool.name) ?? []
+
 it.each([
   { edition: 'full', existing: false }, { edition: 'lite', existing: false },
   { edition: 'full', existing: true }, { edition: 'lite', existing: true },
-] as const)('keeps $edition memory off in existing=$existing profiles until configured and switched, then retains it across restart', async ({ edition, existing }) => {
+] as const)('keeps $edition memory official in existing=$existing profiles until Reflex is enabled, then retains it across restart', async ({ edition, existing }) => {
   const h = await fixture(edition, existing)
   const first = await h.open()
   expect(first.ctx.settings.describe().find(row => row.ns === 'continuum-memory')).toMatchObject({ value: { enabled: false, mode: 'active' } })
@@ -90,44 +107,55 @@ it.each([
   expect(first.ctx.continuumMemory.state().enabled).toBe(false)
   const handle = await first.ctx.agents.create({ sessionId: SessionId('product-memory'), agentOptions: { provider: 'recording', model: 'recording' } })
   const agent = handle.agent
-  agent.followup(user('A disabled memory input must remain only in the Session.'))
-  await agent.whenIdle()
-  expect(agent.session.snapshotEvents().some(event => event.type === 'continuum/memory-record')).toBe(false)
   await first.ctx.settings.mutate('jev', [{ op: 'set', path: ['endpoint'], value: 'http://127.0.0.1:1' }, { op: 'set', path: ['model'], value: 'product-fixture' }])
   const decide = vi.spyOn(first.ctx.jev, 'decide')
   await first.ctx.settings.mutate('continuum-memory', [{ op: 'set', path: ['enabled'], value: true }])
   agent.followup(user('The deployment code is MERIDIAN-731.'))
   await agent.whenIdle()
-  expect(agent.session.snapshotEvents().find(event => event.type === 'continuum/memory-record')).toMatchObject({ data: { record: { content: 'The deployment code is MERIDIAN-731.' } } })
   agent.followup(user('What is the deployment code?'))
   await agent.whenIdle()
-  expect(first.adapter.requests.at(-1)?.messages.some(message => message.source?.kind === 'continuum-memory'
-    && message.content.some(block => block.type === 'text' && block.text.includes('MERIDIAN-731')))).toBe(true)
+  // Reflex relevance is off by default, so the profile keeps the base DSH behavior.
+  expect(first.ctx.get('continuumMemoryAdmitter')).toBeUndefined()
+  expect(agent.session.snapshotEvents().some(event => event.type.startsWith('continuum/'))).toBe(false)
+  expect(first.adapter.requests.flatMap(request => request.messages).some(message => message.source?.kind === 'continuum-memory')).toBe(false)
+  expect(toolNames(first.adapter)).not.toContain('history_read')
   expect(decide).not.toHaveBeenCalled()
+
+  const selector = first.ctx.configEditor.entries().find(row => row.options.id === 'continuum-jev')!
+  await first.ctx.configEditor.edit(selector, raw => ({ ...raw, mode: 'shadow' }))
+  expect(first.ctx.get('continuumMemoryAdmitter')).toBeDefined()
+  agent.followup(user('Reflex is enabled now.'))
+  await agent.whenIdle()
+  expect(toolNames(first.adapter)).toEqual(expect.arrayContaining(['history_read', 'history_search']))
   await first.ctx.sessions.flush(agent.session)
   await first.ctx.fiber.dispose()
   h.contexts.splice(h.contexts.indexOf(first.ctx), 1)
   const restarted = await h.open()
   expect(restarted.ctx.continuumMemory.state()).toEqual({ enabled: true, mode: 'active', reason: 'ready' })
+  expect(restarted.ctx.get('continuumMemoryAdmitter')).toBeDefined()
   const resumed = await restarted.ctx.agentLoop.resume(restarted.ctx, { resumeSessionId: agent.session.id, agentOptions: { provider: 'recording', model: 'recording' } })
-  resumed.agent.followup(user('After restart, what is the deployment code?'))
+  resumed.agent.followup(user('After restart, are the history tools still offered?'))
   await resumed.agent.whenIdle()
-  expect(restarted.adapter.requests[0]?.messages.some(message => message.source?.kind === 'continuum-memory'
-    && message.content.some(block => block.type === 'text' && block.text.includes('MERIDIAN-731')))).toBe(true)
-  const before = resumed.agent.session.snapshotEvents().filter(event => event.type === 'continuum/memory-record').length
-  const previousRecallIds = new Set(restarted.adapter.requests.flatMap(request => request.messages
-    .filter(message => message.source?.kind === 'continuum-memory').map(message => message.id)))
-  await restarted.ctx.settings.mutate('continuum-memory', [{ op: 'set', path: ['enabled'], value: false }])
-  resumed.agent.followup(user('Memory disabled: a new deployment code must not be admitted.'))
+  expect(toolNames(restarted.adapter)).toContain('history_read')
+  // The Reflex settings switch hides the recall tools without unloading the memory profile.
+  await restarted.ctx.settings.mutate('jev', [{ op: 'set', path: ['enabled'], value: false }])
+  resumed.agent.followup(user('Reflex is switched off in settings.'))
   await resumed.agent.whenIdle()
-  expect(restarted.ctx.continuumMemory.state().enabled).toBe(false)
-  expect(restarted.adapter.requests.at(-1)?.messages.filter(message => message.source?.kind === 'continuum-memory')
-    .every(message => previousRecallIds.has(message.id))).toBe(true)
-  expect(resumed.agent.session.snapshotEvents().filter(event => event.type === 'continuum/memory-record')).toHaveLength(before)
+  expect(toolNames(restarted.adapter)).not.toContain('history_read')
+  expect(toolNames(restarted.adapter)).not.toContain('history_search')
+  await restarted.ctx.settings.mutate('jev', [{ op: 'set', path: ['enabled'], value: true }])
+  resumed.agent.followup(user('Reflex is switched on again.'))
+  await resumed.agent.whenIdle()
+  expect(toolNames(restarted.adapter)).toEqual(expect.arrayContaining(['history_read', 'history_search']))
+  await restarted.ctx.configEditor.edit(restarted.ctx.configEditor.entries().find(row => row.options.id === 'continuum-jev')!, raw => ({ ...raw, mode: 'off' }))
+  expect(restarted.ctx.get('continuumMemoryAdmitter')).toBeUndefined()
+  resumed.agent.followup(user('Reflex is off again.'))
+  await resumed.agent.whenIdle()
+  expect(toolNames(restarted.adapter)).not.toContain('history_read')
 })
 
 it('denies remote relevance even after its mode is enabled without a data-sharing policy', async () => {
-  const h = await fixture('lite', true)
+  const h = await fixture('lite', 'user-message')
   const { ctx, adapter } = await h.open()
   await ctx.settings.mutate('jev', [{ op: 'set', path: ['endpoint'], value: 'http://127.0.0.1:1' }, { op: 'set', path: ['model'], value: 'product-fixture' }])
   const selector = ctx.configEditor.entries().find(row => row.options.id === 'continuum-jev')!
@@ -151,18 +179,18 @@ it('denies remote relevance even after its mode is enabled without a data-sharin
 
 it('keeps Core defaults unchanged and accepts explicit product restrictions', () => {
   expect(ContinuumConfig({}).enabled.get()).toBe(false)
-  expect(ContinuumConfig({})).toMatchObject({ scopes: [], admission: 'explicit' })
+  expect(ContinuumConfig({})).toMatchObject({ scopes: [], admission: 'explicit', candidatePool: 'lexical' })
   expect(ContinuumConfig({}).mode.get()).toBe('off')
   const defaults = ProductContinuumMemory.Config({ enabled: true })
   expect(defaults.mode.get()).toBe('active')
-  expect(defaults).toMatchObject({ scopes: ['workspace'], admission: 'user-message' })
+  expect(defaults).toMatchObject({ scopes: ['workspace'], admission: 'compaction', candidatePool: 'all', maxPool: 200 })
   const restricted = ProductContinuumMemory.Config({ mode: 'off', admission: 'explicit', scopes: [] })
   expect(restricted.mode.get()).toBe('off')
   expect(restricted).toMatchObject({ scopes: [], admission: 'explicit' })
 })
 
 it.each(['full', 'lite'] as const)('preserves existing %s settings while keeping missing Reflex unable to admit or recall', async (edition) => {
-  const h = await fixture(edition, true, false)
+  const h = await fixture(edition, 'user-message', false)
   const { ctx, adapter } = await h.open()
   expect(ctx.configEditor.entries().find(row => row.options.id === 'continuum-memory')?.options).toMatchObject({ config: { maxCandidates: 3 } })
   await ctx.settings.mutate('continuum-memory', [{ op: 'set', path: ['enabled'], value: true }])

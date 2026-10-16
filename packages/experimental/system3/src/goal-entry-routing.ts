@@ -89,6 +89,8 @@ export function installGoalEntryRouting(ctx: Context, config: System3EntryRoutin
         }
         return decision
       }
+      // With front-loaded decisions off a new Goal round runs natively; restored delegations above are still settled.
+      if (options.frontLoaded?.() === false) return decision
       let receipt: GoalEntryReceipt = { version: 1, goalId: goal.id, goalRevision: goal.revision, round: input.source.round,
         state: 'abstained', candidateId: null, provider: null, childSessionId: null, reason: null, input: null, output: null }
       const admission = admitSystem3Routes(policy, candidates.map(candidate => ({ ...candidate, dataClasses: config.sessionDataClasses })))

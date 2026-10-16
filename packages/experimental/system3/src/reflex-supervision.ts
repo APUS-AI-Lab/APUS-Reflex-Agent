@@ -12,7 +12,7 @@ import { admitSystem3Routes, type System3DataClass, type System3PrivacyPolicy } 
 import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
 import { choiceVerdict, noulVerdict, runSystem3Decision, validateSystem3DecisionSettings,
   type System3DecisionSettings, type System3DecisionSpec } from './decision-kernel.ts'
-import type { System3DecisionId, System3JevOptions } from './decisions.ts'
+import { resolveSystem3JevRoute, type System3DecisionId, type System3JevOptions, type System3JevRoute } from './decisions.ts'
 import { delegatingAgent } from './delegation-progress.ts'
 import { copyReflexEvidence, reflexSupervisionStateProjection } from './reflex-supervision-state.ts'
 
@@ -175,12 +175,14 @@ export function validateReflexSupervision(config: ReflexSupervisionConfig): void
 /** Whether explicitly configured semantic evidence is admitted by the current workspace-data policy.
  * @param config - Supervision deployment settings.
  * @param policy - Existing user-controlled route and data permissions.
- * @param options - Reflex execution route.
+ * @param options - Reflex route identity.
+ * @param route - Selected Jev provider and the execution domain admission checks.
  * @returns Whether semantic summaries may enter the decision request.
  */
-export function reflexSemanticEnabled(config: ReflexSupervisionConfig, policy: System3PrivacyPolicy, options: System3JevOptions): boolean {
+export function reflexSemanticEnabled(config: ReflexSupervisionConfig, policy: System3PrivacyPolicy, options: System3JevOptions,
+  route: System3JevRoute): boolean {
   return config.semantic !== undefined && admitSystem3Routes(policy, [{ id: options.routeId,
-    executionDomain: options.executionDomain, dataClasses: [...new Set<System3DataClass>([...config.sessionDataClasses, 'workspace'])] }]).allowed.length > 0
+    executionDomain: route.executionDomain, dataClasses: [...new Set<System3DataClass>([...config.sessionDataClasses, 'workspace'])] }]).allowed.length > 0
 }
 
 function completeSemantic(evidence: SubagentEvidenceInfo): boolean {
@@ -242,7 +244,9 @@ export function installReflexSupervision(ctx: Context, settings: {
   validateReflexSupervision(config)
   if (config.mode === 'off') return
   if (config.recovery !== undefined) installReflexRecovery(ctx, settings)
-  const semantic = reflexSemanticEnabled(config, settings.policy, settings.options) ? config.semantic : undefined
+  // Decided once at installation from the provider selected then; every later decision is still admitted against the provider it uses.
+  const semantic = reflexSemanticEnabled(config, settings.policy, settings.options, resolveSystem3JevRoute(ctx.get('jev'), settings.options))
+    ? config.semantic : undefined
   const shared = { policy: settings.policy, options: settings.options, dataClasses: semantic === undefined ? config.sessionDataClasses
     : [...new Set<System3DataClass>([...config.sessionDataClasses, 'workspace'])] }
   const admittedEvidence = (info: SubagentEvidenceInfo): SubagentEvidenceInfo => {

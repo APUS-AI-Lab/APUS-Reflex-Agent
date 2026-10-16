@@ -44,6 +44,8 @@ export interface PrimaryRuntimeManifest {
   readonly pnpm?: string
   /** All recorded Python distribution versions; empty for legacy files without a distribution map. */
   readonly pythonPackages: Readonly<Record<string, string>>
+  /** llama.cpp release tag (`b<build>`) of the runner at {@link llamaServerPath}; absent when the payload ships no runner. */
+  readonly llamaServer?: string
 }
 
 /** Absolute entry points and bundled versions; pnpm runs through the returned Node executable. */
@@ -58,6 +60,7 @@ export interface WorkspaceDependencies {
 }
 
 const VERSION = /^\d+\.\d+\.\d+(?:[-+][\w.-]+)?$/u
+const LLAMA_RELEASE = /^b\d+$/u
 const PLATFORMS = ['win32', 'darwin', 'linux']
 
 function isVersion(value: unknown): value is string {
@@ -86,7 +89,7 @@ export function parsePrimaryRuntime(value: unknown): PrimaryRuntimeManifest {
   if (!isRecord(versions) || (legacy && ['python', 'node', 'pnpm'].some(key => value[key] !== undefined))) {
     throw new Error('primary runtime: invalid metadata')
   }
-  const { desktopVersion, platform, arch, payloadDigest } = value
+  const { desktopVersion, platform, arch, payloadDigest, llamaServer } = value
   const { python, node, pnpm } = versions
   const pythonPackages = value.pythonPackages === undefined && legacy ? {} : value.pythonPackages
   if (typeof desktopVersion !== 'string' || desktopVersion.length === 0
@@ -96,6 +99,7 @@ export function parsePrimaryRuntime(value: unknown): PrimaryRuntimeManifest {
     || (node !== undefined && !isVersion(node))
     || (pnpm !== undefined && (!isVersion(pnpm) || node === undefined))
     || (payloadDigest !== undefined && (typeof payloadDigest !== 'string' || !/^[a-f0-9]{64}$/u.test(payloadDigest)))
+    || (llamaServer !== undefined && (typeof llamaServer !== 'string' || !LLAMA_RELEASE.test(llamaServer)))
     || !isDistributionMap(pythonPackages)) {
     throw new Error('primary runtime: invalid metadata')
   }
@@ -119,6 +123,7 @@ export function parsePrimaryRuntime(value: unknown): PrimaryRuntimeManifest {
     ...(node === undefined ? {} : { node }),
     ...(pnpm === undefined ? {} : { pnpm }),
     pythonPackages,
+    ...(llamaServer === undefined ? {} : { llamaServer }),
   }
 }
 
@@ -155,10 +160,21 @@ export function workspaceDependencyPaths(root: string, manifest: PrimaryRuntimeM
   }
 }
 
-async function validatePayloadEntries(paths: WorkspaceDependencies): Promise<void> {
+/**
+ * Locate the bundled llama.cpp server executable; its libraries are regular files in the same directory.
+ * @param root - Absolute payload or installation directory whose manifest declares `llamaServer`.
+ * @returns Absolute `dependencies/llama-server/llama-server` path.
+ */
+export function llamaServerPath(root: string): string {
+  return join(root, 'dependencies', 'llama-server', 'llama-server')
+}
+
+async function validatePayloadEntries(root: string, manifest: PrimaryRuntimeManifest): Promise<WorkspaceDependencies> {
+  const paths = workspaceDependencyPaths(root, manifest)
   for (const [path, kind] of [
     [paths.python, 'file'], [paths.node, 'file'], [paths.pnpm, 'file'],
     [paths.pythonPackages, 'directory'], [paths.nodePackages, 'directory'],
+    [manifest.llamaServer === undefined ? undefined : llamaServerPath(root), 'file'],
   ] as const) {
     if (path === undefined) continue
     const entry = await stat(path)
@@ -166,6 +182,7 @@ async function validatePayloadEntries(paths: WorkspaceDependencies): Promise<voi
       throw new Error(`primary runtime: expected ${kind} at ${path}`)
     }
   }
+  return paths
 }
 
 async function exists(path: string): Promise<boolean> {
@@ -190,9 +207,7 @@ async function compatibleManifest(source: string): Promise<PrimaryRuntimeManifes
  * @returns Paths into the payload itself.
  */
 export async function resolvePrimaryRuntime(source: string): Promise<WorkspaceDependencies> {
-  const paths = workspaceDependencyPaths(source, await compatibleManifest(source))
-  await validatePayloadEntries(paths)
-  return paths
+  return validatePayloadEntries(source, await compatibleManifest(source))
 }
 
 /**
@@ -209,15 +224,12 @@ export async function installPrimaryRuntime(source: string, root: string): Promi
   const rootExists = await exists(root)
   if (!rootExists && previousExists) await rename(previous, root)
   if (await exists(join(root, 'runtime.json')) && JSON.stringify(await readPrimaryRuntime(root)) === JSON.stringify(manifest)) {
-    const paths = workspaceDependencyPaths(root, manifest)
-    await validatePayloadEntries(paths)
-    return paths
+    return validatePayloadEntries(root, manifest)
   }
   const staging = await mkdtemp(join(dirname(root), '.primary-runtime-'))
   try {
     await cp(source, staging, { recursive: true, dereference: true })
-    const paths = workspaceDependencyPaths(staging, manifest)
-    await validatePayloadEntries(paths)
+    await validatePayloadEntries(staging, manifest)
     await rm(previous, { recursive: true, force: true })
     const replacing = await exists(root)
     if (replacing) await rename(root, previous)

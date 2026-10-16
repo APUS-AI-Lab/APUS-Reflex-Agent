@@ -74,6 +74,7 @@ All settings are optional. With context window `W`, effective request output cap
 | `maxOverflowRetries` | `1` | Maximum retries after a confirmed context-window overflow; `0` disables recovery only. |
 | `modelPolicies` | `[]` | Exact `{ provider, model, ...partialPolicy }` overrides for individual model routes. |
 | `auto` | `true` | Enable automatic condensation and overflow recovery; set `false` for manual-only operation. |
+| `recallFooter` | `false` | End each checkpoint with `[checkpoint c<seq>: shadows conversation events #<start>–#<end>; …]`, naming its `compaction/summary` seq so `dsh-tool-history-recall` can read the originals back. |
 
 Misconfiguration fails fast: unknown settings, duplicate per-model overrides, invalid token counts, both retention forms together, or a retention ratio at least as large as the threshold ratio reject the plugin at load. When the model is first used, `W − O − B` must be positive and the resolved retained budget must be below the trigger. Zero headroom requires an explicit positive `maxTokens`, globally or in that model policy. Small-window deployments must configure headroom that fits their capacity; lower `thresholdRatio` to compact earlier.
 
@@ -88,6 +89,8 @@ With `dsh-command-compact` mounted, type `/compact` in a chat UI to condense imm
 ### Trimming oversized tool outputs
 
 Mount `dsh-compaction-tool-result-pruner` before this package to trim oversized tool results as part of condensation. Trimming makes no model call and can remove the need to summarize at all: when the trimmed conversation fits within the threshold, condensation skips the summary. Trimming only runs after a condensation trigger qualifies — a below-pressure conversation is never touched.
+
+Automatic condensation also emits `compaction/prepare` after trimming, so a mounted listener such as the System3 Reflex compaction sweep can hide tool output the current task no longer needs. When the prepared conversation fits within the threshold, condensation skips the summary. `/compact` does not emit it.
 
 -----
 

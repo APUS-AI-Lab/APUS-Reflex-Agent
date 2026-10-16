@@ -3,7 +3,7 @@ import AgentLoop from '@deepseek-ai/dsh-agent-loop'
 import { mountAgentLoopTestDependencies } from '@deepseek-ai/dsh-agent-loop-testkit'
 import { SessionId } from '@deepseek-ai/dsh-session'
 import { afterEach, expect, it, vi } from 'vitest'
-import Jev, { type JevRequest, type JevResponse } from '../../apus-dsh-jev-plugin/src/index.ts'
+import Jev, { JevConfigurationError, type JevRequest, type JevResponse } from '../../apus-dsh-jev-plugin/src/index.ts'
 import { choiceVerdict, noulVerdict, runSystem3Decision, validateSystem3DecisionSettings, type System3DecisionContext,
   type System3DecisionSettings, type System3DecisionSpec } from '../src/decision-kernel.ts'
 
@@ -56,6 +56,20 @@ it('acts on a confident judgement only when active, and records the full request
   expect(watched.judgement).toMatchObject({ mode: 'shadow', outcome: 'act', reason: 'judged', applied: false })
 })
 
+it.each([
+  [{ mode: 'local-only' } as const, 'local' as const, 'judged'],
+  [{ mode: 'controlled', approvedRemoteIds: [], approvedRemoteDataClasses: [] } as const, 'local' as const, 'judged'],
+  [{ mode: 'local-only' } as const, 'network' as const, 'privacy-denied'],
+])('admits by the selected provider\'s declared domain under %j: %s provider is %s', async (policy, executionDomain, reason) => {
+  const harness = await setup(0.95)
+  vi.spyOn(harness.ctx.jev, 'providerInfo').mockReturnValue({ id: 'system-one', model: 'jev-test', endpoint: 'http://localhost:1', executionDomain })
+  // The configured default is the opposite of the provider's declaration, so only the provider's domain can explain the result.
+  const fallback = executionDomain === 'local' ? 'network' : 'local'
+  const result = await harness.run(ACTIVE, { ...SHARED, policy, options: { ...SHARED.options, executionDomain: fallback } })
+  expect(result.judgement.reason).toBe(reason)
+  expect(harness.decide).toHaveBeenCalledTimes(reason === 'judged' ? 1 : 0)
+})
+
 it('falls back when the answer sits between the thresholds, and asks nothing when off', async () => {
   const unsure = await setup(0.5)
   expect((await unsure.run()).judgement).toMatchObject({ outcome: 'skip', reason: 'unsure', applied: false })
@@ -105,7 +119,16 @@ it('rejects without a record when the caller cancels or Jev throws unexpectedly'
   const broken = await setup()
   broken.decide.mockRejectedValue(new Error('protocol'))
   await expect(broken.run()).rejects.toThrow('protocol')
-  expect([...cancelled.judgements(), ...broken.judgements()]).toEqual([])
+  const resolver = await setup()
+  vi.spyOn(resolver.ctx.jev, 'resolve').mockImplementation(() => { throw new Error('resolver bug') })
+  await expect(resolver.run()).rejects.toThrow('resolver bug')
+  expect([...cancelled.judgements(), ...broken.judgements(), ...resolver.judgements()]).toEqual([])
+})
+
+it('answers like a missing provider when Jev is switched off during dispatch', async () => {
+  const h = await setup()
+  h.decide.mockRejectedValue(new JevConfigurationError('switched off'))
+  expect((await h.run()).judgement).toMatchObject({ reason: 'provider-unavailable', outcome: 'skip', applied: false })
 })
 
 it('does not ask the provider or record when the caller is already cancelled', async () => {

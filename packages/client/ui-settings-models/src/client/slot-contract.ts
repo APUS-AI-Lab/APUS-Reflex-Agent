@@ -31,8 +31,13 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
      * area renders nothing.
      */
     'settings.models.provider-card': { kind: 'keyed'; scope: 'root'; owner: ProviderCardExtrasOwnerProps }
-    /** Optional account login choice before the credential editor. */
-    'settings.models.sign-in': { kind: 'single'; scope: 'root'; owner: { complete: () => void; useApiKey: () => void } }
+    /**
+     * Optional account routing before the credential editor, rendered only
+     * while no provider is usable. `later` defers the automatic prompt for the
+     * page load and leaves the composer readiness notice; `useApiKey` opens
+     * the credential editor. Without a registrant the editor renders directly.
+     */
+    'settings.models.sign-in': { kind: 'single'; scope: 'root'; owner: { later: () => void; useApiKey: () => void } }
     /**
      * Ordered extension area after the provider rows and the add controls.
      * Without a registrant the area renders nothing.

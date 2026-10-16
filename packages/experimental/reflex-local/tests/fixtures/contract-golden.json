@@ -1,0 +1,249 @@
+[
+  {
+    "name": "official-support-731",
+    "state": "Order 731 was delivered. The customer confirms that the issue is resolved.",
+    "primitive": "choice",
+    "instructions": "Select the next support action.",
+    "descriptions": [
+      "Close the ticket as resolved.",
+      "Escalate to a human agent.",
+      "Issue a refund."
+    ],
+    "prompt": "<|im_start|>user\nShared state:\nOrder 731 was delivered. The customer confirms that the issue is resolved.\n\n{\"criteria\": [{\"description\": \"Close the ticket as resolved.\", \"label\": \"A\"}, {\"description\": \"Escalate to a human agent.\", \"label\": \"B\"}, {\"description\": \"Issue a refund.\", \"label\": \"C\"}], \"instructions\": \"Select the next support action.\", \"primitive\": \"choice\"}\nReturn only the selected letter: A, B, C.\nAnswer:<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n"
+  },
+  {
+    "name": "string-state-verbatim",
+    "state": "订单 \"731\"\t已送达\\n 不转义\n第二行 😀 \u0001 {\"k\": 1}",
+    "primitive": "choice",
+    "instructions": "Choose the best candidate.",
+    "descriptions": [
+      "关闭工单",
+      "升级"
+    ],
+    "prompt": "<|im_start|>user\nShared state:\n订单 \"731\"\t已送达\\n 不转义\n第二行 😀 \u0001 {\"k\": 1}\n\n{\"criteria\": [{\"description\": \"关闭工单\", \"label\": \"A\"}, {\"description\": \"升级\", \"label\": \"B\"}], \"instructions\": \"Choose the best candidate.\", \"primitive\": \"choice\"}\nReturn only the selected letter: A, B.\nAnswer:<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n"
+  },
+  {
+    "name": "object-text-escapes",
+    "state": {
+      "中文": "用户说：“问题已解决”",
+      "quote": "He said \"hi\"",
+      "backslash": "C:\\path\\file",
+      "whitespace": "line1\nline2\ttab\rreturn",
+      "controls": "\u0000\u0001\b\f\u001f",
+      "separators": "  ",
+      "key \"quoted\"\n": "\\"
+    },
+    "primitive": "choice",
+    "instructions": "选择下一步：\"关闭\"或'升级'\n\t注意反斜杠 \\",
+    "descriptions": [
+      "Close \"now\"",
+      "Back\\slash\u0002",
+      "Emoji 🚀 候选"
+    ],
+    "prompt": "<|im_start|>user\nShared state:\n{\"backslash\": \"C:\\\\path\\\\file\", \"controls\": \"\\u0000\\u0001\\b\\f\\u001f\", \"key \\\"quoted\\\"\\n\": \"\\\\\", \"quote\": \"He said \\\"hi\\\"\", \"separators\": \"  \", \"whitespace\": \"line1\\nline2\\ttab\\rreturn\", \"中文\": \"用户说：“问题已解决”\"}\n\n{\"criteria\": [{\"description\": \"Close \\\"now\\\"\", \"label\": \"A\"}, {\"description\": \"Back\\\\slash\\u0002\", \"label\": \"B\"}, {\"description\": \"Emoji 🚀 候选\", \"label\": \"C\"}], \"instructions\": \"选择下一步：\\\"关闭\\\"或'升级'\\n\\t注意反斜杠 \\\\\", \"primitive\": \"choice\"}\nReturn only the selected letter: A, B, C.\nAnswer:<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n"
+  },
+  {
+    "name": "astral-key-order",
+    "state": {
+      "a": 1,
+      "é": 2,
+      "": 3,
+      "！": 4,
+      "😀": 5,
+      "𝒜": 6,
+      "Z": 7,
+      "": 8,
+      "aa": 9,
+      "a😀": 10,
+      "a￿": 11
+    },
+    "primitive": "choice",
+    "instructions": "Choose the best candidate.",
+    "descriptions": [
+      "first",
+      "second"
+    ],
+    "prompt": "<|im_start|>user\nShared state:\n{\"\": 8, \"Z\": 7, \"a\": 1, \"aa\": 9, \"a￿\": 11, \"a😀\": 10, \"é\": 2, \"\": 3, \"！\": 4, \"𝒜\": 6, \"😀\": 5}\n\n{\"criteria\": [{\"description\": \"first\", \"label\": \"A\"}, {\"description\": \"second\", \"label\": \"B\"}], \"instructions\": \"Choose the best candidate.\", \"primitive\": \"choice\"}\nReturn only the selected letter: A, B.\nAnswer:<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n"
+  },
+  {
+    "name": "nested-values",
+    "state": {
+      "list": [
+        1,
+        [
+          2,
+          [
+            3,
+            []
+          ]
+        ],
+        {},
+        {
+          "b": null,
+          "a": true
+        }
+      ],
+      "flags": {
+        "on": true,
+        "off": false,
+        "unset": null
+      },
+      "empty": {
+        "object": {},
+        "array": []
+      }
+    },
+    "primitive": "choice",
+    "instructions": "Choose the best candidate.",
+    "descriptions": [
+      "keep",
+      "drop",
+      "defer"
+    ],
+    "prompt": "<|im_start|>user\nShared state:\n{\"empty\": {\"array\": [], \"object\": {}}, \"flags\": {\"off\": false, \"on\": true, \"unset\": null}, \"list\": [1, [2, [3, []]], {}, {\"a\": true, \"b\": null}]}\n\n{\"criteria\": [{\"description\": \"keep\", \"label\": \"A\"}, {\"description\": \"drop\", \"label\": \"B\"}, {\"description\": \"defer\", \"label\": \"C\"}], \"instructions\": \"Choose the best candidate.\", \"primitive\": \"choice\"}\nReturn only the selected letter: A, B, C.\nAnswer:<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n"
+  },
+  {
+    "name": "numbers",
+    "state": {
+      "ints": [
+        0,
+        -7,
+        42,
+        9007199254740991,
+        -9007199254740991
+      ],
+      "half": 0.5,
+      "tiny": 1e-07,
+      "big": 1e+16,
+      "mixed": 123456.789,
+      "negative_zero": -0.0,
+      "fixed_small": 0.0001,
+      "exp_small": 1e-05,
+      "sum": 0.30000000000000004,
+      "unsafe_integer": 9007199254740992.0,
+      "fixed_large": 1234567890123456.8,
+      "exp_large": 1.2345678901234568e+16,
+      "huge": 1e+22,
+      "max": 1.7976931348623157e+308,
+      "subnormal": 5e-324,
+      "negative": -2.5e-10
+    },
+    "primitive": "choice",
+    "instructions": "Choose the best candidate.",
+    "descriptions": [
+      "low",
+      "high"
+    ],
+    "prompt": "<|im_start|>user\nShared state:\n{\"big\": 1e+16, \"exp_large\": 1.2345678901234568e+16, \"exp_small\": 1e-05, \"fixed_large\": 1234567890123456.8, \"fixed_small\": 0.0001, \"half\": 0.5, \"huge\": 1e+22, \"ints\": [0, -7, 42, 9007199254740991, -9007199254740991], \"max\": 1.7976931348623157e+308, \"mixed\": 123456.789, \"negative\": -2.5e-10, \"negative_zero\": -0.0, \"subnormal\": 5e-324, \"sum\": 0.30000000000000004, \"tiny\": 1e-07, \"unsafe_integer\": 9007199254740992.0}\n\n{\"criteria\": [{\"description\": \"low\", \"label\": \"A\"}, {\"description\": \"high\", \"label\": \"B\"}], \"instructions\": \"Choose the best candidate.\", \"primitive\": \"choice\"}\nReturn only the selected letter: A, B.\nAnswer:<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n"
+  },
+  {
+    "name": "scalar-null",
+    "state": null,
+    "primitive": "choice",
+    "instructions": "Choose the best candidate.",
+    "descriptions": [
+      "yes",
+      "no"
+    ],
+    "prompt": "<|im_start|>user\nShared state:\nnull\n\n{\"criteria\": [{\"description\": \"yes\", \"label\": \"A\"}, {\"description\": \"no\", \"label\": \"B\"}], \"instructions\": \"Choose the best candidate.\", \"primitive\": \"choice\"}\nReturn only the selected letter: A, B.\nAnswer:<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n"
+  },
+  {
+    "name": "scalar-bool",
+    "state": true,
+    "primitive": "choice",
+    "instructions": "Choose the best candidate.",
+    "descriptions": [
+      "yes",
+      "no"
+    ],
+    "prompt": "<|im_start|>user\nShared state:\ntrue\n\n{\"criteria\": [{\"description\": \"yes\", \"label\": \"A\"}, {\"description\": \"no\", \"label\": \"B\"}], \"instructions\": \"Choose the best candidate.\", \"primitive\": \"choice\"}\nReturn only the selected letter: A, B.\nAnswer:<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n"
+  },
+  {
+    "name": "scalar-float",
+    "state": 3.25,
+    "primitive": "choice",
+    "instructions": "Choose the best candidate.",
+    "descriptions": [
+      "yes",
+      "no"
+    ],
+    "prompt": "<|im_start|>user\nShared state:\n3.25\n\n{\"criteria\": [{\"description\": \"yes\", \"label\": \"A\"}, {\"description\": \"no\", \"label\": \"B\"}], \"instructions\": \"Choose the best candidate.\", \"primitive\": \"choice\"}\nReturn only the selected letter: A, B.\nAnswer:<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n"
+  },
+  {
+    "name": "array-state-two-candidates",
+    "state": [
+      "步骤一",
+      {
+        "done": false
+      },
+      3
+    ],
+    "primitive": "choice",
+    "instructions": "Pick one.",
+    "descriptions": [
+      "Continue the current step.",
+      "Stop and ask the user."
+    ],
+    "prompt": "<|im_start|>user\nShared state:\n[\"步骤一\", {\"done\": false}, 3]\n\n{\"criteria\": [{\"description\": \"Continue the current step.\", \"label\": \"A\"}, {\"description\": \"Stop and ask the user.\", \"label\": \"B\"}], \"instructions\": \"Pick one.\", \"primitive\": \"choice\"}\nReturn only the selected letter: A, B.\nAnswer:<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n"
+  },
+  {
+    "name": "choice-sixteen",
+    "state": {
+      "task": "pick a letter"
+    },
+    "primitive": "choice",
+    "instructions": "Choose the best candidate.",
+    "descriptions": [
+      "Candidate A 候选",
+      "Candidate B 候选",
+      "Candidate C 候选",
+      "Candidate D 候选",
+      "Candidate E 候选",
+      "Candidate F 候选",
+      "Candidate G 候选",
+      "Candidate H 候选",
+      "Candidate I 候选",
+      "Candidate J 候选",
+      "Candidate K 候选",
+      "Candidate L 候选",
+      "Candidate M 候选",
+      "Candidate N 候选",
+      "Candidate O 候选",
+      "Candidate P 候选"
+    ],
+    "prompt": "<|im_start|>user\nShared state:\n{\"task\": \"pick a letter\"}\n\n{\"criteria\": [{\"description\": \"Candidate A 候选\", \"label\": \"A\"}, {\"description\": \"Candidate B 候选\", \"label\": \"B\"}, {\"description\": \"Candidate C 候选\", \"label\": \"C\"}, {\"description\": \"Candidate D 候选\", \"label\": \"D\"}, {\"description\": \"Candidate E 候选\", \"label\": \"E\"}, {\"description\": \"Candidate F 候选\", \"label\": \"F\"}, {\"description\": \"Candidate G 候选\", \"label\": \"G\"}, {\"description\": \"Candidate H 候选\", \"label\": \"H\"}, {\"description\": \"Candidate I 候选\", \"label\": \"I\"}, {\"description\": \"Candidate J 候选\", \"label\": \"J\"}, {\"description\": \"Candidate K 候选\", \"label\": \"K\"}, {\"description\": \"Candidate L 候选\", \"label\": \"L\"}, {\"description\": \"Candidate M 候选\", \"label\": \"M\"}, {\"description\": \"Candidate N 候选\", \"label\": \"N\"}, {\"description\": \"Candidate O 候选\", \"label\": \"O\"}, {\"description\": \"Candidate P 候选\", \"label\": \"P\"}], \"instructions\": \"Choose the best candidate.\", \"primitive\": \"choice\"}\nReturn only the selected letter: A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P.\nAnswer:<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n"
+  },
+  {
+    "name": "noul-canonical",
+    "state": {
+      "proposition": "测试全部通过",
+      "evidence": [
+        "exit 0",
+        "42 passed"
+      ]
+    },
+    "primitive": "noul",
+    "instructions": "Judge whether the proposition in the shared state is true.",
+    "descriptions": [
+      "The stated proposition is true.",
+      "The stated proposition is false."
+    ],
+    "prompt": "<|im_start|>user\nShared state:\n{\"evidence\": [\"exit 0\", \"42 passed\"], \"proposition\": \"测试全部通过\"}\n\n{\"criteria\": [{\"description\": \"The stated proposition is true.\", \"label\": \"A\"}, {\"description\": \"The stated proposition is false.\", \"label\": \"B\"}], \"instructions\": \"Judge whether the proposition in the shared state is true.\", \"primitive\": \"noul\"}\nReturn only the selected letter: A, B.\nAnswer:<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n"
+  },
+  {
+    "name": "score-levels",
+    "state": {
+      "diff": "+3 -1"
+    },
+    "primitive": "choice",
+    "instructions": "Rate the risk of this change.",
+    "descriptions": [
+      "none",
+      "low",
+      "medium",
+      "high",
+      "critical"
+    ],
+    "prompt": "<|im_start|>user\nShared state:\n{\"diff\": \"+3 -1\"}\n\n{\"criteria\": [{\"description\": \"none\", \"label\": \"A\"}, {\"description\": \"low\", \"label\": \"B\"}, {\"description\": \"medium\", \"label\": \"C\"}, {\"description\": \"high\", \"label\": \"D\"}, {\"description\": \"critical\", \"label\": \"E\"}], \"instructions\": \"Rate the risk of this change.\", \"primitive\": \"choice\"}\nReturn only the selected letter: A, B, C, D, E.\nAnswer:<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n"
+  }
+]

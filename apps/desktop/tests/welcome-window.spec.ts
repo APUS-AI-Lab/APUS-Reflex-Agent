@@ -179,7 +179,7 @@ describe('desktop welcome window', () => {
     expect(electron.handlers.size).toBe(0)
   })
 
-  it('shows the entry after logout only without a separately configured API key', () => {
+  it('shows the entry only while signed out without an API key; a signed-in account defers readiness to the workspace', () => {
     expect(needsWelcome({ loggedIn: true, hasApiKey: false })).toBe(false)
     expect(needsWelcome({ loggedIn: false, hasApiKey: false })).toBe(true)
     expect(needsWelcome({ loggedIn: false, hasApiKey: true })).toBe(false)

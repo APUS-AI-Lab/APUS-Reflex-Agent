@@ -7,7 +7,7 @@ import { createUserMessage, type MessageId } from '@deepseek-ai/dsh-llm'
 import { isModelInvocable, renderSkillContent, type SkillSummary } from '@deepseek-ai/dsh-skill'
 import { JevConfigurationError, MAX_JEV_QUESTIONS, type JevQuestion, type JevRequest, type JevResponse } from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
 import { admitSystem3Routes, type System3DataClass, type System3PrivacyPolicy } from '@deepseek-ai/dsh-experimental-system3-policy'
-import type { System3JevOptions } from './decisions.ts'
+import { pinSystem3JevRequest, resolveSystem3JevRoute, type System3JevOptions } from './decisions.ts'
 import type { System3InputIntent } from './types.ts'
 
 /** The intent labels Jev chooses between, with the meaning it reads for each. */
@@ -167,7 +167,7 @@ export function installSystem3SkillSelection(ctx: Context, config: System3SkillS
   ctx.effect(() => () => { lifetime.abort(new DOMException('System3 Skill selector removed', 'AbortError')) })
   ctx.on('agent/pre-step', async ({ agent, signal, turn, step }, next): Promise<PreStepDecision> => {
     const decision = await next()
-    if (decision.kind === 'reject') return decision
+    if (decision.kind === 'reject' || options.frontLoaded?.() === false) return decision
     const users = decision.messages.filter(message => message.source.kind === 'user')
     const input = users.flatMap(message => message.content.flatMap(part => part.type === 'text' ? [part.text] : [])).join('\n')
     if (users.length === 0 || users.some(message => message.content.some(part => part.type !== 'text'))
@@ -189,11 +189,12 @@ export function installSystem3SkillSelection(ctx: Context, config: System3SkillS
       'rpcId' in message.source ? message.source.rpcId : null, null)
     try {
       lookupSignal.throwIfAborted()
-      const admission = admitSystem3Routes(policy, [{ id: options.routeId, executionDomain: options.executionDomain,
-        dataClasses: settings.sessionDataClasses }])
-      if (admission.allowed.length === 0) { outcome = 'privacy-denied'; return decision }
       const skills = ctx.get('skills')
       const jev = ctx.get('jev')
+      const route = resolveSystem3JevRoute(jev, options)
+      const admission = admitSystem3Routes(policy, [{ id: options.routeId, executionDomain: route.executionDomain,
+        dataClasses: settings.sessionDataClasses }])
+      if (admission.allowed.length === 0) { outcome = 'privacy-denied'; return decision }
       if (skills === undefined || jev === undefined) return decision
       const snapshot = await bounded(skills.snapshot(lookup), lookupSignal)
       const catalog = snapshot.skills.filter(isModelInvocable)
@@ -219,7 +220,8 @@ export function installSystem3SkillSelection(ctx: Context, config: System3SkillS
           criteria: Object.fromEntries([...group.map(({ skill, id }) => [id, skillLabel(skill)] as const),
             ['abstain', 'No clearly applicable skill.']]) }])) : {},
       } }
-      const spec = jev.resolve(query)
+      // The catalog lookup awaited after admission; run on the admitted provider even if the default changed meanwhile.
+      const spec = jev.resolve(pinSystem3JevRequest(query, route))
       if (Buffer.byteLength(JSON.stringify(spec), 'utf8') > settings.maxInputBytes) { outcome = 'input-too-large'; return decision }
       request = spec
       const classify = (answer: JevResponse): void => {

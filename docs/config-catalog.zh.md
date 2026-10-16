@@ -670,6 +670,11 @@ export interface BasicCompactionConfig extends CompactionPolicyConfig {
   modelPolicies?: ModelCompactPolicyConfig[]
   /** Enable automatic step-boundary pressure and overflow-recovery listeners. Defaults to `true`. */
   auto?: boolean
+  /**
+   * End every checkpoint with a code-composed footer naming its `compaction/summary` seq and shadowed range,
+   * so a mounted history-recall tool can read the originals back. Defaults to `false`.
+   */
+  recallFooter?: boolean
 }
 
 /** Policy fields shared by the default policy and exact model overrides. */
@@ -889,7 +894,7 @@ export interface Config {
 ## `@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin`
 
 - `refs`: `Volatile` (`@deepseek-ai/cordis`)
-- `source`: [`packages/experimental/apus-dsh-jev-plugin/src/index.ts:38`](../packages/experimental/apus-dsh-jev-plugin/src/index.ts)
+- `source`: [`packages/experimental/apus-dsh-jev-plugin/src/index.ts:47`](../packages/experimental/apus-dsh-jev-plugin/src/index.ts)
 
 ```ts config-catalog
 /** Plugin configuration for the built-in System One provider. */
@@ -912,8 +917,16 @@ export interface Config {
   readonly timeoutMs: Volatile<number>
   /** Credential reference for bearer authentication; omission permits an unauthenticated gateway. */
   readonly apiKeyEnv: Volatile<string | undefined>
-  /** Registry identity of the built-in provider, selected when a request omits providerId. @default 'system-one' */
+  /**
+   * Registry identity of the built-in provider; selected when a request omits providerId and `defaultProviderId` is
+   * unset. @default 'system-one'
+   */
   readonly providerId?: string
+  /**
+   * Provider selected when a request omits providerId. Another plugin may register it; changing it switches the next
+   * decision without renaming or reloading the built-in provider. Omission selects `providerId`.
+   */
+  readonly defaultProviderId?: Volatile<string | undefined>
   /**
    * Idle time in milliseconds a direct connection to the gateway stays open for reuse. Omission keeps
    * the process-wide transport. A request routed through a configured HTTP proxy always uses that proxy's transport.
@@ -1035,7 +1048,7 @@ export interface Config {
 ## `@deepseek-ai/dsh-experimental-continuum-jev`
 
 - `refs`: [`System3DataClass`](../packages/experimental/system3-policy/src/index.ts) · [`System3PrivacyPolicy`](../packages/experimental/system3-policy/src/index.ts)
-- `source`: [`packages/experimental/continuum-jev/src/index.ts:107`](../packages/experimental/continuum-jev/src/index.ts)
+- `source`: [`packages/experimental/continuum-jev/src/index.ts:176`](../packages/experimental/continuum-jev/src/index.ts)
 
 ```ts config-catalog
 /** Profile settings resolve the same explicit configuration used by direct consumers. */
@@ -1053,14 +1066,55 @@ export interface ContinuumJevConfig {
   readonly privacyPolicy: System3PrivacyPolicy
   /** Deployment classification of the query and every candidate; null or empty denies dispatch. */
   readonly sessionDataClasses: readonly System3DataClass[] | null
+  /** How Reflex relevance applies to the candidates. Omitted means `rank`. */
+  readonly selection?: ContinuumJevSelection
+  /** Lowest relevance probability `threshold` selection keeps, from 0 to 1. Omitted means 0.7. */
+  readonly minRelevance?: number
+  /**
+   * With `threshold` selection, more candidates than this are first routed: Reflex picks the tags the input needs and
+   * only candidates carrying one of them, or no tag, are judged. Omitted means 16.
+   */
+  readonly routeAbove?: number
+  /** Lowest probability, from 0 to 1, at which routing picks a tag. Omitted means 0.5. */
+  readonly minRouteProbability?: number
+  /** Index tags compaction admission judges each message against. Omitted means {@link DEFAULT_MEMORY_TAGS}. */
+  readonly tags?: readonly ContinuumMemoryTag[]
+  /** Lowest tag probability, from 0 to 1, that assigns a tag; a message with no assigned tag is not indexed. Omitted means 0.5. */
+  readonly minTagProbability?: number
+  /**
+   * UTF-16 code units of a compacted message each tag question quotes; a longer message is quoted as its head and tail
+   * around an omission marker. Omitted means 600. The indexed original in L2 is never cut.
+   */
+  readonly maxQuotedChars?: number
+  /**
+   * Leading UTF-16 code units of the user input that each relevance question quotes; longer input is cut with a marker.
+   * Omitted means 500. Memory records and excerpts are never cut by this setting.
+   */
+  readonly maxQueryChars?: number
   /** Rejected legacy setting: relevance ranking does not filter candidates by confidence. */
   readonly minConfidence?: number
   /** Rejected legacy setting: relevance ranking retains every bounded candidate. */
   readonly maxSelections?: number
 }
 
-/** Only active mode applies the relevance order; every mode retains all supplied candidates. */
+/** Only active mode applies Reflex advice; off and shadow keep the deterministic result. */
 export type ContinuumJevMode = 'off' | 'shadow' | 'active'
+
+/**
+ * `rank` orders every supplied candidate by relevance. `threshold` keeps only candidates whose relevance reaches
+ * `minRelevance`; without a Reflex answer it keeps only candidates that share a query term.
+ */
+export type ContinuumJevSelection = 'rank' | 'threshold'
+
+/** One L1 index tag: a stable ID and the subject a message must state a fact about to carry it. */
+export interface ContinuumMemoryTag {
+  /** Stable tag ID written to L1 index entries. */
+  readonly id: string
+  /** Short name the routing question shows for the tag. */
+  readonly label: string
+  /** English noun phrase completing "states a fact about the user or someone in their life concerning …". */
+  readonly description: string
+}
 ```
 <!-- END GENERATED config-catalog:@deepseek-ai/dsh-experimental-continuum-jev -->
 
@@ -1201,6 +1255,81 @@ export interface Config {
 ```
 <!-- END GENERATED config-catalog:@deepseek-ai/dsh-experimental-ptc-runtime-python -->
 
+<!-- BEGIN GENERATED config-catalog:@deepseek-ai/dsh-experimental-reflex-local -->
+<a id="deepseek-aidsh-experimental-reflex-local"></a>
+
+## `@deepseek-ai/dsh-experimental-reflex-local`
+
+- `inject`: `subprocess`
+- `source`: [`packages/experimental/reflex-local/src/index.ts:22`](../packages/experimental/reflex-local/src/index.ts)
+
+```ts config-catalog
+/** Device, download, process, and self-test settings of the local engine. */
+export interface Config {
+  /** Jev registry id of the local provider. */
+  providerId: string
+  /** Absolute directory owning downloaded weights, partial files, and `state.json`. */
+  dataRoot: string
+  /** Absolute path of the bundled `llama-server`; omission or a non-executable file reports `runner-missing`. */
+  runnerPath?: string | undefined
+  /** Explicit Hugging Face-compatible origin; bypasses probing and public fallback. */
+  modelOrigin?: string | undefined
+  /** Hugging Face-compatible origins compared before each download. */
+  modelOrigins: string[]
+  /** Deadline for concurrent HEAD probes, including redirects. */
+  modelProbeTimeoutMs: number
+  /** Longest interval without response bytes before a download attempt fails with `timeout`. */
+  downloadStallTimeoutMs: number
+  /** Runner context window in tokens (`-c`). */
+  contextTokens: number
+  /** Deadline from spawn until the runner answers `GET /health` with 200. */
+  startupTimeoutMs: number
+  /** Deadline of one runner completion, which answers one question. */
+  decisionTimeoutMs: number
+  /**
+   * Idle period after which the runner stops and frees the model's memory; absent keeps it resident while local
+   * decisions are enabled. The next decision after a release waits for the model to load.
+   */
+  idleReleaseMs?: number | undefined
+  /** Managed process termination grace period. */
+  graceMs: number
+  /** Maximum retained runner diagnostic bytes. */
+  maxLogBytes: number
+  /** Maximum runner completion response bytes. */
+  maxResponseBytes: number
+  /** Minimum interval between intermediate download progress notifications. */
+  progressIntervalMs: number
+  /**
+   * Self-test prompt-processing throughput below which a Host is reported slow and never enabled automatically. The
+   * default sits between an Apple M5 with Metal (about 400 tokens per second on the 118-token reference prompt) and
+   * CPU-only inference (about 100).
+   */
+  minPrefillTokensPerSecond: number
+  /** Total memory each variant requires; options below their tier are greyed and never recommended. */
+  minMemoryBytes: {
+    /** 4B Q4_K_M. */
+    '4b-q4_k_m': number
+    /** 4B Q8_0. */
+    '4b-q8_0': number
+    /** 9B Q4_K_M. */
+    '9b-q4_k_m': number
+    /** 9B Q8_0. */
+    '9b-q8_0': number
+    /** 35B-A3B Q4_K_M; experimental. */
+    '35b-a3b-q4_k_m': number
+    /** 35B-A3B Q8_0; experimental. */
+    '35b-a3b-q8_0': number
+  }
+  /** Free bytes left on the data volume after a download completes. */
+  diskMarginBytes: number
+  /** Consecutive runner start or request failures after which local decisions are turned off. */
+  maxConsecutiveRunnerFailures: number
+  /** Interval for reading the Jev entry's routing and master switch, so external changes publish and stop the runner. */
+  routingPollMs: number
+}
+```
+<!-- END GENERATED config-catalog:@deepseek-ai/dsh-experimental-reflex-local -->
+
 <!-- BEGIN GENERATED config-catalog:@deepseek-ai/dsh-experimental-speech-to-text -->
 <a id="deepseek-aidsh-experimental-speech-to-text"></a>
 
@@ -1284,7 +1413,7 @@ export interface Config {
 
 ## `@deepseek-ai/dsh-experimental-system3`
 
-- `refs`: [`System3DataClass`](../packages/experimental/system3-policy/src/index.ts) · [`System3ExecutionDomain`](../packages/experimental/system3-policy/src/index.ts) · [`System3PrivacyMode`](../packages/experimental/system3-policy/src/index.ts)
+- `refs`: [`System3DataClass`](../packages/experimental/system3-policy/src/index.ts) · [`System3ExecutionDomain`](../packages/experimental/system3-policy/src/index.ts) · [`System3PrivacyMode`](../packages/experimental/system3-policy/src/index.ts) · `Volatile` (`@deepseek-ai/cordis`)
 - `source`: [`packages/experimental/system3/src/index.ts:61`](../packages/experimental/system3/src/index.ts)
 
 ```ts config-catalog
@@ -1302,7 +1431,10 @@ export interface Config {
   readonly observeAgentLoop?: boolean
   /** Privacy-policy route identity for explicit Jev calls. */
   readonly jevRouteId?: string
-  /** Actual execution location, including the remote destination of any tunnel. */
+  /**
+   * Execution location of a Jev provider that does not declare its own, including the remote destination of any tunnel.
+   * A provider's declared `executionDomain`, such as the local Reflex engine's `local`, takes precedence.
+   */
   readonly jevExecutionDomain?: 'local' | 'network'
   /** Execution effort sent to the Jev provider. */
   readonly jevEffort?: 'low' | 'high'
@@ -1332,6 +1464,14 @@ export interface Config {
    * input needs; `false` or omission disables it.
    */
   readonly prefetch?: false | System3PrefetchConfig
+  /**
+   * Live switch for the decisions System3 makes before the main model: entry routing, goal routing, Skill selection, the
+   * task frame, and prefetch. While false, new requests take the native path, ask Jev nothing, and record no System3
+   * decision; a task frame recorded earlier stays in the prompt, and work already started finishes. Process and Reflex
+   * supervision, Reflex context, completion review, and output folding do not follow it. Edited live through the
+   * entry's settings form without reloading the plugin. @default true
+   */
+  readonly frontLoadedDecisions?: Volatile<boolean>
 }
 
 /** Explicit controls for entry recommendations; omission leaves entry routing disabled. */
@@ -1463,6 +1603,8 @@ export interface ReflexContextConfig extends System3DecisionSettings {
   readonly maxRestoredChars: number
   /** Maximum memory search results returned to the caller. */
   readonly maxSearchResults: number
+  /** Compaction-time sweep over the whole visible tool output; omitted or false keeps compaction unchanged. */
+  readonly compactionSweep?: false | ReflexContextSweepConfig
 }
 
 /** Which shell results are folded and how large a repeat must be; deployment-owned. */
@@ -1614,6 +1756,18 @@ export interface ReflexRecoveryConfig {
   readonly cooldownMs: number
   /** Maximum reserved recoveries per Goal, including unknown transport outcomes. */
   readonly maxRecoveries: number
+}
+
+/** Deployment settings of the compaction sweep; `no` is the probability at or below which every question must answer. */
+export interface ReflexContextSweepConfig extends System3DecisionSettings {
+  /** Maximum original characters in one judged passage of consecutive lines. */
+  readonly fragmentChars: number
+  /** Maximum passages judged in one compaction; certain noise does not count. */
+  readonly maxFragments: number
+  /** Passages per decision request, each asked three questions, at most 5. */
+  readonly fragmentsPerRequest: number
+  /** Decision requests in flight at once. */
+  readonly concurrency: number
 }
 
 /** Deployment-owned model route; choosing it switches the generation model for this input. */
@@ -3824,7 +3978,7 @@ export interface Config {
 
 ## `@deepseek-ai/dsh-system-prompt`
 
-- `source`: [`packages/core/system-prompt/src/index.ts:248`](../packages/core/system-prompt/src/index.ts)
+- `source`: [`packages/core/system-prompt/src/index.ts:249`](../packages/core/system-prompt/src/index.ts)
 
 ```ts config-catalog
 /** Plugin config: the deployment-authored fragment of the system prompt (see {@link Config.personaPrefix} for its contract). */
@@ -4082,6 +4236,30 @@ export interface Config {
 }
 ```
 <!-- END GENERATED config-catalog:@deepseek-ai/dsh-tool-goal -->
+
+<!-- BEGIN GENERATED config-catalog:@deepseek-ai/dsh-tool-history-recall -->
+<a id="deepseek-aidsh-tool-history-recall"></a>
+
+## `@deepseek-ai/dsh-tool-history-recall`
+
+- `inject`: `tools` · `systemPrompt` · `sessionQuery`
+- `source`: [`packages/session-query/tool-history-recall/src/index.ts:40`](../packages/session-query/tool-history-recall/src/index.ts)
+
+```ts config-catalog
+/** Bounds with every default applied. */
+export type ResolvedConfig = Required<Config>
+
+/** Deployment-owned page and result bounds. */
+export interface Config {
+  /** Characters returned by one `history_read` page. Defaults to 24000. */
+  pageChars?: number
+  /** Maximum matches returned by one `history_search` call. Defaults to 20. */
+  maxMatches?: number
+  /** Characters of context shown on each side of a match. Defaults to 160. */
+  snippetRadius?: number
+}
+```
+<!-- END GENERATED config-catalog:@deepseek-ai/dsh-tool-history-recall -->
 
 <!-- BEGIN GENERATED config-catalog:@deepseek-ai/dsh-tool-jobs -->
 <a id="deepseek-aidsh-tool-jobs"></a>
@@ -4874,8 +5052,10 @@ export interface Config {
 | `@deepseek-ai/dsh-config-editor` | `loader` · `profileContext` | [`packages/boot/config-editor/src/index.ts`](../packages/boot/config-editor/src/index.ts) |
 | `@deepseek-ai/dsh-cordis-client-runner` | — | [`packages/extensions/cordis-client-runner/src/index.ts`](../packages/extensions/cordis-client-runner/src/index.ts) |
 | `@deepseek-ai/dsh-deepseek-llm-api-extensions` | — | [`packages/llm/deepseek-llm-api-extensions/src/index.ts`](../packages/llm/deepseek-llm-api-extensions/src/index.ts) |
+| `@deepseek-ai/dsh-experimental-api-reflex-local` | `reflexLocal` · `typert` | [`packages/experimental/api-reflex-local/src/index.ts`](../packages/experimental/api-reflex-local/src/index.ts) |
 | `@deepseek-ai/dsh-experimental-auto-review` | `approval` · `llm` · `permissionPresets` · `sessions` · `tools` | [`packages/experimental/auto-review/src/index.ts`](../packages/experimental/auto-review/src/index.ts) |
 | `@deepseek-ai/dsh-experimental-client-ui-agent-team` | — | [`packages/experimental/client-ui-agent-team/src/index.ts`](../packages/experimental/client-ui-agent-team/src/index.ts) |
+| `@deepseek-ai/dsh-experimental-client-ui-reflex-local` | — | [`packages/experimental/client-ui-reflex-local/src/index.ts`](../packages/experimental/client-ui-reflex-local/src/index.ts) |
 | `@deepseek-ai/dsh-experimental-client-ui-system3` | — | [`packages/experimental/client-ui-system3/src/index.ts`](../packages/experimental/client-ui-system3/src/index.ts) |
 | `@deepseek-ai/dsh-experimental-client-ui-voice-input` | — | [`packages/experimental/client-ui-voice-input/src/index.ts`](../packages/experimental/client-ui-voice-input/src/index.ts) |
 | `@deepseek-ai/dsh-experimental-computer-use-cua-driver-native` | `computerUse` · `tools` · `systemPrompt` | [`packages/experimental/computer-use-cua-driver-native/src/index.ts`](../packages/experimental/computer-use-cua-driver-native/src/index.ts) |
@@ -4959,6 +5139,7 @@ export interface Config {
 | `@deepseek-ai/dsh-deque` | — | [`packages/util/deque/src/index.ts`](../packages/util/deque/src/index.ts) |
 | `@deepseek-ai/dsh-experimental-agent-team-profile` | — | [`packages/experimental/agent-team-profile/src/index.ts`](../packages/experimental/agent-team-profile/src/index.ts) |
 | `@deepseek-ai/dsh-experimental-browser-use-runtime` | — | [`packages/experimental/browser-use-runtime/src/index.ts`](../packages/experimental/browser-use-runtime/src/index.ts) |
+| `@deepseek-ai/dsh-experimental-reflex-local-bundle` | — | [`packages/experimental/reflex-local-bundle/src/index.ts`](../packages/experimental/reflex-local-bundle/src/index.ts) |
 | `@deepseek-ai/dsh-experimental-system3-evidence` | — | [`packages/experimental/system3-evidence/src/index.ts`](../packages/experimental/system3-evidence/src/index.ts) |
 | `@deepseek-ai/dsh-experimental-system3-policy` | — | [`packages/experimental/system3-policy/src/index.ts`](../packages/experimental/system3-policy/src/index.ts) |
 | `@deepseek-ai/dsh-experimental-system3-supervisor` | — | [`packages/experimental/system3-supervisor/src/index.ts`](../packages/experimental/system3-supervisor/src/index.ts) |

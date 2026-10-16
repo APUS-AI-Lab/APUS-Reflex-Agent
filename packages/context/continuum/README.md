@@ -11,7 +11,7 @@ English | [中文](README.zh.md)
 
 Save original text with exact source references, retrieve bounded excerpts, and retain explicit corrections for audit. The optional task plugin lets a new Session recover inputs from the same persistent task; the memory-record plugin separately supports Reflex selection. Continued work uses a finite model window; complete processing coverage and scale acceptance remain unfinished.
 
-Session events use the existing persistence backend and become durable after `ctx.sessions.flush(session)`. Admission is explicit by default; opt-in `admission: 'user-message'` records committed human messages with exact Session references when the Reflex-only switch is enabled. The companion `continuum-jev` service adds shadow/active selection and receipts.
+Session events use the existing persistence backend and become durable after `ctx.sessions.flush(session)`. Admission is explicit by default; the opt-in `user-message` and `compaction` modes record human messages with exact Session references. The companion `continuum-jev` service adds Reflex selection, admission, and receipts.
 
 ## Table of Contents
 
@@ -30,7 +30,7 @@ Session events use the existing persistence backend and become durable after `ct
 
 Import `MemoryRecordStore` for deterministic revision semantics. Use `appendMemoryRecordEvent` after a store transition, `foldMemoryRecordEvents` when rebuilding from a Session log, `readMemorySourceEvents` for exact source readback, and `retrieveMemoryWorkingSet` for bounded candidates. A successful append is not a durability promise until the caller completes `ctx.sessions.flush(session)`.
 
-`ContinuumConfigFields` exposes the validated schema fields for profile providers that define their own defaults. Core still defaults to `enabled: false`, `mode: off`, `admission: explicit` and empty scopes.
+`ContinuumConfigFields` exposes the validated schema fields for profile providers that define their own defaults. Core still defaults to `enabled: false`, `mode: off`, `admission: explicit`, `candidatePool: lexical` and empty scopes. With the Reflex-only switch enabled, `admission: 'user-message'` records every committed human message, and `admission: 'compaction'` indexes the human messages a compaction checkpoint replaces once a mounted Reflex admitter selects them. `candidatePool: all` also offers records that share no term with the input, newest first after every lexical hit, so a mounted selector can judge them; without a selector only records that share a term are injected. A mounted selector receives up to `maxPool` candidates (default `maxCandidates`) with each record's L1 tags, and the recall it selects is kept within `maxTotalBytes`.
 
 -----
 
@@ -47,7 +47,7 @@ See the [cross-session design and acceptance](../../../docs/feat-cross-session-m
 <a id="understand-the-implementation"></a>
 ## Understand the implementation
 
-`MemoryRecordStore` keeps immutable snapshots and requires the caller's observed revision for superseding or deactivation. `ContinuumMemory` pairs each Agent's controller and record store in one owned projection, restores it from the Agent Session, and persists explicit create/supersede/deactivate calls as `continuum/memory-record`. In `user-message` admission mode, a committed human `user/message` is converted after the Session append completes; generated recall messages and non-user sources are ignored. Mounting the service after an Agent already exists uses the current initiating Agent only when it owns the same Session; agentless input and input from another Session are left unadmitted. Its controller keeps a disposable index current after committed transitions; indexed candidates preserve the same lexical substring matches as direct retrieval; folding applies events without model calls or a second durable source.
+`MemoryRecordStore` keeps immutable snapshots and requires the caller's observed revision for superseding or deactivation. `ContinuumMemory` pairs each Agent's controller and record store in one owned projection, restores it from the Agent Session, and persists explicit create/supersede/deactivate calls as `continuum/memory-record`. In `user-message` admission mode, a committed human `user/message` is converted after the Session append completes; generated recall messages and non-user sources are ignored. Mounting the service after an Agent already exists uses the current initiating Agent only when it owns the same Session; agentless input and input from another Session are left unadmitted. In `compaction` admission mode, each committed `compaction/summary` queues its shadowed human messages that have text and no record yet; the optional `continuumMemoryAdmitter` returns the IDs to index with their tags, an admitter failure indexes every candidate untagged, and an admitter removed before it runs indexes none. Each kept message becomes a `continuum/memory-index` event: an L1 entry with its tags and a pointer to the source event, never the text. Folding the log resolves each entry's text from that source event into the in-memory record store, so retrieval reads the original while the log keeps a single copy. Without a mounted admitter this mode neither admits nor recalls. The next same-step read waits for queued admissions, so records from a compaction that ran before the request are visible to it. Its controller keeps a disposable index current after committed transitions; indexed candidates preserve the same lexical substring matches as direct retrieval; folding applies events without model calls or a second durable source.
 
 -----
 
@@ -70,7 +70,7 @@ Read the [Continuum architecture and acceptance design](../../../docs/feat-lossl
 
 #### What the model sees
 
-When `installContinuumMemoryContext` is mounted, the model sees a bounded `continuum-memory` recall message built from active records and the current user text. Each excerpt is an unchanged window around the first matching term in the record content, or a prefix when only the kind or scope matches. It includes the record ID, revision, source event references, UTF-16 range within the record content, and omitted-side markers. These offsets do not identify positions within the source event. Selector filtering preserves the same metadata.
+When `installContinuumMemoryContext` is mounted, the model sees a bounded `continuum-memory` recall message built from active records and the current user text. Each excerpt is an unchanged window around the first matching term in the record content, or a prefix when only the kind or scope matches. It includes the record ID, revision, source event references, UTF-16 range within the record content, and omitted-side markers. These offsets do not identify positions within the source event. Selector filtering preserves the same metadata. The source event references name the event `history_read` accepts as `event`.
 
 #### Token effect
 
@@ -87,6 +87,7 @@ The consumer appends a bounded recall message, so the existing request prefix re
 - The record projection is process-local; restart recovery requires reading and folding the Session event log. `MemoryRecordIndex` is disposable derived state maintained by the controller; it can still be rebuilt from the projection or drained with a bounded backlog budget.
 - The service has no full text index and does not automatically attach the summary tree to lifecycle retrieval. Summary navigation is rebuilt from Session events after restart; it is not a persisted model-summary snapshot. The tree and cache helpers are deterministic, local instrumentation; they do not report provider cache accounting. Records remain source-backed; admission is caller-owned by default and can be enabled for human messages explicitly.
 - Automatic user-message admission is deliberately opt-in, uses the first configured scope, and stores message text as a source-backed fact. Deployments handling private or sensitive conversations should keep `admission: explicit` and provide a domain-specific admission caller.
+- Compaction admission covers human messages only; assistant answers and tool results stay readable through `history_read` but do not become records. A process that exits while an admission is queued loses that judgement, and the checkpoint is not offered again after restart.
 
 No invariant companion is published because this package exposes no independently owned runtime observation to reconcile with its Session-backed projection.
 
