@@ -9,6 +9,7 @@ import {
   migrateProfileToGenerations,
   rollBackMigration
 } from '../src/main/state/generation-migration'
+import { IN_BOX_BUNDLES } from '../packages/dsh-desktop-market-installer/generations/projection'
 import {
   listGenerations,
   readDesired,
@@ -198,6 +199,50 @@ describe('one-time profile migration to generations', () => {
     expect(migrated).toEqual({ outcome: 'no-op' })
     expect(isProfileMigrated(home)).toBe(true)
     expect(await readDesired(home)).toEqual([])
+  })
+
+  it('marks a 0.1.3 profile that declares only in-box bundles as migrated instead of deferring it', async () => {
+    // A 0.1.3 profile declares the shipped Reflex bundles, which resolve from the installation and so never appear in
+    // the profile's node_modules; an earlier build deferred such a profile on every launch.
+    const home = await preUpgradeProfile({})
+    const dir = join(home, 'profiles', 'web')
+    const earlier = IN_BOX_BUNDLES.filter((name) => name !== '@deepseek-ai/dsh-experimental-system3')
+    await writeFile(join(dir, 'package.json'), JSON.stringify({
+      name: 'dsh-profile-web', private: true, dependencies: {}, dsh: { profile: { bundles: earlier } }
+    }))
+    await writeFile(join(dir, '.generations-deferred.json'), JSON.stringify({
+      protocol: 6,
+      fingerprint: '3a51b1ea5c42d993f2d0fa1912aaad64342d0d0aa5e6e29a24adb24297e90bff',
+      reason: '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin has no readable installed package manifest',
+      failedAt: new Date().toISOString(),
+      retryAfter: new Date(Date.now() + 60 * 60 * 1000).toISOString()
+    }))
+
+    expect(await migrateProfileToGenerations(deps(home))).toEqual({ outcome: 'no-op' })
+    expect(isProfileMigrated(home)).toBe(true)
+    expect(installCalls).toEqual([])
+    expect(JSON.parse(await readFile(join(dir, 'package.json'), 'utf8')).dsh.profile.bundles).toEqual(earlier)
+  })
+
+  it('moves only the community plugin of a profile that also declares in-box bundles', async () => {
+    const home = await preUpgradeProfile({ 'dsh-vision-router': '2.0.1' })
+    const manifestPath = join(home, 'profiles', 'web', 'package.json')
+    const legacy = JSON.parse(await readFile(manifestPath, 'utf8'))
+    legacy.dsh.profile.bundles = [...IN_BOX_BUNDLES, 'dsh-vision-router']
+    await writeFile(manifestPath, JSON.stringify(legacy))
+
+    expect(await migrateProfileToGenerations(deps(home))).toEqual({ outcome: 'migrated' })
+    expect(installCalls).toEqual(['dsh-vision-router'])
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf8'))
+    expect(manifest.dsh.profile.bundles).toEqual([...IN_BOX_BUNDLES, 'dsh-vision-router'])
+    expect(Object.keys(manifest.dependencies).sort()).toEqual(['dsh-vision-router', 'dshmarket'])
+  })
+
+  it('writes the migrated marker on a first launch before the profile directory exists', async () => {
+    const home = await mkdtemp(join(tmpdir(), 'dsh-migrate-first-'))
+    homes.push(home)
+    expect(await migrateProfileToGenerations(deps(home))).toEqual({ outcome: 'no-op' })
+    expect(isProfileMigrated(home)).toBe(true)
   })
 
   it('restores the pre-upgrade profile when the shared-tree rebuild fails', async () => {

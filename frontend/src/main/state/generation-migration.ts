@@ -6,7 +6,7 @@ import {
   installGeneration,
   verifyGenerationPeers
 } from 'dsh-desktop-market-installer/generations/installer'
-import { projectGenerations } from 'dsh-desktop-market-installer/generations/projection'
+import { IN_BOX_BUNDLES, projectGenerations } from 'dsh-desktop-market-installer/generations/projection'
 import { readDesired, writeDesired } from 'dsh-desktop-market-installer/generations/registry'
 import { resolveMarketRegistry } from 'dsh-desktop-market-installer/market-registry'
 
@@ -66,12 +66,11 @@ interface SnapshotState {
   paths: SnapshotPathState[]
 }
 
-/** Packages that stay in the shared tree — never migrated to a generation. */
-const KEEP_IN_SHARED_TREE = new Set([
-  'dshmarket',
-  '@deepseek-ai/dsh-base',
-  '@deepseek-ai/dsh-web-app'
-])
+/**
+ * Packages that stay in the shared tree — never migrated to a generation. In-box bundles resolve from the
+ * installation, so a profile's `node_modules` never holds them and a migration keeps every one of them.
+ */
+export const KEEP_IN_SHARED_TREE: ReadonlySet<string> = new Set(['dshmarket', ...IN_BOX_BUNDLES])
 
 type Note = (line: string) => void
 
@@ -601,10 +600,11 @@ export async function migrateProfileToGenerations(deps: MigrationDeps): Promise<
   }
   if (isProfileMigrated(dshHome)) return noop()
   if (!existsSync(join(profileDir(dshHome), 'package.json'))) {
-    // No profile yet — nothing to migrate; mark so a fresh install skips this.
-    await writeFile(join(profileDir(dshHome), MARKER), `${new Date().toISOString()}\n`, 'utf8').catch(
-      () => undefined
-    )
+    // No profile yet — nothing to migrate; mark so a fresh install skips this. The profile directory does not exist
+    // before its first initialization, so create it rather than lose the marker.
+    await mkdir(profileDir(dshHome), { recursive: true })
+      .then(() => writeFile(join(profileDir(dshHome), MARKER), `${new Date().toISOString()}\n`, 'utf8'))
+      .catch(() => undefined)
     return noop()
   }
 

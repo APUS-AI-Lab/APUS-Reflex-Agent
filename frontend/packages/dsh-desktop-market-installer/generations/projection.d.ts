@@ -1,3 +1,6 @@
+/** Profile bundles the desktop shell owns, in composition order; they resolve from the installation, never the profile. */
+export const IN_BOX_BUNDLES: readonly string[]
+
 export interface ProjectionResult {
   linked: string[]
   unlinked: string[]

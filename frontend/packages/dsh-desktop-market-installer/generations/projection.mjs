@@ -34,8 +34,21 @@ import { resolveEnabledGenerations } from './registry.mjs'
  * not a repair.
  */
 
-/** Packages the desktop shell owns as profile bundles; never projected or pruned. */
-const IN_BOX_BUNDLES = new Set(['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app', '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin', '@deepseek-ai/dsh-experimental-system3', '@deepseek-ai/dsh-experimental-continuum-jev', '@deepseek-ai/dsh-experimental-reflex-local-bundle'])
+/**
+ * Packages the desktop shell owns as profile bundles, in composition order; never projected, pruned or migrated. They
+ * resolve from the installation, so a profile's `node_modules` never holds them. System3 and the local Reflex bundle
+ * follow the Jev bundle that inserts the `jev` entry they route to.
+ * @type {readonly string[]}
+ */
+export const IN_BOX_BUNDLES = Object.freeze([
+  '@deepseek-ai/dsh-base',
+  '@deepseek-ai/dsh-web-app',
+  '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin',
+  '@deepseek-ai/dsh-experimental-system3',
+  '@deepseek-ai/dsh-experimental-continuum-jev',
+  '@deepseek-ai/dsh-experimental-reflex-local-bundle'
+])
+const IN_BOX_BUNDLE_SET = new Set(IN_BOX_BUNDLES)
 
 /** Substring that marks a symlink target as one this projector wrote. */
 const GENERATION_LINK_MARKER = join('profiles', '.generations', 'live')
@@ -495,7 +508,7 @@ async function syncProfileManifest(
   // restart prompt on every launch.
   let bundles = [...(manifest.dsh?.profile?.bundles ?? [])]
   if (syncBundles) {
-    const declaredBundles = bundles.filter((name) => IN_BOX_BUNDLES.has(name))
+    const declaredBundles = bundles.filter((name) => IN_BOX_BUNDLE_SET.has(name))
     for (const name of Object.keys(dependencies)) {
       if (declaredBundles.includes(name) || enabled.has(name)) continue
       if (await declaresBundle(join(dir, 'node_modules', name))) declaredBundles.push(name)

@@ -13,7 +13,7 @@ import {
   resolveEnabledGenerations,
   sweepRegistry
 } from 'dsh-desktop-market-installer/generations/registry'
-import { projectGenerations } from 'dsh-desktop-market-installer/generations/projection'
+import { IN_BOX_BUNDLES, projectGenerations } from 'dsh-desktop-market-installer/generations/projection'
 
 /**
  * The launch-process half of the generation model. The market plugin installs
@@ -48,18 +48,14 @@ export async function prepareGenerationsForLaunch(dshHome: string, note: Note): 
   // Use the same initializer and template app-boot itself uses so its defaults
   // remain the single source of truth.
   const profileDir = resolveProfileDir('web', dshHome)
-  if (!existsSync(join(profileDir, 'package.json'))) {
-    const template = PROFILE_TEMPLATES.web
-    if (template === undefined) throw new Error('Harness does not define the web profile template')
-    initProfile(profileDir, template.bundles)
-  }
+  const template = PROFILE_TEMPLATES.web
+  if (template === undefined) throw new Error('Harness does not define the web profile template')
+  if (!existsSync(join(profileDir, 'package.json'))) initProfile(profileDir, template.bundles)
   const manifest = readProfileManifest('APUS Reflex Harness', profileDir)
   const bundles = manifest.dsh?.profile?.bundles ?? []
-  // The System3 and local Reflex bundles route to the Jev entry, so they follow the Jev bundle. Profiles from earlier
-  // releases lack the System3 bundle and receive it appended, after their Jev bundle.
-  const missingBundles = ['@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin', '@deepseek-ai/dsh-experimental-system3',
-    '@deepseek-ai/dsh-experimental-continuum-jev', '@deepseek-ai/dsh-experimental-reflex-local-bundle']
-    .filter(bundle => !bundles.includes(bundle))
+  // The in-box bundles beyond the template's, in IN_BOX_BUNDLES order, so System3 and the local Reflex bundle follow
+  // the Jev bundle whose entry they route to. Profiles from earlier releases receive the ones they lack appended.
+  const missingBundles = IN_BOX_BUNDLES.filter(bundle => !template.bundles.includes(bundle) && !bundles.includes(bundle))
   if (missingBundles.length > 0) {
     writeProfileBundles(profileDir, manifest, [...bundles, ...missingBundles])
   }
