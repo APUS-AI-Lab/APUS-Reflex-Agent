@@ -1,6 +1,6 @@
 {
   "name": "apus-reflex-agent",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "APUS Reflex Harness — Model-as-a-Harness. 瞬策：瞬时执行，深度思考。",
   "private": true,
   "type": "module",
