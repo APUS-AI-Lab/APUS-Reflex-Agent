@@ -4,7 +4,7 @@ English | [中文](handoff.zh.md)
 
 ## TL;DR
 
-This worktree makes main's Independent harness workflow run the Continuum memory unit tests and recorded sessions, and adds an opt-in live Jev memory acceptance job. The live script now checks ranking, admission of facts versus chatter, and threshold recall against a real Jev gateway. Keyless checks pass locally; the live run is pending a `CONTINUUM_JEV_API_KEY`.
+This worktree makes main's Independent harness workflow run the Continuum memory unit tests and recorded sessions, and adds an opt-in live Jev memory acceptance job. The live script now checks ranking, admission of facts versus chatter, and threshold recall against a real Jev gateway. Keyless checks pass locally and in pull request CI; the live script passed four consecutive runs against `APUS-OpenJev-v1-9B-5949`.
 
 ## Deliverables
 
@@ -26,13 +26,14 @@ This worktree makes main's Independent harness workflow run the Continuum memory
 
 - `vitest run` over the ten directories of the CI step: 110 files, 1930 tests passed.
 - `test:snapshot` with the CI filter: 15 passed, including five Continuum sessions.
-- `tsc -b tsconfig.host.json`, `actionlint`, and `test:docs` (20 gates) passed.
+- `tsc -b tsconfig.host.json`, `actionlint`, and `doc-sync` (42 gates) passed.
+- Live script, four runs: every run admitted `dentist` (`health`, `plans`, `dates`) and `budget` (`money`, `preferences`), indexed no chatter, and recalled only `dentist`; ranking took 1.8–3.3 s, each admission batch 0.9–1.6 s, and recall 0.46–1.2 s.
 
 ## Next tasks
 
-- [ ] Add `JEV_API_KEY` locally and run the live script against `APUS-OpenJev-v1-9B-5949`.
+- [x] Run the live script against `APUS-OpenJev-v1-9B-5949`.
 - [ ] Set the `CONTINUUM_JEV_ENDPOINT` and `CONTINUUM_JEV_MODEL` variables and the `CONTINUUM_JEV_API_KEY` secret in the repository.
-- [ ] Merge after the pull request checks and the live run pass.
+- [x] Merge after the pull request checks and the live run pass.
 - [ ] Rebuild the leaderboard runtime from the merged main and rerun its preflight.
 
 ## Branch status

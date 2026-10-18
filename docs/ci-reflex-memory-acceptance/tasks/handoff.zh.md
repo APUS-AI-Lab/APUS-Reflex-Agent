@@ -4,7 +4,7 @@
 
 ## TL;DR
 
-本 worktree 让 main 的 Independent harness workflow 运行 Continuum 记忆单测与录制会话，并新增需显式开启的真实 Jev 记忆验收 job。真实验收脚本现在用真实 Jev gateway 检查排序、事实与闲聊的收录判断和阈值召回。无 key 检查已在本地通过；真实运行等待 `CONTINUUM_JEV_API_KEY`。
+本 worktree 让 main 的 Independent harness workflow 运行 Continuum 记忆单测与录制会话，并新增需显式开启的真实 Jev 记忆验收 job。真实验收脚本现在用真实 Jev gateway 检查排序、事实与闲聊的收录判断和阈值召回。无 key 检查已在本地和 PR CI 中通过；真实验收脚本对 `APUS-OpenJev-v1-9B-5949` 连续四次运行通过。
 
 ## 交付物
 
@@ -26,13 +26,14 @@
 
 - 对 CI 步骤的十个目录运行 `vitest run`：110 个文件、1930 个测试通过。
 - 按 CI 过滤条件运行 `test:snapshot`：15 个通过，其中包含五个 Continuum 会话。
-- `tsc -b tsconfig.host.json`、`actionlint` 和 `test:docs`（20 个门禁）通过。
+- `tsc -b tsconfig.host.json`、`actionlint` 和 `doc-sync`（42 个门禁）通过。
+- 真实验收脚本四次运行：每次都收录 `dentist`（`health`、`plans`、`dates`）和 `budget`（`money`、`preferences`），不索引闲聊，并且只召回 `dentist`；排序耗时 1.8–3.3 秒，每批收录 0.9–1.6 秒，召回 0.46–1.2 秒。
 
 ## 下一步任务
 
-- [ ] 在本机添加 `JEV_API_KEY`，用 `APUS-OpenJev-v1-9B-5949` 运行真实验收脚本。
+- [x] 用 `APUS-OpenJev-v1-9B-5949` 运行真实验收脚本。
 - [ ] 在仓库中设置 `CONTINUUM_JEV_ENDPOINT`、`CONTINUUM_JEV_MODEL` 变量和 `CONTINUUM_JEV_API_KEY` secret。
-- [ ] PR 检查与真实运行通过后合并。
+- [x] PR 检查与真实运行通过后合并。
 - [ ] 从合并后的 main 重建榜单 runtime 并重跑 preflight。
 
 ## 分支状态
