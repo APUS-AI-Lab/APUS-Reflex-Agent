@@ -47,10 +47,13 @@ jobs:
         run: |
           pnpm run build:native-system
           pnpm run build:lib:host
-      - name: Jev, System3, and AG-UI behavior
+      - name: Jev, System3, Continuum, and AG-UI behavior
         run: >-
           pnpm exec vitest run
           packages/experimental/apus-dsh-jev-plugin/tests
+          packages/context/continuum/tests
+          packages/experimental/continuum-jev/tests
+          packages/session-query/tool-history-recall/tests
           packages/experimental/system3/tests
           packages/experimental/system3-evidence/tests
           packages/experimental/system3-policy/tests
@@ -58,8 +61,8 @@ jobs:
           packages/experimental/agui/tests
           packages/api/session-controller/tests
           --maxWorkers=2
-      - name: Replay System3 and AG-UI persona sessions
-        run: pnpm run test:snapshot snapshots/sdk/sdk.snapshot.ts -t 'system3-shadow|system3-entry-route|system3-completion-review|reflex-context|reflex-supervision|reflex-semantic-supervision|reflex-native-recovery|goal-entry-routing|agui-persona'
+      - name: Replay System3, Continuum, and AG-UI persona sessions
+        run: pnpm run test:snapshot snapshots/sdk/sdk.snapshot.ts -t 'continuum-|system3-shadow|system3-entry-route|system3-completion-review|reflex-context|reflex-supervision|reflex-semantic-supervision|reflex-native-recovery|goal-entry-routing|agui-persona'
       - name: Python SDK completion review
         run: uv run --project python/sdk python scripts/smoke-python-runtime.py --scenario sdk-system3-completion-review --exe apps/cli/lib/bin.js
       - name: Python SDK Reflex context restoration
@@ -72,3 +75,39 @@ jobs:
         run: uv run --project python/sdk python scripts/smoke-python-runtime.py --scenario sdk-goal-entry-routing --exe apps/cli/lib/bin.js
       - name: Python SDK native Reflex recovery
         run: uv run --project python/sdk python scripts/smoke-python-runtime.py --scenario sdk-reflex-native-recovery --exe apps/cli/lib/bin.js
+
+  jev-live:
+    name: Live Jev memory acceptance
+    # Opt-in: set the CONTINUUM_JEV_ENDPOINT and CONTINUUM_JEV_MODEL repository variables and the
+    # CONTINUUM_JEV_API_KEY secret. Forked and Dependabot PRs never receive the secret, so they skip.
+    if: >-
+      vars.CONTINUUM_JEV_ENDPOINT != '' && (github.event_name != 'pull_request'
+      || !(github.event.pull_request.head.repo.fork || github.event.pull_request.user.login == 'dependabot[bot]'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      CONTINUUM_JEV_ENDPOINT: ${{ vars.CONTINUUM_JEV_ENDPOINT }}
+      CONTINUUM_JEV_MODEL: ${{ vars.CONTINUUM_JEV_MODEL }}
+      CONTINUUM_JEV_API_KEY: ${{ secrets.CONTINUUM_JEV_API_KEY }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Require live Jev configuration
+        run: |
+          test -n "$CONTINUUM_JEV_MODEL" || { echo '::error::CONTINUUM_JEV_MODEL variable is missing'; exit 1; }
+          test -n "$CONTINUUM_JEV_API_KEY" || { echo '::error::CONTINUUM_JEV_API_KEY secret is missing'; exit 1; }
+          curl -fsS --max-time 30 "${CONTINUUM_JEV_ENDPOINT%/}/health"
+      - name: Build host runtime
+        run: |
+          pnpm run build:native-system
+          pnpm run build:lib:host
+      - name: Rank, admit, and recall through live Jev
+        run: pnpm exec tsx scripts/continuum-live-e2e.ts

@@ -1,0 +1,31 @@
+# Bilingual-pair consistency record for handoff.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/ci-reflex-memory-acceptance/tasks/handoff.md
+/ci-reflex-memory-acceptance-handoff:
+  en: 98ff334d85e4aaf9
+  zh: 3b935cf34e7a1d81
+/ci-reflex-memory-acceptance-handoff/tl-dr:
+  en: 15aebfab8350cdb0
+  zh: 3cc9c1a8cb7d85f9
+/ci-reflex-memory-acceptance-handoff/deliverables:
+  en: 41ad0000939e07c3
+  zh: feab84763493f46c
+/ci-reflex-memory-acceptance-handoff/constraints:
+  en: c1a95d15b4d09eef
+  zh: 74a98324c84c5442
+/ci-reflex-memory-acceptance-handoff/observed-behavior:
+  en: 132180b9733d1182
+  zh: 144d3698df1aa283
+/ci-reflex-memory-acceptance-handoff/local-evidence:
+  en: bb90442be73b68ce
+  zh: 637700209d99ffd6
+/ci-reflex-memory-acceptance-handoff/next-tasks:
+  en: 9fed4889106152b1
+  zh: ab4aab580ca52014
+/ci-reflex-memory-acceptance-handoff/branch-status:
+  en: 573fbae4c0da52e7
+  zh: 543253522bd82235
+/ci-reflex-memory-acceptance-handoff/cold-start:
+  en: 2b9534e7a1864de9
+  zh: 0f61e480fc9bc821

@@ -77,7 +77,7 @@ APUS Desktop 和 Web 启动器为新建和已有普通配置方案选择已安�
 
 - 在设置中关闭 Reflex 期间，写入仍会记录 `provider-unavailable` 回执；不会产生索引项或召回，也不提供 `history_read` 和 `history_search`，重新开启 Reflex 后下一次请求恢复这两个工具。
 - 服务不负责检索或记录。Core 负责 bundle 中基于 Session 的记录和生命周期；Reflex 判断不表示事实成立。
-- 真实 Jev 质量和延迟必须在 gateway 可达且配置完整时测试；fake provider 不能证明模型效果。真实 headless 验收覆盖一个约束召回场景，`minRelevance` 和 `minTagProbability` 尚未用标注集校准。相关性请求位于每轮的关键路径上。
+- 真实 Jev 质量和延迟必须在 gateway 可达且配置完整时测试；fake provider 不能证明模型效果。[`scripts/continuum-live-e2e.ts`](../../../scripts/continuum-live-e2e.ts) 的真实验收由需显式开启的 `Live Jev memory acceptance` CI job 运行，覆盖一次排序请求、两条事实与两条闲聊消息的收录判断和一次阈值召回；headless 验收覆盖一个约束召回场景，`minRelevance` 和 `minTagProbability` 尚未用标注集校准。相关性请求位于每轮的关键路径上。
 - 仅对前十六个候选评分；`rank` 保留其余候选，`threshold` 只保留其中与问题有共同词的候选。语义索引、查询扩展和逐条数据分类属于后续工作。声明的 Session 数据分类覆盖候选及问题；本包没有检测其中密钥的数据分类器。
 
 不发布运行时不变式伴生模块：请求与回执适配器不维护独立的持久投影。
