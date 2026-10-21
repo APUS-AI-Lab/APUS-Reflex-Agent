@@ -71,7 +71,7 @@ This section explains the design decisions behind the local backend and points a
 The backend builds on three ideas:
 
 - **Realpath identity.** The `targetKey` is the file's `realpath`, so two input paths reaching the same file through symlinks share one identity, and writes land on the link target while preserving the link.
-- **Atomic publication.** Writes stage into an exclusive temp file inside a private staging directory next to the target, fsync, then publish; an existing file's mode is preserved and Windows DACLs survive replacement.
+- **Atomic publication.** Writes stage into an exclusive owner-only temp file inside a private staging directory next to the target, fsync, then publish; an existing file's mode is preserved, a new POSIX file takes `0o666` minus the process umask (the mode a shell redirect creates, so other users such as a privilege-dropped verifier can read it under the usual `022` umask), and Windows DACLs survive replacement.
 - **One mutation critical section.** A per-target FIFO lock serializes read→guard→write windows, so concurrent writes and edits are deterministically ordered — one wins, the rest see the new version and reject as stale.
 
 ### Source map

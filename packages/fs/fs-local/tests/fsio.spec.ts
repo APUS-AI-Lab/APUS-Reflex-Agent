@@ -892,10 +892,33 @@ describe('writeFileAtomic — temp-file safety', () => {
     expect(await readFile(file, 'utf8')).toBe('ours')
   })
 
-  it.skipIf(!posixModes)('creates new files owner-only by default', async () => {
+  it.skipIf(!posixModes)('creates new files with the mode a plain file creation gets under the process umask', async () => {
     const file = join(dir, 'a.txt')
+    const reference = join(dir, 'reference.txt')
+    await writeFile(reference, 'shell redirect equivalent', { mode: 0o666 })
     await writeFileAtomic(file, 'hello', undefined, undefined)
-    expect((await stat(file)).mode & 0o777).toBe(0o600)
+    expect((await stat(file)).mode & 0o777).toBe((await stat(reference)).mode & 0o777)
+  })
+
+  it.skipIf(!posixModes)('keeps a new file owner-only while staged and widens it only at publication', async () => {
+    const file = join(dir, 'a.txt')
+    const reference = join(dir, 'reference.txt')
+    await writeFile(reference, 'shell redirect equivalent', { mode: 0o666 })
+    let stagedMode: number | undefined
+    await writeFileAtomic(file, 'hello', undefined, undefined, {
+      inspectTemp: async ({ tempPath }) => { stagedMode = (await stat(tempPath)).mode & 0o777 },
+    })
+    expect(stagedMode).toBe(0o600)
+    expect((await stat(file)).mode & 0o777).toBe((await stat(reference)).mode & 0o777)
+  })
+
+  it.skipIf(!posixModes)('lets other users read a new file under the common 022 umask', async () => {
+    const file = join(dir, 'a.txt')
+    const reference = join(dir, 'reference.txt')
+    await writeFile(reference, 'probe', { mode: 0o666 })
+    const umaskAllowsOtherRead = ((await stat(reference)).mode & 0o004) !== 0
+    await writeFileAtomic(file, 'hello', undefined, undefined)
+    expect(((await stat(file)).mode & 0o004) !== 0).toBe(umaskAllowsOtherRead)
   })
 
   it('opens staging paths exclusively — a pre-existing path is never clobbered', async () => {
