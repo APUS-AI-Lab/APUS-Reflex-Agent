@@ -1,6 +1,7 @@
 import { spawn, spawnSync } from 'node:child_process'
 import {
   chmodSync,
+  copyFileSync,
   existsSync,
   linkSync,
   mkdirSync,
@@ -179,13 +180,14 @@ async function waitForPath(path: string): Promise<void> {
   }
 }
 
-function runInstaller(
+function runInstallerScript(
+  script: string,
   fixture: Fixture,
   root: string,
   extraEnv: NodeJS.ProcessEnv = {},
 ): Promise<CommandResult> {
   return new Promise((resolveResult, reject) => {
-    const child = spawn(process.execPath, [installer], {
+    const child = spawn(process.execPath, [script], {
       cwd: root,
       env: { ...fixture.env, ...extraEnv },
       stdio: ['ignore', 'pipe', 'pipe'],
@@ -197,6 +199,14 @@ function runInstaller(
     child.on('error', reject)
     child.on('close', (status) => { resolveResult({ status, stderr, stdout }) })
   })
+}
+
+function runInstaller(
+  fixture: Fixture,
+  root: string,
+  extraEnv: NodeJS.ProcessEnv = {},
+): Promise<CommandResult> {
+  return runInstallerScript(installer, fixture, root, extraEnv)
 }
 
 // Every case builds scratch worktrees and drives them through spawned Git and
@@ -232,6 +242,18 @@ describe('worktree-local Lefthook installer', { timeout: 90_000 }, () => {
       expect(existsSync(join(common, 'config.worktree'))).toBe(false)
     })
   }
+
+  it('skips hook installation when the Lefthook devDependency is absent', async () => {
+    const fixture = createFixture()
+    const detachedInstaller = join(fixture.container, 'install-lefthook.mjs')
+    copyFileSync(installer, detachedInstaller)
+
+    const result = await runInstallerScript(detachedInstaller, fixture, fixture.main)
+
+    expect(result.status, result.stderr).toBe(0)
+    expect(result.stderr).toBe('')
+    expect(existsSync(hooksPath(fixture, fixture.main))).toBe(false)
+  })
 
   it('isolates main and linked worktrees without changing legacy common hooks', async () => {
     const fixture = createFixture()
