@@ -60,6 +60,8 @@
 | `event:hook/result` | event | `e75916628f3f10c2d50658bd143052a46285fbf1a9a700ba54947614603d26b4` | [`{ type: "hook/result" }`](#persistence-type-sha256-e75916628f3f10c2d50658bd143052a46285fbf1a9a700ba54947614603d26b4) |
 | `event:image/offload` | event | `b222069eea2d768065161c1147b1f2c78c1b54328c84b3586ae5c8f91b8ed35e` | [`{ type: "image/offload" }`](#persistence-type-sha256-b222069eea2d768065161c1147b1f2c78c1b54328c84b3586ae5c8f91b8ed35e) |
 | `event:job/settled` | event | `3a2b9280ee61ea2cda5c13a1101a8d577bb6e84f7bf1c78088c9cfba6b781bf5` | [`{ type: "job/settled" }`](#persistence-type-sha256-3a2b9280ee61ea2cda5c13a1101a8d577bb6e84f7bf1c78088c9cfba6b781bf5) |
+| `event:llm/dispatch` | event | `51dc09b0cc092ccf146dc03542d280da687fbb519436865f78426991b6cbd609` | [`{ type: "llm/dispatch" }`](#persistence-type-sha256-51dc09b0cc092ccf146dc03542d280da687fbb519436865f78426991b6cbd609) |
+| `event:llm/dispatch-settled` | event | `5044ddd4d7ae6ef58098ffda9b908d944166c0b3d421608c3e58044bcf449696` | [`{ type: "llm/dispatch-settled" }`](#persistence-type-sha256-5044ddd4d7ae6ef58098ffda9b908d944166c0b3d421608c3e58044bcf449696) |
 | `event:llm/retry` | event | `525254db03b1d1e6b74cf55aced52817568331ac1f96c0818728910b6692e336` | [`{ type: "llm/retry" }`](#persistence-type-sha256-525254db03b1d1e6b74cf55aced52817568331ac1f96c0818728910b6692e336) |
 | `event:llm/retry-started` | event | `48e5c9861f16ac07e78cb7b5ae9dabdf7bb85c58baed5a51b4ad275050ea58e3` | [`{ type: "llm/retry-started" }`](#persistence-type-sha256-48e5c9861f16ac07e78cb7b5ae9dabdf7bb85c58baed5a51b4ad275050ea58e3) |
 | `event:model/automatic-selection` | event | `8cf64ffe0f1b4f590140051634a0abb3513a07fd9c699d393620189321536a92` | [`{ type: "model/automatic-selection" }`](#persistence-type-sha256-8cf64ffe0f1b4f590140051634a0abb3513a07fd9c699d393620189321536a92) |
@@ -911,6 +913,52 @@ export type SessionEvent<T extends SessionEventType = SessionEventType> = {
 来源：[`packages/jobs/jobs-local/src/index.ts:56`](../packages/jobs/jobs-local/src/index.ts)
 
 ### `llm/*`
+
+<a id="llmdispatch--log-only"></a>
+
+#### `llm/dispatch` — log-only
+
+```ts persistence-catalog
+/**
+ * One actual loop-built model dispatch, recorded at the `llm/stream`
+ * waterfall before the adapter runs. Carries only the native references a
+ * later reader cannot reconstruct from the log: the dispatching session,
+ * the exact committed prefix end the request was derived from, and its
+ * turn/step. It never copies messages or tool declarations and never
+ * enters the model-visible surface. Log-only and informational: losing it
+ * cannot change how the rest of the log is interpreted.
+ */
+'llm/dispatch': {
+  sessionId: SessionId
+  /** Last committed event seq the request was derived from. */
+  prefixEnd: SessionSeq
+  turn: number
+  step: number
+}
+```
+
+来源：[`packages/sdk/server/src/request-view.ts:47`](../packages/sdk/server/src/request-view.ts)
+
+<a id="llmdispatch-settled--log-only"></a>
+
+#### `llm/dispatch-settled` — log-only
+
+```ts persistence-catalog
+/**
+ * The assistant settlement that closed one `llm/dispatch`. `settlementSeq`
+ * names the `assistant/message` or `assistant/attempt` event; this record
+ * is appended after it. Log-only and informational, like its dispatch.
+ */
+'llm/dispatch-settled': {
+  sessionId: SessionId
+  /** Seq of the `llm/dispatch` record this settlement closes. */
+  dispatchSeq: SessionSeq
+  /** Seq of the assistant settlement event that closed the attempt. */
+  settlementSeq: SessionSeq
+}
+```
+
+来源：[`packages/sdk/server/src/request-view.ts:59`](../packages/sdk/server/src/request-view.ts)
 
 <a id="llmretry--log-only"></a>
 
@@ -3768,6 +3816,22 @@ SHA-256: `fd641c68c937bf27c6d4bfb3e8fb2788a2ce5e56f645fe0b72e92ed44561bb4c`
 SHA-256: `af0ff6e309fb86fe4a57ddd2630ab51a7353a4bb512ca69edbb50d76ad4b9360`
 
 `"listener"`
+
+<a id="persistence-type-sha256-a32c82ffc53e58e23913021683a2c311fef0c612dfc2fb1e7882aca2dab5d68e"></a>
+
+### `"llm/dispatch"`
+
+SHA-256: `a32c82ffc53e58e23913021683a2c311fef0c612dfc2fb1e7882aca2dab5d68e`
+
+`"llm/dispatch"`
+
+<a id="persistence-type-sha256-9b414c415622ed87c94c74a8cf7ecf4b46a6911dc2385f9e1328015048c37bd5"></a>
+
+### `"llm/dispatch-settled"`
+
+SHA-256: `9b414c415622ed87c94c74a8cf7ecf4b46a6911dc2385f9e1328015048c37bd5`
+
+`"llm/dispatch-settled"`
 
 <a id="persistence-type-sha256-611cae9a3539733aa0c42f66035a7d90f19dcbbdfb5d9e3b628b13705253942d"></a>
 
@@ -12466,6 +12530,20 @@ SHA-256: `119abe2b9c0b2f46ecb31d82b9acba4d4b30e049f655e2475e8b4ae12d5a9e25`
 | `point` | 必需 | `string` |
 | `turn` | 必需 | `number` |
 
+<a id="persistence-type-sha256-332cf8fdb36ea28e1d23b16e8d4c55dbaef1998d915c2cb8dc7ba13d9002d171"></a>
+
+### `{ dispatchSeq, sessionId, settlementSeq }`
+
+SHA-256: `332cf8fdb36ea28e1d23b16e8d4c55dbaef1998d915c2cb8dc7ba13d9002d171`
+
+来源：[`packages/sdk/server/src/request-view.ts:59`](../packages/sdk/server/src/request-view.ts)
+
+| 属性 | 存在性 | 类型 |
+|---|---|---|
+| `dispatchSeq` | 必需 | `number` |
+| `sessionId` | 必需 | `string` |
+| `settlementSeq` | 必需 | `number` |
+
 <a id="persistence-type-sha256-a9ded4c2bc78c2a75b4521eadb04dcdb9e1abf8cd002437efeb0baf8c94689dd"></a>
 
 ### `{ end, firstLine, lastLine, start }`
@@ -14291,6 +14369,21 @@ SHA-256: `11f70b595aa76897fc4e25a352bfa718c659f44b799e5aa14e84e5a38fe72912`
 | `policy` | 必需 | [`ApprovalPolicy`](#persistence-type-sha256-05d2ae1e0c7f8770f83f9a09047afb39a335d8ac986df3193659aa1e581472cf) |
 | `source` | 可选 | `"delegation"` |
 
+<a id="persistence-type-sha256-8b0776cd48a68ad71880b08f1e1b4a0775d08dd9c2024d6b3ef6a7c7e0b1a5c6"></a>
+
+### `{ prefixEnd, sessionId, step, turn }`
+
+SHA-256: `8b0776cd48a68ad71880b08f1e1b4a0775d08dd9c2024d6b3ef6a7c7e0b1a5c6`
+
+来源：[`packages/sdk/server/src/request-view.ts:47`](../packages/sdk/server/src/request-view.ts)
+
+| 属性 | 存在性 | 类型 |
+|---|---|---|
+| `prefixEnd` | 必需 | `number` |
+| `sessionId` | 必需 | `string` |
+| `step` | 必需 | `number` |
+| `turn` | 必需 | `number` |
+
 <a id="persistence-type-sha256-8a9c990773f798eac10ca8878e6bcc531ee080bc589cac956730e462cc6a09ad"></a>
 
 ### `{ preset }`
@@ -15153,6 +15246,38 @@ SHA-256: `3a2b9280ee61ea2cda5c13a1101a8d577bb6e84f7bf1c78088c9cfba6b781bf5`
 | `seq` | 必需 | `number` |
 | `time` | 必需 | `number` |
 | `type` | 必需 | `"job/settled"` |
+
+<a id="persistence-type-sha256-51dc09b0cc092ccf146dc03542d280da687fbb519436865f78426991b6cbd609"></a>
+
+<a id="persistence-type-eventllmdispatch"></a>
+
+### `{ type: "llm/dispatch" }`
+
+SHA-256: `51dc09b0cc092ccf146dc03542d280da687fbb519436865f78426991b6cbd609`
+
+| 属性 | 存在性 | 类型 |
+|---|---|---|
+| `data` | 必需 | [`{ prefixEnd, sessionId, step, turn }`](#persistence-type-sha256-8b0776cd48a68ad71880b08f1e1b4a0775d08dd9c2024d6b3ef6a7c7e0b1a5c6) |
+| `ignorable` | 可选 | `true` |
+| `seq` | 必需 | `number` |
+| `time` | 必需 | `number` |
+| `type` | 必需 | `"llm/dispatch"` |
+
+<a id="persistence-type-sha256-5044ddd4d7ae6ef58098ffda9b908d944166c0b3d421608c3e58044bcf449696"></a>
+
+<a id="persistence-type-eventllmdispatch-settled"></a>
+
+### `{ type: "llm/dispatch-settled" }`
+
+SHA-256: `5044ddd4d7ae6ef58098ffda9b908d944166c0b3d421608c3e58044bcf449696`
+
+| 属性 | 存在性 | 类型 |
+|---|---|---|
+| `data` | 必需 | [`{ dispatchSeq, sessionId, settlementSeq }`](#persistence-type-sha256-332cf8fdb36ea28e1d23b16e8d4c55dbaef1998d915c2cb8dc7ba13d9002d171) |
+| `ignorable` | 可选 | `true` |
+| `seq` | 必需 | `number` |
+| `time` | 必需 | `number` |
+| `type` | 必需 | `"llm/dispatch-settled"` |
 
 <a id="persistence-type-sha256-525254db03b1d1e6b74cf55aced52817568331ac1f96c0818728910b6692e336"></a>
 

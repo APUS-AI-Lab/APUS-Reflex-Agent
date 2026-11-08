@@ -8,9 +8,17 @@
  * @module @deepseek-ai/dsh-sdk-protocol/types
  */
 
-import type { ContentBlock, ReasoningEffortId } from '@deepseek-ai/dsh-llm'
-import type { SessionEvent } from '@deepseek-ai/dsh-session'
+import type { ContentBlock, ReasoningEffortId, RequestMessage, ToolHistory, ToolSchema } from '@deepseek-ai/dsh-llm'
+import type { EpochHeader, SessionEvent } from '@deepseek-ai/dsh-session'
 import type { SubagentStopReason } from '@deepseek-ai/dsh-subagent'
+
+/**
+ * Wire-stable capability token a runtime advertises when it can answer the
+ * read-only request-view methods. Both SDK clients and the runtime compare this
+ * exact value, so an older runtime that omits it is refused instead of being
+ * asked for a view it cannot produce.
+ */
+export const SDK_REQUEST_VIEW_CAPABILITY = 'request-view/dispatch-v1' as const
 
 /** Parameters for the process-wide SDK handshake. */
 export interface InitializeParams {
@@ -30,6 +38,89 @@ export interface InitializeParams {
 export interface InitializeResult {
   /** Wire-stable server identity (`deepseek-harness-sdk-runtime`) and version. */
   serverInfo: { name: string; version: string }
+  /**
+   * Capability tokens this runtime serves. Present only when the runtime offers
+   * optional read-only surfaces; an older runtime omits it, so clients must
+   * treat absence as unsupported. See {@link SDK_REQUEST_VIEW_CAPABILITY}.
+   */
+  capabilities?: string[]
+}
+
+/** One recorded model dispatch of a session, as listed without reading its request. */
+export interface SdkDispatchRecord {
+  /** Seq of the `llm/dispatch` session event. */
+  dispatchSeq: number
+  /** Last committed session event seq the request was derived from. */
+  prefixEnd: number
+  /** Turn the dispatch belonged to. */
+  turn: number
+  /** Step the dispatch belonged to. */
+  step: number
+  /** Seq of the assistant settlement that closed the dispatch, when recorded. */
+  settlementSeq?: number
+}
+
+/** Parameters for `session/dispatches`: list one session's recorded dispatches. */
+export interface SessionDispatchesParams {
+  /** Session whose dispatches to list. */
+  sessionId: string
+}
+
+/** Result of `session/dispatches`. */
+export interface SessionDispatchesResult {
+  /** The queried session. */
+  sessionId: string
+  /** Recorded dispatches in commit order. */
+  dispatches: SdkDispatchRecord[]
+}
+
+/** Parameters for `session/request-view`: rebuild one dispatch's model input. */
+export interface SessionRequestViewParams {
+  /** Session that dispatched the request. */
+  sessionId: string
+  /** Seq of the `llm/dispatch` record to rebuild. */
+  dispatchSeq: number
+}
+
+/**
+ * One dispatch's reconstructed model input, rebuilt through the native Session
+ * primitives from its exact committed prefix. This is the loop-level request,
+ * not the provider's mapped wire body.
+ */
+export interface SdkRequestView {
+  /** Session that dispatched the request. */
+  sessionId: string
+  /** Seq of the `llm/dispatch` record this view rebuilt. */
+  dispatchSeq: number
+  /** Last committed session event seq the request was derived from. */
+  prefixEnd: number
+  /** Turn the dispatch belonged to. */
+  turn: number
+  /** Step the dispatch belonged to. */
+  step: number
+  /** Request header in force at dispatch: call config, adapter defaults, and tools. */
+  header: EpochHeader
+  /** Derived message history at dispatch. */
+  messages: RequestMessage[]
+  /** Assembled tool schemas at dispatch; absent for a tool-less request. */
+  tools?: ToolSchema[]
+  /** Session-folded tool history at dispatch. */
+  toolHistory: ToolHistory
+  /** Seq of the assistant settlement that closed the dispatch, when recorded. */
+  settlementSeq?: number
+  /** Event types of the message projections the rebuild supplied. */
+  projectionTypes: string[]
+}
+
+/** Result of `session/request-view`. */
+export type SessionRequestViewResult = SdkRequestView
+
+/** A typed refusal the runtime returns for an unsupported request view. */
+export interface SdkRequestViewRefusal {
+  /** Stable machine classification: unknown session, unknown dispatch, missing prefix, or unsupported projection. */
+  code: 'SESSION_NOT_FOUND' | 'DISPATCH_NOT_FOUND' | 'PREFIX_UNAVAILABLE' | 'UNSUPPORTED_PROJECTION'
+  /** Human-readable reason, including the unavailable projection type when known. */
+  message: string
 }
 
 /** One user turn on one SDK session. */
@@ -134,5 +225,9 @@ export interface HarnessSdkRequestMap {
   'initialize': { params: InitializeParams; result: InitializeResult }
   'session/prompt': { params: SessionPromptParams; result: SessionPromptResult }
   'session/cancel': { params: SessionCancelParams; result: SessionCancelResult }
+  /** List one session's recorded model dispatches. */
+  'session/dispatches': { params: SessionDispatchesParams; result: SessionDispatchesResult }
+  /** Rebuild one recorded dispatch's model input from its exact log prefix. */
+  'session/request-view': { params: SessionRequestViewParams; result: SessionRequestViewResult }
   'shutdown': { params: undefined; result: Record<string, never> }
 }

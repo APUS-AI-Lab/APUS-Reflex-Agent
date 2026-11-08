@@ -12,7 +12,6 @@ import type { Agent, AgentHandle, AgentSetup } from '@deepseek-ai/dsh-agent'
 import { admitEncodedImages, type EncodedImageAttachment, type ImageAttachmentRef } from '@deepseek-ai/dsh-attachment'
 import { createUserMessage, ReasoningEffortId, type ContentBlock, type LlmRuntime } from '@deepseek-ai/dsh-llm'
 import { carrierKeyOf, type Scoped } from '@deepseek-ai/dsh-scope'
-import type { SessionId } from '@deepseek-ai/dsh-session'
 import type {} from '@deepseek-ai/dsh-agent-preset-registry'
 import type SubagentRuntime from '@deepseek-ai/dsh-subagent'
 import type { SubagentRunEndInfo } from '@deepseek-ai/dsh-subagent'
@@ -23,13 +22,22 @@ import type {
   JsonRpcTransportPeer,
   SessionCancelParams,
   SessionCancelResult,
+  SessionDispatchesParams,
+  SessionDispatchesResult,
   SessionEventNotification,
   SessionPromptParams,
   SessionPromptResult,
+  SessionRequestViewParams,
+  SessionRequestViewResult,
   SdkEncodedImageBlock,
+  SdkRequestViewRefusal,
   SubagentFinishedNotification,
   SubagentStartedNotification,
 } from '@deepseek-ai/dsh-sdk-protocol'
+import { SDK_REQUEST_VIEW_CAPABILITY } from '@deepseek-ai/dsh-sdk-protocol'
+import { SessionId, SessionSeq } from '@deepseek-ai/dsh-session'
+import type { SessionEvent, SessionMessageProjection } from '@deepseek-ai/dsh-session'
+import { buildRequestView, installRequestDispatchRecorder, RequestViewError, RequestViewUnsupportedError } from './request-view.ts'
 
 interface SessionRecord {
   handle: AgentHandle
@@ -74,6 +82,39 @@ function subagentParentOf(carrier: Scoped<SubagentRuntime>): Agent {
 export interface HarnessSdkJsonRpcServerOptions {
   /** Report max-token termination as an accepted result instead of an infrastructure error. */
   maxTokensAsSuccess?: boolean
+  /**
+   * Record one minimal `llm/dispatch` fact per loop-built model call and expose
+   * the read-only request-view methods. Default `false`: the recorder is off,
+   * so dispatch records are not written and the capability is not advertised.
+   */
+  recordLlmDispatch?: boolean
+  /**
+   * Message projections used when rebuilding request views. Defaults to the
+   * store's registered projections; a log needing a projection outside this set
+   * is refused instead of flattened.
+   */
+  requestViewProjections?: readonly SessionMessageProjection[]
+}
+
+/** Validate the wire params of one `session/dispatches` request. */
+function dispatchesParams(params: Record<string, unknown> | undefined): SessionDispatchesParams {
+  const sessionId = params?.sessionId
+  if (typeof sessionId !== 'string' || sessionId === '') {
+    throw new TypeError('session/dispatches requires a non-empty sessionId')
+  }
+  return { sessionId }
+}
+
+/** Validate the wire params of one `session/request-view` request. */
+function requestViewParams(params: Record<string, unknown> | undefined): SessionRequestViewParams {
+  const { sessionId, dispatchSeq } = params ?? {}
+  if (typeof sessionId !== 'string' || sessionId === '') {
+    throw new TypeError('session/request-view requires a non-empty sessionId')
+  }
+  if (typeof dispatchSeq !== 'number' || !Number.isSafeInteger(dispatchSeq) || dispatchSeq < 0) {
+    throw new TypeError('session/request-view requires a non-negative safe-integer dispatchSeq')
+  }
+  return { sessionId, dispatchSeq }
 }
 
 function successStatus(reason: string, options: HarnessSdkJsonRpcServerOptions): 'ok' | 'error' {
@@ -102,6 +143,7 @@ export class HarnessSdkJsonRpcServer {
    */
   private readonly cancelGenerations = new Map<string, number>()
   private readonly disposers: (() => void)[] = []
+  private dispatchRecorderDispose: (() => void) | undefined
   private shutdownTask: Promise<Record<string, never>> | undefined
   private shuttingDown = false
   private initialized = false
@@ -112,6 +154,9 @@ export class HarnessSdkJsonRpcServer {
     private readonly options: HarnessSdkJsonRpcServerOptions = {},
   ) {
     const serverOptions = this.options
+    if (serverOptions.recordLlmDispatch === true) {
+      this.dispatchRecorderDispose = installRequestDispatchRecorder(ctx)
+    }
     this.disposers.push(ctx.on('session/event', (session, event) => {
       const payload: SessionEventNotification = { sessionId: String(session.id), event }
       this.transport.notify('session.event', payload)
@@ -187,7 +232,122 @@ export class HarnessSdkJsonRpcServer {
     this.reasoningEffort = reasoningEffort
     this.maxTokens = params.maxTokens
     this.initialized = true
-    return { serverInfo: { name: 'deepseek-harness-sdk-runtime', version: '0.0.1' } }
+    return {
+      serverInfo: { name: 'deepseek-harness-sdk-runtime', version: '0.0.1' },
+      ...this.dispatchRecorderDispose === undefined ? {} : { capabilities: [SDK_REQUEST_VIEW_CAPABILITY] },
+    }
+  }
+
+  /**
+   * List one session's recorded model dispatches. The session may be live or
+   * only durable; each record names the exact prefix its request came from.
+   * @param params - target session.
+   * @returns the session id and its dispatch records in commit order.
+   * @throws when the recorder is off for this runtime.
+   */
+  async dispatches(params: SessionDispatchesParams): Promise<SessionDispatchesResult> {
+    if (!this.initialized) throw new Error('SDK server is not initialized')
+    this.assertRequestViews()
+    const sessionId = SessionId(params.sessionId)
+    let events: readonly SessionEvent[]
+    try {
+      events = await this.sessionEvents(sessionId)
+    } catch (error: unknown) {
+      // An unknown session is classified like the request-view path: the client
+      // reads the same `data.code` instead of parsing message text.
+      throw Object.assign(new Error(error instanceof Error ? error.message : String(error)), { data: refusalOf(error) })
+    }
+    const dispatches = events
+      .flatMap(event => event.type === 'llm/dispatch' ? [event] : [])
+      .map((event) => {
+        const settlement = events.find((candidate): candidate is Extract<SessionEvent, { type: 'llm/dispatch-settled' }> =>
+          candidate.type === 'llm/dispatch-settled'
+          && candidate.data.dispatchSeq === event.seq)
+        return {
+          dispatchSeq: Number(event.seq),
+          prefixEnd: Number(event.data.prefixEnd),
+          turn: event.data.turn,
+          step: event.data.step,
+          ...settlement === undefined ? {} : { settlementSeq: Number(settlement.data.settlementSeq) },
+        }
+      })
+    return { sessionId: params.sessionId, dispatches }
+  }
+
+  /**
+   * Rebuild one recorded dispatch's model input from its exact committed log
+   * prefix through the native Session primitives.
+   * @param params - target session and dispatch record.
+   * @returns the reconstructed header, messages, tools, and tool history.
+   * @throws when the recorder is off, the params are invalid, the session or
+   *   dispatch is unknown, or the prefix needs an unavailable projection.
+   */
+  async requestView(params: SessionRequestViewParams): Promise<SessionRequestViewResult> {
+    if (!this.initialized) throw new Error('SDK server is not initialized')
+    this.assertRequestViews()
+    const projections = this.options.requestViewProjections
+    try {
+      const view = await buildRequestView(this.ctx, {
+        sessionId: SessionId(params.sessionId),
+        dispatchSeq: SessionSeq(params.dispatchSeq),
+        ...projections === undefined ? {} : { projections },
+      })
+      return {
+        sessionId: String(view.sessionId),
+        dispatchSeq: Number(view.dispatchSeq),
+        prefixEnd: Number(view.prefixEnd),
+        turn: view.turn,
+        step: view.step,
+        header: view.header,
+        messages: view.messages,
+        ...view.tools === undefined ? {} : { tools: view.tools },
+        toolHistory: view.toolHistory,
+        ...view.settlementSeq === undefined ? {} : { settlementSeq: Number(view.settlementSeq) },
+        projectionTypes: view.projectionTypes,
+      }
+    } catch (error: unknown) {
+      throw Object.assign(new Error(error instanceof Error ? error.message : String(error)), { data: refusalOf(error) })
+    }
+  }
+
+  /** Refuse read-only request views when this runtime recorded no dispatches. */
+  private assertRequestViews(): void {
+    if (this.dispatchRecorderDispose === undefined) {
+      throw new Error('this SDK runtime does not support read-only request views; start it with recordLlmDispatch enabled')
+    }
+  }
+
+  /**
+   * Read one session's complete event log for request facts. A live session is
+   * flushed to its durability barrier first; a disposed one is read from
+   * storage. Neither path mutates the session.
+   * @param sessionId - the session to read.
+   * @returns contiguous events from seq 0.
+   */
+  private async sessionEvents(sessionId: SessionId): Promise<readonly SessionEvent[]> {
+    const sessions = this.ctx.get('sessions')
+    if (sessions === undefined) throw new Error('request views require the session store')
+    const persistence = this.ctx.get('sessionPersistence')
+    if (persistence === undefined) throw new Error('request views require session persistence')
+    const live = sessions.get(sessionId)
+    if (live !== undefined) await sessions.flush(live)
+    let handle
+    try {
+      handle = await persistence.open(sessionId, 'read')
+    } catch (_error: unknown) {
+      // Every open failure on this path means the recorded session cannot be
+      // read at all: it is gone, or storage refused it.
+      throw new RequestViewError(
+        `session "${String(sessionId)}" was not found`,
+        'SESSION_NOT_FOUND',
+      )
+    }
+    try {
+      const read = await handle.read(0)
+      return read.events
+    } finally {
+      await handle.close()
+    }
   }
 
   /**
@@ -270,6 +430,8 @@ export class HarnessSdkJsonRpcServer {
 
   private async performShutdown(): Promise<Record<string, never>> {
     this.shuttingDown = true
+    this.dispatchRecorderDispose?.()
+    this.dispatchRecorderDispose = undefined
     const pendingCreations = [...this.sessionCreations.values()]
     await Promise.allSettled(pendingCreations)
     this.sessionCreations.clear()
@@ -312,6 +474,10 @@ export class HarnessSdkJsonRpcServer {
         return this.prompt(params as unknown as SessionPromptParams)
       case 'session/cancel':
         return this.cancel(cancelParams(params))
+      case 'session/dispatches':
+        return this.dispatches(dispatchesParams(params))
+      case 'session/request-view':
+        return this.requestView(requestViewParams(params))
       case 'shutdown':
         return this.shutdown()
       default:
@@ -379,4 +545,21 @@ export class HarnessSdkJsonRpcServer {
   private hasAdapterFor(provider: string): boolean {
     return this.ctx.get('llm')?.listProviders().some(entry => entry.id === provider) ?? false
   }
+}
+
+/**
+ * Classify a request-view failure for the wire. Known refusals keep their
+ * machine code; an uninterpretable prefix becomes an explicit unsupported
+ * projection rather than a generic error. The transport forwards `data`.
+ * @param error - the failure raised while rebuilding a request view.
+ * @returns the typed refusal payload carried in the JSON-RPC error data.
+ */
+function refusalOf(error: unknown): SdkRequestViewRefusal {
+  if (error instanceof RequestViewError) {
+    return { code: error.code, message: error.message }
+  }
+  if (error instanceof RequestViewUnsupportedError) {
+    return { code: 'UNSUPPORTED_PROJECTION', message: error.message }
+  }
+  throw error
 }

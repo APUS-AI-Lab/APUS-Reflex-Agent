@@ -36,6 +36,7 @@ kind: "package-reference"
 | 字段 | 默认值 | 含义 |
 |---|---|---|
 | `maxTokensAsSuccess` | `false` | 把 max-token 轮次或 subagent 终止报告为成功的 SDK 结果 |
+| `recordLlmDispatch` | `false` | 为每次 loop 构建的模型调用记录一条最小 `llm/dispatch` 事实，并提供只读请求视图方法 |
 
 profile 组合拥有每个根 agent 的工具。`input`、`output` 与 `exit` 是仅供测试的运行时传输钩子；生产环境使用进程 stdio 与 `process.exit`。生成的[配置目录](../../../docs/config-catalog.zh.md#deepseek-aidsh-sdk-jsonrpc-server)是每个受支持字段的穷尽式真源。
 
@@ -46,6 +47,12 @@ Stdout 只承载 JSON-RPC 帧，客户端可以逐字节解析；诊断信息应
 ### SDK 客户端可以做什么
 
 `initialize` 是运行时就绪边界：服务器由 Loader 组合挂载时，会等待当前插件树完成所有加载任务后再响应，因此首次提示词能够看到 MCP 初始工具发现等异步同级能力。握手返回协议稳定标识 `deepseek-harness-sdk-runtime`。服务器会通过所选适配器校验提供方／模型路由与可选的非空 `reasoningEffort`，再保存这些值；省略时不会保存推理强度，因此模型保留自身默认值。可选的正整数 `maxTokens` 会成为每个 SDK 创建的 agent 及其进程内后代的请求输出上限，省略时则应用所选适配器或提供方路由的默认值。JSON-RPC 请求可能并发分派，因此在一次 `initialize` 成功完成之前，`session/prompt` 会拒绝；客户端必须等待握手完成后再发送提示词。已接受的提示词会把一条带标识的用户消息排入队列，并立即返回 `{ messageId }`；服务器随后把每个持久事实作为 `session.event`、把整个 agent 生命周期的每次状态转换作为 `session.status` 流式发出。它不会把某条助手消息或 `turn/end` 归属于某个提示词，同一会话上的独立请求可以继续排入更多工作。持久化根目录与 persona 来自外围组合。
+
+### 只读请求视图
+
+开启 `recordLlmDispatch: true` 后，每次真实的 loop 构建模型调用都会追加一条仅日志的 `llm/dispatch` 事件，携带会话、该请求所依据的确切已提交前缀终点，以及它的 turn/step；关闭该次尝试的助手结算会追加 `llm/dispatch-settled`，同时标出两个序号。这两个事件都不复制消息或工具声明，也不进入模型可见面。此后握手会声明 `request-view/dispatch-v1`，并服务两个只读方法：`session/dispatches` 列出一个会话已记录的派发，`session/request-view` 从那个确切前缀出发，经原生 Session 能力重建一次派发的消息、header、工具与工具历史。会话在运行中或已释放都可查询（运行中的先 flush）。
+
+该视图是 **loop 级** 请求。提供方映射后的 HTTP 请求体——system 提示位置、路由变换、传输元数据——属于另一层，这里不报告。若某前缀需要运行时无法提供的消息投影，会以 `code: UNSUPPORTED_PROJECTION` 拒绝，绝不会扁平化为近似结果。`requestViewProjections` 可覆盖这些重建所用的投影集合，默认使用会话存储已注册的投影。
 
 ### 关闭与退出
 
@@ -71,6 +78,7 @@ Stdout 只承载 JSON-RPC 帧，客户端可以逐字节解析；诊断信息应
 |---|---|
 | [`src/index.ts`](src/index.ts) | 插件入口：`Config` schema、stdio 接线、请求分发、共享关闭与退出任务 |
 | [`src/server.ts`](src/server.ts) | `HarnessSdkJsonRpcServer`：协议方法、逐会话 agent 创建、生命周期订阅、清理 |
+| [`src/request-view.ts`](src/request-view.ts) | `llm/stream` 上的派发记录器、两个仅日志的派发事件，以及基于原生 Session 能力的 `buildRequestView` |
 | — | 不发布运行时不变式伴生入口；此展示适配器不拥有包内持久事件流；边界与回放测试覆盖协议映射。 |
 
 ### 请求流程
@@ -126,6 +134,8 @@ Stdout 只承载 JSON-RPC 帧，客户端可以逐字节解析；诊断信息应
 - **没有逐提示词结果**——`MessageId` 只标识 inbox 准入；拥有自动化活动区间的客户端必须自行定义并观察该区间。
 - **stdout 纯净性由部署保证**——外围配置仍可能加载 stdout logger 并破坏 JSON-RPC 通道；此插件不会检查或否决同级 logger。
 - **自动挂载适配器仅支持 DeepSeek**——`initialize` 可以复用任何预先注册的模型适配器，但唯一的回退行为是挂载 DeepSeek 适配器。
+- **请求视图止于 loop 请求**——`session/request-view` 重建的是 loop 构建的请求。提供方映射后的线上请求体与任何适配器侧变换都不重建、也不声称；需要提供方级输入的部署必须另行观察提供方发送接缝。
+- **请求视图需要可读的持久日志**——重建通过 `sessionPersistence` 读取确切前缀，因此未挂载持久化的组合即使会话仍在运行也无法提供这些方法。
 
 <a id="dev-note"></a>
 ### 开发备注

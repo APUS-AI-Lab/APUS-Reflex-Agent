@@ -19,7 +19,9 @@ import {
   type InitializeParams,
   type InitializeResult,
   type SessionCancelParams,
+  type SessionDispatchesResult,
   type SessionPromptParams,
+  type SessionRequestViewResult,
   type SdkPromptContentBlock,
 } from '@deepseek-ai/dsh-sdk-protocol'
 import { disposeRuntimeProcess } from './dispose.ts'
@@ -197,6 +199,7 @@ export class HarnessClient {
   private spawnError: Error | undefined
   private streamsSettled: Promise<void> = Promise.resolve()
   private closeTask: Promise<void> | undefined
+  private advertisedCapabilities: string[] = []
 
   /** @param options - dsh profile, patch, home, process, environment, and timeout options. */
   constructor(options?: HarnessClientOptions)
@@ -280,7 +283,81 @@ export class HarnessClient {
       || typeof result.serverInfo.name !== 'string' || typeof result.serverInfo.version !== 'string') {
       throw new SdkProtocolError(`initialize returned no server identity: ${JSON.stringify(result)}`)
     }
-    return { serverInfo: { name: result.serverInfo.name, version: result.serverInfo.version } }
+    const capabilities: unknown = result.capabilities
+    if (capabilities !== undefined
+      && (!Array.isArray(capabilities) || capabilities.some(capability => typeof capability !== 'string'))) {
+      throw new SdkProtocolError(`initialize returned malformed capabilities: ${JSON.stringify(capabilities)}`)
+    }
+    this.advertisedCapabilities = (capabilities as string[] | undefined) ?? []
+    return {
+      serverInfo: { name: result.serverInfo.name, version: result.serverInfo.version },
+      ...capabilities === undefined ? {} : { capabilities: this.advertisedCapabilities },
+    }
+  }
+
+  /**
+   * Capability tokens the runtime advertised during `initialize`. Empty before
+   * the handshake or against a runtime that offers no optional surfaces.
+   * @returns a detached copy of the advertised tokens.
+   */
+  get capabilities(): string[] {
+    return [...this.advertisedCapabilities]
+  }
+
+  /**
+   * List one session's recorded model dispatches.
+   * @param sessionId - the session whose dispatches to list.
+   * @returns the runtime's dispatch records in commit order.
+   * @throws {TypeError} for an empty session id.
+   * @throws {SdkProtocolError} when the runtime answers malformed data or does not serve the method.
+   */
+  async dispatches(sessionId: string): Promise<SessionDispatchesResult> {
+    assertSessionId(sessionId)
+    const result = await this.request('session/dispatches', { sessionId })
+    if (!isRecord(result) || result.sessionId !== sessionId || !Array.isArray(result.dispatches)) {
+      throw new SdkProtocolError(`session/dispatches returned no dispatch list: ${JSON.stringify(result)}`)
+    }
+    const dispatches = result.dispatches.map((entry) => {
+      if (!isRecord(entry)
+        || !isSafeInteger(entry.dispatchSeq) || !isSafeInteger(entry.prefixEnd)
+        || !isSafeInteger(entry.turn) || !isSafeInteger(entry.step)
+        || (entry.settlementSeq !== undefined && !isSafeInteger(entry.settlementSeq))) {
+        throw new SdkProtocolError(`session/dispatches returned a malformed record: ${JSON.stringify(entry)}`)
+      }
+      return {
+        dispatchSeq: entry.dispatchSeq,
+        prefixEnd: entry.prefixEnd,
+        turn: entry.turn,
+        step: entry.step,
+        ...entry.settlementSeq === undefined ? {} : { settlementSeq: entry.settlementSeq },
+      }
+    })
+    return { sessionId, dispatches }
+  }
+
+  /**
+   * Rebuild one recorded dispatch's model input. The runtime owns the
+   * reconstruction; this client transports its answer verbatim.
+   * @param sessionId - the session that dispatched the request.
+   * @param dispatchSeq - the `llm/dispatch` record to rebuild.
+   * @returns the runtime's reconstructed header, messages, tools, and tool history.
+   * @throws {TypeError} for an empty session id or a non-natural dispatch seq.
+   * @throws {JsonRpcResponseError} when the runtime refuses (for example an unsupported projection); `data.code` classifies it.
+   * @throws {SdkProtocolError} when the runtime answers malformed data.
+   */
+  async requestView(sessionId: string, dispatchSeq: number): Promise<SessionRequestViewResult> {
+    assertSessionId(sessionId)
+    if (!isSafeInteger(dispatchSeq) || dispatchSeq < 0) {
+      throw new TypeError(`session/request-view requires a non-negative integer dispatchSeq, got ${String(dispatchSeq)}`)
+    }
+    const result: unknown = await this.request('session/request-view', { sessionId, dispatchSeq })
+    if (!isRequestViewOf(result, sessionId, dispatchSeq)) {
+      throw new SdkProtocolError(`session/request-view returned no request view: ${JSON.stringify(result)}`)
+    }
+    // Every top-level member was just checked; the nested messages, header,
+    // tools, and tool history are the runtime's reconstruction, transported
+    // verbatim.
+    return result as SessionRequestViewResult
   }
 
   /**
@@ -503,6 +580,29 @@ export function createProcessHarnessClient(options: RuntimeProcessOptions): Harn
  */
 export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+/** Whether a wire value is a non-negative safe integer. */
+function isSafeInteger(value: unknown): value is number {
+  return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0
+}
+
+/** Reject an empty session id before any wire traffic. */
+function assertSessionId(sessionId: string): void {
+  if (sessionId === '') throw new TypeError('session methods require a non-empty sessionId')
+}
+
+/** Whether a wire value carries every top-level member one request view declares. */
+function isRequestViewOf(value: unknown, sessionId: string, dispatchSeq: number): boolean {
+  if (!isRecord(value)) return false
+  const projectionTypes = value.projectionTypes
+  return value.sessionId === sessionId
+    && value.dispatchSeq === dispatchSeq
+    && isSafeInteger(value.prefixEnd) && isSafeInteger(value.turn) && isSafeInteger(value.step)
+    && (value.settlementSeq === undefined || isSafeInteger(value.settlementSeq))
+    && isRecord(value.header) && isRecord(value.header.config)
+    && Array.isArray(value.messages) && isRecord(value.toolHistory)
+    && Array.isArray(projectionTypes) && projectionTypes.every(type => typeof type === 'string')
 }
 
 /** The message of a thrown value (the transport only throws `Error`s; `String` covers the rest). */

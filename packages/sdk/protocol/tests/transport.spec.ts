@@ -60,6 +60,25 @@ describe('JsonRpcLineTransport', () => {
     b.close()
   })
 
+  it('carries a handler-attached structured error payload to the caller', async () => {
+    const { a, b } = transportPair()
+    a.onRequest(async () => {
+      throw Object.assign(new Error('dispatch not found'), { data: { code: 'DISPATCH_NOT_FOUND' } })
+    })
+    a.start()
+    b.start()
+
+    const failure = await b.request('refuse', {}).then(
+      () => { throw new Error('request unexpectedly succeeded') },
+      (error: unknown) => error,
+    )
+    // The classified code is a wire contract, not just a message substring.
+    expect(failure).toMatchObject({ message: 'dispatch not found', code: -32603, data: { code: 'DISPATCH_NOT_FOUND' } })
+
+    a.close()
+    b.close()
+  })
+
   it('rejects immediately on a pre-aborted signal without registering pending state', async () => {
     const { b } = transportPair()
     b.start()

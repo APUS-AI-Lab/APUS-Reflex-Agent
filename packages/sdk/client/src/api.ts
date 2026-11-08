@@ -9,6 +9,7 @@
 import { randomUUID } from 'node:crypto'
 import { resolve } from 'node:path'
 import type { SessionEvent, TurnEndReason } from '@deepseek-ai/dsh-session'
+import type { SessionDispatchesResult, SessionRequestViewResult } from '@deepseek-ai/dsh-sdk-protocol'
 import { createProcessHarnessClient, HarnessClient, isRecord, SdkProtocolError } from './client.ts'
 import type { RuntimeProcessOptions } from './launch.ts'
 import type { ContentBlock, DeepSeekHarnessOptions, HarnessNotification, RunResult, SdkPromptContentBlock } from './types.ts'
@@ -102,6 +103,37 @@ export class DeepSeekHarness implements AsyncDisposable {
    */
   session(sessionId?: string): HarnessSession {
     return new HarnessSession(this, sessionId ?? `session-${randomUUID().replaceAll('-', '')}`)
+  }
+
+  /**
+   * Capability tokens the runtime advertised during the handshake. Empty before
+   * {@link start} or against a runtime without optional surfaces.
+   * @returns a detached copy of the advertised tokens.
+   */
+  get capabilities(): string[] {
+    return this.clientInstance.capabilities
+  }
+
+  /**
+   * List one session's recorded model dispatches.
+   * @param sessionId - the session whose dispatches to list.
+   * @returns the runtime's dispatch records in commit order.
+   */
+  async dispatches(sessionId: string): Promise<SessionDispatchesResult> {
+    await this.start()
+    return this.clientInstance.dispatches(sessionId)
+  }
+
+  /**
+   * Rebuild one recorded dispatch's model input. The runtime owns the
+   * reconstruction and this client transports it verbatim.
+   * @param sessionId - the session that dispatched the request.
+   * @param dispatchSeq - the `llm/dispatch` record to rebuild.
+   * @returns the reconstructed request view.
+   */
+  async requestView(sessionId: string, dispatchSeq: number): Promise<SessionRequestViewResult> {
+    await this.start()
+    return this.clientInstance.requestView(sessionId, dispatchSeq)
   }
 
   /**

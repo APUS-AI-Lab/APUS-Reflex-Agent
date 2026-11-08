@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, TypeAlias, TypeVar
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from .errors import JsonRpcError, SdkProtocolError, TransportClosedError
 from .models import (
@@ -75,6 +75,13 @@ class HarnessClient:
         self._stderr_lines: deque[str] = deque(maxlen=400)
         self._reader_thread: threading.Thread | None = None
         self._stderr_thread: threading.Thread | None = None
+        # Capability tokens the runtime advertised during ``initialize``.
+        self._capabilities: list[str] = []
+
+    @property
+    def capabilities(self) -> list[str]:
+        """Return the capability tokens the runtime advertised during ``initialize``."""
+        return list(self._capabilities)
 
     def __enter__(self) -> "HarnessClient":
         self.start()
@@ -187,12 +194,16 @@ class HarnessClient:
         if max_tokens is not None:
             payload["maxTokens"] = max_tokens
         try:
-            return self.request(
+            response = self.request(
                 "initialize",
                 payload,
                 response_model=InitializeResponse,
                 timeout_seconds=self.config.initialize_timeout_seconds,
             )
+            self._capabilities = list(response.capabilities or [])
+            # Absence means "no optional surfaces"; expose the normalized empty
+            # list rather than leaving callers to distinguish None from [].
+            return response.model_copy(update={"capabilities": list(self._capabilities)})
         except TimeoutError as error:
             self.close()
             raise TimeoutError(
@@ -256,6 +267,67 @@ class HarnessClient:
                     self._session_prompts_in_flight.pop(session_id, None)
                     self._session_prompts_settled.notify_all()
         return response.messageId
+
+    def session_dispatches(self, session_id: str) -> JsonObject:
+        """List one session's recorded model dispatches.
+
+        The runtime owns the dispatch records; this client transports them
+        verbatim and validates only the answer envelope.
+
+        Raises:
+            ValueError: ``session_id`` is empty.
+            JsonRpcError: The runtime refused the request.
+            SdkProtocolError: The runtime answered without a dispatch list.
+        """
+        if not session_id:
+            raise ValueError("session_dispatches requires a non-empty session_id")
+        result = self.request(
+            "session/dispatches",
+            {"sessionId": session_id},
+            response_model=_JsonObjectResponse,
+        ).model_dump()
+        dispatches = result.get("dispatches")
+        if not isinstance(dispatches, list):
+            raise SdkProtocolError("session/dispatches did not return a dispatch list")
+        return {
+            "sessionId": result.get("sessionId", session_id),
+            "dispatches": [dict(entry) for entry in dispatches if isinstance(entry, dict)],
+        }
+
+    def session_request_view(self, session_id: str, dispatch_seq: int) -> JsonObject:
+        """Fetch one recorded dispatch's rebuilt model input.
+
+        The runtime reconstructs the view through its native Session primitives.
+        The Python SDK relays it unchanged; it never builds a second message
+        projection. A dispatch the runtime cannot represent is refused with a
+        ``JsonRpcError`` whose ``data.code`` classifies the reason.
+
+        Raises:
+            ValueError: ``session_id`` is empty or ``dispatch_seq`` is not a
+                non-negative integer.
+            JsonRpcError: The runtime refused the request (for example
+                ``UNSUPPORTED_PROJECTION``).
+            SdkProtocolError: The runtime answered without a request view.
+        """
+        if not session_id:
+            raise ValueError("session_request_view requires a non-empty session_id")
+        if isinstance(dispatch_seq, bool) or not isinstance(dispatch_seq, int) or dispatch_seq < 0:
+            raise ValueError("session_request_view requires a non-negative integer dispatch_seq")
+        result = self.request(
+            "session/request-view",
+            {"sessionId": session_id, "dispatchSeq": dispatch_seq},
+            response_model=_JsonObjectResponse,
+        ).model_dump()
+        if (
+            result.get("sessionId") != session_id
+            or result.get("dispatchSeq") != dispatch_seq
+            or not isinstance(result.get("header"), dict)
+            or not isinstance(result.get("messages"), list)
+            or not isinstance(result.get("toolHistory"), dict)
+            or not isinstance(result.get("projectionTypes"), list)
+        ):
+            raise SdkProtocolError("session/request-view did not return a request view")
+        return result
 
     def session_cancel(self, session_id: str) -> None:
         """Stop one session's active and queued work and await confirmation.
@@ -736,6 +808,12 @@ class NotificationSubscription:
 
 class _SessionPromptResponse(BaseModel):
     messageId: str
+
+
+class _JsonObjectResponse(BaseModel):
+    """Response envelope that retains every member of a free-form JSON object."""
+
+    model_config = ConfigDict(extra="allow")
 
 
 class _SessionCancelResponse(BaseModel):

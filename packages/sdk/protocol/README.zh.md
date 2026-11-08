@@ -33,12 +33,15 @@ kind: "package-library"
 
 ### SDK 方法
 
-两个协议端共享同一套方法：三个客户端到服务端请求与四个服务端到客户端通知。
+两个协议端共享同一套方法：六个客户端到服务端请求与四个服务端到客户端通知。
 
 | 方向 | 方法 | 载荷类型 |
 |---|---|---|
 | client→server | `initialize` | `InitializeParams` → `InitializeResult` |
 | client→server | `session/prompt` | `SessionPromptParams` → `SessionPromptResult`（入队回执；不确认持久化 flush） |
+| client→server | `session/cancel` | `SessionCancelParams` → `SessionCancelResult`（结算确认） |
+| client→server | `session/dispatches` | `SessionDispatchesParams` → `SessionDispatchesResult`（已记录的派发事实；需要 `request-view/dispatch-v1`） |
+| client→server | `session/request-view` | `SessionRequestViewParams` → `SessionRequestViewResult`（一次派发重建后的模型输入；需要 `request-view/dispatch-v1`） |
 | client→server | `shutdown` | 无参数 → `{}` |
 | server→client | `session.event` | `SessionEventNotification`（运行时内每个会话，不过滤） |
 | server→client | `session.status` | `SessionStatusNotification`（整个 agent（智能体）的 `running`/`idle` 转换） |
@@ -49,7 +52,7 @@ kind: "package-library"
 
 ### 载荷语义
 
-`SessionPromptResult.messageId` 标识已排队的用户消息；它不标识后续的助手消息、轮次结束或提示词结果。`SdkPromptContentBlock` 接受普通持久内容以及 `SdkEncodedImageBlock { type: "image", data, mimeType }`；服务器在入队前把编码图像转换为持久引用。`InitializeParams.reasoningEffort` 是所选提供方／模型路由可选的非空适配器自有标识符；省略时保留该模型的默认值。`InitializeParams.maxTokens` 是可选的正安全整数，用于限制 SDK 创建的 agent 及其进程内后代的每次对话模型输出；省略时应用所选适配器的确切模型默认值。服务器会在初始化期间解析确切路由，并在握手成功前拒绝 `session/prompt`，因此缺少适配器、模型不可用或推理强度不受支持时，不会回退到构造期默认值。`SubagentFinishedNotification.lastAssistantMessage` 携带子 agent 最后一条非空 assistant 消息；若不存在这类消息，则携带其累积的 assistant 文本；子 agent 两种输出均未产生时，该字段缺省。`serverInfo.name` 的协议值固定为 `deepseek-harness-sdk-runtime`。通知载荷依赖 `SessionEvent`（`dsh-session`）、`ContentBlock`（`dsh-llm`）与 `SubagentStopReason`（`dsh-subagent`），因此会话词汇是协议格式约定的一部分。
+`SessionPromptResult.messageId` 标识已排队的用户消息；它不标识后续的助手消息、轮次结束或提示词结果。`SdkPromptContentBlock` 接受普通持久内容以及 `SdkEncodedImageBlock { type: "image", data, mimeType }`；服务器在入队前把编码图像转换为持久引用。`InitializeParams.reasoningEffort` 是所选提供方／模型路由可选的非空适配器自有标识符；省略时保留该模型的默认值。`InitializeParams.maxTokens` 是可选的正安全整数，用于限制 SDK 创建的 agent 及其进程内后代的每次对话模型输出；省略时应用所选适配器的确切模型默认值。服务器会在初始化期间解析确切路由，并在握手成功前拒绝 `session/prompt`，因此缺少适配器、模型不可用或推理强度不受支持时，不会回退到构造期默认值。`SubagentFinishedNotification.lastAssistantMessage` 携带子 agent 最后一条非空 assistant 消息；若不存在这类消息，则携带其累积的 assistant 文本；子 agent 两种输出均未产生时，该字段缺省。`serverInfo.name` 的协议值固定为 `deepseek-harness-sdk-runtime`。`InitializeResult.capabilities` 列出可选能力令牌；缺省表示没有可选接口，`request-view/dispatch-v1` 控制两个只读派发方法是否可用。`session/dispatches` 返回已记录的派发事实（`dispatchSeq`、`prefixEnd`、`turn`、`step`、可选 `settlementSeq`），不含任何请求内容。`session/request-view` 返回一次派发重建后的 `header`、`messages`、`tools`、`toolHistory`，以及重建所用的 `projectionTypes`；它是 loop 级请求，不是提供方映射后的线上请求体。运行时无法生成的视图以 JSON-RPC 错误到达，其 `data.code` 为 `SESSION_NOT_FOUND`、`DISPATCH_NOT_FOUND`、`PREFIX_UNAVAILABLE` 或 `UNSUPPORTED_PROJECTION`——绝不作为近似成功返回。通知载荷依赖 `SessionEvent`（`dsh-session`）、`ContentBlock`（`dsh-llm`）与 `SubagentStopReason`（`dsh-subagent`），因此会话词汇是协议格式约定的一部分。
 
 -----
 
@@ -113,6 +116,7 @@ kind: "package-library"
 - **无协议版本协商**——握手只携带 `serverInfo.version`（`0.0.1`，客户端不校验）；处于预发布阶段，无兼容承诺。
 - **无取消与会话关闭方法**——客户端放弃轮次的方式是关闭运行时进程；见 [JSON-RPC 服务插件](../server/README.zh.md)。
 - **server→client 请求是未使用的能力**——传输层支持，但服务器从不发送；Python SDK 的应答接口为未来审批流程预留。
+- **请求视图受能力门控且止于 loop 级**——未声明 `request-view/dispatch-v1` 的运行时拒绝两个派发方法；返回的视图也从不描述提供方映射后的 HTTP 请求体，提供方级输入需要另行观察。
 
 <a id="dev-note"></a>
 ### 开发备注

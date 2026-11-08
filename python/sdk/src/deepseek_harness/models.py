@@ -30,3 +30,6 @@ class ServerInfo(BaseModel):
 
 class InitializeResponse(BaseModel):
     serverInfo: ServerInfo | None = None
+    # Capability tokens the runtime offers (for example request-view/dispatch-v1).
+    # An older runtime omits the member, so absence means "no optional surfaces".
+    capabilities: list[str] | None = None

@@ -72,6 +72,7 @@ async function mountPlugin(
   options: {
     writeDelayMs?: number
     failFlush?: boolean
+    recordLlmDispatch?: boolean
     beforeServer?: (ctx: Context) => Promise<void> | void
   } = {},
 ): Promise<ApplyHarness> {
@@ -123,6 +124,7 @@ async function mountPlugin(
     input,
     output,
     exit,
+    ...options.recordLlmDispatch === true ? { recordLlmDispatch: true } : {},
   })
 
   const frames = (): Record<string, unknown>[] =>
@@ -279,6 +281,90 @@ describe('dsh-sdk-jsonrpc-server plugin apply', () => {
         jsonrpc: '2.0',
         params: { sessionId: 'main', status: 'idle' },
       })
+    } finally {
+      await harness.dispose()
+      await rm(storageDir, { recursive: true, force: true })
+    }
+  })
+
+  it('serves recorded dispatch facts and request views through the real stdio plugin when enabled', async () => {
+    const storageDir = await mkdtemp(join(tmpdir(), 'dsh-jsonrpc-apply-request-view-'))
+    const llmServer = await mockCompletionServer()
+    vi.stubEnv('DEEPSEEK_API_KEY', 'test-key')
+    vi.stubEnv('DEEPSEEK_BASE_URL', llmServer.url)
+    const harness = await mountPlugin(storageDir, { recordLlmDispatch: true })
+    try {
+      harness.send({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { cwd: storageDir, provider: 'deepseek-official', model: 'dsagent-model' } })
+      const initialized = await harness.waitForFrame(frame => frame.id === 1, 'initialize response')
+      expect((initialized.result as { capabilities?: string[] }).capabilities).toEqual(['request-view/dispatch-v1'])
+
+      harness.send({
+        jsonrpc: '2.0',
+        id: 2,
+        method: 'session/prompt',
+        params: { sessionId: 'rv', contentBlocks: [{ type: 'text', text: 'view me' }] },
+      })
+      await harness.waitForFrame(frame => frame.id === 2, 'prompt response')
+      await harness.waitForFrame(
+        frame => frame.method === 'session.status'
+          && (frame.params as { status?: string } | undefined)?.status === 'idle',
+        'idle session status',
+      )
+
+      harness.send({ jsonrpc: '2.0', id: 3, method: 'session/dispatches', params: { sessionId: 'rv' } })
+      const listed = await harness.waitForFrame(frame => frame.id === 3, 'dispatch list response')
+      expect(listed.error).toBeUndefined()
+      const dispatches = (listed.result as { dispatches: { dispatchSeq: number }[] }).dispatches
+      expect(dispatches).toHaveLength(1)
+
+      harness.send({
+        jsonrpc: '2.0',
+        id: 4,
+        method: 'session/request-view',
+        params: { sessionId: 'rv', dispatchSeq: dispatches[0]!.dispatchSeq },
+      })
+      const viewed = await harness.waitForFrame(frame => frame.id === 4, 'request view response')
+      const view = viewed.result as { messages: { role: string; content: { type: string; text?: string }[] }[] }
+      expect(JSON.stringify(view.messages)).toContain('view me')
+      // This slice reconstructs the LOOP-level request. The provider's mapped
+      // HTTP body (which moves the system prompt to its own field and applies
+      // route-specific transforms) is a separate layer and is not claimed here.
+      const wireMessages = (llmServer.requests[0] as { messages: { role: string; content: { type: string; text?: string }[] }[] }).messages
+      expect(view.messages.at(-1)?.role).toBe('user')
+      expect(view.messages.at(-1)?.content).toEqual(wireMessages.at(-1)?.content)
+
+      // A log-only dispatch record is streamed as an ordinary session event.
+      expect(harness.frames().some(frame =>
+        frame.method === 'session.event'
+        && (frame.params as { event?: { type?: string } } | undefined)?.event?.type === 'llm/dispatch')).toBe(true)
+
+      // A refusal keeps its classified code on the wire, not just in the message.
+      harness.send({
+        jsonrpc: '2.0',
+        id: 5,
+        method: 'session/request-view',
+        params: { sessionId: 'rv', dispatchSeq: 999_999 },
+      })
+      const refused = await harness.waitForFrame(frame => frame.id === 5, 'refusal response')
+      expect(refused.error).toMatchObject({ data: { code: 'DISPATCH_NOT_FOUND' } })
+    } finally {
+      await harness.dispose()
+      await rm(storageDir, { recursive: true, force: true })
+    }
+  })
+
+  it('does not advertise or serve request views with the default configuration', async () => {
+    const storageDir = await mkdtemp(join(tmpdir(), 'dsh-jsonrpc-apply-request-view-off-'))
+    vi.stubEnv('DEEPSEEK_API_KEY', 'test-key')
+    const harness = await mountPlugin(storageDir)
+    try {
+      harness.send({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { cwd: storageDir, provider: 'deepseek-official', model: 'model' } })
+      const initialized = await harness.waitForFrame(frame => frame.id === 1, 'initialize response')
+      expect((initialized.result as { capabilities?: string[] }).capabilities).toBeUndefined()
+
+      harness.send({ jsonrpc: '2.0', id: 2, method: 'session/dispatches', params: { sessionId: 'none' } })
+      const refused = await harness.waitForFrame(frame => frame.id === 2, 'refusal response')
+      expect((refused.error as { message: string }).message).toMatch(/does not support read-only request views/)
     } finally {
       await harness.dispose()
       await rm(storageDir, { recursive: true, force: true })

@@ -153,6 +153,40 @@ class DeepSeekHarness:
             self._sessions[identity] = session
             return session
 
+    @property
+    def capabilities(self) -> list[str]:
+        """Return the capability tokens the runtime advertised during the handshake."""
+        return self._client.capabilities
+
+    def dispatches(self, session_id: str) -> JsonObject:
+        """List one session's recorded model dispatches.
+
+        The runtime owns the dispatch records; this SDK transports them
+        verbatim.
+
+        Raises:
+            ValueError: ``session_id`` is empty.
+            JsonRpcError: The runtime refused the request.
+            SdkProtocolError: The runtime answered without a dispatch list.
+        """
+        self.start()
+        return self._client.session_dispatches(session_id)
+
+    def request_view(self, session_id: str, dispatch_seq: int) -> JsonObject:
+        """Fetch one recorded dispatch's rebuilt model input.
+
+        The runtime reconstructs the view through its native Session
+        primitives; the Python SDK relays it unchanged and builds no second
+        message projection.
+
+        Raises:
+            ValueError: ``session_id`` is empty or ``dispatch_seq`` is invalid.
+            JsonRpcError: The runtime refused the request.
+            SdkProtocolError: The runtime answered without a request view.
+        """
+        self.start()
+        return self._client.session_request_view(session_id, dispatch_seq)
+
     def cancel_session(self, session_id: str) -> None:
         """Cancel one session's work and wait until the runtime confirms it stopped.
 
