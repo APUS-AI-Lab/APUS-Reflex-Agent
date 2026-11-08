@@ -55,6 +55,10 @@ Default roots are scanned in this provider's rank order:
 
 The project root is the nearest ancestor containing `.git`; without one, the current cwd is used. The user DSH root skips its `.system` child. `includeDefaultRoots: false` omits the project and user rows plus the `$DSH_BUNDLED_SKILL_DIR` default so an isolated provider sees only its own configured roots; `bundledSkillDir` adds a bundled root at rank 600.
 
+### One provider, several execution worlds
+
+A lookup may name the agent it acts for (`agentId`). A provider mounted where that agent's files live — a benchmark task container — then resolves the project and custom roots inside that container, and a root the container lacks is honestly absent. The default user roots name this host's home directories, so they join the catalog only when the mounted provider can open host paths (`processPathFromHostPath`); a task-container world leaves them out rather than asking the container about host locations. The bundled root is a fixed read-only host resource and is always read by this process. Two agents sharing a cwd never share a cached catalog, because the lookup identity is part of the registry's cache key.
+
 ### Mount and configure
 
 Load the plugin alongside the skill registry; it requires `ctx.skills`.

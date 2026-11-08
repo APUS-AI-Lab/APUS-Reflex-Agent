@@ -64,6 +64,18 @@ export interface Config {
 | `instructionFileCandidates` | `['AGENTS.md', 'CLAUDE.md']` | Base file names loaded in each project directory |
 | `localInstructionFileCandidates` | `['AGENTS.local.md', 'CLAUDE.local.md']` | Local overlay file names loaded after the base files |
 | `dshHome` | `$DSH_HOME` or `~/.dsh` | Directory containing the user-global `AGENTS.md` |
+| `hostInstructionRoots` | `[]` | Fixed read-only Host rule directories loaded for every agent |
+
+### Task-container workspaces
+
+A session's working directory may name a container this process never mounts. Each read then carries the owning Agent's identity (`agentId`) to the mounted provider, so two agents with the same `/app` cwd load their own container's rules and never each other's. The user-global `AGENTS.md` and every `hostInstructionRoots` entry are fixed read-only Host resources: this process reads them directly, and they are never resolved inside an agent's execution world. A provider that cannot see Host paths therefore leaves those Host rules unavailable rather than reading an unrelated Host file.
+
+```yaml
+- name: '@deepseek-ai/dsh-agent-instructions'
+  config:
+    maxBytes: 65536
+    hostInstructionRoots: [/opt/apus/rules]
+```
 
 The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-agent-instructions) is the exhaustive source for every accepted field and its JSDoc.
 

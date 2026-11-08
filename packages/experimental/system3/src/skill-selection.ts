@@ -144,7 +144,7 @@ export function installSystem3SkillSelection(ctx: Context, config: System3SkillS
     const deadline = new AbortController()
     const timer = setTimeout(() => { deadline.abort(new DOMException('System3 Skill deadline exceeded', 'TimeoutError')) }, settings.deadlineMs)
     const lookupSignal = AbortSignal.any([signal, deadline.signal, lifetime.signal])
-    const lookup = { cwd: agent.session.header.cwd, scope: agent, signal: lookupSignal }
+    const lookup = { cwd: agent.session.header.cwd, scope: agent, signal: lookupSignal, agentId: agent.id }
     let request: JevRequest | null = null
     let response: JevResponse | undefined
     let injectionMessageId: MessageId | undefined

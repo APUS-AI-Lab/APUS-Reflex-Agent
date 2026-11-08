@@ -106,6 +106,13 @@ export interface SkillLookupOptions {
   readonly cwd?: string | undefined
   /** Abort discovery or loading work for the current caller. */
   readonly signal?: AbortSignal | undefined
+  /**
+   * Opaque identity of the agent the lookup acts for, passed through to
+   * providers unchanged. A provider whose roots live in another execution
+   * world (a task container) uses it to pick that world; a provider reading
+   * Host directories ignores it. The registry never interprets this value.
+   */
+  readonly agentId?: string | undefined
 }
 
 /**
@@ -598,7 +605,7 @@ export class SkillRegistry extends Service {
       // The chain is part of the key rather than assumed stable: a blank-session
       // recompose re-parents an existing scope without touching this registry,
       // and only a chain-bearing key makes the next read see the new preset.
-      const key = this.collectCacheKey(options.cwd, scopeChainOf(options.scope), revision)
+      const key = this.collectCacheKey(options.cwd, options.agentId, scopeChainOf(options.scope), revision)
       const cached = this.collectCache.get(key)
       if (cached !== undefined) return { entries: cached, cacheable: true, cached: true }
 
@@ -714,8 +721,16 @@ export class SkillRegistry extends Service {
     return id
   }
 
-  private collectCacheKey(cwd: string | undefined, chain: ScopeKey[], revision: number): string {
-    return JSON.stringify({ cwd, scopes: chain.map(key => this.scopeId(key)), revision })
+  private collectCacheKey(
+    cwd: string | undefined,
+    agentId: string | undefined,
+    chain: ScopeKey[],
+    revision: number,
+  ): string {
+    // The agent identity is part of the key: two agents may share a cwd and a
+    // scope chain while their providers read different execution worlds, and a
+    // cached catalog from one must never answer the other.
+    return JSON.stringify({ cwd, agentId, scopes: chain.map(key => this.scopeId(key)), revision })
   }
 
   /** Notify catalog observers without making their refresh work load-bearing. */

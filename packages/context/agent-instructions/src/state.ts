@@ -15,6 +15,7 @@ import {
   ancestorChain,
   descendantDirsBetween,
   findProjectRoot,
+  hostRuleDirectory,
   probeScopeInstruction,
   readScopeInstruction,
   relativeDisplay,
@@ -265,8 +266,9 @@ export async function reconcileInstructionContext(
   const cwd = session.header.cwd ?? process.cwd()
   // TODO(frozen-project-root): retain the baseline root for the loop instance;
   // recomputing it after marker edits reinterprets the existing relative scope keys.
+  const agentId = session.id
   const projectRoot = options.projectRoot
-    ?? await findProjectRoot(cwd, resolved.projectRootMarkers, fileSystem, options.signal)
+    ?? await findProjectRoot(cwd, resolved.projectRootMarkers, fileSystem, options.signal, agentId)
   const scopes = new Set<string>()
   const baselineScopes = new Set<string>()
   const addDirScopes = (target: Set<string>, directory: string): void => {
@@ -277,6 +279,10 @@ export async function reconcileInstructionContext(
     addDirScopes(target, relativeScope(projectRoot, dir))
   }
   baselineScopes.add(candidateScopeKey(USER_GLOBAL_DIRECTORY, USER_GLOBAL_FILE))
+  // Fixed Host rule roots are part of the baseline too: their files carry no
+  // project-relative directory, so they must never be re-derived as project
+  // scopes during a later reconciliation.
+  for (const root of resolved.hostInstructionRoots) addDirScopes(baselineScopes, hostRuleDirectory(root))
   for (const dir of ancestorChain(projectRoot, cwd)) addProjectScopes(baselineScopes, dir)
   if (options.includeBaselineScopes) {
     for (const scope of baselineScopes) scopes.add(scope)
@@ -348,7 +354,7 @@ export async function reconcileInstructionContext(
     const priorVersions = new Map(probedScopes.map(scope => [scope, versions.get(scope)]))
     for (const scope of probedScopes) {
       const previous = effective.get(scope)
-      const probe = await probeScopeInstruction(scope, projectRoot, resolved, fileSystem, options.signal)
+      const probe = await probeScopeInstruction(scope, projectRoot, resolved, fileSystem, options.signal, agentId)
       if (probe.kind === 'unavailable') {
         if (previous === undefined || previous.action === 'remove') continue
         // Same-directory candidates form one deduplicated authority group. If an

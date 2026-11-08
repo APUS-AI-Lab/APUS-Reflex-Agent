@@ -4,7 +4,7 @@
  * @module @deepseek-ai/dsh-agent-instructions/config
  */
 
-import { relative } from 'node:path'
+import { relative, resolve } from 'node:path'
 import z from '@deepseek-ai/schemastery'
 import { resolveDshHome } from '@deepseek-ai/dsh-home-paths'
 
@@ -34,6 +34,13 @@ export interface Config {
    * under the same per-directory trimmed-content dedup; empty disables the overlay.
    */
   localInstructionFileCandidates?: string[]
+  /**
+   * Fixed read-only Host directories whose ordinary instruction candidates load
+   * for every agent. These are harness-installation resources, not agent
+   * workspace files: each root is read directly by this process and is never
+   * resolved inside an agent's execution world (a benchmark task container).
+   */
+  hostInstructionRoots?: string[]
 }
 
 export const Config: z<Config> = z.object({
@@ -43,6 +50,7 @@ export const Config: z<Config> = z.object({
   maxSourceBytes: z.number().step(1).min(1).default(DEFAULT_MAX_SOURCE_BYTES),
   instructionFileCandidates: z.array(z.string()).default([...DEFAULT_INSTRUCTION_FILE_CANDIDATES]),
   localInstructionFileCandidates: z.array(z.string()).default([...DEFAULT_LOCAL_INSTRUCTION_FILE_CANDIDATES]),
+  hostInstructionRoots: z.array(z.string()).default([]),
 })
 
 /** Normalized instruction discovery configuration. */
@@ -51,6 +59,7 @@ export interface ResolvedDiscoveryConfig {
   projectRootMarkers: string[]
   instructionFileCandidates: string[]
   localInstructionFileCandidates: string[]
+  hostInstructionRoots: string[]
 }
 
 /** Normalized configuration used by discovery and reconciliation. */
@@ -78,6 +87,7 @@ export function workspaceBaselineIdentity(
     maxSourceBytes: config.maxSourceBytes,
     instructionFileCandidates: config.instructionFileCandidates,
     localInstructionFileCandidates: config.localInstructionFileCandidates,
+    hostInstructionRoots: config.hostInstructionRoots,
   })
 }
 
@@ -100,7 +110,10 @@ export function resolveConfig(config: Config): ResolvedConfig {
  * @returns normalized home, root markers, and instruction candidates.
  */
 export function resolveDiscoveryConfig(
-  config: Pick<Config, 'dshHome' | 'projectRootMarkers' | 'instructionFileCandidates' | 'localInstructionFileCandidates'>,
+  config: Pick<
+    Config,
+    'dshHome' | 'projectRootMarkers' | 'instructionFileCandidates' | 'localInstructionFileCandidates' | 'hostInstructionRoots'
+  >,
 ): ResolvedDiscoveryConfig {
   return {
     dshHome: resolveDshHome(config.dshHome),
@@ -113,6 +126,7 @@ export function resolveDiscoveryConfig(
       config.localInstructionFileCandidates,
       DEFAULT_LOCAL_INSTRUCTION_FILE_CANDIDATES,
     ),
+    hostInstructionRoots: (config.hostInstructionRoots ?? []).map(root => resolve(root)),
   }
 }
 

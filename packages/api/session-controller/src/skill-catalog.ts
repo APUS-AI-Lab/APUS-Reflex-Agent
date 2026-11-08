@@ -74,7 +74,13 @@ export class SessionSkillCatalog extends TypertRemoteService {
     await using lease = live === undefined ? await this.scopeFor(agentPreset) : undefined
     const scope = live ?? lease?.key
     try {
-      const skills = (await skillRegistry.list({ cwd, scope })).filter(isUserInvocable)
+      // A live Agent's identity selects the execution world its preset's
+      // providers read; a cold read has no agent and stays world-neutral.
+      const skills = (await skillRegistry.list({
+        cwd,
+        scope,
+        ...live === undefined ? {} : { agentId: live.id },
+      })).filter(isUserInvocable)
       return {
         skills: skills.map(skill => ({
           name: skill.name,

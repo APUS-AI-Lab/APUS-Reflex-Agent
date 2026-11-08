@@ -113,7 +113,7 @@ describe('SessionSkillCatalog', () => {
         modelInvocable: false,
       }],
     })
-    expect(scopedList).toHaveBeenCalledWith({ cwd: '/live/project', scope: agent })
+    expect(scopedList).toHaveBeenCalledWith({ cwd: '/live/project', scope: agent, agentId: sessionId })
     expect(acquireScope).not.toHaveBeenCalled()
   })
 

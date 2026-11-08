@@ -6,8 +6,8 @@
 
 import { createReadStream } from 'node:fs'
 import { stat } from 'node:fs/promises'
-import { dirname, isAbsolute, join, relative, resolve } from 'node:path'
-import type { FileSystem, FsInfo, FsTarget, FsVersion } from '@deepseek-ai/dsh-fs'
+import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path'
+import { FsVersion, type FileSystem, type FsInfo, type FsTarget } from '@deepseek-ai/dsh-fs'
 import { dshHomeDisplay } from '@deepseek-ai/dsh-home-paths'
 import { assertNever } from '@deepseek-ai/dsh-util-values'
 import { resolveConfig, resolveDiscoveryConfig, type ResolvedConfig } from './config.ts'
@@ -41,10 +41,14 @@ interface DiscoveredInstructionFile extends InstructionFile {
 
 /** Provider metadata for a probed scope candidate before its content is read. */
 export interface ProbedInstructionFile extends InstructionFile {
-  target: FsTarget
+  /** Resolved provider target; absent for a fixed Host rule read by this process. */
+  target?: FsTarget
   version: FsVersion
   size?: number
 }
+
+/** Display namespace for files loaded from a fixed Host rule root. */
+export const HOST_RULE_DIRECTORY_PREFIX = 'host-rules'
 
 interface DiscoverOptions {
   cwd: string
@@ -52,8 +56,15 @@ interface DiscoverOptions {
   projectRootMarkers?: string[]
   instructionFileCandidates?: string[]
   localInstructionFileCandidates?: string[]
+  hostInstructionRoots?: string[]
   projectRoot?: string
   signal?: AbortSignal
+  /**
+   * Opaque identity of the agent the load acts for. A provider whose execution
+   * world is another container (the benchmark task environment) needs it to
+   * choose that world; a Host-local provider ignores it.
+   */
+  agentId?: string
 }
 
 interface LoadOptions extends DiscoverOptions {
@@ -87,8 +98,21 @@ type StatFileProbe =
   | { kind: 'absent' }
   | { kind: 'unavailable' }
 
-function signalOptions(signal?: AbortSignal): { signal: AbortSignal } | undefined {
-  return signal === undefined ? undefined : { signal }
+/**
+ * Provider resolution options carrying the agent whose world the path lives in.
+ * @param agentId - agent the read acts for, when the caller knows one.
+ * @param signal - cancellation for the provider round-trip.
+ * @returns options for `FileSystem.resolve`, or undefined when neither applies.
+ */
+function resolutionOptions(
+  agentId: string | undefined,
+  signal?: AbortSignal,
+): { agentId?: string; signal?: AbortSignal } | undefined {
+  if (agentId === undefined && signal === undefined) return undefined
+  return {
+    ...agentId === undefined ? {} : { agentId },
+    ...signal === undefined ? {} : { signal },
+  }
 }
 
 function isMissingPathError(error: unknown): boolean {
@@ -107,7 +131,9 @@ async function nodeStatFile(path: string, signal?: AbortSignal): Promise<StatFil
     const info = await stat(path)
     signal?.throwIfAborted()
     if (!info.isFile()) return { kind: 'absent' }
-    return { kind: 'present', info: { size: info.size } }
+    // A version-token pair (mtime and size) so a Host-rule reconciliation can
+    // skip an unchanged file yet never reuse a same-size earlier revision.
+    return { kind: 'present', info: { size: info.size, version: FsVersion(`host:${info.mtimeMs}:${info.size}`) } }
   } catch (error: unknown) {
     signal?.throwIfAborted()
     return isMissingPathError(error) ? { kind: 'absent' } : { kind: 'unavailable' }
@@ -117,13 +143,14 @@ async function nodeStatFile(path: string, signal?: AbortSignal): Promise<StatFil
 async function fsStatFile(
   path: string,
   fileSystem: FileSystem,
+  agentId: string | undefined,
   signal?: AbortSignal,
 ): Promise<StatFileProbe> {
   // resolve() follows a final-component symlink to its target's stable identity;
   // stat then classifies that target. A link to a regular file loads, while a
   // missing path or non-file target (including a link to a directory) is absent.
   try {
-    const target = await fileSystem.resolve(path, signalOptions(signal))
+    const target = await fileSystem.resolve(path, resolutionOptions(agentId, signal))
     signal?.throwIfAborted()
     const info = await fileSystem.stat(target, signal)
     signal?.throwIfAborted()
@@ -140,16 +167,22 @@ async function fsStatFile(
 
 async function statFile(
   path: string,
-  fileSystem?: FileSystem,
+  fileSystem: FileSystem | undefined,
+  agentId: string | undefined,
   signal?: AbortSignal,
 ): Promise<StatFileProbe> {
-  return fileSystem === undefined ? nodeStatFile(path, signal) : fsStatFile(path, fileSystem, signal)
+  return fileSystem === undefined ? nodeStatFile(path, signal) : fsStatFile(path, fileSystem, agentId, signal)
 }
 
-async function existsAsMarker(path: string, fileSystem?: FileSystem, signal?: AbortSignal): Promise<boolean> {
+async function existsAsMarker(
+  path: string,
+  fileSystem: FileSystem | undefined,
+  agentId: string | undefined,
+  signal?: AbortSignal,
+): Promise<boolean> {
   if (fileSystem !== undefined) {
     try {
-      const target = await fileSystem.resolve(path, signalOptions(signal))
+      const target = await fileSystem.resolve(path, resolutionOptions(agentId, signal))
       return await fileSystem.stat(target, signal) !== undefined
     } catch (error: unknown) {
       signal?.throwIfAborted()
@@ -175,6 +208,7 @@ async function existsAsMarker(path: string, fileSystem?: FileSystem, signal?: Ab
  * @param markers - child names that identify a project root.
  * @param fileSystem - optional provider used instead of host filesystem probes.
  * @param signal - cancellation for provider and host probes.
+ * @param agentId - agent whose execution world the walk belongs to.
  * @returns the discovered project root, or `cwd` when no marker exists.
  * @throws the original marker metadata error or cancellation reason when a probe is unavailable.
  */
@@ -183,11 +217,12 @@ export async function findProjectRoot(
   markers: readonly string[],
   fileSystem?: FileSystem,
   signal?: AbortSignal,
+  agentId?: string,
 ): Promise<string> {
   let current = resolve(cwd)
   for (;;) {
     for (const marker of markers) {
-      if (await existsAsMarker(join(current, marker), fileSystem, signal)) return current
+      if (await existsAsMarker(join(current, marker), fileSystem, agentId, signal)) return current
     }
     const parent = dirname(current)
     if (parent === current) return resolve(cwd)
@@ -245,13 +280,14 @@ async function allExistingInstructionFiles(
   dir: string,
   root: string,
   instructionFileCandidates: readonly string[],
-  fileSystem?: FileSystem,
+  fileSystem: FileSystem | undefined,
+  agentId: string | undefined,
   signal?: AbortSignal,
 ): Promise<DiscoveredInstructionFile[]> {
   const found: DiscoveredInstructionFile[] = []
   for (const candidate of instructionFileCandidates) {
     const path = join(dir, candidate)
-    const probe = await statFile(path, fileSystem, signal)
+    const probe = await statFile(path, fileSystem, agentId, signal)
     switch (probe.kind) {
       case 'present':
         found.push({ absolutePath: path, displayPath: relativeDisplay(root, path), ...probe.info })
@@ -282,8 +318,11 @@ async function discoverInstructionFiles(
     files.push(file)
   }
 
+  // The user-global rule is the fixed read-only Host resource of this loader:
+  // it belongs to the harness installation, not to the agent's task container,
+  // so it is probed without an agent and never resolved inside that world.
   const userGlobal = join(config.dshHome, USER_GLOBAL_FILE)
-  const userGlobalProbe = await statFile(userGlobal, fileSystem, options.signal)
+  const userGlobalProbe = await statFile(userGlobal, fileSystem, undefined, options.signal)
   switch (userGlobalProbe.kind) {
     case 'present':
       addFile({
@@ -300,12 +339,23 @@ async function discoverInstructionFiles(
       assertNever(userGlobalProbe, 'StatFileProbe')
   }
 
+  // Fixed Host rule roots are harness-installation resources too. Host file
+  // location is only meaningful to this process, so they are always read from
+  // the host filesystem and never through the agent's execution world.
+  for (const root of config.hostInstructionRoots) {
+    for (const candidates of [config.instructionFileCandidates, config.localInstructionFileCandidates]) {
+      for (const file of await allExistingInstructionFiles(root, root, candidates, undefined, undefined, options.signal)) {
+        addFile({ ...file, displayPath: hostRootDisplayPath(root, file.absolutePath) })
+      }
+    }
+  }
+
   const cwd = resolve(options.cwd)
   const projectRoot = options.projectRoot
-    ?? await findProjectRoot(cwd, config.projectRootMarkers, fileSystem, options.signal)
+    ?? await findProjectRoot(cwd, config.projectRootMarkers, fileSystem, options.signal, options.agentId)
   for (const dir of ancestorChain(projectRoot, cwd)) {
     for (const candidates of [config.instructionFileCandidates, config.localInstructionFileCandidates]) {
-      for (const file of await allExistingInstructionFiles(dir, projectRoot, candidates, fileSystem, options.signal)) {
+      for (const file of await allExistingInstructionFiles(dir, projectRoot, candidates, fileSystem, options.agentId, options.signal)) {
         addFile(file)
       }
     }
@@ -324,6 +374,21 @@ async function discoverInstructionFiles(
  */
 export async function discoverBaselineInstructionFiles(options: DiscoverOptions): Promise<InstructionFile[]> {
   return (await discoverInstructionFiles(options)).map(({ absolutePath, displayPath }) => ({ absolutePath, displayPath }))
+}
+
+/**
+ * Read one Host-resident instruction file under the source cap.
+ * @param file - Host rule candidate and its metadata snapshot.
+ * @param maxSourceBytes - maximum UTF-8 bytes accepted from the source.
+ * @param signal - cancellation for the host stream.
+ * @returns the decoded content, or undefined when unavailable or over budget.
+ */
+async function readBoundedHost(
+  file: { absolutePath: string; size?: number },
+  maxSourceBytes: number,
+  signal?: AbortSignal,
+): Promise<string | undefined> {
+  return await readBounded(file, maxSourceBytes, undefined, signal)
 }
 
 async function* nodeTextChunks(path: string, signal?: AbortSignal): AsyncIterable<string> {
@@ -464,6 +529,8 @@ export async function loadBaselineInstructionSet(
  * @param resolved - normalized plugin configuration.
  * @param fileSystem - provider used to resolve and stat scope candidates.
  * @param signal - cancellation for provider probes.
+ * @param agentId - agent whose execution world owns the probed directory; the
+ *   user-global scope is the fixed Host resource and never names one.
  * @returns present metadata, confirmed absence, or temporary unavailability.
  */
 export async function probeScopeInstruction(
@@ -472,20 +539,42 @@ export async function probeScopeInstruction(
   resolved: ResolvedConfig,
   fileSystem: FileSystem,
   signal?: AbortSignal,
+  agentId?: string,
 ): Promise<ScopeInstructionProbe> {
   const { directory, candidateName } = decodeScopeKey(scope)
-  const dir = directory === USER_GLOBAL_DIRECTORY
-    ? resolved.dshHome
-    : directory === '.' ? projectRoot : join(projectRoot, directory)
+  const hostRoot = resolved.hostInstructionRoots.find(root => hostRuleDirectory(root) === directory)
+  const dir = hostRoot !== undefined
+    ? hostRoot
+    : directory === USER_GLOBAL_DIRECTORY
+      ? resolved.dshHome
+      : directory === '.' ? projectRoot : join(projectRoot, directory)
   const absolutePath = join(dir, candidateName)
   // resolve() follows a final-component symlink; stat then classifies the target.
   // A non-file target (missing, or a link to a directory) is a confirmed absence;
   // only a provider exception is reported as unavailable.
-  let target: FsTarget
+  // A fixed Host rule root is a Host resource: this process stats it directly,
+  // exactly as it read the candidate during baseline discovery, so a later
+  // reconciliation cannot route it through the agent's execution world.
+  let target: FsTarget | undefined
   let info: FsInfo | undefined
   try {
-    target = await fileSystem.resolve(absolutePath, signalOptions(signal))
-    info = await fileSystem.stat(target, signal)
+    if (hostRoot !== undefined) {
+      const probe = await nodeStatFile(absolutePath, signal)
+      if (probe.kind === 'unavailable') return { kind: 'unavailable' }
+      if (probe.kind === 'absent') return { kind: 'absent' }
+      info = {
+        // `nodeStatFile` always supplies its version token for a present file.
+        version: probe.info.version ?? FsVersion('host'),
+        type: 'file',
+        ...probe.info.size === undefined ? {} : { size: probe.info.size },
+      }
+    } else {
+      target = await fileSystem.resolve(absolutePath, resolutionOptions(
+        directory === USER_GLOBAL_DIRECTORY ? undefined : agentId,
+        signal,
+      ))
+      info = await fileSystem.stat(target, signal)
+    }
   } catch {
     signal?.throwIfAborted()
     return { kind: 'unavailable' }
@@ -493,8 +582,10 @@ export async function probeScopeInstruction(
   if (info?.type !== 'file') return { kind: 'absent' }
   const file: ProbedInstructionFile = {
     absolutePath,
-    displayPath: directory === USER_GLOBAL_DIRECTORY ? userGlobalDisplayPath(resolved.dshHome) : relativeDisplay(projectRoot, absolutePath),
-    target,
+    displayPath: hostRoot !== undefined
+      ? hostRootDisplayPath(hostRoot, absolutePath)
+      : directory === USER_GLOBAL_DIRECTORY ? userGlobalDisplayPath(resolved.dshHome) : relativeDisplay(projectRoot, absolutePath),
+    ...target === undefined ? {} : { target },
     version: info.version,
     ...info.size === undefined ? {} : { size: info.size },
   }
@@ -515,7 +606,11 @@ export async function readScopeInstruction(
   fileSystem: FileSystem,
   signal?: AbortSignal,
 ): Promise<LoadedInstructionFile | undefined> {
-  const content = await readBounded(file, maxSourceBytes, fileSystem, signal)
+  // A Host rule scope was probed without a provider target; read it through the
+  // host filesystem again so probe and read agree on the execution world.
+  const content = file.target === undefined
+    ? await readBoundedHost(file, maxSourceBytes, signal)
+    : await readBounded(file, maxSourceBytes, fileSystem, signal)
   if (content === undefined) return undefined
   return {
     absolutePath: file.absolutePath,
@@ -527,4 +622,28 @@ export async function readScopeInstruction(
 
 function userGlobalDisplayPath(dshHome: string): string {
   return `${dshHomeDisplay(dshHome)}/AGENTS.md`
+}
+
+/**
+ * Model-facing display path for a file under a fixed Host rule root.
+ *
+ * The path keeps a stable Host-root segment so two rule roots, and a Host root
+ * beside the project root, cannot share one logical scope key and silently
+ * replace each other. The installation location itself stays undisclosed.
+ * @param root - configured Host rule root.
+ * @param absolutePath - file inside that root.
+ * @returns a display path under the host rule namespace.
+ */
+function hostRootDisplayPath(root: string, absolutePath: string): string {
+  return join(hostRuleDirectory(root), relative(root, absolutePath))
+}
+
+/**
+ * Logical directory a fixed Host rule root occupies in instruction display
+ * paths and reconciliation scopes.
+ * @param root - configured Host rule root.
+ * @returns the root's stable directory segment, derived from its basename.
+ */
+export function hostRuleDirectory(root: string): string {
+  return join(HOST_RULE_DIRECTORY_PREFIX, basename(root))
 }
