@@ -1,6 +1,6 @@
 /** Interpreted retired content must fail before migration publication or recoverable native-tail suppression. */
 import { Context } from '@deepseek-ai/cordis'
-import { SessionId } from '@deepseek-ai/dsh-session'
+import { SessionId, SESSION_FORMAT_VERSION } from '@deepseek-ai/dsh-session'
 import { SessionFormatUnsupportedError, SessionPersistenceCorruptionError } from '@deepseek-ai/dsh-session-persistence'
 import JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
 import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises'
@@ -16,7 +16,7 @@ const modes = (['none', 'zstd'] as const).flatMap(compression =>
   (['read', 'write'] as const).map(access => ({ compression, access })))
 
 describe.each(modes)('retired content in JSONL ($compression, $access)', ({ compression, access }) => {
-  async function stored(version: 3 | 4, opaque: boolean, corruptPrefix: boolean) {
+  async function stored(version: 3 | typeof SESSION_FORMAT_VERSION, opaque: boolean, corruptPrefix: boolean) {
     const root = await mkdtemp(join(tmpdir(), 'dsh-retired-content-'))
     const ctx = new Context()
     onTestFinished(async () => {
@@ -37,7 +37,11 @@ describe.each(modes)('retired content in JSONL ($compression, $access)', ({ comp
     return { ctx, path, bytes, event }
   }
 
-  it.each([{ version: 3, corruptPrefix: false }, { version: 4, corruptPrefix: false }, { version: 4, corruptPrefix: true }] as const)
+  it.each([
+    { version: 3, corruptPrefix: false },
+    { version: SESSION_FORMAT_VERSION, corruptPrefix: false },
+    { version: SESSION_FORMAT_VERSION, corruptPrefix: true },
+  ] as const)
   ('refuses V$version content with corruptPrefix=$corruptPrefix and preserves the only generation', async ({ version, corruptPrefix }) => {
     const { ctx, path, bytes } = await stored(version, false, corruptPrefix)
     const opened = ctx.sessionPersistence.open(id, access).then(async (handle) => { await handle.close() })
@@ -47,7 +51,7 @@ describe.each(modes)('retired content in JSONL ($compression, $access)', ({ comp
     expect((await readdir(dirname(path))).filter(name => name !== 'session.lock')).toEqual([basename(path)])
   })
 
-  it.each([3, 4] as const)('preserves an unknown ignorable V%s payload without interpreting its content', async (version) => {
+  it.each([3, SESSION_FORMAT_VERSION] as const)('preserves an unknown ignorable V%s payload without interpreting its content', async (version) => {
     const { ctx, path, bytes, event } = await stored(version, true, false)
     const handle = await ctx.sessionPersistence.open(id, access)
     const expected = version === 3 ? { ...event, type: 'plugin:future/opaque' } : event

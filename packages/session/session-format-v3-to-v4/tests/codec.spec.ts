@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { SESSION_FORMAT_VERSION } from '@deepseek-ai/dsh-session'
 import { SessionFormatEventCollector } from '@deepseek-ai/dsh-session-format'
 import type { SessionFormatEvent, SessionFormatJsonObject } from '@deepseek-ai/dsh-session-format'
 import { sessionFormatCatalog } from '@deepseek-ai/dsh-session-format-catalog'
@@ -93,7 +94,10 @@ describe('V4 framing and restoration', () => {
     expect(() => restore([fact, { ...marker, data: null }])).toThrow('data must be an object')
     const reader = sessionFormatCatalog.createRestore({ type: 'session', ...header }, { recovery: 'strict', validation: 'current' })
     reader.decodeRow(fact)
-    reader.decodeRow({ ...marker, data: { ...data, throughSeq: 1 } })
+    reader.decodeRow({
+      ...delivery(SESSION_FORMAT_VERSION),
+      data: { ...data, throughSeq: 1, sessionFormatVersion: SESSION_FORMAT_VERSION },
+    })
     expect(() => reader.finish()).toThrow('throughSeq')
   })
 

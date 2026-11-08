@@ -1,6 +1,6 @@
 /** Developer surface positions and admission remain distinct from unknown ignorable records. */
 import { describe, expect, it } from 'vitest'
-import { Session, SessionId, SessionLogOffset } from '@deepseek-ai/dsh-session'
+import { Session, SessionId, SessionLogOffset, SESSION_FORMAT_VERSION } from '@deepseek-ai/dsh-session'
 import type { SessionEvent, SessionHeader } from '@deepseek-ai/dsh-session'
 import { SessionFormatEventCollector } from '@deepseek-ai/dsh-session-format'
 import type { SessionFormatArtifact, SessionFormatEvent, SessionFormatJsonValue } from '@deepseek-ai/dsh-session-format'
@@ -45,7 +45,7 @@ describe('V4 developer relationship admission', () => {
     } }
     const input = restore([...begin, system, emptyDeveloper, replacement])
     const session = Session.fromRestore(SessionId(input.header.id), input.events as SessionEvent[],
-      input.header as unknown as SessionHeader, SessionLogOffset(0), 'detached')
+      { ...input.header, version: SESSION_FORMAT_VERSION } as unknown as SessionHeader, SessionLogOffset(0), 'detached')
     expect(session.surface.nodes).toEqual([4, 3])
     expect(session.deriveMessages().map(message => message.id)).toEqual(['replacement'])
     expect(input.events[3]?.data).toEqual(emptyDeveloper.data)

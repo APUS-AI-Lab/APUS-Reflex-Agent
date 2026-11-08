@@ -270,7 +270,7 @@ describe('first-party Session format catalog', () => {
     stream.decodeRow({ type: 'feedback/record', seq: 0, time: 2, data: { text: 'retained' } })
 
     expect(stream.finish()).toMatchObject({
-      header: { version: 4, id: 'streaming' },
+      header: { version: SESSION_FORMAT_VERSION, id: 'streaming' },
       inheritedEventCount: 0,
       events: [{ type: 'feedback/record', seq: 0 }],
     })

@@ -288,6 +288,7 @@
     { "path": "./packages/session/session-format-v1-to-v2" },
     { "path": "./packages/session/session-format-v2-to-v3" },
     { "path": "./packages/session/session-format-v3-to-v4" },
+    { "path": "./packages/session/session-format-v4-to-v5" },
     { "path": "./packages/session/session-format-catalog" },
     { "path": "./packages/session/session-checkpoint-policy" },
     { "path": "./packages/session/session-log-deepseek" },

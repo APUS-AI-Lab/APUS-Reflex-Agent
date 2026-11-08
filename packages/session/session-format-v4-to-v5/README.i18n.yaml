@@ -1,0 +1,52 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/session/session-format-v4-to-v5/README.md
+/:
+  en: 96d5788883c5b39c
+  zh: 949bfd67f0fdde28
+/deepseek-ai-dsh-session-format-v4-to-v5:
+  en: 5c911c36fc777867
+  zh: 523c41bb93008361
+/deepseek-ai-dsh-session-format-v4-to-v5/summary:
+  en: 45c25eac06dd866c
+  zh: d0f32183df158edd
+/deepseek-ai-dsh-session-format-v4-to-v5/table-of-contents:
+  en: c32b5a513fcd1eeb
+  zh: c32de694c860c976
+/deepseek-ai-dsh-session-format-v4-to-v5/use-this-package:
+  en: cb46e7cb68bf4ad4
+  zh: adec2c8fbcf44250
+/deepseek-ai-dsh-session-format-v4-to-v5/v4-to-v5-specification:
+  en: d9148b1a6f54d15e
+  zh: 25806c3048dc6407
+/deepseek-ai-dsh-session-format-v4-to-v5/v4-to-v5-specification/header-and-physical-framing:
+  en: 9e956319e3abe62c
+  zh: cf5f6c7904dabc54
+/deepseek-ai-dsh-session-format-v4-to-v5/v4-to-v5-specification/body-preservation:
+  en: 79cbb518e58d22b8
+  zh: cc4200a14ed3817c
+/deepseek-ai-dsh-session-format-v4-to-v5/v4-to-v5-specification/inherited-cut:
+  en: c8d070f3db89d407
+  zh: 3d862976f0d57fa2
+/deepseek-ai-dsh-session-format-v4-to-v5/v4-to-v5-specification/delivery-generations:
+  en: 4b7d3aea04e4b7cc
+  zh: f954494d6bc05307
+/deepseek-ai-dsh-session-format-v4-to-v5/native-v5-admission:
+  en: 21a15684f4d4436a
+  zh: 7aa646680aad1967
+/deepseek-ai-dsh-session-format-v4-to-v5/understand-the-implementation:
+  en: 2c9ca4a4f0c6a0d8
+  zh: 4ba5cb6e0f9a2e5e
+/deepseek-ai-dsh-session-format-v4-to-v5/further-exploration:
+  en: e056c27cc06a62d7
+  zh: b8900795746871e5
+/deepseek-ai-dsh-session-format-v4-to-v5/model-experience:
+  en: 7c9aa4a681f7607a
+  zh: 0136a423d6e9546a
+/deepseek-ai-dsh-session-format-v4-to-v5/known-limitations-and-deferred-work:
+  en: 19b9d45adb404aac
+  zh: 7c27b2d5f9b18d84
+/deepseek-ai-dsh-session-format-v4-to-v5/dev-note:
+  en: b75c8458928b72b9
+  zh: 003ba4e17b4b5269

@@ -4,7 +4,7 @@
     {
       "key": "SessionHeader",
       "kind": "header",
-      "digest": "1a3440e3577382704d42a6263aa463504eb74c566734a55e9503a63efcd02445",
+      "digest": "22c6899a78214dd841c266348ae997027ef391174ddb21127f1b71dc1b362824",
       "schema": {
         "root": 0,
         "nodes": [
@@ -77,7 +77,7 @@
           },
           {
             "kind": "literal",
-            "value": 4
+            "value": 5
           }
         ]
       }
@@ -48064,7 +48064,7 @@
         "packages/session/session-persistence-jsonl/src/format.ts#HeaderLine"
       ],
       "sources": [
-        "packages/session/session-persistence-jsonl/src/format.ts:83"
+        "packages/session/session-persistence-jsonl/src/format.ts:84"
       ]
     },
     {
@@ -48222,91 +48222,6 @@
       },
       "names": [],
       "sources": []
-    },
-    {
-      "digest": "1a3440e3577382704d42a6263aa463504eb74c566734a55e9503a63efcd02445",
-      "schema": {
-        "root": 0,
-        "nodes": [
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "agentPreset",
-                "type": 1,
-                "optional": true
-              },
-              {
-                "name": "createdAt",
-                "type": 2,
-                "optional": false
-              },
-              {
-                "name": "cwd",
-                "type": 1,
-                "optional": true
-              },
-              {
-                "name": "delegationDepth",
-                "type": 2,
-                "optional": true
-              },
-              {
-                "name": "id",
-                "type": 1,
-                "optional": false
-              },
-              {
-                "name": "isSeeded",
-                "type": 3,
-                "optional": false
-              },
-              {
-                "name": "origin",
-                "type": 4,
-                "optional": true
-              },
-              {
-                "name": "parentSession",
-                "type": 1,
-                "optional": true
-              },
-              {
-                "name": "version",
-                "type": 5,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "primitive",
-            "type": "string"
-          },
-          {
-            "kind": "primitive",
-            "type": "number"
-          },
-          {
-            "kind": "primitive",
-            "type": "boolean"
-          },
-          {
-            "kind": "literal",
-            "value": "subagent"
-          },
-          {
-            "kind": "literal",
-            "value": 4
-          }
-        ]
-      },
-      "names": [
-        "packages/core/session/src/types.ts#SessionHeader"
-      ],
-      "sources": [
-        "packages/core/session/src/types.ts:95"
-      ]
     },
     {
       "digest": "1a5dbe1c2a2628205d1a74dbdae973672b2d9b00ff82dd3e8b35ad5b89c88414",
@@ -58478,6 +58393,91 @@
       },
       "names": [],
       "sources": []
+    },
+    {
+      "digest": "22c6899a78214dd841c266348ae997027ef391174ddb21127f1b71dc1b362824",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "agentPreset",
+                "type": 1,
+                "optional": true
+              },
+              {
+                "name": "createdAt",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "cwd",
+                "type": 1,
+                "optional": true
+              },
+              {
+                "name": "delegationDepth",
+                "type": 2,
+                "optional": true
+              },
+              {
+                "name": "id",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "isSeeded",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "origin",
+                "type": 4,
+                "optional": true
+              },
+              {
+                "name": "parentSession",
+                "type": 1,
+                "optional": true
+              },
+              {
+                "name": "version",
+                "type": 5,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "primitive",
+            "type": "boolean"
+          },
+          {
+            "kind": "literal",
+            "value": "subagent"
+          },
+          {
+            "kind": "literal",
+            "value": 5
+          }
+        ]
+      },
+      "names": [
+        "packages/core/session/src/types.ts#SessionHeader"
+      ],
+      "sources": [
+        "packages/core/session/src/types.ts:95"
+      ]
     },
     {
       "digest": "22f6f37d2e289d9af174338c4c8cc493b4fb4b34390def7f6269ff60e5f0e8f3",
@@ -96755,6 +96755,20 @@
       "sources": []
     },
     {
+      "digest": "74fcbac234394b9c646b1a4cd1d0c089efaf6410097733ba57690361bc56e3b1",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": 5
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "750a0e9010d85962e22c6999b9b4cdf0453b6586d255f38d23cb8ea3ddfe867f",
       "schema": {
         "root": 0,
@@ -117850,20 +117864,6 @@
           {
             "kind": "literal",
             "value": "listener"
-          }
-        ]
-      },
-      "names": [],
-      "sources": []
-    },
-    {
-      "digest": "af6e173f7be819bcd0a5c8d77918649c10ce761d8a184ff472f2e01ce64eb2e0",
-      "schema": {
-        "root": 0,
-        "nodes": [
-          {
-            "kind": "literal",
-            "value": 4
           }
         ]
       },
