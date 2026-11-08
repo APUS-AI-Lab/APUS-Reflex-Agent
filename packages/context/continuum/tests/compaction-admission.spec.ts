@@ -7,20 +7,28 @@ import type { SummarizationInput, SummaryResult } from '@deepseek-ai/dsh-compact
 import LlmRuntime, { createUserMessage, LlmAdapter } from '@deepseek-ai/dsh-llm'
 import type { LlmResolvedModelInfo, RequestMessage, StreamChunk } from '@deepseek-ai/dsh-llm'
 import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
+import JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import TokenMeter from '@deepseek-ai/dsh-token-meter'
 import ToolRuntime from '@deepseek-ai/dsh-tools'
+import { mkdtemp, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import Jev from '../../../experimental/apus-dsh-jev-plugin/src/index.ts'
 import ContinuumMemory, { type ContinuumConfig } from '../src/service.ts'
+import { foldMemoryRecordEvents } from '../src/persistence.ts'
+import { MemoryId, MemoryRecordStore } from '../src/records.ts'
 import type { ContinuumMemoryAdmitter } from '../src/context.ts'
 import { ContinuumMemoryController } from '../src/policy.ts'
 
 const contexts: Context[] = []
+const roots: string[] = []
 const SIGNAL = new AbortController().signal
 
 afterEach(async () => {
   await Promise.all(contexts.splice(0).map(ctx => ctx.fiber.dispose()))
+  await Promise.all(roots.splice(0).map(root => rm(root, { recursive: true, force: true })))
   vi.restoreAllMocks()
 })
 
@@ -55,6 +63,8 @@ interface HarnessOptions {
   readonly admission?: ContinuumConfig['admission']
   readonly scopes?: string[]
   readonly lateMount?: boolean
+  /** Durability root; supplied only by restart cases. */
+  readonly root?: string
 }
 
 async function harness(options: HarnessOptions = {}) {
@@ -62,6 +72,7 @@ async function harness(options: HarnessOptions = {}) {
   contexts.push(ctx)
   await ctx.plugin(LlmRuntime)
   await ctx.plugin(SessionStore)
+  if (options.root !== undefined) await ctx.plugin(JsonlSessionPersistence, { root: options.root, compression: 'none' })
   await ctx.plugin(SessionProjectionRegistry)
   await ctx.plugin(SystemPrompt, { personaPrefix: '', personaSuffix: '', includeHarnessIdentity: false, includeRuntimeContext: false })
   await ctx.plugin(ToolRuntime)
@@ -153,7 +164,12 @@ describe('Continuum compaction admission', () => {
       id: `${String(h.agent.session.id)}:${String(source?.seq)}`, scope: 'workspace', tags: ['work', 'places'],
       source: { sessionId: h.agent.session.id, eventSeq: source?.seq },
     })
-    expect(h.agent.session.snapshotEvents().some(event => event.type === 'continuum/memory-record')).toBe(false)
+    // The record event states the content was stored; it precedes the index event that makes it findable.
+    const recordEvent = h.agent.session.snapshotEvents().find(event => event.type === 'continuum/memory-record')
+    expect(recordEvent).toBeDefined()
+    expect(recordEvent?.type === 'continuum/memory-record' ? recordEvent.data.record : undefined)
+      .toMatchObject({ id: admitted[0]?.id, status: 'active' })
+    expect(recordEvent !== undefined && indexEvent !== undefined && recordEvent.seq < indexEvent.seq).toBe(true)
     expect(recalled(h.adapter).join('\n')).toContain('X-Orbit-Key')
 
     // A second compaction of the same span admits nothing twice.
@@ -161,6 +177,44 @@ describe('Continuum compaction admission', () => {
     h.agent.followup(user('And again?'))
     await h.agent.whenIdle()
     expect(records(h.agent)).toHaveLength(1)
+  })
+
+  it('recovers compacted records from the record event after a restart', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'dsh-continuum-compaction-restart-'))
+    roots.push(root)
+    const h = await harness({ admitter: keepAll, root })
+    await seed(h.agent)
+    expect(await h.compaction.compactNow(h.agent, SIGNAL)).not.toBeNull()
+    h.agent.followup(user('Which API key header did I name?'))
+    await h.agent.whenIdle()
+    await h.ctx.sessions.flush(h.agent.session)
+    await h.ctx.fiber.dispose()
+    contexts.splice(contexts.indexOf(h.ctx), 1)
+
+    const reader = new Context()
+    contexts.push(reader)
+    await reader.plugin(SessionStore)
+    await reader.plugin(JsonlSessionPersistence, { root, compression: 'none' })
+    const handle = await reader.sessionPersistence.open(SessionId('continuum-compaction'), 'read')
+    try {
+      const { events } = await handle.read()
+      const recordEvent = events.find(event => event.type === 'continuum/memory-record')
+      expect(recordEvent).toBeDefined()
+      const committed = recordEvent?.type === 'continuum/memory-record' ? recordEvent.data.record : undefined
+      expect(committed).toBeDefined()
+      // Simulate the crash window: the record was committed, its index event was not.
+      const withoutIndex = events.filter(event => event.type !== 'continuum/memory-index')
+      const tags = new Map<MemoryId, readonly string[]>()
+      const store = foldMemoryRecordEvents(withoutIndex, new MemoryRecordStore(), tags)
+      if (committed !== undefined) {
+        // Recovery is pinned on the record event alone: it carries the content and the index supplied no tags.
+        expect(store.get(MemoryId(committed.id))?.content).toBe(committed.content)
+        expect(tags.has(MemoryId(committed.id))).toBe(false)
+        expect(store.snapshot().some(record => record.content.includes('X-Orbit-Key'))).toBe(true)
+      }
+    } finally {
+      await handle.close()
+    }
   })
 
   it('admits every compacted human message when the admitter fails', async () => {

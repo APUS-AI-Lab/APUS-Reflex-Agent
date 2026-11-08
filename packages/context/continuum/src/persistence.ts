@@ -366,13 +366,16 @@ export async function readMemorySourceEvents(
 }
 
 /**
- * Rebuild Continuum records from durable log events without model calls or I/O. An L1 index entry becomes an
- * in-memory record whose content is resolved from its source event in the same stream; the log never holds a copy.
+ * Rebuild Continuum records from durable log events without model calls or I/O. A live write appends the record event
+ * before its index event, so the record event itself restores the content and the index only contributes its tags; an
+ * index-only entry from an older log rebuilds an in-memory record whose content is resolved from its source event in
+ * the same stream, so an index entry adds no second copy of that text.
  * @param events - complete Session event stream in sequence order.
  * @param store - empty or partially rebuilt record store.
  * @param tags - receives each index entry's tags by record ID, when supplied.
  * @returns the supplied store after applying every Continuum transition.
- * @throws when an index entry's source is not a human message with text in this stream.
+ * @throws when an index entry's source is not a human message with text in this stream, or a repeated record create
+ *   event does not repeat its record exactly.
  */
 export function foldMemoryRecordEvents(
   events: readonly SessionEvent[],
@@ -384,10 +387,10 @@ export function foldMemoryRecordEvents(
     if (event.type === 'continuum/memory-index') {
       const { entry } = event.data
       tags?.set(entry.id, entry.tags)
-      // A live write appends the record first and its index second, while the
-      // compaction path writes the index first. Replay accepts either: an index
-      // whose record already exists only contributes its tags, and the content
-      // it would rebuild is already in the store from the record event.
+      // Every live write appends the record event first and its index second;
+      // an older log wrote the index first or alone. Replay accepts either:
+      // the record event restores the content, and an index whose record
+      // already exists only contributes its tags.
       if (store.get(entry.id) !== undefined) continue
       bySeq ??= new Map(events.map(candidate => [Number(candidate.seq), candidate]))
       const source = bySeq.get(Number(entry.source.eventSeq))
@@ -399,6 +402,14 @@ export function foldMemoryRecordEvents(
     if (event.type !== 'continuum/memory-record') continue
     const { operation, record } = event.data
     if (operation === 'create') {
+      const existing = store.get(record.id)
+      if (existing !== undefined) {
+        // The id was introduced by an index-first rebuild or an earlier create.
+        // An exact repeat is idempotent replay; a differing one is a conflict,
+        // never a silent overwrite.
+        assertEquivalentRecord(existing, record)
+        continue
+      }
       store.create(asNewRecord(record))
       continue
     }
@@ -421,6 +432,23 @@ export function foldMemoryRecordEvents(
 function asNewRecord(record: MemoryRecord): NewMemoryRecord {
   const { revision: _revision, status: _status, supersedes: _supersedes, ...newRecord } = record
   return newRecord
+}
+
+/** Fields a repeated create event must repeat exactly about its record. */
+const RECORD_EQUIVALENCE_FIELDS = ['revision', 'kind', 'scope', 'content', 'status', 'supersedes'] as const
+
+function assertEquivalentRecord(actual: MemoryRecord, replayed: MemoryRecord): void {
+  const differing: string[] = RECORD_EQUIVALENCE_FIELDS.filter(field => actual[field] !== replayed[field])
+  // Source references compare entry-wise, so a caller's property order cannot make equal pointers look different.
+  const sameRefs = actual.sourceRefs.length === replayed.sourceRefs.length
+    && actual.sourceRefs.every((ref, index) => {
+      const other = replayed.sourceRefs[index]
+      return other !== undefined && ref.sessionId === other.sessionId && ref.eventSeq === other.eventSeq
+    })
+  if (!sameRefs) differing.push('sourceRefs')
+  if (differing.length > 0) {
+    throw new Error(`memory ${replayed.id} record event conflicts with the restored record: ${differing.join(', ')}`)
+  }
 }
 
 function assertRestoredRecord(actual: MemoryRecord, expected: MemoryRecord): void {

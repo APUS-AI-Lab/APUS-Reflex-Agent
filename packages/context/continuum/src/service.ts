@@ -281,16 +281,13 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
       const tags = admitted.get(candidate.id)
       if (tags === undefined || store.get(id) !== undefined) continue
       const source = { sessionId: agent.session.id, eventSeq: candidate.seq }
-      // The L1 index keeps only tags and the pointer; the in-memory record caches the L2 text for retrieval.
-      // It goes first: `foldMemoryRecordEvents` rebuilds a record from its index
-      // entry, so the index must be the event that introduces the id.
+      // The record event carries the record's content; the index event states
+      // where it became findable. The record goes first, so a fold recovers the
+      // record even when the index event was never written.
+      this.create(agent, { id, kind: 'fact', scope, content: candidate.content, sourceRefs: [source] })
       appendMemoryIndexEvent(agent.session, { id, scope, tags: [...tags], source },
         { source: 'compaction', tagSource: judged.tagSource })
       projection.tags.set(id, tags)
-      this.controller(agent).observe(
-        store.create({ id, kind: 'fact', scope, content: candidate.content, sourceRefs: [source] }),
-        agent.session,
-      )
     }
   }
 

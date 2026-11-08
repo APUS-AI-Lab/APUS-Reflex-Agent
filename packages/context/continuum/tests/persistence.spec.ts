@@ -66,6 +66,111 @@ describe('Continuum L1 index events', () => {
   })
 })
 
+describe('Continuum record-before-index fold order', () => {
+  const human = (session: Session, text: string) =>
+    session.append('user/message', createUserMessage({ source: { kind: 'user' }, content: [{ type: 'text', text }] }), { surfaceOp: 'append' })
+
+  it('recovers a record whose index event never arrived, without tags', () => {
+    const session = Session.create(SessionId('record-crash-window'))
+    session.append('turn/start', { turn: 1 })
+    const source = human(session, 'The API key header is X-Orbit-Key.')
+    const writer = new MemoryRecordStore()
+    const created = writer.create({
+      id: MemoryId(`record-crash-window:${String(source.seq)}`), kind: 'fact', scope: 'workspace',
+      content: 'The API key header is X-Orbit-Key.',
+      sourceRefs: [{ sessionId: session.id, eventSeq: source.seq }],
+    })
+    appendMemoryRecordEvent(session, 'create', created)
+    const tags = new Map<MemoryId, readonly string[]>()
+    const store = foldMemoryRecordEvents(session.snapshotEvents(), new MemoryRecordStore(), tags)
+    expect(store.get(created.id)).toEqual(created)
+    expect(tags.has(created.id)).toBe(false)
+  })
+
+  it('treats an equal record event that follows its index as one record', () => {
+    const session = Session.create(SessionId('index-then-record'))
+    session.append('turn/start', { turn: 1 })
+    const source = human(session, 'The release is Friday.')
+    const id = MemoryId(`index-then-record:${String(source.seq)}`)
+    const writer = new MemoryRecordStore()
+    const created = writer.create({
+      id, kind: 'fact', scope: 'workspace', content: 'The release is Friday.',
+      sourceRefs: [{ sessionId: session.id, eventSeq: source.seq }],
+    })
+    appendMemoryIndexEvent(session, { id, scope: 'workspace', tags: ['work'], source: { sessionId: session.id, eventSeq: source.seq } })
+    appendMemoryRecordEvent(session, 'create', created)
+    const tags = new Map<MemoryId, readonly string[]>()
+    const store = foldMemoryRecordEvents(session.snapshotEvents(), new MemoryRecordStore(), tags)
+    expect(store.snapshot()).toHaveLength(1)
+    expect(store.get(id)).toEqual(created)
+    expect(tags.get(id)).toEqual(['work'])
+  })
+
+  it('treats a repeated create as equal regardless of source-ref property order', () => {
+    const session = Session.create(SessionId('record-key-order'))
+    session.append('turn/start', { turn: 1 })
+    const source = human(session, 'Property order must not matter.')
+    const id = MemoryId('record-key-order')
+    const writer = new MemoryRecordStore()
+    const created = writer.create({
+      id, kind: 'fact', scope: 'workspace', content: 'Property order must not matter.',
+      sourceRefs: [{ sessionId: session.id, eventSeq: source.seq }],
+    })
+    appendMemoryRecordEvent(session, 'create', created)
+    // Spliced in JSON order: same pointer, different property order.
+    const reordered = JSON.stringify({ ...created, sourceRefs: [{ eventSeq: source.seq, sessionId: session.id }] })
+    const events = session.snapshotEvents()
+    const replay = { ...events.at(-1), data: { operation: 'create', record: JSON.parse(reordered) } }
+    const store = foldMemoryRecordEvents([...events, replay as never], new MemoryRecordStore())
+    expect(store.snapshot()).toHaveLength(1)
+    expect(store.get(id)).toEqual(created)
+  })
+
+  it('keeps the first record and names the differing fields when a duplicate create conflicts', () => {
+    const session = Session.create(SessionId('record-conflict'))
+    session.append('turn/start', { turn: 1 })
+    const writer = new MemoryRecordStore()
+    const first = writer.create({
+      id: MemoryId('record-conflict'), kind: 'fact', scope: 'workspace', content: 'First fact.',
+      sourceRefs: [{ sessionId: session.id, eventSeq: SessionSeq(0) }],
+    })
+    appendMemoryRecordEvent(session, 'create', first)
+    const second = new MemoryRecordStore().create({
+      id: MemoryId('record-conflict'), kind: 'fact', scope: 'workspace', content: 'Second fact.',
+      sourceRefs: [{ sessionId: session.id, eventSeq: SessionSeq(0) }],
+    })
+    appendMemoryRecordEvent(session, 'create', second)
+    const store = new MemoryRecordStore()
+    expect(() => foldMemoryRecordEvents(session.snapshotEvents(), store)).toThrow(/record-conflict.*content/)
+    expect(store.get(MemoryId('record-conflict'))).toEqual(first)
+  })
+
+  it('restores index-only and record-then-index entries in one stream', () => {
+    const session = Session.create(SessionId('mixed-orders'))
+    session.append('turn/start', { turn: 1 })
+    const oldSource = human(session, 'Old log entry.')
+    appendMemoryIndexEvent(session, {
+      id: MemoryId('mixed-old'), scope: 'workspace', tags: ['old'],
+      source: { sessionId: session.id, eventSeq: oldSource.seq },
+    })
+    const newSource = human(session, 'New log entry.')
+    const writer = new MemoryRecordStore()
+    const created = writer.create({
+      id: MemoryId('mixed-new'), kind: 'fact', scope: 'workspace', content: 'New log entry.',
+      sourceRefs: [{ sessionId: session.id, eventSeq: newSource.seq }],
+    })
+    appendMemoryRecordEvent(session, 'create', created)
+    appendMemoryIndexEvent(session, {
+      id: MemoryId('mixed-new'), scope: 'workspace', tags: ['new'],
+      source: { sessionId: session.id, eventSeq: newSource.seq },
+    })
+    const store = foldMemoryRecordEvents(session.snapshotEvents(), new MemoryRecordStore())
+    expect(store.snapshot().map(record => record.id)).toEqual([MemoryId('mixed-old'), MemoryId('mixed-new')])
+    expect(store.get(MemoryId('mixed-old'))).toMatchObject({ content: 'Old log entry.' })
+    expect(store.get(MemoryId('mixed-new'))).toEqual(created)
+  })
+})
+
 describe('Continuum record events', () => {
   it('records the replaced record and read invalidation on corrections only', () => {
     const session = Session.create(SessionId('record-predecessor'))
