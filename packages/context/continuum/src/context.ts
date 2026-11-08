@@ -7,7 +7,7 @@ import {
   budgetMemoryWorkingSetWithDrops, renderMemoryWorkingSet, retrieveMemoryWorkingSet, retrieveMemoryWorkingSetWithReport,
   type MemoryCandidatePool, type MemoryRetrievalConfig, type MemoryRetrievalReport,
 } from './retrieval.ts'
-import { MAX_RECORDED_RECORDS, type MemoryRecallDecisionReason, type MemoryRetrievalLimits } from './persistence.ts'
+import { MAX_RECORDED_RECORDS, type MemoryExecutionCandidate, type MemoryRecallDecisionReason, type MemoryRetrievalLimits } from './persistence.ts'
 import { recordMemoryRecallDecision, recordMemoryRetrieval, type MemoryRetrievalRecorder } from './retrieval-events.ts'
 import type { ContinuumMemoryController, ContinuumMemoryPrincipal } from './policy.ts'
 
@@ -104,6 +104,9 @@ export interface ContinuumAdmittedMemory {
   readonly tags: readonly string[]
 }
 
+/** Text one closed step produced, offered to the execution adjudicator. */
+export type ContinuumExecutionCandidate = MemoryExecutionCandidate
+
 /** Replayable outcome returned by a mounted Reflex admitter. */
 export interface ContinuumMemoryAdmission {
   /** Candidates to index; IDs absent from the request are ignored. */
@@ -117,6 +120,19 @@ export interface ContinuumMemoryAdmitter {
     input: { readonly candidates: readonly ContinuumAdmissionCandidate[]; readonly isCurrent: () => boolean },
     signal: AbortSignal,
   ): Promise<ContinuumMemoryAdmission>
+  /**
+   * Judge which executed facts one closed step may record, when `executionAdmission` is `verified`. An admitter
+   * without this method writes no execution records.
+   * @param agent - Agent whose step produced the candidates.
+   * @param input - candidates and a synchronous lifecycle check that prevents a stale write.
+   * @param signal - cancellation for the judgement.
+   * @returns the candidates kept as records, each with its tags; absent means none.
+   */
+  judgeExecution?(
+    agent: Agent,
+    input: { readonly candidates: readonly ContinuumExecutionCandidate[]; readonly isCurrent: () => boolean },
+    signal: AbortSignal,
+  ): Promise<readonly ContinuumAdmittedMemory[]>
 }
 
 declare module '@deepseek-ai/cordis' {
@@ -348,7 +364,7 @@ function retrievalBudget(config: ContinuumMemoryContextConfig): Omit<ContinuumMe
 
 /** Session log and warning sink for one read's retrieval events. */
 function retrievalRecorder(ctx: Context, agent: Agent): MemoryRetrievalRecorder {
-  return { session: agent.session, warn: message => ctx.logger.warn(message) }
+  return { session: agent.session, warn: (message) => { ctx.logger.warn(message) } }
 }
 
 /** Limits applied to the bounded recall, including the selector pool when one is mounted. */

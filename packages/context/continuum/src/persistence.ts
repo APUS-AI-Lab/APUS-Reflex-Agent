@@ -192,6 +192,42 @@ export const MAX_RECORDED_QUERY_CHARS = 500
 /** Maximum IDs or candidates one retrieval event records; paired counts stay complete. */
 export const MAX_RECORDED_RECORDS = 64
 
+/** Why one post-step execution-fact judgement did or did not write a record. */
+export type MemoryWriteDecisionReason =
+  | 'admitted'
+  | 'no-new-facts'
+  | 'no-scope'
+  | 'no-admitter'
+  | 'stale'
+  | 'cancelled'
+  | 'error'
+
+/**
+ * Terminal facts of one post-step execution-fact judgement; log-only and never model-visible. The candidates are the
+ * assistant and tool text one closed step produced, offered to the adjudicator that decides which become records.
+ */
+export interface MemoryWriteDecisionEventData {
+  /** Turn and step whose executed text this judgement covered. */
+  readonly turn: number
+  readonly step: number
+  /** `admitted` means at least one record was written by this judgement. */
+  readonly outcome: 'admitted' | 'skipped' | 'failed'
+  readonly reason: MemoryWriteDecisionReason
+  /** Candidates offered to the adjudicator; zero records a step that produced no assistant or tool text. */
+  readonly candidateRecords: number
+  /** Records this judgement wrote; absent unless at least one was written. */
+  readonly writtenRecords?: number
+}
+
+/** Text one closed step produced, offered as a memory-record candidate. */
+export interface MemoryExecutionCandidate {
+  readonly id: string
+  /** Session sequence of the assistant message or tool result that carries the text. */
+  readonly seq: number
+  /** Complete text of that event. */
+  readonly content: string
+}
+
 declare module '@deepseek-ai/dsh-session/types' {
   interface SessionEventMap {
     /** A source-backed Continuum record transition; log-only and never model-visible. */
@@ -200,6 +236,8 @@ declare module '@deepseek-ai/dsh-session/types' {
     'continuum/memory-index': MemoryIndexEventData
     /** Terminal outcome and reason of one pre-step recall judgement; log-only and never model-visible. */
     'continuum/memory-recall-decision': MemoryRecallDecisionEventData
+    /** Terminal outcome of one post-step execution-fact judgement; log-only and never model-visible. */
+    'continuum/memory-write-decision': MemoryWriteDecisionEventData
     /** One memory retrieval's query, authorization scope and applied limits; log-only and never model-visible. */
     'continuum/memory-retrieval': MemoryRetrievalEventData
     /** The lexical ranking one retrieval produced; log-only and never model-visible. */
@@ -290,6 +328,61 @@ export function appendMemoryIndexQueuedEvent(
   pendingRecords: number,
 ): SessionEvent<'continuum/memory-index-queued'> {
   return session.append('continuum/memory-index-queued', { recordId, pendingRecords })
+}
+
+/**
+ * Assistant and tool text one closed step produced, offered as execution-fact candidates. Only the step's own
+ * completed model output counts: a turn-cancelled `assistant/message` is marked `interrupted` and excluded, as are
+ * generated recall, user input, index and record events, so a record can never be founded on Continuum's own writes
+ * or on a half-delivered answer. Each candidate keeps at most {@link MAX_EXECUTION_CANDIDATE_CHARS} characters and
+ * one step offers at most {@link MAX_EXECUTION_CANDIDATES}, so a large tool result cannot become an unbounded record.
+ * @param events - Session event stream, in sequence order.
+ * @param stepStartSeq - sequence of the `step/start` that opened the judged step.
+ * @param stepEndSeq - sequence of the `step/end` that closed it; the window is `[stepStartSeq, stepEndSeq]`.
+ * @returns one candidate per assistant message or tool result with text, in stream order; empty when the step produced none.
+ */
+export function executionSourceFacts(
+  events: readonly SessionEvent[],
+  stepStartSeq: number,
+  stepEndSeq: number,
+): readonly MemoryExecutionCandidate[] {
+  const candidates: MemoryExecutionCandidate[] = []
+  for (const event of events) {
+    if (candidates.length >= MAX_EXECUTION_CANDIDATES) break
+    if (Number(event.seq) < stepStartSeq || Number(event.seq) > stepEndSeq) continue
+    const content = event.type === 'assistant/message'
+      ? event.data.interrupted === true ? [] : event.data.message.content
+      : event.type === 'tool/result' ? event.data.message.content : []
+    const text = content
+      .filter((block): block is ContentBlock & { type: 'text' } => block.type === 'text')
+      .map(block => block.text).join('\n').trim()
+    if (text.length === 0) continue
+    candidates.push({ id: String(event.seq), seq: Number(event.seq), content: text.slice(0, MAX_EXECUTION_CANDIDATE_CHARS) })
+  }
+  return candidates
+}
+
+/** Maximum UTF-16 characters one execution candidate offers for judgement. */
+export const MAX_EXECUTION_CANDIDATE_CHARS = 16_384
+/** Maximum candidates one closed step offers for judgement. */
+export const MAX_EXECUTION_CANDIDATES = 32
+
+/**
+ * Append one execution-fact judgement to the Session log. A failed append is reported and never fails the step.
+ * @param session - live Session that owns the durable event log.
+ * @param decision - turn, step, terminal outcome and real counts.
+ * @param warn - warning sink for a contained append failure.
+ */
+export function appendMemoryWriteDecision(
+  session: Session,
+  decision: MemoryWriteDecisionEventData,
+  warn: (message: string) => void,
+): void {
+  try {
+    session.append('continuum/memory-write-decision', decision)
+  } catch (error: unknown) {
+    warn(`continuum memory write decision was not recorded: ${String(error)}`)
+  }
 }
 
 /**

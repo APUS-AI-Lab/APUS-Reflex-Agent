@@ -1,0 +1,153 @@
+{
+  "formatVersion": 2,
+  "roots": [
+    {
+      "key": "event:continuum/memory-write-decision",
+      "kind": "event",
+      "event": "continuum/memory-write-decision",
+      "surface": false,
+      "digest": "a5f3fe5e1e3f8d21f5f3f49cfa208259eb73207b04674fb2b213f87715cb3c21",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "data",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "ignorable",
+                "type": 14,
+                "optional": true
+              },
+              {
+                "name": "seq",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "time",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 15,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "candidateRecords",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "outcome",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "reason",
+                "type": 7,
+                "optional": false
+              },
+              {
+                "name": "step",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "turn",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "writtenRecords",
+                "type": 2,
+                "optional": true
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "union",
+            "types": [
+              4,
+              5,
+              6
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "admitted"
+          },
+          {
+            "kind": "literal",
+            "value": "failed"
+          },
+          {
+            "kind": "literal",
+            "value": "skipped"
+          },
+          {
+            "kind": "union",
+            "types": [
+              4,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "cancelled"
+          },
+          {
+            "kind": "literal",
+            "value": "no-admitter"
+          },
+          {
+            "kind": "literal",
+            "value": "no-new-facts"
+          },
+          {
+            "kind": "literal",
+            "value": "no-scope"
+          },
+          {
+            "kind": "literal",
+            "value": "stale"
+          },
+          {
+            "kind": "literal",
+            "value": "error"
+          },
+          {
+            "kind": "literal",
+            "value": true
+          },
+          {
+            "kind": "literal",
+            "value": "continuum/memory-write-decision"
+          }
+        ]
+      }
+    }
+  ],
+  "types": []
+}

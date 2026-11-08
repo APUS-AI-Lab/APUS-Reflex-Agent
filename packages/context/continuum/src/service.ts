@@ -2,10 +2,13 @@ import { Context, Service, type Volatile } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/cordis-plugin-loader'
 import type {} from '@deepseek-ai/dsh-compaction'
 import type { Agent } from '@deepseek-ai/dsh-agent'
-import type { Session, SessionEvent, SessionId } from '@deepseek-ai/dsh-session'
+import { SessionSeq, type Session, type SessionEvent, type SessionId } from '@deepseek-ai/dsh-session'
 import z from '@deepseek-ai/schemastery'
 import { ContinuumMemoryController, resolveContinuumMemorySwitch, type ContinuumMemorySwitch } from './policy.ts'
-import { appendMemoryIndexEvent, appendMemoryRecordEvent, foldMemoryRecordEvents, memorySourceText } from './persistence.ts'
+import {
+  appendMemoryIndexEvent, appendMemoryRecordEvent, appendMemoryWriteDecision, executionSourceFacts,
+  foldMemoryRecordEvents, memorySourceText, type MemoryWriteDecisionEventData,
+} from './persistence.ts'
 import { MemoryId as createMemoryId, MemoryRecordStore, type MemoryId, type MemoryRecord, type NewMemoryRecord } from './records.ts'
 import {
   installContinuumMemoryControllerContext,
@@ -33,6 +36,11 @@ export interface ContinuumConfig extends ContinuumMemoryContextConfig {
    * Reflex admitter; without that admitter it neither indexes nor recalls, so the Session behaves as without Continuum.
    */
   readonly admission?: ContinuumAdmissionMode
+  /**
+   * `off` records no execution facts. `verified` offers the assistant and tool text each closed step produced to the
+   * mounted admitter's `judgeExecution`, which decides what becomes a record; without that method nothing is written.
+   */
+  readonly executionAdmission?: ContinuumExecutionAdmissionMode
   readonly candidatePool?: MemoryCandidatePool
   readonly maxPool?: number
   /** Record retrieval audit events; the schema supplies `false` when omitted. */
@@ -41,6 +49,9 @@ export interface ContinuumConfig extends ContinuumMemoryContextConfig {
 
 /** Which human messages become memory records without an explicit caller. */
 export type ContinuumAdmissionMode = 'explicit' | 'user-message' | 'compaction'
+
+/** Whether closed steps offer their executed facts to the admitter for verification. */
+export type ContinuumExecutionAdmissionMode = 'off' | 'verified'
 
 type ContinuumResolvedConfig = Omit<ContinuumConfig, 'enabled' | 'mode'> & {
   readonly enabled: Volatile<boolean>
@@ -60,6 +71,8 @@ export const ContinuumConfigFields = {
   mode: z.union([z.const('off'), z.const('shadow'), z.const('active')]).default('off').volatile(),
   scopes: z.array(z.string()).default([]),
   admission: z.union([z.const('explicit'), z.const('user-message'), z.const('compaction')]).default('explicit'),
+  /** Execution-fact admission; `off` writes no judgement and no record. */
+  executionAdmission: z.union([z.const('off'), z.const('verified')]).default('off'),
   candidatePool: z.union([z.const('lexical'), z.const('all')]).default('lexical'),
   maxCandidates: z.number().step(1).min(1).default(8),
   maxExcerptBytes: z.number().step(1).min(1).default(2048),
@@ -109,6 +122,12 @@ export interface ContinuumMemoryService {
    * @returns The deactivated immutable record.
    */
   deactivate(agent: Agent, id: MemoryId, expectedRevision: number): MemoryRecord
+  /**
+   * Wait for this Agent's queued admissions, without a cross-Session barrier.
+   * @param agent - Agent whose queue to drain.
+   * @returns a promise that settles when the Agent's current admissions have settled.
+   */
+  whenSettled(agent: Agent): Promise<void>
 }
 
 /**
@@ -126,6 +145,17 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
   private readonly agentsBySession = new Map<SessionId, Agent>()
   /** Compaction admissions in flight, chained per Agent in checkpoint order. */
   private readonly admissions = new Map<Agent, { readonly settled: Promise<void>; readonly abort: AbortController }>()
+  /** Sequence of the `step/start` that opened each Agent's current step, and the turn signal that opened it. */
+  private readonly openSteps = new Map<Agent, {
+    readonly seq: number
+    readonly turn: number
+    readonly step: number
+    readonly signal: AbortSignal
+  }>()
+  /** Agents whose projection was disposed; their Session may already be detached, so no event may be appended. */
+  private readonly disposedAgents = new WeakSet<Agent>()
+  /** Cancellation signal of each Agent's current turn, captured at its pre-step. */
+  private readonly turnSignals = new WeakMap<Agent, AbortSignal>()
 
   constructor(ctx: Context, config: ContinuumConfig | ContinuumResolvedConfig) {
     super(ctx, 'continuumMemory')
@@ -140,6 +170,7 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
       this.admissions.clear()
       this.projections.clear()
       this.agentsBySession.clear()
+      this.openSteps.clear()
     })
     ctx.inject(['agents'], (ctx) => {
       const principal = { scopes: [...config.scopes] }
@@ -154,16 +185,27 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
       agent => this.admissions.get(agent)?.settled, (agent, id) => this.projections.get(agent)?.tags.get(id) ?? [])
     })
     ctx.on('agent/created', ({ agent }) => { this.agentsBySession.set(agent.session.id, agent) })
+    ctx.on('agent/pre-step', ({ agent, signal }, next) => {
+      // The turn signal outlives this pre-step; a step it opens is cancelled with the same signal.
+      this.turnSignals.set(agent, signal)
+      return next()
+    })
     ctx.on('agent/disposed', ({ agent }) => {
       this.projections.get(agent)?.controller.setSwitch({ enabled: false, mode: 'off', reflexMounted: false })
       this.projections.delete(agent)
       this.admissions.get(agent)?.abort.abort()
       this.admissions.delete(agent)
+      this.openSteps.delete(agent)
       this.agentsBySession.delete(agent.session.id)
+      this.disposedAgents.add(agent)
     })
     ctx.on('session/event', (session, event) => {
       if (event.type === 'compaction/summary') {
         this.admitCompacted(session, event)
+        return
+      }
+      if (event.type === 'step/start' || event.type === 'step/end') {
+        this.observeStep(session, event)
         return
       }
       if (event.type !== 'user/message') return
@@ -176,6 +218,10 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
           this.ctx.logger.warn(`continuum memory admission failed: ${String(error)}`)
         }
       })
+    })
+    ctx.on('agent/turn-stopping', async ({ agent, signal }) => {
+      // The turn's own boundary cancels the wait, so a pending judgement cannot delay a cancelled turn.
+      await settledOrAborted(this.whenSettled(agent), signal)
     })
   }
 
@@ -209,6 +255,10 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
     const next = this.controller(agent).deactivate(id, expectedRevision)
     appendMemoryRecordEvent(agent.session, 'deactivate', next, previous)
     return next
+  }
+
+  whenSettled(agent: Agent): Promise<void> {
+    return this.admissions.get(agent)?.settled ?? Promise.resolve()
   }
 
   private synchronizeControllers(): void {
@@ -291,6 +341,120 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
     }
   }
 
+  /**
+   * Track one step boundary. `step/start` records the window; `step/end` queues the execution-fact judgement for the
+   * window it closes, so a read after the step waits for that judgement.
+   */
+  private observeStep(session: Session, event: SessionEvent<'step/start' | 'step/end'>): void {
+    const agent = this.agentsBySession.get(session.id)
+    if (agent === undefined || agent.session.id !== session.id) return
+    if (event.type === 'step/start') {
+      this.openSteps.set(agent, {
+        seq: Number(event.seq), turn: event.data.turn, step: event.data.step,
+        signal: this.turnSignals.get(agent) ?? new AbortController().signal,
+      })
+      return
+    }
+    const opened = this.openSteps.get(agent)
+    this.openSteps.delete(agent)
+    if (opened === undefined) return
+    this.admitExecutionFacts(agent, opened, Number(event.seq))
+  }
+
+  /** Queue the execution-fact judgement for one closed step, chained after the Agent's earlier admissions. */
+  private admitExecutionFacts(
+    agent: Agent,
+    opened: { readonly turn: number; readonly step: number; readonly seq: number; readonly signal: AbortSignal },
+    stepEndSeq: number,
+  ): void {
+    if ((this.config.executionAdmission ?? 'off') !== 'verified' || !this.state().enabled) return
+    const scope = this.config.scopes[0]
+    const previous = this.admissions.get(agent)
+    const abort = previous?.abort ?? new AbortController()
+    const settled = (previous?.settled ?? Promise.resolve()).then(async () => {
+      // Session rejects re-entrant append calls while publishing this event.
+      await Promise.resolve()
+      await this.admitStepFacts(agent, opened, stepEndSeq, scope, abort.signal)
+    }).catch((error: unknown) => {
+      if (!abort.signal.aborted) this.ctx.logger.warn(`continuum execution admission failed: ${String(error)}`)
+    })
+    this.admissions.set(agent, { settled, abort })
+  }
+
+  /**
+   * Offer one closed step's executed text to the admitter and write the records it keeps. A cancelled turn, a
+   * disposed Agent, a switched-off projection, or a failed judgement writes no record; the cancelled-turn check
+   * reads the turn signal captured when the step opened, because the admission controller outlives the turn.
+   */
+  private async admitStepFacts(
+    agent: Agent,
+    opened: { readonly turn: number; readonly step: number; readonly seq: number; readonly signal: AbortSignal },
+    stepEndSeq: number,
+    scope: string | undefined,
+    signal: AbortSignal,
+  ): Promise<void> {
+    const session = agent.session
+    const decide = (decision: MemoryWriteDecisionEventData): void => {
+      // A disposed Agent's Session may already be detached; appending then would fork the log.
+      if (this.disposedAgents.has(agent) || !this.agentsBySession.has(session.id)) return
+      appendMemoryWriteDecision(session, decision, (message) => { this.ctx.logger.warn(message) })
+    }
+    if (signal.aborted || opened.signal.aborted) {
+      decide({ turn: opened.turn, step: opened.step, outcome: 'failed', reason: 'cancelled', candidateRecords: 0 })
+      return
+    }
+    if (scope === undefined) { decide({ turn: opened.turn, step: opened.step, outcome: 'skipped', reason: 'no-scope', candidateRecords: 0 }); return }
+    const admitter = this.ctx.get('continuumMemoryAdmitter')
+    if (admitter?.judgeExecution === undefined) { decide({ turn: opened.turn, step: opened.step, outcome: 'skipped', reason: 'no-admitter', candidateRecords: 0 }); return }
+    // oxlint-disable-next-line typescript/no-deprecated -- Existing Session history read; migration deferred.
+    const candidates = executionSourceFacts(session.snapshotEvents(), opened.seq, stepEndSeq)
+    if (candidates.length === 0) { decide({ turn: opened.turn, step: opened.step, outcome: 'skipped', reason: 'no-new-facts', candidateRecords: 0 }); return }
+    // The projection's generation invalidates a proposal judged across a disable and re-enable.
+    const projection = this.projectionFor(agent, this.switchConfig())
+    const ticket = projection.controller.beginRead({ scopes: [scope] })
+    const isCurrent = (): boolean =>
+      !signal.aborted && !opened.signal.aborted && ticket !== undefined && projection.controller.isCurrent(ticket)
+    let kept: readonly ContinuumAdmittedMemory[]
+    try {
+      kept = await admitter.judgeExecution(agent, { candidates, isCurrent }, signal)
+    } catch (error: unknown) {
+      if (isCurrent()) {
+        this.ctx.logger.warn(`continuum execution judge failed: ${String(error)}`)
+        decide({ turn: opened.turn, step: opened.step, outcome: 'failed', reason: 'error', candidateRecords: candidates.length })
+      } else {
+        decide({ turn: opened.turn, step: opened.step, outcome: 'failed', reason: 'cancelled', candidateRecords: candidates.length })
+      }
+      return
+    }
+    if (!isCurrent()) {
+      decide({ turn: opened.turn, step: opened.step, outcome: 'skipped', reason: 'stale', candidateRecords: candidates.length })
+      return
+    }
+    const byId = new Map(candidates.map(candidate => [candidate.id, candidate]))
+    let written = 0
+    for (const memory of kept) {
+      const candidate = byId.get(memory.id)
+      if (candidate === undefined) continue
+      const id = createMemoryId(`${String(session.id)}:execution:${String(stepEndSeq)}:${candidate.id}`)
+      if (projection.store.get(id) !== undefined) continue
+      try {
+        this.create(agent, {
+          id, kind: 'fact', scope,
+          content: candidate.content,
+          // The source is the message that carries the text, so history readback resolves it.
+          sourceRefs: [{ sessionId: session.id, eventSeq: SessionSeq(candidate.seq) }],
+        })
+      } catch (error: unknown) {
+        this.ctx.logger.warn(`continuum execution record was not written: ${String(error)}`)
+        continue
+      }
+      written += 1
+    }
+    decide(written === 0
+      ? { turn: opened.turn, step: opened.step, outcome: 'skipped', reason: 'no-new-facts', candidateRecords: candidates.length }
+      : { turn: opened.turn, step: opened.step, outcome: 'admitted', reason: 'admitted', candidateRecords: candidates.length, writtenRecords: written })
+  }
+
   /** Compaction admission needs a mounted Reflex admitter; the other modes do not depend on it. */
   private reflexReady(): boolean {
     return this.config.admission !== 'compaction' || this.ctx.get('continuumMemoryAdmitter') !== undefined
@@ -352,4 +516,17 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
 function readSetting<T extends boolean | 'off' | 'shadow' | 'active'>(value: T | Volatile<T>): T {
   if (typeof value === 'object') return value.get() as T
   return value
+}
+
+/** Wait for a promise, or resolve early once the boundary signal aborts. */
+async function settledOrAborted(settled: Promise<void>, signal: AbortSignal): Promise<void> {
+  if (signal.aborted) return
+  const aborted = Promise.withResolvers<never>()
+  const cancel = (): void => { aborted.resolve(undefined as never) }
+  signal.addEventListener('abort', cancel, { once: true })
+  try {
+    await Promise.race([settled, aborted.promise])
+  } finally {
+    signal.removeEventListener('abort', cancel)
+  }
 }

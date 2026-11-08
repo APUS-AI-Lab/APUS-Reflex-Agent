@@ -34,6 +34,8 @@ Session 事件使用现有 persistence backend；完成 `ctx.sessions.flush(sess
 
 `ContinuumConfigFields` 导出经过校验的 schema 字段，供 profile provider 定义自己的默认值。Core 默认仍为 `enabled: false`、`mode: off`、`admission: explicit`、`candidatePool: lexical` 和空作用域。Reflex 专属开关生效时，`admission: 'user-message'` 记录每条已提交的人类消息，`admission: 'compaction'` 在挂载的 Reflex admitter 选中后，为压缩检查点替换掉的人类消息建立索引。`candidatePool: all` 还会在所有字面命中之后按从新到旧提供与输入没有共同词的记录，供挂载的 selector 判断；没有 selector 时只注入有共同词的记录。挂载的 selector 最多收到 `maxPool` 个候选（默认等于 `maxCandidates`），每个候选附带记录的 L1 标签；它选出的召回仍受 `maxTotalBytes` 限制。`trace` 默认为 `false`，可独立于 `enabled`/`mode` 配置，只控制 `continuum/memory-retrieval`、`memory-scored`、`memory-budgeted` 和 `memory-injected` 审计事件，且仅在实际执行到对应阶段的读取中写入。它不会进入数值预算校验，也不会改变注入哪些记录。`continuum/memory-recall-decision` 把每次进入 pre-step 的判断记为一条仅日志的终态事实——包括被拒的提议、缺少 controller 或 store、开关不可用、空库、无命中的读取、过期、取消或失败的尝试——并附原因与真实读取计数，独立于 `trace`；该决策日志为每条缺失的审计事件给出明确原因。
 
+`executionAdmission` 默认为 `off`，不写判断也不写记录。`verified` 会把每个已结束 step 产生的 assistant 与工具文本——从不包含 Continuum 自己的召回、索引或记录事件，也不包含被取消轮次的消息——交给挂载 admitter 的 `judgeExecution`；没有该方法时不写任何记录，判断未形成真实结论时也不写记录。每个受判断的 step 记录一条 `continuum/memory-write-decision` 事件；没有产生此类文本的 step、被取消的轮次，以及判断失败或已过期的 step 都不写记录。每个候选最多保留 16 384 个字符，一个 step 最多提供 32 个候选，因此大型工具结果不会变成无上限记录。执行记录的 id 为 `{sessionId}:execution:{stepEndSeq}:{eventSeq}`，重复判断不会重复创建记录，并且每条记录指向承载其文本的消息。下一次 pre-step 读取与 `agent/turn-stopping` 都通过 `whenSettled(agent)` 等待该 Agent 排队的判断；它不设跨 Session 屏障，并在轮次本身被取消时停止等待。
+
 -----
 
 可选插件 `@deepseek-ai/dsh-continuum/tasks` 将不同 Session 接入宿主配置的同一任务。独立 JSONL 日志提供单写者、持久版本检查、精确请求去重和完整原文；内部日志不进入普通会话列表。配置固定 `root`、`workspace`、`domainId`、`principalId` 和 `taskId`；`maxContextBytes` 与 `maxPageBytes` 默认都是 8192。宿主向一个本地主体授权精确 canonical 工作区；这不是多用户认证服务。

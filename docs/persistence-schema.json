@@ -9640,6 +9640,153 @@
       }
     },
     {
+      "key": "event:continuum/memory-write-decision",
+      "kind": "event",
+      "event": "continuum/memory-write-decision",
+      "surface": false,
+      "digest": "a5f3fe5e1e3f8d21f5f3f49cfa208259eb73207b04674fb2b213f87715cb3c21",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "data",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "ignorable",
+                "type": 14,
+                "optional": true
+              },
+              {
+                "name": "seq",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "time",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 15,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "candidateRecords",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "outcome",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "reason",
+                "type": 7,
+                "optional": false
+              },
+              {
+                "name": "step",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "turn",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "writtenRecords",
+                "type": 2,
+                "optional": true
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "union",
+            "types": [
+              4,
+              5,
+              6
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "admitted"
+          },
+          {
+            "kind": "literal",
+            "value": "failed"
+          },
+          {
+            "kind": "literal",
+            "value": "skipped"
+          },
+          {
+            "kind": "union",
+            "types": [
+              4,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "cancelled"
+          },
+          {
+            "kind": "literal",
+            "value": "no-admitter"
+          },
+          {
+            "kind": "literal",
+            "value": "no-new-facts"
+          },
+          {
+            "kind": "literal",
+            "value": "no-scope"
+          },
+          {
+            "kind": "literal",
+            "value": "stale"
+          },
+          {
+            "kind": "literal",
+            "value": "error"
+          },
+          {
+            "kind": "literal",
+            "value": true
+          },
+          {
+            "kind": "literal",
+            "value": "continuum/memory-write-decision"
+          }
+        ]
+      }
+    },
+    {
       "key": "event:continuum/task-binding",
       "kind": "event",
       "event": "continuum/task-binding",
@@ -45215,6 +45362,116 @@
       "sources": []
     },
     {
+      "digest": "118a6aade098793306eea52ef0f6ae6b47ebe72c142c887ec778aeecd1b6c2ec",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "candidateRecords",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "outcome",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "reason",
+                "type": 6,
+                "optional": false
+              },
+              {
+                "name": "step",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "turn",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "writtenRecords",
+                "type": 1,
+                "optional": true
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "union",
+            "types": [
+              3,
+              4,
+              5
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "admitted"
+          },
+          {
+            "kind": "literal",
+            "value": "skipped"
+          },
+          {
+            "kind": "literal",
+            "value": "failed"
+          },
+          {
+            "kind": "union",
+            "types": [
+              3,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "cancelled"
+          },
+          {
+            "kind": "literal",
+            "value": "stale"
+          },
+          {
+            "kind": "literal",
+            "value": "error"
+          },
+          {
+            "kind": "literal",
+            "value": "no-admitter"
+          },
+          {
+            "kind": "literal",
+            "value": "no-new-facts"
+          },
+          {
+            "kind": "literal",
+            "value": "no-scope"
+          }
+        ]
+      },
+      "names": [
+        "packages/context/continuum/src/persistence.ts#MemoryWriteDecisionEventData"
+      ],
+      "sources": [
+        "packages/context/continuum/src/persistence.ts:209"
+      ]
+    },
+    {
       "digest": "119abe2b9c0b2f46ecb31d82b9acba4d4b30e049f655e2475e8b4ae12d5a9e25",
       "schema": {
         "root": 0,
@@ -48130,7 +48387,7 @@
         "packages/context/continuum/src/persistence.ts#MemoryIndexQueuedEventData"
       ],
       "sources": [
-        "packages/context/continuum/src/persistence.ts:236"
+        "packages/context/continuum/src/persistence.ts:274"
       ]
     },
     {
@@ -58221,6 +58478,20 @@
       "sources": []
     },
     {
+      "digest": "2223f5416a10231d574c64f382acbd0d3765702f12663d2a8f2cadbe84fbc821",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "no-new-facts"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "222bcd659111b0b1cf4545c8598f9a2696a04863aa4b5b99a591ab9e94300993",
       "schema": {
         "root": 0,
@@ -64672,6 +64943,36 @@
           {
             "kind": "literal",
             "value": "no-store"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "2cee9e96aa95b444ff89d20a0fd4fc71b37a032eb72e1bf582028b7822dab94b",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "union",
+            "types": [
+              1,
+              2,
+              3
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "admitted"
+          },
+          {
+            "kind": "literal",
+            "value": "failed"
+          },
+          {
+            "kind": "literal",
+            "value": "skipped"
           }
         ]
       },
@@ -95486,6 +95787,20 @@
       "sources": []
     },
     {
+      "digest": "6eaa23cfb283e2f9e549a9cef72b68978237ed701e59f9a6032a40b59a2cfc47",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "continuum/memory-write-decision"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "6ebb9b2d43fb0085b4264add7d76a8f4915c01a8aa9fc39b3f78c078928ed10e",
       "schema": {
         "root": 0,
@@ -98139,7 +98454,7 @@
         "packages/context/continuum/src/persistence.ts#MemoryIndexRebuiltEventData"
       ],
       "sources": [
-        "packages/context/continuum/src/persistence.ts:219"
+        "packages/context/continuum/src/persistence.ts:257"
       ]
     },
     {
@@ -107251,6 +107566,60 @@
       ]
     },
     {
+      "digest": "98b1e16566a8a6bf2c17f00861d97eddeaa80c75c68c713b51270895f640a4d5",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "union",
+            "types": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "admitted"
+          },
+          {
+            "kind": "literal",
+            "value": "cancelled"
+          },
+          {
+            "kind": "literal",
+            "value": "error"
+          },
+          {
+            "kind": "literal",
+            "value": "no-admitter"
+          },
+          {
+            "kind": "literal",
+            "value": "no-new-facts"
+          },
+          {
+            "kind": "literal",
+            "value": "no-scope"
+          },
+          {
+            "kind": "literal",
+            "value": "stale"
+          }
+        ]
+      },
+      "names": [
+        "packages/context/continuum/src/persistence.ts#MemoryWriteDecisionReason"
+      ],
+      "sources": [
+        "packages/context/continuum/src/persistence.ts:196"
+      ]
+    },
+    {
       "digest": "99135d8a3937977955eaac5f8f04f930dcd1562f8450a54a51cde9b921dd59a6",
       "schema": {
         "root": 0,
@@ -114974,6 +115343,151 @@
           {
             "kind": "literal",
             "value": "continuum/task-operation"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "a5f3fe5e1e3f8d21f5f3f49cfa208259eb73207b04674fb2b213f87715cb3c21",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "data",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "ignorable",
+                "type": 14,
+                "optional": true
+              },
+              {
+                "name": "seq",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "time",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 15,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "candidateRecords",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "outcome",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "reason",
+                "type": 7,
+                "optional": false
+              },
+              {
+                "name": "step",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "turn",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "writtenRecords",
+                "type": 2,
+                "optional": true
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "union",
+            "types": [
+              4,
+              5,
+              6
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "admitted"
+          },
+          {
+            "kind": "literal",
+            "value": "failed"
+          },
+          {
+            "kind": "literal",
+            "value": "skipped"
+          },
+          {
+            "kind": "union",
+            "types": [
+              4,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "cancelled"
+          },
+          {
+            "kind": "literal",
+            "value": "no-admitter"
+          },
+          {
+            "kind": "literal",
+            "value": "no-new-facts"
+          },
+          {
+            "kind": "literal",
+            "value": "no-scope"
+          },
+          {
+            "kind": "literal",
+            "value": "stale"
+          },
+          {
+            "kind": "literal",
+            "value": "error"
+          },
+          {
+            "kind": "literal",
+            "value": true
+          },
+          {
+            "kind": "literal",
+            "value": "continuum/memory-write-decision"
           }
         ]
       },
@@ -132461,6 +132975,20 @@
       "sources": []
     },
     {
+      "digest": "d25fd2741610f6395d9067be1b2c3c06a1da0e78d3da115ef6d8c7e8b288259c",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "no-scope"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "d28765f87d6b6ab408e0b2f3e7e297791b004b806d8e302c49903ebae815feb2",
       "schema": {
         "root": 0,
@@ -137138,6 +137666,20 @@
       "sources": [
         "packages/experimental/system3/src/reflex-recovery.ts:30"
       ]
+    },
+    {
+      "digest": "d71b5263835c020778b82bc21bbe482348045fca4c76c64d10ace6d722f3a5cb",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "admitted"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
     },
     {
       "digest": "d74872f6b1aa352f81a5680d445f517d81ead9e575664893712978ceb90b5064",
@@ -149548,6 +150090,20 @@
           {
             "kind": "literal",
             "value": "reflex/context-cache-anchor"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "fbca0f6a5e8a2475f61bc76c8ff7b637acb11810c3d4f30d96d5c45dc8eb1867",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "no-admitter"
           }
         ]
       },

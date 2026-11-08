@@ -106,6 +106,10 @@
         # The schema default is an empty list, and admission returns early
         # without a scope — nothing is stored even with `user-message` set.
         scopes: !!js 'JSON.parse(process.env.CONTINUUM_MEMORY_SCOPES || "[\"workspace\"]")'
+        # Execution facts stay off unless the run explicitly opts in. `verified`
+        # offers each closed step's assistant/tool text to the admitter, which
+        # decides what becomes a record; the default writes no judgement.
+        executionAdmission: !!js 'process.env.CONTINUUM_EXECUTION_ADMISSION || "off"'
 
     - id: continuum-jev
       name: /workspace/packages/experimental/continuum-jev/lib/index.js
