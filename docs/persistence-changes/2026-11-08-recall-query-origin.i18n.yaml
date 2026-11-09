@@ -1,0 +1,28 @@
+# Bilingual-pair consistency record for 2026-11-08-recall-query-origin.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/persistence-changes/2026-11-08-recall-query-origin.md
+/:
+  en: 3d5a424ae7d7e46b
+  zh: c22a8e4a62d8cc1a
+/2026-11-08-recall-query-origin:
+  en: 79a6375f5e15405d
+  zh: 8fa78d9f201125a8
+/2026-11-08-recall-query-origin/summary:
+  en: f0a8159027be1848
+  zh: ad6312b32fd4adbf
+/2026-11-08-recall-query-origin/table-of-contents:
+  en: 6cf314a069ceb451
+  zh: 9adff678e9ecab3b
+/2026-11-08-recall-query-origin/declaration:
+  en: 6907136f28e48c90
+  zh: 02f8298485f3d8e7
+/2026-11-08-recall-query-origin/compatibility:
+  en: 07def2b5bc659e30
+  zh: 49ec171ab1319b84
+/2026-11-08-recall-query-origin/verification:
+  en: ce6bdbdfa9561d34
+  zh: 730418046c17d700
+/2026-11-08-recall-query-origin/dev-note:
+  en: b75c8458928b72b9
+  zh: 003ba4e17b4b5269

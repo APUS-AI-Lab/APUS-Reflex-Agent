@@ -4,6 +4,8 @@ import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import { describe, expect, it, onTestFinished } from 'vitest'
 import { ContinuumMemoryController, MemoryId, MemoryRecordStore, installContinuumMemoryContext, installContinuumMemoryControllerContext } from '../src/index.ts'
 import { Session, SessionId, SessionSeq } from '@deepseek-ai/dsh-session'
+import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
+import { goalProjectionDefinition } from '@deepseek-ai/dsh-goal'
 import type { Agent } from '@deepseek-ai/dsh-agent'
 
 function records(): MemoryRecordStore {
@@ -560,5 +562,117 @@ describe('Continuum same-step context consumer', () => {
     const result = await request
     expect(result.kind === 'enter' ? result.messages : []).toHaveLength(1)
     await ctx.fiber.dispose()
+  })
+
+  it('composes the recall query from the newest user message, then the session goal, then execution text', async () => {
+    const session = Session.create(SessionId('recall-query-source'))
+    const ctx = new Context()
+    onTestFinished(() => ctx.fiber.dispose())
+    // Register the goal projection so the goal fallback reads the current surface state, not raw events.
+    await ctx.plugin(SessionProjectionRegistry)
+    ctx.sessionProjections.register(goalProjectionDefinition)
+    const store = new MemoryRecordStore()
+    store.create({ id: MemoryId('migration'), kind: 'fact', scope: 'workspace', content: 'Migration is scheduled Friday.',
+      sourceRefs: [{ sessionId: SessionId('source'), eventSeq: SessionSeq(0) }] })
+    const controller = new ContinuumMemoryController(store, { enabled: true, mode: 'active', reflexMounted: true })
+    installContinuumMemoryControllerContext(ctx, () => controller, () => ({ scopes: ['workspace'] }),
+      { maxCandidates: 4, maxExcerptBytes: 100, maxTotalBytes: 1024 })
+    session.append('goal/change', {
+      kind: 'goal/change', version: 1, operation: 'create',
+      goal: { id: 'goal-1', revision: 1, objective: 'scheduled migration', phase: 'active', maxGoalRounds: 3 } as never,
+      roundsStarted: 0, createdAt: 0, updatedAt: 0,
+    })
+    session.append('turn/start', { turn: 1 })
+    session.append('assistant/message', {
+      turn: 1, step: 1,
+      message: { role: 'assistant', content: [{ type: 'text', text: 'Unrelated execution text.' }] } as never,
+      stream: [],
+    }, { surfaceOp: 'append' })
+    const ask = async (messages: readonly ReturnType<typeof createUserMessage>[]) => {
+      const result = await agentEvents(ctx, { session } as Agent).waterfall('agent/pre-step', {
+        messages: [...messages], turn: 1, step: 1, signal: new AbortController().signal,
+      }, () => Promise.resolve({ kind: 'enter' as const, messages: [...messages] }))
+      return result.kind === 'enter' ? result.messages : []
+    }
+    // No user text in the request: the Session goal becomes the query, and the recall is the only message.
+    expect(await ask([])).toHaveLength(1)
+    expect(recallDecisions(session).at(-1)).toMatchObject({ queryOrigin: 'session-goal', queryChars: 'scheduled migration'.length })
+    // A newer user message still wins verbatim.
+    const user = createUserMessage({ source: { kind: 'user' }, content: [{ type: 'text', text: 'When is the migration scheduled?' }] })
+    expect(await ask([user])).toHaveLength(2)
+    expect(recallDecisions(session).at(-1)).toMatchObject({ querySource: 'latest-user-message', queryOrigin: 'latest-user-message', queryChars: user.content[0]?.type === 'text' ? 'When is the migration scheduled?'.length : 0 })
+  })
+
+  it('records no-query when no user, goal, or execution text exists', async () => {
+    const session = Session.create(SessionId('recall-no-query-any'))
+    const ctx = new Context()
+    onTestFinished(() => ctx.fiber.dispose())
+    const controller = new ContinuumMemoryController(records(), { enabled: true, mode: 'active', reflexMounted: true })
+    installContinuumMemoryControllerContext(ctx, () => controller, () => ({ scopes: ['workspace'] }),
+      { maxCandidates: 4, maxExcerptBytes: 100, maxTotalBytes: 1024 })
+    const result = await agentEvents(ctx, { session } as Agent).waterfall('agent/pre-step', {
+      messages: [], turn: 1, step: 1, signal: new AbortController().signal,
+    }, () => Promise.resolve({ kind: 'enter' as const, messages: [] }))
+    expect(result.kind === 'enter' ? result.messages : []).toEqual([])
+    expect(recallDecisions(session).map(decision => decision.reason)).toEqual(['no-query'])
+  })
+
+  it('does not inject a record already present verbatim in the current request', async () => {
+    const ctx = new Context()
+    onTestFinished(() => ctx.fiber.dispose())
+    const session = Session.create(SessionId('recall-already-present'))
+    // The only record's full content already appears in the request message.
+    const store = new MemoryRecordStore()
+    store.create({ id: MemoryId('migration'), kind: 'fact', scope: 'workspace', content: 'Migration is scheduled Friday.',
+      sourceRefs: [{ sessionId: SessionId('source'), eventSeq: SessionSeq(0) }] })
+    installContinuumMemoryContext(ctx, () => store, { maxCandidates: 4, maxExcerptBytes: 100, maxTotalBytes: 1024 })
+    const user = createUserMessage({ source: { kind: 'user' }, content: [{ type: 'text', text: 'Migration is scheduled Friday.' }] })
+    const result = await agentEvents(ctx, { session } as Agent).waterfall('agent/pre-step', {
+      messages: [user], turn: 1, step: 1, signal: new AbortController().signal,
+    }, () => Promise.resolve({ kind: 'enter' as const, messages: [user] }))
+    expect(result.kind === 'enter' ? result.messages : []).toHaveLength(1)
+    expect(recallDecisions(session).at(-1)).toMatchObject({ reason: 'no-query-match', alreadyPresentRecords: 1 })
+  })
+
+  it('keeps a partially overlapping record and reinjects after compaction', async () => {
+    const ctx = new Context()
+    onTestFinished(() => ctx.fiber.dispose())
+    const session = Session.create(SessionId('recall-reinject'))
+    const store = records()
+    installContinuumMemoryContext(ctx, () => store, { maxCandidates: 4, maxExcerptBytes: 200, maxTotalBytes: 1024 })
+    const ask = async (text: string, turn: number) => {
+      const user = createUserMessage({ source: { kind: 'user' }, content: [{ type: 'text', text }] })
+      const result = await agentEvents(ctx, { session } as Agent).waterfall('agent/pre-step', {
+        messages: [user], turn, step: 1, signal: new AbortController().signal,
+      }, () => Promise.resolve({ kind: 'enter' as const, messages: [user] }))
+      return result.kind === 'enter' ? result.messages : []
+    }
+    // A request that only mentions part of the record still receives it.
+    expect(await ask('When is the migration?', 1)).toHaveLength(2)
+    // After compaction the original message leaves the request; the record is injected again.
+    expect(await ask('Migration details please.', 2)).toHaveLength(2)
+    expect(recallDecisions(session).map(decision => decision.outcome)).toEqual(['injected', 'injected'])
+  })
+
+  it('injects only the kept records when some were already present', async () => {
+    const ctx = new Context()
+    onTestFinished(() => ctx.fiber.dispose())
+    const session = Session.create(SessionId('recall-partial-present'))
+    const store = new MemoryRecordStore()
+    store.create({ id: MemoryId('present'), kind: 'fact', scope: 'workspace', content: 'Migration is scheduled Friday.',
+      sourceRefs: [{ sessionId: SessionId('source'), eventSeq: SessionSeq(0) }] })
+    store.create({ id: MemoryId('fresh'), kind: 'fact', scope: 'workspace', content: 'Migration checks are pending.',
+      sourceRefs: [{ sessionId: SessionId('source'), eventSeq: SessionSeq(1) }] })
+    installContinuumMemoryContext(ctx, () => store, { maxCandidates: 4, maxExcerptBytes: 200, maxTotalBytes: 1024 })
+    const user = createUserMessage({ source: { kind: 'user' }, content: [{ type: 'text', text: 'Migration is scheduled Friday.' }] })
+    const result = await agentEvents(ctx, { session } as Agent).waterfall('agent/pre-step', {
+      messages: [user], turn: 1, step: 1, signal: new AbortController().signal,
+    }, () => Promise.resolve({ kind: 'enter' as const, messages: [user] }))
+    const recall = result.kind === 'enter' ? result.messages[1] : undefined
+    // The model sees exactly the record the source names, never the already-present text.
+    expect(recall?.source).toMatchObject({ recordIds: ['fresh'] })
+    const text = recall?.content.map(block => block.type === 'text' ? block.text : '').join('') ?? ''
+    expect(text).toContain('Migration checks are pending.')
+    expect(text).not.toContain('Migration is scheduled Friday.')
   })
 })

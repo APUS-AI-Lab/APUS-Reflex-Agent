@@ -8913,7 +8913,7 @@
       "kind": "event",
       "event": "continuum/memory-recall-decision",
       "surface": false,
-      "digest": "ebc96301fd38bc561480ea9f1f751811bc92f787e5cd3e44449df6200fb69793",
+      "digest": "62c71a62e2a2750232cda7672d1505ca1f8742249e4d44017e6766b30cb36b05",
       "schema": {
         "root": 0,
         "nodes": [
@@ -8927,7 +8927,7 @@
               },
               {
                 "name": "ignorable",
-                "type": 22,
+                "type": 25,
                 "optional": true
               },
               {
@@ -8942,7 +8942,7 @@
               },
               {
                 "name": "type",
-                "type": 23,
+                "type": 26,
                 "optional": false
               }
             ],
@@ -8953,6 +8953,11 @@
             "properties": [
               {
                 "name": "activeRecords",
+                "type": 2,
+                "optional": true
+              },
+              {
+                "name": "alreadyPresentRecords",
                 "type": 2,
                 "optional": true
               },
@@ -8977,13 +8982,18 @@
                 "optional": true
               },
               {
-                "name": "querySource",
+                "name": "queryOrigin",
                 "type": 7,
                 "optional": true
               },
               {
+                "name": "querySource",
+                "type": 9,
+                "optional": true
+              },
+              {
                 "name": "reason",
-                "type": 8,
+                "type": 11,
                 "optional": false
               },
               {
@@ -9024,16 +9034,29 @@
             "value": "skipped"
           },
           {
+            "kind": "union",
+            "types": [
+              8,
+              9,
+              10
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "execution-text"
+          },
+          {
             "kind": "literal",
             "value": "latest-user-message"
+          },
+          {
+            "kind": "literal",
+            "value": "session-goal"
           },
           {
             "kind": "union",
             "types": [
               5,
-              9,
-              10,
-              11,
               12,
               13,
               14,
@@ -9043,7 +9066,10 @@
               18,
               19,
               20,
-              21
+              21,
+              22,
+              23,
+              24
             ]
           },
           {
@@ -9056,6 +9082,18 @@
           },
           {
             "kind": "literal",
+            "value": "step-rejected"
+          },
+          {
+            "kind": "literal",
+            "value": "unavailable"
+          },
+          {
+            "kind": "literal",
+            "value": "no-controller"
+          },
+          {
+            "kind": "literal",
             "value": "empty-store"
           },
           {
@@ -9064,15 +9102,11 @@
           },
           {
             "kind": "literal",
-            "value": "no-query"
-          },
-          {
-            "kind": "literal",
             "value": "no-candidates"
           },
           {
             "kind": "literal",
-            "value": "no-controller"
+            "value": "no-query"
           },
           {
             "kind": "literal",
@@ -9089,14 +9123,6 @@
           {
             "kind": "literal",
             "value": "stale"
-          },
-          {
-            "kind": "literal",
-            "value": "step-rejected"
-          },
-          {
-            "kind": "literal",
-            "value": "unavailable"
           },
           {
             "kind": "literal",
@@ -9362,7 +9388,7 @@
       "kind": "event",
       "event": "continuum/memory-retrieval",
       "surface": false,
-      "digest": "1436683bce21c83423016fc410d772eb5a4c96b41a8fbe19d4129451574bc803",
+      "digest": "5078a685d07859721694955c12182f6f793ba6bfdb95841b65bf7098d217ef18",
       "schema": {
         "root": 0,
         "nodes": [
@@ -9376,7 +9402,7 @@
               },
               {
                 "name": "ignorable",
-                "type": 11,
+                "type": 14,
                 "optional": true
               },
               {
@@ -9391,7 +9417,7 @@
               },
               {
                 "name": "type",
-                "type": 12,
+                "type": 15,
                 "optional": false
               }
             ],
@@ -9436,28 +9462,33 @@
                 "optional": false
               },
               {
-                "name": "querySource",
+                "name": "queryOrigin",
                 "type": 8,
+                "optional": true
+              },
+              {
+                "name": "querySource",
+                "type": 9,
                 "optional": false
               },
               {
                 "name": "queryTruncated",
-                "type": 9,
+                "type": 12,
                 "optional": false
               },
               {
                 "name": "scopes",
-                "type": 10,
+                "type": 13,
                 "optional": true
               },
               {
                 "name": "selectorMounted",
-                "type": 9,
+                "type": 12,
                 "optional": false
               },
               {
                 "name": "terms",
-                "type": 10,
+                "type": 13,
                 "optional": false
               }
             ],
@@ -9513,8 +9544,24 @@
             "type": "string"
           },
           {
+            "kind": "union",
+            "types": [
+              9,
+              10,
+              11
+            ]
+          },
+          {
             "kind": "literal",
             "value": "latest-user-message"
+          },
+          {
+            "kind": "literal",
+            "value": "session-goal"
+          },
+          {
+            "kind": "literal",
+            "value": "execution-text"
           },
           {
             "kind": "primitive",
@@ -40986,7 +41033,7 @@
         "packages/context/continuum/src/persistence.ts#MemoryRecallDecisionReason"
       ],
       "sources": [
-        "packages/context/continuum/src/persistence.ts:154"
+        "packages/context/continuum/src/persistence.ts:159"
       ]
     },
     {
@@ -41028,170 +41075,6 @@
       "names": [],
       "sources": [
         "packages/extensions/cordis-host-runner/src/index.ts:14"
-      ]
-    },
-    {
-      "digest": "02b6331345e63cf02e4722c3fa821b8ffcea7e281b8801a2ddc6a1b9def8a3c0",
-      "schema": {
-        "root": 0,
-        "nodes": [
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "activeRecords",
-                "type": 1,
-                "optional": true
-              },
-              {
-                "name": "candidateRecords",
-                "type": 1,
-                "optional": true
-              },
-              {
-                "name": "injectedRecords",
-                "type": 1,
-                "optional": true
-              },
-              {
-                "name": "outcome",
-                "type": 2,
-                "optional": false
-              },
-              {
-                "name": "queryChars",
-                "type": 1,
-                "optional": true
-              },
-              {
-                "name": "querySource",
-                "type": 6,
-                "optional": true
-              },
-              {
-                "name": "reason",
-                "type": 7,
-                "optional": false
-              },
-              {
-                "name": "step",
-                "type": 1,
-                "optional": false
-              },
-              {
-                "name": "turn",
-                "type": 1,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "primitive",
-            "type": "number"
-          },
-          {
-            "kind": "union",
-            "types": [
-              3,
-              4,
-              5
-            ]
-          },
-          {
-            "kind": "literal",
-            "value": "failed"
-          },
-          {
-            "kind": "literal",
-            "value": "injected"
-          },
-          {
-            "kind": "literal",
-            "value": "skipped"
-          },
-          {
-            "kind": "literal",
-            "value": "latest-user-message"
-          },
-          {
-            "kind": "union",
-            "types": [
-              4,
-              8,
-              9,
-              10,
-              11,
-              12,
-              13,
-              14,
-              15,
-              16,
-              17,
-              18,
-              19,
-              20
-            ]
-          },
-          {
-            "kind": "literal",
-            "value": "cancelled"
-          },
-          {
-            "kind": "literal",
-            "value": "consumer-inactive"
-          },
-          {
-            "kind": "literal",
-            "value": "empty-store"
-          },
-          {
-            "kind": "literal",
-            "value": "error"
-          },
-          {
-            "kind": "literal",
-            "value": "no-candidates"
-          },
-          {
-            "kind": "literal",
-            "value": "no-controller"
-          },
-          {
-            "kind": "literal",
-            "value": "no-query-match"
-          },
-          {
-            "kind": "literal",
-            "value": "no-query"
-          },
-          {
-            "kind": "literal",
-            "value": "no-store"
-          },
-          {
-            "kind": "literal",
-            "value": "selection-empty"
-          },
-          {
-            "kind": "literal",
-            "value": "stale"
-          },
-          {
-            "kind": "literal",
-            "value": "step-rejected"
-          },
-          {
-            "kind": "literal",
-            "value": "unavailable"
-          }
-        ]
-      },
-      "names": [
-        "packages/context/continuum/src/persistence.ts#MemoryRecallDecisionEventData"
-      ],
-      "sources": [
-        "packages/context/continuum/src/persistence.ts:171"
       ]
     },
     {
@@ -45468,7 +45351,7 @@
         "packages/context/continuum/src/persistence.ts#MemoryWriteDecisionEventData"
       ],
       "sources": [
-        "packages/context/continuum/src/persistence.ts:209"
+        "packages/context/continuum/src/persistence.ts:218"
       ]
     },
     {
@@ -46016,182 +45899,6 @@
           {
             "kind": "literal",
             "value": "always"
-          }
-        ]
-      },
-      "names": [],
-      "sources": []
-    },
-    {
-      "digest": "1436683bce21c83423016fc410d772eb5a4c96b41a8fbe19d4129451574bc803",
-      "schema": {
-        "root": 0,
-        "nodes": [
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "data",
-                "type": 1,
-                "optional": false
-              },
-              {
-                "name": "ignorable",
-                "type": 11,
-                "optional": true
-              },
-              {
-                "name": "seq",
-                "type": 2,
-                "optional": false
-              },
-              {
-                "name": "time",
-                "type": 2,
-                "optional": false
-              },
-              {
-                "name": "type",
-                "type": 12,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "activeRecords",
-                "type": 2,
-                "optional": false
-              },
-              {
-                "name": "candidatePool",
-                "type": 3,
-                "optional": false
-              },
-              {
-                "name": "candidateRecords",
-                "type": 2,
-                "optional": false
-              },
-              {
-                "name": "limits",
-                "type": 6,
-                "optional": false
-              },
-              {
-                "name": "matchedRecords",
-                "type": 2,
-                "optional": false
-              },
-              {
-                "name": "query",
-                "type": 7,
-                "optional": false
-              },
-              {
-                "name": "queryChars",
-                "type": 2,
-                "optional": false
-              },
-              {
-                "name": "querySource",
-                "type": 8,
-                "optional": false
-              },
-              {
-                "name": "queryTruncated",
-                "type": 9,
-                "optional": false
-              },
-              {
-                "name": "scopes",
-                "type": 10,
-                "optional": true
-              },
-              {
-                "name": "selectorMounted",
-                "type": 9,
-                "optional": false
-              },
-              {
-                "name": "terms",
-                "type": 10,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "primitive",
-            "type": "number"
-          },
-          {
-            "kind": "union",
-            "types": [
-              4,
-              5
-            ]
-          },
-          {
-            "kind": "literal",
-            "value": "all"
-          },
-          {
-            "kind": "literal",
-            "value": "lexical"
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "maxCandidates",
-                "type": 2,
-                "optional": false
-              },
-              {
-                "name": "maxExcerptBytes",
-                "type": 2,
-                "optional": false
-              },
-              {
-                "name": "maxPool",
-                "type": 2,
-                "optional": false
-              },
-              {
-                "name": "maxTotalBytes",
-                "type": 2,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "primitive",
-            "type": "string"
-          },
-          {
-            "kind": "literal",
-            "value": "latest-user-message"
-          },
-          {
-            "kind": "primitive",
-            "type": "boolean"
-          },
-          {
-            "kind": "array",
-            "element": 7
-          },
-          {
-            "kind": "literal",
-            "value": true
-          },
-          {
-            "kind": "literal",
-            "value": "continuum/memory-retrieval"
           }
         ]
       },
@@ -48387,7 +48094,7 @@
         "packages/context/continuum/src/persistence.ts#MemoryIndexQueuedEventData"
       ],
       "sources": [
-        "packages/context/continuum/src/persistence.ts:274"
+        "packages/context/continuum/src/persistence.ts:283"
       ]
     },
     {
@@ -68249,7 +67956,7 @@
         "packages/context/continuum/src/context.ts#ContinuumMemorySource"
       ],
       "sources": [
-        "packages/context/continuum/src/context.ts:15"
+        "packages/context/continuum/src/context.ts:18"
       ]
     },
     {
@@ -70168,7 +69875,7 @@
         "packages/context/continuum/src/persistence.ts#MemoryInjectedEventData"
       ],
       "sources": [
-        "packages/context/continuum/src/persistence.ts:142"
+        "packages/context/continuum/src/persistence.ts:144"
       ]
     },
     {
@@ -77023,6 +76730,196 @@
       "sources": []
     },
     {
+      "digest": "432ca58ab634d870688e57c201486ce908744d8ba1719c8e9c43ddbe96f6e9b0",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "activeRecords",
+                "type": 1,
+                "optional": true
+              },
+              {
+                "name": "alreadyPresentRecords",
+                "type": 1,
+                "optional": true
+              },
+              {
+                "name": "candidateRecords",
+                "type": 1,
+                "optional": true
+              },
+              {
+                "name": "injectedRecords",
+                "type": 1,
+                "optional": true
+              },
+              {
+                "name": "outcome",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "queryChars",
+                "type": 1,
+                "optional": true
+              },
+              {
+                "name": "queryOrigin",
+                "type": 6,
+                "optional": true
+              },
+              {
+                "name": "querySource",
+                "type": 8,
+                "optional": true
+              },
+              {
+                "name": "reason",
+                "type": 10,
+                "optional": false
+              },
+              {
+                "name": "step",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "turn",
+                "type": 1,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "union",
+            "types": [
+              3,
+              4,
+              5
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "failed"
+          },
+          {
+            "kind": "literal",
+            "value": "injected"
+          },
+          {
+            "kind": "literal",
+            "value": "skipped"
+          },
+          {
+            "kind": "union",
+            "types": [
+              7,
+              8,
+              9
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "execution-text"
+          },
+          {
+            "kind": "literal",
+            "value": "latest-user-message"
+          },
+          {
+            "kind": "literal",
+            "value": "session-goal"
+          },
+          {
+            "kind": "union",
+            "types": [
+              4,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "cancelled"
+          },
+          {
+            "kind": "literal",
+            "value": "consumer-inactive"
+          },
+          {
+            "kind": "literal",
+            "value": "unavailable"
+          },
+          {
+            "kind": "literal",
+            "value": "empty-store"
+          },
+          {
+            "kind": "literal",
+            "value": "error"
+          },
+          {
+            "kind": "literal",
+            "value": "no-query"
+          },
+          {
+            "kind": "literal",
+            "value": "no-candidates"
+          },
+          {
+            "kind": "literal",
+            "value": "no-controller"
+          },
+          {
+            "kind": "literal",
+            "value": "no-query-match"
+          },
+          {
+            "kind": "literal",
+            "value": "no-store"
+          },
+          {
+            "kind": "literal",
+            "value": "selection-empty"
+          },
+          {
+            "kind": "literal",
+            "value": "stale"
+          },
+          {
+            "kind": "literal",
+            "value": "step-rejected"
+          }
+        ]
+      },
+      "names": [
+        "packages/context/continuum/src/persistence.ts#MemoryRecallDecisionEventData"
+      ],
+      "sources": [
+        "packages/context/continuum/src/persistence.ts:176"
+      ]
+    },
+    {
       "digest": "43569cd8e972857c369951d81a1fd562d008b8329a41f6b4f2ed36d9060bc499",
       "schema": {
         "root": 0,
@@ -77765,147 +77662,6 @@
       "names": [],
       "sources": [
         "packages/interaction/user-approval/src/types.ts:73"
-      ]
-    },
-    {
-      "digest": "45ff8e3f1eb741c34ef222f594d6c51f4f3a9fe89bbfc5b529eec2f4370fa207",
-      "schema": {
-        "root": 0,
-        "nodes": [
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "activeRecords",
-                "type": 1,
-                "optional": false
-              },
-              {
-                "name": "candidatePool",
-                "type": 2,
-                "optional": false
-              },
-              {
-                "name": "candidateRecords",
-                "type": 1,
-                "optional": false
-              },
-              {
-                "name": "limits",
-                "type": 5,
-                "optional": false
-              },
-              {
-                "name": "matchedRecords",
-                "type": 1,
-                "optional": false
-              },
-              {
-                "name": "query",
-                "type": 6,
-                "optional": false
-              },
-              {
-                "name": "queryChars",
-                "type": 1,
-                "optional": false
-              },
-              {
-                "name": "querySource",
-                "type": 7,
-                "optional": false
-              },
-              {
-                "name": "queryTruncated",
-                "type": 8,
-                "optional": false
-              },
-              {
-                "name": "scopes",
-                "type": 9,
-                "optional": true
-              },
-              {
-                "name": "selectorMounted",
-                "type": 8,
-                "optional": false
-              },
-              {
-                "name": "terms",
-                "type": 9,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "primitive",
-            "type": "number"
-          },
-          {
-            "kind": "union",
-            "types": [
-              3,
-              4
-            ]
-          },
-          {
-            "kind": "literal",
-            "value": "all"
-          },
-          {
-            "kind": "literal",
-            "value": "lexical"
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "maxCandidates",
-                "type": 1,
-                "optional": false
-              },
-              {
-                "name": "maxExcerptBytes",
-                "type": 1,
-                "optional": false
-              },
-              {
-                "name": "maxPool",
-                "type": 1,
-                "optional": false
-              },
-              {
-                "name": "maxTotalBytes",
-                "type": 1,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "primitive",
-            "type": "string"
-          },
-          {
-            "kind": "literal",
-            "value": "latest-user-message"
-          },
-          {
-            "kind": "primitive",
-            "type": "boolean"
-          },
-          {
-            "kind": "array",
-            "element": 6
-          }
-        ]
-      },
-      "names": [
-        "packages/context/continuum/src/persistence.ts#MemoryRetrievalEventData"
-      ],
-      "sources": [
-        "packages/context/continuum/src/persistence.ts:76"
       ]
     },
     {
@@ -81954,6 +81710,203 @@
           {
             "kind": "literal",
             "value": "team/member"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "5078a685d07859721694955c12182f6f793ba6bfdb95841b65bf7098d217ef18",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "data",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "ignorable",
+                "type": 14,
+                "optional": true
+              },
+              {
+                "name": "seq",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "time",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 15,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "activeRecords",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "candidatePool",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "candidateRecords",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "limits",
+                "type": 6,
+                "optional": false
+              },
+              {
+                "name": "matchedRecords",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "query",
+                "type": 7,
+                "optional": false
+              },
+              {
+                "name": "queryChars",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "queryOrigin",
+                "type": 8,
+                "optional": true
+              },
+              {
+                "name": "querySource",
+                "type": 9,
+                "optional": false
+              },
+              {
+                "name": "queryTruncated",
+                "type": 12,
+                "optional": false
+              },
+              {
+                "name": "scopes",
+                "type": 13,
+                "optional": true
+              },
+              {
+                "name": "selectorMounted",
+                "type": 12,
+                "optional": false
+              },
+              {
+                "name": "terms",
+                "type": 13,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "union",
+            "types": [
+              4,
+              5
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "all"
+          },
+          {
+            "kind": "literal",
+            "value": "lexical"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "maxCandidates",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "maxExcerptBytes",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "maxPool",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "maxTotalBytes",
+                "type": 2,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "union",
+            "types": [
+              9,
+              10,
+              11
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "latest-user-message"
+          },
+          {
+            "kind": "literal",
+            "value": "session-goal"
+          },
+          {
+            "kind": "literal",
+            "value": "execution-text"
+          },
+          {
+            "kind": "primitive",
+            "type": "boolean"
+          },
+          {
+            "kind": "array",
+            "element": 7
+          },
+          {
+            "kind": "literal",
+            "value": true
+          },
+          {
+            "kind": "literal",
+            "value": "continuum/memory-retrieval"
           }
         ]
       },
@@ -87357,7 +87310,7 @@
         "packages/context/continuum/src/persistence.ts#MemoryScoredEventData"
       ],
       "sources": [
-        "packages/context/continuum/src/persistence.ts:109"
+        "packages/context/continuum/src/persistence.ts:111"
       ]
     },
     {
@@ -91989,6 +91942,231 @@
       "sources": []
     },
     {
+      "digest": "62c71a62e2a2750232cda7672d1505ca1f8742249e4d44017e6766b30cb36b05",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "data",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "ignorable",
+                "type": 25,
+                "optional": true
+              },
+              {
+                "name": "seq",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "time",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 26,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "activeRecords",
+                "type": 2,
+                "optional": true
+              },
+              {
+                "name": "alreadyPresentRecords",
+                "type": 2,
+                "optional": true
+              },
+              {
+                "name": "candidateRecords",
+                "type": 2,
+                "optional": true
+              },
+              {
+                "name": "injectedRecords",
+                "type": 2,
+                "optional": true
+              },
+              {
+                "name": "outcome",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "queryChars",
+                "type": 2,
+                "optional": true
+              },
+              {
+                "name": "queryOrigin",
+                "type": 7,
+                "optional": true
+              },
+              {
+                "name": "querySource",
+                "type": 9,
+                "optional": true
+              },
+              {
+                "name": "reason",
+                "type": 11,
+                "optional": false
+              },
+              {
+                "name": "step",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "turn",
+                "type": 2,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "union",
+            "types": [
+              4,
+              5,
+              6
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "failed"
+          },
+          {
+            "kind": "literal",
+            "value": "injected"
+          },
+          {
+            "kind": "literal",
+            "value": "skipped"
+          },
+          {
+            "kind": "union",
+            "types": [
+              8,
+              9,
+              10
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "execution-text"
+          },
+          {
+            "kind": "literal",
+            "value": "latest-user-message"
+          },
+          {
+            "kind": "literal",
+            "value": "session-goal"
+          },
+          {
+            "kind": "union",
+            "types": [
+              5,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "cancelled"
+          },
+          {
+            "kind": "literal",
+            "value": "consumer-inactive"
+          },
+          {
+            "kind": "literal",
+            "value": "step-rejected"
+          },
+          {
+            "kind": "literal",
+            "value": "unavailable"
+          },
+          {
+            "kind": "literal",
+            "value": "no-controller"
+          },
+          {
+            "kind": "literal",
+            "value": "empty-store"
+          },
+          {
+            "kind": "literal",
+            "value": "error"
+          },
+          {
+            "kind": "literal",
+            "value": "no-candidates"
+          },
+          {
+            "kind": "literal",
+            "value": "no-query"
+          },
+          {
+            "kind": "literal",
+            "value": "no-query-match"
+          },
+          {
+            "kind": "literal",
+            "value": "no-store"
+          },
+          {
+            "kind": "literal",
+            "value": "selection-empty"
+          },
+          {
+            "kind": "literal",
+            "value": "stale"
+          },
+          {
+            "kind": "literal",
+            "value": true
+          },
+          {
+            "kind": "literal",
+            "value": "continuum/memory-recall-decision"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "62e6a429ff3f390a46ac39fb468692032f42936ca0db19b53454184189401379",
       "schema": {
         "root": 0,
@@ -92954,6 +93132,20 @@
       "sources": [
         "packages/llm/llm/src/call-config.ts:23"
       ]
+    },
+    {
+      "digest": "67e1d4fc28c4f20c20e32b35ca7acee8693ad2066e3dddcc8d05f56e6c2c0601",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "session-goal"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
     },
     {
       "digest": "68141cbe3994a5ffcd064c07c75996538437fd9dbf77ce8a2927e89ec577fabe",
@@ -98454,7 +98646,7 @@
         "packages/context/continuum/src/persistence.ts#MemoryIndexRebuiltEventData"
       ],
       "sources": [
-        "packages/context/continuum/src/persistence.ts:257"
+        "packages/context/continuum/src/persistence.ts:266"
       ]
     },
     {
@@ -105987,7 +106179,7 @@
         "packages/context/continuum/src/persistence.ts#MemorySelectionRecord"
       ],
       "sources": [
-        "packages/context/continuum/src/persistence.ts:129"
+        "packages/context/continuum/src/persistence.ts:131"
       ]
     },
     {
@@ -107616,7 +107808,7 @@
         "packages/context/continuum/src/persistence.ts#MemoryWriteDecisionReason"
       ],
       "sources": [
-        "packages/context/continuum/src/persistence.ts:196"
+        "packages/context/continuum/src/persistence.ts:205"
       ]
     },
     {
@@ -114467,6 +114659,20 @@
       "sources": []
     },
     {
+      "digest": "a32109b89879351477662136e3926d145d744e2d06d27c3cff26515729c23501",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "literal",
+            "value": "execution-text"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "a352a2e70bab002eb9f5de89a5f73f4074889d56c9e5db20d5f006873e2d0283",
       "schema": {
         "root": 0,
@@ -114940,7 +115146,169 @@
         "packages/context/continuum/src/persistence.ts#MemoryScoredCandidate"
       ],
       "sources": [
-        "packages/context/continuum/src/persistence.ts:102"
+        "packages/context/continuum/src/persistence.ts:104"
+      ]
+    },
+    {
+      "digest": "a4d1394897139c9066dbbea8759baaa7f13b9df84b2c2defc42d98fe0d11d288",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "activeRecords",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "candidatePool",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "candidateRecords",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "limits",
+                "type": 5,
+                "optional": false
+              },
+              {
+                "name": "matchedRecords",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "query",
+                "type": 6,
+                "optional": false
+              },
+              {
+                "name": "queryChars",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "queryOrigin",
+                "type": 7,
+                "optional": true
+              },
+              {
+                "name": "querySource",
+                "type": 9,
+                "optional": false
+              },
+              {
+                "name": "queryTruncated",
+                "type": 11,
+                "optional": false
+              },
+              {
+                "name": "scopes",
+                "type": 12,
+                "optional": true
+              },
+              {
+                "name": "selectorMounted",
+                "type": 11,
+                "optional": false
+              },
+              {
+                "name": "terms",
+                "type": 12,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "union",
+            "types": [
+              3,
+              4
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "all"
+          },
+          {
+            "kind": "literal",
+            "value": "lexical"
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "maxCandidates",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "maxExcerptBytes",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "maxPool",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "maxTotalBytes",
+                "type": 1,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "union",
+            "types": [
+              8,
+              9,
+              10
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "execution-text"
+          },
+          {
+            "kind": "literal",
+            "value": "latest-user-message"
+          },
+          {
+            "kind": "literal",
+            "value": "session-goal"
+          },
+          {
+            "kind": "primitive",
+            "type": "boolean"
+          },
+          {
+            "kind": "array",
+            "element": 6
+          }
+        ]
+      },
+      "names": [
+        "packages/context/continuum/src/persistence.ts#MemoryRetrievalEventData"
+      ],
+      "sources": [
+        "packages/context/continuum/src/persistence.ts:76"
       ]
     },
     {
@@ -122112,6 +122480,36 @@
           {
             "kind": "literal",
             "value": "disposed"
+          }
+        ]
+      },
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "b3d6693cf0e68e8f30965a4c9293c9929fb5f46ec5c9493ec9b7aed80fb5353f",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "union",
+            "types": [
+              1,
+              2,
+              3
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "execution-text"
+          },
+          {
+            "kind": "literal",
+            "value": "latest-user-message"
+          },
+          {
+            "kind": "literal",
+            "value": "session-goal"
           }
         ]
       },
@@ -144918,7 +145316,7 @@
         "packages/context/continuum/src/persistence.ts#MemoryBudgetEventData"
       ],
       "sources": [
-        "packages/context/continuum/src/persistence.ts:117"
+        "packages/context/continuum/src/persistence.ts:119"
       ]
     },
     {
@@ -146007,205 +146405,6 @@
           {
             "kind": "literal",
             "value": "image/webp"
-          }
-        ]
-      },
-      "names": [],
-      "sources": []
-    },
-    {
-      "digest": "ebc96301fd38bc561480ea9f1f751811bc92f787e5cd3e44449df6200fb69793",
-      "schema": {
-        "root": 0,
-        "nodes": [
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "data",
-                "type": 1,
-                "optional": false
-              },
-              {
-                "name": "ignorable",
-                "type": 22,
-                "optional": true
-              },
-              {
-                "name": "seq",
-                "type": 2,
-                "optional": false
-              },
-              {
-                "name": "time",
-                "type": 2,
-                "optional": false
-              },
-              {
-                "name": "type",
-                "type": 23,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "object",
-            "properties": [
-              {
-                "name": "activeRecords",
-                "type": 2,
-                "optional": true
-              },
-              {
-                "name": "candidateRecords",
-                "type": 2,
-                "optional": true
-              },
-              {
-                "name": "injectedRecords",
-                "type": 2,
-                "optional": true
-              },
-              {
-                "name": "outcome",
-                "type": 3,
-                "optional": false
-              },
-              {
-                "name": "queryChars",
-                "type": 2,
-                "optional": true
-              },
-              {
-                "name": "querySource",
-                "type": 7,
-                "optional": true
-              },
-              {
-                "name": "reason",
-                "type": 8,
-                "optional": false
-              },
-              {
-                "name": "step",
-                "type": 2,
-                "optional": false
-              },
-              {
-                "name": "turn",
-                "type": 2,
-                "optional": false
-              }
-            ],
-            "indices": []
-          },
-          {
-            "kind": "primitive",
-            "type": "number"
-          },
-          {
-            "kind": "union",
-            "types": [
-              4,
-              5,
-              6
-            ]
-          },
-          {
-            "kind": "literal",
-            "value": "failed"
-          },
-          {
-            "kind": "literal",
-            "value": "injected"
-          },
-          {
-            "kind": "literal",
-            "value": "skipped"
-          },
-          {
-            "kind": "literal",
-            "value": "latest-user-message"
-          },
-          {
-            "kind": "union",
-            "types": [
-              5,
-              9,
-              10,
-              11,
-              12,
-              13,
-              14,
-              15,
-              16,
-              17,
-              18,
-              19,
-              20,
-              21
-            ]
-          },
-          {
-            "kind": "literal",
-            "value": "cancelled"
-          },
-          {
-            "kind": "literal",
-            "value": "consumer-inactive"
-          },
-          {
-            "kind": "literal",
-            "value": "empty-store"
-          },
-          {
-            "kind": "literal",
-            "value": "error"
-          },
-          {
-            "kind": "literal",
-            "value": "no-query"
-          },
-          {
-            "kind": "literal",
-            "value": "no-candidates"
-          },
-          {
-            "kind": "literal",
-            "value": "no-controller"
-          },
-          {
-            "kind": "literal",
-            "value": "no-query-match"
-          },
-          {
-            "kind": "literal",
-            "value": "no-store"
-          },
-          {
-            "kind": "literal",
-            "value": "selection-empty"
-          },
-          {
-            "kind": "literal",
-            "value": "stale"
-          },
-          {
-            "kind": "literal",
-            "value": "step-rejected"
-          },
-          {
-            "kind": "literal",
-            "value": "unavailable"
-          },
-          {
-            "kind": "literal",
-            "value": true
-          },
-          {
-            "kind": "literal",
-            "value": "continuum/memory-recall-decision"
           }
         ]
       },

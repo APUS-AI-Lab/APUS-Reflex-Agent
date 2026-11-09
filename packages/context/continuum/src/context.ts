@@ -1,5 +1,8 @@
 import { Context } from '@deepseek-ai/cordis'
 import type { Agent, PreStepDecision } from '@deepseek-ai/dsh-agent'
+import type { Session } from '@deepseek-ai/dsh-session'
+// Type-only import: registers the `goal` Session projection state this reader consults.
+import type {} from '@deepseek-ai/dsh-goal/types'
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import type { ContentBlock, UserMessage } from '@deepseek-ai/dsh-llm'
 import type { MemoryId, MemoryRecordStore } from './records.ts'
@@ -7,7 +10,7 @@ import {
   budgetMemoryWorkingSetWithDrops, renderMemoryWorkingSet, retrieveMemoryWorkingSet, retrieveMemoryWorkingSetWithReport,
   type MemoryCandidatePool, type MemoryRetrievalConfig, type MemoryRetrievalReport,
 } from './retrieval.ts'
-import { MAX_RECORDED_RECORDS, type MemoryExecutionCandidate, type MemoryRecallDecisionReason, type MemoryRetrievalLimits } from './persistence.ts'
+import { MAX_RECORDED_RECORDS, type MemoryExecutionCandidate, type MemoryRecallDecisionReason, type MemoryRecallQuerySource, type MemoryRetrievalLimits } from './persistence.ts'
 import { recordMemoryRecallDecision, recordMemoryRetrieval, type MemoryRetrievalRecorder } from './retrieval-events.ts'
 import type { ContinuumMemoryController, ContinuumMemoryPrincipal } from './policy.ts'
 
@@ -26,6 +29,12 @@ declare module '@deepseek-ai/dsh-llm' {
      */
     'continuum-memory': ContinuumMemorySource
   }
+}
+
+/** A recall query and the part of the request or history it came from. */
+export interface ContinuumRecallQuery {
+  readonly text: string
+  readonly source: MemoryRecallQuerySource
 }
 
 /** Configuration for the deterministic memory context consumer. */
@@ -168,7 +177,7 @@ export function installContinuumMemoryContext(
   const isActive = (): boolean => active
   const stop = ctx.on('agent/pre-step', async ({ agent, messages, turn, step, signal }, next): Promise<PreStepDecision> => {
     const decision = await next()
-    const query = latestUserText(messages)
+    const query = composeRecallQuery(ctx, agent.session, messages)
     const note = recallDecision(ctx, agent, turn, step, query)
     try {
       if (!isActive()) { note('consumer-inactive'); return decision }
@@ -177,19 +186,24 @@ export function installContinuumMemoryContext(
       if (store === undefined) { note('no-store'); return decision }
       if (query === undefined) { note('no-query'); return decision }
       signal.throwIfAborted()
-      const { workingSet, report } = retrieveMemoryWorkingSetWithReport(store, budget, query)
+      const { workingSet, report } = retrieveMemoryWorkingSetWithReport(store, budget, query.text)
+      const kept = workingSet.candidates.filter(candidate => !alreadyPresentIn(candidate.record.content, messages))
+      const alreadyPresentRecords = workingSet.candidates.length - kept.length
+      // Re-render from the kept candidates: the model must see exactly the records `recordIds` names.
+      const rendered = kept.length === 0 ? undefined : renderMemoryWorkingSet(workingSet.query, kept)
       if (config.trace === true) {
         recordMemoryRetrieval(retrievalRecorder(ctx, agent), {
-          query, limits: retrievalLimits(config), selectorMounted: false, report,
-          ...(workingSet.candidates.length === 0 ? {} : { injection: { workingSet, dropped: [] } }),
+          query: query.text, querySource: query.source, limits: retrievalLimits(config), selectorMounted: false, report,
+          ...(rendered === undefined ? {} : { injection: { workingSet: rendered, dropped: [] } }),
         })
       }
-      if (workingSet.candidates.length === 0) {
+      if (rendered === undefined) {
+        if (alreadyPresentRecords > 0) { note('no-query-match', report, undefined, alreadyPresentRecords); return decision }
         note(report.activeRecords === 0 ? 'empty-store' : 'no-candidates', report)
         return decision
       }
-      note('injected', report, workingSet.candidates.length)
-      return { ...decision, messages: [...decision.messages, recallMessage(workingSet)] }
+      note('injected', report, rendered.candidates.length, alreadyPresentRecords)
+      return { ...decision, messages: [...decision.messages, recallMessage(rendered)] }
     } catch (error: unknown) {
       note(signal.aborted ? 'cancelled' : 'error')
       throw error
@@ -230,7 +244,7 @@ export function installContinuumMemoryControllerContext(
   const isActive = (): boolean => active
   const stop = ctx.on('agent/pre-step', async ({ agent, messages, turn, step, signal }, next): Promise<PreStepDecision> => {
     const decision = await next()
-    const query = latestUserText(messages)
+    const query = composeRecallQuery(ctx, agent.session, messages)
     const note = recallDecision(ctx, agent, turn, step, query)
     try {
       if (!isActive()) { note('consumer-inactive'); return decision }
@@ -248,41 +262,46 @@ export function installContinuumMemoryControllerContext(
       const requestedLimits = selector === undefined ? budget : {
         ...budget, maxCandidates: config.maxPool ?? config.maxCandidates, maxTotalBytes: Number.MAX_SAFE_INTEGER,
       }
-      const outcome = controller.readWithReport(ticket, requestedLimits, query)
+      const outcome = controller.readWithReport(ticket, requestedLimits, query.text)
       if (outcome === undefined || !controller.isCurrent(ticket)) { note('stale'); return decision }
       const { workingSet, report } = outcome
+      // A record whose text the request already carries is not injected again; the rest keep their order.
+      const fresh = workingSet.candidates.filter(candidate => !alreadyPresentIn(candidate.record.content, messages))
+      const alreadyPresentRecords = workingSet.candidates.length - fresh.length
+      const freshSet = { ...workingSet, candidates: fresh }
       const recorder = config.trace === true ? retrievalRecorder(ctx, agent) : undefined
-      if (workingSet.candidates.length === 0) {
+      if (fresh.length === 0) {
         if (recorder !== undefined) {
           recordMemoryRetrieval(recorder, {
-            query, limits: retrievalLimits(config), selectorMounted: selector !== undefined, report,
+            query: query.text, querySource: query.source, limits: retrievalLimits(config), selectorMounted: selector !== undefined, report,
           })
         }
+        if (alreadyPresentRecords > 0) { note('no-query-match', report, undefined, alreadyPresentRecords); return decision }
         note(report.activeRecords === 0 ? 'empty-store' : 'no-candidates', report)
         return decision
       }
       if (selector === undefined) {
-        const matched = renderMemoryWorkingSet(workingSet.query, workingSet.candidates.filter(candidate => candidate.score > 0))
+        const matched = renderMemoryWorkingSet(freshSet.query, fresh.filter(candidate => candidate.score > 0))
         if (recorder !== undefined) {
           recordMemoryRetrieval(recorder, {
-            query, limits: retrievalLimits(config), selectorMounted: false, report,
+            query: query.text, querySource: query.source, limits: retrievalLimits(config), selectorMounted: false, report,
             ...(matched.candidates.length === 0 ? {} : {
               injection: {
                 workingSet: matched,
-                dropped: workingSet.candidates.filter(candidate => candidate.score === 0)
+                dropped: fresh.filter(candidate => candidate.score === 0)
                   .map(candidate => ({ id: candidate.id, reason: 'no-query-match' as const })),
               },
             }),
           })
         }
-        if (matched.candidates.length === 0) { note('no-query-match', report); return decision }
-        note('injected', report, matched.candidates.length)
+        if (matched.candidates.length === 0) { note('no-query-match', report, undefined, alreadyPresentRecords); return decision }
+        note('injected', report, matched.candidates.length, alreadyPresentRecords)
         return { ...decision, messages: [...decision.messages, recallMessage(matched)] }
       }
       const selection = await selector.select(agent, {
-        query,
+        query: query.text,
         isCurrent: () => isActive() && controller.isCurrent(ticket),
-        candidates: workingSet.candidates.map(candidate => ({
+        candidates: fresh.map(candidate => ({
           id: String(candidate.id),
           label: candidate.record.kind,
           excerpt: candidate.excerpt,
@@ -301,15 +320,15 @@ export function installContinuumMemoryControllerContext(
       signal.throwIfAborted()
       if (!isActive()) { note('consumer-inactive', report); return decision }
       if (!controller.isCurrent(ticket)) { note('stale', report); return decision }
-      const byId = new Map(workingSet.candidates.map(candidate => [String(candidate.id), candidate]))
+      const byId = new Map(fresh.map(candidate => [String(candidate.id), candidate]))
       const candidates = [...new Set(selection.selectedIds)].flatMap((id) => {
         const candidate = byId.get(id)
         return candidate === undefined ? [] : [candidate]
       })
-      const budgeted = budgetMemoryWorkingSetWithDrops(workingSet.query, candidates, config.maxTotalBytes)
+      const budgeted = budgetMemoryWorkingSetWithDrops(freshSet.query, candidates, config.maxTotalBytes)
       if (recorder !== undefined) {
         recordMemoryRetrieval(recorder, {
-          query, limits: retrievalLimits(config), selectorMounted: true, report,
+          query: query.text, querySource: query.source, limits: retrievalLimits(config), selectorMounted: true, report,
           injection: {
             workingSet: budgeted.workingSet,
             dropped: budgeted.dropped,
@@ -321,8 +340,8 @@ export function installContinuumMemoryControllerContext(
           },
         })
       }
-      if (budgeted.workingSet.candidates.length === 0) { note('selection-empty', report); return decision }
-      note('injected', report, budgeted.workingSet.candidates.length)
+      if (budgeted.workingSet.candidates.length === 0) { note('selection-empty', report, undefined, alreadyPresentRecords); return decision }
+      note('injected', report, budgeted.workingSet.candidates.length, alreadyPresentRecords)
       return { ...decision, messages: [...decision.messages, recallMessage(budgeted.workingSet)] }
     } catch (error: unknown) {
       note(signal.aborted ? 'cancelled' : 'error')
@@ -336,22 +355,79 @@ export function installContinuumMemoryControllerContext(
   return () => { void dispose() }
 }
 
+/**
+ * Compose the recall query for one pre-step: the newest user message in the request, then the Session's most recent
+ * human message in its current surface, then its current goal objective, then its most recent assistant or tool text.
+ * The Session fallbacks read the current surface, so a message a compaction replaced never supplies a stale query.
+ * @param ctx - context that may own the Session projection registry.
+ * @param session - Session whose current surface and goal projection supply the fallbacks.
+ * @param messages - messages the pre-step decision carries.
+ * @returns the query text and its source, or undefined when none of the sources has text.
+ */
+export function composeRecallQuery(
+  ctx: Context,
+  session: Session | undefined,
+  messages: readonly UserMessage[],
+): ContinuumRecallQuery | undefined {
+  const latest = latestUserText(messages)
+  if (latest !== undefined) return { text: latest, source: 'latest-user-message' }
+  if (session === undefined) return undefined
+  const surface = session.deriveMessages()
+  for (let index = surface.length - 1; index >= 0; index -= 1) {
+    const message = surface[index]
+    if (message?.role !== 'user' || message.source.kind !== 'user') continue
+    const text = messageText(message.content)
+    if (text.length > 0) return { text, source: 'latest-user-message' }
+  }
+  const goal = ctx.get('sessionProjections')?.stateOf(session, 'goal')?.current?.goal.objective.trim()
+  if (goal !== undefined && goal.length > 0) return { text: goal, source: 'session-goal' }
+  for (let index = surface.length - 1; index >= 0; index -= 1) {
+    const message = surface[index]
+    const text = message === undefined || message.role === 'user' ? '' : messageText(message.content)
+    if (text.length > 0) return { text, source: 'execution-text' }
+  }
+  return undefined
+}
+
+/**
+ * Whether one record's text already appears verbatim in the current request, so injecting it would repeat it.
+ * @param recordContent - complete content of one active record.
+ * @param messages - messages the pre-step decision carries.
+ * @returns true only when a request message contains the record content exactly.
+ */
+export function alreadyPresentIn(recordContent: string, messages: readonly UserMessage[]): boolean {
+  if (recordContent.length === 0) return false
+  return messages.some(message => messageText(message.content).includes(recordContent))
+}
+
+function messageText(content: readonly ContentBlock[]): string {
+  return content.filter((block): block is ContentBlock & { type: 'text' } => block.type === 'text')
+    .map(block => block.text).join('\n').trim()
+}
+
 /** Record one judgement's terminal reason without depending on detailed retrieval tracing. */
 function recallDecision(
   ctx: Context,
   agent: Agent,
   turn: number,
   step: number,
-  query: string | undefined,
-): (reason: MemoryRecallDecisionReason, report?: MemoryRetrievalReport, injectedRecords?: number) => void {
-  return (reason, report, injectedRecords) => {
+  query: ContinuumRecallQuery | undefined,
+): (reason: MemoryRecallDecisionReason, report?: MemoryRetrievalReport, injectedRecords?: number, alreadyPresentRecords?: number) => void {
+  return (reason, report, injectedRecords, alreadyPresentRecords) => {
     recordMemoryRecallDecision(retrievalRecorder(ctx, agent), {
       turn, step,
       outcome: reason === 'injected' ? 'injected' : reason === 'error' || reason === 'cancelled' ? 'failed' : 'skipped',
       reason,
-      ...(query === undefined ? {} : { querySource: 'latest-user-message' as const, queryChars: query.length }),
+      ...(query === undefined
+        ? {}
+        : {
+          ...(query.source === 'latest-user-message' ? { querySource: 'latest-user-message' as const } : {}),
+          queryOrigin: query.source,
+          queryChars: query.text.length,
+        }),
       ...(report === undefined ? {} : { activeRecords: report.activeRecords, candidateRecords: report.candidateRecords }),
       ...(injectedRecords === undefined ? {} : { injectedRecords }),
+      ...(alreadyPresentRecords === undefined ? {} : { alreadyPresentRecords }),
     })
   }
 }

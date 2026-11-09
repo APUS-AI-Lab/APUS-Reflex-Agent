@@ -74,8 +74,10 @@ export interface MemoryRetrievalLimits {
 
 /** Event payload for the start of one memory retrieval, before ranking limits apply. */
 export interface MemoryRetrievalEventData {
-  /** Where the query came from; the current consumer always uses the latest human message with text. */
+  /** Kept for compatibility with events written before goal and execution fallbacks; always `latest-user-message`. */
   readonly querySource: 'latest-user-message'
+  /** Where the query actually came from; absent on those older events. */
+  readonly queryOrigin?: MemoryRecallQuerySource
   /** Query terms used for scoring, truncated to {@link MAX_RECORDED_QUERY_CHARS} characters. */
   readonly query: string
   /** Full UTF-16 length of the query, before recording truncation. */
@@ -150,6 +152,9 @@ export interface MemoryInjectedEventData {
   readonly selection?: MemorySelectionRecord
 }
 
+/** Where one recall query came from: the request's newest user message, the Session goal, or executed text. */
+export type MemoryRecallQuerySource = 'latest-user-message' | 'session-goal' | 'execution-text'
+
 /** Why one pre-step recall judgement did or did not add memory context to the request. */
 export type MemoryRecallDecisionReason =
   | 'injected'
@@ -175,8 +180,10 @@ export interface MemoryRecallDecisionEventData {
   /** `injected` means a recall message was appended in this judgement, not that a candidate merely existed. */
   readonly outcome: 'injected' | 'skipped' | 'failed'
   readonly reason: MemoryRecallDecisionReason
-  /** Present when a current human-message query was available. */
+  /** Compatibility field: present only when the query was the latest user message. */
   readonly querySource?: 'latest-user-message'
+  /** Where the query actually came from, including the Session-goal and executed-text fallbacks. */
+  readonly queryOrigin?: MemoryRecallQuerySource
   /** Full UTF-16 length of that query. */
   readonly queryChars?: number
   /** Active records visible to the authorized read, when a read ran. */
@@ -185,6 +192,8 @@ export interface MemoryRecallDecisionEventData {
   readonly candidateRecords?: number
   /** Records in the recall appended by this judgement; present only for `injected`. */
   readonly injectedRecords?: number
+  /** Records dropped because the current request already contained their text verbatim. */
+  readonly alreadyPresentRecords?: number
 }
 
 /** Maximum UTF-16 characters of a query or term recorded in a retrieval event. */

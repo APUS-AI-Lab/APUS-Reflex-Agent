@@ -3,6 +3,7 @@ import type { Session } from '@deepseek-ai/dsh-session'
 import type {
   MemoryInjectedEventData,
   MemoryRecallDecisionEventData,
+  MemoryRecallQuerySource,
   MemoryRetrievalLimits,
   MemorySelectionRecord,
 } from './persistence.ts'
@@ -21,6 +22,8 @@ export interface MemoryInjectionFacts {
 /** Everything one retrieval read recorded, built once the pipeline has decided what to inject. */
 export interface MemoryRetrievalTrace {
   readonly query: string
+  /** Where the query came from. */
+  readonly querySource: MemoryRecallQuerySource
   /** Exact authorized scopes; absent when the caller owns no scope list. */
   readonly scopes?: readonly string[]
   readonly limits: MemoryRetrievalLimits
@@ -64,6 +67,7 @@ export function recordMemoryRetrieval(recorder: MemoryRetrievalRecorder, trace: 
     const query = trace.query.slice(0, MAX_RECORDED_QUERY_CHARS)
     recorder.session.append('continuum/memory-retrieval', {
       querySource: 'latest-user-message',
+      queryOrigin: trace.querySource,
       query,
       queryChars: trace.query.length,
       queryTruncated: query.length !== trace.query.length,

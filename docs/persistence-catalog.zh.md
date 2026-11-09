@@ -43,9 +43,9 @@
 | `event:continuum/memory-index-queued` | event | `90decc8b160b1783fbed0653e9e7c6f8ec2d8e9bf969494792e5d0e30dce77bd` | [`{ type: "continuum/memory-index-queued" }`](#persistence-type-sha256-90decc8b160b1783fbed0653e9e7c6f8ec2d8e9bf969494792e5d0e30dce77bd) |
 | `event:continuum/memory-index-rebuilt` | event | `1e56911072efa80548cb770e4307a55d631abafc7c980a395b2dcfa1bcee9532` | [`{ type: "continuum/memory-index-rebuilt" }`](#persistence-type-sha256-1e56911072efa80548cb770e4307a55d631abafc7c980a395b2dcfa1bcee9532) |
 | `event:continuum/memory-injected` | event | `3544f425275428b971445968a34ba6235158d1c9078ac278c07cf5abcb41f21a` | [`{ type: "continuum/memory-injected" }`](#persistence-type-sha256-3544f425275428b971445968a34ba6235158d1c9078ac278c07cf5abcb41f21a) |
-| `event:continuum/memory-recall-decision` | event | `ebc96301fd38bc561480ea9f1f751811bc92f787e5cd3e44449df6200fb69793` | [`{ type: "continuum/memory-recall-decision" }`](#persistence-type-sha256-ebc96301fd38bc561480ea9f1f751811bc92f787e5cd3e44449df6200fb69793) |
+| `event:continuum/memory-recall-decision` | event | `62c71a62e2a2750232cda7672d1505ca1f8742249e4d44017e6766b30cb36b05` | [`{ type: "continuum/memory-recall-decision" }`](#persistence-type-sha256-62c71a62e2a2750232cda7672d1505ca1f8742249e4d44017e6766b30cb36b05) |
 | `event:continuum/memory-record` | event | `58dcdae3ef200ae86529df4759b462debbcb50070ada273c374b4a7fa7c2c77b` | [`{ type: "continuum/memory-record" }`](#persistence-type-sha256-58dcdae3ef200ae86529df4759b462debbcb50070ada273c374b4a7fa7c2c77b) |
-| `event:continuum/memory-retrieval` | event | `1436683bce21c83423016fc410d772eb5a4c96b41a8fbe19d4129451574bc803` | [`{ type: "continuum/memory-retrieval" }`](#persistence-type-sha256-1436683bce21c83423016fc410d772eb5a4c96b41a8fbe19d4129451574bc803) |
+| `event:continuum/memory-retrieval` | event | `5078a685d07859721694955c12182f6f793ba6bfdb95841b65bf7098d217ef18` | [`{ type: "continuum/memory-retrieval" }`](#persistence-type-sha256-5078a685d07859721694955c12182f6f793ba6bfdb95841b65bf7098d217ef18) |
 | `event:continuum/memory-scored` | event | `d12879f833e7a326e0664e87bb3638d97194b612bd79541e8a1d07f824b1c10c` | [`{ type: "continuum/memory-scored" }`](#persistence-type-sha256-d12879f833e7a326e0664e87bb3638d97194b612bd79541e8a1d07f824b1c10c) |
 | `event:continuum/memory-write-decision` | event | `a5f3fe5e1e3f8d21f5f3f49cfa208259eb73207b04674fb2b213f87715cb3c21` | [`{ type: "continuum/memory-write-decision" }`](#persistence-type-sha256-a5f3fe5e1e3f8d21f5f3f49cfa208259eb73207b04674fb2b213f87715cb3c21) |
 | `event:continuum/task-binding` | event | `2f27b8a61e281bcfa57508f9871ecd2420e03e84cbc632226df4fd7ccd5f9c5b` | [`{ type: "continuum/task-binding" }`](#persistence-type-sha256-2f27b8a61e281bcfa57508f9871ecd2420e03e84cbc632226df4fd7ccd5f9c5b) |
@@ -597,7 +597,7 @@ export type SessionEvent<T extends SessionEventType = SessionEventType> = {
 'continuum/memory-budgeted': MemoryBudgetEventData
 ```
 
-来源：[`packages/context/continuum/src/persistence.ts:246`](../packages/context/continuum/src/persistence.ts)
+来源：[`packages/context/continuum/src/persistence.ts:255`](../packages/context/continuum/src/persistence.ts)
 
 <a id="continuummemory-decision--log-only"></a>
 
@@ -619,7 +619,7 @@ export type SessionEvent<T extends SessionEventType = SessionEventType> = {
 'continuum/memory-index': MemoryIndexEventData
 ```
 
-来源：[`packages/context/continuum/src/persistence.ts:236`](../packages/context/continuum/src/persistence.ts)
+来源：[`packages/context/continuum/src/persistence.ts:245`](../packages/context/continuum/src/persistence.ts)
 
 <a id="continuummemory-index-queued--log-only"></a>
 
@@ -630,7 +630,7 @@ export type SessionEvent<T extends SessionEventType = SessionEventType> = {
 'continuum/memory-index-queued': MemoryIndexQueuedEventData
 ```
 
-来源：[`packages/context/continuum/src/persistence.ts:252`](../packages/context/continuum/src/persistence.ts)
+来源：[`packages/context/continuum/src/persistence.ts:261`](../packages/context/continuum/src/persistence.ts)
 
 <a id="continuummemory-index-rebuilt--log-only"></a>
 
@@ -641,7 +641,7 @@ export type SessionEvent<T extends SessionEventType = SessionEventType> = {
 'continuum/memory-index-rebuilt': MemoryIndexRebuiltEventData
 ```
 
-来源：[`packages/context/continuum/src/persistence.ts:250`](../packages/context/continuum/src/persistence.ts)
+来源：[`packages/context/continuum/src/persistence.ts:259`](../packages/context/continuum/src/persistence.ts)
 
 <a id="continuummemory-injected--log-only"></a>
 
@@ -652,7 +652,7 @@ export type SessionEvent<T extends SessionEventType = SessionEventType> = {
 'continuum/memory-injected': MemoryInjectedEventData
 ```
 
-来源：[`packages/context/continuum/src/persistence.ts:248`](../packages/context/continuum/src/persistence.ts)
+来源：[`packages/context/continuum/src/persistence.ts:257`](../packages/context/continuum/src/persistence.ts)
 
 <a id="continuummemory-recall-decision--log-only"></a>
 
@@ -663,7 +663,7 @@ export type SessionEvent<T extends SessionEventType = SessionEventType> = {
 'continuum/memory-recall-decision': MemoryRecallDecisionEventData
 ```
 
-来源：[`packages/context/continuum/src/persistence.ts:238`](../packages/context/continuum/src/persistence.ts)
+来源：[`packages/context/continuum/src/persistence.ts:247`](../packages/context/continuum/src/persistence.ts)
 
 <a id="continuummemory-record--log-only"></a>
 
@@ -674,7 +674,7 @@ export type SessionEvent<T extends SessionEventType = SessionEventType> = {
 'continuum/memory-record': MemoryRecordEventData
 ```
 
-来源：[`packages/context/continuum/src/persistence.ts:234`](../packages/context/continuum/src/persistence.ts)
+来源：[`packages/context/continuum/src/persistence.ts:243`](../packages/context/continuum/src/persistence.ts)
 
 <a id="continuummemory-retrieval--log-only"></a>
 
@@ -685,7 +685,7 @@ export type SessionEvent<T extends SessionEventType = SessionEventType> = {
 'continuum/memory-retrieval': MemoryRetrievalEventData
 ```
 
-来源：[`packages/context/continuum/src/persistence.ts:242`](../packages/context/continuum/src/persistence.ts)
+来源：[`packages/context/continuum/src/persistence.ts:251`](../packages/context/continuum/src/persistence.ts)
 
 <a id="continuummemory-scored--log-only"></a>
 
@@ -696,7 +696,7 @@ export type SessionEvent<T extends SessionEventType = SessionEventType> = {
 'continuum/memory-scored': MemoryScoredEventData
 ```
 
-来源：[`packages/context/continuum/src/persistence.ts:244`](../packages/context/continuum/src/persistence.ts)
+来源：[`packages/context/continuum/src/persistence.ts:253`](../packages/context/continuum/src/persistence.ts)
 
 <a id="continuummemory-write-decision--log-only"></a>
 
@@ -707,7 +707,7 @@ export type SessionEvent<T extends SessionEventType = SessionEventType> = {
 'continuum/memory-write-decision': MemoryWriteDecisionEventData
 ```
 
-来源：[`packages/context/continuum/src/persistence.ts:240`](../packages/context/continuum/src/persistence.ts)
+来源：[`packages/context/continuum/src/persistence.ts:249`](../packages/context/continuum/src/persistence.ts)
 
 <a id="continuumtask-binding--log-only"></a>
 
@@ -3255,6 +3255,14 @@ SHA-256: `152048df899127af7384c43d0807ff9b7eb8e67112bc58c0ee6805375ccadcfc`
 
 `"execute-wrapper"`
 
+<a id="persistence-type-sha256-a32109b89879351477662136e3926d145d744e2d06d27c3cff26515729c23501"></a>
+
+### `"execution-text"`
+
+SHA-256: `a32109b89879351477662136e3926d145d744e2d06d27c3cff26515729c23501`
+
+`"execution-text"`
+
 <a id="persistence-type-sha256-22be2363644506f0a26f26e4b36625813678b08d95bd305244100d17753ed163"></a>
 
 ### `"explicit"`
@@ -4836,6 +4844,14 @@ SHA-256: `7180844e1066230c5e891f1b9ccd942423b0fe48aac6ded7eef2a285b288a732`
 SHA-256: `e41bdebe246abe17154de7e7a1d81035437eee8d20e7f1edff0d91e2598ad828`
 
 `"session"`
+
+<a id="persistence-type-sha256-67e1d4fc28c4f20c20e32b35ca7acee8693ad2066e3dddcc8d05f56e6c2c0601"></a>
+
+### `"session-goal"`
+
+SHA-256: `67e1d4fc28c4f20c20e32b35ca7acee8693ad2066e3dddcc8d05f56e6c2c0601`
+
+`"session-goal"`
 
 <a id="persistence-type-sha256-47e5d84f1a93450a78c7f3954b43990d0f629af7c034a56313e5deb63e772c1b"></a>
 
@@ -6530,7 +6546,7 @@ SHA-256: `54fad06eed39bfe7b3112dc37fd5a76e8a151b3a90975a7916b6128d570e728e`
 
 SHA-256: `3651a7f1d68099fdb0190e7b83c590f74801cf16a8473b1df6fe6a9b6c12103f`
 
-来源：[`packages/context/continuum/src/context.ts:15`](../packages/context/continuum/src/context.ts)
+来源：[`packages/context/continuum/src/context.ts:18`](../packages/context/continuum/src/context.ts)
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|
@@ -7490,7 +7506,7 @@ SHA-256: `6f72ece8f317cd080c4f20a93f1bf709965f5b81ac4669528f5a023191cfcf20`
 
 SHA-256: `e88d2ab44c3e226770c700650449613de0ff2f69e5e1b83b4278c64bf827ec8d`
 
-来源：[`packages/context/continuum/src/persistence.ts:117`](../packages/context/continuum/src/persistence.ts)
+来源：[`packages/context/continuum/src/persistence.ts:119`](../packages/context/continuum/src/persistence.ts)
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|
@@ -7607,7 +7623,7 @@ SHA-256: `fc66fc4283c425893792a5dc3f155e17b7102577d84682a4aa8c94eecca26135`
 
 SHA-256: `19044a882b577212acfa2726e9ec21a4eae3fce660a0da20125545cc80e0d2f3`
 
-来源：[`packages/context/continuum/src/persistence.ts:274`](../packages/context/continuum/src/persistence.ts)
+来源：[`packages/context/continuum/src/persistence.ts:283`](../packages/context/continuum/src/persistence.ts)
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|
@@ -7624,7 +7640,7 @@ SHA-256: `19044a882b577212acfa2726e9ec21a4eae3fce660a0da20125545cc80e0d2f3`
 
 SHA-256: `7a31934a4506e86c22e90b0cc1345d3eb44bff89b2aa0f8f8eae1ab9ff938e83`
 
-来源：[`packages/context/continuum/src/persistence.ts:257`](../packages/context/continuum/src/persistence.ts)
+来源：[`packages/context/continuum/src/persistence.ts:266`](../packages/context/continuum/src/persistence.ts)
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|
@@ -7643,7 +7659,7 @@ SHA-256: `7a31934a4506e86c22e90b0cc1345d3eb44bff89b2aa0f8f8eae1ab9ff938e83`
 
 SHA-256: `3c2335bb3e8d830f6df23e7ed1a58e9a7f1343ec6d72cb385c636f4892f1feb2`
 
-来源：[`packages/context/continuum/src/persistence.ts:142`](../packages/context/continuum/src/persistence.ts)
+来源：[`packages/context/continuum/src/persistence.ts:144`](../packages/context/continuum/src/persistence.ts)
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|
@@ -7652,7 +7668,7 @@ SHA-256: `3c2335bb3e8d830f6df23e7ed1a58e9a7f1343ec6d72cb385c636f4892f1feb2`
 | `injectedRecords` | 必需 | `number` |
 | `selection` | 可选 | [`MemorySelectionRecord`](#persistence-type-sha256-8eabef29b737f10b983e87cbff46e8125214c5c0ffa150768d76652a8e352368) |
 
-<a id="persistence-type-sha256-02b6331345e63cf02e4722c3fa821b8ffcea7e281b8801a2ddc6a1b9def8a3c0"></a>
+<a id="persistence-type-sha256-432ca58ab634d870688e57c201486ce908744d8ba1719c8e9c43ddbe96f6e9b0"></a>
 
 <a id="persistence-type-memoryrecalldecisioneventdata"></a>
 
@@ -7660,17 +7676,19 @@ SHA-256: `3c2335bb3e8d830f6df23e7ed1a58e9a7f1343ec6d72cb385c636f4892f1feb2`
 
 ### `MemoryRecallDecisionEventData`
 
-SHA-256: `02b6331345e63cf02e4722c3fa821b8ffcea7e281b8801a2ddc6a1b9def8a3c0`
+SHA-256: `432ca58ab634d870688e57c201486ce908744d8ba1719c8e9c43ddbe96f6e9b0`
 
-来源：[`packages/context/continuum/src/persistence.ts:171`](../packages/context/continuum/src/persistence.ts)
+来源：[`packages/context/continuum/src/persistence.ts:176`](../packages/context/continuum/src/persistence.ts)
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|
 | `activeRecords` | 可选 | `number` |
+| `alreadyPresentRecords` | 可选 | `number` |
 | `candidateRecords` | 可选 | `number` |
 | `injectedRecords` | 可选 | `number` |
 | `outcome` | 必需 | [`union (3 variants)`](#persistence-type-sha256-e8a19069a643d13dba0d9f17e00ce68d5bb9dbc9df72537f0dad3447c5e60975) |
 | `queryChars` | 可选 | `number` |
+| `queryOrigin` | 可选 | [`union (3 variants)`](#persistence-type-sha256-b3d6693cf0e68e8f30965a4c9293c9929fb5f46ec5c9493ec9b7aed80fb5353f) |
 | `querySource` | 可选 | `"latest-user-message"` |
 | `reason` | 必需 | [`MemoryRecallDecisionReason`](#persistence-type-sha256-029d96748356b84149c9164ee93a55ce3567a00cb46026bf3f644f37c232c7dc) |
 | `step` | 必需 | `number` |
@@ -7686,7 +7704,7 @@ SHA-256: `02b6331345e63cf02e4722c3fa821b8ffcea7e281b8801a2ddc6a1b9def8a3c0`
 
 SHA-256: `029d96748356b84149c9164ee93a55ce3567a00cb46026bf3f644f37c232c7dc`
 
-来源：[`packages/context/continuum/src/persistence.ts:154`](../packages/context/continuum/src/persistence.ts)
+来源：[`packages/context/continuum/src/persistence.ts:159`](../packages/context/continuum/src/persistence.ts)
 
 以下类型之一：
 
@@ -7784,7 +7802,7 @@ SHA-256: `68dbe2c1afd970933dc42a56a0caf7c49991ef12184758e911315e5ad9c33138`
 | `sourceRefs` | 必需 | [`tuple (2 positions)`](#persistence-type-sha256-38c3eea3de158184ced9d0dfebb719886bf4b7eb7d273e217ef2eb506da95c9d) |
 | `status` | 必需 | [`MemoryStatus`](#persistence-type-sha256-d8cc1e499bfba6d3e7ab4d1c8db1ccbc0e2ed084c73ad66c7bfcb5b9066446f7) |
 
-<a id="persistence-type-sha256-45ff8e3f1eb741c34ef222f594d6c51f4f3a9fe89bbfc5b529eec2f4370fa207"></a>
+<a id="persistence-type-sha256-a4d1394897139c9066dbbea8759baaa7f13b9df84b2c2defc42d98fe0d11d288"></a>
 
 <a id="persistence-type-memoryretrievaleventdata"></a>
 
@@ -7792,7 +7810,7 @@ SHA-256: `68dbe2c1afd970933dc42a56a0caf7c49991ef12184758e911315e5ad9c33138`
 
 ### `MemoryRetrievalEventData`
 
-SHA-256: `45ff8e3f1eb741c34ef222f594d6c51f4f3a9fe89bbfc5b529eec2f4370fa207`
+SHA-256: `a4d1394897139c9066dbbea8759baaa7f13b9df84b2c2defc42d98fe0d11d288`
 
 来源：[`packages/context/continuum/src/persistence.ts:76`](../packages/context/continuum/src/persistence.ts)
 
@@ -7805,6 +7823,7 @@ SHA-256: `45ff8e3f1eb741c34ef222f594d6c51f4f3a9fe89bbfc5b529eec2f4370fa207`
 | `matchedRecords` | 必需 | `number` |
 | `query` | 必需 | `string` |
 | `queryChars` | 必需 | `number` |
+| `queryOrigin` | 可选 | [`union (3 variants)`](#persistence-type-sha256-b3d6693cf0e68e8f30965a4c9293c9929fb5f46ec5c9493ec9b7aed80fb5353f) |
 | `querySource` | 必需 | `"latest-user-message"` |
 | `queryTruncated` | 必需 | `boolean` |
 | `scopes` | 可选 | [`string[]`](#persistence-type-sha256-93c33d9687613293f8c95d46c4d922fe9ceae83b84c384beff5c3315abe005f2) |
@@ -7840,7 +7859,7 @@ SHA-256: `e125033e8845bb18761caf8ea58336ebae0a816c58931001d9994ccea04ca3ec`
 
 SHA-256: `a46a8ccb1087e5b09e7cfe50013a6ee9c39d1cd11b31ccf5150b45e8bb8b79c4`
 
-来源：[`packages/context/continuum/src/persistence.ts:102`](../packages/context/continuum/src/persistence.ts)
+来源：[`packages/context/continuum/src/persistence.ts:104`](../packages/context/continuum/src/persistence.ts)
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|
@@ -7866,7 +7885,7 @@ SHA-256: `c4d8e2c4fcf149148f2e1bbbe2acb251447df4021a43340538f8a1dfc2676aad`
 
 SHA-256: `5b70e5ebbc3734b771863fb2541efd7b922b2190069c3afc7c642b71519b1f09`
 
-来源：[`packages/context/continuum/src/persistence.ts:109`](../packages/context/continuum/src/persistence.ts)
+来源：[`packages/context/continuum/src/persistence.ts:111`](../packages/context/continuum/src/persistence.ts)
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|
@@ -7904,7 +7923,7 @@ SHA-256: `ec8090893b4835c24289c291bba387748de11d20b46a117d54a184bb1b9f0f33`
 
 SHA-256: `8eabef29b737f10b983e87cbff46e8125214c5c0ffa150768d76652a8e352368`
 
-来源：[`packages/context/continuum/src/persistence.ts:129`](../packages/context/continuum/src/persistence.ts)
+来源：[`packages/context/continuum/src/persistence.ts:131`](../packages/context/continuum/src/persistence.ts)
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|
@@ -7958,7 +7977,7 @@ SHA-256: `d8cc1e499bfba6d3e7ab4d1c8db1ccbc0e2ed084c73ad66c7bfcb5b9066446f7`
 
 SHA-256: `118a6aade098793306eea52ef0f6ae6b47ebe72c142c887ec778aeecd1b6c2ec`
 
-来源：[`packages/context/continuum/src/persistence.ts:209`](../packages/context/continuum/src/persistence.ts)
+来源：[`packages/context/continuum/src/persistence.ts:218`](../packages/context/continuum/src/persistence.ts)
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|
@@ -7979,7 +7998,7 @@ SHA-256: `118a6aade098793306eea52ef0f6ae6b47ebe72c142c887ec778aeecd1b6c2ec`
 
 SHA-256: `98b1e16566a8a6bf2c17f00861d97eddeaa80c75c68c713b51270895f640a4d5`
 
-来源：[`packages/context/continuum/src/persistence.ts:196`](../packages/context/continuum/src/persistence.ts)
+来源：[`packages/context/continuum/src/persistence.ts:205`](../packages/context/continuum/src/persistence.ts)
 
 以下类型之一：
 
@@ -11526,6 +11545,18 @@ SHA-256: `9ffb136972f6e29a50edca534f911cc083737bc99794cf55c46f8aca2cd0537c`
 - `"agent/request-error"`
 - `null`
 
+<a id="persistence-type-sha256-b3d6693cf0e68e8f30965a4c9293c9929fb5f46ec5c9493ec9b7aed80fb5353f"></a>
+
+### `union (3 variants)`
+
+SHA-256: `b3d6693cf0e68e8f30965a4c9293c9929fb5f46ec5c9493ec9b7aed80fb5353f`
+
+以下类型之一：
+
+- `"execution-text"`
+- `"latest-user-message"`
+- `"session-goal"`
+
 <a id="persistence-type-sha256-ba61547ea25860832a5c0adfff36362b139aadc28ac0f4d587d0249ab585cbd4"></a>
 
 ### `union (3 variants)`
@@ -14973,17 +15004,17 @@ SHA-256: `3544f425275428b971445968a34ba6235158d1c9078ac278c07cf5abcb41f21a`
 | `time` | 必需 | `number` |
 | `type` | 必需 | `"continuum/memory-injected"` |
 
-<a id="persistence-type-sha256-ebc96301fd38bc561480ea9f1f751811bc92f787e5cd3e44449df6200fb69793"></a>
+<a id="persistence-type-sha256-62c71a62e2a2750232cda7672d1505ca1f8742249e4d44017e6766b30cb36b05"></a>
 
 <a id="persistence-type-eventcontinuummemory-recall-decision"></a>
 
 ### `{ type: "continuum/memory-recall-decision" }`
 
-SHA-256: `ebc96301fd38bc561480ea9f1f751811bc92f787e5cd3e44449df6200fb69793`
+SHA-256: `62c71a62e2a2750232cda7672d1505ca1f8742249e4d44017e6766b30cb36b05`
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|
-| `data` | 必需 | [`MemoryRecallDecisionEventData`](#persistence-type-sha256-02b6331345e63cf02e4722c3fa821b8ffcea7e281b8801a2ddc6a1b9def8a3c0) |
+| `data` | 必需 | [`MemoryRecallDecisionEventData`](#persistence-type-sha256-432ca58ab634d870688e57c201486ce908744d8ba1719c8e9c43ddbe96f6e9b0) |
 | `ignorable` | 可选 | `true` |
 | `seq` | 必需 | `number` |
 | `time` | 必需 | `number` |
@@ -15005,17 +15036,17 @@ SHA-256: `58dcdae3ef200ae86529df4759b462debbcb50070ada273c374b4a7fa7c2c77b`
 | `time` | 必需 | `number` |
 | `type` | 必需 | `"continuum/memory-record"` |
 
-<a id="persistence-type-sha256-1436683bce21c83423016fc410d772eb5a4c96b41a8fbe19d4129451574bc803"></a>
+<a id="persistence-type-sha256-5078a685d07859721694955c12182f6f793ba6bfdb95841b65bf7098d217ef18"></a>
 
 <a id="persistence-type-eventcontinuummemory-retrieval"></a>
 
 ### `{ type: "continuum/memory-retrieval" }`
 
-SHA-256: `1436683bce21c83423016fc410d772eb5a4c96b41a8fbe19d4129451574bc803`
+SHA-256: `5078a685d07859721694955c12182f6f793ba6bfdb95841b65bf7098d217ef18`
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|
-| `data` | 必需 | [`MemoryRetrievalEventData`](#persistence-type-sha256-45ff8e3f1eb741c34ef222f594d6c51f4f3a9fe89bbfc5b529eec2f4370fa207) |
+| `data` | 必需 | [`MemoryRetrievalEventData`](#persistence-type-sha256-a4d1394897139c9066dbbea8759baaa7f13b9df84b2c2defc42d98fe0d11d288) |
 | `ignorable` | 可选 | `true` |
 | `seq` | 必需 | `number` |
 | `time` | 必需 | `number` |
