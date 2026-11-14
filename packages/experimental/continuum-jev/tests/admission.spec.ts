@@ -334,7 +334,9 @@ describe('Continuum Reflex admitter service', () => {
     expect(admission.admitted).toEqual([{ id: 'x:1', tags: [] }, { id: 'x:2', tags: [] }])
     expect(provider.calls).toEqual([])
     expect(session.snapshotEvents().flatMap(event => event.type === 'continuum/memory-admission' ? [[event.data.phase, event.data.reason]] : []))
-      .toEqual([['prepared', 'prepared'], ['settled', 'persistence-unavailable']])
+      // A prepared receipt states the phase and the request, not a judgement
+      // reason: `reason` is absent until the settlement decides one.
+      .toEqual([['prepared', undefined], ['settled', 'persistence-unavailable']])
   })
 
   it('durably prepares each batch of two candidates before dispatch and returns the assigned tags', async () => {

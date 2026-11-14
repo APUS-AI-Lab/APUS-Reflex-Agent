@@ -247,13 +247,20 @@ export interface ContinuumMemoryAdmissionReceipt {
   readonly batchTotal?: number
   /** Prepared receipt position, when a durable profile owns the dispatch. */
   readonly preparedSeq?: SessionSeq
+  /**
+   * Where the request stands. `prepared` means the receipt exists but no
+   * judgement has settled; readers must not read `admittedIds`/`outcome` as a
+   * verdict in that phase.
+   */
+  readonly requestStatus?: 'prepared' | 'settled'
   /** Compacted human messages judged in this batch, in Session order. */
   readonly candidateIds: readonly MemoryId[]
   /** Candidates indexed; every candidate unless active mode applied a Reflex judgement. */
   readonly admittedIds: readonly MemoryId[]
   /** Tags assigned to each admitted candidate, in `admittedIds` order; empty without a Reflex judgement. */
   readonly admittedTags: readonly (readonly string[])[]
-  readonly outcome: 'off' | 'baseline' | 'jev' | 'unknown'
+  /** Absent while prepared: the verdict has not settled, so there is no outcome to state. */
+  readonly outcome?: 'off' | 'baseline' | 'jev' | 'unknown'
   readonly failure?: string
   /** Which entry triggered this admission; absent on historical receipts and when the caller owns no entry. */
   readonly origin?: 'compaction' | 'execution'
@@ -262,7 +269,8 @@ export interface ContinuumMemoryAdmissionReceipt {
   /** Null when no authorized, bounded request was prepared; prepared does not imply dispatched. */
   readonly request: JevRequest | null
   readonly response?: JevResponse
-  readonly reason: 'off' | 'judged' | 'provider-unavailable' | 'privacy-denied' | 'request-budget' | 'provider-error' | 'prepared'
+  /** Absent while prepared: a stage name is not a judgement reason. */
+  readonly reason?: 'off' | 'judged' | 'provider-unavailable' | 'privacy-denied' | 'request-budget' | 'provider-error' | 'prepared'
     | 'persistence-unavailable' | 'invalidated'
 }
 
@@ -645,12 +653,22 @@ export async function admitContinuumMemory(
   ): ContinuumMemoryAdmissionReceipt => ({
     version: 1, mode: config.mode, phase: reason === 'prepared' ? 'prepared' : 'settled',
     ...(preparedSeq === undefined ? {} : { preparedSeq }),
-    // Reflex turned off in settings indexes nothing; every other fallback indexes the whole batch untagged.
-    candidateIds, ...failure === REFLEX_DISABLED ? { admittedIds: [], admittedTags: [] } : {
-      admittedIds: candidateIds, admittedTags: candidateIds.map(() => []),
+    // 形状保持稳定（消费方按数组读取），但 prepared 阶段不把候选批次冒充成判定：
+    // 名单为空、状态显式标成 prepared，reader 不会把占位读成"已全部准入"。
+    candidateIds,
+    ...reason === 'prepared' ? {
+      requestStatus: 'prepared' as const,
+      admittedIds: [] as readonly MemoryId[], admittedTags: [] as readonly (readonly string[])[],
+      request, ...attribution,
+    } : {
+      ...failure === REFLEX_DISABLED ? { admittedIds: [], admittedTags: [] } : {
+        admittedIds: candidateIds, admittedTags: candidateIds.map(() => []),
+      },
+      requestStatus: 'settled' as const,
+      outcome: reason === 'off' ? 'off' : reason === 'provider-unavailable' ? 'baseline' : 'unknown',
+      ...(failure === undefined ? {} : { failure }), request,
+      ...(reason === undefined ? {} : { reason }), ...attribution,
     },
-    outcome: reason === 'off' ? 'off' : reason === 'provider-unavailable' ? 'baseline' : 'unknown',
-    ...(failure === undefined ? {} : { failure }), request, reason, ...attribution,
   })
   if (config.mode === 'off') return fallback('off')
   if (jev === undefined) return fallback('provider-unavailable')
