@@ -28,7 +28,7 @@ import { assertNever, deepFreeze } from '@deepseek-ai/dsh-util-values'
 import type { Scope } from '@deepseek-ai/dsh-scope'
 import { createScope } from '@deepseek-ai/dsh-scope'
 import type { EpochHeader, RequestContextEventData, Session, SessionEventMap, SessionId, SessionSeq, TurnEndReason, UserMessage } from '@deepseek-ai/dsh-session'
-import { canonicalHeader, headerEquals } from '@deepseek-ai/dsh-session'
+import { SessionSeq as toSessionSeq, canonicalHeader, headerEquals } from '@deepseek-ai/dsh-session'
 import { joinContextSections, joinPromptSections, renderContextSections, renderPromptSections } from '@deepseek-ai/dsh-system-prompt'
 import type { AssembledSection, PromptAssembly } from '@deepseek-ai/dsh-system-prompt'
 import type {} from '@deepseek-ai/dsh-session-projection'
@@ -561,6 +561,11 @@ export class ReactLoopAgent implements Agent {
         config, preparedCall, assembly.tools, { turn, step }, startsRequestSeries,
         rewrites, renderedSections, omittedSections, signal,
       )
+      // Last committed offset this request was built from — the same value the
+      // llm/dispatch records, taken before the stream adds anything. The
+      // settlement carries it so an audit can prove a request view and the
+      // call it explains share one log prefix.
+      const requestPrefixEnd = toSessionSeq(Number(this.session.seq) - 1)
       const live = new AssistantStreamAttempt(
         this.session.id,
         ++this.assistantAttemptCounter,
@@ -598,6 +603,7 @@ export class ReactLoopAgent implements Agent {
                   },
                 }),
                 interrupted: true,
+                prefixEnd: requestPrefixEnd,
                 ...live.usage === undefined ? {} : { usage: live.usage },
                 stream: live.stream,
               }, { surfaceOp: 'append' }).seq)
@@ -661,6 +667,7 @@ export class ReactLoopAgent implements Agent {
             turn,
             step,
             message,
+            prefixEnd: requestPrefixEnd,
             ...live.usage === undefined ? {} : { usage: live.usage },
             stream: live.stream,
           }, { surfaceOp: 'append' }).seq,

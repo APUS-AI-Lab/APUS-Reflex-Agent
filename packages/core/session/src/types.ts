@@ -397,6 +397,16 @@ export interface SessionEventMap {
     stream: AssistantStreamRecord[]
     usage?: TokenUsage
     interrupted?: true
+    /**
+     * Last committed session offset the request was built from, matching the
+     * `llm/dispatch` of that request. It lets an audit prove that a recorded
+     * request view and the call it explains derive from the same log prefix
+     * instead of inferring it from turn/step alone.
+     *
+     * Optional: logs written before this field existed carry no prefix, and a
+     * reader must treat those as unverifiable rather than assume a match.
+     */
+    prefixEnd?: SessionSeq
   }
   /**
    * One model attempt that committed no surface message. The embedded stream
