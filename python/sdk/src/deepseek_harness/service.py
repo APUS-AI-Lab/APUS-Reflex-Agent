@@ -64,6 +64,17 @@ class _Run:
     dataset_version: str = ""
     dataset_sha256: str = ""
     question_type: str = "unknown"
+    # Where the run is in its own lifecycle, and when it last moved. A caller
+    # that only sees `running` cannot tell a slow model call from a run that
+    # stopped progressing, and neither can the service's own health check.
+    stage: str = "accepted"
+    accepted_at: float = field(default_factory=time.monotonic)
+    started_at: float | None = None
+    last_progress_at: float = field(default_factory=time.monotonic)
+    last_progress_stage: str = "accepted"
+    # The last source event seq this run saw, so progress can be reported
+    # without carrying the events themselves.
+    last_event_seq: int | None = None
     worker_done: threading.Event = field(default_factory=threading.Event)
     worker: threading.Thread | None = None
     terminal_status: str | None = None
@@ -106,6 +117,22 @@ class _Run:
 
 class _RunCancelled(Exception):
     """Internal signal: the run was cancelled before its prompt was delivered."""
+
+
+@dataclass
+class _RuntimeUsage:
+    """What the service knows about one route's runtime process.
+
+    The runtime outlives the runs it serves, so its lifetime has to be owned
+    somewhere: this record is what lets the service answer "which process serves
+    this route, since when, and is anything still using it" and lets it retire a
+    route that no run needs any more.
+    """
+
+    route: tuple[str, ...]
+    harness: Any
+    started_at: float
+    last_used_at: float
 
 
 class _RequestConflict(ValueError):
@@ -351,7 +378,32 @@ class HarnessService:
         # One harness per route, keyed by what actually selects the model. Two
         # runs naming the same route share it; a different route gets its own,
         # because the model is fixed when the runtime is initialized.
-        self._harnesses: dict[tuple[str, ...], Any] = {}
+        self._harnesses: dict[tuple[str, ...], _RuntimeUsage] = {}
+        # A route's runtime is a whole Node process. Without a ceiling, every
+        # model, endpoint or credential a caller names would leave one behind
+        # for the life of the service; the oldest idle route is retired first.
+        self._max_runtimes = int(os.environ.get("DSH_MAX_RUNTIMES", "4"))
+        if self._max_runtimes < 1:
+            raise ValueError("DSH_MAX_RUNTIMES must be at least 1")
+        # How long an idle route's runtime may stay up before it is retired.
+        # Zero disables idle retirement: the deployment may prefer to pay the
+        # start cost again later rather than hold a process it is not using.
+        self._idle_runtime_seconds = float(os.environ.get("DSH_IDLE_RUNTIME_SEC", "0"))
+        if not math.isfinite(self._idle_runtime_seconds) or self._idle_runtime_seconds < 0:
+            raise ValueError("DSH_IDLE_RUNTIME_SEC must be finite and nonnegative")
+        # How long a run may stay in acceptance or start-up before it is
+        # reported stuck, and the same for a run that is executing but has gone
+        # quiet. Zero disables the check for that stage.
+        self._run_stuck_after_seconds = float(os.environ.get("DSH_RUN_STUCK_SEC", "600"))
+        self._run_executing_stuck_after_seconds = float(
+            os.environ.get("DSH_RUN_EXECUTING_STUCK_SEC", "3600")
+        )
+        for name, value in (
+            ("DSH_RUN_STUCK_SEC", self._run_stuck_after_seconds),
+            ("DSH_RUN_EXECUTING_STUCK_SEC", self._run_executing_stuck_after_seconds),
+        ):
+            if not math.isfinite(value) or value < 0:
+                raise ValueError(f"{name} must be finite and nonnegative")
         self._factory = harness_factory or DeepSeekHarness
         self._runs: dict[str, _Run] = {}
         self._requests: dict[str, str] = {}
@@ -519,13 +571,110 @@ class HarnessService:
         """
         config = self._config_for(route)
         key = _route_key(config)
+        now = time.monotonic()
         with self._start_lock:
-            harness = self._harnesses.get(key)
-            if harness is None:
-                harness = self._factory(config)
-                self._harnesses[key] = harness
-            harness.start()
-            return harness
+            usage = self._harnesses.get(key)
+            if usage is None:
+                self._retire_route_for_capacity_locked(now)
+                usage = _RuntimeUsage(
+                    route=key, harness=self._factory(config), started_at=now, last_used_at=now,
+                )
+                self._harnesses[key] = usage
+            usage.last_used_at = now
+            usage.harness.start()
+            return usage.harness
+
+    def _retire_route_for_capacity_locked(self, now: float) -> None:
+        """Free a runtime slot before a new route starts.
+
+        Retiring a runtime that a run is still using would end that run, so the
+        oldest idle route goes first. When every route is busy the new route is
+        still created — refusing work because a sibling route is busy would turn
+        a resource ceiling into an outage — but the count above the ceiling is
+        recorded so it is visible in ``runtime_states()``.
+        """
+        if len(self._harnesses) < self._max_runtimes:
+            return
+        idle = [
+            (usage.last_used_at, key)
+            for key, usage in self._harnesses.items()
+            if not self._route_is_busy(key)
+        ]
+        if not idle:
+            return
+        _last_used, key = min(idle)
+        usage = self._harnesses.pop(key)
+        self._close_runtime(usage)
+
+    def _route_is_busy(self, key: tuple[str, ...]) -> bool:
+        """Whether any run this service accepted is still assigned to the route."""
+        with self._lock:
+            return any(
+                not run.done.is_set() and run.route == key
+                for run in self._runs.values()
+            )
+
+    def _close_runtime(self, usage: _RuntimeUsage) -> None:
+        """Stop one route's runtime, naming the process if closing fails.
+
+        Only the handle this service saved is touched: a broad process match
+        could stop another route's runtime or an unrelated process.
+        """
+        close = getattr(usage.harness, "close", None)
+        if close is None:
+            return
+        try:
+            close()
+        except Exception as error:  # noqa: BLE001 - one route must not block the rest
+            print(
+                f"dsh-service: closing runtime for route {usage.route[:2]} failed: {error}",
+                flush=True,
+            )
+
+    def retire_idle_runtimes(self, now: float | None = None) -> list[tuple[str, ...]]:
+        """Retire routes whose runtime has served nothing for the idle window.
+
+        A runtime waiting for its next run is idle, not stuck: this decides only
+        whether the process is worth keeping, and it never touches a route an
+        accepted run is still assigned to.
+        """
+        if self._idle_runtime_seconds <= 0:
+            return []
+        moment = time.monotonic() if now is None else now
+        retired: list[tuple[str, ...]] = []
+        with self._start_lock:
+            for key, usage in list(self._harnesses.items()):
+                if moment - usage.last_used_at < self._idle_runtime_seconds:
+                    continue
+                if self._route_is_busy(key):
+                    continue
+                self._harnesses.pop(key)
+                self._close_runtime(usage)
+                retired.append(key)
+        return retired
+
+    def runtime_states(self) -> list[dict[str, Any]]:
+        """Report each route's runtime process and whether it is in use.
+
+        Matches the shape a health check needs: an idle runtime is a normal
+        process, a route with no live pid is one that failed to stay up, and a
+        count above the ceiling says the deployment is holding more runtimes
+        than ``DSH_MAX_RUNTIMES`` allows.
+        """
+        with self._start_lock:
+            usages = list(self._harnesses.values())
+        states: list[dict[str, Any]] = []
+        for usage in usages:
+            pid = getattr(usage.harness, "pid", None)
+            states.append({
+                "route": {"provider": usage.route[0], "model": usage.route[1]},
+                "pid": pid,
+                "alive": isinstance(pid, int),
+                "busy": self._route_is_busy(usage.route),
+                "uptime_seconds": round(time.monotonic() - usage.started_at, 3),
+                "idle_seconds": round(time.monotonic() - usage.last_used_at, 3),
+            })
+        return states
 
     def _config_for(self, route: dict[str, str]) -> DeepSeekHarnessConfig:
         """The deployment's configuration with the run's own route applied."""
@@ -549,15 +698,9 @@ class HarnessService:
         route for as long as the service lives, so shutdown closes them all.
         """
         with self._start_lock:
-            harnesses, self._harnesses = list(self._harnesses.values()), {}
-        for harness in harnesses:
-            close = getattr(harness, "close", None)
-            if close is None:
-                continue
-            try:
-                close()
-            except Exception as error:  # noqa: BLE001 - one route must not block the rest
-                print(f"dsh-service: closing a harness failed: {error}", flush=True)
+            usages, self._harnesses = list(self._harnesses.values()), {}
+        for usage in usages:
+            self._close_runtime(usage)
         with self._lock:
             runs = list(self._runs.values())
         for run in runs:
@@ -641,6 +784,7 @@ class HarnessService:
             try:
                 if run.cancel_requested:
                     return
+                self._record_progress(run, "starting")
                 harness = self._ensure_started(route)
                 if run.cancel_requested:
                     return
@@ -652,6 +796,7 @@ class HarnessService:
                     deliver["agent_preset"] = run.agent_preset
                 if self._event_callback is not None and run.event_url:
                     deliver["on_notification"] = lambda notification: self._report_event(run, notification)
+                self._record_progress(run, "executing")
                 result = harness.run(instruction, **deliver)
                 completed = {
                     "final_response": result.final_response,
@@ -710,6 +855,72 @@ class HarnessService:
         except OSError as error:
             run.delivery_error = f"report storage failed: {type(error).__name__}"
 
+    def _record_progress(self, run: _Run, stage: str, *, seq: int | None = None) -> None:
+        """Note that a run moved, and where it now is.
+
+        This is the only evidence that distinguishes a run making slow progress
+        from one that stopped: callers see `running` in both cases, and an idle
+        runtime is not evidence either way.
+        """
+        with self._lock:
+            if run.done.is_set():
+                return
+            run.stage = stage
+            run.last_progress_stage = stage
+            run.last_progress_at = time.monotonic()
+            if seq is not None:
+                run.last_event_seq = seq
+            elif run.last_event_seq is None:
+                run.last_event_seq = None
+
+    def run_progress(self, run_id: str, *, now: float | None = None) -> dict[str, Any] | None:
+        """Report how far one run has got and whether it stopped moving.
+
+        ``stuck_after_seconds`` is the deployment's ceiling on stillness for the
+        stage the run is in; ``stuck`` is only ever true for a run that has not
+        finished. An idle runtime never appears here, because this asks about a
+        run, not about a process.
+        """
+        moment = time.monotonic() if now is None else now
+        with self._lock:
+            run = self._runs.get(run_id)
+            if run is None:
+                return None
+            finished = run.done.is_set()
+            stage = run.stage
+            report = {
+                "run_id": run.run_id,
+                "stage": stage,
+                "accepted_seconds": round(moment - run.accepted_at, 3),
+                "last_progress_seconds": round(moment - run.last_progress_at, 3),
+                "last_progress_stage": run.last_progress_stage,
+                "last_event_seq": run.last_event_seq,
+                "finished": finished,
+            }
+        limit = self._stuck_after_seconds(stage)
+        if finished:
+            report["stuck_after_seconds"] = None
+            report["stuck"] = False
+        else:
+            report["stuck_after_seconds"] = limit
+            report["stuck"] = limit is not None and report["last_progress_seconds"] >= limit
+        return report
+
+    def _stuck_after_seconds(self, stage: str) -> float | None:
+        """How long a run may stay in ``stage`` before it is reported stuck.
+
+        A run waiting for its runtime to start gets the start budget; one that is
+        executing gets the agent's own deadline. Both come from the deployment,
+        so a slow model call is not mistaken for a frozen service.
+        """
+        if stage == "accepted":
+            return self._run_stuck_after_seconds
+        if stage == "starting":
+            return self._run_stuck_after_seconds
+        if stage == "executing":
+            return self._run_executing_stuck_after_seconds
+        return None
+
     def _report_event(self, run: _Run, notification: Any) -> None:
         """Queue the unchanged source event; network I/O belongs to its sender."""
         if self._event_callback is None or not run.event_url:
@@ -727,6 +938,7 @@ class HarnessService:
         if type(seq) is not int:
             run.delivery_error = "source event has no integer sequence"
             return
+        self._record_progress(run, "executing", seq=seq)
         body = {
             "protocol_version": "2.0",
             "evaluation_id": run.evaluation_id or run.request_id or run.run_id,
@@ -945,6 +1157,47 @@ class HarnessService:
                 if run.result_sender is threading.current_thread():
                     run.result_sender = None
 
+    def readiness(self) -> tuple[bool, dict[str, Any]]:
+        """Report whether this service could complete a run, not only answer HTTP.
+
+        Each condition is something that has actually stopped runs in this
+        deployment: no credential means every request is refused, no run store
+        means outcomes are not durable, and a route whose process died means the
+        next run on it fails at the first message. Stuck runs are reported but do
+        not make the service unready — other routes can still serve work.
+        """
+        problems: list[str] = []
+        if not self._api_token:
+            problems.append("service authentication is not configured")
+        if self._run_store is None:
+            problems.append("no run store: outcomes would not survive a restart")
+        if self._shutdown.is_set():
+            problems.append("service is shutting down")
+        runtimes = self.runtime_states()
+        dead = [
+            state for state in runtimes
+            if not state["alive"] and state["busy"]
+        ]
+        if dead:
+            problems.append(
+                f"{len(dead)} route(s) have a run assigned but no live runtime process"
+            )
+        stuck: list[str] = []
+        with self._lock:
+            unfinished = [run.run_id for run in self._runs.values() if not run.done.is_set()]
+        for run_id in unfinished:
+            progress = self.run_progress(run_id)
+            if progress is not None and progress.get("stuck"):
+                stuck.append(run_id)
+        report = {
+            "status": "ready" if not problems else "not-ready",
+            "protocol_version": "2.0",
+            "problems": problems,
+            "runtimes": runtimes,
+            "runs": {"unfinished": len(unfinished), "stuck": stuck},
+        }
+        return not problems, report
+
     def run_state(self, run_id: str) -> dict[str, Any] | None:
         with self._lock:
             run = self._runs.get(run_id)
@@ -973,6 +1226,11 @@ class HarnessService:
                     "events": run.event_delivery, "result": run.result_delivery,
                     "pending_events": len(run.undelivered), "error": run.delivery_error,
                 }
+        # `running` alone cannot distinguish a slow model call from a run that
+        # stopped moving; the progress record is what answers that question.
+        progress = self.run_progress(run_id)
+        if progress is not None:
+            state["progress"] = progress
         return state
 
     def cancel(self, run_id: str) -> bool:
@@ -1006,9 +1264,9 @@ class HarnessService:
             return True
         try:
             with self._start_lock:
-                harness = self._harnesses.get(run.route)
-            if harness is not None:
-                harness.cancel_session(run.session_id)
+                usage = self._harnesses.get(run.route)
+            if usage is not None:
+                usage.harness.cancel_session(run.session_id)
             if not run.worker_done.wait(timeout=self._result_timeout):
                 raise RuntimeError("the run worker has not stopped after cancellation")
         except Exception as error:
@@ -1109,7 +1367,13 @@ def _handler(service: HarnessService) -> type[BaseHTTPRequestHandler]:
 
         def do_GET(self) -> None:  # noqa: N802 - name fixed by BaseHTTPRequestHandler
             if self.path == "/healthz":
+                # Liveness only: this process is answering. It says nothing about
+                # whether a run could complete, which is what /readyz reports.
                 self._reply(200, {"status": "ok", "protocol_version": "2.0"})
+                return
+            if self.path == "/readyz":
+                ready, report = service.readiness()
+                self._reply(200 if ready else 503, report)
                 return
             if not self._authorized():
                 return

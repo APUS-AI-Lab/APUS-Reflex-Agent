@@ -109,6 +109,19 @@ class DeepSeekHarness:
     def client(self) -> HarnessClient:
         return self._client
 
+    @property
+    def pid(self) -> int | None:
+        """The running runtime's process id, or ``None`` while it is not up.
+
+        A service that keeps one runtime per model route has to be able to say
+        which process serves a route and whether it is still alive; the SDK is
+        the only layer that holds that handle.
+        """
+        proc = self._client._proc
+        if proc is None or proc.poll() is not None:
+            return None
+        return proc.pid
+
     def start(self) -> None:
         if self._initialized:
             return

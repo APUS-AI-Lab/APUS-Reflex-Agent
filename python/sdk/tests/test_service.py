@@ -103,6 +103,12 @@ def _service(harness: _FakeHarness) -> HarnessService:
     return HarnessService(DeepSeekHarnessConfig(), harness_factory=lambda _config: harness)
 
 
+def _status(service: HarnessService, run_id: str) -> dict[str, Any]:
+    """The run's status fields, without the progress report appended to them."""
+    state = dict(service.run_state(run_id) or {})
+    state.pop("progress", None)
+    return state
+
 def _wait_for(predicate, description: str, timeout: float = 2.0) -> None:
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
@@ -155,7 +161,7 @@ def test_cancel_stops_only_the_named_run_session() -> None:
 
     assert service.cancel(first) is True
     assert harness.cancelled == ["session-one"]
-    assert service.run_state(first) == {"run_id": first, "status": "cancelled"}
+    assert _status(service, first) == {"run_id": first, "status": "cancelled"}
 
     # The other run keeps its own work and reaches its result.
     _wait_for(
@@ -231,20 +237,20 @@ def test_run_state_reports_cancelling_until_the_harness_confirms() -> None:
     cancel.start()
     _wait_for(cancel_reached.is_set, "the cancel to reach the harness")
     # Cancel is in flight: not yet confirmed.
-    assert service.run_state(run_id) == {"run_id": run_id, "status": "cancelling"}
+    assert _status(service, run_id) == {"run_id": run_id, "status": "cancelling"}
 
     # The turn now settles while the harness still has not confirmed the stop.
     settle_turn.set()
     # The worker's run() returns; its own thread may still be unwinding, so the
     # available evidence is that the turn is no longer blocked.
     time.sleep(0.15)
-    assert service.run_state(run_id) == {"run_id": run_id, "status": "cancelling"}
+    assert _status(service, run_id) == {"run_id": run_id, "status": "cancelling"}
     assert "result" not in outcome
 
     confirm_cancel.set()
     cancel.join(timeout=5)
     assert outcome["result"] is True
-    assert service.run_state(run_id) == {"run_id": run_id, "status": "cancelled"}
+    assert _status(service, run_id) == {"run_id": run_id, "status": "cancelled"}
 
 
 def test_cancel_waits_for_an_in_progress_shared_start() -> None:
@@ -327,7 +333,7 @@ def test_a_cancel_landing_before_delivery_sends_no_prompt() -> None:
     service.cancel(run_id)
 
     assert harness.prompts == []
-    assert service.run_state(run_id) == {"run_id": run_id, "status": "cancelled"}
+    assert _status(service, run_id) == {"run_id": run_id, "status": "cancelled"}
 
 
 def test_a_cancellation_failure_is_reported_and_never_claimed_as_success() -> None:
@@ -503,6 +509,132 @@ def test_closing_twice_is_harmless() -> None:
     _wait_for(lambda: service.run_state(run_id)["status"] == "completed", "run")
     service.close()
     service.close()
+
+
+def test_runtime_states_name_each_route_process_and_whether_it_is_in_use() -> None:
+    """An idle runtime is a normal process; only the state has to say which."""
+    created: list["_PidHarness"] = []
+
+    class _PidHarness(_RecordingHarness):
+        @property
+        def pid(self) -> int:
+            return 4242
+
+    def factory(config):
+        harness = _PidHarness(config)
+        created.append(harness)
+        return harness
+
+    service = HarnessService(DeepSeekHarnessConfig(model="default-model"), harness_factory=factory)
+
+    first = service.start_run({"instruction": "one", "llm": {"model": "model-a"}})
+    _wait_for(lambda: service.run_state(first)["status"] == "completed", "first run")
+    service.start_run({"instruction": "two", "llm": {"model": "model-b"}})
+
+    states = service.runtime_states()
+    assert {state["route"]["model"] for state in states} == {"model-a", "model-b"}
+    for state in states:
+        assert state["pid"] == 4242
+        assert state["alive"] is True
+        assert state["idle_seconds"] >= 0
+        assert state["uptime_seconds"] >= 0
+
+
+def test_a_route_whose_runtime_did_not_stay_up_is_reported_not_alive() -> None:
+    """A harness that never exposed a process is a failed start, not an idle one."""
+    service = HarnessService(
+        DeepSeekHarnessConfig(model="base"), harness_factory=lambda config: _RecordingHarness(config),
+    )
+    run_id = service.start_run({"instruction": "x"})
+    _wait_for(lambda: service.run_state(run_id)["status"] == "completed", "run")
+
+    state = service.runtime_states()[0]
+    assert state["pid"] is None
+    assert state["alive"] is False
+
+
+def test_a_route_above_the_runtime_ceiling_retires_the_oldest_idle_one(monkeypatch) -> None:
+    """Runtimes are whole processes: a new route must not leave every old one up."""
+    monkeypatch.setenv("DSH_MAX_RUNTIMES", "1")
+    closed: list[str] = []
+
+    class _Closable(_RecordingHarness):
+        def close(self) -> None:
+            closed.append(self.config.model)
+
+    created: list[_Closable] = []
+
+    def factory(config):
+        harness = _Closable(config)
+        created.append(harness)
+        return harness
+
+    service = HarnessService(DeepSeekHarnessConfig(model="base"), harness_factory=factory)
+    for model in ("model-a", "model-b"):
+        run_id = service.start_run({"instruction": "x", "llm": {"model": model}})
+        _wait_for(lambda: service.run_state(run_id)["status"] == "completed", "run")
+
+    assert closed == ["model-a"]
+    assert [state["route"]["model"] for state in service.runtime_states()] == ["model-b"]
+
+
+def test_a_busy_route_is_not_retired_for_capacity(monkeypatch) -> None:
+    """Retiring a route in use would end its run, so the ceiling waits."""
+    monkeypatch.setenv("DSH_MAX_RUNTIMES", "1")
+    closed: list[str] = []
+    gates: dict[str, threading.Event] = {}
+
+    class _Gated(_RecordingHarness):
+        def __init__(self, config) -> None:
+            super().__init__(config)
+            gates[config.model] = self.gate
+
+        def run(self, instruction, *, session_id=None, before_deliver=None):
+            self.prompts.append((instruction, session_id or ""))
+            if before_deliver is not None:
+                before_deliver()
+            self.gate.wait(timeout=5)
+            return _FakeResult("done", "completed", session_id or "", [], [])
+
+        def close(self) -> None:
+            closed.append(self.config.model)
+
+    service = HarnessService(DeepSeekHarnessConfig(model="base"), harness_factory=_Gated)
+    busy = service.start_run({"instruction": "hold", "llm": {"model": "model-a"}})
+    _wait_for(lambda: "model-a" in gates, "the first route to start")
+    time.sleep(0.05)
+
+    second = service.start_run({"instruction": "other", "llm": {"model": "model-b"}})
+    _wait_for(lambda: "model-b" in gates, "the second route to start")
+
+    assert closed == [], "a route with a run in flight must not be closed"
+    gates["model-a"].set()
+    gates["model-b"].set()
+    _wait_for(lambda: service.run_state(busy)["status"] == "completed", "first run")
+    _wait_for(lambda: service.run_state(second)["status"] == "completed", "second run")
+
+
+def test_idle_runtimes_are_retired_only_when_nothing_uses_them(monkeypatch) -> None:
+    """Holding an unused process is the risk this bounds; a busy one is not idle."""
+    monkeypatch.setenv("DSH_IDLE_RUNTIME_SEC", "30")
+    closed: list[str] = []
+
+    class _Closable(_RecordingHarness):
+        def close(self) -> None:
+            closed.append(self.config.model)
+
+    service = HarnessService(DeepSeekHarnessConfig(model="base"), harness_factory=_Closable)
+    run_id = service.start_run({"instruction": "x", "llm": {"model": "model-a"}})
+    _wait_for(lambda: service.run_state(run_id)["status"] == "completed", "run")
+
+    assert service.retire_idle_runtimes(now=time.monotonic() + 1) == []
+    assert closed == []
+
+    retired = service.retire_idle_runtimes(now=time.monotonic() + 31)
+    assert [route[1] for route in retired] == ["model-a"]
+    assert closed == ["model-a"]
+    assert service.runtime_states() == []
+
 
 def test_a_finished_run_reports_its_outcome_to_the_caller_named_endpoint() -> None:
     """The evaluator is told the result; it does not poll for it.
@@ -2411,3 +2543,167 @@ def test_two_sessions_with_the_same_dispatch_seq_keep_their_own_views() -> None:
         assert sorted(_TwoViewClient.calls) == [("child-native", 10), ("root-native", 10)]
     finally:
         service.close()
+
+
+def test_a_running_run_reports_its_stage_and_last_progress() -> None:
+    """`running` alone cannot separate a slow call from one that stopped."""
+    harness = _FakeHarness()
+    service = _service(harness)
+    run_id = service.start_run({"instruction": "work", "session_id": "tracked"})
+    _wait_for(lambda: len(harness.prompts) == 1, "the run to reach the harness")
+
+    progress = service.run_state(run_id)["progress"]
+    assert progress["stage"] == "executing"
+    assert progress["finished"] is False
+    assert progress["stuck"] is False
+    assert progress["last_progress_seconds"] >= 0
+
+    harness.gate.set()
+    _wait_for(lambda: service.run_state(run_id)["status"] == "completed", "completion")
+    finished = service.run_state(run_id)["progress"]
+    assert finished["finished"] is True
+    assert finished["stuck"] is False
+    assert finished["stuck_after_seconds"] is None
+
+
+def test_a_run_that_stops_moving_is_reported_stuck_without_touching_the_process(monkeypatch) -> None:
+    """A stuck run is a run, not an idle runtime; only it gets reported."""
+    monkeypatch.setenv("DSH_RUN_EXECUTING_STUCK_SEC", "60")
+    harness = _FakeHarness()
+    service = _service(harness)
+    run_id = service.start_run({"instruction": "work", "session_id": "frozen"})
+    _wait_for(lambda: len(harness.prompts) == 1, "the run to reach the harness")
+
+    fresh = service.run_progress(run_id)
+    assert fresh["stuck"] is False
+
+    later = service.run_progress(run_id, now=time.monotonic() + 61)
+    assert later["stuck"] is True
+    assert later["stuck_after_seconds"] == 60
+    # Reporting is not a termination: the run keeps its own state.
+    assert service.run_state(run_id)["status"] == "running"
+
+
+def test_a_quiet_runtime_with_no_run_is_never_reported_as_stuck(monkeypatch) -> None:
+    """An idle process waiting for work is the design, not a fault."""
+    monkeypatch.setenv("DSH_RUN_STUCK_SEC", "1")
+    harness = _FakeHarness()
+    harness.gate.set()
+    service = _service(harness)
+    run_id = service.start_run({"instruction": "quick"})
+    _wait_for(lambda: service.run_state(run_id)["status"] == "completed", "completion")
+
+    time.sleep(0.02)
+    state = service.runtime_states()[0]
+    assert state["idle_seconds"] >= 0
+    assert "stuck" not in state
+    ready, report = service.readiness()
+    assert report["runs"]["stuck"] == []
+
+
+def test_readiness_names_what_would_prevent_a_run_from_completing() -> None:
+    """A service can answer /healthz and still be unable to finish a run."""
+    harness = _FakeHarness()
+    harness.gate.set()
+    service = _service(harness)
+    # _service builds without a token or a run store, which is exactly the
+    # deployment mistake this check exists for.
+    ready, report = service.readiness()
+
+    assert ready is False
+    assert report["status"] == "not-ready"
+    assert any("authentication" in problem for problem in report["problems"])
+    assert any("run store" in problem for problem in report["problems"])
+    assert report["protocol_version"] == "2.0"
+
+
+def test_readiness_is_true_when_authentication_and_the_run_store_are_configured(tmp_path) -> None:
+    harness = _FakeHarness()
+    harness.gate.set()
+    service = HarnessService(
+        DeepSeekHarnessConfig(dsh_home=str(tmp_path)),
+        harness_factory=lambda _config: harness,
+        api_token="configured-token",
+    )
+    ready, report = service.readiness()
+
+    assert ready is True
+    assert report["status"] == "ready"
+    assert report["problems"] == []
+
+
+def test_a_route_with_a_run_and_no_live_runtime_makes_the_service_not_ready() -> None:
+    """A dead runtime is invisible until the next run fails at its first message."""
+    harness = _FakeHarness()  # blocks until released; has no pid
+    service = _service(harness)
+    run_id = service.start_run({"instruction": "work", "session_id": "orphaned"})
+    _wait_for(lambda: len(harness.prompts) == 1, "the run to reach the harness")
+
+    ready, report = service.readiness()
+    assert ready is False
+    assert any("no live runtime" in problem for problem in report["problems"])
+
+    harness.gate.set()
+    _wait_for(lambda: service.run_state(run_id)["status"] == "completed", "completion")
+
+
+def _serve(service: HarnessService, path: str) -> tuple[int, dict[str, Any]]:
+    """GET one route and return its status code and decoded body."""
+    import json
+    import urllib.error
+    import urllib.request
+    from http.server import ThreadingHTTPServer
+    from deepseek_harness.service import _handler
+
+    server = ThreadingHTTPServer(("127.0.0.1", 0), _handler(service))
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        try:
+            with urllib.request.urlopen(
+                f"http://127.0.0.1:{server.server_port}{path}", timeout=2,
+            ) as response:
+                return response.status, json.load(response)
+        except urllib.error.HTTPError as error:
+            return error.code, json.load(error)
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=2)
+
+
+def test_healthz_stays_a_liveness_answer_even_when_the_service_is_not_ready(tmp_path) -> None:
+    """The container must not be restarted for a configuration fault.
+
+    A missing credential is fixed by correcting the deployment, not by killing
+    and restarting the process, so liveness and readiness answer differently.
+    """
+    harness = _FakeHarness()
+    harness.gate.set()
+    service = _service(harness)  # no token, no run store
+
+    live_status, live = _serve(service, "/healthz")
+    ready_status, ready = _serve(service, "/readyz")
+
+    assert live_status == 200
+    assert live == {"status": "ok", "protocol_version": "2.0"}
+    assert ready_status == 503
+    assert ready["status"] == "not-ready"
+    assert ready["problems"]
+
+
+def test_readyz_is_200_when_the_service_can_actually_complete_a_run(tmp_path) -> None:
+    harness = _FakeHarness()
+    harness.gate.set()
+    service = HarnessService(
+        DeepSeekHarnessConfig(dsh_home=str(tmp_path)),
+        harness_factory=lambda _config: harness,
+        api_token="configured-token",
+    )
+
+    status, body = _serve(service, "/readyz")
+
+    assert status == 200
+    assert body["status"] == "ready"
+    assert body["runtimes"] == []
+    assert body["runs"] == {"unfinished": 0, "stuck": []}
