@@ -1,0 +1,7 @@
+version: 1
+scenario: html-endpoint-no-retry
+profile: headless
+composition: retry
+recording: authored
+header:
+  class: retry
