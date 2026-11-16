@@ -36,7 +36,13 @@ const SIGNAL = new AbortController().signal
 const endpoint = process.env.JEV_ENDPOINT
 const apiKey = process.env.JEV_API_KEY
 const model = process.env.JEV_MODEL ?? 'APUS-Reflex-9B'
-const live = endpoint !== undefined && apiKey !== undefined
+// This file exists to prove the live path works; it must never pass by
+// skipping. A missing endpoint or key is a failure of the run, not a reason to
+// stay silent — an empty suite is indistinguishable from a green one.
+const missing = [
+  endpoint === undefined ? 'JEV_ENDPOINT' : '',
+  apiKey === undefined ? 'JEV_API_KEY' : '',
+].filter(Boolean)
 
 afterEach(async () => {
   await Promise.all(contexts.splice(0).map(ctx => ctx.fiber.dispose()))
@@ -70,7 +76,11 @@ const padding = (label: string) => `${label} ${'filler words for the history spa
 const records = (agent: Agent) => agent.session.snapshotEvents().flatMap(event =>
   event.type === 'continuum/memory-index' ? [event.data.entry] : [])
 
-describe.skipIf(!live)('live compaction admission through the Reflex endpoint', () => {
+describe('live compaction admission through the Reflex endpoint', () => {
+  it('has a Reflex endpoint and key configured', () => {
+    expect(missing, `缺少 ${missing.join(', ')}：这份验证必须接真实端点运行`).toEqual([])
+  })
+
   it('writes, indexes and recalls a compacted fact', async () => {
     const ctx = new Context()
     contexts.push(ctx)
