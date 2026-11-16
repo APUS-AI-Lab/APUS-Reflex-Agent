@@ -12,6 +12,14 @@ export interface MemoryIndexRebuildResult {
 export interface MemoryIndexAppliedRecord {
   readonly recordId: MemoryId
   readonly revision: number
+  /**
+   * The search terms this version actually put in the index.
+   *
+   * The version and id say which snapshot was applied; only the terms say what
+   * can be found through it. They are the index's own output — a reader
+   * re-tokenizing the record text would be guessing at a different result.
+   */
+  readonly terms: readonly string[]
 }
 
 /**
@@ -78,10 +86,20 @@ export class MemoryRecordIndex {
       this.indexed.set(id, record)
       addRecord(this.postings, record)
       this.pending.delete(id)
-      applied.push(Object.freeze({ recordId: id, revision: record.revision }))
+      applied.push(Object.freeze({
+        recordId: id, revision: record.revision, terms: memorySearchTerms(recordSearchText(record)),
+      }))
       if (applied.length >= limit) break
     }
     return { result: this.result(), applied: Object.freeze(applied) }
+  }
+
+  /** Search terms one record version contributes to the index.
+   * @param record - record snapshot to tokenize.
+   * @returns the normalized terms this snapshot adds.
+   */
+  static termsOf(record: MemoryRecord): readonly string[] {
+    return memorySearchTerms(recordSearchText(record))
   }
 
   /** Number of snapshots waiting for a bounded rebuild.

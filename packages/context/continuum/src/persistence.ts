@@ -653,7 +653,12 @@ export interface MemoryIndexRebuiltEventData {
    * Records this rebuild actually applied: the cold-start snapshot members for `full`, or the entries the bounded
    * loop drained. The count alone cannot say which version reached the index.
    */
-  readonly appliedRecords?: readonly { readonly recordId: MemoryId; readonly revision: number }[]
+  readonly appliedRecords?: readonly {
+    readonly recordId: MemoryId
+    readonly revision: number
+    /** Search terms this version put in the index; absent on historical events. */
+    readonly terms?: readonly string[]
+  }[]
   /** Epoch milliseconds when the rebuild work itself started; absent on historical events. */
   readonly startedAt?: number
   /** Epoch milliseconds when the rebuild work finished; absent on historical events. */
@@ -709,7 +714,9 @@ export function appendMemoryIndexRebuiltEvent(
     pendingRecords: result.pendingRecords,
     ...(consumed === undefined ? {} : { consumed }),
     ...(applied === undefined ? {} : {
-      appliedRecords: applied.appliedRecords.map(entry => ({ recordId: entry.recordId, revision: entry.revision })),
+      appliedRecords: applied.appliedRecords.map(entry => ({
+        recordId: entry.recordId, revision: entry.revision, terms: [...entry.terms],
+      })),
       startedAt: applied.startedAt,
       endedAt: applied.endedAt,
     }),
@@ -718,7 +725,11 @@ export function appendMemoryIndexRebuiltEvent(
 
 /** Records one rebuild actually applied, with the real work interval. */
 export interface MemoryIndexRebuildEventDetails {
-  readonly appliedRecords: readonly { readonly recordId: MemoryId; readonly revision: number }[]
+  readonly appliedRecords: readonly {
+    readonly recordId: MemoryId
+    readonly revision: number
+    readonly terms: readonly string[]
+  }[]
   readonly startedAt: number
   readonly endedAt: number
 }

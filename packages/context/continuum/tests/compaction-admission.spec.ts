@@ -178,6 +178,13 @@ describe('Continuum compaction admission', () => {
     const indexEvent = h.agent.session.snapshotEvents().find(event => event.type === 'continuum/memory-index')
     expect(indexEvent?.type === 'continuum/memory-index' ? indexEvent.data.admission : undefined)
       .toEqual({ source: 'compaction', tagSource: 'reflex' })
+    // The L1 append result is written back onto the attempt it belongs to, not left unverified.
+    const compactionResult = h.agent.session.snapshotEvents()
+      .flatMap(event => event.type === 'continuum/memory-write-result' && event.data.origin === 'compaction' ? [event.data] : [])
+    expect(compactionResult).toHaveLength(1)
+    expect(compactionResult[0]?.attemptResults).toEqual([
+      expect.objectContaining({ appendStatus: 'accepted', l1Status: 'added' }),
+    ])
     expect(sourceText(h.agent, admitted[0]!)).toContain('X-Orbit-Key')
     const source = h.agent.session.snapshotEvents().find(event => event.type === 'user/message' && event.data.source.kind === 'user')
     expect(admitted[0]).toEqual({
@@ -265,6 +272,42 @@ describe('Continuum compaction admission', () => {
     await h.agent.whenIdle()
     expect(admit).not.toHaveBeenCalled()
     expect(records(h.agent)).toEqual([])
+  })
+
+  it('settles this compaction write when storing one record fails, instead of leaving candidates without a result', async () => {
+    const h = await harness({ admitter: keepAll })
+    await seed(h.agent)
+    vi.spyOn(h.ctx.logger, 'warn').mockImplementation(() => undefined)
+    const projections = (h.ctx.continuumMemory as unknown as {
+      projections: Map<unknown, { store: { create: (record: unknown) => unknown } }>
+    }).projections
+    const held = projections.get(h.agent)
+    if (held === undefined) throw new Error('no projection for the seeded agent')
+    vi.spyOn(held.store, 'create').mockImplementationOnce((() => {
+      throw new Error('store rejected this record')
+    }) as never)
+
+    await h.compaction.compactNow(h.agent, SIGNAL)
+    await new Promise(resolve => setTimeout(resolve, 10))
+
+    const results = h.agent.session.snapshotEvents().flatMap(event =>
+      event.type === 'continuum/memory-write-result' && event.data.origin === 'compaction'
+        ? [event.data] : [])
+    // 候选已经写进日志；没有结算，读者只看到“准备写”而不知道结果。
+    expect(results).toHaveLength(1)
+    const candidateResults = results[0]?.candidateResults ?? []
+    // 一条记录存不进去，只让它自己失败；同批其它候选照常写入并对账。
+    expect(candidateResults.filter(entry => entry.status === 'failed')).toEqual([
+      expect.objectContaining({ reason: 'store-rejected' }),
+    ])
+    expect(candidateResults.some(entry => entry.status === 'record_accepted')).toBe(true)
+    expect(results[0]?.attemptResults).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        storeStatus: 'rejected', appendStatus: 'unverifiable', l1Status: 'not_applicable',
+        failure: expect.objectContaining({ stage: 'store' }),
+      }),
+    ]))
+    expect(results[0]?.partialFailures).toEqual([expect.stringContaining(': store')])
   })
 
   it('stops a pending admission without a warning when the Agent is disposed', async () => {

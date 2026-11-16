@@ -432,29 +432,49 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
       if (store.get(id) !== undefined) { candidateResults.push({ candidateId: candidate.id, status: 'already_exists', reason: 'existing-record' }); continue }
       const source = { sessionId: session.id, eventSeq: candidate.seq }
       const attemptId = randomUUID()
-      const attempt = this.createAttempt(agent, { id, kind: 'fact', scope, content: candidate.content, sourceRefs: [source] }, { writeId, origin: 'compaction', attemptId })
-      attemptResults.push({ ...attempt.attempt, candidateId: candidate.id })
+      let attempt: MemoryCreateAttempt
+      try {
+        attempt = this.createAttempt(agent, { id, kind: 'fact', scope, content: candidate.content, sourceRefs: [source] }, { writeId, origin: 'compaction', attemptId })
+      } catch (error: unknown) {
+        // Storing one record can fail on its own. Letting it escape would abandon
+        // the whole batch after its candidates were already logged, leaving a
+        // write that says what it meant to do and never what happened.
+        this.ctx.logger.warn(`continuum compaction record was not written: ${errorMessage(error)}`)
+        candidateResults.push({ candidateId: candidate.id, status: 'failed', reason: 'store-rejected', attemptId })
+        attemptResults.push({
+          attemptId, proposedRecordId: String(id), candidateId: candidate.id, origin: 'compaction',
+          storeStatus: 'rejected', appendStatus: 'unverifiable', indexStatus: 'not_attempted', l1Status: 'not_applicable',
+          failure: { stage: 'store', message: errorMessage(error) },
+        })
+        continue
+      }
       recordEventRefs.push(...(attempt.attempt.recordEventRef === undefined ? [] : [attempt.attempt.recordEventRef]))
       indexEventRefs.push(...attempt.indexEvents.map(event => indexRef(agent.session.id, event)))
+      // The L1 entry is appended after the attempt, so its own outcome settles the candidate and the L1 status.
+      let candidateResult: MemoryCandidateResultFact
+      let l1Status: MemoryAttemptResultFact['l1Status'] = 'unverifiable'
       if (attempt.attempt.appendStatus !== 'accepted') {
-        candidateResults.push({ candidateId: candidate.id, status: 'failed', reason: 'record-append-rejected', record: recordRefOf(attempt.created), attemptId })
-        continue
+        candidateResult = { candidateId: candidate.id, status: 'failed', reason: 'record-append-rejected', record: recordRefOf(attempt.created), attemptId }
+      } else {
+        try {
+          const indexEvent = appendMemoryIndexEvent(session, { id, scope, tags: [...tags], source },
+            { source: 'compaction', tagSource: judged.tagSource }, { writeId, origin: 'compaction', attemptId })
+          indexEventRefs.push({ sessionId: session.id, seq: indexEvent.seq, kind: 'l1' })
+          projection.tags.set(id, tags)
+          l1Status = 'added'
+          candidateResult = { candidateId: candidate.id, status: 'record_accepted', record: recordRefOf(attempt.created), attemptId }
+        } catch (error: unknown) {
+          this.ctx.logger.warn(`continuum L1 index entry was not written: ${String(error)}`)
+          l1Status = 'failed'
+          candidateResult = { candidateId: candidate.id, status: 'record_accepted', reason: 'l1-index-rejected', record: recordRefOf(attempt.created), attemptId }
+        }
       }
-      try {
-        const indexEvent = appendMemoryIndexEvent(session, { id, scope, tags: [...tags], source },
-          { source: 'compaction', tagSource: judged.tagSource }, { writeId, origin: 'compaction', attemptId })
-        indexEventRefs.push({ sessionId: session.id, seq: indexEvent.seq, kind: 'l1' })
-        projection.tags.set(id, tags)
-      } catch (error: unknown) {
-        this.ctx.logger.warn(`continuum L1 index entry was not written: ${String(error)}`)
-        candidateResults.push({ candidateId: candidate.id, status: 'record_accepted', reason: 'l1-index-rejected', record: recordRefOf(attempt.created), attemptId })
-        continue
-      }
-      candidateResults.push({ candidateId: candidate.id, status: 'record_accepted', record: recordRefOf(attempt.created), attemptId })
+      attemptResults.push({ ...attempt.attempt, candidateId: candidate.id, l1Status })
+      candidateResults.push(candidateResult)
     }
     appendMemoryWriteResultEvent(session, writeResultOf(
       writeId, 'compaction', triggerRef, offered, candidateResults, attemptResults, recordEventRefs, indexEventRefs,
-      attemptResults.flatMap(failure => failure.failure === undefined ? [] : [`${failure.proposedRecordId}: ${failure.failure.stage}`]),
+      writeStagesNotCompleted(attemptResults),
     ), warn(this.ctx))
   }
 
@@ -765,6 +785,7 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
     const indexEventRefs: { sessionId: SessionId; seq: SessionSeq; kind: 'l1' | 'lexical' }[] =
       attempt.indexEvents.map(indexed => ({ sessionId: session.id, seq: indexed.seq, kind: 'lexical' as const }))
     let result: MemoryCandidateResultFact
+    let l1Status: 'added' | 'failed' | 'unverifiable' = 'unverifiable'
     if (attempt.attempt.appendStatus !== 'accepted') {
       result = { candidateId: String(id), status: 'failed', reason: 'record-append-rejected', record: recordRefOf(attempt.created), attemptId }
     } else {
@@ -775,16 +796,18 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
           id, scope, tags: [], source: { sessionId: session.id, eventSeq: event.seq },
         }, { source: 'user-message', tagSource: 'unjudged' }, { writeId, origin: 'user-message', attemptId })
         indexEventRefs.push({ sessionId: session.id, seq: indexEvent.seq, kind: 'l1' })
+        l1Status = 'added'
         result = { candidateId: String(id), status: 'record_accepted', record: recordRefOf(attempt.created), attemptId }
       } catch (error: unknown) {
         this.ctx.logger.warn(`continuum L1 index entry was not written: ${String(error)}`)
+        l1Status = 'failed'
         result = { candidateId: String(id), status: 'record_accepted', reason: 'l1-index-rejected', record: recordRefOf(attempt.created), attemptId }
       }
     }
     appendMemoryWriteResultEvent(session, writeResultOf(
-      writeId, 'user-message', triggerRef, offered, [result], [{ ...attempt.attempt, candidateId: String(id) }],
+      writeId, 'user-message', triggerRef, offered, [result], [{ ...attempt.attempt, candidateId: String(id), l1Status }],
       attempt.attempt.recordEventRef === undefined ? [] : [attempt.attempt.recordEventRef], indexEventRefs,
-      attempt.attempt.failure === undefined ? [] : [`${String(id)}: ${attempt.attempt.failure.stage}`],
+      writeStagesNotCompleted([{ ...attempt.attempt, candidateId: String(id), l1Status }]),
     ), warn(this.ctx))
   }
 }
@@ -819,6 +842,26 @@ function indexRef(sessionId: SessionId, event: SessionEvent<'continuum/memory-in
 /** Warning sink from the service context. */
 function warn(ctx: Context): (message: string) => void {
   return (message) => { ctx.logger.warn(message) }
+}
+
+/**
+ * Stages a create left unfinished, named for the settlement's `partialFailures`.
+ *
+ * A record can be created while a later stage failed: the append did not land,
+ * the index observer did not report, or the L1 entry was rejected. Every such
+ * stage belongs in the summary — `l1Status: 'failed'` alone leaves the batch
+ * reading as a clean success, and reconciliation reads that as a hidden
+ * partial commit.
+ * @param attempts - the attempts this write settled.
+ * @returns one entry per attempt and unfinished stage, in attempt order.
+ */
+function writeStagesNotCompleted(attempts: readonly MemoryAttemptResultFact[]): string[] {
+  const failures: string[] = []
+  for (const attempt of attempts) {
+    if (attempt.failure !== undefined) failures.push(`${attempt.proposedRecordId}: ${attempt.failure.stage}`)
+    if (attempt.l1Status === 'failed') failures.push(`${attempt.proposedRecordId}: l1`)
+  }
+  return failures
 }
 
 /** One write result built from the candidate and attempt evidence collected so far. */

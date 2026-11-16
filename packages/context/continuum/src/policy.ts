@@ -78,7 +78,9 @@ export class ContinuumMemoryController {
     const snapshot = store.snapshot()
     this.coldStart = this.index.rebuild(snapshot)
     this.coldStartDetails = {
-      appliedRecords: snapshot.map(record => ({ recordId: record.id, revision: record.revision })),
+      appliedRecords: snapshot.map(record => ({
+        recordId: record.id, revision: record.revision, terms: MemoryRecordIndex.termsOf(record),
+      })),
       startedAt: rebuildStartedAt, endedAt: Date.now(),
     }
     this.switchConfig = { ...config }

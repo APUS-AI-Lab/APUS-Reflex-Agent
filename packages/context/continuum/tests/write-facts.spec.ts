@@ -108,9 +108,12 @@ describe('Continuum write-chain facts', () => {
     const bounded = events.filter(event => event.type === 'continuum/memory-index-rebuilt')
       .map(event => event.type === 'continuum/memory-index-rebuilt' ? event.data : undefined)
     expect(bounded.at(-1)).toMatchObject({ scope: 'bounded', consumed: 1 })
-    expect(bounded.at(-1)?.appliedRecords).toEqual([
-      { recordId: record?.type === 'continuum/memory-record' ? record.data.record.id : undefined, revision: 1 },
-    ])
+    // The applied entry names the search terms the index actually holds for that
+    // version; without them the result cannot answer "what can be recalled".
+    expect(bounded.at(-1)?.appliedRecords).toEqual([{
+      recordId: record?.type === 'continuum/memory-record' ? record.data.record.id : undefined, revision: 1,
+      terms: ['fact', 'workspace', 'the', 'cutover', 'window', 'is', 'thursday', 'night'],
+    }])
     expect(typeof bounded.at(-1)?.startedAt).toBe('number')
     expect(typeof bounded.at(-1)?.endedAt).toBe('number')
 
@@ -126,7 +129,7 @@ describe('Continuum write-chain facts', () => {
     expect(result[0]?.attemptResults).toEqual([{
       attemptId, proposedRecordId: `${String(agent.session.id)}:${String(message?.seq)}`,
       candidateId: `${String(agent.session.id)}:${String(message?.seq)}`, origin: 'user-message',
-      storeStatus: 'created', appendStatus: 'accepted', indexStatus: 'observed', l1Status: 'unverifiable',
+      storeStatus: 'created', appendStatus: 'accepted', indexStatus: 'observed', l1Status: 'added',
       recordEventRef: { sessionId: agent.session.id, seq: record?.seq },
     }])
     // Only this attempt's own queued and bounded events are attributed; the cold-start `full` report stays unattributed.
@@ -225,8 +228,34 @@ describe('Continuum write-chain facts', () => {
     index.enqueue(newer)
     const { result, applied } = index.rebuildPendingWithApplied(1)
     // The bounded batch drained the first queued snapshot, not the most recently enqueued one.
-    expect(applied).toEqual([{ recordId: MemoryId('older'), revision: 1 }])
+    expect(applied).toEqual([{ recordId: MemoryId('older'), revision: 1, terms: ['fact', 'workspace', 'older'] }])
     expect(result).toEqual({ indexedRecords: 1, pendingRecords: 1 })
+  })
+
+  it('reports a rejected L1 index entry as a failed attempt stage, not as added', async () => {
+    const h = await harness()
+    const agent = await h.ctx.agentLoop.create(SessionId('write-l1-rejected'), { provider: 'recording', model: 'recording' })
+    const warn = vi.spyOn(h.ctx.logger, 'warn').mockImplementation(() => undefined)
+    const original = agent.session.append.bind(agent.session)
+    vi.spyOn(agent.session, 'append').mockImplementation(((type: string, ...rest: unknown[]) => {
+      // Only the L1 entry fails; the record and lexical events still reach the log.
+      if (type === 'continuum/memory-index') throw new Error('Session append unavailable')
+      return (original as unknown as (type: string, ...rest: unknown[]) => unknown)(type, ...rest)
+    }) as never)
+    agent.followup(user('This fact still needs an L1 failure recorded.'))
+    await agent.whenIdle()
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('continuum L1 index entry was not written: Error: Session append unavailable'))
+    const result = writeResults(agent.session)
+    expect(result).toHaveLength(1)
+    expect(result[0]?.attemptResults).toEqual([
+      expect.objectContaining({ appendStatus: 'accepted', l1Status: 'failed' }),
+    ])
+    expect(result[0]?.candidateResults).toEqual([
+      expect.objectContaining({ status: 'record_accepted', reason: 'l1-index-rejected' }),
+    ])
+    // 记录已建、L1 条目没写成属于“部分提交”；汇总层面必须说出来，
+    // 否则对账会判定这次失败被隐藏（memory_partial_commit_hidden）。
+    expect(result[0]?.partialFailures).toEqual([expect.stringContaining(': l1')])
   })
 
   it('keeps the original record snapshot intact while adding the write attribution', async () => {
