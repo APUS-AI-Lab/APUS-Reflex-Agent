@@ -59,6 +59,9 @@ ENV PATH="/opt/venv/bin:${PATH}" \
     DSH_INITIALIZE_TIMEOUT=300
 RUN mkdir -p /var/lib/dsh
 EXPOSE 8080
+# Liveness only. `/healthz` answers whenever this process is up; whether a run
+# could complete is `/readyz`, and a container must not be restarted for a
+# configuration fault it reports.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=90s \
   CMD python3 -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8080/healthz', timeout=4).status == 200 else 1)"
 CMD ["python3", "-m", "deepseek_harness.service", "--host", "0.0.0.0", "--port", "8080"]
