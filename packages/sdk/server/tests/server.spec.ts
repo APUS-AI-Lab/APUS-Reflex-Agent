@@ -975,6 +975,45 @@ describe('HarnessSdkJsonRpcServer', () => {
     }
   })
 
+  it('refuses the handshake when the default agent preset cannot mount', async () => {
+    const storageDir = await mkdtemp(join(tmpdir(), 'dsh-jsonrpc-broken-preset-'))
+    const ctx = await makeHarness(storageDir)
+    vi.stubEnv('DEEPSEEK_API_KEY', 'test-key')
+    await ctx.plugin(LlmDeepSeek)
+    try {
+      ctx.provide('agentPresets', {
+        resolve: async () => ({ id: 'sdk', broken: 'agent-instructions: $.maxBytes missing required value' }),
+      })
+      const server = new HarnessSdkJsonRpcServer(ctx, new FakeTransport())
+
+      await expect(server.initialize({ cwd: storageDir, provider: 'deepseek-official', model: 'model' }))
+        .rejects.toThrow(/default agent preset "sdk" cannot mount.*maxBytes/)
+
+      await server.shutdown()
+    } finally {
+      await ctx.fiber.dispose()
+      await rm(storageDir, { recursive: true, force: true })
+    }
+  })
+
+  it('accepts the handshake when no agent preset registry is mounted', async () => {
+    const storageDir = await mkdtemp(join(tmpdir(), 'dsh-jsonrpc-no-presets-'))
+    const ctx = await makeHarness(storageDir)
+    vi.stubEnv('DEEPSEEK_API_KEY', 'test-key')
+    await ctx.plugin(LlmDeepSeek)
+    try {
+      const server = new HarnessSdkJsonRpcServer(ctx, new FakeTransport())
+
+      await expect(server.initialize({ cwd: storageDir, provider: 'deepseek-official', model: 'model' }))
+        .resolves.toMatchObject({ serverInfo: { name: 'deepseek-harness-sdk-runtime' } })
+
+      await server.shutdown()
+    } finally {
+      await ctx.fiber.dispose()
+      await rm(storageDir, { recursive: true, force: true })
+    }
+  })
+
   it('rejects a missing non-DeepSeek provider when an LLM service already exists', async () => {
     const storageDir = await mkdtemp(join(tmpdir(), 'dsh-jsonrpc-new-llm-'))
     const ctx = await makeHarness(storageDir)
@@ -1199,7 +1238,11 @@ describe('HarnessSdkJsonRpcServer', () => {
     const ctx = {
       on: vi.fn(() => () => undefined),
       agents: { create, get: () => undefined },
-      get: () => ({ listProviders: () => [{ id: 'mock', name: 'Mock' }], resolveCallConfig }),
+      // Name-aware: a stub that answers every service key would also answer
+      // `agentPresets` with this object, which is not a preset registry.
+      get: (name: string) => name === 'llm'
+        ? { listProviders: () => [{ id: 'mock', name: 'Mock' }], resolveCallConfig }
+        : undefined,
     } as unknown as Context
     const server = new HarnessSdkJsonRpcServer(ctx, new FakeTransport()) as unknown as {
       initialize(params: { cwd: string; provider: string; model: string; reasoningEffort?: string; maxTokens?: number }): Promise<unknown>

@@ -283,6 +283,11 @@ export class HarnessSdkJsonRpcServer {
       ...reasoningEffort === undefined ? {} : { reasoningEffort },
       ...params.maxTokens === undefined ? {} : { maxTokens: params.maxTokens },
     })
+    // A preset whose plugins fail to mount (a missing required config field,
+    // an unloadable row) makes every session on it fail. The handshake is where
+    // the deployment can still see that: a run that starts and then fails at
+    // its first message reads as a task failure instead of a broken profile.
+    await this.assertDefaultPresetUsable()
     this.cwd = cwd
     this.provider = provider
     this.model = model
@@ -293,6 +298,23 @@ export class HarnessSdkJsonRpcServer {
       serverInfo: { name: 'deepseek-harness-sdk-runtime', version: '0.0.1' },
       ...this.dispatchRecorder === undefined ? {} : { capabilities: [SDK_REQUEST_VIEW_CAPABILITY] },
     }
+  }
+
+  /**
+   * Refuse the handshake when the composition's default agent preset is broken.
+   *
+   * Sessions that name no preset run on this one, so a preset that cannot mount
+   * would fail every run at its first message. Reporting it here keeps the
+   * deployment fault at the point where it can still be corrected; a
+   * composition without a preset registry is not affected, because its sessions
+   * do not mount one.
+   */
+  private async assertDefaultPresetUsable(): Promise<void> {
+    const presets = this.ctx.get('agentPresets')
+    if (presets === undefined) return
+    const preset = await presets.resolve()
+    if (preset.broken === undefined) return
+    throw new Error(`default agent preset "${preset.id}" cannot mount: ${preset.broken}`)
   }
 
   /**
