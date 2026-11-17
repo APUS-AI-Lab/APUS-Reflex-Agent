@@ -264,6 +264,51 @@ describe('Session', () => {
     expect(Object.isFrozen(mismatchedMessage)).toBe(false)
   })
 
+  it('validates the recorded request prefix on restored Assistant events', () => {
+    const id = SessionId('invalid-restored-prefix-end')
+    const header = {
+      version: SESSION_FORMAT_VERSION,
+      id,
+      createdAt: 1,
+      isSeeded: false,
+      delegationDepth: 0,
+    } as const
+    for (const prefixEnd of [-1, -0, 1.5, '3', null, Number.MAX_SAFE_INTEGER + 2]) {
+      const invalidAttempt = {
+        type: 'assistant/attempt', seq: 0, time: 1,
+        data: { turn: 1, step: 1, stream: [], prefixEnd },
+      } as unknown as SessionEvent
+      expect(() => Session.fromRestore(
+        id,
+        [invalidAttempt],
+        header,
+        SessionLogOffset(0),
+        'detached',
+      ))
+        .toThrow(/invalid prefixEnd/)
+    }
+
+    // 缺字段是历史日志的合法形态：读不出配对结论，但不该拒绝整份日志。
+    const legacyAttempt = {
+      type: 'assistant/attempt', seq: 0, time: 1,
+      data: { turn: 1, step: 1, stream: [] },
+    } as unknown as SessionEvent
+    const restored = Session.fromRestore(
+      id, [legacyAttempt], header, SessionLogOffset(0), 'detached',
+    )
+    expect(restored.eventAt(SessionSeq(0))).toBe(legacyAttempt)
+
+    // 合法前缀原样保留，供审计与 llm/dispatch 的 prefixEnd 精确比对。
+    const pairedAttempt = {
+      type: 'assistant/attempt', seq: 0, time: 1,
+      data: { turn: 1, step: 1, stream: [], prefixEnd: 7 },
+    } as unknown as SessionEvent
+    const paired = Session.fromRestore(
+      id, [pairedAttempt], header, SessionLogOffset(0), 'detached',
+    )
+    expect(paired.eventAt(SessionSeq(0))).toEqual(pairedAttempt)
+  })
+
   it('rejects historical or malformed request-header lifecycle markers on seed/load', () => {
     const base = {
       type: 'request/header', seq: SessionSeq(0), time: 1,

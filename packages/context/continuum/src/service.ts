@@ -10,7 +10,7 @@ import {
 } from './policy.ts'
 import {
   appendMemoryIndexEvent, appendMemoryRecordEvent, appendMemoryWriteCandidatesEvent, appendMemoryWriteDecision,
-  appendMemoryWriteResultEvent, executionSourceFacts, foldMemoryRecordEvents, memorySourceText,
+  appendMemoryWriteResultEvent, executionSourceScan, foldMemoryRecordEvents, memorySourceText,
   type MemoryAttemptResultFact, type MemoryCandidateResultFact, type MemoryWriteCandidateFact,
   type MemoryRecordRefFact, type MemoryWriteCandidatesEventData, type MemoryWriteDecisionEventData,
   type MemoryWriteExclusionFact,
@@ -534,6 +534,14 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
     const writeId = randomUUID()
     const triggerRef: MemoryWriteTriggerRef = { sessionId: session.id, eventSeq: SessionSeq(stepEndSeq), eventType: 'step/end' }
     const window: MemoryWriteWindowFact = { kind: 'execution', stepStartSeq: SessionSeq(opened.seq), stepEndSeq: SessionSeq(stepEndSeq) }
+    // Defined before the closures so an early-return branch can never observe a binding in its temporal dead zone.
+    // Reading stays lazy: a step that returns before offering has not inspected its window and must not claim it did.
+    let scanned: ReturnType<typeof executionSourceScan> | undefined
+    const sourceScan = (): ReturnType<typeof executionSourceScan> => {
+      // oxlint-disable-next-line typescript/no-deprecated -- Existing Session history read; migration deferred.
+      scanned ??= executionSourceScan(session.snapshotEvents(), opened.seq, stepEndSeq)
+      return scanned
+    }
     const candidatesEvent = (
       status: MemoryWriteCandidatesEventData['status'],
       reason: string | undefined,
@@ -542,11 +550,27 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
     ): void => {
       // A disposed Agent's Session may already be detached; appending then would fork the log.
       if (this.disposedAgents.has(agent) || !this.agentsBySession.has(session.id)) return
+      // Coverage follows whether the scan ran, not the entry's status: a read window with no candidates is
+      // complete, while a branch that returned before reading must not claim either list is complete.
+      const inspected = scanned
+      const unexamined = inspected?.unexaminedSourceSeqs ?? []
+      const coverage = inspected === undefined
+        ? { sourceWindowComplete: false, candidateListComplete: false, missingEvidence: [`${reason ?? status}: source window not inspected`] }
+        : unexamined.length === 0
+          ? { sourceWindowComplete: true, candidateListComplete: true, missingEvidence: [] }
+          : {
+            sourceWindowComplete: false,
+            candidateListComplete: false,
+            missingEvidence: ['execution candidate limit stopped the scan before the window ended'],
+          }
       appendMemoryWriteCandidatesEvent(session, {
         version: 1, writeId, origin: 'execution', status,
         ...(reason === undefined ? {} : { reason }),
         triggerRef, window, candidates: candidateFacts, exclusions,
-        coverage: { sourceWindowComplete: true, candidateListComplete: true, missingEvidence: [] },
+        ...(unexamined.length === 0 ? {} : {
+          unexaminedSourceRefs: unexamined.map(seq => sourceRefOf(session.id, SessionSeq(seq))),
+        }),
+        coverage,
       }, warn(this.ctx))
     }
     const finish = (
@@ -584,14 +608,13 @@ export default class ContinuumMemory extends Service implements ContinuumMemoryS
       finish({ turn: opened.turn, step: opened.step, outcome: 'skipped', reason: 'no-admitter', candidateRecords: 0 }, empty)
       return
     }
-    // oxlint-disable-next-line typescript/no-deprecated -- Existing Session history read; migration deferred.
-    const candidates = executionSourceFacts(session.snapshotEvents(), opened.seq, stepEndSeq)
+    const candidates = sourceScan().candidates
     const offered: MemoryWriteCandidateFact[] = candidates.map(candidate => ({
       candidateId: candidate.id,
       sourceRefs: [sourceRefOf(session.id, SessionSeq(candidate.seq))],
       normalization: {
         textBlocksOnly: true, joinSeparator: '\n', trim: true,
-        // `executionSourceFacts` keeps only a prefix of the event text; the source event remains the complete text.
+        // The scan keeps only a prefix of the event text; the source event remains the complete text.
         sourceChars: sourceTextLength(session, candidate.seq) ?? candidate.content.length,
         candidateChars: candidate.content.length,
         truncated: (sourceTextLength(session, candidate.seq) ?? candidate.content.length) > candidate.content.length,

@@ -2,8 +2,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import AgentRegistry from '@deepseek-ai/dsh-agent'
 import AgentLoop from '@deepseek-ai/dsh-agent-loop'
-import LlmRuntime, { createUserMessage } from '@deepseek-ai/dsh-llm'
-import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
+import LlmRuntime, { createAssistantMessage, createUserMessage } from '@deepseek-ai/dsh-llm'
+import SessionStore, { Session, SessionId } from '@deepseek-ai/dsh-session'
 import JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
@@ -14,7 +14,7 @@ import { join } from 'node:path'
 import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import Jev from '../../../experimental/apus-dsh-jev-plugin/src/index.ts'
 import ContinuumMemory, { ContinuumConfig, ContinuumConfigFields, type ContinuumConfig as Config } from '../src/service.ts'
-import { foldMemoryRecordEvents, type MemoryWriteDecisionEventData } from '../src/persistence.ts'
+import { foldMemoryRecordEvents, type MemoryWriteCandidatesEventData, type MemoryWriteDecisionEventData } from '../src/persistence.ts'
 import { MemoryRecordStore } from '../src/records.ts'
 import type { ContinuumMemoryAdmitter } from '../src/context.ts'
 
@@ -35,6 +35,8 @@ interface HarnessOptions {
   readonly admission?: Config['admission']
   /** Durability root; supplied only by restart cases. */
   readonly root?: string
+  /** Overrides the default eight `ack` responses; `'hang'` keeps a step open until cancelled. */
+  readonly responses?: (ReturnType<typeof textResponse> | 'hang')[]
 }
 
 async function harness(options: HarnessOptions = {}) {
@@ -48,7 +50,7 @@ async function harness(options: HarnessOptions = {}) {
   await ctx.plugin(ToolRuntime)
   await ctx.plugin(AgentRegistry)
   await ctx.plugin(AgentLoop, { agents: [] })
-  const adapter = new MockAdapter(Array.from({ length: 8 }, () => textResponse('ack')))
+  const adapter = new MockAdapter(options.responses ?? Array.from({ length: 8 }, () => textResponse('ack')))
   ctx.llm.registerAdapter(['recording'], adapter)
   await ctx.plugin(Jev, { endpoint: 'http://127.0.0.1:1', model: 'jev-test' })
   const admitterFiber = options.admitter === undefined
@@ -70,6 +72,25 @@ const keepAllExecution = (judge: NonNullable<ContinuumMemoryAdmitter['judgeExecu
   admit: async () => ({ admitted: [] }),
   judgeExecution: judge,
 })
+
+/** Execution candidate entries one Session recorded. */
+const candidateEntries = (session: { snapshotEvents(): readonly { type: string; data?: unknown }[] }) =>
+  session.snapshotEvents().flatMap(event =>
+    event.type === 'continuum/memory-write-candidates' ? [event.data as MemoryWriteCandidatesEventData] : [])
+
+/** Append one extra closed step carrying `texts` to an already idle Agent's Session. */
+function appendStep(agent: { session: Session }, turn: number, texts: readonly string[]): void {
+  const session = agent.session
+  session.append('turn/start', { turn })
+  session.append('step/start', { turn, step: 1 })
+  for (const text of texts) {
+    session.append('assistant/message', {
+      turn, step: 1, stream: [],
+      message: createAssistantMessage({ content: [{ type: 'text', text }], source: { provider: 'recording', model: 'recording' } }),
+    }, { surfaceOp: 'append' })
+  }
+  session.append('step/end', { turn, step: 1 })
+}
 
 describe('Continuum execution admission', () => {
   it('writes no judgement and no record while executionAdmission is off', async () => {
@@ -256,6 +277,77 @@ describe('Continuum execution admission', () => {
     const source = events.find(event => event.seq === ref?.eventSeq)
     // The reference resolves to the assistant message, not the step boundary.
     expect(source?.type).toBe('assistant/message')
+  })
+
+  it('records the cancelled step instead of losing its candidate event', async () => {
+    const judge = vi.fn<NonNullable<ContinuumMemoryAdmitter['judgeExecution']>>(async () => [])
+    const h = await harness({ admitter: keepAllExecution(judge), executionAdmission: 'verified', responses: ['hang'] })
+    const agent = await h.ctx.agentLoop.create(SessionId('execution-cancel-settled'), { provider: 'recording', model: 'recording' })
+    agent.followup(user('Slow request.'))
+    // Cancel only after the step opened, so its `step/end` reaches the execution admission.
+    while (!agent.session.snapshotEvents().some(event => event.type === 'step/start')) {
+      await new Promise(resolve => setTimeout(resolve, 1))
+    }
+    agent.cancel({ kind: 'user' })
+    await agent.whenIdle()
+    await h.ctx.continuumMemory.whenSettled(agent)
+    const entries = candidateEntries(agent.session).filter(entry => entry.origin === 'execution')
+    expect(entries.length).toBeGreaterThan(0)
+    expect(entries.at(-1)).toMatchObject({
+      status: 'skipped', reason: 'cancelled',
+      // The judgement was skipped before any source was read, so coverage must not claim a complete window.
+      coverage: { sourceWindowComplete: false, candidateListComplete: false, missingEvidence: ['cancelled: source window not inspected'] },
+    })
+    expect(entries.at(-1)?.unexaminedSourceRefs).toBeUndefined()
+    expect(judge).not.toHaveBeenCalled()
+  })
+
+  it('records a skipped step without an admitter instead of losing its candidate event', async () => {
+    const h = await harness({ executionAdmission: 'verified' })
+    const agent = await h.ctx.agentLoop.create(SessionId('execution-no-admitter-settled'), { provider: 'recording', model: 'recording' })
+    agent.followup(user('One turn.'))
+    await agent.whenIdle()
+    await h.ctx.continuumMemory.whenSettled(agent)
+    const entries = candidateEntries(agent.session).filter(entry => entry.origin === 'execution')
+    expect(entries.length).toBeGreaterThan(0)
+    expect(entries.at(-1)).toMatchObject({
+      status: 'skipped', reason: 'no-admitter',
+      coverage: { sourceWindowComplete: false, candidateListComplete: false, missingEvidence: ['no-admitter: source window not inspected'] },
+    })
+  })
+
+  it('reports a 33-source step as one unexamined source in the real candidate event', async () => {
+    const judge = vi.fn<NonNullable<ContinuumMemoryAdmitter['judgeExecution']>>(async () => [])
+    const h = await harness({ admitter: keepAllExecution(judge), executionAdmission: 'verified' })
+    const agent = await h.ctx.agentLoop.create(SessionId('execution-over-limit'), { provider: 'recording', model: 'recording' })
+    agent.followup(user('First turn.'))
+    await agent.whenIdle()
+    await h.ctx.continuumMemory.whenSettled(agent)
+    appendStep(agent, 2, Array.from({ length: 33 }, (_, index) => `step fact ${String(index)}`))
+    await h.ctx.continuumMemory.whenSettled(agent)
+    const entry = candidateEntries(agent.session).filter(item => item.origin === 'execution').at(-1)
+    expect(entry?.candidates).toHaveLength(32)
+    expect(entry?.unexaminedSourceRefs).toHaveLength(1)
+    expect(entry?.coverage).toEqual({
+      sourceWindowComplete: false,
+      candidateListComplete: false,
+      missingEvidence: ['execution candidate limit stopped the scan before the window ended'],
+    })
+  })
+
+  it('reports an exact 32-source step as a complete window', async () => {
+    const judge = vi.fn<NonNullable<ContinuumMemoryAdmitter['judgeExecution']>>(async () => [])
+    const h = await harness({ admitter: keepAllExecution(judge), executionAdmission: 'verified' })
+    const agent = await h.ctx.agentLoop.create(SessionId('execution-exact-limit'), { provider: 'recording', model: 'recording' })
+    agent.followup(user('First turn.'))
+    await agent.whenIdle()
+    await h.ctx.continuumMemory.whenSettled(agent)
+    appendStep(agent, 2, Array.from({ length: 32 }, (_, index) => `step fact ${String(index)}`))
+    await h.ctx.continuumMemory.whenSettled(agent)
+    const entry = candidateEntries(agent.session).filter(item => item.origin === 'execution').at(-1)
+    expect(entry?.candidates).toHaveLength(32)
+    expect(entry?.unexaminedSourceRefs).toBeUndefined()
+    expect(entry?.coverage).toEqual({ sourceWindowComplete: true, candidateListComplete: true, missingEvidence: [] })
   })
 
   it('judges no record when the switching projection went stale during the judgement', async () => {

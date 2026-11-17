@@ -160,6 +160,25 @@ export interface ContinuumMemoryEvaluation {
   readonly limits?: MemorySelectionLimits
   /** Stable id of the pre-step recall this evaluation belongs to; absent outside one. */
   readonly recallId?: string
+  /**
+   * Which question asked about which candidate, in the order the request used.
+   *
+   * The relevance request names its candidates `m0`, `m1`, ... over the routed
+   * pool; by the time a reader sees the receipt, that pool is gone. Without this
+   * binding, a score can only be matched to a candidate by guessing the baseline
+   * index, and tag routing changes that order.
+   */
+  readonly questionBindings?: readonly ContinuumMemoryQuestionBinding[]
+}
+
+/** One judged question and the candidate it asked about. */
+export interface ContinuumMemoryQuestionBinding {
+  /** Question key as it appears in the request and response, e.g. `m0`. */
+  readonly key: string
+  /** Candidate the question quoted. */
+  readonly candidateId: MemoryId
+  /** Whether the question was asked during tag routing rather than relevance. */
+  readonly stage: 'routing' | 'relevance'
 }
 
 /** One tag-routing judgement: which L1 tags the input needs. */
@@ -600,6 +619,9 @@ export async function selectContinuumMemory(
     ? undefined
     : request => beforeDispatch(fallback('prepared', 'pending', request)))
   if (batch.kind === 'fallback') return fallback(batch.reason, batch.failure, batch.request, batch.preparedSeq)
+  const bindings: ContinuumMemoryQuestionBinding[] = candidates.map((candidate, index) => ({
+    key: `m${String(index)}`, candidateId: candidate.id, stage: 'relevance',
+  }))
   const scored = candidates.map((candidate, index) => ({ id: candidate.id, index, relevance: batch.probabilities[index] as number }))
   const ranked = scored.toSorted((left, right) => right.relevance - left.relevance || left.index - right.index)
   const unscored = pool.slice(candidates.length).map(candidate => candidate.id)
@@ -615,7 +637,8 @@ export async function selectContinuumMemory(
     mode: config.mode, selectedIds: config.mode === 'active' ? selected : matched, baselineIds: baseline, outcome: 'jev',
     evaluation: { version: 1, strategy: 'batch-relevance', phase: 'settled',
       ...(preparedSeq === undefined ? {} : { preparedSeq }), request: batch.request, response: batch.response, rankedIds,
-      unscoredIds: unscored, reason: 'ranked', ...recorded, ...(routing === undefined ? {} : { routing }) },
+      unscoredIds: unscored, reason: 'ranked', questionBindings: bindings,
+      ...recorded, ...(routing === undefined ? {} : { routing }) },
   }
 }
 

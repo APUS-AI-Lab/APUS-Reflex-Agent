@@ -89,6 +89,32 @@ describe('Continuum recall source facts', () => {
     expect(injected?.['recallId']).toBe(recallId)
   })
 
+  it('keeps the query facts when the retrieval event could not be written', async () => {
+    // 回执省略查询依据的前提是“检索事件真的写进去了”。append 被吞掉后仍按
+    // trace 开关省略，读者就再也看不到这次召回的查询全文。
+    const ctx = new Context()
+    onTestFinished(() => ctx.fiber.dispose())
+    const session = Session.create(SessionId('recall-facts-append-failed'))
+    const controller = new ContinuumMemoryController(store(), { enabled: true, mode: 'active', reflexMounted: true })
+    installContinuumMemoryControllerContext(ctx, () => controller, () => ({ scopes: ['workspace'] }),
+      { maxCandidates: 4, maxExcerptBytes: 200, maxTotalBytes: 1024, trace: true })
+    const original = session.append.bind(session)
+    // 只让这次检索事件写失败，其余事件照常，才能只观察该分支的后果。
+    ;(session as unknown as { append: typeof original }).append = ((type: string, ...rest: unknown[]) => {
+      if (type === 'continuum/memory-retrieval') throw new Error('append unavailable')
+      return (original as unknown as (type: string, ...rest: unknown[]) => unknown)(type, ...rest)
+    }) as typeof original
+    const request = user('When is the migration scheduled?')
+    const result = await agentEvents(ctx, { session } as Agent).waterfall('agent/pre-step', {
+      messages: [request], turn: 1, step: 1, signal: new AbortController().signal,
+    }, () => Promise.resolve({ kind: 'enter' as const, messages: [request] }))
+    expect(result.kind).toBe('enter')
+    const decision = eventsOf(session, 'continuum/memory-recall-decision').at(-1)?.data
+    // 检索事件没写成，回执必须自己带着查询依据。
+    expect(eventsOf(session, 'continuum/memory-retrieval')).toHaveLength(0)
+    expect(decision?.['queryFacts']).toBeDefined()
+  })
+
   it('names the message that already contained a record instead of only counting it', async () => {
     const ctx = new Context()
     onTestFinished(() => ctx.fiber.dispose())
@@ -109,6 +135,24 @@ describe('Continuum recall source facts', () => {
     expect(filter['kept']).toEqual([])
     const decision = eventsOf(session, 'continuum/memory-recall-decision').at(-1)?.data
     expect(decision?.['resultMessageId']).toBeUndefined()
+    // 检索事实已经写在独立事件里；判断回执不再复制同一份查询。
+    expect(decision?.['queryFacts']).toBeUndefined()
+  })
+
+  it('leaves query facts to the read event on a no-query-match judgement', async () => {
+    const ctx = new Context()
+    onTestFinished(() => ctx.fiber.dispose())
+    const session = Session.create(SessionId('recall-facts-no-match'))
+    installContinuumMemoryContext(ctx, () => store(), { maxCandidates: 4, maxExcerptBytes: 200, maxTotalBytes: 1024, trace: true })
+    const request = user('Unrelated question about the weather.')
+    await agentEvents(ctx, { session } as Agent).waterfall('agent/pre-step', {
+      messages: [request], turn: 1, step: 1, signal: new AbortController().signal,
+    }, () => Promise.resolve({ kind: 'enter' as const, messages: [request] }))
+    const decision = eventsOf(session, 'continuum/memory-recall-decision').at(-1)?.data
+    // 无相关命中与无候选是不同原因，本例只要求“已有检索事件时回执不复制查询”。
+    expect(['no-query-match', 'no-candidates']).toContain(decision?.['reason'])
+    expect(eventsOf(session, 'continuum/memory-retrieval')).toHaveLength(1)
+    expect(decision?.['queryFacts']).toBeUndefined()
   })
 
   it('records the source it actually fell back to and leaves later sources not consulted', async () => {

@@ -610,13 +610,17 @@ export class ReactLoopAgent implements Agent {
             } else {
               live.settle(
                 'assistant/attempt',
-                () => this.session.append('assistant/attempt', { turn, step, stream: live.stream }).seq,
+                () => this.session.append('assistant/attempt', {
+                  turn, step, stream: live.stream, prefixEnd: requestPrefixEnd,
+                }).seq,
               )
             }
           } else {
             live.settle(
               'assistant/attempt',
-              () => this.session.append('assistant/attempt', { turn, step, stream: live.stream }).seq,
+              () => this.session.append('assistant/attempt', {
+                turn, step, stream: live.stream, prefixEnd: requestPrefixEnd,
+              }).seq,
             )
           }
         } catch (settlementError: unknown) {
@@ -633,7 +637,9 @@ export class ReactLoopAgent implements Agent {
         if (finish.kind === 'error' || finish.kind === 'aborted') {
           live.settle(
             'assistant/attempt',
-            () => this.session.append('assistant/attempt', { turn, step, stream: live.stream }).seq,
+            () => this.session.append('assistant/attempt', {
+              turn, step, stream: live.stream, prefixEnd: requestPrefixEnd,
+            }).seq,
           )
           const action = await this.dispatch.waterfall(
             'agent/request-error', {

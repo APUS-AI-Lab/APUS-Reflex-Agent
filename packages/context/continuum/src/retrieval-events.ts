@@ -72,7 +72,7 @@ export function recordMemoryRecallDecision(recorder: MemoryRetrievalRecorder, de
  * @param recorder - Session that owns the log and a warning sink for contained append failures.
  * @param trace - retrieval facts gathered by the read and its injection stage.
  */
-export function recordMemoryRetrieval(recorder: MemoryRetrievalRecorder, trace: MemoryRetrievalTrace): void {
+export function recordMemoryRetrieval(recorder: MemoryRetrievalRecorder, trace: MemoryRetrievalTrace): boolean {
   try {
     const { report } = trace
     const query = trace.query.slice(0, MAX_RECORDED_QUERY_CHARS)
@@ -101,21 +101,25 @@ export function recordMemoryRetrieval(recorder: MemoryRetrievalRecorder, trace: 
           id: candidate.id, score: candidate.score, matchedTerms: [...candidate.matchedTerms],
         })),
         matchedRecords: report.matchedRecords,
+        ...(trace.recallId === undefined ? {} : { recallId: trace.recallId }),
       })
     }
     if (report.dropped.length > 0) {
       recorder.session.append('continuum/memory-budgeted', {
         stage: 'recall', dropped: [...report.dropped], droppedRecords: report.droppedRecords, bytes: report.bytes,
+        ...(trace.recallId === undefined ? {} : { recallId: trace.recallId }),
       })
     }
     const injection = trace.injection
-    if (injection === undefined) return
+    // 没有注入集合是“这次没有注入”，不是“事件没写成”：检索本身已经入日志。
+    if (injection === undefined) return true
     if (injection.dropped.length > 0) {
       recorder.session.append('continuum/memory-budgeted', {
         stage: 'selection',
         dropped: injection.dropped,
         droppedRecords: injection.dropped.length,
         bytes: injection.workingSet.bytes,
+        ...(trace.recallId === undefined ? {} : { recallId: trace.recallId }),
       })
     }
     const injected: MemoryInjectedEventData = {
@@ -126,7 +130,10 @@ export function recordMemoryRetrieval(recorder: MemoryRetrievalRecorder, trace: 
       ...(trace.recallId === undefined ? {} : { recallId: trace.recallId }),
     }
     recorder.session.append('continuum/memory-injected', injected)
+    return true
   } catch (error: unknown) {
     recorder.warn(`continuum retrieval events were not recorded: ${String(error)}`)
+    // 写入失败时调用方不能按“已记录”省略查询依据；返回结果让 decision 据实决定。
+    return false
   }
 }

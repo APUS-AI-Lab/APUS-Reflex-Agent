@@ -413,7 +413,22 @@ export interface SessionEventMap {
    * preserves a failed, retried, cancelled, or stream-error attempt that
    * reached settlement without fabricating model-visible history.
    */
-  'assistant/attempt': { turn: number; step: number; stream: AssistantStreamRecord[] }
+  'assistant/attempt': {
+    turn: number
+    step: number
+    stream: AssistantStreamRecord[]
+    /**
+     * Last committed session offset the request was built from, matching the
+     * `llm/dispatch` of that request. Same field and meaning as on
+     * `assistant/message`: it lets an audit pair a recorded request view with
+     * the failed, retried, or cancelled call it explains instead of inferring
+     * the pairing from turn/step alone.
+     *
+     * Optional: logs written before this field existed carry no prefix, and a
+     * reader must treat those as unverifiable rather than assume a match.
+     */
+    prefixEnd?: SessionSeq
+  }
   /**
    * The model requested one tool invocation: `name` with the raw `arguments`
    * JSON string exactly as the model produced it (unparsed). `callId` pairs the

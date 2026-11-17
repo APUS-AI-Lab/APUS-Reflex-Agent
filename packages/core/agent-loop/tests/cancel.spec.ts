@@ -738,6 +738,24 @@ describe('Agent.cancel()', () => {
         member.chunk.type === 'text-delta' && member.chunk.text === 'doomed partial'
       ))
       : false).toBe(true)
+    // 失败尝试同样记录它据以发出的日志前缀：只有它能与 llm/dispatch 和
+    // 原生请求视图三方配对，否则这次调用只能判为不可核。llm/dispatch 由
+    // SDK 插件追加，本 spec 的 harness 里没有它，所以核对前缀本身就是
+    // 一个真实日志序号，且早于这次尝试自身。
+    const prefixEnd = failed?.type === 'assistant/attempt' ? failed.data.prefixEnd : undefined
+    expect(typeof prefixEnd).toBe('number')
+    expect(Number.isSafeInteger(prefixEnd)).toBe(true)
+    expect(prefixEnd as number).toBeGreaterThanOrEqual(0)
+    expect(prefixEnd as number).toBeLessThan(failed!.seq)
+    // 成功消息来自重试后的另一次请求，它的前缀必须严格更靠后：重试请求是在
+    // 失败尝试落盘之后构建的。若两处前缀相等，说明实现复制了上一次的值，
+    // 审计就无法用前缀区分这两次调用。
+    const messagePrefixEnd = message.type === 'assistant/message'
+      ? message.data.prefixEnd
+      : undefined
+    expect(typeof messagePrefixEnd).toBe('number')
+    expect(messagePrefixEnd as number).toBeGreaterThan(prefixEnd as number)
+    expect(messagePrefixEnd as number).toBeLessThan(message.seq)
     expect(message.type === 'assistant/message'
       ? expandAssistantStream(message.data.stream).some(member => (
         member.chunk.type === 'text-delta' && member.chunk.text === 'doomed partial'

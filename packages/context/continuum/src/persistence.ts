@@ -358,6 +358,8 @@ export interface MemoryScoredEventData {
   readonly candidates: readonly MemoryScoredCandidate[]
   /** Complete matched candidate count, including entries omitted from `candidates`. */
   readonly matchedRecords: number
+  /** Pre-step recall this ranking belongs to; absent on historical events. */
+  readonly recallId?: string
 }
 
 /** Event payload for one candidate or byte limit that excluded records. */
@@ -370,6 +372,8 @@ export interface MemoryBudgetEventData {
   readonly droppedRecords: number
   /** UTF-8 bytes of the recall that this stage produced. */
   readonly bytes: number
+  /** Pre-step recall this exclusion belongs to; absent on historical events. */
+  readonly recallId?: string
 }
 
 /** Selector outcome recorded with an injection, so advice and applied recall are distinguishable. */
@@ -771,20 +775,51 @@ export function executionSourceFacts(
   stepStartSeq: number,
   stepEndSeq: number,
 ): readonly MemoryExecutionCandidate[] {
+  return executionSourceScan(events, stepStartSeq, stepEndSeq).candidates
+}
+
+/** Candidates one closed step offered, plus the sources the scan stopped before reading. */
+export interface MemoryExecutionSourceScan {
+  readonly candidates: readonly MemoryExecutionCandidate[]
+  /** Sources inside the window the candidate limit left uninspected; empty when the whole window was read. */
+  readonly unexaminedSourceSeqs: readonly number[]
+}
+
+/**
+ * Scan one closed step's assistant and tool sources with the same bounds as {@link executionSourceFacts}, and report the
+ * in-window sources the candidate limit left unread. The window bounds are applied first, so a source outside it is
+ * never counted as a gap; a window with no unread source is complete even when it offered exactly the limit.
+ * @param events - Session event stream, in sequence order.
+ * @param stepStartSeq - sequence of the `step/start` that opened the judged step.
+ * @param stepEndSeq - sequence of the `step/end` that closed it; the window is `[stepStartSeq, stepEndSeq]`.
+ * @returns the offered candidates in stream order and the sequence numbers of in-window sources not inspected.
+ */
+export function executionSourceScan(
+  events: readonly SessionEvent[],
+  stepStartSeq: number,
+  stepEndSeq: number,
+): MemoryExecutionSourceScan {
   const candidates: MemoryExecutionCandidate[] = []
+  const unexamined: number[] = []
   for (const event of events) {
-    if (candidates.length >= MAX_EXECUTION_CANDIDATES) break
     if (Number(event.seq) < stepStartSeq || Number(event.seq) > stepEndSeq) continue
+    if (event.type !== 'assistant/message' && event.type !== 'tool/result') continue
+    if (candidates.length >= MAX_EXECUTION_CANDIDATES) {
+      // Stop offering, but keep naming the in-window sources that were never read:
+      // "32 candidates" alone cannot tell a complete window from a truncated scan.
+      unexamined.push(Number(event.seq))
+      continue
+    }
     const content = event.type === 'assistant/message'
       ? event.data.interrupted === true ? [] : event.data.message.content
-      : event.type === 'tool/result' ? event.data.message.content : []
+      : event.data.message.content
     const text = content
       .filter((block): block is ContentBlock & { type: 'text' } => block.type === 'text')
       .map(block => block.text).join('\n').trim()
     if (text.length === 0) continue
     candidates.push({ id: String(event.seq), seq: Number(event.seq), content: text.slice(0, MAX_EXECUTION_CANDIDATE_CHARS) })
   }
-  return candidates
+  return { candidates, unexaminedSourceSeqs: unexamined }
 }
 
 /** Maximum UTF-16 characters one execution candidate offers for judgement. */

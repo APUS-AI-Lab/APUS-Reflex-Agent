@@ -311,6 +311,14 @@ function assertAssistantSettlementShape(
     || !Array.isArray(data?.['stream'])) {
     throw new Error(`seed ${type} at index ${index} has invalid settlement fields`)
   }
+  const prefixEnd = data?.['prefixEnd']
+  // Same `SessionSeq` rule as turn/step above: a negative zero is not a valid
+  // offset, and `JSON.parse` can hand one back from a logged `-0`.
+  if (prefixEnd !== undefined
+    && (typeof prefixEnd !== 'number' || !Number.isSafeInteger(prefixEnd)
+      || prefixEnd < 0 || Object.is(prefixEnd, -0))) {
+    throw new Error(`seed ${type} at index ${index} has an invalid prefixEnd`)
+  }
 }
 
 const allowedAdapterKeys = new Set(['reasoningEffort', 'maxTokens'])

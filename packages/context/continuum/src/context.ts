@@ -217,24 +217,26 @@ export function installContinuumMemoryContext(
       const alreadyPresentRecords = freshness.facts.alreadyPresentCount
       // Re-render from the kept candidates: the model must see exactly the records `recordIds` names.
       const rendered = kept.length === 0 ? undefined : renderMemoryWorkingSet(workingSet.query, kept)
-      if (config.trace === true) {
-        recordMemoryRetrieval(retrievalRecorder(ctx, agent), {
+      // 同 controller 路径：回执据真实写入结果决定是否省略查询依据。
+      const retrievalTraced = config.trace === true
+        && recordMemoryRetrieval(retrievalRecorder(ctx, agent), {
           query: query.text, querySource: query.source, limits: retrievalLimits(config), selectorMounted: false, report,
           recallId: note.recallId, queryFacts: composition.facts, retrievalFacts, filterFacts: freshness.facts,
           ...(rendered === undefined ? {} : { injection: { workingSet: rendered, dropped: [] } }),
         })
-      }
       if (rendered === undefined) {
         if (alreadyPresentRecords > 0) {
-          note.decide('no-query-match', { report, alreadyPresentRecords }); return decision
+          note.decide('no-query-match', { report, alreadyPresentRecords, retrievalTraced })
+          return decision
         }
-        note.decide(report.activeRecords === 0 ? 'empty-store' : 'no-candidates', { report })
+        note.decide(report.activeRecords === 0 ? 'empty-store' : 'no-candidates',
+          { report, retrievalTraced })
         return decision
       }
       const message = recallMessage(rendered)
       note.decide('injected', {
         report, injectedRecords: rendered.candidates.length, alreadyPresentRecords,
-        resultMessageId: String(message.id), retrievalTraced: config.trace === true,
+        resultMessageId: String(message.id), retrievalTraced,
       })
       return { ...decision, messages: [...decision.messages, message] }
     } catch (error: unknown) {
@@ -308,10 +310,12 @@ export function installContinuumMemoryControllerContext(
       const freshness = freshnessFacts(workingSet.candidates, messages, Date.now())
       const fresh = freshness.kept
       const alreadyPresentRecords = freshness.facts.alreadyPresentCount
-      const retrievalTraced = config.trace === true
+      // “检索事件是否真的写进了日志”决定回执能否省略查询依据。只看 trace 开关，
+      // 会把一次被吞掉的 append 当成已记录，读者从此看不到这次召回的查询全文。
+      let retrievalTraced = false
       const traced = (extra: TracedInjection): void => {
-        if (!retrievalTraced) return
-        recordMemoryRetrieval(retrievalRecorder(ctx, agent), {
+        if (config.trace !== true) return
+        retrievalTraced = recordMemoryRetrieval(retrievalRecorder(ctx, agent), {
           query: query.text, querySource: query.source, limits: retrievalLimits(config),
           selectorMounted: selector !== undefined, report,
           recallId: note.recallId, queryFacts: composition.facts, retrievalFacts, filterFacts: freshness.facts,
@@ -321,8 +325,11 @@ export function installContinuumMemoryControllerContext(
       const freshSet = { ...workingSet, candidates: fresh }
       if (fresh.length === 0) {
         traced({})
-        if (alreadyPresentRecords > 0) { note.decide('no-query-match', { report, alreadyPresentRecords }); return decision }
-        note.decide(report.activeRecords === 0 ? 'empty-store' : 'no-candidates', { report })
+        if (alreadyPresentRecords > 0) {
+          note.decide('no-query-match', { report, alreadyPresentRecords, retrievalTraced }); return decision
+        }
+        note.decide(report.activeRecords === 0 ? 'empty-store' : 'no-candidates',
+          { report, retrievalTraced })
         return decision
       }
       if (selector === undefined) {
@@ -338,7 +345,9 @@ export function installContinuumMemoryControllerContext(
         const selection = selectionFactsOf('controller_without_selector', fresh, matched, zeroScore
           .map((candidate, index) => ({ recordId: String(candidate.id), inputRank: fresh.length + index + 1, reason: 'no-query-match' as const })))
         if (matched.candidates.length === 0) {
-          note.decide('no-query-match', { report, alreadyPresentRecords, selectionFacts: selection }); return decision
+          note.decide('no-query-match', {
+            report, alreadyPresentRecords, selectionFacts: selection, retrievalTraced,
+          }); return decision
         }
         const message = recallMessage(matched)
         note.decide('injected', {
@@ -393,7 +402,9 @@ export function installContinuumMemoryControllerContext(
         fresh, selection, uniqueIds, budgeted, selectionStartedAt,
       )
       if (budgeted.workingSet.candidates.length === 0) {
-        note.decide('selection-empty', { report, alreadyPresentRecords, selectionFacts: factsOfSelection }); return decision
+        note.decide('selection-empty', {
+          report, alreadyPresentRecords, selectionFacts: factsOfSelection, retrievalTraced,
+        }); return decision
       }
       const message = recallMessage(budgeted.workingSet)
       note.decide('injected', {
