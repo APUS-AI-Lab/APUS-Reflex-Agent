@@ -2707,3 +2707,361 @@ def test_readyz_is_200_when_the_service_can_actually_complete_a_run(tmp_path) ->
     assert body["status"] == "ready"
     assert body["runtimes"] == []
     assert body["runs"] == {"unfinished": 0, "stuck": []}
+
+
+class _IterationGuardDict(dict):
+    """A run's ``request_views`` that fails if a writer mutates it mid-iteration.
+
+    ``sorted(items())`` reads the dict lazily, so a writer that does not hold
+    the run's condition can add a key between two yielded items. This records
+    that window and raises the same failure CPython raises when a dict changes
+    size during iteration, in a controlled and deterministic way.
+    """
+
+    def __init__(self, initial: dict[Any, Any]) -> None:
+        super().__init__(initial)
+        self.block_after_first = threading.Event()
+        self.reader_parked = threading.Event()
+        self.reader_resume = threading.Event()
+        self.violations = 0
+
+    def items(self):
+        first = True
+        for pair in super().items():
+            yield pair
+            if first:
+                first = False
+                if self.block_after_first.is_set():
+                    self.reader_parked.set()
+                    self.reader_resume.wait(timeout=5)
+
+    def __setitem__(self, key, value):
+        if self.reader_parked.is_set() and not self.reader_resume.is_set():
+            self.violations += 1
+            # 受控复刻 CPython 的 "dictionary changed size during iteration"。
+            raise AssertionError("request_views mutated during iteration")
+        super().__setitem__(key, value)
+
+
+def test_persisting_a_run_does_not_iterate_request_views_while_a_dispatch_writes(
+    tmp_path,
+) -> None:
+    """Persisting a run and attaching a view must not use request_views together.
+
+    The persistence thread iterates the mapping under ``delivery_condition``;
+    the event sender adds the dispatch decision on its own thread. The sender
+    must wait for that iteration to finish instead of writing into it.
+    """
+    rpc_started = threading.Event()
+    rpc_release = threading.Event()
+
+    class _GatedViewClient:
+        def __init__(self) -> None:
+            self.calls: list[tuple[str, int]] = []
+
+        def session_request_view(self, session_id: str, dispatch_seq: int) -> dict[str, Any]:
+            self.calls.append((session_id, dispatch_seq))
+            rpc_started.set()
+            assert rpc_release.wait(timeout=5)
+            return {**_NATIVE_VIEW, "sessionId": session_id, "dispatchSeq": dispatch_seq}
+
+    class _Harness(_FakeHarness):
+        def __init__(self) -> None:
+            super().__init__()
+            self.go = threading.Event()
+            self.turn_release = threading.Event()
+
+        def run(
+            self, instruction, *, session_id=None, before_deliver=None,
+            on_notification=None, cwd=None, agent_preset=None,
+        ):
+            if before_deliver is not None:
+                before_deliver()
+            self.prompts.append((instruction, session_id or ""))
+            assert self.go.wait(timeout=5)
+            if on_notification is not None:
+                on_notification(_dispatch_notifications()[0])
+            self.turn_release.wait(timeout=5)
+            return _FakeResult("done", "completed", session_id or "", [], [])
+
+    delivered: list[dict[str, Any]] = []
+
+    class _Sink:
+        def post(self, url, payload, timeout):
+            delivered.append(payload)
+
+    harness = _Harness()
+    harness.client = _GatedViewClient()
+    service = HarnessService(
+        DeepSeekHarnessConfig(dsh_home=str(tmp_path)),
+        harness_factory=lambda _config: harness,
+        event_callback=_Sink(),
+    )
+    try:
+        run_id = service.start_run({
+            "instruction": "race", "session_id": "root-native",
+            "event_url": "http://events.invalid/v1/events",
+        })
+        run = service._runs[run_id]
+        _wait_for(lambda: bool(harness.prompts), "the run to reach the harness")
+        # A wide mapping makes the persistence iteration long enough for the
+        # sender's write to land in it; the dispatch key itself is not present.
+        run.request_views = _IterationGuardDict(
+            {("prefill", index): None for index in range(64)}
+        )
+        harness.go.set()
+        _wait_for(rpc_started.is_set, "the sender to reach the request view RPC")
+
+        run.request_views.block_after_first.set()
+        reader = threading.Thread(target=service._persist_run, args=(run,), daemon=True)
+        reader.start()
+        _wait_for(run.request_views.reader_parked.is_set, "the persistence reader to park")
+        rpc_release.set()
+        # 写方要么已经越权写入，要么阻塞在锁上等待迭代结束。
+        time.sleep(0.05)
+        run.request_views.reader_resume.set()
+        reader.join(timeout=5)
+        assert not reader.is_alive()
+        assert run.request_views.violations == 0, (
+            "request_views was written during iteration"
+        )
+        _wait_for(
+            lambda: any(e["event"]["type"] == "llm/dispatch" for e in delivered),
+            "the dispatch report",
+        )
+        dispatch = next(e for e in delivered if e["event"]["type"] == "llm/dispatch")
+        assert dispatch["request_view"]["dispatchSeq"] == 9
+        assert run.request_views[("root-native", 9)] is not None
+    finally:
+        harness.turn_release.set()
+        service.close()
+
+
+class _SlowCancelHarness(_FakeHarness):
+    """Cancels slowly: the stop is confirmed late and the worker unwinds after it."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.turn_running = threading.Event()
+
+    def run(
+        self, instruction, *, session_id=None, before_deliver=None,
+        on_notification=None, cwd=None, agent_preset=None,
+    ):
+        if before_deliver is not None:
+            before_deliver()
+        self.prompts.append((instruction, session_id or ""))
+        self.turn_running.set()
+        self.gate.wait(timeout=5)
+        # The turn does not unwind the moment the stop is confirmed.
+        time.sleep(0.2)
+        return _FakeResult("done", "completed", session_id or "", [], [])
+
+    def cancel_session(self, session_id: str) -> None:
+        self.cancelled.append(session_id)
+        time.sleep(0.6)
+        self.gate.set()
+
+
+def _slow_cancel_service(monkeypatch, harness: _SlowCancelHarness) -> HarnessService:
+    # The confirmation plus worker unwind must outlast this short delivery
+    # timeout but fit inside the caller's own request budget.
+    monkeypatch.setenv("DSH_CALLBACK_TIMEOUT_SEC", "0.1")
+    return HarnessService(
+        DeepSeekHarnessConfig(request_timeout_seconds=2.0),
+        harness_factory=lambda _config: harness,
+    )
+
+
+def test_cancel_waits_for_the_run_worker_within_the_request_budget(monkeypatch) -> None:
+    harness = _SlowCancelHarness()
+    service = _slow_cancel_service(monkeypatch, harness)
+    try:
+        run_id = service.start_run({"instruction": "slow cancel", "session_id": "slow"})
+        assert harness.turn_running.wait(timeout=5)
+        assert service.cancel(run_id) is True
+        assert _status(service, run_id) == {"run_id": run_id, "status": "cancelled"}
+    finally:
+        service.close()
+
+
+def test_a_second_canceller_waits_with_the_same_budget(monkeypatch) -> None:
+    """A caller that finds the cancellation in progress shares its wait budget."""
+    harness = _SlowCancelHarness()
+    service = _slow_cancel_service(monkeypatch, harness)
+    outcomes: dict[str, Any] = {}
+
+    def cancel(name: str) -> None:
+        try:
+            outcomes[name] = service.cancel(run_id)
+        except Exception as error:  # noqa: BLE001 - the test reports what was raised
+            outcomes[name] = error
+
+    try:
+        run_id = service.start_run({"instruction": "slow cancel", "session_id": "slow"})
+        assert harness.turn_running.wait(timeout=5)
+        first = threading.Thread(target=cancel, args=("first",), daemon=True)
+        first.start()
+        _wait_for(
+            lambda: service._runs[run_id].cancel_state == "cancelling",
+            "the first canceller to take ownership",
+        )
+        second = threading.Thread(target=cancel, args=("second",), daemon=True)
+        second.start()
+        first.join(timeout=5)
+        second.join(timeout=5)
+        assert outcomes == {"first": True, "second": True}
+        assert _status(service, run_id) == {"run_id": run_id, "status": "cancelled"}
+    finally:
+        service.close()
+
+
+_view_guards: dict[str, "_WideIterationDict"] = {}
+
+
+class _WideIterationDict(dict):
+    """A run's ``request_views`` that fails a write landing inside an iteration.
+
+    Persisting a wide mapping is quick enough that a concurrent write rarely
+    lands inside it, so while a view RPC is waiting this pauses inside
+    ``items()`` to model a production-sized run. A write during an iteration is
+    then reported as the same failure CPython raises for a dict changing size.
+    """
+
+    def __init__(self, initial: dict[Any, Any]) -> None:
+        super().__init__(initial)
+        self.iterating = 0
+        self.rpc_in_flight = threading.Event()
+        self.writer_attempted = threading.Event()
+
+    def items(self):
+        self.iterating += 1
+        try:
+            for index, pair in enumerate(super().items()):
+                if self.rpc_in_flight.is_set() and index and index % 100 == 0:
+                    # 写方此刻在 RPC 后；不受锁约束的写方会在这里被抓住。
+                    self.writer_attempted.wait(0.001)
+                yield pair
+        finally:
+            self.iterating -= 1
+
+    def __setitem__(self, key, value):
+        if self.iterating:
+            self.writer_attempted.set()
+            raise RuntimeError("dictionary changed size during iteration")
+        super().__setitem__(key, value)
+
+
+def test_wide_request_views_survive_concurrent_persistence(tmp_path) -> None:
+    """Many dispatches per run must not turn persistence into a lost run.
+
+    A run keeps one view decision per dispatch; the sender attaches them while
+    the worker queues and persists later reports to the same mapping. This
+    repeats the evaluation mix: wide mappings, 20 dispatches per run, 20 rounds.
+    No thread may die, every report must arrive, and every run must settle with
+    no error.
+    """
+    class _Harness(_FakeHarness):
+        def __init__(self) -> None:
+            super().__init__()
+            self.go = threading.Event()
+
+        def run(
+            self, instruction, *, session_id=None, before_deliver=None,
+            on_notification=None, cwd=None, agent_preset=None,
+        ):
+            if before_deliver is not None:
+                before_deliver()
+            self.prompts.append((instruction, session_id or ""))
+            assert self.go.wait(timeout=5)
+            session = session_id or ""
+            if on_notification is not None:
+                for seq in range(1, 21):
+                    on_notification(Notification(method="session.event", payload={
+                        "sessionId": session,
+                        "event": {
+                            "type": "llm/dispatch", "seq": seq, "time": seq,
+                            "data": {"sessionId": session, "prefixEnd": seq - 1, "turn": 1, "step": 1},
+                        },
+                    }))
+            return _FakeResult("done", "completed", session, [], [])
+
+    client = _ViewClient(_NATIVE_VIEW)
+    original_request_view = client.session_request_view
+
+    def request_view_during_persistence(session_id: str, dispatch_seq: int) -> dict[str, Any]:
+        # 真实 RPC 有往返延迟；持久化在这段窗口内迭代时会被拉长，于是 RPC 返回
+        # 后的写入正好落在迭代中途——与线上（旧实现不持锁）相同。
+        guard = _view_guards[session_id]
+        guard.rpc_in_flight.set()
+        try:
+            time.sleep(0.004)
+            return original_request_view(session_id, dispatch_seq)
+        finally:
+            guard.rpc_in_flight.clear()
+
+    client.session_request_view = request_view_during_persistence
+    harness = _Harness()
+    harness.client = client
+    harness.gate.set()
+    delivered: list[dict[str, Any]] = []
+
+    class _Sink:
+        def post(self, url, payload, timeout):
+            delivered.append(payload)
+
+    service = HarnessService(
+        DeepSeekHarnessConfig(dsh_home=str(tmp_path)), harness_factory=lambda _config: harness,
+        event_callback=_Sink(),
+    )
+    thread_failures: list[BaseException] = []
+    previous_hook = threading.excepthook
+
+    def record_failure(args) -> None:
+        thread_failures.append(args.exc_value)
+
+    threading.excepthook = record_failure
+    _view_guards.clear()
+    try:
+        for round_index in range(20):
+            harness.go.clear()
+            session = f"round-{round_index}"
+            run_id = service.start_run({
+                "instruction": "wide dispatch", "session_id": session,
+                "event_url": "http://events.invalid/v1/events",
+            })
+            run = service._runs[run_id]
+            # 先拉宽已有映射再放行事件，避免替换字典时丢掉刚开始写入的键。
+            guard = _WideIterationDict(
+                {("prefill", index): None for index in range(2000)}
+            )
+            run.request_views = guard
+            _view_guards[session] = guard
+            # worker 每入队一条通知都会 _deliver→持久化，发送线程同时在锁外
+            # 写决策；这正是线上读写同一映射的重叠，无需额外线程。
+            harness.go.set()
+            # 2020 键的状态要 fsync，单轮耗时不固定；按截止时间判定，线程一旦
+            # 异常立即失败。
+            deadline = time.monotonic() + 120
+            while time.monotonic() < deadline:
+                assert thread_failures == [], thread_failures[0]
+                if (
+                    service.run_state(run_id)["status"] != "running"
+                    and service.run_state(run_id)["delivery_state"]["pending_events"] == 0
+                ):
+                    break
+                time.sleep(0.02)
+            assert thread_failures == [], thread_failures[0]
+            assert len([
+                event for event in delivered
+                if event["source_session_id"] == session
+                and event["event"]["type"] == "llm/dispatch"
+            ]) == 20
+            state = service.run_state(run_id)
+            assert state["status"] == "completed", state
+            assert run.error is None, run.error
+            assert run.terminal_status == "succeeded"
+            assert len(run.request_views) == 2020
+    finally:
+        threading.excepthook = previous_hook
+        service.close()

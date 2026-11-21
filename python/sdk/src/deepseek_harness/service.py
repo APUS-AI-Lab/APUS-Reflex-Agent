@@ -418,6 +418,10 @@ class HarnessService:
         self._retry_delay = float(os.environ.get("DSH_DELIVERY_RETRY_DELAY_SEC", "0.1"))
         self._event_timeout = float(os.environ.get("DSH_EVENT_TIMEOUT_SEC", "5"))
         self._result_timeout = float(os.environ.get("DSH_CALLBACK_TIMEOUT_SEC", "10"))
+        # 取消确认要等 worker 真正停下，而 SDK 的取消请求受调用方自己的请求预算
+        # 约束；沿用投递超时会在慢确认时提前报“未停止”。DSH_CANCEL_WAIT_SEC 为
+        # 显式上限，未设置时把投递超时与请求预算相加作为下限。
+        self._cancel_wait = float(os.environ.get("DSH_CANCEL_WAIT_SEC", "0"))
         # The runtime's own mapping for a token-capped turn; read once here so
         # a malformed value fails at start rather than at the first outcome.
         self._max_tokens_as_success = _max_tokens_as_success()
@@ -1022,31 +1026,41 @@ class HarnessService:
         if dispatch is None:
             return
         key = (body["source_session_id"], dispatch)
-        if key in run.request_views:
-            view = run.request_views[key]
-        else:
-            persisted = body.get("request_view")
-            if isinstance(persisted, dict):
-                # A report recovered from the outbox already carries the view
-                # its first attempt had; repeat it rather than fetch again.
-                run.request_views[key] = persisted
-                return
-            view = None
+        # 第一段在锁内只读决策并写回已持久化的 body 视图；RPC 必须放到锁外，
+        # 否则持久化线程的 sorted(request_views.items()) 会与写方并发。
+        with run.delivery_condition:
+            recorded = key in run.request_views
+            view = run.request_views[key] if recorded else None
+            if not recorded:
+                persisted = body.get("request_view")
+                if isinstance(persisted, dict):
+                    # A report recovered from the outbox already carries the view
+                    # its first attempt had; repeat it rather than fetch again.
+                    run.request_views[key] = persisted
+                    return
+        rpc_error: str | None = None
+        if not recorded:
             source = run.view_source
             try:
-                if source is not None:
-                    view = source.request_view(key[0], dispatch)
+                view = source.request_view(key[0], dispatch) if source is not None else None
             except Exception as error:  # noqa: BLE001 - the source event survives without a view
-                run.delivery_error = (
+                rpc_error = (
                     f"request_view unavailable for dispatch {dispatch} of "
                     f"{key[0]}: {type(error).__name__}: {error}"
                 )
-            run.request_views[key] = view
-        if view is not None:
-            body["request_view"] = view
-        elif run.delivery_error is None:
-            run.delivery_error = f"request_view unavailable for dispatch {dispatch} of {key[0]}"
+        # 第二段重新持锁落盘；迭代方看到的是完整决策，不会在迭代中途变长。
         with run.delivery_condition:
+            if not recorded:
+                if key in run.request_views:
+                    view = run.request_views[key]
+                else:
+                    run.request_views[key] = view
+                if rpc_error is not None:
+                    run.delivery_error = rpc_error
+            if view is not None:
+                body["request_view"] = view
+            elif run.delivery_error is None:
+                run.delivery_error = f"request_view unavailable for dispatch {dispatch} of {key[0]}"
             self._save_delivery(run)
 
     def _send_report(
@@ -1256,8 +1270,11 @@ class HarnessService:
             if owner:
                 run.cancel_state = "cancelling"
                 run.cancellation_done.clear()
+        wait = self._cancel_wait or (
+            self._result_timeout + (self._config.request_timeout_seconds or 30)
+        )
         if not owner:
-            if not run.cancellation_done.wait(timeout=self._result_timeout):
+            if not run.cancellation_done.wait(timeout=wait):
                 raise RuntimeError("cancellation is still awaiting confirmation")
             if run.cancel_state == "cancel-failed":
                 raise RuntimeError(run.error or "cancellation failed")
@@ -1267,7 +1284,7 @@ class HarnessService:
                 usage = self._harnesses.get(run.route)
             if usage is not None:
                 usage.harness.cancel_session(run.session_id)
-            if not run.worker_done.wait(timeout=self._result_timeout):
+            if not run.worker_done.wait(timeout=wait):
                 raise RuntimeError("the run worker has not stopped after cancellation")
         except Exception as error:
             with self._lock:
