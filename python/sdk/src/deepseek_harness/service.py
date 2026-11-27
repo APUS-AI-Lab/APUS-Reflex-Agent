@@ -284,7 +284,9 @@ def config_from_environment() -> DeepSeekHarnessConfig:
         dsh_home=optional("DSH_HOME"),
         base_url=required("LLM_BASE_URL"),
         api_key=required("LLM_API_KEY"),
-        initialize_timeout_seconds=float(os.environ.get("DSH_INITIALIZE_TIMEOUT", "300")),
+        initialize_timeout_seconds=float(
+            os.environ.get("DSH_INITIALIZE_TIMEOUT", "300")
+        ),
         request_timeout_seconds=request_budget,
     )
 

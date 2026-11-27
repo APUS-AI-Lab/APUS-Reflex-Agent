@@ -238,7 +238,9 @@ class HarnessClient:
                 payload,
                 response_model=_SessionPromptResponse,
                 on_notification=on_notification,
-                notification_filter=self._notification_belongs_to_session_tree(session_id),
+                notification_filter=self._notification_belongs_to_session_tree(
+                    session_id
+                ),
                 notification_subscription=notification_subscription,
             )
         finally:

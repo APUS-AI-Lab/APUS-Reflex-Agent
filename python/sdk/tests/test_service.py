@@ -48,7 +48,9 @@ class _FakeHarness:
         self.prompts.append((instruction, session_id or ""))
         self.started_gate.set()
         self.gate.wait(timeout=5)
-        notifications = [Notification(method="session.status", payload={"status": "idle"})]
+        notifications = [
+            Notification(method="session.status", payload={"status": "idle"})
+        ]
         return _FakeResult(
             final_response="done",
             finish_reason="completed",
@@ -90,7 +92,10 @@ def test_start_run_reuses_an_explicit_session_across_steps() -> None:
     _wait_for(lambda: len(harness.prompts) == 2, "both steps to reach the harness")
 
     assert first != second
-    assert [session for _instruction, session in harness.prompts] == ["case-42", "case-42"]
+    assert [session for _instruction, session in harness.prompts] == [
+        "case-42",
+        "case-42",
+    ]
 
 
 def test_start_run_defaults_to_one_fresh_session_per_run() -> None:
@@ -332,6 +337,7 @@ def test_a_finished_run_keeps_its_outcome_when_cancel_arrives_afterwards() -> No
 
 def test_http_service_has_a_finite_control_request_budget(monkeypatch):
     from deepseek_harness.service import config_from_environment
+
     for key in ("LLM_PROVIDER", "LLM_MODEL", "LLM_BASE_URL", "LLM_API_KEY"):
         monkeypatch.setenv(key, "unit-test")
     monkeypatch.delenv("DSH_REQUEST_TIMEOUT_SECONDS", raising=False)
@@ -356,7 +362,8 @@ def test_http_cancel_keeps_an_already_completed_outcome():
     try:
         request = urllib.request.Request(
             f"http://127.0.0.1:{server.server_port}/v1/runs/{run_id}/cancel",
-            data=b"", method="POST",
+            data=b"",
+            method="POST",
         )
         with urllib.request.urlopen(request, timeout=2) as response:
             assert json.load(response)["status"] == "completed"
