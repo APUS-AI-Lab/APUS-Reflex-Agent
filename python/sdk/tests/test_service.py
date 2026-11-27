@@ -72,7 +72,18 @@ class _FakeHarness:
         if self.fail_with is not None:
             raise self.fail_with
         notifications = self.notifications or [
-            Notification(method="session.event", payload={"sessionId": session_id or "", "event": {"type": "turn/start", "seq": 1, "time": 1, "data": {"turn": 1}}}),
+            Notification(
+                method="session.event",
+                payload={
+                    "sessionId": session_id or "",
+                    "event": {
+                        "type": "turn/start",
+                        "seq": 1,
+                        "time": 1,
+                        "data": {"turn": 1},
+                    },
+                },
+            ),
             Notification(method="session.status", payload={"status": "idle"}),
         ]
         if on_notification is not None:
@@ -100,7 +111,9 @@ class _FakeHarness:
 def _service(harness: _FakeHarness) -> HarnessService:
     # The fake owns no subprocess, so it is installed as the only route's
     # instance. Every run in these tests names no route, so they all reach it.
-    return HarnessService(DeepSeekHarnessConfig(), harness_factory=lambda _config: harness)
+    return HarnessService(
+        DeepSeekHarnessConfig(), harness_factory=lambda _config: harness
+    )
 
 
 def _status(service: HarnessService, run_id: str) -> dict[str, Any]:
@@ -108,6 +121,7 @@ def _status(service: HarnessService, run_id: str) -> dict[str, Any]:
     state = dict(service.run_state(run_id) or {})
     state.pop("progress", None)
     return state
+
 
 def _wait_for(predicate, description: str, timeout: float = 2.0) -> None:
     deadline = time.monotonic() + timeout
@@ -128,7 +142,10 @@ def test_start_run_reuses_an_explicit_session_across_steps() -> None:
     _wait_for(lambda: len(harness.prompts) == 2, "both steps to reach the harness")
 
     assert first != second
-    assert [session for _instruction, session in harness.prompts] == ["case-42", "case-42"]
+    assert [session for _instruction, session in harness.prompts] == [
+        "case-42",
+        "case-42",
+    ]
 
 
 def test_start_run_defaults_to_one_fresh_session_per_run() -> None:
@@ -186,7 +203,9 @@ def test_cancel_before_the_run_starts_prevents_it_from_starting() -> None:
             super().start()
 
     harness = _SlowStartHarness()
-    service = HarnessService(DeepSeekHarnessConfig(), harness_factory=lambda _config: harness)
+    service = HarnessService(
+        DeepSeekHarnessConfig(), harness_factory=lambda _config: harness
+    )
     run_id = service.start_run({"instruction": "late", "session_id": "pending"})
     _wait_for(lambda: harness.starting.is_set(), "the shared start to begin")
 
@@ -274,7 +293,9 @@ def test_cancel_waits_for_an_in_progress_shared_start() -> None:
     harness = _StartingHarness()
     # The harness exists but its start() is what the worker is inside; the
     # factory returns it once, then the service holds it as this route's one.
-    service = HarnessService(DeepSeekHarnessConfig(), harness_factory=lambda _config: harness)
+    service = HarnessService(
+        DeepSeekHarnessConfig(), harness_factory=lambda _config: harness
+    )
     run_id = service.start_run({"instruction": "work", "session_id": "starting"})
     _wait_for(starting.is_set, "the shared start to begin")
     assert calls == []
@@ -369,6 +390,7 @@ def test_a_finished_run_keeps_its_outcome_when_cancel_arrives_afterwards() -> No
 
 def test_http_service_has_a_finite_control_request_budget(monkeypatch):
     from deepseek_harness.service import config_from_environment
+
     for key in ("LLM_PROVIDER", "LLM_MODEL", "LLM_BASE_URL", "LLM_API_KEY"):
         monkeypatch.setenv(key, "unit-test")
     monkeypatch.delenv("DSH_REQUEST_TIMEOUT_SECONDS", raising=False)
@@ -394,7 +416,9 @@ def test_http_cancel_keeps_an_already_completed_outcome():
     try:
         request = urllib.request.Request(
             f"http://127.0.0.1:{server.server_port}/v1/runs/{run_id}/cancel",
-            data=b"", method="POST", headers={"Authorization": "Bearer test-token"},
+            data=b"",
+            method="POST",
+            headers={"Authorization": "Bearer test-token"},
         )
         with urllib.request.urlopen(request, timeout=2) as response:
             assert json.load(response)["status"] == "completed"
@@ -413,7 +437,9 @@ class _RecordingHarness(_FakeHarness):
 
     def run(self, instruction, *, session_id=None, before_deliver=None):
         self.gate.set()
-        return super().run(instruction, session_id=session_id, before_deliver=before_deliver)
+        return super().run(
+            instruction, session_id=session_id, before_deliver=before_deliver
+        )
 
 
 @dataclass
@@ -433,7 +459,9 @@ class _Routes:
 
 def test_two_runs_can_name_different_models_within_one_service() -> None:
     routes = _Routes()
-    service = HarnessService(DeepSeekHarnessConfig(model="default-model"), harness_factory=routes)
+    service = HarnessService(
+        DeepSeekHarnessConfig(model="default-model"), harness_factory=routes
+    )
     for harness in routes.created:
         harness.gate.set()
 
@@ -448,7 +476,9 @@ def test_two_runs_can_name_different_models_within_one_service() -> None:
 
 def test_a_run_without_a_route_reuses_the_deployment_model() -> None:
     routes = _Routes()
-    service = HarnessService(DeepSeekHarnessConfig(model="default-model"), harness_factory=routes)
+    service = HarnessService(
+        DeepSeekHarnessConfig(model="default-model"), harness_factory=routes
+    )
     for harness in routes.created:
         harness.gate.set()
 
@@ -461,7 +491,9 @@ def test_a_run_without_a_route_reuses_the_deployment_model() -> None:
 
 def test_a_malformed_route_is_refused_before_any_run_starts() -> None:
     routes = _Routes()
-    service = HarnessService(DeepSeekHarnessConfig(model="default-model"), harness_factory=routes)
+    service = HarnessService(
+        DeepSeekHarnessConfig(model="default-model"), harness_factory=routes
+    )
     with pytest.raises(ValueError):
         service.start_run({"instruction": "x", "llm": {"model": ""}})
     with pytest.raises(ValueError):
@@ -485,7 +517,9 @@ def test_closing_the_service_stops_every_route_it_started() -> None:
     def factory(config):
         return _Closable(config)
 
-    service = HarnessService(DeepSeekHarnessConfig(model="base"), harness_factory=factory)
+    service = HarnessService(
+        DeepSeekHarnessConfig(model="base"), harness_factory=factory
+    )
     for model in ("model-a", "model-b"):
         run_id = service.start_run({"instruction": "x", "llm": {"model": model}})
         _wait_for(lambda: service.run_state(run_id)["status"] == "completed", "run")
@@ -504,7 +538,9 @@ def test_closing_twice_is_harmless() -> None:
         def close(self) -> None:
             return None
 
-    service = HarnessService(DeepSeekHarnessConfig(), harness_factory=lambda c: _Closable(c))
+    service = HarnessService(
+        DeepSeekHarnessConfig(), harness_factory=lambda c: _Closable(c)
+    )
     run_id = service.start_run({"instruction": "x"})
     _wait_for(lambda: service.run_state(run_id)["status"] == "completed", "run")
     service.close()
@@ -525,7 +561,9 @@ def test_runtime_states_name_each_route_process_and_whether_it_is_in_use() -> No
         created.append(harness)
         return harness
 
-    service = HarnessService(DeepSeekHarnessConfig(model="default-model"), harness_factory=factory)
+    service = HarnessService(
+        DeepSeekHarnessConfig(model="default-model"), harness_factory=factory
+    )
 
     first = service.start_run({"instruction": "one", "llm": {"model": "model-a"}})
     _wait_for(lambda: service.run_state(first)["status"] == "completed", "first run")
@@ -543,7 +581,8 @@ def test_runtime_states_name_each_route_process_and_whether_it_is_in_use() -> No
 def test_a_route_whose_runtime_did_not_stay_up_is_reported_not_alive() -> None:
     """A harness that never exposed a process is a failed start, not an idle one."""
     service = HarnessService(
-        DeepSeekHarnessConfig(model="base"), harness_factory=lambda config: _RecordingHarness(config),
+        DeepSeekHarnessConfig(model="base"),
+        harness_factory=lambda config: _RecordingHarness(config),
     )
     run_id = service.start_run({"instruction": "x"})
     _wait_for(lambda: service.run_state(run_id)["status"] == "completed", "run")
@@ -553,7 +592,9 @@ def test_a_route_whose_runtime_did_not_stay_up_is_reported_not_alive() -> None:
     assert state["alive"] is False
 
 
-def test_a_route_above_the_runtime_ceiling_retires_the_oldest_idle_one(monkeypatch) -> None:
+def test_a_route_above_the_runtime_ceiling_retires_the_oldest_idle_one(
+    monkeypatch,
+) -> None:
     """Runtimes are whole processes: a new route must not leave every old one up."""
     monkeypatch.setenv("DSH_MAX_RUNTIMES", "1")
     closed: list[str] = []
@@ -569,13 +610,17 @@ def test_a_route_above_the_runtime_ceiling_retires_the_oldest_idle_one(monkeypat
         created.append(harness)
         return harness
 
-    service = HarnessService(DeepSeekHarnessConfig(model="base"), harness_factory=factory)
+    service = HarnessService(
+        DeepSeekHarnessConfig(model="base"), harness_factory=factory
+    )
     for model in ("model-a", "model-b"):
         run_id = service.start_run({"instruction": "x", "llm": {"model": model}})
         _wait_for(lambda: service.run_state(run_id)["status"] == "completed", "run")
 
     assert closed == ["model-a"]
-    assert [state["route"]["model"] for state in service.runtime_states()] == ["model-b"]
+    assert [state["route"]["model"] for state in service.runtime_states()] == [
+        "model-b"
+    ]
 
 
 def test_a_busy_route_is_not_retired_for_capacity(monkeypatch) -> None:
@@ -599,7 +644,9 @@ def test_a_busy_route_is_not_retired_for_capacity(monkeypatch) -> None:
         def close(self) -> None:
             closed.append(self.config.model)
 
-    service = HarnessService(DeepSeekHarnessConfig(model="base"), harness_factory=_Gated)
+    service = HarnessService(
+        DeepSeekHarnessConfig(model="base"), harness_factory=_Gated
+    )
     busy = service.start_run({"instruction": "hold", "llm": {"model": "model-a"}})
     _wait_for(lambda: "model-a" in gates, "the first route to start")
     time.sleep(0.05)
@@ -623,7 +670,9 @@ def test_idle_runtimes_are_retired_only_when_nothing_uses_them(monkeypatch) -> N
         def close(self) -> None:
             closed.append(self.config.model)
 
-    service = HarnessService(DeepSeekHarnessConfig(model="base"), harness_factory=_Closable)
+    service = HarnessService(
+        DeepSeekHarnessConfig(model="base"), harness_factory=_Closable
+    )
     run_id = service.start_run({"instruction": "x", "llm": {"model": "model-a"}})
     _wait_for(lambda: service.run_state(run_id)["status"] == "completed", "run")
 
@@ -656,11 +705,13 @@ def test_a_finished_run_reports_its_outcome_to_the_caller_named_endpoint() -> No
         harness_factory=lambda _config: harness,
         result_callback=_Sink(),
     )
-    service.start_run({
-        "instruction": "do it",
-        "request_id": "req-1",
-        "callback_url": "http://benchmark.invalid/v1/jobs/job-1/backend-result",
-    })
+    service.start_run(
+        {
+            "instruction": "do it",
+            "request_id": "req-1",
+            "callback_url": "http://benchmark.invalid/v1/jobs/job-1/backend-result",
+        }
+    )
     # The fake harness holds the turn open until released, as a real one does.
     _wait_for(lambda: harness.started_gate.is_set(), "the run to reach the harness")
     harness.gate.set()
@@ -681,13 +732,18 @@ def test_result_callback_does_not_repeat_the_full_event_history() -> None:
             delivered.append(payload)
 
     service = HarnessService(
-        DeepSeekHarnessConfig(), harness_factory=lambda _: harness, result_callback=_Sink(),
+        DeepSeekHarnessConfig(),
+        harness_factory=lambda _: harness,
+        result_callback=_Sink(),
     )
     try:
-        run_id = service.start_run({
-            "instruction": "do it", "session_id": "case-small-result",
-            "callback_url": "http://benchmark.invalid/jobs/one/backend-result",
-        })
+        run_id = service.start_run(
+            {
+                "instruction": "do it",
+                "session_id": "case-small-result",
+                "callback_url": "http://benchmark.invalid/jobs/one/backend-result",
+            }
+        )
         harness.gate.set()
         _wait_for(lambda: delivered, "the result callback")
 
@@ -705,7 +761,9 @@ def test_result_callback_does_not_repeat_the_full_event_history() -> None:
         service.close()
 
 
-def test_pending_legacy_result_is_compacted_on_recovery_without_rerunning(tmp_path, monkeypatch) -> None:
+def test_pending_legacy_result_is_compacted_on_recovery_without_rerunning(
+    tmp_path, monkeypatch
+) -> None:
     import json
 
     monkeypatch.setenv("DSH_DELIVERY_MAX_ATTEMPTS", "1")
@@ -718,19 +776,28 @@ def test_pending_legacy_result_is_compacted_on_recovery_without_rerunning(tmp_pa
             raise OSError("unavailable")
 
     config = DeepSeekHarnessConfig(dsh_home=str(tmp_path))
-    service = HarnessService(config, harness_factory=lambda _: harness, result_callback=_Unavailable())
+    service = HarnessService(
+        config, harness_factory=lambda _: harness, result_callback=_Unavailable()
+    )
     try:
-        run_id = service.start_run({
-            "instruction": "once", "request_id": "legacy-result",
-            "callback_url": "http://benchmark.invalid/jobs/one/backend-result",
-        })
-        _wait_for(lambda: service.run_state(run_id)["delivery_state"]["result"] == "failed", "failed result")
+        run_id = service.start_run(
+            {
+                "instruction": "once",
+                "request_id": "legacy-result",
+                "callback_url": "http://benchmark.invalid/jobs/one/backend-result",
+            }
+        )
+        _wait_for(
+            lambda: service.run_state(run_id)["delivery_state"]["result"] == "failed",
+            "failed result",
+        )
     finally:
         service.close()
     path = tmp_path / "evaluation-runs" / run_id / "state.json"
     stored = json.loads(path.read_text())
     stored["result_report"]["result"] = {
-        **stored["result"], "usage": {"input_tokens": 12, "output_tokens": 3},
+        **stored["result"],
+        "usage": {"input_tokens": 12, "output_tokens": 3},
     }
     original = stored["result"]
     path.write_text(json.dumps(stored))
@@ -743,7 +810,9 @@ def test_pending_legacy_result_is_compacted_on_recovery_without_rerunning(tmp_pa
     def refuse_execution(_):
         raise AssertionError("recovery must not execute the task")
 
-    recovered = HarnessService(config, harness_factory=refuse_execution, result_callback=_Sink())
+    recovered = HarnessService(
+        config, harness_factory=refuse_execution, result_callback=_Sink()
+    )
     try:
         _wait_for(lambda: delivered, "recovered result")
         result = delivered[0]["result"]
@@ -777,12 +846,14 @@ def test_each_finished_event_is_reported_while_the_run_is_going() -> None:
         harness_factory=lambda _config: harness,
         event_callback=_Events(),
     )
-    service.start_run({
-        "instruction": "do it",
-        "case_id": "case-7",
-        "event_url": "http://autoeval.invalid/v1/events",
-        "run_user": "eval-user-9",
-    })
+    service.start_run(
+        {
+            "instruction": "do it",
+            "case_id": "case-7",
+            "event_url": "http://autoeval.invalid/v1/events",
+            "run_user": "eval-user-9",
+        }
+    )
     _wait_for(lambda: harness.started_gate.is_set(), "the run to reach the harness")
     harness.gate.set()
     _wait_for(lambda: events, "at least one event to be reported")
@@ -813,14 +884,16 @@ def test_events_are_reported_under_the_evaluation_that_sent_the_case() -> None:
         harness_factory=lambda _config: harness,
         event_callback=_Events(),
     )
-    service.start_run({
-        "instruction": "do it",
-        "case_id": "case-7",
-        "request_id": "job-1",
-        "evaluation_id": "eval-run-9",
-        "event_url": "http://autoeval.invalid/v1/events",
-        "run_user": "eval-user-9",
-    })
+    service.start_run(
+        {
+            "instruction": "do it",
+            "case_id": "case-7",
+            "request_id": "job-1",
+            "evaluation_id": "eval-run-9",
+            "event_url": "http://autoeval.invalid/v1/events",
+            "run_user": "eval-user-9",
+        }
+    )
     _wait_for(lambda: harness.started_gate.is_set(), "the run to reach the harness")
     harness.gate.set()
     _wait_for(lambda: events, "at least one event to be reported")
@@ -855,18 +928,26 @@ def test_a_failed_event_report_does_not_leave_a_gap_the_trace_can_never_fill() -
     harness.notifications = [
         Notification(
             method="session.event",
-            payload={"sessionId": "s", "event": {
-                "type": "turn/start", "seq": n, "time": n, "data": {},
-            }},
+            payload={
+                "sessionId": "s",
+                "event": {
+                    "type": "turn/start",
+                    "seq": n,
+                    "time": n,
+                    "data": {},
+                },
+            },
         )
         for n in (1, 2, 3)
     ]
-    service.start_run({
-        "instruction": "do it",
-        "case_id": "case-8",
-        "evaluation_id": "eval-run-8",
-        "event_url": "http://autoeval.invalid/v1/events",
-    })
+    service.start_run(
+        {
+            "instruction": "do it",
+            "case_id": "case-8",
+            "evaluation_id": "eval-run-8",
+            "event_url": "http://autoeval.invalid/v1/events",
+        }
+    )
     _wait_for(lambda: harness.started_gate.is_set(), "the run to reach the harness")
     harness.gate.set()
     _wait_for(lambda: len(delivered) >= 2, "the surviving events to be delivered")
@@ -896,12 +977,14 @@ def test_the_run_closes_its_trace_once_it_has_ended() -> None:
         harness_factory=lambda _config: harness,
         event_callback=_Events(),
     )
-    service.start_run({
-        "instruction": "do it",
-        "case_id": "case-closing",
-        "evaluation_id": "eval-closing",
-        "event_url": "http://autoeval.invalid/v1/events",
-    })
+    service.start_run(
+        {
+            "instruction": "do it",
+            "case_id": "case-closing",
+            "evaluation_id": "eval-closing",
+            "event_url": "http://autoeval.invalid/v1/events",
+        }
+    )
     _wait_for(lambda: harness.started_gate.is_set(), "the run to reach the harness")
     harness.gate.set()
     _wait_for(lambda: any(e["final"] for e in events), "the closing report to arrive")
@@ -940,12 +1023,14 @@ def test_a_cancelled_run_still_closes_its_trace() -> None:
         harness_factory=lambda _config: harness,
         event_callback=_Events(),
     )
-    service.start_run({
-        "instruction": "do it",
-        "case_id": "case-cancelled",
-        "evaluation_id": "eval-cancelled",
-        "event_url": "http://autoeval.invalid/v1/events",
-    })
+    service.start_run(
+        {
+            "instruction": "do it",
+            "case_id": "case-cancelled",
+            "evaluation_id": "eval-cancelled",
+            "event_url": "http://autoeval.invalid/v1/events",
+        }
+    )
     _wait_for(lambda: harness.started_gate.is_set(), "the run to reach the harness")
     harness.gate.set()
     _wait_for(lambda: events and any(e["final"] for e in events), "the closing report")
@@ -974,14 +1059,19 @@ def test_event_delivery_does_not_block_the_sdk_or_business_result(monkeypatch) -
             completed.append(payload)
 
     service = HarnessService(
-        DeepSeekHarnessConfig(), harness_factory=lambda _: harness,
-        event_callback=_Events(), result_callback=_Results(),
+        DeepSeekHarnessConfig(),
+        harness_factory=lambda _: harness,
+        event_callback=_Events(),
+        result_callback=_Results(),
     )
     try:
-        run_id = service.start_run({
-            "instruction": "do it", "event_url": "http://autoeval.invalid/v1/events",
-            "callback_url": "http://benchmark.invalid/jobs/one/backend-result",
-        })
+        run_id = service.start_run(
+            {
+                "instruction": "do it",
+                "event_url": "http://autoeval.invalid/v1/events",
+                "callback_url": "http://benchmark.invalid/jobs/one/backend-result",
+            }
+        )
         assert entered.wait(timeout=1)
         _wait_for(lambda: completed, "the independent business callback")
         assert service.run_state(run_id)["status"] == "completed"
@@ -993,10 +1083,13 @@ def test_event_delivery_does_not_block_the_sdk_or_business_result(monkeypatch) -
 def test_event_source_sequence_is_distinct_from_delivery_sequence() -> None:
     harness = _FakeHarness()
     harness.notifications = [
-        Notification(method="session.event", payload={
-            "sessionId": source,
-            "event": {"type": "turn/start", "seq": seq, "time": seq, "data": {}},
-        })
+        Notification(
+            method="session.event",
+            payload={
+                "sessionId": source,
+                "event": {"type": "turn/start", "seq": seq, "time": seq, "data": {}},
+            },
+        )
         for source, seq in (("root", 12), ("child", 1), ("root", 13))
     ]
     harness.gate.set()
@@ -1007,14 +1100,20 @@ def test_event_source_sequence_is_distinct_from_delivery_sequence() -> None:
             reports.append(payload)
 
     service = HarnessService(
-        DeepSeekHarnessConfig(), harness_factory=lambda _: harness, event_callback=_Events(),
+        DeepSeekHarnessConfig(),
+        harness_factory=lambda _: harness,
+        event_callback=_Events(),
     )
     try:
-        service.start_run({"instruction": "do it", "event_url": "http://a.invalid/v1/events"})
+        service.start_run(
+            {"instruction": "do it", "event_url": "http://a.invalid/v1/events"}
+        )
         _wait_for(lambda: any(p["final"] for p in reports), "the final report")
         native = [p for p in reports if not p["final"]]
         assert [(p["source_session_id"], p["seq"]) for p in native] == [
-            ("root", 12), ("child", 1), ("root", 13),
+            ("root", 12),
+            ("child", 1),
+            ("root", 13),
         ]
         assert [p["delivery_seq"] for p in reports] == [1, 2, 3, 4]
         assert [p["event"]["seq"] for p in native] == [12, 1, 13]
@@ -1037,10 +1136,14 @@ def test_failed_final_report_is_retried_without_a_later_event(monkeypatch) -> No
             delivered.append(payload)
 
     service = HarnessService(
-        DeepSeekHarnessConfig(), harness_factory=lambda _: harness, event_callback=_Events(),
+        DeepSeekHarnessConfig(),
+        harness_factory=lambda _: harness,
+        event_callback=_Events(),
     )
     try:
-        run_id = service.start_run({"instruction": "do it", "event_url": "http://a.invalid/v1/events"})
+        run_id = service.start_run(
+            {"instruction": "do it", "event_url": "http://a.invalid/v1/events"}
+        )
         _wait_for(lambda: any(p["final"] for p in delivered), "the retried final event")
         final_attempts = [p for p in attempts if p["final"]]
         assert len(final_attempts) == 2
@@ -1051,7 +1154,9 @@ def test_failed_final_report_is_retried_without_a_later_event(monkeypatch) -> No
         service.close()
 
 
-def test_delivery_recovers_after_the_initial_attempt_budget_is_exhausted(monkeypatch) -> None:
+def test_delivery_recovers_after_the_initial_attempt_budget_is_exhausted(
+    monkeypatch,
+) -> None:
     monkeypatch.setenv("DSH_DELIVERY_MAX_ATTEMPTS", "1")
     monkeypatch.setenv("DSH_DELIVERY_RETRY_DELAY_SEC", "0.001")
     harness = _FakeHarness()
@@ -1071,16 +1176,27 @@ def test_delivery_recovers_after_the_initial_attempt_budget_is_exhausted(monkeyp
     events = _FlakySink()
     results = _FlakySink()
     service = HarnessService(
-        DeepSeekHarnessConfig(), harness_factory=lambda _: harness,
-        event_callback=events, result_callback=results,
+        DeepSeekHarnessConfig(),
+        harness_factory=lambda _: harness,
+        event_callback=events,
+        result_callback=results,
     )
     try:
-        run_id = service.start_run({
-            "instruction": "do it", "event_url": "http://a.invalid/v1/events",
-            "callback_url": "http://benchmark.invalid/jobs/one/backend-result",
-        })
-        _wait_for(lambda: any(p["final"] for p in events.delivered), "final delivery after backoff", timeout=3)
-        _wait_for(lambda: bool(results.delivered), "result delivery after backoff", timeout=3)
+        run_id = service.start_run(
+            {
+                "instruction": "do it",
+                "event_url": "http://a.invalid/v1/events",
+                "callback_url": "http://benchmark.invalid/jobs/one/backend-result",
+            }
+        )
+        _wait_for(
+            lambda: any(p["final"] for p in events.delivered),
+            "final delivery after backoff",
+            timeout=3,
+        )
+        _wait_for(
+            lambda: bool(results.delivered), "result delivery after backoff", timeout=3
+        )
         state = service.run_state(run_id)
         assert state["delivery_state"]["events"] == "delivered"
         assert state["delivery_state"]["result"] == "delivered"
@@ -1110,17 +1226,30 @@ def test_delivery_recovery_is_bounded_and_preserves_the_outbox(monkeypatch) -> N
     events = _Unavailable()
     results = _Unavailable()
     service = HarnessService(
-        DeepSeekHarnessConfig(), harness_factory=lambda _: harness,
-        event_callback=events, result_callback=results,
+        DeepSeekHarnessConfig(),
+        harness_factory=lambda _: harness,
+        event_callback=events,
+        result_callback=results,
     )
     try:
-        run_id = service.start_run({
-            "instruction": "do it", "event_url": "http://a.invalid/v1/events",
-            "callback_url": "http://benchmark.invalid/jobs/one/backend-result",
-        })
+        run_id = service.start_run(
+            {
+                "instruction": "do it",
+                "event_url": "http://a.invalid/v1/events",
+                "callback_url": "http://benchmark.invalid/jobs/one/backend-result",
+            }
+        )
         run = service._runs[run_id]
-        _wait_for(lambda: run.event_sender is None, "bounded event recovery to stop", timeout=3)
-        _wait_for(lambda: run.result_sender is None, "bounded result recovery to stop", timeout=3)
+        _wait_for(
+            lambda: run.event_sender is None,
+            "bounded event recovery to stop",
+            timeout=3,
+        )
+        _wait_for(
+            lambda: run.result_sender is None,
+            "bounded result recovery to stop",
+            timeout=3,
+        )
         assert len(events.attempts) == 2
         assert len(results.attempts) == 2
         state = service.run_state(run_id)
@@ -1132,7 +1261,9 @@ def test_delivery_recovery_is_bounded_and_preserves_the_outbox(monkeypatch) -> N
         service.close()
 
 
-def test_outbox_survives_service_restart_without_rerunning_the_task(tmp_path, monkeypatch) -> None:
+def test_outbox_survives_service_restart_without_rerunning_the_task(
+    tmp_path, monkeypatch
+) -> None:
     import json
 
     monkeypatch.setenv("DSH_DELIVERY_MAX_ATTEMPTS", "1")
@@ -1144,13 +1275,25 @@ def test_outbox_survives_service_restart_without_rerunning_the_task(tmp_path, mo
             raise OSError("not available")
 
     config = DeepSeekHarnessConfig(dsh_home=str(tmp_path))
-    service = HarnessService(config, harness_factory=lambda _: harness, event_callback=_Unavailable())
-    run_id = service.start_run({
-        "instruction": "do not repeat", "request_id": "restart-1",
-        "event_url": "http://a.invalid/v1/events", "llm": {"api_key": "secret-test-value"},
-    })
-    _wait_for(lambda: service.run_state(run_id).get("delivery_state", {}).get("events") == "failed", "failed delivery")
-    _wait_for(lambda: service.run_state(run_id)["status"] == "completed", "the original run")
+    service = HarnessService(
+        config, harness_factory=lambda _: harness, event_callback=_Unavailable()
+    )
+    run_id = service.start_run(
+        {
+            "instruction": "do not repeat",
+            "request_id": "restart-1",
+            "event_url": "http://a.invalid/v1/events",
+            "llm": {"api_key": "secret-test-value"},
+        }
+    )
+    _wait_for(
+        lambda: service.run_state(run_id).get("delivery_state", {}).get("events")
+        == "failed",
+        "failed delivery",
+    )
+    _wait_for(
+        lambda: service.run_state(run_id)["status"] == "completed", "the original run"
+    )
     service.close()
     record = tmp_path / "evaluation-runs" / run_id / "state.json"
     assert record.exists()
@@ -1168,11 +1311,16 @@ def test_outbox_survives_service_restart_without_rerunning_the_task(tmp_path, mo
     def refuse_execution(_):
         raise AssertionError("recovery must not start a harness")
 
-    recovered = HarnessService(config, harness_factory=refuse_execution, event_callback=_Events())
+    recovered = HarnessService(
+        config, harness_factory=refuse_execution, event_callback=_Events()
+    )
     try:
-        _wait_for(lambda: any(p["final"] for p in delivered), "recovered final delivery")
         _wait_for(
-            lambda: recovered.run_state(run_id)["delivery_state"]["pending_events"] == 0,
+            lambda: any(p["final"] for p in delivered), "recovered final delivery"
+        )
+        _wait_for(
+            lambda: recovered.run_state(run_id)["delivery_state"]["pending_events"]
+            == 0,
             "the recovered outbox to drain",
         )
         assert recovered.run_state(run_id)["status"] == "completed"
@@ -1189,7 +1337,14 @@ def test_cancelled_reports_wait_for_confirmation_and_worker_exit() -> None:
     reports: list[dict[str, Any]] = []
 
     class _Harness(_FakeHarness):
-        def run(self, instruction, *, session_id=None, before_deliver=None, on_notification=None):
+        def run(
+            self,
+            instruction,
+            *,
+            session_id=None,
+            before_deliver=None,
+            on_notification=None,
+        ):
             entered.set()
             release_worker.wait(timeout=3)
             return _FakeResult("late success", "completed", session_id or "", [], [])
@@ -1204,13 +1359,18 @@ def test_cancelled_reports_wait_for_confirmation_and_worker_exit() -> None:
 
     harness = _Harness()
     service = HarnessService(
-        DeepSeekHarnessConfig(), harness_factory=lambda _: harness,
-        event_callback=_Sink(), result_callback=_Sink(),
+        DeepSeekHarnessConfig(),
+        harness_factory=lambda _: harness,
+        event_callback=_Sink(),
+        result_callback=_Sink(),
     )
-    run_id = service.start_run({
-        "instruction": "do it", "event_url": "http://a.invalid/v1/events",
-        "callback_url": "http://b.invalid/jobs/one/backend-result",
-    })
+    run_id = service.start_run(
+        {
+            "instruction": "do it",
+            "event_url": "http://a.invalid/v1/events",
+            "callback_url": "http://b.invalid/jobs/one/backend-result",
+        }
+    )
     assert entered.wait(timeout=1)
     cancel = threading.Thread(target=lambda: service.cancel(run_id))
     cancel.start()
@@ -1287,7 +1447,13 @@ def http_callbacks():
     class Handler(BaseHTTPRequestHandler):
         def do_POST(self):
             body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
-            received.append({"path": self.path, "authorization": self.headers.get("Authorization"), "body": body})
+            received.append(
+                {
+                    "path": self.path,
+                    "authorization": self.headers.get("Authorization"),
+                    "body": body,
+                }
+            )
             self.send_response(302 if self.path == "/redirect" else 200)
             if self.path == "/redirect":
                 self.send_header("Location", "/unapproved")
@@ -1309,7 +1475,9 @@ def http_callbacks():
         thread.join(timeout=2)
 
 
-def test_real_http_v2_acceptance_authentication_and_independent_reports(http_callbacks, monkeypatch):
+def test_real_http_v2_acceptance_authentication_and_independent_reports(
+    http_callbacks, monkeypatch
+):
     import json
     import urllib.error
     import urllib.request
@@ -1323,8 +1491,10 @@ def test_real_http_v2_acceptance_authentication_and_independent_reports(http_cal
     monkeypatch.setenv("PIPELINE_API_TOKEN", "result-token")
     harness = _FakeHarness()
     service = HarnessService(
-        DeepSeekHarnessConfig(), harness_factory=lambda _: harness,
-        event_callback=http_sink("event"), result_callback=http_sink("result"),
+        DeepSeekHarnessConfig(),
+        harness_factory=lambda _: harness,
+        event_callback=http_sink("event"),
+        result_callback=http_sink("result"),
         api_token="service-token",
     )
     server = ThreadingHTTPServer(("127.0.0.1", 0), _handler(service))
@@ -1334,8 +1504,12 @@ def test_real_http_v2_acceptance_authentication_and_independent_reports(http_cal
     def post(body, token="service-token"):
         request = urllib.request.Request(
             f"http://127.0.0.1:{server.server_port}/v1/runs",
-            data=json.dumps(body).encode(), method="POST",
-            headers={"Content-Type": "application/json", "Authorization": f"Bearer {token}"},
+            data=json.dumps(body).encode(),
+            method="POST",
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {token}",
+            },
         )
         try:
             with urllib.request.urlopen(request, timeout=2) as response:
@@ -1344,8 +1518,11 @@ def test_real_http_v2_acceptance_authentication_and_independent_reports(http_cal
             return error.code, json.load(error)
 
     task = {
-        "instruction": "one accepted execution", "request_id": "http-once",
-        "evaluation_id": "e", "case_id": "c", "session_id": "native-session",
+        "instruction": "one accepted execution",
+        "request_id": "http-once",
+        "evaluation_id": "e",
+        "case_id": "c",
+        "session_id": "native-session",
         "event_url": endpoint + "/v1/events",
         "callback_url": endpoint + "/jobs/one/backend-result",
     }
@@ -1360,10 +1537,23 @@ def test_real_http_v2_acceptance_authentication_and_independent_reports(http_cal
         status, duplicate = post({"protocol_version": "2.0", "task": task})
         assert status == 202
         assert duplicate["run_id"] == accepted["run_id"]
-        assert post({"protocol_version": "2.0", "task": {**task, "instruction": "different"}})[0] == 409
+        assert (
+            post(
+                {
+                    "protocol_version": "2.0",
+                    "task": {**task, "instruction": "different"},
+                }
+            )[0]
+            == 409
+        )
         harness.gate.set()
-        _wait_for(lambda: any(p["body"].get("final") for p in received), "real final callback")
-        _wait_for(lambda: any(p["path"].endswith("backend-result") for p in received), "real result callback")
+        _wait_for(
+            lambda: any(p["body"].get("final") for p in received), "real final callback"
+        )
+        _wait_for(
+            lambda: any(p["path"].endswith("backend-result") for p in received),
+            "real result callback",
+        )
         assert len(harness.prompts) == 1
         events = [p for p in received if p["path"] == "/v1/events"]
         result = next(p for p in received if p["path"].endswith("backend-result"))
@@ -1393,7 +1583,9 @@ def test_callback_allowlist_and_redirect_denial(http_callbacks, monkeypatch):
         sink.post(endpoint + "/redirect", {}, timeout=1)
     assert [p["path"] for p in received] == ["/redirect"]
     with pytest.raises(ValueError, match="credentials"):
-        sink.validate_target(endpoint.replace("http://", "http://user:password@") + "/redirect")
+        sink.validate_target(
+            endpoint.replace("http://", "http://user:password@") + "/redirect"
+        )
 
 
 def test_a_task_selects_the_isolated_tools_and_keeps_its_working_directory() -> None:
@@ -1401,11 +1593,18 @@ def test_a_task_selects_the_isolated_tools_and_keeps_its_working_directory() -> 
     harness.gate.set()
     service = _service(harness)
     try:
-        run_id = service.start_run({
-            "instruction": "read the task", "request_id": "preset-run",
-            "cwd": "/app", "agent_preset": "benchmark-task",
-        })
-        _wait_for(lambda: service.run_state(run_id)["status"] == "completed", "the task to finish")
+        run_id = service.start_run(
+            {
+                "instruction": "read the task",
+                "request_id": "preset-run",
+                "cwd": "/app",
+                "agent_preset": "benchmark-task",
+            }
+        )
+        _wait_for(
+            lambda: service.run_state(run_id)["status"] == "completed",
+            "the task to finish",
+        )
         assert harness.requested_cwd == "/app"
         assert harness.requested_preset == "benchmark-task"
     finally:
@@ -1421,14 +1620,39 @@ def test_child_events_keep_the_parent_from_the_native_lifecycle_notice() -> None
 
     harness = _FakeHarness()
     harness.notifications = [
-        Notification(method="subagent.started", payload={"parentSessionId": "root-native", "childSessionId": "child-native"}),
-        Notification(method="session.event", payload={"sessionId": "child-native", "event": {"seq": 1, "type": "turn/start", "time": 10, "data": {}}}),
+        Notification(
+            method="subagent.started",
+            payload={
+                "parentSessionId": "root-native",
+                "childSessionId": "child-native",
+            },
+        ),
+        Notification(
+            method="session.event",
+            payload={
+                "sessionId": "child-native",
+                "event": {"seq": 1, "type": "turn/start", "time": 10, "data": {}},
+            },
+        ),
     ]
     harness.gate.set()
-    service = HarnessService(DeepSeekHarnessConfig(), harness_factory=lambda _config: harness, event_callback=EventReceiver())
+    service = HarnessService(
+        DeepSeekHarnessConfig(),
+        harness_factory=lambda _config: harness,
+        event_callback=EventReceiver(),
+    )
     try:
-        service.start_run({"instruction": "delegate work", "session_id": "root-native", "event_url": "http://events.invalid/v1/events"})
-        _wait_for(lambda: any(e["source_session_id"] == "child-native" for e in events), "the child report")
+        service.start_run(
+            {
+                "instruction": "delegate work",
+                "session_id": "root-native",
+                "event_url": "http://events.invalid/v1/events",
+            }
+        )
+        _wait_for(
+            lambda: any(e["source_session_id"] == "child-native" for e in events),
+            "the child report",
+        )
         child = next(e for e in events if e["source_session_id"] == "child-native")
         assert child["parent_session_id"] == "root-native"
         assert child["root_session_id"] == "root-native"
@@ -1445,7 +1669,9 @@ class _ViewClient:
         self.calls: list[tuple[str, int]] = []
         self.threads: list[str] = []
 
-    def session_request_view(self, session_id: str, dispatch_seq: int) -> dict[str, Any]:
+    def session_request_view(
+        self, session_id: str, dispatch_seq: int
+    ) -> dict[str, Any]:
         self.calls.append((session_id, dispatch_seq))
         self.threads.append(threading.current_thread().name)
         if self.fail_times > 0:
@@ -1476,30 +1702,77 @@ _NATIVE_VIEW: dict[str, Any] = {
 
 def _dispatch_notifications() -> list[Notification]:
     return [
-        Notification(method="session.event", payload={"sessionId": "root-native", "event": {
-            "type": "llm/dispatch", "seq": 9, "time": 1,
-            "data": {"sessionId": "root-native", "prefixEnd": 8, "turn": 1, "step": 1},
-        }}),
-        Notification(method="session.event", payload={"sessionId": "root-native", "event": {
-            "type": "assistant/message", "seq": 10, "time": 2, "data": {"turn": 1, "step": 1},
-        }}),
-        Notification(method="session.event", payload={"sessionId": "root-native", "event": {
-            "type": "llm/dispatch-settled", "seq": 11, "time": 3,
-            "data": {"sessionId": "root-native", "dispatchSeq": 9, "settlementSeq": 10},
-        }}),
-        Notification(method="session.event", payload={"sessionId": "root-native", "event": {
-            "type": "step/start", "seq": 12, "time": 4, "data": {"turn": 1, "step": 1},
-        }}),
+        Notification(
+            method="session.event",
+            payload={
+                "sessionId": "root-native",
+                "event": {
+                    "type": "llm/dispatch",
+                    "seq": 9,
+                    "time": 1,
+                    "data": {
+                        "sessionId": "root-native",
+                        "prefixEnd": 8,
+                        "turn": 1,
+                        "step": 1,
+                    },
+                },
+            },
+        ),
+        Notification(
+            method="session.event",
+            payload={
+                "sessionId": "root-native",
+                "event": {
+                    "type": "assistant/message",
+                    "seq": 10,
+                    "time": 2,
+                    "data": {"turn": 1, "step": 1},
+                },
+            },
+        ),
+        Notification(
+            method="session.event",
+            payload={
+                "sessionId": "root-native",
+                "event": {
+                    "type": "llm/dispatch-settled",
+                    "seq": 11,
+                    "time": 3,
+                    "data": {
+                        "sessionId": "root-native",
+                        "dispatchSeq": 9,
+                        "settlementSeq": 10,
+                    },
+                },
+            },
+        ),
+        Notification(
+            method="session.event",
+            payload={
+                "sessionId": "root-native",
+                "event": {
+                    "type": "step/start",
+                    "seq": 12,
+                    "time": 4,
+                    "data": {"turn": 1, "step": 1},
+                },
+            },
+        ),
     ]
 
 
-def _collecting_service(harness: _FakeHarness, events: list[dict[str, Any]]) -> HarnessService:
+def _collecting_service(
+    harness: _FakeHarness, events: list[dict[str, Any]]
+) -> HarnessService:
     class _Events:
         def post(self, url: str, payload: dict[str, Any], timeout: float) -> None:
             events.append(payload)
 
     return HarnessService(
-        DeepSeekHarnessConfig(), harness_factory=lambda _config: harness, event_callback=_Events(),
+        DeepSeekHarnessConfig(),
+        harness_factory=lambda _config: harness,
+        event_callback=_Events(),
     )
 
 
@@ -1518,17 +1791,23 @@ def test_dispatch_events_carry_the_native_view_fetched_on_the_sender_thread() ->
     events: list[dict[str, Any]] = []
     service = _collecting_service(harness, events)
     try:
-        service.start_run({
-            "instruction": "do it", "session_id": "root-native",
-            "event_url": "http://events.invalid/v1/events",
-        })
+        service.start_run(
+            {
+                "instruction": "do it",
+                "session_id": "root-native",
+                "event_url": "http://events.invalid/v1/events",
+            }
+        )
         _wait_for(lambda: len(events) >= 4, "the four source events")
         by_type = {e["event"]["type"]: e for e in events if not e.get("final")}
         dispatch = by_type["llm/dispatch"]
         settled = by_type["llm/dispatch-settled"]
         assert dispatch["event"]["seq"] == 9
         assert dispatch["event"] == _dispatch_notifications()[0].payload["event"]
-        assert dispatch["request_view"]["messages"][0]["content"][0]["text"] == "hello view"
+        assert (
+            dispatch["request_view"]["messages"][0]["content"][0]["text"]
+            == "hello view"
+        )
         assert dispatch["request_view"]["prefixEnd"] == 8
         assert settled["request_view"]["dispatchSeq"] == 9
         assert settled["request_view"] == dispatch["request_view"]
@@ -1540,7 +1819,9 @@ def test_dispatch_events_carry_the_native_view_fetched_on_the_sender_thread() ->
         service.close()
 
 
-def test_a_dispatch_event_without_a_view_is_reported_unchanged_with_the_gap_named() -> None:
+def test_a_dispatch_event_without_a_view_is_reported_unchanged_with_the_gap_named() -> (
+    None
+):
     harness = _FakeHarness()
     harness.client = _ViewClient(_NATIVE_VIEW, fail_times=99)
     harness.notifications = _dispatch_notifications()[:1]
@@ -1548,11 +1829,17 @@ def test_a_dispatch_event_without_a_view_is_reported_unchanged_with_the_gap_name
     events: list[dict[str, Any]] = []
     service = _collecting_service(harness, events)
     try:
-        run_id = service.start_run({
-            "instruction": "do it", "session_id": "root-native",
-            "event_url": "http://events.invalid/v1/events",
-        })
-        _wait_for(lambda: any(e["event"]["type"] == "llm/dispatch" for e in events), "the source event")
+        run_id = service.start_run(
+            {
+                "instruction": "do it",
+                "session_id": "root-native",
+                "event_url": "http://events.invalid/v1/events",
+            }
+        )
+        _wait_for(
+            lambda: any(e["event"]["type"] == "llm/dispatch" for e in events),
+            "the source event",
+        )
         report = next(e for e in events if e["event"]["type"] == "llm/dispatch")
         assert "request_view" not in report
         assert report["event"] == _dispatch_notifications()[0].payload["event"]
@@ -1580,13 +1867,18 @@ def test_a_redelivered_dispatch_report_repeats_the_same_content(monkeypatch) -> 
                 raise OSError("lost event request")
 
     service = HarnessService(
-        DeepSeekHarnessConfig(), harness_factory=lambda _config: harness, event_callback=_Flaky(),
+        DeepSeekHarnessConfig(),
+        harness_factory=lambda _config: harness,
+        event_callback=_Flaky(),
     )
     try:
-        service.start_run({
-            "instruction": "do it", "session_id": "root-native",
-            "event_url": "http://events.invalid/v1/events",
-        })
+        service.start_run(
+            {
+                "instruction": "do it",
+                "session_id": "root-native",
+                "event_url": "http://events.invalid/v1/events",
+            }
+        )
         _wait_for(lambda: len(posted) >= 2, "the retried report")
         assert posted[0] == posted[1]
         assert "request_view" not in posted[0]
@@ -1607,7 +1899,10 @@ def test_the_report_carries_the_runtime_view_unchanged() -> None:
         **_NATIVE_VIEW,
         "turn": 3,
         "step": 2,
-        "header": {"config": {"provider": "p", "model": "m"}, "tools": [{"name": "read"}]},
+        "header": {
+            "config": {"provider": "p", "model": "m"},
+            "tools": [{"name": "read"}],
+        },
         "tools": [{"name": "read"}],
         "projectionTypes": ["image/offload"],
     }
@@ -1618,10 +1913,13 @@ def test_the_report_carries_the_runtime_view_unchanged() -> None:
     events: list[dict[str, Any]] = []
     service = _collecting_service(harness, events)
     try:
-        service.start_run({
-            "instruction": "do it", "session_id": "root-native",
-            "event_url": "http://events.invalid/v1/events",
-        })
+        service.start_run(
+            {
+                "instruction": "do it",
+                "session_id": "root-native",
+                "event_url": "http://events.invalid/v1/events",
+            }
+        )
         _wait_for(lambda: len(events) >= 4, "the four source events")
         dispatch = next(e for e in events if e["event"]["type"] == "llm/dispatch")
         assert dispatch["request_view"] == runtime_view
@@ -1630,7 +1928,9 @@ def test_the_report_carries_the_runtime_view_unchanged() -> None:
         service.close()
 
 
-def test_a_recovered_report_repeats_the_view_it_was_queued_with(tmp_path, monkeypatch) -> None:
+def test_a_recovered_report_repeats_the_view_it_was_queued_with(
+    tmp_path, monkeypatch
+) -> None:
     """An outbox entry keeps what its first attempt carried, not a refetch.
 
     The runtime may answer a later fetch differently (a settlement may have
@@ -1650,12 +1950,19 @@ def test_a_recovered_report_repeats_the_view_it_was_queued_with(tmp_path, monkey
             raise OSError("not available")
 
     config = DeepSeekHarnessConfig(dsh_home=str(tmp_path))
-    service = HarnessService(config, harness_factory=lambda _: harness, event_callback=_Unavailable())
-    run_id = service.start_run({
-        "instruction": "do not refetch", "session_id": "root-native",
-        "event_url": "http://a.invalid/v1/events",
-    })
-    _wait_for(lambda: service.run_state(run_id)["status"] == "completed", "the original run")
+    service = HarnessService(
+        config, harness_factory=lambda _: harness, event_callback=_Unavailable()
+    )
+    run_id = service.start_run(
+        {
+            "instruction": "do not refetch",
+            "session_id": "root-native",
+            "event_url": "http://a.invalid/v1/events",
+        }
+    )
+    _wait_for(
+        lambda: service.run_state(run_id)["status"] == "completed", "the original run"
+    )
     _wait_for(
         lambda: service.run_state(run_id)["delivery_state"]["events"] == "failed",
         "the failed delivery",
@@ -1672,7 +1979,9 @@ def test_a_recovered_report_repeats_the_view_it_was_queued_with(tmp_path, monkey
     def refuse_execution(_):
         raise AssertionError("recovery must not start a harness")
 
-    recovered = HarnessService(config, harness_factory=refuse_execution, event_callback=_Events())
+    recovered = HarnessService(
+        config, harness_factory=refuse_execution, event_callback=_Events()
+    )
     try:
         _wait_for(
             lambda: any(e["event"]["type"] == "llm/dispatch" for e in delivered),
@@ -1687,7 +1996,9 @@ def test_a_recovered_report_repeats_the_view_it_was_queued_with(tmp_path, monkey
         recovered.close()
 
 
-def test_a_none_view_decision_survives_restart_and_is_not_refetched(tmp_path, monkeypatch) -> None:
+def test_a_none_view_decision_survives_restart_and_is_not_refetched(
+    tmp_path, monkeypatch
+) -> None:
     """A recorded gap is a decision, not a cache miss to answer again later.
 
     The first attempt could not produce a view, so the report carries none and
@@ -1710,12 +2021,19 @@ def test_a_none_view_decision_survives_restart_and_is_not_refetched(tmp_path, mo
             raise OSError("not available")
 
     config = DeepSeekHarnessConfig(dsh_home=str(tmp_path))
-    service = HarnessService(config, harness_factory=lambda _: harness, event_callback=_Unavailable())
-    run_id = service.start_run({
-        "instruction": "keep the missing decision", "session_id": "root-native",
-        "event_url": "http://a.invalid/v1/events",
-    })
-    _wait_for(lambda: service.run_state(run_id)["status"] == "completed", "the original run")
+    service = HarnessService(
+        config, harness_factory=lambda _: harness, event_callback=_Unavailable()
+    )
+    run_id = service.start_run(
+        {
+            "instruction": "keep the missing decision",
+            "session_id": "root-native",
+            "event_url": "http://a.invalid/v1/events",
+        }
+    )
+    _wait_for(
+        lambda: service.run_state(run_id)["status"] == "completed", "the original run"
+    )
     _wait_for(
         lambda: service.run_state(run_id)["delivery_state"]["events"] == "failed",
         "the failed delivery",
@@ -1723,7 +2041,9 @@ def test_a_none_view_decision_survives_restart_and_is_not_refetched(tmp_path, mo
     assert harness.client.calls == [("root-native", 9)]
     service.close()
 
-    record = json.loads((tmp_path / "evaluation-runs" / run_id / "state.json").read_text())
+    record = json.loads(
+        (tmp_path / "evaluation-runs" / run_id / "state.json").read_text()
+    )
     assert record["request_views"] == [
         {"source_session_id": "root-native", "dispatch_seq": 9, "view": None},
     ]
@@ -1740,7 +2060,9 @@ def test_a_none_view_decision_survives_restart_and_is_not_refetched(tmp_path, mo
     def refuse_execution(_):
         raise AssertionError("recovery must not start a harness")
 
-    recovered = HarnessService(config, harness_factory=refuse_execution, event_callback=_Events())
+    recovered = HarnessService(
+        config, harness_factory=refuse_execution, event_callback=_Events()
+    )
     try:
         run = recovered._runs[run_id]
         assert run.request_views == {("root-native", 9): None}
@@ -1769,8 +2091,13 @@ def test_an_error_turn_is_published_as_failed_with_its_evidence_kept() -> None:
     something the status change may discard.
     """
     failure_event = {
-        "type": "turn/end", "seq": 3, "time": 3,
-        "data": {"turn": 1, "reason": {"kind": "error", "error": {"code": "AUTH", "status": 401}}},
+        "type": "turn/end",
+        "seq": 3,
+        "time": 3,
+        "data": {
+            "turn": 1,
+            "reason": {"kind": "error", "error": {"code": "AUTH", "status": 401}},
+        },
     }
     harness = _FakeHarness()
     harness.finish_reason = "error"
@@ -1786,16 +2113,24 @@ def test_an_error_turn_is_published_as_failed_with_its_evidence_kept() -> None:
             reports.append(payload)
 
     service = HarnessService(
-        DeepSeekHarnessConfig(), harness_factory=lambda _: harness,
-        event_callback=_Sink(), result_callback=_Sink(),
+        DeepSeekHarnessConfig(),
+        harness_factory=lambda _: harness,
+        event_callback=_Sink(),
+        result_callback=_Sink(),
     )
     try:
-        run_id = service.start_run({
-            "instruction": "fail with a reason", "session_id": "error-turn",
-            "event_url": "http://a.invalid/v1/events",
-            "callback_url": "http://benchmark.invalid/jobs/one/backend-result",
-        })
-        _wait_for(lambda: service.run_state(run_id)["status"] != "running", "the run to settle")
+        run_id = service.start_run(
+            {
+                "instruction": "fail with a reason",
+                "session_id": "error-turn",
+                "event_url": "http://a.invalid/v1/events",
+                "callback_url": "http://benchmark.invalid/jobs/one/backend-result",
+            }
+        )
+        _wait_for(
+            lambda: service.run_state(run_id)["status"] != "running",
+            "the run to settle",
+        )
         state = service.run_state(run_id)
         assert state["status"] == "failed"
         assert "error" in state["error"]
@@ -1825,7 +2160,10 @@ def test_a_max_tokens_turn_follows_the_deployment_switch(monkeypatch) -> None:
     environment with the runtime it starts. The finish reason stays visible in
     both outcomes, so a capped answer is never silently rewritten as complete.
     """
-    def run_once(finish_reason: str, switch: str | None) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+
+    def run_once(
+        finish_reason: str, switch: str | None
+    ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
         if switch is None:
             monkeypatch.delenv("DSH_MAX_TOKENS_AS_SUCCESS", raising=False)
         else:
@@ -1840,14 +2178,22 @@ def test_a_max_tokens_turn_follows_the_deployment_switch(monkeypatch) -> None:
                 reports.append(payload)
 
         service = HarnessService(
-            DeepSeekHarnessConfig(), harness_factory=lambda _: harness, result_callback=_Sink(),
+            DeepSeekHarnessConfig(),
+            harness_factory=lambda _: harness,
+            result_callback=_Sink(),
         )
         try:
-            run_id = service.start_run({
-                "instruction": "hit the ceiling", "session_id": "capped",
-                "callback_url": "http://benchmark.invalid/jobs/one/backend-result",
-            })
-            _wait_for(lambda: service.run_state(run_id)["status"] != "running", "the run to settle")
+            run_id = service.start_run(
+                {
+                    "instruction": "hit the ceiling",
+                    "session_id": "capped",
+                    "callback_url": "http://benchmark.invalid/jobs/one/backend-result",
+                }
+            )
+            _wait_for(
+                lambda: service.run_state(run_id)["status"] != "running",
+                "the run to settle",
+            )
             return service.run_state(run_id), reports
         finally:
             service.close()
@@ -1874,8 +2220,13 @@ def test_a_return_without_a_turn_end_is_not_published_as_completed() -> None:
     harness.gate.set()
     service = _service(harness)
     try:
-        run_id = service.start_run({"instruction": "no turn end", "session_id": "silent"})
-        _wait_for(lambda: service.run_state(run_id)["status"] != "running", "the run to settle")
+        run_id = service.start_run(
+            {"instruction": "no turn end", "session_id": "silent"}
+        )
+        _wait_for(
+            lambda: service.run_state(run_id)["status"] != "running",
+            "the run to settle",
+        )
         state = service.run_state(run_id)
         assert state["status"] == "failed"
         assert "turn ended with None" in state["error"]
@@ -1884,7 +2235,9 @@ def test_a_return_without_a_turn_end_is_not_published_as_completed() -> None:
         service.close()
 
 
-def test_a_legacy_succeeded_state_with_an_error_finish_is_corrected_on_recovery(tmp_path) -> None:
+def test_a_legacy_succeeded_state_with_an_error_finish_is_corrected_on_recovery(
+    tmp_path,
+) -> None:
     """A state written before the outcome followed the finish reason is repaired.
 
     The recorded run 77c40199… said ``terminal_status=succeeded`` while its
@@ -1897,27 +2250,56 @@ def test_a_legacy_succeeded_state_with_an_error_finish_is_corrected_on_recovery(
     directory = home / "evaluation-runs" / "legacy-error-run"
     directory.mkdir(parents=True)
     failure = {
-        "type": "turn/end", "seq": 3, "time": 3,
-        "data": {"turn": 1, "reason": {"kind": "error", "error": {"code": "AUTH", "status": 401}}},
-    }
-    (directory / "state.json").write_text(json.dumps({
-        "protocol_version": "2.0", "run_id": "legacy-error-run",
-        "task_id": "case", "session_id": "legacy-session", "instruction": "old task",
-        "callback_url": "http://b.invalid/jobs/one/backend-result",
-        "event_url": "http://a.invalid/v1/events",
-        "request_id": "", "request_digest": "",
-        "evaluation_id": "eval", "case_id": "case", "run_user": "", "cwd": "",
-        "agent_preset": "", "model": "m", "benchmark": "b", "question_type": "unknown",
-        "dataset_version": "", "dataset_sha256": "",
-        "reported": 2, "undelivered": [], "reports_closed": True,
-        "event_delivery": "delivered", "result_delivery": "delivered",
-        "result_report": None,
-        "result": {
-            "final_response": "", "finish_reason": "error", "session_id": "legacy-session",
-            "events": [failure], "notifications": [],
+        "type": "turn/end",
+        "seq": 3,
+        "time": 3,
+        "data": {
+            "turn": 1,
+            "reason": {"kind": "error", "error": {"code": "AUTH", "status": 401}},
         },
-        "error": None, "cancel_state": "none", "terminal_status": "succeeded", "done": True,
-    }))
+    }
+    (directory / "state.json").write_text(
+        json.dumps(
+            {
+                "protocol_version": "2.0",
+                "run_id": "legacy-error-run",
+                "task_id": "case",
+                "session_id": "legacy-session",
+                "instruction": "old task",
+                "callback_url": "http://b.invalid/jobs/one/backend-result",
+                "event_url": "http://a.invalid/v1/events",
+                "request_id": "",
+                "request_digest": "",
+                "evaluation_id": "eval",
+                "case_id": "case",
+                "run_user": "",
+                "cwd": "",
+                "agent_preset": "",
+                "model": "m",
+                "benchmark": "b",
+                "question_type": "unknown",
+                "dataset_version": "",
+                "dataset_sha256": "",
+                "reported": 2,
+                "undelivered": [],
+                "reports_closed": True,
+                "event_delivery": "delivered",
+                "result_delivery": "delivered",
+                "result_report": None,
+                "result": {
+                    "final_response": "",
+                    "finish_reason": "error",
+                    "session_id": "legacy-session",
+                    "events": [failure],
+                    "notifications": [],
+                },
+                "error": None,
+                "cancel_state": "none",
+                "terminal_status": "succeeded",
+                "done": True,
+            }
+        )
+    )
     delivered: list[dict[str, Any]] = []
 
     class _Sink:
@@ -1928,8 +2310,10 @@ def test_a_legacy_succeeded_state_with_an_error_finish_is_corrected_on_recovery(
         raise AssertionError("recovery must not start a harness")
 
     recovered = HarnessService(
-        DeepSeekHarnessConfig(dsh_home=str(home)), harness_factory=refuse_execution,
-        event_callback=_Sink(), result_callback=_Sink(),
+        DeepSeekHarnessConfig(dsh_home=str(home)),
+        harness_factory=refuse_execution,
+        event_callback=_Sink(),
+        result_callback=_Sink(),
     )
     try:
         state = recovered.run_state("legacy-error-run")
@@ -1945,7 +2329,9 @@ def test_a_legacy_succeeded_state_with_an_error_finish_is_corrected_on_recovery(
         recovered.close()
 
 
-def test_a_pending_legacy_result_report_is_corrected_with_the_recovered_status(tmp_path) -> None:
+def test_a_pending_legacy_result_report_is_corrected_with_the_recovered_status(
+    tmp_path,
+) -> None:
     """A queued result the evaluator never received is still a draft.
 
     The recorded state claimed ``succeeded`` and held a result report with the
@@ -1959,33 +2345,69 @@ def test_a_pending_legacy_result_report_is_corrected_with_the_recovered_status(t
     directory = home / "evaluation-runs" / "legacy-pending-result"
     directory.mkdir(parents=True)
     failure = {
-        "type": "turn/end", "seq": 3, "time": 3,
-        "data": {"turn": 1, "reason": {"kind": "error", "error": {"code": "AUTH", "status": 401}}},
+        "type": "turn/end",
+        "seq": 3,
+        "time": 3,
+        "data": {
+            "turn": 1,
+            "reason": {"kind": "error", "error": {"code": "AUTH", "status": 401}},
+        },
     }
     stored_result = {
-        "final_response": "", "finish_reason": "error", "session_id": "legacy-session",
-        "events": [failure], "notifications": [],
+        "final_response": "",
+        "finish_reason": "error",
+        "session_id": "legacy-session",
+        "events": [failure],
+        "notifications": [],
     }
-    (directory / "state.json").write_text(json.dumps({
-        "protocol_version": "2.0", "run_id": "legacy-pending-result",
-        "task_id": "case", "session_id": "legacy-session", "instruction": "old task",
-        "callback_url": "http://b.invalid/jobs/one/backend-result",
-        "event_url": "http://a.invalid/v1/events",
-        "request_id": "", "request_digest": "",
-        "evaluation_id": "eval", "case_id": "case", "run_user": "", "cwd": "",
-        "agent_preset": "", "model": "m", "benchmark": "b", "question_type": "unknown",
-        "dataset_version": "", "dataset_sha256": "",
-        "reported": 2, "undelivered": [], "reports_closed": True,
-        "event_delivery": "delivered", "result_delivery": "failed",
-        "result_report": {
-            "protocol_version": "2.0", "run_id": "legacy-pending-result",
-            "request_id": "", "evaluation_id": "eval", "case_id": "case",
-            "model": "m", "status": "succeeded", "session_id": "legacy-session",
-            "task_id": "case", "result": stored_result, "error": None,
-        },
-        "result": stored_result,
-        "error": None, "cancel_state": "none", "terminal_status": "succeeded", "done": True,
-    }))
+    (directory / "state.json").write_text(
+        json.dumps(
+            {
+                "protocol_version": "2.0",
+                "run_id": "legacy-pending-result",
+                "task_id": "case",
+                "session_id": "legacy-session",
+                "instruction": "old task",
+                "callback_url": "http://b.invalid/jobs/one/backend-result",
+                "event_url": "http://a.invalid/v1/events",
+                "request_id": "",
+                "request_digest": "",
+                "evaluation_id": "eval",
+                "case_id": "case",
+                "run_user": "",
+                "cwd": "",
+                "agent_preset": "",
+                "model": "m",
+                "benchmark": "b",
+                "question_type": "unknown",
+                "dataset_version": "",
+                "dataset_sha256": "",
+                "reported": 2,
+                "undelivered": [],
+                "reports_closed": True,
+                "event_delivery": "delivered",
+                "result_delivery": "failed",
+                "result_report": {
+                    "protocol_version": "2.0",
+                    "run_id": "legacy-pending-result",
+                    "request_id": "",
+                    "evaluation_id": "eval",
+                    "case_id": "case",
+                    "model": "m",
+                    "status": "succeeded",
+                    "session_id": "legacy-session",
+                    "task_id": "case",
+                    "result": stored_result,
+                    "error": None,
+                },
+                "result": stored_result,
+                "error": None,
+                "cancel_state": "none",
+                "terminal_status": "succeeded",
+                "done": True,
+            }
+        )
+    )
     delivered: list[dict[str, Any]] = []
 
     class _Sink:
@@ -1996,8 +2418,10 @@ def test_a_pending_legacy_result_report_is_corrected_with_the_recovered_status(t
         raise AssertionError("recovery must not start a harness")
 
     recovered = HarnessService(
-        DeepSeekHarnessConfig(dsh_home=str(home)), harness_factory=refuse_execution,
-        event_callback=_Sink(), result_callback=_Sink(),
+        DeepSeekHarnessConfig(dsh_home=str(home)),
+        harness_factory=refuse_execution,
+        event_callback=_Sink(),
+        result_callback=_Sink(),
     )
     try:
         assert recovered.run_state("legacy-pending-result")["status"] == "failed"
@@ -2014,7 +2438,9 @@ def test_a_pending_legacy_result_report_is_corrected_with_the_recovered_status(t
         recovered.close()
 
 
-def test_a_pending_legacy_final_event_is_corrected_with_the_recovered_status(tmp_path) -> None:
+def test_a_pending_legacy_final_event_is_corrected_with_the_recovered_status(
+    tmp_path,
+) -> None:
     """A queued final event is a draft too, and must not claim a success.
 
     The same recorded state queued its ``run/end`` report with
@@ -2029,47 +2455,114 @@ def test_a_pending_legacy_final_event_is_corrected_with_the_recovered_status(tmp
     directory = home / "evaluation-runs" / "legacy-pending-final"
     directory.mkdir(parents=True)
     failure = {
-        "type": "turn/end", "seq": 3, "time": 3,
-        "data": {"turn": 1, "reason": {"kind": "error", "error": {"code": "AUTH", "status": 401}}},
-    }
-    stored_result = {
-        "final_response": "", "finish_reason": "error", "session_id": "legacy-session",
-        "events": [failure], "notifications": [],
-    }
-    queued_final = {
-        "protocol_version": "2.0", "evaluation_id": "eval", "case_id": "case",
-        "model": "m", "harness": "APUS", "benchmark": "b",
-        "dataset_version": "", "dataset_sha256": "", "question_type": "unknown",
-        "source_session_id": "legacy-session:service", "root_session_id": "legacy-session",
-        "seq": 1, "first_seq": 1, "final": True, "question": "old task", "run_user": "",
-        "delivery_seq": 3,
-        "event": {
-            "type": "run/end", "seq": 1, "time": 4,
-            "data": {"status": "succeeded", "finish_reason": "error", "final_response": "", "error": None},
+        "type": "turn/end",
+        "seq": 3,
+        "time": 3,
+        "data": {
+            "turn": 1,
+            "reason": {"kind": "error", "error": {"code": "AUTH", "status": 401}},
         },
     }
-    (directory / "state.json").write_text(json.dumps({
-        "protocol_version": "2.0", "run_id": "legacy-pending-final",
-        "task_id": "case", "session_id": "legacy-session", "instruction": "old task",
-        "callback_url": "", "event_url": "http://a.invalid/v1/events",
-        "request_id": "", "request_digest": "",
-        "evaluation_id": "eval", "case_id": "case", "run_user": "", "cwd": "",
-        "agent_preset": "", "model": "m", "benchmark": "b", "question_type": "unknown",
-        "dataset_version": "", "dataset_sha256": "",
-        "reported": 3, "undelivered": [{
-            "protocol_version": "2.0", "evaluation_id": "eval", "case_id": "case",
-            "model": "m", "harness": "APUS", "benchmark": "b",
-            "dataset_version": "", "dataset_sha256": "", "question_type": "unknown",
-            "source_session_id": "legacy-session", "root_session_id": "legacy-session",
-            "seq": 1, "first_seq": 1, "final": False, "question": "old task", "run_user": "",
-            "delivery_seq": 2,
-            "event": {"type": "turn/start", "seq": 1, "time": 2, "data": {"turn": 1}},
-        }, queued_final], "reports_closed": True,
-        "event_delivery": "failed", "result_delivery": "delivered",
-        "result_report": None,
-        "result": stored_result,
-        "error": None, "cancel_state": "none", "terminal_status": "succeeded", "done": True,
-    }))
+    stored_result = {
+        "final_response": "",
+        "finish_reason": "error",
+        "session_id": "legacy-session",
+        "events": [failure],
+        "notifications": [],
+    }
+    queued_final = {
+        "protocol_version": "2.0",
+        "evaluation_id": "eval",
+        "case_id": "case",
+        "model": "m",
+        "harness": "APUS",
+        "benchmark": "b",
+        "dataset_version": "",
+        "dataset_sha256": "",
+        "question_type": "unknown",
+        "source_session_id": "legacy-session:service",
+        "root_session_id": "legacy-session",
+        "seq": 1,
+        "first_seq": 1,
+        "final": True,
+        "question": "old task",
+        "run_user": "",
+        "delivery_seq": 3,
+        "event": {
+            "type": "run/end",
+            "seq": 1,
+            "time": 4,
+            "data": {
+                "status": "succeeded",
+                "finish_reason": "error",
+                "final_response": "",
+                "error": None,
+            },
+        },
+    }
+    (directory / "state.json").write_text(
+        json.dumps(
+            {
+                "protocol_version": "2.0",
+                "run_id": "legacy-pending-final",
+                "task_id": "case",
+                "session_id": "legacy-session",
+                "instruction": "old task",
+                "callback_url": "",
+                "event_url": "http://a.invalid/v1/events",
+                "request_id": "",
+                "request_digest": "",
+                "evaluation_id": "eval",
+                "case_id": "case",
+                "run_user": "",
+                "cwd": "",
+                "agent_preset": "",
+                "model": "m",
+                "benchmark": "b",
+                "question_type": "unknown",
+                "dataset_version": "",
+                "dataset_sha256": "",
+                "reported": 3,
+                "undelivered": [
+                    {
+                        "protocol_version": "2.0",
+                        "evaluation_id": "eval",
+                        "case_id": "case",
+                        "model": "m",
+                        "harness": "APUS",
+                        "benchmark": "b",
+                        "dataset_version": "",
+                        "dataset_sha256": "",
+                        "question_type": "unknown",
+                        "source_session_id": "legacy-session",
+                        "root_session_id": "legacy-session",
+                        "seq": 1,
+                        "first_seq": 1,
+                        "final": False,
+                        "question": "old task",
+                        "run_user": "",
+                        "delivery_seq": 2,
+                        "event": {
+                            "type": "turn/start",
+                            "seq": 1,
+                            "time": 2,
+                            "data": {"turn": 1},
+                        },
+                    },
+                    queued_final,
+                ],
+                "reports_closed": True,
+                "event_delivery": "failed",
+                "result_delivery": "delivered",
+                "result_report": None,
+                "result": stored_result,
+                "error": None,
+                "cancel_state": "none",
+                "terminal_status": "succeeded",
+                "done": True,
+            }
+        )
+    )
     delivered: list[dict[str, Any]] = []
 
     class _Sink:
@@ -2080,7 +2573,8 @@ def test_a_pending_legacy_final_event_is_corrected_with_the_recovered_status(tmp
         raise AssertionError("recovery must not start a harness")
 
     recovered = HarnessService(
-        DeepSeekHarnessConfig(dsh_home=str(home)), harness_factory=refuse_execution,
+        DeepSeekHarnessConfig(dsh_home=str(home)),
+        harness_factory=refuse_execution,
         event_callback=_Sink(),
     )
     try:
@@ -2088,7 +2582,12 @@ def test_a_pending_legacy_final_event_is_corrected_with_the_recovered_status(tmp
         # Only the terminal record carries an outcome; a source event keeps
         # its own body untouched.
         source = next(p for p in delivered if not p.get("final"))
-        assert source["event"] == {"type": "turn/start", "seq": 1, "time": 2, "data": {"turn": 1}}
+        assert source["event"] == {
+            "type": "turn/start",
+            "seq": 1,
+            "time": 2,
+            "data": {"turn": 1},
+        }
         assert source["delivery_seq"] == 2
         report = next(p for p in delivered if p.get("final"))
         assert report["event"]["data"]["status"] == "failed"
@@ -2114,31 +2613,64 @@ def test_a_delivered_legacy_result_report_is_never_rewritten(tmp_path) -> None:
     directory = home / "evaluation-runs" / "legacy-delivered-result"
     directory.mkdir(parents=True)
     delivered_report = {
-        "protocol_version": "2.0", "run_id": "legacy-delivered-result",
-        "request_id": "", "evaluation_id": "eval", "case_id": "case",
-        "model": "m", "status": "succeeded", "session_id": "legacy-session",
+        "protocol_version": "2.0",
+        "run_id": "legacy-delivered-result",
+        "request_id": "",
+        "evaluation_id": "eval",
+        "case_id": "case",
+        "model": "m",
+        "status": "succeeded",
+        "session_id": "legacy-session",
         "task_id": "case",
-        "result": {"final_response": "", "finish_reason": "error", "session_id": "legacy-session"},
+        "result": {
+            "final_response": "",
+            "finish_reason": "error",
+            "session_id": "legacy-session",
+        },
         "error": None,
     }
-    (directory / "state.json").write_text(json.dumps({
-        "protocol_version": "2.0", "run_id": "legacy-delivered-result",
-        "task_id": "case", "session_id": "legacy-session", "instruction": "old task",
-        "callback_url": "http://b.invalid/jobs/one/backend-result",
-        "event_url": "http://a.invalid/v1/events",
-        "request_id": "", "request_digest": "",
-        "evaluation_id": "eval", "case_id": "case", "run_user": "", "cwd": "",
-        "agent_preset": "", "model": "m", "benchmark": "b", "question_type": "unknown",
-        "dataset_version": "", "dataset_sha256": "",
-        "reported": 2, "undelivered": [], "reports_closed": True,
-        "event_delivery": "delivered", "result_delivery": "delivered",
-        "result_report": delivered_report,
-        "result": {
-            "final_response": "", "finish_reason": "error", "session_id": "legacy-session",
-            "events": [], "notifications": [],
-        },
-        "error": None, "cancel_state": "none", "terminal_status": "succeeded", "done": True,
-    }))
+    (directory / "state.json").write_text(
+        json.dumps(
+            {
+                "protocol_version": "2.0",
+                "run_id": "legacy-delivered-result",
+                "task_id": "case",
+                "session_id": "legacy-session",
+                "instruction": "old task",
+                "callback_url": "http://b.invalid/jobs/one/backend-result",
+                "event_url": "http://a.invalid/v1/events",
+                "request_id": "",
+                "request_digest": "",
+                "evaluation_id": "eval",
+                "case_id": "case",
+                "run_user": "",
+                "cwd": "",
+                "agent_preset": "",
+                "model": "m",
+                "benchmark": "b",
+                "question_type": "unknown",
+                "dataset_version": "",
+                "dataset_sha256": "",
+                "reported": 2,
+                "undelivered": [],
+                "reports_closed": True,
+                "event_delivery": "delivered",
+                "result_delivery": "delivered",
+                "result_report": delivered_report,
+                "result": {
+                    "final_response": "",
+                    "finish_reason": "error",
+                    "session_id": "legacy-session",
+                    "events": [],
+                    "notifications": [],
+                },
+                "error": None,
+                "cancel_state": "none",
+                "terminal_status": "succeeded",
+                "done": True,
+            }
+        )
+    )
     calls: list[dict[str, Any]] = []
 
     class _Sink:
@@ -2149,7 +2681,8 @@ def test_a_delivered_legacy_result_report_is_never_rewritten(tmp_path) -> None:
         raise AssertionError("recovery must not start a harness")
 
     recovered = HarnessService(
-        DeepSeekHarnessConfig(dsh_home=str(home)), harness_factory=refuse_execution,
+        DeepSeekHarnessConfig(dsh_home=str(home)),
+        harness_factory=refuse_execution,
         result_callback=_Sink(),
     )
     try:
@@ -2175,12 +2708,24 @@ def test_an_aborted_turn_is_a_failure_that_keeps_its_evidence() -> None:
     """
     harness = _FakeHarness()
     harness.finish_reason = "aborted"
-    harness.events = [{"type": "turn/end", "seq": 2, "time": 2, "data": {"turn": 1, "reason": {"kind": "aborted"}}}]
+    harness.events = [
+        {
+            "type": "turn/end",
+            "seq": 2,
+            "time": 2,
+            "data": {"turn": 1, "reason": {"kind": "aborted"}},
+        }
+    ]
     harness.gate.set()
     service = _service(harness)
     try:
-        run_id = service.start_run({"instruction": "abort", "session_id": "aborted-turn"})
-        _wait_for(lambda: service.run_state(run_id)["status"] != "running", "the run to settle")
+        run_id = service.start_run(
+            {"instruction": "abort", "session_id": "aborted-turn"}
+        )
+        _wait_for(
+            lambda: service.run_state(run_id)["status"] != "running",
+            "the run to settle",
+        )
         state = service.run_state(run_id)
         assert state["status"] == "failed"
         assert "aborted" in state["error"]
@@ -2190,7 +2735,9 @@ def test_an_aborted_turn_is_a_failure_that_keeps_its_evidence() -> None:
         service.close()
 
 
-def test_store_failure_is_reported_as_a_gap_not_as_persistence(tmp_path, monkeypatch) -> None:
+def test_store_failure_is_reported_as_a_gap_not_as_persistence(
+    tmp_path, monkeypatch
+) -> None:
     """A failed save must stay visible as missing evidence.
 
     The run keeps executing after a write failure, so its in-memory state is
@@ -2209,7 +2756,8 @@ def test_store_failure_is_reported_as_a_gap_not_as_persistence(tmp_path, monkeyp
             accepted.append(payload)
 
     service = HarnessService(
-        DeepSeekHarnessConfig(dsh_home=str(tmp_path)), harness_factory=lambda _: harness,
+        DeepSeekHarnessConfig(dsh_home=str(tmp_path)),
+        harness_factory=lambda _: harness,
         event_callback=_Sink(),
     )
     original = service._persist_run
@@ -2224,22 +2772,32 @@ def test_store_failure_is_reported_as_a_gap_not_as_persistence(tmp_path, monkeyp
 
     monkeypatch.setattr(service, "_persist_run", fail_after_the_first_write)
     try:
-        run_id = service.start_run({
-            "instruction": "run", "session_id": "store-failure",
-            "event_url": "http://a.invalid/v1/events",
-        })
-        _wait_for(lambda: service.run_state(run_id)["status"] == "completed", "the run to settle")
+        run_id = service.start_run(
+            {
+                "instruction": "run",
+                "session_id": "store-failure",
+                "event_url": "http://a.invalid/v1/events",
+            }
+        )
+        _wait_for(
+            lambda: service.run_state(run_id)["status"] == "completed",
+            "the run to settle",
+        )
         state = service.run_state(run_id)
         assert "report storage failed" in state["delivery_state"]["error"]
         assert "OSError" in state["delivery_state"]["error"]
-        record = json.loads((tmp_path / "evaluation-runs" / run_id / "state.json").read_text())
+        record = json.loads(
+            (tmp_path / "evaluation-runs" / run_id / "state.json").read_text()
+        )
         assert record["done"] is False
         assert record["terminal_status"] is None
     finally:
         service.close()
 
 
-def test_a_state_already_corrected_to_failed_still_fixes_its_queued_drafts(tmp_path) -> None:
+def test_a_state_already_corrected_to_failed_still_fixes_its_queued_drafts(
+    tmp_path,
+) -> None:
     """Recovery is repeatable: a second restart must finish the same repair.
 
     An earlier build corrected ``terminal_status`` to ``failed`` and persisted
@@ -2253,46 +2811,99 @@ def test_a_state_already_corrected_to_failed_still_fixes_its_queued_drafts(tmp_p
     directory = home / "evaluation-runs" / "legacy-twice"
     directory.mkdir(parents=True)
     failure = {
-        "type": "turn/end", "seq": 3, "time": 3,
-        "data": {"turn": 1, "reason": {"kind": "error", "error": {"code": "AUTH", "status": 401}}},
+        "type": "turn/end",
+        "seq": 3,
+        "time": 3,
+        "data": {
+            "turn": 1,
+            "reason": {"kind": "error", "error": {"code": "AUTH", "status": 401}},
+        },
     }
     stored_result = {
-        "final_response": "", "finish_reason": "error", "session_id": "legacy-session",
-        "events": [failure], "notifications": [],
+        "final_response": "",
+        "finish_reason": "error",
+        "session_id": "legacy-session",
+        "events": [failure],
+        "notifications": [],
     }
     queued_final = {
-        "protocol_version": "2.0", "evaluation_id": "eval", "case_id": "case",
-        "model": "m", "harness": "APUS", "benchmark": "b",
-        "dataset_version": "", "dataset_sha256": "", "question_type": "unknown",
-        "source_session_id": "legacy-session:service", "root_session_id": "legacy-session",
-        "seq": 1, "first_seq": 1, "final": True, "question": "old task", "run_user": "",
+        "protocol_version": "2.0",
+        "evaluation_id": "eval",
+        "case_id": "case",
+        "model": "m",
+        "harness": "APUS",
+        "benchmark": "b",
+        "dataset_version": "",
+        "dataset_sha256": "",
+        "question_type": "unknown",
+        "source_session_id": "legacy-session:service",
+        "root_session_id": "legacy-session",
+        "seq": 1,
+        "first_seq": 1,
+        "final": True,
+        "question": "old task",
+        "run_user": "",
         "delivery_seq": 2,
         "event": {
-            "type": "run/end", "seq": 1, "time": 4,
-            "data": {"status": "succeeded", "finish_reason": "error", "final_response": "", "error": None},
+            "type": "run/end",
+            "seq": 1,
+            "time": 4,
+            "data": {
+                "status": "succeeded",
+                "finish_reason": "error",
+                "final_response": "",
+                "error": None,
+            },
         },
     }
-    (directory / "state.json").write_text(json.dumps({
-        "protocol_version": "2.0", "run_id": "legacy-twice",
-        "task_id": "case", "session_id": "legacy-session", "instruction": "old task",
-        "callback_url": "http://b.invalid/jobs/one/backend-result",
-        "event_url": "http://a.invalid/v1/events",
-        "request_id": "", "request_digest": "",
-        "evaluation_id": "eval", "case_id": "case", "run_user": "", "cwd": "",
-        "agent_preset": "", "model": "m", "benchmark": "b", "question_type": "unknown",
-        "dataset_version": "", "dataset_sha256": "",
-        "reported": 2, "undelivered": [queued_final], "reports_closed": True,
-        "event_delivery": "failed", "result_delivery": "failed",
-        "result_report": {
-            "protocol_version": "2.0", "run_id": "legacy-twice",
-            "request_id": "", "evaluation_id": "eval", "case_id": "case",
-            "model": "m", "status": "succeeded", "session_id": "legacy-session",
-            "task_id": "case", "result": dict(stored_result), "error": None,
-        },
-        "result": stored_result,
-        "error": "turn ended with 'error': AUTH 401", "cancel_state": "none",
-        "terminal_status": "failed", "done": True,
-    }))
+    (directory / "state.json").write_text(
+        json.dumps(
+            {
+                "protocol_version": "2.0",
+                "run_id": "legacy-twice",
+                "task_id": "case",
+                "session_id": "legacy-session",
+                "instruction": "old task",
+                "callback_url": "http://b.invalid/jobs/one/backend-result",
+                "event_url": "http://a.invalid/v1/events",
+                "request_id": "",
+                "request_digest": "",
+                "evaluation_id": "eval",
+                "case_id": "case",
+                "run_user": "",
+                "cwd": "",
+                "agent_preset": "",
+                "model": "m",
+                "benchmark": "b",
+                "question_type": "unknown",
+                "dataset_version": "",
+                "dataset_sha256": "",
+                "reported": 2,
+                "undelivered": [queued_final],
+                "reports_closed": True,
+                "event_delivery": "failed",
+                "result_delivery": "failed",
+                "result_report": {
+                    "protocol_version": "2.0",
+                    "run_id": "legacy-twice",
+                    "request_id": "",
+                    "evaluation_id": "eval",
+                    "case_id": "case",
+                    "model": "m",
+                    "status": "succeeded",
+                    "session_id": "legacy-session",
+                    "task_id": "case",
+                    "result": dict(stored_result),
+                    "error": None,
+                },
+                "result": stored_result,
+                "error": "turn ended with 'error': AUTH 401",
+                "cancel_state": "none",
+                "terminal_status": "failed",
+                "done": True,
+            }
+        )
+    )
     delivered: list[dict[str, Any]] = []
 
     class _Sink:
@@ -2303,8 +2914,10 @@ def test_a_state_already_corrected_to_failed_still_fixes_its_queued_drafts(tmp_p
         raise AssertionError("recovery must not start a harness")
 
     recovered = HarnessService(
-        DeepSeekHarnessConfig(dsh_home=str(home)), harness_factory=refuse_execution,
-        event_callback=_Sink(), result_callback=_Sink(),
+        DeepSeekHarnessConfig(dsh_home=str(home)),
+        harness_factory=refuse_execution,
+        event_callback=_Sink(),
+        result_callback=_Sink(),
     )
     try:
         _wait_for(lambda: len(delivered) >= 2, "both queued drafts")
@@ -2325,28 +2938,55 @@ def test_a_recovered_cancelled_run_is_not_rewritten_as_failed(tmp_path) -> None:
     home = tmp_path / "home"
     directory = home / "evaluation-runs" / "legacy-cancelled"
     directory.mkdir(parents=True)
-    (directory / "state.json").write_text(json.dumps({
-        "protocol_version": "2.0", "run_id": "legacy-cancelled",
-        "task_id": "case", "session_id": "legacy-session", "instruction": "old task",
-        "callback_url": "", "event_url": "",
-        "request_id": "", "request_digest": "",
-        "evaluation_id": "eval", "case_id": "case", "run_user": "", "cwd": "",
-        "agent_preset": "", "model": "m", "benchmark": "b", "question_type": "unknown",
-        "dataset_version": "", "dataset_sha256": "",
-        "reported": 1, "undelivered": [], "reports_closed": True,
-        "event_delivery": "delivered", "result_delivery": "idle",
-        "result_report": None,
-        "result": {"final_response": "", "finish_reason": "aborted", "session_id": "legacy-session",
-                   "events": [], "notifications": []},
-        "error": None, "cancel_state": "cancelled",
-        "terminal_status": "cancelled", "done": True,
-    }))
+    (directory / "state.json").write_text(
+        json.dumps(
+            {
+                "protocol_version": "2.0",
+                "run_id": "legacy-cancelled",
+                "task_id": "case",
+                "session_id": "legacy-session",
+                "instruction": "old task",
+                "callback_url": "",
+                "event_url": "",
+                "request_id": "",
+                "request_digest": "",
+                "evaluation_id": "eval",
+                "case_id": "case",
+                "run_user": "",
+                "cwd": "",
+                "agent_preset": "",
+                "model": "m",
+                "benchmark": "b",
+                "question_type": "unknown",
+                "dataset_version": "",
+                "dataset_sha256": "",
+                "reported": 1,
+                "undelivered": [],
+                "reports_closed": True,
+                "event_delivery": "delivered",
+                "result_delivery": "idle",
+                "result_report": None,
+                "result": {
+                    "final_response": "",
+                    "finish_reason": "aborted",
+                    "session_id": "legacy-session",
+                    "events": [],
+                    "notifications": [],
+                },
+                "error": None,
+                "cancel_state": "cancelled",
+                "terminal_status": "cancelled",
+                "done": True,
+            }
+        )
+    )
 
     def refuse_execution(_):
         raise AssertionError("recovery must not start a harness")
 
     recovered = HarnessService(
-        DeepSeekHarnessConfig(dsh_home=str(home)), harness_factory=refuse_execution,
+        DeepSeekHarnessConfig(dsh_home=str(home)),
+        harness_factory=refuse_execution,
     )
     try:
         assert recovered.run_state("legacy-cancelled")["status"] == "cancelled"
@@ -2356,7 +2996,9 @@ def test_a_recovered_cancelled_run_is_not_rewritten_as_failed(tmp_path) -> None:
         recovered.close()
 
 
-def test_a_recovered_in_flight_cancellation_is_not_turned_into_a_turn_failure(tmp_path) -> None:
+def test_a_recovered_in_flight_cancellation_is_not_turned_into_a_turn_failure(
+    tmp_path,
+) -> None:
     """A state caught mid-cancellation keeps its own status.
 
     The turn end says ``aborted``, which would map to a failed case, but the
@@ -2368,28 +3010,55 @@ def test_a_recovered_in_flight_cancellation_is_not_turned_into_a_turn_failure(tm
     home = tmp_path / "home"
     directory = home / "evaluation-runs" / "stuck-cancelling"
     directory.mkdir(parents=True)
-    (directory / "state.json").write_text(json.dumps({
-        "protocol_version": "2.0", "run_id": "stuck-cancelling",
-        "task_id": "case", "session_id": "legacy-session", "instruction": "old task",
-        "callback_url": "", "event_url": "",
-        "request_id": "", "request_digest": "",
-        "evaluation_id": "eval", "case_id": "case", "run_user": "", "cwd": "",
-        "agent_preset": "", "model": "m", "benchmark": "b", "question_type": "unknown",
-        "dataset_version": "", "dataset_sha256": "",
-        "reported": 1, "undelivered": [], "reports_closed": True,
-        "event_delivery": "delivered", "result_delivery": "idle",
-        "result_report": None,
-        "result": {"final_response": "", "finish_reason": "aborted", "session_id": "legacy-session",
-                   "events": [], "notifications": []},
-        "error": None, "cancel_state": "cancelling",
-        "terminal_status": "cancelled", "done": True,
-    }))
+    (directory / "state.json").write_text(
+        json.dumps(
+            {
+                "protocol_version": "2.0",
+                "run_id": "stuck-cancelling",
+                "task_id": "case",
+                "session_id": "legacy-session",
+                "instruction": "old task",
+                "callback_url": "",
+                "event_url": "",
+                "request_id": "",
+                "request_digest": "",
+                "evaluation_id": "eval",
+                "case_id": "case",
+                "run_user": "",
+                "cwd": "",
+                "agent_preset": "",
+                "model": "m",
+                "benchmark": "b",
+                "question_type": "unknown",
+                "dataset_version": "",
+                "dataset_sha256": "",
+                "reported": 1,
+                "undelivered": [],
+                "reports_closed": True,
+                "event_delivery": "delivered",
+                "result_delivery": "idle",
+                "result_report": None,
+                "result": {
+                    "final_response": "",
+                    "finish_reason": "aborted",
+                    "session_id": "legacy-session",
+                    "events": [],
+                    "notifications": [],
+                },
+                "error": None,
+                "cancel_state": "cancelling",
+                "terminal_status": "cancelled",
+                "done": True,
+            }
+        )
+    )
 
     def refuse_execution(_):
         raise AssertionError("recovery must not start a harness")
 
     recovered = HarnessService(
-        DeepSeekHarnessConfig(dsh_home=str(home)), harness_factory=refuse_execution,
+        DeepSeekHarnessConfig(dsh_home=str(home)),
+        harness_factory=refuse_execution,
     )
     try:
         assert recovered.run_state("stuck-cancelling")["status"] == "cancelling"
@@ -2400,7 +3069,7 @@ def test_a_recovered_in_flight_cancellation_is_not_turned_into_a_turn_failure(tm
         recovered.close()
 
 
-_RUNTIME_SCRIPT = '''
+_RUNTIME_SCRIPT = """
 import json, sys
 VIEW = {
     "sessionId": "s", "dispatchSeq": 10, "prefixEnd": 9, "turn": 1, "step": 1,
@@ -2450,7 +3119,7 @@ for line in sys.stdin:
     elif method == "shutdown":
         send({"jsonrpc": "2.0", "id": rid, "result": {}})
         break
-'''
+"""
 
 
 def test_the_view_arrives_over_the_runtime_wire_not_a_stand_in(tmp_path) -> None:
@@ -2472,14 +3141,20 @@ def test_the_view_arrives_over_the_runtime_wire_not_a_stand_in(tmp_path) -> None
             reports.append(payload)
 
     config = DeepSeekHarnessConfig(
-        dsh_bin=str(script), dsh_home=str(home), cwd=str(tmp_path), env={},
+        dsh_bin=str(script),
+        dsh_home=str(home),
+        cwd=str(tmp_path),
+        env={},
     )
     service = HarnessService(config, event_callback=_Events())
     try:
-        service.start_run({
-            "instruction": "do it", "session_id": "s",
-            "event_url": "http://events.invalid/v1/events",
-        })
+        service.start_run(
+            {
+                "instruction": "do it",
+                "session_id": "s",
+                "event_url": "http://events.invalid/v1/events",
+            }
+        )
         _wait_for(
             lambda: any(r["event"]["type"] == "llm/dispatch" for r in reports),
             "the dispatch report over the real wire",
@@ -2489,8 +3164,13 @@ def test_the_view_arrives_over_the_runtime_wire_not_a_stand_in(tmp_path) -> None
             "the settled report over the real wire",
         )
         dispatch = next(r for r in reports if r["event"]["type"] == "llm/dispatch")
-        settled = next(r for r in reports if r["event"]["type"] == "llm/dispatch-settled")
-        assert dispatch["request_view"]["messages"][0]["content"][0]["text"] == "over the wire"
+        settled = next(
+            r for r in reports if r["event"]["type"] == "llm/dispatch-settled"
+        )
+        assert (
+            dispatch["request_view"]["messages"][0]["content"][0]["text"]
+            == "over the wire"
+        )
         assert dispatch["request_view"]["projectionTypes"] == ["image/offload"]
         assert settled["request_view"]["dispatchSeq"] == 10
     finally:
@@ -2504,43 +3184,99 @@ def test_two_sessions_with_the_same_dispatch_seq_keep_their_own_views() -> None:
     which is a different model call. The view a report carries must belong to
     the session that report names.
     """
-    root_view = {**_NATIVE_VIEW, "sessionId": "root-native", "dispatchSeq": 10,
-                 "messages": [{"role": "user", "content": [{"type": "text", "text": "root call"}]}]}
-    child_view = {**_NATIVE_VIEW, "sessionId": "child-native", "dispatchSeq": 10,
-                  "messages": [{"role": "user", "content": [{"type": "text", "text": "child call"}]}]}
+    root_view = {
+        **_NATIVE_VIEW,
+        "sessionId": "root-native",
+        "dispatchSeq": 10,
+        "messages": [
+            {"role": "user", "content": [{"type": "text", "text": "root call"}]}
+        ],
+    }
+    child_view = {
+        **_NATIVE_VIEW,
+        "sessionId": "child-native",
+        "dispatchSeq": 10,
+        "messages": [
+            {"role": "user", "content": [{"type": "text", "text": "child call"}]}
+        ],
+    }
 
     class _TwoViewClient:
         calls: list[tuple[str, int]] = []
 
-        def session_request_view(self, session_id: str, dispatch_seq: int) -> dict[str, Any]:
+        def session_request_view(
+            self, session_id: str, dispatch_seq: int
+        ) -> dict[str, Any]:
             type(self).calls.append((session_id, dispatch_seq))
             return dict(root_view if session_id == "root-native" else child_view)
 
     harness = _FakeHarness()
     harness.client = _TwoViewClient()
     harness.notifications = [
-        Notification(method="session.event", payload={"sessionId": "root-native", "event": {
-            "type": "llm/dispatch", "seq": 10, "time": 1,
-            "data": {"sessionId": "root-native", "prefixEnd": 9, "turn": 1, "step": 1},
-        }}),
-        Notification(method="session.event", payload={"sessionId": "child-native", "event": {
-            "type": "llm/dispatch", "seq": 10, "time": 2,
-            "data": {"sessionId": "child-native", "prefixEnd": 9, "turn": 1, "step": 1},
-        }}),
+        Notification(
+            method="session.event",
+            payload={
+                "sessionId": "root-native",
+                "event": {
+                    "type": "llm/dispatch",
+                    "seq": 10,
+                    "time": 1,
+                    "data": {
+                        "sessionId": "root-native",
+                        "prefixEnd": 9,
+                        "turn": 1,
+                        "step": 1,
+                    },
+                },
+            },
+        ),
+        Notification(
+            method="session.event",
+            payload={
+                "sessionId": "child-native",
+                "event": {
+                    "type": "llm/dispatch",
+                    "seq": 10,
+                    "time": 2,
+                    "data": {
+                        "sessionId": "child-native",
+                        "prefixEnd": 9,
+                        "turn": 1,
+                        "step": 1,
+                    },
+                },
+            },
+        ),
     ]
     harness.gate.set()
     events: list[dict[str, Any]] = []
     service = _collecting_service(harness, events)
     try:
-        service.start_run({
-            "instruction": "delegate", "session_id": "root-native",
-            "event_url": "http://events.invalid/v1/events",
-        })
+        service.start_run(
+            {
+                "instruction": "delegate",
+                "session_id": "root-native",
+                "event_url": "http://events.invalid/v1/events",
+            }
+        )
         _wait_for(lambda: len(events) >= 2, "both dispatch reports")
         by_session = {e["source_session_id"]: e for e in events if not e.get("final")}
-        assert by_session["root-native"]["request_view"]["messages"][0]["content"][0]["text"] == "root call"
-        assert by_session["child-native"]["request_view"]["messages"][0]["content"][0]["text"] == "child call"
-        assert sorted(_TwoViewClient.calls) == [("child-native", 10), ("root-native", 10)]
+        assert (
+            by_session["root-native"]["request_view"]["messages"][0]["content"][0][
+                "text"
+            ]
+            == "root call"
+        )
+        assert (
+            by_session["child-native"]["request_view"]["messages"][0]["content"][0][
+                "text"
+            ]
+            == "child call"
+        )
+        assert sorted(_TwoViewClient.calls) == [
+            ("child-native", 10),
+            ("root-native", 10),
+        ]
     finally:
         service.close()
 
@@ -2566,7 +3302,9 @@ def test_a_running_run_reports_its_stage_and_last_progress() -> None:
     assert finished["stuck_after_seconds"] is None
 
 
-def test_a_run_that_stops_moving_is_reported_stuck_without_touching_the_process(monkeypatch) -> None:
+def test_a_run_that_stops_moving_is_reported_stuck_without_touching_the_process(
+    monkeypatch,
+) -> None:
     """A stuck run is a run, not an idle runtime; only it gets reported."""
     monkeypatch.setenv("DSH_RUN_EXECUTING_STUCK_SEC", "60")
     harness = _FakeHarness()
@@ -2617,7 +3355,9 @@ def test_readiness_names_what_would_prevent_a_run_from_completing() -> None:
     assert report["protocol_version"] == "2.0"
 
 
-def test_readiness_is_true_when_authentication_and_the_run_store_are_configured(tmp_path) -> None:
+def test_readiness_is_true_when_authentication_and_the_run_store_are_configured(
+    tmp_path,
+) -> None:
     harness = _FakeHarness()
     harness.gate.set()
     service = HarnessService(
@@ -2661,7 +3401,8 @@ def _serve(service: HarnessService, path: str) -> tuple[int, dict[str, Any]]:
     try:
         try:
             with urllib.request.urlopen(
-                f"http://127.0.0.1:{server.server_port}{path}", timeout=2,
+                f"http://127.0.0.1:{server.server_port}{path}",
+                timeout=2,
             ) as response:
                 return response.status, json.load(response)
         except urllib.error.HTTPError as error:
@@ -2672,7 +3413,9 @@ def _serve(service: HarnessService, path: str) -> tuple[int, dict[str, Any]]:
         thread.join(timeout=2)
 
 
-def test_healthz_stays_a_liveness_answer_even_when_the_service_is_not_ready(tmp_path) -> None:
+def test_healthz_stays_a_liveness_answer_even_when_the_service_is_not_ready(
+    tmp_path,
+) -> None:
     """The container must not be restarted for a configuration fault.
 
     A missing credential is fixed by correcting the deployment, not by killing
@@ -2759,11 +3502,17 @@ def test_persisting_a_run_does_not_iterate_request_views_while_a_dispatch_writes
         def __init__(self) -> None:
             self.calls: list[tuple[str, int]] = []
 
-        def session_request_view(self, session_id: str, dispatch_seq: int) -> dict[str, Any]:
+        def session_request_view(
+            self, session_id: str, dispatch_seq: int
+        ) -> dict[str, Any]:
             self.calls.append((session_id, dispatch_seq))
             rpc_started.set()
             assert rpc_release.wait(timeout=5)
-            return {**_NATIVE_VIEW, "sessionId": session_id, "dispatchSeq": dispatch_seq}
+            return {
+                **_NATIVE_VIEW,
+                "sessionId": session_id,
+                "dispatchSeq": dispatch_seq,
+            }
 
     class _Harness(_FakeHarness):
         def __init__(self) -> None:
@@ -2772,8 +3521,14 @@ def test_persisting_a_run_does_not_iterate_request_views_while_a_dispatch_writes
             self.turn_release = threading.Event()
 
         def run(
-            self, instruction, *, session_id=None, before_deliver=None,
-            on_notification=None, cwd=None, agent_preset=None,
+            self,
+            instruction,
+            *,
+            session_id=None,
+            before_deliver=None,
+            on_notification=None,
+            cwd=None,
+            agent_preset=None,
         ):
             if before_deliver is not None:
                 before_deliver()
@@ -2798,10 +3553,13 @@ def test_persisting_a_run_does_not_iterate_request_views_while_a_dispatch_writes
         event_callback=_Sink(),
     )
     try:
-        run_id = service.start_run({
-            "instruction": "race", "session_id": "root-native",
-            "event_url": "http://events.invalid/v1/events",
-        })
+        run_id = service.start_run(
+            {
+                "instruction": "race",
+                "session_id": "root-native",
+                "event_url": "http://events.invalid/v1/events",
+            }
+        )
         run = service._runs[run_id]
         _wait_for(lambda: bool(harness.prompts), "the run to reach the harness")
         # A wide mapping makes the persistence iteration long enough for the
@@ -2815,7 +3573,9 @@ def test_persisting_a_run_does_not_iterate_request_views_while_a_dispatch_writes
         run.request_views.block_after_first.set()
         reader = threading.Thread(target=service._persist_run, args=(run,), daemon=True)
         reader.start()
-        _wait_for(run.request_views.reader_parked.is_set, "the persistence reader to park")
+        _wait_for(
+            run.request_views.reader_parked.is_set, "the persistence reader to park"
+        )
         rpc_release.set()
         # 写方要么已经越权写入，要么阻塞在锁上等待迭代结束。
         time.sleep(0.05)
@@ -2845,8 +3605,14 @@ class _SlowCancelHarness(_FakeHarness):
         self.turn_running = threading.Event()
 
     def run(
-        self, instruction, *, session_id=None, before_deliver=None,
-        on_notification=None, cwd=None, agent_preset=None,
+        self,
+        instruction,
+        *,
+        session_id=None,
+        before_deliver=None,
+        on_notification=None,
+        cwd=None,
+        agent_preset=None,
     ):
         if before_deliver is not None:
             before_deliver()
@@ -2961,14 +3727,21 @@ def test_wide_request_views_survive_concurrent_persistence(tmp_path) -> None:
     No thread may die, every report must arrive, and every run must settle with
     no error.
     """
+
     class _Harness(_FakeHarness):
         def __init__(self) -> None:
             super().__init__()
             self.go = threading.Event()
 
         def run(
-            self, instruction, *, session_id=None, before_deliver=None,
-            on_notification=None, cwd=None, agent_preset=None,
+            self,
+            instruction,
+            *,
+            session_id=None,
+            before_deliver=None,
+            on_notification=None,
+            cwd=None,
+            agent_preset=None,
         ):
             if before_deliver is not None:
                 before_deliver()
@@ -2977,19 +3750,33 @@ def test_wide_request_views_survive_concurrent_persistence(tmp_path) -> None:
             session = session_id or ""
             if on_notification is not None:
                 for seq in range(1, 21):
-                    on_notification(Notification(method="session.event", payload={
-                        "sessionId": session,
-                        "event": {
-                            "type": "llm/dispatch", "seq": seq, "time": seq,
-                            "data": {"sessionId": session, "prefixEnd": seq - 1, "turn": 1, "step": 1},
-                        },
-                    }))
+                    on_notification(
+                        Notification(
+                            method="session.event",
+                            payload={
+                                "sessionId": session,
+                                "event": {
+                                    "type": "llm/dispatch",
+                                    "seq": seq,
+                                    "time": seq,
+                                    "data": {
+                                        "sessionId": session,
+                                        "prefixEnd": seq - 1,
+                                        "turn": 1,
+                                        "step": 1,
+                                    },
+                                },
+                            },
+                        )
+                    )
             return _FakeResult("done", "completed", session, [], [])
 
     client = _ViewClient(_NATIVE_VIEW)
     original_request_view = client.session_request_view
 
-    def request_view_during_persistence(session_id: str, dispatch_seq: int) -> dict[str, Any]:
+    def request_view_during_persistence(
+        session_id: str, dispatch_seq: int
+    ) -> dict[str, Any]:
         # 真实 RPC 有往返延迟；持久化在这段窗口内迭代时会被拉长，于是 RPC 返回
         # 后的写入正好落在迭代中途——与线上（旧实现不持锁）相同。
         guard = _view_guards[session_id]
@@ -3011,7 +3798,8 @@ def test_wide_request_views_survive_concurrent_persistence(tmp_path) -> None:
             delivered.append(payload)
 
     service = HarnessService(
-        DeepSeekHarnessConfig(dsh_home=str(tmp_path)), harness_factory=lambda _config: harness,
+        DeepSeekHarnessConfig(dsh_home=str(tmp_path)),
+        harness_factory=lambda _config: harness,
         event_callback=_Sink(),
     )
     thread_failures: list[BaseException] = []
@@ -3026,10 +3814,13 @@ def test_wide_request_views_survive_concurrent_persistence(tmp_path) -> None:
         for round_index in range(20):
             harness.go.clear()
             session = f"round-{round_index}"
-            run_id = service.start_run({
-                "instruction": "wide dispatch", "session_id": session,
-                "event_url": "http://events.invalid/v1/events",
-            })
+            run_id = service.start_run(
+                {
+                    "instruction": "wide dispatch",
+                    "session_id": session,
+                    "event_url": "http://events.invalid/v1/events",
+                }
+            )
             run = service._runs[run_id]
             # 先拉宽已有映射再放行事件，避免替换字典时丢掉刚开始写入的键。
             guard = _WideIterationDict(
@@ -3047,16 +3838,23 @@ def test_wide_request_views_survive_concurrent_persistence(tmp_path) -> None:
                 assert thread_failures == [], thread_failures[0]
                 if (
                     service.run_state(run_id)["status"] != "running"
-                    and service.run_state(run_id)["delivery_state"]["pending_events"] == 0
+                    and service.run_state(run_id)["delivery_state"]["pending_events"]
+                    == 0
                 ):
                     break
                 time.sleep(0.02)
             assert thread_failures == [], thread_failures[0]
-            assert len([
-                event for event in delivered
-                if event["source_session_id"] == session
-                and event["event"]["type"] == "llm/dispatch"
-            ]) == 20
+            assert (
+                len(
+                    [
+                        event
+                        for event in delivered
+                        if event["source_session_id"] == session
+                        and event["event"]["type"] == "llm/dispatch"
+                    ]
+                )
+                == 20
+            )
             state = service.run_state(run_id)
             assert state["status"] == "completed", state
             assert run.error is None, run.error

@@ -16,7 +16,7 @@ import pytest
 from deepseek_harness import DeepSeekHarness, SdkProtocolError
 
 
-_PRELUDE = '''import json
+_PRELUDE = """import json
 import sys
 
 
@@ -74,10 +74,10 @@ for line in sys.stdin:
     elif method == "shutdown":
         send({"jsonrpc": "2.0", "id": msg["id"], "result": {}})
         break
-'''
+"""
 
 
-_RUN_ONE = '''import json
+_RUN_ONE = """import json
 import sys
 
 
@@ -140,10 +140,10 @@ for line in sys.stdin:
     elif method == "shutdown":
         send({"jsonrpc": "2.0", "id": msg["id"], "result": {}})
         break
-'''
+"""
 
 
-_RAISING_RUN = '''import json
+_RAISING_RUN = """import json
 import sys
 
 
@@ -204,7 +204,7 @@ for line in sys.stdin:
     elif method == "shutdown":
         send({"jsonrpc": "2.0", "id": msg["id"], "result": {}})
         break
-'''
+"""
 
 
 def _runtime(tmp_path: Path, script: str) -> Path:
