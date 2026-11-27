@@ -85,6 +85,10 @@ interface SpillRef {
 type SpillLocator = Branded<'SpillLocator'>
 ```
 
+## 溢出记录
+
+每次替换会向所属会话追加一条仅日志的 `spill/spilled` 事件。载荷记录工具调用与被替换的副本（`label`：`result` 或 `dispatch`）、生效的 `threshold`（`maxInlineTokens`）、在预留间隔与最坏情况通知后剩余的保留预算 `budgetTokens`、最终的 `retainedTokens`、文本的 `retainedBytes` 与 `retainedImages`、`spilledBytes`、`omittedBytes`、`omittedImages`、后端的 `locator`，以及完整存储文本与替换内容的 SHA-256 值 `originalDigest`/`previewDigest`。该记录不改变恢复、投影或重放：所属 `tool/result` 或 `tool/ptc-dispatch` 事件仍是权威，存储文本仍是恢复来源。追加失败只记录警告，不会撤销已成功的替换。
+
 ## 服务
 
 `SpillStore`（`ctx.spillStore`，定义于 [`packages/spill/spill/src/index.ts`](../../packages/spill/spill/src/index.ts)）是只有一个方法的抽象服务：`saveText(input) → Promise<SpillRef>`。它持久保存完整的 `content`，并在实际存储失败（权限、ENOSPC、后端不可用）时拒绝。该 seam 只负责存储：不负责保留策略、工具结果替换或检索／搜索 API。

@@ -55,6 +55,10 @@ skill 可以是被扫描根目录顶层的目录 bundle `<name>/SKILL.md`，也�
 
 项目根目录是包含 `.git` 的最近祖先目录；如果不存在，则使用当前 cwd。用户 DSH 根目录会跳过其 `.system` 子目录。`includeDefaultRoots: false` 会省略项目根、用户根以及 `$DSH_BUNDLED_SKILL_DIR` 默认值，使隔离提供方只看到自身配置的根；`bundledSkillDir` 会按 rank 600 添加一个随包提供的根目录。
 
+### 一个提供方，多个执行世界
+
+一次查找可以指明它代理的 agent（`agentId`）。当提供方挂载在 agent 文件所在的世界（例如评测任务容器）时，项目根与自定义根都在该容器内解析，容器没有的根就是如实缺失。默认用户根指向本机主目录，因此只有挂载的提供方能打开主机路径（`processPathFromHostPath`）时才会加入目录；任务容器世界跳过它们，而不是向容器询问主机位置。bundled 根是固定的只读主机资源，始终由本进程读取。两个 cwd 相同的 agent 不会共用缓存目录，因为查找身份是注册表缓存键的一部分。
+
 ### 挂载与配置
 
 与 skill 注册表一起加载该插件；它需要 `ctx.skills`。

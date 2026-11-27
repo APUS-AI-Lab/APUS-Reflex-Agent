@@ -1,7 +1,15 @@
 /** Durable association between a business Session and one explicitly authorized task. */
 import { z } from 'zod'
 import type { ProjectionDefinition } from '@deepseek-ai/dsh-session-projection'
+import type { MemoryId } from './records.ts'
 import { MemoryDomainId, MemoryPrincipalId, MemoryTaskId } from './task-types.ts'
+
+/** One retired task entry as hashed into a binding's retirement digest. */
+export interface TaskRetirementBasis {
+  readonly id: MemoryId
+  readonly status: 'superseded' | 'deactivated'
+  readonly supersedes?: MemoryId
+}
 
 /** A binding captures the retirement set before any task content reaches the model. */
 export interface TaskBinding {
@@ -10,11 +18,21 @@ export interface TaskBinding {
   readonly taskId: MemoryTaskId
   readonly workspace: string
   readonly retirementDigest: string
+  /**
+   * Retired entries in snapshot order that produced `retirementDigest`, hashed as JSON arrays of
+   * `[id, status, supersedes]`; absent on historical bindings.
+   */
+  readonly retirementBasis?: readonly TaskRetirementBasis[]
+  /** Isolated journal revision when the binding was first written; absent on historical bindings. */
+  readonly journalRevision?: number
 }
 
 declare module '@deepseek-ai/dsh-session/types' {
   interface SessionEventMap {
-    /** Explicit host-owned cross-session task binding, required to interpret subsequent task context. */
+    /**
+     * Explicit host-owned cross-session task binding, required to interpret subsequent task context. It also records
+     * the retired entries hashed into `retirementDigest` and the journal revision at first binding.
+     */
     'continuum/task-binding': TaskBinding
   }
 }

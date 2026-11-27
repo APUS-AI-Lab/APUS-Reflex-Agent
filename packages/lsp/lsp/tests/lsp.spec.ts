@@ -185,3 +185,101 @@ describe('Lsp registration', () => {
     expect(LspProviderId('ts')).toBe('ts')
   })
 })
+
+interface RecordedSelection {
+  readonly type: string
+  readonly data: Record<string, unknown>
+}
+
+/** Mount an Lsp service with a stub initiator that records appended session events. */
+async function mountLspWithRecorder(
+  append: (type: string, data: Record<string, unknown>) => void = () => undefined,
+): Promise<{ lsp: Lsp; recorded: RecordedSelection[] }> {
+  const ctx = new Context()
+  await ctx.plugin(Lsp)
+  const recorded: RecordedSelection[] = []
+  ctx.provide('agents', {
+    currentInitiator: () => ({
+      session: {
+        append: (type: string, data: Record<string, unknown>) => {
+          append(type, data)
+          recorded.push({ type, data })
+        },
+      },
+    }),
+  })
+  return { lsp: ctx.lsp as Lsp, recorded }
+}
+
+describe('Lsp provider selection records', () => {
+  it('records the extension-selected provider with the derived language id and timings', async () => {
+    const { lsp, recorded } = await mountLspWithRecorder()
+    lsp.registerProvider(makeProvider('ts', { '.ts': 'typescript' }))
+
+    await lsp.query(query('a.ts'))
+
+    expect(recorded).toHaveLength(1)
+    expect(recorded[0]?.type).toBe('tool/provider-selected')
+    expect(recorded[0]?.data).toEqual(expect.objectContaining({
+      capability: 'lsp',
+      operation: 'goToDefinition',
+      providerId: 'ts',
+      languageId: 'typescript',
+      selectionMode: 'extension-route',
+      outcome: 'completed',
+      fallbackChain: [],
+    }))
+    expect(typeof recorded[0]?.data.selectionMs).toBe('number')
+    expect(typeof recorded[0]?.data.latencyMs).toBe('number')
+  })
+
+  it('records a failed provider query and rethrows the provider error', async () => {
+    const { lsp, recorded } = await mountLspWithRecorder()
+    const failure = new Error('provider failed')
+    lsp.registerProvider({
+      id: LspProviderId('ts'),
+      extensionToLanguage: { '.ts': 'typescript' },
+      query: () => Promise.reject(failure),
+    })
+
+    await expect(lsp.query(query('a.ts'))).rejects.toBe(failure)
+    expect(recorded[0]?.data).toEqual(expect.objectContaining({
+      capability: 'lsp',
+      operation: 'goToDefinition',
+      providerId: 'ts',
+      languageId: 'typescript',
+      outcome: 'failed',
+    }))
+  })
+
+  it('does not record an unmatched extension', async () => {
+    const { lsp, recorded } = await mountLspWithRecorder()
+    lsp.registerProvider(makeProvider('ts', { '.ts': 'typescript' }))
+
+    await expect(lsp.query(query('a.py'))).rejects.toThrow(expect.objectContaining({ code: 'LSP_UNAVAILABLE' }))
+    expect(recorded).toHaveLength(0)
+  })
+
+  it('does not record when no agents service is loaded', async () => {
+    const { lsp } = await mountLsp()
+    lsp.registerProvider(makeProvider('ts', { '.ts': 'typescript' }))
+
+    await expect(lsp.query(query('a.ts'))).resolves.toEqual({ kind: 'locations', locations: [], resolvedWorkspaceUri: 'file:///ws' })
+  })
+
+  it('tolerates an agents service with no active initiator', async () => {
+    const ctx = new Context()
+    await ctx.plugin(Lsp)
+    ctx.provide('agents', { currentInitiator: () => undefined })
+    ctx.lsp.registerProvider(makeProvider('ts', { '.ts': 'typescript' }))
+
+    await expect(ctx.lsp.query(query('a.ts'))).resolves.toEqual({ kind: 'locations', locations: [], resolvedWorkspaceUri: 'file:///ws' })
+  })
+
+  it('keeps the result when the selection record append fails', async () => {
+    const { lsp } = await mountLspWithRecorder(() => { throw new Error('append failed') })
+    lsp.registerProvider(makeProvider('ts', { '.ts': 'typescript' }))
+
+    await expect(lsp.query(query('a.ts'))).resolves.toEqual({ kind: 'locations', locations: [], resolvedWorkspaceUri: 'file:///ws' })
+  })
+})

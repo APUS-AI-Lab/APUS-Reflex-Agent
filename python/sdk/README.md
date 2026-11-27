@@ -30,6 +30,8 @@ with DeepSeekHarness(
 print(result.final_response)
 ```
 
+`DeepSeekHarness.cancel_session(session_id)` stops one session's active and queued work and returns only after the runtime confirmed that session stopped; the shared runtime and every other session keep running. A prompt already in flight when the cancel arrived is refused, so cancelled work never starts afterwards; a prompt sent after the call returns starts new work on the same session. A runtime refusal, failure, or timeout raises instead of returning. `HarnessClient.session_cancel(session_id)` is the same operation below the run API.
+
 `DeepSeekHarness` starts lazily and reuses its runtime until `close()` or context-manager exit. The initial profile handshake has an independent 30-second default bound through `initialize_timeout_seconds`; ordinary turns remain unbounded unless `request_timeout_seconds` is set. A timeout names the selected profile and includes retained runtime diagnostics. `cwd` is the agent workspace; `runtime_cwd` independently selects the subprocess working directory. Both become absolute before launch. `provider`, `model`, optional `reasoning_effort`, and optional positive `max_tokens` are sent during JSON-RPC initialization. `base_url` and `api_key` explicitly override `DEEPSEEK_BASE_URL` and `DEEPSEEK_API_KEY` in the child environment.
 
 ## Customize plugins
@@ -65,10 +67,14 @@ The shipped `sdk-minimal` profile is a standalone explicit tree rather than an o
 
 `Session.run()` owns an activity interval from its prompt's logged inbox receipt through the next whole-agent idle and returns `RunResult(session_id, final_response, finish_reason, events, notifications)`. `final_response` is the last committed root-session assistant text in the interval. `finish_reason` is the `kind` of the last root-session `turn/end`, such as `completed`, `max-tokens`, or `error`, and is `None` when no turn ended. A `turn/end` without a string `data.reason.kind` violates the protocol and raises `SdkProtocolError`.
 
-`HarnessClient` retains discovered subagent ancestry for the runtime process lifetime. During `Session.run()`, `RunResult.notifications` and `on_notification` receive the root session and known descendants in wire order. `RunResult.events` contains root-session events only, so descendant output cannot replace the root response. The low-level `session_prompt()` returns the queued message id immediately; callers that bypass `Session.run()` own the later activity boundary.
+A Session's initialization events are appended before its prompt is spliced into the inbox, so they reach the subscription ahead of the receipt. `Session.run()` keeps them as the start of the interval when the source session has not been read before. Notifications that a previous run already returned, including a later sequence appended after that run ended, stay out of the next interval.
+
+`HarnessClient` retains discovered subagent ancestry for the runtime process lifetime. During `Session.run()`, `RunResult.notifications` and `on_notification` receive the root session and known descendants in wire order, each source event once. `RunResult.events` contains root-session events only, so descendant output cannot replace the root response. The low-level `session_prompt()` returns the queued message id immediately; callers that bypass `Session.run()` own the later activity boundary.
 
 The selected home stores profiles, plugins, and every profile-owned durable resource. The full `sdk` profile uses its credentials, settings, and session stores; `sdk-minimal` uses only its JSONL session store. Use a fresh home when those resources must be isolated, and a fresh session id for independent work. Reusing both a harness and session id continues the durable conversation and session-owned resources.
 
 For APUS Continuum replay, call `latest_continuum_memory_decision(result.events)` to read the newest recorded `continuum/memory-decision` receipt. The projection is local and replay-only: it never calls Jev or performs a new retrieval, and returns `None` when the log has no decision.
 
 See the [Python tutorial](../../docs/user/guide/python-sdk.md), [runnable example](examples/README.md), and [runtime wheel reference](../sdk-runtime/README.md).
+
+The HTTP service uses `DSH_REQUEST_TIMEOUT_SECONDS` (default 30, finite and positive) for control requests and cancellation acknowledgement. This does not limit model output tokens or the overall case runtime. A cancellation of an already completed run preserves and returns its completed status.

@@ -83,7 +83,7 @@ kind: "package-reference"
 
 ### 审计
 
-`request()` 先追加携带请求身份与工具的 `approval/asked`，再追加携带最终结果的 `approval/decided`；确切追加字段见 [`src/index.ts`](src/index.ts)。两者都只写入日志；不变式会在同一个未结束轮次内按 id 校验这一事件对，并校验结果属于封闭词汇。
+`request()` 先追加携带请求身份与工具的 `approval/asked`，再追加携带最终结果与 `decisionPath` 的 `approval/decided`：`decisionPath` 记录聚合点在哪里作出结论——请求信号、会话策略、应答者、委托后的失败关闭默认值、被容纳的应答者失败，或中止竞争；当应答者返回结果时，还附带 `responder: 'unattributed'`。waterfall 不暴露稳定的逐应答者身份，因此绝不推断应答者名称。两者都只写入日志；不变式会在同一个未结束轮次内按 id 校验这一事件对，并校验结果属于封闭词汇。
 
 </details>
 
@@ -155,6 +155,7 @@ Approval prompts are disabled in this session: actions that require approval are
 - **仅存在一次性授权**：结果词汇包含 `allowed-once`，但不含 `allow-always`、已记住的规则、撤销或授权存储；会话策略只有 `ask`／`never`。
 - **请求不携带工具参数**：应答者会看到工具名称、原因和可选调用 id；ACP（Agent Client Protocol）机器通道要求调用 id，并会委托不含 id 的请求。
 - **没有内置应答者**：无头或组合不完整的部署会返回 `unavailable` 并以拒绝方式关闭；服务自身绝不会提示人类。
+- **审计中没有应答者身份**：`approval/decided` 以 `'unattributed'` 记录有应答者返回；waterfall 无法指出声明该请求的具体监听器。
 
 <a id="dev-note"></a>
 ### 开发备注

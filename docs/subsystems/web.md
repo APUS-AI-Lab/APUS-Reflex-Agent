@@ -124,6 +124,43 @@ A provider's `available(): boolean` is a cheap LOCAL check (credential presence,
 
 Selection never depends on registration, config, or HMR order: a capability has an explicit provider id (config `searchProvider`/`fetchProvider`, or the matching env var feeding the same field), or auto-selects when exactly one usable provider is registered; multiple usable providers with no configured id is `WEB_PROVIDER_AMBIGUOUS`, not first-wins.
 
+## Provider selection record
+
+After the selected provider settles, each `search()` or `fetch()` call appends one log-only `web/provider-selected` event to the initiating agent's session. A call with no initiator logs nothing, and a failed append cannot change the call's result or error. The event records the capability, the registered id that ran, how selection chose it, both timings, the outcome, and the seam-level fallback chain. It carries no surface metadata and never enters model history; the operation's result or thrown `WebError` stays authoritative.
+
+```ts type-equiv
+/** How execution-time selection chose the web provider that ran. */
+type WebProviderSelectionMode = 'configured' | 'auto-single'
+```
+
+```ts type-equiv
+/**
+ * One successful execution-time web provider selection, appended after the
+ * selected provider settles. `providerId` is the registered id that actually
+ * ran, `selectionMode` records whether an explicit id won or the sole usable
+ * provider auto-selected, and `fallbackChain` is always empty because this
+ * seam never falls back (provider-internal retries are not visible here).
+ * Log-only: `deriveMessages()` ignores it; the operation's result or thrown
+ * {@link WebError} stays authoritative.
+ */
+interface WebProviderSelectedEventData {
+  /** Capability whose call selected the provider. */
+  readonly capability: 'search' | 'fetch'
+  /** Registered id of the provider that ran. */
+  readonly providerId: string
+  /** How selection chose the provider. */
+  readonly selectionMode: WebProviderSelectionMode
+  /** Milliseconds from entering selection until the provider was chosen. */
+  readonly selectionMs: number
+  /** Milliseconds from provider dispatch to settlement, success or failure. */
+  readonly latencyMs: number
+  /** Whether the provider operation resolved or threw. */
+  readonly outcome: 'completed' | 'failed'
+  /** Seam-level fallback candidates, in order; always empty because the seam selects exactly one provider. */
+  readonly fallbackChain: readonly string[]
+}
+```
+
 ## Fetch network policy
 
 The shipped Cordis, Code, and Standard presets expose `web_fetch` in every sandbox and approval mode without per-call confirmation. File sandbox presets do not govern Web network access. A deployment that needs confirmation must add a `tools/pre-execute` policy or disable fetch.
@@ -185,6 +222,8 @@ registerFetchProvider(provider: WebFetchProvider): () => void
  * time with the selection rules above; throws {@link WebError} when the
  * capability cannot run. The seam enforces `request.maxResults` on the result:
  * if the provider over-returns, `sources[]` is truncated and `truncated` set.
+ * Appends one log-only `web/provider-selected` record to the initiating
+ * Agent's session; a missing initiator or failed append changes nothing.
  * @param request - the query and optional result limit.
  * @param signal - optional cancellation signal forwarded to the provider.
  * @returns the provider's results, capped to `request.maxResults`.
@@ -195,6 +234,8 @@ async search(request: WebSearchRequest, signal?: AbortSignal): Promise<WebSearch
  * Retrieve one URL through the selected provider. Resolves the provider at
  * call time with the selection rules above; throws {@link WebError} when the
  * capability cannot run. A non-2xx response is a result, not a throw.
+ * Appends one log-only `web/provider-selected` record to the initiating
+ * Agent's session; a missing initiator or failed append changes nothing.
  * @param request - the URL plus retrieval options.
  * @param signal - optional cancellation signal forwarded to the provider.
  * @returns the retrieval outcome; non-2xx responses resolve descriptively.

@@ -77,6 +77,7 @@ const PACKAGE_LIBRARIES: Readonly<Record<string, string>> = {
   'packages/session/session-format-v0-to-v1': 'Pure released-v0 codec and adjacent migration library.',
   'packages/session/session-format-v2-to-v3': 'Pure released-v2 codec and adjacent migration library.',
   'packages/session/session-format-v3-to-v4': 'Released V3 codec reuse and adjacent migration library.',
+  'packages/session/session-format-v4-to-v5': 'Released V4 framing reuse and adjacent header-promotion library.',
   'packages/session/session-telemetry': 'Telemetry Service Definition and capture library; providers mount the backend.',
   'packages/session/session-title-llm': 'Shared LLM title-provider registration and request policy.',
   'packages/subagent/subagent-in-process-driver': 'Shared one-shot child-agent driver used by provider plugins.',

@@ -78,7 +78,7 @@ kind: "package-reference"
 
 ### 消费方角色
 
-该插件以 `['tools', 'userQuestions']` 注入，在 `ctx.tools` 上注册一个 `defineTool` 条目。`execute` 把模型参数映射为 `AskUserQuestionRequest`，转发确切的调用 agent 与当前轮次的信号，并把接受的回答映射回规范的 `answers` 数组。身份检查、意图校验、waterfall（瀑布式事件）分派与错误分类由 seam 拥有；本包只做转换。
+该插件以 `['tools', 'userQuestions']` 注入，在 `ctx.tools` 上注册一个 `defineTool` 条目。`execute` 把模型参数映射为 `AskUserQuestionRequest`，转发确切的调用 agent、工具调用 id（使 seam 只写入日志的应答回执能关联到本次调用）与当前轮次的信号，并把接受的回答映射回规范的 `answers` 数组。身份检查、意图校验、waterfall（瀑布式事件）分派、应答回执与错误分类由 seam 拥有；本包只做转换。
 
 ### 结果渲染
 

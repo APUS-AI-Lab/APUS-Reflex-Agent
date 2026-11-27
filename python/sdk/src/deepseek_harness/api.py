@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import threading
 import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -94,6 +95,8 @@ class DeepSeekHarness:
             _launch_args=_launch_args,
         )
         self._initialized = False
+        self._sessions: dict[str, Session] = {}
+        self._session_lock = threading.Lock()
 
     def __enter__(self) -> "DeepSeekHarness":
         self.start()
@@ -105,6 +108,19 @@ class DeepSeekHarness:
     @property
     def client(self) -> HarnessClient:
         return self._client
+
+    @property
+    def pid(self) -> int | None:
+        """The running runtime's process id, or ``None`` while it is not up.
+
+        A service that keeps one runtime per model route has to be able to say
+        which process serves a route and whether it is still alive; the SDK is
+        the only layer that holds that handle.
+        """
+        proc = self._client._proc
+        if proc is None or proc.poll() is not None:
+            return None
+        return proc.pid
 
     def start(self) -> None:
         if self._initialized:
@@ -122,49 +138,192 @@ class DeepSeekHarness:
     def close(self) -> None:
         self._client.close()
         self._initialized = False
+        self._sessions.clear()
 
-    def start_session(self, session_id: str | None = None) -> "Session":
+    def start_session(
+        self,
+        session_id: str | None = None,
+        *,
+        cwd: str | None = None,
+        agent_preset: str | None = None,
+    ) -> "Session":
+        if cwd is not None and (
+            not isinstance(cwd, str) or not cwd or not Path(cwd).is_absolute()
+        ):
+            raise ValueError("session cwd must be an absolute path")
+        if agent_preset is not None and (
+            not isinstance(agent_preset, str) or not agent_preset.strip()
+        ):
+            raise ValueError("session agent_preset must be a nonempty string")
         self.start()
-        return Session(self, session_id or f"session-{uuid.uuid4().hex}")
+        identity = session_id or f"session-{uuid.uuid4().hex}"
+        with self._session_lock:
+            existing = self._sessions.get(identity)
+            if existing is not None:
+                if cwd is not None and cwd != existing.cwd:
+                    raise ValueError(
+                        f"session {identity!r} already uses cwd {existing.cwd!r}"
+                    )
+                if agent_preset is not None and agent_preset != existing.agent_preset:
+                    raise ValueError(
+                        f"session {identity!r} already uses preset {existing.agent_preset!r}"
+                    )
+                return existing
+            session = Session(
+                self, identity, cwd=cwd or self._cwd, agent_preset=agent_preset
+            )
+            self._sessions[identity] = session
+            return session
+
+    @property
+    def capabilities(self) -> list[str]:
+        """Return the capability tokens the runtime advertised during the handshake."""
+        return self._client.capabilities
+
+    def dispatches(self, session_id: str) -> JsonObject:
+        """List one session's recorded model dispatches.
+
+        The runtime owns the dispatch records; this SDK transports them
+        verbatim.
+
+        Raises:
+            ValueError: ``session_id`` is empty.
+            JsonRpcError: The runtime refused the request.
+            SdkProtocolError: The runtime answered without a dispatch list.
+        """
+        self.start()
+        return self._client.session_dispatches(session_id)
+
+    def request_view(self, session_id: str, dispatch_seq: int) -> JsonObject:
+        """Fetch one recorded dispatch's rebuilt model input.
+
+        The runtime reconstructs the view through its native Session
+        primitives; the Python SDK relays it unchanged and builds no second
+        message projection.
+
+        Raises:
+            ValueError: ``session_id`` is empty or ``dispatch_seq`` is invalid.
+            JsonRpcError: The runtime refused the request.
+            SdkProtocolError: The runtime answered without a request view.
+        """
+        self.start()
+        return self._client.session_request_view(session_id, dispatch_seq)
+
+    def cancel_session(self, session_id: str) -> None:
+        """Cancel one session's work and wait until the runtime confirms it stopped.
+
+        The shared runtime and every other session stay alive. Only a confirmed
+        settlement returns; a runtime failure or refusal is raised.
+        """
+        self.start()
+        self._client.session_cancel(session_id)
 
     def run(
         self,
         input: str | list[JsonObject],
         *,
         session_id: str | None = None,
+        cwd: str | None = None,
+        agent_preset: str | None = None,
         on_notification: Callable[[Notification], None] | None = None,
+        before_deliver: Callable[[], None] | None = None,
     ) -> RunResult:
-        return self.start_session(session_id).run(
-            input, on_notification=on_notification
+        return self.start_session(session_id, cwd=cwd, agent_preset=agent_preset).run(
+            input, on_notification=on_notification, before_deliver=before_deliver
         )
 
 
 class Session:
-    def __init__(self, harness: DeepSeekHarness, session_id: str) -> None:
+    def __init__(
+        self,
+        harness: DeepSeekHarness,
+        session_id: str,
+        *,
+        cwd: str | None = None,
+        agent_preset: str | None = None,
+    ) -> None:
         self.harness = harness
         self.id = session_id
+        self._cwd = cwd or harness._cwd
+        self._agent_preset = agent_preset
+        # Highest native sequence this Session has returned, per source
+        # session. A source session absent here has not been read before, so
+        # its initialization events can still arrive ahead of this run's inbox
+        # receipt; once it has a prefix, everything it sends is a later run's.
+        self._last_seqs: dict[str, int] = {}
+
+    @property
+    def cwd(self) -> str:
+        return self._cwd
+
+    @property
+    def agent_preset(self) -> str | None:
+        return self._agent_preset
 
     def run(
         self,
         input: str | list[JsonObject],
         *,
         on_notification: Callable[[Notification], None] | None = None,
+        before_deliver: Callable[[], None] | None = None,
     ) -> RunResult:
         content_blocks = normalize_input(input)
         notifications: list[Notification] = []
         events: list[JsonObject] = []
+        # Notifications this Session returned before this run, per source
+        # session. See ``_last_seqs``: a source session not listed here is
+        # still unread, so its initialization events belong to this run.
+        returned = dict(self._last_seqs)
+        seen: set[tuple[str, int]] = set()
+        pending: list[Notification] = []
+        observed: dict[str, int] = {}
 
         def collect(notification: Notification) -> None:
+            event = (
+                notification.payload.get("event")
+                if notification.method == "session.event"
+                else None
+            )
+            if isinstance(event, dict):
+                source_id = notification.payload.get("sessionId")
+                seq = event.get("seq")
+                if isinstance(source_id, str) and isinstance(seq, int):
+                    if seq <= returned.get(source_id, -1) or (source_id, seq) in seen:
+                        return
+                    seen.add((source_id, seq))
+                    observed[source_id] = max(observed.get(source_id, -1), seq)
             notifications.append(notification)
             if on_notification is not None:
                 on_notification(notification)
             if (
-                notification.method == "session.event"
+                isinstance(event, dict)
                 and notification.payload.get("sessionId") == self.id
             ):
+                events.append(event)
+
+        def claim_before_receipt(buffered: list[Notification]) -> list[Notification]:
+            """Return the buffered notifications this run owns, in arrival order.
+
+            A source session this Session has not returned events for yet is
+            starting here, so its initialization events belong to this run.
+            Every other notification seen before the receipt belongs to an
+            earlier run: this run's own replies, status, and subagents are all
+            appended after its splice.
+            """
+            claimed: list[Notification] = []
+            for notification in buffered:
+                if notification.method != "session.event":
+                    continue
+                source_id = notification.payload.get("sessionId")
                 event = notification.payload.get("event")
-                if isinstance(event, dict):
-                    events.append(event)
+                seq = event.get("seq") if isinstance(event, dict) else None
+                if (
+                    isinstance(source_id, str)
+                    and isinstance(seq, int)
+                    and source_id not in returned
+                ):
+                    claimed.append(notification)
+            return claimed
 
         with self.harness.client.subscribe_session_notifications(
             self.id
@@ -172,7 +331,10 @@ class Session:
             message_id = self.harness.client.session_prompt(
                 self.id,
                 content_blocks,
+                cwd=self.cwd,
+                agent_preset=self.agent_preset,
                 notification_subscription=subscription,
+                before_deliver=before_deliver,
             )
 
             received = False
@@ -180,8 +342,12 @@ class Session:
                 notification = subscription.next()
                 if not received:
                     if not _is_inbox_receipt(notification, self.id, message_id):
+                        pending.append(notification)
                         continue
                     received = True
+                    for buffered in claim_before_receipt(pending):
+                        collect(buffered)
+                    pending.clear()
                 collect(notification)
                 if (
                     notification.method == "session.status"
@@ -190,13 +356,16 @@ class Session:
                 ):
                     break
 
-        return RunResult(
+        result = RunResult(
             session_id=self.id,
             final_response=final_response(events),
             finish_reason=finish_reason(events),
             events=events,
             notifications=notifications,
         )
+        for source_id, seq in observed.items():
+            self._last_seqs[source_id] = max(self._last_seqs.get(source_id, -1), seq)
+        return result
 
 
 def _is_inbox_receipt(

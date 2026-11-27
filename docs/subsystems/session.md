@@ -40,7 +40,47 @@ interface SessionEventMap {
    * `whenIdle()` flush themselves. Success commits the turn; rejection is
    * reported live and does not prevent later work.
    */
-  'turn/end': { turn: number; reason: TurnEndReason }
+  'turn/end': {
+    turn: number
+    reason: TurnEndReason
+    /**
+     * The pre-step listener's blocking reason, present only when `reason.kind`
+     * is `'blocked'` and the rejecting listener supplied one. Closers produced
+     * by repair or fork synthesis never carry it.
+     */
+    blockedReason?: string
+  }
+  /**
+   * The disposition of one proposed step before any step-scoped event: what
+   * the pre-step chain did with the inbox messages claimed for that proposal.
+   * `entered` admits `enteredMessageIds` as the step's model batch, `rejected`
+   * passes the claimed messages over and closes the turn, and `cancelled`
+   * leaves the proposal with no admission decision. This event is the
+   * authoritative record of which messages entered the model batch; surface
+   * `user/message` events follow it. `rewrite` is present only when the entered
+   * batch differs from the loop's default (claimed messages plus projected
+   * runtime context).
+   */
+  'turn/pre-step': {
+    turn: number
+    step: number
+    disposition: 'entered' | 'rejected' | 'cancelled'
+    /** Inbox messages claimed for this proposal, in claim order. */
+    claimedMessageIds: MessageId[]
+    /** Messages admitted as the step's model batch; present for `entered`. */
+    enteredMessageIds?: MessageId[]
+    /** Claimed messages passed over without entering a step; present for `rejected`. */
+    rejectedMessageIds?: MessageId[]
+    /** The rejecting listener's reason; present only when it supplied one. */
+    blockedReason?: string
+    /** Default-batch delta and digests; present only when the entered batch differs. */
+    rewrite?: {
+      addedMessageIds: MessageId[]
+      removedMessageIds: MessageId[]
+      beforeDigest: string
+      afterDigest: string
+    }
+  }
   /** Opens step `step` of turn `turn` — one model call plus the tool executions it requested. */
   'step/start': { turn: number; step: number }
   /** Closes step `step` of turn `turn`. */
@@ -128,6 +168,18 @@ interface SessionEventMap {
      */
     error?: { name: string; code: string; reason?: string }
     meta?: JsonValue
+    /**
+     * Plugin that registered the tool, when its definition declares one. Not
+     * model-visible; absent for tools that declare no owner and for calls
+     * skipped before dispatch.
+     */
+    pluginOwner?: string
+    /**
+     * Execution backend that ran the tool, when its definition declares one.
+     * Not model-visible; absent for tools that declare no backend and for
+     * calls skipped before dispatch.
+     */
+    executionBackend?: string
   }
   /**
    * Full header for the next request, appended inside its step before dispatch.
@@ -138,14 +190,32 @@ interface SessionEventMap {
     reason: RequestHeaderReason
     /** This request begins a distinct model-message series, independently of the header reason. */
     startsSeries?: true
+    /**
+     * Call-config fields the request waterfall changed relative to the loop's
+     * seed, aggregated per field without listener identity. A field absent
+     * from either side carries no `before` or `after`. Absent when nothing
+     * changed.
+     */
+    configRewrites?: {
+      field: 'provider' | 'model' | 'reasoningEffort' | 'temperature' | 'maxTokens' | 'stop'
+      before?: JsonValue
+      after?: JsonValue
+    }[]
+    /**
+     * Assembled prompt sections that rendered empty for this request. Absent
+     * when no section rendered empty.
+     */
+    omittedSections?: { name: string; reason: 'empty' }[]
   }
   /**
    * Route metadata for the next request, logged only when the route, capacity,
-   * or system prompt update mode changes. It does not participate in request
-   * reconstruction or header equality. Prompt admission uses the bound prepared
-   * call's capability, not this snapshot from an earlier request.
+   * or system prompt update mode changes. The same append also snapshots the
+   * prompt-section and tool-schema digests the request used. It does not
+   * participate in request reconstruction or header equality. Prompt admission
+   * uses the bound prepared call's capability, not this snapshot from an
+   * earlier request.
    */
-  'request/context': RequestContext
+  'request/context': RequestContextEventData
   /**
    * Separates inherited or restored history from later lifecycle-owned work.
    * This log-only marker need not be at {@link Session.firstLiveSeq}: a fork

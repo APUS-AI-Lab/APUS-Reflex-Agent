@@ -21,11 +21,14 @@
   en: f7c183c8728b05cd
   zh: f0104632d8eb2938
 /deepseek-ai-dsh-user-questions/service-userquestionservice-ctx-key-userquestions/key-types:
-  en: 10637ca40891d520
-  zh: 015662eb651d19cb
+  en: 90c3aaf6da24852e
+  zh: 91f2b4bb3f23ed0c
 /deepseek-ai-dsh-user-questions/service-userquestionservice-ctx-key-userquestions/presentation-intent:
-  en: d3809cfa854f1c02
-  zh: f9bcc88f1db8fd83
+  en: 724afb45884a02eb
+  zh: 6b460d7f052e62e2
+/deepseek-ai-dsh-user-questions/service-userquestionservice-ctx-key-userquestions/answer-receipt:
+  en: 6046ba68fc3b0c42
+  zh: 9582f6fc83f62d18
 /deepseek-ai-dsh-user-questions/role:
   en: 1d4b9680e35350a7
   zh: fcba25211099b880
@@ -36,8 +39,8 @@
   en: 40294c1c31b74824
   zh: cd40bdfe1a1c37dc
 /deepseek-ai-dsh-user-questions/known-limitations-and-deferred-work:
-  en: 9c2d868427856d56
-  zh: f0d19979fd90d826
+  en: ffac8536966f2d1d
+  zh: 310821a63192cf65
 /deepseek-ai-dsh-user-questions/known-limitations-and-deferred-work/dev-note:
-  en: f5f2c82d2e085ccf
-  zh: d04ca73d1db0ef0f
+  en: ff657d49eab77dc5
+  zh: 6522aebbbffc5d55

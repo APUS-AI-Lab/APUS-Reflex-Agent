@@ -449,10 +449,16 @@ describe('compactNow transaction and failure classification', () => {
     )
     const end = session.snapshotEvents().findLast(event => event.type === 'compaction/end')
     const correlated = { compactionId: result?.compactionId, sourceCommandId: commandId }
-    expect(start?.data).toEqual({ ...correlated, turn: null })
+    expect(start?.data).toEqual({ ...correlated, turn: null, trigger: 'manual', autoCaller: null })
     expect(summaryEvent?.data.sourceCommandId).toBe(commandId)
     expect(checkpoint?.data.source).toMatchObject(correlated)
-    expect(end?.data).toEqual({ ...correlated, turn: null })
+    expect(end?.data).toEqual({
+      ...correlated,
+      turn: null,
+      generationAdvanced: true,
+      retryDecision: 'not-applicable',
+      recovered: false,
+    })
   })
 
   it('reports a live unmatched bracket as busy without summarizing', async () => {
@@ -744,7 +750,12 @@ describe('compactNow transaction and failure classification', () => {
     expect(result).not.toBeNull()
     expect(session.snapshotEvents().some(event => event.type === 'turn/start')).toBe(false)
     expect(session.snapshotEvents().find(event => event.type === 'compaction/start')?.data)
-      .toEqual({ compactionId: result?.compactionId, turn: null })
+      .toEqual({
+        compactionId: result?.compactionId,
+        turn: null,
+        trigger: 'manual',
+        autoCaller: null,
+      })
   })
 
   it('classifies a durability failure after the standalone bracket committed', async () => {
@@ -758,7 +769,13 @@ describe('compactNow transaction and failure classification', () => {
     expect(session.snapshotEvents().some(event => event.type === 'compaction/summary')).toBe(true)
     const start = session.snapshotEvents().findLast(event => event.type === 'compaction/start')
     const end = session.snapshotEvents().findLast(event => event.type === 'compaction/end')
-    expect(end?.data).toEqual({ compactionId: start?.data.compactionId, turn: null })
+    expect(end?.data).toEqual({
+      compactionId: start?.data.compactionId,
+      turn: null,
+      generationAdvanced: true,
+      retryDecision: 'not-applicable',
+      recovered: false,
+    })
   })
 
   it('lets a pre-aborted signal win before reservation, measurement, or summarization', async () => {

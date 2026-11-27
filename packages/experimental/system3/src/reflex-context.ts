@@ -10,7 +10,7 @@ import { reflexContextMessageProjection, projectReflexText, type ReflexContextTa
 import type { System3DataClass } from '@deepseek-ai/dsh-experimental-system3-policy'
 import { runSystem3Decision, validateSystem3DecisionSettings, type System3DecisionSettings, type System3DecisionContext, type System3DecisionSpec } from './decision-kernel.ts'
 import { JevConfigurationError, type JevRequest, type JevSpec } from '@deepseek-ai/dsh-experimental-apus-dsh-jev-plugin'
-import { reflexContextStateProjection, type ReflexContextState } from './reflex-context-state.ts'
+import { reflexContextStateProjection, type ReflexContextAnchorSnapshot, type ReflexContextState } from './reflex-context-state.ts'
 import { sweepReflexContext, validateReflexContextSweepConfig, type ReflexContextSweepConfig, type SweepHost } from './reflex-context-sweep.ts'
 import type {} from '@deepseek-ai/dsh-compaction'
 
@@ -153,6 +153,10 @@ function stateOf(ctx: Context, agent: Pick<Agent, 'session'>): ReflexContextStat
   if (state === undefined) throw new Error('Reflex context projection is not installed')
   return state
 }
+/** Copy the state fields already in force at an anchor append; no recomputation and no effect on freezing. */
+function anchorSnapshot(state: ReflexContextState): ReflexContextAnchorSnapshot {
+  return { revision: state.revision, topic: state.topic, constraints: [...state.constraints] }
+}
 function activeBlocks(agent: Pick<Agent, 'session'>, state: ReflexContextState): ReflexContextState['blocks'] {
   const nodes = new Set(agent.session.surface.nodes)
   return state.blocks.filter(block => nodes.has(block.seq))
@@ -209,7 +213,7 @@ export function installReflexContext(ctx: Context, config: ReflexContextConfig, 
       if (state === undefined) throw new Error('Reflex context projection is not installed')
       const throughSeq = state.messageSeqs.at(-1) ?? SessionSeq(0)
       if (!state.anchored || throughSeq > state.frozenThrough) {
-        session.append('reflex/context-cache-anchor', { version: 1, throughSeq })
+        session.append('reflex/context-cache-anchor', { version: 1, throughSeq, snapshot: anchorSnapshot(state) })
       }
     }
     yield* next()
@@ -227,7 +231,7 @@ export function installReflexContext(ctx: Context, config: ReflexContextConfig, 
     if (!resumed.has(agent.session)) {
       resumed.add(agent.session)
       if (!state.anchored && state.legacyRequest) {
-        agent.session.append('reflex/context-cache-anchor', { version: 1, throughSeq: state.messageSeqs.at(-1) ?? SessionSeq(0) })
+        agent.session.append('reflex/context-cache-anchor', { version: 1, throughSeq: state.messageSeqs.at(-1) ?? SessionSeq(0), snapshot: anchorSnapshot(state) })
         state = stateOf(ctx, agent)
       }
     }

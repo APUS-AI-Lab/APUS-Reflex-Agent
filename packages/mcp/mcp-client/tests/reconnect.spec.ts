@@ -31,6 +31,7 @@ const { mockConnect, mockClose, mockListTools, mockCallTool, mockSetNotification
     close = mockClose
     getServerCapabilities = () => ({ tools: {} })
     getInstructions(): string | undefined { return undefined }
+    getServerVersion(): { name: string; version: string } | undefined { return undefined }
     listResources = async () => ({ resources: [] })
     listTools = mockListTools
     callTool = mockCallTool
@@ -210,8 +211,42 @@ describe('reconnect supervisor', () => {
     expect(instances).toHaveLength(2)
   })
 
+  it('reports one ready connection fact with the negotiated handshake', async () => {
+    const facts: import('@deepseek-ai/dsh-mcp-client/src/connection.ts').McpConnectionFact[] = []
+    ctx.on('mcp/connection', (fact) => { facts.push(fact) })
+    const versionSpy = vi.spyOn(MockClient.prototype, 'getServerVersion')
+      .mockReturnValue({ name: 'fixture-server', version: '9.9.9' })
+
+    await apply(ctx, stdioConfig())
+    await vi.waitFor(() => { expect(ctx.tools.get('mcp__srv__remote')).toBeDefined() })
+
+    expect(facts).toEqual([{
+      serverName: 'srv',
+      transport: 'stdio',
+      status: 'ready',
+      attempt: 0,
+      maxAttempts: RECONNECT_DEFAULTS.maxAttempts,
+      serverInfo: 'fixture-server 9.9.9',
+    }])
+    versionSpy.mockRestore()
+    await ctx.fiber.dispose()
+  })
+
+  it('a throwing connection observer cannot break the connection it reports', async () => {
+    ctx.on('mcp/connection', () => { throw new Error('observer exploded') })
+
+    await apply(ctx, stdioConfig())
+    await vi.waitFor(() => { expect(ctx.tools.get('mcp__srv__remote')).toBeDefined() })
+
+    // The connection and its tools stand; only the observation was lost.
+    expect(ctx.tools.get('mcp__srv__remote')).toBeDefined()
+    await ctx.fiber.dispose()
+  })
+
   it('stops at the failure cap, unregisters the tools, and reports final failure', async () => {
     const { warns, errors } = captureLogs(ctx)
+    const facts: import('@deepseek-ai/dsh-mcp-client/src/connection.ts').McpConnectionFact[] = []
+    ctx.on('mcp/connection', (fact) => { facts.push(fact) })
     await apply(ctx, stdioConfig({ initialDelayMs: 2, maxDelayMs: 8, maxAttempts: 2 }))
     await vi.waitFor(() => { expect(ctx.tools.get('mcp__srv__remote')).toBeDefined() })
 
@@ -232,6 +267,10 @@ describe('reconnect supervisor', () => {
     expect(mockConnect).toHaveBeenCalledTimes(3)
     expect(warns.some(line => line.includes('connection attempt failed: Error: server gone'))).toBe(true)
     expect(warns.some(line => line.includes('connection failed; retrying in 4ms (attempt 2/2)'))).toBe(true)
+    // Each failed attempt and the terminal give-up are reported once, in order.
+    expect(facts.filter(fact => fact.status === 'failed').map(fact => fact.attempt)).toEqual([1, 2])
+    expect(facts.at(-1)).toMatchObject({ status: 'gave-up', attempt: 2, maxAttempts: 2 })
+    expect(facts.filter(fact => fact.status === 'ready')).toHaveLength(1)
     await sleep(30)
     expect(mockConnect).toHaveBeenCalledTimes(3)
   })
@@ -433,12 +472,24 @@ describe('reconnect supervisor', () => {
   })
   it('reconnect disabled after a failed initial connect reports no registered tools', async () => {
     const { errors } = captureLogs(ctx)
+    const facts: import('@deepseek-ai/dsh-mcp-client/src/connection.ts').McpConnectionFact[] = []
+    ctx.on('mcp/connection', (fact) => { facts.push(fact) })
     mockConnect.mockRejectedValue(new Error('refused'))
     await apply(ctx, stdioConfig({ enabled: false }))
     await sleep(30)
     expect(ctx.tools.get('mcp__srv__remote')).toBeUndefined()
     expect(errors.some(line => line.includes('connection failed and reconnect is disabled'))).toBe(true)
     expect(errors.some(line => line.includes('no tools were registered'))).toBe(true)
+    // A disabled policy cannot recover the server, so the attempt is terminal
+    // and carries the reason the plugin gave up on it.
+    expect(facts).toEqual([{
+      serverName: 'srv',
+      transport: 'stdio',
+      status: 'gave-up',
+      attempt: 1,
+      maxAttempts: 0,
+      error: 'Error: refused',
+    }])
   })
 
   it('an uptime past the stability window resets the attempt budget', async () => {

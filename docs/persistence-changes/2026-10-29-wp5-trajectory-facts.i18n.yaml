@@ -1,0 +1,28 @@
+# Bilingual-pair consistency record for 2026-10-29-wp5-trajectory-facts.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/persistence-changes/2026-10-29-wp5-trajectory-facts.md
+/:
+  en: 3d5a424ae7d7e46b
+  zh: c22a8e4a62d8cc1a
+/2026-10-29-wp5-trajectory-facts:
+  en: 46908f7e2c130cac
+  zh: c86f7075196b3e9a
+/2026-10-29-wp5-trajectory-facts/summary:
+  en: 5082760d302a9217
+  zh: 1b902e55cefa932a
+/2026-10-29-wp5-trajectory-facts/table-of-contents:
+  en: 6cf314a069ceb451
+  zh: 9adff678e9ecab3b
+/2026-10-29-wp5-trajectory-facts/declaration:
+  en: 6907136f28e48c90
+  zh: 02f8298485f3d8e7
+/2026-10-29-wp5-trajectory-facts/compatibility:
+  en: bde6b43216791be5
+  zh: 7cc1071ff4f8e133
+/2026-10-29-wp5-trajectory-facts/verification:
+  en: 89b7840eff69b352
+  zh: 2a9532f3fbbc55c7
+/2026-10-29-wp5-trajectory-facts/dev-note:
+  en: b75c8458928b72b9
+  zh: 003ba4e17b4b5269

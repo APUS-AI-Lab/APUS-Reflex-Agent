@@ -204,6 +204,40 @@ describe('LocalJobRegistry.start', () => {
     expect(() => ctx.jobs.start(producer().spec)).not.toThrow()
   })
 
+  it('records the durable settlement fact on the owner session', async () => {
+    const ctx = await harness()
+    const owner = await liveAgent(ctx, 'settling-owner')
+    const job = producer({ owner })
+    const id = ctx.jobs.start(job.spec)
+    job.settle({ status: 'completed', result: 'JOB_DONE' })
+    await ctx.jobs.wait(id, 5_000, owner.id)
+
+    const record = owner.session.snapshotEvents().find(event => event.type === 'job/settled')
+    expect(record).toBeDefined()
+    if (record?.type !== 'job/settled') throw new Error('missing record')
+    // A job outlives the tool call that started it, so the durable fact names
+    // the job and its owner; a reader pairs the two without replaying events.
+    expect(record.data).toMatchObject({
+      owner: 'settling-owner',
+      kind: 'bash',
+      status: 'completed',
+      cause: 'producer',
+      producerReported: true,
+    })
+    expect(record.data.jobId).toBe(id)
+  })
+
+  it('records nothing for a job with no owning agent', async () => {
+    const ctx = await harness()
+    const job = producer()
+    const id = ctx.jobs.start(job.spec)
+    job.settle({ status: 'completed' })
+    const view = await ctx.jobs.wait(id, 5_000)
+
+    // No owner means no session to record into; the job still settles normally.
+    expect(view.status).toBe('completed')
+  })
+
   it('rejects an empty kind, empty label, and invalid output limit', async () => {
     const ctx = await harness()
     expect(() => ctx.jobs.start(producer({ kind: '' as JobKind }).spec)).toThrow('invalid job kind')

@@ -561,15 +561,37 @@ it('freezes real submitted history and only edits the unsubmitted tool tail with
   expect(h.ctx.sessionProjections.stateOf(resumed, 'reflexContext')?.frozenThrough)
     .toBe(h.ctx.sessionProjections.stateOf(h.agent.session, 'reflexContext')?.frozenThrough)
 })
+it('records the projection revision, topic, and constraints with a dispatch anchor', async () => {
+  const h = await setup()
+  const message = h.append('Keep the original CSV unchanged; inspect the finance task.')
+  h.agent.session.append('system3/task-frame', { version: 1,
+    goal: { messageId: message.data.id, text: 'Keep the original CSV unchanged; inspect the finance task.' }, items: [] })
+  const state = h.ctx.sessionProjections.stateOf(h.agent.session, 'reflexContext')
+  if (state === undefined) throw new Error('Reflex context projection is missing')
+  h.ctx.effect(() => h.ctx.llm.registerAdapter(['test'], new MockAdapter([textResponse('ok')])))
+  const request = markAgentLoopRequest({ provider: 'test', model: 'test', messages: h.agent.session.deriveMessages(), sessionId: h.agent.session.id })
+  for await (const _chunk of h.ctx.llm.stream(request)) { /* Consume the public stream. */ }
+  const anchor = h.agent.session.snapshotEvents().find(event => event.type === 'reflex/context-cache-anchor')
+  if (anchor?.type !== 'reflex/context-cache-anchor') throw new Error('Dispatch anchor is missing')
+  expect(anchor.data).toEqual({ version: 1, throughSeq: message.seq,
+    snapshot: { revision: state.revision, topic: state.topic, constraints: state.constraints } })
+  expect(state.topic).toBe('Keep the original CSV unchanged; inspect the finance task.')
+  expect(state.constraints).toEqual(['Keep the original CSV unchanged; inspect the finance task.'])
+  expect(h.ctx.sessionProjections.stateOf(h.agent.session, 'reflexContext')?.frozenThrough).toBe(message.seq)
+})
 it('conservatively freezes legacy history on resume when no dispatch anchor was recorded', async () => {
   const h = await setup()
   h.append('Legacy request content that must never be rewritten merely because the process restarted')
   h.agent.session.append('request/context', { provider: 'test', model: 'test' })
   h.append('An uncertain tail after the last legacy request has no reliable dispatch receipt')
   h.append('latest')
+  const before = h.ctx.sessionProjections.stateOf(h.agent.session, 'reflexContext')
   await h.step()
   expect(h.decide).not.toHaveBeenCalled()
-  expect(h.agent.session.snapshotEvents().some(event => event.type === 'reflex/context-cache-anchor')).toBe(true)
+  const anchor = h.agent.session.snapshotEvents().find(event => event.type === 'reflex/context-cache-anchor')
+  if (anchor?.type !== 'reflex/context-cache-anchor') throw new Error('Legacy anchor is missing')
+  expect(anchor.data.snapshot).toEqual({ revision: before?.revision, topic: before?.topic, constraints: before?.constraints })
+  expect(anchor.data.snapshot?.topic).toBe('latest')
 })
 
 it('anchors an empty dispatch, skips one-shot requests, and retains anchors across identical retries', async () => {

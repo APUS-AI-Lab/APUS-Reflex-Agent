@@ -588,10 +588,23 @@ describe('the sub-dispatch scheduler (native concurrency contract)', () => {
     if (result.isError) throw new Error('expected success')
     expect(result.value).toMatchObject({ result: 'safe_read:a,safe_read:b,safe_read:c' })
     // One start per dispatch, paired with its settle by subCallId, starts in submission order.
-    const starts = events.filter(event => event.type === 'tool/ptc-dispatch-start').map(event => event.data as { subCallId: string })
-    const settles = events.filter(event => event.type === 'tool/ptc-dispatch').map(event => event.data as { subCallId: string })
+    type StartData = { subCallId: string; maxParallelSubCalls?: number; submissionIndex?: number; concurrentSubCallsAtStart?: number }
+    type SettleData = { subCallId: string }
+    const starts = events.filter(event => event.type === 'tool/ptc-dispatch-start').map(event => event.data as StartData)
+    const settles = events.filter(event => event.type === 'tool/ptc-dispatch').map(event => event.data as SettleData)
     expect(starts.map(start => start.subCallId)).toEqual(['call-1:ptc:1', 'call-1:ptc:2', 'call-1:ptc:3'])
     expect(new Set(settles.map(settle => settle.subCallId))).toEqual(new Set(starts.map(start => start.subCallId)))
+    // Owner-private overlap facts: the cap, submission order, and the peers
+    // already in flight when each start was appended.
+    expect(starts.map(start => ({
+      maxParallelSubCalls: start.maxParallelSubCalls,
+      submissionIndex: start.submissionIndex,
+      concurrentSubCallsAtStart: start.concurrentSubCallsAtStart,
+    }))).toEqual([
+      { maxParallelSubCalls: 10, submissionIndex: 1, concurrentSubCallsAtStart: 0 },
+      { maxParallelSubCalls: 10, submissionIndex: 2, concurrentSubCallsAtStart: 1 },
+      { maxParallelSubCalls: 10, submissionIndex: 3, concurrentSubCallsAtStart: 2 },
+    ])
   })
 
   it('an exclusive call bars overlap: safe calls drain first, it runs alone, later calls wait', async () => {
@@ -952,10 +965,14 @@ describe('the run_code dispatch bridge', () => {
       {
         rootCallId: 'call-1', parentCallId: 'call-1', subCallId: 'call-1:ptc:1', name: 'echo',
         arguments: { value: 'one' }, isError: false, content: [{ type: 'text', text: 'echo:one' }],
+        maxParallelSubCalls: 10, submissionIndex: 1,
+        concurrentSubCallsAtSettle: 0,
       },
       {
         rootCallId: 'call-1', parentCallId: 'call-1', subCallId: 'call-1:ptc:2', name: 'echo',
         arguments: { value: 'two' }, isError: false, content: [{ type: 'text', text: 'echo:two' }],
+        maxParallelSubCalls: 10, submissionIndex: 2,
+        concurrentSubCallsAtSettle: 0,
       },
     ])
     expect(result.meta).toBeUndefined()

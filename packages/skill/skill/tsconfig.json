@@ -21,6 +21,9 @@
       "path": "../../core/scope"
     },
     {
+      "path": "../../core/session"
+    },
+    {
       "path": "../../llm/llm"
     },
     {

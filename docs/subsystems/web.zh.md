@@ -124,6 +124,43 @@ type WebFetchBody =
 
 选择从不依赖注册顺序、配置顺序或 HMR（热模块替换）顺序：一项能力要么有显式的提供方 id（配置 `searchProvider`／`fetchProvider`，或填充同一字段的对应环境变量），要么在恰好只有一个可用提供方注册时自动选择；如果存在多个可用提供方却未配置 id，则抛出 `WEB_PROVIDER_AMBIGUOUS`，而不会选用最先注册的提供方。
 
+## 提供方选择记录
+
+所选提供方结算后，每次 `search()` 或 `fetch()` 调用都会向发起方 agent 的会话追加一个仅记录日志的 `web/provider-selected` 事件。没有发起方的调用不记录任何内容，追加失败也不会改变调用的结果或错误。事件记录能力、实际运行的注册 id、选择方式、两段耗时、结果，以及 seam 级回退链。它不携带 surface 元数据，也从不进入模型历史；操作结果或抛出的 `WebError` 仍是权威。
+
+```ts type-equiv
+/** How execution-time selection chose the web provider that ran. */
+type WebProviderSelectionMode = 'configured' | 'auto-single'
+```
+
+```ts type-equiv
+/**
+ * One successful execution-time web provider selection, appended after the
+ * selected provider settles. `providerId` is the registered id that actually
+ * ran, `selectionMode` records whether an explicit id won or the sole usable
+ * provider auto-selected, and `fallbackChain` is always empty because this
+ * seam never falls back (provider-internal retries are not visible here).
+ * Log-only: `deriveMessages()` ignores it; the operation's result or thrown
+ * {@link WebError} stays authoritative.
+ */
+interface WebProviderSelectedEventData {
+  /** Capability whose call selected the provider. */
+  readonly capability: 'search' | 'fetch'
+  /** Registered id of the provider that ran. */
+  readonly providerId: string
+  /** How selection chose the provider. */
+  readonly selectionMode: WebProviderSelectionMode
+  /** Milliseconds from entering selection until the provider was chosen. */
+  readonly selectionMs: number
+  /** Milliseconds from provider dispatch to settlement, success or failure. */
+  readonly latencyMs: number
+  /** Whether the provider operation resolved or threw. */
+  readonly outcome: 'completed' | 'failed'
+  /** Seam-level fallback candidates, in order; always empty because the seam selects exactly one provider. */
+  readonly fallbackChain: readonly string[]
+}
+```
+
 ## 抓取网络策略
 
 已交付的 Cordis、Code 与 Standard preset 会在所有 sandbox 和审批模式下暴露 `web_fetch`，无需逐次确认。文件 sandbox preset 不管辖 Web 网络访问。需要确认步骤的部署必须添加 `tools/pre-execute` 策略或禁用抓取。
@@ -185,6 +222,8 @@ registerFetchProvider(provider: WebFetchProvider): () => void
  * time with the selection rules above; throws {@link WebError} when the
  * capability cannot run. The seam enforces `request.maxResults` on the result:
  * if the provider over-returns, `sources[]` is truncated and `truncated` set.
+ * Appends one log-only `web/provider-selected` record to the initiating
+ * Agent's session; a missing initiator or failed append changes nothing.
  * @param request - the query and optional result limit.
  * @param signal - optional cancellation signal forwarded to the provider.
  * @returns the provider's results, capped to `request.maxResults`.
@@ -195,6 +234,8 @@ async search(request: WebSearchRequest, signal?: AbortSignal): Promise<WebSearch
  * Retrieve one URL through the selected provider. Resolves the provider at
  * call time with the selection rules above; throws {@link WebError} when the
  * capability cannot run. A non-2xx response is a result, not a throw.
+ * Appends one log-only `web/provider-selected` record to the initiating
+ * Agent's session; a missing initiator or failed append changes nothing.
  * @param request - the URL plus retrieval options.
  * @param signal - optional cancellation signal forwarded to the provider.
  * @returns the retrieval outcome; non-2xx responses resolve descriptively.

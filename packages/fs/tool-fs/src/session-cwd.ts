@@ -27,10 +27,13 @@ export function sessionCwd(exec: ToolExecution): string | undefined {
 export function sessionResolveOptions(
   exec: ToolExecution,
   policyWorkspaceRoot?: string,
-): { cwd?: string; signal?: AbortSignal } {
+): { cwd?: string; signal?: AbortSignal; agentId?: string } {
   const cwd = policyWorkspaceRoot ?? sessionCwd(exec)
   return {
     ...cwd !== undefined ? { cwd } : {},
     signal: exec.signal,
+    // One process serves several agents, and a provider whose execution
+    // world is another container needs this to pick the right one.
+    ...exec.agent === undefined ? {} : { agentId: exec.agent.id },
   }
 }

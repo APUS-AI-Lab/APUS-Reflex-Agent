@@ -24,7 +24,8 @@ import { parseSessionFormatLogFilename, sessionFormatLogFilename, SessionFormatU
 import type { SessionFormatEvent } from '@deepseek-ai/dsh-session-format'
 import type { SessionFormatRecovery, SessionFormatRestore } from '@deepseek-ai/dsh-session-format'
 import { sessionFormatCatalog } from '@deepseek-ai/dsh-session-format-catalog'
-import { assertV4RowAdmission, assertReleasedV4Relationships } from '@deepseek-ai/dsh-session-format-v3-to-v4'
+import { assertV4RowAdmission } from '@deepseek-ai/dsh-session-format-v3-to-v4'
+import { assertV5Relationships } from '@deepseek-ai/dsh-session-format-v4-to-v5'
 import {
   SessionFormatUnsupportedError,
   sessionFormatVersionRefusal,
@@ -465,7 +466,7 @@ export class SessionLogScanner {
   finish(): SessionLogScan {
     this.finished = true
     const artifact = this.restore.finish()
-    assertReleasedV4Relationships(artifact, KNOWN_SESSION_EVENT_TYPES)
+    assertV5Relationships(artifact, KNOWN_SESSION_EVENT_TYPES)
     return {
       meta: this.meta,
       inheritedEventCount: SessionLogOffset(artifact.inheritedEventCount),

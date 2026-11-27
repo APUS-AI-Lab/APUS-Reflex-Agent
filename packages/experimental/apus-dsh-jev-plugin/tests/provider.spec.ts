@@ -209,3 +209,79 @@ it('preserves a non-Error caller abort reason while cancelling pending credentia
   await expect(result).rejects.toBe('caller-stopped')
   credential.resolve('late-key')
 })
+
+describe('chat-completions dialect', () => {
+  const chatProvider = (reply: (body: Record<string, unknown>) => Response) => new SystemOneProvider({
+    id: 'test', endpoint: 'http://127.0.0.1:30135/v1', model: 'reflex-test', effort: 'high', protocol: 'chat-completions',
+    timeoutMs: 1000, resolveApiKey: async () => 'chat-key', fetcher: async (_url, init) => reply(JSON.parse(String(init?.body))),
+  })
+
+  type ReplyToken = {
+    readonly token: string
+    readonly logprob: number
+    readonly alternatives?: readonly { token: string; logprob: number }[]
+  }
+  const completion = (tokens: readonly ReplyToken[], usage = { prompt_tokens: 10, completion_tokens: 1 }) => response({
+    choices: [{ index: 0, message: { role: 'assistant', content: tokens.map(t => t.token).join('') },
+      logprobs: { content: tokens.map(({ token, logprob, alternatives }) =>
+        ({ token, logprob, ...alternatives === undefined ? {} : { top_logprobs: alternatives } })) } }],
+    usage,
+  })
+
+  it('answers a choice question from its option letters', async () => {
+    // The gateway answers with one letter; its probability scales every option,
+    // so the distribution must cover the whole candidate set and sum to one.
+    let sent: string | undefined
+    const provider = chatProvider((body) => {
+      sent = JSON.stringify(body)
+      return completion([{ token: 'B', logprob: Math.log(0.8), alternatives: [
+        { token: 'B', logprob: Math.log(0.8) }, { token: 'A', logprob: Math.log(0.2) },
+      ] }, { token: '<|im_end|>', logprob: Math.log(0.9) }])
+    })
+    const result = await provider.decide({ state: { input: 'where did I move?' }, questions: {
+      intent: { type: 'choice', instructions: 'Classify.', criteria: { conversation: 'small talk', retrieval: 'recall facts' } },
+    } })
+    expect(result.model).toBe('reflex-test')
+    expect(result.answers.intent).toEqual({ type: 'choice', choice: 'retrieval',
+      probabilities: { conversation: 0.2, retrieval: 0.8 }, confidence: 0.8 })
+    expect(sent).toContain('retrieval')
+  })
+
+  it('refuses a letter no option offers instead of guessing', async () => {
+    const provider = chatProvider(() => completion([{ token: 'Z', logprob: Math.log(0.9) }]))
+    await expect(provider.decide({ state: 'x', questions: {
+      intent: { type: 'choice', criteria: { conversation: 'small talk', retrieval: 'recall facts' } },
+    } })).rejects.toMatchObject({ failure: { code: 'invalid-response' } })
+  })
+
+  it('sends the deployment chat-template switches with every question', async () => {
+    // A reasoning model asked for one word spends its budget thinking first.
+    // The deployment decides whether that reasoning is on; the provider only
+    // forwards the switches it was configured with.
+    const bodies: string[] = []
+    const provider = new SystemOneProvider({
+      id: 'test', endpoint: 'http://127.0.0.1:30135/v1', model: 'reflex-test', effort: 'high', protocol: 'chat-completions',
+      timeoutMs: 1000, chatTemplateKwargs: { enable_thinking: false }, fetcher: async (_url, init) => {
+        bodies.push(String(init?.body))
+        return completion([{ token: 'YES', logprob: Math.log(0.9) }])
+      },
+    })
+    await provider.decide({ state: 'x', questions: { relevant: { type: 'noul' } } })
+    expect(JSON.parse(bodies[0] ?? '{}')).toMatchObject({ chat_template_kwargs: { enable_thinking: false } })
+  })
+
+  it('answers noul and choice questions in one decision', async () => {
+    const provider = chatProvider((body) => {
+      const prompt = String((body.messages as { content: string }[])[0]?.content)
+      return prompt.includes('Question relevant')
+        ? completion([{ token: 'YES', logprob: Math.log(0.9) }])
+        : completion([{ token: 'A', logprob: Math.log(0.7) }])
+    })
+    const result = await provider.decide({ state: 'x', questions: {
+      relevant: { type: 'noul', instructions: 'Is it relevant?' },
+      intent: { type: 'choice', criteria: { keep: 'Keep', escalate: 'Escalate' } },
+    } })
+    expect(result.answers.relevant).toMatchObject({ type: 'noul', noul: 0.9 })
+    expect(result.answers.intent).toMatchObject({ type: 'choice', choice: 'keep' })
+  })
+})

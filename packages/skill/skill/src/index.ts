@@ -12,6 +12,7 @@
 
 import { Context, Service } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-llm'
+import type {} from '@deepseek-ai/dsh-session/types'
 import { assertNever } from '@deepseek-ai/dsh-util-values'
 import { NamedEntries, ScopedLayers, scopeChainOf, scopeOf } from '@deepseek-ai/dsh-scope'
 import type { ScopeKey, ScopeLayer } from '@deepseek-ai/dsh-scope'
@@ -105,6 +106,13 @@ export interface SkillLookupOptions {
   readonly cwd?: string | undefined
   /** Abort discovery or loading work for the current caller. */
   readonly signal?: AbortSignal | undefined
+  /**
+   * Opaque identity of the agent the lookup acts for, passed through to
+   * providers unchanged. A provider whose roots live in another execution
+   * world (a task container) uses it to pick that world; a provider reading
+   * Host directories ignores it. The registry never interprets this value.
+   */
+  readonly agentId?: string | undefined
 }
 
 /**
@@ -114,7 +122,11 @@ export interface SkillLookupOptions {
  * contract from it.
  */
 export interface SkillViewOptions extends SkillLookupOptions {
-  /** Viewing scope (the calling agent); omitted reads the global layer alone. */
+  /**
+   * Viewing scope (the calling agent); omitted reads the global layer alone.
+   * A calling agent's scope also carries the session that receives the
+   * log-only `skill/loaded` receipt for each successful load.
+   */
   readonly scope?: ScopeKey | undefined
 }
 
@@ -154,6 +166,48 @@ declare module '@deepseek-ai/dsh-llm' {
   interface MessageSourceMap {
     /** Loaded Skill instructions injected by the Host after invocation-policy validation. */
     'skill-invocation': SkillInvocationSource
+  }
+}
+
+/**
+ * Payload of the log-only receipt the registry appends when it returns one
+ * loaded skill definition. `loadedAt` is the epoch-millisecond time after the
+ * provider returned the definition and the registry validated it. `cached`
+ * describes only catalog resolution: the definition body is always loaded
+ * from its provider, so `true` means completed catalog discovery was reused,
+ * not that the body came from a cache.
+ */
+export interface SkillLoadedEventData {
+  /** Winning skill name, already validated against the skill-name grammar. */
+  readonly name: string
+  /** Provider that supplied the winning candidate and the loaded body. */
+  readonly provider: string
+  /**
+   * Discovery source of the winning candidate. Persisted as an open string:
+   * `SkillSource` is `known literals | (string & {})`, and the persistence
+   * schema extractor cannot materialize that intersection, so the receipt
+   * records the value the provider reported as a plain string.
+   */
+  readonly source: string
+  /** Unix epoch milliseconds when the provider returned and the registry validated this definition. */
+  readonly loadedAt: number
+  /** Whether catalog resolution came from the completed-catalog cache rather than fresh discovery. */
+  readonly cached: boolean
+}
+
+declare module '@deepseek-ai/dsh-session/types' {
+  interface SessionEventMap {
+    /**
+     * One skill body returned by `ctx.skills.get()`: the winning `name`,
+     * `provider`, and `source`, the epoch-millisecond `loadedAt` after the
+     * provider returned and the definition passed validation, and whether
+     * catalog resolution came from the completed-catalog cache (`cached`; the
+     * body itself is always loaded from its provider). Appended at the return
+     * point to the calling agent's session when the lookup's opaque `scope`
+     * exposes one. Log-only: `deriveMessages()` ignores it, and no later load
+     * or replay decision reads it.
+     */
+    'skill/loaded': SkillLoadedEventData
   }
 }
 
@@ -320,6 +374,8 @@ interface LayerCollectResult {
 interface CollectResult {
   entries: Map<string, IndexedCandidate>
   cacheable: boolean
+  /** Whether this observation was served by the completed-catalog cache. */
+  cached: boolean
 }
 
 /** One scope's complete skill-registry contribution. */
@@ -512,7 +568,33 @@ export class SkillRegistry extends Service {
       this.invalidateEntry(match)
       return undefined
     }
+    this.recordLoaded(definition, collected.cached, options.scope)
     return definition
+  }
+
+  /**
+   * Append the log-only load receipt to the calling agent's session. The
+   * lookup's opaque scope carries that session when the caller is an Agent;
+   * a scope without one, or a rejected append, never changes the returned
+   * definition or fails the lookup.
+   * @param definition - the validated definition being returned.
+   * @param cached - whether catalog resolution came from the completed-catalog cache.
+   * @param scope - the lookup's viewing scope, which may carry the calling agent's session.
+   */
+  private recordLoaded(definition: SkillDefinition, cached: boolean, scope: ScopeKey | undefined): void {
+    const session = loadReceiptSession(scope)
+    if (session === undefined) return
+    try {
+      session.append('skill/loaded', {
+        name: definition.name,
+        provider: definition.provider,
+        source: definition.source,
+        loadedAt: Date.now(),
+        cached,
+      })
+    } catch (error: unknown) {
+      this.ctx.logger.warn(`skill/loaded receipt for "${definition.name}" skipped: ${errorMessage(error)}`)
+    }
   }
 
   private async collect(options: SkillViewOptions): Promise<CollectResult> {
@@ -523,9 +605,9 @@ export class SkillRegistry extends Service {
       // The chain is part of the key rather than assumed stable: a blank-session
       // recompose re-parents an existing scope without touching this registry,
       // and only a chain-bearing key makes the next read see the new preset.
-      const key = this.collectCacheKey(options.cwd, scopeChainOf(options.scope), revision)
+      const key = this.collectCacheKey(options.cwd, options.agentId, scopeChainOf(options.scope), revision)
       const cached = this.collectCache.get(key)
-      if (cached !== undefined) return { entries: cached, cacheable: true }
+      if (cached !== undefined) return { entries: cached, cacheable: true, cached: true }
 
       const result = await this.collectFresh(options)
       throwIfAborted(options.signal)
@@ -534,7 +616,7 @@ export class SkillRegistry extends Service {
           attempt += 1
           continue
         }
-        return { entries: result.entries, cacheable: false }
+        return { entries: result.entries, cacheable: false, cached: false }
       }
       if (result.cacheable) {
         this.collectCache.set(key, result.entries)
@@ -560,7 +642,7 @@ export class SkillRegistry extends Service {
       if (!collected.cacheable) cacheable = false
       for (const entry of collected.entries) merged.set(entry.candidate.name, entry)
     }
-    return { entries: merged, cacheable }
+    return { entries: merged, cacheable, cached: false }
   }
 
   private async collectLayer(layer: SkillLayer, options: SkillLookupOptions): Promise<LayerCollectResult> {
@@ -639,8 +721,16 @@ export class SkillRegistry extends Service {
     return id
   }
 
-  private collectCacheKey(cwd: string | undefined, chain: ScopeKey[], revision: number): string {
-    return JSON.stringify({ cwd, scopes: chain.map(key => this.scopeId(key)), revision })
+  private collectCacheKey(
+    cwd: string | undefined,
+    agentId: string | undefined,
+    chain: ScopeKey[],
+    revision: number,
+  ): string {
+    // The agent identity is part of the key: two agents may share a cwd and a
+    // scope chain while their providers read different execution worlds, and a
+    // cached catalog from one must never answer the other.
+    return JSON.stringify({ cwd, agentId, scopes: chain.map(key => this.scopeId(key)), revision })
   }
 
   /** Notify catalog observers without making their refresh work load-bearing. */
@@ -807,6 +897,26 @@ function compareIndexedCandidates(left: IndexedCandidate, right: IndexedCandidat
   return left.candidate.rank - right.candidate.rank
     || left.providerOrder - right.providerOrder
     || left.localOrder - right.localOrder
+}
+
+/** Session capability a calling-agent lookup scope exposes for the durable load receipt. */
+interface SkillLoadReceiptSession {
+  readonly append: (type: 'skill/loaded', data: SkillLoadedEventData) => unknown
+}
+
+/** Whether a value exposes the session `append` method; lookup scopes are opaque objects. */
+function isLoadReceiptSession(value: unknown): value is SkillLoadReceiptSession {
+  return value !== null
+    && typeof value === 'object'
+    && 'append' in value
+    && typeof value.append === 'function'
+}
+
+/** Read the session a lookup scope exposes, or `undefined` for scopes without one. */
+function loadReceiptSession(scope: ScopeKey | undefined): SkillLoadReceiptSession | undefined {
+  if (scope === undefined || !('session' in scope)) return undefined
+  const session: unknown = scope.session
+  return isLoadReceiptSession(session) ? session : undefined
 }
 
 function assertPositiveInteger(name: string, value: number, minimum = 1): void {

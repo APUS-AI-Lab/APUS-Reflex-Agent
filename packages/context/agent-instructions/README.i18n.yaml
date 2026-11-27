@@ -21,8 +21,11 @@
   en: 68f776f145a0dec4
   zh: e63e9140aa305936
 /deepseek-ai-dsh-agent-instructions/use-this-package/configuration:
-  en: 14b4bcce25065881
-  zh: 8cd77151b711808b
+  en: b93d8cd7ad98f67b
+  zh: 9e896afd7ab35cea
+/deepseek-ai-dsh-agent-instructions/use-this-package/task-container-workspaces:
+  en: 3027a285c13f9399
+  zh: cac3cefdb0b2dea1
 /deepseek-ai-dsh-agent-instructions/use-this-package/observing-the-budget:
   en: 9797082b1e69b72c
   zh: d26c00b1b90fe4ea

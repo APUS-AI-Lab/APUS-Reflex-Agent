@@ -176,7 +176,7 @@ export interface ReflexConnectionInput {
   readonly model: string
   readonly effort: 'low' | 'high'
   readonly timeoutMs: number
-  readonly protocol: 'openjev' | 'typesafe'
+  readonly protocol: 'openjev' | 'typesafe' | 'chat-completions'
   readonly apiKeyEnv?: string
   readonly apiKey?: string
 }

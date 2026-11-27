@@ -72,6 +72,22 @@ interface AskUserQuestionItem {
 
 ## 提问请求
 
+`AskUserQuestionRequestEvent` 是应答者 waterfall 收到的 payload。当提问方持有一个等待答案的工具调用时，`callId` 指明该调用，以便回答回执关联回该调用。
+
+```ts type-equiv
+/** Client-safe payload declared for the user-question answerer waterfall. */
+interface AskUserQuestionRequestEvent {
+  /** Questions to display. */
+  questions: AskUserQuestionItem[]
+  /** Agent identity projected to the corresponding Client Context in transit. */
+  agent?: Agent
+  /** Tool call awaiting the answers, when the asker has one; links the answer receipt to that call. */
+  callId?: ToolCallId
+  /** Cancellation lifetime of the pending request. */
+  signal?: AbortSignal
+}
+```
+
 `AskUserQuestionRequest` 是跨包请求。`questions` 是数组，这样 UI 可以在一个流程中呈现相关提示，同时保持每个回答有稳定的 id。如提供 `agent`，它必须与存活调用方是同一实例；只有当当前注册表将该实例识别为运行时根时，交互 seam 才会接纳该 agent。
 
 ```ts type-equiv
@@ -101,6 +117,20 @@ interface AskUserQuestionAnswer {
   /** Structured answers keyed by question id. */
   answers: AskUserQuestionAnswerItem[]
 }
+```
+
+## 回答回执
+
+当请求提供了活跃 agent 时，一次成功回答会向该调用方 agent 的会话追加一个仅记录日志的 `user-question/answered` 事件。由于应答者 waterfall 不暴露稳定的逐应答者身份，`answeredBy` 为 `'unattributed'`；当请求带有工具调用时，`callId` 重复该调用的标识。信封的 `time` 即答案返回的时刻。从未获得回答的请求不记录任何内容：中止与应答者失败仍留在消费方的错误结果上。该回执仅作信息记录，从不具备权威性；追加失败会被吞掉，不会把已获回答的问题变成失败。
+
+```ts type-equiv
+/**
+ * Identity of the answerer that returned a question batch. The answerer
+ * waterfall exposes no stable per-answerer identity, so the only value today
+ * is `'unattributed'`: the receipt states that an answerer answered without
+ * inferring which one. A future identity source extends this union.
+ */
+type UserQuestionAnsweredBy = 'unattributed'
 ```
 
 ## 错误
@@ -141,7 +171,11 @@ Generated from source by `scripts/gen-cordis-catalog.ts` (verified fresh by `pnp
  * block forever, while a lineage-bearing session resumed as a new runtime
  * root may ask normally.
  *
- * @param request Questions, owner agent, and abort signal.
+ * A successful answer appends the log-only `user-question/answered` receipt
+ * to the calling agent's session. The receipt never changes the returned
+ * answer and is skipped for an agentless ask (no session to record it on).
+ *
+ * @param request Questions, owner agent, optional tool call, and abort signal.
  * @returns The answer chosen or typed by the human.
  * @throws {UserQuestionError} code `ASK_ABORTED` when the supplied signal
  *   is already or becomes aborted, `CALLER_NOT_LIVE` when a supplied agent

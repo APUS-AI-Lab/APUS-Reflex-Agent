@@ -9,7 +9,7 @@ import type { Agent } from '@deepseek-ai/dsh-agent'
 import AgentLoop from '@deepseek-ai/dsh-agent-loop'
 import { BasicCompactionEngine } from '@deepseek-ai/dsh-compaction-basic'
 import LlmRuntime, { createUserMessage, isAgentLoopRequest, ToolCallId } from '@deepseek-ai/dsh-llm'
-import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
+import SessionStore, { SESSION_FORMAT_VERSION, SessionId, SessionSeq } from '@deepseek-ai/dsh-session'
 import JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
@@ -409,6 +409,56 @@ it('rejects a second durable task binding instead of replacing the original iden
   expect(binding.type).toBe('continuum/task-binding')
   if (binding.type !== 'continuum/task-binding') throw new Error('missing durable task binding')
   expect(() => taskBindingProjection.apply(binding.data, binding)).toThrow('cannot replace')
+})
+
+it('mirrors journal commits into read-only business-Session receipts and records the binding basis', async () => {
+  const { root, workspace } = await locations()
+  const h = await runtime(root, workspace)
+  const a = await h.create('receipts')
+  append(a, 'Receipt input.')
+  const snapshot = await h.ctx.continuumTasks.snapshot(a)
+  expect(snapshot?.entries[0]?.text).toBe('Receipt input.')
+  const receipts = a.session.snapshotEvents().flatMap(event =>
+    event.type === 'continuum/task-receipt' ? [event.data] : [])
+  expect(receipts).toHaveLength(1)
+  expect(receipts[0]).toMatchObject({
+    version: 1, taskId: 'release-task', revision: 1, workspace, requestId: expect.stringMatching(/^input:/),
+  })
+  const page = JSON.parse(await h.ctx.continuumTasks.read(a)) as TaskPage
+  expect(page.entries.map(entry => entry.text)).toEqual(['Receipt input.'])
+  const binding = a.session.snapshotEvents().find(event => event.type === 'continuum/task-binding')
+  expect(binding?.type === 'continuum/task-binding' ? binding.data : undefined)
+    .toMatchObject({ taskId: 'release-task', retirementBasis: [], journalRevision: 0 })
+})
+
+it('records the retired predecessor on binding and mirrors explicit corrections', async () => {
+  const { root, workspace } = await locations()
+  const h = await runtime(root, workspace)
+  const a = await h.create('corrections')
+  append(a, 'Old requirement.')
+  const initial = await h.ctx.continuumTasks.snapshot(a)
+  // A cold source Session keeps the correction source free of task receipts.
+  const sourceId = SessionId('correction-source')
+  const sourceHandle = await h.ctx.sessionPersistence.create({
+    version: SESSION_FORMAT_VERSION, id: sourceId, createdAt: Date.now(), isSeeded: false, cwd: workspace,
+  })
+  await sourceHandle.append([{ type: 'user/message', seq: SessionSeq(0), time: Date.now(),
+    data: user('New requirement.'), surfaceOp: 'append' }])
+  await sourceHandle.flush()
+  await sourceHandle.close()
+  await h.ctx.continuumTasks.supersede(a, { requestId: 'correction', expectedRevision: initial!.revision,
+    predecessor: initial!.entries[0]!.id, source: { sessionId: sourceId, eventSeq: SessionSeq(0), blockIndex: 0 } })
+  const receipts = a.session.snapshotEvents().flatMap(event =>
+    event.type === 'continuum/task-receipt' ? [event.data] : [])
+  expect(receipts.at(-1)).toMatchObject({ requestId: 'correction', revision: 2, workspace })
+  expect(receipts.map(receipt => receipt.revision)).toEqual([1, 2])
+  // A fresh business Session binds against the current retired set.
+  const c = await h.create('after-correction')
+  await h.ctx.continuumTasks.read(c)
+  const binding = c.session.snapshotEvents().find(event => event.type === 'continuum/task-binding')
+  expect(binding?.type === 'continuum/task-binding' ? binding.data : undefined).toMatchObject({
+    taskId: 'release-task', journalRevision: 2, retirementBasis: [{ id: initial!.entries[0]!.id, status: 'superseded' }],
+  })
 })
 
 it('rejects use of an unloaded service and cancels an active stream before releasing its journal', async () => {

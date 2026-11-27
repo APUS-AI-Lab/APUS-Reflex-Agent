@@ -72,6 +72,22 @@ interface AskUserQuestionItem {
 
 ## Ask request
 
+`AskUserQuestionRequestEvent` is the payload the answerer waterfall receives. `callId` names the tool call awaiting the answers when the asker has one, so the answer receipt can link back to that call.
+
+```ts type-equiv
+/** Client-safe payload declared for the user-question answerer waterfall. */
+interface AskUserQuestionRequestEvent {
+  /** Questions to display. */
+  questions: AskUserQuestionItem[]
+  /** Agent identity projected to the corresponding Client Context in transit. */
+  agent?: Agent
+  /** Tool call awaiting the answers, when the asker has one; links the answer receipt to that call. */
+  callId?: ToolCallId
+  /** Cancellation lifetime of the pending request. */
+  signal?: AbortSignal
+}
+```
+
 `AskUserQuestionRequest` is the cross-package request. `questions` is an array so a UI can present related prompts in one flow while preserving a stable id per answer. When present, `agent` is the exact live caller; the interaction seam admits it only while the live registry identifies that instance as a runtime root.
 
 ```ts type-equiv
@@ -101,6 +117,20 @@ interface AskUserQuestionAnswer {
   /** Structured answers keyed by question id. */
   answers: AskUserQuestionAnswerItem[]
 }
+```
+
+## Answer receipt
+
+A successful answer appends one log-only `user-question/answered` event to the calling agent's session when the ask supplied a live agent. `answeredBy` is `'unattributed'` because the answerer waterfall exposes no stable per-answerer identity; `callId` repeats the ask's tool call when it had one. The envelope's `time` is when the answers returned. An ask that never receives an answer logs nothing: aborts and answerer failures stay on the consumer's error result. The receipt is informational, never authoritative, and a failed append is contained so it cannot turn an answered question into a failure.
+
+```ts type-equiv
+/**
+ * Identity of the answerer that returned a question batch. The answerer
+ * waterfall exposes no stable per-answerer identity, so the only value today
+ * is `'unattributed'`: the receipt states that an answerer answered without
+ * inferring which one. A future identity source extends this union.
+ */
+type UserQuestionAnsweredBy = 'unattributed'
 ```
 
 ## Errors
@@ -141,7 +171,11 @@ Generated from source by `scripts/gen-cordis-catalog.ts` (verified fresh by `pnp
  * block forever, while a lineage-bearing session resumed as a new runtime
  * root may ask normally.
  *
- * @param request Questions, owner agent, and abort signal.
+ * A successful answer appends the log-only `user-question/answered` receipt
+ * to the calling agent's session. The receipt never changes the returned
+ * answer and is skipped for an agentless ask (no session to record it on).
+ *
+ * @param request Questions, owner agent, optional tool call, and abort signal.
  * @returns The answer chosen or typed by the human.
  * @throws {UserQuestionError} code `ASK_ABORTED` when the supplied signal
  *   is already or becomes aborted, `CALLER_NOT_LIVE` when a supplied agent

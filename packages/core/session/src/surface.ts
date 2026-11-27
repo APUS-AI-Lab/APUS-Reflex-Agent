@@ -222,6 +222,14 @@ export function validateSessionEventData(
     if (!isRecord(message) || message['isError'] !== true) {
       throw new Error(`${subject} error requires message.isError === true`)
     }
+  } else if (event.type === 'turn/end') {
+    if (!isRecord(data)) throw new Error(`${subject} data must be an object`)
+    if (data['blockedReason'] !== undefined) {
+      const reason = data['reason']
+      if (!isRecord(reason) || reason['kind'] !== 'blocked') {
+        throw new Error(`${subject} turn/end blockedReason requires a blocked reason`)
+      }
+    }
   }
 }
 

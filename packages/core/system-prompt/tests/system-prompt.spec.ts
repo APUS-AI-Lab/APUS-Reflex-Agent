@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import SystemPrompt, {
-  AssembleContext, PromptAssembly, renderContextSnapshot, renderPrompt,
+  AssembleContext, joinPromptSections, PromptAssembly, renderContextSnapshot, renderPrompt, renderPromptSections,
 } from '@deepseek-ai/dsh-system-prompt'
 import type { PromptContextOrderName, PromptSectionOrderName } from '@deepseek-ai/dsh-system-prompt'
 
@@ -69,6 +69,26 @@ describe('SystemPrompt', () => {
       environment.model = 'model-b'
       expect(renderPrompt(await ctx.systemPrompt.assemble()))
         .toBe(second.replace('Model model-a.', 'Model model-b.'))
+    } finally {
+      await ctx.fiber.dispose()
+    }
+  })
+
+  it('exposes rendered sections and their join as the single render path', async () => {
+    const ctx = new Context()
+    try {
+      await ctx.plugin(SystemPrompt, { personaSuffix: '' })
+      ctx.systemPrompt.variable('model', () => 'model-x')
+      ctx.systemPrompt.section({ name: 'guidance', order: 100, text: 'Use {{model}}.' })
+      ctx.systemPrompt.section({ name: 'literal', order: 110, text: '', interpolate: false })
+      const assembly = await ctx.systemPrompt.assemble()
+      const sections = renderPromptSections(assembly)
+      expect(sections.map(({ name, text }) => ({ name, text }))).toEqual([
+        { name: 'harness:identity', text: IDENTITY },
+        { name: 'guidance', text: 'Use model-x.' },
+      ])
+      expect(joinPromptSections(sections)).toBe(`${IDENTITY}\n\nUse model-x.`)
+      expect(renderPrompt(assembly)).toBe(joinPromptSections(sections))
     } finally {
       await ctx.fiber.dispose()
     }

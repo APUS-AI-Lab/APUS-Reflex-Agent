@@ -25,6 +25,12 @@ export const inject = ['agents']
 export interface JsonRpcConfig {
   /** Report max-token turn/subagent termination as a successful SDK result. */
   maxTokensAsSuccess?: boolean
+  /**
+   * Record one minimal `llm/dispatch` fact per loop-built model call and serve
+   * the read-only request-view methods. Default `false`, keeping prior
+   * runtimes unchanged until a deployment opts in.
+   */
+  recordLlmDispatch?: boolean
   /** Transport input override; production uses `process.stdin`. */
   input?: Readable
   /** Transport output override; production uses `process.stdout`. */
@@ -35,6 +41,7 @@ export interface JsonRpcConfig {
 
 export const Config: Schema<JsonRpcConfig> = Schema.object({
   maxTokensAsSuccess: Schema.boolean().default(false),
+  recordLlmDispatch: Schema.boolean().default(false),
 })
 
 /**
@@ -45,7 +52,7 @@ export const Config: Schema<JsonRpcConfig> = Schema.object({
  */
 export function apply(ctx: Context, config: JsonRpcConfig): void {
   // Cordis applies the schema default before invoking the plugin.
-  const resolvedConfig = config as JsonRpcConfig & { maxTokensAsSuccess: boolean }
+  const resolvedConfig = config as JsonRpcConfig & { maxTokensAsSuccess: boolean; recordLlmDispatch: boolean }
   // Protocol shutdown owns the complete runtime process, so it must await the
   // root lifecycle (including persistence) before exiting.
   const rootFiber = ctx.root.fiber
@@ -59,6 +66,7 @@ export function apply(ctx: Context, config: JsonRpcConfig): void {
   const transport = new JsonRpcLineTransport(input, output)
   const server = new HarnessSdkJsonRpcServer(ctx, transport, {
     maxTokensAsSuccess: resolvedConfig.maxTokensAsSuccess,
+    recordLlmDispatch: resolvedConfig.recordLlmDispatch,
   })
 
   // Share one exit task so racing shutdown requests cannot dispose the root or

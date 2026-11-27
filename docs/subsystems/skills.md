@@ -173,6 +173,37 @@ interface SkillDefinition extends SkillSummary {
 }
 ```
 
+Each successful `get()` appends one log-only `skill/loaded` event to the calling agent's session when the lookup's scope exposes that session. It records the winning identity and source, the epoch-millisecond completion time, and whether catalog resolution used the completed-catalog cache. The body is always loaded from its provider, so `cached` does not describe body reuse; the event never enters derived model history.
+
+```ts type-equiv
+/**
+ * Payload of the log-only receipt the registry appends when it returns one
+ * loaded skill definition. `loadedAt` is the epoch-millisecond time after the
+ * provider returned the definition and the registry validated it. `cached`
+ * describes only catalog resolution: the definition body is always loaded
+ * from its provider, so `true` means completed catalog discovery was reused,
+ * not that the body came from a cache.
+ */
+interface SkillLoadedEventData {
+  /** Winning skill name, already validated against the skill-name grammar. */
+  readonly name: string
+  /** Provider that supplied the winning candidate and the loaded body. */
+  readonly provider: string
+  /** Discovery source of the winning candidate. */
+  /**
+   * Discovery source of the winning candidate. Persisted as an open string:
+   * `SkillSource` is `known literals | (string & {})`, and the persistence
+   * schema extractor cannot materialize that intersection, so the receipt
+   * records the value the provider reported as a plain string.
+   */
+  readonly source: string
+  /** Unix epoch milliseconds when the provider returned and the registry validated this definition. */
+  readonly loadedAt: number
+  /** Whether catalog resolution came from the completed-catalog cache rather than fresh discovery. */
+  readonly cached: boolean
+}
+```
+
 Runtime skill inputs may omit invocation controls and the provider label. The registry resolves both defaults once, then uses the same complete definition shape and first-wins collection order as providers. The returned disposer removes the contribution and invalidates discovery caches.
 
 ```ts type-equiv
@@ -209,7 +240,11 @@ interface SkillLookupOptions {
  * contract from it.
  */
 interface SkillViewOptions extends SkillLookupOptions {
-  /** Viewing scope (the calling agent); omitted reads the global layer alone. */
+  /**
+   * Viewing scope (the calling agent); omitted reads the global layer alone.
+   * A calling agent's scope also carries the session that receives the
+   * log-only `skill/loaded` receipt for each successful load.
+   */
   readonly scope?: ScopeKey | undefined
 }
 ```

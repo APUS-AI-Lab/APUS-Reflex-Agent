@@ -13,6 +13,81 @@ import type { WebSearchResult, WebSearchSource } from '@deepseek-ai/dsh-web'
 import { EXTERNAL_WEB_CONTENT_NOTICE } from './trust.ts'
 
 /**
+ * Build the durable record for one finished `web_search` call.
+ *
+ * Separated from the append so the payload can be asserted without mounting a
+ * session: the append's failure mode is containment, but the facts it writes
+ * are the part a reader depends on.
+ * @param input - resolved provider, the model's queries, and the merged result.
+ * @returns the payload for `web/search-route`.
+ */
+export function webSearchDispatched(
+  input: {
+    readonly providerId?: string
+    readonly callId?: string
+    readonly queries: readonly unknown[]
+    readonly result: WebSearchResult
+    readonly elapsedMs: number
+    readonly outcome?: 'completed' | 'failed'
+    readonly failure?: string
+  },
+): WebSearchRoute {
+  return {
+    capability: 'search',
+    ...input.providerId === undefined ? {} : { providerId: input.providerId },
+    ...input.callId === undefined ? {} : { callId: input.callId },
+    ...input.outcome === undefined ? {} : { outcome: input.outcome },
+    ...input.failure === undefined ? {} : { failure: input.failure },
+    queryCount: input.queries.length,
+    sourceCount: input.result.sources.length,
+    truncated: input.result.truncated,
+    elapsedMs: input.elapsedMs,
+  }
+}
+
+/**
+ * Durable fact that one `web_search` call resolved a provider and finished.
+ *
+ * The transcript otherwise shows the model's arguments and the merged result,
+ * with no record of which provider ran the searches, how many queries fanned
+ * out, or how long it took — the facts a reader needs to explain a slow or
+ * truncated result.
+ */
+export interface WebSearchRoute {
+  /** Which capability ran: search. */
+  readonly capability: 'search'
+  /** Provider id the seam resolved at call time, when one could be resolved. */
+  readonly providerId?: string
+  /**
+   * How the seam chose that provider. The tool layer cannot observe selection,
+   * so this stays absent here; `tool/provider-selected` carries it for the same
+   * call, joined on `callId`.
+   */
+  readonly selectionMode?: 'configured' | 'auto-single'
+  /** Tool call this search served, so the record attaches to the call that ran it. */
+  readonly callId?: string
+  /** Number of queries the model supplied. */
+  readonly queryCount: number
+  /** Number of sources in the merged result. */
+  readonly sourceCount: number
+  /** Whether the seam capped sources to `maxResults`. */
+  readonly truncated: boolean
+  /** Wall-clock duration of the whole fan-out, in milliseconds. */
+  readonly elapsedMs: number
+  /** Whether the fan-out resolved or threw. */
+  readonly outcome?: 'completed' | 'failed'
+  /** Failure text when the fan-out threw; absent on success. */
+  readonly failure?: string
+}
+
+declare module '@deepseek-ai/dsh-session/types' {
+  interface SessionEventMap {
+    /** One `web_search` call's provider, fan-out size and duration. */
+    'web/search-route': WebSearchRoute
+  }
+}
+
+/**
  * Default upper bound on returned sources (the `searchMaxResults` config).
  * The consumer owns the returned-context limit; providers and models do not.
  */
@@ -233,9 +308,11 @@ async function runSearchQueries(
   queries: string[],
   maxResults: number,
   signal: AbortSignal,
+  callId?: string,
 ): Promise<WebSearchResult> {
+  const base = { maxResults, ...callId === undefined ? {} : { callId } }
   if (queries.length === 1) {
-    return ctx.web.search({ query: queries[0] as string, maxResults }, signal)
+    return ctx.web.search({ ...base, query: queries[0] as string }, signal)
   }
   const controller = new AbortController()
   const batchSignal = AbortSignal.any([signal, controller.signal])
@@ -243,7 +320,7 @@ async function runSearchQueries(
   const results: WebSearchResult[] = []
   const searches = queries.map(async (query, index) => {
     try {
-      results[index] = await ctx.web.search({ query, maxResults }, batchSignal)
+      results[index] = await ctx.web.search({ ...base, query }, batchSignal)
     } catch (error) {
       if (firstFailure === undefined) firstFailure = { error }
       controller.abort(error)
@@ -364,7 +441,51 @@ export function applyWebSearchTool(
     isConcurrencySafe: () => true,
     async execute(args, exec) {
       const queries = parseSearchArgs(args, maxQueries)
-      const result = await runSearchQueries(ctx, queries, maxResults, exec.signal)
+      const startedAt = Date.now()
+      const providerId = ctx.web.resolvedSearchProviderId()
+      // Observational: a session that refuses the record must not fail a search
+      // that already succeeded, so every append is contained. The loop does not
+      // always set `exec.agent`, and an optional chain made that skip silently —
+      // this record was never written in any run. The initiating Agent is the
+      // same source the provider-selection record uses.
+      const owner = exec.agent ?? ctx.get('agents')?.currentInitiator()
+      const record = (payload: WebSearchRoute): void => {
+        try {
+          owner?.session.append('web/search-route', payload)
+        } catch {
+          // The result stands; only the observation is missing.
+        }
+      }
+      let result: WebSearchResult
+      try {
+        result = await runSearchQueries(ctx, queries, maxResults, exec.signal, String(exec.callId))
+      } catch (error) {
+        // A failed search is not an empty one. Recorded separately so a reader
+        // can tell "the provider returned nothing" from "the search never ran" —
+        // conflating them makes an outage look like a genuinely empty result.
+        record({
+          capability: 'search',
+          ...providerId === undefined ? {} : { providerId },
+          callId: String(exec.callId),
+          queryCount: queries.length,
+          sourceCount: 0,
+          truncated: false,
+          elapsedMs: Date.now() - startedAt,
+          outcome: 'failed',
+          failure: error instanceof Error ? error.message : String(error),
+        })
+        throw error
+      }
+      record({
+        capability: 'search',
+        ...providerId === undefined ? {} : { providerId },
+        callId: String(exec.callId),
+        queryCount: queries.length,
+        sourceCount: result.sources.length,
+        truncated: result.truncated,
+        elapsedMs: Date.now() - startedAt,
+        outcome: 'completed',
+      })
       return {
         ...result.content !== undefined ? { content: result.content } : {},
         sources: result.sources.map(projectSource),

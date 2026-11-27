@@ -15,11 +15,14 @@
   en: 1ad4373e6fdfe4c7
   zh: efb8d41ebe7224f8
 /user-interaction/ask-request:
-  en: e10cf6c8c9c20962
-  zh: 0b347b40c12b6b25
+  en: 11fc9b89b9dd7b48
+  zh: eeebb9c560d27e96
 /user-interaction/answer:
   en: 4235b687a9975881
   zh: 350d000d4bfa7400
+/user-interaction/answer-receipt:
+  en: b1a209269a47b84f
+  zh: fb548013ec63c82a
 /user-interaction/errors:
   en: 33cc3bf5e352e223
   zh: 143279cc3f355453

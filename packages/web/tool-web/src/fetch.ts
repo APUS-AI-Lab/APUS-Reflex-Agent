@@ -499,7 +499,7 @@ export function applyWebFetchTool(ctx: Context, timeoutMs: number, maxOutputChar
     async execute(args, exec) {
       const input = parseFetchArgs(args)
       const result = await ctx.web.fetch(
-        { url: input.url },
+        { url: input.url, callId: String(exec.callId) },
         exec.signal,
       )
       return {

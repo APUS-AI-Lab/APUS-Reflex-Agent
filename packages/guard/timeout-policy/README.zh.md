@@ -45,6 +45,8 @@ kind: "package-reference"
 
 截止时间触发时，插件会中止派生的 `exec.signal`。下游代码遵守取消且 `next()` 完成后，模型会收到标记为错误的 `Error: tool call timed out after <ms>ms` 工具结果，从而决定重试、调整或放弃。忽略或缓慢处理该信号的工具会让调用方继续等待，并且在自身完成前不会产生超时结果；按时完成的调用保持不变。
 
+声明了预算且拥有属主 Agent 的每次调用，还会在包装层结算后追加一条仅入日志的 `tool/execute-deadline` Session 事件。记录包含调用的 `callId`、生效的 `timeoutMs`、`elapsedMs`、`signalReplaced`、`abortSource`（`self-timer`、`upstream` 或 `none`）、`selfTimerWon` 与 `finalErrorCode`（成功结果为 `null`）。该记录不会进入模型上下文，也不改变返回结果。
+
 -----
 
 <a id="understand-the-implementation"></a>
@@ -68,6 +70,10 @@ kind: "package-reference"
 
 一个 `tools/execute` 监听器从注册表读取已分发工具声明的限时（`ctx.tools.get(exec.name, exec.agent)?.timeoutMs`）；没有限时的工具原样委派。对有限时的工具，`deadline(exec.signal, timeoutMs, TOOL_TIMEOUT)` 构建融合信号，包装层在分发时把它换到 `exec` 上并在 `finally` 中恢复，使 `tools/post-execute` 监听器永远看不到派生信号。当包装层自己的计时器触发时——`timeoutOf(d.signal, 'TOOL_TIMEOUT')` 以代码限定作用域，因此嵌套的外层截止时间读作普通的上游取消——已被分发规范化为错误结果的分发结果会被替换为结构化结果：`isError: true`、内容 `Error: tool call timed out after <ms>ms`、错误信息 `{ name: 'ToolTimeoutError', code: 'TOOL_TIMEOUT' }`。
 
+### 截止时间记录
+
+`tools/execute` 包装层在 `next()` 结算后、返回结果前追加 `tool/execute-deadline`，仅当工具声明了 `timeoutMs` 预算且调用拥有属主 Agent 时。`callId` 将记录与 `tool/call`、`tool/result` 配对。`abortSource` 标明胜出的取消来源：本包装层的计时器触发时为 `self-timer`，调用方信号先中止时为 `upstream`，两者都未中止时为 `none`。`signalReplaced` 表示分发是否收到融合后的截止时间信号，`finalErrorCode` 是返回结果的错误码，成功时为 `null`。该记录仅用于诊断：追加被拒绝时会被吞掉，因此不能替换工具结果；没有属主 Agent 的已结算调用不记录。
+
 ### 与其他包装层组合
 
 多个 `tools/execute` 监听器按 Cordis 注册顺序组合，注册顺序决定语义：超时注册在外层时覆盖整个重试操作，注册在内层时覆盖每次尝试。
@@ -76,7 +82,7 @@ kind: "package-reference"
 
 | 文件 | 职责 |
 |---|---|
-| [`src/index.ts`](src/index.ts) | 插件入口：`TOOL_TIMEOUT`、`name`／`inject`／`apply`、`tools/execute` 包装层 |
+| [`src/index.ts`](src/index.ts) | 插件入口：`TOOL_TIMEOUT`、`name`／`inject`／`apply`、`tools/execute` 包装层，以及仅入日志的 `tool/execute-deadline` 记录 |
 | — | 不发布运行时不变式伴生入口；此无状态策略插件不拥有包级事件历史，也不拥有所拦截 seam 之外的可变数据关系。 |
 
 </details>
@@ -106,7 +112,7 @@ kind: "package-reference"
 
 #### Token 影响
 
-未超时的调用不会增加 token。超时会添加一条会被保留的简短错误结果，并可防止体积更大、较晚返回的提供方结果进入上下文。
+未超时的调用不会增加 token。超时会添加一条会被保留的简短错误结果，并可防止体积更大、较晚返回的提供方结果进入上下文。`tool/execute-deadline` 记录仅入日志，不增加请求内容。
 
 #### KV Cache 影响
 
@@ -121,6 +127,7 @@ kind: "package-reference"
 
 - **协作式，绝不是硬终止**——截止时间只通过 `exec.signal` 通知；忽略该信号的工具不会在超时时停止，包装层仍停留在 `await next()` 内，模型要等下游完成后才可能收到超时结果。
 - **没有统一预算**——只有声明 `timeoutMs` 并将其放在 `ToolDefinition` 上的工具才会获得截止时间；未声明工具（随附的 `bash`、`read`、`write`、`edit` 有意不声明）没有注册表级默认值。
+- **截止时间记录需要属主 Agent**——没有 `exec.agent` 的带预算调用仍会执行截止时间，但不会追加 `tool/execute-deadline` 记录。
 
 <a id="dev-note"></a>
 ### 开发备注

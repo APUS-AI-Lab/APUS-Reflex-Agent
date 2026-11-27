@@ -180,3 +180,13 @@ Docs accompany every code change: update affected README and JSDoc contracts tog
 ## Vendoring policy
 
 `vendor/` packages are pinned source copies (manifest with upstream SHAs in [vendor/README.md](vendor/README.md)). Update via the sync procedure there; re-apply or retire the logged local modifications; rerun `pnpm run test && pnpm run build`.
+
+## 部署：默认在容器内更新代码
+
+**改完 SDK 或服务代码后，默认把改动文件复制进运行中的容器并重启该容器内的服务，不默认完整重建镜像。**
+
+- 构建失败先读日志中首个错误（编译面、文件与行号）。本次改动引入的测试类型错误按仓库既有严格设置修好，不放宽 `tsconfig`、不跳过测试编译；修好后重新验证 `tsc -b tsconfig.host.json`、`tsc -b tsconfig.client.json` 与受影响测试文件。
+- 容器内更新只复制本次提交涉及的文件，保留容器内其他内容。复制前记录容器名、目标提交、源文件清单及哈希；复制后读取容器内同一文件的哈希，确认两者一致。
+- 更新只作用于本次改动涉及的服务容器；不触碰未更新的常驻服务。重启仍遵循重启条款：确有代码更新、本次部署已获用户授权、且只重启本次更新涉及的服务。
+- 重启后核对容器内实际加载的版本（文件哈希、包入口或服务健康响应中的版本标识），不能把“服务起来了”当成“新代码生效”。
+- 容器内更新不产生新的分发镜像，不 `docker commit` 成镜像对外分发；含凭据或运行数据的容器快照不得传播。只有需要改镜像层（新增系统依赖或 Dockerfile）时才做完整构建，并在记录中说明理由。

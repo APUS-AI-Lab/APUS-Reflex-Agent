@@ -8,6 +8,20 @@ export interface MemoryIndexRebuildResult {
   readonly pendingRecords: number
 }
 
+/** One record snapshot a bounded rebuild actually applied, with its version. */
+export interface MemoryIndexAppliedRecord {
+  readonly recordId: MemoryId
+  readonly revision: number
+  /**
+   * The search terms this version actually put in the index.
+   *
+   * The version and id say which snapshot was applied; only the terms say what
+   * can be found through it. They are the index's own output — a reader
+   * re-tokenizing the record text would be guessing at a different result.
+   */
+  readonly terms: readonly string[]
+}
+
 /**
  * Disposable deterministic inverted index for Continuum records.
  *
@@ -51,17 +65,41 @@ export class MemoryRecordIndex {
    * @returns counts after applying the bounded batch.
    */
   rebuildPending(limit: number): MemoryIndexRebuildResult {
+    return this.rebuildPendingWithApplied(limit).result
+  }
+
+  /**
+   * Apply at most `limit` queued snapshots and report exactly which versions were applied.
+   *
+   * The reported count alone cannot say which queued version reached the index: with a backlog the loop may drain an
+   * older snapshot than the one just enqueued, so the applied list is the only per-version evidence.
+   * @param limit - positive safe integer work budget.
+   * @returns the counts after applying the batch and the records actually applied, in drain order.
+   */
+  rebuildPendingWithApplied(
+    limit: number,
+  ): { readonly result: MemoryIndexRebuildResult; readonly applied: readonly MemoryIndexAppliedRecord[] } {
     if (!Number.isSafeInteger(limit) || limit < 1) throw new TypeError('limit must be a positive safe integer')
-    let applied = 0
+    const applied: MemoryIndexAppliedRecord[] = []
     for (const [id, record] of this.pending) {
       this.removeIndexed(id)
       this.indexed.set(id, record)
       addRecord(this.postings, record)
       this.pending.delete(id)
-      applied += 1
-      if (applied >= limit) break
+      applied.push(Object.freeze({
+        recordId: id, revision: record.revision, terms: memorySearchTerms(recordSearchText(record)),
+      }))
+      if (applied.length >= limit) break
     }
-    return this.result()
+    return { result: this.result(), applied: Object.freeze(applied) }
+  }
+
+  /** Search terms one record version contributes to the index.
+   * @param record - record snapshot to tokenize.
+   * @returns the normalized terms this snapshot adds.
+   */
+  static termsOf(record: MemoryRecord): readonly string[] {
+    return memorySearchTerms(recordSearchText(record))
   }
 
   /** Number of snapshots waiting for a bounded rebuild.

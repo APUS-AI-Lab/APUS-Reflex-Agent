@@ -36,6 +36,15 @@
  *   arrives, then poll for the GO file before answering (deterministic
  *   cancel-during-handshake window).
  * - `FAKE_HANG_PROMPT`: never answer `session/prompt` (for timeout/dispose tests).
+ * - `FAKE_HANG_CANCEL`: accept `session/cancel` but never answer it (cancellation
+ *   timeout probe); emits the prompt turn normally first.
+ * - `FAKE_CANCEL_ERROR`: answer `session/cancel` with a JSON-RPC error response.
+ * - `FAKE_CANCEL_UNCONFIRMED`: answer `session/cancel` with `{ cancelled: false }`.
+ * - `FAKE_RECORD_CANCELS`: append each `session/cancel` sessionId to this file.
+ * - `FAKE_PRE_RECEIPT_EVENTS`: comma list of `source:type` entries published
+ *   before this prompt's inbox receipt — `self` for this session, another id
+ *   for an unrelated one. A source session that already ran sees a stale tail
+ *   here instead, which the client must not attribute to this run.
  * - `FAKE_EXIT_DURING_PROMPT`: commit one interrupted assistant message, then
  *   exit 17 while the owned session run is waiting for its terminal state.
  * - `FAKE_STREAM_THEN_MALFORMED`: commit a partial assistant attempt for the
@@ -49,7 +58,7 @@
  * - `FAKE_RECORD_INIT`: append each `initialize` params JSON to this file (handshake probe).
  */
 
-import { appendFileSync, existsSync, writeFileSync } from 'node:fs'
+import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs'
 import process from 'node:process'
 import { createInterface } from 'node:readline'
 
@@ -225,6 +234,19 @@ function sessionIdOf(params: Record<string, unknown> | undefined): string {
   return typeof value === 'string' ? value : ''
 }
 
+/**
+ * Scripted request-view surface: when `FAKE_REQUEST_VIEW` names a JSON file it
+ * contains `{ dispatches, views }`, answered per session. Unset means an older
+ * runtime with the capability absent and both methods unknown.
+ */
+function requestViewScript(): { dispatches?: Record<string, unknown[]>; views?: Record<string, unknown> } {
+  const path = env.FAKE_REQUEST_VIEW
+  if (path === undefined) return {}
+  return JSON.parse(readFileSync(path, 'utf8')) as { dispatches?: Record<string, unknown[]>; views?: Record<string, unknown> }
+}
+
+const viewScript = requestViewScript()
+
 const reader = createInterface({ input: process.stdin })
 reader.on('line', (line) => {
   if (line.trim().length === 0) return
@@ -263,10 +285,57 @@ reader.on('line', (line) => {
         respond({ serverInfo: { name: 'deepseek-harness-sdk-runtime', version: process.cwd() } })
         return
       }
+      if (env.FAKE_REQUEST_VIEW !== undefined) {
+        respond({
+          serverInfo: { name: 'deepseek-harness-sdk-runtime', version: '0.0.1' },
+          capabilities: ['request-view/dispatch-v1'],
+        })
+        return
+      }
       respond({ serverInfo: { name: 'deepseek-harness-sdk-runtime', version: '0.0.1' } })
       return
-    case 'session/prompt': {
+    case 'session/dispatches': {
+      if (env.FAKE_REQUEST_VIEW === undefined) {
+        write({ jsonrpc: '2.0', id: frame.id, error: { code: -32603, message: 'unknown APUS Reflex Harness SDK runtime method: session/dispatches' } })
+        return
+      }
       const sessionId = sessionIdOf(frame.params)
+      if (viewScript.dispatches === undefined) {
+        respond({ sessionId, dispatches: [] })
+        return
+      }
+      respond({ sessionId, dispatches: viewScript.dispatches[sessionId] ?? [] })
+      return
+    }
+    case 'session/request-view': {
+      if (env.FAKE_REQUEST_VIEW === undefined) {
+        write({ jsonrpc: '2.0', id: frame.id, error: { code: -32603, message: 'unknown APUS Reflex Harness SDK runtime method: session/request-view' } })
+        return
+      }
+      const sessionId = sessionIdOf(frame.params)
+      const key = `${sessionId}:${String(frame.params?.dispatchSeq)}`
+      const view = viewScript.views?.[key]
+      if (view === undefined || view === null) {
+        write({ jsonrpc: '2.0', id: frame.id, error: { code: -32603, message: 'dispatch not found', data: { code: 'DISPATCH_NOT_FOUND' } } })
+        return
+      }
+      respond(view)
+      return
+    }
+    case 'session/prompt': {
+      if (env.FAKE_RECORD_PROMPTS !== undefined) appendFileSync(env.FAKE_RECORD_PROMPTS, `${JSON.stringify(frame.params)}\n`)
+      const sessionId = sessionIdOf(frame.params)
+      // Initialization events published before this prompt's inbox receipt.
+      // A fresh source session sends them here; a session that already ran
+      // sends a stale tail instead, which the client must not attribute to
+      // this run.
+      if (env.FAKE_PRE_RECEIPT_EVENTS !== undefined) {
+        for (const entry of env.FAKE_PRE_RECEIPT_EVENTS.split(',').filter(part => part.length > 0)) {
+          const [source, type] = entry.split(':', 2)
+          if (source === undefined || type === undefined) continue
+          event(source === 'self' ? sessionId : source, type, {})
+        }
+      }
       const messageId = `fake-user-${seq}`
       event(sessionId, 'agent/inbox/spliced', {
         target: 'next-turn',
@@ -314,6 +383,23 @@ reader.on('line', (line) => {
       runTurn(sessionId)
       notify('session.status', { sessionId, status: 'idle' })
       respond({ messageId })
+      return
+    }
+    case 'session/cancel': {
+      const sessionId = sessionIdOf(frame.params)
+      if (env.FAKE_RECORD_CANCELS !== undefined) appendFileSync(env.FAKE_RECORD_CANCELS, `${sessionId}\n`)
+      if (env.FAKE_HANG_CANCEL !== undefined) return
+      if (env.FAKE_CANCEL_ERROR !== undefined) {
+        write({ jsonrpc: '2.0', id: frame.id, error: { code: 7, message: 'scripted cancel failure' } })
+        return
+      }
+      if (env.FAKE_CANCEL_UNCONFIRMED !== undefined) {
+        respond({ sessionId, cancelled: false })
+        return
+      }
+      event(sessionId, 'turn/end', { turn: 0, reason: { kind: 'aborted', reason: { kind: 'user' } } })
+      notify('session.status', { sessionId, status: 'idle' })
+      respond({ sessionId, cancelled: true })
       return
     }
     case 'shutdown':

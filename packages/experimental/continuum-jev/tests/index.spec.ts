@@ -277,3 +277,37 @@ describe('Continuum coverage-preserving relevance', () => {
     expect(phases).toEqual(['prepared', 'settled'])
   })
 })
+
+describe('Continuum decision receipt recall attribution', () => {
+  it('records the pre-step recall id on both the prepared and settled receipt', async () => {
+    const provider = fake([0.9])
+    const ctx = new Context()
+    contexts.push(ctx)
+    await ctx.plugin(SessionStore)
+    const session = ctx.sessions.create(SessionId('decision-recall'))
+    let prepared: ReturnType<typeof recordContinuumMemoryDecision>['data'] | undefined
+    const result = await selectContinuumMemory(provider, config, {
+      query: 'migration', recallId: 'recall-7',
+      candidates: [{ ...first, id: MemoryId('a') }],
+    }, undefined, async (receipt) => {
+      const appended = recordContinuumMemoryDecision(session, receipt)
+      prepared = appended.data
+      return appended.seq
+    })
+    const settled = recordContinuumMemoryDecision(session, result).data
+    expect(prepared).toMatchObject({ recallId: 'recall-7', evaluation: { recallId: 'recall-7', phase: 'prepared' } })
+    expect(settled).toMatchObject({ recallId: 'recall-7', evaluation: { recallId: 'recall-7', phase: 'settled' } })
+    expect(latestContinuumMemoryDecision(session.snapshotEvents())?.recallId).toBe('recall-7')
+  })
+
+  it('omits the recall id for a caller outside a pre-step recall instead of inventing one', async () => {
+    const ctx = new Context()
+    contexts.push(ctx)
+    await ctx.plugin(SessionStore)
+    const session = ctx.sessions.create(SessionId('decision-no-recall'))
+    const result = await selectContinuumMemory(fake([0.9]), config, { query: 'migration', candidates: [first] })
+    const data = recordContinuumMemoryDecision(session, result).data
+    expect(data.recallId).toBeUndefined()
+    expect(data.evaluation?.recallId).toBeUndefined()
+  })
+})

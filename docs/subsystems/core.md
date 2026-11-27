@@ -318,7 +318,15 @@ It returns a `PreStepDecision`. Reject opens no step. Enter supplies the complet
 ```ts type-equiv
 /** Whether and with which messages the loop enters a proposed step. */
 type PreStepDecision =
-  | { kind: 'reject' }
+  | {
+    kind: 'reject'
+    /**
+     * Why the listener rejected the step, recorded on the durable
+     * `turn/pre-step` and `turn/end` records. Absent when the listener gives
+     * no reason; the loop never infers one.
+     */
+    reason?: string
+  }
   | {
     kind: 'enter'
     messages: UserMessage[]

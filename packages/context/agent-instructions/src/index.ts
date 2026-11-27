@@ -125,7 +125,10 @@ export function apply(ctx: Context, config: Config): void {
     const authorityMessages = [...claimed]
     /* v8 ignore next -- normal agents carry an absolute session cwd. */
     const cwd = agent.session.header.cwd ?? process.cwd()
-    const projectRoot = await findProjectRoot(cwd, resolved.projectRootMarkers, fileSystem, signal)
+    // The Agent's identity selects the execution world its cwd lives in (a
+    // benchmark task container); a Host-local provider ignores it.
+    const agentId = agent.id
+    const projectRoot = await findProjectRoot(cwd, resolved.projectRootMarkers, fileSystem, signal, agentId)
     const identity = workspaceBaselineIdentity(resolved, cwd, projectRoot)
     const visibleBaseline = visibleBaselineSource(agent, authorityMessages)
     const baselinePresent = visibleBaseline !== undefined
@@ -145,9 +148,11 @@ export function apply(ctx: Context, config: Config): void {
         maxSourceBytes: resolved.maxSourceBytes,
         instructionFileCandidates: resolved.instructionFileCandidates,
         localInstructionFileCandidates: resolved.localInstructionFileCandidates,
+        hostInstructionRoots: resolved.hostInstructionRoots,
         projectRoot,
         replacePreviousBaseline,
         signal,
+        agentId,
       }, fileSystem)
       const baseline = baselineInstructionState(instructions?.included ?? [])
       const observedBaseline = baselineInstructionState(instructions?.observed ?? [])

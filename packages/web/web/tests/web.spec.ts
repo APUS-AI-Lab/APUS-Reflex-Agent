@@ -213,3 +213,189 @@ describe('WebError', () => {
     expect(error.name).toBe('WebError')
   })
 })
+
+describe('resolved provider identity', () => {
+  it('reports which search provider a call would use', async () => {
+    const { web } = await mountWeb()
+    web.registerSearchProvider(makeSearchProvider('primary', available, () => Promise.resolve(searchResult('x'))))
+
+    expect(web.resolvedSearchProviderId()).toBe('primary')
+  })
+
+  it('reports the configured id when one is set', async () => {
+    const { web } = await mountWeb({ searchProvider: 'chosen' })
+    web.registerSearchProvider(makeSearchProvider('other', available, () => Promise.resolve(searchResult('x'))))
+    web.registerSearchProvider(makeSearchProvider('chosen', available, () => Promise.resolve(searchResult('y'))))
+
+    expect(web.resolvedSearchProviderId()).toBe('chosen')
+  })
+
+  it('reports nothing when no provider can serve the call', async () => {
+    const { web } = await mountWeb()
+
+    expect(web.resolvedSearchProviderId()).toBeUndefined()
+  })
+})
+
+describe('provider selection records', () => {
+  /** Mount a runtime whose initiator records every appended event. */
+  async function mountWithRecorder(config: ConstructorParameters<typeof WebRuntime>[1] = {}) {
+    const ctx = new Context()
+    await ctx.plugin(WebRuntime, config)
+    const recorded: { type: string; data: Record<string, unknown> }[] = []
+    ctx.provide('agents', {
+      currentInitiator: () => ({
+        session: {
+          append: (type: string, data: Record<string, unknown>) => { recorded.push({ type, data }) },
+        },
+      }),
+    })
+    return { web: ctx.web, recorded }
+  }
+
+  it('records the search provider the seam actually ran', async () => {
+    const { web, recorded } = await mountWithRecorder()
+    web.registerSearchProvider(makeSearchProvider('exa', available, () => Promise.resolve(searchResult('x'))))
+
+    await web.search({ query: 'q' })
+
+    expect(recorded).toHaveLength(1)
+    expect(recorded[0]?.type).toBe('tool/provider-selected')
+    expect(recorded[0]?.data).toMatchObject({
+      capability: 'web-search',
+      providerId: 'exa',
+      selectionMode: 'auto-single',
+      outcome: 'completed',
+    })
+    expect(recorded[0]?.data.latencyMs).toBeGreaterThanOrEqual(0)
+  })
+
+  it('records a configured selection as such', async () => {
+    const { web, recorded } = await mountWithRecorder({ searchProvider: 'chosen' })
+    web.registerSearchProvider(makeSearchProvider('other', available, () => Promise.resolve(searchResult('x'))))
+    web.registerSearchProvider(makeSearchProvider('chosen', available, () => Promise.resolve(searchResult('y'))))
+
+    await web.search({ query: 'q' })
+
+    expect(recorded[0]?.data).toMatchObject({ providerId: 'chosen', selectionMode: 'configured' })
+  })
+
+  it('records a failed fetch as failed', async () => {
+    const { web, recorded } = await mountWithRecorder()
+    web.registerFetchProvider({
+      id: 'broken',
+      available: () => true,
+      fetch: () => Promise.reject(new Error('boom')),
+    })
+
+    await expect(web.fetch({ url: 'https://example.com' })).rejects.toThrow('boom')
+
+    expect(recorded).toHaveLength(1)
+    expect(recorded[0]?.data).toMatchObject({ capability: 'web-fetch', providerId: 'broken', outcome: 'failed' })
+  })
+
+  it('records nothing when no provider can serve the call', async () => {
+    const { web, recorded } = await mountWithRecorder()
+
+    await expect(web.search({ query: 'q' })).rejects.toThrow(
+      expect.objectContaining({ code: 'WEB_PROVIDER_UNAVAILABLE' }),
+    )
+    expect(recorded).toHaveLength(0)
+  })
+})
+
+describe('provider selection record containment', () => {
+  async function mount(config: ConstructorParameters<typeof WebRuntime>[1] = {}) {
+    const ctx = new Context()
+    await ctx.plugin(WebRuntime, config)
+    return ctx
+  }
+
+  it('records a failed search as failed', async () => {
+    const ctx = await mount()
+    const recorded: { type: string; data: Record<string, unknown> }[] = []
+    ctx.provide('agents', {
+      currentInitiator: () => ({
+        session: { append: (type: string, data: Record<string, unknown>) => { recorded.push({ type, data }) } },
+      }),
+    })
+    ctx.web.registerSearchProvider({
+      id: 'broken',
+      available: () => true,
+      search: () => Promise.reject(new Error('upstream down')),
+    })
+
+    await expect(ctx.web.search({ query: 'q' })).rejects.toThrow('upstream down')
+
+    expect(recorded).toHaveLength(1)
+    expect(recorded[0]?.data).toMatchObject({
+      capability: 'web-search', providerId: 'broken', outcome: 'failed',
+    })
+  })
+
+  it('runs the provider even when no initiator can own the record', async () => {
+    // A direct caller outside any agent boundary still gets its result; only
+    // the log entry is missing.
+    const ctx = await mount()
+    ctx.provide('agents', { currentInitiator: () => undefined })
+    ctx.web.registerSearchProvider(makeSearchProvider('exa', available, () => Promise.resolve(searchResult('ok'))))
+
+    await expect(ctx.web.search({ query: 'q' })).resolves.toMatchObject({ content: 'ok' })
+  })
+
+  it('runs the provider when recording the selection throws', async () => {
+    // An observer's failure must not turn a completed search into an error.
+    const ctx = await mount()
+    ctx.provide('agents', {
+      currentInitiator: () => ({
+        session: { append: () => { throw new Error('log unavailable') } },
+      }),
+    })
+    ctx.web.registerSearchProvider(makeSearchProvider('exa', available, () => Promise.resolve(searchResult('ok'))))
+
+    await expect(ctx.web.search({ query: 'q' })).resolves.toMatchObject({ content: 'ok' })
+  })
+})
+
+describe('provider selection call attribution', () => {
+  async function mount() {
+    const ctx = new Context()
+    await ctx.plugin(WebRuntime)
+    const recorded: { type: string; data: Record<string, unknown> }[] = []
+    ctx.provide('agents', {
+      currentInitiator: () => ({
+        session: { append: (type: string, data: Record<string, unknown>) => { recorded.push({ type, data }) } },
+      }),
+    })
+    return { web: ctx.web, recorded }
+  }
+
+  it('records the tool call a search ran for', async () => {
+    // Without the call id a parallel batch shows N selections beside N calls
+    // instead of inside the call each one belongs to.
+    const { web, recorded } = await mount()
+    web.registerSearchProvider(makeSearchProvider('exa', available, () => Promise.resolve(searchResult('x'))))
+
+    await web.search({ query: 'q', callId: 'call-1' })
+
+    expect(recorded[0]?.data).toMatchObject({ capability: 'web-search', callId: 'call-1' })
+  })
+
+  it('records the tool call a fetch ran for', async () => {
+    const { web, recorded } = await mount()
+    web.registerFetchProvider(makeFetchProvider('http', available, fetchResult('x')))
+
+    await web.fetch({ url: 'https://example.com', callId: 'call-2' })
+
+    expect(recorded[0]?.data).toMatchObject({ capability: 'web-fetch', callId: 'call-2' })
+  })
+
+  it('omits the field when the caller supplies no call id', async () => {
+    const { web, recorded } = await mount()
+    web.registerSearchProvider(makeSearchProvider('exa', available, () => Promise.resolve(searchResult('x'))))
+
+    await web.search({ query: 'q' })
+
+    expect(recorded[0]?.data).not.toHaveProperty('callId')
+  })
+})

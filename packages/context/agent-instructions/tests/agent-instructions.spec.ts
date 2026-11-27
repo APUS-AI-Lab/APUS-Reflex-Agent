@@ -116,6 +116,9 @@ class RecordingFileSystem extends FileSystem {
 
   override processPath(target: FsTarget): string { return String(target.targetKey) }
 
+  /** This fixture models a Host-backed provider: it reads the harness host's own files. */
+  override processPathFromHostPath(hostPath: string): string { return hostPath }
+
   override fileUrl(target: FsTarget): string { return `file://${target.targetKey}` }
 
   override contains(parent: FsTarget, child: FsTarget): boolean {

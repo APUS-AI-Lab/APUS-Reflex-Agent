@@ -134,6 +134,18 @@ function text(result: { content: { type: string; text?: string }[] }): string {
 }
 
 describe('session cwd resolution', () => {
+  it('names the agent a filesystem call acts for', async () => {
+    /** A provider whose execution world is another container needs this. */
+    const { sessionResolveOptions } = await import('../src/session-cwd.ts')
+    const options = sessionResolveOptions({
+      agent: { id: 'case-7', session: { header: {} } },
+      signal: testToolSignal,
+    } as never)
+
+    expect(options.agentId).toBe('case-7')
+  })
+
+
   const execution = (cwd?: string) => cwd === undefined
     ? {}
     : { agent: { session: { header: { cwd } } } }

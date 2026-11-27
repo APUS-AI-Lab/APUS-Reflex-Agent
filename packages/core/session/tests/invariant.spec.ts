@@ -38,6 +38,27 @@ describe('session-log invariants', () => {
     }).not.toThrow()
   })
 
+  it('requires turn/pre-step to name its open turn before any step opens', async () => {
+    const { ctx } = await setup()
+    try {
+      const session = ctx.sessions.create()
+      const preStep = (turn: number) => session.append('turn/pre-step', {
+        turn, step: 1, disposition: 'cancelled', claimedMessageIds: [],
+      })
+      expect(() => preStep(1)).toThrow('turn/pre-step 1 does not match open turn null')
+      session.append('turn/start', { turn: 1 })
+      expect(() => preStep(2)).toThrow('turn/pre-step 2 does not match open turn 1')
+      expect(() => preStep(1)).not.toThrow()
+      session.append('step/start', { turn: 1, step: 1 })
+      expect(() => preStep(1)).toThrow('turn/pre-step in turn 1 while step 1 is still open')
+      session.append('step/end', { turn: 1, step: 1 })
+      expect(() => preStep(1)).not.toThrow()
+      session.append('turn/end', { turn: 1, reason: { kind: 'completed' } })
+    } finally {
+      await ctx.fiber.dispose()
+    }
+  })
+
   it('requires developer messages to belong to the open turn and step', async () => {
     const { ctx } = await setup()
     try {

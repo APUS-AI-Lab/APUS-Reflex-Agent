@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import AgentRegistry, { type Agent } from '@deepseek-ai/dsh-agent'
+import { ToolCallId } from '@deepseek-ai/dsh-llm'
+import { Session, SessionId } from '@deepseek-ai/dsh-session'
 import UserQuestionService, {
   UserQuestionError,
   type AskUserQuestionAnswer,
@@ -34,6 +36,14 @@ function stubAgent(id: string, delegationDepth = 0): Agent {
     id: agentId,
     session: { id: agentId, header: { delegationDepth } },
   } as unknown as Agent
+}
+
+/** A registry-attestable agent over a real session inside an open turn. */
+function liveAgent(id: string): { agent: Agent; session: Session } {
+  const session = Session.create(SessionId(id))
+  session.append('turn/start', { turn: 1 })
+  const agent = { id: session.id, session } as unknown as Agent
+  return { agent, session }
 }
 
 describe('UserQuestionService', () => {
@@ -350,5 +360,63 @@ describe('UserQuestionService', () => {
       { id: 'plan-review', selected: ['Approve'] },
     ])
     expect(p.seen[0]?.questions[1]?.intent).toEqual(intent)
+  })
+
+  it('records the log-only answer receipt with an unattributed answerer', async () => {
+    const ctx = new Context()
+    await ctx.plugin(AgentRegistry)
+    await ctx.plugin(UserQuestionService)
+    registerAnswerer(ctx, provider('yes'))
+    const { agent, session } = liveAgent('answered-receipt')
+    ctx.agents.enter(agent, undefined)
+
+    const result = await ctx.userQuestions.ask({
+      questions: [{ id: 'confirm', question: 'Proceed?', options: [{ label: 'yes' }] }],
+      agent,
+      callId: ToolCallId('ask-call-1'),
+    })
+
+    expect(result).toEqual({ answers: [{ id: 'confirm', selected: ['yes'] }] })
+    expect(session.snapshotEvents().at(-1)).toMatchObject({
+      type: 'user-question/answered',
+      data: { callId: 'ask-call-1', answeredBy: 'unattributed' },
+    })
+  })
+
+  it('logs no answer receipt when no answerer accepts the request', async () => {
+    const ctx = new Context()
+    await ctx.plugin(AgentRegistry)
+    await ctx.plugin(UserQuestionService)
+    const { agent, session } = liveAgent('unanswered')
+    ctx.agents.enter(agent, undefined)
+    const before = session.seq
+
+    await expect(ctx.userQuestions.ask({
+      questions: [{ id: 'confirm', question: 'Proceed?' }],
+      agent,
+    })).rejects.toMatchObject({ code: 'NO_PROVIDER' })
+
+    expect(session.seq).toBe(before)
+  })
+
+  it('leaves an answered question intact when the receipt append fails', async () => {
+    const ctx = new Context()
+    await ctx.plugin(AgentRegistry)
+    await ctx.plugin(UserQuestionService)
+    registerAnswerer(ctx, provider('yes'))
+    const { agent, session } = liveAgent('receipt-append-failure')
+    ctx.agents.enter(agent, undefined)
+    const warn = vi.spyOn(ctx.logger, 'warn').mockImplementation(() => {})
+    const append = vi.spyOn(session, 'append').mockImplementation(() => {
+      throw new Error('append failed')
+    })
+
+    await expect(ctx.userQuestions.ask({
+      questions: [{ id: 'confirm', question: 'Proceed?' }],
+      agent,
+    })).resolves.toEqual({ answers: [{ id: 'confirm', selected: ['yes'] }] })
+
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('user-question/answered receipt append failed'))
+    append.mockRestore()
   })
 })

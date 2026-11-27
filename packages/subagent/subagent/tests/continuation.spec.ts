@@ -8,7 +8,7 @@ import type { Agent } from '@deepseek-ai/dsh-agent'
 import AgentLoop from '@deepseek-ai/dsh-agent-loop'
 import { mountAgentLoopTestDependencies } from '@deepseek-ai/dsh-agent-loop-testkit'
 import { SessionId } from '@deepseek-ai/dsh-session'
-import type { SessionEvent, SessionEventMap } from '@deepseek-ai/dsh-session'
+import type { SessionEvent } from '@deepseek-ai/dsh-session'
 import JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
 import ScheduleService from '@deepseek-ai/dsh-schedule'
 import Storage from '@deepseek-ai/dsh-storage'
@@ -693,10 +693,13 @@ describe('SubagentRuntime.startContinuable', () => {
     const childId = SessionId('00000000-0000-4000-8000-000000000321')
     const catalogFailure = new Error('catalog append failed')
     const cleanupFailure = new Error('activation disposal also failed')
-    const appendCatalog = parent.session.append.bind(parent.session) as (
-      type: 'subagent/catalog',
-      data: SessionEventMap['subagent/catalog'],
-    ) => SessionEvent<'subagent/catalog'>
+    // Only the catalog write is diverted: the failure this test exercises is a
+    // refused catalog append, and every other record (including a run-end for
+    // the epoch that did start) must reach the log with its own type.
+    const appendAny = parent.session.append.bind(parent.session) as (
+      type: string,
+      data: unknown,
+    ) => SessionEvent
     vi.spyOn(parent.session, 'append').mockImplementation(((type: string, data: unknown) => {
       if (type === 'subagent/catalog') {
         const activation = continuationActivations(ctx).get(childId)
@@ -708,7 +711,7 @@ describe('SubagentRuntime.startContinuable', () => {
         })
         throw catalogFailure
       }
-      return appendCatalog('subagent/catalog', data as SessionEventMap['subagent/catalog'])
+      return appendAny(type, data)
     }) as typeof parent.session.append)
 
     await expect(ctx.subagents.startContinuable({

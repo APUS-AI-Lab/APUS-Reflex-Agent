@@ -3,9 +3,10 @@
  * `tools/post-execute` transformer. We drive real tools through
  * `ctx.tools.execute(...)` and assert: disabled mode is a true no-op, an
  * oversized plain-text result is spilled and replaced with a preview + locator,
- * a small result and a non-text result pass through, `read` is skipped, and a
+ * a small result and a non-text result pass through, `read` is skipped, a
  * `saveText` failure / missing backend / missing owner all preserve the original
- * result without an `isError`.
+ * result without an `isError`, and each successful replacement appends one
+ * log-only `spill/spilled` record whose accounting matches the replacement.
  */
 
 import { describe, expect, it, onTestFinished, vi } from 'vitest'
@@ -15,7 +16,8 @@ import { createUserMessage, ToolCallId } from '@deepseek-ai/dsh-llm'
 import { estimateContent } from '@deepseek-ai/dsh-token-meter/estimate'
 import type { ContentBlock } from '@deepseek-ai/dsh-llm'
 import type { ContextFormed } from '@deepseek-ai/dsh-llm'
-import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
+import SessionStore, { Session, SessionId } from '@deepseek-ai/dsh-session'
+import type { SessionEvent } from '@deepseek-ai/dsh-session'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import ToolRuntime, { defineContentToolFixture } from '@deepseek-ai/dsh-tools'
 import type { ToolDefinition } from '@deepseek-ai/dsh-tools'
@@ -84,11 +86,22 @@ function textTool(name: string, text: string) {
   })
 }
 
-/** A minimal exec carrying a session header id (the spill owner). */
-function exec(name: string, session = 's1'): ToolExecution {
-  // Only agent.session.header.id is read by the policy; a structural stub suffices.
-  const agent = { session: { header: { id: SessionId(session) } } }
+/** A minimal exec carrying a live Session that owns the spill record. */
+function exec(name: string, session: Session = Session.create(SessionId('s1'))): ToolExecution {
+  const agent = { session }
   return { callId: ToolCallId(`call-${name}`), name, arguments: {}, agent, signal: testToolSignal } as unknown as ToolExecution
+}
+
+/** The `spill/spilled` events one session recorded. */
+function spillEvents(session: Session): SessionEvent<'spill/spilled'>[] {
+  return session.snapshotEvents().filter((event): event is SessionEvent<'spill/spilled'> => event.type === 'spill/spilled')
+}
+
+/** SHA-256 hex, matching the event's digest convention. */
+/** UTF-8 bytes of text blocks, matching the event's byte accounting. */
+function textBytes(content: readonly ContentBlock[]): number {
+  return content.reduce(
+    (total, block) => total + (block.type === 'text' ? Buffer.byteLength(block.text, 'utf8') : 0), 0)
 }
 
 /**
@@ -216,6 +229,66 @@ describe('oversized plain-text replacement', () => {
   })
 })
 
+describe('the spill/spilled record', () => {
+  it('records the threshold, locator, accounting, and digests after a text replacement', async () => {
+    const { ctx, spill } = await setup({ maxInlineTokens: 64 })
+    const body = 'HEAD'.repeat(200) + 'TAIL'.repeat(200)
+    ctx.tools.register(textTool('big', body))
+    const session = Session.create(SessionId('record-text'))
+    const result = await ctx.tools.execute(exec('big', session))
+
+    const events = spillEvents(session)
+    expect(events).toHaveLength(1)
+    expect(events[0]?.data).toMatchObject({
+      callId: 'call-big',
+      toolName: 'big',
+      label: 'result',
+      threshold: 64,
+      retainedImages: 0,
+      omittedImages: 0,
+      locator: '/spill/big.txt',
+      spilledBytes: Buffer.byteLength(body, 'utf8'),
+      // Digests were removed from the record: the stored text embeds
+      // wall-clock times and the preview embeds the per-run locator name.
+
+    })
+    const record = events[0]!.data
+    expect(record.retainedBytes).toBe(textBytes(result.content))
+    expect(record.omittedBytes).toBeGreaterThan(0)
+    expect(record.budgetTokens).toBeLessThanOrEqual(64)
+    expect(record.retainedTokens).toBe(result.content.reduce((total, block) => total + estimateContent([block]), 0))
+    expect(record.retainedTokens).toBeLessThanOrEqual(64)
+    expect(spill?.saves).toHaveLength(1)
+  })
+
+  it('records nothing for a within-budget result or when retention is disabled', async () => {
+    const enabled = await setup({ maxInlineTokens: 1000 })
+    enabled.ctx.tools.register(textTool('small', 'tiny'))
+    const smallSession = Session.create(SessionId('record-small'))
+    await enabled.ctx.tools.execute(exec('small', smallSession))
+    expect(spillEvents(smallSession)).toEqual([])
+
+    const disabled = await setup({})
+    disabled.ctx.tools.register(textTool('big', 'x'.repeat(1000)))
+    const disabledSession = Session.create(SessionId('record-disabled'))
+    await disabled.ctx.tools.execute(exec('big', disabledSession))
+    expect(spillEvents(disabledSession)).toEqual([])
+  })
+
+  it('keeps a successful replacement when the record append fails', async () => {
+    const { ctx } = await setup({ maxInlineTokens: 64 })
+    const body = 'x'.repeat(2000)
+    ctx.tools.register(textTool('big', body))
+    const session = Session.create(SessionId('record-readonly'))
+    vi.spyOn(session, 'append').mockImplementation(() => { throw new Error('log unavailable') })
+    const warn = vi.spyOn(ctx.logger, 'warn').mockImplementation(() => {})
+
+    const result = await ctx.tools.execute(exec('big', session))
+    expect(textOf(result.content)).toContain('Full formatted result stored at: /spill/big.txt')
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('spill/spilled'))
+  })
+})
+
 describe('outer PTC mode failure capture', () => {
   it('spills the bounded output-limit diagnostic through the ordinary outer-result policy', async () => {
     const ctx = new Context()
@@ -224,8 +297,8 @@ describe('outer PTC mode failure capture', () => {
     await ctx.plugin(StubStore)
     await ctx.plugin(SpillPolicy, { maxInlineTokens: 64 })
     await mountRuntime(ctx, { maxOutputBytes: 500 })
-    const events: unknown[] = []
-    const agent = observedAgent(ctx, 'code-spill', (_type: string, data: unknown) => { events.push(data) })
+    const events: { type: string; data: unknown }[] = []
+    const agent = observedAgent(ctx, 'code-spill', (type: string, data: unknown) => { events.push({ type, data }) })
 
     const result = await ctx.tools.execute({
       signal: testToolSignal,
@@ -245,7 +318,15 @@ describe('outer PTC mode failure capture', () => {
     expect(saved[0]?.content).toContain('code run failed (output-limit)')
     expect(saved[0]?.content).toContain('HEAD-')
     expect(textOf(result.content)).toContain('Full formatted result stored at: /spill/run_code.txt')
-    expect(events).toEqual([])
+    // WP-5 loop/pipeline observations (pre-execute decision, result rewrite)
+    // append their own durable events during the same execution; this policy
+    // owns only the spill/spilled record.
+    const spillRecords = events.filter(event => event.type === 'spill/spilled')
+    expect(spillRecords).toHaveLength(1)
+    expect(spillRecords[0]).toMatchObject({
+      type: 'spill/spilled',
+      data: { callId: 'code-output-limit', toolName: 'run_code', label: 'result', threshold: 64 },
+    })
   })
 })
 
@@ -304,6 +385,10 @@ describe('the durable dispatch-log arm', () => {
       source: { kind: 'tool', toolName: 'huge_read', callId: 'parent-1:ptc:1', label: 'dispatch' },
     })
     expect(save?.content).toBe('H'.repeat(2_000))
+    const record = events.find(event => event.type === 'spill/spilled')
+    expect(record?.data).toMatchObject({
+      callId: 'parent-1:ptc:1', toolName: 'huge_read', label: 'dispatch', threshold: 200,
+    })
   })
 
   it('leaves a non-text sub-result log unchanged (flatten declines)', async () => {

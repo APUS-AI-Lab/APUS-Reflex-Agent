@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import { bindScopeParent, createScope, scopeOf } from '@deepseek-ai/dsh-scope'
+import { Session, SessionId } from '@deepseek-ai/dsh-session'
 import SkillRegistry, {
   isModelInvocable,
   isUserInvocable,
@@ -8,6 +9,7 @@ import SkillRegistry, {
   type SkillCandidate,
   type SkillDefinition,
   type SkillInvocationPolicy,
+  type SkillLoadedEventData,
   type SkillLookupOptions,
   type SkillProvider,
   type SkillProviderObservation,
@@ -463,6 +465,71 @@ describe('SkillRegistry registry', () => {
     expect(received).toBe(candidate)
     expect(received?.locator).toBe(locator)
     expect(loaded).toBe(definition)
+  })
+
+  it('records one log-only load receipt with the catalog cache state at the return point', async () => {
+    const ctx = new Context()
+    await ctx.plugin(SkillRegistry)
+    registerProvider(ctx, new MemoryProvider([memorySkill('loaded-skill', 'Loaded', 10)]))
+    const records: { type: string; data: SkillLoadedEventData }[] = []
+    const scope = {
+      session: {
+        append(type: string, data: SkillLoadedEventData) {
+          records.push({ type, data })
+          return { type, data }
+        },
+      },
+    }
+
+    expect(await ctx.skills.get('loaded-skill', { scope })).toMatchObject({ content: 'loaded-skill body.' })
+    expect(await ctx.skills.get('loaded-skill', { scope })).toMatchObject({ content: 'loaded-skill body.' })
+
+    expect(records.map(record => record.type)).toEqual(['skill/loaded', 'skill/loaded'])
+    expect(records[0]?.data).toMatchObject({
+      name: 'loaded-skill',
+      provider: 'memory',
+      source: 'memory',
+      cached: false,
+    })
+    expect(records[1]?.data.cached).toBe(true)
+    expect(Number.isSafeInteger(records[0]?.data.loadedAt)).toBe(true)
+  })
+
+  it('appends the load receipt through the real session log', async () => {
+    const ctx = new Context()
+    await ctx.plugin(SkillRegistry)
+    registerProvider(ctx, new MemoryProvider([memorySkill('durable-skill', 'Durable', 10)]))
+    const session = Session.create(SessionId('skill-load-receipt'))
+
+    expect(await ctx.skills.get('durable-skill', { scope: { session } })).toMatchObject({ name: 'durable-skill' })
+
+    const receipts = session.snapshotEvents().filter(event => event.type === 'skill/loaded')
+    expect(receipts).toHaveLength(1)
+    expect(receipts[0]?.data).toEqual({
+      name: 'durable-skill',
+      provider: 'memory',
+      source: 'memory',
+      loadedAt: expect.any(Number),
+      cached: false,
+    })
+  })
+
+  it('skips the load receipt without a session-bearing scope and contains append failures', async () => {
+    const ctx = new Context()
+    await ctx.plugin(SkillRegistry)
+    registerProvider(ctx, new MemoryProvider([memorySkill('quiet-skill', 'Quiet', 10)]))
+
+    expect(await ctx.skills.get('quiet-skill')).toMatchObject({ name: 'quiet-skill' })
+    expect(await ctx.skills.get('quiet-skill', { scope: {} })).toMatchObject({ name: 'quiet-skill' })
+
+    const scope = {
+      session: {
+        append() {
+          throw new Error('closed session')
+        },
+      },
+    }
+    expect(await ctx.skills.get('quiet-skill', { scope })).toMatchObject({ name: 'quiet-skill' })
   })
 
   it('preserves readonly runtime resource identities while adding the default provider', async () => {

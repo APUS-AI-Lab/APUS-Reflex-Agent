@@ -85,7 +85,46 @@ interface ApprovalRequest extends ApprovalRequestEvent {
 
 `ctx.approval.request(req)` 要求发起请求的会话处于一个尚未结束的轮次内。它追加 `approval/asked`，获取一个结果，追加对应的 `approval/decided`，然后以该结果完成。`never` 策略在服务内部、waterfall 分发之前强制执行，因此即使后来以 `prepend` 注册的应答者也无法绕过它。应答者在负责处理该请求时返回结果，否则调用 `next()` 委托；第一个应答占据唯一的决策槽位。
 
-审计事件仅写入日志，不进入模型 transcript（文本记录）。模型可见的行为是调用方派生的工具结果与当前运行时上下文快照。服务 dispose（资源释放）时会移除其上下文贡献；应答者监听器独立地通过 effect 绑定到其所属插件。
+审计记录仅写入日志，不进入模型 transcript（文本记录）。`approval/asked` 携带 `id`、`toolName`、可选的 `callId` 与 `reason`；`approval/decided` 携带相同的 `id` 与 `outcome`，以及每次结算都有的 `decisionPath`，并仅在由应答者结算时携带 `responder`。模型可见的行为是调用方派生的工具结果与当前运行时上下文快照。服务 dispose（资源释放）时会移除其上下文贡献；应答者监听器独立地通过 effect 绑定到其所属插件。
+
+### 结算路径
+
+`ApprovalDecisionPath` 指明聚合在何处结算该请求。`signal-aborted` 与 `session-policy` 在分发前结算；`answerer` 表示某应答者未委托并直接返回；`delegated-default` 表示所有应答者都调用了 `next()` 且链路到达内置的失败关闭默认值，即使某个应答者包装并转换了该值；`answerer-error` 与 `answerer-normalized` 是受控的应答者失败；`abort-race` 表示分发期间信号中止，最终应答被丢弃。
+
+```ts type-equiv
+/**
+ * Where the approval aggregate settled one ask, relative to the answerer
+ * waterfall. `'signal-aborted'` and `'session-policy'` settle before any
+ * dispatch; `'answerer'` means an answerer returned without delegating to the
+ * built-in fail-closed default; `'delegated-default'` means every answerer
+ * called `next()` and the chain reached that default (an answerer may still
+ * wrap and transform the default's value, so this records delegation, not the
+ * final value's origin); `'answerer-error'` and `'answerer-normalized'` are
+ * the contained answerer failures; `'abort-race'` means the request signal
+ * aborted while dispatch was pending and the eventual answer was discarded.
+ */
+type ApprovalDecisionPath =
+  | 'signal-aborted'
+  | 'session-policy'
+  | 'answerer'
+  | 'answerer-error'
+  | 'answerer-normalized'
+  | 'delegated-default'
+  | 'abort-race'
+```
+
+`ApprovalResponder` 是应答者归属。waterfall 不暴露稳定的逐应答者身份，因此由应答者作出的决策记录为 `'unattributed'`。不涉及应答者的决策——策略、分发前中止、委派默认值或中止竞争——省略 `responder`。
+
+```ts type-equiv
+/**
+ * Identity of the answerer that settled an ask. The approval waterfall exposes
+ * no stable per-answerer identity, so a decision produced by an answerer
+ * records `'unattributed'` instead of inferring a name. Decisions settled
+ * without an answerer (policy, a pre-dispatch abort, the delegated default, or
+ * an abort race) omit the field.
+ */
+type ApprovalResponder = 'unattributed'
+```
 
 <!-- BEGIN GENERATED cordis-surface (gen-cordis-catalog.ts) — do not edit between markers -->
 
@@ -119,11 +158,13 @@ setPolicy(agent: Agent, policy: ApprovalPolicy): void
  * appending anything. The answerer phase always produces an outcome: an
  * aborted signal yields `'cancelled'`, a missing or throwing answerer yields
  * `'unavailable'` (fail closed), and a rogue non-vocabulary return value is
- * normalized to `'unavailable'`. A failure that prevents either audit append
- * from committing still rejects because returning an unlogged decision would
- * violate the pair. Session contains post-commit observer failures, so an
- * authoritative append cannot reject the request or suppress its matching
- * audit event.
+ * normalized to `'unavailable'`. `approval/decided` records that settlement
+ * path and, when an answerer returned, an `'unattributed'` responder
+ * because the waterfall declares no identity. A failure that prevents either
+ * audit append from committing still rejects because returning an unlogged
+ * decision would violate the pair. Session contains post-commit observer
+ * failures, so an authoritative append cannot reject the request or suppress
+ * its matching audit event.
  * @param req - the pending decision (agent, tool identity, reason, signal).
  * @returns the closed outcome; `'allowed-once'` is the only grant.
  * @throws when no turn is open or either audit event fails before the session

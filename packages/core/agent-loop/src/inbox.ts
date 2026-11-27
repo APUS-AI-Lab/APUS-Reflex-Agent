@@ -16,6 +16,7 @@ import type {
   InboxWireState,
 } from '@deepseek-ai/dsh-agent'
 import { z } from 'zod'
+import type {} from './types.ts'
 
 /** Wire validation for pending agent input reconstructed from durable inbox splices. */
 export const inboxProjectionSchema = z.object({
@@ -233,6 +234,8 @@ export class ReactLoopInbox implements InboxContract {
     }
     const removed = inbox.slice(actualStart, actualStart + actualDeleteCount)
     const event = this.session.append('agent/inbox/spliced', splice)
+    // No separate cancellation event: the splice above already carries
+    // `outcome: 'canceled'` and `removedCount`, and `removed` holds the ids.
     if (discardRemoved) {
       for (const message of removed) this.dispatch.emit('agent/inbox/discarded', { message })
     }

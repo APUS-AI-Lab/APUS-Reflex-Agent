@@ -7,7 +7,11 @@
 import { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import { CompactionEngine, ManualCompactionError } from '@deepseek-ai/dsh-compaction'
-import type { CompactionResult, CompactionTrigger } from '@deepseek-ai/dsh-compaction'
+import type {
+  CompactionAutoCaller,
+  CompactionResult,
+  CompactionTrigger,
+} from '@deepseek-ai/dsh-compaction'
 import type { Session, SessionSeq } from '@deepseek-ai/dsh-session'
 import { CONTEXT_WINDOW_EXCEEDED_CODE } from '@deepseek-ai/dsh-llm'
 import type { LlmCallConfig } from '@deepseek-ai/dsh-llm'
@@ -28,6 +32,7 @@ import {
   compactSurfaceRegion,
   selectCompactableRange,
 } from './region.ts'
+import type { CompactionRegionObservation } from './region.ts'
 import { summarizeWithLlm } from './summarizer.ts'
 import type { SummarizationInput, SummaryResult } from './summarizer.ts'
 import type {
@@ -163,7 +168,7 @@ export class BasicCompactionEngine extends CompactionEngine {
     ): Promise<PreStepDecision> => {
       if (!signal.aborted) {
         try {
-          const result = await this.compactIfNeeded(agent, 'pressure', signal)
+          const result = await this.compactIfNeeded(agent, 'pressure', signal, 'agent/pre-step')
           if (result !== null) logResult(result, 'step pressure')
         } catch (error: unknown) {
           if (error instanceof TargetPressureConfigError) {
@@ -204,7 +209,7 @@ export class BasicCompactionEngine extends CompactionEngine {
       const generation = agent.session.surface.replaceGeneration
       let result: CompactionResult | null
       try {
-        result = await this.compactIfNeeded(agent, 'context-overflow', signal)
+        result = await this.compactIfNeeded(agent, 'context-overflow', signal, 'agent/request-error')
       } catch (recoveryError: unknown) {
         const message = recoveryError instanceof Error ? recoveryError.message : String(recoveryError)
         // A model-free prune can land before later summary work fails. That
@@ -266,12 +271,14 @@ export class BasicCompactionEngine extends CompactionEngine {
    * @param agent - agent whose latest durable routed request is measured.
    * @param trigger - normal step-boundary pressure or context-overflow recovery.
    * @param signal - live turn cancellation signal forwarded to summarization.
+   * @param autoCaller - automatic hook that dispatched this trigger, when one did.
    * @returns the latest summary compaction result, or `null` when no summary ran.
    */
   override async compactIfNeeded(
     agent: Agent,
     trigger: CompactionTrigger,
     signal: AbortSignal,
+    autoCaller: CompactionAutoCaller | null = null,
   ): Promise<CompactionResult | null> {
     const target = routedTarget(agent.session)
     if (target === undefined) return null
@@ -294,10 +301,19 @@ export class BasicCompactionEngine extends CompactionEngine {
     const prune = this.ctx.get('toolResultPruner')
 
     if (trigger === 'context-overflow') {
+      // Overflow recovery authorizes a retry by comparing the replacement
+      // generation with the value the attempt started from, before any prune can
+      // advance it; the closing observation on `compaction/end` uses the same
+      // baseline so the recorded decision matches the listener's.
+      const recoveryBaseline = agent.session.surface.replaceGeneration
       measurement = await this.prepareSurface(agent, prune, signal) ?? measurement
       const range = selectCompactableRange(agent.session, measurement, 0)
       if (range === null) return null
-      return this.compactRegion(range.start, range.end, agent, signal)
+      return this.compactRegion(range.start, range.end, agent, signal, {
+        trigger: 'context-overflow',
+        autoCaller,
+        recoveryBaseline,
+      })
     }
 
     const info = await this.ctx.llm.resolveModelInfo(target.provider, target.model, signal)
@@ -332,7 +348,10 @@ export class BasicCompactionEngine extends CompactionEngine {
         /* v8 ignore next -- paired with the defensive post-success branch above. */
         break
       }
-      result = await this.compactRegion(range.start, range.end, agent, signal)
+      result = await this.compactRegion(range.start, range.end, agent, signal, {
+        trigger: 'pressure',
+        autoCaller,
+      })
       measurement = meter.measure(agent.session)
       if (measurement.totalTokens < spec.thresholdTokens) return result
     }
@@ -374,6 +393,8 @@ export class BasicCompactionEngine extends CompactionEngine {
    * @param end - inclusive last surface-node seq.
    * @param agent - owner of the target session, used by the summarizer.
    * @param signal - optional summarization cancellation signal.
+   * @param observation - why the forced region runs and the automatic caller identity;
+   *   defaults to a direct caller.
    * @returns the successful durable compaction result.
    */
   override async compactRegion(
@@ -381,6 +402,7 @@ export class BasicCompactionEngine extends CompactionEngine {
     end: SessionSeq,
     agent: Agent,
     signal?: AbortSignal,
+    observation: CompactionRegionObservation = { trigger: 'explicit-region', autoCaller: null },
   ): Promise<CompactionResult> {
     return compactSurfaceRegion(
       this.regionDependencies(),
@@ -388,7 +410,7 @@ export class BasicCompactionEngine extends CompactionEngine {
       start,
       end,
       agent,
-      { owner: 'current-turn', stability: 'whole-surface' },
+      { owner: 'current-turn', stability: 'whole-surface', ...observation },
       signal,
     )
   }
@@ -427,6 +449,8 @@ export class BasicCompactionEngine extends CompactionEngine {
             {
               owner: null,
               stability: 'selected-span',
+              trigger: 'manual',
+              autoCaller: null,
               ...sourceCommandId === undefined ? {} : { sourceCommandId },
               flush: async () => {
                 await this.ctx.sessions.flush(agent.session)

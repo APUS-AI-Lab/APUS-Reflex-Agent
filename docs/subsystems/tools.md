@@ -22,9 +22,26 @@ interface ToolOutputDefinition {
 }
 ```
 
+`ToolOrigin` records the plugin that registered the tool and the execution backend that runs its body. Both optional values stay outside the model-visible schema; a dispatched call copies them onto `tool/result` when the definition declares them.
+
+```ts type-equiv
+/**
+ * Owner attribution declared by a tool definition. The registry records it on
+ * each execution so the agent loop can attach it to the durable `tool/result`.
+ * Both fields are optional; omission means the definition declares no owner,
+ * and the registry never infers one from the plugin or call stack.
+ */
+interface ToolOrigin {
+  /** Plugin that registered the tool. */
+  readonly pluginOwner?: string
+  /** Execution backend that runs the tool body. */
+  readonly executionBackend?: string
+}
+```
+
 ```ts type-equiv
 /** A registered tool: its schema plus the execution function. */
-interface ToolDefinition extends ToolSchema {
+interface ToolDefinition extends ToolSchema, ToolOrigin {
   /** Mandatory canonical output declaration. */
   readonly output: ToolOutputDefinition
   /**
@@ -390,6 +407,10 @@ interface ToolErrorInfo {
 ```
 
 The result carries only the outcome. Call identity remains on the immutable `ToolExecution` that accompanies it through every hook and on the durable `tool/call` / `tool/result` session events, so wrappers cannot create a second, disagreeing identity. The canonical `value` is execution-local: the loop persists only `content`, `error`, and `meta`, while `tool/ptc-dispatch` stores the sub-call's rendered `content`, `isError`, and optional structured `error`. Replay reproduces presentation but cannot reconstruct canonical intermediate values. Optional `ToolErrorInfo.reason` retains raw user-facing detail without adding it to model-facing content.
+
+Two log-only session events record deadline and scheduling facts the pipeline owns. `tool/execute-deadline` is appended by `@deepseek-ai/dsh-tool-call-timeout-policy` after its `tools/execute` wrapper settles, and names the effective `timeoutMs` budget, the `elapsedMs` it measured, whether dispatch received the fused signal (`signalReplaced`), which cancellation source won (`abortSource`, `selfTimerWon`), and the `finalErrorCode` on the result the wrapper returned; a call without a budget or without an owning Agent records nothing. `tool/execution-plan` is appended by the loop's call scheduler and names the `scheduleMode`, the parallel-group ordinal or exclusive barrier, and per-call classification (`exactParallel`, `reclassifiedTo`), so a reclassified call is visible as deferred to its own barrier group. Neither event enters model history, and a failed append logs a warning without changing the tool outcome.
+
+`tool/retry-started` is appended by `@deepseek-ai/dsh-tool-call-retry-policy` immediately before dispatching a retried attempt of a call whose tool definition declares `retry`. It names the `callId`, the tool `name`, the `attempt` about to start (`2` is the first retry), the declared `maxAttempts` budget, the `backoffMs` slept before it, and `priorErrorCode` from the attempt it follows. A call the caller cancelled is never retried. The record is written before the attempt runs, so a hard interrupt still leaves every started retry behind.
 
 On success the registry snapshots and validates the body value, freezes it, and invokes the pure renderer plus the optional top-level-call metadata projector. It separately materializes the durable presentation fields immediately before `tools/result`; an invalid value, renderer/projector failure, or non-JSON presentation becomes a JSON-safe `isError`. The final live observer therefore sees the exact execution-local value beside fields safe for the later durable append.
 

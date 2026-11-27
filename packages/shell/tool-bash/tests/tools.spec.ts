@@ -244,6 +244,23 @@ function sandboxAgent(
 }
 
 describe('bash tool', () => {
+  it('names the agent its command runs for', async () => {
+    /** An executor outside this process needs this to pick the environment. */
+    const ctx = await setup()
+    const seen: Array<string | undefined> = []
+    const bash = ctx.shell as RecordingSandboxExecutor
+    const original = bash.resolve.bind(bash)
+    bash.resolve = (request) => {
+      seen.push(request.agentId)
+      return original(request)
+    }
+    const agent = await registerFakeAgent(ctx, 'case-7')
+
+    await call(ctx, 'bash', { command: 'echo hi', description: 'test command' }, agent)
+
+    expect(seen).toEqual(['case-7'])
+  })
+
   it('returns stdout for a successful command', async () => {
     const ctx = await setup()
     const result = await call(ctx, 'bash', { command: 'echo hello', description: 'test command' })

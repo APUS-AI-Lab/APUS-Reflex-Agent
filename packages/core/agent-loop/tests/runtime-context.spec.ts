@@ -38,14 +38,78 @@ describe('RuntimeContextProjection', () => {
     const projection = new RuntimeContextProjection(ctx, session)
     expect(session.surface.nodes).toContain(retained.seq)
     expect(projection.project('retained', [])).toBeUndefined()
+    // A snapshot that replaces a retained one records what moved, so the
+    // durable log explains why this text replaced the last.
     expect(projection.project('next', [{ name: 'sandbox:policy', text: 'policy' }])?.source).toEqual({
       kind: SOURCE,
       form: 'snapshot',
       sections: [{ name: 'sandbox:policy', text: 'policy' }],
+      change: {
+        fromSeq: retained.seq,
+        sections: [{ name: 'sandbox:policy', kind: 'added' }],
+      },
     })
 
     const other = ctx.sessions.create(SessionId('runtime-context-other'))
     other.append('user/message', contextMessage('other'), { surfaceOp: 'append' })
     expect(projection.project('retained', [])).toBeUndefined()
+  })
+
+  it('records no change on the first snapshot, which has no predecessor', async () => {
+    const ctx = new Context()
+    await ctx.plugin(SessionStore)
+    const session = ctx.sessions.create(SessionId('runtime-context-first'))
+    const projection = new RuntimeContextProjection(ctx, session)
+
+    const source = projection.project('first', [{ name: 'sandbox:policy', text: 'policy' }])?.source
+
+    // There is nothing this text replaced, so claiming a delta would be a
+    // fabricated cause.
+    expect(source).toEqual({
+      kind: SOURCE,
+      form: 'snapshot',
+      sections: [{ name: 'sandbox:policy', text: 'policy' }],
+    })
+  })
+
+  it('names updated and removed contributions as well as added ones', async () => {
+    const ctx = new Context()
+    await ctx.plugin(SessionStore)
+    const session = ctx.sessions.create(SessionId('runtime-context-delta'))
+    const projection = new RuntimeContextProjection(ctx, session)
+    projection.project('first', [
+      { name: 'sandbox:policy', text: 'old' },
+      { name: 'approval:policy', text: 'ask' },
+    ])
+    session.append(
+      'user/message',
+      createUserMessage({
+        content: [{ type: 'text', text: 'first' }],
+        source: {
+          kind: SOURCE,
+          form: 'snapshot',
+          sections: [
+            { name: 'sandbox:policy', text: 'old' },
+            { name: 'approval:policy', text: 'ask' },
+          ],
+        },
+      }),
+      { surfaceOp: 'append' },
+    )
+
+    const source = projection.project('second', [
+      { name: 'sandbox:policy', text: 'new' },
+      { name: 'network:policy', text: 'deny' },
+    ])
+
+    expect(source?.source).toMatchObject({
+      change: {
+        sections: [
+          { name: 'sandbox:policy', kind: 'updated' },
+          { name: 'network:policy', kind: 'added' },
+          { name: 'approval:policy', kind: 'removed' },
+        ],
+      },
+    })
   })
 })

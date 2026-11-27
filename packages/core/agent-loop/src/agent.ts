@@ -16,7 +16,7 @@ import type {
   RequestErrorAction,
 } from '@deepseek-ai/dsh-agent'
 import { agentEvents, assembleContextFor } from '@deepseek-ai/dsh-agent'
-import type { GenerateOptions, LlmCallConfig, Message, PreparedLlmCall } from '@deepseek-ai/dsh-llm'
+import type { GenerateOptions, LlmCallConfig, Message, MessageId, PreparedLlmCall, ToolSchema } from '@deepseek-ai/dsh-llm'
 import {
   LlmError,
   createAssistantMessage,
@@ -27,10 +27,10 @@ import {
 import { assertNever, deepFreeze } from '@deepseek-ai/dsh-util-values'
 import type { Scope } from '@deepseek-ai/dsh-scope'
 import { createScope } from '@deepseek-ai/dsh-scope'
-import type { EpochHeader, RequestContext, Session, SessionId, SessionSeq, TurnEndReason, UserMessage } from '@deepseek-ai/dsh-session'
-import { canonicalHeader, headerEquals } from '@deepseek-ai/dsh-session'
-import { joinContextSections, renderContextSections, renderPrompt } from '@deepseek-ai/dsh-system-prompt'
-import type { PromptAssembly } from '@deepseek-ai/dsh-system-prompt'
+import type { EpochHeader, RequestContextEventData, Session, SessionEventMap, SessionId, SessionSeq, TurnEndReason, UserMessage } from '@deepseek-ai/dsh-session'
+import { SessionSeq as toSessionSeq, canonicalHeader, headerEquals } from '@deepseek-ai/dsh-session'
+import { joinContextSections, joinPromptSections, renderContextSections, renderPromptSections } from '@deepseek-ai/dsh-system-prompt'
+import type { AssembledSection, PromptAssembly } from '@deepseek-ai/dsh-system-prompt'
 import type {} from '@deepseek-ai/dsh-session-projection'
 import type { Context } from '@deepseek-ai/cordis'
 import { ReactLoopInbox } from './inbox.ts'
@@ -38,6 +38,8 @@ import { RuntimeContextProjection } from './runtime-context.ts'
 import { AssistantStreamAttempt } from './assistant-stream.ts'
 import { SystemPromptProjection } from './runtime-context.ts'
 import { executeToolCalls } from './tool-calls.ts'
+import { digestJson } from './digest.ts'
+import type {} from './types.ts'
 
 type Phase =
   | { kind: 'idle'; lastTurn: number }
@@ -51,8 +53,11 @@ type Phase =
 
 type StepEndReason = Extract<TurnEndReason, { kind: 'completed' | 'max-tokens' }>
 
+type ConfigRewrite = NonNullable<SessionEventMap['request/header']['configRewrites']>[number]
+type OmittedSection = NonNullable<SessionEventMap['request/header']['omittedSections']>[number]
+
 type PreparedStep =
-  | { kind: 'reject' }
+  | { kind: 'reject'; blockedReason?: string }
   | {
     kind: 'enter'
     messages: UserMessage[]
@@ -67,6 +72,40 @@ function requestProposal(header: EpochHeader): LlmCallConfig {
   if (header.adapterDefaults.reasoningEffort === true) delete proposal.reasoningEffort
   if (header.adapterDefaults.maxTokens === true) delete proposal.maxTokens
   return proposal
+}
+
+/** The call-config fields a request waterfall may rewrite, in durable order. */
+const CONFIG_REWRITE_FIELDS = ['provider', 'model', 'reasoningEffort', 'temperature', 'maxTokens', 'stop'] as const
+
+/**
+ * Diff a request waterfall's result against the loop's seed configuration.
+ * @param seed - configuration proposed to the waterfall.
+ * @param proposed - configuration the waterfall returned.
+ * @returns one entry per changed field, in a fixed field order.
+ */
+function configRewrites(seed: LlmCallConfig, proposed: LlmCallConfig): ConfigRewrite[] {
+  const rewrites: ConfigRewrite[] = []
+  for (const field of CONFIG_REWRITE_FIELDS) {
+    const before = seed[field]
+    const after = proposed[field]
+    // `stop` is the only list field; compare its exact serialized value.
+    if (field === 'stop' ? JSON.stringify(before) === JSON.stringify(after) : before === after) continue
+    rewrites.push({
+      field,
+      ...before === undefined ? {} : { before },
+      ...after === undefined ? {} : { after },
+    })
+  }
+  return rewrites
+}
+
+/**
+ * Identities of a message batch, in batch order.
+ * @param messages - messages whose stable ids to collect.
+ * @returns the ids in the same order.
+ */
+function messageIds(messages: readonly UserMessage[]): MessageId[] {
+  return messages.map(message => message.id)
 }
 
 /**
@@ -269,20 +308,114 @@ export class ReactLoopAgent implements Agent {
     if (this.phase.kind !== 'running') throw new Error(`agent "${this.id}": pre-step outside running phase`)
     const signal = this.phase.abort.signal
     const claimed = this.inbox.claim(target, position.turn)
-    const assembly = await this.loopCtx.systemPrompt.assemble(assembleContextFor(this, signal))
-    signal.throwIfAborted()
-    const sections = renderContextSections(assembly)
-    const context = this.runtimeContext.project(joinContextSections(sections), sections)
-    const decision = await this.dispatch.waterfall(
-      'agent/pre-step', { messages: claimed, ...position, signal },
-      (): Promise<PreStepDecision> => Promise.resolve<PreStepDecision>({
-        kind: 'enter',
-        messages: context === undefined ? claimed : [...claimed, context],
-      }),
-    )
-    signal.throwIfAborted()
-    if (decision.kind === 'reject') return decision
-    return { ...decision, assembly }
+    const claimedMessageIds = messageIds(claimed)
+    try {
+      const assembly = await this.loopCtx.systemPrompt.assemble(assembleContextFor(this, signal))
+      signal.throwIfAborted()
+      this.appendCatalogResolved(position, assembly.tools)
+      const sections = renderContextSections(assembly)
+      const context = this.runtimeContext.project(joinContextSections(sections), sections)
+      const defaultMessages = context === undefined ? [...claimed] : [...claimed, context]
+      const decision = await this.dispatch.waterfall(
+        'agent/pre-step', { messages: claimed, ...position, signal },
+        (): Promise<PreStepDecision> => Promise.resolve<PreStepDecision>({
+          kind: 'enter',
+          messages: defaultMessages,
+        }),
+      )
+      signal.throwIfAborted()
+      if (decision.kind === 'reject') {
+        this.appendPreStep({
+          ...position,
+          disposition: 'rejected',
+          claimedMessageIds,
+          rejectedMessageIds: claimedMessageIds,
+          ...decision.reason === undefined ? {} : { blockedReason: decision.reason },
+        })
+        return {
+          kind: 'reject',
+          ...decision.reason === undefined ? {} : { blockedReason: decision.reason },
+        }
+      }
+      const beforeIds = new Set(defaultMessages.map(message => message.id))
+      const afterIds = new Set(decision.messages.map(message => message.id))
+      const addedMessageIds = decision.messages
+        .filter(message => !beforeIds.has(message.id))
+        .map(message => message.id)
+      const removedMessageIds = defaultMessages
+        .filter(message => !afterIds.has(message.id))
+        .map(message => message.id)
+      this.appendPreStep({
+        ...position,
+        disposition: 'entered',
+        claimedMessageIds,
+        enteredMessageIds: messageIds(decision.messages),
+        ...addedMessageIds.length === 0 && removedMessageIds.length === 0 ? {} : {
+          // Id deltas only: a digest of the message batches would hash
+          // run-varying text (interpolated cwd, session ids), which snapshot
+          // fixtures cannot normalize and no reader can reverse.
+          rewrite: { addedMessageIds, removedMessageIds },
+        },
+      })
+      return { ...decision, assembly }
+    } catch (error: unknown) {
+      // A cancelled proposal never reached an admission decision; record that
+      // before rethrowing so the turn boundary is not the only trace.
+      if (signal.aborted) {
+        this.appendPreStep({ ...position, disposition: 'cancelled', claimedMessageIds })
+      }
+      throw error
+    }
+  }
+
+  /**
+   * Record the model-facing tool catalog one step assembled.
+   *
+   * The assembled schemas are what the model can call this rotation; a reader
+   * cannot reconstruct them from static definitions because mode collapse and
+   * scoped restrictions change the set per scope. Only digests of the parameter
+   * schemas are recorded, so the row proves which definitions the model saw
+   * without duplicating them. A rejected append must not change the step.
+   * @param position - the turn/step this assembly belongs to.
+   * @param schemas - the exact schemas the prompt assembly produced.
+   */
+  private appendCatalogResolved(
+    position: { turn: number; step: number },
+    schemas: readonly ToolSchema[],
+  ): void {
+    try {
+      const admitted = schemas.map(schema => ({
+        name: schema.name,
+        schemaDigest: digestJson(schema.parameters),
+      }))
+      // The registry's own resolution is the only place a withheld name and its
+      // stage are both known; the model never sees the omission at all.
+      const skipped = this.loopCtx.tools.catalog(this.scope).omissions.map(omission => ({
+        name: omission.name,
+        reason: omission.reason,
+      }))
+      this.session.append('tool/catalog-resolved', { ...position, admitted, skipped })
+    } catch (error: unknown) {
+      this.ctx.logger.warn(`agent "${this.id}": failed to record tool/catalog-resolved: ${errorChain(error)}`)
+    }
+  }
+
+  /** Record one pre-step disposition; a rejected log append must not change the loop's decision. */
+  private appendPreStep(data: SessionEventMap['turn/pre-step']): void {
+    try {
+      this.session.append('turn/pre-step', data)
+    } catch (error: unknown) {
+      this.ctx.logger.warn(`agent "${this.id}": failed to record turn/pre-step: ${errorChain(error)}`)
+    }
+  }
+
+  /** Record the aggregate turn-stopping result; a rejected append must not change the loop's decision. */
+  private appendTurnStopping(data: SessionEventMap['turn/stopping']): void {
+    try {
+      this.session.append('turn/stopping', data)
+    } catch (error: unknown) {
+      this.ctx.logger.warn(`agent "${this.id}": failed to record turn/stopping: ${errorChain(error)}`)
+    }
   }
 
   /** Whether the assembled tool schemas differ from the logged request header's. */
@@ -308,6 +441,7 @@ export class ReactLoopAgent implements Agent {
     }
     phase.turn = turn
     let turnEnds: TurnEndReason | null = null
+    let blockedReason: string | undefined
     let target: InboxTarget = 'next-turn'
     try {
       while (true) {
@@ -316,6 +450,7 @@ export class ReactLoopAgent implements Agent {
         const decision = await this.preStep(target, { turn, step })
         if (decision.kind === 'reject') {
           turnEnds = { kind: 'blocked' }
+          blockedReason = decision.blockedReason
           return false
         }
         if (turnEnds && decision.messages.length === 0) break
@@ -340,8 +475,16 @@ export class ReactLoopAgent implements Agent {
         }
         signal.throwIfAborted()
         if (turnEnds && this.inbox.nextStep.length === 0) {
+          const nextStepBefore = messageIds(this.inbox.nextStep)
           await this.dispatch.serial('agent/turn-stopping', { turn, signal })
           signal.throwIfAborted()
+          const nextStepAfter = messageIds(this.inbox.nextStep)
+          this.appendTurnStopping({
+            turn,
+            outcome: nextStepAfter.length === 0 ? 'stop' : 'continue',
+            nextStepBefore,
+            nextStepAfter,
+          })
         }
         if (turnEnds && this.inbox.nextStep.length === 0) break
         target = 'next-step'
@@ -364,8 +507,12 @@ export class ReactLoopAgent implements Agent {
       this.throwError(error)
     } finally {
       try {
-        // oxlint-disable-next-line typescript/no-non-null-assertion -- every exit assigns a turn ending
-        this.session.append('turn/end', { turn, reason: turnEnds! })
+        this.session.append('turn/end', {
+          turn,
+          // oxlint-disable-next-line typescript/no-non-null-assertion -- every exit assigns a turn ending
+          reason: turnEnds!,
+          ...blockedReason === undefined ? {} : { blockedReason },
+        })
       } catch (error: unknown) {
         this.throwError(error)
       }
@@ -385,10 +532,15 @@ export class ReactLoopAgent implements Agent {
     signal.throwIfAborted()
 
     const { assembly } = decision
-    const renderedPrompt = renderPrompt(assembly)
+    const renderedSections = renderPromptSections(assembly)
+    const renderedPrompt = joinPromptSections(renderedSections)
+    const renderedNames = new Set(renderedSections.map(section => section.name))
+    const omittedSections: OmittedSection[] = assembly.sections
+      .filter(section => !renderedNames.has(section.name))
+      .map(section => ({ name: section.name, reason: 'empty' }))
     let firstAttempt = true
     while (true) {
-      const { config, preparedCall } = await this.prepareRequest(turn, step, signal)
+      const { config, preparedCall, rewrites } = await this.prepareRequest(turn, step, signal)
       const startsRequestSeries = firstAttempt && decision.startsRequestSeries === true
       const commits = this.systemPrompt.project(renderedPrompt, {
         inHistory: preparedCall?.systemPromptUpdate === 'in-history',
@@ -405,7 +557,15 @@ export class ReactLoopAgent implements Agent {
         }
       }
       firstAttempt = false
-      const request = this.buildRequest(config, preparedCall, assembly.tools, { turn, step }, startsRequestSeries, signal)
+      const request = this.buildRequest(
+        config, preparedCall, assembly.tools, { turn, step }, startsRequestSeries,
+        rewrites, renderedSections, omittedSections, signal,
+      )
+      // Last committed offset this request was built from — the same value the
+      // llm/dispatch records, taken before the stream adds anything. The
+      // settlement carries it so an audit can prove a request view and the
+      // call it explains share one log prefix.
+      const requestPrefixEnd = toSessionSeq(Number(this.session.seq) - 1)
       const live = new AssistantStreamAttempt(
         this.session.id,
         ++this.assistantAttemptCounter,
@@ -443,19 +603,24 @@ export class ReactLoopAgent implements Agent {
                   },
                 }),
                 interrupted: true,
+                prefixEnd: requestPrefixEnd,
                 ...live.usage === undefined ? {} : { usage: live.usage },
                 stream: live.stream,
               }, { surfaceOp: 'append' }).seq)
             } else {
               live.settle(
                 'assistant/attempt',
-                () => this.session.append('assistant/attempt', { turn, step, stream: live.stream }).seq,
+                () => this.session.append('assistant/attempt', {
+                  turn, step, stream: live.stream, prefixEnd: requestPrefixEnd,
+                }).seq,
               )
             }
           } else {
             live.settle(
               'assistant/attempt',
-              () => this.session.append('assistant/attempt', { turn, step, stream: live.stream }).seq,
+              () => this.session.append('assistant/attempt', {
+                turn, step, stream: live.stream, prefixEnd: requestPrefixEnd,
+              }).seq,
             )
           }
         } catch (settlementError: unknown) {
@@ -472,7 +637,9 @@ export class ReactLoopAgent implements Agent {
         if (finish.kind === 'error' || finish.kind === 'aborted') {
           live.settle(
             'assistant/attempt',
-            () => this.session.append('assistant/attempt', { turn, step, stream: live.stream }).seq,
+            () => this.session.append('assistant/attempt', {
+              turn, step, stream: live.stream, prefixEnd: requestPrefixEnd,
+            }).seq,
           )
           const action = await this.dispatch.waterfall(
             'agent/request-error', {
@@ -506,6 +673,7 @@ export class ReactLoopAgent implements Agent {
             turn,
             step,
             message,
+            prefixEnd: requestPrefixEnd,
             ...live.usage === undefined ? {} : { usage: live.usage },
             stream: live.stream,
           }, { surfaceOp: 'append' }).seq,
@@ -531,7 +699,7 @@ export class ReactLoopAgent implements Agent {
     turn: number,
     step: number,
     signal: AbortSignal,
-  ): Promise<{ config: LlmCallConfig; preparedCall?: PreparedLlmCall }> {
+  ): Promise<{ config: LlmCallConfig; preparedCall?: PreparedLlmCall; rewrites: ConfigRewrite[] }> {
     const { session } = this
 
     // A loop instance starts from its declared route, restoring only an explicit
@@ -561,6 +729,7 @@ export class ReactLoopAgent implements Agent {
       () => Promise.resolve(seedConfig),
     )
     signal.throwIfAborted()
+    const rewrites = configRewrites(seedConfig, proposedConfig)
     if (!proposedConfig.provider || !proposedConfig.model) {
       throw new Error(`agent "${this.id}" has no provider/model: set AgentOptions.provider and AgentOptions.model or supply both via the agent/request waterfall`)
     }
@@ -575,7 +744,7 @@ export class ReactLoopAgent implements Agent {
       config = proposedConfig
     }
     signal.throwIfAborted()
-    return { config, ...preparedCall === undefined ? {} : { preparedCall } }
+    return { config, rewrites, ...preparedCall === undefined ? {} : { preparedCall } }
   }
 
   /** Log the resolved envelope and derive a frozen request from the admitted surface. */
@@ -585,6 +754,9 @@ export class ReactLoopAgent implements Agent {
     tools: GenerateOptions['tools'] & object,
     position: { turn: number; step: number },
     startsRequestSeries: boolean,
+    rewrites: readonly ConfigRewrite[],
+    renderedSections: readonly AssembledSection[],
+    omittedSections: readonly OmittedSection[],
     signal: AbortSignal,
   ): GenerateOptions {
     const { session } = this
@@ -597,6 +769,12 @@ export class ReactLoopAgent implements Agent {
     const baseline = this.session.requestHeader()
     const startsSeries = startsRequestSeries
       || this.requestSurfaceGeneration !== surfaceGeneration
+    // Same snapshot for every reason: the rewrite and omission facts belong to
+    // this request, whichever header append records it.
+    const rewriteFacts = {
+      ...rewrites.length === 0 ? {} : { configRewrites: [...rewrites] },
+      ...omittedSections.length === 0 ? {} : { omittedSections: [...omittedSections] },
+    }
     let headerSeq: SessionSeq | undefined
     if (!this.requestHeaderLogged) {
       // Compaction during the first resumed pre-step must still mark a new series.
@@ -604,6 +782,7 @@ export class ReactLoopAgent implements Agent {
         header,
         reason: baseline === undefined ? 'initial' : 'resume',
         ...startsSeries ? { startsSeries: true } : {},
+        ...rewriteFacts,
       }).seq
       this.requestHeaderLogged = true
     } else if (baseline === undefined || !headerEquals(baseline, header)) {
@@ -611,9 +790,10 @@ export class ReactLoopAgent implements Agent {
         header,
         reason: 'change',
         ...startsSeries ? { startsSeries: true } : {},
+        ...rewriteFacts,
       }).seq
     } else if (startsSeries) {
-      this.session.append('request/header', { header, reason: 'series' })
+      this.session.append('request/header', { header, reason: 'series', ...rewriteFacts })
     }
     if (baseline !== undefined && headerSeq !== undefined) {
       const previousNames = new Set(baseline.tools?.map(tool => tool.name))
@@ -634,11 +814,16 @@ export class ReactLoopAgent implements Agent {
 
     const contextWindow = preparedCall?.context?.contextWindow
     const systemPromptUpdate = preparedCall?.systemPromptUpdate
-    const requestContext: RequestContext = {
+    const requestContext: RequestContextEventData = {
       provider: config.provider,
       model: config.model,
       ...contextWindow === undefined ? {} : { contextWindow },
       ...systemPromptUpdate === undefined ? {} : { systemPromptUpdate },
+      // Assembly facts for this append only; route comparison below ignores them.
+      // Section names only: digests would hash interpolated text (for example
+      // the cwd in the persona suffix), which fixtures cannot normalize.
+      sections: renderedSections.map(section => ({ name: section.name })),
+      toolSchemaDigest: digestJson(tools),
     }
     const previousContext = session.requestContext()
     if (previousContext?.provider !== requestContext.provider

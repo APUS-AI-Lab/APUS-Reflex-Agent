@@ -33,15 +33,18 @@ Wire one JSON-RPC 2.0 message per `\n`-terminated line over byte streams you own
 
 ### The SDK methods
 
-Both wire ends share one method set: three client-to-server requests and four server-to-client notifications.
+Both wire ends share one method set: six client-to-server requests and four server-to-client notifications.
 
 | Direction | Method | Payload types |
 |---|---|---|
 | client→server | `initialize` | `InitializeParams` → `InitializeResult` |
 | client→server | `session/prompt` | `SessionPromptParams` → `SessionPromptResult` (enqueue receipt; no persistence flush confirmation) |
+| client→server | `session/cancel` | `SessionCancelParams` → `SessionCancelResult` (settlement confirmation) |
+| client→server | `session/dispatches` | `SessionDispatchesParams` → `SessionDispatchesResult` (recorded dispatch facts; requires `request-view/dispatch-v1`) |
+| client→server | `session/request-view` | `SessionRequestViewParams` → `SessionRequestViewResult` (one dispatch's rebuilt model input; requires `request-view/dispatch-v1`) |
 | client→server | `shutdown` | no params → `{}` |
 | server→client | `session.event` | `SessionEventNotification` (every session in the runtime, unfiltered) |
-| server→client | `session.status` | `SessionStatusNotification` (whole-agent `running`/`idle` transition) |
+| server→client | `session.status` | `SessionStatusNotification` (whole-agent `running`/`idle` transition, with an optional `settlement` outcome on `idle`) |
 | server→client | `subagent.started` | `SubagentStartedNotification` |
 | server→client | `subagent.finished` | `SubagentFinishedNotification` (in-process runs only) |
 
@@ -49,7 +52,7 @@ Both wire ends share one method set: three client-to-server requests and four se
 
 ### Payload semantics
 
-`SessionPromptResult.messageId` identifies the queued user message; it does not identify a later assistant message, turn ending, or prompt result. `SdkPromptContentBlock` accepts ordinary durable content plus `SdkEncodedImageBlock { type: "image", data, mimeType }`; the server converts encoded images to durable references before enqueue. `InitializeParams.reasoningEffort` is an optional non-empty adapter-owned identifier for the selected provider/model route; omission preserves that model's default. `InitializeParams.maxTokens` is an optional positive safe integer that caps each conversation-model output for SDK-created agents and their in-process descendants; omission lets the selected adapter's exact-model default apply. The server resolves the exact route during initialization and rejects `session/prompt` until that handshake succeeds, so a missing adapter, unavailable model, or unsupported effort cannot fall back to constructor defaults. `SubagentFinishedNotification.lastAssistantMessage` carries the child's last non-empty assistant message, or its accumulated assistant text when no such message exists; the field is absent when the child produced neither. `serverInfo.name` stays the wire-stable `deepseek-harness-sdk-runtime`. Notification payloads depend on `SessionEvent` (`dsh-session`), `ContentBlock` (`dsh-llm`), and `SubagentStopReason` (`dsh-subagent`), so the session vocabulary is part of the wire contract.
+`SessionPromptResult.messageId` identifies the queued user message; it does not identify a later assistant message, turn ending, or prompt result. `session/cancel` stops one session's active and queued work and returns `SessionCancelResult { sessionId, cancelled: true }` only after the runtime confirmed that session reached quiescence; every other session and the runtime process keep running. A prompt already in flight when the cancel arrived is refused, so the cancelled work never starts; a prompt sent afterwards starts new work on the same session. `SessionStatusNotification.settlement` is optional: `settled` means the runtime waited for the dispatch settlement records, the queued memory admissions, and the Session log flush before sending `idle`; `failed` means one of them rejected or the barrier timed out, so `idle` describes the stopped loop only; a runtime that applies no barrier omits the member. `SessionCancelParams.sessionId` must be a non-empty string; a runtime failure or refusal arrives as a JSON-RPC error response, never as `cancelled: false`. `SdkPromptContentBlock` accepts ordinary durable content plus `SdkEncodedImageBlock { type: "image", data, mimeType }`; the server converts encoded images to durable references before enqueue. `InitializeParams.reasoningEffort` is an optional non-empty adapter-owned identifier for the selected provider/model route; omission preserves that model's default. `InitializeParams.maxTokens` is an optional positive safe integer that caps each conversation-model output for SDK-created agents and their in-process descendants; omission lets the selected adapter's exact-model default apply. The server resolves the exact route during initialization and rejects `session/prompt` until that handshake succeeds, so a missing adapter, unavailable model, or unsupported effort cannot fall back to constructor defaults. `SubagentFinishedNotification.lastAssistantMessage` carries the child's last non-empty assistant message, or its accumulated assistant text when no such message exists; the field is absent when the child produced neither. `serverInfo.name` stays the wire-stable `deepseek-harness-sdk-runtime`. `InitializeResult.capabilities` lists optional capability tokens; absence means no optional surfaces, and `request-view/dispatch-v1` gates the two read-only dispatch methods. `session/dispatches` returns recorded dispatch facts (`dispatchSeq`, `prefixEnd`, `turn`, `step`, optional `settlementSeq`) without any request content. `session/request-view` returns one dispatch's rebuilt `header`, `messages`, `tools`, `toolHistory`, and the `projectionTypes` the rebuild used; it is the loop-level request, not a provider-mapped wire body. A view the runtime cannot produce arrives as a JSON-RPC error whose `data.code` is `SESSION_NOT_FOUND`, `DISPATCH_NOT_FOUND`, `PREFIX_UNAVAILABLE`, or `UNSUPPORTED_PROJECTION` — never as an approximated success. Notification payloads depend on `SessionEvent` (`dsh-session`), `ContentBlock` (`dsh-llm`), and `SubagentStopReason` (`dsh-subagent`), so the session vocabulary is part of the wire contract.
 
 -----
 
@@ -111,8 +114,9 @@ None; this package neither assembles nor sends a provider request.
 These limits define what the protocol does not cover or promise. They are current package constraints, not a comparison with other wire formats or a task backlog.
 
 - **No protocol-version negotiation** — the handshake carries only `serverInfo.version` (`0.0.1`, unvalidated by clients); pre-release stance, no compatibility promise.
-- **No cancel or session-close methods** — a client abandons a turn by closing the runtime process; see the [JSON-RPC serving plugin](../server/README.md).
+- **No session-close or cancellation-with-result methods** — `session/cancel` stops a session's work but returns no transcript of what it discarded, and cancelling the runtime as a whole still means `shutdown`; see the [JSON-RPC serving plugin](../server/README.md).
 - **Server→client requests are a dead capability** — the transport supports them, but the server never sends one; the Python SDK's responder surface exists for future approval flows.
+- **Request views are capability-gated and loop-level** — a runtime without `request-view/dispatch-v1` refuses both dispatch methods, and a returned view never describes the provider's mapped HTTP body; provider-level input needs a separate observation.
 
 <a id="dev-note"></a>
 ### Dev Note

@@ -22,9 +22,26 @@ interface ToolOutputDefinition {
 }
 ```
 
+`ToolOrigin` 记录注册该工具的插件与运行工具主体的执行后端。这两个可选值都不在模型可见 schema 中；当定义声明了它们时，分派后的调用会把它们复制到 `tool/result`。
+
+```ts type-equiv
+/**
+ * Owner attribution declared by a tool definition. The registry records it on
+ * each execution so the agent loop can attach it to the durable `tool/result`.
+ * Both fields are optional; omission means the definition declares no owner,
+ * and the registry never infers one from the plugin or call stack.
+ */
+interface ToolOrigin {
+  /** Plugin that registered the tool. */
+  readonly pluginOwner?: string
+  /** Execution backend that runs the tool body. */
+  readonly executionBackend?: string
+}
+```
+
 ```ts type-equiv
 /** A registered tool: its schema plus the execution function. */
-interface ToolDefinition extends ToolSchema {
+interface ToolDefinition extends ToolSchema, ToolOrigin {
   /** Mandatory canonical output declaration. */
   readonly output: ToolOutputDefinition
   /**
@@ -390,6 +407,8 @@ interface ToolErrorInfo {
 ```
 
 结果仅承载产出。调用身份保留在不可变的 `ToolExecution` 上，后者伴随结果经过每个钩子，并出现在持久化的 `tool/call` / `tool/result` 会话事件上，因此包装层无法创建第二个相互矛盾的身份。规范的 `value` 仅存在于执行期间：循环只持久化 `content`、`error` 和 `meta`，`tool/ptc-dispatch` 则存储子调用渲染后的 `content`、`isError` 与可选结构化 `error`。回放可以重现展示，却无法重建规范的中间值。可选的 `ToolErrorInfo.reason` 保留面向用户的原始详情，不将其加入模型可见内容。
+
+两条仅日志的会话事件记录管道自身拥有的截止时间与调度事实。`tool/execute-deadline` 由 `@deepseek-ai/dsh-tool-call-timeout-policy` 在其 `tools/execute` 包装层结算后追加，记录生效的 `timeoutMs` 预算、测得的 `elapsedMs`、分发是否拿到融合后的 signal（`signalReplaced`）、哪个取消来源胜出（`abortSource`、`selfTimerWon`），以及该包装层返回结果上的 `finalErrorCode`；没有预算或没有所属 Agent 的调用不记录。`tool/execution-plan` 由循环的调用调度器追加，记录 `scheduleMode`、并行组序号或排他屏障，以及逐调用分类（`exactParallel`、`reclassifiedTo`），因此被重新分类的调用可见为延后到自己的屏障组。这两个事件都不进入模型历史，追加失败只记录警告，不改变工具结果。
 
 成功时，注册表会快照并校验函数体返回值，将其冻结，然后调用纯渲染器；对于直接的外层调用，还会调用可选的元数据投影器。注册表会在 `tools/result` 之前另行物化持久展示字段；无效值、渲染器/投影器失败或非 JSON 展示都会转为 JSON 安全的 `isError`。因此，最终实时观察者能看到精确的执行期值，以及可安全用于后续持久追加的字段。
 

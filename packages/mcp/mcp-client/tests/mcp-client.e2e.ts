@@ -26,6 +26,7 @@ import type { GenerateOptions, LlmResolvedModelInfo, StreamChunk } from '@deepse
 import { apply } from '@deepseek-ai/dsh-mcp-client/src/index.ts'
 import { publicToolName } from '@deepseek-ai/dsh-mcp-client/src/tools.ts'
 import type { Config } from '@deepseek-ai/dsh-mcp-client'
+import type { McpConnectionFact } from '@deepseek-ai/dsh-mcp-client/src/connection.ts'
 
 const testToolSignal = new AbortController().signal
 
@@ -553,4 +554,97 @@ describe('streamable-http — in-process MCP server', () => {
     expect(seenAuth.length).toBeGreaterThan(0)
     for (const auth of seenAuth) expect(auth).toBe('Bearer e2e-test-token')
   })
+})
+
+// ---- Connection facts against a real server ----
+//
+// `mcp/connection` is the only record an operator gets when an external tool
+// server will not start: no session exists yet, and without the fact a trace
+// simply has no MCP tools and no explanation. The unit tests cover the state
+// machine with a fake client; these drive the real protocol so the handshake
+// values and the failure text are the ones a deployment actually produces.
+
+describe('connection facts — real stdio server', () => {
+  let home: string
+
+  beforeAll(async () => {
+    home = await mkdtemp(join(tmpdir(), 'mcp-fact-e2e-'))
+  })
+
+  afterAll(async () => {
+    await sleep(200)
+    await rm(home, { recursive: true, force: true })
+  })
+
+  it('reports a ready fact carrying the server name and version from the handshake', async () => {
+    const ctx = await mountImageRegistry(home)
+    const facts: McpConnectionFact[] = []
+    ctx.on('mcp/connection', (fact) => { facts.push(fact) })
+    try {
+      await apply(ctx, {
+        transport: 'stdio',
+        serverName: 'fixture',
+        command: process.execPath,
+        args: [fixtureServerPath],
+        env: {},
+        cwd: packageDir,
+        toolCallTimeoutMs: 15_000,
+        failOnStartupError: false,
+      })
+      await vi.waitFor(() => { expect(ctx.tools.get('mcp__fixture__add')).toBeDefined() })
+
+      expect(facts).toHaveLength(1)
+      const fact = facts[0]!
+      expect(fact.status).toBe('ready')
+      expect(fact.serverName).toBe('fixture')
+      expect(fact.transport).toBe('stdio')
+      // The fixture advertises itself as `fixture-server@1.0.0`.
+      expect(fact.serverInfo).toBe('fixture-server 1.0.0')
+      expect(fact.attempt).toBe(0)
+      expect(fact.error).toBeUndefined()
+      // The negotiated protocol version comes from the transport handshake.
+      expect(fact.protocolVersion).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+    } finally {
+      await ctx.fiber.dispose()
+    }
+  }, 30_000)
+
+  it('reports the reason a server that cannot start was given up on', async () => {
+    const ctx = await mountImageRegistry(home)
+    const facts: McpConnectionFact[] = []
+    ctx.on('mcp/connection', (fact) => { facts.push(fact) })
+    try {
+      await apply(ctx, {
+        transport: 'stdio',
+        serverName: 'missing',
+        command: process.execPath,
+        // A module that does not exist: the child exits before the handshake.
+        args: ['-e', 'process.exit(3)'],
+        env: {},
+        cwd: packageDir,
+        toolCallTimeoutMs: 5_000,
+        failOnStartupError: false,
+        reconnect: { enabled: true, initialDelayMs: 5, maxDelayMs: 10, maxAttempts: 2 },
+      })
+
+      await vi.waitFor(() => {
+        expect(facts.some(fact => fact.status === 'gave-up')).toBe(true)
+      }, { timeout: 15_000 })
+
+      const failures = facts.filter(fact => fact.status === 'failed')
+      expect(failures.length).toBeGreaterThan(0)
+      for (const fact of failures) {
+        expect(fact.serverName).toBe('missing')
+        expect(fact.error).toBeTruthy()
+      }
+      const gaveUp = facts.find(fact => fact.status === 'gave-up')!
+      expect(gaveUp.attempt).toBe(2)
+      expect(gaveUp.maxAttempts).toBe(2)
+      expect(gaveUp.error).toBeTruthy()
+      // No tools were ever registered for a server that never connected.
+      expect(ctx.tools.get('mcp__missing__anything')).toBeUndefined()
+    } finally {
+      await ctx.fiber.dispose()
+    }
+  }, 30_000)
 })

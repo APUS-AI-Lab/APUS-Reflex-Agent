@@ -153,7 +153,9 @@ interface LspService {
   registerProvider(provider: LspProvider): () => void
   /**
    * Select a provider by the file's extension and run one query. Selection is per-query and
-   * order-independent; no match throws `LspError` `LSP_UNAVAILABLE`.
+   * order-independent; no match throws `LspError` `LSP_UNAVAILABLE`. Appends one log-only
+   * `lsp/provider-selected` record to the initiating Agent's session; a missing initiator or
+   * failed append changes nothing.
    * @param request - the normalized query.
    * @param signal - optional cancellation forwarded to the selected provider.
    * @returns the normalized, closed-union result.
@@ -163,6 +165,40 @@ interface LspService {
 ```
 
 `LspProviderId` 是该 seam 的品牌化 id（来自 [dsh-brand](../../packages/util/brand) 的 `Branded<'LspProviderId'>`）；`LspError` 扩展 `HarnessError`，提供 `LSP_INVALID_PROVIDER`、`LSP_CONFLICT`、`LSP_UNAVAILABLE`、`LSP_DISPOSED`、`LSP_UNSUPPORTED_OPERATION` 和 `LSP_MALFORMED_RESPONSE` 等稳定错误码，调用方应按错误码路由，而不是解析 `message`。
+
+## 提供方选择记录
+
+所选提供方结算后，每次查询都会向发起方 agent 的会话追加一个仅记录日志的 `lsp/provider-selected` 事件。没有发起方的查询不记录任何内容，追加失败也不会改变查询的结果或错误。事件记录操作、实际运行的注册提供方 id、从该提供方扩展名映射派生的语言 id、基于扩展名的选择方式、两段耗时、结果，以及 seam 级回退链。它不携带 surface 元数据，也从不进入模型历史；查询结果或抛出的 `LspError` 仍是权威。
+
+```ts type-equiv
+/**
+ * One successful execution-time LSP provider selection, appended after the
+ * selected provider settles. Records the operation, the provider that ran, the
+ * derived language id, the extension-based selection mode, both timings, and
+ * the outcome. `fallbackChain` is always empty because this seam selects
+ * exactly one route and never falls back (provider-internal retries are not
+ * visible here). Log-only: `deriveMessages()` ignores it; the query result or
+ * thrown `LspError` stays authoritative.
+ */
+interface LspProviderSelectedEventData {
+  /** Query operation whose provider was selected. */
+  readonly operation: LspOperation
+  /** Registered id of the provider that ran. */
+  readonly providerId: string
+  /** Language id the seam derived from the provider's extension mapping. */
+  readonly languageId: string
+  /** How selection chose the provider: by the file's final extension. */
+  readonly selectionMode: 'extension'
+  /** Milliseconds from entering selection until the route was chosen. */
+  readonly selectionMs: number
+  /** Milliseconds from provider dispatch to settlement, success or failure. */
+  readonly latencyMs: number
+  /** Whether the provider query resolved or threw. */
+  readonly outcome: 'completed' | 'failed'
+  /** Seam-level fallback candidates, in order; always empty because the seam selects exactly one route. */
+  readonly fallbackChain: readonly string[]
+}
+```
 
 <!-- BEGIN GENERATED cordis-surface (gen-cordis-catalog.ts) — do not edit between markers -->
 
@@ -190,7 +226,9 @@ registerProvider(provider: LspProvider): () => void
 
 /**
  * Select a provider by the file's extension and run one query. Selection is per-query and
- * order-independent; no match throws `LspError` `LSP_UNAVAILABLE`.
+ * order-independent; no match throws `LspError` `LSP_UNAVAILABLE`. Appends one log-only
+ * `lsp/provider-selected` record to the initiating Agent's session; a missing initiator or
+ * failed append changes nothing.
  * @param request - the normalized query.
  * @param signal - optional cancellation forwarded to the selected provider.
  * @returns the normalized, closed-union result.

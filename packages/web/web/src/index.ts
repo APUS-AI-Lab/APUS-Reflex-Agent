@@ -9,6 +9,7 @@
 import { Context, Service } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import type {
+  ToolProviderSelectedEventData,
   WebFetchProvider,
   WebFetchRequest,
   WebFetchResult,
@@ -22,6 +23,7 @@ export {
   WebError,
 } from './types.ts'
 export type {
+  ToolProviderSelectedEventData,
   WebFetchBody,
   WebFetchProvider,
   WebFetchRequest,
@@ -129,6 +131,26 @@ export class WebRuntime extends Service {
   }
 
   /**
+   * Which search provider a call made now would use, or `undefined` when none
+   * can serve it. Exposes the same resolution `search()` performs, so a caller
+   * observing an execution can name the provider without re-deriving the
+   * selection rules or reaching into private state.
+   * @returns the resolved provider id, or `undefined` when selection would throw.
+   */
+  resolvedSearchProviderId(): string | undefined {
+    try {
+      return resolveProvider({
+        providers: this.searchProviders,
+        ...this.searchProviderId !== undefined ? { configuredId: this.searchProviderId } : {},
+      }).id
+    } catch {
+      // Selection failure is reported by search() itself with a typed error;
+      // this query answers "who would run it" and nothing would.
+      return undefined
+    }
+  }
+
+  /**
    * Run one search through the selected provider. Resolves the provider at call
    * time with the selection rules above; throws {@link WebError} when the
    * capability cannot run. The seam enforces `request.maxResults` on the result:
@@ -142,8 +164,22 @@ export class WebRuntime extends Service {
       providers: this.searchProviders,
       ...this.searchProviderId !== undefined ? { configuredId: this.searchProviderId } : {},
     })
-    const result = await provider.search(request, signal)
-    return capSources(result, request.maxResults)
+    const startedAt = performance.now()
+    let outcome: ToolProviderSelectedEventData['outcome'] = 'failed'
+    try {
+      const result = await provider.search(request, signal)
+      outcome = 'completed'
+      return capSources(result, request.maxResults)
+    } finally {
+      recordProviderSelection(this.ctx, {
+        capability: 'web-search',
+        ...request.callId === undefined ? {} : { callId: request.callId },
+        providerId: provider.id,
+        selectionMode: this.searchProviderId === undefined ? 'auto-single' : 'configured',
+        latencyMs: performance.now() - startedAt,
+        outcome,
+      })
+    }
   }
 
   /**
@@ -159,7 +195,38 @@ export class WebRuntime extends Service {
       providers: this.fetchProviders,
       ...this.fetchProviderId !== undefined ? { configuredId: this.fetchProviderId } : {},
     })
-    return provider.fetch(request, signal)
+    const startedAt = performance.now()
+    let outcome: ToolProviderSelectedEventData['outcome'] = 'failed'
+    try {
+      const result = await provider.fetch(request, signal)
+      outcome = 'completed'
+      return result
+    } finally {
+      recordProviderSelection(this.ctx, {
+        capability: 'web-fetch',
+        ...request.callId === undefined ? {} : { callId: request.callId },
+        providerId: provider.id,
+        selectionMode: this.fetchProviderId === undefined ? 'auto-single' : 'configured',
+        latencyMs: performance.now() - startedAt,
+        outcome,
+      })
+    }
+  }
+}
+
+/**
+ * Append one log-only provider-selection record to the initiating Agent's
+ * session, when this execution has one. Logging is observational: a missing
+ * initiator or a failed append is contained here so it cannot change the
+ * caller's result or error.
+ * @param ctx - the service context used to resolve the optional `agents` service.
+ * @param data - the selection facts to record.
+ */
+function recordProviderSelection(ctx: Context, data: ToolProviderSelectedEventData): void {
+  try {
+    ctx.get('agents')?.currentInitiator()?.session.append('tool/provider-selected', data)
+  } catch (error) {
+    ctx.logger.warn(`web provider selection record failed: ${String(error)}`)
   }
 }
 

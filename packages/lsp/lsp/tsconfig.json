@@ -19,6 +19,15 @@
     },
     {
       "path": "../../llm/llm"
+    },
+    {
+      "path": "../../core/agent"
+    },
+    {
+      "path": "../../core/session"
+    },
+    {
+      "path": "../../web/web"
     }
   ]
 }

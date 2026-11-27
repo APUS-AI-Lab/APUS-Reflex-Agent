@@ -55,6 +55,10 @@ console.log(result.finalResponse)
 
 本客户端为每种失败模式导出类型化错误：`JsonRpcResponseError`（协议错误响应，保留 code 与 data）、`RequestTimeoutError`（配置的时限已到）、`SdkProtocolError`（响应超出文档化协议）、`TransportClosedError`（运行时已消失——消息携带退出码与有界 stderr 尾部）。`close()` 先请求协议 `shutdown`（受 `shutdownTimeoutMs` 约束，默认 1000 毫秒），然后走 stdin-EOF → SIGTERM → SIGKILL 阶梯直到进程退出；幂等，已关闭的客户端拒绝复用。`HarnessClientOptions.env` 给定时整体替换子进程环境（`undefined` 原样继承父进程环境）；凭据策略归调用方——`dsh-subprocess` 的 `scrubbedParentEnv` 是面向隔离启动的共享擦除基底。
 
+### 已记录的派发与请求视图
+
+当运行时声明 `request-view/dispatch-v1` 时，`capabilities`（`HarnessClient` 与 `DeepSeekHarness` 上都有，由 `initialize` 填充）包含该令牌，两个只读调用会原样转发运行时的答案：`dispatches(sessionId)` 列出一个会话已记录的模型派发，`requestView(sessionId, dispatchSeq)` 返回一次派发重建后的消息、header、工具与工具历史。重建由运行时通过其原生 Session 能力完成；本客户端只校验响应信封，绝不自行构建消息投影。被拒绝的视图以 `JsonRpcResponseError` 到达，其 `data.code` 给出分类（`SESSION_NOT_FOUND`、`DISPATCH_NOT_FOUND`、`PREFIX_UNAVAILABLE`、`UNSUPPORTED_PROJECTION`）；该视图是 loop 级请求，不是提供方映射后的线上请求体。运行时没有该能力时，两个方法都以运行时的未知方法错误失败。
+
 -----
 
 <a id="understand-the-implementation"></a>
@@ -125,6 +129,7 @@ console.log(result.finalResponse)
 - **无轮次中取消**——协议层没有提示词取消方法；放弃轮次意味着关闭运行时（见[协议限制](../protocol/README.zh.md#known-limitations-and-deferred-work)）。
 - **没有逐提示词结果**——低层 `prompt()` 只返回入队回执；高层 `run()` 负责从回执到 idle 的收集，放弃该过程意味着关闭运行时。
 - **客户端→服务端通知与服务端→客户端请求**在协议两端都未实现；传输层为未来审批流程保留了承载能力。
+- **请求视图依赖运行时**——`dispatches()` 与 `requestView()` 转发运行时记录与重建的结果。运行时关闭 `recordLlmDispatch` 时，它们以未知方法失败；客户端绝不自行编造视图。
 
 <a id="dev-note"></a>
 ### 开发备注

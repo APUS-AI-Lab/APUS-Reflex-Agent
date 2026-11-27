@@ -15,6 +15,47 @@ import z from '@deepseek-ai/schemastery'
 import type { Agent } from '@deepseek-ai/dsh-agent'
 import { ScopedLayers, scopeOf } from '@deepseek-ai/dsh-scope'
 import type { SessionId } from '@deepseek-ai/dsh-session'
+
+/**
+ * Durable payload of one `job/settled` record: the terminal facts of a
+ * background job, appended to its owner's session when the job settles.
+ *
+ * A job outlives the tool call that started it, so a trajectory reader cannot
+ * pair its outcome with the call by notification order alone. This record is
+ * the durable link: it names the job, its owner, and how it ended.
+ */
+export interface JobSettledData {
+  /** The registry-issued job id (`<kind>-N`). */
+  readonly jobId: JobId
+  /** The owning agent's id. */
+  readonly owner: string
+  /** The job's kind, e.g. `bash`. */
+  readonly kind: string
+  /** Producer-supplied display label. */
+  readonly label: string
+  /** Terminal status. */
+  readonly status: JobStatus
+  /** Wall-clock milliseconds when the job settled. */
+  readonly finishedAt: number
+  /** Why the job settled: producer completion, kill, or teardown. */
+  readonly cause: string
+  /** Producer-reported completion, when the producer supplied one. */
+  readonly producerReported: boolean
+  /** Producer-supplied failure detail, when present. */
+  readonly detail?: string
+}
+
+declare module '@deepseek-ai/dsh-session/types' {
+  interface SessionEventMap {
+    /**
+     * Durable record that one background job reached a terminal state,
+     * appended to its owner's session at settlement. A job with no owning
+     * agent has no session to record it in and appends nothing. Assert-only: a
+     * rejected append must not orphan started work or delay waiter release.
+     */
+    'job/settled': JobSettledData
+  }
+}
 import { deadline, timeoutOf } from '@deepseek-ai/dsh-timeout'
 import { JobRegistry, JobId } from '@deepseek-ai/dsh-jobs'
 import type {
@@ -600,10 +641,43 @@ export class LocalJobRegistry extends JobRegistry {
     job.waitResolvers.clear()
     for (const resolveWait of waitResolvers) resolveWait()
     job.markSettled()
+    this.recordSettled(job, cause)
     this.emit({ type: 'settled', job: this.view(job), cause, awaited: waitResolvers.length > 0 }, job.owner)
     // The ring's stream ends with settlement; the signal follows the committed
     // settlement so an observer that wakes on it reads the terminal state.
     this.emitOutput(job)
+  }
+
+  /**
+   * Append the durable settlement fact for one job.
+   *
+   * A job outlives the tool call that started it, so its outcome cannot be
+   * paired with that call by notification order. Recording it is observational:
+   * a rejection must not orphan already-started work or delay waiter release,
+   * so it is contained rather than propagated.
+   * @param job - the job whose terminal facts are being recorded.
+   * @param cause - why the job settled.
+   */
+  private recordSettled(job: TrackedJob, cause: JobSettleCause): void {
+    const owner = job.owner
+    // A job with no owning agent has no session to record into.
+    if (owner === undefined) return
+    try {
+      owner.session.append('job/settled', {
+        jobId: job.id,
+        owner: owner.id,
+        kind: job.kind,
+        label: job.label,
+        status: job.status,
+        finishedAt: job.finishedAt ?? Date.now(),
+        cause: String(cause),
+        producerReported: cause === 'producer',
+        ...job.detail === undefined ? {} : { detail: job.detail },
+      })
+    } catch (error: unknown) {
+      // Diagnostic only: recording cannot change how the job settled.
+      this.selfCtx.logger.warn(`jobs: failed to record settlement for ${job.id}: ${String(error)}`)
+    }
   }
 
   /**

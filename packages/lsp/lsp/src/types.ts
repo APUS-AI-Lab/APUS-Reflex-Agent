@@ -7,6 +7,8 @@
  * @module @deepseek-ai/dsh-lsp/types
  */
 
+import type {} from '@deepseek-ai/dsh-session'
+import type { ToolProviderSelectedEventData } from '@deepseek-ai/dsh-web'
 import type { LspProviderId } from './brand.ts'
 
 /**
@@ -121,10 +123,41 @@ export interface LspService {
   registerProvider(provider: LspProvider): () => void
   /**
    * Select a provider by the file's extension and run one query. Selection is per-query and
-   * order-independent; no match throws `LspError` `LSP_UNAVAILABLE`.
+   * order-independent; no match throws `LspError` `LSP_UNAVAILABLE`. Appends one log-only
+   * `tool/provider-selected` record to the initiating Agent's session; a missing initiator or
+   * failed append changes nothing.
    * @param request - the normalized query.
    * @param signal - optional cancellation forwarded to the selected provider.
    * @returns the normalized, closed-union result.
    */
   query(request: LspQueryRequest, signal?: AbortSignal): Promise<LspQueryResult>
+}
+
+/**
+ * One successful execution-time LSP provider selection, appended after the
+ * selected provider settles. Records the operation, the provider that ran, the
+ * derived language id, the extension-based selection mode, both timings, and
+ * the outcome. `fallbackChain` is always empty because this seam selects
+ * exactly one route and never falls back (provider-internal retries are not
+ * visible here). Log-only: `deriveMessages()` ignores it; the query result or
+ * thrown `LspError` stays authoritative. The event name and payload type are
+ * declared once in `@deepseek-ai/dsh-web`; this interface narrows the shared
+ * record to the lsp route with the operation and required lsp-only fields.
+ */
+export interface LspProviderSelectedEventData extends ToolProviderSelectedEventData {
+  /**
+   * The capability this record belongs to. Fixed at `lsp` so one reader can
+   * treat web search, web fetch and language service selection alike.
+   */
+  readonly capability: 'lsp'
+  /** Query operation whose provider was selected. */
+  readonly operation: LspOperation
+  /** Language id the seam derived from the provider's extension mapping. */
+  readonly languageId: string
+  /** How selection chose the provider: by the file's final extension. */
+  readonly selectionMode: 'extension-route'
+  /** Milliseconds from entering selection until the route was chosen. */
+  readonly selectionMs: number
+  /** Seam-level fallback candidates, in order; always empty because the seam selects exactly one route. */
+  readonly fallbackChain: readonly string[]
 }

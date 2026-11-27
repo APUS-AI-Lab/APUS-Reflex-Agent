@@ -1,10 +1,12 @@
 /** Durable per-session state for the user-controlled model-selection opt-in. */
 
 import { z as zod } from 'zod'
+import type { Context } from '@deepseek-ai/cordis'
 import type { Session } from '@deepseek-ai/dsh-session'
 import type SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import type { ProjectionDefinition } from '@deepseek-ai/dsh-session-projection'
-import { assertAllowedModelRoutes, type AllowedModelRoute } from './model-selection.ts'
+import type { AgentOptions } from '@deepseek-ai/dsh-agent'
+import { assertAllowedModelRoutes, type AllowedModelRoute, type DelegationModelRequest } from './model-selection.ts'
 
 declare module '@deepseek-ai/dsh-session/types' {
   interface SessionEventMap {
@@ -18,7 +20,26 @@ declare module '@deepseek-ai/dsh-session/types' {
       /** Exact routes this Session may select explicitly for a child. */
       allowedModels: AllowedModelRoute[]
     }
+    /**
+     * The route one accepted delegation resolved to, recorded in the delegating
+     * parent's session after the child was published. The policy states what a
+     * child *may* select; this states what one delegation actually got, which
+     * neither the tool call nor the child's own log carries. Log-only.
+     */
+    'subagent/model-selection-observation': SubagentModelSelectionObservation
   }
+}
+
+/** One accepted delegation's resolved child route, as the parent recorded it. */
+export interface SubagentModelSelectionObservation {
+  /** The published child this observation belongs to. */
+  subagentId: string
+  /** Route fields the call supplied; absent when it selected nothing. */
+  requested?: DelegationModelRequest
+  /** Child agent options this tool forwarded; absent when it forwarded none. */
+  forwarded?: AgentOptions
+  /** Whether the session policy constrained this selection. */
+  policyConstrained: boolean
 }
 
 declare module '@deepseek-ai/dsh-session-projection/types' {
@@ -78,4 +99,26 @@ export function recordSubagentModelSelection(
   session.append('subagent/model-selection-policy', {
     allowedModels: allowedModels.map(route => ({ ...route })),
   })
+}
+
+/**
+ * Record one accepted delegation's resolved route in the delegating session.
+ * Append failure is contained: the warning names the child, and the delegation
+ * keeps its accepted result unchanged.
+ * @param logger - plugin logger that contains append failures.
+ * @param session - the delegating parent's durable session.
+ * @param observation - selection facts taken after the child was published.
+ */
+export function recordModelSelectionObservation(
+  logger: Context['logger'],
+  session: Session,
+  observation: SubagentModelSelectionObservation,
+): void {
+  try {
+    session.append('subagent/model-selection-observation', observation)
+  } catch (error: unknown) {
+    logger.warn(
+      `subagent "${observation.subagentId}": the route selection was not recorded as subagent/model-selection-observation: ${String(error)}`,
+    )
+  }
 }

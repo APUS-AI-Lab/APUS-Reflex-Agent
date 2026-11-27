@@ -1,3 +1,7 @@
+// Type-only: resolves the `@deepseek-ai/dsh-session/types` export so the
+// SessionEventMap augmentation below targets a known module.
+import type {} from '@deepseek-ai/dsh-session'
+
 /**
  * Vocabulary for the web capability seam (`ctx.web`). Search and fetch deliberately share one
  * seam so provider selection, cancellation, errors, and product configuration have one owner,
@@ -15,6 +19,14 @@ import { HarnessError } from '@deepseek-ai/dsh-llm'
  */
 export interface WebSearchRequest {
   readonly query: string
+  /**
+   * Tool call this search runs for, when the caller knows it.
+   *
+   * The seam records a provider-selection fact per execution; without the call
+   * id that fact cannot be attached to the tool call that caused it, and a
+   * parallel batch shows N selections beside N calls instead of inside them.
+   */
+  readonly callId?: string
   /**
    * Upper bound on returned sources; the seam truncates to it. Omitted = no
    * bound. `dsh-tool-web` always sets it. A provider whose API supports a
@@ -62,6 +74,8 @@ export interface WebSearchSource {
  * belong outside safe retrieval.
  */
 export interface WebFetchRequest {
+  /** Tool call this retrieval runs for, when the caller knows it. */
+  readonly callId?: string
   readonly url: string
 }
 
@@ -128,3 +142,61 @@ export interface WebFetchProvider {
  * structured error metadata.
  */
 export class WebError extends HarnessError {}
+
+/**
+ * Log-only record that one `web` execution resolved a provider.
+ *
+ * The tool layer records what the model asked; this records which provider the
+ * seam ran it through and whether it settled. The two answer different
+ * questions, so the seam keeps its own fact rather than leaving a reader to
+ * infer selection from the tool call.
+ */
+export interface ToolProviderSelectedEventData {
+  /** Capability that ran: a search fan-out, a URL retrieval, or a language query. */
+  readonly capability: ToolProviderSelectedCapability
+  /** Tool call this execution served, when the caller supplied one. */
+  readonly callId?: string
+  /** Lsp query operation whose provider was selected; lsp records only. */
+  readonly operation?: string
+  /** Registered id of the provider that ran. */
+  readonly providerId: string
+  /** How selection chose it: an explicit config id, the single usable provider, or the file's extension. */
+  readonly selectionMode: ToolProviderSelectionMode
+  /** Milliseconds from entering the seam to settling, success or failure. */
+  readonly latencyMs: number
+  /** Whether the provider call resolved or threw. */
+  readonly outcome: 'completed' | 'failed'
+  /** Language id the lsp seam derived from the extension mapping; lsp only. */
+  readonly languageId?: string
+  /** Milliseconds from entering lsp selection until the route was chosen; lsp only. */
+  readonly selectionMs?: number
+  /**
+   * Seam-level fallback candidates the lsp route considered, in order; lsp only.
+   * Empty means the seam had exactly one candidate, which is its normal state.
+   */
+  readonly fallbackChain?: readonly string[]
+}
+
+/** The capability whose provider selection one record describes. */
+export type ToolProviderSelectedCapability = 'web-search' | 'web-fetch' | 'lsp'
+
+/** How a capability resolved its provider. */
+export type ToolProviderSelectionMode =
+  | 'configured'
+  | 'auto-single'
+  | 'extension-route'
+
+declare module '@deepseek-ai/dsh-session/types' {
+  interface SessionEventMap {
+    /**
+     * One capability operation's provider selection and settlement, appended to
+     * the initiating Agent's session. Search, fetch and language service share
+     * the record because the question is the same one: which backend served this
+     * operation, how was it chosen, and did it finish. `languageId`,
+     * `selectionMs`, `fallbackChain` describe the lsp route; `queryCount`,
+     * `sourceCount`, `truncated` describe a search fan-out. Each is absent when
+     * the capability does not measure it, never zero-filled.
+     */
+    'tool/provider-selected': ToolProviderSelectedEventData
+  }
+}

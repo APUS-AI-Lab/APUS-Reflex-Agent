@@ -16,6 +16,7 @@ class StubExecutor extends ShellExecutor {
   resolve(request: ShellExecRequest): ShellExecSpec {
     return {
       command: request.command,
+      ...request.agentId === undefined ? {} : { agentId: request.agentId },
       workdir: request.workdir ?? '/stub',
       timeoutMs: request.timeoutMs ?? 1000,
       onExpiry: request.onExpiry ?? 'kill',
@@ -85,5 +86,31 @@ describe('ShellExecutor service seam', () => {
     await ctx.plugin(StubExecutor)
     class SecondExecutor extends StubExecutor {}
     await expect(ctx.plugin(SecondExecutor)).rejects.toThrow(/service "shell" has been registered/)
+  })
+})
+
+describe('the request names the agent it belongs to', () => {
+  /**
+   * A shell executor may run commands somewhere the caller cannot reach, and
+   * then it must know which case's task environment to run them in. One
+   * process serves many concurrent cases, so the request is the only place
+   * that identity can travel.
+   */
+  it('carries the agent identity from the request into the resolved spec', async () => {
+    const ctx = new Context()
+    await ctx.plugin(StubExecutor)
+
+    const spec = ctx.shell.resolve({ command: 'ls', agentId: 'case-7' })
+
+    expect(spec.agentId).toBe('case-7')
+  })
+
+  it('leaves the identity absent when the caller names none', async () => {
+    const ctx = new Context()
+    await ctx.plugin(StubExecutor)
+
+    const spec = ctx.shell.resolve({ command: 'ls' })
+
+    expect(spec.agentId).toBeUndefined()
   })
 })

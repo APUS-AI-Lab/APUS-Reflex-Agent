@@ -60,6 +60,13 @@ export type ShellExpiryPolicy = 'kill' | 'none'
  */
 export interface ShellExecRequest {
   command: string
+  /**
+   * The agent this command runs for. One process serves several agents at
+   * once, and an executor that runs commands outside this process has no
+   * other way to tell which one's environment to use; an executor that runs
+   * them here ignores it.
+   */
+  agentId?: string | undefined
   /** Working directory override (default: implementation-configured). */
   workdir?: string | undefined
   /** Timeout override in milliseconds (implementations cap it). */
@@ -110,6 +117,8 @@ export interface ShellExecRequest {
  */
 export interface ShellExecSpec {
   command: string
+  /** The agent this command runs for; carried through from the request. */
+  agentId?: string | undefined
   workdir: string
   timeoutMs: number
   /** Deadline policy at `timeoutMs` expiry ({@link ShellExecutor.resolve} defaults it to `'kill'`). */

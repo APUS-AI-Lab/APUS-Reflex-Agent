@@ -18,6 +18,7 @@ import AgentRegistry, { type Agent } from '@deepseek-ai/dsh-agent'
 import AgentLoop from '@deepseek-ai/dsh-agent-loop'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import { MockAdapter, textResponse, toolCallResponse } from './mock-adapter.ts'
+import { digestJson } from '../src/digest.ts'
 
 declare module '@deepseek-ai/dsh-llm' {
   interface MessageSourceMap {
@@ -903,7 +904,39 @@ describe('request stability across the loop', () => {
   })
 })
 
+describe('request/header request facts', () => {
+  it('records waterfall config rewrites and assembled sections that rendered empty', async () => {
+    const adapter = new MockAdapter([textResponse('ok')])
+    const ctx = await harness(adapter)
+    const agent = await ctx.agentLoop.create(SessionId('header-facts'), { provider: 'mock', model: 'mock' })
+    ctx.on('agent/request', async (_payload, next) => {
+      const config = await next()
+      return { ...config, temperature: 0.2, maxTokens: 2_048 }
+    })
+
+    send(agent, 'go')
+    await waitForIdle(ctx, agent)
+
+    const header = agent.session.snapshotEvents().find(event => event.type === 'request/header')
+    if (header?.type !== 'request/header') throw new Error('expected request/header')
+    expect(header.data.configRewrites).toEqual([
+      { field: 'temperature', after: 0.2 },
+      { field: 'maxTokens', after: 2_048 },
+    ])
+    expect(header.data.omittedSections).toEqual([{ name: 'deployment:persona-suffix', reason: 'empty' }])
+  })
+})
+
 describe('request/context capacity records', () => {
+  /** Assembly facts the loop snapshots beside the route for the default harness. */
+  const assemblyFacts = () => ({
+    sections: [
+      { name: 'harness:identity' },
+      { name: 'deployment:persona-prefix' },
+    ],
+    toolSchemaDigest: digestJson([]),
+  })
+
   /** Adapter advertising a per-model capacity, keyed by model id. */
   function capacityAdapter(windows: Record<string, number>, script: StreamChunk[][]): MockAdapter {
     return new class extends MockAdapter {
@@ -931,7 +964,7 @@ describe('request/context capacity records', () => {
 
     const records = agent.session.snapshotEvents().filter(event => event.type === 'request/context')
     expect(records).toHaveLength(1)
-    expect(records[0]?.data).toEqual({ provider: 'mock', model: 'mock', contextWindow: 128_000 })
+    expect(records[0]?.data).toEqual({ provider: 'mock', model: 'mock', contextWindow: 128_000, ...assemblyFacts() })
     // Log-only: not a SurfaceEventType, so it can never reach a model request
     // (the type system rejects a surfaceOp here; the session invariant also
     // requires the record to sit inside its open turn).
@@ -968,7 +1001,7 @@ describe('request/context capacity records', () => {
     await waitForIdle(ctx, agent)
     expect(agent.session.snapshotEvents()
       .filter(event => event.type === 'request/context')
-      .map(event => event.data)).toEqual([{ provider: 'mock', model: 'mock' }])
+      .map(event => event.data)).toEqual([{ provider: 'mock', model: 'mock', ...assemblyFacts() }])
   })
 
   it('clears a previous capacity when the next route advertises none', async () => {
@@ -989,8 +1022,8 @@ describe('request/context capacity records', () => {
     expect(agent.session.snapshotEvents()
       .filter(event => event.type === 'request/context')
       .map(event => event.data)).toEqual([
-      { provider: 'mock', model: 'known', contextWindow: 64_000 },
-      { provider: 'mock', model: 'unknown' },
+      { provider: 'mock', model: 'known', contextWindow: 64_000, ...assemblyFacts() },
+      { provider: 'mock', model: 'unknown', ...assemblyFacts() },
     ])
   })
 })

@@ -375,6 +375,34 @@ describe('PiAiAdapter provider routing', () => {
     expect(server.headers[0]?.authorization).toBe('')
   })
 
+  it('reports an HTML page at the completion endpoint as a non-retryable request error', async () => {
+    const server = await mockServer([{
+      body: '<!doctype html><html><title>Gateway console</title></html>',
+      headers: { 'content-type': 'text/html; charset=utf-8' },
+    }])
+    const adapter = adapterOf({
+      gateway: {
+        api: 'openai-completions', baseURL: server.url,
+        models: [{ id: 'test-model', contextWindow: 32768, maxTokens: 1024 }],
+      },
+    })
+    const chunks = []
+    for await (const chunk of adapter.stream({ provider: 'gateway', model: 'test-model', messages: [] })) {
+      chunks.push(chunk)
+    }
+    const finish = chunks.find(chunk => chunk.type === 'finish')
+    expect(finish).toMatchObject({
+      reason: { kind: 'error', failure: { code: 'INVALID_REQUEST' } },
+    })
+    if (finish?.type !== 'finish' || finish.reason.kind !== 'error') {
+      throw new Error('请求应报告响应协议不匹配')
+    }
+    expect(finish.reason.failure?.message).toContain('text/html')
+    expect(finish.reason.failure?.message).toContain('200')
+    expect(finish.reason.failure?.message).not.toContain('Stream ended without finish_reason')
+    expect(server.paths).toEqual(['/chat/completions'])
+  }, 15000)
+
   it.each([
     [401, 'AUTH'],
     [400, 'INVALID_REQUEST'],

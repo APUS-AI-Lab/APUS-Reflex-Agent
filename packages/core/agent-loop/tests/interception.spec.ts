@@ -268,6 +268,70 @@ describe('agent/pre-step', () => {
     expect(log.some(e => e.type === 'user/message')).toBe(false)
     expect(log.some(e => e.type === 'step/start')).toBe(false)
     expect(reasons).toEqual([{ kind: 'blocked' }])
+    const preStep = log.find(e => e.type === 'turn/pre-step')
+    expect(preStep?.type === 'turn/pre-step' && preStep.data).toMatchObject({
+      turn: 1, step: 1, disposition: 'rejected',
+    })
+    if (preStep?.type !== 'turn/pre-step') throw new Error('expected turn/pre-step')
+    expect(preStep.data.claimedMessageIds).toHaveLength(1)
+    expect(preStep.data.rejectedMessageIds).toEqual(preStep.data.claimedMessageIds)
+    expect(preStep.data.blockedReason).toBeUndefined()
+  })
+
+  it('records a rejected pre-step listener reason on turn/pre-step and turn/end', async () => {
+    const adapter = new MockAdapter([textResponse('should not run')])
+    const ctx = await harness(adapter)
+    const agent = await ctx.agentLoop.create(SessionId('a1-reject-reason'), { provider: 'mock', model: 'mock' })
+    const message = createUserMessage({ content: [{ type: 'text', text: 'do something' }], source: { kind: 'user' } })
+    ctx.on('agent/pre-step', async (): Promise<PreStepDecision> => ({ kind: 'reject', reason: 'policy denied' }))
+
+    agent.followup(message)
+    await agent.whenIdle()
+
+    const log = events(agent)
+    const preStep = log.find(e => e.type === 'turn/pre-step')
+    expect(preStep?.type === 'turn/pre-step' && preStep.data).toEqual({
+      turn: 1,
+      step: 1,
+      disposition: 'rejected',
+      claimedMessageIds: [message.id],
+      rejectedMessageIds: [message.id],
+      blockedReason: 'policy denied',
+    })
+    const turnEnd = log.find(e => e.type === 'turn/end')
+    expect(turnEnd?.type === 'turn/end' && turnEnd.data).toEqual({
+      turn: 1,
+      reason: { kind: 'blocked' },
+      blockedReason: 'policy denied',
+    })
+  })
+
+  it('records an entered pre-step batch rewrite against the loop default', async () => {
+    const adapter = new MockAdapter([textResponse('ok')])
+    const ctx = await harness(adapter)
+    const agent = await ctx.agentLoop.create(SessionId('a1-enter-rewrite'), { provider: 'mock', model: 'mock' })
+    const added = createUserMessage({ content: [{ type: 'text', text: 'appended reference' }], source: { kind: 'test' } })
+    ctx.on('agent/pre-step', async (_payload, next) => {
+      const decision = await next()
+      return decision.kind === 'enter'
+        ? { ...decision, messages: [...decision.messages, added] }
+        : decision
+    })
+
+    send(agent, 'go')
+    await agent.whenIdle()
+
+    const preStep = events(agent).find(e => e.type === 'turn/pre-step')
+    expect(preStep?.type === 'turn/pre-step' && preStep.data.disposition).toBe('entered')
+    if (preStep?.type !== 'turn/pre-step') throw new Error('expected turn/pre-step')
+    expect(preStep.data.enteredMessageIds).toContain(added.id)
+    expect(preStep.data.rewrite).toMatchObject({
+      addedMessageIds: [added.id],
+      removedMessageIds: [],
+    })
+    // Id deltas only; the batches themselves hash run-varying text and are
+    // not recorded.
+    expect(preStep.data.rewrite?.addedMessageIds.length).toBeGreaterThan(0)
   })
 
   it('stages inject and steer during pre-step for the entered turn', async () => {

@@ -237,6 +237,9 @@ export async function runRipgrep(
   try {
     handle = ctx.subprocess.spawn({
       argv: [await resolveRgPath(), '--no-config', ...argv],
+      // A runtime whose execution world is another container needs the agent
+      // to know which one; a local runtime ignores it.
+      ...exec.agent === undefined ? {} : { agentId: exec.agent.id },
       cwd: workdir,
       stdio: {
         stdin: 'ignore',

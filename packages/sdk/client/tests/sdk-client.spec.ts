@@ -63,6 +63,17 @@ async function tempDir(prefix: string): Promise<string> {
 }
 
 describe('DeepSeekHarness', () => {
+  it('carries session cwd and preset independently of the initialized runtime', async () => {
+    const directory = await tempDir('sdk-session-options-')
+    const recording = join(directory, 'prompts.jsonl')
+    const harness = harnessWith({ FAKE_RECORD_PROMPTS: recording })
+    await harness.run('inspect the task', {
+      sessionId: 'task', cwd: '/app/task', agentPreset: 'benchmark-task',
+    })
+    const params = JSON.parse((await readFile(recording, 'utf8')).trim()) as Record<string, unknown>
+    expect(params).toMatchObject({ sessionId: 'task', cwd: '/app/task', agentPreset: 'benchmark-task' })
+  })
+
   it('replays a Continuum memory decision receipt through the TypeScript SDK wire', async () => {
     const harness = harnessWith({ FAKE_CONTINUUM_RECEIPT: '1' })
     const result = await new HarnessSession(harness, 'owned').run('replay memory')
@@ -703,6 +714,36 @@ describe('wire payload validation', () => {
     await expect(harness.run('bad-reason')).rejects.toThrow(SdkProtocolError)
   })
 
+  it('returns initialization events published before the inbox receipt', async () => {
+    const harness = harnessWith({ FAKE_PRE_RECEIPT_EVENTS: 'self:permission/preset,self:approval/policy' })
+    const session = new HarnessSession(harness, 'owned')
+    const result = await session.run('first turn')
+    // Both setup events precede this prompt's splice on the wire; a client that
+    // discards everything before the receipt loses the session's own setup.
+    expect(result.events.map(event => event.type).slice(0, 2))
+      .toEqual(['permission/preset', 'approval/policy'])
+    expect(result.events.some(event => event.type === 'turn/end')).toBe(true)
+  })
+
+  it('does not replay an earlier run tail as the next run initialization', async () => {
+    const harness = harnessWith({ FAKE_PRE_RECEIPT_EVENTS: 'self:permission/preset' })
+    const session = new HarnessSession(harness, 'owned')
+    const first = await session.run('first turn')
+    expect(first.events.some(event => event.type === 'permission/preset')).toBe(true)
+    const second = await session.run('second turn')
+    // The same source already published its prefix in the first run, so the
+    // second run must not attribute the repeated setup to itself.
+    expect(second.events.some(event => event.type === 'permission/preset')).toBe(false)
+    expect(second.events.filter(event => event.type === 'turn/end')).toHaveLength(1)
+  })
+
+  it('does not claim an unrelated session notification before the receipt', async () => {
+    const harness = harnessWith({ FAKE_PRE_RECEIPT_EVENTS: 'other-session:permission/preset' })
+    const result = await new HarnessSession(harness, 'owned').run('go')
+    expect(result.events.some(event => event.type === 'permission/preset')).toBe(false)
+    expect(result.events.some(event => event.type === 'turn/end')).toBe(true)
+  })
+
   it('accepts the complete hook cancellation cause', async () => {
     const harness = harnessWith({ FAKE_REASON_KIND: 'aborted', FAKE_ABORT_REASON_KIND: 'hook' })
     const result = await harness.run('hook-abort')
@@ -743,4 +784,41 @@ describe('pure helpers', () => {
       { type: 'assistant/message', seq: 1, time: 0, data: { message: { content: [{ type: 'text', text: 'a' }, { type: 'tool-call' }, { type: 'text', text: 'b' }] } } } as never,
     ])).toBe('ab')
   })
+  it('cancels one named session without closing the runtime', async () => {
+    const cancelFile = join(await tempDir('dsh-sdk-cancel-'), 'cancels.txt')
+    const harness = harnessWith({ FAKE_RECORD_CANCELS: cancelFile })
+    expect(await harness.cancelSession('first')).toBe('first')
+    expect(await harness.cancelSession('second')).toBe('second')
+    expect((await readFile(cancelFile, 'utf8')).trim().split('\n')).toEqual(['first', 'second'])
+    // The runtime is still usable after a cancellation.
+    const result = await harness.run('after cancel')
+    expect(result.finalResponse).toBe('hello from fake runtime')
+  })
+
+  it('reports a cancellation the runtime did not confirm as a protocol error', async () => {
+    const harness = harnessWith({ FAKE_CANCEL_UNCONFIRMED: '1' })
+    await expect(harness.cancelSession('unconfirmed')).rejects.toThrow(SdkProtocolError)
+  })
+
+  it('surfaces a runtime cancellation failure instead of reporting success', async () => {
+    const harness = harnessWith({ FAKE_CANCEL_ERROR: '1' })
+    await expect(harness.cancelSession('refused')).rejects.toThrow(JsonRpcResponseError)
+  })
+
+  it('bounds a cancellation whose runtime never answers', async () => {
+    const client = processClient(fakeLaunch({ FAKE_HANG_CANCEL: '1' }))
+    cleanups.push(() => client.close())
+    await client.initialize({ cwd: process.cwd(), provider: 'p', model: 'm' })
+    const bounded = client as unknown as { runtime: { requestTimeoutMs?: number } }
+    const original = bounded.runtime.requestTimeoutMs
+    bounded.runtime.requestTimeoutMs = 150
+    try {
+      await expect(client.cancelSession('hung')).rejects.toThrow(RequestTimeoutError)
+    } finally {
+      if (original === undefined) delete bounded.runtime.requestTimeoutMs
+      else bounded.runtime.requestTimeoutMs = original
+    }
+    await client.close()
+  })
+
 })

@@ -70,7 +70,8 @@ describe('ApprovalService.request', () => {
     expect(appended.map(e => e.type)).toEqual(['approval/asked', 'approval/decided'])
     const [asked, decided] = appended
     expect(asked?.data).toMatchObject({ toolName: 'echo', callId: 'call-1', reason: 'hook says ask' })
-    expect(decided?.data).toMatchObject({ outcome: 'unavailable' })
+    expect(decided?.data).toMatchObject({ outcome: 'unavailable', decisionPath: 'delegated-default' })
+    expect(decided?.data).not.toHaveProperty('responder')
     expect(decided?.data['id']).toBe(asked?.data['id'])
   })
 
@@ -112,7 +113,11 @@ describe('ApprovalService.request', () => {
       callId: 'scoped-call',
       reason: 'scoped reason',
     })
-    expect(appended[1]?.data).toMatchObject({ outcome: 'allowed-once' })
+    expect(appended[1]?.data).toMatchObject({
+      outcome: 'allowed-once',
+      decisionPath: 'answerer',
+      responder: 'unattributed',
+    })
     expect(appended[1]?.data['id']).toBe(appended[0]?.data['id'])
     await scopeFiber.dispose()
   })
@@ -193,10 +198,12 @@ describe('ApprovalService.request', () => {
 
   it('lets a non-owning listener delegate via next() down to the fail-closed default', async () => {
     const ctx = await mounted()
-    const { agent } = fakeAgent()
+    const { agent, appended } = fakeAgent()
     ctx.on('approval/request', (_req, next) => next())
 
     await expect(ctx.approval.request(requestOf(agent))).resolves.toBe('unavailable')
+    expect(appended[1]?.data).toMatchObject({ outcome: 'unavailable', decisionPath: 'delegated-default' })
+    expect(appended[1]?.data).not.toHaveProperty('responder')
   })
 
   it('dispatches to global and matching agent-scoped listeners, never a foreign scope', async () => {
@@ -256,17 +263,22 @@ describe('ApprovalService.request', () => {
     ctx.on('approval/request', () => Promise.reject(new Error('transport died')))
 
     await expect(ctx.approval.request(requestOf(agent))).resolves.toBe('unavailable')
-    expect(appended[1]?.data).toMatchObject({ outcome: 'unavailable' })
+    expect(appended[1]?.data).toMatchObject({
+      outcome: 'unavailable', decisionPath: 'answerer-error', responder: 'unattributed',
+    })
   })
 
   it('normalizes a rogue non-vocabulary answer to unavailable', async () => {
     const ctx = await mounted()
-    const { agent } = fakeAgent()
+    const { agent, appended } = fakeAgent()
     // A JS answerer can return anything; the seam must not leak it into
     // callers' closed-union switches.
     ctx.on('approval/request', () => Promise.resolve('yolo' as ApprovalOutcome))
 
     await expect(ctx.approval.request(requestOf(agent))).resolves.toBe('unavailable')
+    expect(appended[1]?.data).toMatchObject({
+      outcome: 'unavailable', decisionPath: 'answerer-normalized', responder: 'unattributed',
+    })
   })
 
   it('settles cancelled immediately on an already-aborted signal without asking anyone', async () => {
@@ -283,7 +295,8 @@ describe('ApprovalService.request', () => {
     expect(outcome).toBe('cancelled')
     expect(asked).toBe(false)
     expect(appended.map(e => e.type)).toEqual(['approval/asked', 'approval/decided'])
-    expect(appended[1]?.data).toMatchObject({ outcome: 'cancelled' })
+    expect(appended[1]?.data).toMatchObject({ outcome: 'cancelled', decisionPath: 'signal-aborted' })
+    expect(appended[1]?.data).not.toHaveProperty('responder')
   })
 
   it('resolves cancelled when the signal aborts mid-question and discards the late answer', async () => {
@@ -301,7 +314,7 @@ describe('ApprovalService.request', () => {
     settleLate?.('allowed-once')
     await Promise.resolve()
     expect(appended.filter(e => e.type === 'approval/decided')).toHaveLength(1)
-    expect(appended[1]?.data).toMatchObject({ outcome: 'cancelled' })
+    expect(appended[1]?.data).toMatchObject({ outcome: 'cancelled', decisionPath: 'abort-race' })
   })
 
   it('discards a late REJECTION after abort without an unhandled rejection', async () => {
@@ -415,8 +428,9 @@ describe('approval policy (the approval/policy fold)', () => {
     await expect(ctx.approval.request({ agent, toolName: 'bash' })).resolves.toBe('rejected')
     expect(consulted).not.toHaveBeenCalled()
     // The audit pair still lands on the session log.
-    expect(session.snapshotEvents().filter(e => e.type === 'approval/asked')).toHaveLength(1)
-    expect(session.snapshotEvents().filter(e => e.type === 'approval/decided')).toHaveLength(1)
+    const decided = session.snapshotEvents().find((event): event is SessionEvent<'approval/decided'> => event.type === 'approval/decided')
+    expect(decided?.data).toMatchObject({ outcome: 'rejected', decisionPath: 'session-policy' })
+    expect(decided?.data).not.toHaveProperty('responder')
   })
 
   it('the gate decides FIRST even against an answerer registered before the service (prepend)', async () => {

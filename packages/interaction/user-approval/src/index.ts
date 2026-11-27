@@ -46,13 +46,22 @@ declare module '@deepseek-ai/dsh-session/types' {
 }
 
 import { ApprovalRequestId } from './types.ts'
-import type { ApprovalOutcome, ApprovalRequestEvent } from './types.ts'
+import type {
+  ApprovalDecisionPath, ApprovalOutcome, ApprovalRequestEvent, ApprovalResponder,
+} from './types.ts'
 
 export { ApprovalRequestId } from './types.ts'
-export type { ApprovalOutcome } from './types.ts'
+export type { ApprovalDecisionPath, ApprovalOutcome, ApprovalResponder } from './types.ts'
 
 /** Every {@link ApprovalOutcome}, for runtime normalization of answerer returns. */
 const OUTCOMES: readonly ApprovalOutcome[] = ['allowed-once', 'rejected', 'cancelled', 'unavailable']
+
+/** The closed outcome plus the aggregate-path facts the audit event carries. */
+interface ApprovalDecision {
+  outcome: ApprovalOutcome
+  decisionPath: ApprovalDecisionPath
+  responder?: ApprovalResponder
+}
 
 /**
  * A session's approval policy — what happens to an {@link ApprovalService}
@@ -202,11 +211,13 @@ export class ApprovalService extends Service {
    * appending anything. The answerer phase always produces an outcome: an
    * aborted signal yields `'cancelled'`, a missing or throwing answerer yields
    * `'unavailable'` (fail closed), and a rogue non-vocabulary return value is
-   * normalized to `'unavailable'`. A failure that prevents either audit append
-   * from committing still rejects because returning an unlogged decision would
-   * violate the pair. Session contains post-commit observer failures, so an
-   * authoritative append cannot reject the request or suppress its matching
-   * audit event.
+   * normalized to `'unavailable'`. `approval/decided` records that settlement
+   * path and, when an answerer returned, an `'unattributed'` responder
+   * because the waterfall declares no identity. A failure that prevents either
+   * audit append from committing still rejects because returning an unlogged
+   * decision would violate the pair. Session contains post-commit observer
+   * failures, so an authoritative append cannot reject the request or suppress
+   * its matching audit event.
    * @param req - the pending decision (agent, tool identity, reason, signal).
    * @returns the closed outcome; `'allowed-once'` is the only grant.
    * @throws when no turn is open or either audit event fails before the session
@@ -228,9 +239,14 @@ export class ApprovalService extends Service {
       ...req.callId !== undefined ? { callId: req.callId } : {},
       ...req.reason !== undefined ? { reason: req.reason } : {},
     })
-    const outcome = await this.decide(req, session)
-    session.append('approval/decided', { id, outcome })
-    return outcome
+    const decision = await this.decide(req, session)
+    session.append('approval/decided', {
+      id,
+      outcome: decision.outcome,
+      decisionPath: decision.decisionPath,
+      ...decision.responder === undefined ? {} : { responder: decision.responder },
+    })
+    return decision.outcome
   }
 
   /**
@@ -262,46 +278,61 @@ export class ApprovalService extends Service {
    * Dispatch the waterfall, contained and raced against the request signal.
    * @param req - the borrowed public request.
    * @param session - the request agent's session used for policy lookup.
-   * @returns the normalized closed outcome.
+   * @returns the normalized closed outcome plus the settlement path recorded on
+   *   `approval/decided`.
    */
-  private async decide(req: ApprovalRequest, session: Session): Promise<ApprovalOutcome> {
+  private async decide(req: ApprovalRequest, session: Session): Promise<ApprovalDecision> {
     const signal = req.signal
-    if (signal?.aborted) return 'cancelled'
+    if (signal?.aborted) return { outcome: 'cancelled', decisionPath: 'signal-aborted' }
     // The 'never' policy is decided HERE, before any dispatch: a listener
     // registered with `prepend: true` after this service mounts would sit
     // ahead of any gate LISTENER, so a listener-shaped gate cannot keep the
     // documented promise that 'never' rejects deterministically regardless
     // of registration order — only the service's own request path can.
-    if (this.effectivePolicy(session) === 'never') return 'rejected'
+    if (this.effectivePolicy(session) === 'never') return { outcome: 'rejected', decisionPath: 'session-policy' }
+    // Records whether the chain reached the built-in fail-closed default —
+    // i.e. whether every answerer delegated instead of claiming the request.
+    let delegated = false
     // Enter the promise chain BEFORE dispatching: a listener that throws
     // SYNCHRONOUSLY (before its first await) must land in the same rejection
     // path as an async one — `Promise.resolve(call())` would let it escape
     // the containment into the caller.
-    const answer: Promise<ApprovalOutcome> = Promise.resolve().then(
+    const answer: Promise<ApprovalDecision> = Promise.resolve().then(
       () => this.ctx.waterfall(
         scopeTarget(req.agent, req.agent), 'approval/request', req,
-        () => Promise.resolve<ApprovalOutcome>('unavailable'),
+        () => {
+          delegated = true
+          return Promise.resolve<ApprovalOutcome>('unavailable')
+        },
       ),
     ).then(
-      // Normalize a rogue (non-vocabulary) answerer return to the fail-closed
-      // outcome instead of leaking it into callers' closed-union switches.
-      outcome => OUTCOMES.includes(outcome) ? outcome : 'unavailable',
+      (outcome): ApprovalDecision => {
+        // Normalize a rogue (non-vocabulary) answerer return to the
+        // fail-closed outcome instead of leaking it into callers'
+        // closed-union switches.
+        if (!OUTCOMES.includes(outcome)) {
+          return { outcome: 'unavailable', decisionPath: 'answerer-normalized', responder: 'unattributed' }
+        }
+        return delegated
+          ? { outcome, decisionPath: 'delegated-default' }
+          : { outcome, decisionPath: 'answerer', responder: 'unattributed' }
+      },
       // A throwing answerer must fail the QUESTION closed, not the caller's
       // tool call open — the seam contains its callbacks.
-      () => 'unavailable',
+      (): ApprovalDecision => ({ outcome: 'unavailable', decisionPath: 'answerer-error', responder: 'unattributed' }),
     )
     if (signal === undefined) return answer
-    return await new Promise<ApprovalOutcome>((resolve) => {
+    return await new Promise<ApprovalDecision>((resolve) => {
       const onAbort = () => {
         signal.removeEventListener('abort', onAbort)
-        resolve('cancelled')
+        resolve({ outcome: 'cancelled', decisionPath: 'abort-race' })
       }
       signal.addEventListener('abort', onAbort, { once: true })
-      void answer.then((outcome) => {
+      void answer.then((decision) => {
         signal.removeEventListener('abort', onAbort)
         // After an abort won the race this resolve is a settled-promise no-op:
         // the late answer is discarded by construction.
-        resolve(outcome)
+        resolve(decision)
       })
     })
   }

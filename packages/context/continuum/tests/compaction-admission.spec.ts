@@ -7,20 +7,28 @@ import type { SummarizationInput, SummaryResult } from '@deepseek-ai/dsh-compact
 import LlmRuntime, { createUserMessage, LlmAdapter } from '@deepseek-ai/dsh-llm'
 import type { LlmResolvedModelInfo, RequestMessage, StreamChunk } from '@deepseek-ai/dsh-llm'
 import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
+import JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import TokenMeter from '@deepseek-ai/dsh-token-meter'
 import ToolRuntime from '@deepseek-ai/dsh-tools'
+import { mkdtemp, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import Jev from '../../../experimental/apus-dsh-jev-plugin/src/index.ts'
 import ContinuumMemory, { type ContinuumConfig } from '../src/service.ts'
+import { foldMemoryRecordEvents } from '../src/persistence.ts'
+import { MemoryId, MemoryRecordStore } from '../src/records.ts'
 import type { ContinuumMemoryAdmitter } from '../src/context.ts'
 import { ContinuumMemoryController } from '../src/policy.ts'
 
 const contexts: Context[] = []
+const roots: string[] = []
 const SIGNAL = new AbortController().signal
 
 afterEach(async () => {
   await Promise.all(contexts.splice(0).map(ctx => ctx.fiber.dispose()))
+  await Promise.all(roots.splice(0).map(root => rm(root, { recursive: true, force: true })))
   vi.restoreAllMocks()
 })
 
@@ -55,6 +63,8 @@ interface HarnessOptions {
   readonly admission?: ContinuumConfig['admission']
   readonly scopes?: string[]
   readonly lateMount?: boolean
+  /** Durability root; supplied only by restart cases. */
+  readonly root?: string
 }
 
 async function harness(options: HarnessOptions = {}) {
@@ -62,6 +72,7 @@ async function harness(options: HarnessOptions = {}) {
   contexts.push(ctx)
   await ctx.plugin(LlmRuntime)
   await ctx.plugin(SessionStore)
+  if (options.root !== undefined) await ctx.plugin(JsonlSessionPersistence, { root: options.root, compression: 'none' })
   await ctx.plugin(SessionProjectionRegistry)
   await ctx.plugin(SystemPrompt, { personaPrefix: '', personaSuffix: '', includeHarnessIdentity: false, includeRuntimeContext: false })
   await ctx.plugin(ToolRuntime)
@@ -124,6 +135,26 @@ describe('Continuum compaction admission', () => {
     expect(recalled(h.adapter)).toEqual([])
   })
 
+  it('keeps writing compaction candidates for human text and none for injected user-role messages', async () => {
+    // The human-message entry ignores injected user-role messages; compaction
+    // must keep working, because it reads the shadowed originals itself.
+    const h = await harness({ admitter: keepAll })
+    await seed(h.agent)
+    h.agent.session.append('user/message', createUserMessage({
+      source: { kind: 'continuum-memory', form: 'recall', version: 1, recordIds: ['injected'] },
+      content: [{ type: 'text', text: 'Injected recall text that no person typed.' }],
+    }), { surfaceOp: 'append' })
+    await Promise.resolve()
+    expect(await h.compaction.compactNow(h.agent, SIGNAL)).not.toBeNull()
+    const candidates = h.agent.session.snapshotEvents().flatMap(event =>
+      event.type === 'continuum/memory-write-candidates' && event.data.origin === 'compaction' ? [event.data] : [])
+    expect(candidates).toHaveLength(1)
+    expect(candidates[0]?.status).toBe('candidates_ready')
+    const offered = candidates[0]?.candidates ?? []
+    expect(offered.length).toBeGreaterThan(0)
+    expect(offered.every(candidate => !candidate.candidateId.includes('injected'))).toBe(true)
+  })
+
   it('admits only the compacted human messages the admitter keeps, and the next read waits for them', async () => {
     const admit = vi.fn<ContinuumMemoryAdmitter['admit']>(async (_agent, input) => {
       await new Promise(resolve => setTimeout(resolve, 20))
@@ -144,13 +175,28 @@ describe('Continuum compaction admission', () => {
     const admitted = records(h.agent)
     expect(admitted).toHaveLength(1)
     expect(admitted[0]).not.toHaveProperty('content')
+    const indexEvent = h.agent.session.snapshotEvents().find(event => event.type === 'continuum/memory-index')
+    expect(indexEvent?.type === 'continuum/memory-index' ? indexEvent.data.admission : undefined)
+      .toEqual({ source: 'compaction', tagSource: 'reflex' })
+    // The L1 append result is written back onto the attempt it belongs to, not left unverified.
+    const compactionResult = h.agent.session.snapshotEvents()
+      .flatMap(event => event.type === 'continuum/memory-write-result' && event.data.origin === 'compaction' ? [event.data] : [])
+    expect(compactionResult).toHaveLength(1)
+    expect(compactionResult[0]?.attemptResults).toEqual([
+      expect.objectContaining({ appendStatus: 'accepted', l1Status: 'added' }),
+    ])
     expect(sourceText(h.agent, admitted[0]!)).toContain('X-Orbit-Key')
     const source = h.agent.session.snapshotEvents().find(event => event.type === 'user/message' && event.data.source.kind === 'user')
     expect(admitted[0]).toEqual({
       id: `${String(h.agent.session.id)}:${String(source?.seq)}`, scope: 'workspace', tags: ['work', 'places'],
       source: { sessionId: h.agent.session.id, eventSeq: source?.seq },
     })
-    expect(h.agent.session.snapshotEvents().some(event => event.type === 'continuum/memory-record')).toBe(false)
+    // The record event states the content was stored; it precedes the index event that makes it findable.
+    const recordEvent = h.agent.session.snapshotEvents().find(event => event.type === 'continuum/memory-record')
+    expect(recordEvent).toBeDefined()
+    expect(recordEvent?.type === 'continuum/memory-record' ? recordEvent.data.record : undefined)
+      .toMatchObject({ id: admitted[0]?.id, status: 'active' })
+    expect(recordEvent !== undefined && indexEvent !== undefined && recordEvent.seq < indexEvent.seq).toBe(true)
     expect(recalled(h.adapter).join('\n')).toContain('X-Orbit-Key')
 
     // A second compaction of the same span admits nothing twice.
@@ -158,6 +204,44 @@ describe('Continuum compaction admission', () => {
     h.agent.followup(user('And again?'))
     await h.agent.whenIdle()
     expect(records(h.agent)).toHaveLength(1)
+  })
+
+  it('recovers compacted records from the record event after a restart', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'dsh-continuum-compaction-restart-'))
+    roots.push(root)
+    const h = await harness({ admitter: keepAll, root })
+    await seed(h.agent)
+    expect(await h.compaction.compactNow(h.agent, SIGNAL)).not.toBeNull()
+    h.agent.followup(user('Which API key header did I name?'))
+    await h.agent.whenIdle()
+    await h.ctx.sessions.flush(h.agent.session)
+    await h.ctx.fiber.dispose()
+    contexts.splice(contexts.indexOf(h.ctx), 1)
+
+    const reader = new Context()
+    contexts.push(reader)
+    await reader.plugin(SessionStore)
+    await reader.plugin(JsonlSessionPersistence, { root, compression: 'none' })
+    const handle = await reader.sessionPersistence.open(SessionId('continuum-compaction'), 'read')
+    try {
+      const { events } = await handle.read()
+      const recordEvent = events.find(event => event.type === 'continuum/memory-record')
+      expect(recordEvent).toBeDefined()
+      const committed = recordEvent?.type === 'continuum/memory-record' ? recordEvent.data.record : undefined
+      expect(committed).toBeDefined()
+      // Simulate the crash window: the record was committed, its index event was not.
+      const withoutIndex = events.filter(event => event.type !== 'continuum/memory-index')
+      const tags = new Map<MemoryId, readonly string[]>()
+      const store = foldMemoryRecordEvents(withoutIndex, new MemoryRecordStore(), tags)
+      if (committed !== undefined) {
+        // Recovery is pinned on the record event alone: it carries the content and the index supplied no tags.
+        expect(store.get(MemoryId(committed.id))?.content).toBe(committed.content)
+        expect(tags.has(MemoryId(committed.id))).toBe(false)
+        expect(store.snapshot().some(record => record.content.includes('X-Orbit-Key'))).toBe(true)
+      }
+    } finally {
+      await handle.close()
+    }
   })
 
   it('admits every compacted human message when the admitter fails', async () => {
@@ -169,6 +253,9 @@ describe('Continuum compaction admission', () => {
     h.agent.followup(user('Next request.'))
     await h.agent.whenIdle()
     expect(records(h.agent).length).toBeGreaterThan(1)
+    expect(h.agent.session.snapshotEvents().flatMap(event =>
+      event.type === 'continuum/memory-index' ? [event.data.admission?.tagSource] : [])
+      .every(source => source === 'fallback-untagged')).toBe(true)
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('admitting every compacted message'))
   })
 
@@ -185,6 +272,42 @@ describe('Continuum compaction admission', () => {
     await h.agent.whenIdle()
     expect(admit).not.toHaveBeenCalled()
     expect(records(h.agent)).toEqual([])
+  })
+
+  it('settles this compaction write when storing one record fails, instead of leaving candidates without a result', async () => {
+    const h = await harness({ admitter: keepAll })
+    await seed(h.agent)
+    vi.spyOn(h.ctx.logger, 'warn').mockImplementation(() => undefined)
+    const projections = (h.ctx.continuumMemory as unknown as {
+      projections: Map<unknown, { store: { create: (record: unknown) => unknown } }>
+    }).projections
+    const held = projections.get(h.agent)
+    if (held === undefined) throw new Error('no projection for the seeded agent')
+    vi.spyOn(held.store, 'create').mockImplementationOnce((() => {
+      throw new Error('store rejected this record')
+    }) as never)
+
+    await h.compaction.compactNow(h.agent, SIGNAL)
+    await new Promise(resolve => setTimeout(resolve, 10))
+
+    const results = h.agent.session.snapshotEvents().flatMap(event =>
+      event.type === 'continuum/memory-write-result' && event.data.origin === 'compaction'
+        ? [event.data] : [])
+    // 候选已经写进日志；没有结算，读者只看到“准备写”而不知道结果。
+    expect(results).toHaveLength(1)
+    const candidateResults = results[0]?.candidateResults ?? []
+    // 一条记录存不进去，只让它自己失败；同批其它候选照常写入并对账。
+    expect(candidateResults.filter(entry => entry.status === 'failed')).toEqual([
+      expect.objectContaining({ reason: 'store-rejected' }),
+    ])
+    expect(candidateResults.some(entry => entry.status === 'record_accepted')).toBe(true)
+    expect(results[0]?.attemptResults).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        storeStatus: 'rejected', appendStatus: 'unverifiable', l1Status: 'not_applicable',
+        failure: expect.objectContaining({ stage: 'store' }),
+      }),
+    ]))
+    expect(results[0]?.partialFailures).toEqual([expect.stringContaining(': store')])
   })
 
   it('stops a pending admission without a warning when the Agent is disposed', async () => {
@@ -249,7 +372,7 @@ describe('Continuum compaction admission', () => {
     vi.spyOn(ContinuumMemoryController.prototype, 'observe').mockImplementation(() => { throw new Error('append failed') })
     await failing.compaction.compactNow(failing.agent, SIGNAL)
     await new Promise(resolve => setTimeout(resolve, 10))
-    expect(warn).toHaveBeenCalledWith(expect.stringContaining('continuum compaction admission failed: Error: append failed'))
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('continuum memory index observation failed: append failed'))
   })
 
   it('ignores checkpoints in the other admission modes', async () => {

@@ -1,0 +1,183 @@
+# Evaluation deployment for the APUS harness.
+#
+# The `sdk` profile registers only `deepseek-official`, whose protocol is
+# Anthropic Messages against api.deepseek.com. An evaluation gateway commonly
+# serves OpenAI chat-completions instead, so this overlay mounts the dormant
+# `llm-pi-ai` twin with the deployment's own endpoint, and activates the three
+# plugins that make this harness APUS rather than the plain harness: Jev
+# decisions, Continuum memory, and System3 routing.
+#
+# No host, model or credential is named here; every one comes from the
+# environment, so one image serves every deployment.
+- id: llm-pi-ai
+  config:
+    providers:
+      gateway:
+        displayName: Evaluation Gateway
+        api: openai-completions
+        baseURL: !!js 'process.env.LLM_BASE_URL?.trim()'
+        apiKeyEnv: LLM_API_KEY
+        timeoutMs: !!js 'Number(process.env.LLM_REQUEST_TIMEOUT_MS || 900000)'
+        models:
+          - id: !!js 'process.env.LLM_MODEL?.trim()'
+            name: !!js 'process.env.LLM_MODEL?.trim()'
+            # pi-ai derives the output budget from this window
+            # (`contextWindow - estimated input - 4096`, floored at 1), and an
+            # understated value turns a large prompt into a one-token reply.
+            contextWindow: !!js 'Number(process.env.LLM_CONTEXT_WINDOW || 1048576)'
+            maxTokens: !!js 'Number(process.env.LLM_MAX_TOKENS || 8192)'
+
+- id: sdk-jsonrpc-server
+  config:
+    maxTokensAsSuccess: !!js 'process.env.DSH_MAX_TOKENS_AS_SUCCESS === undefined ? true : JSON.parse(process.env.DSH_MAX_TOKENS_AS_SUCCESS)'
+    recordLlmDispatch: true
+
+- insert:
+    - id: agent-preset-registry
+      name: /workspace/packages/preset/agent-preset-registry/lib/index.js
+      config:
+        default: benchmark-task
+
+    - id: preset-benchmark-task
+      name: /workspace/packages/preset/agent-preset/lib/index.js
+      config:
+        id: benchmark-task
+        plugins:
+          - id: benchmark-task-io
+            name: cordis:group
+            group: true
+            isolate:
+              fs: true
+              shell: true
+              subprocess: true
+            config:
+              - id: subprocess-remote
+                name: /workspace/packages/subprocess/subprocess-remote/lib/index.js
+                config:
+                  endpoint: !!js 'process.env.PIPELINE_EXEC_ENDPOINT?.trim()'
+                  token: !!js 'process.env.PIPELINE_API_TOKEN?.trim()'
+              - id: fs-remote
+                name: /workspace/packages/fs/fs-remote/lib/index.js
+                config:
+                  endpoint: !!js 'process.env.PIPELINE_EXEC_ENDPOINT?.trim()'
+                  token: !!js 'process.env.PIPELINE_API_TOKEN?.trim()'
+                  timeoutSec: !!js 'Number(process.env.PIPELINE_FS_TIMEOUT_SEC || 120)'
+              - id: bash-remote
+                name: /workspace/packages/shell/bash-remote/lib/index.js
+                config:
+                  timeoutMs: !!js 'Number(process.env.PIPELINE_EXEC_TIMEOUT_MS || 600000)'
+                  maxTimeoutMs: !!js 'Number(process.env.PIPELINE_EXEC_MAX_TIMEOUT_MS || 3600000)'
+              - id: tool-fs
+                name: '@deepseek-ai/dsh-tool-fs'
+              - id: tool-fs-search
+                name: '@deepseek-ai/dsh-tool-fs-search'
+                config:
+                  sampleOverCapGlobResults: false
+              - id: tool-bash
+                name: '@deepseek-ai/dsh-tool-bash'
+              # Task context reads use the same Agent-scoped filesystem as tools.
+              - id: agent-instructions
+                name: '@deepseek-ai/dsh-agent-instructions'
+                config:
+                  instructionFileCandidates: ['AGENTS.md', 'CLAUDE.md']
+                  maxBytes: 32768
+              - id: skill-filesystem
+                name: '@deepseek-ai/dsh-skill-filesystem'
+                config:
+                  includeDefaultRoots: true
+
+    # Jev decides; the harness records what it decided.
+    - id: jev
+      name: /workspace/packages/experimental/apus-dsh-jev-plugin/lib/index.js
+      config:
+        endpoint: !!js 'process.env.JEV_ENDPOINT?.trim()'
+        model: !!js 'process.env.JEV_MODEL?.trim()'
+        apiKeyEnv: JEV_API_KEY
+        # The evaluation gateway is a vLLM OpenAI-compatible server, so decisions
+        # are asked in words and read from token probabilities. `openjev` would
+        # call /v1/systemone, which that server does not serve.
+        protocol: !!js 'process.env.JEV_PROTOCOL?.trim() || "chat-completions"'
+        # The served model thinks before answering unless its chat template is
+        # told not to, which outlasts System3's 3 s skill-selection deadline:
+        # 330 output tokens / 4.9 s with thinking on versus 2 tokens / 0.17 s
+        # off for the same verdict. Switch it off through the deployment.
+        chatTemplateKwargs:
+          enable_thinking: !!js 'process.env.JEV_ENABLE_THINKING === "true"'
+
+    # Continuum's two halves: the memory service and the Jev bridge that
+    # admits and indexes what the service writes.
+    - id: continuum-memory
+      name: /workspace/packages/context/continuum/lib/index.js
+      config:
+        enabled: !!js 'process.env.CONTINUUM_MEMORY_ENABLED !== "false"'
+        mode: !!js 'process.env.CONTINUUM_MEMORY_MODE || "active"'
+        # The service default is `explicit`, which stores only what a caller
+        # writes by name. The evaluation agent never writes memory explicitly,
+        # so the store stays empty and each question is answered from the whole
+        # conversation in one prompt — a long-context run, not a memory run.
+        # `user-message` is the mode memory benchmarks assume: every committed
+        # user message becomes a record the retrieval side can return.
+        admission: !!js 'process.env.CONTINUUM_MEMORY_ADMISSION || "user-message"'
+        # The schema default is an empty list, and admission returns early
+        # without a scope — nothing is stored even with `user-message` set.
+        scopes: !!js 'JSON.parse(process.env.CONTINUUM_MEMORY_SCOPES || "[\"workspace\"]")'
+        # Execution facts stay off unless the run explicitly opts in. `verified`
+        # offers each closed step's assistant/tool text to the admitter, which
+        # decides what becomes a record; the default writes no judgement.
+        # Acceptance runs this profile with `verified`: the trace has to show
+        # what execution admission judged, not only user-message admission.
+        executionAdmission: !!js 'process.env.CONTINUUM_EXECUTION_ADMISSION || "verified"'
+        # Retrieval audit facts. The schema default is false, which drops every
+        # continuum/memory-retrieval record and with it the query, lexical
+        # candidate and filter facts the trace needs; the acceptance profile
+        # records them. This is a recording switch, not a budget or a model
+        # choice, and the shipped profile default stays false.
+        trace: true
+
+    - id: continuum-jev
+      name: /workspace/packages/experimental/continuum-jev/lib/index.js
+      config:
+        # The bridge defaults to `off`, which ranks every recall from the
+        # lexical baseline and never asks Jev. `active` lets its judgement decide
+        # which records the model sees.
+        mode: !!js 'process.env.CONTINUUM_JEV_MODE || "active"'
+        timeoutMs: 180000
+        # Ranking sends candidate excerpts to Jev, which runs on another host.
+        # `local-only` refuses every network route before the other checks run;
+        # naming that route explicitly is what allows the call. The id is the
+        # provider's registry id (`system-one`), not the Loader row id `jev`.
+        privacyPolicy:
+          mode: cloud-approved
+          cloudApproval: true
+          approvedRemoteIds: [system-one]
+          approvedRemoteDataClasses: [workspace]
+        sessionDataClasses: [workspace]
+
+    # System3 routes an incoming request to a model before the step opens, and
+    # records the choice; without it the trace cannot say why this model.
+    - id: system3
+      name: /workspace/packages/experimental/system3/lib/index.js
+      config:
+        # The service defaults to `local-only` with no approved route, which
+        # denies every outbound judgement before it is sent. The evaluation
+        # deployment's Jev is the gateway row above, so that route is approved
+        # here; `jevRouteId` is the Loader row id, not the provider id.
+        privacyMode: controlled
+        # Admission compares this list against the Loader row id named by
+        # `jevRouteId` below, not against the provider's registry id.
+        approvedRemoteIds: [jev]
+        approvedRemoteDataClasses: [workspace]
+        jevRouteId: jev
+        jevExecutionDomain: network
+        # Every decision branch below defaults to `false`, which installs the
+        # service and then never judges. They are switched on so an evaluation
+        # trace records the decisions the harness actually took.
+        skillSelection:
+          sessionDataClasses: [workspace]
+          minConfidence: 0.5
+          # The evaluation prompt alone exceeds 16 KB; a smaller limit makes
+          # every decision `input-too-large` instead of a judgement.
+          maxInputBytes: 400000
+          maxContentBytes: 200000
+          maxCandidates: 15
+          deadlineMs: 3000

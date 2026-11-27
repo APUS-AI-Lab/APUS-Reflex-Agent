@@ -68,6 +68,10 @@ kind: "package-reference"
 
 PTC 程序收到完整的规范值。含图片的子结果在转发给模型前设定上限；全部图片被省略时，模型仍会收到保留的文字和读取提示。分发日志使用相同的保留内容。纯文本子调用的日志，包括 `read`，异步设定上限，不延迟程序获取返回值。
 
+### 溢出记录
+
+每次替换都会向所属会话追加一条仅日志的 `spill/spilled` 事件。载荷给出工具调用与被替换的副本（`label` 为 `result` 或 `dispatch`）、生效的 `threshold`（`maxInlineTokens`）、预留间隔与最坏通知后剩余的保留 `budgetTokens`、最终 `retainedTokens`、文本 `retainedBytes` 与 `retainedImages`、`spilledBytes`、`omittedBytes`、`omittedImages`、后端 `locator`。不记录摘要：存储文本内嵌时钟时间、替换内容内嵌每次运行不同的 locator 文件名，哈希无法跨运行重放。该记录不参与恢复、投影或重放：所属 `tool/result` 或 `tool/ptc-dispatch` 事件仍是权威，存储文本仍是恢复来源。追加失败只记录警告，不回退已成功的替换。
+
 -----
 
 <a id="understand-the-implementation"></a>
@@ -95,9 +99,10 @@ PTC 程序收到完整的规范值。含图片的子结果在转发给模型前�
 
 | 文件 | 职责 |
 |---|---|
-| [`src/index.ts`](src/index.ts) | 插件入口：`Config` 校验、两个 waterfall 监听器、共享替换辅助函数 |
+| [`src/index.ts`](src/index.ts) | 插件入口：`Config` 校验、两个 waterfall 监听器、共享替换辅助函数和 `spill/spilled` 记录 |
 | [`src/notice.ts`](src/notice.ts) | 浏览器安全的通知格式化与识别，以 `./notice` 发布 |
 | [`src/retention.ts`](src/retention.ts) | 有序图文首尾保留的纯函数 |
+| [`src/types.ts`](src/types.ts) | 最小执行视图、`spill/spilled` 载荷及其 `SessionEventMap` 声明 |
 | — | 不发布运行时不变式伴生入口；除在所属 seam 处强制执行的约定外，本包不公开独立的事件序列或可变数据关系。 |
 
 ### 故障模式

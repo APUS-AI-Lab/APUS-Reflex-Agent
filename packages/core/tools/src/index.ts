@@ -11,7 +11,7 @@ import type { ScopeKey, ScopeLayer, Scoped } from '@deepseek-ai/dsh-scope'
 import type { ToolCallId, ContentBlock, ToolSchema } from '@deepseek-ai/dsh-llm'
 import { HarnessError } from '@deepseek-ai/dsh-llm'
 import type { Agent } from '@deepseek-ai/dsh-agent'
-import type { UserMessage } from '@deepseek-ai/dsh-session'
+import type { Session, UserMessage } from '@deepseek-ai/dsh-session'
 import { assertNever, deepFreeze, snapshotJsonValue, type JsonValue } from '@deepseek-ai/dsh-util-values'
 import type { PromptSection, ToolProviderResult } from '@deepseek-ai/dsh-system-prompt'
 import type { PtcRuntime } from '@deepseek-ai/dsh-ptc-runtime'
@@ -99,7 +99,14 @@ export {
   type JsonSchemaScalar,
 } from './json-schema.ts'
 
-export type { PtcDispatchEventData, PtcDispatchStartEventData } from './types.ts'
+export type {
+  ApprovalUnavailableEventData,
+  PtcDispatchEventData,
+  PtcDispatchStartEventData,
+  ToolCatalogOmittedTool,
+  ToolPipelineErrorEventData,
+} from './types.ts'
+import type { ToolPipelineErrorEventData } from './types.ts'
 
 export { CodeRunFailedError, RUN_CODE_NAME } from './ptc.ts'
 export { jsonSchemaToTs, renderToolsSdk } from './ts-types.ts'
@@ -219,8 +226,21 @@ export interface ToolOutputDefinition {
   presentationMeta?(args: unknown, value: JsonValue): JsonValue
 }
 
+/**
+ * Owner attribution declared by a tool definition. The registry records it on
+ * each execution so the agent loop can attach it to the durable `tool/result`.
+ * Both fields are optional; omission means the definition declares no owner,
+ * and the registry never infers one from the plugin or call stack.
+ */
+export interface ToolOrigin {
+  /** Plugin that registered the tool. */
+  readonly pluginOwner?: string
+  /** Execution backend that runs the tool body. */
+  readonly executionBackend?: string
+}
+
 /** A registered tool: its schema plus the execution function. */
-export interface ToolDefinition extends ToolSchema {
+export interface ToolDefinition extends ToolSchema, ToolOrigin {
   /** Mandatory canonical output declaration. */
   readonly output: ToolOutputDefinition
   /**
@@ -264,6 +284,14 @@ export interface ToolDefinition extends ToolSchema {
    * cooperative implementation that can reach quiescence when the signal aborts.
    */
   timeoutMs?: number
+  /**
+   * Opt-in retry budget for this tool's own body. Omit to dispatch exactly once.
+   * Enforced by `@deepseek-ai/dsh-tool-call-retry-policy` (a `tools/execute`
+   * wrapper); it is NEVER sent to the model. Declaring it asserts the body is
+   * replayable: a retried attempt runs the implementation again, including its
+   * external side effects. Caller cancellation is never retried.
+   */
+  retry?: ToolRetryPolicy
   /**
    * Pure synchronous classifier for overlap with sibling tool calls. Only
    * `true` opts in; omission, exceptions, non-`true` returns, and invalid
@@ -465,12 +493,41 @@ export type ScheduledToolDispatch =
 export interface ToolRuntimeScheduler {
   /** Materialize input, run the ordered pre-execute/guard gate, and decide what stage follows. */
   prepare(exec: ToolExecutionInput): Promise<ScheduledToolPreparation>
+  /** Attribution declared by the definition that admitted `exec`, if any. */
+  originOf(exec: ToolExecution): ToolOrigin | undefined
+  /** Resolve one scope's presentation mode and the known names its model-facing catalog omits. */
+  catalog(scope: ScopeKey | undefined): ToolCatalogResolution
   /** Run only the around-dispatch/body stage. */
   dispatch(exec: ToolRunContext): Promise<ScheduledToolDispatch>
   /** Run post-execute and definition-owned content finalization, then materialize and notify. */
   finalize(exec: ToolRunContext, result: ToolExecutionResult): Promise<ToolExecutionResult>
   /** Run definition-owned content finalization, then materialize and notify without post-execute. */
   finish(exec: ToolRunContext, result: ToolExecutionResult): ToolExecutionResult
+}
+
+/**
+ * Declared retry budget for one tool body. The original attempt plus the
+ * retries it permits must fit within `maxAttempts`.
+ */
+export interface ToolRetryPolicy {
+  /** Total attempts permitted for one call, including the original attempt. */
+  readonly maxAttempts: number
+  /** Delay slept before each retry, in milliseconds; omit for no delay. */
+  readonly backoffMs?: number
+}
+
+/** One known tool name omitted from a scope's model-facing catalog, with the omitting stage. */
+export interface ToolCatalogOmission {
+  readonly name: string
+  readonly reason: 'restricted' | 'ptc-collapse'
+}
+
+/** The registry facts behind one scope's model-facing tool catalog. */
+export interface ToolCatalogResolution {
+  /** The presentation mode the scope selected. */
+  readonly mode: ToolPresentationMode
+  /** Known names the catalog omits, sorted by name. */
+  readonly omissions: readonly ToolCatalogOmission[]
 }
 
 /**
@@ -659,11 +716,40 @@ function materializePresentation<T>(candidate: T): T {
 }
 
 /** Structured `{ name, code }` for a thrown HarnessError, else undefined. */
+/**
+ * Structural equality of two JSON-compatible values, used to tell whether a
+ * content callback actually replaced anything. A hash would be cheaper but its
+ * value cannot replay for text carrying run-varying paths or timestamps.
+ * @param left - one value.
+ * @param right - the other value.
+ * @returns whether they serialize identically.
+ */
+function sameJson(left: unknown, right: unknown): boolean {
+  if (left === right) return true
+  try {
+    return JSON.stringify(left) === JSON.stringify(right)
+  } catch {
+    // A value that cannot serialize is not JSON-compatible content; treat it as
+    // unchanged rather than claiming a rewrite the log could not describe.
+    return true
+  }
+}
+
 function errorInfo(error: unknown): ToolErrorInfo | undefined {
   try {
     return error instanceof HarnessError ? { name: error.name, code: error.code } : undefined
   } catch {
     return undefined
+  }
+}
+
+/** A thrown value's error name, without trusting hostile property access. */
+function errorName(error: unknown): string {
+  try {
+    return error instanceof Error ? error.name : typeof error
+  } catch {
+    // A hostile thrown value can trap `instanceof`; the record still needs a name.
+    return 'unknown'
   }
 }
 
@@ -775,8 +861,10 @@ class ToolLayer implements ScopeLayer {
 
 /** Approval decision plus whether the approval channel reported cancellation. */
 interface ToolAskResolution {
-  readonly decision: Extract<PreToolDecision, { kind: 'allow' | 'deny' }>
+  readonly decision: Extract<PreToolDecision, { kind: 'allow' | 'deny' | 'cancel' }>
   readonly approvalCancelled: boolean
+  /** How the seam resolved an `ask`; absent when the pre-execute decision was not `ask`. */
+  readonly resolved?: 'allowed-once' | 'rejected' | 'cancelled' | 'unavailable' | 'no-service' | 'no-agent'
 }
 
 /** Caller cancellation and dispatch state kept outside the around-wrapper view. */
@@ -815,11 +903,15 @@ export class ToolRuntime extends Service {
   /** Internal staged view consumed by `dsh-agent-loop`'s parallel scheduler. */
   readonly [TOOL_RUNTIME_SCHEDULER]: ToolRuntimeScheduler = {
     prepare: exec => this.prepareScheduledExecution(exec),
+    originOf: exec => this.origins.get(exec),
+    catalog: scope => this.catalogResolution(scope),
     dispatch: exec => this.dispatchScheduledExecution(exec),
     finalize: (exec, result) => this.finalizeScheduledExecution(exec, result),
     finish: (exec, result) => this.finishScheduledExecution(exec, result),
   }
 
+  /** Definition-declared owner attribution, keyed by the execution it admitted. */
+  private readonly origins = new WeakMap<ToolExecution, ToolOrigin>()
   /** Context deferred by a running tool body, keyed by its scheduler-owned execution. */
   private deferredContexts = new WeakMap<ToolRunContext, UserMessage[]>()
   /** Executions whose tool body declared the current turn complete. */
@@ -1029,6 +1121,30 @@ export class ToolRuntime extends Service {
   }
 
   /**
+   * Resolve the names one scope's model-facing catalog omits and the stage that
+   * omitted each. `restricted` names are known global capabilities removed by a
+   * scoped restriction before projection; `ptc-collapse` names stay visible in
+   * the registry but the `ptc` executor collapses native schemas into the
+   * program-only SDK. No listener or hook can remove a tool in this registry,
+   * so no skip reason is invented for one.
+   */
+  private catalogResolution(scope?: ScopeKey): ToolCatalogResolution {
+    const view = this.view(scope)
+    const mode = this.modeFor(scope)
+    const omissions: ToolCatalogOmission[] = []
+    for (const name of view.knownNames) {
+      if (!view.visible.has(name)) omissions.push({ name, reason: 'restricted' })
+    }
+    if (mode === 'ptc') {
+      for (const name of view.visible.keys()) {
+        if (name !== RUN_CODE_NAME) omissions.push({ name, reason: 'ptc-collapse' })
+      }
+    }
+    omissions.sort((left, right) => left.name < right.name ? -1 : left.name > right.name ? 1 : 0)
+    return { mode, omissions }
+  }
+
+  /**
    * Resolve the PTC runtime or throw the actionable misconfiguration error.
    * Read at use time (assembly / run_code execution), NOT via static
    * `inject`: an inject entry would hold `ctx.tools` — and every tool plugin
@@ -1073,6 +1189,22 @@ export class ToolRuntime extends Service {
     if (timeoutMs !== undefined
       && (!Number.isFinite(timeoutMs) || timeoutMs <= 0)) {
       throw new TypeError(`tool "${name}" timeoutMs must be a positive finite number`)
+    }
+    const retry = definition.retry
+    if (retry !== undefined) {
+      if (!Number.isInteger(retry.maxAttempts) || retry.maxAttempts < 1) {
+        throw new TypeError(`tool "${name}" retry.maxAttempts must be a positive integer`)
+      }
+      if (retry.backoffMs !== undefined
+        && (!Number.isFinite(retry.backoffMs) || retry.backoffMs < 0)) {
+        throw new TypeError(`tool "${name}" retry.backoffMs must be a non-negative finite number`)
+      }
+    }
+    for (const field of ['pluginOwner', 'executionBackend'] as const) {
+      const value = definition[field]
+      if (value !== undefined && (typeof value !== 'string' || value.length === 0)) {
+        throw new TypeError(`tool "${name}" ${field} must be a nonempty string`)
+      }
     }
     // Reserved unconditionally: any agent may select a code mode for itself,
     // so a name free to take under the deployment default would become a
@@ -1216,6 +1348,17 @@ export class ToolRuntime extends Service {
       visible.set(RUN_CODE_NAME, this.requirePtcTransport())
     }
     return { visible, knownNames, restrictableNames }
+  }
+
+  /**
+   * Report the names one scope's model-facing catalog omits and the stage that
+   * omitted each. Read-only: it records what resolution already decided and
+   * never changes admission.
+   * @param scope - the viewing scope (the agent); omitted = the global view.
+   * @returns the presentation mode and the sorted omissions.
+   */
+  catalog(scope?: ScopeKey): ToolCatalogResolution {
+    return this.catalogResolution(scope)
   }
 
   /**
@@ -1405,6 +1548,7 @@ export class ToolRuntime extends Service {
     // keeps the historical dispatch-stage `UNKNOWN_TOOL` path so policy
     // listeners still see every name that reaches the registry.
     const visible = this.get(name, agent)
+    const origin = visible === undefined ? undefined : declaredOrigin(visible)
     const collapsed = visible !== undefined && this.collapses(name, agent, parent !== undefined)
     const concludingExecutions = this.concludingExecutions
     const base = {
@@ -1450,6 +1594,7 @@ export class ToolRuntime extends Service {
         callerSignal: signal,
         bodyInvoked: false,
       })
+      if (origin !== undefined) this.origins.set(execution, origin)
       if (collapsed) {
         // The collapse denies the call before the policy pipeline, but a
         // pre-dispatch abort still keeps the established cancellation
@@ -1476,6 +1621,7 @@ export class ToolRuntime extends Service {
     } catch (error: unknown) {
       const execution: MutableToolRunContext = { ...base, arguments: undefined }
       this.contentFinalizers.set(execution, finalizerFor())
+      if (origin !== undefined) this.origins.set(execution, origin)
       return { kind: 'final-result', exec: execution, result: toolErrorResult(error) }
     }
   }
@@ -1500,24 +1646,30 @@ export class ToolRuntime extends Service {
     if (this.callerCancelled(exec)) {
       return next({ kind: 'final-result', exec, result: toolAbortedBeforeDispatchResult() })
     }
+    let stage: 'pre-execute' | 'approval' | 'guard' = 'pre-execute'
     try {
       const carrier = scopeTarget(this, exec.agent)
       const gate = await this.ctx.waterfall(
         carrier, 'tools/pre-execute', exec,
         () => Promise.resolve<PreToolDecision>({ kind: 'allow' }),
       )
+      stage = 'approval'
       const askResolution = gate.kind === 'ask'
         ? await this.serviceAsk(exec, gate)
         : { decision: gate, approvalCancelled: false }
+      stage = 'guard'
       const { decision } = askResolution
+      const denialReason = decision.kind === 'allow'
+        ? this.guardReason(exec)
+        : decision.kind === 'deny' ? decision.reason : undefined
+      const denialInfo = decision.kind === 'deny' ? decision.info : undefined
+      this.appendPreExecuteDecision(exec, gate, askResolution, denialReason)
       if (this.callerCancelled(exec) && askResolution.approvalCancelled) {
         return await next({ kind: 'post-result', exec, result: toolAbortedBeforeDispatchResult() })
       }
       if (decision.kind === 'cancel') {
         return await next({ kind: 'post-result', exec, result: toolAbortedBeforeDispatchResult() })
       }
-      const denialReason = decision.kind === 'allow' ? this.guardReason(exec) : decision.reason
-      const denialInfo = decision.kind === 'deny' ? decision.info : undefined
       if (denialReason !== undefined) {
         return await next({
           kind: 'post-result',
@@ -1534,6 +1686,12 @@ export class ToolRuntime extends Service {
       }
       return await next({ kind: 'dispatch', exec })
     } catch (error: unknown) {
+      this.appendPipelineError(
+        exec,
+        stage,
+        stage === 'approval' ? 'approval-service' : stage === 'guard' ? 'guard' : 'listener',
+        error,
+      )
       return next({ kind: 'final-result', exec, result: toolErrorResult(error) })
     }
   }
@@ -1578,8 +1736,20 @@ export class ToolRuntime extends Service {
       const tool = this.resolveExecution(exec.name, exec.agent, exec.parent !== undefined)
       if (!tool) throw new ToolNotFoundError(exec.name)
       state.bodyInvoked = true
-      const returned = await tool.execute(exec.arguments, exec)
-      const result = this.createSuccessResult(exec, tool, returned)
+      let returned: unknown
+      try {
+        returned = await tool.execute(exec.arguments, exec)
+      } catch (error: unknown) {
+        // A throwing tool body is an ordinary failed call, not a pipeline failure.
+        return toolErrorResult(error)
+      }
+      let result: ToolExecutionResult
+      try {
+        result = this.createSuccessResult(exec, tool, returned)
+      } catch (error: unknown) {
+        this.appendPipelineError(exec, 'materialize', 'definition', error)
+        return toolErrorResult(error)
+      }
       return isAborted(signal)
         ? toolAbortedResult(result)
         : result
@@ -1599,14 +1769,26 @@ export class ToolRuntime extends Service {
    * @internal
    */
   private async dispatchScheduledExecution(exec: ToolRunContext): Promise<ScheduledToolDispatch> {
+    const mutableExec = exec as MutableToolRunContext
+    const carrier = scopeTarget(this, exec.agent)
+    let result: ToolExecutionResult
     try {
-      const mutableExec = exec as MutableToolRunContext
-      const carrier = scopeTarget(this, exec.agent)
-      const result = await this.ctx.waterfall(
+      result = await this.ctx.waterfall(
         carrier, 'tools/execute', mutableExec,
         () => this.dispatchToolBody(mutableExec),
       )
-      const normalized = this.normalizeDispatchResult(exec, result)
+    } catch (error: unknown) {
+      this.appendPipelineError(exec, 'execute-wrapper', 'listener', error)
+      return { kind: 'final-result', result: toolErrorResult(error) }
+    }
+    let normalized: ToolExecutionResult
+    try {
+      normalized = this.normalizeDispatchResult(exec, result)
+    } catch (error: unknown) {
+      this.appendPipelineError(exec, 'materialize', 'definition', error)
+      return { kind: 'final-result', result: toolErrorResult(error) }
+    }
+    try {
       const deferredContexts = this.deferredContexts.get(exec)
       /* v8 ignore next -- dispatch only receives executions minted by this registry's prepare stage */
       if (deferredContexts === undefined) throw new Error('tool registry scheduler invariant violated: unprepared execution')
@@ -1626,6 +1808,7 @@ export class ToolRuntime extends Service {
           : resultWithDeferredContexts,
       }
     } catch (error: unknown) {
+      this.appendPipelineError(exec, 'materialize', 'registry', error)
       return { kind: 'final-result', result: toolErrorResult(error) }
     }
   }
@@ -1639,6 +1822,7 @@ export class ToolRuntime extends Service {
    * @internal
    */
   private async finalizeScheduledExecution(exec: ToolRunContext, result: ToolExecutionResult): Promise<ToolExecutionResult> {
+    let stage: 'projectContent' | 'post-execute' = 'projectContent'
     try {
       const project = this.contentProjectors.get(exec)
       this.contentProjectors.delete(exec)
@@ -1646,7 +1830,10 @@ export class ToolRuntime extends Service {
       const projected = content === undefined
         ? result
         : this.markCanonical(exec, this.materializeFinalResult({ ...result, content }))
+      if (content !== undefined) this.appendContentRewrite(exec, 'projectContent', result.content, projected.content)
+      stage = 'post-execute'
       const postResult = await this.postExecute(exec, projected)
+      this.appendPostExecuteRewrite(exec, projected, postResult)
       return this.finishScheduledExecution(
         exec,
         this.callerCancelled(exec) && !postResult.isError
@@ -1654,6 +1841,7 @@ export class ToolRuntime extends Service {
           : postResult,
       )
     } catch (error: unknown) {
+      this.appendPipelineError(exec, stage, stage === 'projectContent' ? 'definition' : 'listener', error)
       return this.finishScheduledExecution(exec, toolErrorResult(error))
     }
   }
@@ -1671,12 +1859,28 @@ export class ToolRuntime extends Service {
     try {
       materializedResult = this.materializeFinalResult(result)
     } catch (error: unknown) {
+      this.appendPipelineError(exec, 'materialize', 'registry', error)
       materializedResult = this.materializeFinalResult(toolErrorResult(error))
+    }
+    let applied: ToolExecutionResult
+    let finalizeApplied = false
+    try {
+      applied = this.applyFinalContent(exec, materializedResult)
+      finalizeApplied = true
+      if (applied.content !== materializedResult.content) {
+        this.appendContentRewrite(exec, 'finalizeContent', materializedResult.content, applied.content)
+      }
+    } catch (error: unknown) {
+      this.appendPipelineError(exec, 'finalizeContent', 'definition', error)
+      applied = toolErrorResult(error)
     }
     let finalResult: ToolExecutionResult
     try {
-      finalResult = this.materializeFinalResult(this.applyFinalContent(exec, materializedResult))
+      finalResult = this.materializeFinalResult(applied)
+      if (finalizeApplied && applied !== materializedResult) {
+      }
     } catch (error: unknown) {
+      this.appendPipelineError(exec, 'materialize', 'registry', error)
       finalResult = this.materializeFinalResult(toolErrorResult(error))
     }
     this.notifyResult(exec, finalResult)
@@ -1689,6 +1893,150 @@ export class ToolRuntime extends Service {
     if (finalizeContent === undefined) return result
     const content = finalizeContent(exec, result)
     return content === undefined ? result : { ...result, content }
+  }
+
+  /** Record the aggregate pre-execute decision; listener attribution is unavailable on the waterfall. */
+  private appendPreExecuteDecision(
+    exec: ToolExecution,
+    gate: PreToolDecision,
+    resolution: ToolAskResolution,
+    denialReason: string | undefined,
+  ): void {
+    // `no-agent` cannot reach a session, so it is never a loggable resolution.
+    const askResolution = resolution.resolved === undefined || resolution.resolved === 'no-agent'
+      ? undefined
+      : resolution.resolved
+    this.appendObservation(exec, (session) => {
+      session.append('tool/pre-execute-decision', {
+        callId: exec.callId,
+        name: exec.name,
+        decision: gate.kind,
+        decidedBy: gate.kind === 'allow' && denialReason !== undefined ? 'guard' : 'pre-execute',
+        ...denialReason === undefined ? {} : { reason: denialReason },
+        ...askResolution === undefined ? {} : { askResolution },
+        attributed: false,
+      })
+    })
+  }
+
+  /**
+   * Record one replacement a definition-owned content callback made. These
+   * callbacks are invoked directly by the registry with no emit, so this is the
+   * only point that can state the stage.
+   * @param exec - the dispatch whose definition replaced content.
+   * @param stage - which definition callback made the replacement.
+   * @param before - the content entering the callback.
+   * @param after - the content the callback returned.
+   */
+  private appendContentRewrite(
+    exec: ToolExecution,
+    stage: 'projectContent' | 'finalizeContent',
+    before: ContentBlock[],
+    after: ContentBlock[],
+  ): void {
+    if (exec.agent === undefined || before === after) return
+    this.appendObservation(exec, (session) => {
+      session.append('tool/result-rewrite', {
+        callId: exec.callId,
+        rootCallId: exec.rootCallId,
+        name: exec.name,
+        stage,
+        replacedField: 'content',
+        attributed: false,
+      })
+    })
+  }
+
+  /**
+   * Record the model-visible field a post-execute decision replaced. A value
+   * replacement also re-renders content; the value is the primary field then.
+   * @param exec - the dispatch the decision settled.
+   * @param before - the result entering post-execute.
+   * @param after - the result post-execute returned.
+   */
+  private appendPostExecuteRewrite(
+    exec: ToolExecution,
+    before: ToolExecutionResult,
+    after: ToolExecutionResult,
+  ): void {
+    if (exec.agent === undefined) return
+    let replacedField: 'content' | 'value'
+    if (!before.isError && !after.isError && !sameJson(before.value, after.value)) {
+      replacedField = 'value'
+    } else if (!sameJson(before.content, after.content)) {
+      replacedField = 'content'
+    } else {
+      return
+    }
+    this.appendObservation(exec, (session) => {
+      session.append('tool/result-rewrite', {
+        callId: exec.callId,
+        rootCallId: exec.rootCallId,
+        name: exec.name,
+        stage: 'post-execute',
+        replacedField,
+        attributed: false,
+      })
+    })
+  }
+
+  /** Record an `ask` that degraded before the approval seam could receive it. */
+  private appendApprovalUnavailable(
+    exec: ToolExecution,
+    ask: Extract<PreToolDecision, { kind: 'ask' }>,
+    degradeCause: 'no-service',
+    denyReason: string,
+  ): void {
+    this.appendObservation(exec, (session) => {
+      session.append('approval/unavailable', {
+        callId: exec.callId,
+        toolName: exec.name,
+        ...ask.reason === undefined ? {} : { askReason: ask.reason },
+        degradeCause,
+        finalDecision: 'deny',
+        denyReason,
+      })
+    })
+  }
+
+  /** Record one thrown pipeline value at the stage that caught it. */
+  private appendPipelineError(
+    exec: ToolExecution,
+    stage: ToolPipelineErrorEventData['stage'],
+    thrower: ToolPipelineErrorEventData['thrower'],
+    error: unknown,
+  ): void {
+    const info = errorInfo(error)
+    this.appendObservation(exec, (session) => {
+      session.append('tool/pipeline-error', {
+        callId: exec.callId,
+        rootCallId: exec.rootCallId,
+        name: exec.name,
+        stage,
+        thrower,
+        error: {
+          name: info?.name ?? errorName(error),
+          ...info === undefined ? {} : { code: info.code },
+          message: errorMessage(error),
+        },
+        normalizedToIsError: true,
+      })
+    })
+  }
+
+  /**
+   * Record the model-visible field a post-execute decision replaced. A value
+   * replacement also re-renders content; the value is the primary field then.
+   */
+  /** Append one log-only tool observation; a rejected append never changes the tool outcome. */
+  private appendObservation(exec: ToolExecution, record: (session: Session) => void): void {
+    const session = exec.agent?.session
+    if (session === undefined) return
+    try {
+      record(session)
+    } catch (error: unknown) {
+      this.ctx.logger.warn(`tools: failed to record a tool observation for "${exec.name}": ${errorMessage(error)}`)
+    }
   }
 
   /** Notify observers without exposing a mutation or error channel into the outcome. */
@@ -1730,15 +2078,22 @@ export class ToolRuntime extends Service {
   ): Promise<ToolAskResolution> {
     const approval = this.ctx.get('approval')
     if (approval === undefined) {
+      const reason = ask.reason ?? `tool "${exec.name}" requires approval (not yet supported)`
+      this.appendApprovalUnavailable(exec, ask, 'no-service', reason)
       return {
-        decision: { kind: 'deny', reason: ask.reason ?? `tool "${exec.name}" requires approval (not yet supported)` },
+        decision: { kind: 'deny', reason },
         approvalCancelled: false,
+        resolved: 'no-service',
       }
     }
     if (exec.agent === undefined) {
+      // No Agent means no session, so this degrade has no durable home; it
+      // still fails closed with the historical denial.
+      const reason = `tool "${exec.name}" requires approval, but the call has no agent to route it through`
       return {
-        decision: { kind: 'deny', reason: `tool "${exec.name}" requires approval, but the call has no agent to route it through` },
+        decision: { kind: 'deny', reason },
         approvalCancelled: false,
+        resolved: 'no-agent',
       }
     }
     const outcome = await approval.request({
@@ -1750,18 +2105,21 @@ export class ToolRuntime extends Service {
       signal: exec.signal,
     })
     switch (outcome) {
-      case 'allowed-once': return { decision: { kind: 'allow' }, approvalCancelled: false }
+      case 'allowed-once': return { decision: { kind: 'allow' }, approvalCancelled: false, resolved: outcome }
       case 'rejected': return {
         decision: { kind: 'deny', reason: `the user rejected tool "${exec.name}"` },
         approvalCancelled: false,
+        resolved: outcome,
       }
       case 'cancelled': return {
         decision: { kind: 'deny', reason: `approval for tool "${exec.name}" was cancelled` },
         approvalCancelled: true,
+        resolved: outcome,
       }
       case 'unavailable': return {
         decision: { kind: 'deny', reason: `tool "${exec.name}" requires approval, but no approval channel is available` },
         approvalCancelled: false,
+        resolved: outcome,
       }
       default: return assertNever(outcome, 'ApprovalOutcome')
     }
@@ -1902,6 +2260,15 @@ export class ToolRuntime extends Service {
 }
 
 /** Mint a same-process correlation token whose identity is its value. */
+/** Copy only the origin fields a resolved definition actually declares. */
+function declaredOrigin(definition: ToolDefinition): ToolOrigin | undefined {
+  if (definition.pluginOwner === undefined && definition.executionBackend === undefined) return undefined
+  return {
+    ...definition.pluginOwner === undefined ? {} : { pluginOwner: definition.pluginOwner },
+    ...definition.executionBackend === undefined ? {} : { executionBackend: definition.executionBackend },
+  }
+}
+
 function createExecutionToken(): ToolExecutionToken {
   return Symbol('dsh.tool.execution') as ToolExecutionToken
 }

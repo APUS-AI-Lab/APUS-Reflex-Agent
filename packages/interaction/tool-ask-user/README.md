@@ -78,7 +78,7 @@ The observable behavior is covered in [Use this package](#use-this-package); thi
 
 ### Consumer role
 
-The plugin registers one `defineTool` entry on `ctx.tools` with injects `['tools', 'userQuestions']`. `execute` maps model arguments into an `AskUserQuestionRequest`, forwards the exact calling agent and the turn's signal, and maps the accepted answer back into the canonical `answers` array. The seam owns identity checks, intent validation, waterfall dispatch, and the error taxonomy; this package only translates.
+The plugin registers one `defineTool` entry on `ctx.tools` with injects `['tools', 'userQuestions']`. `execute` maps model arguments into an `AskUserQuestionRequest`, forwards the exact calling agent, the tool call id (so the seam's log-only answer receipt links to this call), and the turn's signal, then maps the accepted answer back into the canonical `answers` array. The seam owns identity checks, intent validation, waterfall dispatch, the answer receipt, and the error taxonomy; this package only translates.
 
 ### Result rendering
 

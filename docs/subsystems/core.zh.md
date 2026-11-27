@@ -326,7 +326,15 @@ pre-step 决策使用与持久 user-role 输入相同、带标识的 `UserMessag
 ```ts type-equiv
 /** Whether and with which messages the loop enters a proposed step. */
 type PreStepDecision =
-  | { kind: 'reject' }
+  | {
+    kind: 'reject'
+    /**
+     * Why the listener rejected the step, recorded on the durable
+     * `turn/pre-step` and `turn/end` records. Absent when the listener gives
+     * no reason; the loop never infers one.
+     */
+    reason?: string
+  }
   | {
     kind: 'enter'
     messages: UserMessage[]

@@ -8,10 +8,24 @@ const blockSchema = reflexContextTargetSchema.extend({ messageId: z.string().tra
 const stateSchema = z.object({ frozenThrough: z.number().int().min(-1), anchored: z.boolean(), legacyRequest: z.boolean(),
   revision: z.number().int().nonnegative(), topic: z.string(), constraints: z.array(z.string()),
   blocks: z.array(blockSchema), messageSeqs: z.array(z.number().transform(SessionSeq)) })
+/** Projection state copied into an anchor; observation only, never read back by the projection. */
+export interface ReflexContextAnchorSnapshot {
+  /** Selection revision the projection held when the anchor was appended. */
+  readonly revision: number
+  /** Current task text the projection retained. */
+  readonly topic: string
+  /** Task-frame constraints in force. */
+  readonly constraints: readonly string[]
+}
+
 declare module '@deepseek-ai/dsh-session/types' {
   interface SessionEventMap {
-    /** Submitted-history protection; does not alter model-visible content. */
-    'reflex/context-cache-anchor': { version: 1; throughSeq: SessionSeq }
+    /**
+     * Submitted-history protection; does not alter model-visible content.
+     * `snapshot` copies the projection state at the append site; it is log-only,
+     * and events written before snapshots were recorded omit it.
+     */
+    'reflex/context-cache-anchor': { version: 1; throughSeq: SessionSeq; snapshot?: ReflexContextAnchorSnapshot }
   }
 }
 /** Original block index and current selections; retained across process restarts by event folding. */

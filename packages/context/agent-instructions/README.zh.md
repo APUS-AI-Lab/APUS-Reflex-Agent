@@ -53,6 +53,7 @@ export interface Config {
   maxSourceBytes?: number
   instructionFileCandidates?: string[]
   localInstructionFileCandidates?: string[]
+  hostInstructionRoots?: string[]
 }
 ```
 
@@ -64,6 +65,18 @@ export interface Config {
 | `instructionFileCandidates` | `['AGENTS.md', 'CLAUDE.md']` | 每个项目目录中加载的基础文件名 |
 | `localInstructionFileCandidates` | `['AGENTS.local.md', 'CLAUDE.local.md']` | 在基础文件之后加载的本地 overlay 文件名 |
 | `dshHome` | `$DSH_HOME` 或 `~/.dsh` | 存放用户全局 `AGENTS.md` 的目录 |
+| `hostInstructionRoots` | `[]` | 为每个 agent 加载的固定只读主机规则目录 |
+
+### 任务容器工作区
+
+会话工作目录可能指向本进程从未挂载的容器。此时每次读取都把所属 agent 的身份（`agentId`）交给挂载的文件系统提供方，因此 `/app` 相同的两个 agent 各自加载自己容器的规则，不会串内容。用户全局 `AGENTS.md` 和每个 `hostInstructionRoots` 目录都是固定的只读主机资源：由本进程直接读取，绝不在 agent 的执行世界内解析。看不到主机路径的提供方因此不会误读无关主机文件，而是如实报告这些主机规则不可用。
+
+```yaml
+- name: '@deepseek-ai/dsh-agent-instructions'
+  config:
+    maxBytes: 65536
+    hostInstructionRoots: [/opt/apus/rules]
+```
 
 生成的[配置目录](../../../docs/config-catalog.zh.md#deepseek-aidsh-agent-instructions)是每个受支持字段及其 JSDoc 的穷尽式真源。
 

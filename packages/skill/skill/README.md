@@ -67,6 +67,8 @@ Loaded instruction messages use `SkillInvocationSource` (`kind: skill-invocation
 
 A skill that any provider reports appears in the merged catalog, and loading it by its exact kebab-case name returns the body; an invalid name returns no skill rather than throwing. A provider that fails discovery is logged and skipped, and the observation is reported incomplete so consumers keep their last-good catalog; an explicit incomplete observation still contributes its candidates. A malformed candidate fails fast — the registry validates names, descriptions, invocation booleans, and provider ownership before caching or returning anything.
 
+Every successful `get()` appends one log-only `skill/loaded` event to the calling agent's session when the lookup's `scope` exposes that session. The receipt records the winning skill's `name`, `provider`, and `source`, the epoch-millisecond `loadedAt` after the provider returned and the registry validated the definition, and `cached`, which reports whether catalog resolution reused a completed-catalog cache; the body itself is always loaded from its provider. The event never enters model history, and a missing or closed session leaves the load unchanged.
+
 Skill summaries retain the winning provider’s optional instruction-file `path` for discovery consumers that offer file previews. Listing still reads no skill body, and model-facing catalogs continue to select only their owned routing fields.
 
 -----

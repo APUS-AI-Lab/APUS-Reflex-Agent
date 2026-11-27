@@ -172,6 +172,9 @@ export class PwshLocalExecutor extends ShellExecutor {
     assertPositiveFinite('request.stdoutMaxBytes', stdoutMaxBytes)
     return {
       command: request.command,
+      // Carried through so an executor that runs elsewhere can tell which
+      // agent's environment this command belongs to.
+      ...request.agentId === undefined ? {} : { agentId: request.agentId },
       workdir: request.workdir ?? this.config.cwd.get() ?? process.cwd(),
       timeoutMs,
       onExpiry: request.onExpiry ?? 'kill',

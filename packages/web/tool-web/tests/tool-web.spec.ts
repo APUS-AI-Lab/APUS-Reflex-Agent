@@ -713,11 +713,11 @@ describe('tool-web execution through the real registry', () => {
   })
 
   it('executes web_fetch, forwarding the url (no timeout param) and the abort signal to the seam', async () => {
-    const seen: { request?: { url: string }; signal?: AbortSignal | undefined } = {}
+    const seen: { request?: { url: string; callId?: string }; signal?: AbortSignal | undefined } = {}
     const fetchProvider = {
       id: 'stub-fetch',
       available: () => available,
-      fetch: (request: { url: string }, signal?: AbortSignal) => {
+      fetch: (request: { url: string; callId?: string }, signal?: AbortSignal) => {
         seen.request = request
         seen.signal = signal
         return Promise.resolve({ url: request.url, statusCode: 200, body: { kind: 'text' as const, content: 'ok' }, truncated: false })
@@ -735,7 +735,8 @@ describe('tool-web execution through the real registry', () => {
     })
     // The model schema exposes no timeout: the tool forwards only the url; the
     // tool-call budget is owned by dsh-tool-call-timeout-policy over exec.signal.
-    expect(seen.request).toEqual({ url: 'https://a.test' })
+    // The call id rides along so the seam's selection fact can name this call.
+    expect(seen.request).toEqual({ url: 'https://a.test', callId: 'fetch-1' })
     expect(seen.signal).toBe(controller.signal)
     await fiber.dispose()
   })
@@ -745,7 +746,7 @@ describe('tool-web execution through the real registry', () => {
     const fetchProvider = {
       id: 'stub-fetch',
       available: () => available,
-      fetch: (request: { url: string }, signal?: AbortSignal) => {
+      fetch: (request: { url: string; callId?: string }, signal?: AbortSignal) => {
         seen.passedSignal = signal !== undefined
         seen.signal = signal
         return Promise.resolve({ url: request.url, statusCode: 200, body: { kind: 'text' as const, content: 'ok' }, truncated: false })
@@ -985,3 +986,112 @@ describe('scope-aware web guidance', () => {
 function withPersona(...sections: string[]): string {
   return ['You are an AI agent powered by APUS Reflex Harness.', ...sections].join('\n\n')
 }
+
+describe('web/search-route payload', () => {
+  it('names the provider, the fan-out size and the merged result', async () => {
+    const { webSearchDispatched } = await import('@deepseek-ai/dsh-tool-web/src/search.ts')
+
+    const payload = webSearchDispatched({
+      providerId: 'deepseek',
+      queries: ['a', 'b'],
+      result: { sources: [{ url: 'https://x', title: 'X' }, { url: 'https://y', title: 'Y' }], truncated: true },
+      elapsedMs: 120,
+    })
+
+    expect(payload).toEqual({
+      capability: 'search',
+      providerId: 'deepseek',
+      queryCount: 2,
+      sourceCount: 2,
+      truncated: true,
+      elapsedMs: 120,
+    })
+  })
+
+  it('omits the provider when none could be resolved', async () => {
+    const { webSearchDispatched } = await import('@deepseek-ai/dsh-tool-web/src/search.ts')
+
+    const payload = webSearchDispatched({
+      queries: ['a'],
+      result: { sources: [], truncated: false },
+      elapsedMs: 3,
+    })
+
+    expect('providerId' in payload).toBe(false)
+  })
+})
+
+describe('call attribution', () => {
+  it('passes the tool call id into the web seam', async () => {
+    // The seam records a provider-selection fact per execution; without the id
+    // that fact cannot be attached to the tool call that caused it.
+    const seen: { search: string[]; fetch: string[] } = { search: [], fetch: [] }
+    const ctx = new Context()
+    await ctx.plugin(SystemPrompt)
+    await ctx.plugin(ToolRuntime)
+    await ctx.plugin(WebRuntime)
+    ctx.web.registerSearchProvider({
+      id: 'probe', available: () => true,
+      search: (request) => { if (request.callId) seen.search.push(request.callId); return Promise.resolve({ content: '', sources: [], truncated: false }) },
+    })
+    ctx.web.registerFetchProvider({
+      id: 'probe-fetch', available: () => true,
+      fetch: (request) => { if (request.callId) seen.fetch.push(request.callId); return Promise.resolve({ url: request.url, statusCode: 200, body: { kind: 'text', content: '' }, truncated: false }) },
+    })
+    await ctx.plugin(ToolWeb, {})
+
+    await ctx.tools.execute({ signal: testToolSignal, callId: ToolCallId('search-42'), name: 'web_search', arguments: { queries: ['q'] } })
+    await ctx.tools.execute({ signal: testToolSignal, callId: ToolCallId('fetch-42'), name: 'web_fetch', arguments: { url: 'https://a.test' } })
+
+    expect(seen.search).toEqual(['search-42'])
+    expect(seen.fetch).toEqual(['fetch-42'])
+  })
+})
+
+describe('search dispatch records', () => {
+  /** Mount a search tool whose provider either answers or throws. */
+  async function mountSearch(search: () => Promise<{ content?: string; sources: never[]; truncated: boolean }>) {
+    const ctx = new Context()
+    await ctx.plugin(SystemPrompt)
+    await ctx.plugin(ToolRuntime)
+    await ctx.plugin(WebRuntime)
+    const appended: { type: string; data: Record<string, unknown> }[] = []
+    ctx.provide('agents', {
+      currentInitiator: () => ({
+        session: { append: (type: string, data: Record<string, unknown>) => { appended.push({ type, data }) } },
+      }),
+    })
+    ctx.web.registerSearchProvider({ id: 'probe', available: () => true, search: () => search() })
+    await ctx.plugin(ToolWeb, {})
+    return { ctx, appended }
+  }
+
+  it('records what a finished search returned', async () => {
+    const { ctx, appended } = await mountSearch(() => Promise.resolve({
+      sources: [{ url: 'https://a', title: 'A' }, { url: 'https://b', title: 'B' }] as never[],
+      truncated: false,
+    }))
+
+    await ctx.tools.execute({ signal: testToolSignal, callId: ToolCallId('s-1'), name: 'web_search', arguments: { queries: ['q'] } })
+
+    const record = appended.find(r => r.type === 'web/search-route')
+    expect(record?.data).toMatchObject({
+      capability: 'search', callId: 's-1', queryCount: 1, sourceCount: 2,
+      truncated: false, outcome: 'completed',
+    })
+  })
+
+  it('records a search that threw as failed, not as an empty result', async () => {
+    const { ctx, appended } = await mountSearch(() => Promise.reject(new Error('rate limited')))
+
+    // The runtime turns a thrown tool error into an isError result; the record
+    // is what separates "provider failed" from "provider found nothing".
+    const out = await ctx.tools.execute({
+      signal: testToolSignal, callId: ToolCallId('s-2'), name: 'web_search', arguments: { queries: ['q'] },
+    })
+    expect(out.isError).toBe(true)
+
+    const record = appended.find(r => r.type === 'web/search-route')
+    expect(record?.data).toMatchObject({ outcome: 'failed', sourceCount: 0, failure: 'rate limited' })
+  })
+})

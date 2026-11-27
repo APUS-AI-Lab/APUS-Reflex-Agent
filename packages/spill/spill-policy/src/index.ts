@@ -1,8 +1,10 @@
 /**
  * Token-budgeted tool content with recoverable text and image addresses.
  * Post-execute policies settle before retention; canonical program values
- * remain intact. Missing recovery storage or image pricing keeps the original
- * content and reports the reason through the logger.
+ * remain intact. Each successful replacement appends one log-only
+ * `spill/spilled` record to the owning session. Missing recovery storage or
+ * image pricing keeps the original content and reports the reason through the
+ * logger.
  * @module @deepseek-ai/dsh-spill-policy
  */
 import type { Context } from '@deepseek-ai/cordis'
@@ -14,12 +16,12 @@ import type { SpillRef } from '@deepseek-ai/dsh-spill'
 import type { PostToolDecision, ToolExecution } from '@deepseek-ai/dsh-tools'
 import type {} from '@deepseek-ai/dsh-attachment'
 import type {} from '@deepseek-ai/dsh-fs'
-import type { SpillPolicyExec } from './types.ts'
+import type { SpillPolicyExec, SpillSpilledEventData } from './types.ts'
 import { formatSpillNotice } from './notice.ts'
 import { retainContent } from './retention.ts'
 import type { RetainableBlock } from './retention.ts'
 
-export type { SpillPolicyExec } from './types.ts'
+export type { SpillCopyLabel, SpillPolicyExec, SpillSpilledEventData } from './types.ts'
 
 /** Optional result-retention budget. */
 export interface Config {
@@ -39,6 +41,12 @@ function retainable(content: readonly ContentBlock[]): content is RetainableBloc
 }
 
 const GAP = { type: 'text', text: '\n\n[...]\n\n' } as const
+
+/** UTF-8 bytes of retained text blocks; image bytes stay in attachment storage. */
+function textBytes(blocks: readonly RetainableBlock[]): number {
+  return blocks.reduce(
+    (total, block) => total + (block.type === 'text' ? Buffer.byteLength(block.text, 'utf8') : 0), 0)
+}
 
 /**
  * Mount token retention for accepted tool results and PTC log copies.
@@ -96,32 +104,52 @@ export function apply(ctx: Context, config: Config): void {
       const images = content.filter((block): block is ImageBlock => block.type === 'image')
       const price = pricing(exec, images)
       if (content.reduce((total, block) => total + price(block), 0) <= maxTokens) return undefined
-      const owner = (exec as SpillPolicyExec).agent?.session.header.id
-      if (owner === undefined) throw new Error(`no session owner for ${toolName} ${label}`)
+      const session = (exec as SpillPolicyExec).agent?.session
+      if (session === undefined) throw new Error(`no session owner for ${toolName} ${label}`)
+      const owner = session.header.id
       const spillStore = ctx.get('spillStore')
       if (spillStore === undefined) throw new Error('no ctx.spillStore backend loaded')
+      const full = fullText(content)
       const ref: SpillRef = await spillStore.saveText({
         owner: { sessionId: owner }, source: { kind: 'tool', toolName, callId, label },
-        suggestedName: `${toolName}.txt`, content: fullText(content),
+        suggestedName: `${toolName}.txt`, content: full,
       })
-      const totalBytes = content.reduce((total, block) => total + (block.type === 'text' ? Buffer.byteLength(block.text, 'utf8') : 0), 0)
+      const totalBytes = textBytes(content)
       const notice = (bytes: number, count: number): Extract<RetainableBlock, { type: 'text' }> => ({
         type: 'text', text: formatSpillNotice({ kind: 'exact', count: bytes }, ref, count),
       })
       const worstNotice = notice(totalBytes, images.length)
       const reserved = price(GAP) + price({ type: 'text', text: `\n\n${worstNotice.text}` })
       if (price(worstNotice) > maxTokens) throw new Error(`spill notice for ${toolName} exceeds maxInlineTokens`)
-      const retained = retainContent(content, Math.max(0, maxTokens - reserved), price)
+      const budget = Math.max(0, maxTokens - reserved)
+      const retained = retainContent(content, budget, price)
       const footer = notice(retained.omittedBytes, retained.omittedImages)
       const result = retained.head.length + retained.tail.length === 0
         ? [footer]
         : [...retained.head, GAP, ...retained.tail, { type: 'text' as const, text: `\n\n${footer.text}` }]
       // Adjacent text has one framing cost on the wire and in the spill preview.
-      const merged: ContentBlock[] = []
+      const merged: RetainableBlock[] = []
       for (const block of result) {
         const previous = merged.at(-1)
         if (block.type === 'text' && previous?.type === 'text') previous.text += block.text
         else merged.push(block.type === 'text' ? { ...block } : block)
+      }
+      const record: SpillSpilledEventData = {
+        callId, toolName, label,
+        threshold: maxTokens,
+        budgetTokens: budget,
+        retainedTokens: merged.reduce((total, block) => total + price(block), 0),
+        retainedBytes: textBytes(merged),
+        retainedImages: merged.filter(block => block.type === 'image').length,
+        spilledBytes: ref.bytes,
+        omittedBytes: retained.omittedBytes,
+        omittedImages: retained.omittedImages,
+        locator: ref.locator,
+      }
+      try {
+        session.append('spill/spilled', record)
+      } catch (error: unknown) {
+        ctx.logger.warn(`spill-policy: failed to append spill/spilled: ${String(error)}`)
       }
       return merged
     } catch (error: unknown) {

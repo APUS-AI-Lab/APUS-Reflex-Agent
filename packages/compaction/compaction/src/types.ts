@@ -14,14 +14,43 @@ import type { CompactionId } from './brand.ts'
 
 export type { CompactionId }
 
+/** Why automatic policy is asking a backend to consider compaction. */
+export type CompactionTrigger = 'pressure' | 'context-overflow'
+
+/**
+ * Why one compaction transaction runs: an automatic policy trigger, an
+ * on-demand request, or a caller-selected forced region.
+ */
+export type CompactionStartTrigger = CompactionTrigger | 'manual' | 'explicit-region'
+
+/** Automatic hook that requested one compaction. `null` means a direct or manual caller. */
+export type CompactionAutoCaller = 'agent/pre-step' | 'agent/request-error'
+
+/**
+ * What the overflow-recovery path decides from the durable facts when one
+ * compaction transaction closes. `not-applicable` marks the other triggers.
+ */
+export type CompactionRetryDecision = 'retry' | 'preserve-error' | 'not-applicable'
+
 declare module '@deepseek-ai/dsh-session/types' {
   interface SessionEventMap {
     /**
      * Marks the start of a compaction — log-only, holds the lock until
      * `compaction/end`. A numbered owner is strictly enclosed by that open turn;
      * `null` identifies a standalone manual transaction between turns.
+     * `trigger` and `autoCaller` state why the transaction ran. Both are
+     * optional because records written before they existed remain readable;
+     * new appends write them.
      */
-    'compaction/start': { compactionId: CompactionId; sourceCommandId?: CommandId; turn: number | null }
+    'compaction/start': {
+      compactionId: CompactionId
+      sourceCommandId?: CommandId
+      turn: number | null
+      /** Automatic policy, on-demand request, or caller-selected forced region. */
+      trigger?: CompactionStartTrigger
+      /** Automatic hook that requested it; `null` for direct and manual callers. */
+      autoCaller?: CompactionAutoCaller | null
+    }
     /**
      * Completed summary, its inputs, and its model call facts — log-only, no surfaceOp.
      * The summary content is in `data.summary`; the actual surface replacement
@@ -68,8 +97,24 @@ declare module '@deepseek-ai/dsh-session/types' {
     /**
      * Marks the end of a compaction — log-only, releases the lock. Its owner
      * matches `compaction/start`; `error` records an unsuccessful attempt.
+     * `generationAdvanced`, `retryDecision`, and `recovered` state the durable
+     * facts visible when the attempt closed, mirroring the overflow listener's
+     * retry authorization without participating in it. They are optional
+     * because records written before they existed remain readable; new appends
+     * write them.
      */
-    'compaction/end': { compactionId: CompactionId; sourceCommandId?: CommandId; turn: number | null; error?: string }
+    'compaction/end': {
+      compactionId: CompactionId
+      sourceCommandId?: CommandId
+      turn: number | null
+      error?: string
+      /** Whether the surface replacement generation advanced from this attempt's retry baseline. */
+      generationAdvanced?: boolean
+      /** The overflow-recovery decision; `not-applicable` outside overflow recovery. */
+      retryDecision?: CompactionRetryDecision
+      /** Whether this attempt authorized the failing request's retry. */
+      recovered?: boolean
+    }
     /**
      * Shadow price of one model-free prune replacement — log-only, no
      * surfaceOp. The shared shadow-price protocol: a surface `replace` event

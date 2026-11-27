@@ -8,7 +8,7 @@
  */
 
 import { Context, Service } from '@deepseek-ai/cordis'
-import type {} from '@deepseek-ai/dsh-agent'
+import type { Agent } from '@deepseek-ai/dsh-agent'
 import { HarnessError } from '@deepseek-ai/dsh-llm'
 import { scopeTarget } from '@deepseek-ai/dsh-scope'
 
@@ -24,7 +24,7 @@ import type {
 
 export type {
   AskUserQuestionAnswer, AskUserQuestionAnswerItem, AskUserQuestionIntent, AskUserQuestionItem,
-  AskUserQuestionOption,
+  AskUserQuestionOption, UserQuestionAnsweredBy,
 } from './types.ts'
 
 /** Request for a human answer. */
@@ -76,7 +76,11 @@ export class UserQuestionService extends Service {
    * block forever, while a lineage-bearing session resumed as a new runtime
    * root may ask normally.
    *
-   * @param request Questions, owner agent, and abort signal.
+   * A successful answer appends the log-only `user-question/answered` receipt
+   * to the calling agent's session. The receipt never changes the returned
+   * answer and is skipped for an agentless ask (no session to record it on).
+   *
+   * @param request Questions, owner agent, optional tool call, and abort signal.
    * @returns The answer chosen or typed by the human.
    * @throws {UserQuestionError} code `ASK_ABORTED` when the supplied signal
    *   is already or becomes aborted, `CALLER_NOT_LIVE` when a supplied agent
@@ -132,7 +136,7 @@ export class UserQuestionService extends Service {
       'NO_PROVIDER',
     ))
     try {
-      return await (agent === undefined
+      const answer = await (agent === undefined
         ? this.ctx.waterfall('user-questions/request', request, noAnswerer)
         : this.ctx.waterfall(
           scopeTarget(agent, agent),
@@ -140,6 +144,8 @@ export class UserQuestionService extends Service {
           { ...request, agent },
           noAnswerer,
         ))
+      this.recordAnswered(agent, request)
+      return answer
     } catch (error) {
       const restored = restoreUserQuestionError(error)
       if (restored instanceof UserQuestionError) throw restored
@@ -147,6 +153,27 @@ export class UserQuestionService extends Service {
         throw abortedQuestion(error)
       }
       throw restored
+    }
+  }
+
+  /**
+   * Append the log-only answer receipt to the calling agent's session. The
+   * waterfall exposes no per-answerer identity, so `answeredBy` is
+   * `'unattributed'`; the receipt is informational and never authoritative.
+   * A failed append is contained so it cannot turn an answered question into
+   * a failure.
+   * @param agent - the caller that supplied a live runtime root, when any.
+   * @param request - the answered request providing the optional tool call id.
+   */
+  private recordAnswered(agent: Agent | undefined, request: AskUserQuestionRequest): void {
+    if (agent === undefined) return
+    try {
+      agent.session.append('user-question/answered', {
+        answeredBy: 'unattributed',
+        ...request.callId === undefined ? {} : { callId: request.callId },
+      })
+    } catch (error) {
+      this.ctx.logger.warn(`user-question/answered receipt append failed; the answer is unaffected: ${String(error)}`)
     }
   }
 }

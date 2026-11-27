@@ -68,6 +68,10 @@ A missing owner or spill backend, failed storage, missing route image pricing, o
 
 PTC programs receive complete canonical values. Image-bearing sub-results are bounded before forwarding to the model; when every image is omitted, the model still receives the retained text and recovery notice. The dispatch log uses the same retained content. Text-only sub-call logs, including `read`, are bounded asynchronously without delaying program values.
 
+### The spill record
+
+Each replacement appends one log-only `spill/spilled` event to the owning session. The payload names the tool call and the replaced copy (`label`: `result` or `dispatch`), the effective `threshold` (`maxInlineTokens`), the retention `budgetTokens` left after reserving the gap and worst-case notice, the final `retainedTokens`, text `retainedBytes` and `retainedImages`, `spilledBytes`, `omittedBytes`, `omittedImages`, and the backend `locator`. No digests are recorded: the stored text embeds wall-clock times and the replacement embeds the per-run locator name, so a hash could never replay. The record never changes recovery, projection, or replay: the owning `tool/result` or `tool/ptc-dispatch` event remains authoritative, and the stored text remains the recovery source. A failed append logs a warning and does not undo a successful replacement.
+
 -----
 
 <a id="understand-the-implementation"></a>
@@ -95,9 +99,10 @@ The browser-safe `./notice` entry owns `formatSpillNotice(omitted, ref, images)`
 
 | File | Role |
 |---|---|
-| [`src/index.ts`](src/index.ts) | Plugin entry: `Config` validation, the two waterfall listeners, the shared replacement helper |
+| [`src/index.ts`](src/index.ts) | Plugin entry: `Config` validation, the two waterfall listeners, the shared replacement helper, and the `spill/spilled` record |
 | [`src/notice.ts`](src/notice.ts) | Browser-safe notice formatting and recognition, published as `./notice` |
 | [`src/retention.ts`](src/retention.ts) | Pure ordered text/image head-tail retention |
+| [`src/types.ts`](src/types.ts) | Minimal execution view, `spill/spilled` payload, and its `SessionEventMap` declaration |
 | — | No runtime invariant companion is published; this package exposes no independent event sequence or mutable data relation beyond contracts enforced at its owning seam. |
 
 ### Failure modes

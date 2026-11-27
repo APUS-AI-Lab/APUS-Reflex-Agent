@@ -30,10 +30,11 @@ User-interaction Service Definition. It owns `ctx.userQuestions`, the service a 
 
 ### Key Types
 
-- `AskUserQuestionRequest` — `{ questions: [{ id, question, detail?, header?, options?, multiSelect?, intent? }], agent?, signal? }`; `detail` supplies supporting text that providers render with the question without turning it into an option label. When present, `agent` must be the registry's exact live runtime root.
+- `AskUserQuestionRequest` — `{ questions: [{ id, question, detail?, header?, options?, multiSelect?, intent? }], agent?, callId?, signal? }`; `detail` supplies supporting text that providers render with the question without turning it into an option label. When present, `agent` must be the registry's exact live runtime root; `callId` links the ask to the tool call awaiting it.
 - `AskUserQuestionOption` — `{ label, description? }`.
 - `AskUserQuestionIntent` — `{ kind: 'plan-review', approve }`; the tagged presentation intent below.
 - `AskUserQuestionAnswer` — `{ answers: [{ id, selected, custom? }] }`.
+- `UserQuestionAnsweredBy` — `'unattributed'`; the waterfall declares no stable per-answerer identity, so the answer receipt never infers a name.
 - `UserQuestionError` — `HarnessError` subclass with codes such as `EMPTY_QUESTIONS`, `BAD_INTENT`, `NO_PROVIDER`, `ASK_ABORTED`, `CALLER_NOT_LIVE`, and `DELEGATED_CALLER`.
 
 For a single-select question, `custom` overrides the selected choice and `selected` is empty. For a multi-select question, `custom` may supplement the labels in `selected`. A UI may preserve a skipped item as `{ id, selected: [] }`, keeping the existing answer shape while retaining other answers in the batch.
@@ -43,6 +44,10 @@ When a request carries an agent, `ask()` authenticates its exact identity throug
 ### Presentation intent
 
 `intent` declares that a question IS a known kind of decision, so a UI that recognises the tag may present it as such — `plan-review` says `detail` is a plan under review, and `dsh-plan-mode` sets it on the `exit_plan_mode` question. An intent changes presentation only: a UI honouring it answers with the same option labels a generic UI would send, and a UI that does not know the tag renders the generic option list, so callers read the same answer fields either way. `approve` names the label that approves rather than relying on option order. `ask()` rejects with `BAD_INTENT` the two assertions no type can carry: an `approve` naming none of that question's own options, and an intent on a question with no `detail` — the thing it declares itself a review of.
+
+### Answer receipt
+
+After an answerer returns, `ask()` appends the log-only `user-question/answered` event to the calling agent's session: `callId` when the asker supplied one and `answeredBy: 'unattributed'`. The event's `time` is when the answers returned. It is never model context — the consuming tool's `tool/result` remains the authoritative model-visible record. An ask with no accepting answerer, an abort, or an answerer failure logs nothing and keeps its existing error path, and a failed receipt append is contained without changing the answer. An agentless ask has no session and writes no receipt.
 
 <a id="role"></a>
 ## Role
@@ -63,6 +68,7 @@ No direct invalidation; the named consumer owns any request-prefix changes.
 <a id="known-limitations-and-deferred-work"></a>
 
 - **Agent-scoped Web answering** — Remote Events route the shipped Web answerer only when the request carries a live Agent scope; agentless callers need an unscoped local waterfall listener.
+- **No answerer identity** — `user-question/answered` records `answeredBy: 'unattributed'`; the waterfall cannot name the listener that returned the answers.
 - **The vocabulary is the question-form shape only** — selectable options plus optional custom text; richer interaction shapes (file pickers, diff-preview confirmations) have no seam vocabulary yet.
 
 
@@ -78,4 +84,4 @@ The optional plan-review `callId` identifies the logged tool invocation for docu
 
 </details>
 
-**Runtime invariant:** No companion is published. The answerer waterfall is resolved per request and returns directly to its caller; the seam publishes no independent request/answer audit stream.
+**Runtime invariant:** No companion is published. The answerer waterfall is resolved per request and returns directly to its caller. The only persistent record is the log-only `user-question/answered` receipt, which is informational and never an authoritative audit stream.

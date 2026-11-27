@@ -51,9 +51,13 @@ The subprocess starts lazily on first use and stays owned by the instance across
 
 ### Lower-level control with HarnessClient
 
-`HarnessClient` is the protocol client under the run API: explicit `start()`, `initialize()`, `prompt()`, `request()`, and `close()`, plus notification subscriptions. `prompt()` returns the queued message id as soon as the runtime accepts it and never waits for agent activity. `subscribe(filter?)` returns a `NotificationSubscription` (awaitable `next()`, non-blocking `tryNext()`, async iteration); `subscribeSessionTree(id)` scopes to one session and the descendants discovered from `subagent.started` lineage edges — the runtime notifies for every session in its context, and scoping is client-side, exactly like the Python SDK.
+`HarnessClient` is the protocol client under the run API: explicit `start()`, `initialize()`, `prompt()`, `cancelSession()`, `request()`, and `close()`, plus notification subscriptions. `prompt()` returns the queued message id as soon as the runtime accepts it and never waits for agent activity. `cancelSession(sessionId)` stops that session's active and queued work and resolves only after the runtime confirmed the session reached quiescence; other sessions and the process stay alive, and `DeepSeekHarness.cancelSession` exposes the same call above the run API. A prompt already in flight when the cancellation arrived is refused; a later prompt on the same session starts new work. A refused, failed, unconfirmed, or timed-out cancellation raises its typed error instead of resolving. `subscribe(filter?)` returns a `NotificationSubscription` (awaitable `next()`, non-blocking `tryNext()`, async iteration); `subscribeSessionTree(id)` scopes to one session and the descendants discovered from `subagent.started` lineage edges — the runtime notifies for every session in its context, and scoping is client-side, exactly like the Python SDK.
 
 The client exports typed errors for every failure mode: `JsonRpcResponseError` (a wire error response, code and data preserved), `RequestTimeoutError` (a configured bound elapsed), `SdkProtocolError` (a response outside the documented protocol), and `TransportClosedError` (the runtime is gone — the message carries the exit code and a bounded stderr tail). `close()` requests protocol `shutdown` (bounded by `shutdownTimeoutMs`, default 1000 ms), then walks a stdin-EOF → SIGTERM → SIGKILL ladder until the process has exited; it is idempotent, and a closed client refuses reuse. `HarnessClientOptions.env` replaces the child environment entirely when given (`undefined` inherits the parent's); callers own credential policy — `scrubbedParentEnv` from `dsh-subprocess` is the shared scrub base for isolation-minded launches.
+
+### Recorded dispatches and request views
+
+When the runtime advertises `request-view/dispatch-v1`, `capabilities` (on both `HarnessClient` and `DeepSeekHarness`, populated by `initialize`) contains that token, and two read-only calls transport the runtime's answers: `dispatches(sessionId)` lists a session's recorded model dispatches, and `requestView(sessionId, dispatchSeq)` returns one dispatch's rebuilt messages, header, tools, and tool history. The runtime owns the reconstruction through its native Session primitives; this client validates the answer envelope and never builds a message projection of its own. A refused view arrives as `JsonRpcResponseError` whose `data.code` classifies it (`SESSION_NOT_FOUND`, `DISPATCH_NOT_FOUND`, `PREFIX_UNAVAILABLE`, `UNSUPPORTED_PROJECTION`); the view is the loop-level request, not a provider's mapped wire body. Against a runtime without the capability, both methods fail with the runtime's unknown-method error.
 
 -----
 
@@ -122,9 +126,10 @@ None in the client process. Profile, patch, provider, model, and history choices
 These limits define when the client is a poor fit or needs special care. They are current package constraints, not a comparison with other SDK clients or a task backlog.
 
 - **No bundled-runtime resolution** — the client resolves the same-version `@deepseek-ai/dsh` package (or a caller-provided `dshBin`); packaged-executable discovery stays Python-side until a TypeScript distribution consumer exists.
-- **No mid-turn cancel** — the wire has no prompt-cancel method; abandoning a turn means closing the runtime (see the [protocol limitations](../protocol/README.md#known-limitations-and-deferred-work)).
-- **No per-prompt result** — low-level `prompt()` returns only an enqueue receipt; high-level `run()` owns receipt-to-idle collection, and abandoning it means closing the runtime.
+- **Cancellation is session-wide** — `cancelSession()` stops a session's active turn and clears its queued work; there is no single-prompt cancel, and the call reports no result for the discarded work.
+- **No per-prompt result** — low-level `prompt()` returns only an enqueue receipt; high-level `run()` owns receipt-to-idle collection, and a concurrent `cancelSession()` for the same session ends that interval without a run result.
 - **Client→server notifications and server→client requests are unimplemented** on both wire ends; the transport carries them for future approval flows.
+- **Request views depend on the runtime** — `dispatches()` and `requestView()` relay what the runtime recorded and reconstructed. Against a runtime with `recordLlmDispatch` off, they fail as unknown methods; the client never fabricates a view. See the [protocol limits](../protocol/README.md#known-limitations-and-deferred-work).
 
 <a id="dev-note"></a>
 ### Dev Note

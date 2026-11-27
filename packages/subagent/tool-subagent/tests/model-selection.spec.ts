@@ -449,3 +449,33 @@ describe('dsh-tool-subagent model selection', () => {
     expect(starts).toBe(0)
   })
 })
+
+  it('records the resolved child route on an accepted delegation', async () => {
+    // The policy states what a child may select; this records what one
+    // delegation actually got, which neither the tool call nor the child's own
+    // log carries.
+    const observed: Array<{ type: string; data: unknown }> = []
+    const ctx = await setup({ provider: 'mock', withModelSelection: true })
+    ctx.llm.registerAdapter(['alpha'], new MockAdapter([], REASONING))
+    const parent = modelSelectionSetupAgent(ctx)
+    ;(parent as { options: Agent['options'] }).options = parentWithRoute().options
+    ctx.on('session/event', (_session, event) => {
+      if (event.type === 'subagent/model-selection-observation') {
+        observed.push({ type: event.type, data: event.data })
+      }
+    })
+
+    const result = await callSubagent(ctx, {
+      description: 'route work',
+      prompt: 'do it',
+      provider: 'alpha',
+      model: 'fast-model',
+    })
+
+    expect(result.isError, text(result)).toBe(false)
+    expect(observed).toHaveLength(1)
+    expect(observed[0]?.data).toMatchObject({
+      requested: { provider: 'alpha', model: 'fast-model' },
+      policyConstrained: true,
+    })
+  })

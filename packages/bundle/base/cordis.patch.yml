@@ -403,6 +403,9 @@
     - id: timeout-policy
       name: '@deepseek-ai/dsh-tool-call-timeout-policy'
 
+    - id: retry-policy
+      name: '@deepseek-ai/dsh-tool-call-retry-policy'
+
     - id: spill-local
       name: '@deepseek-ai/dsh-spill-local'
 

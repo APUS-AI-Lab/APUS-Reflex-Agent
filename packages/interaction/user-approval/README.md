@@ -83,7 +83,7 @@ The system-prompt contribution `approval:policy` states the complete current mea
 
 ### Audit
 
-`request()` appends `approval/asked` with the request identity and tool, then `approval/decided` with the closed outcome; the exact appended fields live in [`src/index.ts`](src/index.ts). Both are log-only; the invariant validates the pair by id within one open turn and the closed outcome vocabulary.
+`request()` appends `approval/asked` with the request identity and tool, then `approval/decided` with the closed outcome plus `decisionPath` — where the aggregate settled: the request signal, the session policy, an answerer, the delegated fail-closed default, a contained answerer failure, or the abort race — and, when an answerer returned, `responder: 'unattributed'`. The waterfall exposes no stable per-answerer identity, so a responder name is never inferred. Both events are log-only; the invariant validates the pair by id within one open turn and the closed outcome vocabulary.
 
 </details>
 
@@ -155,6 +155,7 @@ These limits define when the seam is a poor fit or needs special composition car
 - **Only one-shot grants exist** — the outcome vocabulary has `allowed-once` but no `allow-always`, remembered rule, revocation, or grant store; session policy is only `ask` / `never`.
 - **The request carries no tool arguments** — an answerer sees the tool name, reason, and optional call id; the ACP machine channel requires a call id and delegates requests without one.
 - **No built-in answerer** — headless or incompletely composed deployments resolve `unavailable` and fail closed; the service itself never prompts a human.
+- **No answerer identity in the audit** — `approval/decided` records that an answerer returned as `'unattributed'`; the waterfall cannot name the listener that claimed the request.
 
 <a id="dev-note"></a>
 ### Dev Note

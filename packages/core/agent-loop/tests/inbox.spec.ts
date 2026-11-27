@@ -6,6 +6,9 @@ import type { UserMessage } from '@deepseek-ai/dsh-session'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import { describe, expect, it, onTestFinished } from 'vitest'
 import { inboxProjectionDefinition, ReactLoopInbox } from '../src/inbox.ts'
+// Type-only: merges the loop's durable observation events (turn/stopping,
+// tool/execution-plan) onto SessionEventMap.
+import type {} from '../src/types.ts'
 
 function unsupportedInbox(): Agent['inbox'] {
   const rejectMutation = (): never => {
@@ -265,6 +268,8 @@ describe('ReactLoopInbox', () => {
     expect(agent.inbox.nextTurn).toEqual([])
     expect(agent.inbox.nextStep).toEqual([])
     expect(discarded).toEqual([nextStep, nextTurn])
+    // A discard is fully described by the splice itself: `outcome: 'canceled'`
+    // plus `removedCount`, with the removed message identities in `removed`.
     expect(session.snapshotEvents().slice(beforeClear).map(event => event.type === 'agent/inbox/spliced'
       ? event.data
       : event.type)).toEqual([

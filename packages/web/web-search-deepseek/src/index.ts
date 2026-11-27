@@ -10,6 +10,7 @@ import type { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import type {} from '@deepseek-ai/dsh-agent'
 import { credentialRef } from '@deepseek-ai/dsh-credentials'
+import type { SearchProtocolSetting } from './protocol.ts'
 import { launchEnvironmentOf } from '@deepseek-ai/dsh-launch-environment'
 import type {} from '@deepseek-ai/dsh-session'
 import type {} from '@deepseek-ai/dsh-web'
@@ -58,6 +59,16 @@ export interface Config {
   maxTokens: Volatile<number>
   /** Maximum `web_search` server-tool uses per request. Defaults to 5. */
   maxUses: Volatile<number>
+  /**
+   * Wire dialect for the search request.
+   *
+   * `auto` (default) probes on the first search and remembers whichever dialect
+   * answered: an Anthropic-compatible endpoint takes `/v1/messages` with the
+   * `web_search_20250305` server tool, an OpenAI-compatible gateway takes
+   * `/v1/responses` with `tools: [{ type: 'web_search' }]`. Pin one only when
+   * the deployment forbids probing.
+   */
+  protocol: Volatile<SearchProtocolSetting>
 }
 
 export const Config = z.object({
@@ -71,6 +82,7 @@ export const Config = z.object({
   apiVersion: z.string().default(DEEPSEEK_DEFAULT_API_VERSION).volatile(),
   maxTokens: z.number().step(1).min(1).default(DEEPSEEK_DEFAULT_MAX_TOKENS).volatile(),
   maxUses: z.number().step(1).min(1).default(DEEPSEEK_DEFAULT_MAX_USES).volatile(),
+  protocol: z.union(['auto', 'anthropic', 'openai-responses']).default('auto').volatile(),
 })
 
 /**
@@ -107,6 +119,7 @@ function resolveOptions(
       return ambient !== undefined && ambient.value.length > 0 ? ambient.value : undefined
     },
     apiKeyEnv,
+    protocol: config.protocol,
     baseURL: config.baseURL
       ?? launchEnvironmentOf(ctx).get(SEARCH_BASE_URL_ENV)?.value
       ?? DEEPSEEK_DEFAULT_BASE_URL,
@@ -128,5 +141,6 @@ export function apply(ctx: Context, config: Config): void {
   ctx.web.registerSearchProvider(new DeepSeekSearchProvider(() => resolveOptions(ctx, {
     apiKey: config.apiKey.get(), apiKeyEnv: config.apiKeyEnv.get(), baseURL: config.baseURL.get(), model: config.model.get(),
     apiVersion: config.apiVersion.get(), maxTokens: config.maxTokens.get(), maxUses: config.maxUses.get(),
+    protocol: config.protocol.get(),
   })))
 }

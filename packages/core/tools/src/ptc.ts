@@ -595,6 +595,12 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
                 isError: result.isError,
                 ...result.error?.info === undefined ? {} : { error: result.error.info },
                 content: logged,
+                // Owner-private scheduling facts: the run's cap, submission order,
+                // and how many siblings were in flight. The two events' `time`
+                // fields give the wall-clock span.
+                maxParallelSubCalls: maxParallel,
+                submissionIndex: n,
+                concurrentSubCallsAtSettle: inFlight.size,
               })
             })().finally(() => { logWork.delete(task) })
             logWork.add(task)
@@ -615,6 +621,9 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
                 subCallId,
                 name,
                 arguments: normalized.logged,
+                maxParallelSubCalls: maxParallel,
+                submissionIndex: n,
+                concurrentSubCallsAtStart: inFlight.size,
               })
               // Ordered prepare runs INSIDE the driver lane: the next entry's
               // pre-execute waits for this resolution, as under the native

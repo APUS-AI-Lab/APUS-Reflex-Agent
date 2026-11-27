@@ -233,7 +233,15 @@ export class JsonRpcLineTransport implements JsonRpcTransportPeer {
       const result = await handler(method, params)
       this.write({ jsonrpc: '2.0', id, result })
     } catch (error) {
-      this.writeError(id, -32603, error instanceof Error ? error.message : String(error))
+      // A handler that attaches structured `data` keeps it on the wire: typed
+      // refusals (for example a request-view code) are part of the contract.
+      const data = (error as { data?: unknown } | null)?.data
+      this.writeError(
+        id,
+        -32603,
+        error instanceof Error ? error.message : String(error),
+        data === undefined ? undefined : data,
+      )
     }
   }
 
@@ -253,8 +261,16 @@ export class JsonRpcLineTransport implements JsonRpcTransportPeer {
     pending.resolve(frame.result)
   }
 
-  private writeError(id: JsonRpcId, code: number, message: string): void {
-    this.write({ jsonrpc: '2.0', id, error: { code, message } })
+  /**
+   * Write one error response, including structured `data` when the handler
+   * attached it.
+   * @param id - the request being answered.
+   * @param code - the JSON-RPC error code.
+   * @param message - the human-readable message.
+   * @param data - optional classified payload (for example a request-view refusal code).
+   */
+  private writeError(id: JsonRpcId, code: number, message: string, data?: unknown): void {
+    this.write({ jsonrpc: '2.0', id, error: { code, message, ...data === undefined ? {} : { data } } })
   }
 
   private write(message: Record<string, unknown>): void {

@@ -129,6 +129,9 @@ export class LocalBashExecutor extends ShellExecutor {
     assertPositiveFinite('request.stdoutMaxBytes', stdoutMaxBytes)
     return {
       command: request.command,
+      // Carried through so an executor that runs elsewhere can tell which
+      // agent's environment this command belongs to.
+      ...request.agentId === undefined ? {} : { agentId: request.agentId },
       workdir: request.workdir ?? this.config.cwd.get() ?? process.cwd(),
       timeoutMs,
       onExpiry: request.onExpiry ?? 'kill',
@@ -158,6 +161,7 @@ export class LocalBashExecutor extends ShellExecutor {
       ({ maxBytes, spill: { maxBytes: this.config.maxSpillBytes.get() } })
     return {
       argv,
+      ...spec.agentId === undefined ? {} : { agentId: spec.agentId },
       cwd: spec.workdir,
       stdio: {
         stdin: spec.stdin !== undefined ? { data: spec.stdin } : 'ignore',
@@ -271,8 +275,6 @@ export class LocalBashExecutor extends ShellExecutor {
     const spawned = preparationTimedOut
       ? Promise.resolve({ exitCode: null, signal: null })
       : running !== undefined ? running.done
-      // The original throw is preserved for callers even when it was not an Error.
-      // eslint-disable-next-line prefer-promise-reject-errors
         : Promise.reject(spawnThrow())
 
     // A provider rejection produces no process output, so the subprocess

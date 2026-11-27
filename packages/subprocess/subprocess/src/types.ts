@@ -77,6 +77,12 @@ export interface SubprocessStdio {
 export interface SubprocessSpawnSpec {
   /** Executable and arguments; `argv[0]` is the program. Never shell-interpreted here. */
   argv: readonly string[]
+  /**
+   * The agent this command runs for. One process serves several agents, and a
+   * runtime whose execution world is another container needs it to pick the
+   * right one; a runtime that runs commands here ignores it.
+   */
+  agentId?: string | undefined
   /** Working directory for the child. */
   cwd: string
   /** Per-stream stdio dispositions. */

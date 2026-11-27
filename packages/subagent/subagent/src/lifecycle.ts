@@ -149,6 +149,69 @@ export interface SteerableRun {
 export const SUBAGENT_ACTIVITY_NOTE_MAX_CHARS = 200
 
 /**
+ * Durable payload of one `subagent/run-end` record.
+ *
+ * The lifecycle edge (`subagent/end`) is a live notification; this is the
+ * durable fact that a delegated run reached a terminal state, written to the
+ * parent session so a trajectory reader can pair it with the delegation that
+ * started it without replaying the notification stream.
+ */
+export interface SubagentRunEndData {
+  /** Identity shared with the start edge of the same run. */
+  readonly runId: SubagentRunId
+  /** Provider that established the run. */
+  readonly provider: string
+  /** The child agent's session id. */
+  readonly id: SessionId
+  /** Whether the run held a local child agent in this process. */
+  readonly local: boolean
+  /** Why the run ended. */
+  readonly stopReason: SubagentResult['stopReason']
+}
+
+declare module '@deepseek-ai/dsh-session/types' {
+  interface SessionEventMap {
+    /**
+     * Durable record that one delegated subagent run reached a terminal state,
+     * appended to the parent session after the live `subagent/end` edge. Only a
+     * run whose start edge was emitted writes it: a creation failure before
+     * the run started owns no end edge and no durable end fact. Assert-only:
+     * a rejected append must not change how the run settles.
+     */
+    'subagent/run-end': SubagentRunEndData
+  }
+}
+
+/**
+ * Append the durable end fact for one settled run.
+ *
+ * The append is observational: a session that refuses the record (an older
+ * reader, a closed log) must not turn a successful delegation into a failure,
+ * so the rejection is contained rather than propagated.
+ * @param parent - the delegating agent whose session owns the record.
+ * @param identity - the run identity published on its start edge.
+ * @param stopReason - why the run ended.
+ */
+function appendRunEnd(
+  parent: Agent,
+  identity: { runId: SubagentRunId; provider: string; id: SessionId; local: boolean },
+  stopReason: SubagentResult['stopReason'],
+): void {
+  try {
+    parent.session.append('subagent/run-end', {
+      runId: identity.runId,
+      provider: identity.provider,
+      id: identity.id,
+      local: identity.local,
+      stopReason,
+    })
+  } catch (error: unknown) {
+    // Diagnostic only: the tool result and the run's own outcome are unaffected.
+    void error
+  }
+}
+
+/**
  * Emit the start/end lifecycle pair for one accepted one-shot run.
  * @param emit - the contained lifecycle emitter.
  * @param provider - the provider that established the run.
@@ -194,6 +257,10 @@ export function observeRun(
     steerable: steer !== undefined,
   }
   let settled = false
+  // A run that fails before its start edge owns neither an end edge nor a
+  // durable run-end fact: the start emission below sets this, and a creation
+  // failure that rejects first leaves it false.
+  let started = false
   // Attach the terminal observer before dispatching start. Promise reactions
   // still run after this synchronous start emission, preserving start → end.
   void run.result.then(
@@ -206,17 +273,20 @@ export function observeRun(
         // Omit the field when no output exists, matching continuable epochs.
         ...result.output.length === 0 ? {} : { lastAssistantMessage: result.output },
       }, parent)
+      if (started) appendRunEnd(parent, identity, result.stopReason)
     },
     () => {
       settled = true
       steerable.delete(identity.runId)
       emit('subagent/end', { ...identity, stopReason: 'error' }, parent)
+      if (started) appendRunEnd(parent, identity, 'error')
     },
   )
   if (steer !== undefined || recover !== undefined) {
     steerable.set(identity.runId, { provider, parent, steer, accepted, humanRevision: 0, recover, recoveryState })
   }
   emit('subagent/start', identity, parent)
+  started = true
   bindActivity((activity) => {
     if (settled) return
     const note = activity.note?.trim()
@@ -270,10 +340,14 @@ export function createActivationObserver(
   const terminal = (failure: unknown): ActivationTerminal => failure === undefined
     ? captured
     : { stopReason: 'error' }
+  // An epoch that fails before its start edge owns neither an end edge nor a
+  // durable run-end fact; `start` below sets this.
+  let started = false
   return {
     start: (child: Agent): void => {
       boundary = child.session.seq
       emit('subagent/start', identity, parent)
+      started = true
     },
     capture: (child: Agent): void => {
       // oxlint-disable-next-line typescript/no-deprecated -- Existing Session history read; migration deferred.
@@ -292,6 +366,7 @@ export function createActivationObserver(
         stopReason,
         ...output === undefined ? {} : { lastAssistantMessage: output },
       }, parent)
+      if (started) appendRunEnd(parent, identity, stopReason)
     },
   }
 }

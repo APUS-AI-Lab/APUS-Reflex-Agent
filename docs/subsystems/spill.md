@@ -85,6 +85,10 @@ interface SpillRef {
 type SpillLocator = Branded<'SpillLocator'>
 ```
 
+## The spill record
+
+Each replacement appends one log-only `spill/spilled` event to the owning session. The payload names the tool call and the replaced copy (`label`: `result` or `dispatch`), the effective `threshold` (`maxInlineTokens`), the retention `budgetTokens` left after reserving the gap and worst-case notice, the final `retainedTokens`, text `retainedBytes` and `retainedImages`, `spilledBytes`, `omittedBytes`, `omittedImages`, the backend `locator`, and SHA-256 `originalDigest`/`previewDigest` values for the complete stored text and the replacement content. The record never changes recovery, projection, or replay: the owning `tool/result` or `tool/ptc-dispatch` event remains authoritative, and the stored text remains the recovery source. A failed append logs a warning and does not undo a successful replacement.
+
 ## The service
 
 `SpillStore` (`ctx.spillStore`, defined in [`packages/spill/spill/src/index.ts`](../../packages/spill/spill/src/index.ts)) is a one-method abstract service: `saveText(input) → Promise<SpillRef>`. It persists the FULL `content` and REJECTS on a real storage failure (permissions, ENOSPC, backend unavailable). The seam owns storage only: no retention policy, no tool-result replacement, no retrieval/search API.

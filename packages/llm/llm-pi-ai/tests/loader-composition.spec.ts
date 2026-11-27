@@ -110,6 +110,37 @@ describe('llm-pi-ai real dormant composition', () => {
     expect(server.headers[0]?.authorization).toBe('Bearer key-from-store')
   })
 
+  it('reports an HTML API response through the provider loaded from profile settings', async () => {
+    vi.stubEnv('PI_COMPOSITION_KEY', '')
+    const server = await mockServer([{
+      body: '<html><title>Gateway console</title></html>',
+      headers: { 'content-type': 'text/html; charset=utf-8' },
+    }])
+    const { ctx, settingsPath } = await loadComposition()
+    await writeFile(settingsPath, [
+      '- id: llm-pi-ai',
+      '  config:',
+      '    providers:',
+      '      gateway:',
+      '        apiKeyEnv: PI_COMPOSITION_KEY',
+      '        api: openai-completions',
+      `        baseURL: ${server.url}`,
+      '        models:',
+      '          - id: test-model',
+      '',
+    ].join('\n'))
+    await vi.waitFor(() => {
+      expect(ctx.llm.listProviders().map(provider => provider.id)).toEqual(['gateway'])
+    }, { timeout: 5000 })
+
+    const result = await assemble(ctx, { provider: 'gateway', model: 'test-model', messages: [] })
+    expect(result.finish).toMatchObject({
+      kind: 'error', failure: { code: 'INVALID_REQUEST' },
+    })
+    expect(server.paths).toEqual(['/chat/completions'])
+    expect(server.headers[0]?.authorization).toBe('Bearer key-from-store')
+  }, 15000)
+
   it('uses settings-only route headers for model discovery', async () => {
     vi.stubEnv('PI_COMPOSITION_KEY', '')
     const server = await mockServer([{ body: JSON.stringify({ data: [{ id: 'acme-private' }] }) }])

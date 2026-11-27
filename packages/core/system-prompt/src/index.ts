@@ -279,10 +279,34 @@ export interface Config {
  * @returns the rendered prompt, or `''` when all sections are empty.
  */
 export function renderPrompt(assembly: PromptAssembly): string {
+  return joinPromptSections(renderPromptSections(assembly))
+}
+
+/**
+ * Render each prompt section once and keep the named, non-empty results.
+ *
+ * A consumer that also needs the prompt text joins this list with
+ * {@link joinPromptSections}, so interpolation runs on one path for both.
+ * Sections with `interpolate: false` retain literal text.
+ * @param assembly - the assembly whose sections and variables to render.
+ * @returns resolved sections in assembly order, omitting empty text.
+ */
+export function renderPromptSections(assembly: PromptAssembly): AssembledSection[] {
   return assembly.sections
-    .map(section => section.interpolate === false ? section.text : interpolate(section, assembly.variables, 'section'))
-    .filter(text => text.length > 0)
-    .join('\n\n')
+    .map(section => ({
+      ...section,
+      text: section.interpolate === false ? section.text : interpolate(section, assembly.variables, 'section'),
+    }))
+    .filter(section => section.text.length > 0)
+}
+
+/**
+ * Join already-rendered prompt sections into the model-facing prompt.
+ * @param sections - sections from {@link renderPromptSections}.
+ * @returns the blank-line-joined text, or `''` when no section has text.
+ */
+export function joinPromptSections(sections: readonly AssembledSection[]): string {
+  return sections.map(section => section.text).join('\n\n')
 }
 
 /**

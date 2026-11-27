@@ -109,6 +109,70 @@ async function settleSubagent(
 }
 
 describe('HarnessSdkJsonRpcServer', () => {
+  it('binds a requested preset before the first prompt and freezes it for the session', async () => {
+    const agents = new Map<string, Agent>()
+    const followups = new Map<string, number>()
+    const mount = vi.fn(async () => ({ id: 'benchmark-task' }))
+    const agentCtx = new Context()
+    const create = vi.fn(async (options: import('@deepseek-ai/dsh-agent').CreateAgentOptions) => {
+      const agent = Object.assign({} as Agent, {
+        id: options.sessionId,
+        followup: () => { followups.set(String(options.sessionId), (followups.get(String(options.sessionId)) ?? 0) + 1) },
+      })
+      await options.setup?.(agentCtx, agent)
+      agents.set(String(options.sessionId), agent)
+      return { agent, dispose: async () => {} }
+    })
+    const ctx = new Context()
+    ctx.provide('agents', { create, get: (id: SessionId) => agents.get(String(id)) })
+    ctx.provide('agentPresets', { mount })
+    const server = new HarnessSdkJsonRpcServer(ctx, new FakeTransport())
+    Object.assign(server, { initialized: true })
+    const contentBlocks = [{ type: 'text' as const, text: 'inspect the task' }]
+    try {
+      await server.prompt({ sessionId: 'task', agentPreset: 'benchmark-task', contentBlocks })
+      expect(mount).toHaveBeenCalledWith(agentCtx, 'benchmark-task')
+      expect(create.mock.calls[0]?.[0].meta?.agentPreset).toBe('benchmark-task')
+      await server.prompt({ sessionId: 'task', contentBlocks })
+      await expect(server.prompt({ sessionId: 'task', agentPreset: 'another', contentBlocks })).rejects.toThrow(/preset/)
+      expect(create).toHaveBeenCalledOnce()
+      expect(followups.get('task')).toBe(2)
+    } finally {
+      await server.shutdown()
+      await agentCtx.fiber.dispose()
+      await ctx.fiber.dispose()
+    }
+  })
+
+  it('freezes a separate cwd for each SDK session before delivering prompts', async () => {
+    const agents = new Map<string, Agent>()
+    const followups = new Map<string, number>()
+    const create = vi.fn(async (options: { sessionId: SessionId; meta?: { cwd?: string } }) => {
+      const agent = Object.assign({} as Agent, {
+        id: options.sessionId,
+        followup: () => { followups.set(String(options.sessionId), (followups.get(String(options.sessionId)) ?? 0) + 1) },
+      })
+      agents.set(String(options.sessionId), agent)
+      return { agent, dispose: async () => {} }
+    })
+    const ctx = new Context()
+    ctx.provide('agents', { create, get: (id: SessionId) => agents.get(String(id)) })
+    const server = new HarnessSdkJsonRpcServer(ctx, new FakeTransport())
+    Object.assign(server, { initialized: true })
+    const contentBlocks = [{ type: 'text' as const, text: 'inspect the task' }]
+    try {
+      await server.prompt({ sessionId: 'task-a', cwd: '/app/task-a', contentBlocks })
+      await server.prompt({ sessionId: 'task-b', cwd: '/app/task-b', contentBlocks })
+      await server.prompt({ sessionId: 'task-a', contentBlocks })
+      expect(create.mock.calls.map(([options]) => options.meta?.cwd)).toEqual(['/app/task-a', '/app/task-b'])
+      await expect(server.prompt({ sessionId: 'task-a', cwd: '/app/another', contentBlocks })).rejects.toThrow(/cwd/)
+      expect(followups.get('task-a')).toBe(2)
+    } finally {
+      await server.shutdown()
+      await ctx.fiber.dispose()
+    }
+  })
+
   it('creates a harness agent and calls the configured OpenAI-compatible endpoint', { timeout: 15_000 }, async () => {
     const storageDir = await mkdtemp(join(tmpdir(), 'dsh-jsonrpc-'))
     const llmServer = await mockCompletionServer()
@@ -911,6 +975,45 @@ describe('HarnessSdkJsonRpcServer', () => {
     }
   })
 
+  it('refuses the handshake when the default agent preset cannot mount', async () => {
+    const storageDir = await mkdtemp(join(tmpdir(), 'dsh-jsonrpc-broken-preset-'))
+    const ctx = await makeHarness(storageDir)
+    vi.stubEnv('DEEPSEEK_API_KEY', 'test-key')
+    await ctx.plugin(LlmDeepSeek)
+    try {
+      ctx.provide('agentPresets', {
+        resolve: async () => ({ id: 'sdk', broken: 'agent-instructions: $.maxBytes missing required value' }),
+      })
+      const server = new HarnessSdkJsonRpcServer(ctx, new FakeTransport())
+
+      await expect(server.initialize({ cwd: storageDir, provider: 'deepseek-official', model: 'model' }))
+        .rejects.toThrow(/default agent preset "sdk" cannot mount.*maxBytes/)
+
+      await server.shutdown()
+    } finally {
+      await ctx.fiber.dispose()
+      await rm(storageDir, { recursive: true, force: true })
+    }
+  })
+
+  it('accepts the handshake when no agent preset registry is mounted', async () => {
+    const storageDir = await mkdtemp(join(tmpdir(), 'dsh-jsonrpc-no-presets-'))
+    const ctx = await makeHarness(storageDir)
+    vi.stubEnv('DEEPSEEK_API_KEY', 'test-key')
+    await ctx.plugin(LlmDeepSeek)
+    try {
+      const server = new HarnessSdkJsonRpcServer(ctx, new FakeTransport())
+
+      await expect(server.initialize({ cwd: storageDir, provider: 'deepseek-official', model: 'model' }))
+        .resolves.toMatchObject({ serverInfo: { name: 'deepseek-harness-sdk-runtime' } })
+
+      await server.shutdown()
+    } finally {
+      await ctx.fiber.dispose()
+      await rm(storageDir, { recursive: true, force: true })
+    }
+  })
+
   it('rejects a missing non-DeepSeek provider when an LLM service already exists', async () => {
     const storageDir = await mkdtemp(join(tmpdir(), 'dsh-jsonrpc-new-llm-'))
     const ctx = await makeHarness(storageDir)
@@ -1107,25 +1210,25 @@ describe('HarnessSdkJsonRpcServer', () => {
       get: () => undefined,
     } as unknown as Context
     const server = new HarnessSdkJsonRpcServer(ctx, new FakeTransport()) as unknown as {
-      getOrCreateSession(sessionId: string): Promise<{ handle: AgentHandle }>
+      getOrCreateSession(params: { sessionId: string; contentBlocks: [] }): Promise<{ handle: AgentHandle }>
       shutdown(): Promise<Record<string, never>>
     }
 
-    const first = server.getOrCreateSession('shared')
-    const second = server.getOrCreateSession('shared')
+    const first = server.getOrCreateSession({ sessionId: 'shared', contentBlocks: [] })
+    const second = server.getOrCreateSession({ sessionId: 'shared', contentBlocks: [] })
     expect(create).toHaveBeenCalledTimes(1)
     resolveShared?.(sharedHandle)
     const [firstRecord, secondRecord] = await Promise.all([first, second])
     expect(firstRecord).toBe(secondRecord)
 
-    await expect(server.getOrCreateSession('retry')).rejects.toThrow('creation failed')
-    await expect(server.getOrCreateSession('retry')).resolves.toMatchObject({ handle: retryHandle })
+    await expect(server.getOrCreateSession({ sessionId: 'retry', contentBlocks: [] })).rejects.toThrow('creation failed')
+    await expect(server.getOrCreateSession({ sessionId: 'retry', contentBlocks: [] })).resolves.toMatchObject({ handle: retryHandle })
     expect(create).toHaveBeenCalledTimes(3)
 
     await server.shutdown()
     expect(sharedHandle.dispose).toHaveBeenCalledOnce()
     expect(retryHandle.dispose).toHaveBeenCalledOnce()
-    await expect(server.getOrCreateSession('after-shutdown')).rejects.toThrow('SDK server is shutting down')
+    await expect(server.getOrCreateSession({ sessionId: 'after-shutdown', contentBlocks: [] })).rejects.toThrow('SDK server is shutting down')
   })
 
   it('resolves a relative cwd before creating the session', async () => {
@@ -1135,16 +1238,20 @@ describe('HarnessSdkJsonRpcServer', () => {
     const ctx = {
       on: vi.fn(() => () => undefined),
       agents: { create, get: () => undefined },
-      get: () => ({ listProviders: () => [{ id: 'mock', name: 'Mock' }], resolveCallConfig }),
+      // Name-aware: a stub that answers every service key would also answer
+      // `agentPresets` with this object, which is not a preset registry.
+      get: (name: string) => name === 'llm'
+        ? { listProviders: () => [{ id: 'mock', name: 'Mock' }], resolveCallConfig }
+        : undefined,
     } as unknown as Context
     const server = new HarnessSdkJsonRpcServer(ctx, new FakeTransport()) as unknown as {
       initialize(params: { cwd: string; provider: string; model: string; reasoningEffort?: string; maxTokens?: number }): Promise<unknown>
-      getOrCreateSession(sessionId: string): Promise<unknown>
+      getOrCreateSession(params: { sessionId: string; contentBlocks: [] }): Promise<unknown>
       shutdown(): Promise<Record<string, never>>
     }
 
     await server.initialize({ cwd: '.', provider: 'mock', model: 'model', reasoningEffort: 'high', maxTokens: 123 })
-    await server.getOrCreateSession('relative')
+    await server.getOrCreateSession({ sessionId: 'relative', contentBlocks: [] })
 
     expect(resolveCallConfig).toHaveBeenCalledWith({
       provider: 'mock',
@@ -1184,6 +1291,90 @@ describe('HarnessSdkJsonRpcServer', () => {
     expect(secondDispose).toHaveBeenCalledOnce()
   })
 
+  it('stops a running agent, then settles, flushes, and only then disposes it on shutdown', async () => {
+    const order: string[] = []
+    const session = { id: SessionId('owned') } as unknown as Agent['session']
+    const cancel = vi.fn(() => { order.push('cancel') })
+    const agent = ({
+      id: SessionId('owned'),
+      session,
+      status: 'running',
+      cancel,
+      whenIdle: vi.fn(async () => { order.push('whenIdle') }),
+    } as unknown) as Agent
+    const continuumMemory = {
+      whenSettled: vi.fn(async () => { order.push('settled') }),
+    }
+    const sessions = {
+      get: vi.fn(() => session),
+      flush: vi.fn(async () => { order.push('flush') }),
+    }
+    const ctx = {
+      on: vi.fn(() => () => undefined),
+      logger: { warn: vi.fn(), error: vi.fn() },
+      agents: { create: vi.fn(), get: () => agent },
+      get: (name: string) => name === 'continuumMemory' ? continuumMemory : name === 'sessions' ? sessions : undefined,
+    } as unknown as Context
+    const server = new HarnessSdkJsonRpcServer(ctx, new FakeTransport()) as unknown as {
+      sessions: Map<string, { handle: AgentHandle; cwd: string; agentPreset: undefined }>
+      shutdown(): Promise<Record<string, never>>
+    }
+    server.sessions.set('owned', {
+      handle: {
+        agent,
+        dispose: vi.fn(async () => { order.push('dispose') }),
+      },
+      cwd: '/tmp',
+      agentPreset: undefined,
+    })
+
+    await server.shutdown()
+    // The loop is stopped by this shutdown (as a disposed-cause cancel) while
+    // the session and recorder are still mounted; settlement and durability
+    // follow, and disposal is last.
+    expect(order).toEqual(['cancel', 'whenIdle', 'settled', 'flush', 'dispose'])
+    expect(cancel).toHaveBeenCalledWith({ kind: 'disposed' })
+    expect(continuumMemory.whenSettled).toHaveBeenCalledWith(agent)
+  })
+
+  it('drains the dispatch recorder settlement queue for each session during shutdown', async () => {
+    const order: string[] = []
+    const whenSettled = vi.fn(async (sessionId: SessionId) => { order.push(`recorder:${String(sessionId)}`) })
+    const sessions = {
+      get: vi.fn(() => undefined),
+      flush: vi.fn(async () => { order.push('flush') }),
+    }
+    const ctx = {
+      on: vi.fn(() => () => undefined),
+      logger: { warn: vi.fn(), error: vi.fn() },
+      agents: { create: vi.fn(), get: () => undefined },
+      get: (name: string) => name === 'sessions' ? sessions : undefined,
+    } as unknown as Context
+    const server = new HarnessSdkJsonRpcServer(ctx, new FakeTransport()) as unknown as {
+      dispatchRecorder: unknown
+      sessions: Map<string, { handle: AgentHandle; cwd: string; agentPreset: undefined }>
+      shutdown(): Promise<Record<string, never>>
+    }
+    server.dispatchRecorder = Object.assign(() => { order.push('uninstall') }, { whenSettled })
+    server.sessions.set('a', {
+      handle: { agent: { id: SessionId('a') } as unknown as Agent, dispose: vi.fn(async () => { order.push('dispose:a') }) },
+      cwd: '/tmp',
+      agentPreset: undefined,
+    })
+    server.sessions.set('b', {
+      handle: { agent: { id: SessionId('b') } as unknown as Agent, dispose: vi.fn(async () => { order.push('dispose:b') }) },
+      cwd: '/tmp',
+      agentPreset: undefined,
+    })
+
+    await server.shutdown()
+    expect(whenSettled.mock.calls.map(([sessionId]) => String(sessionId)).sort()).toEqual(['a', 'b'])
+    // Settlement records are drained while the recorder is still installed;
+    // uninstalling is the last recorder action.
+    expect(order.indexOf('uninstall')).toBeGreaterThan(order.indexOf('recorder:a'))
+    expect(order.indexOf('uninstall')).toBeGreaterThan(order.indexOf('recorder:b'))
+  })
+
   it('continues teardown after a subscription disposer fails', async () => {
     let subscription = 0
     const listenerFailure = new Error('listener teardown failed')
@@ -1201,4 +1392,501 @@ describe('HarnessSdkJsonRpcServer', () => {
     await expect(server.shutdown()).rejects.toBe(listenerFailure)
     expect(on).toHaveBeenCalledTimes(4)
   })
+  it('cancels one active session and leaves the other running', async () => {
+    const idle = Promise.withResolvers<undefined>()
+    const mainCancel = vi.fn<Agent['cancel']>()
+    const mainWhenIdle = vi.fn(() => idle.promise)
+    const mainAgent = ({
+      id: SessionId('main'),
+      status: 'running',
+      followup: vi.fn(),
+      cancel: mainCancel,
+      whenIdle: mainWhenIdle,
+    } satisfies Pick<Agent, 'id' | 'status' | 'followup' | 'cancel' | 'whenIdle'>) as unknown as Agent
+    const otherCancel = vi.fn<Agent['cancel']>()
+    const otherAgent = ({
+      id: SessionId('other'),
+      status: 'running',
+      followup: vi.fn(),
+      cancel: otherCancel,
+      whenIdle: vi.fn(() => Promise.resolve()),
+    } satisfies Pick<Agent, 'id' | 'status' | 'followup' | 'cancel' | 'whenIdle'>) as unknown as Agent
+    const liveAgents = new Map<string, Agent>([['main', mainAgent], ['other', otherAgent]])
+    const ctx = {
+      on: vi.fn(() => () => undefined),
+      agents: {
+        create: vi.fn(async (options: { sessionId: SessionId }) => ({
+          agent: String(options.sessionId) === 'main' ? mainAgent : otherAgent,
+          dispose: vi.fn(() => Promise.resolve()),
+        })),
+        get: (id: SessionId) => liveAgents.get(String(id)),
+      },
+      get: () => undefined,
+    } as unknown as Context
+    const server = new HarnessSdkJsonRpcServer(ctx, new FakeTransport())
+    ;(server as unknown as { initialized: boolean }).initialized = true
+    await server.prompt({ sessionId: 'main', contentBlocks: [{ type: 'text', text: 'work' }] })
+    await server.prompt({ sessionId: 'other', contentBlocks: [{ type: 'text', text: 'work' }] })
+
+    let settled = false
+    const cancellation = server.cancel({ sessionId: 'main' }).then((result) => {
+      settled = true
+      return result
+    })
+    await new Promise(resolve => setTimeout(resolve, 20))
+    // The reply waits for the agent's own settlement, not just the request.
+    expect(settled).toBe(false)
+    idle.resolve(undefined)
+    await expect(cancellation).resolves.toEqual({ sessionId: 'main', cancelled: true })
+    expect(mainCancel).toHaveBeenCalledWith({ kind: 'user' })
+    expect(mainWhenIdle).toHaveBeenCalledOnce()
+    expect(otherCancel).not.toHaveBeenCalled()
+    await server.shutdown()
+  })
+
+  it('accepts a prompt sent after a cancellation and refuses one already in flight', async () => {
+    const followup = vi.fn<Agent['followup']>()
+    const agent = ({
+      id: SessionId('pending'),
+      status: 'idle',
+      followup,
+      cancel: vi.fn(),
+      whenIdle: vi.fn(() => Promise.resolve()),
+    } satisfies Pick<Agent, 'id' | 'status' | 'followup' | 'cancel' | 'whenIdle'>) as unknown as Agent
+    const ctx = {
+      on: vi.fn(() => () => undefined),
+      agents: {
+        create: vi.fn(async () => ({ agent, dispose: vi.fn(() => Promise.resolve()) })),
+        get: () => agent,
+      },
+      get: () => undefined,
+    } as unknown as Context
+    const server = new HarnessSdkJsonRpcServer(ctx, new FakeTransport())
+    ;(server as unknown as { initialized: boolean }).initialized = true
+
+    // Cancelled before the session ever started: no agent exists yet.
+    await expect(server.cancel({ sessionId: 'pending' })).resolves.toEqual({ sessionId: 'pending', cancelled: true })
+    expect(followup).not.toHaveBeenCalled()
+    // A prompt sent after the cancellation starts a new generation and runs,
+    // so one case session can be reused for its next step.
+    await server.prompt({ sessionId: 'pending', contentBlocks: [{ type: 'text', text: 'next step' }] })
+    expect(followup).toHaveBeenCalledOnce()
+    await server.shutdown()
+  })
+
+  it('refuses a prompt that was still being prepared when the cancel arrived', async () => {
+    const followup = vi.fn<Agent['followup']>()
+    const agent = ({
+      id: SessionId('racing'),
+      status: 'idle',
+      followup,
+      cancel: vi.fn(),
+      whenIdle: vi.fn(() => Promise.resolve()),
+    } satisfies Pick<Agent, 'id' | 'status' | 'followup' | 'cancel' | 'whenIdle'>) as unknown as Agent
+    const admission = Promise.withResolvers<undefined>()
+    const saveImages = vi.fn(async () => {
+      await admission.promise
+      return [{ attachmentId: 'sha256:pending', mediaType: 'image/png', bytes: 1, width: 1, height: 1 }]
+    })
+    const ctx = {
+      on: vi.fn(() => () => undefined),
+      agents: {
+        create: vi.fn(async () => ({ agent, dispose: vi.fn(() => Promise.resolve()) })),
+        get: () => agent,
+      },
+      get: (name: string) => name === 'attachments' ? { saveImages } : undefined,
+    } as unknown as Context
+    const server = new HarnessSdkJsonRpcServer(ctx, new FakeTransport())
+    ;(server as unknown as { initialized: boolean }).initialized = true
+
+    const pending = server.prompt({
+      sessionId: 'racing',
+      contentBlocks: [{ type: 'image', data: 'AA==', mimeType: 'image/png' }],
+    })
+    await vi.waitFor(() => { expect(saveImages).toHaveBeenCalledOnce() })
+    // Cancel lands while the prompt awaits attachment admission.
+    const cancel = server.cancel({ sessionId: 'racing' })
+    admission.resolve(undefined)
+    await expect(pending).rejects.toThrow('cancelled while this prompt was in flight')
+    await expect(cancel).resolves.toEqual({ sessionId: 'racing', cancelled: true })
+    expect(followup).not.toHaveBeenCalled()
+    // The next prompt belongs to a later generation and is accepted.
+    await server.prompt({ sessionId: 'racing', contentBlocks: [{ type: 'text', text: 'retry' }] })
+    expect(followup).toHaveBeenCalledOnce()
+    await server.shutdown()
+  })
+
+  it('reports the cancelled session idle only after its observed admissions settle and flush', async () => {
+    const observed = Promise.withResolvers<undefined>()
+    const flush = Promise.withResolvers<undefined>()
+    const order: string[] = []
+    let status: 'running' | 'idle' = 'running'
+    const session = { id: SessionId('draining') } as unknown as Agent['session']
+    const listeners = new Map<string, (payload: { agent: Agent; status: 'running' | 'idle' }) => void>()
+    const agent = ({
+      id: SessionId('draining'),
+      get status(): 'running' | 'idle' { return status },
+      session,
+      followup: vi.fn(),
+      cancel: vi.fn(),
+      whenIdle: vi.fn(async () => {
+        order.push('whenIdle')
+        status = 'idle'
+        // The loop publishes the idle transition at this point.
+        listeners.get('agent/status')?.({ agent, status: 'idle' })
+      }),
+    } satisfies Pick<Agent, 'id' | 'status' | 'session' | 'followup' | 'cancel' | 'whenIdle'>) as unknown as Agent
+    const continuumMemory = {
+      whenSettled: vi.fn(async () => { order.push('whenSettled'); await observed.promise }),
+    }
+    const sessions = {
+      get: vi.fn(() => session),
+      flush: vi.fn(async () => { order.push('flush'); await flush.promise }),
+    }
+    const ctx = {
+      on: vi.fn((name: string, listener: (payload: { agent: Agent; status: 'running' | 'idle' }) => void) => {
+        listeners.set(name, listener)
+        return () => { listeners.delete(name) }
+      }),
+      logger: { warn: vi.fn() },
+      agents: {
+        create: vi.fn(async () => ({ agent, dispose: vi.fn(() => Promise.resolve()) })),
+        get: () => agent,
+      },
+      get: (name: string) => name === 'continuumMemory' ? continuumMemory : name === 'sessions' ? sessions : undefined,
+    } as unknown as Context
+    const transport = new FakeTransport()
+    const server = new HarnessSdkJsonRpcServer(ctx, transport)
+    ;(server as unknown as { initialized: boolean }).initialized = true
+    await server.prompt({ sessionId: 'draining', contentBlocks: [{ type: 'text', text: 'work' }] })
+
+    let settled = false
+    const cancellation = server.cancel({ sessionId: 'draining' }).then((result) => { settled = true; return result })
+    await vi.waitFor(() => { expect(order).toEqual(['whenIdle', 'whenSettled']) })
+    // Settlement and durability precede the reported quiescence.
+    expect(settled).toBe(false)
+    expect(transport.notifications.filter(n => n.method === 'session.status')).toEqual([])
+    observed.resolve(undefined)
+    await vi.waitFor(() => { expect(order).toContain('flush') })
+    expect(settled).toBe(false)
+    flush.resolve(undefined)
+    await expect(cancellation).resolves.toEqual({ sessionId: 'draining', cancelled: true })
+    expect(order).toEqual(['whenIdle', 'whenSettled', 'flush'])
+    await vi.waitFor(() => {
+      expect(transport.notifications.filter(n => n.method === 'session.status')).toEqual([
+        { method: 'session.status', params: { sessionId: 'draining', status: 'idle', settlement: 'settled' } },
+      ])
+    })
+    // The listener shared the cancel's single drain instead of awaiting again.
+    expect(continuumMemory.whenSettled).toHaveBeenCalledOnce()
+    expect(sessions.flush).toHaveBeenCalledOnce()
+    await server.shutdown()
+  })
+
+  it('holds the idle notification until a real turn\'s dispatch settlement record and log flush exist', { timeout: 20_000 }, async () => {
+    const storageDir = await mkdtemp(join(tmpdir(), 'dsh-jsonrpc-settled-idle-'))
+    const llmServer = await mockCompletionServer()
+    vi.stubEnv('DEEPSEEK_API_KEY', 'test-key')
+    vi.stubEnv('DEEPSEEK_BASE_URL', llmServer.url)
+    const ctx = await makeHarness(storageDir)
+    try {
+      const transport = new FakeTransport()
+      const server = new HarnessSdkJsonRpcServer(ctx, transport, { recordLlmDispatch: true })
+      await server.initialize({ cwd: storageDir, provider: 'deepseek-official', model: 'dsagent-model' })
+      await server.prompt({ sessionId: 'settled-idle', contentBlocks: [{ type: 'text', text: 'fix it' }] })
+
+      // The idle status is published only after the recorder's queued
+      // settlement record exists, so the advertised barrier is observable.
+      await vi.waitFor(() => {
+        expect(transport.notifications.findLast(n => n.method === 'session.status')).toEqual({
+          method: 'session.status',
+          params: { sessionId: 'settled-idle', status: 'idle', settlement: 'settled' },
+        })
+      }, { timeout: 10_000 })
+      const session = ctx.sessions.get(SessionId('settled-idle'))
+      if (session === undefined) throw new Error('the SDK session is not live')
+      const events = session.snapshotEvents()
+      const dispatch = events.find(event => event.type === 'llm/dispatch')
+      expect(dispatch).toBeDefined()
+      expect(events.some(event => event.type === 'llm/dispatch-settled'
+        && event.data.dispatchSeq === (dispatch as { seq: number }).seq)).toBe(true)
+      // 屏障成功本身只是通知上的一个词；要能回答“已持久化到哪里”，这份事实
+      // 必须落在会话日志里，读者才能从原生日志核对，而不是信任一次回调。
+      const flush = events.find(event => event.type === 'session/flushed')
+      expect(flush).toBeDefined()
+      expect((flush as { data: { sessionId: string; throughSeq: number } }).data.sessionId)
+        .toBe('settled-idle')
+      const reported = (flush as { data: { throughSeq: number } }).data.throughSeq
+      expect(reported).toBeGreaterThanOrEqual((events.at(-1) as { seq: number }).seq - 1)
+      // 覆盖范围必须真的在存储里：读回已落盘的日志，确认报告到的那一条确实存在，
+      // 且确认记录作为“落盘证据”本身也已被保存，而不是只在内存里。
+      const persistence = ctx.get('sessionPersistence')
+      if (persistence === undefined) throw new Error('this harness must mount session persistence')
+      const handle = await persistence.open(SessionId('settled-idle'), 'read')
+      try {
+        const stored = await handle.read(0)
+        const storedSeqs = new Set(stored.events.map(event => Number(event.seq)))
+        expect(storedSeqs.has(reported)).toBe(true)
+        // 确认记录本身也要真的落到存储里：它只是“报告已落盘到哪”，
+        // 若自身没保存，重启后这段结论就消失了。
+        const storedFlush = stored.events.find(event => event.type === 'session/flushed')
+        expect(storedFlush).toBeDefined()
+        expect(Number(storedFlush?.seq)).toBeGreaterThan(reported)
+      } finally {
+        await handle.close()
+      }
+      await server.shutdown()
+    } finally {
+      await ctx.fiber.dispose()
+      await rm(storageDir, { recursive: true, force: true })
+    }
+  })
+
+  it('starts a fresh settlement pass for work that began after an earlier idle drain', async () => {
+    const first = Promise.withResolvers<undefined>()
+    const calls: number[] = []
+    let call = 0
+    const session = { id: SessionId('two-turns') } as unknown as Agent['session']
+    let status: 'running' | 'idle' = 'running'
+    const listeners = new Map<string, (payload: { agent: Agent; status: 'running' | 'idle' }) => void>()
+    const agent = ({
+      id: SessionId('two-turns'),
+      session,
+      get status(): 'running' | 'idle' { return status },
+      followup: vi.fn(),
+      cancel: vi.fn(),
+      whenIdle: vi.fn(() => Promise.resolve()),
+    } satisfies Pick<Agent, 'id' | 'status' | 'session' | 'followup' | 'cancel' | 'whenIdle'>) as unknown as Agent
+    const continuumMemory = {
+      whenSettled: vi.fn(() => {
+        call += 1
+        calls.push(call)
+        // The first turn's admissions drain slowly; the second turn's settle
+        // must not be answered by that same pass.
+        return call === 1 ? first.promise : Promise.resolve()
+      }),
+    }
+    const flush = vi.fn(() => Promise.resolve())
+    const sessions = { get: vi.fn(() => session), flush }
+    const ctx = {
+      on: vi.fn((name: string, listener: (payload: { agent: Agent; status: 'running' | 'idle' }) => void) => {
+        listeners.set(name, listener)
+        return () => { listeners.delete(name) }
+      }),
+      logger: { warn: vi.fn(), error: vi.fn() },
+      agents: { create: vi.fn(async () => ({ agent, dispose: vi.fn(() => Promise.resolve()) })), get: () => agent },
+      get: (name: string) => name === 'continuumMemory' ? continuumMemory : name === 'sessions' ? sessions : undefined,
+    } as unknown as Context
+    const server = new HarnessSdkJsonRpcServer(ctx, new FakeTransport(), { settlementTimeoutMs: 500 })
+    ;(server as unknown as { initialized: boolean }).initialized = true
+    await server.prompt({ sessionId: 'two-turns', contentBlocks: [{ type: 'text', text: 'first' }] })
+
+    listeners.get('agent/status')?.({ agent, status: 'idle' })
+    await vi.waitFor(() => { expect(continuumMemory.whenSettled).toHaveBeenCalledOnce() })
+    // A new turn starts while the first drain is still waiting.
+    status = 'running'
+    listeners.get('agent/status')?.({ agent, status: 'running' })
+    status = 'idle'
+    listeners.get('agent/status')?.({ agent, status: 'idle' })
+
+    await vi.waitFor(() => { expect(continuumMemory.whenSettled).toHaveBeenCalledTimes(2) })
+    first.resolve(undefined)
+    await server.shutdown()
+  })
+
+  it('reports a failed settlement on the idle notification and refuses a clean shutdown when the flush rejects', async () => {
+    const flushFailure = new Error('flush failed')
+    const session = { id: SessionId('flush-fails') } as unknown as Agent['session']
+    let status: 'running' | 'idle' = 'running'
+    const listeners = new Map<string, (payload: { agent: Agent; status: 'running' | 'idle' }) => void>()
+    const agent = ({
+      id: SessionId('flush-fails'),
+      session,
+      get status(): 'running' | 'idle' { return status },
+      followup: vi.fn(),
+      cancel: vi.fn(),
+      whenIdle: vi.fn(async () => {
+        status = 'idle'
+        listeners.get('agent/status')?.({ agent, status: 'idle' })
+      }),
+    } satisfies Pick<Agent, 'id' | 'status' | 'session' | 'followup' | 'cancel' | 'whenIdle'>) as unknown as Agent
+    const sessions = {
+      get: vi.fn(() => session),
+      flush: vi.fn(() => Promise.reject(flushFailure)),
+    }
+    const ctx = {
+      on: vi.fn((name: string, listener: (payload: { agent: Agent; status: 'running' | 'idle' }) => void) => {
+        listeners.set(name, listener)
+        return () => { listeners.delete(name) }
+      }),
+      logger: { warn: vi.fn(), error: vi.fn() },
+      agents: { create: vi.fn(async () => ({ agent, dispose: vi.fn(() => Promise.resolve()) })), get: () => agent },
+      get: (name: string) => name === 'continuumMemory'
+        ? { whenSettled: vi.fn(() => Promise.resolve()) }
+        : name === 'sessions' ? sessions : undefined,
+    } as unknown as Context
+    const transport = new FakeTransport()
+    const server = new HarnessSdkJsonRpcServer(ctx, transport)
+    ;(server as unknown as { initialized: boolean }).initialized = true
+    await server.prompt({ sessionId: 'flush-fails', contentBlocks: [{ type: 'text', text: 'work' }] })
+
+    await expect(server.cancel({ sessionId: 'flush-fails' })).rejects.toBe(flushFailure)
+    // The loop stopped, so idle still goes out, but it is marked as unproven.
+    await vi.waitFor(() => {
+      expect(transport.notifications.filter(n => n.method === 'session.status')).toEqual([
+        { method: 'session.status', params: { sessionId: 'flush-fails', status: 'idle', settlement: 'failed' } },
+      ])
+    })
+    expect(ctx.logger.error).toHaveBeenCalled()
+    // Shutdown re-drains the same session and reports the durability failure.
+    await expect(server.shutdown()).rejects.toBe(flushFailure)
+  })
+
+  it('fails a settlement barrier that exceeds its bound instead of hanging', async () => {
+    const session = { id: SessionId('slow') } as unknown as Agent['session']
+    const agent = ({
+      id: SessionId('slow'),
+      session,
+      status: 'idle',
+      followup: vi.fn(),
+      cancel: vi.fn(),
+      whenIdle: vi.fn(() => Promise.resolve()),
+    } satisfies Pick<Agent, 'id' | 'status' | 'session' | 'followup' | 'cancel' | 'whenIdle'>) as unknown as Agent
+    const neverSettled = Promise.withResolvers<undefined>()
+    const sessions = { get: vi.fn(() => session), flush: vi.fn(() => neverSettled.promise) }
+    const ctx = {
+      on: vi.fn(() => () => undefined),
+      logger: { warn: vi.fn(), error: vi.fn() },
+      agents: { create: vi.fn(async () => ({ agent, dispose: vi.fn(() => Promise.resolve()) })), get: () => agent },
+      get: (name: string) => name === 'sessions' ? sessions : undefined,
+    } as unknown as Context
+    const server = new HarnessSdkJsonRpcServer(ctx, new FakeTransport(), { settlementTimeoutMs: 20 })
+    ;(server as unknown as { initialized: boolean }).initialized = true
+    await server.prompt({ sessionId: 'slow', contentBlocks: [{ type: 'text', text: 'work' }] })
+
+    await expect(server.cancel({ sessionId: 'slow' }))
+      .rejects.toThrow('did not settle and flush within 20ms')
+    await expect(server.shutdown()).rejects.toThrow('did not settle and flush within 20ms')
+  })
+
+  it('reports a cancellation failure instead of claiming success', async () => {
+    const failure = new Error('agent did not stop')
+    const agent = ({
+      id: SessionId('stuck'),
+      status: 'running',
+      followup: vi.fn(),
+      cancel: vi.fn(),
+      whenIdle: vi.fn(() => Promise.reject(failure)),
+    } satisfies Pick<Agent, 'id' | 'status' | 'followup' | 'cancel' | 'whenIdle'>) as unknown as Agent
+    const handle = { agent, dispose: vi.fn(() => Promise.resolve()) }
+    const ctx = {
+      on: vi.fn(() => () => undefined),
+      agents: { create: vi.fn(async () => handle), get: () => agent },
+      get: () => undefined,
+    } as unknown as Context
+    const transport = new FakeTransport()
+    const server = new HarnessSdkJsonRpcServer(ctx, transport)
+    ;(server as unknown as { initialized: boolean }).initialized = true
+    await server.prompt({ sessionId: 'stuck', contentBlocks: [{ type: 'text', text: 'work' }] })
+
+    await expect(server.handleRequest('session/cancel', { sessionId: 'stuck' })).rejects.toBe(failure)
+    // Shutdown stops the same stuck loop and must not report a clean teardown:
+    // the agent never reached quiescence, so its facts were never settled.
+    await expect(server.shutdown()).rejects.toBe(failure)
+    expect(handle.dispose).toHaveBeenCalledOnce()
+  })
+
+  it('rejects a session/cancel without a non-empty sessionId', async () => {
+    const ctx = {
+      on: vi.fn(() => () => undefined),
+      agents: { create: vi.fn(), get: () => undefined },
+      get: () => undefined,
+    } as unknown as Context
+    const server = new HarnessSdkJsonRpcServer(ctx, new FakeTransport())
+    ;(server as unknown as { initialized: boolean }).initialized = true
+
+    await expect(server.handleRequest('session/cancel', {})).rejects.toThrow('non-empty sessionId')
+    await expect(server.handleRequest('session/cancel', { sessionId: '' })).rejects.toThrow('non-empty sessionId')
+    await expect(server.handleRequest('session/cancel', undefined)).rejects.toThrow('non-empty sessionId')
+    await server.shutdown()
+  })
+
+  it('stops only the cancelled session while a second real session keeps streaming', { timeout: 15_000 }, async () => {
+    const storageDir = await mkdtemp(join(tmpdir(), 'dsh-jsonrpc-cancel-'))
+    const ctx = await makeHarness(storageDir)
+    const started = new Map<string, () => void>()
+    const gates = new Map<string, () => void>()
+    class GatedAdapter extends LlmAdapter {
+      async * stream(options: GenerateOptions): AsyncIterable<StreamChunk> {
+        const sessionId = String(options.sessionId)
+        const begin = Promise.withResolvers<undefined>()
+        const gate = Promise.withResolvers<undefined>()
+        started.set(sessionId, () => begin.resolve(undefined))
+        gates.set(sessionId, () => gate.resolve(undefined))
+        begin.resolve(undefined)
+        yield { type: 'block-start', index: 0, blockType: 'text' }
+        await Promise.race([
+          gate.promise,
+          new Promise<void>((_resolve, reject) => {
+            if (options.signal?.aborted) { reject(new Error('aborted')); return }
+            options.signal?.addEventListener('abort', () => { reject(new Error('aborted')) }, { once: true })
+          }),
+        ])
+        yield { type: 'text-delta', index: 0, text: 'done' }
+        yield { type: 'block-end', index: 0, block: { type: 'text', text: 'done' } }
+        yield { type: 'finish', reason: { kind: 'stop' } }
+      }
+    }
+    const disposeAdapter = ctx.llm.registerAdapter(['gated'], new GatedAdapter())
+    try {
+      const transport = new FakeTransport()
+      const server = new HarnessSdkJsonRpcServer(ctx, transport)
+      await server.initialize({ cwd: storageDir, provider: 'gated', model: 'gated' })
+      const waiting = (sessionId: string) => new Promise<void>((resolve) => {
+        const exam = setInterval(() => {
+          if (started.has(sessionId)) { clearInterval(exam); resolve() }
+        }, 5)
+      })
+
+      const firstStart = waiting('first')
+      const secondStart = waiting('second')
+      await Promise.all([
+        server.prompt({ sessionId: 'first', contentBlocks: [{ type: 'text', text: 'long work' }] }),
+        server.prompt({ sessionId: 'second', contentBlocks: [{ type: 'text', text: 'other work' }] }),
+      ])
+      await Promise.all([firstStart, secondStart])
+
+      await expect(server.handleRequest('session/cancel', { sessionId: 'first' }))
+        .resolves.toEqual({ sessionId: 'first', cancelled: true })
+
+      const firstEnding = transport.notifications.findLast(notification =>
+        notification.method === 'session.event'
+        && notification.params?.sessionId === 'first'
+        && (notification.params.event as { type?: string } | undefined)?.type === 'turn/end')
+      expect((firstEnding?.params?.event as { data?: { reason?: unknown } } | undefined)?.data?.reason)
+        .toEqual({ kind: 'aborted', reason: { kind: 'user' } })
+
+      // The second session never observed an abort: its gate is still open.
+      expect(gates.has('second')).toBe(true)
+      const secondIdleBefore = transport.notifications.filter(notification =>
+        notification.method === 'session.status'
+        && notification.params?.sessionId === 'second'
+        && notification.params.status === 'idle')
+      expect(secondIdleBefore).toHaveLength(0)
+
+      gates.get('second')?.()
+      await vi.waitFor(() => {
+        expect(transport.notifications.some(notification =>
+          notification.method === 'session.status'
+          && notification.params?.sessionId === 'second'
+          && notification.params.status === 'idle')).toBe(true)
+      })
+      await server.shutdown()
+    } finally {
+      disposeAdapter()
+      await ctx.fiber.dispose()
+      await rm(storageDir, { recursive: true, force: true })
+    }
+  })
+
 })

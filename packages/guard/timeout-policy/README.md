@@ -45,6 +45,8 @@ The limit is set where the tool is configured. For example, `dsh-tool-web`'s `fe
 
 When the deadline fires, the plugin aborts the derived `exec.signal`. After downstream code honors cancellation and `next()` settles, the model receives `Error: tool call timed out after <ms>ms` as an error result, so it can decide to retry, adjust, or give up. A tool that ignores or slowly handles the signal keeps the caller waiting and produces no timeout result until it settles; calls that finish in time are unchanged.
 
+Every call that declares a budget and has an owning Agent also appends one log-only `tool/execute-deadline` Session event after the wrapper settles. The record carries the call's `callId`, the effective `timeoutMs`, `elapsedMs`, `signalReplaced`, `abortSource` (`self-timer`, `upstream`, or `none`), `selfTimerWon`, and `finalErrorCode` (`null` for a successful result). It never enters model context and does not change the returned result.
+
 -----
 
 <a id="understand-the-implementation"></a>
@@ -68,6 +70,10 @@ The wrapper is built on four commitments:
 
 One `tools/execute` listener reads the dispatched tool's declared limit from the registry (`ctx.tools.get(exec.name, exec.agent)?.timeoutMs`); a tool without a limit delegates untouched. For a limited tool, `deadline(exec.signal, timeoutMs, TOOL_TIMEOUT)` builds a fused signal that the wrapper swaps onto `exec` for dispatch and restores in a `finally`, so `tools/post-execute` listeners never see the derived signal. When the wrapper's own timer fired — `timeoutOf(d.signal, 'TOOL_TIMEOUT')` scoped by the code, so a nested outer deadline reads as an ordinary upstream cancel — the dispatched result, already normalized into an error result by dispatch, is replaced with the structured result: `isError: true`, content `Error: tool call timed out after <ms>ms`, and error info `{ name: 'ToolTimeoutError', code: 'TOOL_TIMEOUT' }`.
 
+### Deadline record
+
+The `tools/execute` wrapper appends `tool/execute-deadline` after `next()` settles and before it returns its result, only when the tool declared a `timeoutMs` budget and the call has an owning Agent. `callId` pairs the record with `tool/call` and `tool/result`. `abortSource` identifies the cancellation source that won: `self-timer` when this wrapper's timer fired, `upstream` when the caller's signal aborted first, and `none` when neither aborted. `signalReplaced` reports whether dispatch received the fused deadline signal, and `finalErrorCode` is the error code on the returned result or `null` for success. The record is diagnostic: a rejected append is swallowed so it cannot replace the tool outcome, and a settled call without an owning Agent records nothing.
+
 ### Composing with other wrappers
 
 Multiple `tools/execute` listeners compose by Cordis registration order, which chooses the semantics: the timeout registered outer covers a whole retry operation, the timeout registered inner covers each attempt.
@@ -76,7 +82,7 @@ Multiple `tools/execute` listeners compose by Cordis registration order, which c
 
 | File | Role |
 |---|---|
-| [`src/index.ts`](src/index.ts) | Plugin entry: `TOOL_TIMEOUT`, `name`/`inject`/`apply`, the `tools/execute` wrapper |
+| [`src/index.ts`](src/index.ts) | Plugin entry: `TOOL_TIMEOUT`, `name`/`inject`/`apply`, the `tools/execute` wrapper, and the log-only `tool/execute-deadline` record |
 | — | No runtime invariant companion is published; this stateless policy plugin owns no package-local event history or mutable data relation beyond the seam it intercepts. |
 
 </details>
@@ -106,7 +112,7 @@ This plugin adds no prompt or schema. If a declared deadline wins and downstream
 
 #### Token effect
 
-Zero tokens on non-timeout calls. A timeout adds one small retained error result and can prevent a larger late provider result from entering context.
+Zero tokens on non-timeout calls. A timeout adds one small retained error result and can prevent a larger late provider result from entering context. The `tool/execute-deadline` record is log-only and adds no request content.
 
 #### KV Cache effect
 
@@ -121,6 +127,7 @@ These limits define when the policy is a poor fit. They are current package cons
 
 - **Cooperative, never a hard kill** — the deadline only notifies via `exec.signal`; a tool that ignores the signal does not stop on timeout, the wrapper remains inside `await next()`, and the model receives no timeout result until downstream settles.
 - **No blanket budget** — only tools that declare `timeoutMs` on their `ToolDefinition` get a deadline; undeclared tools (the shipped `bash`, `read`, `write`, and `edit` declare none) have no registry-wide default.
+- **Deadline records need an owning Agent** — a budgeted call dispatched without `exec.agent` still enforces its deadline but appends no `tool/execute-deadline` record.
 
 <a id="dev-note"></a>
 ### Dev Note

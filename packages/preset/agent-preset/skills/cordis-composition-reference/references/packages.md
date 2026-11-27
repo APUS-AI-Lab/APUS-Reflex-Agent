@@ -223,6 +223,7 @@ Every package below exports a Cordis plugin that a bundle patch can name in a Lo
 |---|---|---|
 | `@deepseek-ai/dsh-fs-local` | yes | Local-filesystem implementation of the APUS Reflex Harness filesystem seam (ctx.fs) |
 | `@deepseek-ai/dsh-fs-observation-policy` | no | File-context policy plugin for the APUS Reflex Harness — observed-state, read-before-edit, and version-guarded write/edit added over the ctx.fs provider seam through the fs/* event gate (no service API) |
+| `@deepseek-ai/dsh-fs-remote` | yes | Filesystem provider whose execution world is the task container a benchmark owns |
 | `@deepseek-ai/dsh-fs-sandbox` | yes | Sandbox-enforcing implementation of the APUS Reflex Harness filesystem seam: fences write/edit by the per-call sandbox mode (read-only denies mutation, workspace-write contains it to the workspace + temp roots) while reads pass through |
 | `@deepseek-ai/dsh-tool-fs` | yes | Model-facing filesystem tools (read, write, edit) over the APUS Reflex Harness filesystem seam (ctx.fs) |
 | `@deepseek-ai/dsh-tool-fs-search` | yes | Model-facing filesystem discovery tools (glob, grep) backed by the packaged ripgrep binary (@vscode/ripgrep) |
@@ -242,6 +243,7 @@ Every package below exports a Cordis plugin that a bundle patch can name in a Lo
 | Package | Config | Description |
 |---|---|---|
 | `@deepseek-ai/dsh-repeat-tool-reminder` | yes | Repeat-tool-call guard plugin: advisory reminders when an agent loops on identical tool calls |
+| `@deepseek-ai/dsh-tool-call-retry-policy` | no | Tool-call retry policy: a tools/execute wrapper that retries only calls whose tool definition opts in with a retry budget, and appends a log-only tool/retry-started record per attempt |
 | `@deepseek-ai/dsh-tool-call-timeout-policy` | no | Tool-call timeout policy: a tools/execute wrapper that arms a per-tool deadline on exec.signal and returns TOOL_TIMEOUT when it wins |
 
 ## hooks
@@ -390,6 +392,7 @@ Every package below exports a Cordis plugin that a bundle patch can name in a Lo
 | Package | Config | Description |
 |---|---|---|
 | `@deepseek-ai/dsh-bash-local` | yes | Local-subprocess implementation of the APUS Reflex Harness bash executor seam |
+| `@deepseek-ai/dsh-bash-remote` | no | Bash executor that runs each command in the task environment a benchmark owns |
 | `@deepseek-ai/dsh-bash-sandbox` | yes | Sandbox-consuming implementation of the APUS Reflex Harness bash executor seam (confines every command via ctx.sandbox, reports denial/enforcement result facts) |
 | `@deepseek-ai/dsh-pwsh-local` | yes | Local PowerShell implementation of the APUS Reflex Harness bash executor seam |
 | `@deepseek-ai/dsh-pwsh-sandbox` | yes | Sandbox-consuming implementation of the APUS Reflex Harness PowerShell executor seam (confines every command via ctx.sandbox, reports denial/enforcement result facts) |
@@ -454,6 +457,7 @@ Every package below exports a Cordis plugin that a bundle patch can name in a Lo
 | Package | Config | Description |
 |---|---|---|
 | `@deepseek-ai/dsh-subprocess-local` | no | Local-subprocess implementation of the APUS Reflex Harness subprocess seam |
+| `@deepseek-ai/dsh-subprocess-remote` | yes | Subprocess runtime that runs each command in the task container a benchmark owns |
 
 ## terminal
 

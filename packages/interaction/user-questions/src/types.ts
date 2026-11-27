@@ -3,6 +3,7 @@
 import type { Scoped } from '@deepseek-ai/dsh-scope'
 import type { Agent } from '@deepseek-ai/dsh-agent/types'
 import type { ToolCallId } from '@deepseek-ai/dsh-llm/brand'
+import type {} from '@deepseek-ai/dsh-session/types'
 
 /** One selectable answer offered to the user. */
 export interface AskUserQuestionOption {
@@ -66,12 +67,41 @@ export interface AskUserQuestionAnswer {
   answers: AskUserQuestionAnswerItem[]
 }
 
+/**
+ * Identity of the answerer that returned a question batch. The answerer
+ * waterfall exposes no stable per-answerer identity, so the only value today
+ * is `'unattributed'`: the receipt states that an answerer answered without
+ * inferring which one. A future identity source extends this union.
+ */
+export type UserQuestionAnsweredBy = 'unattributed'
+
+declare module '@deepseek-ai/dsh-session/types' {
+  interface SessionEventMap {
+    /**
+     * One user-question batch returned by an answerer — log-only, never model
+     * context (the consuming tool's `tool/result` carries the answers the
+     * model sees). `callId` links the ask to the tool call that awaited it
+     * when the call came from one; `answeredBy` names the answerer when the
+     * waterfall declares a stable identity and is `'unattributed'` otherwise.
+     * The log's event `time` is when the answers returned. An ask that never
+     * receives an answer logs nothing: aborts and answerer failures stay on
+     * the consumer's error result.
+     */
+    'user-question/answered': {
+      callId?: ToolCallId
+      answeredBy: UserQuestionAnsweredBy
+    }
+  }
+}
+
 /** Client-safe payload declared for the user-question answerer waterfall. */
 export interface AskUserQuestionRequestEvent {
   /** Questions to display. */
   questions: AskUserQuestionItem[]
   /** Agent identity projected to the corresponding Client Context in transit. */
   agent?: Agent
+  /** Tool call awaiting the answers, when the asker has one; links the answer receipt to that call. */
+  callId?: ToolCallId
   /** Cancellation lifetime of the pending request. */
   signal?: AbortSignal
 }

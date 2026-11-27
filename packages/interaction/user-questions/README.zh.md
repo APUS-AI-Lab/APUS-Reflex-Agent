@@ -30,10 +30,11 @@ kind: "package-reference"
 
 ### 关键类型
 
-- `AskUserQuestionRequest`：`{ questions: [{ id, question, detail?, header?, options?, multiSelect?, intent? }], agent?, signal? }`；`detail` 提供辅助文本，提供方会将其随问题一起渲染，而不会将其变成选项标签。如提供 `agent`，它必须与注册表中的存活运行时根 agent（智能体）是同一对象。
+- `AskUserQuestionRequest`：`{ questions: [{ id, question, detail?, header?, options?, multiSelect?, intent? }], agent?, callId?, signal? }`；`detail` 提供辅助文本，提供方会将其随问题一起渲染，而不会将其变成选项标签。如提供 `agent`，它必须与注册表中的存活运行时根 agent（智能体）是同一对象；`callId` 把这次提问关联到等待答复的工具调用。
 - `AskUserQuestionOption`：`{ label, description? }`。
 - `AskUserQuestionIntent`：`{ kind: 'plan-review', approve }`；即下文的带标签呈现意图。
 - `AskUserQuestionAnswer`：`{ answers: [{ id, selected, custom? }] }`。
+- `UserQuestionAnsweredBy`：`'unattributed'`；waterfall 不声明稳定的逐回答者身份，因此应答回执绝不推断名称。
 - `UserQuestionError`：`HarnessError` 的子类，包含 `EMPTY_QUESTIONS`、`BAD_INTENT`、`NO_PROVIDER`、`ASK_ABORTED`、`CALLER_NOT_LIVE` 和 `DELEGATED_CALLER` 等代码。
 
 对于单选题，`custom` 会覆盖选中的选项，且 `selected` 为空。对于多选题，`custom` 可以补充 `selected` 中的标签。UI 可以把跳过的条目保留为 `{ id, selected: [] }`，既维持现有回答形态，也保留该批次中的其他回答。
@@ -43,6 +44,10 @@ kind: "package-reference"
 ### 呈现意图
 
 `intent` 声明某个问题本身就是一种已知决策，因此认识该标签的 UI 可以照此呈现——`plan-review` 表示 `detail` 是一份待审阅的计划，`dsh-plan-mode` 会在 `exit_plan_mode` 的问题上设置它。意图只改变呈现：遵循它的 UI 回答的仍是通用 UI 会发送的那些选项标签，不认识该标签的 UI 渲染通用选项列表，因此调用方两种情况下读到的回答字段相同。`approve` 指名表示批准的标签，而不依赖选项顺序。有两项断言无法通过类型表达，`ask()` 会以 `BAD_INTENT` 拒绝它们：`approve` 未命中该问题自身的任一选项，以及意图落在没有 `detail` 的问题上——而 `detail` 正是它自称在审阅的东西。
+
+### 应答回执
+
+回答者返回后，`ask()` 会向调用方 agent 的会话追加只写入日志的 `user-question/answered` 事件：提问方提供时带 `callId`，以及 `answeredBy: 'unattributed'`。事件自身的 `time` 即回答返回时刻。它从不进入模型上下文——消费工具的 `tool/result` 仍是模型可见的权威记录。没有回答者接受、请求中止或回答者失败时都不写回执，并保留原有错误路径；回执追加失败会被容纳，不改变回答。无 agent 的提问没有会话，也不写回执。
 
 <a id="role"></a>
 ## 职责
@@ -63,6 +68,7 @@ kind: "package-reference"
 <a id="known-limitations-and-deferred-work"></a>
 
 - **带 Agent scope 的 Web 回答**：Remote Events 仅在请求带有存活 Agent scope 时路由随产品交付的 Web 回答者；agentless 调用方需要本地未限定 scope 的 waterfall listener。
+- **没有回答者身份**：`user-question/answered` 以 `answeredBy: 'unattributed'` 记录；waterfall 无法指出返回这些回答的具体监听器。
 - **词汇仅包含问题表单形态**：可供选择的选项加可选的自定义文本；更丰富的交互形态（文件选择器、diff 预览确认）尚无 seam 词汇。
 
 
@@ -78,4 +84,4 @@ kind: "package-reference"
 
 </details>
 
-**运行时不变式：** 不发布伴生入口。answerer waterfall 按请求解析并把结果直接返回调用方；该 seam 不发布独立的请求／回答审计流。
+**运行时不变式：** 不发布伴生入口。answerer waterfall 按请求解析并把结果直接返回调用方。唯一持久化的记录是只写入日志的 `user-question/answered` 回执，它仅供参考，永远不是权威审计流。

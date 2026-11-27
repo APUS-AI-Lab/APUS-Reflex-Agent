@@ -95,6 +95,12 @@ interface SkillRoot {
   skipSystem?: boolean
   projectRoot?: string
   trustedHost?: boolean
+  /**
+   * Agent whose filesystem world owns this root. Set for world-owned roots so
+   * every resolve/list/read names the container the paths belong to; Host-owned
+   * roots (`trustedHost`) leave it unset and are read by this process.
+   */
+  agentId?: string
 }
 
 interface SkillRootEntry {
@@ -119,6 +125,12 @@ interface ParsedSkill extends SkillText {
 interface LocalLocator {
   path: string
   directory: string
+  /**
+   * Agent whose execution world `path` lives in. Absent for a Host-readable
+   * root (the bundled root); a later `get()` must read the same world the
+   * discovery did, never the caller's world by assumption.
+   */
+  agentId?: string
 }
 
 interface ResolvedWatchConfig {
@@ -184,7 +196,7 @@ export class FileSystemSkillProvider implements SkillProvider {
    *   failure returns readable candidates as an incomplete observation.
    */
   async list(options: SkillLookupOptions): Promise<SkillCandidate[] | SkillProviderObservation> {
-    const roots = await this.roots(options.cwd)
+    const roots = await this.roots(options.cwd, options.agentId)
     let complete = true
     try {
       await this.watchManager.observeRoots(roots)
@@ -204,12 +216,21 @@ export class FileSystemSkillProvider implements SkillProvider {
   /**
    * Load a complete local skill body from the candidate's file locator.
    * @param candidate - the winning candidate returned by this provider.
-   * @param options - lookup options whose signal cancels filesystem reads.
+   * @param options - lookup options whose signal cancels filesystem reads and
+   *   whose agent identity selects the world the body lives in.
    * @returns the full local skill, or `undefined` if the file disappeared.
    */
   async get(candidate: SkillCandidate, options: SkillLookupOptions): Promise<SkillDefinition | undefined> {
     const locator = candidate.locator as LocalLocator
-    const parsed = await parseSkillFile(locator.path, this.ctx, options.signal, candidate.source === 'bundled')
+    // Load in the world discovery used; the bundled root is Host-readable and
+    // carries no agent, while a world-owned root recorded the agent that found it.
+    const parsed = await parseSkillFile(
+      locator.path,
+      this.ctx,
+      options.signal,
+      candidate.source === 'bundled',
+      locator.agentId,
+    )
     if (parsed === undefined) return undefined
     return {
       name: parsed.name,
@@ -242,17 +263,33 @@ export class FileSystemSkillProvider implements SkillProvider {
     return this.disposal
   }
 
-  private async roots(cwd: string | undefined): Promise<SkillRoot[]> {
+  private async roots(cwd: string | undefined, agentId: string | undefined): Promise<SkillRoot[]> {
     const roots: SkillRoot[] = []
+    // Only the bundled root is a fixed Host read-only resource read by this
+    // process. Everything else belongs to the lookup's world: with an Agent
+    // identity, project and explicitly configured custom roots are resolved
+    // inside that agent's container, so a path the container lacks is honestly
+    // absent instead of a Host path accidentally read here.
+    const world = agentId === undefined ? {} : { agentId }
     if (this.includeDefaultRoots && cwd !== undefined) {
-      const projectRoot = await findProjectRoot(resolve(cwd), optionalFileSystem(this.ctx))
+      const projectRoot = await findProjectRoot(resolve(cwd), optionalFileSystem(this.ctx), agentId)
       roots.push(
-        { path: join(projectRoot, '.dsh/skills'), source: 'project-dsh', rank: PROJECT_DSH_RANK, projectRoot },
-        { path: join(projectRoot, '.agents/skills'), source: 'project-agents', rank: PROJECT_AGENTS_RANK, projectRoot },
+        { path: join(projectRoot, '.dsh/skills'), source: 'project-dsh', rank: PROJECT_DSH_RANK, projectRoot, ...world },
+        { path: join(projectRoot, '.agents/skills'), source: 'project-agents', rank: PROJECT_AGENTS_RANK, projectRoot, ...world },
       )
     }
-    roots.push(...this.customSkillDirs.map(path => ({ path, source: 'custom' as const, rank: CUSTOM_RANK })))
-    if (this.includeDefaultRoots) {
+    roots.push(...this.customSkillDirs.map(path => ({ path, source: 'custom' as const, rank: CUSTOM_RANK, ...world })))
+    // The default user roots name this Host's home directories. A lookup that
+    // names an Agent runs in that agent's world: unless the mounted provider
+    // can also open Host paths (`processPathFromHostPath`), those Host
+    // directories are left out rather than asked of a task container. A lookup
+    // without an agent keeps its existing Host-local semantics. The bundled
+    // root below is read by this process either way.
+    const fileSystem = optionalFileSystem(this.ctx)
+    const hostVisible = agentId === undefined
+      || fileSystem === undefined
+      || fileSystem.processPathFromHostPath(join(this.dshHome, 'skills')) !== undefined
+    if (this.includeDefaultRoots && hostVisible) {
       roots.push(
         { path: join(this.dshHome, 'skills'), source: 'user-dsh', rank: USER_DSH_RANK, skipSystem: true },
         { path: join(this.agentsHome, 'skills'), source: 'user-agents', rank: USER_AGENTS_RANK },
@@ -725,13 +762,14 @@ async function discoverRoot(root: SkillRoot, ctx: Context, provider: string): Pr
   const entries = await listSkillRootEntries(root, ctx)
   for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name))) {
     if (root.skipSystem && entry.name === '.system') continue
-    const locator = entry.type === 'directory'
+    const location = entry.type === 'directory'
       ? { path: join(entry.path, 'SKILL.md'), directory: entry.path }
       : entry.type === 'file' && entry.name.endsWith('.md')
         ? { path: entry.path, directory: root.path }
         : undefined
-    if (locator === undefined) continue
-    const parsed = await parseSkillFile(locator.path, ctx, undefined, root.trustedHost === true)
+    if (location === undefined) continue
+    const locator: LocalLocator = { ...location, ...root.agentId === undefined ? {} : { agentId: root.agentId } }
+    const parsed = await parseSkillFile(locator.path, ctx, undefined, root.trustedHost === true, root.agentId)
     if (parsed === undefined) continue
     skills.push({
       name: parsed.name,
@@ -758,15 +796,15 @@ async function listSkillRootEntries(root: SkillRoot, ctx: Context): Promise<Skil
 
 async function listSkillRootEntriesFromFileSystem(root: SkillRoot, fs: FileSystem): Promise<SkillRootEntry[]> {
   try {
-    return (await fsListDir(fs, root.path)).map(entryFromFs)
+    return (await fsListDir(fs, root.path, root.agentId)).map(entryFromFs)
   } catch (error) {
     if (isAbsentSkillPathError(error)) return []
     throw error
   }
 }
 
-async function fsListDir(fs: FileSystem, path: string): Promise<FsDirEntry[]> {
-  const target = await fs.resolve(path)
+async function fsListDir(fs: FileSystem, path: string, agentId: string | undefined): Promise<FsDirEntry[]> {
+  const target = await fs.resolve(path, agentId === undefined ? undefined : { agentId })
   return await fs.listDir(target)
 }
 
@@ -794,8 +832,14 @@ async function listSkillRootEntriesFromNode(root: SkillRoot, ctx: Context): Prom
   return result
 }
 
-async function parseSkillFile(path: string, ctx: Context, signal?: AbortSignal, trustedHost = false): Promise<ParsedSkill | undefined> {
-  const raw = await readSkillText(ctx, path, signal, trustedHost)
+async function parseSkillFile(
+  path: string,
+  ctx: Context,
+  signal?: AbortSignal,
+  trustedHost = false,
+  agentId?: string,
+): Promise<ParsedSkill | undefined> {
+  const raw = await readSkillText(ctx, path, signal, trustedHost, agentId)
   signal?.throwIfAborted()
   if (raw === undefined) {
     return undefined
@@ -843,11 +887,17 @@ function optionalFileSystem(ctx: Context): FileSystem | undefined {
   return ctx.get('fs')
 }
 
-async function readSkillText(ctx: Context, path: string, signal?: AbortSignal, trustedHost = false): Promise<SkillText | undefined> {
+async function readSkillText(
+  ctx: Context,
+  path: string,
+  signal?: AbortSignal,
+  trustedHost = false,
+  agentId?: string,
+): Promise<SkillText | undefined> {
   signal?.throwIfAborted()
   const fs = optionalFileSystem(ctx)
   if (fs !== undefined && !trustedHost) {
-    return await readSkillTextFromFileSystem(ctx, fs, path, signal)
+    return await readSkillTextFromFileSystem(ctx, fs, path, signal, agentId)
   }
   try {
     const resolvedPath = await realpath(path)
@@ -860,13 +910,13 @@ async function readSkillText(ctx: Context, path: string, signal?: AbortSignal, t
 }
 
 async function readSkillTextFromFileSystem(
-  ctx: Context, fs: FileSystem, path: string, signal?: AbortSignal,
+  ctx: Context, fs: FileSystem, path: string, signal?: AbortSignal, agentId?: string,
 ): Promise<SkillText | undefined> {
   // A missing or temporarily inaccessible skill file is not fatal to discovery.
   signal?.throwIfAborted()
   let target
   try {
-    target = await fs.resolve(path)
+    target = await fs.resolve(path, agentId === undefined ? undefined : { agentId })
   } catch (error) {
     if (isAbsentSkillPathError(error)) return undefined
     throw error
@@ -942,10 +992,10 @@ function findClosingFrontmatter(raw: string, start: number): { start: number; bo
   }
 }
 
-async function findProjectRoot(cwd: string, fs: FileSystem | undefined): Promise<string> {
+async function findProjectRoot(cwd: string, fs: FileSystem | undefined, agentId: string | undefined): Promise<string> {
   let current = cwd
   while (true) {
-    if (await pathExists(join(current, '.git'), fs)) {
+    if (await pathExists(join(current, '.git'), fs, agentId)) {
       return current
     }
     const parent = dirname(current)
@@ -954,17 +1004,17 @@ async function findProjectRoot(cwd: string, fs: FileSystem | undefined): Promise
   }
 }
 
-async function pathExists(path: string, fs: FileSystem | undefined): Promise<boolean> {
+async function pathExists(path: string, fs: FileSystem | undefined, agentId: string | undefined): Promise<boolean> {
   if (fs !== undefined) {
-    return await pathExistsInFileSystem(path, fs)
+    return await pathExistsInFileSystem(path, fs, agentId)
   }
   return await pathExistsInNode(path)
 }
 
-async function pathExistsInFileSystem(path: string, fs: FileSystem): Promise<boolean> {
+async function pathExistsInFileSystem(path: string, fs: FileSystem, agentId: string | undefined): Promise<boolean> {
   let target
   try {
-    target = await fs.resolve(path)
+    target = await fs.resolve(path, agentId === undefined ? undefined : { agentId })
   } catch {
     // A backend may reject or hide this candidate; continue walking upward.
     return false

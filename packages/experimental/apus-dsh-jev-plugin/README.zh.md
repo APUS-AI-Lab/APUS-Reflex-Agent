@@ -29,7 +29,7 @@ kind: "package-bundle"
 
 正式 System3 服务在启动 web profile 前运行 [prepare-profile.mjs](../../../deploy/system3/prepare-profile.mjs)。准备步骤只加入一次此 bundle，并保留既有用户补丁。[cordis.patch.yml](cordis.patch.yml) 提供 `jev` 行；profile 编辑覆盖这些默认值，无需改动 bundle。密钥保存在 Harness 凭据存储或 `apiKeyEnv` 引用的启动环境中。
 
-传输使用 `@typesafe-ai/sdk` 0.6.0，禁用自动重试及 SDK 日志。`protocol: openjev` 发送配置的 effort，`protocol: typesafe` 不发送该扩展。端点可使用 API 根地址或 `/v1` 前缀。超时覆盖凭据解析与响应接收；取消后迟到的凭据不会触发网络调用。网络响应体在交给 SDK 前完整读取，取消保持当前调用的失败，不产生脱离请求的拒绝。state 接受文本、对象、数组和 null。
+传输使用 `@typesafe-ai/sdk` 0.6.0，禁用自动重试及 SDK 日志。`protocol: openjev` 发送配置的 effort，`protocol: typesafe` 不发送该扩展。`protocol: chat-completions` 绕过该 SDK：每个问题发一个带 `logprobs` 的 chat 请求，再从模型自己的 token 概率里读裁决——`noul` 取最后一个 `yes`／`no` token，`choice` 取最后一个选项字母，并按末步给出的候选概率归一。回答中没有裁决时按 `invalid-response` 失败，而不是记 0 分，因为 0 会让模型从未判过的候选进入排序。端点可使用 API 根地址或 `/v1` 前缀。超时覆盖凭据解析与响应接收；取消后迟到的凭据不会触发网络调用。网络响应体在交给 SDK 前完整读取，取消保持当前调用的失败，不产生脱离请求的拒绝。state 接受文本、对象、数组和 null。
 
 <a id="configure-the-gateway"></a>
 ### 配置 gateway
@@ -54,7 +54,7 @@ kind: "package-bundle"
 | `enabled` | `true` | 是否运行 Reflex 判定。为 `false` 时，解析或发送判定会抛出 `JevDisabledError`（与未配置提供方相同的 `JevConfigurationError`），不会向网关发送任何请求；System3 的前置判定直接跳过且不留记录，其他判定记录 `provider-unavailable` 并保持原生路径，Continuum 排序在各模式下都保持基线顺序。提供方元数据仍会列出。“设置 → Reflex 配置”将其显示为立即保存的开关；更改对下一次判定生效。`isEnabled()` 读取该值，每次变化都会触发 `jev/enabled`，供 Jev 配置项以外的依赖方监听。`isReady(providerId?)` 同步且无副作用：Reflex 关闭或所解析提供方的可选 `ready()` 返回 false 时为 false，其余情况为 true，包括没有 `ready()` 的提供方以及未配置或未注册的提供方（其失败仍由 `decide()` 报告）；可选的使用方据此跳过判定，而不记录失败 |
 | `endpoint` | 空 | HTTP gateway 根 URL 或 `/v1` URL；执行决策前须与 `model` 一同配置 |
 | `model` | 空 | 发给 gateway 的模型 id；执行决策前须与 `endpoint` 一同配置 |
-| `protocol` | `openjev` | 决策协议：OpenJev（`openjev`）或 Typesafe（`typesafe`） |
+| `protocol` | `openjev` | 决策协议：OpenJev（`openjev`）、Typesafe（`typesafe`），或面向任意 OpenAI 兼容端点的 `chat-completions`。后者把每个问题写成文字提问——`noul` 问是非，`choice` 为每个选项给出一个字母——并从 `logprobs` 读取答案 token 的概率；`score` 没有这种问法，会被拒绝 |
 | `effort` | `low` | OpenJev 推理 effort：`low` 或 `high`；Typesafe 不发送该扩展 |
 | `timeoutMs` | `30000` | 请求期限，单位毫秒 |
 | `apiKeyEnv` | 无 | 每次请求解析的凭据引用 |
@@ -62,6 +62,7 @@ kind: "package-bundle"
 | `http2` | `false` | 在专用连接上协商 HTTP/2；需要 `keepAliveMs` |
 | `resetAfterFailures` | 无 | 连续这么多次请求没有响应后销毁专用连接池，下一次请求打开新连接；HTTP/2 下所有请求共用一条连接，否则一条卡住的连接会让之后的每次判定都失败。需要 `keepAliveMs`；省略时从不重建连接池 |
 | `questionsPerRequest` | 无 | 一次网关请求最多携带的问题数（1–16）。问题更多的判定按此大小分成连续的组，以相同 state 并行发送，答复合并成一个响应，用量计数相加；任一组失败会取消其他组，整次判定失败。网关耗时随问题数增长：在已部署的网关上，7 个问题作为一个请求约 340 ms，复用连接时拆成 7 个并行请求约 260 ms。省略时每次判定作为一个请求发送 |
+| `chatTemplateKwargs` | 不设置 | 每次 `chat-completions` 请求都原样作为 `chat_template_kwargs` 发送的 chat template 开关。要求一个裁决词的推理模型会先花预算思考：在同一网关，同一判定开启思考时输出 330 个 token、4.9 秒，设 `enable_thinking: false` 后为 2 个 token、0.17 秒。调用方的期限短于思考时间时永远拿不到判定，因此能关闭思考的部署在这里设置。这些开关属于模型自身，依赖前先确认所服务的 chat template 接受它们 |
 | `providerId` | `system-one` | 内置 provider 的 registry id；请求未指定 provider 且未设置 `defaultProviderId` 时选用 |
 | `defaultProviderId` | 不设置 | 请求未指定 provider 时选用的 id，例如由其他插件注册的本机 Reflex 引擎（`@deepseek-ai/dsh-experimental-reflex-local`）。修改后下一次判断即切换，不重命名、不重载内置 provider；`enabled: false` 仍会停止所有 provider |
 

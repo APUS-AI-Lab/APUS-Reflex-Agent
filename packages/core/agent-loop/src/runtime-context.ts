@@ -12,8 +12,27 @@ import { isReplacementSurfaceEvent } from '@deepseek-ai/dsh-session'
 import type { Context } from '@deepseek-ai/cordis'
 declare module '@deepseek-ai/dsh-llm' {
   interface MessageSourceMap {
-    'runtime-context': { kind: 'runtime-context' } & ContextFormed
+    'runtime-context': { kind: 'runtime-context' } & ContextFormed & {
+      /**
+       * What changed relative to the previous retained snapshot. Absent on the
+       * first snapshot, which has no predecessor to compare against.
+       */
+      readonly change?: RuntimeContextChange
+    }
   }
+}
+
+/** How one named contribution differs from the snapshot it replaced. */
+export interface RuntimeContextSectionChange {
+  readonly name: string
+  /** `added` had no predecessor contribution; the others had one. */
+  readonly kind: 'added' | 'updated' | 'removed'
+}
+
+/** The delta one snapshot carries, so a reader can see why it replaced the last. */
+export interface RuntimeContextChange {
+  readonly fromSeq: SessionSeq
+  readonly sections: readonly RuntimeContextSectionChange[]
 }
 
 const SOURCE = 'runtime-context'
@@ -26,6 +45,30 @@ function isOwned(message: UserMessage): boolean {
 function textOf(message: Message): string | undefined {
   const [block] = message.content
   return message.content.length === 1 && block?.type === 'text' ? block.text : undefined
+}
+
+/** The contributions one retained snapshot recorded, or none when it recorded no form. */
+function sectionsOf(message: Message): readonly ContextSnapshotSection[] {
+  const source = message.source as { form?: string; sections?: readonly ContextSnapshotSection[] }
+  return source.form === 'snapshot' ? source.sections ?? [] : []
+}
+
+/** Compare two snapshots' contributions, naming only what differs. */
+function changeBetween(
+  previous: readonly ContextSnapshotSection[],
+  current: readonly ContextSnapshotSection[],
+): RuntimeContextSectionChange[] {
+  const before = new Map(previous.map(section => [section.name, section.text]))
+  const after = new Map(current.map(section => [section.name, section.text]))
+  const changes: RuntimeContextSectionChange[] = []
+  for (const [name, text] of after) {
+    if (!before.has(name)) changes.push({ name, kind: 'added' })
+    else if (before.get(name) !== text) changes.push({ name, kind: 'updated' })
+  }
+  for (const name of before.keys()) {
+    if (!after.has(name)) changes.push({ name, kind: 'removed' })
+  }
+  return changes
 }
 
 /** One uncommitted system-prompt surface operation for request admission or reconciliation. */
@@ -113,7 +156,11 @@ export class SystemPromptProjection {
 /** Tracks the last retained runtime-context snapshot without owning its commit. */
 export class RuntimeContextProjection {
   /** `undefined` means no snapshot ever existed; `null` means none is retained. */
-  private retained: { seq: SessionSeq; text: string | undefined } | null | undefined
+  private retained: {
+    seq: SessionSeq
+    text: string | undefined
+    sections: readonly ContextSnapshotSection[]
+  } | null | undefined
 
   /**
    * Restore projection state once, then follow authoritative session events.
@@ -126,7 +173,11 @@ export class RuntimeContextProjection {
       if (event.type !== 'user/message' || !isOwned(event.data)) continue
       this.retained ??= null
       if (surface.has(event.seq)) {
-        this.retained = { seq: event.seq, text: textOf(event.data) }
+        this.retained = {
+          seq: event.seq,
+          text: textOf(event.data),
+          sections: sectionsOf(event.data),
+        }
         break
       }
     }
@@ -134,7 +185,11 @@ export class RuntimeContextProjection {
     ctx.on('session/event', (subject, event) => {
       if (subject !== session) return
       if (event.type === 'user/message' && isOwned(event.data)) {
-        this.retained = { seq: event.seq, text: textOf(event.data) }
+        this.retained = {
+          seq: event.seq,
+          text: textOf(event.data),
+          sections: sectionsOf(event.data),
+        }
       } else if (this.retained
         && isReplacementSurfaceEvent(event)
         && event.sourceEventSeqs?.includes(this.retained.seq) === true) {
@@ -153,12 +208,18 @@ export class RuntimeContextProjection {
     if (this.retained === undefined && current.length === 0) return
     const snapshot = current.length === 0 ? CLEARED : current
     if (this.retained?.text === snapshot) return
+    // The delta against the snapshot this one replaces. Without it a reader of
+    // the durable log sees only the new text and cannot say what moved.
+    const previous = this.retained
+    const change: RuntimeContextChange | undefined = previous === null || previous === undefined
+      ? undefined
+      : { fromSeq: previous.seq, sections: changeBetween(previous.sections, sections) }
     return createUserMessage({
       content: [{ type: 'text', text: snapshot }],
       // The cleared marker has no contributions left to attribute.
       source: sections.length === 0
-        ? { kind: SOURCE }
-        : { kind: SOURCE, form: 'snapshot', sections },
+        ? { kind: SOURCE, ...change === undefined ? {} : { change } }
+        : { kind: SOURCE, form: 'snapshot', sections, ...change === undefined ? {} : { change } },
     })
   }
 }

@@ -23,6 +23,9 @@
     },
     {
       "path": "../../core/tools"
+    },
+    {
+      "path": "../../core/session"
     }
   ]
 }

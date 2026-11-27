@@ -12,9 +12,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, TypeAlias, TypeVar
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
-from .errors import JsonRpcError, TransportClosedError
+from .errors import JsonRpcError, SdkProtocolError, TransportClosedError
 from .models import (
     IncomingRequest,
     InitializeResponse,
@@ -56,6 +56,9 @@ class HarnessClient:
         self._proc: subprocess.Popen[str] | None = None
         self._lock = threading.Lock()
         self._write_lock = threading.Lock()
+        # Held across the runtime spawn so concurrent first callers cannot each
+        # launch a process; see start().
+        self._launch_lock = threading.Lock()
         self._responses: dict[str, queue.Queue[JsonValue | BaseException]] = {}
         self._notifications: queue.Queue[Notification | BaseException] = queue.Queue()
         self._notification_subscribers: dict[
@@ -63,10 +66,22 @@ class HarnessClient:
             tuple[queue.Queue[Notification | BaseException], NotificationFilter | None],
         ] = {}
         self._session_parents: dict[str, str] = {}
+        # Prompt calls in progress per session, guarded by ``_lock``. A
+        # cancellation waits for them so a prompt that was already decided is
+        # written before the cancel frame instead of after it.
+        self._session_prompts_in_flight: dict[str, int] = {}
+        self._session_prompts_settled = threading.Condition(self._lock)
         self._requests: queue.Queue[IncomingRequest | BaseException] = queue.Queue()
         self._stderr_lines: deque[str] = deque(maxlen=400)
         self._reader_thread: threading.Thread | None = None
         self._stderr_thread: threading.Thread | None = None
+        # Capability tokens the runtime advertised during ``initialize``.
+        self._capabilities: list[str] = []
+
+    @property
+    def capabilities(self) -> list[str]:
+        """Return the capability tokens the runtime advertised during ``initialize``."""
+        return list(self._capabilities)
 
     def __enter__(self) -> "HarnessClient":
         self.start()
@@ -76,29 +91,43 @@ class HarnessClient:
         self.close()
 
     def start(self) -> None:
-        if self._proc is not None:
-            return
-        with self._lock:
-            self._session_parents.clear()
-        env = os.environ.copy()
-        if self.config.env:
-            env.update(self.config.env)
-        args = list(self._launch_args or self._default_launch_args(env))
-        self._proc = subprocess.Popen(
-            args,
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            encoding="utf-8",
-            cwd=None
-            if self.config.cwd is None
-            else str(Path(self.config.cwd).resolve()),
-            env=env,
-            bufsize=1,
-        )
-        self._start_reader_thread()
-        self._start_stderr_thread()
+        """Launch the runtime once, whatever order callers arrive in.
+
+        The check and the spawn have to be one step: a caller that finds no
+        runtime must be the only one that creates it. Without that, two callers
+        both pass the check, both spawn, and the assignment keeps only the
+        second — leaving the first running as an orphan whose stdout is still
+        wired to a reader that now belongs to the other process. Runs then wait
+        for events that arrive on the pipe nobody reads.
+
+        The launch lock is not the state lock: state changes stay short, while
+        this one is held across the spawn so a second caller waits for the
+        start instead of repeating it.
+        """
+        with self._launch_lock:
+            if self._proc is not None:
+                return
+            with self._lock:
+                self._session_parents.clear()
+            env = os.environ.copy()
+            if self.config.env:
+                env.update(self.config.env)
+            args = list(self._launch_args or self._default_launch_args(env))
+            self._proc = subprocess.Popen(
+                args,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                encoding="utf-8",
+                cwd=None
+                if self.config.cwd is None
+                else str(Path(self.config.cwd).resolve()),
+                env=env,
+                bufsize=1,
+            )
+            self._start_reader_thread()
+            self._start_stderr_thread()
 
     def close(self) -> None:
         """Close the runtime after a bounded opportunity to flush durable state."""
@@ -165,11 +194,17 @@ class HarnessClient:
         if max_tokens is not None:
             payload["maxTokens"] = max_tokens
         try:
-            return self.request(
+            response = self.request(
                 "initialize",
                 payload,
                 response_model=InitializeResponse,
                 timeout_seconds=self.config.initialize_timeout_seconds,
+            )
+            self._capabilities = list(response.capabilities or [])
+            # Absence means "no optional surfaces"; expose the normalized empty
+            # list rather than leaving callers to distinguish None from [].
+            return response.model_copy(
+                update={"capabilities": list(self._capabilities)}
             )
         except TimeoutError as error:
             self.close()
@@ -192,20 +227,168 @@ class HarnessClient:
         session_id: str,
         content_blocks: list[JsonObject],
         *,
+        cwd: str | None = None,
+        agent_preset: str | None = None,
         on_notification: Callable[[Notification], None] | None = None,
         notification_subscription: "NotificationSubscription | None" = None,
+        before_deliver: Callable[[], None] | None = None,
     ) -> str:
-        """Return the queued message id without confirming a persistence flush."""
+        """Return the queued message id without confirming a persistence flush.
+
+        ``before_deliver`` runs at the delivery point, after the prompt is
+        registered as in flight and before its frame is written; raising there
+        sends nothing. A caller that owns an automation interval uses it to
+        refuse work cancelled in the meantime.
+        """
         payload: JsonObject = {"sessionId": session_id, "contentBlocks": content_blocks}
-        response = self.request(
-            "session/prompt",
-            payload,
-            response_model=_SessionPromptResponse,
-            on_notification=on_notification,
-            notification_filter=self._notification_belongs_to_session_tree(session_id),
-            notification_subscription=notification_subscription,
-        )
+        if cwd is not None:
+            payload["cwd"] = cwd
+        if agent_preset is not None:
+            payload["agentPreset"] = agent_preset
+        with self._session_prompts_settled:
+            self._session_prompts_in_flight[session_id] = (
+                self._session_prompts_in_flight.get(session_id, 0) + 1
+            )
+        try:
+            if before_deliver is not None:
+                before_deliver()
+            response = self.request(
+                "session/prompt",
+                payload,
+                response_model=_SessionPromptResponse,
+                on_notification=on_notification,
+                notification_filter=self._notification_belongs_to_session_tree(
+                    session_id
+                ),
+                notification_subscription=notification_subscription,
+            )
+        finally:
+            with self._session_prompts_settled:
+                remaining = self._session_prompts_in_flight.get(session_id, 1) - 1
+                if remaining > 0:
+                    self._session_prompts_in_flight[session_id] = remaining
+                else:
+                    self._session_prompts_in_flight.pop(session_id, None)
+                    self._session_prompts_settled.notify_all()
         return response.messageId
+
+    def session_dispatches(self, session_id: str) -> JsonObject:
+        """List one session's recorded model dispatches.
+
+        The runtime owns the dispatch records; this client transports them
+        verbatim and validates only the answer envelope.
+
+        Raises:
+            ValueError: ``session_id`` is empty.
+            JsonRpcError: The runtime refused the request.
+            SdkProtocolError: The runtime answered without a dispatch list.
+        """
+        if not session_id:
+            raise ValueError("session_dispatches requires a non-empty session_id")
+        result = self.request(
+            "session/dispatches",
+            {"sessionId": session_id},
+            response_model=_JsonObjectResponse,
+        ).model_dump()
+        dispatches = result.get("dispatches")
+        if not isinstance(dispatches, list):
+            raise SdkProtocolError("session/dispatches did not return a dispatch list")
+        return {
+            "sessionId": result.get("sessionId", session_id),
+            "dispatches": [
+                dict(entry) for entry in dispatches if isinstance(entry, dict)
+            ],
+        }
+
+    def session_request_view(self, session_id: str, dispatch_seq: int) -> JsonObject:
+        """Fetch one recorded dispatch's rebuilt model input.
+
+        The runtime reconstructs the view through its native Session primitives.
+        The Python SDK relays it unchanged; it never builds a second message
+        projection. A dispatch the runtime cannot represent is refused with a
+        ``JsonRpcError`` whose ``data.code`` classifies the reason.
+
+        Raises:
+            ValueError: ``session_id`` is empty or ``dispatch_seq`` is not a
+                non-negative integer.
+            JsonRpcError: The runtime refused the request (for example
+                ``UNSUPPORTED_PROJECTION``).
+            SdkProtocolError: The runtime answered without a request view.
+        """
+        if not session_id:
+            raise ValueError("session_request_view requires a non-empty session_id")
+        if (
+            isinstance(dispatch_seq, bool)
+            or not isinstance(dispatch_seq, int)
+            or dispatch_seq < 0
+        ):
+            raise ValueError(
+                "session_request_view requires a non-negative integer dispatch_seq"
+            )
+        result = self.request(
+            "session/request-view",
+            {"sessionId": session_id, "dispatchSeq": dispatch_seq},
+            response_model=_JsonObjectResponse,
+        ).model_dump()
+        if (
+            result.get("sessionId") != session_id
+            or result.get("dispatchSeq") != dispatch_seq
+            or not isinstance(result.get("header"), dict)
+            or not isinstance(result.get("messages"), list)
+            or not isinstance(result.get("toolHistory"), dict)
+            or not isinstance(result.get("projectionTypes"), list)
+        ):
+            raise SdkProtocolError("session/request-view did not return a request view")
+        return result
+
+    def session_cancel(self, session_id: str) -> None:
+        """Stop one session's active and queued work and await confirmation.
+
+        Other sessions and the runtime process keep running. A prompt that was
+        already in flight when the cancellation arrived is refused, so the
+        cancelled work never starts afterwards; a prompt sent after this call
+        returns starts new work on the same session.
+
+        Raises:
+            ValueError: ``session_id`` is empty.
+            JsonRpcError: The runtime refused or failed the cancellation.
+            SdkProtocolError: The runtime answered without confirming.
+            TimeoutError: The in-flight prompt or the runtime exceeded the
+                configured request bound.
+            TransportClosedError: The runtime is gone.
+        """
+        if not session_id:
+            raise ValueError("session_cancel requires a non-empty session_id")
+        # Let a prompt that was already decided reach the runtime first; the
+        # runtime then cancels it instead of letting it start after ours. The
+        # wait uses the same request budget, so a prompt that never receives its
+        # receipt cannot hang the cancellation forever.
+        budget = self.config.request_timeout_seconds
+        deadline = None if budget is None else time.monotonic() + budget
+        with self._session_prompts_settled:
+            while self._session_prompts_in_flight.get(session_id):
+                if deadline is None:
+                    self._session_prompts_settled.wait()
+                    continue
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    raise TimeoutError(
+                        f"session/cancel waited for an in-flight prompt on "
+                        f"{session_id!r} beyond its {budget}s request budget"
+                    )
+                self._session_prompts_settled.wait(remaining)
+        response = self.request(
+            "session/cancel",
+            {"sessionId": session_id},
+            response_model=_SessionCancelResponse,
+        )
+        if response.cancelled is not True:
+            raise SdkProtocolError("session/cancel did not confirm cancellation")
+        if response.sessionId != session_id:
+            raise SdkProtocolError(
+                "session/cancel confirmed a different session: "
+                f"{response.sessionId!r} != {session_id!r}"
+            )
 
     def request(
         self,
@@ -637,6 +820,17 @@ class NotificationSubscription:
 
 class _SessionPromptResponse(BaseModel):
     messageId: str
+
+
+class _JsonObjectResponse(BaseModel):
+    """Response envelope that retains every member of a free-form JSON object."""
+
+    model_config = ConfigDict(extra="allow")
+
+
+class _SessionCancelResponse(BaseModel):
+    sessionId: str
+    cancelled: bool
 
 
 class _ShutdownResponse(BaseModel):

@@ -24,8 +24,8 @@
   en: 42c3fee6ddf0e952
   zh: 6b7728300cf5bfdc
 /deepseek-ai-dsh-tool-call-timeout-policy/use-this-package/what-you-get:
-  en: 339ff1d6001f3def
-  zh: c3e378abc7c58fa4
+  en: 4eedcd16d21d3fb0
+  zh: 4a43092baa187725
 /deepseek-ai-dsh-tool-call-timeout-policy/understand-the-implementation:
   en: 9bdd0f9388915825
   zh: c101ec504869d187
@@ -35,12 +35,15 @@
 /deepseek-ai-dsh-tool-call-timeout-policy/understand-the-implementation/how-a-deadline-is-armed-and-mapped:
   en: 4c2f31d760d5ad4b
   zh: 42e5c42675c32dcc
+/deepseek-ai-dsh-tool-call-timeout-policy/understand-the-implementation/deadline-record:
+  en: 906495d167a6a0e0
+  zh: 91ed22984600a334
 /deepseek-ai-dsh-tool-call-timeout-policy/understand-the-implementation/composing-with-other-wrappers:
   en: 09fba7333cf511f6
   zh: 965c60634d370287
 /deepseek-ai-dsh-tool-call-timeout-policy/understand-the-implementation/source-map:
-  en: 35abf9419848ba92
-  zh: 3c08b161064abdcd
+  en: 2639a571473506e8
+  zh: 57a1916f74cffa91
 /deepseek-ai-dsh-tool-call-timeout-policy/further-exploration:
   en: fb2426b1c4c3da4a
   zh: ff9a7cd6a6b9f631
@@ -54,14 +57,14 @@
   en: 1fd9832261036f56
   zh: 245b04969f3bc26d
 /deepseek-ai-dsh-tool-call-timeout-policy/model-experience/conditional-tool-result/token-effect:
-  en: 063d0485b8631d04
-  zh: 13c1a680cfa9f02b
+  en: 90b4a818a0ab5da2
+  zh: 649d77e28b12cf78
 /deepseek-ai-dsh-tool-call-timeout-policy/model-experience/conditional-tool-result/kv-cache-effect:
   en: 2fbf2175168e8244
   zh: f681f89596f500f5
 /deepseek-ai-dsh-tool-call-timeout-policy/known-limitations-and-deferred-work:
-  en: 8b51b07b2fc6d1bc
-  zh: f65e3760a6ea5f2f
+  en: b7e3dbf02ad757c0
+  zh: 080ca05ffec9011d
 /deepseek-ai-dsh-tool-call-timeout-policy/known-limitations-and-deferred-work/dev-note:
   en: 93e2b2a5ae84f266
   zh: 63283f6b1b2da63f

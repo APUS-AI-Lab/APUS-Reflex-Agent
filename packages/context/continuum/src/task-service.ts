@@ -12,10 +12,10 @@ import { defineTool } from '@deepseek-ai/dsh-tools'
 import type {} from '@deepseek-ai/dsh-system-prompt'
 import { MemoryId } from './records.ts'
 import { TaskJournal } from './task-journal.ts'
-import { MemoryDomainId, MemoryPrincipalId, MemoryTaskId, type TaskDomainIdentity, type TaskReceipt, type TaskSnapshot } from './task-types.ts'
+import { MemoryDomainId, MemoryPrincipalId, MemoryTaskId, type TaskDomainIdentity, type TaskReceipt, type TaskSnapshot, type TaskStoredEntry } from './task-types.ts'
 import { readTaskSource, type TaskSourceInput } from './task-source.ts'
 import { renderTaskPage, type TaskPageOptions } from './task-pages.ts'
-import type { TaskBinding } from './task-binding.ts'
+import type { TaskBinding, TaskRetirementBasis } from './task-binding.ts'
 import type {} from './task-guard.ts'
 export type { TaskBinding } from './task-binding.ts'
 
@@ -61,6 +61,7 @@ export default class ContinuumTasks extends Service {
 
   private journal!: TaskJournal
   private identity!: TaskDomainIdentity
+  private journalId!: SessionId
   private readonly taskId: MemoryTaskId
   private readonly agents = new Map<SessionId, Agent>()
   private readonly prepared = new WeakMap<Agent, { revision: number; retirement: string; admittedMessageIds: Set<MessageId> }>()
@@ -84,6 +85,7 @@ export default class ContinuumTasks extends Service {
     const isolated = ctx.root.isolate('sessionPersistence')
     const backend = await isolated.plugin(JsonlSessionPersistence, { root: join(config.root, 'task-journals'), compression: 'none' })
     const id = SessionId(createHash('sha256').update(config.domainId).digest('hex'))
+    this.journalId = id
     try {
       const existing = await isolated.sessionPersistence.stat(id)
       const handle = existing === undefined
@@ -192,10 +194,12 @@ export default class ContinuumTasks extends Service {
     await this.settled(agent)
     const original = await readTaskSource(this.ctx, agent, this.requireIdentity().workspace, request.source)
     this.assertActive()
-    return this.commitAuthorized(() => this.requireJournal().commit({
+    const receipt = await this.commitAuthorized(() => this.requireJournal().commit({
       requestId: request.requestId, expectedRevision: request.expectedRevision,
       command: { kind: 'supersede', taskId: this.taskId, predecessor: request.predecessor,
         entry: { id: MemoryId(`correction:${request.requestId}`), role: 'input', ...original } } }))
+    this.appendJournalReceipt(agent, receipt)
+    return receipt
   }
 
   private async * guardRequest(options: GenerateOptions, next: () => AsyncIterable<StreamChunk>): AsyncIterable<StreamChunk> {
@@ -270,6 +274,7 @@ export default class ContinuumTasks extends Service {
             prepared.revision = receipt.revision
             prepared.admittedMessageIds.add(event.data.id)
           }
+          this.appendJournalReceipt(agent, receipt)
         })
       }
     })
@@ -312,7 +317,23 @@ export default class ContinuumTasks extends Service {
       if (current.retirementDigest !== retirement) throw new Error('task requirements were retired; open a fresh Session to avoid stale history or summaries')
       return
     }
-    agent.session.append('continuum/task-binding', { ...identity, taskId: this.taskId, retirementDigest: retirement })
+    agent.session.append('continuum/task-binding', {
+      ...identity, taskId: this.taskId, retirementDigest: retirement,
+      retirementBasis: retirementBasis(snapshot), journalRevision: this.requireJournal().revision,
+    })
+  }
+
+  /** Mirror one committed journal operation into the business Session as a log-only receipt. */
+  private appendJournalReceipt(agent: Agent, receipt: TaskReceipt): void {
+    try {
+      agent.session.append('continuum/task-receipt', {
+        version: 1, journalId: this.journalId, taskId: this.taskId,
+        requestId: receipt.requestId, revision: receipt.revision, workspace: this.identity.workspace,
+      })
+    } catch (error: unknown) {
+      // The journal already holds the authority; a receipt failure changes no business result.
+      this.ctx.logger.warn(`continuum task receipt failed: ${String(error)}`)
+    }
   }
 
   private installReadTool(): void {
@@ -346,7 +367,22 @@ export default class ContinuumTasks extends Service {
   }
 }
 
+function retiredEntries(
+  snapshot: TaskSnapshot | undefined,
+): readonly (TaskStoredEntry & { status: 'superseded' | 'deactivated' })[] {
+  return (snapshot?.entries ?? []).filter(
+    (entry): entry is TaskStoredEntry & { status: 'superseded' | 'deactivated' } => entry.status !== 'active',
+  )
+}
+
 function retirementDigest(snapshot: TaskSnapshot | undefined): string {
-  return createHash('sha256').update(JSON.stringify(snapshot?.entries.filter(entry => entry.status !== 'active')
-    .map(entry => [entry.id, entry.status, entry.supersedes]) ?? [])).digest('hex')
+  return createHash('sha256').update(JSON.stringify(retiredEntries(snapshot)
+    .map(entry => [entry.id, entry.status, entry.supersedes]))).digest('hex')
+}
+
+function retirementBasis(snapshot: TaskSnapshot | undefined): readonly TaskRetirementBasis[] {
+  return retiredEntries(snapshot).map(entry => ({
+    id: entry.id, status: entry.status,
+    ...(entry.supersedes === undefined ? {} : { supersedes: entry.supersedes }),
+  }))
 }

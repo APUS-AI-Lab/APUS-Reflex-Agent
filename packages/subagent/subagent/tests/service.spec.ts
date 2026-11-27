@@ -477,7 +477,29 @@ describe('SubagentRuntime', () => {
       await expect(subagents.steerByParent({ runId, parentSessionId: SessionId('delegator'), text: 'x' }, signal()))
         .rejects.toMatchObject({ code: 'subagent/not-steerable' })
       expect(steer).not.toHaveBeenCalled()
-      expect(parent.append).not.toHaveBeenCalled()
+      // The refusals must record nothing about steering. The run still settles
+      // normally above, so its own end fact is expected and is not a steering record.
+      expect(parent.append.mock.calls.filter(([type]) => type === 'subagent/steer')).toEqual([])
+    })
+
+    it('records the durable end fact when the run settles', async () => {
+      const { subagents, runId, parent, result, run } = await steerableRun(vi.fn(async () => {}))
+      const signalRef = signal()
+      await expect(subagents.steerByParent({ runId, parentSessionId: SessionId('delegator'), text: 'x' }, signalRef))
+        .resolves.toEqual({ accepted: true })
+      result.resolve({ output: [], stopReason: 'completed' })
+      await run.result
+
+      // The live edge and the durable fact are different things: the edge tells
+      // plugins, the record lets a trajectory reader pair the run with its
+      // delegation without replaying notifications.
+      expect(parent.append).toHaveBeenCalledWith('subagent/run-end', {
+        runId,
+        provider: 'steerable',
+        id: SessionId('child'),
+        local: false,
+        stopReason: 'completed',
+      })
     })
 
     it('forgets a run whose result rejects', async () => {

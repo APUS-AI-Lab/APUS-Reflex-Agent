@@ -36,6 +36,7 @@ import type { DelegationModelRequest, ModelSelectionPolicy } from './model-selec
 import { registerListSubagentModels } from './list-models.ts'
 import type {} from './model-selection-settings.ts'
 import {
+  recordModelSelectionObservation,
   recordSubagentModelSelection,
   subagentModelSelectionProjectionDefinition,
   subagentModelSelectionPolicy,
@@ -536,6 +537,27 @@ export function apply(ctx: Context, config: Config, session?: Session): void {
             ...maxDepth !== undefined ? { maxDepth } : {},
           }
 
+          const recordSelection = (childId: string): void => {
+            recordModelSelectionObservation(ctx.logger, parent.session, {
+              subagentId: childId,
+              // Only the model-facing route fields the call supplied; the rest
+              // of the arguments live in the executed tool event.
+              ...hasDelegationModelRequest(modelRequest)
+                ? {
+                    requested: {
+                      ...args.provider === undefined ? {} : { provider: args.provider },
+                      ...args.model === undefined ? {} : { model: args.model },
+                      ...args.reasoning_effort === undefined ? {} : { reasoning_effort: args.reasoning_effort },
+                    },
+                  }
+                : {},
+              // Omission records that no child options were forwarded and the
+              // provider's own defaults resolve the route, which is unobservable here.
+              ...requestedChildAgentOptions !== undefined ? { forwarded: requestedChildAgentOptions } : {},
+              policyConstrained: modelSelectionPolicy !== undefined,
+            })
+          }
+
           const runSpec = resolveDelegationRun(args, { backgroundEnabled, continuable })
           if (runSpec.runInBackground) {
             if (continuable) {
@@ -547,6 +569,7 @@ export function apply(ctx: Context, config: Config, session?: Session): void {
                 request,
                 signal: exec.signal,
               })
+              recordSelection(started.childId)
               return { kind: 'continuable' as const, subagentId: started.childId }
             }
             const jobs = runtimeCtx.get('jobs')
@@ -578,6 +601,7 @@ export function apply(ctx: Context, config: Config, session?: Session): void {
             ...request,
             signal: exec.signal,
           })
+          recordSelection(run.id)
           return settleForegroundRun(run)
         },
       }))

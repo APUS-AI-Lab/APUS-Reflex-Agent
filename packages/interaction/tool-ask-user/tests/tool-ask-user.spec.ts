@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import { ToolCallId } from '@deepseek-ai/dsh-llm'
 import AgentRegistry, { type Agent } from '@deepseek-ai/dsh-agent'
+import { Session, SessionId } from '@deepseek-ai/dsh-session'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import ToolRuntime from '@deepseek-ai/dsh-tools'
 import UserQuestionService, {
@@ -114,6 +115,7 @@ describe('ask_user_question tool', () => {
       content: [{ type: 'text', text: '{"answers":[{"id":"pkg","selected":["pnpm"]}]}' }],
     })
     expect(seen).toMatchObject([{
+      callId: 'ask-1',
       questions: [{
         id: 'pkg',
         question: 'Which package manager should I use?',
@@ -249,6 +251,28 @@ describe('ask_user_question tool', () => {
 
     expect(result.content).toEqual([{ type: 'text', text: '{"answers":[{"id":"continue","selected":["ok"]}]}' }])
     expect(seen[0]).toMatchObject({ questions: [{ id: 'continue', header: 'Confirm', question: 'Continue?' }], agent })
+  })
+
+  it('links the answer receipt to the tool call that waited for it', async () => {
+    const ctx = await setup()
+    const session = Session.create(SessionId('ask-receipt'))
+    session.append('turn/start', { turn: 1 })
+    const agent = { id: session.id, session } as unknown as Agent
+    ctx.agents.enter(agent, undefined)
+    registerQuestionAnswerer(ctx, { ask: async () => ({ answers: [{ id: 'continue', selected: ['ok'] }] }) })
+
+    await ctx.tools.execute({
+      signal: testToolSignal,
+      callId: ToolCallId('ask-receipt-1'),
+      name: 'ask_user_question',
+      arguments: { questions: [{ id: 'continue', question: 'Continue?' }] },
+      agent,
+    })
+
+    expect(session.snapshotEvents().at(-1)).toMatchObject({
+      type: 'user-question/answered',
+      data: { callId: 'ask-receipt-1', answeredBy: 'unattributed' },
+    })
   })
 
   it('returns structured user-questions errors through tool execution', async () => {

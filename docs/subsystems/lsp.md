@@ -153,7 +153,9 @@ interface LspService {
   registerProvider(provider: LspProvider): () => void
   /**
    * Select a provider by the file's extension and run one query. Selection is per-query and
-   * order-independent; no match throws `LspError` `LSP_UNAVAILABLE`.
+   * order-independent; no match throws `LspError` `LSP_UNAVAILABLE`. Appends one log-only
+   * `lsp/provider-selected` record to the initiating Agent's session; a missing initiator or
+   * failed append changes nothing.
    * @param request - the normalized query.
    * @param signal - optional cancellation forwarded to the selected provider.
    * @returns the normalized, closed-union result.
@@ -163,6 +165,40 @@ interface LspService {
 ```
 
 `LspProviderId` is the seam's branded id (`Branded<'LspProviderId'>` from [dsh-brand](../../packages/util/brand)); `LspError` extends `HarnessError` with stable codes such as `LSP_INVALID_PROVIDER`, `LSP_CONFLICT`, `LSP_UNAVAILABLE`, `LSP_DISPOSED`, `LSP_UNSUPPORTED_OPERATION`, and `LSP_MALFORMED_RESPONSE`, which callers route on instead of parsing `message`.
+
+## Provider selection record
+
+After the selected provider settles, each query appends one log-only `lsp/provider-selected` event to the initiating agent's session. A query with no initiator logs nothing, and a failed append cannot change the query's result or error. The event records the operation, the registered provider id that ran, the language id derived from that provider's extension map, the extension-based selection mode, both timings, the outcome, and the seam-level fallback chain. It carries no surface metadata and never enters model history; the query result or thrown `LspError` stays authoritative.
+
+```ts type-equiv
+/**
+ * One successful execution-time LSP provider selection, appended after the
+ * selected provider settles. Records the operation, the provider that ran, the
+ * derived language id, the extension-based selection mode, both timings, and
+ * the outcome. `fallbackChain` is always empty because this seam selects
+ * exactly one route and never falls back (provider-internal retries are not
+ * visible here). Log-only: `deriveMessages()` ignores it; the query result or
+ * thrown `LspError` stays authoritative.
+ */
+interface LspProviderSelectedEventData {
+  /** Query operation whose provider was selected. */
+  readonly operation: LspOperation
+  /** Registered id of the provider that ran. */
+  readonly providerId: string
+  /** Language id the seam derived from the provider's extension mapping. */
+  readonly languageId: string
+  /** How selection chose the provider: by the file's final extension. */
+  readonly selectionMode: 'extension'
+  /** Milliseconds from entering selection until the route was chosen. */
+  readonly selectionMs: number
+  /** Milliseconds from provider dispatch to settlement, success or failure. */
+  readonly latencyMs: number
+  /** Whether the provider query resolved or threw. */
+  readonly outcome: 'completed' | 'failed'
+  /** Seam-level fallback candidates, in order; always empty because the seam selects exactly one route. */
+  readonly fallbackChain: readonly string[]
+}
+```
 
 <!-- BEGIN GENERATED cordis-surface (gen-cordis-catalog.ts) — do not edit between markers -->
 
@@ -190,7 +226,9 @@ registerProvider(provider: LspProvider): () => void
 
 /**
  * Select a provider by the file's extension and run one query. Selection is per-query and
- * order-independent; no match throws `LspError` `LSP_UNAVAILABLE`.
+ * order-independent; no match throws `LspError` `LSP_UNAVAILABLE`. Appends one log-only
+ * `lsp/provider-selected` record to the initiating Agent's session; a missing initiator or
+ * failed append changes nothing.
  * @param request - the normalized query.
  * @param signal - optional cancellation forwarded to the selected provider.
  * @returns the normalized, closed-union result.

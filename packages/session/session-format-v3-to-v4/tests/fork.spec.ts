@@ -4,7 +4,7 @@ import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import TokenMeter from '@deepseek-ai/dsh-token-meter'
 import ToolResultPruner from '@deepseek-ai/dsh-compaction-tool-result-pruner'
 import { SessionFormatEventCollector, type SessionFormatEvent, type SessionFormatArtifact, type SessionFormatJsonObject } from '@deepseek-ai/dsh-session-format'
-import { Session, SessionId, SessionLogOffset, SessionSeq } from '@deepseek-ai/dsh-session'
+import { Session, SessionId, SessionLogOffset, SessionSeq, SESSION_FORMAT_VERSION } from '@deepseek-ai/dsh-session'
 import { buildForkSeed } from '@deepseek-ai/dsh-session/fork'
 import { createMessage, ToolCallId } from '@deepseek-ai/dsh-llm'
 import { releasedV4SessionFormatCodec as codec, assertV4RowAdmission, restoreReleasedV4Artifact } from '../src/index.ts'
@@ -29,13 +29,13 @@ function fork() {
   }, { surfaceOp: 'append' })
   const seed = buildForkSeed(source.snapshotEvents(), SessionSeq(2))
   return Session.create(SessionId('fork-child'), seed, {
-    version: 4, id: SessionId('fork-child'), createdAt: 1, delegationDepth: 0, isSeeded: true, parentSession: source.id,
+    version: SESSION_FORMAT_VERSION, id: SessionId('fork-child'), createdAt: 1, delegationDepth: 0, isSeeded: true, parentSession: source.id,
   }, SessionLogOffset(3))
 }
 
 function artifact(session = fork()): SessionFormatArtifact {
   return JSON.parse(JSON.stringify({
-    header: session.header, events: session.snapshotEvents(), inheritedEventCount: session.inheritedEventCount,
+    header: { ...session.header, version: 4 }, events: session.snapshotEvents(), inheritedEventCount: session.inheritedEventCount,
   })) as SessionFormatArtifact
 }
 
@@ -77,7 +77,7 @@ describe('V4 fork results', () => {
     expect(result.data.message.id).toBe(`forked-tool-result-read-one-${result.seq}`)
     expect(JSON.stringify(result)).toContain('The parent session may have executed it after the fork point.')
     const nested = Session.create(SessionId('fork-grandchild'), buildForkSeed(child.snapshotEvents(), result.seq), {
-      version: 4, id: SessionId('fork-grandchild'), createdAt: 1, delegationDepth: 0, isSeeded: true, parentSession: child.id,
+      version: SESSION_FORMAT_VERSION, id: SessionId('fork-grandchild'), createdAt: 1, delegationDepth: 0, isSeeded: true, parentSession: child.id,
     }, SessionLogOffset(result.seq + 1))
     expect(restoreReleasedV4Artifact(artifact(nested), new Set(original.map(event => event.type)))).toBeDefined()
   })

@@ -489,6 +489,9 @@ export function apply(ctx: Context, config: Config = {}): void {
         const dshEnv = ctx.shellEnv.collect(exec)
         const request: ShellExecRequest = {
           command: args.command,
+          // The agent this call runs for: an executor that runs commands
+          // outside this process needs it to pick the right environment.
+          ...exec.agent === undefined ? {} : { agentId: exec.agent.id },
           ...workdir !== undefined ? { workdir } : {},
           ...args.timeoutMs !== undefined ? { timeoutMs: args.timeoutMs } : {},
           dshEnv,

@@ -77,6 +77,9 @@ export function applyReadTool(ctx: Context, caps: ReadToolCaps): void {
   ctx.tools.register(defineTool({
     name: 'read',
     description: 'Read a UTF-8 text file and return line-numbered content.',
+    // Names this package as the settled call's owner so `tool/result` can carry
+    // a real attribution instead of leaving the field absent.
+    pluginOwner: '@deepseek-ai/dsh-tool-fs',
     parameters: {
       file_path: { type: 'string', required: true, description: 'Path to read, resolved by the filesystem backend.' },
       offset: { type: 'number', description: '1-based first line to return. Defaults to 1.' },
@@ -134,6 +137,9 @@ export function applyReadTool(ctx: Context, caps: ReadToolCaps): void {
     },
     // Observation races fail closed because guarded mutations re-check the version in-lock.
     isConcurrencySafe: () => true,
+    // Reading a file has no side effect and re-observes the file on each attempt, so a
+    // transient backend failure can be replayed once before it reaches the model.
+    retry: { maxAttempts: 2 },
     async execute(args, exec) {
       const input = parseReadArgs(args, caps.limit)
       // One stat: absence observation OR type check + size routing + present version.

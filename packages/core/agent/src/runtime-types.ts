@@ -110,7 +110,15 @@ export type AgentStatus = 'idle' | 'running'
 
 /** Whether and with which messages the loop enters a proposed step. */
 export type PreStepDecision =
-  | { kind: 'reject' }
+  | {
+    kind: 'reject'
+    /**
+     * Why the listener rejected the step, recorded on the durable
+     * `turn/pre-step` and `turn/end` records. Absent when the listener gives
+     * no reason; the loop never infers one.
+     */
+    reason?: string
+  }
   | {
     kind: 'enter'
     messages: UserMessage[]

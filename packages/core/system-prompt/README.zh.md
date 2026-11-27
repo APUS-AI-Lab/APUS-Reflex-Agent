@@ -104,7 +104,7 @@ ctx.systemPrompt.variable('cwd', ({ agent }) => agent?.session.header.cwd)
 
 ### 组装与渲染
 
-组装分两阶段完成求值与渲染：`assemble()` 返回文本已求值但尚未插值的段、有序工具 schema，以及每个已注册变量按当前上下文求得的值；`renderPrompt()` 对未设置 `interpolate: false` 的段插值 `{{variable}}` 引用、删除空段并用空行连接——严格规则：未知引用、已注册但无值的引用或格式错误的完整组都会抛出，因为格式错误的提示词比明确失败更糟。`toolOrder` 在 waterfall 分发前规范化收集到的工具（注册顺序只是插件加载产物）；修改列表的 waterfall 监听器对其输出的确定性负责。
+组装分两阶段完成求值与渲染：`assemble()` 返回文本已求值但尚未插值的段、有序工具 schema，以及每个已注册变量按当前上下文求得的值；`renderPromptSections()` 对未设置 `interpolate: false` 的段插值 `{{variable}}` 引用并删除空段，`joinPromptSections()` 用空行连接带名称的结果，`renderPrompt()` 组合二者，使同时需要逐段摘要的调用方复用同一插值路径——严格规则：未知引用、已注册但无值的引用或格式错误的完整组都会抛出，因为格式错误的提示词比明确失败更糟。`toolOrder` 在 waterfall 分发前规范化收集到的工具（注册顺序只是插件加载产物）；修改列表的 waterfall 监听器对其输出的确定性负责。
 
 ### 作用域
 

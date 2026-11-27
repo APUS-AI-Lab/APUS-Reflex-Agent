@@ -256,6 +256,23 @@ describe('Continuum threshold selection', () => {
     expect(result.selectedIds).toEqual(['lexical'])
     expect(result.evaluation.unscoredIds).toEqual(['lexical', 'other'])
   })
+
+  it('records the effective selection policy and caller limits in every evaluation', async () => {
+    const limits = {
+      maxCandidates: 8, maxExcerptBytes: 2048, maxTotalBytes: 8192,
+      candidatePool: 'all', maxPool: 8, admission: 'compaction',
+    } as const
+    const result = await selectContinuumMemory(fake([0.9]),
+      { ...threshold, minRelevance: 0.8, routeAbove: 3, minRouteProbability: 0.6 },
+      { query: 'q', candidates: [candidate('a', 0, 'fact')], limits })
+    expect(result.evaluation).toMatchObject({
+      policy: { selection: 'threshold', minRelevance: 0.8, routeAbove: 3, minRouteProbability: 0.6 }, limits,
+    })
+    const prepared: unknown[] = []
+    await selectContinuumMemory(fake([0.9]), { ...threshold, minRelevance: 0.8 }, { query: 'q', candidates: [candidate('a', 0)], limits },
+      undefined, (receipt) => { prepared.push(receipt.evaluation); return Promise.resolve(SessionSeq(prepared.length)) })
+    expect(prepared[0]).toMatchObject({ phase: 'prepared', policy: { selection: 'threshold', minRelevance: 0.8 }, limits })
+  })
 })
 
 describe('Continuum Reflex admitter service', () => {
@@ -317,7 +334,9 @@ describe('Continuum Reflex admitter service', () => {
     expect(admission.admitted).toEqual([{ id: 'x:1', tags: [] }, { id: 'x:2', tags: [] }])
     expect(provider.calls).toEqual([])
     expect(session.snapshotEvents().flatMap(event => event.type === 'continuum/memory-admission' ? [[event.data.phase, event.data.reason]] : []))
-      .toEqual([['prepared', 'prepared'], ['settled', 'persistence-unavailable']])
+      // A prepared receipt states the phase and the request, not a judgement
+      // reason: `reason` is absent until the settlement decides one.
+      .toEqual([['prepared', undefined], ['settled', 'persistence-unavailable']])
   })
 
   it('durably prepares each batch of two candidates before dispatch and returns the assigned tags', async () => {
@@ -333,6 +352,8 @@ describe('Continuum Reflex admitter service', () => {
     const receipts = session.snapshotEvents().flatMap(event => event.type === 'continuum/memory-admission' ? [event] : [])
     expect(receipts.map(event => event.data.phase)).toEqual(['prepared', 'settled', 'prepared', 'settled'])
     expect(receipts[1]?.data.preparedSeq).toBe(receipts[0]?.seq)
+    expect(receipts.map(event => [event.data.batchIndex, event.data.batchSize, event.data.batchTotal]))
+      .toEqual([[0, 2, 3], [0, 2, 3], [1, 1, 3], [1, 1, 3]])
   })
 
   it('admits everything after a durable prepared receipt when the provider then fails', async () => {
@@ -352,5 +373,35 @@ describe('Continuum Reflex admitter service', () => {
     expect(ctx.get('continuumMemoryAdmitter')).toBeDefined()
     await fiber.dispose()
     expect(ctx.get('continuumMemoryAdmitter')).toBeUndefined()
+  })
+})
+
+describe('Continuum admission receipt attribution', () => {
+  it('records which entry and write trigger a receipt belongs to', async () => {
+    const provider = fake([0.9, 0.9])
+    const receipts: unknown[] = []
+    const settle = admitContinuumMemory(provider, config, {
+      candidates: [memory('a')], subject: 'executed output', writeId: 'write-1',
+    })
+    const settled = await settle
+    receipts.push(settled)
+    expect(settled).toMatchObject({ origin: 'execution', writeId: 'write-1', phase: 'settled' })
+    // A compaction caller that names no trigger keeps the receipt free of a guessed write id.
+    const compaction = await admitContinuumMemory(provider, config, { candidates: [memory('b')], subject: 'user message' })
+    expect(compaction).toMatchObject({ origin: 'compaction' })
+    expect(compaction.writeId).toBeUndefined()
+  })
+
+  it('carries the same attribution into the prepared receipt that precedes dispatch', async () => {
+    const provider = fake([0.9])
+    let prepared: unknown
+    const settled = await admitContinuumMemory(provider, config, {
+      candidates: [memory('a')], subject: 'executed output', writeId: 'write-2',
+    }, undefined, async (receipt) => {
+      prepared = receipt
+      return SessionSeq(7)
+    })
+    expect(prepared).toMatchObject({ phase: 'prepared', origin: 'execution', writeId: 'write-2' })
+    expect(settled).toMatchObject({ phase: 'settled', origin: 'execution', writeId: 'write-2', preparedSeq: SessionSeq(7) })
   })
 })

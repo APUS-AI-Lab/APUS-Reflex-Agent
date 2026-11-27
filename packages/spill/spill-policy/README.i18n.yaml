@@ -30,8 +30,11 @@
   en: b4d94d99a8a9e52f
   zh: d5cec6295cbf5ef6
 /deepseek-ai-dsh-spill-policy/use-this-package/the-durable-log-copy:
-  en: b72e6e88ada5a957
-  zh: 5c6167651618738a
+  en: 0e1677afc924748e
+  zh: 2de2797ff5080c10
+/deepseek-ai-dsh-spill-policy/use-this-package/the-spill-record:
+  en: 475150cd6604d7d8
+  zh: b246616c2b21cd01
 /deepseek-ai-dsh-spill-policy/understand-the-implementation:
   en: bb7cedc768113c0e
   zh: ca05828dfe63b233
@@ -45,8 +48,8 @@
   en: 916aa902ea376c42
   zh: 51fbf25c1f1560d7
 /deepseek-ai-dsh-spill-policy/understand-the-implementation/source-map:
-  en: 9a63af71cc19194d
-  zh: 0937a72b5444cff2
+  en: e3c940725dc90896
+  zh: 007170271c3de95b
 /deepseek-ai-dsh-spill-policy/understand-the-implementation/failure-modes:
   en: 5640d59fdf0e064f
   zh: 7f92c52a1bdf5bff

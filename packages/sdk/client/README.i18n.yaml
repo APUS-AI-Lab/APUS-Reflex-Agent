@@ -21,8 +21,11 @@
   en: b76f1c8d57919847
   zh: 93e1edfdcafd515b
 /deepseek-ai-dsh-sdk-client/use-this-package/lower-level-control-with-harnessclient:
-  en: 8e7eb3a9b3f91404
-  zh: 277a722586dcb549
+  en: 69addd816715e5d5
+  zh: 2b31ac1f853da2e4
+/deepseek-ai-dsh-sdk-client/use-this-package/recorded-dispatches-and-request-views:
+  en: 331b8efcb2603396
+  zh: 4da6a315d294451c
 /deepseek-ai-dsh-sdk-client/understand-the-implementation:
   en: 8773f50c51da85f0
   zh: 4649ebc69357deb0
@@ -48,8 +51,8 @@
   en: 7abe0be104a791e7
   zh: 445311f78b1069ca
 /deepseek-ai-dsh-sdk-client/known-limitations-and-deferred-work:
-  en: 3f51394ef0699943
-  zh: 6d4c3180fced8db1
+  en: 7d40efc3db619d87
+  zh: f60ed854866c8719
 /deepseek-ai-dsh-sdk-client/known-limitations-and-deferred-work/dev-note:
   en: 6177a56f053936a4
   zh: 0f4b20228c2d15da

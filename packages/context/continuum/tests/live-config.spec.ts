@@ -19,7 +19,7 @@ import ContinuumMemory from '../src/service.ts'
 import type { ContinuumMemorySelection } from '../src/context.ts'
 import { expect, it, onTestFinished } from 'vitest'
 
-async function start(isolatedJev = false) {
+async function start(isolatedJev = false, trace = false) {
   const home = realpathSync(mkdtempSync(join(tmpdir(), 'continuum-disable-race-')))
   const resource: { context?: Context } = {}
   const entered = Promise.withResolvers<readonly string[]>()
@@ -43,7 +43,7 @@ async function start(isolatedJev = false) {
     { id: 'agent-loop', name: 'cordis:loop', config: { agents: [] } },
     { id: 'jev', name: 'cordis:jev', config: { endpoint: 'http://127.0.0.1:1', model: 'fixture' } },
     ...isolatedJev ? [{ id: 'isolated-jev', name: 'cordis:jev', isolate: { jev: true }, config: { endpoint: 'http://127.0.0.1:1', model: 'isolated-fixture' } }] : [],
-    { id: 'continuum-memory', name: 'cordis:memory', config: { enabled: true, mode: 'active', admission: 'user-message', scopes: ['workspace'], maxCandidates: 8, maxExcerptBytes: 2048, maxTotalBytes: 8192 } },
+    { id: 'continuum-memory', name: 'cordis:memory', config: { enabled: true, mode: 'active', admission: 'user-message', scopes: ['workspace'], maxCandidates: 8, maxExcerptBytes: 2048, maxTotalBytes: 8192, ...trace ? { trace: true } : {} } },
   ] }]))
   writeFileSync(join(dir, 'cordis.yml'), '[]\n')
   const profile: ProfileContext = { name: 'test', startedBundles: ['test-bundle'], dir, patchPath: join(dir, 'cordis.patch.yml'), installAnchor: join(home, 'package.json'), cwd: home, home, overlays: [], telemetryDisabledEnv: undefined }
@@ -255,4 +255,26 @@ it.each(['unload', 'scope-remount'] as const)('drops old-scope recall after %s w
     stop()
     await agent.whenIdle()
   }
+})
+
+it('keeps retrieval audit events out of the Session by default', async () => {
+  const { agent, user, entered, released } = await start()
+  agent.followup(user('What is the release code?'))
+  const selectedIds = await entered.promise
+  released.resolve({ mode: 'active', selectedIds, baselineIds: selectedIds, outcome: 'jev' })
+  await agent.whenIdle()
+  const types = new Set(agent.session.snapshotEvents().map(event => event.type))
+  expect(types.has('continuum/memory-retrieval')).toBe(false)
+  expect(types.has('continuum/memory-injected')).toBe(false)
+})
+
+it('records retrieval audit events when the Loader profile enables trace', async () => {
+  const { agent, user, entered, released } = await start(false, true)
+  agent.followup(user('What is the release code?'))
+  const selectedIds = await entered.promise
+  released.resolve({ mode: 'active', selectedIds, baselineIds: selectedIds, outcome: 'jev' })
+  await agent.whenIdle()
+  const types = new Set(agent.session.snapshotEvents().map(event => event.type))
+  expect(types.has('continuum/memory-retrieval')).toBe(true)
+  expect(types.has('continuum/memory-injected')).toBe(true)
 })

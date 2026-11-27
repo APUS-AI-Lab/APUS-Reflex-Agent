@@ -1,0 +1,51 @@
+{
+  "name": "@deepseek-ai/dsh-session-format-v4-to-v5",
+  "description": "Provider-selection unification and memory-admission widening from Session V4 to V5",
+  "version": "0.1.7-rc.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "directory": "packages/session/session-format-v4-to-v5"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "dsh": {
+    "sessionFormatMigration": {
+      "from": 4,
+      "to": 5,
+      "export": ".",
+      "migration": "sessionFormatV4ToV5",
+      "sourceCodec": "releasedV4SessionFormatCodec",
+      "targetCodec": "releasedV5SessionFormatCodec",
+      "targetHeaderValidator": "assertReleasedV5Header",
+      "targetRestorer": "restoreReleasedV5Artifact"
+    }
+  },
+  "dependencies": {
+    "@deepseek-ai/dsh-session-format": "workspace:*",
+    "@deepseek-ai/dsh-session-format-v3-to-v4": "workspace:*"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "workspace:~"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "workspace:~"
+  }
+}

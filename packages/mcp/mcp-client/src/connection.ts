@@ -18,6 +18,45 @@
 import { Client, type Transport } from '@modelcontextprotocol/client'
 import type { Context } from '@deepseek-ai/cordis'
 import { assertNever, type JsonValue } from '@deepseek-ai/dsh-util-values'
+
+/**
+ * One connection lifecycle fact, broadcast for observers.
+ *
+ * A connection belongs to the plugin, not to any agent: it is established
+ * before a session exists and survives across sessions. That is why this is a
+ * `ctx.emit` event rather than a durable Session event — there is no session to
+ * own it, and attributing it to whichever agent happened to be current would
+ * be false. An observer (AutoEval) subscribes and records it wherever its own
+ * trace lives.
+ */
+export interface McpConnectionFact {
+  /** Configured server name this plugin instance supervises. */
+  readonly serverName: string
+  /** Transport the instance uses. */
+  readonly transport: 'stdio' | 'streamable-http'
+  /** `ready` on a completed handshake; `failed` on one failed attempt. */
+  readonly status: 'ready' | 'failed' | 'gave-up'
+  /** Consecutive failed attempts at the time of this fact (0 on ready). */
+  readonly attempt: number
+  /** How many attempts the policy allows before giving up. */
+  readonly maxAttempts: number
+  /** Protocol version the server negotiated, on `ready` only. */
+  readonly protocolVersion?: string
+  /** Server-reported name and version from the handshake, on `ready` only. */
+  readonly serverInfo?: string
+  /** Failure text, secret-free, on `failed` and `gave-up`. */
+  readonly error?: string
+}
+
+declare module '@deepseek-ai/cordis' {
+  interface Events {
+    /**
+     * One MCP connection lifecycle fact.
+     * @param fact - server identity, status, attempt budget and failure text.
+     */
+    'mcp/connection'(fact: McpConnectionFact): void
+  }
+}
 import type { ServerContext } from './server-context.ts'
 import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
 import { createTransport } from './transport.ts'
@@ -158,6 +197,11 @@ export function startConnection(ctx: Context, config: Config, policy: ResolvedRe
   let reconnectTimer: NodeJS.Timeout | undefined
   /** Consecutive failed connection attempts within the current outage. */
   let failedAttempts = 0
+  /**
+   * Failure text of the attempt that most recently lost the connection, carried
+   * from the attempt's catch to the supervisor's single outage-step fact.
+   */
+  let lastAttemptError: string | undefined
   /** When the current generation finished connect + initial sync; undefined while down. */
   let connectedAt: number | undefined
   /** The real error from the first connection attempt, for startup-await diagnostics. */
@@ -222,6 +266,20 @@ export function startConnection(ctx: Context, config: Config, policy: ResolvedRe
         ? 'connection lost and reconnect is disabled — registered tools will fail until an HMR reload or Host restart'
         : 'connection failed and reconnect is disabled — no tools were registered; reload the plugin or restart the Host to connect'
       ctx.logger.error(`${label}: ${message}`)
+      // Reconnect being off does not make this a success: the server is down
+      // and the plugin will not bring it back, which is terminal for its tools.
+      try {
+        ctx.emit('mcp/connection', {
+          serverName: config.serverName,
+          transport: config.transport,
+          status: 'gave-up',
+          attempt: 1,
+          maxAttempts: 0,
+          ...lastAttemptError === undefined ? {} : { error: lastAttemptError },
+        })
+      } catch {
+        // Reporting the outage must not change the plugin's load path.
+      }
       return
     }
     // A connection that stayed up past the stability window (= maxDelayMs, the
@@ -229,7 +287,24 @@ export function startConnection(ctx: Context, config: Config, policy: ResolvedRe
     if (connectedAt !== undefined && Date.now() - connectedAt >= policy.maxDelayMs) failedAttempts = 0
     connectedAt = undefined
     failedAttempts += 1
-    if (failedAttempts > policy.maxAttempts) {
+    const gaveUp = failedAttempts > policy.maxAttempts
+    // One fact per outage step. The attempt ordinal comes from the budget the
+    // supervisor just incremented, so a reader cannot see a count the policy
+    // never reached.
+    try {
+      ctx.emit('mcp/connection', {
+        serverName: config.serverName,
+        transport: config.transport,
+        status: gaveUp ? 'gave-up' : 'failed',
+        attempt: Math.min(failedAttempts, policy.maxAttempts),
+        maxAttempts: policy.maxAttempts,
+        ...lastAttemptError === undefined ? {} : { error: lastAttemptError },
+      })
+    } catch {
+      // Reporting an outage step must not change how the supervisor retries.
+    }
+    lastAttemptError = undefined
+    if (gaveUp) {
       // Enqueue the give-up disposal so it cannot race an in-flight sync's
       // phase-2 swap (which checks isCurrent inside the queue).
       syncChain = syncChain.then(() => {
@@ -310,8 +385,16 @@ export function startConnection(ctx: Context, config: Config, policy: ResolvedRe
       }
     }
     let instructions: string
+    // The handshake reports the agreed protocol version only through this
+    // setter, which the SDK calls once before the first request.
+    let negotiatedProtocolVersion: string | undefined
     try {
       transport = createTransport(config)
+      const setProtocolVersion = transport.setProtocolVersion?.bind(transport)
+      transport.setProtocolVersion = (version: string): void => {
+        negotiatedProtocolVersion = version
+        setProtocolVersion?.(version)
+      }
       await generation.connect(transport)
       if (hasClosed()) {
         attemptSettled = true
@@ -332,7 +415,10 @@ export function startConnection(ctx: Context, config: Config, policy: ResolvedRe
       if (firstAttemptError === undefined) firstAttemptError = error
       // Disposal clears current ownership before it closes the generation, so
       // only a live supervisor reports an attempt failure.
-      if (isCurrent(generation)) ctx.logger.warn(`${label}: connection attempt failed: ${String(error)}`)
+      if (isCurrent(generation)) {
+        ctx.logger.warn(`${label}: connection attempt failed: ${String(error)}`)
+        lastAttemptError = String(error)
+      }
       const quiesced = await closeGeneration()
       attemptSettled = true
       settleFailedGeneration(generation, quiesced)
@@ -346,6 +432,22 @@ export function startConnection(ctx: Context, config: Config, policy: ResolvedRe
     if (!isCurrent(generation)) return
     serverInstructions = instructions
     connectedAt = Date.now()
+    lastAttemptError = undefined
+    // Observational only: an observer's failure must not affect the connection.
+    try {
+      const server = generation.getServerVersion()
+      ctx.emit('mcp/connection', {
+        serverName: config.serverName,
+        transport: config.transport,
+        status: 'ready',
+        attempt: failedAttempts,
+        maxAttempts: policy.maxAttempts,
+        ...negotiatedProtocolVersion === undefined ? {} : { protocolVersion: negotiatedProtocolVersion },
+        ...server === undefined ? {} : { serverInfo: `${server.name} ${server.version}` },
+      })
+    } catch {
+      // The connection stands; only the observation is missing.
+    }
     if (failedAttempts > 0) ctx.logger.info(`${label}: reconnected and re-synced tools (attempt ${failedAttempts}/${policy.maxAttempts})`)
   }
 

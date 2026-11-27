@@ -93,6 +93,8 @@ seam 需要提供方与消费方才能发挥作用。最小组合挂载服务、
 
 注册与释放通过 `ctx.effect()` 执行，因此提供方路由随注册 fiber 一同存活与消亡。`finalExtension()` 按两种路径分隔符切分，对没有扩展名的名称或点开头的 dotfile 返回 `''`，任何路由都不会匹配。`LspError` 扩展 `HarnessError`，携带稳定的 code（`LSP_INVALID_PROVIDER`、`LSP_CONFLICT`、`LSP_UNAVAILABLE`、`LSP_DISPOSED`、`LSP_UNSUPPORTED_OPERATION`、`LSP_MALFORMED_RESPONSE`），调用方据此路由，而不是解析 `message`。
 
+每次选中提供方的 `query()` 都会向发起 Agent 的会话追加一条仅日志的 `tool/provider-selected` 事件；该事件名与载荷类型由 `@deepseek-ai/dsh-web` 统一声明，本 seam 将其收窄到 lsp 路由。记录操作类型、实际运行的提供方 id、由其扩展名映射派生的语言 id、基于扩展名的选择方式、选择与操作耗时、结果，以及 seam 层始终为空的回退链——该 seam 从不回退，提供方内部的 retry 在这里不可见。没有发起 Agent 的查询或追加失败都不会改变查询的结果或错误。
+
 </details>
 
 -----

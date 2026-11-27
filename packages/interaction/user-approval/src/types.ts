@@ -31,6 +31,35 @@ export function ApprovalRequestId(id: string): ApprovalRequestId {
  */
 export type ApprovalOutcome = 'allowed-once' | 'rejected' | 'cancelled' | 'unavailable'
 
+/**
+ * Where the approval aggregate settled one ask, relative to the answerer
+ * waterfall. `'signal-aborted'` and `'session-policy'` settle before any
+ * dispatch; `'answerer'` means an answerer returned without delegating to the
+ * built-in fail-closed default; `'delegated-default'` means every answerer
+ * called `next()` and the chain reached that default (an answerer may still
+ * wrap and transform the default's value, so this records delegation, not the
+ * final value's origin); `'answerer-error'` and `'answerer-normalized'` are
+ * the contained answerer failures; `'abort-race'` means the request signal
+ * aborted while dispatch was pending and the eventual answer was discarded.
+ */
+export type ApprovalDecisionPath =
+  | 'signal-aborted'
+  | 'session-policy'
+  | 'answerer'
+  | 'answerer-error'
+  | 'answerer-normalized'
+  | 'delegated-default'
+  | 'abort-race'
+
+/**
+ * Identity of the answerer that settled an ask. The approval waterfall exposes
+ * no stable per-answerer identity, so a decision produced by an answerer
+ * records `'unattributed'` instead of inferring a name. Decisions settled
+ * without an answerer (policy, a pre-dispatch abort, the delegated default, or
+ * an abort race) omit the field.
+ */
+export type ApprovalResponder = 'unattributed'
+
 declare module '@deepseek-ai/dsh-session/types' {
   interface SessionEventMap {
     /**
@@ -55,6 +84,10 @@ declare module '@deepseek-ai/dsh-session/types' {
     'approval/decided': {
       id: ApprovalRequestId
       outcome: ApprovalOutcome
+      /** Where the aggregate settled the ask; absent on decisions recorded without it. */
+      decisionPath?: ApprovalDecisionPath
+      /** Answerer attribution; absent when no answerer was involved. */
+      responder?: ApprovalResponder
     }
   }
 }

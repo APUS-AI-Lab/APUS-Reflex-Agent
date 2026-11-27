@@ -386,6 +386,19 @@ export class PiAiAdapter extends LlmAdapter {
         // Profile headers are deployment-owned; attribution names are
         // Harness-owned and therefore win collisions.
         headers: requestHeaders(profile.headers),
+        onResponse: (response, responseModel) => {
+          if (responseModel.api !== 'openai-completions') return
+          const contentType = response.headers['content-type']?.split(';')[0]?.trim().toLowerCase()
+          if (response.status >= 200 && response.status < 300
+            && (contentType === 'text/html' || contentType === 'application/xhtml+xml')) {
+            // Successful HTML is a protocol/configuration failure, not a transient
+            // stream interruption. Keep the prefix pi-ai preserves for classification.
+            throw new LlmError(
+              `Invalid request: model API returned HTTP ${response.status} ${contentType}; check the API base URL and protocol`,
+              'INVALID_REQUEST',
+            )
+          }
+        },
       })
       const iterator = toStreamChunks(events, model.contextWindow, options.signal, model.id)[Symbol.asyncIterator]()
       let exhausted = false

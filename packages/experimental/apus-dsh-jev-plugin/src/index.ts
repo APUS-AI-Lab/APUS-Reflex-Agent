@@ -53,8 +53,13 @@ export interface Config {
   readonly enabled: Volatile<boolean>
   /** System One gateway URL; empty with model leaves the provider unconfigured. Credentials use apiKeyEnv. */
   readonly endpoint: Volatile<string>
-  /** Wire protocol; the official API does not receive the OpenJev effort extension. @default 'openjev' */
-  readonly protocol: Volatile<'openjev' | 'typesafe'>
+  /**
+   * Wire protocol. `openjev`/`typesafe` speak the System One API;
+   * `chat-completions` drives any OpenAI-compatible endpoint by reading each
+   * candidate's yes/no verdict probability.
+   * @default 'openjev'
+   */
+  readonly protocol: Volatile<'openjev' | 'typesafe' | 'chat-completions'>
   /** Model identifier used when a decision request omits its model; empty with endpoint permits first-run settings. */
   readonly model: Volatile<string>
   /** Decision effort used when a request omits it. @default 'low' */
@@ -88,6 +93,12 @@ export interface Config {
    * with the question count, so parallel groups answer sooner. Omission sends every decision as one request.
    */
   readonly questionsPerRequest?: number
+  /**
+   * Chat-template switches for the chat-completions dialect, sent verbatim as `chat_template_kwargs`. A reasoning
+   * model that thinks before answering spends its budget before reaching the verdict; a deployment whose model can be
+   * told to answer directly disables that here. Omission sends no switches.
+   */
+  readonly chatTemplateKwargs?: Volatile<Readonly<Record<string, string | number | boolean>> | undefined>
 }
 
 const DEFAULT_TIMEOUT_MS = 30_000
@@ -107,7 +118,7 @@ export default class Jev extends TypertRemoteService {
   static Config = z.object({
     enabled: z.boolean().default(true).volatile(),
     endpoint: z.string().default('').volatile(),
-    protocol: z.union([z.const('openjev'), z.const('typesafe')]).default('openjev').volatile(),
+    protocol: z.union([z.const('openjev'), z.const('typesafe'), z.const('chat-completions')]).default('openjev').volatile(),
     model: z.string().max(256).default('').volatile(),
     effort: z.union([z.const('low'), z.const('high')]).default('low').volatile(),
     timeoutMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).default(DEFAULT_TIMEOUT_MS).volatile(),
@@ -118,6 +129,7 @@ export default class Jev extends TypertRemoteService {
     http2: z.boolean().default(false),
     resetAfterFailures: z.number().step(1).min(1),
     questionsPerRequest: z.number().step(1).min(1).max(MAX_JEV_QUESTIONS),
+    chatTemplateKwargs: z.dict(z.union([z.string(), z.number(), z.boolean()])).volatile(),
   })
 
   private readonly providers = new Map<string, JevProvider>()
@@ -151,11 +163,13 @@ export default class Jev extends TypertRemoteService {
       const identity = providerIdentity(config)
       if (identity === undefined) return undefined
       const apiKeyEnv = config.apiKeyEnv.get()
+      const chatTemplateKwargs = config.chatTemplateKwargs?.get()
       return new SystemOneProvider({
         id: providerId,
         ...fetcher === undefined ? {} : { fetcher },
         ...identity, protocol: config.protocol.get(),
         effort: config.effort.get(), timeoutMs: config.timeoutMs.get(),
+        ...chatTemplateKwargs === undefined ? {} : { chatTemplateKwargs },
         ...apiKeyEnv === undefined ? {} : { apiKeyEnv, resolveApiKey: () => resolveJevApiKey(ctx, apiKeyEnv) },
       })
     }

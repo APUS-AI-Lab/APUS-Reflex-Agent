@@ -12,10 +12,12 @@
  */
 
 import { Context, Service } from '@deepseek-ai/cordis'
+import type {} from '@deepseek-ai/dsh-agent'
 import { HarnessError } from '@deepseek-ai/dsh-llm'
 import type { LspProviderId } from './brand.ts'
 import type {
   LspProvider,
+  LspProviderSelectedEventData,
   LspQueryRequest,
   LspQueryResult,
   LspService,
@@ -29,6 +31,7 @@ export type {
   LspPosition,
   LspProvider,
   LspProviderQuery,
+  LspProviderSelectedEventData,
   LspQueryRequest,
   LspQueryResult,
   LspRange,
@@ -141,11 +144,48 @@ export class Lsp extends Service implements LspService {
   }
 
   async query(request: LspQueryRequest, signal?: AbortSignal): Promise<LspQueryResult> {
+    const selectionStartedAt = performance.now()
     const route = this.routes.get(finalExtension(request.filePath))
+    const selectionMs = performance.now() - selectionStartedAt
     if (route === undefined) {
       throw new LspError(`no LSP provider handles "${request.filePath}"`, 'LSP_UNAVAILABLE')
     }
-    return route.provider.query({ ...request, languageId: route.languageId }, signal)
+    const operationStartedAt = performance.now()
+    let outcome: LspProviderSelectedEventData['outcome'] = 'completed'
+    try {
+      return await route.provider.query({ ...request, languageId: route.languageId }, signal)
+    } catch (error) {
+      outcome = 'failed'
+      throw error
+    } finally {
+      recordProviderSelection(this.ctx, {
+        capability: 'lsp',
+        operation: request.operation,
+        providerId: route.provider.id,
+        languageId: route.languageId,
+        selectionMode: 'extension-route',
+        selectionMs,
+        latencyMs: performance.now() - operationStartedAt,
+        outcome,
+        fallbackChain: [],
+      })
+    }
+  }
+}
+
+/**
+ * Append one log-only provider-selection record to the initiating Agent's
+ * session, when this query has one. Logging is observational: a missing
+ * initiator or a failed append is contained here so it cannot change the
+ * caller's result or error.
+ * @param ctx - the service context used to resolve the optional `agents` service.
+ * @param data - the selection facts to record.
+ */
+function recordProviderSelection(ctx: Context, data: LspProviderSelectedEventData): void {
+  try {
+    ctx.get('agents')?.currentInitiator()?.session.append('tool/provider-selected', data)
+  } catch (error) {
+    ctx.logger.warn(`lsp provider selection record failed: ${String(error)}`)
   }
 }
 

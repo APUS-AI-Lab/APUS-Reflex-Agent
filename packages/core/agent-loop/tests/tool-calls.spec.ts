@@ -17,6 +17,9 @@ import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import { MockAdapter, textResponse } from './mock-adapter.ts'
 import { PtcRuntime } from '@deepseek-ai/dsh-ptc-runtime'
 import type { PtcRunRequest, PtcRunResult } from '@deepseek-ai/dsh-ptc-runtime'
+// Type-only: merges the loop's durable observation events (agent/inbox/cancelled,
+// turn/stopping, tool/execution-plan, tool/execution) onto SessionEventMap.
+import type {} from '../src/types.ts'
 
 declare module '@deepseek-ai/dsh-llm' {
   interface MessageSourceMap {
@@ -223,6 +226,113 @@ describe('tool-call scheduler: grouping and barriers', () => {
     expect(replacement.started).toEqual(['3'])
     replacement.release('3')
     await waitForIdle(ctx, agent)
+  })
+})
+
+describe('tool-call scheduler: execution-plan observation', () => {
+  it('records parallel and fail-closed exclusive groups with their live classification', async () => {
+    const adapter = new MockAdapter([
+      multiCall([
+        { id: 'c1', name: 'p', args: { id: '1' } },
+        { id: 'c2', name: 'p', args: { id: '2' } },
+        { id: 'c3', name: 'w', args: { id: '3' } },
+      ]),
+      textResponse('done'),
+    ])
+    const ctx = await harness(adapter)
+    ctx.tools.register(defineContentToolFixture({
+      name: 'p',
+      description: 'parallel',
+      parameters: { id: { type: 'string', required: true } },
+      isConcurrencySafe: () => true,
+      async execute() { return [{ type: 'text', text: 'p' }] },
+    }))
+    // Fail-closed: a throwing classifier is not an exact `true`, so the call is exclusive.
+    ctx.tools.register(defineContentToolFixture({
+      name: 'w',
+      description: 'exclusive',
+      parameters: { id: { type: 'string', required: true } },
+      isConcurrencySafe: () => { throw new Error('classifier failed') },
+      async execute() { return [{ type: 'text', text: 'w' }] },
+    }))
+    const agent = await ctx.agentLoop.create(SessionId('plan-1'), { provider: 'mock', model: 'mock' })
+
+    agent.followup(createUserMessage({ content: [{ type: 'text', text: 'go' }], source: { kind: 'user' } }))
+    await waitForIdle(ctx, agent)
+
+    const plans = events(agent)
+      .filter(event => event.type === 'tool/execution-plan')
+      .map(event => event.data)
+    expect(plans).toEqual([
+      {
+        turn: 1,
+        step: 1,
+        scheduleMode: 'parallel',
+        parallelGroup: 1,
+        calls: [
+          { callId: 'c1', name: 'p', exactParallel: true, reclassifiedTo: 'parallel' },
+          { callId: 'c2', name: 'p', exactParallel: true, reclassifiedTo: 'parallel' },
+          { callId: 'c3', name: 'w', exactParallel: false, reclassifiedTo: 'exclusive' },
+        ],
+      },
+      {
+        turn: 1,
+        step: 1,
+        scheduleMode: 'exclusive',
+        exclusiveBarrier: true,
+        calls: [{ callId: 'c3', name: 'w', exactParallel: false, reclassifiedTo: 'exclusive' }],
+      },
+    ])
+  })
+
+  it('records a queued call reclassified exclusive after its tool is replaced', async () => {
+    const adapter = new MockAdapter([
+      multiCall([
+        { id: 'c1', name: 'x', args: { id: '1' } },
+        { id: 'c2', name: 'x', args: { id: '2' } },
+      ]),
+      textResponse('done'),
+    ])
+    const ctx = await harness(adapter, 1)
+    const initial = gatedParallelTool('x')
+    const replacement = gatedExclusiveTool('x')
+    const disposeInitial = ctx.tools.register(initial.tool)
+    ctx.on('tools/result', (exec) => {
+      if (exec.callId !== ToolCallId('c1')) return
+      disposeInitial()
+      ctx.tools.register(replacement.tool)
+    })
+    const agent = await ctx.agentLoop.create(SessionId('plan-2'), { provider: 'mock', model: 'mock' })
+
+    agent.followup(createUserMessage({ content: [{ type: 'text', text: 'go' }], source: { kind: 'user' } }))
+    await until(() => initial.started.length === 1)
+    initial.release('1')
+    await until(() => replacement.started.length === 1)
+    replacement.release('2')
+    await waitForIdle(ctx, agent)
+
+    const plans = events(agent)
+      .filter(event => event.type === 'tool/execution-plan')
+      .map(event => event.data)
+    expect(plans).toEqual([
+      {
+        turn: 1,
+        step: 1,
+        scheduleMode: 'parallel',
+        parallelGroup: 1,
+        calls: [
+          { callId: 'c1', name: 'x', exactParallel: true, reclassifiedTo: 'parallel' },
+          { callId: 'c2', name: 'x', exactParallel: false, reclassifiedTo: 'exclusive' },
+        ],
+      },
+      {
+        turn: 1,
+        step: 1,
+        scheduleMode: 'exclusive',
+        exclusiveBarrier: true,
+        calls: [{ callId: 'c2', name: 'x', exactParallel: false, reclassifiedTo: 'exclusive' }],
+      },
+    ])
   })
 })
 

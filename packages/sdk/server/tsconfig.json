@@ -34,6 +34,9 @@
     },
     {
       "path": "../../subagent/subagent"
+    },
+    {
+      "path": "../../preset/agent-preset-registry"
     }
   ]
 }

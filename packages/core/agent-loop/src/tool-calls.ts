@@ -12,10 +12,11 @@
  */
 
 import type { Context } from '@deepseek-ai/cordis'
-import { createToolResultMessage, type ToolCallBlock } from '@deepseek-ai/dsh-llm'
+import { createToolResultMessage, errorChain, type ToolCallBlock } from '@deepseek-ai/dsh-llm'
 import type { Session, SessionSeq, UserMessage } from '@deepseek-ai/dsh-session'
 import { TOOL_ABORTED_BEFORE_DISPATCH, TOOL_RUNTIME_SCHEDULER, type ToolExecutionInput, type ToolExecutionMode, type ToolExecutionResult, type ToolRunContext } from '@deepseek-ai/dsh-tools'
 import { assertNever } from '@deepseek-ai/dsh-util-values'
+import type { ToolExecutionPlanCall } from './types.ts'
 
 /** One tool call after argument parsing, ready to schedule. */
 interface PlannedCall {
@@ -82,14 +83,16 @@ export async function executeToolCalls(
 
   let next = 0
   let concluded = false
+  let parallelGroups = 0
   while (next < planned.length) {
     // Commit before classifying again so registry changes affect unstarted calls.
     // oxlint-disable-next-line typescript/no-non-null-assertion -- bounded by the loop condition
     const first = planned[next]!
     const mode = ctx.tools.executionMode(first.exec).kind
     const group = mode === 'parallel' ? planned.slice(next) : [first]
+    const parallelGroup = mode === 'parallel' ? ++parallelGroups : undefined
     const outcome = await runGroup(
-      ctx, turn, step, group, mode, signal, acceptContext,
+      ctx, turn, step, group, mode, signal, acceptContext, parallelGroup,
     )
     next += outcome.consumed
     concluded ||= outcome.concluded
@@ -127,6 +130,7 @@ async function runGroup(
   mode: ToolExecutionMode['kind'],
   signal: AbortSignal,
   acceptContext: (context: UserMessage) => void,
+  parallelGroup: number | undefined,
 ): Promise<GroupOutcome> {
   const { session } = ctx.agents.requireInitiator()
   const maxParallelToolCalls = ctx.agentLoop.config.maxParallelToolCalls.get()
@@ -239,11 +243,56 @@ async function runGroup(
     // Started calls and accepted context settle first; every remaining model
     // call then receives an ordered synthetic result before the turn aborts.
     for (const call of group.slice(started)) appendSkippedToolCall(session, turn, step, call.block)
+    appendExecutionPlan(ctx, session, turn, step, mode, parallelGroup, group, started, true)
     return { consumed: group.length, aborted: true, concluded }
   }
   /* v8 ignore next -- unreachable: a non-aborted group commits every started call */
   if (committed !== started) throw new Error('tool-call scheduler: uncommitted settled calls')
+  appendExecutionPlan(ctx, session, turn, step, mode, parallelGroup, group, started, false)
   return { consumed: started, aborted: false, concluded }
+}
+
+/**
+ * Record the group's live scheduling decision after it quiesces. A parallel
+ * pool that stopped because a later call re-read as exclusive names that
+ * deferred call once here; its own barrier group logs it again when it starts.
+ * The append is observation only: a rejected log must not change scheduling.
+ */
+function appendExecutionPlan(
+  ctx: Context,
+  session: Session,
+  turn: number,
+  step: number,
+  mode: ToolExecutionMode['kind'],
+  parallelGroup: number | undefined,
+  group: PlannedCall[],
+  started: number,
+  aborted: boolean,
+): void {
+  const calls: ToolExecutionPlanCall[] = group.slice(0, started).map(call => ({
+    callId: call.block.id,
+    name: call.block.name,
+    exactParallel: mode === 'parallel',
+    reclassifiedTo: mode,
+  }))
+  if (!aborted && mode === 'parallel' && started < group.length) {
+    // oxlint-disable-next-line typescript/no-non-null-assertion -- bounded by the condition
+    const deferred = group[started]!.block
+    calls.push({ callId: deferred.id, name: deferred.name, exactParallel: false, reclassifiedTo: 'exclusive' })
+  }
+  if (calls.length === 0) return
+  try {
+    session.append('tool/execution-plan', {
+      turn,
+      step,
+      scheduleMode: mode,
+      ...parallelGroup === undefined ? {} : { parallelGroup },
+      ...mode === 'exclusive' ? { exclusiveBarrier: true } : {},
+      calls,
+    })
+  } catch (error: unknown) {
+    ctx.logger.warn(`tool-call scheduler: failed to record tool/execution-plan: ${errorChain(error)}`)
+  }
 }
 
 /** Append the durable call/result pair for a model call skipped after cancellation. */

@@ -21,10 +21,15 @@ export type { NotificationSubscription } from './client.ts'
 export { JsonRpcResponseError } from '@deepseek-ai/dsh-sdk-protocol'
 export type {
   ContentBlock,
+  SdkDispatchRecord,
   SdkPromptContentBlock,
+  SdkRequestView,
+  SdkRequestViewRefusal,
   DeepSeekHarnessOptions,
   HarnessClientOptions,
   HarnessNotification,
   NotificationFilter,
   RunResult,
+  SessionDispatchesResult,
+  SessionRequestViewResult,
 } from './types.ts'

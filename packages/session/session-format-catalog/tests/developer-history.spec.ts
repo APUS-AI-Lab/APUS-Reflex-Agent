@@ -2,11 +2,11 @@
 import { describe, expect, expectTypeOf, it } from 'vitest'
 import { createDeveloperMessage } from '@deepseek-ai/dsh-llm'
 import type { ToolAdditionBlock, ToolSchema } from '@deepseek-ai/dsh-llm'
-import { Session, SessionId, SessionLogOffset } from '@deepseek-ai/dsh-session'
+import { Session, SessionId, SessionLogOffset, SESSION_FORMAT_VERSION } from '@deepseek-ai/dsh-session'
 import type { SessionEvent, SessionHeader } from '@deepseek-ai/dsh-session'
 import { buildForkSeed } from '@deepseek-ai/dsh-session/fork'
 import { createSessionFormatCatalog } from '@deepseek-ai/dsh-session-format'
-import { restoreReleasedV4Artifact } from '@deepseek-ai/dsh-session-format-v3-to-v4'
+import { restoreReleasedV5Artifact } from '@deepseek-ai/dsh-session-format-v4-to-v5'
 import { sessionFormatCatalogOptions } from '../src/generated.ts'
 import type { SessionFormatEvent } from '@deepseek-ai/dsh-session-format'
 import { sessionFormatCatalog } from '../src/index.ts'
@@ -53,7 +53,7 @@ function toolStates(session: Session): (ToolSchema | undefined)[] {
 describe('developer tool history', () => {
 
   it.each([false, true])('defers ignorable developer interpretation until catalog completion (known: %s)', (knowsDeveloper) => {
-    const header = { version: 4, id: 'opaque-developer', createdAt: 1, isSeeded: false, delegationDepth: 0 }
+    const header = { version: SESSION_FORMAT_VERSION, id: 'opaque-developer', createdAt: 1, isSeeded: false, delegationDepth: 0 }
     const events: SessionFormatEvent[] = [
       { type: 'developer/message', seq: 0, time: 1, ignorable: true, surfaceOp: { future: true }, data: {
         message: { role: 'developer', source: { kind: 'plugin' } }, future: true,
@@ -65,7 +65,7 @@ describe('developer tool history', () => {
     if (!knowsDeveloper) known.delete('developer/message')
     const catalog = createSessionFormatCatalog({
       ...sessionFormatCatalogOptions,
-      restoreCurrent: candidate => restoreReleasedV4Artifact(candidate, known),
+      restoreCurrent: candidate => restoreReleasedV5Artifact(candidate, known),
     })
     const reader = catalog.createRestore(sessionFormatCatalog.encodeCurrentHeader(header, 0), { recovery: 'strict', validation: 'current' })
     for (const event of events) reader.decodeRow(event)

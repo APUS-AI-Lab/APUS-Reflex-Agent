@@ -91,6 +91,15 @@ function validateEvent(
       nextTurn += 1
       break
     }
+    case 'turn/pre-step': {
+      if (trace.openTurn !== event.data.turn) {
+        fail(`turn/pre-step ${event.data.turn} does not match open turn ${trace.openTurn}`)
+      }
+      if (trace.openStep !== null) {
+        fail(`turn/pre-step in turn ${event.data.turn} while step ${trace.openStep} is still open`)
+      }
+      break
+    }
     case 'step/start': {
       if (trace.openTurn !== event.data.turn) {
         fail(`step/start in turn ${event.data.turn} but open turn is ${trace.openTurn}`)

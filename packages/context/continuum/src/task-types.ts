@@ -102,9 +102,31 @@ export type TaskOperationData =
   | { readonly version: 1; readonly kind: 'init'; readonly identity: TaskDomainIdentity }
   | { readonly version: 1; readonly kind: 'commit'; readonly request: TaskCommitRequest; readonly digest: string; readonly receipt: TaskReceipt }
 
+/**
+ * Read-only business-Session receipt for one isolated-journal commit. The isolated journal remains the only authority:
+ * this record is never read for recovery, authorization, projection, or scheduling. An identical retry with the same
+ * request id may append another receipt with the same revision.
+ */
+export interface TaskJournalReceipt {
+  readonly version: 1
+  /** Isolated journal Session id: SHA-256 of the domain id. */
+  readonly journalId: SessionId
+  readonly taskId: MemoryTaskId
+  readonly requestId: string
+  /** Domain revision the journal commit published. */
+  readonly revision: number
+  /** Canonical workspace the committing business Session resolved to before the commit. */
+  readonly workspace: string
+}
+
 declare module '@deepseek-ai/dsh-session/types' {
   interface SessionEventMap {
     /** Ordered task-domain operation in an isolated journal; not model-visible. */
     'continuum/task-operation': TaskOperationData
+    /**
+     * Log-only business-Session receipt mirroring one committed isolated-journal operation. The journal stays
+     * authoritative; this receipt never participates in recovery, authorization, projection, or scheduling.
+     */
+    'continuum/task-receipt': TaskJournalReceipt
   }
 }

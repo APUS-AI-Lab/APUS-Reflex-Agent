@@ -1,5 +1,7 @@
 CLAUDE.local.md
 .env
+.env.*
+!.env.example
 apps/desktop/.env.windows
 apps/desktop/.env.macos
 apps/desktop/*.p12
@@ -61,3 +63,6 @@ __pycache__/
 /frontend/tasks/
 /frontend/docs/feat-system3-integration/packaging-preflight.json
 /frontend/docs/feat-system3-integration/ci-recovery-plan.md
+
+# Local runtime state, never part of the product.
+.dsh-home/

@@ -173,6 +173,37 @@ interface SkillDefinition extends SkillSummary {
 }
 ```
 
+每次成功的 `get()` 都会在查询 scope 暴露会话时，向调用 Agent 的会话追加一条仅用于日志的 `skill/loaded` 事件。它记录胜出的标识与来源、毫秒级完成时间，以及目录解析是否使用了已完成的目录缓存。正文始终从提供方加载，因此 `cached` 不表示正文复用；该事件不会进入派生的模型历史。
+
+```ts type-equiv
+/**
+ * Payload of the log-only receipt the registry appends when it returns one
+ * loaded skill definition. `loadedAt` is the epoch-millisecond time after the
+ * provider returned the definition and the registry validated it. `cached`
+ * describes only catalog resolution: the definition body is always loaded
+ * from its provider, so `true` means completed catalog discovery was reused,
+ * not that the body came from a cache.
+ */
+interface SkillLoadedEventData {
+  /** Winning skill name, already validated against the skill-name grammar. */
+  readonly name: string
+  /** Provider that supplied the winning candidate and the loaded body. */
+  readonly provider: string
+  /** Discovery source of the winning candidate. */
+  /**
+   * Discovery source of the winning candidate. Persisted as an open string:
+   * `SkillSource` is `known literals | (string & {})`, and the persistence
+   * schema extractor cannot materialize that intersection, so the receipt
+   * records the value the provider reported as a plain string.
+   */
+  readonly source: string
+  /** Unix epoch milliseconds when the provider returned and the registry validated this definition. */
+  readonly loadedAt: number
+  /** Whether catalog resolution came from the completed-catalog cache rather than fresh discovery. */
+  readonly cached: boolean
+}
+```
+
 运行时 skill 输入可以省略调用控制和提供方标签。注册表会一次性补全这两项默认值，随后使用与提供方相同的完整定义形状和先到先得收集顺序。返回的 disposer 移除该贡献并使发现缓存失效。
 
 ```ts type-equiv
@@ -209,7 +240,11 @@ interface SkillLookupOptions {
  * contract from it.
  */
 interface SkillViewOptions extends SkillLookupOptions {
-  /** Viewing scope (the calling agent); omitted reads the global layer alone. */
+  /**
+   * Viewing scope (the calling agent); omitted reads the global layer alone.
+   * A calling agent's scope also carries the session that receives the
+   * log-only `skill/loaded` receipt for each successful load.
+   */
   readonly scope?: ScopeKey | undefined
 }
 ```

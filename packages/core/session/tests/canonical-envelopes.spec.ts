@@ -121,6 +121,18 @@ describe('canonical event payload acceptance', () => {
     })
   }
 
+  it('accepts blockedReason only on a blocked turn/end', () => {
+    const session = Session.create(id)
+    session.append('turn/start', { turn: 1 })
+    expect(() => session.append('turn/end', {
+      turn: 1, reason: { kind: 'completed' }, blockedReason: 'why',
+    })).toThrow(/turn\/end blockedReason requires a blocked reason/)
+    expect(() => session.append('turn/end', {
+      turn: 1, reason: { kind: 'blocked' }, blockedReason: 'why',
+    })).not.toThrow()
+    expect(session.eventAt(SessionSeq(1))?.data).toEqual({ turn: 1, reason: { kind: 'blocked' }, blockedReason: 'why' })
+  })
+
   it('preserves nested header, source, and data extras without normalizing accepted events', () => {
     const message = createSystemMessage('prompt')
     const events: SessionEvent[] = [
