@@ -21,7 +21,7 @@ import threading
 import uuid
 from dataclasses import dataclass, field
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from typing import Any, Callable
+from typing import Any
 
 from .api import DeepSeekHarness, DeepSeekHarnessConfig
 
