@@ -92,9 +92,7 @@ def test_initialization_notifications_before_the_receipt_are_kept(
                 "data": {"text": "be brief"},
             }
         )
-        + _event(
-            {"type": "user/message", "seq": 2, "time": 1, "data": {"text": "hi"}}
-        )
+        + _event({"type": "user/message", "seq": 2, "time": 1, "data": {"text": "hi"}})
         + _spliced(3)
         + _result("message-1")
         + _event({"type": "turn/start", "seq": 4, "time": 1, "data": {"turn": 1}})
