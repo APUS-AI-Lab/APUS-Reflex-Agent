@@ -203,7 +203,9 @@ class HarnessClient:
             self._capabilities = list(response.capabilities or [])
             # Absence means "no optional surfaces"; expose the normalized empty
             # list rather than leaving callers to distinguish None from [].
-            return response.model_copy(update={"capabilities": list(self._capabilities)})
+            return response.model_copy(
+                update={"capabilities": list(self._capabilities)}
+            )
         except TimeoutError as error:
             self.close()
             raise TimeoutError(
@@ -255,7 +257,9 @@ class HarnessClient:
                 payload,
                 response_model=_SessionPromptResponse,
                 on_notification=on_notification,
-                notification_filter=self._notification_belongs_to_session_tree(session_id),
+                notification_filter=self._notification_belongs_to_session_tree(
+                    session_id
+                ),
                 notification_subscription=notification_subscription,
             )
         finally:
@@ -291,7 +295,9 @@ class HarnessClient:
             raise SdkProtocolError("session/dispatches did not return a dispatch list")
         return {
             "sessionId": result.get("sessionId", session_id),
-            "dispatches": [dict(entry) for entry in dispatches if isinstance(entry, dict)],
+            "dispatches": [
+                dict(entry) for entry in dispatches if isinstance(entry, dict)
+            ],
         }
 
     def session_request_view(self, session_id: str, dispatch_seq: int) -> JsonObject:
@@ -311,8 +317,14 @@ class HarnessClient:
         """
         if not session_id:
             raise ValueError("session_request_view requires a non-empty session_id")
-        if isinstance(dispatch_seq, bool) or not isinstance(dispatch_seq, int) or dispatch_seq < 0:
-            raise ValueError("session_request_view requires a non-negative integer dispatch_seq")
+        if (
+            isinstance(dispatch_seq, bool)
+            or not isinstance(dispatch_seq, int)
+            or dispatch_seq < 0
+        ):
+            raise ValueError(
+                "session_request_view requires a non-negative integer dispatch_seq"
+            )
         result = self.request(
             "session/request-view",
             {"sessionId": session_id, "dispatchSeq": dispatch_seq},

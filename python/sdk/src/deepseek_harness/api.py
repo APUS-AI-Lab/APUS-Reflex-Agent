@@ -128,7 +128,10 @@ class DeepSeekHarness:
         self._sessions.clear()
 
     def start_session(
-        self, session_id: str | None = None, *, cwd: str | None = None,
+        self,
+        session_id: str | None = None,
+        *,
+        cwd: str | None = None,
         agent_preset: str | None = None,
     ) -> "Session":
         if cwd is not None and (
@@ -145,11 +148,17 @@ class DeepSeekHarness:
             existing = self._sessions.get(identity)
             if existing is not None:
                 if cwd is not None and cwd != existing.cwd:
-                    raise ValueError(f"session {identity!r} already uses cwd {existing.cwd!r}")
+                    raise ValueError(
+                        f"session {identity!r} already uses cwd {existing.cwd!r}"
+                    )
                 if agent_preset is not None and agent_preset != existing.agent_preset:
-                    raise ValueError(f"session {identity!r} already uses preset {existing.agent_preset!r}")
+                    raise ValueError(
+                        f"session {identity!r} already uses preset {existing.agent_preset!r}"
+                    )
                 return existing
-            session = Session(self, identity, cwd=cwd or self._cwd, agent_preset=agent_preset)
+            session = Session(
+                self, identity, cwd=cwd or self._cwd, agent_preset=agent_preset
+            )
             self._sessions[identity] = session
             return session
 
@@ -213,7 +222,11 @@ class DeepSeekHarness:
 
 class Session:
     def __init__(
-        self, harness: DeepSeekHarness, session_id: str, *, cwd: str | None = None,
+        self,
+        harness: DeepSeekHarness,
+        session_id: str,
+        *,
+        cwd: str | None = None,
         agent_preset: str | None = None,
     ) -> None:
         self.harness = harness

@@ -7,7 +7,6 @@ typed refusal, and never computes a second message projection of its own.
 
 from __future__ import annotations
 
-import json
 import sys
 from pathlib import Path
 
@@ -38,8 +37,13 @@ VIEW = {
 }
 
 
-def _runtime_script(tmp_path: Path, *, capabilities: bool, dispatches: dict | None = None,
-                    views: dict | None = None) -> Path:
+def _runtime_script(
+    tmp_path: Path,
+    *,
+    capabilities: bool,
+    dispatches: dict | None = None,
+    views: dict | None = None,
+) -> Path:
     """Write a scripted runtime that answers the request-view methods."""
     script = tmp_path / "fake_runtime.py"
     init_result: dict = {"serverInfo": {"name": "fake-runtime"}}
@@ -102,7 +106,9 @@ def _client(tmp_path: Path, script: Path, *, home: Path) -> HarnessClient:
 def test_client_reports_advertised_capabilities(tmp_path: Path) -> None:
     home = tmp_path / "home"
     home.mkdir()
-    with _client(tmp_path, _runtime_script(tmp_path, capabilities=True), home=home) as client:
+    with _client(
+        tmp_path, _runtime_script(tmp_path, capabilities=True), home=home
+    ) as client:
         initialized = client.initialize(cwd=str(tmp_path), provider="p", model="m")
         assert initialized.capabilities == [REQUEST_VIEW_CAPABILITY]
 
@@ -110,7 +116,9 @@ def test_client_reports_advertised_capabilities(tmp_path: Path) -> None:
 def test_client_reports_no_capabilities_when_absent(tmp_path: Path) -> None:
     home = tmp_path / "home"
     home.mkdir()
-    with _client(tmp_path, _runtime_script(tmp_path, capabilities=False), home=home) as client:
+    with _client(
+        tmp_path, _runtime_script(tmp_path, capabilities=False), home=home
+    ) as client:
         initialized = client.initialize(cwd=str(tmp_path), provider="p", model="m")
         assert initialized.capabilities == []
 
@@ -121,7 +129,17 @@ def test_client_transports_dispatch_facts_and_request_views(tmp_path: Path) -> N
     script = _runtime_script(
         tmp_path,
         capabilities=True,
-        dispatches={"s": [{"dispatchSeq": 4, "prefixEnd": 9, "turn": 1, "step": 1, "settlementSeq": 12}]},
+        dispatches={
+            "s": [
+                {
+                    "dispatchSeq": 4,
+                    "prefixEnd": 9,
+                    "turn": 1,
+                    "step": 1,
+                    "settlementSeq": 12,
+                }
+            ]
+        },
         views={"s:4": VIEW},
     )
     with _client(tmp_path, script, home=home) as client:
@@ -129,7 +147,15 @@ def test_client_transports_dispatch_facts_and_request_views(tmp_path: Path) -> N
         listed = client.session_dispatches("s")
         assert listed == {
             "sessionId": "s",
-            "dispatches": [{"dispatchSeq": 4, "prefixEnd": 9, "turn": 1, "step": 1, "settlementSeq": 12}],
+            "dispatches": [
+                {
+                    "dispatchSeq": 4,
+                    "prefixEnd": 9,
+                    "turn": 1,
+                    "step": 1,
+                    "settlementSeq": 12,
+                }
+            ],
         }
         view = client.session_request_view("s", 4)
         assert view == VIEW
@@ -140,7 +166,9 @@ def test_client_transports_dispatch_facts_and_request_views(tmp_path: Path) -> N
 def test_client_surfaces_a_typed_refusal(tmp_path: Path) -> None:
     home = tmp_path / "home"
     home.mkdir()
-    with _client(tmp_path, _runtime_script(tmp_path, capabilities=True), home=home) as client:
+    with _client(
+        tmp_path, _runtime_script(tmp_path, capabilities=True), home=home
+    ) as client:
         client.initialize(cwd=str(tmp_path), provider="p", model="m")
         with pytest.raises(JsonRpcError) as caught:
             client.session_request_view("s", 4)
@@ -150,7 +178,9 @@ def test_client_surfaces_a_typed_refusal(tmp_path: Path) -> None:
 def test_client_rejects_malformed_params_before_sending(tmp_path: Path) -> None:
     home = tmp_path / "home"
     home.mkdir()
-    with _client(tmp_path, _runtime_script(tmp_path, capabilities=True), home=home) as client:
+    with _client(
+        tmp_path, _runtime_script(tmp_path, capabilities=True), home=home
+    ) as client:
         client.initialize(cwd=str(tmp_path), provider="p", model="m")
         for dispatch_seq in (-1, 1.5):
             with pytest.raises(ValueError):

@@ -1107,6 +1107,7 @@ def test_public_signatures_omit_unsupported_wire_parameters() -> None:
     assert "_launch_args" not in HarnessConfig.__dataclass_fields__
     assert "session_root" not in RunResult.__dataclass_fields__
 
+
 def _cancel_runtime(tmp_path: Path, cancel_body: str = "") -> Path:
     """A scripted runtime that records session/cancel calls and answers them."""
     script = tmp_path / "fake_runtime.py"
@@ -1132,13 +1133,17 @@ for line in sys.stdin:
     return script
 
 
-def test_session_cancel_sends_the_named_session_and_returns_none(tmp_path: Path) -> None:
+def test_session_cancel_sends_the_named_session_and_returns_none(
+    tmp_path: Path,
+) -> None:
     script = _cancel_runtime(
         tmp_path,
         '        print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": {"sessionId": params["sessionId"], "cancelled": True}}), flush=True)',
     )
     with HarnessClient(_launch_args=(sys.executable, str(script))) as client:
-        client.initialize(provider="deepseek-official", cwd="/workspace", model="dsagent")
+        client.initialize(
+            provider="deepseek-official", cwd="/workspace", model="dsagent"
+        )
         client.start()
         assert client.session_cancel("session-a") is None
         notification = client.next_notification()
@@ -1158,7 +1163,9 @@ def test_session_cancel_surfaces_a_runtime_refusal(tmp_path: Path) -> None:
         '        print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "error": {"code": 7, "message": "cancel refused"}}), flush=True)',
     )
     with HarnessClient(_launch_args=(sys.executable, str(script))) as client:
-        client.initialize(provider="deepseek-official", cwd="/workspace", model="dsagent")
+        client.initialize(
+            provider="deepseek-official", cwd="/workspace", model="dsagent"
+        )
         with pytest.raises(JsonRpcError, match="cancel refused"):
             client.session_cancel("session-a")
 
@@ -1169,7 +1176,9 @@ def test_session_cancel_rejects_an_unconfirmed_result(tmp_path: Path) -> None:
         '        print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": {"sessionId": params["sessionId"], "cancelled": False}}), flush=True)',
     )
     with HarnessClient(_launch_args=(sys.executable, str(script))) as client:
-        client.initialize(provider="deepseek-official", cwd="/workspace", model="dsagent")
+        client.initialize(
+            provider="deepseek-official", cwd="/workspace", model="dsagent"
+        )
         with pytest.raises(SdkProtocolError, match="did not confirm"):
             client.session_cancel("session-a")
 
@@ -1187,7 +1196,10 @@ def test_high_level_cancel_session_keeps_the_runtime_usable(tmp_path: Path) -> N
     finally:
         harness.close()
 
-def test_session_cancel_waits_for_a_prompt_decided_but_not_yet_written(tmp_path: Path) -> None:
+
+def test_session_cancel_waits_for_a_prompt_decided_but_not_yet_written(
+    tmp_path: Path,
+) -> None:
     """The gate covers the window between a prompt decision and its frame."""
     audit = tmp_path / "audit.txt"
     script = tmp_path / "fake_runtime.py"
@@ -1228,10 +1240,14 @@ for line in sys.stdin:
         release.wait(timeout=5)
 
     with HarnessClient(_launch_args=(sys.executable, str(script))) as client:
-        client.initialize(provider="deepseek-official", cwd="/workspace", model="dsagent")
+        client.initialize(
+            provider="deepseek-official", cwd="/workspace", model="dsagent"
+        )
         prompt = threading.Thread(
             target=lambda: client.session_prompt(
-                "ordered", [{"type": "text", "text": "go"}], before_deliver=before_deliver
+                "ordered",
+                [{"type": "text", "text": "go"}],
+                before_deliver=before_deliver,
             ),
             daemon=True,
         )
@@ -1266,7 +1282,9 @@ def _wait_until(predicate, description: str, timeout: float = 5.0) -> None:
     raise AssertionError(f"timed out waiting for {description}")
 
 
-def test_session_cancel_bounds_its_wait_for_an_unanswered_prompt(tmp_path: Path) -> None:
+def test_session_cancel_bounds_its_wait_for_an_unanswered_prompt(
+    tmp_path: Path,
+) -> None:
     """An in-flight prompt without a receipt must not hang the cancellation."""
     received = tmp_path / "prompt-received"
     script = tmp_path / "fake_runtime.py"
@@ -1296,7 +1314,10 @@ for line in sys.stdin:
         HarnessConfig(request_timeout_seconds=30.0),
         _launch_args=(sys.executable, str(script)),
     ) as client:
-        client.initialize(provider="deepseek-official", cwd="/workspace", model="dsagent")
+        client.initialize(
+            provider="deepseek-official", cwd="/workspace", model="dsagent"
+        )
+
         def abandoned_prompt() -> None:
             try:
                 client.session_prompt("hung", [{"type": "text", "text": "go"}])
@@ -1572,7 +1593,9 @@ for line in sys.stdin:
     assert len(launches) == 1, f"each caller spawned its own runtime: {len(launches)}"
 
 
-def test_session_cwd_is_sent_and_frozen_without_changing_runtime_cwd(tmp_path: Path) -> None:
+def test_session_cwd_is_sent_and_frozen_without_changing_runtime_cwd(
+    tmp_path: Path,
+) -> None:
     script = tmp_path / "session_options_runtime.py"
     calls = tmp_path / "prompts.jsonl"
     script.write_text("""
@@ -1599,10 +1622,16 @@ for line in sys.stdin:
         break
 """)
     with DeepSeekHarness(
-        _launch_args=(sys.executable, str(script)), cwd=str(tmp_path),
+        _launch_args=(sys.executable, str(script)),
+        cwd=str(tmp_path),
         env={"PROMPT_DUMP": str(calls)},
     ) as harness:
-        harness.run("first", session_id="task-a", cwd="/app/task-a", agent_preset="benchmark-task")
+        harness.run(
+            "first",
+            session_id="task-a",
+            cwd="/app/task-a",
+            agent_preset="benchmark-task",
+        )
         harness.run("second", session_id="task-b", cwd="/app/task-b")
         harness.run("followup", session_id="task-a")
         with pytest.raises(ValueError, match="cwd"):
@@ -1610,5 +1639,13 @@ for line in sys.stdin:
         with pytest.raises(ValueError, match="preset"):
             harness.run("must not switch", session_id="task-a", agent_preset="another")
     sent = [json.loads(line) for line in calls.read_text().splitlines()]
-    assert [item["cwd"] for item in sent] == ["/app/task-a", "/app/task-b", "/app/task-a"]
-    assert [item.get("agentPreset") for item in sent] == ["benchmark-task", None, "benchmark-task"]
+    assert [item["cwd"] for item in sent] == [
+        "/app/task-a",
+        "/app/task-b",
+        "/app/task-a",
+    ]
+    assert [item.get("agentPreset") for item in sent] == [
+        "benchmark-task",
+        None,
+        "benchmark-task",
+    ]
